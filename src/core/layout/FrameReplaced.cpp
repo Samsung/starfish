@@ -150,8 +150,8 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
 {
     LayoutUnit newWidth = w;
     LayoutUnit newHeight = h;
-    LayoutUnit viewportWidth = ctx.frameDocument()->width();
-    LayoutUnit viewportHeight = ctx.frameDocument()->height();
+    LayoutUnit viewportWidth = ctx.viewportWidth();
+    LayoutUnit viewportHeight = ctx.viewportHeight();
     Length width = style()->width();
     Length height = style()->height();
     Length minWidth = style()->minWidth();
@@ -266,8 +266,8 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     Length height = style()->height();
     LayoutUnit intrinsicWidth, intrinsicHeight;
     LayoutUnit parentContentWidth, parentContentHeight,
-        viewportWidth = ctx.frameDocument()->width(),
-        viewportHeight = ctx.frameDocument()->height();
+        viewportWidth = ctx.viewportWidth(),
+        viewportHeight = ctx.viewportHeight();
     Length parentHeightLength;
     bool parentHasFixedHeight;
     bool hasAspectRatio;
@@ -454,8 +454,8 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
                                          Length parentContentHeight)
 {
     IntrinsicSizeUsedInLayout s = computeIntrinsicSizeForLayout();
-    LayoutUnit viewportWidth = ctx.frameDocument()->width();
-    LayoutUnit viewportHeight = ctx.frameDocument()->height();
+    LayoutUnit viewportWidth = ctx.viewportWidth();
+    LayoutUnit viewportHeight = ctx.viewportHeight();
     hasAspectRatio = s.m_hasAspectRatio;
     auto a = s.m_intrinsicSizeIsSpecifiedByAttributeOfElement;
     auto b = s.m_intrinsicContentSize;

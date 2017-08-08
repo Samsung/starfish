@@ -492,7 +492,7 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
                        container->style()->bottom().isSpecified()) {
                 LayoutUnit parentHeight =
                     containingBlock(container)->contentHeight();
-                LayoutUnit viewportHeight = frameDocument()->height();
+                LayoutUnit viewportHeight = LayoutContext::viewportHeight();
                 LayoutUnit t = container->style()->top().specifiedValue(
                     parentHeight, viewportHeight);
                 LayoutUnit b = container->style()->bottom().specifiedValue(
@@ -521,7 +521,7 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
         result = height.fixed();
     } else {
         STARFISH_ASSERT(height.isViewportPercent());
-        result = height.viewportPercentValue(frameDocument()->height());
+        result = height.viewportPercentValue(viewportHeight());
     }
 
     result = reverse.back().first->contentHeightApplyingBoxSizing(result);
@@ -643,6 +643,16 @@ bool LayoutContext::checkIfThisIsFirstLineCandidate(Frame* parent,
     }
 
     return (*it).second == child;
+}
+
+LayoutUnit LayoutContext::viewportWidth()
+{
+    return frameDocument()->style()->width().fixed();
+}
+
+LayoutUnit LayoutContext::viewportHeight()
+{
+    return frameDocument()->style()->height().fixed();
 }
 
 Frame::Frame(Node* node, ComputedStyle* s)

@@ -60,7 +60,7 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     m_owner = owner;
     m_parent = parent;
     if (m_parent) {
-        int32_t num = owner->style()->zIndex();
+        int32_t num = owner->isPositioned() ? owner->style()->zIndex() : 0;
         auto iter = m_parent->m_childContexts.rbegin();
         size_t idx = m_parent->m_childContexts.size();
         StackingContextChild* target = nullptr;
@@ -115,7 +115,11 @@ StackingContextRareData* StackingContext::ensureRareData()
 
 int32_t StackingContext::zIndex()
 {
-    return m_owner->style()->zIndex();
+    if (m_owner->isPositioned()) {
+        return m_owner->style()->zIndex();
+    } else {
+        return 0;
+    }
 }
 
 VisibleRectContext::VisibleRectContext(FrameBox* box, LayoutLocation* loc)

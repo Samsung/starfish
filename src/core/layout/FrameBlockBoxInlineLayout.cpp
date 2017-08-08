@@ -159,8 +159,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
                 Length len = box->style()->verticalAlignLength();
                 LayoutUnit y;
-                LayoutUnit viewportHeight =
-                    m_layoutContext.frameDocument()->height();
+                LayoutUnit viewportHeight = m_layoutContext.viewportHeight();
                 if (len.isPercent()) {
                     y = LineFormattingContext::ascender(rb) +
                         box->lineHeight(viewportHeight) * len.percent();
@@ -216,8 +215,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
                 Length len = box->style()->verticalAlignLength();
                 LayoutUnit amount;
-                LayoutUnit viewportHeight =
-                    m_layoutContext.frameDocument()->height();
+                LayoutUnit viewportHeight = m_layoutContext.viewportHeight();
                 if (len.isPercent()) {
                     amount = boxHeight +
                              box->lineHeight(viewportHeight) * len.percent();
@@ -287,8 +285,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                     inlineBlockAscender(box->asFrameBlockBox());
                 Length len = box->style()->verticalAlignLength();
                 LayoutUnit amount;
-                LayoutUnit viewportHeight =
-                    m_layoutContext.frameDocument()->height();
+                LayoutUnit viewportHeight = m_layoutContext.viewportHeight();
                 if (len.isPercent()) {
                     amount = ascender +
                              box->lineHeight(viewportHeight) * len.percent();
@@ -340,7 +337,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
     // 3. adjusting the line height
     if (!parentStyle->hasNormalLineHeight()) {
         LayoutUnit lineHeight;
-        LayoutUnit viewportHeight = m_layoutContext.frameDocument()->height();
+        LayoutUnit viewportHeight = m_layoutContext.viewportHeight();
         if (parentBox->isLineBox()) {
             lineHeight = m_block->lineHeight(viewportHeight);
         } else {
@@ -1070,8 +1067,9 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
         ctx.checkIfThisIsFirstLineCandidate(block->parent(), block)) {
         Length textIndent = block->style()->textIndent();
         FrameBox* cb = ctx.containingBlock(block);
-        m_textIndentWidth = textIndent.specifiedValue(
-            cb->contentWidth(), ctx.frameDocument()->width());
+        m_textIndentWidth =
+            textIndent.specifiedValue(cb->contentWidth(), ctx.viewportWidth());
+        ;
     }
 }
 
@@ -3377,7 +3375,7 @@ void PreferredWidthContext::handleFloatingBox(Frame* f, LayoutUnit w)
 LayoutUnit PreferredWidthContext::leftMBPWidth(ComputedStyle* style)
 {
     LayoutUnit width;
-    LayoutUnit viewportWidth = layoutContext().frameDocument()->width();
+    LayoutUnit viewportWidth = layoutContext().viewportWidth();
     Length borderLeftWidth = style->borderLeftWidth();
     Length paddingLeft = style->paddingLeft();
     Length marginLeft = style->marginLeft();
@@ -3406,7 +3404,7 @@ LayoutUnit PreferredWidthContext::leftMBPWidth(ComputedStyle* style)
 LayoutUnit PreferredWidthContext::rightMBPWidth(ComputedStyle* style)
 {
     LayoutUnit minWidth;
-    LayoutUnit viewportWidth = layoutContext().frameDocument()->width();
+    LayoutUnit viewportWidth = layoutContext().viewportWidth();
     Length borderRightWidth = style->borderRightWidth();
     Length paddingRight = style->paddingRight();
     Length marginRight = style->marginRight();
@@ -3566,18 +3564,17 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
                          parentHeightLength);
 
     if (width.isSpecified()) {
+        LayoutUnit viewportWidth = ctx.layoutContext().viewportWidth();
         if (width.isFixed()) {
             w = width.fixed();
             w = contentWidthApplyingBoxSizing(w);
         } else if (width.isViewportPercent()) {
-            w = width.viewportPercentValue(
-                ctx.layoutContext().frameDocument()->width());
+            w = width.viewportPercentValue(viewportWidth);
             w = contentWidthApplyingBoxSizing(w);
         } else {
             w = intrinsicWidth;
         }
 
-        LayoutUnit viewportWidth = ctx.layoutContext().frameDocument()->width();
         w = minMaxWidthAppliedIfNeeds(w, parentContentWidth, viewportWidth);
     } else {
         w = intrinsicWidth;
@@ -3585,9 +3582,8 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 
         if (height.isFixed() || height.isViewportPercent() ||
             (height.isPercent() && parentHasFixedHeight)) {
-            h = height.specifiedValue(
-                parentContentHeight,
-                ctx.layoutContext().frameDocument()->height());
+            h = height.specifiedValue(parentContentHeight,
+                                      ctx.layoutContext().viewportHeight());
             h = contentHeightApplyingBoxSizing(h);
 
             if (hasAspectRatio) {
@@ -3647,8 +3643,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
         if (width.isFixed()) {
             w = width.fixed();
         } else if (width.isViewportPercent()) {
-            w = width.viewportPercentValue(
-                ctx.layoutContext().frameDocument()->width());
+            w = width.viewportPercentValue(ctx.layoutContext().viewportWidth());
         } else {
             LayoutUnit parentContentWidth =
                 ctx.layoutContext().parentContentWidth(this);
@@ -3675,8 +3670,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                                                                     this)) {
                 Length textIndent = style()->textIndent();
                 textIndentWidth = textIndent.specifiedValue(
-                    ctx.remainingWidth(),
-                    ctx.layoutContext().frameDocument()->width());
+                    ctx.remainingWidth(), ctx.layoutContext().viewportWidth());
             }
             ctx.setTextIndentWidth(textIndentWidth);
             ctx.computePreferredWidthInline(this);
