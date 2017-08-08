@@ -3209,6 +3209,17 @@ LayoutUnit LineFormattingContext::contentHeightForBlock()
         // register ascender of first line for table-layout
         m_layoutContext.registerFirstLineAscender(
             m_block->m_lineBoxes[0], ascender(m_block->m_lineBoxes[0]));
+    } else {
+        if (m_block->isFrameInputBox()) {
+            STARFISH_ASSERT(m_block->firstChild()->isFrameText());
+            LayoutUnit fontHeight = m_block->firstChild()
+                                        ->asFrameText()
+                                        ->style()
+                                        ->font()
+                                        ->metrics()
+                                        .m_fontHeight;
+            return fontHeight;
+        }
     }
 
     if (m_block->isEstablishesBlockFormattingContext()) {

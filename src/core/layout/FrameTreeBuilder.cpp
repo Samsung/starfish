@@ -491,6 +491,9 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             shouldSkipChildren = true;
         } else if (current->isHTMLInputElement()) {
             currentFrame = FrameInputBox::buildFrameTree(current, ctx, force);
+            if (!currentFrame) {
+                return nullptr;
+            }
             shouldSkipChildren = true;
         } else {
             if (display == DisplayValue::BlockDisplayValue ||

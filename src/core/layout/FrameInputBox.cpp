@@ -36,6 +36,10 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
                                              FrameTreeBuilderContext& ctx,
                                              bool force)
 {
+    if (current->asHTMLInputElement()->type()->equalsWithoutCase("hidden")) {
+        return nullptr;
+    }
+
     FrameInputBox* currentFrame = nullptr;
     FrameBlockBox* parent = ctx.currentBlockContainer();
     if (current->needsFrameTreeBuild() || force) {
@@ -49,8 +53,13 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
 
     STARFISH_ASSERT(current->isHTMLInputElement());
 
-    {
-        // TODO: Input boxes of "type='text'" requires a GUI component from
+    HTMLInputElement* inputNode = current->asHTMLInputElement();
+    if (inputNode->type()->equalsWithoutCase("text") ||
+        inputNode->type()->equalsWithoutCase("submit") ||
+        inputNode->type()->equalsWithoutCase("button") ||
+        inputNode->type()->equalsWithoutCase("email") ||
+        inputNode->type()->equalsWithoutCase("password")) {
+        // TODO: Input boxes require a GUI component from
         // the backend library. For time being, direct user text inputs to
         // input boxes is not supported. Input boxes display
         // the text value assigned to "value" attribute only. To integrate with
@@ -63,7 +72,7 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         ComputedStyle* pseudoStyle = createInputElementStyleFrom(current);
         textElement->setStyle(pseudoStyle);
 
-        String* userVal = current->asHTMLInputElement()->value();
+        String* userVal = inputNode->value();
         Text* textNode = new Text(current->document(), userVal);
         textNode->setParentNode(textElement);
         ComputedStyle* textStyle = createInputElementStyleFrom(textElement);
