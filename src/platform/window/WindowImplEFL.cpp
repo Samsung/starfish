@@ -74,6 +74,7 @@ public:
         m_dummyBoxClipper = nullptr;
         m_renderingAnimator = nullptr;
         m_isMouseLbuttonDown = false;
+        m_canRendering = true;
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -154,6 +155,7 @@ public:
 
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
+    bool m_canRendering;
 };
 
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -674,6 +676,15 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     evas_object_smart_callback_add(wnd->m_dummyBox, "clicked",
                                    wnd->m_mobileClickEventHandler, wnd);
 #endif
+
+    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+                            EVAS_CALLBACK_RENDER_POST,
+                            [](void* data, Evas* e, void* event_info) {
+                                WindowImplEFL* wnd = (WindowImplEFL*)data;
+                                wnd->m_canRendering = true;
+                            },
+                            wnd);
+
     return wnd;
 }
 
@@ -736,13 +747,18 @@ void WebView::setNeedsRendering()
     m_needsRendering = true;
     wnd->m_renderingAnimator = ecore_animator_add(
         [](void* data) -> Eina_Bool {
-            PlatformWindow* wnd = (PlatformWindow*)data;
+            WindowImplEFL* wnd = (WindowImplEFL*)data;
+            if (!wnd->m_canRendering) {
+                return ECORE_CALLBACK_RENEW;
+            }
             StarFishEnterer enter(wnd->starFish());
-            wnd->rendering();
-            ((WindowImplEFL*)wnd)->m_renderingAnimator = nullptr;
+            if (wnd->rendering()) {
+                wnd->m_canRendering = false;
+            }
+            wnd->m_renderingAnimator = nullptr;
             return ECORE_CALLBACK_CANCEL;
         },
-        starFish()->platformWindow());
+        wnd);
 }
 
 Canvas* WindowImplEFL::preparePainting(bool forPainting)

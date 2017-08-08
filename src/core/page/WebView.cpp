@@ -470,11 +470,13 @@ void WebView::layoutIfNeeds()
     }
 }
 
-void WebView::rendering()
+bool WebView::rendering()
 {
     if (!m_needsRendering) {
-        return;
+        return false;
     }
+
+    bool didPaintingOrCompositing = false;
 
     if (mainBrowsingContext()->hasPendingStyleSheet() &&
         mainBrowsingContext()->document() &&
@@ -501,7 +503,7 @@ void WebView::rendering()
         canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
         delete canvas;
-        return;
+        return true;
     }
 
     uint64_t currentTick = tickCount();
@@ -523,6 +525,7 @@ void WebView::rendering()
     }
 
     if (m_needsPainting) {
+        didPaintingOrCompositing = true;
 #ifdef STARFISH_ENABLE_TIMER
         ProfilerTimer t("painting");
 #endif
@@ -643,6 +646,7 @@ void WebView::rendering()
     }
 
     if (m_needsComposite) {
+        didPaintingOrCompositing = true;
 #ifdef STARFISH_ENABLE_TIMER
         ProfilerTimer t("composite");
 #endif
@@ -719,6 +723,7 @@ void WebView::rendering()
         }
     }
 #endif
+    return didPaintingOrCompositing;
 }
 
 void WebView::clearStackingContext(bool backupBuffer)

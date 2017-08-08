@@ -172,9 +172,9 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
     webView()->mainBrowsingContext()->dispatchKeyEvent(kind, data);
 }
 
-void PlatformWindow::rendering()
+bool PlatformWindow::rendering()
 {
-    webView()->rendering();
+    return webView()->rendering();
 }
 
 void PlatformWindow::paintWindowBackground(Canvas* canvas)
