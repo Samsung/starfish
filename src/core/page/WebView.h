@@ -129,7 +129,7 @@ private:
     WebView(StarFish* starFish);
 
     void initRenderingFlags();
-    void rendering();
+    bool rendering(); // returns did painting | did compositing
     void setNeedsRendering();
     void setNeedsPainting()
     {

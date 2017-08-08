@@ -67,7 +67,7 @@ public:
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
     void dispatchKeyEvent(KeyEventKind kind, KeyboardData data);
 
-    void rendering();
+    bool rendering();
     void pause();
     void resume();
     void close();
