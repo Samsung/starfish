@@ -93,6 +93,8 @@ Inspector::Inspector(StarFish* starFish, uint32_t portNumber)
                                     ownShipRadarString.data(),
                                     ownShipRadarString.size());
                                 self->m_zmqSocket.send(request, ZMQ_NOBLOCK);
+
+                                delete r;
                             } else {
                                 self->m_starFish->messageLoop()
                                     ->addIdlerWithNoGCRootingInOtherThread(
