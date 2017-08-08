@@ -28,6 +28,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/modules/threading/Thread.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "platform/window/PlatformWindow.h"
@@ -456,7 +457,8 @@ void MediaPlayerTizen::pause()
 {
     if (m_inPlaying) {
         m_inPlaying = false;
-        m_container->starFish()->removePointerFromRootSet(this);
+        m_container->document()->browsingContext()->removePointerFromRootSet(
+            this);
         m_container->window()->clearInterval(m_currentTimeUpdateTimer);
         player_pause(m_nativePlayer);
         m_currentTimeUpdateTimer = SIZE_MAX;
@@ -472,12 +474,15 @@ void MediaPlayerTizen::initDisplay()
 
 void MediaPlayerTizen::setNativePlayerDefaultOptions(ResourceURL* url)
 {
-    player_display_h displayHandle = GET_DISPLAY(m_canvasSurface->unwrap());
-    player_display_type_e displayType = PLAYER_DISPLAY_TYPE_EVAS;
-    player_display_mode_e displayMode = PLAYER_DISPLAY_MODE_ORIGIN_OR_LETTER;
-
-    player_set_display(m_nativePlayer, displayType, displayHandle);
-    player_set_display_mode(m_nativePlayer, displayMode);
+    if (m_container->isHTMLVideoElement() && m_container->frame()) {
+        player_display_h displayHandle = GET_DISPLAY(m_canvasSurface->unwrap());
+        player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_EVAS,
+                           displayHandle);
+        player_set_display_mode(m_nativePlayer,
+                                PLAYER_DISPLAY_MODE_ORIGIN_OR_LETTER);
+    } else {
+        player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_NONE, nullptr);
+    }
 }
 
 void MediaPlayerTizen::openPreparingMode()
@@ -490,7 +495,8 @@ void MediaPlayerTizen::openPreparingMode()
 void MediaPlayerTizen::closePreparingMode()
 {
     if (m_inPrepare) {
-        m_container->starFish()->removePointerFromRootSet(this);
+        m_container->document()->browsingContext()->removePointerFromRootSet(
+            this);
         m_inPrepare = false;
     }
 }

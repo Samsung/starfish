@@ -57,11 +57,10 @@ public:
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect);
-#ifdef STARFISH_TIZEN_TV_MSE
+
     virtual void fillVideoBuffer(bool useLock = true);
     virtual void fillAudioBuffer(bool useLock = true);
     virtual void prepareMediaSource();
-#endif
     void setVideoStreamInfo(size_t initSegmentIndex = 0);
     void setAudioStreamInfo(size_t initSegmentIndex = 0);
     virtual void printNativePlayerError(int errorCode);

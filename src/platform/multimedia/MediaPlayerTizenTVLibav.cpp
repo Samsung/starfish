@@ -31,9 +31,10 @@ extern "C" {
 #include "core/modules/mediasource/SourceBuffer.h"
 
 #include <media/player.h>
+#include <media/player_internal.h>
 
 namespace StarFish {
-#ifdef STARFISH_TIZEN_TV_MSE
+
 struct FFMpegIOContext {
     FFMpegIOContext(const GCVector<uint8_t>& buf)
         : m_readPos(0)
@@ -221,7 +222,6 @@ void MediaPlayerTizenTV::setAudioStreamInfo(size_t initSegmentIndex)
         m_audioInitSegmentIndex = initSegmentIndex;
     }
 }
-#endif
 }
 
 #endif
