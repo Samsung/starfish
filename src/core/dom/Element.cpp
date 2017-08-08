@@ -29,6 +29,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/NamedNodeMap.h"
+#include "core/dom/SelectorQuery.h"
 #include "core/dom/Text.h"
 #include "core/dom/PseudoElementData.h"
 #include "core/dom/parser/HTMLParser.h"
@@ -309,6 +310,14 @@ Attr* Element::removeAttributeNode(Attr* attr)
     removeAttribute(attr->qname());
 
     return attr;
+}
+
+bool Element::matches(String* selectors)
+{
+    GCVector<CSSSelectorList*> selectorListContainer;
+    parseSelector(selectorListContainer, selectors);
+    SelectorQuery selectorQuery(selectorListContainer);
+    return selectorQuery.matches(*this);
 }
 
 void Element::didAttributeChanged(QualifiedName name, String* old,

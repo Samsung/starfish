@@ -42,7 +42,7 @@ interface Element : Node {
   [Unimplemented] readonly attribute ShadowRoot? shadowRoot;
 
   [Unimplemented] Element? closest(DOMString selectors);
-  [Unimplemented] boolean matches(DOMString selectors);
+  [RaisesException] boolean matches(DOMString selectors);
 
   HTMLCollection getElementsByTagName(DOMString qualifiedName);
   [Unimplemented] HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
