@@ -146,7 +146,7 @@ private:
             imageFormat = ImageFormat::PNG;
         } else if (isJPGFormat(buf)) {
             imageFormat = ImageFormat::JPG;
-        } else if (isGIFFormat((unsigned char*)buf)) {
+        } else if (isGIFFormat(buf)) {
             imageFormat = ImageFormat::GIF;
         } else {
             // TODO ERROR
@@ -202,9 +202,7 @@ private:
             readData.size = 0;
             png_set_read_fn(png, &readData, readPNGFromBufferedInput);
         } else {
-            if (fp) {
-                png_init_io(png, fp);
-            }
+            png_init_io(png, fp);
         }
 
         png_read_info(png, info);
@@ -302,7 +300,6 @@ private:
         tjhandle dHandle = nullptr;
         unsigned char* srcBuf = nullptr;
         int jpegSize = 0;
-        int TD_BU = 0;
         size_t readSize = 0;
 
         fseek(fp, 0, SEEK_END);
@@ -340,7 +337,6 @@ private:
     void readJPGBufferedInput(const char* buf, size_t len)
     {
         tjhandle dHandle = nullptr;
-        int TD_BU = 0;
 
         if ((dHandle = tjInitDecompress()) == nullptr) {
             STARFISH_LOG_ERROR("%s %d\n : dHandle is NULL", __FUNCTION__,
