@@ -151,7 +151,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
     } else {
         LayoutUnit contentHeight;
         LayoutUnit parentHeight;
-        LayoutUnit viewportHeight = ctx.frameDocument()->height();
+        LayoutUnit viewportHeight = ctx.viewportHeight();
         Length height = style()->height();
         BoxSizingValue boxSizing = style()->boxSizing();
 
@@ -221,7 +221,7 @@ static LayoutUnit specifiedVerticalPosition(LayoutContext& ctx, Frame* f,
     if (l.isFixed()) {
         return l.fixed();
     } else if (l.isViewportPercent()) {
-        return l.viewportPercentValue(ctx.frameDocument()->height());
+        return l.viewportPercentValue(ctx.viewportHeight());
     } else {
         STARFISH_ASSERT(l.isPercent());
         if (ctx.parentHasFixedHeight(f)) {
@@ -236,7 +236,7 @@ static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
 {
     LayoutUnit x = 0;
     LayoutUnit y = 0;
-    LayoutUnit viewportWidth = ctx.frameDocument()->width();
+    LayoutUnit viewportWidth = ctx.viewportWidth();
     Length left = f->style()->left();
     Length right = f->style()->right();
     Length top = f->style()->top();
@@ -323,7 +323,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         FrameBox* cb = ctx.containingBlock(this);
         LayoutUnit parentContentWidth = cb->contentWidth();
-        LayoutUnit viewportWidth = ctx.frameDocument()->width();
+        LayoutUnit viewportWidth = ctx.viewportWidth();
         computeBorderMarginPadding(ctx, parentContentWidth);
 
         if (isAbsolutePositioned()) {
@@ -481,7 +481,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             // 'auto' values for 'margin-top' and 'margin-bottom' to 0, and
             // solve for 'top'
             LayoutUnit h = height.specifiedValue(data.m_contentHeight,
-                                                 ctx.frameDocument()->height());
+                                                 ctx.viewportHeight());
             if (style()->boxSizing() == BorderBoxBoxSizingValue) {
                 setY(data.m_contentHeight - h - data.m_bottom - data.m_absY);
             } else {

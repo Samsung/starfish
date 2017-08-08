@@ -173,7 +173,7 @@ void FrameBox::paintBackground(Canvas* canvas, ComputedStyle* style,
 void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
                                           LayoutUnit parentContentWidth)
 {
-    LayoutUnit viewportWidth = ctx.frameDocument()->width();
+    LayoutUnit viewportWidth = ctx.viewportWidth();
     // padding
     if (style()->paddingLeft().isSpecified() && !m_flags.m_isLeftMBPCleared) {
         setPaddingLeft(style()->paddingLeft().specifiedValue(parentContentWidth,
@@ -283,7 +283,7 @@ FrameBox::computeHorizontalDataToContainingBlock(LayoutContext& ctx,
 
     LayoutUnit containgBlockContentWidth =
         cb->contentWidth() + cb->paddingWidth();
-    LayoutUnit viewportWidth = ctx.frameDocument()->width();
+    LayoutUnit viewportWidth = ctx.viewportWidth();
 
     LayoutUnit l, r;
     Length left = style()->left();
@@ -314,7 +314,7 @@ VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
     }
     LayoutUnit containgBlockContentHeight =
         cb->contentHeight() + cb->paddingHeight();
-    LayoutUnit viewportHeight = ctx.frameDocument()->height();
+    LayoutUnit viewportHeight = ctx.viewportHeight();
 
     LayoutUnit absY = l2.y() - l1.y() - cb->borderTop();
 
@@ -598,9 +598,8 @@ void FrameBox::establishesStackingContextIfNeeds()
                         break;
                     } else if (p->needsGraphicsBuffer()) {
                         break;
-                    } else if (!p->isPositioned()) {
-                        break;
-                    } else if (p->style()->IsSpecifiedZIndex()) {
+                    } else if (p->isPositioned() &&
+                               p->style()->IsSpecifiedZIndex()) {
                         break;
                     } else if (p->style()->opacity() != 1) {
                         break;

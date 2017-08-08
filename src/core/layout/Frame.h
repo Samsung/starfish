@@ -390,6 +390,9 @@ public:
 
     bool checkIfThisIsFirstLineCandidate(Frame* parent, FrameBlockBox* child);
 
+    LayoutUnit viewportWidth();
+    LayoutUnit viewportHeight();
+
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(bool isNormalFlow, bool isRoot,
