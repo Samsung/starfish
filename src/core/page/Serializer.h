@@ -17,7 +17,6 @@
 #ifndef __StarFishSerializer__
 #define __StarFishSerializer__
 
-#include "StarFishConfig.h"
 #include "binding/ScriptWrappable.h"
 
 namespace StarFish {
@@ -26,15 +25,28 @@ using namespace Escargot;
 
 class Blob;
 class Document;
-class SerializedPrimitiveData;
+class SerializedData;
+class SerializedPrimitiveValueData;
+class SerializedStringData;
 class SerializedArrayData;
-class SerializedBlobData;
+class SerializedPlatformObjectData;
 class SerializedObjectData;
-class SerializedValue;
+class SerializedTypedData;
+class ScriptWrappable;
+
+class Serializable {
+public:
+    virtual SerializedData* serialized() = 0;
+};
 
 class SerializedData : public gc {
 public:
-    virtual bool isSerializedPrimitiveData() const
+    virtual bool isSerializedValueData() const
+    {
+        return false;
+    }
+
+    virtual bool isSerializedStringData() const
     {
         return false;
     }
@@ -44,7 +56,7 @@ public:
         return false;
     }
 
-    virtual bool isSerializedBlobData() const
+    virtual bool isSerializedPlatformObjectData() const
     {
         return false;
     }
@@ -54,38 +66,60 @@ public:
         return false;
     }
 
-    SerializedPrimitiveData* asSerializedPrimitiveData()
+    SerializedPrimitiveValueData* asSerializedPrimitiveValueData() const
     {
-        STARFISH_ASSERT(isSerializedPrimitiveData());
-        return (SerializedPrimitiveData*)this;
+        STARFISH_ASSERT(isSerializedValueData());
+        return (SerializedPrimitiveValueData*)this;
     }
 
-    SerializedArrayData* asSerializedArrayData()
+    SerializedStringData* asSerializedStringData() const
+    {
+        STARFISH_ASSERT(isSerializedStringData());
+        return (SerializedStringData*)this;
+    }
+
+    SerializedArrayData* asSerializedArrayData() const
     {
         STARFISH_ASSERT(isSerializedArrayData());
         return (SerializedArrayData*)this;
     }
 
-    SerializedBlobData* asSerializedBlobData()
+    SerializedPlatformObjectData* asSerializedPlatformObjectData() const
     {
-        STARFISH_ASSERT(isSerializedBlobData());
-        return (SerializedBlobData*)this;
+        STARFISH_ASSERT(isSerializedPlatformObjectData());
+        return (SerializedPlatformObjectData*)this;
     }
 
-    SerializedObjectData* asSerializedObjectData()
+    SerializedObjectData* asSerializedObjectData() const
     {
         STARFISH_ASSERT(isSerializedObjectData());
         return (SerializedObjectData*)this;
     }
 };
 
-class SerializedPrimitiveData : public SerializedData {
+class SerializedPrimitiveValueData : public SerializedData {
 public:
-    SerializedPrimitiveData()
+    SerializedPrimitiveValueData(bool booleanData)
     {
+        setBooleanData(booleanData);
     }
 
-    bool isSerializedPrimitiveData() const override
+    SerializedPrimitiveValueData(int32_t int32Data)
+    {
+        setInt32Data(int32Data);
+    }
+
+    SerializedPrimitiveValueData(uint32_t uint32Data)
+    {
+        setUint32Data(uint32Data);
+    }
+
+    SerializedPrimitiveValueData(double numberData)
+    {
+        setNumberData(numberData);
+    }
+
+    bool isSerializedValueData() const override
     {
         return true;
     }
@@ -130,16 +164,6 @@ public:
         m_data.m_numberData = numberData;
     }
 
-    Escargot::StringRef* stringData() const
-    {
-        return m_data.m_stringData;
-    }
-
-    void setStringData(Escargot::StringRef* stringData)
-    {
-        m_data.m_stringData = stringData;
-    }
-
 private:
     union Data {
         bool m_booleanData;
@@ -152,6 +176,35 @@ private:
     Data m_data;
 };
 
+class SerializedStringData : public SerializedData {
+public:
+    SerializedStringData(StringRef* data)
+        : m_data(data)
+    {
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    bool isSerializedStringData() const override
+    {
+        return true;
+    }
+
+    Escargot::StringRef* stringData() const
+    {
+        return m_data;
+    }
+
+    void setStringData(Escargot::StringRef* data)
+    {
+        m_data = data;
+    }
+
+private:
+    Escargot::StringRef* m_data;
+};
+
 class SerializedArrayData : public SerializedData {
 public:
     SerializedArrayData(size_t len)
@@ -159,14 +212,22 @@ public:
         m_data.resize(len);
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     bool isSerializedArrayData() const override
     {
         return true;
     }
 
-    void setValue(size_t key, SerializedValue* value)
+    void insert(size_t key, SerializedTypedData* value)
     {
         m_data[key] = value;
+    }
+
+    SerializedTypedData*& operator[](size_t key)
+    {
+        return m_data[key];
     }
 
     size_t length() const
@@ -175,49 +236,21 @@ public:
     }
 
 private:
-    GCVector<SerializedValue*> m_data;
+    GCVector<SerializedTypedData*> m_data;
 };
 
-class SerializedBlobData : public SerializedData {
+class SerializedPlatformObjectData : public SerializedData {
 public:
-    SerializedBlobData(Blob* blob);
+    SerializedPlatformObjectData()
+    {
+    }
 
-    bool isSerializedBlobData() const override
+    bool isSerializedPlatformObjectData() const override
     {
         return true;
     }
 
-    int64_t size() const
-    {
-        return m_size;
-    }
-
-    String* type() const
-    {
-        return m_type;
-    }
-
-    void* data() const
-    {
-        return m_data;
-    }
-
-    bool isClosed() const
-    {
-        return m_isClosed;
-    }
-
-    bool isEntryOfBlobURLStore() const
-    {
-        return m_isEntryOfBlobURLStore;
-    }
-
-private:
-    uint64_t m_size;
-    String* m_type;
-    void* m_data;
-    bool m_isClosed;
-    bool m_isEntryOfBlobURLStore;
+    virtual ScriptWrappable* deserialized(Document* document) const = 0;
 };
 
 class SerializedObjectData : public SerializedData {
@@ -226,27 +259,44 @@ public:
     {
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     bool isSerializedObjectData() const override
     {
         return true;
     }
 
-    void setValue(Escargot::StringRef* key, SerializedValue* value)
+    void setKeyAndValue(ScriptValue key, SerializedTypedData* value)
     {
         m_data.emplace_back(key, value);
     }
 
+    const std::pair<ScriptValue, SerializedTypedData*>& keyAndValue(
+        size_t idx) const
+    {
+        return m_data[idx];
+    }
+
+    size_t length() const
+    {
+        return m_data.size();
+    }
+
 private:
-    GCVector<std::pair<StringRef*, SerializedValue*>> m_data;
+    GCVector<std::pair<ScriptValue, SerializedTypedData*>> m_data;
 };
 
-class SerializedValue : public gc {
+class SerializedTypedData : public gc {
 public:
-    SerializedValue(uint8_t type, SerializedData* data)
+    SerializedTypedData(uint8_t type, SerializedData* data)
         : m_type(type)
         , m_data(data)
     {
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     bool isUndefined() const
     {
@@ -288,16 +338,6 @@ public:
         return m_type == Boolean;
     }
 
-    bool isInt32() const
-    {
-        return m_type == Int32;
-    }
-
-    bool isUint32() const
-    {
-        return m_type == Uint32;
-    }
-
     bool isNumber() const
     {
         return m_type == Number;
@@ -317,7 +357,7 @@ public:
     {
         return m_type == RegExp;
     }
-
+#if ESCARGOT_ENABLE_TYPEDARRAY
     bool isSharedArrayBuffer() const
     {
         return m_type == SharedArrayBuffer;
@@ -332,45 +372,26 @@ public:
     {
         return m_type == ArrayBufferView;
     }
+#endif
+    /*
+        bool isMap() const
+        {
+            return m_type == Map;
+        }
 
-    bool isMap() const
-    {
-        return m_type == Map;
-    }
-
-    bool isSet() const
-    {
-        return m_type == Set;
-    }
-
+        bool isSet() const
+        {
+            return m_type == Set;
+        }
+    */
     bool isArray() const
     {
         return m_type == Array;
     }
 
-    bool isBlob() const
+    bool isPlatformObject() const
     {
-        return m_type == Blob;
-    }
-
-    bool isFile() const
-    {
-        return m_type == File;
-    }
-
-    bool isFileList() const
-    {
-        return m_type == FileList;
-    }
-
-    bool isImageBitmap() const
-    {
-        return m_type == ImageBitmap;
-    }
-
-    bool isImageData() const
-    {
-        return m_type == ImageData;
+        return m_type == PlatformObject;
     }
 
     bool isObject() const
@@ -392,23 +413,19 @@ public:
         NumberPrimitive,
         StringPrimitive,
         Boolean,
-        Int32,
-        Uint32,
         Number,
         String,
         Date,
         RegExp,
+#if ESCARGOT_ENABLE_TYPEDARRAY
         SharedArrayBuffer,
         ArrayBuffer,
         ArrayBufferView,
-        Map,
-        Set,
+#endif
+        // Map,
+        // Set,
         Array,
-        Blob,
-        File,
-        FileList,
-        ImageBitmap,
-        ImageData,
+        PlatformObject,
         Object,
     };
 
@@ -419,14 +436,14 @@ private:
 
 class Serializer {
 public:
-    static SerializedValue* serialize(Escargot::ExecutionStateRef* state,
-                                      ScriptValue value);
+    static SerializedTypedData* serialize(Escargot::ExecutionStateRef* state,
+                                          ScriptValue value);
     static void deepcopy(Escargot::ExecutionStateRef* state,
                          SerializedData* dst, Escargot::ObjectRef* src);
     static ScriptValue deserialize(Document* document,
                                    Escargot::ExecutionStateRef* state,
-                                   SerializedValue* value);
-    static void deepcopy(Escargot::ExecutionStateRef* state,
+                                   SerializedTypedData* value);
+    static void deepcopy(Document* document, Escargot::ExecutionStateRef* state,
                          Escargot::ObjectRef* dst, SerializedData* src);
 };
 }
