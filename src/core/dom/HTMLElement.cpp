@@ -69,8 +69,6 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         setAttributeEventListener(ss->m_touchmove, value, this);
     } else if (name == ss->m_onload) {
         setAttributeEventListener(ss->m_load, value, this);
-    } else if (name == ss->m_onunload) {
-        setAttributeEventListener(ss->m_unload, value, this);
     } else if (name == ss->m_onerror) {
         setAttributeEventListener(ss->m_error, value, this);
     } else if (name == ss->m_dir) {
@@ -317,6 +315,4 @@ DEFINE_EVENT_LISTENER(HTMLElement, suspend);
 DEFINE_EVENT_LISTENER(HTMLElement, timeupdate);
 DEFINE_EVENT_LISTENER(HTMLElement, volumechange);
 DEFINE_EVENT_LISTENER(HTMLElement, waiting);
-
-DEFINE_EVENT_LISTENER(HTMLElement, unload);
 }

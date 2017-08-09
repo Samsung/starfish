@@ -138,27 +138,21 @@ public:
     DECLARE_EVENT_LISTENER(waiting);
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#documentandelementeventhandlers
-// DECLARE_EVENT_LISTENER(afterprint);
-// DECLARE_EVENT_LISTENER(beforeprint);
-// DECLARE_EVENT_LISTENER(beforeunload);
-// DECLARE_EVENT_LISTENER(hashchange);
-// DECLARE_EVENT_LISTENER(languagechange);
-// DECLARE_EVENT_LISTENER(message);
-// DECLARE_EVENT_LISTENER(offline);
-// DECLARE_EVENT_LISTENER(line);
-// DECLARE_EVENT_LISTENER(pagehide);
-// DECLARE_EVENT_LISTENER(pageshow);
-// DECLARE_EVENT_LISTENER(popstate);
-// DECLARE_EVENT_LISTENER(rejectionhandled);
-// DECLARE_EVENT_LISTENER(storage);
-// DECLARE_EVENT_LISTENER(unhandledrejection);
+// DECLARE_EVENT_LISTENER(copy);
+// DECLARE_EVENT_LISTENER(cut);
+// DECLARE_EVENT_LISTENER(paste);
+
 #undef VIRTUAL
 #undef OVERRIDE
 
 #define VIRTUAL virtual
 #define OVERRIDE
+    // DECLARE_EVENT_LISTENER(blur);
+    // DECLARE_EVENT_LISTENER(error);
+    // DECLARE_EVENT_LISTENER(focus);
     DECLARE_EVENT_LISTENER(load);
-    DECLARE_EVENT_LISTENER(unload);
+// DECLARE_EVENT_LISTENER(resize);
+// DECLARE_EVENT_LISTENER(scroll);
 #undef VIRTUAL
 #undef OVERRIDE
 
