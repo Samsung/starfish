@@ -17,8 +17,10 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/MessageEvent.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -195,7 +197,12 @@ ValueRef* postMessageWindowFunction(ExecutionStateRef* state,
     ScriptValue value0;
     value0 = arg0;
     // Call native function (nargs: 3)
-    window->postMessage(value0, value1, value2);
+    try {
+        window->postMessage(value0, value1, value2);
+    } catch (DOMException* e) {
+        state->throwException(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 
     // Return ValueRef* from native value
     return ValueRef::createUndefined();

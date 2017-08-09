@@ -284,6 +284,12 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_onmessage =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "onmessage"));
+    m_messageerror =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "messageerror"));
+    m_onmessageerror =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onmessageerror"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_cuechange =
         QualifiedName(AtomicString::emptyAtomicString(),

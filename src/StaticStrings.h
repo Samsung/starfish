@@ -297,6 +297,8 @@ public:
     QualifiedName m_onresize;
     QualifiedName m_message;
     QualifiedName m_onmessage;
+    QualifiedName m_messageerror;
+    QualifiedName m_onmessageerror;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;
     QualifiedName m_sourceopen;

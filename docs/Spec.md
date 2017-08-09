@@ -331,6 +331,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the frame in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the frame in CSS pixels. |
+|  | attribute | contentWindow | Returns the WindowProxy object of the iframe element's nested browsing context, if its nested browsing context is non-null, or null otherwise. |
 | [HTMLLegendElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-legend-element) | interface | HTMLLegendElement | Represents a caption for the rest of the contents of the legend element's parent fieldset element, if any. |
 | [HTMLLinkElement](https://html.spec.whatwg.org/multipage/semantics.html#the-link-element) | interface | HTMLLinkElement | The HTMLLinkElement interface represents reference information for external resources and the relationship of those resources to a document and vice-versa |
 |  | attribute | href | Is a DOMString representing the URI for the target resource. |
@@ -543,11 +544,15 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | void pushState(any data, DOMString title, optional DOMString? url = null) | Pushes the given data onto the session history stack with the specified title and, if provided, URL. |
 |  | method | void replaceState(any data, DOMString title, optional DOMString? url = null) | Updates the most recent entry on the history stack to have the specified data, title, and, if provided, URL |
 |  [Location](https://html.spec.whatwg.org/multipage/browsers.html#location)  |  attribute  |  href  |  Return Location object's url  |
-|    |  attribute  |  protocol  |  Return  Location object's url's scheme, followed by ":"  |
-|    |  attribute  |  host  |  Return url's host, serialized, followed by ":" and url's port, serialized  |
-|    |  attribute  |  pathname  |  Return "/", followed by the strings in url's path (including empty strings), separated from each other by "/"  |
-|    |  attribute  |  search  |  Return "?", followed by this Location object's url's query  |
-|    |  attribute  |  hash  |  Return "#", followed by this Location object's url's fragment  |
+|    |  attribute  |  protocol  |  Return  Location object's url's scheme, followed by ":".  |
+|    |  attribute  |  href  |  Return this Location object's url, serialized.  |
+|    |  attribute  |  origin  | Return the serialization of this Location object's url's origin.  |
+|    |  attribute  |  host  |  Return url's host, serialized, followed by ":" and url's port, serialized.  |
+|    |  attribute  |  hostname  | Return this Location object's url's host, serialized.  |
+|    |  attribute  |  port  | Return this Location object's url's port, serialized.  |
+|    |  attribute  |  pathname  |  Return "/", followed by the strings in url's path (including empty strings), separated from each other by "/".  |
+|    |  attribute  |  search  |  Return "?", followed by this Location object's url's query.  |
+|    |  attribute  |  hash  |  Return "#", followed by this Location object's url's fragment.  |
 |    |  method  |  assign(DOMString url)  |  Loads the resource at the URL provided in parameter.  |
 |    |  method  |  replace(DOMString url)  |  Replaces the current resource with the URL provided in parameter.  |
 |    |  method  |  reload()  |  Reloads the resource from the current URL.  |
@@ -614,6 +619,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | location | Return this Window object's Location object. |
 |  | attribute | history | Return the object implementing the History interface for this Window object's associated Document. |
 |  | attribute | navigator | Return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
+|  | method | postMessage(message, targetOrigin, transfer) | Posts a message to the given window. |
 | [Window](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface) | attribute | innerWidth | Return the viewport width including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
 |  | attribute | innerHeight | Return the viewport height including the size of a rendered scroll bar (if any), or zero if there is no viewport. |
 |  | attribute | scrollX | property of the Window interface returns the number of pixels that the document is currently scrolled horizontally |
@@ -740,7 +746,9 @@ This section describes the complete list of supported HTML tags and attributes b
 | [TouchEvent](https://w3c.github.io/touch-events/#touchevent-interface) | interface | TouchEvent | Defines the touchstart, touchend, touchmove, and touchcancel event types. |
 | | attribute | touches | A list of Touch objects for every point of contact currently touching the surface. |
 | [WindowEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers) | partial<br>interface | WindowEventHandlers | WindowEventHandlers are the event handlers common to several interfaces like Window, or HTMLBodyElement and  HTMLFrameSetElement. Each of these interfaces can implement additional specific event handlers. |
-| | attribute | onunload | Represents the code to be called when the unload event is raised. |
+| | attribute | onmessage | Fired at an object when it receives a message. |
+| | attribute | onmessageerror | Fired at an object when it receives a message that cannot be deserialized. |
+| | attribute | onunload | Fired at the Window object when the page is going away. |
 
 ## CSS
 

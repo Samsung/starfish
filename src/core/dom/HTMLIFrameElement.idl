@@ -11,7 +11,7 @@ interface HTMLIFrameElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString height;
 
     [Unimplemented, CheckSecurity=ReturnValue] readonly attribute Document? contentDocument;
-    [Unimplemented] readonly attribute Window? contentWindow;
+    readonly attribute Window? contentWindow;
 //    [Unimplemented, CheckSecurity=ReturnValue, RaisesException] Document? getSVGDocument();
 //    [Unimplemented, CEReactions, Reflect, ReflectOnly=("","no-referrer","origin","no-referrer-when-downgrade","origin-when-cross-origin","unsafe-url"), ReflectMissing="", ReflectInvalid=""] attribute DOMString referrerPolicy;
     // https://w3c.github.io/webappsec-csp/embedded/#dom-htmliframeelement-csp

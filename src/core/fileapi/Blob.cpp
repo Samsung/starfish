@@ -17,10 +17,17 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/fileapi/Blob.h"
+#include "core/page/Serializer.h"
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
 
 namespace StarFish {
+
+Blob::Blob(Document* document, const SerializedBlobData* blobData)
+    : Blob(document, blobData->size(), blobData->type(), blobData->data(),
+           blobData->isClosed(), blobData->isEntryOfBlobURLStore())
+{
+}
 
 ScriptBindingInstance* Blob::scriptBindingInstance()
 {

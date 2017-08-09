@@ -57,6 +57,7 @@ public:
     // DECLARE_EVENT_LISTENER(hashchange);
     // DECLARE_EVENT_LISTENER(languagechange);
     DECLARE_EVENT_LISTENER(message);
+    DECLARE_EVENT_LISTENER(messageerror);
     // DECLARE_EVENT_LISTENER(offline);
     // DECLARE_EVENT_LISTENER(online);
     // DECLARE_EVENT_LISTENER(pagehide);

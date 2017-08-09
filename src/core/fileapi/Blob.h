@@ -23,6 +23,7 @@
 namespace StarFish {
 
 class Document;
+class SerializedBlobData;
 
 class Blob : public ScriptWrappable, public DocumentHoldable {
 public:
@@ -40,9 +41,15 @@ public:
         }
     }
 
+    Blob(Document* document, const SerializedBlobData* blobData);
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isBlob() const override;
+    virtual bool isSerializable() const override
+    {
+        return true;
+    }
     virtual ScriptBindingInstance* scriptBindingInstance();
 
     void* data()
@@ -63,6 +70,11 @@ public:
     bool isClosed()
     {
         return m_isClosed;
+    }
+
+    bool isEntryOfBlobURLStore()
+    {
+        return m_isEntryOfBlobURLStore;
     }
 
     void close()

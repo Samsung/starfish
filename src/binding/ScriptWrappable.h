@@ -179,7 +179,12 @@ public:
     }
     virtual ScriptBindingInstance* scriptBindingInstance() = 0;
 
-    virtual bool isAttributeEventFunction()
+    virtual bool isAttributeEventFunction() const
+    {
+        return false;
+    }
+
+    virtual bool isSerializable() const
     {
         return false;
     }
@@ -204,7 +209,7 @@ public:
         return nullptr;
     }
 
-    virtual bool isAttributeEventFunction()
+    virtual bool isAttributeEventFunction() const override
     {
         return true;
     }
