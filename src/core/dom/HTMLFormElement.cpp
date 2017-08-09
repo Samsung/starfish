@@ -20,12 +20,31 @@
 #include "core/dom/HTMLFormElement.h"
 
 #include "core/dom/Document.h"
+#include "core/dom/Event.h"
+#include "core/dom/HTMLInputElement.h"
+#include "core/dom/Node.h"
+#include "core/dom/Traverse.h"
 #include "core/page/BrowsingContext.h"
 
 namespace StarFish {
 
+class FormDataSetItem : public gc {
+public:
+    FormDataSetItem(String* name, String* value, String* type)
+        : m_name(name)
+        , m_value(value)
+        , m_type(type)
+    {
+    }
+
+    String* m_name;
+    String* m_value;
+    String* m_type;
+};
+
 HTMLFormElement::HTMLFormElement(Document* document)
     : HTMLElement(document)
+    , m_submitter(nullptr)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
@@ -43,5 +62,206 @@ String* HTMLFormElement::domName()
 void HTMLFormElement::setDomName(String* name)
 {
     setAttribute(starFish()->staticStrings()->m_name, name);
+}
+
+String* HTMLFormElement::enctype()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_enctype);
+}
+
+void HTMLFormElement::setEnctype(String* enctype)
+{
+    setAttribute(starFish()->staticStrings()->m_enctype, enctype);
+}
+
+String* HTMLFormElement::method()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_method);
+}
+
+void HTMLFormElement::setMethod(String* method)
+{
+    setAttribute(starFish()->staticStrings()->m_method, method);
+}
+
+String* HTMLFormElement::target()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_target);
+}
+
+void HTMLFormElement::setTarget(String* target)
+{
+    setAttribute(starFish()->staticStrings()->m_target, target);
+}
+
+String* HTMLFormElement::action()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_action);
+}
+
+void HTMLFormElement::setAction(String* action)
+{
+    setAttribute(starFish()->staticStrings()->m_action, action);
+}
+
+void HTMLFormElement::setSubmitter(Element* elem)
+{
+    m_submitter = elem;
+}
+
+// https://www.w3.org/TR/html5/forms.html#concept-form-submit
+void HTMLFormElement::submit()
+{
+    GCVector<FormDataSetItem*>* formDataSet = createFormDataSet();
+    String* formAction = String::emptyString;
+    HTMLInputElement* inputNode = nullptr;
+    if (m_submitter && m_submitter->isHTMLInputElement()) {
+        inputNode = m_submitter->asHTMLInputElement();
+        if (inputNode->type()->equalsWithoutCase("button")) {
+            formAction = inputNode->formAction();
+        }
+    }
+
+    if (formAction == String::emptyString) {
+        formAction = action();
+    }
+
+    ResourceURL* url;
+    if (formAction != String::emptyString) {
+        if (ResourceURL::isValidURL(formAction)) {
+            url = new ResourceURL(formAction);
+        } else {
+            url = new ResourceURL(formAction,
+                                  document()->documentURI()->baseURI());
+        }
+    } else {
+        url = document()->documentURI();
+    }
+
+    String* formEnctype = String::emptyString;
+    String* formMethod = String::emptyString;
+    String* formTarget = String::emptyString;
+    if (inputNode) {
+        formEnctype = inputNode->formEnctype();
+        formMethod = inputNode->formMethod();
+        formTarget = inputNode->formTarget();
+    }
+
+    if (formEnctype == String::emptyString) {
+        formEnctype = enctype();
+        if (formEnctype == String::emptyString) {
+            formEnctype =
+                String::createASCIIString("application/x-www-form-urlencoded");
+        }
+    }
+    if (formMethod == String::emptyString) {
+        formMethod = method();
+    }
+    if (formTarget == String::emptyString) {
+        formTarget = target();
+    }
+
+    if (formTarget != String::emptyString) {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+
+    if (url->isNetworkURL() || url->isFileURL()) {
+        if (formMethod->equalsWithoutCase("post")) {
+            submitAsEntityBody(url, formEnctype, formDataSet);
+        }
+    }
+}
+
+void HTMLFormElement::submitAsEntityBody(
+    ResourceURL* url, String* formEnctype,
+    GCVector<FormDataSetItem*>* formDataSet)
+{
+    String* entityBody = encodeFormDataSet(formEnctype, formDataSet);
+    // TODO: send formDataSet and receive HTML page
+}
+
+// https://www.w3.org/TR/html5/forms.html#application/
+// x-www-form-urlencoded-encoding-algorithm
+String* HTMLFormElement::encodeFormDataSet(
+    String* formEnctype, GCVector<FormDataSetItem*>* formDataSet)
+{
+    String* space = String::spaceString;
+    String* plus = String::createASCIIString("+");
+
+    String* result = String::createASCIIString("");
+    if (formEnctype->equalsWithoutCase("application/x-www-form-urlencoded")) {
+        for (size_t i = 0; i < formDataSet->size(); i++) {
+            FormDataSetItem* item = (*formDataSet)[i];
+            String* name = item->m_name->replaceAll(space, plus);
+            String* value = item->m_value->replaceAll(space, plus);
+            String* type = item->m_type->replaceAll(space, plus);
+
+            if (i == 0 && name->equalsWithoutCase("isindex") &&
+                type->equalsWithoutCase("text")) {
+                result = result->concat(value);
+                continue;
+            }
+
+            if (name->equalsWithoutCase("_charset_") &&
+                type->equalsWithoutCase("hidden")) {
+                value = String::createASCIIString("UTF-8");
+            }
+
+            if (i > 0) {
+                result = result->concat(String::createASCIIString("&"));
+            }
+            result = result->concat(name);
+            result = result->concat(String::createASCIIString("="));
+            result = result->concat(value);
+        }
+    } else if (formEnctype->equalsWithoutCase("multipart/form-data")) {
+        // TODO
+    } else if (formEnctype->equalsWithoutCase("text/plain")) {
+        // TODO
+    }
+
+    return result;
+}
+
+// https://www.w3.org/TR/html5/forms.html#constructing-the-form-data-set
+GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet()
+{
+    GCVector<Element*> inputNodes;
+    Traverse::collectDescendants(
+        inputNodes, asNode(),
+        [this](Node* node) -> bool {
+            // TODO: "Checkness" is not supported yet.
+            // Collecting inputboxes only now
+            if (node->isHTMLInputElement()) {
+                HTMLInputElement* inputNode = node->asHTMLInputElement();
+                if (inputNode->type()->equalsWithoutCase("button") &&
+                    (inputNode != m_submitter)) {
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        },
+        false);
+
+    GCVector<FormDataSetItem*>* formDataSet = new GCVector<FormDataSetItem*>();
+    for (Element* node : inputNodes) {
+        if (node->isHTMLInputElement()) {
+            HTMLInputElement* inputNode = node->asHTMLInputElement();
+            String* val = inputNode->value();
+
+            if (inputNode->type()->equalsWithoutCase("checkbox") ||
+                inputNode->type()->equalsWithoutCase("radio")) {
+                if (inputNode->value() == String::emptyString) {
+                    val = String::createASCIIString("on");
+                }
+            }
+
+            formDataSet->push_back(new FormDataSetItem(inputNode->domName(),
+                                                       val, inputNode->type()));
+        }
+    }
+
+    return formDataSet;
 }
 }

@@ -12,11 +12,11 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented, CEReactions] attribute boolean disabled;
     [Unimplemented] readonly attribute HTMLFormElement? form;
     [Unimplemented] readonly attribute FileList? files;
-    [Unimplemented, CEReactions] attribute USVString formAction;
-    [Unimplemented, CEReactions] attribute DOMString formEnctype;
-    [Unimplemented, CEReactions] attribute DOMString formMethod;
+    [CEReactions] attribute USVString formAction;
+    [CEReactions] attribute DOMString formEnctype;
+    [CEReactions] attribute DOMString formMethod;
     [Unimplemented, CEReactions] attribute boolean formNoValidate;
-    [Unimplemented, CEReactions] attribute DOMString formTarget;
+    [CEReactions] attribute DOMString formTarget;
     [Unimplemented, CEReactions] attribute unsigned long height;
     [Unimplemented] attribute boolean indeterminate;
     [Unimplemented, CEReactions] attribute DOMString inputMode;
