@@ -166,6 +166,9 @@ public:
     void focus();
     void blur();
 
+    void postMessage(ScriptValue message, String* targetOrigin,
+                     std::vector<ScriptObject>& transfer);
+
     // https://html.spec.whatwg.org/multipage/
     // browsers.html#named-access-on-the-window-object
     HTMLCollection* namedAccess(String* name);
@@ -251,7 +254,7 @@ public:
     // DECLARE_EVENT_LISTENER(beforeunload);
     // DECLARE_EVENT_LISTENER(hashchange);
     // DECLARE_EVENT_LISTENER(languagechange);
-    // DECLARE_EVENT_LISTENER(message);
+    DECLARE_EVENT_LISTENER(message);
     // DECLARE_EVENT_LISTENER(offline);
     // DECLARE_EVENT_LISTENER(online);
     // DECLARE_EVENT_LISTENER(pagehide);

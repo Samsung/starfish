@@ -45,6 +45,26 @@ public:
 #define VIRTUAL virtual
 #define OVERRIDE override
     DECLARE_EVENT_LISTENER(load);
+#undef VIRTUAL
+#undef OVERRIDE
+
+#define VIRTUAL
+#define OVERRIDE
+    // https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers
+    // DECLARE_EVENT_LISTENER(afterprint);
+    // DECLARE_EVENT_LISTENER(beforeprint);
+    // DECLARE_EVENT_LISTENER(beforeunload);
+    // DECLARE_EVENT_LISTENER(hashchange);
+    // DECLARE_EVENT_LISTENER(languagechange);
+    DECLARE_EVENT_LISTENER(message);
+    // DECLARE_EVENT_LISTENER(offline);
+    // DECLARE_EVENT_LISTENER(online);
+    // DECLARE_EVENT_LISTENER(pagehide);
+    // DECLARE_EVENT_LISTENER(pageshow);
+    // DECLARE_EVENT_LISTENER(popstate);
+    // DECLARE_EVENT_LISTENER(rejectionhandled);
+    // DECLARE_EVENT_LISTENER(storage);
+    // DECLARE_EVENT_LISTENER(unhandledrejection);
     DECLARE_EVENT_LISTENER(unload);
 #undef VIRTUAL
 #undef OVERRIDE

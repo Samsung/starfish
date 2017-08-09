@@ -150,6 +150,12 @@ Storage* Window::sessionStorage()
         this, origin);
 }
 
+void Window::postMessage(ScriptValue message, String* targetOrigin,
+                         std::vector<ScriptObject>& transfer)
+{
+    // TODO:
+}
+
 Screen* Window::screen()
 {
     if (!m_screen) {
@@ -426,6 +432,7 @@ DEFINE_EVENT_LISTENER(Window, timeupdate);
 DEFINE_EVENT_LISTENER(Window, volumechange);
 DEFINE_EVENT_LISTENER(Window, waiting);
 
+DEFINE_EVENT_LISTENER(Window, message);
 DEFINE_EVENT_LISTENER(Window, unload);
 
 CSSStyleDeclaration* Window::getComputedStyle(Element* element)

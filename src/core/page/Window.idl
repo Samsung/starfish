@@ -6,7 +6,7 @@
 interface Window : EventTarget {
   // the current browsing context
   [Custom, Unforgeable] readonly attribute WindowProxy window;
-  
+
   // `self` is Implemented in virtual id
   // [Replaceable] readonly attribute WindowProxy self;
   [Unforgeable] readonly attribute Document document;
@@ -55,7 +55,7 @@ interface Window : EventTarget {
   [Custom] unsigned long requestAnimationFrame(FrameRequestCallback callback);
   void cancelAnimationFrame(unsigned long handle);
 
-  [Unimplemented] void postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
+  [Custom] void postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
 
   // https://html.spec.whatwg.org/#Window-partial
   [Unimplemented] void captureEvents();

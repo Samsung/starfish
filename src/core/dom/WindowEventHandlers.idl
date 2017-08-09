@@ -8,7 +8,7 @@ interface WindowEventHandlers {
   [Unimplemented] attribute OnBeforeUnloadEventHandler onbeforeunload;
   [Unimplemented] attribute EventHandler onhashchange;
   [Unimplemented] attribute EventHandler onlanguagechange;
-  [Unimplemented] attribute EventHandler onmessage;
+  attribute EventHandler onmessage;
   [Unimplemented] attribute EventHandler onoffline;
   [Unimplemented] attribute EventHandler ononline;
   [Unimplemented] attribute EventHandler onpagehide;

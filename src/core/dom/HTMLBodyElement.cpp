@@ -30,6 +30,8 @@ QualifiedName HTMLBodyElement::name()
 }
 
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, load);
+
+DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, message);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, unload);
 
 void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,

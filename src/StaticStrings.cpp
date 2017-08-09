@@ -279,6 +279,11 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_onresize =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "onresize"));
+    m_message = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "message"));
+    m_onmessage =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onmessage"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_cuechange =
         QualifiedName(AtomicString::emptyAtomicString(),
