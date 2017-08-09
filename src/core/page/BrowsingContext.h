@@ -169,6 +169,8 @@ public:
     bool setHoveredNode(Node* n);
     void releaseHoveredNode();
 
+    // TODO: Nested browsing contexts should be considered.
+    Node* focusedNode();
     void setFocusedNode(Node* n);
     void releaseFocusedNode(Node* n);
 

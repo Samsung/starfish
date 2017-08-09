@@ -767,8 +767,10 @@ DOMImplementation* Document::implementation()
 
 Element* Document::activeElement()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return this->body()->asElement();
+    if (!browsingContext()->focusedNode()) {
+        return body() ? body()->asElement() : nullptr;
+    }
+    return browsingContext()->focusedNode()->asElement();
 }
 
 bool Document::hasFocus() const
