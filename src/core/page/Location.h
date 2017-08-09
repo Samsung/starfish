@@ -43,8 +43,10 @@ public:
 
     ResourceURL* url();
     String* href();
+    String* origin();
     String* host();
     String* hostname();
+    String* port();
     String* protocol();
     String* pathname();
     String* search();
@@ -57,6 +59,7 @@ public:
     void setHref(String* newURL);
     void setHost(String* newHost);
     void setHostname(String* newHostname);
+    void setPort(String* newPort);
     void setProtocol(String* newProtocol);
     void setPathname(String* newPath, bool needRemovingDots = true);
     void setSearch(String* search);

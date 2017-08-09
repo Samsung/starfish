@@ -4,11 +4,11 @@
 interface Location {
 
   [Unforgeable] stringifier attribute DOMString href;
-  [Unimplemented, Unforgeable] readonly attribute DOMString origin;
+  [Unforgeable] readonly attribute DOMString origin;
   [Unforgeable] attribute DOMString protocol;
   [Unforgeable] attribute DOMString host;
   [Unforgeable] attribute DOMString hostname;
-  [Unimplemented, Unforgeable] attribute DOMString port;
+  [Unforgeable] attribute DOMString port;
   [Unforgeable] attribute DOMString pathname;
   [Unforgeable] attribute DOMString search;
   [Unforgeable] attribute DOMString hash;

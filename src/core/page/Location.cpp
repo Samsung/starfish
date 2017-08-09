@@ -38,6 +38,11 @@ String* Location::href()
     return url()->href();
 }
 
+String* Location::origin()
+{
+    return url()->origin();
+}
+
 String* Location::host()
 {
     String* hostname = url()->hostname();
@@ -53,6 +58,11 @@ String* Location::host()
 String* Location::hostname()
 {
     return url()->hostname();
+}
+
+String* Location::port()
+{
+    return url()->port();
 }
 
 String* Location::protocol()
@@ -91,6 +101,13 @@ void Location::setHostname(String* newHostname)
 {
     ResourceURL* newUrl = new ResourceURL(url()->urlString());
     newUrl->setHostname(newHostname);
+    assign(newUrl);
+}
+
+void Location::setPort(String* newPort)
+{
+    ResourceURL* newUrl = new ResourceURL(url()->urlString());
+    newUrl->setPort(newPort);
     assign(newUrl);
 }
 

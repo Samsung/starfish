@@ -71,6 +71,8 @@ public:
     {
         return m_browsingContext;
     }
+
+    Window* contentWindow() const;
     void navigate(ResourceURL* url, HistoryManager::Action type);
 
 private:

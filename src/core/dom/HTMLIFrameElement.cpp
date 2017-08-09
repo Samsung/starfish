@@ -145,6 +145,14 @@ void HTMLIFrameElement::unloadSrc()
     }
 }
 
+Window* HTMLIFrameElement::contentWindow() const
+{
+    if (m_browsingContext) {
+        return m_browsingContext->window();
+    }
+    return nullptr;
+}
+
 void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type)
 {
     unloadSrc();

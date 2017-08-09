@@ -17,24 +17,31 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 #include "core/page/Window.h"
 
 #include "binding/ScriptBindingInstance.h"
+#include "core/dom/DOMException.h"
 #include "core/dom/HTMLAnchorElement.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/MessageEvent.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/TouchEvent.h"
+#include "core/layout/FrameDocument.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/History.h"
 #include "core/page/Navigator.h"
 #include "core/page/Location.h"
 #include "core/page/Screen.h"
 #include "core/page/WebView.h"
-#include "core/layout/FrameDocument.h"
-
+#include "core/page/Serializer.h"
 #include "core/page/SecurityOriginData.h"
+#include "core/page/Serializer.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
 #include "core/style/CSSParser.h"
@@ -153,7 +160,66 @@ Storage* Window::sessionStorage()
 void Window::postMessage(ScriptValue message, String* targetOrigin,
                          std::vector<ScriptObject>& transfer)
 {
-    // TODO:
+    String* origin;
+    if (targetOrigin->equals("/")) {
+        origin = m_location->origin();
+    } else if (targetOrigin->equals("*")) {
+        origin = targetOrigin;
+    } else if (!ResourceURL::isValidURL(targetOrigin)) {
+        COMPOSE_MESSAGE(reason, INVALID_TARGET_ORIGIN, targetOrigin->utf8Data(),
+                        "postMessage");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
+                        reason);
+        throw new DOMException(document(), DOMException::SYNTAX_ERR, msg);
+    } else {
+        ResourceURL* url = new ResourceURL(targetOrigin);
+        origin = url->origin();
+    }
+
+    ContextRef* context = scriptBindingInstance()->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(context);
+    SerializedValue* serializedValue = Serializer::serialize(state, message);
+
+    if (!serializedValue) {
+        COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
+                        message->toString(state)->toStdUTF8String().c_str());
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
+                        reason);
+        throw new DOMException(document(), DOMException::DATA_CLONE_ERR, msg);
+    }
+
+    if (browsingContext()) {
+        starFish()->messageLoop()->addIdler(
+            browsingContext(),
+            [](size_t handle, void* data, void* data1, void* data2) {
+                Window* window = (Window*)data;
+                String* origin = (String*)data1;
+                SerializedValue* serializedValue = (SerializedValue*)data2;
+                ContextRef* context =
+                    window->scriptBindingInstance()->scriptContext();
+                ExecutionStateRef* state = ExecutionStateRef::create(context);
+                ScriptValue deserializedValue = Serializer::deserialize(
+                    window->document(), state, serializedValue);
+                MessageEvent* e;
+                String* eventType;
+                if (deserializedValue) {
+                    eventType = window->starFish()
+                                    ->staticStrings()
+                                    ->m_message.localName();
+                    e = new MessageEvent(window->document(), eventType);
+                    e->setData(deserializedValue);
+
+                } else {
+                    eventType = window->starFish()
+                                    ->staticStrings()
+                                    ->m_messageerror.localName();
+                    e = new MessageEvent(window->document(), eventType);
+                }
+                e->setOrigin(origin);
+                window->dispatchEvent(e);
+            },
+            this, origin, serializedValue);
+    }
 }
 
 Screen* Window::screen()
@@ -433,6 +499,7 @@ DEFINE_EVENT_LISTENER(Window, volumechange);
 DEFINE_EVENT_LISTENER(Window, waiting);
 
 DEFINE_EVENT_LISTENER(Window, message);
+DEFINE_EVENT_LISTENER(Window, messageerror);
 DEFINE_EVENT_LISTENER(Window, unload);
 
 CSSStyleDeclaration* Window::getComputedStyle(Element* element)
