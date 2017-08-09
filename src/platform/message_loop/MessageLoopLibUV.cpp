@@ -29,15 +29,8 @@
 
 namespace StarFish {
 
-MessageLoop::MessageLoop(StarFish* sf)
-    : m_starFish(sf)
-    , m_idlersFromOtherThreadMutex(new Mutex())
-{
-}
-
-void MessageLoop::run()
-{
-}
+uv_async_t m_idler_thread_async_handle1;
+uv_async_t m_idler_thread_async_handle2;
 
 struct IdlerData {
     void (*m_fn)(size_t, void*);
@@ -51,17 +44,64 @@ struct IdlerData {
     bool m_isMainThreadData;
 };
 
-struct IdlerDataAsync {
-    void (*m_fn)(size_t, void*);
-    void* m_data;
-    void* m_data1;
-    void* m_data2;
-    uv_async_t m_idler_uv;
-    MessageLoop* m_ml;
-    BrowsingContext* m_ctx;
-    volatile bool m_shouldExecute;
-    bool m_isMainThreadData;
-};
+MessageLoop::MessageLoop(StarFish* sf)
+    : m_starFish(sf)
+    , m_idlersFromOtherThreadMutex(new Mutex())
+{
+    uv_async_init(
+        uv_default_loop(), &m_idler_thread_async_handle1,
+        [](uv_async_t* handle) {
+            {
+                MessageLoop* ml = (MessageLoop*)handle->data;
+                // TODO: need to lock following whole section
+                while (!ml->m_idlersFromOtherThread.empty()) {
+                    IdlerData* id = nullptr;
+                    {
+                        Locker<Mutex> l(*ml->m_idlersFromOtherThreadMutex);
+                        id = (IdlerData*)*ml->m_idlersFromOtherThread.begin();
+                        ml->m_idlersFromOtherThread.erase(
+                            ml->m_idlersFromOtherThread.begin());
+                    }
+
+                    if (id != nullptr && id->m_shouldExecute) {
+                        StarFishEnterer enter(ml->m_starFish);
+                        id->m_fn((size_t)id, id->m_data);
+
+                        delete id;
+                    }
+                }
+            }
+        });
+
+    uv_async_init(
+        uv_default_loop(), &m_idler_thread_async_handle2,
+        [](uv_async_t* handle) {
+            {
+                MessageLoop* ml = (MessageLoop*)handle->data;
+                while (!ml->m_idlersFromOtherThread.empty()) {
+                    IdlerData* id = nullptr;
+                    {
+                        Locker<Mutex> l(*ml->m_idlersFromOtherThreadMutex);
+                        id = (IdlerData*)*ml->m_idlersFromOtherThread.begin();
+                        ml->m_idlersFromOtherThread.erase(
+                            ml->m_idlersFromOtherThread.begin());
+                    }
+
+                    if (id != nullptr && id->m_shouldExecute) {
+                        StarFishEnterer enter(ml->m_starFish);
+                        ((void (*)(size_t, void*, void*))id->m_fn)(
+                            (size_t)id, id->m_data, id->m_data1);
+
+                        delete id;
+                    }
+                }
+            }
+        });
+}
+
+void MessageLoop::run()
+{
+}
 
 size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
                              void* data)
@@ -144,13 +184,13 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
 
 void uv_close_cb(uv_handle_t* handle)
 {
-    delete (IdlerDataAsync*)handle->data;
+    delete (IdlerData*)handle->data;
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     BrowsingContext* ctx, void (*fn)(size_t, void*), void* data)
 {
-    IdlerDataAsync* id = new IdlerDataAsync;
+    IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
     id->m_shouldExecute = true;
     id->m_fn = fn;
@@ -163,21 +203,8 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThread.insert((size_t)id);
     }
 
-    uv_async_init(uv_default_loop(), &id->m_idler_uv, [](uv_async_t* handle) {
-        IdlerDataAsync* id = (IdlerDataAsync*)handle->data;
-        {
-            Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
-            id->m_ml->m_idlersFromOtherThread.erase(
-                id->m_ml->m_idlersFromOtherThread.find((size_t)id));
-        }
-        if (id->m_shouldExecute) {
-            StarFishEnterer enter(id->m_ml->m_starFish);
-            id->m_fn((size_t)id, id->m_data);
-        }
-        uv_close((uv_handle_t*)handle, &uv_close_cb);
-    });
-    id->m_idler_uv.data = id;
-    uv_async_send(&id->m_idler_uv);
+    m_idler_thread_async_handle1.data = this;
+    uv_async_send(&m_idler_thread_async_handle1);
     return (size_t)id;
 }
 
@@ -185,7 +212,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     BrowsingContext* ctx, void (*fn)(size_t, void*, void*), void* data,
     void* data1)
 {
-    IdlerDataAsync* id = new IdlerDataAsync;
+    IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
     id->m_shouldExecute = true;
     id->m_fn = (void (*)(size_t, void*))fn;
@@ -198,22 +225,9 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
         m_idlersFromOtherThread.insert((size_t)id);
     }
-    uv_async_init(uv_default_loop(), &id->m_idler_uv, [](uv_async_t* handle) {
-        IdlerDataAsync* id = (IdlerDataAsync*)handle->data;
-        {
-            Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
-            id->m_ml->m_idlersFromOtherThread.erase(
-                id->m_ml->m_idlersFromOtherThread.find((size_t)id));
-        }
-        if (id->m_shouldExecute) {
-            StarFishEnterer enter(id->m_ml->m_starFish);
-            ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                       id->m_data1);
-        }
-        uv_close((uv_handle_t*)handle, &uv_close_cb);
-    });
-    id->m_idler_uv.data = id;
-    uv_async_send(&id->m_idler_uv);
+
+    m_idler_thread_async_handle2.data = this;
+    uv_async_send(&m_idler_thread_async_handle2);
     return (size_t)id;
 }
 

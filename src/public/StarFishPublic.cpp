@@ -46,6 +46,8 @@
 
 uv_signal_t g_sigterm;
 uv_signal_t g_sigint;
+uv_async_t g_launcher_handle;
+StarFish::Mutex* g_initMutex;
 
 void uv_term_cb(uv_signal_t* handle, int signum)
 {
@@ -71,11 +73,13 @@ void* mainThread(void* data)
         StarFish::Mutex* initMutext = (StarFish::Mutex*)handle->data;
         initMutext->unlock();
     });
+
+    g_initMutex = new StarFish::Mutex();
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     return NULL;
 }
 
-void initMainThread()
+void initMainThread(void* (*f)(void*))
 {
     StarFish::Mutex* initMutex = new StarFish::Mutex();
 
@@ -83,7 +87,7 @@ void initMainThread()
     pthread_t t;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-    pthread_create(&t, &attr, mainThread, initMutex);
+    pthread_create(&t, &attr, f, initMutex);
 
     {
         StarFish::Locker<StarFish::Mutex> l(*initMutex);
@@ -94,7 +98,6 @@ class StarFishController : public Dali::ConnectionTracker {
 public:
     StarFishController(StarFishInstance* instance)
         : m_isInit(false)
-        , m_InitMutex(new StarFish::Mutex())
     {
         m_instance = instance;
     }
@@ -271,8 +274,6 @@ public:
     StarFishInstance* m_instance;
     Dali::Toolkit::ImageView m_mainView;
     Dali::Timer m_timer;
-    StarFish::Mutex* m_InitMutex;
-    uv_async_t m_uv_handle;
 #if defined(STARFISH_TIZEN)
     tbm_surface_h m_surface1;
     tbm_surface_h m_surface2;
@@ -311,7 +312,7 @@ void starfishCreate_internal(uv_async_t* handle)
 #endif
     app->m_instance->m_starfish = starFish;
     app->m_isInit = true;
-    app->m_InitMutex->unlock();
+    g_initMutex->unlock();
 
     starFish->run();
 
@@ -343,7 +344,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
 {
 #if defined(STARFISH_DALI)
     if (needToInitMainThread()) {
-        initMainThread();
+        initMainThread(&mainThread);
     }
 
     int width = windowWidth, height = windowHeight;
@@ -389,12 +390,12 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     starFishControl->m_width = width;
     starFishControl->m_height = height;
 
-    starFishControl->m_InitMutex->lock();
+    g_initMutex->lock();
 
-    uv_async_init(uv_default_loop(), &starFishControl->m_uv_handle,
+    uv_async_init(uv_default_loop(), &g_launcher_handle,
                   starfishCreate_internal);
-    starFishControl->m_uv_handle.data = starFishControl;
-    uv_async_send(&starFishControl->m_uv_handle);
+    g_launcher_handle.data = starFishControl;
+    uv_async_send(&g_launcher_handle);
 
     Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
         starFishControl, &StarFishController::TouchEventHandler);
@@ -406,7 +407,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
         starFishControl, &StarFishController::updateBuffer);
     starFishControl->m_timer.Start();
     {
-        StarFish::Locker<Mutex> l(*TO_CONTROLLER(instance)->m_InitMutex);
+        StarFish::Locker<Mutex> l(*g_initMutex);
     }
 
     return instance;
@@ -448,11 +449,11 @@ extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(
 #if defined(STARFISH_DALI)
     struct dummy {
         StarFish::StarFish* starfish;
-        StarFish::String* data;
+        char data[128];
     };
     dummy* d = new dummy;
     d->starfish = TO_STARFISH(instance);
-    d->data = StarFish::String::fromUTF8(path);
+    strcpy(d->data, path);
     TO_STARFISH(instance)
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(
@@ -461,8 +462,8 @@ extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(
                 dummy* d = (dummy*)data;
                 StarFish::StarFish* m_sf = d->starfish;
                 StarFishEnterer enter(m_sf);
-
-                m_sf->loadHTMLDocument(d->data);
+                m_sf->loadHTMLDocument(
+                    StarFish::String::fromUTF8(&(d->data)[0]));
                 delete d;
             },
             d);
