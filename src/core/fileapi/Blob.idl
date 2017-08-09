@@ -4,7 +4,7 @@
 typedef (BufferSource or Blob or DOMString) BlobPart;
 
 [CustomConstructor(optional sequence<BlobPart> blobParts, optional BlobPropertyBag options),
-Exposed=(Window,Worker)]
+Exposed=(Window,Worker), Serializable]
 interface Blob {
 
   readonly attribute unsigned long long size;

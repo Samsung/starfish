@@ -178,7 +178,8 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
 
     ContextRef* context = scriptBindingInstance()->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(context);
-    SerializedValue* serializedValue = Serializer::serialize(state, message);
+    SerializedTypedData* serializedValue =
+        Serializer::serialize(state, message);
 
     if (!serializedValue) {
         COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
@@ -194,7 +195,8 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
             [](size_t handle, void* data, void* data1, void* data2) {
                 Window* window = (Window*)data;
                 String* origin = (String*)data1;
-                SerializedValue* serializedValue = (SerializedValue*)data2;
+                SerializedTypedData* serializedValue =
+                    (SerializedTypedData*)data2;
                 ContextRef* context =
                     window->scriptBindingInstance()->scriptContext();
                 ExecutionStateRef* state = ExecutionStateRef::create(context);

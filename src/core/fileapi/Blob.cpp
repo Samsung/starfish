@@ -23,9 +23,9 @@
 
 namespace StarFish {
 
-Blob::Blob(Document* document, const SerializedBlobData* blobData)
-    : Blob(document, blobData->size(), blobData->type(), blobData->data(),
-           blobData->isClosed(), blobData->isEntryOfBlobURLStore())
+Blob::Blob(Document* document, Blob::BlobData blobData)
+    : Blob(document, blobData.m_size, blobData.m_type, blobData.m_data,
+           blobData.m_isClosed, blobData.m_isEntryOfBlobURLStore)
 {
 }
 
@@ -34,10 +34,15 @@ ScriptBindingInstance* Blob::scriptBindingInstance()
     return document()->scriptBindingInstance();
 }
 
+SerializedData* Blob::serialized()
+{
+    return new SerializedBlobData(m_blobData);
+}
+
 void Blob::addBlobToBlobURLStore()
 {
-    STARFISH_ASSERT(!m_isEntryOfBlobURLStore);
-    m_isEntryOfBlobURLStore = true;
+    STARFISH_ASSERT(!m_blobData.m_isEntryOfBlobURLStore);
+    m_blobData.m_isEntryOfBlobURLStore = true;
     STARFISH_ASSERT(!document()->webView()->isValidBlobURL(this));
     document()->webView()->addBlobInBlobURLStore(this);
 }
@@ -50,7 +55,7 @@ void Blob::removeBlobFromBlobURLStore()
 
 Blob* Blob::slice(int64_t start)
 {
-    return slice(start, m_size);
+    return slice(start, m_blobData.m_size);
 }
 
 Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
@@ -58,16 +63,17 @@ Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
     // https://www.w3.org/TR/FileAPI/#slice-method-algo
     // FIXME range of int64_t and size_t not match..
     int64_t relativeStart;
+    uint64_t size = m_blobData.m_size;
     if (start < 0) {
-        relativeStart = std::max(start + (int64_t)m_size, (int64_t)0);
+        relativeStart = std::max(start + (int64_t)size, (int64_t)0);
     } else {
-        relativeStart = std::min(start, (int64_t)m_size);
+        relativeStart = std::min(start, (int64_t)size);
     }
     int64_t relativeEnd;
     if (end < 0) {
-        relativeEnd = std::max(((int64_t)m_size + end), (int64_t)0);
+        relativeEnd = std::max(((int64_t)size + end), (int64_t)0);
     } else {
-        relativeEnd = std::min((int64_t)end, (int64_t)m_size);
+        relativeEnd = std::min((int64_t)end, (int64_t)size);
     }
 
     String* newType = contentType;
@@ -81,7 +87,8 @@ Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
     newType = newType->toLower();
     size_t span = (size_t)std::max(relativeEnd - relativeStart, (int64_t)0);
     STARFISH_ASSERT(relativeStart >= 0);
-    void* newStart = ((char*)m_data) + relativeStart;
-    return new Blob(document(), span, newType, newStart, m_isClosed, false);
+    void* newStart = ((char*)m_blobData.m_data) + relativeStart;
+    return new Blob(document(), span, newType, newStart, m_blobData.m_isClosed,
+                    false);
 }
 }

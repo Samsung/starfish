@@ -23,6 +23,8 @@ namespace StarFish {
 
 class Document;
 class Element;
+class Serializable;
+class Transferable;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
@@ -187,6 +189,21 @@ public:
     virtual bool isSerializable() const
     {
         return false;
+    }
+
+    virtual bool isTransferable() const
+    {
+        return false;
+    }
+
+    virtual Serializable* toSerializable() const
+    {
+        return nullptr;
+    }
+
+    virtual Transferable* toTransferable() const
+    {
+        return nullptr;
     }
 
 protected:
