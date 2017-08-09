@@ -160,6 +160,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | body | Returns body element or null if not exists |
 |  | attribute | head | Returns head element or null if not exists |
 |  | attribute | defaultView | Returns this Document's browsing context's WindowProxy object, if this Document has an associated browsing context, or null otherwise |
+|  | attribute | activeElement | Returns the currently focused element. |
 |  | attribute | cookie | Represents the cookies of the resource identified by the document's URL. |
 | [Document](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | Element? elementFromPoint(double x, double y); | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
 | [Document](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface) | attribute | styleSheets | Returns a StyleSheetList collection representing the document CSS style sheets. |

@@ -440,6 +440,11 @@ Node* BrowsingContext::hitTest(float x, float y)
     return nullptr;
 }
 
+Node* BrowsingContext::focusedNode()
+{
+    return m_focusedNode;
+}
+
 // https://www.w3.org/TR/html5/editing.html#focusing-steps
 void BrowsingContext::setFocusedNode(Node* n)
 {
