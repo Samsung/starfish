@@ -19,11 +19,8 @@
 
 #include "core/dom/HTMLInputElement.h"
 
-#include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLFormElement.h"
-#include "core/dom/Node.h"
-#include "core/dom/Traverse.h"
 
 namespace StarFish {
 
@@ -69,6 +66,46 @@ void HTMLInputElement::setValue(String* value)
     setAttribute(starFish()->staticStrings()->m_value, value);
 }
 
+String* HTMLInputElement::formEnctype()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_formEnctype);
+}
+
+void HTMLInputElement::setFormEnctype(String* enctype)
+{
+    setAttribute(starFish()->staticStrings()->m_formEnctype, enctype);
+}
+
+String* HTMLInputElement::formMethod()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_formMethod);
+}
+
+void HTMLInputElement::setFormMethod(String* method)
+{
+    setAttribute(starFish()->staticStrings()->m_formMethod, method);
+}
+
+String* HTMLInputElement::formTarget()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_formTarget);
+}
+
+void HTMLInputElement::setFormTarget(String* target)
+{
+    setAttribute(starFish()->staticStrings()->m_formTarget, target);
+}
+
+String* HTMLInputElement::formAction()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_formAction);
+}
+
+void HTMLInputElement::setFormAction(String* formAction)
+{
+    setAttribute(starFish()->staticStrings()->m_formAction, formAction);
+}
+
 HTMLFormElement* HTMLInputElement::form()
 {
     for (Node* p = parentNode(); p; p = p->parentNode()) {
@@ -91,24 +128,12 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
 
     if (((event->isMouseEvent() || event->isTouchEvent())) &&
         event->type()->equalsWithoutCase("click")) {
-        if (type()->equalsWithoutCase("submit")) {
-            GCVector<Element*> inputNodes;
+        if (type()->equalsWithoutCase("submit") ||
+            type()->equalsWithoutCase("button")) {
             HTMLFormElement* formNode = form();
             if (formNode) {
-                Traverse::collectDescendants(
-                    inputNodes, formNode->asNode(),
-                    [](Node* node) -> bool {
-                        return node->isHTMLInputElement();
-                    },
-                    false);
-
-                for (Element* node : inputNodes) {
-                    STARFISH_ASSERT(node->isHTMLInputElement());
-                    if (node->asHTMLInputElement()->type()->equalsWithoutCase(
-                            "text")) {
-                        // TODO: send (name, value) pairs to the POST module
-                    }
-                }
+                formNode->setSubmitter(this);
+                formNode->submit();
                 return true;
             }
         }

@@ -3,21 +3,21 @@
 [OverrideBuiltins, LegacyUnenumerableNamedProperties, HTMLConstructor]
 interface HTMLFormElement : HTMLElement {
     [Unimplemented, CEReactions] attribute DOMString acceptCharset;
-    [Unimplemented, CEReactions] attribute USVString action;
+    [CEReactions] attribute USVString action;
     [Unimplemented, CEReactions] attribute DOMString autocomplete;
-    [Unimplemented, CEReactions] attribute DOMString enctype;
+    [CEReactions] attribute DOMString enctype;
     [Unimplemented, CEReactions] attribute DOMString encoding;
-    [Unimplemented, CEReactions] attribute DOMString method;
+    [CEReactions] attribute DOMString method;
     [CEReactions, Rename=domName] attribute DOMString name;
     [Unimplemented, CEReactions] attribute boolean noValidate;
-    [Unimplemented, CEReactions] attribute DOMString target;
+    [CEReactions] attribute DOMString target;
 
     [Unimplemented, SameObject] readonly attribute HTMLFormControlsCollection elements;
     [Unimplemented] readonly attribute unsigned long length;
     // [Unimplemented] getter Element (unsigned long index);
     // [Unimplemented] getter (RadioNodeList or Element) (DOMString name);
 
-    [Unimplemented] void submit();
+    void submit();
     [Unimplemented, CEReactions] void reset();
     [Unimplemented] boolean checkValidity();
     [Unimplemented] boolean reportValidity();

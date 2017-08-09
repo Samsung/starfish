@@ -239,6 +239,14 @@ public:
     QualifiedName m_title;
     QualifiedName m_align;
     QualifiedName m_tabindex;
+    QualifiedName m_formAction;
+    QualifiedName m_action;
+    QualifiedName m_enctype;
+    QualifiedName m_method;
+    QualifiedName m_target;
+    QualifiedName m_formEnctype;
+    QualifiedName m_formMethod;
+    QualifiedName m_formTarget;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

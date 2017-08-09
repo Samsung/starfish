@@ -21,6 +21,8 @@
 
 namespace StarFish {
 
+class FormDataSetItem;
+
 class HTMLFormElement : public HTMLElement {
 public:
     HTMLFormElement(Document* document);
@@ -35,6 +37,32 @@ public:
     // 4.10 Interface Form
     String* domName();
     void setDomName(String* name);
+
+    String* action();
+    void setAction(String* name);
+
+    String* enctype();
+    void setEnctype(String* enctype);
+
+    String* method();
+    void setMethod(String* method);
+
+    String* target();
+    void setTarget(String* target);
+
+    void submit();
+
+    // Other methods
+    void setSubmitter(Element* elem);
+
+private:
+    GCVector<FormDataSetItem*>* createFormDataSet();
+    void submitAsEntityBody(ResourceURL* url, String* formEnctype,
+                            GCVector<FormDataSetItem*>* formDataSet);
+    String* encodeFormDataSet(String* formEnctype,
+                              GCVector<FormDataSetItem*>* formDataSet);
+
+    Element* m_submitter;
 };
 }
 

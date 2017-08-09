@@ -42,6 +42,18 @@ public:
     String* value();
     void setValue(String* value);
 
+    String* formEnctype();
+    void setFormEnctype(String* enctype);
+
+    String* formMethod();
+    void setFormMethod(String* method);
+
+    String* formTarget();
+    void setFormTarget(String* target);
+
+    String* formAction();
+    void setFormAction(String* formAction);
+
     HTMLFormElement* form();
 
     // Other methods
