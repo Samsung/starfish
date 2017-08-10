@@ -451,6 +451,24 @@ void BrowsingContext::setFocusedNode(Node* n)
     if (!n->isInDocumentScope() || !n->document()->browsingContext()) {
         return;
     }
+    // NOTE Handle iframe related focus
+    // When a child browsing context is focused, its browsing context
+    // container is also focused, by definition. For example, if the user moves
+    // the focus to a text field in an iframe, the iframe is the element with
+    // focus in the parent browsing context.
+    if (n->isHTMLIFrameElement() && m_focusedNode != n) {
+        releaseFocusedNode(n);
+        m_focusedNode = n;
+        return;
+    }
+    if (m_focusedNode && m_focusedNode->isHTMLIFrameElement() &&
+        m_focusedNode->asHTMLIFrameElement()->browsingContext() &&
+        m_focusedNode != n) {
+        m_focusedNode->asHTMLIFrameElement()
+            ->browsingContext()
+            ->releaseFocusedNode(nullptr);
+        m_focusedNode = nullptr;
+    }
 
     bool focusOnDocument = n->isDocument();
     Element* e = n->isElement() ? n->asElement() : n->parentElement();
@@ -489,6 +507,10 @@ void BrowsingContext::setFocusedNode(Node* n)
 void BrowsingContext::releaseFocusedNode(Node* n)
 {
     if (m_focusedNode) {
+        if (m_focusedNode->isHTMLIFrameElement()) {
+            m_focusedNode = nullptr;
+            return;
+        }
         m_focusedNode->setState(Node::NodeStateFocused,
                                 Node::ChildrenOrSiblingsAffectedByFocus, false);
 
@@ -984,14 +1006,23 @@ void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
     // 1) currently focused element if possible
     // or 2) body element if possible
     // or 3) root element
-    EventTarget* target = m_focusedNode;
-    if (!target && document()->body()) {
-        target = document()->body();
-    }
-    if (!target && document()->rootElement()) {
-        target = document()->rootElement();
-    }
+    Node* target = m_focusedNode;
     if (!target) {
+        if (document()->body()) {
+            target = document()->body();
+        } else if (document()->rootElement()) {
+            target = document()->rootElement();
+        } else {
+            return;
+        }
+    } else if (target && target->isHTMLIFrameElement()) {
+        if (target->asHTMLIFrameElement()->browsingContext()) {
+            if (target->asHTMLIFrameElement()->frame()) {
+                target->asHTMLIFrameElement()
+                    ->browsingContext()
+                    ->dispatchKeyEvent(kind, data);
+            }
+        }
         return;
     }
     // Dispatch event
