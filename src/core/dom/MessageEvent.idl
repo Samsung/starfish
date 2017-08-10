@@ -5,19 +5,21 @@ interface MessageEvent : Event {
   readonly attribute any data;
   readonly attribute USVString origin;
   readonly attribute DOMString lastEventId;
-  [Unimplemented] readonly attribute MessageEventSource? source;
+  // readonly attribute MessageEventSource? source;
+  readonly attribute Window? source;
   [Unimplemented] readonly attribute FrozenArray<MessagePort> ports;
 
   // FIXME: Should use this after implementing sequence
   // void initMessageEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false, optional any data = null, optional USVString origin = "", optional DOMString lastEventId = "", optional MessageEventSource? source = null, optional sequence<MessagePort> ports = []);
-  void initMessageEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false, optional any data = null, optional USVString origin = "", optional DOMString lastEventId = "");
+  void initMessageEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false, optional any data = null, optional USVString origin = "", optional DOMString lastEventId = "", optional Window? source = null);
 };
 
 dictionary MessageEventInit : EventInit {
   any data = null;
   USVString origin = "";
   DOMString lastEventId = "";
-  [Unimplemented] MessageEventSource? source = null;
+  // MessageEventSource? source = null;
+  Window? source = null;
   [Unimplemented] sequence<MessagePort> ports = [];
 };
 

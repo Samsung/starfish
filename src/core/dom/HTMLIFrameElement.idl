@@ -1,19 +1,19 @@
 // https://html.spec.whatwg.org/#the-iframe-element
 
 interface HTMLIFrameElement : HTMLElement {
-    [CEReactions, Reflect, URL] attribute DOMString src;
-    [Unimplemented, CEReactions, Reflect] attribute DOMString srcdoc;
-    [Unimplemented, CEReactions, Reflect] attribute DOMString name;
+    [CEReactions] attribute DOMString src;
+    [Unimplemented, CEReactions] attribute DOMString srcdoc;
+    [Unimplemented, CEReactions] attribute DOMString name;
     [Unimplemented, CEReactions, PutForwards=value] readonly attribute DOMTokenList sandbox;
     // Note: The seamless attribute was once supported, but was removed.
-    [Unimplemented, CEReactions, Reflect] attribute boolean allowFullscreen;
-    [CEReactions, Reflect] attribute DOMString width;
-    [CEReactions, Reflect] attribute DOMString height;
+    [Unimplemented, CEReactions] attribute boolean allowFullscreen;
+    [CEReactions] attribute DOMString width;
+    [CEReactions] attribute DOMString height;
 
-    [Unimplemented, CheckSecurity=ReturnValue] readonly attribute Document? contentDocument;
+    [Unimplemented] readonly attribute Document? contentDocument;
     readonly attribute Window? contentWindow;
-//    [Unimplemented, CheckSecurity=ReturnValue, RaisesException] Document? getSVGDocument();
-//    [Unimplemented, CEReactions, Reflect, ReflectOnly=("","no-referrer","origin","no-referrer-when-downgrade","origin-when-cross-origin","unsafe-url"), ReflectMissing="", ReflectInvalid=""] attribute DOMString referrerPolicy;
+//    [Unimplemented, RaisesException] Document? getSVGDocument();
+//    [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
     // https://w3c.github.io/webappsec-csp/embedded/#dom-htmliframeelement-csp
     [Unimplemented, RuntimeEnabled=EmbedderCSPEnforcement, CEReactions, Reflect] attribute DOMString csp;
 
@@ -22,11 +22,11 @@ interface HTMLIFrameElement : HTMLElement {
     [Unimplemented, RuntimeEnabled=FeaturePolicy, CEReactions, PutForwards=value] readonly attribute DOMTokenList allow;
     // obsolete members
     // https://html.spec.whatwg.org/#HTMLIFrameElement-partial
-    [Unimplemented, CEReactions, Reflect] attribute DOMString align;
-    [Unimplemented, CEReactions, Reflect] attribute DOMString scrolling;
-    [Unimplemented, CEReactions, Reflect] attribute DOMString frameBorder;
-    [Unimplemented, CEReactions, Reflect, URL] attribute DOMString longDesc;
+    [Unimplemented, CEReactions] attribute DOMString align;
+    [Unimplemented, CEReactions] attribute DOMString scrolling;
+    [Unimplemented, CEReactions] attribute DOMString frameBorder;
+    [Unimplemented, CEReactions] attribute DOMString longDesc;
 
-    [Unimplemented, CEReactions, Reflect, TreatNullAs=EmptyString] attribute DOMString marginHeight;
-    [Unimplemented, CEReactions, Reflect, TreatNullAs=EmptyString] attribute DOMString marginWidth;
+    [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString marginHeight;
+    [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString marginWidth;
 };

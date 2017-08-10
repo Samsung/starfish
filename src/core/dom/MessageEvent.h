@@ -22,8 +22,6 @@
 namespace StarFish {
 
 // https://html.spec.whatwg.org/multipage/comms.html#messageeventinit
-class MessageEventSource;
-
 struct MessageEventInit : EventInit {
     STARFISH_MAKE_STACK_ALLOCATED()
 public:
@@ -32,6 +30,7 @@ public:
         , m_data(scriptNull())
         , m_origin(String::emptyString)
         , m_lastEventId(String::emptyString)
+        , m_source(nullptr)
     {
     }
 
@@ -65,10 +64,22 @@ public:
         m_lastEventId = lastEventId;
     }
 
+    Window* source() const
+    {
+        return m_source;
+    }
+
+    void setSource(Window* source)
+    {
+        m_source = source;
+    }
+
 private:
     ScriptValue m_data;
     String* m_origin;
     String* m_lastEventId;
+    // FIXME: Should change this type to MessageEventSource*
+    Window* m_source;
 };
 
 class MessageEvent : public Event {
@@ -78,6 +89,7 @@ public:
         , m_data(scriptNull())
         , m_origin(String::emptyString)
         , m_lastEventId(String::emptyString)
+        , m_source(nullptr)
     {
     }
 
@@ -86,6 +98,7 @@ public:
         , m_data(scriptNull())
         , m_origin(String::emptyString)
         , m_lastEventId(String::emptyString)
+        , m_source(nullptr)
     {
     }
 
@@ -95,6 +108,7 @@ public:
         , m_data(init.data())
         , m_origin(init.origin())
         , m_lastEventId(init.lastEventId())
+        , m_source(nullptr)
     {
     }
 
@@ -132,19 +146,33 @@ public:
         m_lastEventId = lastEventId;
     }
 
+    Window* source() const
+    {
+        return m_source;
+    }
+
+    void setSource(Window* source)
+    {
+        m_source = source;
+    }
+
     void initMessageEvent(String* type, bool bubbles, bool cancelable,
-                          ScriptValue data, String* origin, String* lastEventId)
+                          ScriptValue data, String* origin, String* lastEventId,
+                          Window* source)
     {
         initEvent(type, bubbles, cancelable);
         m_data = data;
         m_origin = origin;
         m_lastEventId = lastEventId;
+        m_source = source;
     }
 
 private:
     ScriptValue m_data;
     String* m_origin;
     String* m_lastEventId;
+    // FIXME: Should change this type to MessageEventSource*
+    Window* m_source;
 };
 }
 

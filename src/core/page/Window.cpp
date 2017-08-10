@@ -31,6 +31,7 @@ using namespace Escargot;
 #include "core/dom/MessageEvent.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/TouchEvent.h"
+#include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
@@ -160,11 +161,14 @@ Storage* Window::sessionStorage()
 void Window::postMessage(ScriptValue message, String* targetOrigin,
                          std::vector<ScriptObject>& transfer)
 {
-    String* origin;
+    Window* source = parent();
+    while (!source->browsingContext()->isMainBrowsingContext()) {
+        source = source->parent();
+    }
+    String* origin = source->location()->origin();
     if (targetOrigin->equals("/")) {
-        origin = m_location->origin();
+        targetOrigin = origin;
     } else if (targetOrigin->equals("*")) {
-        origin = targetOrigin;
     } else if (!ResourceURL::isValidURL(targetOrigin)) {
         COMPOSE_MESSAGE(reason, INVALID_TARGET_ORIGIN, targetOrigin->utf8Data(),
                         "postMessage");
@@ -173,43 +177,52 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
         throw new DOMException(document(), DOMException::SYNTAX_ERR, msg);
     } else {
         ResourceURL* url = new ResourceURL(targetOrigin);
-        origin = url->origin();
+        targetOrigin = url->origin();
     }
 
     ContextRef* context = scriptBindingInstance()->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(context);
-    SerializedTypedData* serializedValue =
-        Serializer::serialize(state, message);
+    SerializedTypedData* serialized;
+    try {
+        serialized = Serializer::serialize(document(), state, message);
+    } catch (DOMException* e) {
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
+                        e->message()->utf8Data());
+        state->destroy();
+        e->setMessage(String::fromUTF8(msg));
+        throw e;
+    }
 
-    if (!serializedValue) {
-        COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
-                        message->toString(state)->toStdUTF8String().c_str());
+    state->destroy();
+    if (!targetOrigin->equals("*") && targetOrigin) {
+        COMPOSE_MESSAGE(reason, ORIGINS_ARE_NOT_MATCHED,
+                        targetOrigin->utf8Data(), origin->utf8Data());
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         reason);
-        throw new DOMException(document(), DOMException::DATA_CLONE_ERR, msg);
+        starFish()->console()->error(String::fromUTF8(msg));
+        return;
     }
 
     if (browsingContext()) {
         starFish()->messageLoop()->addIdler(
             browsingContext(),
-            [](size_t handle, void* data, void* data1, void* data2) {
+            [](size_t handle, void* data, void* data1) {
                 Window* window = (Window*)data;
-                String* origin = (String*)data1;
-                SerializedTypedData* serializedValue =
-                    (SerializedTypedData*)data2;
+                SerializedTypedData* serialized = (SerializedTypedData*)data1;
                 ContextRef* context =
                     window->scriptBindingInstance()->scriptContext();
                 ExecutionStateRef* state = ExecutionStateRef::create(context);
-                ScriptValue deserializedValue = Serializer::deserialize(
-                    window->document(), state, serializedValue);
+                ScriptValue deserialized = Serializer::deserialize(
+                    window->document(), state, serialized);
+                state->destroy();
                 MessageEvent* e;
                 String* eventType;
-                if (deserializedValue) {
+                if (deserialized) {
                     eventType = window->starFish()
                                     ->staticStrings()
                                     ->m_message.localName();
                     e = new MessageEvent(window->document(), eventType);
-                    e->setData(deserializedValue);
+                    e->setData(deserialized);
 
                 } else {
                     eventType = window->starFish()
@@ -217,10 +230,15 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
                                     ->m_messageerror.localName();
                     e = new MessageEvent(window->document(), eventType);
                 }
-                e->setOrigin(origin);
+                Window* source = window->parent();
+                while (!source->browsingContext()->isMainBrowsingContext()) {
+                    source = source->parent();
+                }
+                e->setSource(source);
+                e->setOrigin(source->location()->origin());
                 window->dispatchEvent(e);
             },
-            this, origin, serializedValue);
+            this, serialized);
     }
 }
 

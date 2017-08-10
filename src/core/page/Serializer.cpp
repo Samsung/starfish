@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include <EscargotPublic.h>
+#include "core/dom/DOMException.h"
 #include "core/page/Serializer.h"
 
 namespace StarFish {
@@ -76,11 +77,13 @@ void* SerializedTypedData::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-SerializedTypedData* Serializer::serialize(ExecutionStateRef* state,
+SerializedTypedData* Serializer::serialize(Document* document,
+                                           ExecutionStateRef* state,
                                            ScriptValue value)
 {
     uint8_t type = SerializedTypedData::Undefined;
     SerializedData* data = nullptr;
+    bool failed = false;
 
     if (value->isUndefined()) {
         type = SerializedTypedData::Undefined;
@@ -129,7 +132,7 @@ SerializedTypedData* Serializer::serialize(ExecutionStateRef* state,
             ValueRef* length = obj->getOwnProperty(
                 state, ValueRef::create(StringRef::fromASCII("length")));
             data = new SerializedArrayData(length->asUint32());
-            deepcopy(state, data, obj);
+            deepcopy(document, state, data, obj);
         } else if (obj->extraData()) {
             ScriptWrappable* scriptWrappable =
                 (ScriptWrappable*)(obj->extraData());
@@ -137,28 +140,35 @@ SerializedTypedData* Serializer::serialize(ExecutionStateRef* state,
                 type = SerializedTypedData::PlatformObject;
                 data = scriptWrappable->toSerializable()->serialized();
             } else {
-                return nullptr;
+                failed = true;
             }
         } else if (obj->isFunctionObject() || obj->isErrorObject() ||
                    obj->isGlobalObject()) {
-            return nullptr;
+            failed = true;
         }
 #if ESCARGOT_ENABLE_PROMISE
         else if (obj->isPromiseObject()) {
-            return nullptr;
+            failed = true;
         }
 #endif
         else {
             type = SerializedTypedData::Object;
             data = new SerializedObjectData();
-            deepcopy(state, data, obj);
+            deepcopy(document, state, data, obj);
         }
+    }
+
+    if (failed) {
+        COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
+                        value->toString(state)->toStdUTF8String().c_str());
+        throw new DOMException(document, DOMException::DATA_CLONE_ERR, reason);
     }
 
     return new SerializedTypedData(type, data);
 }
 
-void Serializer::deepcopy(Escargot::ExecutionStateRef* state,
+void Serializer::deepcopy(Document* document,
+                          Escargot::ExecutionStateRef* state,
                           SerializedData* dst, Escargot::ObjectRef* src)
 {
     ValueVectorRef* values = src->getOwnPropertyKeys(state);
@@ -167,8 +177,9 @@ void Serializer::deepcopy(Escargot::ExecutionStateRef* state,
         for (size_t i = 0; i < serializedArray->length(); i++) {
             ValueRef* key = ValueRef::create(i);
             if (src->hasOwnProperty(state, key)) {
-                serializedArray->insert(i,
-                                        serialize(state, src->get(state, key)));
+                SerializedTypedData* serialized =
+                    serialize(document, state, src->get(state, key));
+                serializedArray->insert(i, serialized);
             }
         }
     } else {
@@ -176,8 +187,9 @@ void Serializer::deepcopy(Escargot::ExecutionStateRef* state,
         for (size_t i = 0; i < values->size(); i++) {
             ValueRef* key = values->at(i);
             if (key->isString() && src->hasOwnProperty(state, key)) {
-                serializedObject->setKeyAndValue(
-                    key, serialize(state, src->get(state, key)));
+                SerializedTypedData* serialized =
+                    serialize(document, state, src->get(state, key));
+                serializedObject->setKeyAndValue(key, serialized);
             }
         }
     }
@@ -264,20 +276,20 @@ void Serializer::deepcopy(Document* document,
         size_t len = serializedArray->length();
         for (size_t i = 0; i < len; i++) {
             SerializedTypedData* serialized = (*serializedArray)[i];
-            ValueRef* value = deserialize(document, state, serialized);
+            ValueRef* deserialized = deserialize(document, state, serialized);
             dst->defineDataProperty(
                 state, ValueRef::create(ValueRef::create(i)->toString(state)),
-                value, true, true, true);
+                deserialized, true, true, true);
         }
     } else {
         SerializedObjectData* serializedObject = src->asSerializedObjectData();
         size_t len = serializedObject->length();
         for (size_t i = 0; i < len; i++) {
             auto& propertyAndValue = serializedObject->keyAndValue(i);
-            ValueRef* value =
+            ValueRef* deserialized =
                 deserialize(document, state, propertyAndValue.second);
-            dst->defineDataProperty(state, propertyAndValue.first, value, true,
-                                    true, true);
+            dst->defineDataProperty(state, propertyAndValue.first, deserialized,
+                                    true, true, true);
         }
     }
 }
