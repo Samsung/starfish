@@ -552,8 +552,24 @@ String* ResourceURL::port()
 
 ResourceURL* ResourceURL::setPort(String* newPort)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return new ResourceURL(m_urlString);
+    if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
+        if (newPort->equals(String::emptyString)) {
+            return new ResourceURL(
+                m_urlString->substring(0, m_hostEnd)
+                    ->concat(m_urlString->substring(
+                        m_portEnd, m_urlString->length() - m_portEnd)));
+        } else {
+            uint16_t port = String::parseInt(newPort);
+            return new ResourceURL(
+                m_urlString->substring(0, m_hostEnd)
+                    ->concat(String::createASCIIString(":"))
+                    ->concat(String::fromInt(port))
+                    ->concat(m_urlString->substring(
+                        m_portEnd, m_urlString->length() - m_portEnd)));
+        }
+    } else {
+        return new ResourceURL(m_urlString);
+    }
 }
 
 String* ResourceURL::pathname()

@@ -549,7 +549,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  attribute  |  origin  | Return the serialization of this Location object's url's origin.  |
 |    |  attribute  |  host  |  Return url's host, serialized, followed by ":" and url's port, serialized.  |
 |    |  attribute  |  hostname  | Return this Location object's url's host, serialized.  |
-|    |  attribute  |  port  | Return this Location object's url's port, serialized.  |
+|    |  attribute  |  port  | Return this Location object's url's port. Can be set, to navigate to the same URL with a changed port.  |
 |    |  attribute  |  pathname  |  Return "/", followed by the strings in url's path (including empty strings), separated from each other by "/".  |
 |    |  attribute  |  search  |  Return "?", followed by this Location object's url's query.  |
 |    |  attribute  |  hash  |  Return "#", followed by this Location object's url's fragment.  |
