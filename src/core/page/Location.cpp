@@ -107,7 +107,7 @@ void Location::setHostname(String* newHostname)
 void Location::setPort(String* newPort)
 {
     ResourceURL* newUrl = new ResourceURL(url()->urlString());
-    newUrl->setPort(newPort);
+    newUrl = newUrl->setPort(newPort);
     assign(newUrl);
 }
 

@@ -549,16 +549,33 @@ MediaQueryList* Window::matchMedia(String* query)
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
-HTMLCollection* Window::namedAccess(String* name)
+ScriptValue Window::namedAccess(String* name)
 {
     // TODO
     // when child browser context(ex- iframe) implemented, we should
     // re-implement this block
     if (document()) {
-        return document()->namedAccess(name);
-    } else {
-        return nullptr;
+        HTMLCollection* coll = document()->namedAccess(name);
+        if (coll) {
+            if (coll->length() > 1) {
+                return coll->scriptValue();
+            } else if (coll->length() == 1) {
+                if (coll->item(0)->isHTMLIFrameElement()) {
+                    HTMLIFrameElement* iframe =
+                        coll->item(0)->asHTMLIFrameElement();
+                    if (iframe->contentWindow()) {
+                        return iframe->contentWindow()->scriptValue();
+                    } else {
+                        return iframe->scriptValue();
+                    }
+                } else {
+                    return coll->item(0)->scriptValue();
+                }
+            }
+        }
     }
+
+    return ValueRef::createNull();
 }
 
 void Window::screenShot(std::string filePath)

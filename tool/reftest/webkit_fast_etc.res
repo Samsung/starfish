@@ -155,6 +155,7 @@ test/reftest/vendor/webkit/fast/layers/visible-layer-with-hidden-parent.html
 test/reftest/vendor/webkit/fast/layers/zindex-inherit.html
 test/reftest/vendor/webkit/fast/layers/zindex-ridonkulous.html
 test/reftest/vendor/webkit/fast/loader/start-load-in-unload.html
+test/reftest/vendor/webkit/fast/loader/location-port.html
 test/reftest/vendor/webkit/fast/parser/broken-comment-in-head-1.html
 test/reftest/vendor/webkit/fast/parser/broken-comment-in-head-2.html
 test/reftest/vendor/webkit/fast/parser/broken-comment-in-head-3.html

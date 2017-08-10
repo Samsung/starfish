@@ -171,7 +171,7 @@ public:
 
     // https://html.spec.whatwg.org/multipage/
     // browsers.html#named-access-on-the-window-object
-    HTMLCollection* namedAccess(String* name);
+    ScriptValue namedAccess(String* name);
 
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);

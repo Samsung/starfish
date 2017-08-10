@@ -172,15 +172,9 @@ static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
     }
 
     String* name = toBrowserString(state, key);
-    HTMLCollection* coll = self->namedAccess(name);
-    if (coll) {
-        if (coll->length()) {
-            if (coll->length() > 1) {
-                return coll->scriptValue();
-            } else {
-                return coll->item(0)->scriptValue();
-            }
-        }
+    ScriptValue coll = self->namedAccess(name);
+    if (!coll->isNull()) {
+        return coll;
     }
 
     if (name->equals("self")) {
