@@ -436,9 +436,10 @@ private:
 
 class Serializer {
 public:
-    static SerializedTypedData* serialize(Escargot::ExecutionStateRef* state,
+    static SerializedTypedData* serialize(Document* document,
+                                          Escargot::ExecutionStateRef* state,
                                           ScriptValue value);
-    static void deepcopy(Escargot::ExecutionStateRef* state,
+    static void deepcopy(Document* document, Escargot::ExecutionStateRef* state,
                          SerializedData* dst, Escargot::ObjectRef* src);
     static ScriptValue deserialize(Document* document,
                                    Escargot::ExecutionStateRef* state,

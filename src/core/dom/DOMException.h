@@ -72,6 +72,11 @@ public:
         return m_message;
     }
 
+    void setMessage(String* message)
+    {
+        m_message = message;
+    }
+
     String* name()
     {
         if (m_code == DOM_EXCEPTION && m_name->length() > 0) {

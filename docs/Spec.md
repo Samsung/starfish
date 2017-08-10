@@ -745,6 +745,11 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attrribute | metaKey | true if the Meta key modifier is to be considered active, false otherwise. |
 | [TouchEvent](https://w3c.github.io/touch-events/#touchevent-interface) | interface | TouchEvent | Defines the touchstart, touchend, touchmove, and touchcancel event types. |
 | | attribute | touches | A list of Touch objects for every point of contact currently touching the surface. |
+| [MessageEvent](https://html.spec.whatwg.org/multipage/comms.html#messageevent) | interface | MessageEvent |Messages in server-sent events, Web sockets, cross-document messaging, channel messaging, and broadcast channels use the MessageEvent interface for their message events. |
+| | attribute | data | Returns the data of the message. |
+| | attribute | origin | Returns the origin of the message, for server-sent events and cross-document messaging. |
+| | attribute | lastEventId | Returns the last event ID string, for server-sent events. |
+| | attribute | source | Returns the WindowProxy of the source window, for cross-document messaging, and the MessagePort being attached, in the connect event fired at SharedWorkerGlobalScope objects. |
 | [WindowEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers) | partial<br>interface | WindowEventHandlers | WindowEventHandlers are the event handlers common to several interfaces like Window, or HTMLBodyElement and  HTMLFrameSetElement. Each of these interfaces can implement additional specific event handlers. |
 | | attribute | onmessage | Fired at an object when it receives a message. |
 | | attribute | onmessageerror | Fired at an object when it receives a message that cannot be deserialized. |
