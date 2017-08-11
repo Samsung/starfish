@@ -130,6 +130,7 @@ public:
     Mutex* m_audioBufferMutex;
     ResourceURL* m_currentURL;
     void (*m_preparedCallback)(void*);
+    void (*m_completeCallback)(void*);
     CanvasSurface* m_canvasSurface;
     player_h m_nativePlayer;
 };
