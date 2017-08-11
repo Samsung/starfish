@@ -532,6 +532,7 @@ bool WebView::rendering()
         // painting
         Canvas* canvas = starFish()->platformWindow()->preparePainting(true);
 
+        canvas->save();
         if (mainBrowsingContext()->document()->frame()->firstChild()) {
             m_needsComposite = m_rootStackingContext->needsOwnBuffer();
         } else {
@@ -554,8 +555,18 @@ bool WebView::rendering()
             }
             mainFrame->paint(ctx);
         }
+
+        if (!m_needsComposite) {
+            FrameBlockBox* mainFrame =
+                mainBrowsingContext()->document()->frame()->asFrameBlockBox();
+            mainBrowsingContext()->window()->scrolling()->paintScrollbars(
+                canvas, mainFrame, OverflowValue::AutoOverflow,
+                OverflowValue::AutoOverflow);
+        }
+
         m_needsPainting = false;
 
+        canvas->restore();
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
         if (!m_needsComposite) {
             starFish()->platformWindow()->paintVirtualCursor(canvas);
@@ -655,6 +666,7 @@ bool WebView::rendering()
             Canvas* canvas =
                 starFish()->platformWindow()->preparePainting(false);
             starFish()->platformWindow()->paintWindowBackground(canvas);
+            canvas->save();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
             canvas->translate(-mainFrame->scrollLeft(),
@@ -667,6 +679,11 @@ bool WebView::rendering()
                 ->stackingContext()
                 ->compositeStackingContext(canvas);
 
+            mainBrowsingContext()->window()->scrolling()->paintScrollbars(
+                canvas, mainFrame, OverflowValue::AutoOverflow,
+                OverflowValue::AutoOverflow);
+
+            canvas->restore();
             m_didCompositeBefore = true;
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
             starFish()->platformWindow()->paintVirtualCursor(canvas);

@@ -346,6 +346,28 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     // back-to-front order:
 
     // the background and borders of the element forming the stacking context.
+    if (m_owner->layoutParent()->isFrameDocument()) {
+        if (!m_owner->node()
+                 ->document()
+                 ->browsingContext()
+                 ->isMainBrowsingContext()) {
+            FrameBox* f = m_owner->node()
+                              ->document()
+                              ->browsingContext()
+                              ->sourceElement()
+                              ->frame()
+                              ->asFrameBox();
+            canvas->translate(f->borderLeft() + f->paddingLeft(),
+                              f->borderTop() + f->paddingTop());
+            canvas->save();
+            canvas->clip(Unit::Rect(0, 0, f->width(), f->height()));
+            m_owner->node()
+                ->document()
+                ->browsingContext()
+                ->paintWindowBackground(canvas);
+            canvas->restore();
+        }
+    }
     m_owner->paintBackgroundAndBorders(canvas);
 
     if (!hasStackingBuffer && owner()->shouldApplyOverflow()) {

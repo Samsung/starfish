@@ -24,6 +24,7 @@ namespace StarFish {
 
 class Event;
 class FrameBlockBox;
+class Canvas;
 
 class Scrolling : public gc {
 public:
@@ -41,6 +42,8 @@ public:
                             OverflowValue ox, OverflowValue oy);
     void onGlobalPointingEvent(float x, float y,
                                EventTarget::GlobalPointingEventKind kind);
+    void paintScrollbars(Canvas* canvas, FrameBlockBox* frame, OverflowValue ox,
+                         OverflowValue oy);
 
 protected:
     bool m_isScrollTarget;

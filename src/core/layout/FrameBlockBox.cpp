@@ -24,6 +24,7 @@
 #include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameText.h"
 #include "core/layout/StackingContext.h"
+#include "core/page/Window.h"
 #include "core/modules/canvas/Canvas.h"
 
 namespace StarFish {
@@ -960,6 +961,20 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
         }
         paintChildrenWith(ctx);
+    }
+
+    if (overflowApplied && ctx.m_paintingStage == PaintingPositionedElements) {
+        if (node() && node()->isElement()) {
+            if (node()->asElement()->hasRareMembers() &&
+                node()->asElement()->rareMembers()->m_scrolling) {
+                node()
+                    ->asElement()
+                    ->rareMembers()
+                    ->m_scrolling->paintScrollbars(ctx.m_canvas, this,
+                                                   style()->overflowX(),
+                                                   style()->overflowY());
+            }
+        }
     }
 
     ctx.m_canvas->restore();
