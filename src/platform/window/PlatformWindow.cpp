@@ -29,6 +29,7 @@
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/MouseEvent.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/profiling/Profiling.h"
 
 #ifdef STARFISH_ENABLE_TEST
 StarFish::CanvasSurface* g_surfaceForScreehShot;
@@ -55,6 +56,8 @@ PlatformWindow::PlatformWindow(StarFish* starFish)
     , m_isButtonOfVirtualCursorClicked(false)
     , m_virtualCursorX(0)
     , m_virtualCursorY(0)
+    , m_virtualCursorSpeed(0)
+    , m_virtualCursorMoveingLastTimestamp(0)
     , m_virtualCursorImageData(nullptr)
 #endif
 {
@@ -110,20 +113,37 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
     registerOrUpdateIdleTimeCleaner();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-    const int virtualCursorSpeed = 10;
+    const int virtualCursorInitialSpeed = 1;
+    const int virtualCursorMaxSpeed = 24;
     MouseEventKind eventKind = MouseEventMove;
-#define ADJEST_VIRTUAL_CURSOR_POSITION() \
-    if (m_virtualCursorX < 0) {          \
-        m_virtualCursorX = 0;            \
-    }                                    \
-    if (m_virtualCursorX > width()) {    \
-        m_virtualCursorX = width();      \
-    }                                    \
-    if (m_virtualCursorY < 0) {          \
-        m_virtualCursorY = 0;            \
-    }                                    \
-    if (m_virtualCursorY > height()) {   \
-        m_virtualCursorY = height();     \
+#define ADJEST_VIRTUAL_CURSOR_POSITION()                                    \
+    if (m_virtualCursorX < 0) {                                             \
+        m_virtualCursorX = 0;                                               \
+        if (!m_isButtonOfVirtualCursorClicked) {                            \
+            dispatchMouseWheelEvent(m_virtualCursorX, m_virtualCursorY, -1, \
+                                    false);                                 \
+        }                                                                   \
+    }                                                                       \
+    if (m_virtualCursorX >= width()) {                                      \
+        m_virtualCursorX = width() - 1;                                     \
+        if (!m_isButtonOfVirtualCursorClicked) {                            \
+            dispatchMouseWheelEvent(m_virtualCursorX, m_virtualCursorY, 1,  \
+                                    false);                                 \
+        }                                                                   \
+    }                                                                       \
+    if (m_virtualCursorY < 0) {                                             \
+        m_virtualCursorY = 0;                                               \
+        if (!m_isButtonOfVirtualCursorClicked) {                            \
+            dispatchMouseWheelEvent(m_virtualCursorX, m_virtualCursorY, -1, \
+                                    true);                                  \
+        }                                                                   \
+    }                                                                       \
+    if (m_virtualCursorY >= height()) {                                     \
+        m_virtualCursorY = height() - 1;                                    \
+        if (!m_isButtonOfVirtualCursorClicked) {                            \
+            dispatchMouseWheelEvent(m_virtualCursorX, m_virtualCursorY, 1,  \
+                                    true);                                  \
+        }                                                                   \
     }
 #define DO_REDRAW_DISPATCH()                                         \
     if (webView()->didCompositeBefore()) {                           \
@@ -139,6 +159,22 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
                       : MouseData::MouseButtonsValue::NoButtonDown,  \
                   m_virtualCursorX, m_virtualCursorY));
     if (KeyEventDown == kind) {
+        if (data.keyCode() >= 37 && data.keyCode() <= 40) {
+            auto ts = timestamp();
+            if ((ts - m_virtualCursorMoveingLastTimestamp) > 250) {
+                m_virtualCursorSpeed = virtualCursorInitialSpeed;
+            } else {
+                m_virtualCursorSpeed += 2;
+                if (m_virtualCursorSpeed > virtualCursorMaxSpeed) {
+                    m_virtualCursorSpeed = virtualCursorMaxSpeed;
+                }
+            }
+
+            m_virtualCursorMoveingLastTimestamp = ts;
+        }
+
+        int virtualCursorSpeed = m_virtualCursorSpeed;
+
         if (data.keyCode() == 37) {
             // left
             m_virtualCursorX -= virtualCursorSpeed;
@@ -185,6 +221,7 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
         }
     }
 #undef DO_REDRAW_DISPATCH
+#undef ADJEST_VIRTUAL_CURSOR_POSITION
 #endif
     webView()->mainBrowsingContext()->dispatchKeyEvent(kind, data);
 }

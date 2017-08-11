@@ -153,11 +153,11 @@ public:
                      unsigned char button, unsigned char buttons, double posX,
                      double posY);
 
-    void dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
+    bool dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
                             TouchData* touches, size_t touchCount);
-    void dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
+    bool dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
                             MouseData data);
-    void dispatchMouseWheelEvent(
+    bool dispatchMouseWheelEvent(
         float screenX, float screenY, int z,
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
     void dispatchKeyEvent(PlatformWindow::KeyEventKind kind,

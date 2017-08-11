@@ -712,11 +712,11 @@ void BrowsingContext::handleHover(PlatformWindow::MouseEventKind kind,
     }
 }
 
-void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
+bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
                                          TouchData* touches, size_t count)
 {
     if (!m_isRunning) {
-        return;
+        return false;
     }
 
     if (m_globalPointingEventListener.size()) {
@@ -748,16 +748,16 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
                 i++;
             }
         }
-        return;
+        return true;
     }
 
     if (kind == PlatformWindow::TouchEventCancel) {
         releaseActiveNode();
         releaseHoveredNode();
-        return;
+        return false;
     }
     if (count < 1) {
-        return;
+        return false;
     }
     // Handle touch informations
     // - Do the hitTest for all `Touch` informations and set target for each.
@@ -786,21 +786,24 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         }
     }
     if (!targetNode) {
-        return;
+        return false;
     }
     // Handle event inside iframe
     double newX = targetX;
     double newY = targetY;
     if (isInnerIFrameEvent(targetNode, newX, newY)) {
-        TouchData newData(newX, newY);
-        targetNode->asHTMLIFrameElement()
-            ->browsingContext()
-            ->dispatchTouchEvent(kind, &newData, 1);
         handleActiveAndFocus((PlatformWindow::MouseEventKind)kind, targetNode,
                              targetX, targetY);
-        return;
+
+        TouchData newData(newX, newY);
+        if (targetNode->asHTMLIFrameElement()
+                ->browsingContext()
+                ->dispatchTouchEvent(kind, &newData, 1)) {
+            return true;
+        }
     }
 
+    bool returnValue = false;
     // Dispatch events
     String* name = String::emptyString;
     switch (kind) {
@@ -810,7 +813,7 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         Event* e = createTouchEvent(document(), name, touches, count);
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
-        document()->window()->dispatchEvent(t, e);
+        returnValue = !document()->window()->dispatchEvent(t, e);
         break;
     }
     case PlatformWindow::TouchEventMove: {
@@ -819,7 +822,7 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         Event* e = createTouchEvent(document(), name, touches, count);
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
-        document()->window()->dispatchEvent(t, e);
+        returnValue = !document()->window()->dispatchEvent(t, e);
         break;
     }
     case PlatformWindow::TouchEventEnd: {
@@ -838,7 +841,7 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         // Dispatch touchend event
         name = starFish()->staticStrings()->m_touchend.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
-        document()->window()->dispatchEvent(t, e);
+        returnValue = !document()->window()->dispatchEvent(t, e);
         break;
     }
     default:
@@ -847,18 +850,19 @@ void BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
     // Handle properties
     handleActiveAndFocus((PlatformWindow::MouseEventKind)kind, targetNode,
                          targetX, targetY);
+    return returnValue;
 }
 
-void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
+bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
                                          MouseData data)
 {
     if (!m_isRunning) {
-        return;
+        return false;
     }
     // MouseEventEnter/MouseEventOut are not supported yet
     if (kind >= PlatformWindow::MouseEventEnter) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return;
+        return false;
     }
 
     if (m_globalPointingEventListener.size()) {
@@ -890,7 +894,7 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
                 i++;
             }
         }
-        return;
+        return true;
     }
 
     // STARFISH_LOG_INFO("BrowsingContext::dispatchMouseEvent %d %f %f\n",
@@ -902,7 +906,7 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
     // Hit test to validate event position
     Node* targetNode = hitTest((float)data.clientX(), (float)data.clientY());
     if (!targetNode) {
-        return;
+        return false;
     }
     double targetX = data.clientX();
     double targetY = data.clientY();
@@ -911,15 +915,19 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
 
     // Handle event inside iframe
     if (isInnerIFrameEvent(targetNode, newX, newY)) {
-        MouseData newData(data.button(), data.buttons(), newX, newY);
-        targetNode->asHTMLIFrameElement()
-            ->browsingContext()
-            ->dispatchMouseEvent(kind, newData);
         handleActiveAndFocus(kind, targetNode, targetX, targetY);
         handleHover(kind, targetNode, data.button(), data.buttons(), targetX,
                     targetY);
-        return;
+
+        MouseData newData(data.button(), data.buttons(), newX, newY);
+        if (targetNode->asHTMLIFrameElement()
+                ->browsingContext()
+                ->dispatchMouseEvent(kind, newData)) {
+            return true;
+        }
     }
+
+    bool returnValue = false;
     // Dispatch events
     String* name = String::emptyString;
     switch (kind) {
@@ -929,7 +937,7 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         // Dispatch mousedown event
         name = starFish()->staticStrings()->m_mousedown.localName();
         Event* e = createMouseEvent(document(), name, data);
-        document()->window()->dispatchEvent(t, e);
+        returnValue = !document()->window()->dispatchEvent(t, e);
         break;
     }
     case PlatformWindow::MouseEventMove: {
@@ -938,7 +946,7 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         // Dispatch mousemove event
         name = starFish()->staticStrings()->m_mousemove.localName();
         Event* e = createMouseEvent(document(), name, data);
-        document()->window()->dispatchEvent(t, e);
+        returnValue = !document()->window()->dispatchEvent(t, e);
         break;
     }
     case PlatformWindow::MouseEventUp: {
@@ -948,7 +956,7 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         // Dispatch mouseup event
         name = starFish()->staticStrings()->m_mouseup.localName();
         Event* mouseup = createMouseEvent(document(), name, data);
-        document()->window()->dispatchEvent(t, mouseup);
+        returnValue = !document()->window()->dispatchEvent(t, mouseup);
 
         if (m_activeNodeTarget == targetNode) {
             // Dispatch click event
@@ -965,13 +973,14 @@ void BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
     handleActiveAndFocus(kind, targetNode, targetX, targetY);
     handleHover(kind, targetNode, data.button(), data.buttons(), targetX,
                 targetY);
+    return returnValue;
 }
 
-void BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
+bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
                                               int z, bool isVerticalWheelEvent)
 {
     if (!m_isRunning) {
-        return;
+        return false;
     }
 
     double wx = window()->scrollX() + screenX;
@@ -979,15 +988,16 @@ void BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
     // Hit test to validate event position
     Node* targetNode = hitTest(wx, wy);
     if (!targetNode) {
-        return;
+        return false;
     }
 
     // Handle event inside iframe
     if (isInnerIFrameEvent(targetNode, wx, wy)) {
-        targetNode->asHTMLIFrameElement()
-            ->browsingContext()
-            ->dispatchMouseWheelEvent(wx, wy, z, isVerticalWheelEvent);
-        return;
+        if (targetNode->asHTMLIFrameElement()
+                ->browsingContext()
+                ->dispatchMouseWheelEvent(wx, wy, z, isVerticalWheelEvent)) {
+            return true;
+        }
     }
 
     double sx = window()->scrollX();
@@ -998,7 +1008,7 @@ void BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
         sx += z * 15;
     }
 
-    window()->scrollTo(sx, sy);
+    return window()->scrollTo(sx, sy);
 }
 
 void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
