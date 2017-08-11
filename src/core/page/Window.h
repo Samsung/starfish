@@ -155,10 +155,10 @@ public:
     double scrollY();
     double pageXOffset();
     double pageYOffset();
-    void scrollTo(double x, double y);
-    void scroll(double x, double y)
+    bool scrollTo(double x, double y); // returns scrolling is actually happened
+    bool scroll(double x, double y)    // returns scrolling is actually happened
     {
-        scrollTo(x, y);
+        return scrollTo(x, y);
     }
 
     Scrolling* scrolling()

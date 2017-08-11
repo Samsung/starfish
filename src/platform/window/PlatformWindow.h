@@ -103,6 +103,8 @@ protected:
     bool m_isButtonOfVirtualCursorClicked;
     int m_virtualCursorX;
     int m_virtualCursorY;
+    int m_virtualCursorSpeed;
+    uint64_t m_virtualCursorMoveingLastTimestamp;
     ImageData* m_virtualCursorImageData;
 #endif
 };

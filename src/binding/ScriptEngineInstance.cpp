@@ -28,6 +28,9 @@ namespace StarFish {
 ScriptEngineInstance::ScriptEngineInstance(StarFish* starFish)
     : StarFishHoldable(starFish)
 {
+    // Set this flag to process const keyword temporary
+    setenv("ESCARGOT_TREAT_CONST_AS_VAR", "1", 1);
+
     Escargot::Globals::initialize();
     m_engineInstance = VMInstanceRef::create(
         starFish->locale().getName(), starFish->timezoneID()->utf8Data());

@@ -144,7 +144,7 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
                                 OverflowValue ox, OverflowValue oy)
 {
 #ifndef STARFISH_SCROLLBAR_THICKNESS
-#define STARFISH_SCROLLBAR_THICKNESS 2
+#define STARFISH_SCROLLBAR_THICKNESS 4
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
@@ -155,7 +155,7 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
     canvas->save();
     if (frame->hasBiggerContentThanFrameHeight() &&
         oy >= OverflowValue::AutoOverflow && frame->height()) {
-        canvas->setColor(Unit::Color(64, 64, 64, 128));
+        canvas->setColor(Unit::Color(64, 64, 64, 192));
 
         float scrollMoveRatio = ((float)frame->scrollTop() /
                                  (frame->scrollHeight() - frame->height()));
@@ -183,7 +183,7 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
     }
     if (frame->hasBiggerContentThanFrameWidth() &&
         ox >= OverflowValue::AutoOverflow && frame->width()) {
-        canvas->setColor(Unit::Color(64, 64, 64, 128));
+        canvas->setColor(Unit::Color(64, 64, 64, 192));
 
         float scrollMoveRatio = ((float)frame->scrollLeft() /
                                  (frame->scrollWidth() - frame->width()));

@@ -329,7 +329,7 @@ double Window::pageYOffset()
     return scrollY();
 }
 
-void Window::scrollTo(double x, double y)
+bool Window::scrollTo(double x, double y)
 {
     browsingContext()->webView()->layoutIfNeeds();
     if (document()->frame()) {
@@ -340,8 +340,10 @@ void Window::scrollTo(double x, double y)
             } else {
                 browsingContext()->setNeedsPainting();
             }
+            return true;
         }
     }
+    return false;
 }
 
 bool Window::handleDefaultEvent(Event* event)
