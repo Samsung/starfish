@@ -267,8 +267,7 @@ FrameBox::computeHorizontalDataToContainingBlock(LayoutContext& ctx,
                                                  FrameBox* cb)
 {
     STARFISH_ASSERT(cb);
-    DirectionValue parentDirection =
-        ctx.blockContainer(this)->style()->direction();
+    DirectionValue parentDirection = blockContainer(this)->style()->direction();
 
     FrameBox* parent = layoutParent()->asFrameBox();
 

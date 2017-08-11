@@ -213,8 +213,32 @@ LayoutRect HTMLElement::offsetRect()
 
 Element* HTMLElement::offsetParent()
 {
+    window()->browsingContext()->webView()->layoutIfNeeds();
+
     Frame* frameObject = frame();
     return frameObject ? frameObject->offsetParent() : nullptr;
+}
+
+long HTMLElement::offsetLeft()
+{
+    window()->browsingContext()->webView()->layoutIfNeeds();
+
+    Frame* frameObject = frame();
+    if (frameObject) {
+        return LayoutUnit(frameObject->offsetLeft()).round();
+    }
+    return 0;
+}
+
+long HTMLElement::offsetTop()
+{
+    window()->browsingContext()->webView()->layoutIfNeeds();
+
+    Frame* frameObject = frame();
+    if (frameObject) {
+        return LayoutUnit(frameObject->offsetTop()).round();
+    }
+    return 0;
 }
 
 String* HTMLElement::innerText()

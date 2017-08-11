@@ -322,7 +322,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     BlockFormattingContextBlock blockFormattingContextBlock(this, ctx);
     // Determine the horizontal margins and the width of this object.
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
-        FrameBox* cb = ctx.containingBlock(this);
+        FrameBox* cb = containingBlock(this);
         LayoutUnit parentContentWidth = cb->contentWidth();
         LayoutUnit viewportWidth = ctx.viewportWidth();
         computeBorderMarginPadding(ctx, parentContentWidth);
@@ -331,7 +331,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             // 10.3.7 Absolutely positioned, non-replaced elements
             STARFISH_ASSERT(!isAnonymous());
             DirectionValue parentDirection =
-                ctx.blockContainer(this)->style()->direction();
+                blockContainer(this)->style()->direction();
             HorizontalDataLocToContainingBlock data =
                 computeHorizontalDataToContainingBlock(ctx, cb);
 
@@ -426,7 +426,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
 
     FrameBox* cb = nullptr;
     if (isAbsolutePositioned()) {
-        cb = ctx.containingBlock(this);
+        cb = containingBlock(this);
     }
     computeContentHeight(ctx, cb);
 

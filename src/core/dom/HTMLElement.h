@@ -57,6 +57,9 @@ public:
         return (float)offsetRect().height() + .5f;
     }
 
+    long offsetTop();
+    long offsetLeft();
+
     // https://html.spec.whatwg.org/multipage/dom.html#the-innertext-idl-attribute
     String* innerText();
     void setInnerText(String* text);

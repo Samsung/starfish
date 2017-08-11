@@ -27,7 +27,7 @@
 
 namespace StarFish {
 
-FrameBlockBox* LayoutContext::blockContainer(Frame* currentFrame)
+FrameBlockBox* blockContainer(Frame* currentFrame)
 {
     Frame* f = currentFrame->layoutParent();
 
@@ -44,7 +44,7 @@ FrameBlockBox* LayoutContext::blockContainer(Frame* currentFrame)
     }
 }
 
-FrameBlockBox* LayoutContext::containingFrameBlockBox(Frame* currentFrame)
+FrameBlockBox* containingFrameBlockBox(Frame* currentFrame)
 {
     FrameBlockBox* blockBox = blockContainer(currentFrame);
     if (currentFrame->isAbsolutePositioned()) {
@@ -60,7 +60,7 @@ FrameBlockBox* LayoutContext::containingFrameBlockBox(Frame* currentFrame)
     }
 }
 
-FrameBox* LayoutContext::containingBlock(Frame* currentFrame)
+FrameBox* containingBlock(Frame* currentFrame)
 {
     // https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#containing-block-details
     if (currentFrame->isAbsolutePositioned()) {
@@ -700,8 +700,7 @@ bool Frame::shouldApplyOverflow()
         if (m_node->isHTMLHtmlElement()) {
             return false;
         } else if (m_node->isHTMLBodyElement()) {
-            HTMLHtmlElement* html =
-                m_node->parentElement()->asHTMLHtmlElement();
+            HTMLHtmlElement* html = m_node->document()->rootElement();
             if (html->style()->overflowX() == OverflowValue::VisibleOverflow &&
                 html->style()->overflowY() == OverflowValue::VisibleOverflow) {
                 return false;
@@ -951,7 +950,7 @@ bool Frame::isDocumentElement() const
     return !isAnonymous() && m_node->document() == m_node;
 }
 
-Element* Frame::offsetParent()
+Element* Frame::offsetParent() const
 {
     if (isDocumentElement() ||
         (!isAnonymous() && m_node->isHTMLBodyElement())) {
@@ -974,9 +973,59 @@ Element* Frame::offsetParent()
         if (node->isHTMLBodyElement()) {
             break;
         }
+
+        if (!isPositioned() &&
+            (node->isHTMLTableElement() || node->isHTMLTableCellElement())) {
+            break;
+        }
     }
 
     return node && node->isElement() ? node->asElement() : nullptr;
+}
+
+LayoutLocation Frame::adjustedPositionRelativeToOffsetParent()
+{
+    if (m_node->isHTMLBodyElement() || !parent()) {
+        return LayoutLocation();
+    }
+
+    Frame* frameObj = this;
+    LayoutRect result(0, 0, 0, 0);
+
+    Node* offsetParentNode = frameObj->offsetParent();
+    FrameBox* offsetParent = nullptr;
+
+    if (!offsetParentNode) {
+        offsetParent = document()->frame()->asFrameBox();
+    } else if (offsetParentNode->frame()->isFrameBox()) {
+        offsetParent = offsetParentNode->frame()->asFrameBox();
+    } else {
+        offsetParent = document()->frame()->asFrameBox();
+    }
+
+    FrameBox* box = nullptr;
+
+    if (frameObj->isFrameBox()) {
+        box = frameObj->asFrameBox();
+    } else {
+        FrameBlockBox* c = blockContainer(frameObj);
+        FrameInline* in = asFrameInline();
+        InlineNonReplacedBox* inrb = c->firstInlineNonReplacedBox(in);
+        if (inrb->boxes().size() > 0) {
+            box = inrb->boxes()[0];
+        } else {
+            box = c;
+        }
+    }
+    LayoutRect rect = box->absoluteRect(offsetParent);
+    result.unite(rect);
+
+    if (offsetParent->node()->isHTMLBodyElement()) {
+        result.setX(result.x() + offsetParent->x());
+        result.setY(result.y() + offsetParent->y());
+    }
+
+    return result.location();
 }
 
 Document* Frame::document()

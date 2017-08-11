@@ -29,3 +29,6 @@ test/reftest/vendor/blink_original/fast/block/float/add-inline-to-block-flow-wit
 test/reftest/vendor/blink_original/fast/block/float/br-with-clear-3.html
 test/reftest/vendor/blink_original/fast/block/float/br-with-clear-4.html
 test/reftest/vendor/blink_original/fast/block/float/nested-floats-expand-formatting-context.html
+test/reftest/vendor/blink_original/fast/block/positioning/offsetLeft-relative-td.html
+test/reftest/vendor/blink/fast/block/positioning/offsetLeft-offsetTop-multicolumn.html
+test/reftest/vendor/blink_original/fast/block/positioning/offsetLeft-relative-iframe.html

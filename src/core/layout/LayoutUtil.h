@@ -1251,6 +1251,20 @@ protected:
     LayoutUnit m_bottom;
     LayoutUnit m_left;
 };
+
+inline LayoutSize& operator+=(LayoutSize& a, const LayoutSize& b)
+{
+    a.setWidth(a.width() + b.width());
+    a.setHeight(a.height() + b.height());
+    return a;
+}
+
+inline LayoutSize& operator-=(LayoutSize& a, const LayoutSize& b)
+{
+    a.setWidth(a.width() - b.width());
+    a.setHeight(a.height() - b.height());
+    return a;
+}
 }
 
 #endif

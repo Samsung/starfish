@@ -28,7 +28,7 @@ void HTMLTableCellElement::styleForPresentationAttribute(
     HTMLElement::styleForPresentationAttribute(cssValues);
 
     HTMLTableElement* table = tableElement();
-    if (table->hasCellPaddingAttribute()) {
+    if (table && table->hasCellPaddingAttribute()) {
         String* value = table->cellpadding();
         if (value && !value->equals(String::emptyString)) {
             // Use px as the default unit

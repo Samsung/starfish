@@ -86,6 +86,10 @@ struct MarginCollapseResult {
     LayoutUnit m_normalFlowHeightAdvance;
 };
 
+FrameBlockBox* blockContainer(Frame* currentFrame);
+FrameBlockBox* containingFrameBlockBox(Frame* currentFrame);
+FrameBox* containingBlock(Frame* currentFrame);
+
 class MarginInfo {
 public:
     MarginInfo(LayoutUnit topBorderPadding, LayoutUnit bottomBorderPadding,
@@ -281,9 +285,6 @@ public:
     LayoutUnit parentContentWidth(Frame* currentFrame);
     bool parentHasFixedHeight(Frame* currentFrame);
     LayoutUnit parentFixedHeight(Frame* currentFrame);
-    FrameBlockBox* blockContainer(Frame* currentFrame);
-    FrameBlockBox* containingFrameBlockBox(Frame* currentFrame);
-    FrameBox* containingBlock(Frame* currentFrame);
 
     void pushInlineBlockBox(FrameBlockBox* blockBox)
     {
@@ -750,7 +751,7 @@ public:
     {
     }
 
-    virtual bool isFrameBox()
+    virtual bool isFrameBox() const
     {
         return false;
     }
@@ -1219,7 +1220,7 @@ public:
         return m_flags.m_needsGraphicsBuffer;
     }
 
-    bool isAbsolutePositioned()
+    bool isAbsolutePositioned() const
     {
         return m_flags.m_isAbsolutePositioned;
     }
@@ -1262,7 +1263,16 @@ public:
                (style()->display() == DisplayValue::InlineTableDisplayValue);
     }
 
-    Element* offsetParent();
+    Element* offsetParent() const;
+    LayoutUnit offsetLeft()
+    {
+        return adjustedPositionRelativeToOffsetParent().x();
+    }
+
+    LayoutUnit offsetTop()
+    {
+        return adjustedPositionRelativeToOffsetParent().y();
+    }
 
     bool shouldWrapLines()
     {
@@ -1294,6 +1304,7 @@ public:
     }
 
     Document* document();
+    LayoutLocation adjustedPositionRelativeToOffsetParent();
 
 protected:
     virtual bool hasFrameTreeItemModel()
