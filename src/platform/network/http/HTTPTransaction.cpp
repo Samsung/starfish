@@ -184,6 +184,8 @@ void HTTPTransaction::start()
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
     if (m_httpRequest->method().compare("POST") == 0) {
+        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE,
+                         m_httpRequest->entityBody().length());
         curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS,
                          m_httpRequest->entityBody().data());
     } else if (!(m_httpRequest->method().compare("GET") == 0)) {

@@ -25,8 +25,62 @@
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
 #include "core/page/BrowsingContext.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 
 namespace StarFish {
+
+class FormResourceRequest : public ResourceRequestClient {
+public:
+    FormResourceRequest(Document* document)
+        : m_resourceRequest(new ResourceRequest(document))
+    {
+        m_resourceRequest->addResourceRequestClient(this);
+    }
+
+    void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
+    {
+        if (fromExplicit &&
+            (request->readyState() == ResourceRequest::ReadyState::DONE)) {
+            if (m_resourceRequest->m_responseType ==
+                    ResourceRequest::ResponseType::TEXT_RESPONSE ||
+                m_resourceRequest->m_responseType ==
+                    ResourceRequest::ResponseType::DOCUMENT_RESPONSE ||
+                m_resourceRequest->m_responseType ==
+                    ResourceRequest::ResponseType::DEFAULT_RESPONSE) {
+                TextConverter textConverter(
+                    m_resourceRequest->responseMimeType(),
+                    String::fromUTF8("UTF-8"),
+                    m_resourceRequest->response().data(),
+                    m_resourceRequest->response().size());
+                String* m_responseText = textConverter.convert(
+                    m_resourceRequest->response().data(),
+                    m_resourceRequest->response().size(), true);
+                m_resourceRequest->response().clear();
+
+                // TODO: navigate to this document
+            }
+        }
+    }
+
+    void open(String* method, String* url)
+    {
+        m_resourceRequest->open(ResourceRequest::POST_METHOD, url, true,
+                                String::emptyString, String::emptyString);
+    }
+
+    void setRequestHeader(String* key, String* value)
+    {
+        m_resourceRequest->setRequestHeader(key, value);
+    }
+
+    void send(String* body)
+    {
+        m_resourceRequest->send(body);
+    }
+
+protected:
+    ResourceRequest* m_resourceRequest;
+};
 
 class FormDataSetItem : public gc {
 public:
@@ -122,12 +176,12 @@ void HTMLFormElement::submit()
         }
     }
 
-    if (formAction == String::emptyString) {
+    if (formAction->equals(String::emptyString)) {
         formAction = action();
     }
 
     ResourceURL* url;
-    if (formAction != String::emptyString) {
+    if (!formAction->equals(String::emptyString)) {
         if (ResourceURL::isValidURL(formAction)) {
             url = new ResourceURL(formAction);
         } else {
@@ -147,21 +201,21 @@ void HTMLFormElement::submit()
         formTarget = inputNode->formTarget();
     }
 
-    if (formEnctype == String::emptyString) {
+    if (formEnctype->equals(String::emptyString)) {
         formEnctype = enctype();
-        if (formEnctype == String::emptyString) {
+        if (formEnctype->equals(String::emptyString)) {
             formEnctype =
                 String::createASCIIString("application/x-www-form-urlencoded");
         }
     }
-    if (formMethod == String::emptyString) {
+    if (formMethod->equals(String::emptyString)) {
         formMethod = method();
     }
-    if (formTarget == String::emptyString) {
+    if (formTarget->equals(String::emptyString)) {
         formTarget = target();
     }
 
-    if (formTarget != String::emptyString) {
+    if (!formTarget->equals(String::emptyString)) {
         STARFISH_ASSERT_NOT_REACHED();
     }
 
@@ -177,7 +231,13 @@ void HTMLFormElement::submitAsEntityBody(
     GCVector<FormDataSetItem*>* formDataSet)
 {
     String* entityBody = encodeFormDataSet(formEnctype, formDataSet);
-    // TODO: send formDataSet and receive HTML page
+    FormResourceRequest* req = new FormResourceRequest(document());
+    req->open(String::createASCIIString("post"), url->urlString());
+    req->setRequestHeader(String::createASCIIString("content-type"),
+                          formEnctype);
+    req->setRequestHeader(String::createASCIIString("charset"),
+                          String::createASCIIString("utf-8"));
+    req->send(entityBody);
 }
 
 // https://www.w3.org/TR/html5/forms.html#application/
