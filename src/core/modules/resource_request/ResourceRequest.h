@@ -53,6 +53,7 @@ class ResourceRequest : public gc,
                         public DocumentHoldable,
                         public ResourceRequestJobInterface {
     friend class XMLHttpRequest;
+    friend class FormResourceRequest;
     friend class NetworkURLWorkerHelper;
     friend class AsyncNetworkWorkHelper;
     friend class FileURLResourceRequestJobDelegate;
