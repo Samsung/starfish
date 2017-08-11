@@ -112,6 +112,19 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     const int virtualCursorSpeed = 10;
     MouseEventKind eventKind = MouseEventMove;
+#define ADJEST_VIRTUAL_CURSOR_POSITION() \
+    if (m_virtualCursorX < 0) {          \
+        m_virtualCursorX = 0;            \
+    }                                    \
+    if (m_virtualCursorX > width()) {    \
+        m_virtualCursorX = width();      \
+    }                                    \
+    if (m_virtualCursorY < 0) {          \
+        m_virtualCursorY = 0;            \
+    }                                    \
+    if (m_virtualCursorY > height()) {   \
+        m_virtualCursorY = height();     \
+    }
 #define DO_REDRAW_DISPATCH()                                         \
     if (webView()->didCompositeBefore()) {                           \
         webView()->setNeedsComposite();                              \
@@ -129,18 +142,22 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
         if (data.keyCode() == 37) {
             // left
             m_virtualCursorX -= virtualCursorSpeed;
+            ADJEST_VIRTUAL_CURSOR_POSITION()
             DO_REDRAW_DISPATCH()
         } else if (data.keyCode() == 38) {
             // up
             m_virtualCursorY -= virtualCursorSpeed;
+            ADJEST_VIRTUAL_CURSOR_POSITION()
             DO_REDRAW_DISPATCH()
         } else if (data.keyCode() == 39) {
             // right
             m_virtualCursorX += virtualCursorSpeed;
+            ADJEST_VIRTUAL_CURSOR_POSITION()
             DO_REDRAW_DISPATCH()
         } else if (data.keyCode() == 40) {
             // down
             m_virtualCursorY += virtualCursorSpeed;
+            ADJEST_VIRTUAL_CURSOR_POSITION()
             DO_REDRAW_DISPATCH()
         } else if (data.keyCode() == 32 || data.keyCode() == 13 ||
                    data.keyCode() == 8) {
