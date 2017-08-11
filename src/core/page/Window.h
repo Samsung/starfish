@@ -161,6 +161,11 @@ public:
         scrollTo(x, y);
     }
 
+    Scrolling* scrolling()
+    {
+        return m_scrolling;
+    }
+
     void resize(uint32_t w, uint32_t h);
 
     void focus();

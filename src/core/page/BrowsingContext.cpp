@@ -264,10 +264,12 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
 {
 #ifdef STARFISH_TIZEN
     if (!document()->tizenWidgetTransparentBackground()) {
-        canvas->clearColor(Unit::Color(255, 255, 255, 255));
+        if (document()->browsingContext()->isMainBrowsingContext())
+            canvas->clearColor(Unit::Color(255, 255, 255, 255));
     }
 #else
-    canvas->clearColor(Unit::Color(255, 255, 255, 255));
+    if (document()->browsingContext()->isMainBrowsingContext())
+        canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
 
     if (!document()->rootElement()) {
@@ -657,8 +659,8 @@ bool BrowsingContext::isInnerIFrameEvent(Node* targetNode, double& posX,
         double contentY = (double)(fb->paddingTop() + fb->borderTop());
         if (contentX <= newPosX && newPosX <= contentX + fb->contentWidth() &&
             contentY <= newPosY && newPosY <= contentY + fb->contentHeight()) {
-            posX = newPosX;
-            posY = newPosY;
+            posX = newPosX - contentX;
+            posY = newPosY - contentY;
             return true;
         }
     }
