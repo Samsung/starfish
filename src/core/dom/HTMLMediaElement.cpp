@@ -325,6 +325,9 @@ Promise* HTMLMediaElement::play()
 
     // TODO If the playback has ended and the direction of playback is forwards,
     // seek to the earliest possible position of the media resource.
+    if (m_isEnded) {
+        setCurrentTime(0);
+    }
 
     // If the media element's paused attribute is true, run the following
     // substeps:
@@ -708,6 +711,7 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
             // Event sequence : seeking -> (SEEK) -> timeupdate -> seeked ->
             // timeupdate
             m_officialPlaybackPosition = currentTime;
+            m_readyState = HAVE_METADATA;
             appendToOperationQueue(
                 new MediaOperationQueueDataRequestSeek(this, currentTime));
         }
@@ -932,6 +936,7 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
     } else {
         // Finish "seek"
         m_isSeeking = false;
+        mediaPlayerNotifyUpdateReadyStateItsContainer(HAVE_ENOUGH_DATA);
         dispatchTimeupdateEvent();
         dispatchSeekedEvent();
         dispatchTimeupdateEvent();

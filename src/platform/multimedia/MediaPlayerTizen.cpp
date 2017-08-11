@@ -146,6 +146,7 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_videoBufferMutex(new Mutex())
     , m_audioBufferMutex(new Mutex())
     , m_preparedCallback(nullptr)
+    , m_completeCallback(nullptr)
     , m_canvasSurface(nullptr)
 {
     player_create(&m_nativePlayer);
@@ -213,8 +214,10 @@ void MediaPlayerTizen::seek(double time)
     STARFISH_ASSERT(m_nativePlayer && m_alive);
     if (m_playbackState == PLAYBACK_STATE_END) {
         m_playbackState = PLAYBACK_STATE_PAUSED;
+        player_unset_completed_cb(m_nativePlayer);
         player_start(m_nativePlayer);
         player_pause(m_nativePlayer);
+        player_set_completed_cb(m_nativePlayer, m_completeCallback, this);
     }
 
     // Check seek boundary
@@ -526,21 +529,19 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
                               },
                               this);
     STARFISH_ASSERT(ret == 0);
-    ret = player_set_completed_cb(
-        m_nativePlayer,
-        [](void* data) {
-            MediaPlayerTizen* player = (MediaPlayerTizen*)data;
-            player->m_container->starFish()
-                ->messageLoop()
-                ->addIdlerWithNoGCRootingInOtherThread(
-                    player->m_container->document()->browsingContext(),
-                    [](size_t, void* data) {
-                        MediaPlayerTizen* player = (MediaPlayerTizen*)data;
-                        player->endOfStream();
-                    },
-                    data);
-        },
-        this);
+    m_completeCallback = [](void* data) {
+        MediaPlayerTizen* player = (MediaPlayerTizen*)data;
+        player->m_container->starFish()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                player->m_container->document()->browsingContext(),
+                [](size_t, void* data) {
+                    MediaPlayerTizen* player = (MediaPlayerTizen*)data;
+                    player->endOfStream();
+                },
+                data);
+    };
+    ret = player_set_completed_cb(m_nativePlayer, m_completeCallback, this);
     STARFISH_ASSERT(ret == 0);
     ret = player_set_buffering_cb(
         m_nativePlayer,

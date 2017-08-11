@@ -40,7 +40,7 @@ public:
     };
     enum SeekState {
         SEEKSTATE_NO_SEEK,
-        SEEKSTATE_SEEKING, // Waiting first callback  (for Tizen2.4 TV)
+        SEEKSTATE_SEEKING, // Waiting first callback
         SEEKSTATE_WAITING, // Waiting second callback (for Tizen2.4 TV)
     };
 

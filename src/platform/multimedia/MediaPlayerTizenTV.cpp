@@ -137,16 +137,13 @@ void MediaPlayerTizenTV::seekOperation(int timeInMS)
         }
     }
 
-    int ret = player_set_position_async(
-        m_nativePlayer, timeInMS,
-        [](void* data, int result) {
-            // Result 0  : Succeed
-            // Otherwise : Failed
+    int ret = player_set_play_position(
+        m_nativePlayer, timeInMS, false,
+        [](void* data) {
             STARFISH_LOG_INFO(
                 "MediaPlayerTizenTV::seekOperation() "
-                "player_set_position_async_cb (%s)(success:%s)\n",
-                isMainThread() ? "main-thread" : "other-thread",
-                result == 0 ? "true" : "false");
+                "player_set_position_async_cb (%s)\n",
+                isMainThread() ? "main-thread" : "other-thread");
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
             self->handleSeeked();
         },
@@ -184,11 +181,7 @@ void MediaPlayerTizenTV::handleSeeked()
         if (m_seekState == SEEKSTATE_NO_SEEK) {
             return;
         }
-        if (m_seekState == SEEKSTATE_SEEKING) {
-            m_seekState = SEEKSTATE_WAITING;
-            return;
-        }
-        STARFISH_ASSERT(m_seekState == SEEKSTATE_WAITING);
+        STARFISH_ASSERT(m_seekState == SEEKSTATE_SEEKING);
         m_seekState = SEEKSTATE_NO_SEEK;
 
         // Notify "Seeked" to its container
@@ -225,7 +218,6 @@ void MediaPlayerTizenTV::handleSeekFail()
 {
     if (isMainThread()) {
         STARFISH_LOG_INFO("MediaPlayerTizenTV::handleSeekFail\n");
-        m_seekState = SEEKSTATE_WAITING;
         handleSeeked();
     } else {
         MessageLoop* msgLoop = m_container->starFish()->messageLoop();
