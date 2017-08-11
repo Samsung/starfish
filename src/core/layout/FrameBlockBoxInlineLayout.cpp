@@ -1066,7 +1066,7 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     if ((!block->isAnonymous() && !block->hasBlockFlow()) ||
         ctx.checkIfThisIsFirstLineCandidate(block->parent(), block)) {
         Length textIndent = block->style()->textIndent();
-        FrameBox* cb = ctx.containingBlock(block);
+        FrameBox* cb = containingBlock(block);
         m_textIndentWidth =
             textIndent.specifiedValue(cb->contentWidth(), ctx.viewportWidth());
         ;
@@ -2656,7 +2656,7 @@ void LineFormattingContext::layoutInline(Frame* origin)
         // Don't put any inline box leaving pending inline boxes ahead.
         STARFISH_ASSERT(m_pendingInlineBoxes.size() == 0);
 
-        if (f->isAbsolutePositioned()) {
+        if (f->isAbsolutePositioned() && f->isFrameBox()) {
             if (m_isPendingBreakLine) {
                 breakLine(nullptr);
             }
@@ -3553,7 +3553,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     Length height = style()->height();
     BoxSizingValue boxSizing = style()->boxSizing();
     LayoutUnit intrinsicWidth, intrinsicHeight, w, h;
-    FrameBox* cb = ctx.layoutContext().containingBlock(this);
+    FrameBox* cb = containingBlock(this);
     computeBorderMarginPadding(ctx.layoutContext(), cb->contentWidth());
     LayoutUnit parentContentWidth, parentContentHeight;
     Length parentHeightLength;
@@ -3645,7 +3645,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
         return;
     }
 
-    FrameBox* cb = ctx.layoutContext().containingBlock(this);
+    FrameBox* cb = containingBlock(this);
     computeBorderMarginPadding(ctx.layoutContext(), cb->contentWidth());
     Length width = style()->width();
 

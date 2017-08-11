@@ -351,14 +351,14 @@ void FrameReplaced::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
-        FrameBox* cb = ctx.containingBlock(this);
+        FrameBox* cb = containingBlock(this);
         LayoutUnit parentContentWidth = cb->contentWidth();
         computeBorderMarginPadding(ctx, parentContentWidth);
         computeContentWidthAndHeight(ctx, cb);
 
         if (isAbsolutePositioned()) {
             DirectionValue parentDirection =
-                ctx.blockContainer(this)->style()->direction();
+                blockContainer(this)->style()->direction();
             HorizontalDataLocToContainingBlock data =
                 computeHorizontalDataToContainingBlock(ctx, cb);
             Length left = style()->left();
@@ -424,7 +424,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
 
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
         if (isAbsolutePositioned()) {
-            FrameBox* cb = ctx.containingBlock(this);
+            FrameBox* cb = containingBlock(this);
             VerticalDataLocToContainingBlock data =
                 computeVerticalDataToContainingBlock(ctx, cb);
             Length top = style()->top();

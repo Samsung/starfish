@@ -1048,6 +1048,8 @@ Node* Node::removeChild(Node* child)
     child->setPreviousSibling(nullptr);
     child->setNextSibling(nullptr);
     child->setParentNode(nullptr);
+
+    FrameTreeBuilder::clearTree(child);
     setNeedsFrameTreeBuild();
 
     if (isInDocumentScope() && document()->doesParticipateInRendering()) {

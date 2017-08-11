@@ -83,7 +83,7 @@ public:
     {
     }
 
-    virtual bool isFrameBox()
+    virtual bool isFrameBox() const
     {
         return true;
     }

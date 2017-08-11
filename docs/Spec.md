@@ -311,8 +311,11 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | tabIndex | Reflects the value of the "tabindex" content attribute of HTMLElement. Its default value is 0 for elements that are focusable and −1 for elements that are not focusable. |
 |  | method | void focus() | This method sets focus on the specified element, if it can be focused. |
 |  | method | void blur() | This method removes focus from the current element. |
-| [HTMLElement 2](https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface) | attribute | offsetWidth | Returns the border edge width of the first CSS layout box associated with the element |
-| | attribute | offsetHeight | Returns the border edge height of the first CSS layout box associated with the element |
+| [HTMLElement 2](https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface) | attribute | offsetParent | Returns a reference to the object which is the closest (nearest in the containment hierarchy) positioned containing element. |
+| | attribute | offsetTop | Returns the distance of the current element relative to the top of the offsetParent node. |
+| | attribute | offsetLeft | Returns the number of pixels that the upper left corner of the current element is offset to the left within the HTMLElement.offsetParent node. |
+| | attribute | offsetWidth | Returns the border edge width of the first CSS layout box associated with the element. |
+| | attribute | offsetHeight | Returns the border edge height of the first CSS layout box associated with the element. |
 | [HTMLFieldSetElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-fieldset-element) | interface | HTMLFieldSetElement |  represents a set of form controls optionally grouped under a common name. |
 |  | attribute | form | Returns the element's form element, if any, or null otherwise. |
 | [HTMLFontElement](https://html.spec.whatwg.org/#htmlfontelement) | interface | HTMLFontElement | The font element defines the font size, font face, and color of text. |

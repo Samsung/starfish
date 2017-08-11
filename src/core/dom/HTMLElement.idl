@@ -24,9 +24,9 @@ interface HTMLElement : Element {
   [CEReactions, TreatNullAs=EmptyString] attribute DOMString innerText;
 
   // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
-  [Unimplemented] readonly attribute Element? offsetParent;
-  [Unimplemented] readonly attribute long offsetTop;
-  [Unimplemented] readonly attribute long offsetLeft;
+  readonly attribute Element? offsetParent;
+  readonly attribute long offsetTop;
+  readonly attribute long offsetLeft;
   readonly attribute long offsetWidth;
   readonly attribute long offsetHeight;
 };
