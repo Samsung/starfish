@@ -343,6 +343,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         // Style should be recalculated from this node to decendants because of
         // combinators.
         setNeedsStyleRecalc();
+        setChildrenNeedsStyleRecalc();
 
         document()->invalidNamedAccessCacheIfNeeded();
     } else if (name == ss->m_class) {
@@ -356,6 +357,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         // Style should be recalculated from this node to decendants because of
         // combinators.
         setNeedsStyleRecalc();
+        setChildrenNeedsStyleRecalc();
 
         // propagate invalidate nodeList cache(getElementsByClassName) damage to
         // parent tree
