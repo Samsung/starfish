@@ -73,6 +73,11 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         textElement->setStyle(pseudoStyle);
 
         String* userVal = inputNode->value();
+        if (inputNode->type()->equalsWithoutCase("submit") &&
+            userVal == String::emptyString) {
+            userVal = String::createASCIIString("submit");
+        }
+
         Text* textNode = new Text(current->document(), userVal);
         textNode->setParentNode(textElement);
         ComputedStyle* textStyle = createInputElementStyleFrom(textElement);
