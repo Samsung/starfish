@@ -10,11 +10,6 @@ fi
 NUMPROC=$(grep 'processor' /proc/cpuinfo | wc -l)
 CU=$PWD
 
-PORT=STARFISH_EFL
-if [[ $1 == STARFISH_DALI ]]; then
-PORT=STARFISH_DALI
-fi
-
 #COMPILER_VERSION_MAJOR=4.9
 #COMPILER_VERSION_MINOR=4.9.2
 COMPILER_VERSION_MAJOR=4.6
@@ -353,7 +348,7 @@ fi
 cd $CU
 
 
-./build_gc.sh $PORT
+./build_gc.sh
 
 cd third_party/escargot/
 git submodule init

@@ -45,8 +45,12 @@ BuildRequires: pkgconfig(capi-media-player)
 %if "%{?tizen_profile_name}" != "tv"
 BuildRequires: pkgconfig(capi-location-manager)
 %endif
-
-
+BuildRequires: pkgconfig(dali-core)
+BuildRequires: pkgconfig(dali-toolkit)
+BuildRequires: pkgconfig(dali-adaptor)
+BuildRequires: libjpeg-turbo-devel
+BuildRequires: pkgconfig(openssl)
+BuildRequires: giflib-devel
 %description
 Implementation of Web Widget Engine
 
@@ -93,7 +97,7 @@ touch    out/tizen_obs/x86/exe/debug/StarFish
 %if "%{mode}" == "release"
 make ${MAKE_TARGET}.exe.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
 %else
-make ${MAKE_TARGET}.exe.debug %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
+make ${MAKE_TARGET}.exe.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
 %endif
 %endif
 
@@ -117,7 +121,7 @@ cp out/tizen_obs/${STARFISH_ARCH}/lib/release/libWebWidgetEngine.so %{buildroot}
 %if "%{mode}" == "release"
 cp out/tizen_obs/${STARFISH_ARCH}/exe/release/StarFish %{buildroot}%{_bindir}
 %else
-cp out/tizen_obs/${STARFISH_ARCH}/exe/debug/StarFish %{buildroot}%{_bindir}
+cp out/tizen_obs/${STARFISH_ARCH}/exe/release/StarFish %{buildroot}%{_bindir}
 %endif
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/

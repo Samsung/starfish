@@ -19,6 +19,7 @@ SHELL:=/bin/bash
 OUTPUT:=bin
 TIZEN_DEVICE_API=
 LTO=
+BACKEND=EFL
 ifeq ($(OS),Linux)
   NPROCS:=$(shell grep -c ^processor /proc/cpuinfo)
   SHELL:=/bin/bash
@@ -113,8 +114,8 @@ else ifneq (,$(findstring tizen_obs_arm,$(MAKECMDGOALS)))
   TIZEN_ARCH=arm
 else ifneq (,$(findstring tizen_obs_emulator,$(MAKECMDGOALS)))
   HOST=tizen_obs
-  ARCH=x86
-  TIZEN_ARCH=i386
+  ARCH=x64
+  TIZEN_ARCH=x86_64
 endif
 
 ifneq (,$(findstring exe,$(MAKECMDGOALS)))
@@ -142,7 +143,8 @@ endif
 ifneq (,$(findstring tizen,$(HOST)))
   #LTO=1
   ifeq ($(TYPE), lib)
-    TIZEN_DEVICE_API=true
+    # At present, this feature is not required. 
+    # TIZEN_DEVICE_API=true
   endif
 endif
 
@@ -174,7 +176,7 @@ $(info build dir... $(OUTDIR))
 
 # common flags
 CXXFLAGS += -std=c++0x -g3
-CXXFLAGS += -fno-rtti -fno-math-errno -Isrc/ -Iinc/
+CXXFLAGS += -fno-math-errno -Isrc/ -Iinc/
 CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof -fvisibility=hidden
@@ -182,8 +184,12 @@ CXXFLAGS += -fno-omit-frame-pointer -fstack-protector
 CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-unused-result
 CXXFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations
 
-CXXFLAGS += -DSTARFISH_EFL
-
+ifeq ($(BACKEND), EFL)
+	CXXFLAGS += -DSTARFISH_EFL
+	CXXFLAGS += -fno-rtti
+else ifeq ($(BACKEND), DALI)
+	CXXFLAGS += -DSTARFISH_DALI
+endif
 LDFLAGS += -lpthread -lcurl
 
 # fixme
@@ -236,14 +242,12 @@ endif
 ifneq (,$(findstring tizen,$(HOST)))
   CXXFLAGS += -Os -finline-limit=64
   CXXFLAGS += -DSTARFISH_TIZEN
-  #for DALi port
-  #CXXFLAGS += -DGC_THREADS
+
+  ifeq ($(BACKEND), DALI)
+    CXXFLAGS += -DGC_THREADS
+  endif
 
   #CXXFLAGS_DEBUG += -Wno-literal-suffix
-
-  ifeq ($(TYPE), lib)
-    CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_LIB
-  endif
 
   ifeq ($(TIZEN_VERSION), 3.0)
     CXXFLAGS += -DSTARFISH_TIZEN_3_0
@@ -261,16 +265,22 @@ ifneq (,$(findstring tizen,$(HOST)))
     MULTIPAGE_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_TV
     CXXFLAGS += -DSTARFISH_ENABLE_TEST
-    CXXFLAGS += -DSTARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER=false
+    # At present, this feature is not required. 
+    # CXXFLAGS += -DSTARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER=false
   endif
   ifeq ($(TIZEN_PROFILE),mobile)
     MEDIA_SUPPORT=true
+    MULTIPAGE_SUPPORT=true
     DOMPARSER_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_MOBILE
+    CXXFLAGS += -DSTARFISH_ENABLE_TEST
   endif
   ifeq ($(TIZEN_PROFILE),wearable)
     CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
     CXXFLAGS += -DSTARFISH_THREAD_POOL_SIZE=2
+    ifeq ($(TYPE), lib)
+      CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_LIB
+    endif
   endif
 endif
 
@@ -360,6 +370,13 @@ CXXFLAGS += -Ithird_party/clipper/cpp/
 #rapidxml
 CXXFLAGS += -Ithird_party/rapidxml/
 
+#libuv TODO: Should be removed!
+ifeq ($(BACKEND), DALI)
+  CXXFLAGS += -Ithird_party/libuv/include
+  CFLAGS += -Ithird_party/libuv/include
+  CFLAGS += -Ithird_party/libuv/src
+endif
+
 #webm, libav
 ifeq ($(MEDIA_SUPPORT), true)
   CXXFLAGS += -Ithird_party/webm/
@@ -384,8 +401,10 @@ ifeq ($(TYPE), lib)
 endif
 
 # escargot
-CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/bdwgc/include/
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/GCutil/bdwgc/include/
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/GCutil/
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/src
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/include
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/checked_arithmetic/
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/double_conversion/
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/rapidjson/include/
@@ -395,8 +414,8 @@ ifeq ($(HOST), linux)
   JSLIBS = $(ESCARGOT_LIB_ROOT)/out/$(HOST)/$(ARCH)/interpreter/$(MODE)/libescargot.a
   GCLIBS = $(ESCARGOT_LIB_ROOT)/third_party/bdwgc/out/$(HOST)/$(ARCH)/$(MODE).shared/.libs/libgc.a
 else ifeq ($(HOST), tizen_obs)
-  JSLIBS = $(ESCARGOT_LIB_ROOT)/$(MODE)/libescargot.a
-  GCLIBS = $(ESCARGOT_LIB_ROOT)/$(MODE)/libgc.a
+  JSLIBS = $(ESCARGOT_LIB_ROOT)/release/libescargot.a
+  GCLIBS = $(ESCARGOT_LIB_ROOT)/release/libgc.a
 else ifneq (,$(findstring tizen,$(HOST)))
   JSLIBS = $(ESCARGOT_LIB_ROOT)/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/interpreter/$(MODE)/libescargot.a
   GCLIBS = $(ESCARGOT_LIB_ROOT)/third_party/bdwgc/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/$(MODE).shared/.libs/libgc.a
@@ -416,6 +435,11 @@ SRC += third_party/skia_matrix/SkDebug.cpp
 
 # clipper
 SRC += third_party/clipper/cpp/clipper.cpp
+
+# libuv
+# SRC += third_party/libuv/src/uv-common.c
+# SRC_C += third_party/libuv/src/version.c
+# SRC_C += $(foreach dir, third_party/libuv/src/unix, $(wildcard $(dir)/*.c))
 
 # webm, libav, mp4parser
 ifeq ($(MEDIA_SUPPORT), true)
@@ -481,8 +505,13 @@ ifeq ($(HOST), linux)
   CC           = gcc
   CXX          = g++
   STRIP        = strip
-  CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n)
-  LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n)
+  ifeq ($(BACKEND), EFL)
+    CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n )
+    LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n )
+  else ifeq ($(BACKEND), DALI)
+    CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n dali-core dali-adaptor dali-toolkit libuv)
+    LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n dali-adaptor dali-toolkit libuv)
+    endif
   CXXFLAGS += -I/usr/local/include/
   LDFLAGS += -L/usr/local/lib/ -Wl,-rpath /usr/local/lib
 else ifeq ($(HOST), tizen_obs)
@@ -491,11 +520,17 @@ else ifeq ($(HOST), tizen_obs)
   STRIP        = strip
   TIZEN_DEPS = dlog elementary ecore libpng cairo freetype2 fontconfig icu-uc icu-i18n \
                ecore-imf-evas efl-extension libpng capi-network-connection capi-media-player
-ifneq ($(TIZEN_PROFILE),tv)
+  ifeq ($(BACKEND), DALI)
+    TIZEN_DEPS += dali-core dali-adaptor dali-toolkit
+  endif
+  ifneq ($(TIZEN_PROFILE),tv)
 	TIZEN_DEPS += capi-location-manager
-endif
+  endif
   CXXFLAGS    += $(shell pkg-config --cflags $(TIZEN_DEPS))
-  LDFLAGS     += $(shell pkg-config --libs $(TIZEN_DEPS))
+  LDFLAGS     += $(shell pkg-config --libs $(TIZEN_DEPS)) -lssl -lcrypto
+  ifeq ($(BACKEND), DALI)
+    LDFLAGS += -luv -lturbojpeg -lgif
+  endif
   LIB = libWebWidgetEngine.so
   ifeq ($(TYPE), exe)
     LDFLAGS += -lrt
