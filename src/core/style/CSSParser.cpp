@@ -1232,7 +1232,7 @@ CSSSelector* CSSParser::getAttributeSelector()
                       attributeName.toAttrAtomicString(starFish()));
 
     if (currentToken()->isSymbol(']')) {
-        getToken(true, false);
+        getToken(false, false);
         return new CSSAttributeSelector(
             CSSSelector::Type::AttributeSet, attrQualifiedName,
             String::emptyString, CSSSelector::AttributeMatchType::CaseSensitive,
