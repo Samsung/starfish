@@ -177,6 +177,15 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
 
     FcPattern* pattern = FcNameParse((const FcChar8*)(u8FontName.data()));
 
+// TODO : need to fallback font
+#ifdef STARFISH_TIZEN
+    // pattern = FcNameParse((const FcChar8*)("BreezeSansKorean-Regular")); //
+    // TM1
+    pattern = FcNameParse((const FcChar8*)("SamsungOneUIKorean"));
+#else
+    pattern = FcNameParse((const FcChar8*)("NanumGothic")); // ubuntu
+#endif
+
     FcConfigSubstitute(config, pattern, FcMatchPattern);
     FcDefaultSubstitute(pattern);
 
