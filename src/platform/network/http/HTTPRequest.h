@@ -55,7 +55,7 @@ public:
         return m_baseURL;
     }
 
-    std::string entityBody()
+    std::string entityBody() const
     {
         return m_entityBody;
     }
