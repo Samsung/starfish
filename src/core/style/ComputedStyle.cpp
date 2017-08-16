@@ -281,11 +281,9 @@ void ComputedStyle::loadResources(
     }
 }
 
-void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
-                                       Node* current)
+void ComputedStyle::blockify(Node* current, bool force)
 {
     // 9.7 Relationships between 'display', 'position', and 'float'
-    m_originalDisplay = m_display;
     if (m_originalDisplay != DisplayValue::NoneDisplayValue) {
         bool isAbsolutePositioned =
             position() == PositionValue::AbsolutePositionValue ||
@@ -295,11 +293,15 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
             m_float = FloatValue::NoneFloatValue;
         }
 
-        if (isAbsolutePositioned || m_float != FloatValue::NoneFloatValue ||
+        if (force || isAbsolutePositioned ||
+            m_float != FloatValue::NoneFloatValue ||
             (current && current->isHTMLHtmlElement())) {
             switch (m_display) {
             case DisplayValue::InlineTableDisplayValue:
                 m_display = DisplayValue::TableDisplayValue;
+                break;
+            case DisplayValue::InlineFlexDisplayValue:
+                m_display = DisplayValue::FlexDisplayValue;
                 break;
             case DisplayValue::InlineDisplayValue:
             case DisplayValue::TableRowGroupDisplayValue:
@@ -318,6 +320,13 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
             }
         }
     }
+}
+
+void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
+                                       Node* current)
+{
+    m_originalDisplay = m_display;
+    blockify(current, false);
 
     // https://www.w3.org/TR/css-overflow-3/#overflow-properties
     // visible is computed to 'auto' if either one of 'overflow-x' or
@@ -399,6 +408,13 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
 
     if (m_background) {
         m_background->checkComputed(baseFontSize, font(), color());
+    }
+
+    if (!m_alignSelfSpecifiedByUser) {
+        // https://www.w3.org/TR/css-flexbox-1/#propdef-align-self
+        // intial value of 'align-self' is 'auto', 'auto' is computed to
+        // parent's 'align-items' value; otherwise 'stretch'
+        m_alignSelf = parentStyle->m_alignItems;
     }
 }
 
@@ -736,6 +752,61 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     if (newStyle->m_boxSizing != oldStyle->m_boxSizing) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_flexDirection != oldStyle->m_flexDirection) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_flexWrap != oldStyle->m_flexWrap) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_order != oldStyle->m_order) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_justifyContent != oldStyle->m_justifyContent) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_alignItems != oldStyle->m_alignItems) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_alignSelf != oldStyle->m_alignSelf) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_alignContent != oldStyle->m_alignContent) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_flexGrow != oldStyle->m_flexGrow) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_flexShrink != oldStyle->m_flexShrink) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    FlexBasisData oldFlexBasis = oldStyle->m_flexBasis;
+    FlexBasisData newFlexBasis = newStyle->m_flexBasis;
+    if ((newFlexBasis.isContent() && !oldFlexBasis.isContent()) ||
+        (!newFlexBasis.isContent() && oldFlexBasis.isContent()) ||
+        (!newFlexBasis.isContent() && !oldFlexBasis.isContent() &&
+         newFlexBasis.width() != oldFlexBasis.width())) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }

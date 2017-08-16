@@ -40,9 +40,12 @@ public:
     std::unordered_map<Node*, FrameInline*>& frameInlineItem();
     bool isInFrameInlineFlow();
     void setIsInFrameInlineFlow(bool b);
+    bool isInFrameFlexFlow();
+    void setIsInFrameFlexFlow(bool b);
 
 protected:
     bool m_isInFrameInlineFlow;
+    bool m_isInFrameFlexFlow;
     FrameBlockBox* m_currentBlockContainer;
     std::unordered_map<Node*, FrameInline*, std::hash<Node*>,
                        std::equal_to<Node*>>
@@ -75,10 +78,8 @@ public:
 private:
     static Frame* buildTree(Node* current, FrameTreeBuilderContext& ctx,
                             bool force);
-    static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox,
-                                           Frame* currentFrame,
-                                           Node* currentNode,
-                                           FrameTreeBuilderContext& ctx);
+    static void insertChild(FrameBlockBox* frameBlockBox, Frame* currentFrame,
+                            Node* currentNode, FrameTreeBuilderContext& ctx);
 };
 }
 

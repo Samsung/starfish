@@ -19,6 +19,7 @@
 #include "core/dom/Element.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
+#include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameInline.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCellBox.h"
@@ -147,72 +148,73 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 {
     STARFISH_ASSERT(isAbsolutePositioned() || cb == nullptr);
 
-    if (isFrameTableBox()) {
-        asFrameTableBox()->layoutHeight(ctx);
+    LayoutUnit contentHeight;
+    LayoutUnit parentHeight;
+    LayoutUnit viewportHeight = ctx.viewportHeight();
+    Length height = style()->height();
+    BoxSizingValue boxSizing = style()->boxSizing();
+
+    if (hasBlockFlow()) {
+        contentHeight = layoutBlock(ctx);
     } else {
-        LayoutUnit contentHeight;
-        LayoutUnit parentHeight;
-        LayoutUnit viewportHeight = ctx.viewportHeight();
-        Length height = style()->height();
-        BoxSizingValue boxSizing = style()->boxSizing();
-
-        if (hasBlockFlow()) {
-            contentHeight = layoutBlock(ctx);
-        } else {
-            contentHeight = layoutInline(ctx);
-        }
-
-        // The contentHeight is used when table cell contents are vertically
-        // aligned in the table row.
-        if (isFrameTableCellBox()) {
-            asFrameTableCellBox()->setActualContentHeight(contentHeight);
-        }
-
-        if (isAbsolutePositioned()) {
-            parentHeight = cb->contentHeight() + cb->paddingHeight();
-            if (height.isAuto()) {
-                Length top = style()->top();
-                Length bottom = style()->bottom();
-                if (top.isSpecified() && bottom.isSpecified()) {
-                    LayoutUnit t =
-                        top.specifiedValue(parentHeight, viewportHeight);
-                    LayoutUnit b =
-                        bottom.specifiedValue(parentHeight, viewportHeight);
-                    contentHeight =
-                        parentHeight - t - b - paddingHeight() - borderHeight();
-                }
-            } else {
-                contentHeight =
-                    height.specifiedValue(parentHeight, viewportHeight);
-                contentHeight = contentHeightApplyingBoxSizing(contentHeight);
-            }
-
-            applyMinMaxHeightIfNeeds(contentHeight, parentHeight,
-                                     viewportHeight);
-        } else {
-            bool parentHasFixedValue = ctx.parentHasFixedHeight(this);
-
-            if (parentHasFixedValue) {
-                parentHeight = ctx.parentFixedHeight(this);
-            } else {
-                parentHeight = contentHeight;
-            }
-
-            if (height.isFixed()) {
-                contentHeight = height.fixed();
-                contentHeight = contentHeightApplyingBoxSizing(contentHeight);
-            } else if (height.isPercent() && parentHasFixedValue) {
-                contentHeight = height.percentValue(parentHeight);
-                contentHeight = contentHeightApplyingBoxSizing(contentHeight);
-            } else if (height.isViewportPercent()) {
-                contentHeight = height.viewportPercentValue(viewportHeight);
-                contentHeight = contentHeightApplyingBoxSizing(contentHeight);
-            }
-
-            applyMinMaxHeightIfNeeds(contentHeight, parentHeight,
-                                     viewportHeight, parentHasFixedValue);
-        }
+        contentHeight = layoutInline(ctx);
     }
+
+    // The contentHeight is used when table cell contents are vertically
+    // aligned in the table row.
+    if (isFrameTableCellBox()) {
+        asFrameTableCellBox()->setActualContentHeight(contentHeight);
+    }
+
+    if (isAbsolutePositioned()) {
+        parentHeight = cb->contentHeight() + cb->paddingHeight();
+        if (height.isAuto()) {
+            Length top = style()->top();
+            Length bottom = style()->bottom();
+            if (top.isSpecified() && bottom.isSpecified()) {
+                LayoutUnit t = top.specifiedValue(parentHeight, viewportHeight);
+                LayoutUnit b =
+                    bottom.specifiedValue(parentHeight, viewportHeight);
+                contentHeight =
+                    parentHeight - t - b - paddingHeight() - borderHeight();
+            }
+        } else {
+            contentHeight = height.specifiedValue(parentHeight, viewportHeight);
+            contentHeight = contentHeightApplyingBoxSizing(contentHeight);
+        }
+
+        applyMinMaxHeightIfNeeds(contentHeight, parentHeight, viewportHeight);
+    } else {
+        computeContentHeight(ctx, contentHeight);
+    }
+}
+
+void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
+                                         LayoutUnit contentHeight)
+{
+    bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
+    LayoutUnit parentHeight;
+    if (parentHasFixedHeight) {
+        parentHeight = ctx.parentFixedHeight(this);
+    } else {
+        parentHeight = contentHeight;
+    }
+
+    Length height = style()->height();
+    if (height.isFixed()) {
+        contentHeight = height.fixed();
+        contentHeight = contentHeightApplyingBoxSizing(contentHeight);
+    } else if (height.isPercent() && parentHasFixedHeight) {
+        LayoutUnit parentContentHeight = ctx.parentFixedHeight(this);
+        contentHeight = height.percentValue(parentContentHeight);
+        contentHeight = contentHeightApplyingBoxSizing(contentHeight);
+    } else if (height.isViewportPercent()) {
+        contentHeight = height.viewportPercentValue(ctx.viewportHeight());
+        contentHeight = contentHeightApplyingBoxSizing(contentHeight);
+    }
+
+    applyMinMaxHeightIfNeeds(contentHeight, parentHeight, ctx.viewportHeight(),
+                             parentHasFixedHeight);
 }
 
 static LayoutUnit specifiedVerticalPosition(LayoutContext& ctx, Frame* f,
@@ -428,7 +430,14 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     if (isAbsolutePositioned()) {
         cb = containingBlock(this);
     }
-    computeContentHeight(ctx, cb);
+
+    if (isFrameTableBox()) {
+        asFrameTableBox()->layoutHeight(ctx);
+    } else if (isFrameFlexibleBox()) {
+        asFrameFlexibleBox()->layoutFlex(ctx);
+    } else {
+        computeContentHeight(ctx, cb);
+    }
 
     // Now the intrinsic height of the object is known because the children are
     // placed
@@ -819,7 +828,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
             }
             return FrameBox::hitTest(x, y, stage);
         }
-    } else if (style()->display() == InlineBlockDisplayValue) {
+    } else if (isInlineLevel() || isFlexItem()) {
         if (stage == HitTestNormalFlowInline) {
             HitTestStage s = HitTestStage::HitTestPositionedElements;
             while (s != HitTestStageEnd) {
@@ -878,8 +887,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
 
     ctx.m_canvas->save();
 
-    if (!isNormalFlow() || style()->display() == InlineBlockDisplayValue ||
-        style()->display() == InlineTableDisplayValue) {
+    if (shouldResetTextDecoration()) {
         ctx.m_canvas->resetTextDecorationData();
     } else {
         ctx.m_canvas->mergeTextDecorationData(style());
@@ -913,10 +921,9 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             }
             ctx.m_paintingStage = PaintingPositionedElements;
         }
-    } else if ((style()->display() == InlineBlockDisplayValue) ||
-               (style()->display() == InlineTableDisplayValue)) {
+    } else if (isInlineLevel() || isFlexItem()) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline &&
-            ctx.m_paintingInlineStage == PaintingInlineBlock) {
+            ctx.m_paintingInlineStage == PaintingBlockBox) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
                 ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
@@ -934,7 +941,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         }
     } else if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats &&
-            ctx.m_paintingInlineStage == PaintingInlineBlock) {
+            ctx.m_paintingInlineStage == PaintingBlockBox) {
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
                 ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),

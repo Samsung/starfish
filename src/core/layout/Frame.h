@@ -28,6 +28,7 @@ class Document;
 class Frame;
 class FrameBox;
 class FrameBlockBox;
+class FrameFlexibleBox;
 class FrameInline;
 class FrameLineBreak;
 class FrameReplaced;
@@ -71,8 +72,9 @@ enum HitTestStage {
 };
 
 enum PaintingInlineStage {
-    PaintingInlineLevelElements,
-    PaintingInlineBlock,
+    PaintingInlineBox,
+    PaintingBlockBox,
+    PaintingReplaced,
     PaintingInlineStageEnd
 };
 
@@ -712,7 +714,7 @@ public:
     PaintingContext(Canvas* canvas)
         : m_canvas(canvas)
         , m_paintingStage(PaintingNormalFlowBlock)
-        , m_paintingInlineStage(PaintingInlineLevelElements)
+        , m_paintingInlineStage(PaintingInlineBox)
     {
     }
 
@@ -762,6 +764,11 @@ public:
     }
 
     virtual bool isFrameBlockBox()
+    {
+        return false;
+    }
+
+    virtual bool isFrameFlexibleBox()
     {
         return false;
     }
@@ -859,9 +866,7 @@ public:
 
     FrameBox* asFrameBox()
     {
-        STARFISH_ASSERT(isFrameBox() || isFrameTableBox() ||
-                        isFrameTableCaptionBox() || isFrameTableSectionBox() ||
-                        isFrameTableRowBox() || isFrameTableCellBox());
+        STARFISH_ASSERT(isFrameBox());
         return (FrameBox*)this;
     }
 
@@ -881,6 +886,12 @@ public:
     {
         STARFISH_ASSERT(isFrameDocument());
         return (FrameDocument*)this;
+    }
+
+    FrameFlexibleBox* asFrameFlexibleBox()
+    {
+        STARFISH_ASSERT(isFrameFlexibleBox());
+        return (FrameFlexibleBox*)this;
     }
 
     FrameInline* asFrameInline()
@@ -1236,6 +1247,22 @@ public:
         return m_flags.m_isFloating;
     }
 
+    void markFlexItem()
+    {
+        m_flags.m_isFlexItem = true;
+        // https://www.w3.org/TR/css-flexbox-1/#painting
+        // Flex items paint exactly the same as inline blocks [CSS21], except
+        // that order-modified document order is used in place of raw document
+        // order, and z-index values other than auto create a stacking context
+        // even if position is static.
+        m_flags.m_isEstablishesStackingContext = true;
+    }
+
+    bool isFlexItem() const
+    {
+        return m_flags.m_isFlexItem;
+    }
+
     bool isDocumentElement() const;
 
     bool isAnonymous() const
@@ -1247,7 +1274,23 @@ public:
     {
         // block, table, list-item
         return (style()->display() == DisplayValue::BlockDisplayValue) ||
-               (style()->display() == DisplayValue::TableDisplayValue);
+               (style()->display() == DisplayValue::TableDisplayValue) ||
+               (style()->display() == DisplayValue::FlexDisplayValue);
+    }
+
+    bool isInlineLevel()
+    {
+        return (style()->display() == DisplayValue::InlineDisplayValue) ||
+               (style()->display() == DisplayValue::InlineBlockDisplayValue) ||
+               (style()->display() == DisplayValue::InlineTableDisplayValue) ||
+               (style()->display() == DisplayValue::InlineFlexDisplayValue);
+    }
+
+    bool isAtomicInlineLevel()
+    {
+        return (isFrameReplaced()) ||
+               (style()->display() == DisplayValue::InlineBlockDisplayValue) ||
+               (style()->display() == DisplayValue::InlineTableDisplayValue);
     }
 
     bool canHaveFirstLineOrFirstLetterStyle()
@@ -1262,9 +1305,9 @@ public:
         return false;
     }
 
-    bool isAtomicInlineLevel()
+    bool shouldResetTextDecoration()
     {
-        return (isFrameReplaced()) ||
+        return !isNormalFlow() ||
                (style()->display() == DisplayValue::InlineBlockDisplayValue) ||
                (style()->display() == DisplayValue::InlineTableDisplayValue);
     }
@@ -1365,6 +1408,7 @@ protected:
 
         bool m_isAbsolutePositioned : 1;
         bool m_isFloating : 1;
+        bool m_isFlexItem : 1;
 
         // special flag for FrameBlockBox
         bool m_heightComputed : 1;

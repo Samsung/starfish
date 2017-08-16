@@ -272,19 +272,10 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     bool parentHasFixedHeight;
     bool hasAspectRatio;
 
-    if (isAbsolutePositioned()) {
-        parentContentWidth = cb->contentWidth() + cb->paddingWidth();
-        parentHasFixedHeight = true;
-        parentContentHeight = cb->contentHeight() + cb->paddingHeight();
-    } else {
-        parentContentWidth = cb->contentWidth();
-        parentHasFixedHeight = ctx.parentHasFixedHeight(this);
-        if (parentHasFixedHeight) {
-            parentContentHeight = ctx.parentFixedHeight(this);
-        }
-    }
-
+    parentContentWidth = cb->contentWidth() + cb->paddingWidth();
+    parentHasFixedHeight = ctx.parentHasFixedHeight(this);
     if (parentHasFixedHeight) {
+        parentContentHeight = ctx.parentFixedHeight(this);
         parentHeightLength = Length(Length::Fixed, parentContentHeight);
     } else {
         parentHeightLength = Length(Length::Auto);
@@ -537,30 +528,22 @@ void FrameReplaced::paint(PaintingContext& ctx)
             paintBackgroundAndBorders(ctx.m_canvas);
             paintReplaced(ctx.m_canvas);
         }
+    } else if (isBlockLevel()) {
+        if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
+            paintBackgroundAndBorders(ctx.m_canvas);
+        } else if (ctx.m_paintingStage == PaintingNormalFlowInline) {
+            paintReplaced(ctx.m_canvas);
+        }
+    } else if (isInlineLevel() || isFlexItem()) {
+        if (ctx.m_paintingStage == PaintingNormalFlowInline &&
+            ctx.m_paintingInlineStage == PaintingReplaced) {
+            paintBackgroundAndBorders(ctx.m_canvas);
+            paintReplaced(ctx.m_canvas);
+        }
     } else if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             paintBackgroundAndBorders(ctx.m_canvas);
             paintReplaced(ctx.m_canvas);
-        }
-    } else {
-        if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
-            if (style()->display() != DisplayValue::InlineDisplayValue) {
-                paintBackgroundAndBorders(ctx.m_canvas);
-            }
-        } else if (ctx.m_paintingStage == PaintingNormalFlowInline) {
-            if (style()->display() == DisplayValue::InlineDisplayValue) {
-                if (ctx.m_paintingInlineStage == PaintingInlineLevelElements) {
-                    paintBackgroundAndBorders(ctx.m_canvas);
-                    paintReplaced(ctx.m_canvas);
-                }
-            } else if (style()->display() ==
-                       DisplayValue::InlineBlockDisplayValue) {
-                if (ctx.m_paintingInlineStage == PaintingInlineBlock) {
-                    paintReplaced(ctx.m_canvas);
-                }
-            } else {
-                paintReplaced(ctx.m_canvas);
-            }
         }
     }
 }

@@ -34,6 +34,7 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
+#include "core/style/FlexBasisData.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/MediaQueryResult.h"
 #include "core/style/MediaValues.h"
@@ -209,24 +210,24 @@ static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
 
 String* CSSTransformFunctions::toString()
 {
-    String* result = String::emptyString;
+    StringBuilder builder;
     for (unsigned i = 0; i < size(); i++) {
         CSSTransformFunction item = (*this)[i];
-        String* itemStr = item.functionName()->concat(String::fromUTF8("("));
+        builder.appendString(item.functionName());
+        builder.appendString("(");
         ValueList* values = item.values();
         for (unsigned int j = 0; j < values->size(); j++) {
             const CSSStyleValuePair& subitem = (*values)[j];
             String* newstr = subitem.toString();
-            itemStr = itemStr->concat(newstr);
+            builder.appendString(newstr);
             if (j != values->size() - 1) {
-                itemStr = itemStr->concat(String::fromUTF8(", "));
+                builder.appendString(", ");
             } else {
-                itemStr = itemStr->concat(String::fromUTF8(")"));
+                builder.appendString(")");
             }
         }
-        result = result->concat(itemStr);
     }
-    return result;
+    return builder.finalize();
 }
 
 String* CSSStyleValuePair::keyName() const
@@ -272,7 +273,7 @@ static String* BorderString(String* width, bool isWidthCombined, String* style,
                             bool isColorCombined)
 {
     String* space = String::spaceString;
-    String* sum = String::emptyString;
+    StringBuilder builder;
 
     if (width->equals(style) && style->equals(color)) {
         STARFISH_ASSERT(width->equals(String::emptyString) ||
@@ -283,26 +284,26 @@ static String* BorderString(String* width, bool isWidthCombined, String* style,
 
     if (!width->equals(String::emptyString) &&
         !width->equals(String::initialString) && !isWidthCombined) {
-        sum = width;
+        builder.appendString(width);
     }
 
     if (!style->equals(String::emptyString) &&
         !style->equals(String::initialString) && !isStyleCombined) {
-        if (sum->length()) {
-            sum = sum->concat(space);
+        if (builder.contentLength() > 0) {
+            builder.appendString(space);
         }
-        sum = sum->concat(style);
+        builder.appendString(style);
     }
 
     if (!color->equals(String::emptyString) &&
         !color->equals(String::initialString) && !isColorCombined) {
-        if (sum->length()) {
-            sum = sum->concat(space);
+        if (builder.contentLength() > 0) {
+            builder.appendString(space);
         }
-        sum = sum->concat(color);
+        builder.appendString(color);
     }
 
-    return sum;
+    return builder.finalize();
 }
 
 // Parse backgroundRepeat string in case it has single token
@@ -1282,9 +1283,12 @@ String* CSSStyleValuePair::toString() const
         return String::inheritString;
     case CSSStyleValuePair::ValueKind::Length:
         return lengthValue().toString();
-    case CSSStyleValuePair::ValueKind::Percentage:
-        return String::fromFloat(percentageValue() * 100.f)
-            ->concat(String::createASCIIString("%"));
+    case CSSStyleValuePair::ValueKind::Percentage: {
+        StringBuilder builder;
+        builder.appendString(String::fromFloat(percentageValue() * 100.f));
+        builder.appendChar('%');
+        return builder.finalize();
+    }
     case CSSStyleValuePair::ValueKind::Auto:
         return String::fromUTF8("auto");
     case CSSStyleValuePair::ValueKind::None:
@@ -1303,10 +1307,13 @@ String* CSSStyleValuePair::toString() const
         return colorValue().toString();
     case CSSStyleValuePair::ValueKind::NamedColorValueKind:
         return NamedColor::namedColorToString(namedColorValue());
-    case CSSStyleValuePair::ValueKind::UrlValueKind:
-        return String::fromUTF8("url(\"")
-            ->concat(urlStringValue())
-            ->concat(String::fromUTF8("\")"));
+    case CSSStyleValuePair::ValueKind::UrlValueKind: {
+        StringBuilder builder;
+        builder.appendString("url(\"");
+        builder.appendString(urlStringValue());
+        builder.appendString("\")");
+        return builder.finalize();
+    }
     case CSSStyleValuePair::ValueKind::DisplayValueKind:
         switch (displayValue()) {
         case DisplayValue::InlineDisplayValue:
@@ -1335,6 +1342,10 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("table-cell");
         case DisplayValue::TableCaptionDisplayValue:
             return String::fromUTF8("table-caption");
+        case DisplayValue::FlexDisplayValue:
+            return String::fromUTF8("flex");
+        case DisplayValue::InlineFlexDisplayValue:
+            return String::fromUTF8("inline-flex");
         case DisplayValue::NoneDisplayValue:
             return String::fromUTF8("none");
         default:
@@ -1593,15 +1604,16 @@ String* CSSStyleValuePair::toString() const
     case CSSStyleValuePair::ValueKind::TransformFunctions:
         return transformValue()->toString();
     case CSSStyleValuePair::ValueKind::ValueListKind: {
-        String* str = String::emptyString;
+        StringBuilder builder;
         ValueList* list = multiValue();
         size_t len = list->size();
         for (size_t i = 0; i < len; i++) {
-            str = str->concat((*list)[i].toString());
-            if (i != len - 1)
-                str = str->concat(list->separatorString());
+            builder.appendString((*list)[i].toString());
+            if (i != len - 1) {
+                builder.appendString(list->separatorString());
+            }
         }
-        return str;
+        return builder.finalize();
     }
     case CSSStyleValuePair::ValueKind::TransitionPropertyValueKind:
         switch (transitionPropertyValue()) {
@@ -1732,6 +1744,82 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::FlexDirectionValueKind:
+        switch (flexDirectionValue()) {
+        case RowFlexDirectionValue:
+            return String::fromUTF8("row");
+        case RowReverseFlexDirectionValue:
+            return String::fromUTF8("row-reverse");
+        case ColumnFlexDirectionValue:
+            return String::fromUTF8("column");
+        case ColumnReverseFlexDirectionValue:
+            return String::fromUTF8("column-reverse");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::FlexWrapValueKind:
+        switch (flexWrapValue()) {
+        case NoWrapFlexWrapValue:
+            return String::fromUTF8("nowrap");
+        case WrapFlexWrapValue:
+            return String::fromUTF8("wrap");
+        case WrapReverseFlexWrapValue:
+            return String::fromUTF8("wrap-reverse");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::JustifyContentValueKind:
+        switch (justifyContentValue()) {
+        case FlexStartJustifyContentValue:
+            return String::fromUTF8("flex-start");
+        case FlexEndJustifyContentValue:
+            return String::fromUTF8("flex-end");
+        case CenterJustifyContentValue:
+            return String::fromUTF8("center");
+        case SpaceBetweenJustifyContentValue:
+            return String::fromUTF8("space-between");
+        case SpaceAroundJustifyContentValue:
+            return String::fromUTF8("space-around");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::AlignItemValueKind:
+        switch (alignItemValue()) {
+        case FlexStartAlignItemValue:
+            return String::fromUTF8("flex-start");
+        case FlexEndAlignItemValue:
+            return String::fromUTF8("flex-end");
+        case CenterAlignItemValue:
+            return String::fromUTF8("center");
+        case BaselineAlignItemValue:
+            return String::fromUTF8("baseline");
+        case StretchAlignItemValue:
+            return String::fromUTF8("stretch");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::AlignContentValueKind:
+        switch (alignContentValue()) {
+        case FlexStartAlignContentValue:
+            return String::fromUTF8("flex-start");
+        case FlexEndAlignContentValue:
+            return String::fromUTF8("flex-end");
+        case SpaceBetweenAlignContentValue:
+            return String::fromUTF8("space-between");
+        case SpaceAroundAlignContentValue:
+            return String::fromUTF8("space-around");
+        case StretchAlignContentValue:
+            return String::fromUTF8("stretch");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::FlexBasisValueKind:
+        switch (FlexBasisValue()) {
+        case ContentFlexBasisValue:
+            return String::fromUTF8("content");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -1740,7 +1828,7 @@ String* CSSStyleValuePair::toString() const
 
 void CSSStyleValuePair::setLengthValue(const char* value, size_t len)
 {
-    updateValueLengthOrPercent(CSSTokenValue(value), true);
+    updateValueUnitLength(CSSTokenValue(value), AllowNegative | AllowPercent);
 }
 
 String* CSSStyleDeclaration::BackgroundRepeat()
@@ -1806,7 +1894,11 @@ String* CSSStyleDeclaration::BackgroundPosition()
         return String::fromUTF8("center");
     }
 
-    return positionX->concat(String::spaceString)->concat(positionY);
+    StringBuilder builder;
+    builder.appendString(positionX);
+    builder.appendString(String::spaceString);
+    builder.appendString(positionY);
+    return builder.finalize();
 }
 
 void CSSStyleDeclaration::setBackgroundPosition(const char* value,
@@ -1837,44 +1929,44 @@ void CSSStyleDeclaration::setBackgroundPosition(const char* value,
 static String* printBackground(String* image, String* repeat, String* color,
                                String* position, String* size)
 {
-    String* result = String::emptyString;
+    StringBuilder builder;
     if (image->length() != 0 && !image->equals(String::initialString)) {
-        result = result->concat(image);
+        builder.appendString(image);
     }
     if (position->length() != 0 && !position->equals(String::initialString)) {
-        if (result->length()) {
-            result = result->concat(String::spaceString);
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
         }
-        result = result->concat(position);
+        builder.appendString(position);
     }
     if (size->length() != 0 && !size->equals(String::initialString)) {
-        if (result->length()) {
-            result = result->concat(String::spaceString);
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
         }
         if (position->length() == 0) {
-            result = result->concat(String::fromUTF8("0% 0%"));
+            builder.appendString("0% 0%");
         }
-        result = result->concat(String::fromUTF8(" / "));
-        result = result->concat(size);
+        builder.appendString(" / ");
+        builder.appendString(size);
     }
     if (repeat->length() != 0 && !repeat->equals(String::initialString)) {
-        if (result->length()) {
-            result = result->concat(String::spaceString);
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
         }
-        result = result->concat(repeat);
+        builder.appendString(repeat);
     }
     if (color->length() != 0 && !color->equals(String::initialString)) {
-        if (result->length()) {
-            result = result->concat(String::spaceString);
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
         }
-        result = result->concat(color);
+        builder.appendString(color);
     }
-    return result;
+    return builder.finalize();
 }
 
 String* CSSStyleDeclaration::Background()
 {
-    String* res = String::emptyString;
+    StringBuilder builder;
     String* color = BackgroundColor();
     String* images = BackgroundImage();
     String* repeats = BackgroundRepeat();
@@ -1907,12 +1999,12 @@ String* CSSStyleDeclaration::Background()
         String* size =
             (i < vSizes.size()) ? vSizes[i]->trim() : String::emptyString;
         String* col = (i == max - 1) ? color : String::emptyString;
-        res = res->concat(printBackground(img, rep, col, pos, size));
+        builder.appendString(printBackground(img, rep, col, pos, size));
         if (i != max - 1) {
-            res = res->concat(String::fromUTF8(", "));
+            builder.appendString(", ");
         }
     }
-    return res;
+    return builder.finalize();
 }
 
 static void removeBackgroundCSSValuePairs(CSSStyleDeclaration* target)
@@ -2357,23 +2449,22 @@ void CSSStyleDeclaration::setTransition(const char* value, size_t length,
 
 static String* createTransitionString(String* property, String* duration)
 {
-    String* space = String::spaceString;
-    String* sum = String::emptyString;
+    StringBuilder builder;
 
     if (!property->equals(String::emptyString) &&
         !property->equals(String::initialString)) {
-        sum = property;
+        builder.appendString(property);
     }
 
     if (!duration->equals(String::emptyString) &&
         !duration->equals(String::initialString)) {
-        if (sum->length()) {
-            sum = sum->concat(space);
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
         }
-        sum = sum->concat(duration);
+        builder.appendString(duration);
     }
 
-    return sum;
+    return builder.finalize();
 }
 
 String* CSSStyleDeclaration::Transition()
@@ -2381,82 +2472,6 @@ String* CSSStyleDeclaration::Transition()
     String* property = TransitionProperty();
     String* duration = TransitionDuration();
     return createTransitionString(property, duration);
-}
-
-static void removeOverflowCSSValuePairs(CSSStyleDeclaration* target)
-{
-    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::OverflowX);
-    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::OverflowY);
-}
-
-static void addOverflowCSSValuePairs(CSSStyleDeclaration* target,
-                                     CSSStyleValuePair overflowX,
-                                     CSSStyleValuePair overflowY)
-{
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::OverflowX, overflowX);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::OverflowY, overflowY);
-}
-
-static bool parseOverflowShorthand(const CSSTokenVector& tokens,
-                                   CSSStyleValuePair* overflowX,
-                                   CSSStyleValuePair* overflowY)
-{
-    size_t len = tokens.size();
-    if (len < 1) {
-        return false;
-    }
-
-    overflowX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
-    overflowY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
-
-    bool isFirstTimeValue = true;
-    CSSStyleValuePair temp;
-
-    const CSSTokenValue& tok = tokens[0];
-
-    if (temp.updateValueUnitOverflowX(tokens[0])) {
-        *overflowX = temp;
-        *overflowY = temp;
-    } else {
-        return false;
-    }
-    return true;
-}
-
-void CSSStyleDeclaration::setOverflow(const char* value, size_t length,
-                                      bool isImportant)
-{
-    if (length == 0) {
-        removeOverflowCSSValuePairs(this);
-        return;
-    }
-
-    CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, length);
-
-    // TODO comma separation
-    CSSStyleValuePair v, overflowX, overflowY;
-    if (v.updateValueCommon(tokens)) {
-        v.setFlagImportant(isImportant);
-        addOverflowCSSValuePairs(this, v, v);
-    } else if (parseOverflowShorthand(tokens, &overflowX, &overflowY)) {
-        overflowX.setFlagImportant(isImportant);
-        overflowY.setFlagImportant(isImportant);
-        addOverflowCSSValuePairs(this, overflowX, overflowY);
-    }
-}
-
-String* CSSStyleDeclaration::Overflow()
-{
-    // TODO: Should find the specific rule for composing overflow
-    String* overflowX = OverflowX();
-    String* overflowY = OverflowY();
-
-    if (overflowX->equals(overflowY)) {
-        return overflowX;
-    } else {
-        return String::createASCIIString("auto");
-    }
 }
 
 void CSSStyleDeclaration::setBackground(const char* value, size_t length,
@@ -2553,7 +2568,6 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
 
 String* CSSStyleDeclaration::Font()
 {
-    String* result = String::emptyString;
     String* style = FontStyle();
     String* weight = FontWeight();
     String* size = FontSize();
@@ -2585,33 +2599,29 @@ String* CSSStyleDeclaration::Font()
         return String::emptyString;
     }
 
-    bool first = true;
+    StringBuilder builder;
     // 1. style
     if (!style->equals("normal")) {
-        result = result->concat(style);
-        first = false;
+        builder.appendString(style);
     }
     // 2. weight
     if (!weight->equals("normal")) {
-        if (first) {
-            result = weight;
-            first = false;
-        } else {
-            result = result->concat(String::spaceString)->concat(weight);
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
         }
+        builder.appendString(weight);
     }
     // 3. size
-    if (first) {
-        first = false;
-        result = size;
-    } else {
-        result = result->concat(String::spaceString)->concat(size);
+    if (builder.contentLength() > 0) {
+        builder.appendString(String::spaceString);
     }
+    builder.appendString(size);
     // 4. lineHeight
     if (!lineHeight->equals("normal")) {
-        result = result->concat(String::fromUTF8("/"))->concat(lineHeight);
+        builder.appendString("/");
+        builder.appendString(lineHeight);
     }
-    return result;
+    return builder.finalize();
 }
 
 void CSSStyleDeclaration::setFont(const char* value, size_t length,
@@ -2977,9 +2987,6 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->setMaxWidth(Length());
             } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Auto) {
-                style->setMaxWidth(Length());
-            } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
                 style->setMaxWidth(cssValues[k].lengthValue().toLength());
             } else if (cssValues[k].valueKind() ==
@@ -3010,9 +3017,6 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Percentage) {
                 style->setMinWidth(
                     Length(Length::Percent, cssValues[k].percentageValue()));
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::None) {
-                style->setMinWidth(Length());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -3046,9 +3050,6 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->setMaxHeight(Length());
             } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Auto) {
-                style->setMaxHeight(Length());
-            } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
                 style->setMaxHeight(cssValues[k].lengthValue().toLength());
             } else if (cssValues[k].valueKind() ==
@@ -3079,9 +3080,6 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Percentage) {
                 style->setMinHeight(
                     Length(Length::Percent, cssValues[k].percentageValue()));
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::None) {
-                style->setMinHeight(Length());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -4319,6 +4317,159 @@ void StyleResolver::apply(Element* element,
                 }
             }
             break;
+        case CSSStyleValuePair::KeyKind::FlexDirection:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->m_flexDirection =
+                    FlexDirectionValue::RowFlexDirectionValue;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_flexDirection = parentStyle->m_flexDirection;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::FlexDirectionValueKind) {
+                style->setFlexDirection(cssValues[k].flexDirectionValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::FlexWrap:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->m_flexWrap = FlexWrapValue::NoWrapFlexWrapValue;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_flexWrap = parentStyle->m_flexWrap;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::FlexWrapValueKind) {
+                style->setFlexWrap(cssValues[k].flexWrapValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::Order:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->m_order = 0;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_order = parentStyle->m_order;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Int32) {
+                style->setOrder(cssValues[k].int32Value());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::JustifyContent:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->m_justifyContent =
+                    JustifyContentValue::FlexStartJustifyContentValue;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_justifyContent = parentStyle->m_justifyContent;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::JustifyContentValueKind) {
+                style->setJustifyContent(cssValues[k].justifyContentValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::AlignItems:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->m_alignItems = AlignItemValue::StretchAlignItemValue;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_alignItems = parentStyle->m_alignItems;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::AlignItemValueKind) {
+                style->setAlignItems(cssValues[k].alignItemValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::AlignSelf:
+            style->m_alignSelfSpecifiedByUser = true;
+            if (cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial ||
+                cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Auto) {
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_alignSelf = parentStyle->m_alignSelf;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::AlignItemValueKind) {
+                style->setAlignSelf(cssValues[k].alignItemValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::AlignContent:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->m_alignContent =
+                    AlignContentValue::StretchAlignContentValue;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_alignContent = parentStyle->m_alignContent;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::AlignContentValueKind) {
+                style->setAlignContent(cssValues[k].alignContentValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::FlexGrow:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->m_flexGrow = 0;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_flexGrow = parentStyle->m_flexGrow;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Number) {
+                style->setFlexGrow(cssValues[k].numberValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::FlexShrink:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->m_flexShrink = 1;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_flexShrink = parentStyle->m_flexShrink;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Number) {
+                style->setFlexShrink(cssValues[k].numberValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::FlexBasis:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setFlexBasis(FlexBasisData(true));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_flexBasis = parentStyle->m_flexBasis;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::FlexBasisValueKind) {
+                style->setFlexBasis(FlexBasisData(true));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Length) {
+                Length length = cssValues[k].lengthValue().toLength();
+                if (length.isAuto()) {
+                    style->setFlexBasis(FlexBasisData(true));
+                } else {
+                    style->setFlexBasis(FlexBasisData(false, length));
+                }
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -5084,12 +5235,13 @@ bool CSSStyleValuePair::updateValueUnitBorderColor(const CSSTokenValue& token)
 
 bool CSSStyleValuePair::updateValueUnitMargin(const CSSTokenValue& value)
 {
-    return updateValueLengthOrPercentOrAuto(value, true);
+    return updateValueUnitLength(value,
+                                 AllowNegative | AllowPercent | AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueUnitPadding(const CSSTokenValue& value)
 {
-    return updateValueLengthOrPercent(value, false);
+    return updateValueUnitLength(CSSTokenValue(value), AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValueColor(const CSSTokenVector& tokens)
@@ -5216,6 +5368,10 @@ bool CSSStyleValuePair::updateValueDisplay(const CSSTokenVector& tokens)
         m_value.m_display = DisplayValue::TableCellDisplayValue;
     } else if (STRING_VALUE_IS_STRING("table-caption")) {
         m_value.m_display = DisplayValue::TableCaptionDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("flex")) {
+        m_value.m_display = DisplayValue::FlexDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("inline-flex")) {
+        m_value.m_display = DisplayValue::InlineFlexDisplayValue;
     } else if (STRING_VALUE_IS_STRING("none")) {
         m_value.m_display = DisplayValue::NoneDisplayValue;
     } else {
@@ -5423,11 +5579,9 @@ bool CSSStyleValuePair::updateValueUnitBorderWidth(const CSSTokenValue& value)
     } else if (STRING_VALUE_IS_STRING("medium")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
         m_value.m_borderWidth = BorderWidthValue::MediumBorderWidthValue;
-    } else if (CSSPropertyParser::parseLength(value.c_str(), false,
-                                              &(m_value.m_length))) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Length;
     } else {
-        return false;
+        return CSSPropertyParser::parseLength(value.c_str(), false, false,
+                                              this);
     }
     return true;
 }
@@ -5444,70 +5598,65 @@ bool CSSStyleValuePair::updateValueUnitBorderWidth(const CSSTokenValue& value)
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_WIDTH)
 #undef UPDATE_VALUE_BORDER_WIDTH
 
-bool CSSStyleValuePair::updateValueLength(const CSSTokenValue& token,
-                                          bool allowNegative)
+bool CSSStyleValuePair::updateValueNumber(const CSSTokenVector& tokens)
 {
-    if (!CSSPropertyParser::parseLength(token.data(), allowNegative, this)) {
+    if (tokens.size() != 1) {
         return false;
     }
+
+    return updateValueNumber(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueNumber(const CSSTokenValue& token)
+{
+    float f;
+    m_valueKind = CSSStyleValuePair::ValueKind::Number;
+    if (CSSPropertyParser::parseNumber(token.data(), true, &f)) {
+        m_value.m_floatValue = f;
+        return true;
+    }
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueUnitLength(const CSSTokenValue& token,
+                                              uint8_t option)
+{
+    bool allowNegative =
+        (option & CSSStyleValuePair::LengthOption::AllowNegative);
+    bool allowPercent =
+        (option & CSSStyleValuePair::LengthOption::AllowPercent);
+    bool allowAuto = (option & CSSStyleValuePair::LengthOption::AllowAuto);
+    bool allowNone = (option & CSSStyleValuePair::LengthOption::AllowNone);
+
+    if (allowAuto) {
+        if (token.equals("auto")) {
+            m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+            return true;
+        }
+    }
+
+    if (allowNone) {
+        if (token.equals("none")) {
+            m_valueKind = CSSStyleValuePair::ValueKind::None;
+            return true;
+        }
+    }
+
+    if (!CSSPropertyParser::parseLength(token.data(), allowNegative,
+                                        allowPercent, this)) {
+        return false;
+    }
+
     return true;
 }
 
-bool CSSStyleValuePair::updateValueLengthOrPercent(const CSSTokenValue& token,
-                                                   bool allowNegative)
-{
-    if (!CSSPropertyParser::parseLengthOrPercent(token.data(), allowNegative,
-                                                 this)) {
-        return false;
-    }
-    return true;
-}
-
-bool CSSStyleValuePair::updateValueLengthOrPercent(const CSSTokenVector& tokens,
-                                                   bool allowNegative)
+bool CSSStyleValuePair::updateValueLength(const CSSTokenVector& tokens,
+                                          uint8_t option)
 {
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueLengthOrPercent(tokens[0], allowNegative);
-}
-
-bool CSSStyleValuePair::updateValueLengthOrPercentOrAuto(
-    const CSSTokenValue& token, bool allowNegative)
-{
-    if (token.equals("auto")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
-        return true;
-    }
-    return updateValueLengthOrPercent(token, allowNegative);
-}
-
-bool CSSStyleValuePair::updateValueLengthOrPercentOrAutoOrNone(
-    const CSSTokenValue& token, bool allowNegative)
-{
-    if (token.equals("none")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::None;
-        return true;
-    }
-    return updateValueLengthOrPercentOrAuto(token, allowNegative);
-}
-
-bool CSSStyleValuePair::updateValueLengthOrPercentOrAuto(
-    const CSSTokenVector& tokens, bool allowNegative)
-{
-    if (tokens.size() != 1) {
-        return false;
-    }
-    return updateValueLengthOrPercentOrAuto(tokens[0], allowNegative);
-}
-
-bool CSSStyleValuePair::updateValueLengthOrPercentOrAutoOrNone(
-    const CSSTokenVector& tokens, bool allowNegative)
-{
-    if (tokens.size() != 1) {
-        return false;
-    }
-    return updateValueLengthOrPercentOrAutoOrNone(tokens[0], allowNegative);
+    return updateValueUnitLength(tokens[0], option);
 }
 
 bool CSSStyleValuePair::updateValueBorderImageWidth(
@@ -5521,11 +5670,8 @@ bool CSSStyleValuePair::updateValueBorderImageWidth(
     const char* value = tokens[0].data();
     if (CSSPropertyParser::parseNumber(value, false, &(m_value.m_floatValue))) {
         m_valueKind = CSSStyleValuePair::ValueKind::Number;
-    } else if (CSSPropertyParser::parseLength(value, false,
-                                              &(m_value.m_length))) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Length;
     } else {
-        return false;
+        return CSSPropertyParser::parseLength(value, false, false, this);
     }
     return true;
 }
@@ -5540,7 +5686,7 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPositionX(
         m_value.m_side = SideValue::RightSideValue;
     } else if (STRING_VALUE_IS_STRING("center")) {
         m_value.m_side = SideValue::CenterSideValue;
-    } else if (updateValueLengthOrPercent(value, true)) {
+    } else if (updateValueUnitLength(value, AllowNegative | AllowPercent)) {
     } else {
         return false;
     }
@@ -5557,7 +5703,7 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPositionY(
         m_value.m_side = SideValue::BottomSideValue;
     } else if (STRING_VALUE_IS_STRING("center")) {
         m_value.m_side = SideValue::CenterSideValue;
-    } else if (updateValueLengthOrPercent(value, true)) {
+    } else if (updateValueUnitLength(value, AllowNegative | AllowPercent)) {
     } else {
         return false;
     }
@@ -5619,7 +5765,8 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
                 ret.setValueList(
                     new ValueList(ValueList::Separator::SpaceSeparator));
                 CSSStyleValuePair r;
-                if (!r.updateValueLengthOrPercentOrAuto(tokens[i - 1], false)) {
+                if (!r.updateValueUnitLength(tokens[i - 1],
+                                             AllowPercent | AllowAuto)) {
                     return false;
                 }
                 ret.multiValue()->push_back(r);
@@ -5628,8 +5775,10 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
             ret.setValueList(
                 new ValueList(ValueList::Separator::SpaceSeparator));
             CSSStyleValuePair r1, r2;
-            if (!r1.updateValueLengthOrPercentOrAuto(tokens[i - 2], false) ||
-                !r2.updateValueLengthOrPercentOrAuto(tokens[i - 1], false)) {
+            if (!r1.updateValueUnitLength(tokens[i - 2],
+                                          AllowPercent | AllowAuto) ||
+                !r2.updateValueUnitLength(tokens[i - 1],
+                                          AllowPercent | AllowAuto)) {
                 return false;
             }
             ret.multiValue()->push_back(r1);
@@ -5711,7 +5860,7 @@ bool CSSStyleValuePair::updateValueUnitFontSize(const CSSTokenValue& value)
     } else if (STRING_VALUE_IS_STRING("smaller")) {
         m_value.m_fontSize = FontSizeValue::SmallerFontSizeValue;
     } else {
-        return updateValueLengthOrPercent(value, false);
+        return updateValueUnitLength(value, AllowPercent);
     }
     return true;
 }
@@ -5736,64 +5885,66 @@ bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
         m_value.m_floatValue = result;
         return true;
     } else {
-        return updateValueLengthOrPercent(value, false);
+        return updateValueUnitLength(value, AllowPercent);
     }
 }
 
-#define UPDATE_VALUE_PADDING(POS, ...)                    \
-    bool CSSStyleValuePair::updateValuePadding##POS(      \
-        const CSSTokenVector& tokens)                     \
-    {                                                     \
-        return updateValueLengthOrPercent(tokens, false); \
+#define UPDATE_VALUE_PADDING(POS, ...)                  \
+    bool CSSStyleValuePair::updateValuePadding##POS(    \
+        const CSSTokenVector& tokens)                   \
+    {                                                   \
+        return updateValueLength(tokens, AllowPercent); \
     }
 GEN_FOURSIDE(UPDATE_VALUE_PADDING)
 #undef UPDATE_VALUE_PADDING
 
-#define UPDATE_VALUE_SIDE(POS, ...)                                        \
-    bool CSSStyleValuePair::updateValue##POS(const CSSTokenVector& tokens) \
-    {                                                                      \
-        return updateValueLengthOrPercentOrAuto(tokens, true);             \
+#define UPDATE_VALUE_SIDE(POS, ...)                                         \
+    bool CSSStyleValuePair::updateValue##POS(const CSSTokenVector& tokens)  \
+    {                                                                       \
+        return updateValueLength(tokens,                                    \
+                                 AllowNegative | AllowPercent | AllowAuto); \
     }
 GEN_FOURSIDE(UPDATE_VALUE_SIDE)
 #undef UPDATE_VALUE_SIDE
 
-#define UPDATE_VALUE_MARGIN(POS, ...)                          \
-    bool CSSStyleValuePair::updateValueMargin##POS(            \
-        const CSSTokenVector& tokens)                          \
-    {                                                          \
-        return updateValueLengthOrPercentOrAuto(tokens, true); \
+#define UPDATE_VALUE_MARGIN(POS, ...)                                       \
+    bool CSSStyleValuePair::updateValueMargin##POS(                         \
+        const CSSTokenVector& tokens)                                       \
+    {                                                                       \
+        return updateValueLength(tokens,                                    \
+                                 AllowNegative | AllowPercent | AllowAuto); \
     }
 GEN_FOURSIDE(UPDATE_VALUE_MARGIN)
 #undef UPDATE_VALUE_MARGIN
 
 bool CSSStyleValuePair::updateValueWidth(const CSSTokenVector& tokens)
 {
-    return updateValueLengthOrPercentOrAuto(tokens, false);
+    return updateValueLength(tokens, AllowPercent | AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueMaxWidth(const CSSTokenVector& tokens)
 {
-    return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
+    return updateValueLength(tokens, AllowPercent | AllowNone);
 }
 
 bool CSSStyleValuePair::updateValueMinWidth(const CSSTokenVector& tokens)
 {
-    return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
+    return updateValueLength(tokens, AllowPercent | AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueHeight(const CSSTokenVector& tokens)
 {
-    return updateValueLengthOrPercentOrAuto(tokens, false);
+    return updateValueLength(tokens, AllowPercent | AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueMaxHeight(const CSSTokenVector& tokens)
 {
-    return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
+    return updateValueLength(tokens, AllowPercent | AllowNone);
 }
 
 bool CSSStyleValuePair::updateValueMinHeight(const CSSTokenVector& tokens)
 {
-    return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
+    return updateValueLength(tokens, AllowPercent | AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueVerticalAlign(const CSSTokenVector& tokens)
@@ -5828,7 +5979,7 @@ bool CSSStyleValuePair::updateValueVerticalAlign(const CSSTokenVector& tokens)
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::TextBottomVAlignValue;
     } else {
-        return updateValueLengthOrPercent(value, true);
+        return updateValueUnitLength(value, AllowNegative | AllowPercent);
     }
     return true;
 }
@@ -5894,7 +6045,8 @@ bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens)
             }
 
             CSSStyleValuePair ret;
-            if (!ret.updateValueLengthOrPercent(value, true)) {
+            if (!ret.updateValueUnitLength(value,
+                                           AllowPercent | AllowNegative)) {
                 return false;
             }
             values->push_back(ret);
@@ -5903,7 +6055,7 @@ bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens)
 
     if (tokens.size() == 3) {
         const CSSTokenValue& s = tokens[2];
-        if (!zPair.updateValueLengthOrPercent(s, true)) {
+        if (!zPair.updateValueUnitLength(s, AllowPercent | AllowNegative)) {
             return false;
         }
         if (zPair.valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
@@ -6113,17 +6265,7 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens)
 
 bool CSSStyleValuePair::updateValueOpacity(const CSSTokenVector& tokens)
 {
-    if (tokens.size() != 1) {
-        return false;
-    }
-
-    float f;
-    m_valueKind = CSSStyleValuePair::ValueKind::Number;
-    if (CSSPropertyParser::parseNumber(tokens[0].data(), true, &f)) {
-        m_value.m_floatValue = f;
-        return true;
-    }
-    return false;
+    return updateValueNumber(tokens);
 }
 
 bool CSSStyleValuePair::updateValueFontWeight(const CSSTokenVector& tokens)
@@ -6186,13 +6328,13 @@ bool CSSStyleValuePair::updateValueUnitOverflowX(const CSSTokenValue& value)
     m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
 
     if (STRING_VALUE_IS_STRING("visible")) {
-        m_value.m_overflowX = OverflowValue::VisibleOverflow;
+        m_value.m_overflow = OverflowValue::VisibleOverflow;
     } else if (STRING_VALUE_IS_STRING("hidden")) {
-        m_value.m_overflowX = OverflowValue::HiddenOverflow;
+        m_value.m_overflow = OverflowValue::HiddenOverflow;
     } else if (STRING_VALUE_IS_STRING("auto")) {
-        m_value.m_overflowX = OverflowValue::AutoOverflow;
+        m_value.m_overflow = OverflowValue::AutoOverflow;
     } else if (STRING_VALUE_IS_STRING("scroll")) {
-        m_value.m_overflowX = OverflowValue::ScrollOverflow;
+        m_value.m_overflow = OverflowValue::ScrollOverflow;
     } else {
         return false;
     }
@@ -6213,17 +6355,92 @@ bool CSSStyleValuePair::updateValueUnitOverflowY(const CSSTokenValue& value)
     m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
 
     if (STRING_VALUE_IS_STRING("visible")) {
-        m_value.m_overflowY = OverflowValue::VisibleOverflow;
+        m_value.m_overflow = OverflowValue::VisibleOverflow;
     } else if (STRING_VALUE_IS_STRING("hidden")) {
-        m_value.m_overflowY = OverflowValue::HiddenOverflow;
+        m_value.m_overflow = OverflowValue::HiddenOverflow;
     } else if (STRING_VALUE_IS_STRING("auto")) {
-        m_value.m_overflowY = OverflowValue::AutoOverflow;
+        m_value.m_overflow = OverflowValue::AutoOverflow;
     } else if (STRING_VALUE_IS_STRING("scroll")) {
-        m_value.m_overflowY = OverflowValue::ScrollOverflow;
+        m_value.m_overflow = OverflowValue::ScrollOverflow;
     } else {
         return false;
     }
     return true;
+}
+
+static void removeOverflowCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::OverflowX);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::OverflowY);
+}
+
+static void addOverflowCSSValuePairs(CSSStyleDeclaration* target,
+                                     CSSStyleValuePair overflowX,
+                                     CSSStyleValuePair overflowY)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::OverflowX, overflowX);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::OverflowY, overflowY);
+}
+
+static bool parseOverflowShorthand(const CSSTokenVector& tokens,
+                                   CSSStyleValuePair* overflowX,
+                                   CSSStyleValuePair* overflowY)
+{
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    overflowX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    overflowY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    CSSStyleValuePair temp;
+
+    const CSSTokenValue& tok = tokens[0];
+
+    if (temp.updateValueUnitOverflowX(tokens[0])) {
+        *overflowX = temp;
+        *overflowY = temp;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+void CSSStyleDeclaration::setOverflow(const char* value, size_t length,
+                                      bool isImportant)
+{
+    if (length == 0) {
+        removeOverflowCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    // TODO comma separation
+    CSSStyleValuePair v, overflowX, overflowY;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addOverflowCSSValuePairs(this, v, v);
+    } else if (parseOverflowShorthand(tokens, &overflowX, &overflowY)) {
+        overflowX.setFlagImportant(isImportant);
+        overflowY.setFlagImportant(isImportant);
+        addOverflowCSSValuePairs(this, overflowX, overflowY);
+    }
+}
+
+String* CSSStyleDeclaration::Overflow()
+{
+    // TODO: Should find the specific rule for composing overflow
+    String* overflowX = OverflowX();
+    String* overflowY = OverflowY();
+
+    if (overflowX->equals(overflowY)) {
+        return overflowX;
+    } else {
+        return String::createASCIIString("auto");
+    }
 }
 
 bool CSSStyleValuePair::updateValuePosition(const CSSTokenVector& tokens)
@@ -6299,7 +6516,7 @@ bool CSSStyleValuePair::updateValueTextAlign(const CSSTokenVector& tokens)
 
 bool CSSStyleValuePair::updateValueTextIndent(const CSSTokenVector& tokens)
 {
-    return updateValueLengthOrPercent(tokens, true);
+    return updateValueLength(tokens, AllowNegative | AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValueUnicodeBidi(const CSSTokenVector& tokens)
@@ -6387,29 +6604,26 @@ bool CSSStyleValuePair::updateValueBorderSpacing(const CSSTokenVector& tokens)
     // Initial : 0, Percentages: N/A, lengths may not be negative.
     if (tokens.size() == 1) {
         const CSSTokenValue& first = tokens[0];
-        ValueData data = { 0 };
-        if (CSSPropertyParser::parseLength(first.data(), false,
-                                           &(data.m_length))) {
-            setLengthValue(data.m_length);
-            return true;
-        }
+        return CSSPropertyParser::parseLength(first.data(), false, false, this);
     } else if (tokens.size() == 2) {
         const CSSTokenValue& first = tokens[0];
         const CSSTokenValue& second = tokens[1];
         ValueData firstData = { 0 };
         ValueData secondData = { 0 };
-        if (CSSPropertyParser::parseLength(first.data(), false,
-                                           &(firstData.m_length)) &&
-            CSSPropertyParser::parseLength(second.data(), false,
-                                           &(secondData.m_length))) {
-            m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-            m_value.m_multiValue =
-                new ValueList(ValueList::Separator::SpaceSeparator);
-            m_value.m_multiValue->emplace_back(
-                CSSStyleValuePair::ValueKind::Length, firstData);
-            m_value.m_multiValue->emplace_back(
-                CSSStyleValuePair::ValueKind::Length, secondData);
-            return true;
+        if (CSSPropertyParser::parseLength(first.data(), false, false, this)) {
+            firstData.m_length = m_value.m_length;
+            if (CSSPropertyParser::parseLength(second.data(), false, false,
+                                               this)) {
+                secondData.m_length = m_value.m_length;
+                m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+                m_value.m_multiValue =
+                    new ValueList(ValueList::Separator::SpaceSeparator);
+                m_value.m_multiValue->emplace_back(
+                    CSSStyleValuePair::ValueKind::Length, firstData);
+                m_value.m_multiValue->emplace_back(
+                    CSSStyleValuePair::ValueKind::Length, secondData);
+                return true;
+            }
         }
     }
     return false;
@@ -6512,6 +6726,431 @@ bool CSSStyleValuePair::updateValueBoxSizing(const CSSTokenVector& tokens)
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueUnitFlexDirection(const CSSTokenValue& value)
+{
+    m_valueKind = CSSStyleValuePair::ValueKind::FlexDirectionValueKind;
+    if (STRING_VALUE_IS_STRING("row")) {
+        m_value.m_flexDirection = FlexDirectionValue::RowFlexDirectionValue;
+    } else if (STRING_VALUE_IS_STRING("row-reverse")) {
+        m_value.m_flexDirection =
+            FlexDirectionValue::RowReverseFlexDirectionValue;
+    } else if (STRING_VALUE_IS_STRING("column")) {
+        m_value.m_flexDirection = FlexDirectionValue::ColumnFlexDirectionValue;
+    } else if (STRING_VALUE_IS_STRING("column-reverse")) {
+        m_value.m_flexDirection =
+            FlexDirectionValue::ColumnReverseFlexDirectionValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueFlexDirection(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    return updateValueUnitFlexDirection(value);
+}
+
+bool CSSStyleValuePair::updateValueUnitFlexWrap(const CSSTokenValue& value)
+{
+    m_valueKind = CSSStyleValuePair::ValueKind::FlexWrapValueKind;
+    if (STRING_VALUE_IS_STRING("nowrap")) {
+        m_value.m_flexWrap = FlexWrapValue::NoWrapFlexWrapValue;
+    } else if (STRING_VALUE_IS_STRING("wrap")) {
+        m_value.m_flexWrap = FlexWrapValue::WrapFlexWrapValue;
+    } else if (STRING_VALUE_IS_STRING("wrap-reverse")) {
+        m_value.m_flexWrap = FlexWrapValue::WrapReverseFlexWrapValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueFlexWrap(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    return updateValueUnitFlexWrap(value);
+}
+
+static void removeFlexFlowCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexDirection);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexWrap);
+}
+
+static void addFlexFlowCSSValuePairs(CSSStyleDeclaration* target,
+                                     CSSStyleValuePair flexDirection,
+                                     CSSStyleValuePair flexWrap)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::FlexDirection,
+                            flexDirection);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::FlexWrap, flexWrap);
+}
+
+static bool parseFlexFlowShorthand(const CSSTokenVector& tokens,
+                                   CSSStyleValuePair* flexDirection,
+                                   CSSStyleValuePair* flexWrap)
+{
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    flexDirection->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    flexWrap->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool hasFlexDirection = false, hasFlexWrap = false;
+    CSSStyleValuePair temp;
+    size_t pos = 0;
+
+    while (pos < len) {
+        const CSSTokenValue& token = tokens[pos++];
+        if (!hasFlexDirection && temp.updateValueUnitFlexDirection(token)) {
+            hasFlexDirection = true;
+            *flexDirection = temp;
+            continue;
+        } else if (temp.updateValueUnitFlexWrap(token)) {
+            hasFlexWrap = true;
+            *flexWrap = temp;
+            break;
+        }
+        return false;
+    }
+
+    return hasFlexDirection || hasFlexWrap;
+}
+
+void CSSStyleDeclaration::setFlexFlow(const char* value, size_t length,
+                                      bool isImportant)
+{
+    if (length == 0) {
+        removeFlexFlowCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    // TODO comma separation
+    CSSStyleValuePair v, flexDirection, flexWrap;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addFlexFlowCSSValuePairs(this, v, v);
+    } else if (parseFlexFlowShorthand(tokens, &flexDirection, &flexWrap)) {
+        flexDirection.setFlagImportant(isImportant);
+        flexWrap.setFlagImportant(isImportant);
+        addFlexFlowCSSValuePairs(this, flexDirection, flexWrap);
+    }
+}
+
+String* CSSStyleDeclaration::FlexFlow()
+{
+    String* flexDirection = FlexDirection();
+    String* flexWrap = FlexWrap();
+
+    String* space = String::spaceString;
+    StringBuilder builder;
+    builder.appendString(flexDirection);
+    builder.appendString(space);
+    builder.appendString(flexWrap);
+
+    return builder.finalize();
+}
+
+bool CSSStyleValuePair::updateValueOrder(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const char* token = tokens[0].data();
+    int32_t val = 0;
+    if (CSSPropertyParser::parseInt32(token, true, &val)) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Int32;
+        m_value.m_int32Value = val;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueJustifyContent(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::JustifyContentValueKind;
+    if (STRING_VALUE_IS_STRING("flex-start")) {
+        m_value.m_justifyContent =
+            JustifyContentValue::FlexStartJustifyContentValue;
+    } else if (STRING_VALUE_IS_STRING("flex-end")) {
+        m_value.m_justifyContent =
+            JustifyContentValue::FlexEndJustifyContentValue;
+    } else if (STRING_VALUE_IS_STRING("center")) {
+        m_value.m_justifyContent =
+            JustifyContentValue::CenterJustifyContentValue;
+    } else if (STRING_VALUE_IS_STRING("space-between")) {
+        m_value.m_justifyContent =
+            JustifyContentValue::SpaceBetweenJustifyContentValue;
+    } else if (STRING_VALUE_IS_STRING("space-around")) {
+        m_value.m_justifyContent =
+            JustifyContentValue::SpaceAroundJustifyContentValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueUnitAlignItem(const CSSTokenValue& value)
+{
+    m_valueKind = CSSStyleValuePair::ValueKind::AlignItemValueKind;
+    if (STRING_VALUE_IS_STRING("flex-start")) {
+        m_value.m_alignItem = AlignItemValue::FlexStartAlignItemValue;
+    } else if (STRING_VALUE_IS_STRING("flex-end")) {
+        m_value.m_alignItem = AlignItemValue::FlexEndAlignItemValue;
+    } else if (STRING_VALUE_IS_STRING("center")) {
+        m_value.m_alignItem = AlignItemValue::CenterAlignItemValue;
+    } else if (STRING_VALUE_IS_STRING("baseline")) {
+        m_value.m_alignItem = AlignItemValue::BaselineAlignItemValue;
+    } else if (STRING_VALUE_IS_STRING("stretch")) {
+        m_value.m_alignItem = AlignItemValue::StretchAlignItemValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueAlignItems(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    return updateValueUnitAlignItem(value);
+}
+
+bool CSSStyleValuePair::updateValueAlignSelf(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_STRING("auto")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+        return true;
+    }
+    return updateValueAlignItems(tokens);
+}
+
+bool CSSStyleValuePair::updateValueAlignContent(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::AlignContentValueKind;
+    if (STRING_VALUE_IS_STRING("flex-start")) {
+        m_value.m_alignContent = AlignContentValue::FlexStartAlignContentValue;
+    } else if (STRING_VALUE_IS_STRING("flex-end")) {
+        m_value.m_alignContent = AlignContentValue::FlexEndAlignContentValue;
+    } else if (STRING_VALUE_IS_STRING("space-between")) {
+        m_value.m_alignContent =
+            AlignContentValue::SpaceBetweenAlignContentValue;
+    } else if (STRING_VALUE_IS_STRING("space-around")) {
+        m_value.m_alignContent =
+            AlignContentValue::SpaceAroundAlignContentValue;
+    } else if (STRING_VALUE_IS_STRING("stretch")) {
+        m_value.m_alignContent = AlignContentValue::StretchAlignContentValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueFlexGrow(const CSSTokenVector& tokens)
+{
+    return updateValueNumber(tokens);
+}
+
+bool CSSStyleValuePair::updateValueUnitFlexGrow(const CSSTokenValue& value)
+{
+    return updateValueNumber(value);
+}
+
+bool CSSStyleValuePair::updateValueFlexShrink(const CSSTokenVector& tokens)
+{
+    return updateValueNumber(tokens);
+}
+
+bool CSSStyleValuePair::updateValueUnitFlexShrink(const CSSTokenValue& value)
+{
+    return updateValueNumber(value);
+}
+
+bool CSSStyleValuePair::updateValueFlexBasis(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    return updateValueUnitFlexBasis(value);
+}
+
+bool CSSStyleValuePair::updateValueUnitFlexBasis(const CSSTokenValue& value)
+{
+    if (STRING_VALUE_IS_STRING("content")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::FlexBasisValueKind;
+        m_value.m_flexBasis = FlexBasisValue::ContentFlexBasisValue;
+    } else {
+        return updateValueUnitLength(value, AllowPercent | AllowAuto);
+    }
+    return true;
+}
+
+static void removeFlexCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexGrow);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexShrink);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexBasis);
+}
+
+static void addFlexCSSValuePairs(CSSStyleDeclaration* target,
+                                 CSSStyleValuePair flexGrow,
+                                 CSSStyleValuePair flexShrink,
+                                 CSSStyleValuePair flexBasis)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::FlexGrow, flexGrow);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::FlexShrink, flexShrink);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::FlexBasis, flexBasis);
+}
+
+static bool parseFlexShorthand(const CSSTokenVector& tokens,
+                               CSSStyleValuePair* flexGrow,
+                               CSSStyleValuePair* flexShrink,
+                               CSSStyleValuePair* flexBasis)
+{
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    flexGrow->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    flexShrink->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    flexBasis->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool hasFlexGrow = false, hasFlexShrink = false, hasFlexBasis = false;
+    CSSStyleValuePair temp;
+    size_t pos = 0;
+
+    while (pos < len) {
+        const CSSTokenValue& token = tokens[pos++];
+        if (!hasFlexGrow && temp.updateValueUnitFlexGrow(token)) {
+            hasFlexGrow = true;
+            *flexGrow = temp;
+            continue;
+        } else if (hasFlexGrow && !hasFlexShrink &&
+                   temp.updateValueUnitFlexShrink(token)) {
+            hasFlexShrink = true;
+            *flexShrink = temp;
+            continue;
+        } else if (temp.updateValueUnitFlexBasis(token)) {
+            hasFlexBasis = true;
+            *flexBasis = temp;
+            break;
+        }
+        return false;
+    }
+
+    return hasFlexGrow || hasFlexShrink || hasFlexBasis;
+}
+
+void CSSStyleDeclaration::setFlex(const char* str, size_t length,
+                                  bool isImportant)
+{
+    if (length == 0) {
+        removeFlexCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, str, length);
+    const CSSTokenValue& value = tokens[0];
+
+    // TODO comma separation
+    CSSStyleValuePair v, flexGrow, flexShrink, flexBasis;
+    float f;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addFlexCSSValuePairs(this, v, v, v);
+    } else if (STRING_VALUE_IS_AUTO()) {
+        flexGrow.setFlagImportant(isImportant);
+        flexShrink.setFlagImportant(isImportant);
+        flexBasis.setFlagImportant(isImportant);
+        flexGrow.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        flexGrow.setValue(1);
+        flexShrink.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        flexShrink.setValue(1);
+        flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
+    } else if (STRING_VALUE_IS_NONE()) {
+        flexGrow.setFlagImportant(isImportant);
+        flexShrink.setFlagImportant(isImportant);
+        flexBasis.setFlagImportant(isImportant);
+        flexGrow.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        flexGrow.setValue(0);
+        flexShrink.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        flexShrink.setValue(0);
+        flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
+    } else if (CSSPropertyParser::parseNumber(str, false, &f)) {
+        flexGrow.setFlagImportant(isImportant);
+        flexShrink.setFlagImportant(isImportant);
+        flexBasis.setFlagImportant(isImportant);
+        flexGrow.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        flexGrow.setValue(f);
+        flexShrink.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        flexShrink.setValue(1);
+        flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        flexShrink.setLengthValue(CSSLength(0));
+    } else if (parseFlexShorthand(tokens, &flexGrow, &flexShrink, &flexBasis)) {
+        flexGrow.setFlagImportant(isImportant);
+        flexShrink.setFlagImportant(isImportant);
+        flexBasis.setFlagImportant(isImportant);
+        addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
+    }
+}
+
+String* CSSStyleDeclaration::Flex()
+{
+    String* flexGrow = FlexGrow();
+    String* flexShrink = FlexShrink();
+    String* flexBasis = FlexBasis();
+
+    String* space = String::spaceString;
+    StringBuilder builder;
+    builder.appendString(flexGrow);
+    builder.appendString(space);
+    builder.appendString(flexShrink);
+    builder.appendString(space);
+    builder.appendString(flexBasis);
+
+    return builder.finalize();
 }
 
 #ifdef STARFISH_ENABLE_TEST

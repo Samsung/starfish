@@ -338,28 +338,9 @@ public:
         }
         return false;
     }
-    static bool parseLength(const char* token, bool allowNegative,
-                            CSSLength* ret)
-    {
-        CSSPropertyParser parser((char*)token);
-        if (!parser.consumeNumber()) {
-            return false;
-        }
-        float num = parser.parsedNumber();
-        if (!allowNegative && num < 0) {
-            return false;
-        }
-        parser.consumeString();
-        String* str = parser.parsedString();
-        if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
-            *ret = CSSLength(str, num);
-            return parser.isEnd();
-        }
-        return false;
-    }
 
     static bool parseLength(const char* token, bool allowNegative,
-                            CSSStyleValuePair* pair)
+                            bool allowPercent, CSSStyleValuePair* pair)
     {
         CSSPropertyParser parser((char*)token);
         if (!parser.consumeNumber()) {
@@ -372,30 +353,10 @@ public:
         parser.consumeString();
         String* str = parser.parsedString();
         if (str->equals("%")) {
-            return false;
-        } else if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
-            pair->setLengthValue(CSSLength(str, num));
-            return parser.isEnd();
-        }
-        return false;
-    }
-
-    static bool parseLengthOrPercent(const char* token, bool allowNegative,
-                                     CSSStyleValuePair* pair)
-    {
-        CSSPropertyParser parser((char*)token);
-        if (!parser.consumeNumber()) {
-            return false;
-        }
-        float num = parser.parsedNumber();
-        if (!allowNegative && num < 0) {
-            return false;
-        }
-        parser.consumeString();
-        String* str = parser.parsedString();
-        if (str->equals("%")) {
-            pair->setPercentageValue(num / 100.f);
-            return parser.isEnd();
+            if (allowPercent) {
+                pair->setPercentageValue(num / 100.f);
+                return parser.isEnd();
+            }
         } else if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
             pair->setLengthValue(CSSLength(str, num));
             return parser.isEnd();

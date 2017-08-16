@@ -18,6 +18,7 @@
 #define __StarFishComputedStyle__
 
 #include "core/style/ContentData.h"
+#include "core/style/FlexBasisData.h"
 #include "core/style/DefaultStyle.h"
 #include "core/style/Style.h"
 #include "core/style/StyleBackgroundData.h"
@@ -1021,6 +1022,7 @@ public:
             nullptr);
     void arrangeStyleValues(ComputedStyle* parentStyle,
                             Node* current = nullptr);
+    void blockify(Node* current, bool force);
 
     void clearTransforms()
     {
@@ -1082,6 +1084,106 @@ public:
     TableLayoutValue tableLayout()
     {
         return m_tableLayout;
+    }
+
+    void setFlexDirection(FlexDirectionValue value)
+    {
+        m_flexDirection = value;
+    }
+
+    FlexDirectionValue flexDirection()
+    {
+        return m_flexDirection;
+    }
+
+    void setFlexWrap(FlexWrapValue value)
+    {
+        m_flexWrap = value;
+    }
+
+    FlexWrapValue flexWrap()
+    {
+        return m_flexWrap;
+    }
+
+    void setOrder(int32_t order)
+    {
+        m_order = order;
+    }
+
+    int32_t order()
+    {
+        return m_order;
+    }
+
+    void setJustifyContent(JustifyContentValue value)
+    {
+        m_justifyContent = value;
+    }
+
+    JustifyContentValue justifyContent()
+    {
+        return m_justifyContent;
+    }
+
+    void setAlignItems(AlignItemValue value)
+    {
+        m_alignItems = value;
+    }
+
+    AlignItemValue alignItems()
+    {
+        return m_alignItems;
+    }
+
+    void setAlignSelf(AlignItemValue value)
+    {
+        m_alignSelf = value;
+    }
+
+    AlignItemValue alignSelf()
+    {
+        return m_alignSelf;
+    }
+
+    void setAlignContent(AlignContentValue value)
+    {
+        m_alignContent = value;
+    }
+
+    AlignContentValue alignContent()
+    {
+        return m_alignContent;
+    }
+
+    void setFlexGrow(float value)
+    {
+        m_flexGrow = value;
+    }
+
+    float flexGrow()
+    {
+        return m_flexGrow;
+    }
+
+    void setFlexShrink(float value)
+    {
+        m_flexShrink = value;
+    }
+
+    float flexShrink()
+    {
+        return m_flexShrink;
+    }
+
+    void setFlexBasis(FlexBasisData value)
+    {
+        m_flexBasis = value;
+    }
+
+    FlexBasisData flexBasis()
+    {
+        return m_flexBasis;
     }
 
     bool hasContent()
@@ -1183,12 +1285,24 @@ protected:
         m_zIndexSpecifiedByUser = false;
         m_background = nullptr;
         m_surround = nullptr;
+        m_order = 0;
+        m_flexGrow = 0;
+        m_flexShrink = 1;
+        m_flexBasis = FlexBasisData(true);
         m_overflowX = OverflowValue::VisibleOverflow;
         m_overflowY = OverflowValue::VisibleOverflow;
         m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
         m_verticalAlign = initialVerticalAlign();
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
+        m_tableLayout = TableLayoutValue::AutoTableLayoutValue;
+        m_flexDirection = FlexDirectionValue::RowFlexDirectionValue;
+        m_flexWrap = FlexWrapValue::NoWrapFlexWrapValue;
+        m_justifyContent = JustifyContentValue::FlexStartJustifyContentValue;
+        m_alignItems = AlignItemValue::StretchAlignItemValue;
+        m_alignSelf = AlignItemValue::StretchAlignItemValue;
+        m_alignSelfSpecifiedByUser = false;
+        m_alignContent = AlignContentValue::StretchAlignContentValue;
         m_pseudoId = StyleResolver::PseudoElementType::PseudoElementNone;
         m_combinatorMatchingResult =
             StyleResolver::CombinatorMatchingResult::CombinatorFails;
@@ -1229,8 +1343,14 @@ protected:
     TextDecorationValue m_textDecoration : 3;
     UnicodeBidiValue m_unicodeBidi : 2;
     BoxSizingValue m_boxSizing : 1;
-    bool m_zIndexSpecifiedByUser : 1;
     TableLayoutValue m_tableLayout : 1; // table
+    FlexDirectionValue m_flexDirection : 2;
+    FlexWrapValue m_flexWrap : 2;
+    JustifyContentValue m_justifyContent : 3;
+    AlignItemValue m_alignItems : 3;
+    bool m_alignSelfSpecifiedByUser;
+    AlignItemValue m_alignSelf : 3;
+    AlignContentValue m_alignContent : 3;
     StyleResolver::PseudoElementType m_pseudoId : 6;
     StyleResolver::CombinatorMatchingResult m_combinatorMatchingResult : 1;
 
@@ -1240,9 +1360,14 @@ protected:
 
     float m_opacity;
     int32_t m_zIndex;
+    bool m_zIndexSpecifiedByUser;
     Font* m_font;
     StyleBackgroundData* m_background;
     StyleSurroundData* m_surround;
+    int32_t m_order;
+    float m_flexGrow;
+    float m_flexShrink;
+    FlexBasisData m_flexBasis;
 
     RareComputedStyleData* m_rareComputedStyleData;
 };

@@ -460,11 +460,6 @@ public:
         return m_style;
     }
 
-    ComputedStyle* style() const
-    {
-        return m_style;
-    }
-
     void setFrame(Frame* frame)
     {
         m_frame = frame;

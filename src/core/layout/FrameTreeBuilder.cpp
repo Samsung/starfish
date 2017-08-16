@@ -27,6 +27,7 @@
 #include "core/layout/FrameInline.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
+#include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameReplaced.h"
 #include "core/layout/FrameReplacedImage.h"
 #include "core/layout/FrameTableBox.h"
@@ -49,6 +50,7 @@ FrameTreeBuilderContext::FrameTreeBuilderContext(
     FrameBlockBox* currentBlockContainer)
 {
     m_isInFrameInlineFlow = false;
+    m_isInFrameFlexFlow = false;
     setCurrentBlockContainer(currentBlockContainer);
 }
 
@@ -56,6 +58,7 @@ void FrameTreeBuilderContext::setCurrentBlockContainer(
     FrameBlockBox* blockContainer)
 {
     m_currentBlockContainer = blockContainer;
+    m_isInFrameFlexFlow = blockContainer->isFrameFlexibleBox();
 }
 
 FrameBlockBox* FrameTreeBuilderContext::currentBlockContainer()
@@ -79,6 +82,16 @@ void FrameTreeBuilderContext::setIsInFrameInlineFlow(bool b)
     m_isInFrameInlineFlow = b;
 }
 
+bool FrameTreeBuilderContext::isInFrameFlexFlow()
+{
+    return m_isInFrameFlexFlow;
+}
+
+void FrameTreeBuilderContext::setIsInFrameFlexFlow(bool b)
+{
+    m_isInFrameFlexFlow = b;
+}
+
 void FrameTreeBuilder::clearTree(Node* current)
 {
     current->markNeedsFrameTreeBuild();
@@ -92,28 +105,36 @@ void FrameTreeBuilder::clearTree(Node* current)
     }
 }
 
-static FrameBlockBox* createAnonymouseBlockBox(FrameBlockBox* frameBlockBox,
+static FrameBlockBox* createAnonymouseBlockBox(FrameBlockBox* blockContainer,
                                                Node* node)
 {
-    ComputedStyle* style = new ComputedStyle(frameBlockBox->style());
+    ComputedStyle* style = new ComputedStyle(blockContainer->style());
     style->setDisplay(DisplayValue::BlockDisplayValue);
     style->loadResources(node);
-    style->arrangeStyleValues(frameBlockBox->style(), node);
+    style->arrangeStyleValues(blockContainer->style(), node);
 
     return new FrameBlockBox(nullptr, style);
 }
 
-void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox,
-                                                  Frame* currentFrame,
-                                                  Node* currentNode,
-                                                  FrameTreeBuilderContext& ctx)
+static FrameBlockBox* wrapWithAnonymouseBlockBox(FrameBlockBox* blockContainer,
+                                                 Node* node, Frame* frame)
 {
-    if (!frameBlockBox->firstChild()) {
-        frameBlockBox->appendChild(currentFrame);
+    FrameBlockBox* blockBox = createAnonymouseBlockBox(blockContainer, node);
+    blockBox->appendChild(frame);
+    blockContainer->appendChild(blockBox);
+    return blockBox;
+}
+
+void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
+                                   Frame* currentFrame, Node* currentNode,
+                                   FrameTreeBuilderContext& ctx)
+{
+    bool isBlockChild = currentFrame->isBlockLevel();
+    if (!blockContainer->firstChild()) {
+        blockContainer->appendChild(currentFrame);
         return;
     }
 
-    bool isBlockChild = currentFrame->isBlockLevel();
     if (!isBlockChild || (!currentFrame->isNormalFlow())) {
         if (currentNode->parentNode()->style()->display() ==
             InlineDisplayValue) {
@@ -123,29 +144,24 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox,
         }
     }
 
-    if (frameBlockBox->hasBlockFlow()) {
+    if (blockContainer->hasBlockFlow()) {
         if (isBlockChild) {
             // Block... + Block case
-            if (currentFrame->isNormalFlow()) {
-                frameBlockBox->appendChild(currentFrame);
+            if (currentFrame->isNormalFlow() || currentFrame->isFlexItem()) {
+                blockContainer->appendChild(currentFrame);
             } else {
-                FrameBox* blockBox =
-                    createAnonymouseBlockBox(frameBlockBox, currentNode);
-                blockBox->appendChild(currentFrame);
-                frameBlockBox->appendChild(blockBox);
+                wrapWithAnonymouseBlockBox(blockContainer, currentNode,
+                                           currentFrame);
             }
-
         } else {
             // Block... + Inline case
-            Frame* last = frameBlockBox->lastChild();
+            Frame* last = blockContainer->lastChild();
 
             STARFISH_ASSERT(last);
 
             if (!last->isAnonymous() || last->isFrameTableBox()) {
-                FrameBox* blockBox =
-                    createAnonymouseBlockBox(frameBlockBox, currentNode);
-                blockBox->appendChild(currentFrame);
-                frameBlockBox->appendChild(blockBox);
+                wrapWithAnonymouseBlockBox(blockContainer, currentNode,
+                                           currentFrame);
             } else {
                 last->appendChild(currentFrame);
             }
@@ -153,28 +169,28 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox,
     } else {
         if (isBlockChild) {
             if (!currentFrame->isNormalFlow()) {
-                frameBlockBox->appendChild(currentFrame);
+                blockContainer->appendChild(currentFrame);
                 return;
             }
 
             // Inline... + Block case
             GCVector<Frame*> backup;
-            while (frameBlockBox->firstChild()) {
-                backup.push_back(frameBlockBox->firstChild());
-                frameBlockBox->removeChild(frameBlockBox->firstChild());
+            while (blockContainer->firstChild()) {
+                backup.push_back(blockContainer->firstChild());
+                blockContainer->removeChild(blockContainer->firstChild());
             }
 
             FrameBox* blockBox =
-                createAnonymouseBlockBox(frameBlockBox, currentNode);
+                createAnonymouseBlockBox(blockContainer, currentNode);
             for (unsigned i = 0; i < backup.size(); i++) {
                 blockBox->appendChild(backup[i]);
             }
 
-            frameBlockBox->appendChild(blockBox);
-            frameBlockBox->appendChild(currentFrame);
+            blockContainer->appendChild(blockBox);
+            blockContainer->appendChild(currentFrame);
         } else {
             // Inline... + Inline case
-            frameBlockBox->appendChild(currentFrame);
+            blockContainer->appendChild(currentFrame);
         }
     }
 }
@@ -428,17 +444,20 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
     bool didSplitBlock = false;
     bool shouldSkipChildren = false;
-    bool isTableType = false;
+    bool isTableType =
+        current->style() &&
+        ComputedStyle::isDisplayTableValueType(current->style()->display());
     FrameBlockBox* originalFrameBlockBox = nullptr;
     GCVector<FrameInline*> stackedFrameInline;
 
-    if (current->style() &&
-        ComputedStyle::isDisplayTableValueType(current->style()->display())) {
-        isTableType = true;
+    if (ctx.isInFrameFlexFlow()) {
+        if (!current->isCharacterData() && current->style()) {
+            current->style()->blockify(current, true);
+        }
     }
 
     if ((current->needsFrameTreeBuild() || force) || isTableType) {
-        if (current->needsFrameTreeBuild() || force) {
+        if (current->needsFrameTreeBuild()) {
             force = true;
         }
 
@@ -482,8 +501,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             STARFISH_ASSERT(FrameTableTreeBuilder::isTableWrapperDisplayValue(
                 currentFrame->style()->display()));
             if (!currentFrame->parent()) {
-                FrameTreeBuilder::frameBlockBoxChildInserter(
-                    ctx.currentBlockContainer(), currentFrame, current, ctx);
+                FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
+                                              currentFrame, current, ctx);
             }
             if (display != DisplayValue::InlineTableDisplayValue) {
                 ctx.setIsInFrameInlineFlow(false);
@@ -495,6 +514,9 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                 return nullptr;
             }
             shouldSkipChildren = true;
+        } else if (display == DisplayValue::FlexDisplayValue ||
+                   display == DisplayValue::InlineFlexDisplayValue) {
+            currentFrame = new FrameFlexibleBox(current, nullptr);
         } else {
             if (display == DisplayValue::BlockDisplayValue ||
                 display == DisplayValue::InlineBlockDisplayValue) {
@@ -517,58 +539,71 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             }
         }
 
-        bool isBlockChild = currentFrame->isBlockLevel();
-        if (isBlockChild && ctx.isInFrameInlineFlow() &&
-            currentFrame->isNormalFlow()) {
-            // divide block. when comes Inline.. + Block(normal flow)
-            didSplitBlock = true;
+        current->setFrame(currentFrame);
+        current->clearNeedsFrameTreeBuild();
 
-            STARFISH_ASSERT(current->parentNode());
-            Frame* parent = current->parentNode()->frame();
-            while (parent) {
-                if (!parent->isAnonymous() && parent->isFrameBlockBox()) {
-                    break;
-                }
-                parent = parent->parent();
+        if (ctx.isInFrameFlexFlow()) {
+            if (currentFrame->isFrameText()) {
+                currentFrame = wrapWithAnonymouseBlockBox(
+                    ctx.currentBlockContainer(), current, currentFrame);
             }
+            currentFrame->markFlexItem();
+        }
 
-            Node* nd = current->parentNode();
-            while (nd) {
-                if (nd->frame()->isFrameBlockBox()) {
-                    break;
-                }
-                auto iter = ctx.frameInlineItem().find(nd);
-                STARFISH_ASSERT(iter != ctx.frameInlineItem().end());
-                FrameInline* in = new FrameInline(nd);
-                if (iter->second->isLeftMBPCleared()) {
-                    in->setLeftMBPCleared();
-                }
-                if (iter->second->isRightMBPCleared()) {
-                    in->setRightMBPCleared();
-                }
+        if (currentFrame->isNormalFlow()) {
+            if (currentFrame->isBlockLevel() && ctx.isInFrameInlineFlow()) {
+                // divide block. when comes Inline.. + Block(normal flow)
+                didSplitBlock = true;
 
-                if (in->style()->direction() ==
-                    DirectionValue::LtrDirectionValue) {
-                    in->setLeftMBPCleared();
-                    iter->second->setRightMBPCleared();
-                } else {
-                    iter->second->setLeftMBPCleared();
-                    in->setRightMBPCleared();
+                STARFISH_ASSERT(current->parentNode());
+                Frame* parent = current->parentNode()->frame();
+                while (parent) {
+                    if (!parent->isAnonymous() && parent->isFrameBlockBox()) {
+                        break;
+                    }
+                    parent = parent->parent();
                 }
 
-                stackedFrameInline.push_back(in);
-                iter->second = in;
-                STARFISH_ASSERT(ctx.frameInlineItem().find(nd)->second == in);
-                nd = nd->parentNode();
+                Node* nd = current->parentNode();
+                while (nd) {
+                    if (nd->frame()->isFrameBlockBox()) {
+                        break;
+                    }
+                    auto iter = ctx.frameInlineItem().find(nd);
+                    STARFISH_ASSERT(iter != ctx.frameInlineItem().end());
+                    FrameInline* in = new FrameInline(nd);
+                    if (iter->second->isLeftMBPCleared()) {
+                        in->setLeftMBPCleared();
+                    }
+                    if (iter->second->isRightMBPCleared()) {
+                        in->setRightMBPCleared();
+                    }
+
+                    if (in->style()->direction() ==
+                        DirectionValue::LtrDirectionValue) {
+                        in->setLeftMBPCleared();
+                        iter->second->setRightMBPCleared();
+                    } else {
+                        iter->second->setLeftMBPCleared();
+                        in->setRightMBPCleared();
+                    }
+
+                    stackedFrameInline.push_back(in);
+                    iter->second = in;
+                    STARFISH_ASSERT(ctx.frameInlineItem().find(nd)->second ==
+                                    in);
+                    nd = nd->parentNode();
+                }
+
+                STARFISH_ASSERT(parent);
+                ctx.setCurrentBlockContainer(parent->asFrameBlockBox());
+                ctx.setIsInFrameInlineFlow(false);
             }
-
-            STARFISH_ASSERT(parent);
-            ctx.setCurrentBlockContainer(parent->asFrameBlockBox());
-            ctx.setIsInFrameInlineFlow(false);
-        } else if (!currentFrame->isNormalFlow()) {
+        } else {
             // To prevent inline contents from splitting, add not-normal flowed
             // block to inline-box, inline-boxes + Block(Not normal flow)
-            if (ctx.currentBlockContainer()->hasBlockFlow()) {
+            if (!ctx.currentBlockContainer()->isFrameFlexibleBox() &&
+                ctx.currentBlockContainer()->hasBlockFlow()) {
                 Frame* last = ctx.currentBlockContainer()->lastChild();
                 if (last) {
                     if (last->isAnonymous() && last->isFrameBlockBox() &&
@@ -581,13 +616,17 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         }
 
         if (!currentFrame->parent()) {
-            FrameTreeBuilder::frameBlockBoxChildInserter(
-                ctx.currentBlockContainer(), currentFrame, current, ctx);
+            FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
+                                          currentFrame, current, ctx);
+#ifndef NDEBUG
+            if (ctx.currentBlockContainer()->isFrameFlexibleBox()) {
+                STARFISH_ASSERT(
+                    ctx.currentBlockContainer()->lastChild()->isFlexItem());
+            }
+#endif
         }
 
         STARFISH_ASSERT(currentFrame->parent());
-        current->setFrame(currentFrame);
-        current->clearNeedsFrameTreeBuild();
     } else {
         shouldSkipChildren =
             current->frame() && (current->frame()->isFrameReplaced() ||
@@ -686,7 +725,11 @@ void dump(Frame* frm, unsigned depth)
     for (unsigned i = 0; i < depth; i++) {
         printf("  ");
     }
-    printf("%s", frm->name());
+    if (frm->isFlexItem()) {
+        printf("%s(FlexItem)", frm->name());
+    } else {
+        printf("%s", frm->name());
+    }
     printf("[%p]", frm);
     if (frm->isAnonymous()) {
         printf("[anonymous block box] ");

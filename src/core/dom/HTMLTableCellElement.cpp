@@ -38,8 +38,8 @@ void HTMLTableCellElement::styleForPresentationAttribute(
         }
 
         CSSStyleValuePair pair;
-        if (CSSPropertyParser::parseLengthOrPercent(value->utf8Data(), false,
-                                                    &pair)) {
+        if (CSSPropertyParser::parseLength(value->utf8Data(), false, true,
+                                           &pair)) {
             pair.setKeyKind(CSSStyleValuePair::PaddingTop);
             cssValues.push_back(pair);
             pair.setKeyKind(CSSStyleValuePair::PaddingRight);
