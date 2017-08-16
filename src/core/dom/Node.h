@@ -389,6 +389,11 @@ public:
         m_needsStyleRecalc = false;
     }
 
+    // This function is used when the element's attribute and the state of
+    // dynamic pseudo-classes are changed. We should set the dirty flag from
+    // current node to children if needed.
+    void setNeedsStyleRecalcIfNeeded();
+
     void setChildNeedsStyleRecalc()
     {
         m_childNeedsStyleRecalc = true;
@@ -406,8 +411,6 @@ public:
 
     // This function sets the dirty flag only for children.
     void setChildrenNeedsStyleRecalc();
-
-    void setSiblingsNeedsStyleRecalc();
 
     void setNeedsFrameTreeBuild();
 
@@ -570,6 +573,9 @@ public:
 private:
     void validatePreinsert(Node* child, Node* childRef);
     void validateReplace(Node* child, Node* childToRemove);
+
+    void setSiblingsNeedsStyleRecalcIfNeeded();
+    void setChildrenNeedsStyleRecalcIfNeeded();
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)

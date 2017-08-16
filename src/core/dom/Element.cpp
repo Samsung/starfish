@@ -339,12 +339,6 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         } else {
             m_id = AtomicString::createAtomicString(starFish(), value);
         }
-
-        // Style should be recalculated from this node to decendants because of
-        // combinators.
-        setNeedsStyleRecalc();
-        setChildrenNeedsStyleRecalc();
-
         document()->invalidNamedAccessCacheIfNeeded();
     } else if (name == ss->m_class) {
         GCVector<StringView> tokens = DOMTokenList::tokenize(value);
@@ -353,11 +347,6 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
             m_classNames.push_back(
                 AtomicString::createAtomicString(starFish(), tokens[i]));
         }
-
-        // Style should be recalculated from this node to decendants because of
-        // combinators.
-        setNeedsStyleRecalc();
-        setChildrenNeedsStyleRecalc();
 
         // propagate invalidate nodeList cache(getElementsByClassName) damage to
         // parent tree
@@ -372,9 +361,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         }
         inlineStyle()->clear();
 
-        if (value->isEmpty()) {
-            setNeedsStyleRecalc();
-        } else {
+        if (!value->isEmpty()) {
             CSSParser parser(document());
             parser.parseStyleDeclaration(value, inlineStyle());
         }
@@ -390,6 +377,17 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         if (!value->isEmpty() && parseHTMLInteger(value, tabIndex)) {
             setTabIndex(tabIndex, true);
         }
+    }
+
+    if (name == ss->m_audioTagName || name == ss->m_videoTagName) {
+        // Media elements can have child elements, but they are not visible
+        // elements.
+        setNeedsStyleRecalc();
+    } else {
+        // Style should be recalculated from this node to children because of
+        // combinators. And this is done only if children have combinators that
+        // is partially matched.
+        setNeedsStyleRecalcIfNeeded();
     }
 
     // The 'content' property is used with ::before and ::after pseudo-elements

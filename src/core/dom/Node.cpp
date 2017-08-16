@@ -439,25 +439,25 @@ void Node::setState(NodeState state, DynamicRestyleFlags mask, bool enable)
         m_state = 0;
         m_restyleFlags = 0;
 
-        setNeedsStyleRecalc();
         if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
-            setChildrenNeedsStyleRecalc();
-            setSiblingsNeedsStyleRecalc();
+            setNeedsStyleRecalcIfNeeded();
             if (isElement() && asElement()->hasPseudoElements()) {
                 setNeedsFrameTreeBuild();
             }
+        } else {
+            setNeedsStyleRecalc();
         }
 
     } else if (!(m_state & state) == enable) {
         m_state ^= state;
 
-        setNeedsStyleRecalc();
         if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
-            setChildrenNeedsStyleRecalc();
-            setSiblingsNeedsStyleRecalc();
+            setNeedsStyleRecalcIfNeeded();
             if (isElement() && asElement()->hasPseudoElements()) {
                 setNeedsFrameTreeBuild();
             }
+        } else {
+            setNeedsStyleRecalc();
         }
     }
 }
@@ -1345,6 +1345,61 @@ void Node::setNeedsStyleRecalc()
     window()->browsingContext()->setNeedsStyleRecalc();
 }
 
+void Node::setNeedsStyleRecalcIfNeeded()
+{
+    if (!document()->doesParticipateInRendering()) {
+        return;
+    }
+
+    // current node
+    if (!m_needsStyleRecalc) {
+        m_needsStyleRecalc = true;
+
+        Node* node = parentNode();
+        while (node && !node->childNeedsStyleRecalc()) {
+            node->setChildNeedsStyleRecalc();
+            node = node->parentNode();
+        }
+    }
+
+    // siblings
+    setSiblingsNeedsStyleRecalcIfNeeded();
+
+    // children
+    setChildrenNeedsStyleRecalcIfNeeded();
+
+    window()->browsingContext()->setNeedsStyleRecalc();
+}
+
+void Node::setSiblingsNeedsStyleRecalcIfNeeded()
+{
+    Node* node = nextSibling();
+    while (node) {
+        if (node->style() &&
+            node->style()->combinatorMatchingResult() ==
+                StyleResolver::CombinatorMatchingResult::
+                    CombinatorMatchesPartially) {
+            node->m_needsStyleRecalc = true;
+        }
+        node = node->nextSibling();
+    }
+}
+
+void Node::setChildrenNeedsStyleRecalcIfNeeded()
+{
+    Node* child = firstChild();
+    while (child) {
+        if (child->style() &&
+            child->style()->combinatorMatchingResult() ==
+                StyleResolver::CombinatorMatchingResult::
+                    CombinatorMatchesPartially) {
+            child->m_needsStyleRecalc = true;
+        }
+        child->setChildrenNeedsStyleRecalcIfNeeded();
+        child = child->nextSibling();
+    }
+}
+
 void Node::setChildrenNeedsStyleRecalc()
 {
     if (!document()->doesParticipateInRendering()) {
@@ -1356,19 +1411,6 @@ void Node::setChildrenNeedsStyleRecalc()
         child->m_needsStyleRecalc = true;
         child->setChildrenNeedsStyleRecalc();
         child = child->nextSibling();
-    }
-}
-
-void Node::setSiblingsNeedsStyleRecalc()
-{
-    if (!document()->doesParticipateInRendering()) {
-        return;
-    }
-
-    Node* node = nextSibling();
-    while (node) {
-        node->m_needsStyleRecalc = true;
-        node = node->nextSibling();
     }
 }
 
