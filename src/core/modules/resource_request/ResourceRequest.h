@@ -183,6 +183,7 @@ public:
 
     String* encodeFormDataSet(GCVector<FormDataSetItem*>* formDataSet,
                               String* formEnctype);
+    String* mutateActionURL(DocumentURL* url, FormSubmitData* formSubmitData);
 
 protected:
     void pareseHeader(const char* header, size_t len);

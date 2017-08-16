@@ -169,23 +169,22 @@ void HTMLFormElement::submit()
     }
 
     if (!formTarget->equals(String::emptyString)) {
-        STARFISH_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     if (url->isNetworkURL() || url->isFileURL()) {
-        if (formMethod->equalsWithoutCase("post")) {
-            submitAsEntityBody(url, formDataSet, formEnctype);
-        }
+        submitData(url, formDataSet, formEnctype, formMethod);
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 }
 
-void HTMLFormElement::submitAsEntityBody(
-    ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
-    String* formEnctype)
+void HTMLFormElement::submitData(ResourceURL* url,
+                                 GCVector<FormDataSetItem*>* formDataSet,
+                                 String* formEnctype, String* formMethod)
 {
     DocumentURL* urlToOpen = new DocumentURL(
-        url, new FormSubmitData(formDataSet, formEnctype,
-                                String::createASCIIString("post")));
+        url, new FormSubmitData(formDataSet, formEnctype, formMethod));
     document()->window()->location()->assign(urlToOpen);
 }
 

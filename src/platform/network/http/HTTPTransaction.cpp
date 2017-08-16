@@ -189,7 +189,7 @@ void HTTPTransaction::start()
         curl_easy_setopt(m_curl, CURLOPT_COPYPOSTFIELDS,
                          m_httpRequest->entityBody().data());
     } else if (!(m_httpRequest->method().compare("GET") == 0)) {
-        STARFISH_ASSERT_NOT_REACHED();
+        // Do not need to set bodyentity for get
     }
 
 #ifdef STARFISH_TIZEN_WEARABLE

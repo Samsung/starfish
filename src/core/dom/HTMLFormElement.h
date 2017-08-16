@@ -77,9 +77,8 @@ public:
 
 private:
     GCVector<FormDataSetItem*>* createFormDataSet();
-    void submitAsEntityBody(ResourceURL* url,
-                            GCVector<FormDataSetItem*>* formDataSet,
-                            String* formEnctype);
+    void submitData(ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
+                    String* formEnctype, String* methodType);
 
     Element* m_submitter;
 };

@@ -47,22 +47,32 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
                 String::createASCIIString("text/html,text/plain,text/*"));
         }
 
+        String* urlToOpen = url()->urlString();
         if (m_url->isDocumentURL()) {
             DocumentURL* url = m_url->asDocumentURL();
             if (url->formSubmitData()) {
                 FormSubmitData* formSubmitData = url->formSubmitData();
-                entityBody = m_resourceRequest->encodeFormDataSet(
-                    formSubmitData->m_formDataSet,
-                    formSubmitData->m_formEnctype);
-                m_resourceRequest->setRequestHeader(
-                    String::createASCIIString("content-type"),
-                    formSubmitData->m_formEnctype);
-                m_resourceRequest->setRequestHeader(
-                    String::createASCIIString("charset"),
-                    String::createASCIIString("utf-8"));
+                if (url->isNetworkURL()) {
+                    m_resourceRequest->setRequestHeader(
+                        String::createASCIIString("content-type"),
+                        formSubmitData->m_formEnctype);
+                    m_resourceRequest->setRequestHeader(
+                        String::createASCIIString("charset"),
+                        String::createASCIIString("utf-8"));
 
-                if (formSubmitData->m_method->equalsWithoutCase("post")) {
-                    method = ResourceRequest::POST_METHOD;
+                    if (formSubmitData->m_method->equalsWithoutCase("get")) {
+                        method = ResourceRequest::GET_METHOD;
+                        urlToOpen = m_resourceRequest->mutateActionURL(
+                            url, formSubmitData);
+                    } else if (formSubmitData->m_method->equalsWithoutCase(
+                                   "post")) {
+                        method = ResourceRequest::POST_METHOD;
+                        entityBody = m_resourceRequest->encodeFormDataSet(
+                            formSubmitData->m_formDataSet,
+                            formSubmitData->m_formEnctype);
+                    }
+                } else {
+                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 }
             }
         }
@@ -70,7 +80,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
         m_resourceRequest->addResourceRequestClient(
             new ResourceNetworkRequestClient(this));
         m_resourceRequest->open(
-            method, url()->urlString(),
+            method, urlToOpen,
             !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync));
         m_resourceRequest->send(entityBody);
     }
