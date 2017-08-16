@@ -337,6 +337,16 @@ String* ResourceRequest::encodeFormDataSet(
     return result;
 }
 
+String* ResourceRequest::mutateActionURL(DocumentURL* url,
+                                         FormSubmitData* formSubmitData)
+{
+    String* encodedFormData = encodeFormDataSet(formSubmitData->m_formDataSet,
+                                                formSubmitData->m_formEnctype);
+    String* actionURL = url->urlString()->concat("?");
+    actionURL = actionURL->concat(encodedFormData);
+    return actionURL;
+}
+
 static size_t base64Table[128] = {
     std::string::npos,
     std::string::npos,
