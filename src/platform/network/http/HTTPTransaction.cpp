@@ -186,7 +186,7 @@ void HTTPTransaction::start()
     if (m_httpRequest->method().compare("POST") == 0) {
         curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE,
                          m_httpRequest->entityBody().length());
-        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS,
+        curl_easy_setopt(m_curl, CURLOPT_COPYPOSTFIELDS,
                          m_httpRequest->entityBody().data());
     } else if (!(m_httpRequest->method().compare("GET") == 0)) {
         STARFISH_ASSERT_NOT_REACHED();
