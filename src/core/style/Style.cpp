@@ -4352,6 +4352,11 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
                 authorRules.push_back(std::make_pair(rule, url));
             }
         }
+        if (result.combinatorResult != CombinatorFails) {
+            // This is used to determine whether to recalculate the children's
+            // style when the attributes of the element is changed.
+            ret->setCombinatorMatchingResult(result.combinatorResult);
+        }
     }
 }
 
@@ -4501,6 +4506,10 @@ StyleResolver::Match StyleResolver::matchForRelation(
     unsigned idx, MatchResult& result)
 {
     STARFISH_ASSERT(idx < selectorList.size());
+
+    // This is used to determine whether to recalculate the children's style
+    // when the attributes of the element is changed.
+    result.combinatorResult = CombinatorMatchesPartially;
 
     CSSSelector* selector = selectorList[idx];
     switch (relation) {

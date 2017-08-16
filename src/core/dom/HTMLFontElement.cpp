@@ -54,7 +54,6 @@ void HTMLFontElement::didAttributeChanged(QualifiedName name, String* old,
         }
         if (!old->equals(value)) {
             setAttribute(starFish()->staticStrings()->m_color, value);
-            setNeedsStyleRecalc();
         }
     } else if (name == starFish()->staticStrings()->m_size) {
         if (attributeCreated) {
@@ -65,7 +64,6 @@ void HTMLFontElement::didAttributeChanged(QualifiedName name, String* old,
         }
         if (!old->equals(value)) {
             setAttribute(starFish()->staticStrings()->m_size, value);
-            setNeedsStyleRecalc();
         }
     }
 }

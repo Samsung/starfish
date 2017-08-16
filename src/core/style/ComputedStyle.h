@@ -1132,6 +1132,17 @@ public:
         return m_pseudoId;
     }
 
+    void setCombinatorMatchingResult(
+        StyleResolver::CombinatorMatchingResult result)
+    {
+        m_combinatorMatchingResult = result;
+    }
+
+    StyleResolver::CombinatorMatchingResult combinatorMatchingResult() const
+    {
+        return m_combinatorMatchingResult;
+    }
+
     GCVector<ComputedStyle*>& cachedPseudoStyles()
     {
         setRareComputedStyleDataIfNeeded();
@@ -1179,6 +1190,8 @@ protected:
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
         m_pseudoId = StyleResolver::PseudoElementType::PseudoElementNone;
+        m_combinatorMatchingResult =
+            StyleResolver::CombinatorMatchingResult::CombinatorFails;
     }
 
     // NOTICE
@@ -1219,6 +1232,7 @@ protected:
     bool m_zIndexSpecifiedByUser : 1;
     TableLayoutValue m_tableLayout : 1; // table
     StyleResolver::PseudoElementType m_pseudoId : 6;
+    StyleResolver::CombinatorMatchingResult m_combinatorMatchingResult : 1;
 
     Length m_width;
     Length m_height;

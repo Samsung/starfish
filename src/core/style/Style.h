@@ -1996,13 +1996,20 @@ public:
                                   // ancestor of the element
     };
 
+    enum CombinatorMatchingResult {
+        CombinatorFails,
+        CombinatorMatchesPartially,
+    };
+
     struct MatchResult {
         MatchResult()
-            : pseudoType(PseudoElementType::PseudoElementNone)
+            : pseudoType(PseudoElementNone)
+            , combinatorResult(CombinatorFails)
         {
         }
 
         PseudoElementType pseudoType;
+        CombinatorMatchingResult combinatorResult;
     };
 
     StyleResolver(Document* document);
