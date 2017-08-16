@@ -22,79 +22,29 @@
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLInputElement.h"
+#include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
 #include "core/page/BrowsingContext.h"
-#include "core/modules/resource_request/ResourceRequest.h"
+#include "core/page/Location.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 
-class FormResourceRequest : public ResourceRequestClient {
-public:
-    FormResourceRequest(Document* document)
-        : m_resourceRequest(new ResourceRequest(document))
-    {
-        m_resourceRequest->addResourceRequestClient(this);
-    }
+FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
+    : m_name(name)
+    , m_value(value)
+    , m_type(type)
+{
+}
 
-    void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
-    {
-        if (fromExplicit &&
-            (request->readyState() == ResourceRequest::ReadyState::DONE)) {
-            if (m_resourceRequest->m_responseType ==
-                    ResourceRequest::ResponseType::TEXT_RESPONSE ||
-                m_resourceRequest->m_responseType ==
-                    ResourceRequest::ResponseType::DOCUMENT_RESPONSE ||
-                m_resourceRequest->m_responseType ==
-                    ResourceRequest::ResponseType::DEFAULT_RESPONSE) {
-                TextConverter textConverter(
-                    m_resourceRequest->responseMimeType(),
-                    String::fromUTF8("UTF-8"),
-                    m_resourceRequest->response().data(),
-                    m_resourceRequest->response().size());
-                String* m_responseText = textConverter.convert(
-                    m_resourceRequest->response().data(),
-                    m_resourceRequest->response().size(), true);
-                m_resourceRequest->response().clear();
-
-                // TODO: navigate to this document
-            }
-        }
-    }
-
-    void open(String* method, String* url)
-    {
-        m_resourceRequest->open(ResourceRequest::POST_METHOD, url, true,
-                                String::emptyString, String::emptyString);
-    }
-
-    void setRequestHeader(String* key, String* value)
-    {
-        m_resourceRequest->setRequestHeader(key, value);
-    }
-
-    void send(String* body)
-    {
-        m_resourceRequest->send(body);
-    }
-
-protected:
-    ResourceRequest* m_resourceRequest;
-};
-
-class FormDataSetItem : public gc {
-public:
-    FormDataSetItem(String* name, String* value, String* type)
-        : m_name(name)
-        , m_value(value)
-        , m_type(type)
-    {
-    }
-
-    String* m_name;
-    String* m_value;
-    String* m_type;
-};
+FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
+                               String* formEnctype, String* method)
+    : m_formDataSet(formDataSet)
+    , m_formEnctype(formEnctype)
+    , m_method(method)
+{
+}
 
 HTMLFormElement::HTMLFormElement(Document* document)
     : HTMLElement(document)
@@ -210,6 +160,9 @@ void HTMLFormElement::submit()
     }
     if (formMethod->equals(String::emptyString)) {
         formMethod = method();
+        if (formMethod->equals(String::emptyString)) {
+            formMethod = String::createASCIIString("get");
+        }
     }
     if (formTarget->equals(String::emptyString)) {
         formTarget = target();
@@ -221,66 +174,19 @@ void HTMLFormElement::submit()
 
     if (url->isNetworkURL() || url->isFileURL()) {
         if (formMethod->equalsWithoutCase("post")) {
-            submitAsEntityBody(url, formEnctype, formDataSet);
+            submitAsEntityBody(url, formDataSet, formEnctype);
         }
     }
 }
 
 void HTMLFormElement::submitAsEntityBody(
-    ResourceURL* url, String* formEnctype,
-    GCVector<FormDataSetItem*>* formDataSet)
+    ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
+    String* formEnctype)
 {
-    String* entityBody = encodeFormDataSet(formEnctype, formDataSet);
-    FormResourceRequest* req = new FormResourceRequest(document());
-    req->open(String::createASCIIString("post"), url->urlString());
-    req->setRequestHeader(String::createASCIIString("content-type"),
-                          formEnctype);
-    req->setRequestHeader(String::createASCIIString("charset"),
-                          String::createASCIIString("utf-8"));
-    req->send(entityBody);
-}
-
-// https://www.w3.org/TR/html5/forms.html#application/
-// x-www-form-urlencoded-encoding-algorithm
-String* HTMLFormElement::encodeFormDataSet(
-    String* formEnctype, GCVector<FormDataSetItem*>* formDataSet)
-{
-    String* space = String::spaceString;
-    String* plus = String::createASCIIString("+");
-
-    String* result = String::createASCIIString("");
-    if (formEnctype->equalsWithoutCase("application/x-www-form-urlencoded")) {
-        for (size_t i = 0; i < formDataSet->size(); i++) {
-            FormDataSetItem* item = (*formDataSet)[i];
-            String* name = item->m_name->replaceAll(space, plus);
-            String* value = item->m_value->replaceAll(space, plus);
-            String* type = item->m_type->replaceAll(space, plus);
-
-            if (i == 0 && name->equalsWithoutCase("isindex") &&
-                type->equalsWithoutCase("text")) {
-                result = result->concat(value);
-                continue;
-            }
-
-            if (name->equalsWithoutCase("_charset_") &&
-                type->equalsWithoutCase("hidden")) {
-                value = String::createASCIIString("UTF-8");
-            }
-
-            if (i > 0) {
-                result = result->concat(String::createASCIIString("&"));
-            }
-            result = result->concat(name);
-            result = result->concat(String::createASCIIString("="));
-            result = result->concat(value);
-        }
-    } else if (formEnctype->equalsWithoutCase("multipart/form-data")) {
-        // TODO
-    } else if (formEnctype->equalsWithoutCase("text/plain")) {
-        // TODO
-    }
-
-    return result;
+    DocumentURL* urlToOpen = new DocumentURL(
+        url, new FormSubmitData(formDataSet, formEnctype,
+                                String::createASCIIString("post")));
+    document()->window()->location()->assign(urlToOpen);
 }
 
 // https://www.w3.org/TR/html5/forms.html#constructing-the-form-data-set
@@ -304,7 +210,8 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet()
         },
         false);
 
-    GCVector<FormDataSetItem*>* formDataSet = new GCVector<FormDataSetItem*>();
+    GCVector<FormDataSetItem*>* formDataSet =
+        new (GC) GCVector<FormDataSetItem*>();
     for (Element* node : inputNodes) {
         if (node->isHTMLInputElement()) {
             HTMLInputElement* inputNode = node->asHTMLInputElement();

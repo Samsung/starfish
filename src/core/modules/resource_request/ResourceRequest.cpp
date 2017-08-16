@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
+#include "core/dom/HTMLFormElement.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/resource_request/ResourceRequestJob.h"
@@ -291,6 +292,49 @@ void ResourceRequest::send(String* body)
 void ResourceRequest::setRequestHeader(String* h, String* c)
 {
     m_requestHeaders.push_back(std::make_pair(h, c));
+}
+
+// https://www.w3.org/TR/html5/forms.html#application/
+// x-www-form-urlencoded-encoding-algorithm
+String* ResourceRequest::encodeFormDataSet(
+    GCVector<FormDataSetItem*>* formDataSet, String* formEnctype)
+{
+    String* space = String::spaceString;
+    String* plus = String::createASCIIString("+");
+
+    String* result = String::createASCIIString("");
+    if (formEnctype->equalsWithoutCase("application/x-www-form-urlencoded")) {
+        for (size_t i = 0; i < formDataSet->size(); i++) {
+            FormDataSetItem* item = (*formDataSet)[i];
+            String* name = item->m_name->replaceAll(space, plus);
+            String* value = item->m_value->replaceAll(space, plus);
+            String* type = item->m_type->replaceAll(space, plus);
+
+            if (i == 0 && name->equalsWithoutCase("isindex") &&
+                type->equalsWithoutCase("text")) {
+                result = result->concat(value);
+                continue;
+            }
+
+            if (name->equalsWithoutCase("_charset_") &&
+                type->equalsWithoutCase("hidden")) {
+                value = String::createASCIIString("UTF-8");
+            }
+
+            if (i > 0) {
+                result = result->concat(String::createASCIIString("&"));
+            }
+            result = result->concat(name);
+            result = result->concat(String::createASCIIString("="));
+            result = result->concat(value);
+        }
+    } else if (formEnctype->equalsWithoutCase("multipart/form-data")) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    } else if (formEnctype->equalsWithoutCase("text/plain")) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    return result;
 }
 
 static size_t base64Table[128] = {

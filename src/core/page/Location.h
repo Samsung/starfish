@@ -23,9 +23,11 @@
 namespace StarFish {
 
 class StarFish;
-class ResourceURL;
+class DocumentURL;
 
 class Location : public ScriptWrappable, public DocumentHoldable {
+    friend class HTMLFormElement;
+
 public:
     Location(Document* document)
         : ScriptWrappable(this)

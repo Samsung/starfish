@@ -23,7 +23,9 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/dom/HTMLIFrameElement.h"
+#include "core/dom/HTMLFormElement.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "platform/loader/ResourceURL.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
