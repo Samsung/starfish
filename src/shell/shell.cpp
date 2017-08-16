@@ -508,6 +508,8 @@ int main(int argc, char* argv[])
 #ifdef STARFISH_ENABLE_TEST
             g_memLogDump = true;
 #endif
+        } else if (strcmp(argv[i], "--network-log-verbose") == 0) {
+            setenv("NETWORK_LOG_VERBOSE", "1", 1);
         }
     }
 

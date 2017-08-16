@@ -127,6 +127,18 @@ void HTTPTransaction::start()
     STARFISH_ASSERT(curlsh);
     STARFISH_ASSERT(m_httpResponse);
 
+#ifdef STARFISH_ENABLE_TEST
+    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    const char* verbose = getenv("NETWORK_LOG_VERBOSE");
+    bool enableLog = false;
+    if (verbose && strlen(verbose)) {
+        enableLog = true;
+    }
+    if (enableLog) {
+        curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
+    }
+#endif
+
     struct curl_slist* list = m_httpRequest->headers().generateCurlList();
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
     curl_easy_setopt(m_curl, CURLOPT_SHARE, curlsh);
@@ -143,10 +155,6 @@ void HTTPTransaction::start()
                              ->cookieStoreFilePath()
                              .data());
     }
-
-#ifdef STARFISH_ENABLE_NETWORK_TEST
-    curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
-#endif
     curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
     curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
 
@@ -180,14 +188,17 @@ void HTTPTransaction::start()
         curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, m_writeData);
     }
 
-#ifdef STARFISH_ENABLE_NETWORK_TEST
-    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
-#endif
     if (m_httpRequest->method().compare("POST") == 0) {
         curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE,
                          m_httpRequest->entityBody().length());
         curl_easy_setopt(m_curl, CURLOPT_COPYPOSTFIELDS,
                          m_httpRequest->entityBody().data());
+#ifdef STARFISH_ENABLE_TEST
+        if (enableLog) {
+            STARFISH_LOG_INFO("POST FIELDS\n");
+            STARFISH_LOG_INFO("%s\n", m_httpRequest->entityBody().data());
+        }
+#endif
     } else if (!(m_httpRequest->method().compare("GET") == 0)) {
         // Do not need to set bodyentity for get
     }
@@ -210,10 +221,6 @@ void HTTPTransaction::start()
     }
 #endif
 
-#ifdef STARFISH_ENABLE_NETWORK_TEST
-    STARFISH_LOG_INFO("sending network request to %s\n",
-                      m_httpRequest->url().data());
-#endif
     m_res = curl_easy_perform(m_curl);
 
     updateTransactionStatus();
