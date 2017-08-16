@@ -435,6 +435,9 @@ void Node::setState(NodeState state, DynamicRestyleFlags mask, bool enable)
     // element selectors, the pseudo element should be created through
     // building frame tree only when the node is updated by user action.
     // ex) div:hover:first-letter { ... }
+
+    int oldState = m_state;
+
     if (state == NodeStateNormal) {
         m_state = 0;
         m_restyleFlags = 0;
@@ -459,6 +462,11 @@ void Node::setState(NodeState state, DynamicRestyleFlags mask, bool enable)
         } else {
             setNeedsStyleRecalc();
         }
+    }
+
+    int newState = m_state;
+    if (oldState != newState) {
+        didStateChanged(oldState, newState);
     }
 }
 

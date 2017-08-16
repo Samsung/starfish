@@ -471,7 +471,7 @@ int main(int argc, char* argv[])
     // STARFISH_LOG_INFO("%d", (int)sizeof (StarFish::ComputedStyle));
 
     std::string screenShot;
-    int width = 1920, height = 1080;
+    int width = 1280, height = 720;
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
             flag |= StarFish::enableComputedStyleDump;

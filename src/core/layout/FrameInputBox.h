@@ -41,6 +41,8 @@ public:
         return true;
     }
 
+    void paint(PaintingContext& ctx);
+
 private:
     static ComputedStyle* createInputElementStyleFrom(Node* parent);
 };

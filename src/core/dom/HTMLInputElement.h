@@ -22,13 +22,22 @@
 namespace StarFish {
 class Event;
 class HTMLInputElement : public HTMLElement {
+    friend class FrameInputBox;
+
 public:
     HTMLInputElement(Document* document);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLInputElement() const override;
 
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
+    virtual void didStateChanged(int oldState, int newState) override;
     // 4.4 Interface Node
     virtual QualifiedName name();
 
@@ -60,6 +69,12 @@ public:
     bool handleDefaultEvent(Event* event) override;
 
     bool supportsFocus() const override;
+
+protected:
+    bool m_shouldDrawCaret;
+    size_t m_caretBlinkingIntervalId;
+    size_t m_currentCaretPosition;
+    String* m_currentEditingText;
 };
 }
 

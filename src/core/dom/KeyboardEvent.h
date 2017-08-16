@@ -21,33 +21,212 @@
 
 namespace StarFish {
 
+enum KeyValue {
+    UnidentifiedKey,
+    AltLeftKey,
+    AltRightKey,
+    ControlLeftKey,
+    ControlRightKey,
+    CapsLockKey,
+    FnKey,
+    FnLockKey,
+    HyperKey,
+    MetaKey,
+    NumLockKey,
+    ScrollLockKey,
+    ShiftLeftKey,
+    ShiftRightKey,
+    SuperKey,
+    SymbolKey,
+    SymbolLockKey,
+    EnterKey,
+    TabKey,
+    SpaceKey,
+    ArrowDownKey,
+    ArrowUpKey,
+    ArrowLeftKey,
+    ArrowRightKey,
+    EndKey,
+    HomeKey,
+    PageDownKey,
+    PageUpKey,
+    BackspaceKey,
+    DeleteKey,
+    InsertKey,
+    ContextMenuKey,
+    EscapeKey,
+    AKey,
+    BKey,
+    CKey,
+    DKey,
+    EKey,
+    FKey,
+    GKey,
+    HKey,
+    IKey,
+    JKey,
+    KKey,
+    LKey,
+    MKey,
+    NKey,
+    OKey,
+    PKey,
+    QKey,
+    RKey,
+    SKey,
+    TKey,
+    UKey,
+    VKey,
+    WKey,
+    XKey,
+    YKey,
+    ZKey,
+    LowerAKey,
+    LowerBKey,
+    LowerCKey,
+    LowerDKey,
+    LowerEKey,
+    LowerFKey,
+    LowerGKey,
+    LowerHKey,
+    LowerIKey,
+    LowerJKey,
+    LowerKKey,
+    LowerLKey,
+    LowerMKey,
+    LowerNKey,
+    LowerOKey,
+    LowerPKey,
+    LowerQKey,
+    LowerRKey,
+    LowerSKey,
+    LowerTKey,
+    LowerUKey,
+    LowerVKey,
+    LowerWKey,
+    LowerXKey,
+    LowerYKey,
+    LowerZKey,
+    Digit0Key,
+    Digit1Key,
+    Digit2Key,
+    Digit3Key,
+    Digit4Key,
+    Digit5Key,
+    Digit6Key,
+    Digit7Key,
+    Digit8Key,
+    Digit9Key,
+    ExclamationMarkKey,
+    AtMarkKey,
+    SharpMarkKey,
+    DollarMarkKey,
+    PercentMarkKey,
+    PeriodKey,
+    F1Key,
+    F2Key,
+    F3Key,
+    F4Key,
+    F5Key,
+    F6Key,
+    F7Key,
+    F8Key,
+    F9Key,
+    F10Key,
+    F11Key,
+    F12Key,
+    F13Key,
+    F14Key,
+    F15Key,
+    F16Key,
+    F17Key,
+    F18Key,
+    F19Key,
+    F20Key,
+    ChannelDownKey,
+    ChannelUpKey,
+    MediaFastForwardKey,
+    MediaPauseKey,
+    MediaPlayKey,
+    MediaPlayPauseKey,
+    MediaRecordKey,
+    MediaRewindKey,
+    MediaStopKey,
+    MediaTrackNextKey,
+    MediaTrackPreviousKey,
+    TVKey,
+    TV3DModeKey,
+    TVAntennaCableKey,
+    TVAudioDescriptionKey,
+    TVAudioDescriptionMixDownKey,
+    TVAudioDescriptionMixUpKey,
+    TVContentsMenuKey,
+    TVDataServiceKey,
+    TVInputKey,
+    TVInputComponent1Key,
+    TVInputComponent2Key,
+    TVInputComposite1Key,
+    TVInputComposite2Key,
+    TVInputHDMI1Key,
+    TVInputHDMI2Key,
+    TVInputHDMI3Key,
+    TVInputHDMI4Key,
+    TVInputVGA1Key,
+    TVMediaContextKey,
+    TVNetworkKey,
+    TVNumberEntryKey,
+    TVPowerKey,
+    TVRadioServiceKey,
+    TVSatelliteKey,
+    TVSatelliteBSKey,
+    TVSatelliteCSKey,
+    TVSatelliteToggleKey,
+    TVTerrestrialAnalogKey,
+    TVTerrestrialDigitalKey,
+    TVTimerKey,
+    MediaAppsKey,
+    MediaAudioTrackKey,
+    MediaLastKey,
+    MediaSkipBackwardKey,
+    MediaSkipForwardKey,
+    MediaStepBackwardKey,
+    MediaStepForwardKey,
+    MediaTopMenuKey,
+    BrowserBackKey,
+    BrowserFavoritesKey,
+    BrowserForwardKey,
+    BrowserHomeKey,
+    BrowserRefreshKey,
+    BrowserSearchKey,
+    BrowserStopKey,
+};
+
+String* keyValueToKey(KeyValue v);
+String* keyValueToCode(KeyValue v);
+uint32_t keyValueToKeyCode(KeyValue v);
+
 class KeyboardData {
     STARFISH_MAKE_STACK_ALLOCATED()
     friend KeyboardEvent;
 
 public:
-    KeyboardData()
-        : KeyboardData(String::emptyString)
-    {
-    }
-    KeyboardData(String* key)
-        : KeyboardData(key, String::emptyString)
-    {
-    }
-    KeyboardData(String* key, String* code)
-        : KeyboardData(key, code, 0)
-    {
-    }
-    KeyboardData(String* key, String* code, uint32_t keyCode)
-        : m_key(key)
-        , m_code(code)
-        , m_keyCode(keyCode)
+    KeyboardData(KeyValue value = KeyValue::UnidentifiedKey)
+        : m_keyValue(value)
+        , m_key(keyValueToKey(value))
+        , m_code(keyValueToCode(value))
+        , m_keyCode(keyValueToKeyCode(value))
         , m_ctrlKey(false)
         , m_shiftKey(false)
         , m_altKey(false)
         , m_metaKey(false)
     {
     }
+
+    KeyValue keyValue()
+    {
+        return m_keyValue;
+    }
+
     String* key()
     {
         return m_key;
@@ -94,6 +273,7 @@ public:
     }
 
 protected:
+    KeyValue m_keyValue;
     String* m_key;
     String* m_code;
     uint32_t m_keyCode;
@@ -127,6 +307,10 @@ public:
                       void* domObjectPointer) override;
     virtual bool isKeyboardEvent() const override;
 
+    KeyValue keyValue()
+    {
+        return m_keyboardData.m_keyValue;
+    }
     String* key()
     {
         return m_keyboardData.m_key;
