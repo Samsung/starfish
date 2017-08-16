@@ -118,8 +118,8 @@ public:
                         parseJSON(m_xhr->scriptBindingInstance(), text);
                 } else if (m_xhr->m_responseType ==
                            XMLHttpRequest::ResponseType::Blob) {
-                    void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
-                        m_xhr->m_resourceRequest->response().size());
+                    void* buffer =
+                        calloc(1, m_xhr->m_resourceRequest->response().size());
                     memcpy(buffer, m_xhr->m_resourceRequest->response().data(),
                            m_xhr->m_resourceRequest->response().size());
                     m_xhr->m_responseBlob = new ::StarFish::Blob(
@@ -131,8 +131,8 @@ public:
                     m_xhr->m_resourceRequest->response().shrink_to_fit();
                 } else if (m_xhr->m_responseType ==
                            XMLHttpRequest::ResponseType::ArrayBuffer) {
-                    void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(
-                        m_xhr->m_resourceRequest->response().size());
+                    void* buffer =
+                        calloc(1, m_xhr->m_resourceRequest->response().size());
                     memcpy(buffer, m_xhr->m_resourceRequest->response().data(),
                            m_xhr->m_resourceRequest->response().size());
                     m_xhr->m_responseArrayBuffer = createArrayBuffer(
