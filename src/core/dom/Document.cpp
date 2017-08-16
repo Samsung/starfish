@@ -35,6 +35,7 @@
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLTitleElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"

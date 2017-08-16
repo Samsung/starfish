@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
+#include "core/dom/HTMLFormElement.h"
 #include "platform/loader/Resource.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -31,6 +32,9 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
         // cache miss
         m_resourceRequest = new ResourceRequest(loader()->document());
 
+        ResourceRequest::MethodType method = ResourceRequest::GET_METHOD;
+        String* entityBody = String::emptyString;
+
         if (isImageResource()) {
             m_resourceRequest->setRequestHeader(
                 String::createASCIIString("Accept"),
@@ -43,12 +47,32 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
                 String::createASCIIString("text/html,text/plain,text/*"));
         }
 
+        if (m_url->isDocumentURL()) {
+            DocumentURL* url = m_url->asDocumentURL();
+            if (url->formSubmitData()) {
+                FormSubmitData* formSubmitData = url->formSubmitData();
+                entityBody = m_resourceRequest->encodeFormDataSet(
+                    formSubmitData->m_formDataSet,
+                    formSubmitData->m_formEnctype);
+                m_resourceRequest->setRequestHeader(
+                    String::createASCIIString("content-type"),
+                    formSubmitData->m_formEnctype);
+                m_resourceRequest->setRequestHeader(
+                    String::createASCIIString("charset"),
+                    String::createASCIIString("utf-8"));
+
+                if (formSubmitData->m_method->equalsWithoutCase("post")) {
+                    method = ResourceRequest::POST_METHOD;
+                }
+            }
+        }
+
         m_resourceRequest->addResourceRequestClient(
             new ResourceNetworkRequestClient(this));
         m_resourceRequest->open(
-            ResourceRequest::GET_METHOD, url()->urlString(),
+            method, url()->urlString(),
             !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync));
-        m_resourceRequest->send();
+        m_resourceRequest->send(entityBody);
     }
 }
 

@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "core/dom/Document.h"
+#include "core/dom/HTMLFormElement.h"
 
 namespace StarFish {
 
@@ -633,5 +634,27 @@ ResourceURL* ResourceURL::setHash(String* newPath)
     }
     return new ResourceURL(
         m_urlString->substring(0, m_queryEnd)->concat(newPath));
+}
+
+DocumentURL::DocumentURL(String* url)
+    : DocumentURL(url, nullptr)
+{
+}
+
+DocumentURL::DocumentURL(String* url, FormSubmitData* formSubmitData)
+    : ResourceURL(url)
+    , m_formSubmitData(formSubmitData)
+{
+}
+
+DocumentURL::DocumentURL(ResourceURL* url)
+    : DocumentURL(url, nullptr)
+{
+}
+
+DocumentURL::DocumentURL(ResourceURL* url, FormSubmitData* formSubmitData)
+    : ResourceURL(*url)
+    , m_formSubmitData(formSubmitData)
+{
 }
 }

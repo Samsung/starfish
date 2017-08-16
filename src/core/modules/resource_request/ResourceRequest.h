@@ -29,6 +29,7 @@ namespace StarFish {
 
 class Document;
 class ResourceRequest;
+class FormDataSetItem;
 
 typedef std::vector<char> NetworkRequestResponse;
 typedef std::basic_string<char> NetworkRequestResponseHeader;
@@ -53,7 +54,6 @@ class ResourceRequest : public gc,
                         public DocumentHoldable,
                         public ResourceRequestJobInterface {
     friend class XMLHttpRequest;
-    friend class FormResourceRequest;
     friend class NetworkURLWorkerHelper;
     friend class AsyncNetworkWorkHelper;
     friend class FileURLResourceRequestJobDelegate;
@@ -180,6 +180,9 @@ public:
     }
 
     void setRequestHeader(String* h, String* c);
+
+    String* encodeFormDataSet(GCVector<FormDataSetItem*>* formDataSet,
+                              String* formEnctype);
 
 protected:
     void pareseHeader(const char* header, size_t len);

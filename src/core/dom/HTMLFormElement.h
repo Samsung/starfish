@@ -18,10 +18,30 @@
 #define __StarFishHTMLFormElement__
 
 #include "core/dom/HTMLElement.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 
 namespace StarFish {
 
-class FormDataSetItem;
+class DocumentBuilder;
+
+class FormDataSetItem : public gc {
+public:
+    FormDataSetItem(String* name, String* value, String* type);
+
+    String* m_name;
+    String* m_value;
+    String* m_type;
+};
+
+class FormSubmitData : public gc {
+public:
+    FormSubmitData(GCVector<FormDataSetItem*>* formDataSet, String* formEnctype,
+                   String* method);
+
+    GCVector<FormDataSetItem*>* m_formDataSet;
+    String* m_formEnctype;
+    String* m_method;
+};
 
 class HTMLFormElement : public HTMLElement {
 public:
@@ -57,10 +77,9 @@ public:
 
 private:
     GCVector<FormDataSetItem*>* createFormDataSet();
-    void submitAsEntityBody(ResourceURL* url, String* formEnctype,
-                            GCVector<FormDataSetItem*>* formDataSet);
-    String* encodeFormDataSet(String* formEnctype,
-                              GCVector<FormDataSetItem*>* formDataSet);
+    void submitAsEntityBody(ResourceURL* url,
+                            GCVector<FormDataSetItem*>* formDataSet,
+                            String* formEnctype);
 
     Element* m_submitter;
 };

@@ -20,6 +20,8 @@
 #include "core/dom/Document.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
+#include "core/dom/HTMLFormElement.h"
+#include "platform/loader/ResourceURL.h"
 
 namespace StarFish {
 

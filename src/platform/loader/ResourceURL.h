@@ -21,6 +21,8 @@ namespace StarFish {
 
 class Document;
 class WebOrigin;
+class FormSubmitData;
+class DocumentURL;
 
 class ResourceURL : public gc {
     friend WebOrigin;
@@ -146,6 +148,17 @@ public:
     String* hash();
     ResourceURL* setHash(String* newPath);
 
+    virtual bool isDocumentURL()
+    {
+        return false;
+    }
+
+    DocumentURL* asDocumentURL()
+    {
+        STARFISH_ASSERT(isDocumentURL());
+        return (DocumentURL*)this;
+    }
+
 protected:
     void resolvePositions();
     void parseURLString(String* baseURL, String* url);
@@ -164,6 +177,27 @@ protected:
     unsigned int m_fragmentEnd;
 
     enum Protocol m_protocol;
+};
+
+class DocumentURL : public ResourceURL {
+public:
+    DocumentURL(String* url);
+    DocumentURL(String* url, FormSubmitData* formSubmitData);
+    DocumentURL(ResourceURL* url);
+    DocumentURL(ResourceURL* url, FormSubmitData* formSubmitData);
+
+    virtual bool isDocumentURL() override
+    {
+        return true;
+    }
+
+    FormSubmitData* formSubmitData()
+    {
+        return m_formSubmitData;
+    }
+
+private:
+    FormSubmitData* m_formSubmitData;
 };
 }
 

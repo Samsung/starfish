@@ -24,6 +24,7 @@ namespace StarFish {
 class Window;
 class Resource;
 class HTMLParser;
+class FormDataSetItem;
 
 class HTMLDocumentBuilder : public DocumentBuilder {
     friend class HTMLResourceClient;
@@ -47,6 +48,10 @@ public:
 protected:
     HTMLParser* m_parser;
     Resource* m_resource;
+
+private:
+    String* encodeFormDataSet(GCVector<FormDataSetItem*>* formDataSet,
+                              String* formEnctype);
 };
 }
 
