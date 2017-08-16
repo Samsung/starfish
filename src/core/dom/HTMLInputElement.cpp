@@ -18,17 +18,40 @@
 #include "StarFish.h"
 
 #include "core/dom/HTMLInputElement.h"
-
-#include "core/dom/Event.h"
+#include "core/dom/Document.h"
+#include "core/dom/Text.h"
+#include "core/dom/KeyboardEvent.h"
 #include "core/dom/HTMLFormElement.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
+#include "core/layout/FrameInputBox.h"
 
 namespace StarFish {
 
 HTMLInputElement::HTMLInputElement(Document* document)
     : HTMLElement(document)
+    , m_shouldDrawCaret(false)
+    , m_caretBlinkingIntervalId(SIZE_MAX)
+    , m_currentCaretPosition(SIZE_MAX)
+    , m_currentEditingText(String::emptyString)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
     setTabIndex(0, false);
+}
+
+void* HTMLInputElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLInputElement)] = { 0 };
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(HTMLInputElement, m_currentEditingText));
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLInputElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
 QualifiedName HTMLInputElement::name()
@@ -120,6 +143,32 @@ HTMLFormElement* HTMLInputElement::form()
     return nullptr;
 }
 
+void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
+                                           String* value, bool attributeCreated,
+                                           bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
+
+    if (starFish()->staticStrings()->m_value == name) {
+        if (frame() && !document()->browsingContext()->needsLayout()) {
+            auto box = frame()->asFrameInputBox();
+            box->firstChild()->asFrameText()->node()->asText()->setData(value);
+            // Do partial layout for performance
+            LayoutContext ctx(starFish(),
+                              document()->frame()->asFrameDocument());
+            box->layout(ctx, Frame::ResolveAll);
+            setNeedsPainting();
+        } else if (frame()) {
+            auto box = frame()->asFrameInputBox();
+            box->firstChild()->asFrameText()->node()->asText()->setData(value);
+            setNeedsLayout();
+        } else if (document()->doesParticipateInRendering()) {
+            setNeedsFrameTreeBuild();
+        }
+    }
+}
+
 bool HTMLInputElement::handleDefaultEvent(Event* event)
 {
     if (HTMLElement::handleDefaultEvent(event)) {
@@ -137,8 +186,64 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 return true;
             }
         }
+    } else if (event->isKeyboardEvent() &&
+               document()->browsingContext()->focusedNode() == this &&
+               event->type()->equalsWithoutCase("keydown")) {
+        if (type()->equals("") || type()->equalsWithoutCase("input")) {
+            String* value =
+                getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+            String* oldValue = value;
+            if (event->asKeyboardEvent()->keyValue() ==
+                KeyValue::BackspaceKey) {
+                if (value->length()) {
+                    if (m_currentCaretPosition > 0) {
+                        StringBuilder sb;
+                        sb.appendSubString(value, 0,
+                                           m_currentCaretPosition - 1);
+                        sb.appendSubString(value, m_currentCaretPosition,
+                                           value->length());
+                        value = sb.finalize();
+                        m_currentCaretPosition--;
+                    }
+                }
+            } else if (event->asKeyboardEvent()->keyCode()) {
+                value = value->concat(
+                    (char32_t)event->asKeyboardEvent()->keyCode());
+                m_currentCaretPosition++;
+            }
+            if (!value->equals(oldValue)) {
+                setAttribute(starFish()->staticStrings()->m_value, value);
+            }
+            return true;
+        }
     }
     return false;
+}
+
+void HTMLInputElement::didStateChanged(int oldState, int newState)
+{
+    HTMLElement::didStateChanged(oldState, newState);
+
+    bool oldGotFocus = oldState & Node::NodeStateFocused;
+    bool newGotFocus = newState & Node::NodeStateFocused;
+
+    if (type()->equals("") || type()->equalsWithoutCase("input")) {
+        if (!oldGotFocus && newGotFocus) {
+            String* value =
+                getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+            m_currentCaretPosition = value->length();
+            window()->setInterval(
+                [](Window* window, void* data) {
+                    HTMLInputElement* e = (HTMLInputElement*)data;
+                    e->m_shouldDrawCaret = !e->m_shouldDrawCaret;
+                    e->setNeedsPainting();
+                },
+                500, this);
+        } else if (oldGotFocus && !newGotFocus) {
+            m_currentCaretPosition = SIZE_MAX;
+            window()->clearInterval(m_caretBlinkingIntervalId);
+        }
+    }
 }
 
 bool HTMLInputElement::supportsFocus() const

@@ -877,6 +877,12 @@ public:
         return (FrameBlockBox*)this;
     }
 
+    FrameDocument* asFrameDocument()
+    {
+        STARFISH_ASSERT(isFrameDocument());
+        return (FrameDocument*)this;
+    }
+
     FrameInline* asFrameInline()
     {
         STARFISH_ASSERT(isFrameInline());

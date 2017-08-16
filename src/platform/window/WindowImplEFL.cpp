@@ -268,188 +268,49 @@ static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv,
         user_data);
 }
 
-// Deprecated
-// keycode map (no numlocked code)
-static uint32_t keyCodeMap[] = {
-    /* 000-004 */ 0,   0,   0,   0,   0,
-    /* 005-009 */ 0,   0,   0,   0,   27,
-    /* 010-014 */ 49,  50,  51,  52,  53,
-    /* 015-019 */ 54,  55,  56,  57,  48,
-    /* 020-024 */ 189, 187, 8,   9,   81,
-    /* 025-029 */ 87,  69,  82,  84,  89,
-    /* 030-034 */ 85,  73,  79,  80,  219,
-    /* 035-039 */ 221, 13,  17,  65,  83,
-    /* 040-044 */ 68,  70,  71,  72,  74,
-    /* 045-049 */ 75,  76,  186, 222, 192,
-    /* 050-054 */ 16,  220, 90,  88,  67,
-    /* 055-059 */ 86,  66,  78,  77,  188,
-    /* 060-064 */ 190, 191, 16,  106, 18,
-    /* 065-069 */ 32,  20,  112, 113, 114,
-    /* 070-074 */ 115, 116, 117, 118, 119,
-    /* 075-079 */ 120, 121, 144, 0,   36,
-    /* 080-084 */ 38,  33,  109, 37,  0,
-    /* 085-089 */ 39,  107, 35,  40,  34,
-    /* 090-094 */ 45,  46,  0,   0,   0,
-    /* 095-099 */ 122, 123, 0,   0,   0,
-    /* 100-104 */ 0,   0,   0,   0,   13,
-    /* 105-109 */ 0,   111, 0,   0,   0,
-    /* 110-114 */ 36,  38,  33,  37,  39,
-    /* 115-119 */ 35,  40,  34,  45,  46,
-    /* 120-124 */ 0,   0,   0,   0,   0,
-    /* 125-129 */ 0,   0,   0,   0,   0,
-    /* 130-134 */ 21,  25,  0,   91,  92,
-    /* 135-139 */ 93,  0,   0,   0,   0,
-    /* 140-144 */ 0,   0,   0,   0,   0,
-    /* 145-149 */ 0,   0,   0,   0,   0,
-};
-
-static const char* codeMap[] = {
-    /* 000-004 */
-    "\0", "\0", "\0", "\0", "\0",
-    /* 005-009 */
-    "\0", "\0", "\0", "\0", "Escape\0",
-    /* 010-014 */
-    "Digit1\0", "Digit2\0", "Digit3\0", "Digit4\0", "Digit5\0",
-    /* 015-019 */
-    "Digit6\0", "Digit7\0", "Digit8\0", "Digit9\0", "Digit0\0",
-    /* 020-024 */
-    "Minus\0", "Equal\0", "Backspace\0", "Tab\0", "KeyQ\0",
-    /* 025-029 */
-    "KeyW\0", "KeyE\0", "KeyR\0", "KeyT\0", "KeyY\0",
-    /* 030-034 */
-    "KeyU\0", "KeyI\0", "KeyO\0", "KeyP\0", "BracketLeft\0",
-    /* 035-039 */
-    "BracketRight\0", "Enter\0", "ControlLeft\0", "KeyA\0", "KeyS\0",
-    /* 040-044 */
-    "KeyD\0", "KeyF\0", "KeyG\0", "KeyH\0", "KeyJ\0",
-    /* 045-049 */
-    "KeyK\0", "KeyL\0", "Semicolon\0", "Quote\0", "Backquote\0",
-    /* 050-054 */
-    "ShiftLeft\0", "Backslash\0", "KeyZ\0", "KeyX\0", "KeyC\0",
-    /* 055-059 */
-    "KeyV\0", "KeyB\0", "KeyN\0", "KeyM\0", "Comma\0",
-    /* 060-064 */
-    "Period\0", "Slash\0", "ShiftRight\0", "NumpadMultiply\0", "AltLeft\0",
-    /* 065-069 */
-    "Space\0", "CapsLock\0", "F1\0", "F2\0", "F3\0",
-    /* 070-074 */
-    "F4\0", "F5\0", "F6\0", "F7\0", "F8\0",
-    /* 075-079 */
-    "F9\0", "F10\0", "NumLock\0", "\0", "Numpad7\0",
-    /* 080-084 */
-    "Numpad8\0", "Numpad9\0", "NumpadSubtract\0", "Numpad4\0", "Numpad5\0",
-    /* 085-089 */
-    "Numpad6\0", "NumpadAdd\0", "Numpad1\0", "Numpad2\0", "Numpad3\0",
-    /* 090-094 */
-    "Numpad0\0", "NumpadDecimal\0", "\0", "\0", "\0",
-    /* 095-099 */
-    "F11\0", "F12\0", "\0", "\0", "\0",
-    /* 100-104 */
-    "\0", "\0", "\0", "\0", "NumpadEnter\0",
-    /* 105-109 */
-    "\0", "NumpadDivide\0", "\0", "\0", "\0",
-    /* 110-114 */
-    "Home\0", "ArrowUp\0", "PageUp\0", "ArrowLeft\0", "ArrowRight\0",
-    /* 115-119 */
-    "End\0", "ArrowDown\0", "PageDown\0", "Insert\0", "Delete\0",
-    /* 120-124 */
-    "\0", "\0", "\0", "\0", "\0",
-    /* 125-129 */
-    "\0", "\0", "\0", "\0", "\0",
-    /* 130-134 */
-    "Lang1\0", "Lang2\0", "\0", "MetaLeft\0", "MetaRight\0",
-    /* 135-139 */
-    "ContextMenu\0", "\0", "\0", "\0", "\0",
-    /* 140-144 */
-    "\0", "\0", "\0", "\0", "\0",
-    /* 145-149 */
-    "\0", "\0", "\0", "\0", "\0",
-};
-
-static String* ecoreEventKeyToKey(Ecore_Event_Key* data, String* refCode)
+static KeyValue ecoreEventKeyToKeyValue(Ecore_Event_Key* data)
 {
-    if (data->string && strlen(data->string) == 1 && data->keycode != 9) {
-        if (data->modifiers == 0 || data->modifiers > 4) {
-            return String::createASCIIString(data->string);
-        }
-        return String::createASCIIString(data->key);
-    } else {
-        switch (data->keycode) {
-        case 37:
-            return String::createASCIIString("Control");
-        case 50:
-        case 62:
-            return String::createASCIIString("Shift");
-        case 64:
-            return String::createASCIIString("Alt");
-        case 80:
-            return String::createASCIIString("ArrowUp");
-        case 81:
-            return String::createASCIIString("PageUp");
-        case 83:
-            return String::createASCIIString("ArrowLeft");
-        case 85:
-            return String::createASCIIString("ArrowRight");
-        case 87:
-            return String::createASCIIString("End");
-        case 88:
-            return String::createASCIIString("ArrowDown");
-        case 89:
-            return String::createASCIIString("PageDown");
-        case 104:
-            return String::createASCIIString("Enter");
-        case 130:
-            return String::createASCIIString("HangulMode");
-        case 131:
-            return String::createASCIIString("HanjaMode");
-        case 133:
-        case 134:
-            return String::createASCIIString("Meta");
-        default:
-            break;
+    const char* ecoreKeyString = data->key;
+    if (strcmp("Left", ecoreKeyString) == 0) {
+        return KeyValue::ArrowLeftKey;
+    } else if (strcmp("Right", ecoreKeyString) == 0) {
+        return KeyValue::ArrowRightKey;
+    } else if (strcmp("Up", ecoreKeyString) == 0) {
+        return KeyValue::ArrowUpKey;
+    } else if (strcmp("Down", ecoreKeyString) == 0) {
+        return KeyValue::ArrowDownKey;
+    } else if (strcmp("space", ecoreKeyString) == 0) {
+        return KeyValue::SpaceKey;
+    } else if (strcmp("Return", ecoreKeyString) == 0) {
+        return KeyValue::EnterKey;
+    } else if (strcmp("BackSpace", ecoreKeyString) == 0) {
+        return KeyValue::BackspaceKey;
+    } else if (strcmp("Escape", ecoreKeyString) == 0) {
+        return KeyValue::EscapeKey;
+    } else if (strcmp("period", ecoreKeyString) == 0) {
+        return KeyValue::PeriodKey;
+    } else if (strcmp("at", ecoreKeyString) == 0) {
+        return KeyValue::AtMarkKey;
+    } else if (strlen(ecoreKeyString) == 1) {
+        char ch = ecoreKeyString[0];
+        if (ch >= '0' && ch <= '9') {
+            if (ch == '1' && data->modifiers & 1) {
+                return KeyValue::ExclamationMarkKey;
+            } else if (ch == '1' && data->modifiers & 1) {
+                return KeyValue::AtMarkKey;
+            }
+            return (KeyValue)(KeyValue::Digit0Key + ch - '0');
+        } else if (ch >= 'a' && ch <= 'z') {
+            int kv = KeyValue::LowerAKey + ch - 'a';
+            if (data->modifiers & 1) {
+                kv -= ('z' - 'a');
+            }
+            return (KeyValue)kv;
         }
     }
-    return refCode;
-}
-
-static String* ecoreEventKeyToCode(Ecore_Event_Key* data)
-{
-    if (data->keycode < 150) {
-        return String::createASCIIString(codeMap[data->keycode]);
-    }
-    return String::createASCIIString(data->keyname);
-}
-
-static uint32_t ecoreEventKeyToKeyCode(Ecore_Event_Key* data)
-{
-    // NumLocked keys
-    if (data->keycode >= 79 && data->keycode <= 91 && data->string &&
-        strlen(data->string) == 1) {
-        if (data->keycode == 91) {
-            return 110;
-        }
-        return (uint32_t)(data->string[0] - '0') + 96;
-    }
-    if (strcmp("Left", data->key) == 0) {
-        return 37;
-    } else if (strcmp("Right", data->key) == 0) {
-        return 39;
-    } else if (strcmp("Up", data->key) == 0) {
-        return 38;
-    } else if (strcmp("Down", data->key) == 0) {
-        return 40;
-    } else if (strcmp("space", data->key) == 0) {
-        return 32;
-    } else if (strcmp("Return", data->key) == 0) {
-        return 13;
-    } else if (strcmp("BackSpace", data->key) == 0) {
-        return 8;
-    } else if (strcmp("0", data->key) == 0) {
-        return 48;
-    } else if (data->keycode < 150) {
-        return keyCodeMap[data->keycode];
-    }
-    return 0;
+    STARFISH_LOG_ERROR("WindowImplEFL - unimplemented key %s\n",
+                       ecoreKeyString);
+    return KeyValue::UnidentifiedKey;
 }
 
 static void setModifiersToKeyboardData(Ecore_Event_Key* d, KeyboardData& k)
@@ -570,10 +431,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         [](void* data, int type, void* event) -> Eina_Bool {
             PlatformWindow* sf = (PlatformWindow*)data;
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
-            String* code = ecoreEventKeyToCode(d);
-            String* key = ecoreEventKeyToKey(d, code);
-            uint32_t keycode = ecoreEventKeyToKeyCode(d);
-            KeyboardData kdata(key, code, keycode);
+            auto keyValue = ecoreEventKeyToKeyValue(d);
+            KeyboardData kdata(keyValue);
             setModifiersToKeyboardData(d, kdata);
             StarFishEnterer enter(sf->m_starFish);
             sf->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
@@ -586,10 +445,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         [](void* data, int type, void* event) -> Eina_Bool {
             PlatformWindow* sf = (PlatformWindow*)data;
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
-            String* code = ecoreEventKeyToCode(d);
-            String* key = ecoreEventKeyToKey(d, code);
-            uint32_t keycode = ecoreEventKeyToKeyCode(d);
-            KeyboardData kdata(key, code, keycode);
+            auto keyValue = ecoreEventKeyToKeyValue(d);
+            KeyboardData kdata(keyValue);
             setModifiersToKeyboardData(d, kdata);
             StarFishEnterer enter(sf->m_starFish);
             sf->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);

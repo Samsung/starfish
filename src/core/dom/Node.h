@@ -518,9 +518,14 @@ public:
     }
     virtual void didNodeRemovedFromDocumentTree()
     {
+        setState(NodeStateNormal, DynamicRestyleFlags::NotAffected, false);
     }
 
     virtual void didNodeAdopted()
+    {
+    }
+
+    virtual void didStateChanged(int oldState, int newState)
     {
     }
 
