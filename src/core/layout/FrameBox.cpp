@@ -554,7 +554,7 @@ void FrameBox::paintStackingContextContent(Canvas* canvas)
     PaintingContext ctx(canvas);
     // the in-flow, non-inline-level, non-positioned descendants.
     ctx.m_paintingStage = PaintingNormalFlowBlock;
-    ctx.m_paintingInlineStage = PaintingInlineLevelElements;
+    ctx.m_paintingInlineStage = PaintingInlineBox;
     paintChildrenWith(ctx);
 
     // the non-positioned float
@@ -597,7 +597,7 @@ void FrameBox::establishesStackingContextIfNeeds()
                         break;
                     } else if (p->needsGraphicsBuffer()) {
                         break;
-                    } else if (p->isPositioned() &&
+                    } else if ((p->isPositioned() || p->isFlexItem()) &&
                                p->style()->IsSpecifiedZIndex()) {
                         break;
                     } else if (p->style()->opacity() != 1) {

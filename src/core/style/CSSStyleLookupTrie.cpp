@@ -30,11 +30,15 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         break;
     case 4:
         // Font
+        // Flex
         // Left
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font", 4) == 0) {
                 return CSSStyleKind::Font;
+            }
+            if (memcmp(data, "flex", 4) == 0) {
+                return CSSStyleKind::Flex;
             }
             break;
         case 'l':
@@ -46,9 +50,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         break;
     case 5:
         // Color
+        // Clear
         // Float
         // Width
         // Right
+        // Order
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "color", 5) == 0) {
@@ -71,6 +77,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'r':
             if (memcmp(data, "right", 5) == 0) {
                 return CSSStyleKind::Right;
+            }
+            break;
+        case 'o':
+            if (memcmp(data, "order", 5) == 0) {
+                return CSSStyleKind::Order;
             }
             break;
         }
@@ -142,7 +153,6 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     case 8:
         // Position
         // Overflow
-        // CSSFloat
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "position", 8) == 0) {
@@ -154,23 +164,30 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::Overflow;
             }
             break;
-        case 'c':
-            if (memcmp(data, "cssFloat", 8) == 0) {
-                return CSSStyleKind::Float;
-            }
-            break;
         }
         break;
     case 9:
         // Font-Size
+        // Flex-Wrap
+        // Flex-Flow
+        // Flex-Grow
         // Transform
         // Direction
-        // MaxWidth
-        // MaxHeight
+        // Max-Width
+        // Min-Width
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font-size", 9) == 0) {
                 return CSSStyleKind::FontSize;
+            }
+            if (memcmp(data, "flex-wrap", 9) == 0) {
+                return CSSStyleKind::FlexWrap;
+            }
+            if (memcmp(data, "flex-flow", 9) == 0) {
+                return CSSStyleKind::FlexFlow;
+            }
+            if (memcmp(data, "flex-grow", 9) == 0) {
+                return CSSStyleKind::FlexGrow;
             }
             break;
         case 't':
@@ -196,15 +213,18 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     case 10:
         // Background
         // Border-Top
+        // Box-Sizing
         // Font-Style
+        // Flex-Basis
         // Text-Align
+        // Transition
         // Margin-Top
         // Max-Height
         // Min-Height
         // Overflow-X
         // Overflow-Y
         // Visibility
-        // Box-Sizing
+        // Align-Self
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background", 10) == 0) {
@@ -220,6 +240,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'f':
             if (memcmp(data, "font-style", 10) == 0) {
                 return CSSStyleKind::FontStyle;
+            }
+            if (memcmp(data, "flex-basis", 10) == 0) {
+                return CSSStyleKind::FlexBasis;
             }
             break;
         case 't':
@@ -254,17 +277,24 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::Visibility;
             }
             break;
+        case 'a':
+            if (memcmp(data, "align-self", 10) == 0) {
+                return CSSStyleKind::AlignSelf;
+            }
+            break;
         }
         break;
     case 11:
         // Border-Left
         // Font-Weight
+        // Flex-Shrink
         // Line-Height
         // White-Space
         // Padding-Top
         // Margin-Left
         // Text-Indent
         // Empty-Cells
+        // Align-Items
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left", 11) == 0) {
@@ -279,6 +309,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'f':
             if (memcmp(data, "font-weight", 11) == 0) {
                 return CSSStyleKind::FontWeight;
+            }
+            if (memcmp(data, "flex-shrink", 11) == 0) {
+                return CSSStyleKind::FlexShrink;
             }
             break;
         case 'l':
@@ -304,6 +337,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 't':
             if (memcmp(data, "text-indent", 11) == 0) {
                 return CSSStyleKind::TextIndent;
+            }
+            break;
+        case 'a':
+            if (memcmp(data, "align-items", 11) == 0) {
+                return CSSStyleKind::AlignItems;
             }
             break;
         }
@@ -363,6 +401,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Padding-Right
         // Margin-Bottom
         // Border-Bottom
+        // Align-Content
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "padding-right", 13) == 0) {
@@ -379,16 +418,27 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::BorderBottom;
             }
             break;
+        case 'a':
+            if (memcmp(data, "align-content", 13) == 0) {
+                return CSSStyleKind::AlignContent;
+            }
+            break;
         }
         break;
     case 14:
         // Vertical-Align
         // Padding-Bottom
         // Border-Spacing
+        // Flex-Direction
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-spacing", 14) == 0) {
                 return CSSStyleKind::BorderSpacing;
+            }
+            break;
+        case 'f':
+            if (memcmp(data, "flex-direction", 14) == 0) {
+                return CSSStyleKind::FlexDirection;
             }
             break;
         case 'v':
@@ -407,7 +457,13 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Text-Decoration
         // Background-Size
         // Border-Collapse
+        // Justify-Content
         switch (data[0]) {
+        case 'j':
+            if (memcmp(data, "justify-content", 15) == 0) {
+                return CSSStyleKind::JustifyContent;
+            }
+            break;
         case 't':
             if (memcmp(data, "text-decoration", 15) == 0) {
                 return CSSStyleKind::TextDecoration;
@@ -571,6 +627,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "font", 4) == 0) {
                 return CSSStyleKind::Font;
             }
+            if (memcmp(data, "flex", 4) == 0) {
+                return CSSStyleKind::Flex;
+            }
             break;
         case 'l':
             if (memcmp(data, "left", 4) == 0) {
@@ -602,6 +661,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'r':
             if (memcmp(data, "right", 5) == 0) {
                 return CSSStyleKind::Right;
+            }
+            break;
+        case 'o':
+            if (memcmp(data, "order", 5) == 0) {
+                return CSSStyleKind::Order;
             }
             break;
         }
@@ -672,6 +736,15 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "fontSize", 8) == 0) {
                 return CSSStyleKind::FontSize;
             }
+            if (memcmp(data, "flexWrap", 8) == 0) {
+                return CSSStyleKind::FlexWrap;
+            }
+            if (memcmp(data, "flexFlow", 8) == 0) {
+                return CSSStyleKind::FlexFlow;
+            }
+            if (memcmp(data, "flexGrow", 8) == 0) {
+                return CSSStyleKind::FlexGrow;
+            }
             break;
         case 'm':
             if (memcmp(data, "maxWidth", 8) == 0) {
@@ -695,6 +768,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         break;
     case 9:
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "AlignSelf", 9) == 0) {
+                return CSSStyleKind::AlignSelf;
+            }
+            break;
         case 'b':
             if (memcmp(data, "borderTop", 9) == 0) {
                 return CSSStyleKind::BorderTop;
@@ -720,6 +798,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "fontStyle", 9) == 0) {
                 return CSSStyleKind::FontStyle;
             }
+            if (memcmp(data, "flexBasis", 9) == 0) {
+                return CSSStyleKind::FlexBasis;
+            }
             break;
         case 'm':
             if (memcmp(data, "marginTop", 9) == 0) {
@@ -744,6 +825,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         break;
     case 10:
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "alignItems", 10) == 0) {
+                return CSSStyleKind::AlignItems;
+            }
+            break;
         case 'b':
             if (memcmp(data, "background", 10) == 0) {
                 return CSSStyleKind::Background;
@@ -760,6 +846,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'f':
             if (memcmp(data, "fontWeight", 10) == 0) {
                 return CSSStyleKind::FontWeight;
+            }
+            if (memcmp(data, "flexShrink", 10) == 0) {
+                return CSSStyleKind::FlexShrink;
             }
             break;
         case 'l':
@@ -842,6 +931,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         break;
     case 12:
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "alignContent", 10) == 0) {
+                return CSSStyleKind::AlignContent;
+            }
+            break;
         case 'p':
             if (memcmp(data, "paddingRight", 12) == 0) {
                 return CSSStyleKind::PaddingRight;
@@ -861,8 +955,14 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         break;
     case 13:
         switch (data[0]) {
+        case 'b':
             if (memcmp(data, "borderSpacing", 13) == 0) {
                 return CSSStyleKind::BorderSpacing;
+            }
+            break;
+        case 'f':
+            if (memcmp(data, "flexDirection", 13) == 0) {
+                return CSSStyleKind::FlexDirection;
             }
             break;
         case 'v':
@@ -878,6 +978,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         break;
     case 14:
         switch (data[0]) {
+        case 'j':
+            if (memcmp(data, "justifyContent", 14) == 0) {
+                return CSSStyleKind::JustifyContent;
+            }
+            break;
         case 't':
             if (memcmp(data, "textDecoration", 14) == 0) {
                 return CSSStyleKind::TextDecoration;

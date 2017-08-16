@@ -470,8 +470,8 @@ protected:
 
 // inline | block | list-item | inline-block | table | inline-table |
 // table-row-group | table-header-group | table-footer-group | table-row |
-// table-column-group | table-column | table-cell | table-caption | none |
-// inherit
+// table-column-group | table-column | table-cell | table-caption | flex |
+// inline-flex | none | inherit
 enum DisplayValue {
     InlineDisplayValue, // initial value
     BlockDisplayValue,
@@ -486,6 +486,8 @@ enum DisplayValue {
     TableColumnDisplayValue,
     TableCellDisplayValue,
     TableCaptionDisplayValue,
+    FlexDisplayValue,
+    InlineFlexDisplayValue,
     NoneDisplayValue,
 };
 
@@ -508,6 +510,47 @@ enum ClearValue {
     RightClearValue,
     BothClearValue
 };
+
+// flex
+enum FlexDirectionValue {
+    RowFlexDirectionValue,
+    RowReverseFlexDirectionValue,
+    ColumnFlexDirectionValue,
+    ColumnReverseFlexDirectionValue,
+};
+
+enum FlexWrapValue {
+    NoWrapFlexWrapValue,
+    WrapFlexWrapValue,
+    WrapReverseFlexWrapValue,
+};
+
+enum JustifyContentValue {
+    FlexStartJustifyContentValue,
+    FlexEndJustifyContentValue,
+    CenterJustifyContentValue,
+    SpaceBetweenJustifyContentValue,
+    SpaceAroundJustifyContentValue,
+};
+
+enum AlignItemValue {
+    FlexStartAlignItemValue,
+    FlexEndAlignItemValue,
+    CenterAlignItemValue,
+    BaselineAlignItemValue,
+    StretchAlignItemValue
+};
+
+enum AlignContentValue {
+    FlexStartAlignContentValue,
+    FlexEndAlignContentValue,
+    CenterAlignContentValue,
+    SpaceBetweenAlignContentValue,
+    SpaceAroundAlignContentValue,
+    StretchAlignContentValue,
+};
+
+enum FlexBasisValue { ContentFlexBasisValue };
 
 enum VerticalAlignValue {
     BaselineVAlignValue,
@@ -801,7 +844,7 @@ class CSSStyleDeclaration;
     F(TransformOrigin, transformOrigin, "transform-origin")              \
     F(Visibility, visibility, "visibility")                              \
     F(OverflowX, overflowX, "overflow-x")                                \
-    F(OverflowY, overflowY, "overflow-x")                                \
+    F(OverflowY, overflowY, "overflow-y")                                \
     F(ZIndex, zIndex, "z-index")                                         \
     F(VerticalAlign, verticalAlign, "vertical-align")                    \
     F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x")       \
@@ -818,7 +861,17 @@ class CSSStyleDeclaration;
     F(TransitionTimingFunction, transitionTimingFunction,                \
       "transitionTimingFunction")                                        \
     F(TransitionDelay, transitionDelay, "transitionDelay")               \
-    F(BoxSizing, boxSizing, "box-sizing")
+    F(BoxSizing, boxSizing, "box-sizing")                                \
+    F(FlexDirection, flexDirection, "flex-direction")                    \
+    F(FlexWrap, flexWrap, "flex-wrap")                                   \
+    F(Order, order, "order")                                             \
+    F(JustifyContent, justifyContent, "justify-content")                 \
+    F(AlignItems, alignItems, "align-items")                             \
+    F(AlignSelf, alignSelf, "align-self")                                \
+    F(AlignContent, alignContent, "align-content")                       \
+    F(FlexGrow, flexGrow, "flex-grow")                                   \
+    F(FlexShrink, flexShrink, "flex-shrink")                             \
+    F(FlexBasis, flexBasis, "flex-basis")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
     FOR_EACH_STYLE_ATTRIBUTE(F)                                      \
@@ -837,7 +890,9 @@ class CSSStyleDeclaration;
     F(Padding, padding, "padding")                                   \
     F(Font, font, "font")                                            \
     F(Overflow, overflow, "overflow")                                \
-    F(Transition, transition, "transition")
+    F(Transition, transition, "transition")                          \
+    F(FlexFlow, flexFlow, "flex-flow")                               \
+    F(Flex, flex, "flex")
 
 #define GEN_FOURSIDE(F) \
     F(Top, top)         \
@@ -1007,6 +1062,14 @@ public:
         VisibilityValueKind,
         UnicodeBidiValueKind,
         BoxSizingValueKind,
+
+        // flex
+        FlexDirectionValueKind,
+        FlexWrapValueKind,
+        JustifyContentValueKind,
+        AlignItemValueKind,
+        AlignContentValueKind,
+        FlexBasisValueKind,
 
         // transform
         TransformFunctions,
@@ -1236,18 +1299,6 @@ public:
         return m_value.m_overflow;
     }
 
-    OverflowValue overflowXValue() const
-    {
-        STARFISH_ASSERT(m_valueKind == OverflowValueKind);
-        return m_value.m_overflowX;
-    }
-
-    OverflowValue overflowYValue() const
-    {
-        STARFISH_ASSERT(m_valueKind == OverflowValueKind);
-        return m_value.m_overflowY;
-    }
-
     VisibilityValue visibility() const
     {
         STARFISH_ASSERT(m_valueKind == VisibilityValueKind);
@@ -1319,6 +1370,42 @@ public:
         return m_value.m_stringValue;
     }
 
+    FlexDirectionValue flexDirectionValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == FlexDirectionValueKind);
+        return m_value.m_flexDirection;
+    }
+
+    FlexWrapValue flexWrapValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == FlexWrapValueKind);
+        return m_value.m_flexWrap;
+    }
+
+    JustifyContentValue justifyContentValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == JustifyContentValueKind);
+        return m_value.m_justifyContent;
+    }
+
+    AlignItemValue alignItemValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == AlignItemValueKind);
+        return m_value.m_alignItem;
+    }
+
+    AlignContentValue alignContentValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == AlignContentValueKind);
+        return m_value.m_alignContent;
+    }
+
+    FlexBasisValue flexBasisValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == FlexBasisValueKind);
+        return m_value.m_flexBasis;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1341,8 +1428,6 @@ public:
         BorderWidthValue m_borderWidth;
         ValueList* m_multiValue;
         OverflowValue m_overflow;
-        OverflowValue m_overflowX;
-        OverflowValue m_overflowY;
         VisibilityValue m_visibility;
         UnicodeBidiValue m_unicodeBidi;
         TextDecorationValue m_textDecoration;
@@ -1357,145 +1442,175 @@ public:
         TransitionTimingFunctionValue m_transitionTimingFunction;
         BoxSizingValue m_boxSizing;
         CSSTime m_time;
+        FlexDirectionValue m_flexDirection;
+        FlexWrapValue m_flexWrap;
+        JustifyContentValue m_justifyContent;
+        AlignItemValue m_alignItem;
+        AlignContentValue m_alignContent;
+        FlexBasisValue m_flexBasis;
         ValueData(int v)
+            : m_floatValue(v)
         {
-            m_floatValue = v;
         }
         ValueData(float v)
+            : m_floatValue(v)
         {
-            m_floatValue = v;
         }
         ValueData(DisplayValue v)
+            : m_display(v)
         {
-            m_display = v;
         }
         ValueData(PositionValue v)
+            : m_position(v)
         {
-            m_position = v;
         }
         ValueData(FloatValue v)
+            : m_float(v)
         {
-            m_float = v;
         }
         ValueData(ClearValue v)
+            : m_clear(v)
         {
-            m_clear = v;
         }
         ValueData(VerticalAlignValue v)
+            : m_verticalAlign(v)
         {
-            m_verticalAlign = v;
         }
         ValueData(FontSizeValue v)
+            : m_fontSize(v)
         {
-            m_fontSize = v;
         }
         ValueData(FontStyleValue v)
+            : m_fontStyle(v)
         {
-            m_fontStyle = v;
         }
         ValueData(FontWeightValue v)
+            : m_fontWeight(v)
         {
-            m_fontWeight = v;
         }
         ValueData(SideValue v)
+            : m_side(v)
         {
-            m_side = v;
         }
         ValueData(DirectionValue v)
+            : m_direction(v)
         {
-            m_direction = v;
         }
         ValueData(WhiteSpaceValue v)
+            : m_whiteSpace(v)
         {
-            m_whiteSpace = v;
         }
         ValueData(CSSLength v)
+            : m_length(v)
         {
-            m_length = v;
         }
         ValueData(CSSAngle v)
+            : m_angle(v)
         {
-            m_angle = v;
         }
         ValueData(String* v)
+            : m_stringValue(v)
         {
-            m_stringValue = v;
         }
         ValueData(BackgroundRepeatValue v)
+            : m_backgroundRepeat(v)
         {
-            m_backgroundRepeat = v;
         }
         ValueData(BorderStyleValue v)
+            : m_borderStyle(v)
         {
-            m_borderStyle = v;
         }
         ValueData(BorderWidthValue v)
+            : m_borderWidth(v)
         {
-            m_borderWidth = v;
         }
         ValueData(ValueList* v)
+            : m_multiValue(v)
         {
-            m_multiValue = v;
         }
         ValueData(OverflowValue v)
+            : m_overflow(v)
         {
-            m_overflow = v;
         }
         ValueData(VisibilityValue v)
+            : m_visibility(v)
         {
-            m_visibility = v;
         }
         ValueData(UnicodeBidiValue v)
+            : m_unicodeBidi(v)
         {
-            m_unicodeBidi = v;
         }
         ValueData(TextDecorationValue v)
+            : m_textDecoration(v)
         {
-            m_textDecoration = v;
         }
         ValueData(CSSTransformFunctions* v)
+            : m_transforms(v)
         {
-            m_transforms = v;
         }
         ValueData(Unit::Color v)
+            : m_color(v)
         {
-            m_color = v;
         }
         ValueData(NamedColor::NamedColorValue v)
+            : m_namedColor(v)
         {
-            m_namedColor = v;
         }
         ValueData(BorderCollapseValue v)
+            : m_borderCollapse(v)
         {
-            m_borderCollapse = v;
         }
         ValueData(CaptionSideValue v)
+            : m_captionSide(v)
         {
-            m_captionSide = v;
         }
         ValueData(EmptyCellsValue v)
+            : m_emptyCells(v)
         {
-            m_emptyCells = v;
         }
         ValueData(TableLayoutValue v)
+            : m_tableLayout(v)
         {
-            m_tableLayout = v;
         }
         ValueData(TransitionPropertyValue v)
+            : m_transitionProperty(v)
         {
-            m_transitionProperty = v;
         }
         ValueData(CSSTime v)
+            : m_time(v)
         {
-            m_time = v;
         }
         ValueData(TransitionTimingFunctionValue v)
+            : m_transitionTimingFunction(v)
         {
-            m_transitionTimingFunction = v;
         }
         ValueData(BoxSizingValue v)
+            : m_boxSizing(v)
         {
-            m_boxSizing = v;
+        }
+        ValueData(FlexDirectionValue v)
+            : m_flexDirection(v)
+        {
+        }
+        ValueData(FlexWrapValue v)
+            : m_flexWrap(v)
+        {
+        }
+        ValueData(JustifyContentValue v)
+            : m_justifyContent(v)
+        {
+        }
+        ValueData(AlignItemValue v)
+            : m_alignItem(v)
+        {
+        }
+        ValueData(AlignContentValue v)
+            : m_alignContent(v)
+        {
+        }
+        ValueData(FlexBasisValue v)
+            : m_flexBasis(v)
+        {
         }
     };
 
@@ -1580,20 +1695,16 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
 
-    bool updateValueLength(const CSSTokenValue& token, bool allowNegative);
-    bool updateValueLengthOrPercent(const CSSTokenVector& tokens,
-                                    bool allowNegative);
-    bool updateValueLengthOrPercent(const CSSTokenValue& token,
-                                    bool allowNegative);
-    bool updateValueLengthOrPercentOrAuto(const CSSTokenVector& tokens,
-                                          bool allowNegative);
-    bool updateValueLengthOrPercentOrAutoOrNone(const CSSTokenVector& tokens,
-                                                bool allowNegative);
-    bool updateValueLengthOrPercentOrAuto(const CSSTokenValue& token,
-                                          bool allowNegative);
-    bool updateValueLengthOrPercentOrAutoOrNone(const CSSTokenValue& token,
-                                                bool allowNegative);
-
+    bool updateValueNumber(const CSSTokenVector& tokens);
+    bool updateValueNumber(const CSSTokenValue& token);
+    enum LengthOption {
+        AllowNegative = 1 << 0,
+        AllowPercent = 1 << 1,
+        AllowAuto = 1 << 2,
+        AllowNone = 1 << 3
+    };
+    bool updateValueLength(const CSSTokenVector& tokens, uint8_t option);
+    bool updateValueUnitLength(const CSSTokenValue& token, uint8_t option);
     bool updateValueBackgroundImage(const CSSTokenVector& tokens,
                                     bool allowComma);
     bool updateValueBackgroundSize(const CSSTokenVector& tokens,
@@ -1617,6 +1728,12 @@ public:
     bool updateValueUnitTransitionTime(const CSSTokenValue& value);
     bool updateValueUnitOverflowX(const CSSTokenValue& value);
     bool updateValueUnitOverflowY(const CSSTokenValue& value);
+    bool updateValueUnitFlexDirection(const CSSTokenValue& value);
+    bool updateValueUnitFlexWrap(const CSSTokenValue& value);
+    bool updateValueUnitAlignItem(const CSSTokenValue& value);
+    bool updateValueUnitFlexGrow(const CSSTokenValue& value);
+    bool updateValueUnitFlexShrink(const CSSTokenValue& value);
+    bool updateValueUnitFlexBasis(const CSSTokenValue& value);
 
 protected:
     KeyKind m_keyKind : 8;

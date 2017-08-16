@@ -328,9 +328,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         }
     }
 
-    if (!owner()->isNormalFlow() ||
-        owner()->style()->display() == InlineBlockDisplayValue ||
-        owner()->style()->display() == InlineTableDisplayValue) {
+    if (owner()->shouldResetTextDecoration()) {
         canvas->resetTextDecorationData();
     } else {
         canvas->mergeTextDecorationData(owner()->style());

@@ -232,9 +232,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
-        } else if (box->isFrameBlockBox() &&
-                   ((box->style()->display() == InlineBlockDisplayValue) ||
-                    (box->style()->display() == InlineTableDisplayValue))) {
+        } else if (box->isFrameBlockBox() && box->isInlineLevel()) {
             hasBoxOtherThanText = true;
             hasBoxOtherThanCollapsedInlineNonReplacedBox = true;
             LayoutUnit boxHeight = box->boxHeight();
@@ -468,10 +466,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                     ib->marginTop()); */
                     f->setY(maxAscender - f->height() - marginBottom);
                 } else {
-                    STARFISH_ASSERT(
-                        f->isFrameBlockBox() &&
-                        ((f->style()->display() == InlineBlockDisplayValue) ||
-                         (f->style()->display() == InlineTableDisplayValue)));
+                    STARFISH_ASSERT(f->isFrameBlockBox() && f->isInlineLevel());
                     LayoutUnit ascender =
                         inlineBlockAscender(f->asFrameBlockBox());
                     if (ascender == f->height()) {
@@ -2577,8 +2572,7 @@ void FrameBlockBox::layoutInline(LineFormattingContext& ctx)
         ctx.tryInsertFloatingBox(this);
     } else {
         DisplayValue display = style()->display();
-        STARFISH_ASSERT(display == InlineBlockDisplayValue ||
-                        display == InlineTableDisplayValue);
+        STARFISH_ASSERT(isInlineLevel());
         // inline-block, inline-table
         ctx.m_layoutContext.pushInlineBlockBox(this);
         setLayoutParent(ctx.m_currentLayoutParent);
@@ -3753,7 +3747,8 @@ void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
         FrameBox::paintChildrenWith(ctx);
     } else {
         for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-            PaintingInlineStage s = PaintingInlineLevelElements;
+            PaintingInlineStage old = ctx.m_paintingInlineStage;
+            PaintingInlineStage s = PaintingInlineBox;
             while (s != PaintingInlineStageEnd) {
                 ctx.m_paintingInlineStage = s;
                 ctx.m_canvas->save();
@@ -3769,6 +3764,7 @@ void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
                 ctx.m_canvas->restore();
                 s = (PaintingInlineStage)(s + 1);
             }
+            ctx.m_paintingInlineStage = old;
         }
     }
 }
@@ -3795,7 +3791,7 @@ FrameText* InlineTextBox::origin()
 
 void InlineTextBox::paint(PaintingContext& ctx)
 {
-    if (ctx.m_paintingInlineStage == PaintingInlineLevelElements) {
+    if (ctx.m_paintingInlineStage == PaintingInlineBox) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline) {
             if (style()->visibility() ==
                 VisibilityValue::HiddenVisibilityValue) {
@@ -3866,8 +3862,7 @@ void InlineNonReplacedBox::paint(PaintingContext& ctx)
         return;
     }
 
-    if (!isNormalFlow() || style()->display() == InlineBlockDisplayValue ||
-        style()->display() == InlineTableDisplayValue) {
+    if (shouldResetTextDecoration()) {
         ctx.m_canvas->resetTextDecorationData();
     } else {
         ctx.m_canvas->mergeTextDecorationData(style());
@@ -3903,7 +3898,7 @@ void InlineNonReplacedBox::paint(PaintingContext& ctx)
             ctx.m_paintingStage = PaintingNonPositionedFloats;
         }
     } else if (ctx.m_paintingStage == PaintingNormalFlowInline &&
-               ctx.m_paintingInlineStage == PaintingInlineLevelElements) {
+               ctx.m_paintingInlineStage == PaintingInlineBox) {
         paintBackgroundAndBorders(ctx.m_canvas);
         paintChildrenWith(ctx);
     } else {

@@ -600,6 +600,7 @@ public:
                         Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void layoutInline(LineFormattingContext& ctx);
+    void computeContentHeight(LayoutContext& ctx, LayoutUnit contentHeight);
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);

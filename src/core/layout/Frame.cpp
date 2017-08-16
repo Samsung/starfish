@@ -471,6 +471,10 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
 
 LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
 {
+    if (currentFrame->isAbsolutePositioned()) {
+        FrameBox* cb = containingBlock(currentFrame);
+        return cb->contentHeight() + cb->paddingHeight();
+    }
     FrameBlockBox* container = blockContainer(currentFrame);
     std::vector<std::pair<FrameBox*, Length>> reverse;
     while (container) {
@@ -731,11 +735,6 @@ void Frame::computeStyleFlags()
     m_flags.m_isNormalFlow &= !m_flags.m_isFloating;
 
     // TODO add condition
-    // https://www.w3.org/TR/CSS21/visuren.html#block-formatting
-    // Block formatting context is established when the element is either
-    // float, absolute positioned, block containers (such as inline-blocks,
-    // table-cells, and table-captions) that are not block boxes,
-    // or block boxes with 'overflow' other than 'visible'.
     m_flags.m_isEstablishesBlockFormattingContext |= (shouldApplyOverflow());
     m_flags.m_isEstablishesBlockFormattingContext |=
         m_flags.m_isAbsolutePositioned;
@@ -746,6 +745,10 @@ void Frame::computeStyleFlags()
         (style->originalDisplay() == DisplayValue::TableCellDisplayValue);
     m_flags.m_isEstablishesBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::TableCaptionDisplayValue);
+    m_flags.m_isEstablishesBlockFormattingContext |=
+        (style->originalDisplay() == DisplayValue::FlexDisplayValue);
+    m_flags.m_isEstablishesBlockFormattingContext |=
+        (style->originalDisplay() == DisplayValue::InlineFlexDisplayValue);
     // https://www.w3.org/TR/html5/rendering.html#the-fieldset-and-legend-elements
     m_flags.m_isEstablishesBlockFormattingContext |=
         (!isAnonymous() && m_node->isHTMLFieldSetElement());
@@ -763,7 +766,7 @@ void Frame::computeStyleFlags()
     // Appendix E. Elaborate description of Stacking Contexts
     // All positioned descendants with 'z-index: auto' or 'z-index: 0', in
     // tree order. For those with 'z-index: auto', treat the element as if
-    // it created a new stacking context,
+    // it created a new stacking context.
     m_flags.m_isEstablishesStackingContext |= m_flags.m_isPositioned;
     m_flags.m_isEstablishesStackingContext |= (style->opacity() != 1);
     m_flags.m_isEstablishesStackingContext |= (style->hasTransforms(this));
