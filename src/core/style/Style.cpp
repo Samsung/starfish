@@ -4466,6 +4466,11 @@ void StyleResolver::apply(Element* element,
                 } else {
                     style->setFlexBasis(FlexBasisData(false, length));
                 }
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Percentage) {
+                Length length =
+                    Length(Length::Percent, cssValues[k].percentageValue());
+                style->setFlexBasis(FlexBasisData(false, length));
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -6968,6 +6973,8 @@ bool CSSStyleValuePair::updateValueAlignContent(const CSSTokenVector& tokens)
         m_value.m_alignContent = AlignContentValue::FlexStartAlignContentValue;
     } else if (STRING_VALUE_IS_STRING("flex-end")) {
         m_value.m_alignContent = AlignContentValue::FlexEndAlignContentValue;
+    } else if (STRING_VALUE_IS_STRING("center")) {
+        m_value.m_alignContent = AlignContentValue::CenterAlignContentValue;
     } else if (STRING_VALUE_IS_STRING("space-between")) {
         m_value.m_alignContent =
             AlignContentValue::SpaceBetweenAlignContentValue;
