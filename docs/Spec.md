@@ -321,6 +321,9 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLFontElement](https://html.spec.whatwg.org/#htmlfontelement) | interface | HTMLFontElement | The font element defines the font size, font face, and color of text. |
 |  | attribute | color | This attribute sets the text color. |
 |  | attribute | size | This attribute sets the size of the font. |
+| [HTMLFormElement](https://html.spec.whatwg.org/#forms) | interface | HTMLFormElement | The HTMLFormElement interface provides methods to create and modify form elements. |
+|  | attribute | elements | A HTMLFormControlsCollection holding all form controls belonging to this form element. |
+|  | attribute | length | A long reflecting  the number of controls in the form. |
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
 | [HTMLHeadingElement](https://html.spec.whatwg.org/#htmlheadingelement) | interface | HTMLHeadingElement | The h1, h2, h3, h4, h5 and h6 elements represent headings for their sections. |
 |  | attribute | align | Returns the current value of the align content attribute. |

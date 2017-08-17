@@ -1,4 +1,5 @@
 // https://html.spec.whatwg.org/#forms
+// NOTE Using NotEnumerable at getter instead of LegacyUnenumerableNamedProperties at interface
 
 [OverrideBuiltins, LegacyUnenumerableNamedProperties, HTMLConstructor]
 interface HTMLFormElement : HTMLElement {
@@ -12,10 +13,11 @@ interface HTMLFormElement : HTMLElement {
     [Unimplemented, CEReactions] attribute boolean noValidate;
     [CEReactions] attribute DOMString target;
 
-    [Unimplemented, SameObject] readonly attribute HTMLFormControlsCollection elements;
-    [Unimplemented] readonly attribute unsigned long length;
-    // [Unimplemented] getter Element (unsigned long index);
+    [SameObject] readonly attribute HTMLFormControlsCollection elements;
+    readonly attribute unsigned long length;
+    getter Element (unsigned long index);
     // [Unimplemented] getter (RadioNodeList or Element) (DOMString name);
+    [NotEnumerable] getter Element (DOMString name);
 
     void submit();
     [Unimplemented, CEReactions] void reset();

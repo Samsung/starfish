@@ -23,6 +23,7 @@
 #include "core/dom/Event.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
+#include "core/dom//HTMLFormControlsCollection.h"
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
 #include "core/page/BrowsingContext.h"
@@ -50,8 +51,24 @@ FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
 HTMLFormElement::HTMLFormElement(Document* document)
     : HTMLElement(document)
     , m_submitter(nullptr)
+    , m_elements(nullptr)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
+}
+
+void* HTMLFormElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLFormElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormElement, m_submitter));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormElement, m_elements));
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLFormElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
 QualifiedName HTMLFormElement::name()
@@ -189,6 +206,40 @@ void HTMLFormElement::submitData(ResourceURL* url,
     DocumentURL* urlToOpen =
         new DocumentURL(url, new FormSubmitData(formDataSet, enctype, method));
     document()->window()->location()->assign(urlToOpen);
+}
+
+HTMLFormControlsCollection* HTMLFormElement::elements()
+{
+    if (m_elements) {
+        return m_elements;
+    }
+    m_elements =
+        new HTMLFormControlsCollection(this, NodeListImpl::FormElementsFiliter);
+    return m_elements;
+}
+
+uint32_t HTMLFormElement::length()
+{
+    if (!m_elements) {
+        elements();
+    }
+    return m_elements->length();
+}
+
+Element* HTMLFormElement::defaultIndexedGetter(uint32_t idx)
+{
+    if (!m_elements) {
+        elements();
+    }
+    return m_elements->item(idx);
+}
+
+Element* HTMLFormElement::defaultNamedGetter(String* name)
+{
+    if (!m_elements) {
+        elements();
+    }
+    return m_elements->namedItem(name);
 }
 
 // https://www.w3.org/TR/html5/forms.html#constructing-the-form-data-set

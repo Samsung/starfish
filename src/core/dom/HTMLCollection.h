@@ -38,13 +38,13 @@ public:
 
     size_t length() const;
     Element* item(unsigned long index);
-    Element* namedItem(String* name);
+    virtual Element* namedItem(String* name);
     NodeListImpl& getNodeListImpl()
     {
         return m_nodeListImpl;
     }
 
-private:
+protected:
     NodeListImpl m_nodeListImpl;
 };
 }
