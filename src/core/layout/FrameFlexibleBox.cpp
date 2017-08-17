@@ -552,6 +552,20 @@ void FlexFormattingContext::resolveMainSize()
                   (flexWrap == WrapReverseFlexWrapValue);
 
     while (child) {
+        if (child->isFrameBlockBox()) {
+            FrameBlockBox* blockBox = child->asFrameBlockBox();
+            if (blockBox->isAnonymous() && blockBox->firstChild() &&
+                blockBox->firstChild() == blockBox->lastChild() &&
+                blockBox->firstChild()->isFrameText() &&
+                blockBox->firstChild()
+                    ->asFrameText()
+                    ->text()
+                    ->containsOnlyWhitespace()) {
+                child = child->next();
+                continue;
+            }
+        }
+
         orderedFlexItems.push_back(child->asFrameBox());
         child = child->next();
     }
@@ -567,20 +581,6 @@ void FlexFormattingContext::resolveMainSize()
         FlexLine& flexLine = m_flexLines[m_currentLineIdx];
         std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
         FrameBox* flexItem = *iter;
-
-        if (flexItem->isFrameBlockBox()) {
-            FrameBlockBox* blockBox = flexItem->asFrameBlockBox();
-            if (blockBox->firstChild() &&
-                blockBox->firstChild() == blockBox->lastChild() &&
-                blockBox->firstChild()->isFrameText() &&
-                blockBox->firstChild()
-                    ->asFrameText()
-                    ->text()
-                    ->containsOnlyWhitespace()) {
-                iter++;
-                continue;
-            }
-        }
 
         if (flexItem->isAbsolutePositioned()) {
             m_layoutContext.registerAbsolutePositionedBox(flexItem);
