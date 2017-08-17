@@ -39,9 +39,10 @@ FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
 }
 
 FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
-                               String* formEnctype, String* method)
+                               ResourceRequest::EncodeType enctype,
+                               ResourceRequest::MethodType method)
     : m_formDataSet(formDataSet)
-    , m_formEnctype(formEnctype)
+    , m_enctype(enctype)
     , m_method(method)
 {
 }
@@ -142,26 +143,27 @@ void HTMLFormElement::submit()
         url = document()->documentURI();
     }
 
-    String* formEnctype = String::emptyString;
-    String* formMethod = String::emptyString;
+    ResourceRequest::EncodeType formEnctype =
+        ResourceRequest::MISSING_OR_INVALID_ENCODETYPE;
+    ResourceRequest::MethodType formMethod = ResourceRequest::UNKNOWN_METHOD;
     String* formTarget = String::emptyString;
+
     if (inputNode) {
-        formEnctype = inputNode->formEnctype();
-        formMethod = inputNode->formMethod();
+        formEnctype = ResourceRequest::toEncodeType(inputNode->formEnctype());
+        formMethod = ResourceRequest::toMethodType(inputNode->formMethod());
         formTarget = inputNode->formTarget();
     }
 
-    if (formEnctype->equals(String::emptyString)) {
-        formEnctype = enctype();
-        if (formEnctype->equals(String::emptyString)) {
-            formEnctype =
-                String::createASCIIString("application/x-www-form-urlencoded");
+    if (formEnctype == ResourceRequest::MISSING_OR_INVALID_ENCODETYPE) {
+        formEnctype = ResourceRequest::toEncodeType(enctype());
+        if (formEnctype == ResourceRequest::MISSING_OR_INVALID_ENCODETYPE) {
+            formEnctype = ResourceRequest::APPLICATION_X_WWW_FORM_URLENCODED;
         }
     }
-    if (formMethod->equals(String::emptyString)) {
-        formMethod = method();
-        if (formMethod->equals(String::emptyString)) {
-            formMethod = String::createASCIIString("get");
+    if (formMethod == ResourceRequest::UNKNOWN_METHOD) {
+        formMethod = ResourceRequest::toMethodType(method());
+        if (formMethod == ResourceRequest::UNKNOWN_METHOD) {
+            formMethod = ResourceRequest::GET_METHOD;
         }
     }
     if (formTarget->equals(String::emptyString)) {
@@ -181,10 +183,11 @@ void HTMLFormElement::submit()
 
 void HTMLFormElement::submitData(ResourceURL* url,
                                  GCVector<FormDataSetItem*>* formDataSet,
-                                 String* formEnctype, String* formMethod)
+                                 ResourceRequest::EncodeType enctype,
+                                 ResourceRequest::MethodType method)
 {
-    DocumentURL* urlToOpen = new DocumentURL(
-        url, new FormSubmitData(formDataSet, formEnctype, formMethod));
+    DocumentURL* urlToOpen =
+        new DocumentURL(url, new FormSubmitData(formDataSet, enctype, method));
     document()->window()->location()->assign(urlToOpen);
 }
 

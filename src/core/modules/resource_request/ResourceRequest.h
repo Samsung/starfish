@@ -98,6 +98,13 @@ public:
         LOADEND,
     };
 
+    enum EncodeType {
+        APPLICATION_X_WWW_FORM_URLENCODED,
+        MULTIPART_FORM_DATA,
+        TEXT_PLAIN,
+        MISSING_OR_INVALID_ENCODETYPE,
+    };
+
     ResourceRequest(Document* document);
     void open(ResourceRequest::MethodType method, String* url, bool async,
               String* userName = String::emptyString,
@@ -181,8 +188,13 @@ public:
 
     void setRequestHeader(String* h, String* c);
 
+    static ResourceRequest::MethodType toMethodType(String* input);
+    static String* methodType(ResourceRequest::MethodType method);
+    static ResourceRequest::EncodeType toEncodeType(String* input);
+    static String* encodeType(ResourceRequest::EncodeType input);
+
     String* encodeFormDataSet(GCVector<FormDataSetItem*>* formDataSet,
-                              String* formEnctype);
+                              ResourceRequest::EncodeType formEnctype);
     String* mutateActionURL(DocumentURL* url, FormSubmitData* formSubmitData);
 
 protected:

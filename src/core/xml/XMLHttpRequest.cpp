@@ -201,22 +201,11 @@ void XMLHttpRequest::send(String* body)
     m_resourceRequest->send(body);
 }
 
-static ResourceRequest::MethodType toMethodType(String* input)
-{
-    String* lowerMethod = input->toLower();
-    if (lowerMethod->equals("post")) {
-        return ResourceRequest::POST_METHOD;
-    } else if (lowerMethod->equals("get")) {
-        return ResourceRequest::GET_METHOD;
-    }
-    return ResourceRequest::UNKNOWN_METHOD;
-}
-
 DEFINE_EVENT_LISTENER(XMLHttpRequest, readystatechange);
 
 void XMLHttpRequest::open(String* method, String* url)
 {
-    open(toMethodType(method), url, true, String::emptyString,
+    open(ResourceRequest::toMethodType(method), url, true, String::emptyString,
          String::emptyString);
 }
 
@@ -228,7 +217,7 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
         userName.hasValue() ? userName.getValue() : String::emptyString;
     String* pValue =
         password.hasValue() ? userName.getValue() : String::emptyString;
-    open(toMethodType(method), url, async, uValue, pValue);
+    open(ResourceRequest::toMethodType(method), url, async, uValue, pValue);
 }
 
 void XMLHttpRequest::open(ResourceRequest::MethodType method, String* url,

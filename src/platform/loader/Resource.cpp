@@ -53,23 +53,23 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
             if (url->formSubmitData()) {
                 FormSubmitData* formSubmitData = url->formSubmitData();
                 if (url->isNetworkURL()) {
+                    method = formSubmitData->m_method;
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString("content-type"),
-                        formSubmitData->m_formEnctype);
+                        ResourceRequest::encodeType(formSubmitData->m_enctype));
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString("charset"),
                         String::createASCIIString("utf-8"));
 
-                    if (formSubmitData->m_method->equalsWithoutCase("get")) {
-                        method = ResourceRequest::GET_METHOD;
+                    if (formSubmitData->m_method ==
+                        ResourceRequest::GET_METHOD) {
                         urlToOpen = m_resourceRequest->mutateActionURL(
                             url, formSubmitData);
-                    } else if (formSubmitData->m_method->equalsWithoutCase(
-                                   "post")) {
-                        method = ResourceRequest::POST_METHOD;
+                    } else if (formSubmitData->m_method ==
+                               ResourceRequest::POST_METHOD) {
                         entityBody = m_resourceRequest->encodeFormDataSet(
                             formSubmitData->m_formDataSet,
-                            formSubmitData->m_formEnctype);
+                            formSubmitData->m_enctype);
                     }
                 } else {
                     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
