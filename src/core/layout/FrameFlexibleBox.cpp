@@ -544,6 +544,7 @@ void FlexFormattingContext::layoutMain(LayoutUnit lineWidth)
 
 void FlexFormattingContext::resolveMainSize()
 {
+    std::vector<FrameBox*> orderedFlexItems;
     LayoutUnit lineMainSize;
     Frame* child = m_container->firstChild();
     FlexWrapValue flexWrap = m_container->style()->flexWrap();
@@ -551,12 +552,24 @@ void FlexFormattingContext::resolveMainSize()
                   (flexWrap == WrapReverseFlexWrapValue);
 
     while (child) {
+        orderedFlexItems.push_back(child->asFrameBox());
+        child = child->next();
+    }
+
+    std::sort(orderedFlexItems.begin(), orderedFlexItems.end(),
+              [](FrameBox* a, FrameBox* b) {
+                  return a->style()->order() < b->style()->order();
+              });
+
+    auto iter = orderedFlexItems.begin();
+
+    while (iter != orderedFlexItems.end()) {
         FlexLine& flexLine = m_flexLines[m_currentLineIdx];
         std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
-        FrameBox* flexItemBox = child->asFrameBox();
+        FrameBox* flexItem = *iter;
 
-        if (flexItemBox->isFrameBlockBox()) {
-            FrameBlockBox* blockBox = child->asFrameBlockBox();
+        if (flexItem->isFrameBlockBox()) {
+            FrameBlockBox* blockBox = flexItem->asFrameBlockBox();
             if (blockBox->firstChild() &&
                 blockBox->firstChild() == blockBox->lastChild() &&
                 blockBox->firstChild()->isFrameText() &&
@@ -564,35 +577,34 @@ void FlexFormattingContext::resolveMainSize()
                     ->asFrameText()
                     ->text()
                     ->containsOnlyWhitespace()) {
-                child = child->next();
+                iter++;
                 continue;
             }
         }
 
-        if (child->isAbsolutePositioned()) {
-            m_layoutContext.registerAbsolutePositionedBox(flexItemBox);
+        if (flexItem->isAbsolutePositioned()) {
+            m_layoutContext.registerAbsolutePositionedBox(flexItem);
             addNewLine(lineMainSize);
             FlexLine& newFlexLine = m_flexLines[m_currentLineIdx];
             std::vector<FrameBox*>& newFlexItems = newFlexLine.m_flexItems;
-            newFlexItems.push_back(flexItemBox);
+            newFlexItems.push_back(flexItem);
             newFlexLine.m_hasAbsolutePositionedBox = true;
             addNewLine(0);
             lineMainSize = 0;
-            child = child->next();
+            iter++;
             continue;
         }
 
         if (!isWrap || (lineMainSize == 0) ||
             ((m_mainDirectionIsInlineAxis &&
-              lineMainSize + flexItemBox->boxWidth() <= m_availableMainSize) ||
+              lineMainSize + flexItem->boxWidth() <= m_availableMainSize) ||
              (!m_mainDirectionIsInlineAxis &&
-              lineMainSize + flexItemBox->boxHeight() <=
-                  m_availableMainSize))) {
-            flexItems.push_back(flexItemBox);
+              lineMainSize + flexItem->boxHeight() <= m_availableMainSize))) {
+            flexItems.push_back(flexItem);
             if (m_mainDirectionIsInlineAxis) {
-                lineMainSize += flexItemBox->boxWidth();
+                lineMainSize += flexItem->boxWidth();
             } else {
-                lineMainSize += flexItemBox->boxHeight();
+                lineMainSize += flexItem->boxHeight();
             }
         } else {
             addNewLine(lineMainSize);
@@ -600,7 +612,7 @@ void FlexFormattingContext::resolveMainSize()
             continue;
         }
 
-        child = child->next();
+        iter++;
     }
 
     layoutMain(lineMainSize);
