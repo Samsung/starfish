@@ -189,7 +189,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
     } else if (event->isKeyboardEvent() &&
                document()->browsingContext()->focusedNode() == this &&
                event->type()->equalsWithoutCase("keydown")) {
-        if (type()->equals("") || type()->equalsWithoutCase("input")) {
+        if (isUserKeyboardInputAllowed()) {
             String* value =
                 getAttributeOrEmpty(starFish()->staticStrings()->m_value);
             String* oldValue = value;
@@ -227,7 +227,7 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
     bool oldGotFocus = oldState & Node::NodeStateFocused;
     bool newGotFocus = newState & Node::NodeStateFocused;
 
-    if (type()->equals("") || type()->equalsWithoutCase("input")) {
+    if (isUserKeyboardInputAllowed()) {
         if (!oldGotFocus && newGotFocus) {
             String* value =
                 getAttributeOrEmpty(starFish()->staticStrings()->m_value);
@@ -252,5 +252,26 @@ bool HTMLInputElement::supportsFocus() const
     return !const_cast<HTMLInputElement*>(this)
                 ->getAttributeOrEmpty(type)
                 ->equalsWithoutCase("hidden");
+}
+
+bool HTMLInputElement::isUserKeyboardInputAllowed()
+{
+    String* typeString = type();
+    if (typeString->equals("") || typeString->equalsWithoutCase("text")) {
+        return true;
+    } else if (typeString->equals("email")) {
+        return true;
+    } else if (typeString->equals("number")) {
+        return true;
+    } else if (typeString->equals("password")) {
+        return true;
+    } else if (typeString->equals("url")) {
+        return true;
+    } else if (typeString->equals("tel")) {
+        return true;
+    } else if (typeString->equals("search")) {
+        return true;
+    }
+    return false;
 }
 }

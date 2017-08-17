@@ -114,11 +114,25 @@ uint32_t keyValueToKeyCode(KeyValue v)
         char ch = v - Digit0Key + '0';
         return ch;
     } else if (v == SpaceKey) {
-        return ' ';
+        return 32;
     } else if (v == AtMarkKey) {
         return '@';
     } else if (v == PeriodKey) {
         return '.';
+    } else if (v == ArrowLeftKey) {
+        return 37;
+    } else if (v == ArrowRightKey) {
+        return 39;
+    } else if (v == ArrowUpKey) {
+        return 38;
+    } else if (v == ArrowDownKey) {
+        return 40;
+    } else if (v == EnterKey) {
+        return 13;
+    } else if (v == EscapeKey) {
+        return 27;
+    } else if (v == BackspaceKey) {
+        return 8;
     } else {
         return 0;
     }

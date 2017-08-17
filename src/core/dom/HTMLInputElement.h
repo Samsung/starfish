@@ -71,6 +71,7 @@ public:
     bool supportsFocus() const override;
 
 protected:
+    bool isUserKeyboardInputAllowed();
     bool m_shouldDrawCaret;
     size_t m_caretBlinkingIntervalId;
     size_t m_currentCaretPosition;
