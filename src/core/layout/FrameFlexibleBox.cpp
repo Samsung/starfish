@@ -479,8 +479,10 @@ void FlexFormattingContext::applyJustifyContent()
         offset = separator;
         break;
     case JustifyContentValue::SpaceBetweenJustifyContentValue:
-        separator =
-            (m_availableMainSize - sumOfMainSize) / (flexItems.size() - 1);
+        if (flexItems.size() > 1) {
+            separator =
+                (m_availableMainSize - sumOfMainSize) / (flexItems.size() - 1);
+        }
         break;
     }
 
@@ -686,6 +688,9 @@ void FlexFormattingContext::computeCrossSize()
         FrameBox* flexItem = flexItemsToStretchInfo.second;
 
         if (m_mainDirectionIsInlineAxis) {
+            if (m_flexLines[lineIdx].m_lineHeight < flexItem->boxHeight()) {
+                continue;
+            }
             Length old = flexItem->style()->height();
             LayoutUnit oldContentWidth = flexItem->contentWidth();
             flexItem->style()->setHeight(
@@ -696,6 +701,9 @@ void FlexFormattingContext::computeCrossSize()
             flexItem->style()->setHeight(old);
             flexItem->setContentWidth(oldContentWidth);
         } else {
+            if (m_flexLines[lineIdx].m_lineHeight < flexItem->boxWidth()) {
+                continue;
+            }
             Length old = flexItem->style()->width();
             LayoutUnit oldContentHeight = flexItem->contentHeight();
             flexItem->style()->setWidth(
@@ -853,7 +861,9 @@ void FlexFormattingContext::applyAlignContent(LayoutUnit sumOfCrossSize)
         offset = separator;
         break;
     case SpaceBetweenAlignContentValue:
-        separator = (m_availableCrossSize - sumOfCrossSize) / (lines - 1);
+        if (lines > 1) {
+            separator = (m_availableCrossSize - sumOfCrossSize) / (lines - 1);
+        }
         break;
     case StretchAlignContentValue:
         offset = 0;
