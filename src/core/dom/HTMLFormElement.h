@@ -35,12 +35,12 @@ public:
 
 class FormSubmitData : public gc {
 public:
-    FormSubmitData(GCVector<FormDataSetItem*>* formDataSet, String* formEnctype,
-                   String* method);
-
+    FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
+                   ResourceRequest::EncodeType enctype,
+                   ResourceRequest::MethodType method);
     GCVector<FormDataSetItem*>* m_formDataSet;
-    String* m_formEnctype;
-    String* m_method;
+    ResourceRequest::EncodeType m_enctype;
+    ResourceRequest::MethodType m_method;
 };
 
 class HTMLFormElement : public HTMLElement {
@@ -78,7 +78,8 @@ public:
 private:
     GCVector<FormDataSetItem*>* createFormDataSet();
     void submitData(ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
-                    String* formEnctype, String* methodType);
+                    ResourceRequest::EncodeType encodeType,
+                    ResourceRequest::MethodType methodType);
 
     Element* m_submitter;
 };

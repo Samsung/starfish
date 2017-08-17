@@ -294,16 +294,67 @@ void ResourceRequest::setRequestHeader(String* h, String* c)
     m_requestHeaders.push_back(std::make_pair(h, c));
 }
 
+ResourceRequest::MethodType ResourceRequest::toMethodType(String* input)
+{
+    String* lowerMethod = input->toLower();
+    if (lowerMethod->equals("post")) {
+        return POST_METHOD;
+    } else if (lowerMethod->equals("get")) {
+        return GET_METHOD;
+    }
+    return UNKNOWN_METHOD;
+}
+
+String* ResourceRequest::methodType(ResourceRequest::MethodType method)
+{
+    switch (method) {
+    case POST_METHOD:
+        return String::createASCIIString("post");
+    case GET_METHOD:
+        return String::createASCIIString("get");
+    default:
+        return String::emptyString;
+    }
+}
+
+ResourceRequest::EncodeType ResourceRequest::toEncodeType(String* input)
+{
+    String* lowerMethod = input->toLower();
+    if (lowerMethod->equals("application/x-www-form-urlencoded")) {
+        return APPLICATION_X_WWW_FORM_URLENCODED;
+    } else if (lowerMethod->equals("multipart/form-data")) {
+        return MULTIPART_FORM_DATA;
+    } else if (lowerMethod->equals("text/plain")) {
+        return TEXT_PLAIN;
+    }
+    return MISSING_OR_INVALID_ENCODETYPE;
+}
+
+String* ResourceRequest::encodeType(ResourceRequest::EncodeType input)
+{
+    switch (input) {
+    case APPLICATION_X_WWW_FORM_URLENCODED:
+        return String::createASCIIString("application/x-www-form-urlencoded");
+    case MULTIPART_FORM_DATA:
+        return String::createASCIIString("multipart/form-data");
+    case TEXT_PLAIN:
+        return String::createASCIIString("text/plain");
+    default:
+        return String::emptyString;
+    }
+}
+
 // https://www.w3.org/TR/html5/forms.html#application/
 // x-www-form-urlencoded-encoding-algorithm
 String* ResourceRequest::encodeFormDataSet(
-    GCVector<FormDataSetItem*>* formDataSet, String* formEnctype)
+    GCVector<FormDataSetItem*>* formDataSet,
+    ResourceRequest::EncodeType formEnctype)
 {
     String* space = String::spaceString;
     String* plus = String::createASCIIString("+");
 
     String* result = String::createASCIIString("");
-    if (formEnctype->equalsWithoutCase("application/x-www-form-urlencoded")) {
+    if (formEnctype == APPLICATION_X_WWW_FORM_URLENCODED) {
         for (size_t i = 0; i < formDataSet->size(); i++) {
             FormDataSetItem* item = (*formDataSet)[i];
             String* name = item->m_name->replaceAll(space, plus);
@@ -328,9 +379,9 @@ String* ResourceRequest::encodeFormDataSet(
             result = result->concat(String::createASCIIString("="));
             result = result->concat(value);
         }
-    } else if (formEnctype->equalsWithoutCase("multipart/form-data")) {
+    } else if (formEnctype == MULTIPART_FORM_DATA) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    } else if (formEnctype->equalsWithoutCase("text/plain")) {
+    } else if (formEnctype == TEXT_PLAIN) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
@@ -341,7 +392,7 @@ String* ResourceRequest::mutateActionURL(DocumentURL* url,
                                          FormSubmitData* formSubmitData)
 {
     String* encodedFormData = encodeFormDataSet(formSubmitData->m_formDataSet,
-                                                formSubmitData->m_formEnctype);
+                                                formSubmitData->m_enctype);
     String* actionURL = url->urlString()->concat("?");
     actionURL = actionURL->concat(encodedFormData);
     return actionURL;
