@@ -29,6 +29,7 @@ bool isSameTagName(Node* node, void* data, GCVector<Node*>* collection);
 bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection);
+bool isFormElements(Node* node, void* data, GCVector<Node*>* collection);
 
 class NodeListImpl : public gc {
 public:
@@ -39,7 +40,8 @@ public:
         TagNameFilter,
         ClassNamesFilter,
         NamedAccessFilter,
-        TableRowsFilter
+        TableRowsFilter,
+        FormElementsFiliter
     };
 
     NodeListImpl(Node* root, FilterFunctionType filterType, void* data,
@@ -68,6 +70,9 @@ public:
             break;
         case TableRowsFilter:
             m_filter = isSameTableElement;
+            break;
+        case FormElementsFiliter:
+            m_filter = isFormElements;
             break;
         case None:
             STARFISH_ASSERT_NOT_REACHED();

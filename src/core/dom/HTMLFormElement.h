@@ -23,6 +23,7 @@
 namespace StarFish {
 
 class DocumentBuilder;
+class HTMLFormControlsCollection;
 
 class FormDataSetItem : public gc {
 public:
@@ -46,6 +47,9 @@ public:
 class HTMLFormElement : public HTMLElement {
 public:
     HTMLFormElement(Document* document);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -72,6 +76,11 @@ public:
 
     void submit();
 
+    HTMLFormControlsCollection* elements();
+    uint32_t length();
+    Element* defaultIndexedGetter(uint32_t idx);
+    Element* defaultNamedGetter(String* name);
+
     // Other methods
     void setSubmitter(Element* elem);
 
@@ -82,6 +91,7 @@ private:
                     ResourceRequest::MethodType methodType);
 
     Element* m_submitter;
+    HTMLFormControlsCollection* m_elements;
 };
 }
 

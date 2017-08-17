@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,39 +14,27 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLCollection__
-#define __StarFishHTMLCollection__
+#ifndef __StarFishHTMLFormControlsCollection__
+#define __StarFishHTMLFormControlsCollection__
 
 #include "binding/ScriptWrappable.h"
-#include "core/dom/NodeList.h"
-#include "core/dom/NodeListImpl.h"
+#include "core/dom/HTMLCollection.h"
 
 namespace StarFish {
 
 class Node;
-class Element;
 
-class HTMLCollection : public ScriptWrappable {
+class HTMLFormControlsCollection : public HTMLCollection {
 public:
-    HTMLCollection(Node* root, NodeListImpl::FilterFunctionType filterType,
-                   void* data, bool canCache = false);
-
+    HTMLFormControlsCollection(Node* root,
+                               NodeListImpl::FilterFunctionType filterType);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLCollection() const;
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
+    virtual bool isHTMLFormControlsCollection() const;
 
-    size_t length() const;
-    Element* item(unsigned long index);
-    virtual Element* namedItem(String* name);
-    NodeListImpl& getNodeListImpl()
-    {
-        return m_nodeListImpl;
-    }
+    // Note : inherits length and item()
 
-protected:
-    NodeListImpl m_nodeListImpl;
+    virtual Element* namedItem(String* name) override;
 };
 }
-
 #endif

@@ -20,6 +20,7 @@
 #include "core/dom/HTMLElement.h"
 #include "core/dom/Node.h"
 #include "core/dom/NodeListImpl.h"
+#include "core/dom/HTMLInputElement.h"
 
 namespace StarFish {
 
@@ -212,6 +213,28 @@ bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection)
 
     return false;
 };
+
+bool isFormElements(Node* node, void* data, GCVector<Node*>* collection)
+{
+    // https://html.spec.whatwg.org/#dom-form-elements
+    // Filter matches listed elements whose form owner is the form element
+    // Listed elements is button,fieldset,input,object,output,select,textarea
+    if (node->isHTMLElement()) {
+        if (node->isHTMLButtonElement() || node->isHTMLFieldSetElement() ||
+            node->isHTMLObjectElement() || node->isHTMLSelectElement() ||
+            node->isHTMLTextAreaElement()) {
+            return true;
+        }
+        if (node->isHTMLInputElement()) {
+            if (!node->asHTMLInputElement()->type()->equalsWithoutCase(
+                    "image")) {
+                return true;
+            }
+        }
+        // TODO : output element
+    }
+    return false;
+}
 
 void NodeListImpl::getherDescendant(GCVector<Node*>* collection,
                                     Node* root) const

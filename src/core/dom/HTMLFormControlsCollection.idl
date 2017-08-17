@@ -1,0 +1,8 @@
+// https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#htmlformcontrolscollection
+// NOTE Using NotEnumerable at getter instead of LegacyUnenumerableNamedProperties at interface
+
+interface HTMLFormControlsCollection : HTMLCollection {
+  // inherits length and item()
+  // getter (RadioNodeList or Element)? namedItem(DOMString name); // shadows inherited namedItem()
+  [NotEnumerable] getter Element? namedItem(DOMString name); // shadows inherited namedItem()
+};
