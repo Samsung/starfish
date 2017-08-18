@@ -49,6 +49,7 @@ const char HTTPHeaderMap::kRange[] = "Range";
 const char HTTPHeaderMap::kReferer[] = "Referer";
 const char HTTPHeaderMap::kTE[] = "TE";
 const char HTTPHeaderMap::kUserAgent[] = "User-Agent";
+const char HTTPHeaderMap::kLocation[] = "Location";
 
 HTTPHeaderMap::HTTPHeaderMap()
 {

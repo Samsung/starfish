@@ -44,6 +44,7 @@ public:
     }
 
     bool isSuccessfulResponseStatus();
+    bool isRedirectionResponseStatus();
 
     void setReasonPhrase(const std::string& reasonPhrase)
     {

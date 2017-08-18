@@ -28,10 +28,12 @@ class HTTPTransaction;
 
 struct NetworkURLWorkerData {
     bool isAborted;
+    bool isRedirected;
     long lastTransactionResponseCode;
     ResourceRequest* request;
     NetworkURLWorkerHelper* networkWorker;
     std::unique_ptr<HTTPTransaction> httpTransaction;
+    std::string lastLocation;
 };
 
 class NetworkURLWorkerHelper : public gc {

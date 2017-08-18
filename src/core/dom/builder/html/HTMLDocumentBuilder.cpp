@@ -175,6 +175,12 @@ public:
         m_htmlSource =
             converter->convert(m_buffer.data(), m_buffer.size(), true);
         m_builder.document()->setCharacterSet(converter->encoding());
+
+        if (!m_resource->resourceRequest()->lastLocation()->equals(
+                String::emptyString)) {
+            m_builder.document()->setDocumentURI(
+                new ResourceURL(m_resource->resourceRequest()->lastLocation()));
+        }
         load();
     }
 
