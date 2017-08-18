@@ -473,9 +473,12 @@ void BrowsingContext::setFocusedNode(Node* n)
         m_focusedNode = nullptr;
     }
 
-    bool focusOnDocument = n->isDocument();
     Element* e = n->isElement() ? n->asElement() : n->parentElement();
-    if (!focusOnDocument && (!e || !e->isFocusable() || m_focusedNode == e)) {
+    if (!e || e->isHTMLBodyElement() || !e->isFocusable()) {
+        // Run the unfocusing steps and skip the focusing steps.
+        releaseFocusedNode(nullptr);
+        return;
+    } else if (e == m_focusedNode) {
         return;
     }
 
@@ -483,10 +486,6 @@ void BrowsingContext::setFocusedNode(Node* n)
 
     // Run the unfocusing steps for this element.
     releaseFocusedNode(e);
-
-    if (focusOnDocument) {
-        return;
-    }
 
     e->setState(Node::NodeStateFocused, Node::ChildrenOrSiblingsAffectedByFocus,
                 true);
