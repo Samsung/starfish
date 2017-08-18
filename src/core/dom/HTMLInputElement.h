@@ -66,6 +66,7 @@ public:
     HTMLFormElement* form();
 
     // Other methods
+    String* obscurePhrase(String* phrase);
     bool handleDefaultEvent(Event* event) override;
 
     bool supportsFocus() const override;
