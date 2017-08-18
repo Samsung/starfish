@@ -523,7 +523,7 @@ public:
     VerticalDataLocToContainingBlock computeVerticalDataToContainingBlock(
         LayoutContext& ctx, FrameBox* cb);
 
-    LayoutUnit boxWidth() const
+    LayoutUnit outerWidth() const
     {
         LayoutUnit boxWidth = width() + marginWidth();
         if (boxWidth < 0) {
@@ -532,13 +532,13 @@ public:
         return boxWidth;
     }
 
-    LayoutUnit boxHeight() const
+    LayoutUnit outerHeight() const
     {
-        LayoutUnit boxHeight = height() + marginHeight();
-        if (boxHeight < 0) {
+        LayoutUnit outerHeight = height() + marginHeight();
+        if (outerHeight < 0) {
             return 0;
         }
-        return boxHeight;
+        return outerHeight;
     }
 
     LayoutUnit lineHeight(LayoutUnit viewportHeight);

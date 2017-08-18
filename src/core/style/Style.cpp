@@ -7133,8 +7133,9 @@ void CSSStyleDeclaration::setFlex(const char* str, size_t length,
         flexGrow.setValue(f);
         flexShrink.setValueKind(CSSStyleValuePair::ValueKind::Number);
         flexShrink.setValue(1);
-        flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Length);
-        flexShrink.setLengthValue(CSSLength(0));
+        flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Percentage);
+        flexBasis.setPercentageValue(0);
+        addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
     } else if (parseFlexShorthand(tokens, &flexGrow, &flexShrink, &flexBasis)) {
         flexGrow.setFlagImportant(isImportant);
         flexShrink.setFlagImportant(isImportant);

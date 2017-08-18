@@ -735,10 +735,10 @@ public:
     {
         // TODO: consider starting mbp of InlineNonReplacedBox
         return std::accumulate(std::next(m_boxes.begin()), m_boxes.end(),
-                               (*m_boxes.begin())->boxWidth(),
+                               (*m_boxes.begin())->outerWidth(),
                                [](LayoutUnit w, FrameBox* box) {
                                    if (box->isNormalFlow()) {
-                                       return w + box->boxWidth();
+                                       return w + box->outerWidth();
                                    } else {
                                        return w;
                                    }
