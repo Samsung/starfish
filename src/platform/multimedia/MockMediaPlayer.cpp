@@ -89,7 +89,6 @@ void MockMediaPlayer::prepareMediaSource()
             ->streamInfo(0, activeMediaSource()->activeVideoStreamIndex());
     m_videoWidth = v->m_width;
     m_videoHeight = v->m_height;
-    processNextOperationQueueInContainer();
 
     if (container()->isHTMLVideoElement() && container()->frame()) {
         container()->setNeedsLayout();
@@ -98,7 +97,7 @@ void MockMediaPlayer::prepareMediaSource()
     container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
         HTMLMediaElement::HAVE_METADATA);
     container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
-        HTMLMediaElement::HAVE_FUTURE_DATA);
+        HTMLMediaElement::HAVE_ENOUGH_DATA);
 }
 
 void MockMediaPlayer::play()
@@ -187,6 +186,7 @@ void MockMediaPlayer::prepare(ResourceURL* url)
             m_activeMediaSource->addClient(
                 new MediaPlayerMediaSourceClient(this));
             m_activeMediaSource->attach(m_container);
+            processNextOperationQueueInContainer();
             return;
         }
     }
