@@ -530,7 +530,7 @@ CSSStyleDeclaration* Window::getComputedStyle(Element* element)
 }
 
 CSSStyleDeclaration* Window::getComputedStyle(Element* element,
-                                              String* pseudoElt)
+                                              Nullable<String*> pseudoElt)
 {
     return element->getComputedStyle();
 }
