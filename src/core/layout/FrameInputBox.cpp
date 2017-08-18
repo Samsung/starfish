@@ -80,6 +80,8 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         if (inputNode->type()->equalsWithoutCase("submit") &&
             userVal == String::emptyString) {
             userVal = String::createASCIIString("submit");
+        } else if (inputNode->type()->equalsWithoutCase("password")) {
+            userVal = inputNode->obscurePhrase(userVal);
         }
 
         Text* textNode = new Text(current->document(), userVal);

@@ -143,6 +143,12 @@ HTMLFormElement* HTMLInputElement::form()
     return nullptr;
 }
 
+String* HTMLInputElement::obscurePhrase(String* phrase)
+{
+    std::string s(phrase->length(), '*');
+    return String::createASCIIString(s.c_str());
+}
+
 void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* value, bool attributeCreated,
                                            bool attributeRemoved)
@@ -151,6 +157,10 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
                                      attributeRemoved);
 
     if (starFish()->staticStrings()->m_value == name) {
+        if (type()->equalsWithoutCase("password")) {
+            value = obscurePhrase(value);
+        }
+
         if (frame() && !document()->browsingContext()->needsLayout()) {
             auto box = frame()->asFrameInputBox();
             box->firstChild()->asFrameText()->node()->asText()->setData(value);
