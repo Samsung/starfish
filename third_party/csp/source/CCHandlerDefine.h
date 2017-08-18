@@ -34,7 +34,6 @@ struct CTHandlerMember
 	CCTask* task;
 
 	THREADSAFE_CHECK_PREPARE
-
 };
 
 

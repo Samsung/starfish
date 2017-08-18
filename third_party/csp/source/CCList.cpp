@@ -82,7 +82,7 @@ void CCList::Destroy(void)
 
 	ASSERT(m->size == 0);
 
-#if 0
+/*
 	CTNode* node = m->head;
 	CTNode* tnode;
 
@@ -94,7 +94,7 @@ void CCList::Destroy(void)
 
 		node = tnode;
 	}
-#endif
+*/
 
     m->head = NULL;
     m->tail = NULL;
