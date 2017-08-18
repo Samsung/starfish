@@ -113,10 +113,13 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
     registerOrUpdateIdleTimeCleaner();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-    const int virtualCursorInitialSpeed = 1;
-    const int virtualCursorMaxSpeed = 24;
-    MouseEventKind eventKind = MouseEventMove;
+    if (webView()->hasFocus()) {
+        const int virtualCursorInitialSpeed = 1;
+        const int virtualCursorMaxSpeed = 24;
+        bool isMouseMoved = false;
+        MouseEventKind eventKind = MouseEventMove;
 #define ADJEST_VIRTUAL_CURSOR_POSITION()                                    \
+    isMouseMoved = true;                                                    \
     if (m_virtualCursorX < 0) {                                             \
         m_virtualCursorX = 0;                                               \
         if (!m_isButtonOfVirtualCursorClicked) {                            \
@@ -158,72 +161,77 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
                       ? MouseData::MouseButtonsValue::LeftButtonDown \
                       : MouseData::MouseButtonsValue::NoButtonDown,  \
                   m_virtualCursorX, m_virtualCursorY));
-    if (KeyEventDown == kind) {
-        if (data.keyCode() >= 37 && data.keyCode() <= 40) {
-            auto ts = timestamp();
-            if ((ts - m_virtualCursorMoveingLastTimestamp) > 250) {
-                m_virtualCursorSpeed = virtualCursorInitialSpeed;
-            } else {
-                m_virtualCursorSpeed += 2;
-                if (m_virtualCursorSpeed > virtualCursorMaxSpeed) {
-                    m_virtualCursorSpeed = virtualCursorMaxSpeed;
+        if (KeyEventDown == kind) {
+            if (data.keyCode() >= 37 && data.keyCode() <= 40) {
+                auto ts = timestamp();
+                if ((ts - m_virtualCursorMoveingLastTimestamp) > 250) {
+                    m_virtualCursorSpeed = virtualCursorInitialSpeed;
+                } else {
+                    m_virtualCursorSpeed += 2;
+                    if (m_virtualCursorSpeed > virtualCursorMaxSpeed) {
+                        m_virtualCursorSpeed = virtualCursorMaxSpeed;
+                    }
                 }
+
+                m_virtualCursorMoveingLastTimestamp = ts;
             }
 
-            m_virtualCursorMoveingLastTimestamp = ts;
-        }
+            int virtualCursorSpeed = m_virtualCursorSpeed;
 
-        int virtualCursorSpeed = m_virtualCursorSpeed;
-
-        if (data.keyCode() == 37) {
-            // left
-            m_virtualCursorX -= virtualCursorSpeed;
-            ADJEST_VIRTUAL_CURSOR_POSITION()
-            DO_REDRAW_DISPATCH()
-        } else if (data.keyCode() == 38) {
-            // up
-            m_virtualCursorY -= virtualCursorSpeed;
-            ADJEST_VIRTUAL_CURSOR_POSITION()
-            DO_REDRAW_DISPATCH()
-        } else if (data.keyCode() == 39) {
-            // right
-            m_virtualCursorX += virtualCursorSpeed;
-            ADJEST_VIRTUAL_CURSOR_POSITION()
-            DO_REDRAW_DISPATCH()
-        } else if (data.keyCode() == 40) {
-            // down
-            m_virtualCursorY += virtualCursorSpeed;
-            ADJEST_VIRTUAL_CURSOR_POSITION()
-            DO_REDRAW_DISPATCH()
-        } else if (data.keyCode() == 32 || data.keyCode() == 13 ||
-                   data.keyCode() == 8) {
-            // click
-            eventKind = MouseEventDown;
-            m_isButtonOfVirtualCursorClicked = true;
-            DO_REDRAW_DISPATCH()
-        } else if (data.keyCode() == 48) {
-            if (m_isButtonOfVirtualCursorClicked) {
-                eventKind = MouseEventUp;
-            } else {
+            if (data.keyCode() == 37) {
+                // left
+                m_virtualCursorX -= virtualCursorSpeed;
+                ADJEST_VIRTUAL_CURSOR_POSITION()
+                DO_REDRAW_DISPATCH()
+            } else if (data.keyCode() == 38) {
+                // up
+                m_virtualCursorY -= virtualCursorSpeed;
+                ADJEST_VIRTUAL_CURSOR_POSITION()
+                DO_REDRAW_DISPATCH()
+            } else if (data.keyCode() == 39) {
+                // right
+                m_virtualCursorX += virtualCursorSpeed;
+                ADJEST_VIRTUAL_CURSOR_POSITION()
+                DO_REDRAW_DISPATCH()
+            } else if (data.keyCode() == 40) {
+                // down
+                m_virtualCursorY += virtualCursorSpeed;
+                ADJEST_VIRTUAL_CURSOR_POSITION()
+                DO_REDRAW_DISPATCH()
+            } else if (data.keyCode() == 32 || data.keyCode() == 13 ||
+                       data.keyCode() == 8) {
+                // click
                 eventKind = MouseEventDown;
+                m_isButtonOfVirtualCursorClicked = true;
+                isMouseMoved = true;
+                DO_REDRAW_DISPATCH()
             }
-            DO_REDRAW_DISPATCH()
-            m_isButtonOfVirtualCursorClicked =
-                !m_isButtonOfVirtualCursorClicked;
-        }
-    } else {
-        if (data.keyCode() == 32 || data.keyCode() == 13 ||
-            data.keyCode() == 8) {
-            // click
-            eventKind = MouseEventUp;
-            m_isButtonOfVirtualCursorClicked = false;
-            DO_REDRAW_DISPATCH()
+        } else {
+            if (data.keyCode() == 32 || data.keyCode() == 13 ||
+                data.keyCode() == 8) {
+                // click
+                eventKind = MouseEventUp;
+                m_isButtonOfVirtualCursorClicked = false;
+                isMouseMoved = true;
+                DO_REDRAW_DISPATCH()
+            }
         }
     }
+    if (isMouseMoved) {
+        return;
+    }
+
 #undef DO_REDRAW_DISPATCH
 #undef ADJEST_VIRTUAL_CURSOR_POSITION
 #endif
+
     webView()->mainBrowsingContext()->dispatchKeyEvent(kind, data);
+}
+
+void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
+                                              String* data)
+{
+    webView()->mainBrowsingContext()->dispatchCompositionEvent(kind, data);
 }
 
 bool PlatformWindow::rendering()

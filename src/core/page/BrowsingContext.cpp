@@ -32,6 +32,7 @@
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/TouchEvent.h"
+#include "core/dom/CompositionEvent.h"
 #include "core/page/Location.h"
 #include "core/page/Window.h"
 #include "core/style/CSSStyleSheet.h"
@@ -1048,6 +1049,57 @@ void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
     KeyboardEvent* e = new KeyboardEvent(document(), eventType, data);
     e->setBubbles(true);
     e->setCancelable(true);
+    e->setView(document()->window());
+    document()->window()->dispatchEvent(target, e);
+}
+
+void BrowsingContext::dispatchCompositionEvent(
+    PlatformWindow::CompositionEventKind kind, String* data)
+{
+    // Set target
+    // 1) currently focused element if possible
+    // or 2) body element if possible
+    // or 3) root element
+    Node* target = m_focusedNode;
+    if (!target) {
+        if (document()->body()) {
+            target = document()->body();
+        } else if (document()->rootElement()) {
+            target = document()->rootElement();
+        } else {
+            return;
+        }
+    } else if (target && target->isHTMLIFrameElement()) {
+        if (target->asHTMLIFrameElement()->browsingContext()) {
+            if (target->asHTMLIFrameElement()->frame()) {
+                target->asHTMLIFrameElement()
+                    ->browsingContext()
+                    ->dispatchCompositionEvent(kind, data);
+            }
+        }
+        return;
+    }
+    // Dispatch event
+    String* eventType = String::emptyString;
+    if (kind == PlatformWindow::CompositionEventKind::CompositionEventStart) {
+        eventType = starFish()->staticStrings()->m_compositionstart.localName();
+    } else if (kind ==
+               PlatformWindow::CompositionEventKind::CompositionEventUpdate) {
+        eventType =
+            starFish()->staticStrings()->m_compositionupdate.localName();
+    } else {
+        STARFISH_ASSERT(
+            kind == PlatformWindow::CompositionEventKind::CompositionEventEnd);
+        eventType = starFish()->staticStrings()->m_compositionend.localName();
+    }
+    CompositionEvent* e = new CompositionEvent(document(), eventType, data);
+    e->setBubbles(true);
+    if (kind == PlatformWindow::CompositionEventKind::CompositionEventStart) {
+        e->setCancelable(true);
+    } else {
+        e->setCancelable(false);
+    }
+    e->setComposed(true);
     e->setView(document()->window());
     document()->window()->dispatchEvent(target, e);
 }

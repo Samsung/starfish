@@ -782,4 +782,35 @@ void WebView::initRenderingFlags()
     m_needsPainting = false;
     m_needsComposite = false;
 }
+
+bool WebView::hasFocus()
+{
+    if (!m_mainBrowsingContext) {
+        return false;
+    }
+    if (mainBrowsingContext()->focusedNode()) {
+        return true;
+    }
+    bool ret = false;
+    std::function<void(BrowsingContext*)> fn = [&](BrowsingContext* ctx) {
+        if (ctx->focusedNode()) {
+            ret = true;
+        }
+    };
+    mainBrowsingContext()->iterateChildContext(fn);
+    return ret;
+}
+
+void WebView::blur()
+{
+    if (!m_mainBrowsingContext) {
+        return;
+    }
+    mainBrowsingContext()->releaseFocusedNode(nullptr);
+    bool ret = false;
+    std::function<void(BrowsingContext*)> fn = [&](BrowsingContext* ctx) {
+        ctx->releaseFocusedNode(nullptr);
+    };
+    mainBrowsingContext()->iterateChildContext(fn);
+}
 }

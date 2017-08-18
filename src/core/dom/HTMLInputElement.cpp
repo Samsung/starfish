@@ -21,6 +21,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/Text.h"
 #include "core/dom/KeyboardEvent.h"
+#include "core/dom/CompositionEvent.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -196,35 +197,65 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 return true;
             }
         }
-    } else if (event->isKeyboardEvent() &&
-               document()->browsingContext()->focusedNode() == this &&
-               event->type()->equalsWithoutCase("keydown")) {
-        if (isUserKeyboardInputAllowed()) {
+    } else {
+        if (document()->browsingContext()->focusedNode() == this &&
+            isUserKeyboardInputAllowed()) {
             String* value =
                 getAttributeOrEmpty(starFish()->staticStrings()->m_value);
             String* oldValue = value;
-            if (event->asKeyboardEvent()->keyValue() ==
-                KeyValue::BackspaceKey) {
-                if (value->length()) {
-                    if (m_currentCaretPosition > 0) {
-                        StringBuilder sb;
-                        sb.appendSubString(value, 0,
-                                           m_currentCaretPosition - 1);
-                        sb.appendSubString(value, m_currentCaretPosition,
-                                           value->length());
-                        value = sb.finalize();
-                        m_currentCaretPosition--;
+            if (event->isKeyboardEvent() &&
+                event->type()->equalsWithoutCase("keydown")) {
+                if (event->asKeyboardEvent()->keyValue() ==
+                    KeyValue::BackspaceKey) {
+                    if (value->length()) {
+                        if (m_currentCaretPosition > 0) {
+                            StringBuilder sb;
+                            sb.appendSubString(value, 0,
+                                               m_currentCaretPosition - 1);
+                            sb.appendSubString(value, m_currentCaretPosition,
+                                               value->length());
+                            value = sb.finalize();
+                            m_currentCaretPosition--;
+                            m_shouldDrawCaret = true;
+                        }
+                    }
+                } else {
+                    if (event->asKeyboardEvent()->isASCIIVisibleChar()) {
+                        char key = (char)event->asKeyboardEvent()->keyValue();
+                        value = value->concat(key);
+                        m_currentCaretPosition++;
+                        m_shouldDrawCaret = true;
                     }
                 }
-            } else if (event->asKeyboardEvent()->keyCode()) {
-                value = value->concat(
-                    (char32_t)event->asKeyboardEvent()->keyCode());
-                m_currentCaretPosition++;
+                if (!value->equals(oldValue)) {
+                    setAttribute(starFish()->staticStrings()->m_value, value);
+                }
+                return true;
+            } else if (event->isCompositionEvent()) {
+                if (event->type()->equalsWithoutCase("compositionstart")) {
+                } else if (event->type()->equalsWithoutCase(
+                               "compositionupdate")) {
+                    value = value->remove(m_currentCaretPosition,
+                                          m_currentEditingText->length());
+                    m_currentEditingText = event->asCompositionEvent()->data();
+                    value = value->insert(m_currentEditingText,
+                                          m_currentCaretPosition);
+                    m_shouldDrawCaret = true;
+                } else if (event->type()->equalsWithoutCase("compositionend")) {
+                    value = value->remove(m_currentCaretPosition,
+                                          m_currentEditingText->length());
+                    value = value->insert(event->asCompositionEvent()->data(),
+                                          m_currentCaretPosition);
+                    m_currentEditingText = String::emptyString;
+                    m_currentCaretPosition +=
+                        event->asCompositionEvent()->data()->length();
+                    m_shouldDrawCaret = true;
+                }
+                if (!value->equals(oldValue)) {
+                    setAttribute(starFish()->staticStrings()->m_value, value);
+                }
+                return true;
             }
-            if (!value->equals(oldValue)) {
-                setAttribute(starFish()->staticStrings()->m_value, value);
-            }
-            return true;
         }
     }
     return false;
@@ -242,15 +273,18 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
             String* value =
                 getAttributeOrEmpty(starFish()->staticStrings()->m_value);
             m_currentCaretPosition = value->length();
-            window()->setInterval(
+            m_caretBlinkingIntervalId = window()->setInterval(
                 [](Window* window, void* data) {
                     HTMLInputElement* e = (HTMLInputElement*)data;
                     e->m_shouldDrawCaret = !e->m_shouldDrawCaret;
                     e->setNeedsPainting();
                 },
                 500, this);
+            starFish()->platformWindow()->showSoftwareKeyboardIfPossible();
         } else if (oldGotFocus && !newGotFocus) {
+            starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
             m_currentCaretPosition = SIZE_MAX;
+            m_currentEditingText = String::emptyString;
             window()->clearInterval(m_caretBlinkingIntervalId);
         }
     }

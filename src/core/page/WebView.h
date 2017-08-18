@@ -125,6 +125,9 @@ public:
         return m_didCompositeBefore;
     }
 
+    bool hasFocus();
+    void blur();
+
 private:
     WebView(StarFish* starFish);
 

@@ -21,6 +21,8 @@
 
 namespace StarFish {
 
+// This table has same chars with
+// ASCII printable char(32-126)
 enum KeyValue {
     UnidentifiedKey,
     AltLeftKey,
@@ -41,7 +43,6 @@ enum KeyValue {
     SymbolLockKey,
     EnterKey,
     TabKey,
-    SpaceKey,
     ArrowDownKey,
     ArrowUpKey,
     ArrowLeftKey,
@@ -55,7 +56,40 @@ enum KeyValue {
     InsertKey,
     ContextMenuKey,
     EscapeKey,
-    AKey,
+    SpaceKey = 32,
+    ExclamationMarkKey = 33,
+    DoubleQuoteMarkKey = 34,
+    SharpMarkKey = 35,
+    DollarMarkKey = 36,
+    PercentMarkKey = 37,
+    AmpersandMarkKey = 38,
+    SingleQuoteMarkKey = 39,
+    LeftParenthesisMarkKey = 40,
+    RightParenthesisMarkKey = 41,
+    AsteriskMarkKey = 42,
+    PlusMarkKey = 43,
+    CommaMarkKey = 44,
+    MinusMarkKey = 45,
+    PeriodKey = 46,
+    SlashKey = 47,
+    Digit0Key = 48,
+    Digit1Key,
+    Digit2Key,
+    Digit3Key,
+    Digit4Key,
+    Digit5Key,
+    Digit6Key,
+    Digit7Key,
+    Digit8Key,
+    Digit9Key,
+    ColonMarkKey = 58,
+    SemiColonMarkKey = 59,
+    LessThanMarkKey = 60,
+    EqualitySignKey = 61,
+    GreaterThanSignKey = 62,
+    QuestionMarkKey = 63,
+    AtMarkKey = 64,
+    AKey = 65,
     BKey,
     CKey,
     DKey,
@@ -81,7 +115,13 @@ enum KeyValue {
     XKey,
     YKey,
     ZKey,
-    LowerAKey,
+    LeftSquareBracketKey = 91,
+    BackslashKey = 92,
+    RightSquareBracketKey = 93,
+    CaretMarkKey = 94,
+    UnderScoreMarkKey = 95,
+    AccentMarkKey = 96,
+    LowerAKey = 97,
     LowerBKey,
     LowerCKey,
     LowerDKey,
@@ -107,22 +147,10 @@ enum KeyValue {
     LowerXKey,
     LowerYKey,
     LowerZKey,
-    Digit0Key,
-    Digit1Key,
-    Digit2Key,
-    Digit3Key,
-    Digit4Key,
-    Digit5Key,
-    Digit6Key,
-    Digit7Key,
-    Digit8Key,
-    Digit9Key,
-    ExclamationMarkKey,
-    AtMarkKey,
-    SharpMarkKey,
-    DollarMarkKey,
-    PercentMarkKey,
-    PeriodKey,
+    LeftCurlyBracketMarkKey = 123,
+    VerticalBarMarkKey = 124,
+    RightCurlyBracketMarkKey = 125,
+    TildeMarkKey = 126,
     F1Key,
     F2Key,
     F3Key,
@@ -222,6 +250,12 @@ public:
     {
     }
 
+    bool isASCIIVisibleChar()
+    {
+        return keyValue() < 127 &&
+               String::isASCIIPrintableKey((char)keyValue());
+    }
+
     KeyValue keyValue()
     {
         return m_keyValue;
@@ -307,6 +341,10 @@ public:
                       void* domObjectPointer) override;
     virtual bool isKeyboardEvent() const override;
 
+    bool isASCIIVisibleChar()
+    {
+        return m_keyboardData.isASCIIVisibleChar();
+    }
     KeyValue keyValue()
     {
         return m_keyboardData.m_keyValue;
