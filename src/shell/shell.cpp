@@ -117,7 +117,7 @@ char* url = nullptr;
 extern uv_signal_t g_sigterm;
 extern uv_signal_t g_sigint;
 extern uv_async_t g_launcher_handle;
-extern StarFish::Mutex* g_initMutex;
+extern pthread_mutex_t* g_initMutex;
 
 void uv_term_cb(uv_signal_t* handle, int signum);
 bool needToInitMainThread();
@@ -181,27 +181,24 @@ public:
 
 void* mainShellThread(void* data)
 {
+    volatile int stack = 0;
+
+    GC_stack_base sb;
+    sb.mem_base = (void*)&stack;
+    GC_allow_register_threads();
+    GC_register_my_thread(&sb);
+
     uv_signal_init(uv_default_loop(), &g_sigterm);
     uv_signal_start(&g_sigterm, &uv_term_cb, SIGTERM);
 
     uv_signal_init(uv_default_loop(), &g_sigint);
     uv_signal_start(&g_sigint, &uv_term_cb, SIGINT);
 
-    uv_idle_t idler;
-    idler.data = data;
-    uv_idle_init(uv_default_loop(), &idler);
-    uv_idle_start(&idler, [](uv_idle_t* handle) {
-        StarFish::Mutex* initMutext = (StarFish::Mutex*)handle->data;
-        initMutext->unlock();
-    });
+    pthread_mutex_t* initMutext = (pthread_mutex_t*)data;
+    pthread_mutex_unlock(initMutext);
 
     uv_async_init(
         uv_default_loop(), &g_launcher_handle, [](uv_async_t* handle) {
-
-            GC_stack_base tmp;
-            tmp.mem_base = (void*)&tmp;
-            GC_allow_register_threads();
-            GC_register_my_thread(&tmp);
 
             int flag = 0;
             DaliShellController* app = (DaliShellController*)handle->data;
@@ -224,12 +221,13 @@ void* mainShellThread(void* data)
             (void*)app->m_daliImg.GetBuffer(),nullptr);
 #endif
             app->m_isInit = true;
-            g_initMutex->unlock();
+            pthread_mutex_unlock(g_initMutex);
 
             // uv_close((uv_handle_t*)handle, nullptr);
         });
 
-    g_initMutex = new StarFish::Mutex();
+    g_initMutex = new pthread_mutex_t;
+    pthread_mutex_init(g_initMutex, NULL);
 
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     return NULL;
@@ -299,7 +297,7 @@ void DaliShellController::Create(Application& application)
 
     // TODO: Need to get screen info from X11.
     // Temporally, rect's width and height are set to window size.
-    g_initMutex->lock();
+    pthread_mutex_lock(g_initMutex);
 
     g_launcher_handle.data = this;
     uv_async_send(&g_launcher_handle);
@@ -313,9 +311,8 @@ void DaliShellController::Create(Application& application)
     m_timer.TickSignal().Connect(this, &DaliShellController::updateTick);
 
     m_timer.Start();
-    {
-        StarFish::Locker<Mutex> l(*g_initMutex);
-    }
+    pthread_mutex_lock(g_initMutex);
+    pthread_mutex_unlock(g_initMutex);
 
     struct dummy {
         StarFish::StarFish* starfish;
