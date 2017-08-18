@@ -39,12 +39,15 @@ struct FlexLine {
 
 class FlexFormattingContext {
 public:
-    FlexFormattingContext(LayoutContext& ctx, FrameFlexibleBox* container);
+    FlexFormattingContext(LayoutContext& ctx, FrameFlexibleBox* container,
+                          LayoutUnit availableWidth);
 
-    void computeAvailableSpace();
+    void computeAvailableSpace(LayoutUnit availableWidth);
 
+    void computeMainSize();
     void computeHypotheticalMainSize();
     void resolveMainSize();
+    LayoutUnit basisSize(FrameBox* flexItem);
     bool isMainSizeFlexible(FrameBox* flexItem, bool usingGrowFactor);
     void applyFlexFactor(LayoutUnit lineWidth);
     void resolveMainMargin();
@@ -54,7 +57,7 @@ public:
     void computeCrossSize();
     void resolveCrossMargin();
     void applyAlignSelf();
-    void applyAlignContent(LayoutUnit sumOfCrossSize);
+    void applyAlignContent();
     void layoutCross();
 
     void addNewLine(LayoutUnit lineWidth)
@@ -64,22 +67,29 @@ public:
         m_flexLines.emplace_back(FlexLine());
     }
 
-    void registerBasisSize(FrameBox* flexItem, LayoutUnit basisSize)
+    bool isMainAxisInInlineAxis()
     {
-        m_basisSizes[flexItem] = basisSize;
+        return m_isMainAxisInInlineAxis;
     }
 
-    LayoutUnit basisSize(FrameBox* flexItem)
+    bool isLtrDirection()
     {
-        return m_basisSizes[flexItem];
+        return m_isLtrDirection;
     }
 
-    bool ltrDirection();
+    bool isSingleLine()
+    {
+        return m_isSingleLine;
+    }
+
+    bool isAnonymousFlexItemContainingOnlyWhitespace(Frame* flexItem) const;
 
 private:
     LayoutContext& m_layoutContext;
     FrameFlexibleBox* m_container;
-    bool m_mainDirectionIsInlineAxis;
+    bool m_isMainAxisInInlineAxis;
+    bool m_isLtrDirection;
+    bool m_isSingleLine;
     LayoutUnit m_availableMainSize;
     LayoutUnit m_availableCrossSize;
     size_t m_currentLineIdx;
@@ -106,6 +116,12 @@ public:
     {
         return true;
     }
+
+    LayoutUnit basisSize(LayoutContext& ctx, LayoutUnit availableMainSize,
+                         LayoutUnit availableCrossSize, FrameBox* flexItem);
+    bool isMainAxisInInlineAxis();
+    bool isSingleLine();
+    bool isLtrDirection();
 
     LayoutUnit layoutFlex(LayoutContext& ctx);
 };

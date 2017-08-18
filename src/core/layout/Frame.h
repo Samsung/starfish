@@ -1255,7 +1255,9 @@ public:
         // that order-modified document order is used in place of raw document
         // order, and z-index values other than auto create a stacking context
         // even if position is static.
-        m_flags.m_isEstablishesStackingContext = true;
+        if (!isAnonymous()) {
+            m_flags.m_isEstablishesStackingContext = true;
+        }
     }
 
     bool isFlexItem() const

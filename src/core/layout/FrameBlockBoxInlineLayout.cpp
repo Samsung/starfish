@@ -22,6 +22,7 @@
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameBlockBoxInlineLayout.h"
 #include "core/layout/FrameDocument.h"
+#include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameInline.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/StackingContext.h"
@@ -180,15 +181,15 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
         } else if (box->isFrameReplaced()) {
             hasBoxOtherThanText = true;
             hasBoxOtherThanCollapsedInlineNonReplacedBox = true;
-            LayoutUnit boxHeight = box->boxHeight();
+            LayoutUnit outerHeight = box->outerHeight();
             if (va == VerticalAlignValue::BaselineVAlignValue) {
-                maxAscenderSoFar = std::max(boxHeight, maxAscenderSoFar);
+                maxAscenderSoFar = std::max(outerHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::TopVAlignValue) {
                 // NO WORK TO DO
             } else if (va == VerticalAlignValue::BottomVAlignValue) {
                 // NO WORK TO DO
             } else if (va == VerticalAlignValue::MiddleVAlignValue) {
-                LayoutUnit halfHeight = boxHeight / 2;
+                LayoutUnit halfHeight = outerHeight / 2;
                 LayoutUnit halfXHeight =
                     (parentStyle->font()->metrics().m_xheightRate *
                      parentStyle->font()->size()) /
@@ -199,35 +200,35 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                 maxDescenderSoFar = std::min(-1 * (halfHeight - halfXHeight),
                                              maxDescenderSoFar);
             } else if (va == VerticalAlignValue::SubVAlignValue) {
-                box->setY(descender + boxHeight);
+                box->setY(descender + outerHeight);
                 maxAscenderSoFar =
-                    std::max(descender + boxHeight, maxAscenderSoFar);
+                    std::max(descender + outerHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::SuperVAlignValue) {
-                box->setY(ascender / 2 + boxHeight);
+                box->setY(ascender / 2 + outerHeight);
                 maxAscenderSoFar =
-                    std::max(ascender / 2 + boxHeight, maxAscenderSoFar);
+                    std::max(ascender / 2 + outerHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                 maxDescenderSoFar =
-                    std::min(ascender - boxHeight, maxDescenderSoFar);
+                    std::min(ascender - outerHeight, maxDescenderSoFar);
             } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
                 maxAscenderSoFar =
-                    std::max(descender + boxHeight, maxAscenderSoFar);
+                    std::max(descender + outerHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
                 Length len = box->style()->verticalAlignLength();
                 LayoutUnit amount;
                 LayoutUnit viewportHeight = m_layoutContext.viewportHeight();
                 if (len.isPercent()) {
-                    amount = boxHeight +
+                    amount = outerHeight +
                              box->lineHeight(viewportHeight) * len.percent();
                 } else if (len.isFixed()) {
-                    amount = boxHeight + LayoutUnit::fromPixel(len.fixed());
+                    amount = outerHeight + LayoutUnit::fromPixel(len.fixed());
                 } else if (len.isViewportPercent()) {
                     amount =
-                        boxHeight + len.viewportPercentValue(viewportHeight);
+                        outerHeight + len.viewportPercentValue(viewportHeight);
                 }
                 maxAscenderSoFar = std::max(amount, maxAscenderSoFar);
                 maxDescenderSoFar =
-                    std::min(amount - boxHeight, maxDescenderSoFar);
+                    std::min(amount - outerHeight, maxDescenderSoFar);
                 box->setY(amount);
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -235,7 +236,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
         } else if (box->isFrameBlockBox() && box->isInlineLevel()) {
             hasBoxOtherThanText = true;
             hasBoxOtherThanCollapsedInlineNonReplacedBox = true;
-            LayoutUnit boxHeight = box->boxHeight();
+            LayoutUnit outerHeight = box->outerHeight();
             if (va == VerticalAlignValue::BaselineVAlignValue) {
                 LayoutUnit ascender =
                     inlineBlockAscender(box->asFrameBlockBox());
@@ -256,7 +257,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
             } else if (va == VerticalAlignValue::BottomVAlignValue) {
                 // NO WORK TO DO
             } else if (va == VerticalAlignValue::MiddleVAlignValue) {
-                LayoutUnit halfHeight = boxHeight / 2;
+                LayoutUnit halfHeight = outerHeight / 2;
                 LayoutUnit halfXHeight =
                     (parentStyle->font()->metrics().m_xheightRate *
                      parentStyle->font()->size()) /
@@ -274,10 +275,10 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                 maxDescenderSoFar =
-                    std::min(ascender - boxHeight, maxDescenderSoFar);
+                    std::min(ascender - outerHeight, maxDescenderSoFar);
             } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
                 maxAscenderSoFar =
-                    std::max(descender + boxHeight, maxAscenderSoFar);
+                    std::max(descender + outerHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
                 LayoutUnit ascender =
                     inlineBlockAscender(box->asFrameBlockBox());
@@ -1185,7 +1186,7 @@ void InlineBoxLayoutParentBox::removeDanglingSpace(LineFormattingContext* ctx)
         if (isCollapsibleWhiteSpace(last)) {
             // Ignore last whitespace when wrapping lines.
             removeBoxFromLine(last);
-            ctx->m_currentLineWidth -= last->boxWidth();
+            ctx->m_currentLineWidth -= last->outerWidth();
         } else {
             break;
         }
@@ -1258,7 +1259,7 @@ LayoutUnit InlineBoxLayoutParentBox::layoutInlineBoxes(
                 childBox->asInlineNonReplacedBox()->layoutInlineBoxes(
                     ctx, childBox->borderLeft() + childBox->paddingLeft());
             }
-            x += childBox->boxWidth();
+            x += childBox->outerWidth();
         } else if (childBox->isAbsolutePositioned()) {
             childBox->setX(x);
         }
@@ -1397,7 +1398,7 @@ void LineFormattingContext::insertPendingFloatingBoxes()
         if ((m_pendingFloatingBoxNumsBeforeCurrentLine > 0 ||
              !onlyAllowBeforeCurrentLine) &&
             canInsertFloatingBox(box, true) &&
-            dontBreakLine(box, box->boxWidth())) {
+            dontBreakLine(box, box->outerWidth())) {
             insertFloatingBoxAndReLayoutLineBoxIfNeeds(box);
 
             iter = m_pendingFloatingBoxes.erase(iter);
@@ -1517,8 +1518,8 @@ void LineFormattingContext::insertFloatingBoxAndReLayoutLineBoxIfNeeds(
         LayoutUnit lastAccumulatedLeftFloatingBoxWidth =
             fbCtx.m_accumulatedLeftFloatingBoxWidth;
         LayoutUnit oldLineBoxX = m_lineBoxX;
-        fbCtx.m_accumulatedLeftFloatingBoxWidth += box->boxWidth();
-        if (fbCtx.m_y == 0 && box->boxWidth() > 0) {
+        fbCtx.m_accumulatedLeftFloatingBoxWidth += box->outerWidth();
+        if (fbCtx.m_y == 0 && box->outerWidth() > 0) {
             m_lineBoxX = fbCtx.m_originalLineBoxX +
                          fbCtx.m_accumulatedLeftFloatingBoxWidth;
             m_lineBoxWidth = fbCtx.m_originalLineBoxWidth -
@@ -1535,8 +1536,8 @@ void LineFormattingContext::insertFloatingBoxAndReLayoutLineBoxIfNeeds(
         }
     } else {
         fbCtx.m_hasFloat |= HasRight;
-        fbCtx.m_accumulatedRightFloatingBoxWidth += box->boxWidth();
-        if (fbCtx.m_y == 0 && box->boxWidth() > 0) {
+        fbCtx.m_accumulatedRightFloatingBoxWidth += box->outerWidth();
+        if (fbCtx.m_y == 0 && box->outerWidth() > 0) {
             m_lineBoxWidth = fbCtx.m_originalLineBoxWidth -
                              fbCtx.m_accumulatedLeftFloatingBoxWidth -
                              fbCtx.m_accumulatedRightFloatingBoxWidth;
@@ -1797,7 +1798,7 @@ void LineFormattingContext::insertPendingInlineBoxes()
             if (box->isAbsolutePositioned()) {
                 handleAbsoluteBox(box, true, false);
             } else {
-                if (!dontBreakLine(box, box->boxWidth())) {
+                if (!dontBreakLine(box, box->outerWidth())) {
                     break;
                 }
 
@@ -2191,11 +2192,11 @@ void LineFormattingContext::insertInlineBox(FrameBox* box)
     if (m_currentLayoutParent->isInlineNonReplacedBox()) {
         InlineNonReplacedBox* self =
             m_currentLayoutParent->asInlineNonReplacedBox();
-        self->setWidth(self->width() + box->boxWidth());
+        self->setWidth(self->width() + box->outerWidth());
         self->processStartingMBP(this);
     }
 
-    m_currentLineWidth += box->boxWidth();
+    m_currentLineWidth += box->outerWidth();
     setIsWhiteSpaceAtLast(isCollapsibleWhiteSpace(box));
 }
 
@@ -2211,7 +2212,7 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
     if (isForcedNewLine(box)) {
         m_isPendingBreakLine = true;
     } else {
-        if (!dontBreakLine(box, box->boxWidth())) {
+        if (!dontBreakLine(box, box->outerWidth())) {
             if (isCollapsibleWhiteSpace(box)) {
                 m_isPendingBreakLine = true;
             } else {
@@ -2232,7 +2233,7 @@ void LineFormattingContext::tryInsertFloatingBox(FrameBox* box)
     STARFISH_ASSERT(m_word.isEmpty());
 
     if (canInsertFloatingBox(box, false) &&
-        dontBreakLine(box, box->boxWidth())) {
+        dontBreakLine(box, box->outerWidth())) {
         insertFloatingBoxAndReLayoutLineBoxIfNeeds(box);
     } else {
         m_pendingFloatingBoxes.push_back(box);
@@ -3658,28 +3659,112 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
         w = contentWidthApplyingBoxSizing(w);
         ctx.updatePreferredWidth(w);
     } else {
-        if (hasBlockFlow()) {
-            LayoutUnit w;
+        if (isFrameFlexibleBox()) {
+            FrameFlexibleBox* flexibleBox = asFrameFlexibleBox();
+            FlexFormattingContext fCtx(ctx.layoutContext(), flexibleBox,
+                                       ctx.remainingWidth());
             Frame* f = firstChild();
-            while (f) {
-                STARFISH_ASSERT(f->isNormalFlow());
-                w = std::max(w,
-                             ctx.preferredWidthWithNewContext(f->asFrameBox()));
-                f = f->next();
+            // TODO: Implement following
+            // https://www.w3.org/TR/css-flexbox-1/#intrinsic-sizes
+            if (fCtx.isMainAxisInInlineAxis()) {
+                LayoutUnit lineWidth;
+                float maxContentFlexGrowFraction = 0;
+                float maxContentFlexShrinkFraction = 0;
+                Frame* f = firstChild();
+                while (f) {
+                    if (f->isAbsolutePositioned() ||
+                        fCtx.isAnonymousFlexItemContainingOnlyWhitespace(f)) {
+                        f = f->next();
+                        continue;
+                    }
+
+                    FrameBox* flexItem = f->asFrameBox();
+                    LayoutUnit outerBasisSize =
+                        fCtx.basisSize(flexItem) + flexItem->mbpWidth();
+                    LayoutUnit diff = ctx.remainingWidth() - outerBasisSize;
+                    if (diff > 0) {
+                        if (f->style()->flexGrow() > 0) {
+                            maxContentFlexGrowFraction = std::max(
+                                maxContentFlexGrowFraction,
+                                std::floor(diff / f->style()->flexGrow()));
+                        }
+                    } else if (diff < 0) {
+                        if (f->style()->flexShrink() > 0) {
+                            maxContentFlexShrinkFraction = std::max(
+                                maxContentFlexShrinkFraction,
+                                std::floor(-diff / (f->style()->flexShrink() *
+                                                    outerBasisSize)));
+                        }
+                    }
+
+                    f = f->next();
+                }
+
+                f = firstChild();
+                while (f) {
+                    if (f->isAbsolutePositioned() ||
+                        fCtx.isAnonymousFlexItemContainingOnlyWhitespace(f)) {
+                        f = f->next();
+                        continue;
+                    }
+
+                    FrameBox* flexItem = f->asFrameBox();
+                    LayoutUnit basisSize = fCtx.basisSize(flexItem);
+                    // TODO: should appply max width
+                    if (maxContentFlexGrowFraction >
+                        maxContentFlexShrinkFraction) {
+                        lineWidth +=
+                            basisSize +
+                            f->style()->flexGrow() * maxContentFlexGrowFraction;
+                    } else if (maxContentFlexShrinkFraction >
+                               maxContentFlexGrowFraction) {
+                        lineWidth += basisSize +
+                                     f->style()->flexShrink() * basisSize *
+                                         -maxContentFlexShrinkFraction;
+                    }
+                    f = f->next();
+                }
+                ctx.updatePreferredWidth(lineWidth);
+            } else {
+                LayoutUnit w;
+                Frame* f = firstChild();
+                while (f) {
+                    if (f->isAbsolutePositioned() ||
+                        fCtx.isAnonymousFlexItemContainingOnlyWhitespace(f)) {
+                        f = f->next();
+                        continue;
+                    }
+
+                    w = std::max(
+                        w, ctx.preferredWidthWithNewContext(f->asFrameBox()));
+                    f = f->next();
+                }
+                ctx.updatePreferredWidth(w);
             }
-            ctx.updatePreferredWidth(w);
         } else {
-            LayoutUnit textIndentWidth = LayoutUnit(0);
-            if ((!isAnonymous() && !hasBlockFlow()) ||
-                ctx.layoutContext().checkIfThisIsFirstLineCandidate(parent(),
-                                                                    this)) {
-                Length textIndent = style()->textIndent();
-                textIndentWidth = textIndent.specifiedValue(
-                    ctx.remainingWidth(), ctx.layoutContext().viewportWidth());
+            if (hasBlockFlow()) {
+                LayoutUnit w;
+                Frame* f = firstChild();
+                while (f) {
+                    w = std::max(
+                        w, ctx.preferredWidthWithNewContext(f->asFrameBox()));
+                    f = f->next();
+                }
+                ctx.updatePreferredWidth(w);
+            } else {
+                LayoutUnit textIndentWidth = LayoutUnit(0);
+                if ((!isAnonymous() && !hasBlockFlow()) ||
+                    ctx.layoutContext().checkIfThisIsFirstLineCandidate(
+                        parent(), this)) {
+                    Length textIndent = style()->textIndent();
+                    textIndentWidth = textIndent.specifiedValue(
+                        ctx.remainingWidth(),
+                        ctx.layoutContext().viewportWidth());
+                }
+                ctx.setTextIndentWidth(textIndentWidth);
+                ctx.computePreferredWidthInline(this);
+                ctx.finishLine(false);
             }
-            ctx.setTextIndentWidth(textIndentWidth);
-            ctx.computePreferredWidthInline(this);
-            ctx.finishLine(false);
         }
     }
 }
