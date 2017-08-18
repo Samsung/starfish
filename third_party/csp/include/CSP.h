@@ -28,22 +28,6 @@
 #undef NULL
 #endif
 
-#ifdef INFINITY
-#undef INFINITY
-#endif
-
-#ifdef INVALID
-#undef INVALID
-#endif
-
-
-
-
-#define VERSION 20200
-
-
-
-
 //! The NULL definition
 /*!
  *
@@ -53,6 +37,10 @@
 
 
 
+
+#ifdef INFINITY
+#undef INFINITY
+#endif
 
 //! The inifinite number
 /*!
@@ -65,12 +53,21 @@
 
 
 
+#ifdef INVALID
+#undef INVALID
+#endif
+
 //! The invalid number
 /*!
  *
  * This macro can be used as some parameter that accept the invalid parameter.
  */
 #define INVALID (-1)
+
+
+
+
+#define VERSION 20200
 
 
 
@@ -173,38 +170,6 @@ extern void _PRINT(const char* format = NULL, ...);
  * source code when linking with Core Software Platform library.
  */
 int Main(void);
-
-
-
-
-/*!
- * \defgroup csp Core Software Platform
- * \brief Core Software Platform Related Definition
- */
-
-
-
-
-/*!
- * \defgroup os OS Abstraction
- * \brief OS Abstraction Layer of Core Software Platform
- */
-
-
-
-
-/*!
- * \defgroup util Utility Classes
- * \brief Utility Classes of Core Software Platform
- */
-
-
-
-
-/*!
- * \defgroup device Device Classes
- * \brief Device Related Classes of Core Software Platform
- */
 
 
 
