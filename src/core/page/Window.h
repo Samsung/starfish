@@ -139,7 +139,8 @@ public:
     void releaseCSSTarget();
 
     CSSStyleDeclaration* getComputedStyle(Element* element);
-    CSSStyleDeclaration* getComputedStyle(Element* element, String* pseudoElt);
+    CSSStyleDeclaration* getComputedStyle(Element* element,
+                                          Nullable<String*> pseudoElt);
 
     MediaQueryList* matchMedia(String* query);
 
