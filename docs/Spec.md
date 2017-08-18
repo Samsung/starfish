@@ -323,8 +323,13 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | color | This attribute sets the text color. |
 |  | attribute | size | This attribute sets the size of the font. |
 | [HTMLFormElement](https://html.spec.whatwg.org/#forms) | interface | HTMLFormElement | The HTMLFormElement interface provides methods to create and modify form elements. |
+|  | attribute | action | Returns action attribute that specifies where to send the form-data when a form is submitted. |
+|  | attribute | enctype | Returns enctype attribute that specifies how the form-data should be encoded when submitting it to the server. |
+|  | attribute | method | Returns method attribute that specifies the HTTP method to use when sending form-data |
+|  | attribute | name | Returns the name of the form. |
 |  | attribute | elements | A HTMLFormControlsCollection holding all form controls belonging to this form element. |
 |  | attribute | length | A long reflecting  the number of controls in the form. |
+|  | method | submit | Submits the form. |
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
 | [HTMLHeadingElement](https://html.spec.whatwg.org/#htmlheadingelement) | interface | HTMLHeadingElement | The h1, h2, h3, h4, h5 and h6 elements represent headings for their sections. |
 |  | attribute | align | Returns the current value of the align content attribute. |
@@ -334,6 +339,13 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the image including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the image in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the image in CSS pixels. |
+| [HTMLInputElement](https://html.spec.whatwg.org/multipage/input.html#the-input-element) | interface | HTMLInputElement | The input element represents a typed data field, usually with a form control to allow the user to edit the data. |
+|  | attribute | formAction | Specifies the URL of the file that will process the input control when the form is submitted. |
+|  | attribute | formEnctype | Specifies how the form-data should be encoded when submitting it to the server. |
+|  | attribute | formMethod | Defines the HTTP method for sending data to the action URL. |
+|  | attribute | name | Returns the name of the input element. |
+|  | attribute | type | Returns the type of the input element. |
+|  | attribute | value | Returns the value of the input element. |
 | [HTMLIFrameElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element) | interface | HTMLIFrameElement |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the frame in CSS pixels. |
