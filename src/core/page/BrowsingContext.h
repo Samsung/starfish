@@ -162,6 +162,8 @@ public:
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
     void dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
                           KeyboardData& data);
+    void dispatchCompositionEvent(PlatformWindow::CompositionEventKind kind,
+                                  String* data);
 
     bool setActiveNode(Node* n);
     void releaseActiveNode();

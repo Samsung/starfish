@@ -405,6 +405,8 @@ public:
     static String* fromInt64(int64_t i);
 
     String* substring(size_t pos, size_t len);
+    String* remove(size_t pos, size_t len);
+    String* insert(String* str, size_t pos);
 
     String* toUpper();
     String* toLower();
@@ -436,6 +438,14 @@ public:
 
     bool contains(const char* str, bool caseSensitive = true);
     bool contains(String* str, bool caseSensitive = true);
+
+    static bool isASCIIPrintableKey(char c)
+    {
+        if (c >= 32 && c <= 126) {
+            return true;
+        }
+        return false;
+    }
 
 protected:
     template <typename T>

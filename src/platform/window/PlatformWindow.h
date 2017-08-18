@@ -47,6 +47,12 @@ public:
         MouseEventOut
     };
 
+    enum CompositionEventKind {
+        CompositionEventStart,
+        CompositionEventUpdate,
+        CompositionEventEnd,
+    };
+
     virtual ~PlatformWindow();
 
     static PlatformWindow* create(StarFish* starFish, void* win, int width,
@@ -58,6 +64,12 @@ public:
     virtual void* unwrap() = 0;
     virtual void clearResources() = 0;
     virtual Canvas* preparePainting(bool forPainting) = 0;
+    virtual void showSoftwareKeyboardIfPossible()
+    {
+    }
+    virtual void hideSoftwareKeyboardIfPossible()
+    {
+    }
 
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                             size_t touchCount);
@@ -66,6 +78,7 @@ public:
         float screenX, float screenY, int z,
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
     void dispatchKeyEvent(KeyEventKind kind, KeyboardData data);
+    void dispatchCompositionEvent(CompositionEventKind kind, String* data);
 
     bool rendering();
     void pause();

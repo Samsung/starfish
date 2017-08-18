@@ -29,6 +29,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
+#include "core/dom/CompositionEvent.h"
 
 #include <Elementary.h>
 #include <Evas_Engine_Buffer.h>
@@ -39,6 +40,8 @@
 #endif
 #include <Ecore_Input.h>
 #include <Ecore_Input_Evas.h>
+#include <Ecore_IMF.h>
+#include <Ecore_IMF_Evas.h>
 
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <efl_extension.h>
@@ -75,6 +78,7 @@ public:
         m_renderingAnimator = nullptr;
         m_isMouseLbuttonDown = false;
         m_canRendering = true;
+        m_imfContext = nullptr;
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -126,6 +130,16 @@ public:
     virtual void clearResources();
     virtual Canvas* preparePainting(bool forPainting);
 
+    virtual void showSoftwareKeyboardIfPossible()
+    {
+        evas_object_focus_set(m_mainBox, EINA_TRUE);
+    }
+    virtual void hideSoftwareKeyboardIfPossible()
+    {
+        evas_object_focus_set(m_mainBox, EINA_FALSE);
+        ecore_imf_context_hide(m_imfContext);
+    }
+
     uintptr_t m_handle;
     Evas_Object* m_window;
     Evas_Object* m_canvasAdpater;
@@ -152,6 +166,8 @@ public:
                                       void* event_info);
 
     Ecore_Animator* m_renderingAnimator;
+
+    Ecore_IMF_Context* m_imfContext;
 
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
@@ -268,9 +284,9 @@ static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv,
         user_data);
 }
 
-static KeyValue ecoreEventKeyToKeyValue(Ecore_Event_Key* data)
+static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
+                                        bool isShiftPressed)
 {
-    const char* ecoreKeyString = data->key;
     if (strcmp("Left", ecoreKeyString) == 0) {
         return KeyValue::ArrowLeftKey;
     } else if (strcmp("Right", ecoreKeyString) == 0) {
@@ -287,22 +303,91 @@ static KeyValue ecoreEventKeyToKeyValue(Ecore_Event_Key* data)
         return KeyValue::BackspaceKey;
     } else if (strcmp("Escape", ecoreKeyString) == 0) {
         return KeyValue::EscapeKey;
+    } else if (strcmp("minus", ecoreKeyString) == 0) {
+        if (isShiftPressed) {
+            return KeyValue::MinusMarkKey;
+        } else {
+            return KeyValue::UnderScoreMarkKey;
+        }
+    } else if (strcmp("equal", ecoreKeyString) == 0) {
+        if (isShiftPressed) {
+            return KeyValue::PlusMarkKey;
+        } else {
+            return KeyValue::EqualitySignKey;
+        }
+    } else if (strcmp("bracketleft", ecoreKeyString) == 0) {
+        if (isShiftPressed) {
+            return KeyValue::LeftCurlyBracketMarkKey;
+        } else {
+            return KeyValue::LeftSquareBracketKey;
+        }
+    } else if (strcmp("bracketright", ecoreKeyString) == 0) {
+        if (isShiftPressed) {
+            return KeyValue::RightCurlyBracketMarkKey;
+        } else {
+            return KeyValue::RightSquareBracketKey;
+        }
+    } else if (strcmp("semicolon", ecoreKeyString) == 0) {
+        if (isShiftPressed) {
+            return KeyValue::ColonMarkKey;
+        } else {
+            return KeyValue::SemiColonMarkKey;
+        }
+    } else if (strcmp("apostrophe", ecoreKeyString) == 0) {
+        if (isShiftPressed) {
+            return KeyValue::DoubleQuoteMarkKey;
+        } else {
+            return KeyValue::SingleQuoteMarkKey;
+        }
+    } else if (strcmp("comma", ecoreKeyString) == 0) {
+        if (isShiftPressed) {
+            return KeyValue::LessThanMarkKey;
+        } else {
+            return KeyValue::CommaMarkKey;
+        }
     } else if (strcmp("period", ecoreKeyString) == 0) {
-        return KeyValue::PeriodKey;
-    } else if (strcmp("at", ecoreKeyString) == 0) {
-        return KeyValue::AtMarkKey;
+        if (isShiftPressed) {
+            return KeyValue::GreaterThanSignKey;
+        } else {
+            return KeyValue::PeriodKey;
+        }
+    } else if (strcmp("slash", ecoreKeyString) == 0) {
+        if (isShiftPressed) {
+            return KeyValue::QuestionMarkKey;
+        } else {
+            return KeyValue::SlashKey;
+        }
     } else if (strlen(ecoreKeyString) == 1) {
         char ch = ecoreKeyString[0];
         if (ch >= '0' && ch <= '9') {
-            if (ch == '1' && data->modifiers & 1) {
-                return KeyValue::ExclamationMarkKey;
-            } else if (ch == '1' && data->modifiers & 1) {
-                return KeyValue::AtMarkKey;
+            if (isShiftPressed) {
+                switch (ch) {
+                case '1':
+                    return KeyValue::ExclamationMarkKey;
+                case '2':
+                    return KeyValue::AtMarkKey;
+                case '3':
+                    return KeyValue::SharpMarkKey;
+                case '4':
+                    return KeyValue::DollarMarkKey;
+                case '5':
+                    return KeyValue::PercentMarkKey;
+                case '6':
+                    return KeyValue::CaretMarkKey;
+                case '7':
+                    return KeyValue::AmpersandMarkKey;
+                case '8':
+                    return KeyValue::AsteriskMarkKey;
+                case '9':
+                    return KeyValue::LeftParenthesisMarkKey;
+                case '0':
+                    return KeyValue::RightParenthesisMarkKey;
+                }
             }
             return (KeyValue)(KeyValue::Digit0Key + ch - '0');
         } else if (ch >= 'a' && ch <= 'z') {
             int kv = KeyValue::LowerAKey + ch - 'a';
-            if (data->modifiers & 1) {
+            if (isShiftPressed) {
                 kv -= ('z' - 'a');
             }
             return (KeyValue)kv;
@@ -322,6 +407,37 @@ static void setModifiersToKeyboardData(Ecore_Event_Key* d, KeyboardData& k)
     } else if (d->modifiers == 4 || d->keycode == 64) {
         k.setAltKey();
     }
+}
+
+static void setModifiersToKeyboardData(Evas_Modifier* d, KeyboardData& k)
+{
+    if ((evas_key_modifier_is_set(d, "Shift_L") == EINA_TRUE) ||
+        (evas_key_modifier_is_set(d, "Shift_R") == EINA_TRUE)) {
+        k.setShiftKey();
+    } else if ((evas_key_modifier_is_set(d, "Control_L") == EINA_TRUE) ||
+               (evas_key_modifier_is_set(d, "Control_R") == EINA_TRUE)) {
+        k.setCtrlKey();
+    } else if ((evas_key_modifier_is_set(d, "Alt_L") == EINA_TRUE) ||
+               (evas_key_modifier_is_set(d, "Alt_R") == EINA_TRUE)) {
+        k.setAltKey();
+    }
+}
+
+static const char* getImfMethod()
+{
+    Eina_List* modules;
+
+    modules = ecore_imf_context_available_ids_get();
+    if (!modules)
+        return NULL;
+
+    void* module;
+    EINA_LIST_FREE(modules, module)
+    {
+        return (const char*)module;
+    }
+
+    return NULL;
 }
 
 PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
@@ -429,9 +545,12 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_desktopKeyDownEventHandler = ecore_event_handler_add(
         ECORE_EVENT_KEY_DOWN,
         [](void* data, int type, void* event) -> Eina_Bool {
-            PlatformWindow* sf = (PlatformWindow*)data;
+            WindowImplEFL* sf = (WindowImplEFL*)data;
+            if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
+                return EINA_TRUE;
+            }
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
-            auto keyValue = ecoreEventKeyToKeyValue(d);
+            auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
             KeyboardData kdata(keyValue);
             setModifiersToKeyboardData(d, kdata);
             StarFishEnterer enter(sf->m_starFish);
@@ -443,9 +562,12 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_desktopKeyUpEventHandler = ecore_event_handler_add(
         ECORE_EVENT_KEY_UP,
         [](void* data, int type, void* event) -> Eina_Bool {
-            PlatformWindow* sf = (PlatformWindow*)data;
+            WindowImplEFL* sf = (WindowImplEFL*)data;
+            if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
+                return EINA_TRUE;
+            }
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
-            auto keyValue = ecoreEventKeyToKeyValue(d);
+            auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
             KeyboardData kdata(keyValue);
             setModifiersToKeyboardData(d, kdata);
             StarFishEnterer enter(sf->m_starFish);
@@ -534,6 +656,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                    wnd->m_mobileClickEventHandler, wnd);
 #endif
 
+    // Rendering control callback
     evas_event_callback_add(evas_object_evas_get(wnd->m_window),
                             EVAS_CALLBACK_RENDER_POST,
                             [](void* data, Evas* e, void* event_info) {
@@ -541,6 +664,211 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                 wnd->m_canRendering = true;
                             },
                             wnd);
+
+    ecore_imf_init();
+    // Register IMF callbacks
+    if (ecore_imf_context_default_id_get()) {
+        wnd->m_imfContext =
+            ecore_imf_context_add(ecore_imf_context_default_id_get());
+    } else {
+        STARFISH_LOG_ERROR(
+            "ecore_imf_context_default_id_get returns null.. use fallback "
+            "method\n");
+        wnd->m_imfContext = ecore_imf_context_add(getImfMethod());
+    }
+
+    ecore_imf_context_client_window_set(
+        wnd->m_imfContext,
+        (void*)ecore_evas_window_get(
+            ecore_evas_ecore_evas_get(evas_object_evas_get(wnd->m_window))));
+    ecore_imf_context_client_canvas_set(wnd->m_imfContext,
+                                        evas_object_evas_get(wnd->m_window));
+
+    ecore_imf_context_retrieve_surrounding_callback_set(
+        wnd->m_imfContext,
+        [](void* data, Ecore_IMF_Context* ctx, char** text,
+           int* cursor_pos) -> Eina_Bool {
+            // fputs("ecore_imf_context_retrieve_surrounding_callback_set\n",stderr);
+            // This callback will be called when the Input Method Context module
+            // requests the surrounding context.
+            if (text)
+                *text = strdup("");
+            if (cursor_pos)
+                *cursor_pos = 0;
+            return EINA_TRUE;
+        },
+        wnd);
+
+    // register commit event callback
+    ecore_imf_context_event_callback_add(
+        wnd->m_imfContext, ECORE_IMF_CALLBACK_COMMIT,
+        [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
+            char* commit_str = (char*)event_info;
+            WindowImplEFL* self = (WindowImplEFL*)data;
+            STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_COMMIT %s\n", commit_str);
+            if (strlen(commit_str) == 1 &&
+                String::isASCIIPrintableKey(commit_str[0])) {
+                // ASCII char
+                KeyValue kv = (KeyValue)commit_str[0];
+
+                KeyboardData kdata(kv);
+                // setModifiersToKeyboardData(ev->modifiers, kdata);
+                StarFishEnterer enter(self->m_starFish);
+                self->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
+                self->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);
+            } else {
+                // non-ASCII char
+                self->dispatchCompositionEvent(
+                    PlatformWindow::CompositionEventEnd,
+                    String::fromUTF8(commit_str));
+            }
+        },
+        wnd);
+
+    ecore_imf_context_event_callback_add(
+        wnd->m_imfContext, ECORE_IMF_CALLBACK_PREEDIT_END,
+        [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
+            WindowImplEFL* self = (WindowImplEFL*)data;
+            char* str = NULL;
+            int cursor_pos;
+            ecore_imf_context_preedit_string_get(self->m_imfContext, &str,
+                                                 &cursor_pos);
+            STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_PREEDIT_END %s %d\n", str,
+                              cursor_pos);
+            if (str) {
+                free(str);
+            }
+        },
+        wnd);
+
+    ecore_imf_context_event_callback_add(
+        wnd->m_imfContext, ECORE_IMF_CALLBACK_PREEDIT_START,
+        [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
+            WindowImplEFL* self = (WindowImplEFL*)data;
+            STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_PREEDIT_START\n");
+            self->dispatchCompositionEvent(
+                PlatformWindow::CompositionEventStart, String::emptyString);
+        },
+        wnd);
+
+    // register preedit changed event handler
+    ecore_imf_context_event_callback_add(
+        wnd->m_imfContext, ECORE_IMF_CALLBACK_PREEDIT_CHANGED,
+        [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
+            WindowImplEFL* self = (WindowImplEFL*)data;
+            char* str = NULL;
+            int cursor_pos;
+            ecore_imf_context_preedit_string_get(self->m_imfContext, &str,
+                                                 &cursor_pos);
+            STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_PREEDIT_CHANGED %s %d\n", str,
+                              cursor_pos);
+            if (str) {
+                self->dispatchCompositionEvent(
+                    PlatformWindow::CompositionEventUpdate,
+                    String::fromUTF8(str));
+                free(str);
+            }
+        },
+        wnd);
+
+    ecore_imf_context_input_panel_event_callback_add(
+        wnd->m_imfContext, ECORE_IMF_INPUT_PANEL_STATE_EVENT,
+        [](void* data, Ecore_IMF_Context* ctx, int value) {
+            WindowImplEFL* self = (WindowImplEFL*)data;
+            if (ecore_imf_context_input_panel_state_get(ctx) ==
+                ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
+                self->webView()->blur();
+            } else if (ecore_imf_context_input_panel_state_get(ctx) ==
+                       ECORE_IMF_INPUT_PANEL_STATE_SHOW) {
+            }
+        },
+        wnd);
+
+    // register key event handler
+    evas_object_event_callback_add(
+        wnd->m_mainBox, EVAS_CALLBACK_KEY_DOWN,
+        [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
+            WindowImplEFL* self = (WindowImplEFL*)data;
+            Evas_Event_Key_Down* ev = (Evas_Event_Key_Down*)event_info;
+            STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_DOWN for ime object [%s]\n",
+                              ev->key);
+            Ecore_IMF_Event_Key_Down ecore_ev;
+            ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
+            if (ecore_imf_context_filter_event(self->m_imfContext,
+                                               ECORE_IMF_EVENT_KEY_DOWN,
+                                               (Ecore_IMF_Event*)&ecore_ev)) {
+                return;
+            }
+            // process non-char keys
+            auto keyValue = ecoreEventKeyToKeyValue(
+                ev->key, (evas_key_modifier_is_set(ev->modifiers, "Shift_L") ==
+                          EINA_TRUE) ||
+                             (evas_key_modifier_is_set(
+                                  ev->modifiers, "Shift_R") == EINA_TRUE));
+            KeyboardData kdata(keyValue);
+            setModifiersToKeyboardData(ev->modifiers, kdata);
+            StarFishEnterer enter(self->m_starFish);
+            self->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
+        },
+        wnd);
+    evas_object_event_callback_add(
+        wnd->m_mainBox, EVAS_CALLBACK_KEY_UP,
+        [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
+            WindowImplEFL* self = (WindowImplEFL*)data;
+            Evas_Event_Key_Up* ev = (Evas_Event_Key_Up*)event_info;
+            STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_UP for ime object [%s]\n",
+                              ev->key);
+            Ecore_IMF_Event_Key_Up ecore_ev;
+            ecore_imf_evas_event_key_up_wrap(ev, &ecore_ev);
+            if (ecore_imf_context_filter_event(self->m_imfContext,
+                                               ECORE_IMF_EVENT_KEY_UP,
+                                               (Ecore_IMF_Event*)&ecore_ev)) {
+                return;
+            }
+            // process non-char keys
+            auto keyValue = ecoreEventKeyToKeyValue(
+                ev->key, (evas_key_modifier_is_set(ev->modifiers, "Shift_L") ==
+                          EINA_TRUE) ||
+                             (evas_key_modifier_is_set(
+                                  ev->modifiers, "Shift_R") == EINA_TRUE));
+            KeyboardData kdata(keyValue);
+            setModifiersToKeyboardData(ev->modifiers, kdata);
+            StarFishEnterer enter(self->m_starFish);
+            self->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);
+        },
+        wnd);
+
+    evas_object_event_callback_add(
+        wnd->m_mainBox, EVAS_CALLBACK_FOCUS_IN,
+        [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
+            WindowImplEFL* self = (WindowImplEFL*)data;
+            Ecore_IMF_Context* ctx = self->m_imfContext;
+            Ecore_IMF_Event_Key_Down ev;
+            ecore_imf_evas_event_key_down_wrap((Evas_Event_Key_Down*)event_info,
+                                               &ev);
+            ecore_imf_context_reset(ctx);
+            ecore_imf_context_focus_in(ctx);
+            ecore_imf_context_show(ctx);
+        },
+        wnd);
+
+    evas_object_event_callback_add(
+        wnd->m_mainBox, EVAS_CALLBACK_FOCUS_OUT,
+        [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
+            WindowImplEFL* self = (WindowImplEFL*)data;
+            Ecore_IMF_Context* ctx = self->m_imfContext;
+            Ecore_IMF_Event_Key_Down ev;
+
+            ecore_imf_evas_event_key_down_wrap((Evas_Event_Key_Down*)event_info,
+                                               &ev);
+            // ecore_imf_context_reset(ctx);
+            ecore_imf_context_focus_out(ctx);
+        },
+        wnd);
+
+    // ecore_imf_context_autocapital_type_set(wnd->m_imfContext,
+    //                                        ECORE_IMF_AUTOCAPITAL_TYPE_NONE);
+    // ecore_imf_context_prediction_allow_set(wnd->m_imfContext, EINA_FALSE);
 
     return wnd;
 }
@@ -565,6 +893,10 @@ PlatformWindow::~PlatformWindow()
         elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_mainBox);
         evas_object_del(eflWindow->m_mainBox);
         eflWindow->m_mainBox = nullptr;
+    }
+
+    if (eflWindow->m_imfContext) {
+        ecore_imf_context_del(eflWindow->m_imfContext);
     }
 
 #ifndef STARFISH_TIZEN_WEARABLE

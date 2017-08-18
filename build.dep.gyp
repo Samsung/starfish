@@ -390,10 +390,10 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@(pkg-config --cflags-only-I elementary ecore ecore-x | sed s/-I//g)',
+                    '<!@(pkg-config --cflags-only-I elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g)',
                 ],
                 'libraries': [
-                    '<!@(pkg-config --libs-only-l elementary ecore ecore-x)',
+                    '<!@(pkg-config --libs-only-l elementary ecore ecore-x ecore-imf ecore-imf-evas)',
                 ],
             },
         },

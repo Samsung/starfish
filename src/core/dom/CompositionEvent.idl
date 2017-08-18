@@ -1,0 +1,17 @@
+dictionary CompositionEventInit : UIEventInit {
+    DOMString data = "";
+};
+
+// https://w3c.github.io/uievents/#interface-CompositionEvent
+[
+    Constructor(DOMString type, optional CompositionEventInit eventInitDict), ConstructorCallWith=Document
+] interface CompositionEvent : UIEvent {
+    readonly attribute DOMString data;
+
+    // https://w3c.github.io/uievents/#idl-interface-CompositionEvent-initializers
+    [Unimplemented, Measure] void initCompositionEvent([Default=Undefined] optional DOMString type,
+                                        [Default=Undefined] optional boolean bubbles,
+                                        [Default=Undefined] optional boolean cancelable,
+                                        [Default=Undefined] optional Window? view,
+                                        [Default=Undefined] optional DOMString data);
+};

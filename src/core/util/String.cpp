@@ -746,6 +746,23 @@ String* String::substring(size_t pos, size_t len)
     return new StringView(this, pos, pos + len);
 }
 
+String* String::remove(size_t pos, size_t len)
+{
+    StringBuilder sb;
+    sb.appendSubString(this, 0, pos);
+    sb.appendSubString(this, pos + len, length());
+    return sb.finalize();
+}
+
+String* String::insert(String* str, size_t pos)
+{
+    StringBuilder sb;
+    sb.appendSubString(this, 0, pos);
+    sb.appendString(str);
+    sb.appendSubString(this, pos, length());
+    return sb.finalize();
+}
+
 String* String::toUpper()
 {
     auto data = bufferAccessData();

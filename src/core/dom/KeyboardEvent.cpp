@@ -52,7 +52,7 @@ String* keyValueToKey(KeyValue v)
         if (v == UnidentifiedKey) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
-        return String::createASCIIString("");
+        return String::createASCIIString("Unidentified");
     }
 }
 

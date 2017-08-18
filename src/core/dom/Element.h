@@ -280,12 +280,10 @@ public:
     void notifyInlineStyleChanged();
     void registerInlineStyleCallback();
 
-    // FIXME: Use NodeState instead of this flag.
     bool focused() const
     {
         return m_state & NodeStateFocused;
     }
-    virtual void setFocus(bool flag);
 
     virtual bool supportsFocus() const;
     virtual bool isFocusable();

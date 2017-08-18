@@ -1057,19 +1057,6 @@ String* Element::getLaunguage()
     return value;
 }
 
-void Element::setFocus(bool flag)
-{
-    if (flag == focused()) {
-        return;
-    }
-
-    setFocused(flag);
-    // TODO: Style should be recalculated when we implement :focus selector or
-    // apply visual effects for focusable elements.
-    // setNeedsStyleRecalc();
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-}
-
 bool Element::supportsFocus() const
 {
     if (!tabIndexSetExplicitly()) {
