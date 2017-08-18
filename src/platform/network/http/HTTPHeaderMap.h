@@ -56,6 +56,7 @@ public:
     static const char kReferer[];
     static const char kTE[];
     static const char kUserAgent[];
+    static const char kLocation[];
 
     HTTPHeaderMap();
     ~HTTPHeaderMap();

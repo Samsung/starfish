@@ -151,6 +151,7 @@ public:
     {
         return m_isSync;
     }
+
     const ResponseHeaderMap& responseHeaderMap()
     {
         return m_responseHeaderMap;
@@ -164,6 +165,11 @@ public:
     String* responseMimeType()
     {
         return m_responseMimeType;
+    }
+
+    String* lastLocation()
+    {
+        return m_lastLocation;
     }
 
     void addResourceRequestClient(ResourceRequestClient* client)
@@ -236,6 +242,7 @@ protected:
     NetworkURLWorkerData* m_activeNetworkURLWorkerData;
     Mutex* m_mutex;
     String* m_responseMimeType;
+    String* m_lastLocation;
     NetworkRequestResponse m_response;
     GCVector<size_t> m_requstedIdlers;
     GCVector<std::pair<String*, String*>> m_requestHeaders;

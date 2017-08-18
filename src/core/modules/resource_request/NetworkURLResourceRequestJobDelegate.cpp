@@ -85,6 +85,14 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             requestData->httpTransaction->httpResponse().responseCode();
         requestData->request->m_response = std::move(
             requestData->httpTransaction->httpResponse().entityBody());
+
+        if (requestData->isRedirected &&
+            requestData->lastLocation.compare("") != 0) {
+            requestData->request->m_lastLocation =
+                String::createASCIIString(requestData->lastLocation.data())
+                    ->trim();
+        }
+
         requestData->request->handleResponseEOF();
     } else if (requestData->httpTransaction->res() ==
                CURLE_OPERATION_TIMEDOUT) {
@@ -175,6 +183,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
     NetworkURLWorkerData* data = new (NoGC) NetworkURLWorkerData();
     data->request = m_orgProxy;
     data->isAborted = false;
+    data->isRedirected = false;
+    data->lastLocation = "";
     m_orgProxy->m_activeNetworkURLWorkerData = data;
 
     std::string method;
@@ -355,11 +365,12 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
 
     workerData->httpTransaction->updateTransactionStatus();
     size_t realSize = size * nmemb;
-    std::string header(static_cast<const char*>(ptr), realSize);
+    std::string rawHeader(static_cast<const char*>(ptr), realSize);
 
     if (workerData->httpTransaction->httpResponse()
             .isSuccessfulResponseStatus()) {
-        if ((header.compare("\r\n") == 0) || (header.compare("\n") == 0)) {
+        if ((rawHeader.compare("\r\n") == 0) ||
+            (rawHeader.compare("\n") == 0)) {
             request->m_responseHeaderMap =
                 std::move(workerData->httpTransaction->httpResponse()
                               .headers()
@@ -397,7 +408,20 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                 }
             }
         } else {
-            workerData->httpTransaction->didReceiveHeader(header);
+            workerData->httpTransaction->didReceiveHeader(rawHeader);
+        }
+    } else if (workerData->httpTransaction->httpResponse()
+                   .isRedirectionResponseStatus()) {
+        if (!workerData->isRedirected) {
+            workerData->isRedirected = true;
+        }
+        size_t pos = rawHeader.find(":");
+        if (pos != std::string::npos) {
+            std::string key = rawHeader.substr(0, pos);
+            std::string value = rawHeader.substr(pos + 1);
+            if (StringUtils::equalsWithoutCase(key, HTTPHeaderMap::kLocation)) {
+                workerData->lastLocation = value;
+            }
         }
     }
 

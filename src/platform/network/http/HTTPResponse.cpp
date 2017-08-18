@@ -41,4 +41,13 @@ bool HTTPResponse::isSuccessfulResponseStatus()
     }
     return false;
 }
+
+bool HTTPResponse::isRedirectionResponseStatus()
+{
+    if (HTTPStatusCode::HTTP_STATUS_MULTIPLE_CHOICES <= m_responseCode &&
+        m_responseCode < HTTPStatusCode::HTTP_STATUS_BAD_REQUEST) {
+        return true;
+    }
+    return false;
+}
 }
