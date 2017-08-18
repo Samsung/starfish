@@ -76,7 +76,10 @@ interface Document : Node {
   [Unimplemented] readonly attribute DocumentReadyState readyState;
 
   // DOM tree accessors
-  // getter object (DOMString name);
+  // NOTE: getter is implemented in HTMLDocument.idl due to
+  // the limitation of the binding generator calling only
+  // HTMLDocument.init()
+  // [NotEnumerable] getter ScriptWrappable? (DOMString name);
   [CEReactions] attribute DOMString title;
   [CEReactions] attribute DOMString dir;
   [RaisesException=Setter, CEReactions] attribute HTMLElement? body;

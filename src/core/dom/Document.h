@@ -299,6 +299,7 @@ public:
     virtual void didNodeInserted(Node* parent, Node* newChild);
     virtual void didNodeRemoved(Node* parent, Node* oldChild);
 
+    ScriptWrappable* defaultNamedGetter(String* name);
     HTMLCollection* namedAccess(String* name);
     void invalidNamedAccessCacheIfNeeded();
 
