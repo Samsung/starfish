@@ -100,12 +100,11 @@ void FlexFormattingContext::computeHypotheticalMainSize()
 
         FrameBox* flexItem = child->asFrameBox();
         LayoutUnit mainSize = basisSize(flexItem);
-        if (mainSize == intMaxForLayoutUnit) {
-            mainSize = 0;
-        }
+        STARFISH_ASSERT(mainSize != intMaxForLayoutUnit);
 
         if (m_isMainAxisInInlineAxis) {
-            flexItem->applyMinMaxWidthIfNeeds(mainSize, m_availableMainSize,
+            flexItem->applyMinMaxWidthIfNeeds(m_layoutContext, mainSize,
+                                              m_availableMainSize,
                                               m_layoutContext.viewportWidth());
             sumOfMainSize += flexItem->outerWidth();
         } else {
@@ -223,7 +222,7 @@ void FlexFormattingContext::applyFlexFactor(LayoutUnit lineWidth)
                     (factor / sumOfFactor) * remainingFreeSpace;
                 if (m_isMainAxisInInlineAxis) {
                     flexItem->applyMinMaxWidthIfNeeds(
-                        mainSize, m_availableMainSize,
+                        m_layoutContext, mainSize, m_availableMainSize,
                         m_layoutContext.viewportWidth());
                 } else {
                     flexItem->applyMinMaxHeightIfNeeds(
@@ -240,7 +239,7 @@ void FlexFormattingContext::applyFlexFactor(LayoutUnit lineWidth)
                         remainingFreeSpace;
                 if (m_isMainAxisInInlineAxis) {
                     flexItem->applyMinMaxWidthIfNeeds(
-                        mainSize, m_availableMainSize,
+                        m_layoutContext, mainSize, m_availableMainSize,
                         m_layoutContext.viewportWidth());
                 } else {
                     flexItem->applyMinMaxHeightIfNeeds(
@@ -383,11 +382,11 @@ void FlexFormattingContext::applyJustifyContent()
             for (size_t i = 0; i < flexItems.size(); i++) {
                 FrameBox* flexItem = flexItems[i];
                 flexItem->setX(x);
-                if (flexItem->isNormalFlow()) {
+                if (flexItem->isAbsolutePositioned()) {
+                    STARFISH_ASSERT(flexItems.size() == 1);
+                } else {
                     flexItem->moveX(flexItem->marginLeft());
                     x += flexItem->outerWidth() + separator;
-                } else {
-                    STARFISH_ASSERT(flexItems.size() == 1);
                 }
             }
         } else {
@@ -397,11 +396,11 @@ void FlexFormattingContext::applyJustifyContent()
             for (size_t i = 0; i < flexItems.size(); i++) {
                 FrameBox* flexItem = flexItems[i];
                 flexItem->setX(x - flexItem->outerWidth());
-                if (flexItem->isNormalFlow()) {
+                if (flexItem->isAbsolutePositioned()) {
+                    STARFISH_ASSERT(flexItems.size() == 1);
+                } else {
                     flexItem->moveX(flexItem->marginLeft());
                     x -= flexItem->outerWidth() + separator;
-                } else {
-                    STARFISH_ASSERT(flexItems.size() == 1);
                 }
             }
         }
@@ -411,11 +410,11 @@ void FlexFormattingContext::applyJustifyContent()
         for (size_t i = 0; i < flexItems.size(); i++) {
             FrameBox* flexItem = flexItems[i];
             flexItem->setY(y);
-            if (flexItem->isNormalFlow()) {
+            if (flexItem->isAbsolutePositioned()) {
+                STARFISH_ASSERT(flexItems.size() == 1);
+            } else {
                 flexItem->moveY(flexItem->marginTop());
                 y += flexItem->outerHeight() + separator;
-            } else {
-                STARFISH_ASSERT(flexItems.size() == 1);
             }
         }
     }
@@ -552,18 +551,16 @@ void FlexFormattingContext::computeCrossSize()
 
             if (flexItem->style()->alignSelf() == BaselineAlignItemValue &&
                 ((m_isMainAxisInInlineAxis && flexItem->marginTop() != 0 &&
-                  flexItem->marginBottom() != 0) ||
-                 (!m_isMainAxisInInlineAxis && flexItem->marginLeft() != 0 &&
-                  flexItem->marginRight() != 0))) {
+                  flexItem->marginBottom() != 0))) {
                 // TODO
+            }
+
+            if (m_isMainAxisInInlineAxis) {
+                maxHypotheticalCrossSize =
+                    std::max(maxHypotheticalCrossSize, flexItem->outerHeight());
             } else {
-                if (m_isMainAxisInInlineAxis) {
-                    maxHypotheticalCrossSize = std::max(
-                        maxHypotheticalCrossSize, flexItem->outerHeight());
-                } else {
-                    maxHypotheticalCrossSize = std::max(
-                        maxHypotheticalCrossSize, flexItem->outerWidth());
-                }
+                maxHypotheticalCrossSize =
+                    std::max(maxHypotheticalCrossSize, flexItem->outerWidth());
             }
 
             if (flexItem->style()->alignSelf() == StretchAlignItemValue) {
@@ -609,6 +606,20 @@ void FlexFormattingContext::computeCrossSize()
     }
     STARFISH_ASSERT(m_availableCrossSize != intMaxForLayoutUnit);
 
+    if (m_isSingleLine) {
+        for (size_t i = 0; i < lines; i++) {
+            FlexLine& flexLine = m_flexLines[i];
+            if (!flexLine.m_hasAbsolutePositionedBox) {
+                if (m_isMainAxisInInlineAxis) {
+                    flexLine.m_lineHeight = m_container->contentHeight();
+                } else {
+                    flexLine.m_lineHeight = m_container->contentWidth();
+                }
+                break;
+            }
+        }
+    }
+
     for (size_t i = 0; i < flexItemsToStretchInfos.size(); i++) {
         auto& flexItemsToStretchInfo = flexItemsToStretchInfos[i];
         size_t lineIdx = flexItemsToStretchInfo.first;
@@ -641,9 +652,9 @@ void FlexFormattingContext::computeCrossSize()
                                           flexItem->marginWidth()));
             flexItem->layout(m_layoutContext,
                              Frame::LayoutWantToResolve::ResolveAll);
-            flexItem->applyMinMaxWidthIfNeeds(flexItem->contentWidth(),
-                                              m_availableCrossSize,
-                                              m_layoutContext.viewportWidth());
+            flexItem->applyMinMaxWidthIfNeeds(
+                m_layoutContext, flexItem->contentWidth(), m_availableCrossSize,
+                m_layoutContext.viewportWidth());
             flexItem->style()->setWidth(old);
             flexItem->setContentHeight(oldContentHeight);
         }

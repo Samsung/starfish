@@ -21,6 +21,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
@@ -650,7 +651,8 @@ void FrameBox::clearStackingContextIfNeeds(bool shouldDetachNativeBuffer)
     }
 }
 
-LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(LayoutUnit width,
+LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(LayoutContext& ctx,
+                                               LayoutUnit width,
                                                LayoutUnit parentWidth,
                                                LayoutUnit viewportWidth)
 {
@@ -660,6 +662,23 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(LayoutUnit width,
             style->minWidth().specifiedValue(parentWidth, viewportWidth);
 
         minWidth = contentWidthApplyingBoxSizing(minWidth);
+
+        if (minWidth > width) {
+            return minWidth;
+        }
+    } else if (isFlexItem()) {
+        LayoutUnit minWidth;
+        if (layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
+            style->overflowX() == VisibleOverflow) {
+            PreferredWidthContext p(ctx, parentWidth - mbpWidth());
+            computePreferredWidth(p);
+            minWidth = p.preferredMinWidth();
+            if (style->width().isSpecified()) {
+                minWidth =
+                    std::min(minWidth, LayoutUnit(style->width().specifiedValue(
+                                           parentWidth, viewportWidth)));
+            }
+        }
 
         if (minWidth > width) {
             return minWidth;
@@ -697,7 +716,23 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutUnit height,
         if (minHeight > height) {
             return minHeight;
         }
+    } else if (isFlexItem()) {
+        LayoutUnit minHeight;
+        if (!layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
+            style->overflowY() == VisibleOverflow) {
+            if (!(style->height().isAuto() ||
+                  (style->height().isPercent() && !parentHasFixedValue))) {
+                minHeight =
+                    std::min(height, LayoutUnit(style->height().specifiedValue(
+                                         parentHeight, viewportHeight)));
+            }
+        }
+
+        if (minHeight > height) {
+            return minHeight;
+        }
     }
+
     if (style->maxHeight().isSpecified()) {
         if (!parentHasFixedValue && style->maxHeight().isPercent()) {
             return height;

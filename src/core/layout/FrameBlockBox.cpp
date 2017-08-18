@@ -139,7 +139,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
             contentWidth = contentWidthApplyingBoxSizing(contentWidth);
         }
 
-        applyMinMaxWidthIfNeeds(contentWidth, containgBlockContentWidth,
+        applyMinMaxWidthIfNeeds(ctx, contentWidth, containgBlockContentWidth,
                                 viewportWidth);
     }
 }
