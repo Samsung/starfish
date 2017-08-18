@@ -7,9 +7,9 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented, CEReactions] attribute DOMString autocomplete;
     [Unimplemented, CEReactions] attribute boolean autofocus;
     [Unimplemented, CEReactions] attribute boolean defaultChecked;
-    [Unimplemented] attribute boolean checked;
+    attribute boolean checked;
     [Unimplemented, CEReactions] attribute DOMString dirName;
-    [Unimplemented, CEReactions] attribute boolean disabled;
+    [CEReactions] attribute boolean disabled;
     [Unimplemented] readonly attribute HTMLFormElement? form;
     [Unimplemented] readonly attribute FileList? files;
     [CEReactions] attribute USVString formAction;

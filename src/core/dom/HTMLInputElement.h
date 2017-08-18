@@ -17,11 +17,11 @@
 #ifndef __StarFishHTMLInputElement__
 #define __StarFishHTMLInputElement__
 
-#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLFormElement.h"
 
 namespace StarFish {
 class Event;
-class HTMLInputElement : public HTMLElement {
+class HTMLInputElement : public HTMLFormObject {
     friend class FrameInputBox;
 
 public:
@@ -42,12 +42,6 @@ public:
     virtual QualifiedName name();
 
     // 4.10 Interface Input
-    String* domName();
-    void setDomName(String* name);
-
-    String* type();
-    void setType(String* type);
-
     String* value();
     void setValue(String* value);
 
@@ -63,7 +57,8 @@ public:
     String* formAction();
     void setFormAction(String* formAction);
 
-    HTMLFormElement* form();
+    bool checked();
+    void setChecked(bool checked);
 
     // Other methods
     String* obscurePhrase(String* phrase);

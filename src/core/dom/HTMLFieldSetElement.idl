@@ -2,11 +2,11 @@
 
 [HTMLConstructor]
 interface HTMLFieldSetElement : HTMLElement {
-  [Unimplemented, CEReactions] attribute boolean disabled;
+  [CEReactions] attribute boolean disabled;
   readonly attribute HTMLFormElement? form;
-  [Unimplemented, CEReactions] attribute DOMString name;
+  [CEReactions, Rename=domName] attribute DOMString name;
 
-  [Unimplemented] readonly attribute DOMString type;
+  readonly attribute DOMString type;
 
   [Unimplemented, SameObject] readonly attribute HTMLCollection elements;
 

@@ -25,15 +25,8 @@ QualifiedName HTMLFieldSetElement::name()
     return starFish()->staticStrings()->m_fieldsetTagName;
 }
 
-HTMLFormElement* HTMLFieldSetElement::form()
+String* HTMLFieldSetElement::type()
 {
-    for (Node* parent = parentNode(); parent; parent = parent->parentNode()) {
-        if (parent->isHTMLFormElement()) {
-            return (HTMLFormElement*)parent;
-        } else if (parent == nullptr) {
-            return nullptr;
-        }
-    }
-    return nullptr;
+    return String::createASCIIString("fieldset");
 }
 }

@@ -319,6 +319,9 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | offsetHeight | Returns the border edge height of the first CSS layout box associated with the element. |
 | [HTMLFieldSetElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-fieldset-element) | interface | HTMLFieldSetElement |  represents a set of form controls optionally grouped under a common name. |
 |  | attribute | form | Returns the element's form element, if any, or null otherwise. |
+|  | attribute | name | Returns the element's name. |
+|  | attribute | type | Returns the string "fieldset". |
+|  | attribute | disabled | Returns whether the form control is disabled. |
 | [HTMLFontElement](https://html.spec.whatwg.org/#htmlfontelement) | interface | HTMLFontElement | The font element defines the font size, font face, and color of text. |
 |  | attribute | color | This attribute sets the text color. |
 |  | attribute | size | This attribute sets the size of the font. |
@@ -346,6 +349,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | name | Returns the name of the input element. |
 |  | attribute | type | Returns the type of the input element. |
 |  | attribute | value | Returns the value of the input element. |
+|  | attribute | checked | Returns  the checkedness of the input element. |
+|  | attribute | disabled | Returns whether the input element is disabled. |
 | [HTMLIFrameElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element) | interface | HTMLIFrameElement |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the frame in CSS pixels. |
