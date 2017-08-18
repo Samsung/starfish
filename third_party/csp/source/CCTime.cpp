@@ -342,18 +342,6 @@ void CCTime::SetEpochTime(unsigned long sec)
 {
 #if defined (_WIN32)
 
-#if defined (_WIN32_WCE)
-	TIME_ZONE_INFORMATION info;
-	GetTimeZoneInformation(&info);
-
-	tm_struct tm;
-	DS1371_BinaryToDate(sec - info.Bias * 60, &tm);
-	SYSTEMTIME time = {tm.tm_year + 1900, tm.tm_mon+1, tm.tm_wday, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, 0};
-
-	SetLocalTime(&time);
-
-#else
-
 #if !defined (_WIN32_REAL_CLOCK)
 
 	_CTTime time;
@@ -445,8 +433,6 @@ void CCTime::SetEpochTime(unsigned long sec)
 	}
 
 	CloseHandle(hToken);
-#endif
-
 #endif
 
 #elif defined (_LINUX)
