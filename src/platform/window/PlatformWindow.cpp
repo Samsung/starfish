@@ -113,7 +113,7 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
     registerOrUpdateIdleTimeCleaner();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-    if (webView()->hasFocus()) {
+    if (!webView()->hasFocus()) {
         const int virtualCursorInitialSpeed = 1;
         const int virtualCursorMaxSpeed = 24;
         bool isMouseMoved = false;
@@ -178,22 +178,22 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
 
             int virtualCursorSpeed = m_virtualCursorSpeed;
 
-            if (data.keyCode() == 37) {
+            if (data.keyValue() == ArrowLeftKey) {
                 // left
                 m_virtualCursorX -= virtualCursorSpeed;
                 ADJEST_VIRTUAL_CURSOR_POSITION()
                 DO_REDRAW_DISPATCH()
-            } else if (data.keyCode() == 38) {
+            } else if (data.keyValue() == ArrowUpKey) {
                 // up
                 m_virtualCursorY -= virtualCursorSpeed;
                 ADJEST_VIRTUAL_CURSOR_POSITION()
                 DO_REDRAW_DISPATCH()
-            } else if (data.keyCode() == 39) {
+            } else if (data.keyValue() == ArrowRightKey) {
                 // right
                 m_virtualCursorX += virtualCursorSpeed;
                 ADJEST_VIRTUAL_CURSOR_POSITION()
                 DO_REDRAW_DISPATCH()
-            } else if (data.keyCode() == 40) {
+            } else if (data.keyValue() == ArrowDownKey) {
                 // down
                 m_virtualCursorY += virtualCursorSpeed;
                 ADJEST_VIRTUAL_CURSOR_POSITION()
@@ -207,8 +207,7 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
                 DO_REDRAW_DISPATCH()
             }
         } else {
-            if (data.keyCode() == 32 || data.keyCode() == 13 ||
-                data.keyCode() == 8) {
+            if (data.keyValue() == SpaceKey || data.keyValue() == EnterKey) {
                 // click
                 eventKind = MouseEventUp;
                 m_isButtonOfVirtualCursorClicked = false;
@@ -216,9 +215,14 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
                 DO_REDRAW_DISPATCH()
             }
         }
-    }
-    if (isMouseMoved) {
-        return;
+        if (isMouseMoved) {
+            return;
+        }
+    } else {
+        if (data.keyValue() == EscapeKey) {
+            webView()->blur();
+            return;
+        }
     }
 
 #undef DO_REDRAW_DISPATCH
