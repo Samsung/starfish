@@ -25,7 +25,6 @@
 #if defined(STARFISH_DALI)
 #include "core/dom/Document.h"
 
-#include "core/modules/threading/Locker.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Window.h"
@@ -47,7 +46,7 @@
 uv_signal_t g_sigterm;
 uv_signal_t g_sigint;
 uv_async_t g_launcher_handle;
-StarFish::Mutex* g_initMutex;
+pthread_mutex_t* g_initMutex;
 
 void uv_term_cb(uv_signal_t* handle, int signum)
 {
@@ -60,6 +59,13 @@ bool needToInitMainThread()
 
 void* mainThread(void* data)
 {
+    volatile int stack = 0;
+
+    GC_stack_base sb;
+    sb.mem_base = (void*)&stack;
+    GC_allow_register_threads();
+    GC_register_my_thread(&sb);
+
     uv_signal_init(uv_default_loop(), &g_sigterm);
     uv_signal_start(&g_sigterm, &uv_term_cb, SIGTERM);
 
@@ -70,28 +76,32 @@ void* mainThread(void* data)
     idler.data = data;
     uv_idle_init(uv_default_loop(), &idler);
     uv_idle_start(&idler, [](uv_idle_t* handle) {
-        StarFish::Mutex* initMutext = (StarFish::Mutex*)handle->data;
-        initMutext->unlock();
+        pthread_mutex_t* initMutext = (pthread_mutex_t*)handle->data;
+        pthread_mutex_unlock(initMutext);
     });
 
-    g_initMutex = new StarFish::Mutex();
+    g_initMutex = new pthread_mutex_t;
+    pthread_mutex_init(g_initMutex, NULL);
+
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     return NULL;
 }
 
 void initMainThread(void* (*f)(void*))
 {
-    StarFish::Mutex* initMutex = new StarFish::Mutex();
+    pthread_mutex_t* initMutex = new pthread_mutex_t;
+    pthread_mutex_init(initMutex, NULL);
 
-    initMutex->lock();
+    pthread_mutex_lock(initMutex);
     pthread_t t;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_create(&t, &attr, f, initMutex);
 
-    {
-        StarFish::Locker<StarFish::Mutex> l(*initMutex);
-    }
+    pthread_mutex_lock(initMutex);
+    pthread_mutex_unlock(initMutex);
+    pthread_mutex_destroy(initMutex);
+    delete initMutex;
 }
 
 class StarFishController : public Dali::ConnectionTracker {
@@ -288,7 +298,7 @@ public:
 
 void starfishCreate_internal(uv_async_t* handle)
 {
-    volatile int flag = 0;
+    int flag = 0;
     StarFishController* app = (StarFishController*)handle->data;
 
     StarFish::ScreenInfo info;
@@ -296,11 +306,6 @@ void starfishCreate_internal(uv_async_t* handle)
     info.rect.setHeight(app->m_height);
     info.availableRect.setWidth(app->m_width);
     info.availableRect.setHeight(app->m_height);
-
-    GC_stack_base tmp;
-    tmp.mem_base = (void*)&flag;
-    GC_allow_register_threads();
-    GC_register_my_thread(&tmp);
 
     StarFish::StarFish* starFish = new (NoGC) StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
@@ -312,7 +317,7 @@ void starfishCreate_internal(uv_async_t* handle)
 #endif
     app->m_instance->m_starfish = starFish;
     app->m_isInit = true;
-    g_initMutex->unlock();
+    pthread_mutex_unlock(g_initMutex);
 
     starFish->run();
 
@@ -390,7 +395,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     starFishControl->m_width = width;
     starFishControl->m_height = height;
 
-    g_initMutex->lock();
+    pthread_mutex_lock(g_initMutex);
 
     uv_async_init(uv_default_loop(), &g_launcher_handle,
                   starfishCreate_internal);
@@ -406,9 +411,8 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     starFishControl->m_timer.TickSignal().Connect(
         starFishControl, &StarFishController::updateBuffer);
     starFishControl->m_timer.Start();
-    {
-        StarFish::Locker<Mutex> l(*g_initMutex);
-    }
+    pthread_mutex_lock(g_initMutex);
+    pthread_mutex_unlock(g_initMutex);
 
     return instance;
 #else
