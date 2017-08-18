@@ -185,16 +185,24 @@ private:
                                                  nullptr, nullptr);
 
         if (!png) {
-            abort();
+            STARFISH_LOG_ERROR("%s %d\n : png_structp is NULL", __FUNCTION__,
+                               __LINE__);
+            return;
         }
 
         png_infop info = png_create_info_struct(png);
         if (!info) {
-            abort();
+            STARFISH_LOG_ERROR("%s %d\n : png_infop is NULL", __FUNCTION__,
+                               __LINE__);
+            png_destroy_read_struct(&png, nullptr, nullptr);
+            return;
         }
 
         if (setjmp(png_jmpbuf(png))) {
-            abort();
+            STARFISH_LOG_ERROR("%s %d\n : internal libpng error", __FUNCTION__,
+                               __LINE__);
+            png_destroy_read_struct(&png, &info, nullptr);
+            return;
         }
 
         if (!fp) {
