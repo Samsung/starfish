@@ -166,6 +166,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [Document](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface) | attribute | styleSheets | Returns a StyleSheetList collection representing the document CSS style sheets. |
 | [Document](https://www.w3.org/TR/page-visibility/#sec-document-interface) | attribute | hidden | Returns true if the Document contained by the top level browsing context (root window in the browser's viewport) is not visible at all. |
 | | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
+| Document (non-standard) | method | (HTMLCollection or Node or null) document._nodeName_ | Returns elements of type a, applet, area, embed, form, frameset, img, or object with name="_nodeName_". Returns an element if there is only one such element. |
 | [VisibilityChange Event](https://www.w3.org/TR/page-visibility/#sec-visibilitychange-event) | Event Handler | visibilitychange | Fire when the content of a tab has become visible or has been hidden. |
 | [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | DocumentFragment is a "lightweight" or "minimal" Document object. It is very common to want to be able to extract a portion of a document's tree or to create a new fragment of a document. |
 | [DocumentType](https://dom.spec.whatwg.org/#documenttype) | interface | DocumentType | Document type |

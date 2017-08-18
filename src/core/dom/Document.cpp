@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+
 #include "core/dom/Attr.h"
 #include "core/dom/Attribute.h"
 #include "core/dom/CDATASection.h"
@@ -679,6 +680,22 @@ HTMLCollection* Document::namedAccess(String* name)
     m_namedAccessActiveHTMLCollectionList.push_back(std::make_pair(name, list));
 
     return list;
+}
+
+ScriptWrappable* Document::defaultNamedGetter(String* name)
+{
+    HTMLCollection* list = namedAccess(name);
+
+    if (list) {
+        size_t len = list->length();
+        if (len == 1) {
+            return list->item(0);
+        } else if (len > 1) {
+            return list;
+        }
+    }
+
+    return nullptr;
 }
 
 void Document::invalidNamedAccessCacheIfNeeded()

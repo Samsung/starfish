@@ -13,10 +13,15 @@ interface HTMLDocument : Document {
   [Unimplemented] readonly attribute HTMLCollection anchors;
   // attribute DOMString cookie;
                                         // raises(DOMException) on setting
-
   // void open();
   // void close();
   // void write(DOMString text);
   // void writeln(DOMString text);
   // NodeList getElementsByName(DOMString elementName);
+
+  // NOTE: getter is implemented here due to the limitation of
+  // binding generator. Also until we support union return type,
+  // we return ScriptWrappable.
+  [NotEnumerable] getter ScriptWrappable? (DOMString name);
 };
+
