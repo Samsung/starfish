@@ -1257,6 +1257,7 @@ public:
         // even if position is static.
         if (!isAnonymous()) {
             m_flags.m_isEstablishesStackingContext = true;
+            m_flags.m_isEstablishesBlockFormattingContext = true;
         }
     }
 

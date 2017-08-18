@@ -3581,7 +3581,8 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
             w = intrinsicWidth;
         }
 
-        w = minMaxWidthAppliedIfNeeds(w, parentContentWidth, viewportWidth);
+        w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), w,
+                                      parentContentWidth, viewportWidth);
     } else {
         w = intrinsicWidth;
         h = intrinsicHeight;
