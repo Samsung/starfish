@@ -792,6 +792,14 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             Evas_Event_Key_Down* ev = (Evas_Event_Key_Down*)event_info;
             STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_DOWN for ime object [%s]\n",
                               ev->key);
+
+            if ((strcmp(ev->key, "XF86Exit") == 0) ||
+                (strcmp(ev->key, "Select") == 0) ||
+                (strcmp(ev->key, "Cancel") == 0)) {
+                self->hideSoftwareKeyboardIfPossible();
+                return;
+            }
+
             Ecore_IMF_Event_Key_Down ecore_ev;
             ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
             if (ecore_imf_context_filter_event(self->m_imfContext,
