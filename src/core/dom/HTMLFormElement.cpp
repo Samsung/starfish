@@ -23,7 +23,9 @@
 #include "core/dom/Event.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
-#include "core/dom//HTMLFormControlsCollection.h"
+#include "core/dom/HTMLFormControlsCollection.h"
+#include "core/dom/HTMLFieldSetElement.h"
+#include "core/dom/HTMLLegendElement.h"
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
 #include "core/page/BrowsingContext.h"
@@ -49,11 +51,103 @@ FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
 }
 
 HTMLFormElement::HTMLFormElement(Document* document)
-    : HTMLElement(document)
+    : HTMLFormObject(document)
     , m_submitter(nullptr)
     , m_elements(nullptr)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
+}
+
+String* HTMLFormObject::domName()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
+}
+
+void HTMLFormObject::setDomName(String* name)
+{
+    setAttribute(starFish()->staticStrings()->m_name, name);
+}
+
+String* HTMLFormObject::type()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+}
+
+void HTMLFormObject::setType(String* type)
+{
+    setAttribute(starFish()->staticStrings()->m_type, type);
+}
+
+bool HTMLFormObject::disabled()
+{
+    String* val = getAttributeOrEmpty(starFish()->staticStrings()->m_disabled);
+    if (val->equals("true")) {
+        return true;
+    }
+
+    if (!isHTMLFormElement()) {
+        HTMLFieldSetElement* fieldSetNode = fieldSet();
+        if (fieldSetNode && fieldSetNode->disabled()) {
+            Node* firstChild = fieldSetNode->firstChild();
+            if (firstChild && firstChild->isHTMLLegendElement() &&
+                findAncestor(firstChild, this)) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
+Node* HTMLFormObject::findAncestor(Node* ancestorToFind, Node* fromThisNode)
+{
+    for (Node* p = fromThisNode->parentNode(); p; p = p->parentNode()) {
+        if (p == nullptr) {
+            break;
+        } else if (p->isHTMLIFrameElement()) {
+            return nullptr;
+        } else if (p == ancestorToFind) {
+            return p;
+        }
+    }
+    return nullptr;
+}
+
+void HTMLFormObject::setDisabled(bool disabled)
+{
+    if (disabled) {
+        setAttribute(starFish()->staticStrings()->m_disabled,
+                     String::createASCIIString("true"));
+    }
+}
+
+HTMLFormElement* HTMLFormObject::form()
+{
+    for (Node* p = parentNode(); p; p = p->parentNode()) {
+        if (p == nullptr) {
+            break;
+        } else if (p->isHTMLIFrameElement()) {
+            return nullptr;
+        } else if (p->isHTMLFormElement()) {
+            return p->asHTMLFormElement();
+        }
+    }
+    return nullptr;
+}
+
+HTMLFieldSetElement* HTMLFormObject::fieldSet()
+{
+    for (Node* p = parentNode(); p; p = p->parentNode()) {
+        if (p == nullptr) {
+            break;
+        } else if (p->isHTMLIFrameElement()) {
+            return nullptr;
+        } else if (p->isHTMLFieldSetElement()) {
+            return p->asHTMLFieldSetElement();
+        }
+    }
+    return nullptr;
 }
 
 void* HTMLFormElement::operator new(size_t size)
@@ -74,16 +168,6 @@ void* HTMLFormElement::operator new(size_t size)
 QualifiedName HTMLFormElement::name()
 {
     return starFish()->staticStrings()->m_formTagName;
-}
-
-String* HTMLFormElement::domName()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
-}
-
-void HTMLFormElement::setDomName(String* name)
-{
-    setAttribute(starFish()->staticStrings()->m_name, name);
 }
 
 String* HTMLFormElement::enctype()
@@ -249,14 +333,26 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet()
     Traverse::collectDescendants(
         inputNodes, asNode(),
         [this](Node* node) -> bool {
-            // TODO: "Checkness" is not supported yet.
-            // Collecting inputboxes only now
+            // TODO: datalist, img button, and object is not supported
             if (node->isHTMLInputElement()) {
                 HTMLInputElement* inputNode = node->asHTMLInputElement();
+
+                if (inputNode->disabled()) {
+                    return false;
+                }
                 if (inputNode->type()->equalsWithoutCase("button") &&
                     (inputNode != m_submitter)) {
                     return false;
                 }
+                if (inputNode->type()->equalsWithoutCase("checkbox") &&
+                    (!inputNode->checked())) {
+                    return false;
+                }
+                if (inputNode->type()->equalsWithoutCase("radio") &&
+                    (!inputNode->checked())) {
+                    return false;
+                }
+
                 return true;
             }
             return false;

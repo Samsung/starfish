@@ -30,7 +30,7 @@
 namespace StarFish {
 
 HTMLInputElement::HTMLInputElement(Document* document)
-    : HTMLElement(document)
+    : HTMLFormObject(document)
     , m_shouldDrawCaret(false)
     , m_caretBlinkingIntervalId(SIZE_MAX)
     , m_currentCaretPosition(SIZE_MAX)
@@ -58,26 +58,6 @@ void* HTMLInputElement::operator new(size_t size)
 QualifiedName HTMLInputElement::name()
 {
     return starFish()->staticStrings()->m_inputTagName;
-}
-
-String* HTMLInputElement::domName()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
-}
-
-void HTMLInputElement::setDomName(String* name)
-{
-    setAttribute(starFish()->staticStrings()->m_name, name);
-}
-
-String* HTMLInputElement::type()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
-}
-
-void HTMLInputElement::setType(String* type)
-{
-    setAttribute(starFish()->staticStrings()->m_type, type);
 }
 
 String* HTMLInputElement::value()
@@ -130,18 +110,18 @@ void HTMLInputElement::setFormAction(String* formAction)
     setAttribute(starFish()->staticStrings()->m_formAction, formAction);
 }
 
-HTMLFormElement* HTMLInputElement::form()
+bool HTMLInputElement::checked()
 {
-    for (Node* p = parentNode(); p; p = p->parentNode()) {
-        if (p == nullptr) {
-            break;
-        } else if (p->isHTMLIFrameElement()) {
-            return nullptr;
-        } else if (p->isHTMLFormElement()) {
-            return p->asHTMLFormElement();
-        }
+    String* val = getAttributeOrEmpty(starFish()->staticStrings()->m_checked);
+    return val->equals("true");
+}
+
+void HTMLInputElement::setChecked(bool checked)
+{
+    if (checked) {
+        setAttribute(starFish()->staticStrings()->m_checked,
+                     String::createASCIIString("true"));
     }
-    return nullptr;
 }
 
 String* HTMLInputElement::obscurePhrase(String* phrase)

@@ -17,14 +17,14 @@
 #ifndef __StarFishHTMLFieldSetElement__
 #define __StarFishHTMLFieldSetElement__
 
-#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLFormElement.h"
 
 namespace StarFish {
 
-class HTMLFieldSetElement : public HTMLElement {
+class HTMLFieldSetElement : public HTMLFormObject {
 public:
     HTMLFieldSetElement(Document* document)
-        : HTMLElement(document)
+        : HTMLFormObject(document)
     {
     }
 
@@ -32,10 +32,9 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLFieldSetElement() const override;
 
-    HTMLFormElement* form();
-
     /* 4.4 Interface Node */
     virtual QualifiedName name();
+    virtual String* type() override;
 };
 }
 

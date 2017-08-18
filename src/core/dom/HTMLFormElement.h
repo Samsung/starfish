@@ -23,6 +23,7 @@
 namespace StarFish {
 
 class DocumentBuilder;
+class HTMLFieldSetElement;
 class HTMLFormControlsCollection;
 
 class FormDataSetItem : public gc {
@@ -44,7 +45,33 @@ public:
     ResourceRequest::MethodType m_method;
 };
 
-class HTMLFormElement : public HTMLElement {
+class HTMLFormObject : public HTMLElement {
+public:
+    // Common method for Form-related nodes
+    virtual String* domName();
+    virtual void setDomName(String* name);
+
+    virtual String* type();
+    virtual void setType(String* type);
+
+    virtual bool disabled();
+    virtual void setDisabled(bool disabled);
+
+    // Other method
+    virtual HTMLFormElement* form();
+    virtual HTMLFieldSetElement* fieldSet();
+
+protected:
+    HTMLFormObject(Document* document)
+        : HTMLElement(document)
+    {
+    }
+
+private:
+    Node* findAncestor(Node* ancestorToFind, Node* fromThisNode);
+};
+
+class HTMLFormElement : public HTMLFormObject {
 public:
     HTMLFormElement(Document* document);
 
@@ -59,9 +86,6 @@ public:
     virtual QualifiedName name();
 
     // 4.10 Interface Form
-    String* domName();
-    void setDomName(String* name);
-
     String* action();
     void setAction(String* name);
 
