@@ -198,7 +198,6 @@ bool threadsafe CCSemaphore::Try(unsigned long msec)
 
 		aggregateMilliSec = (msec - elapse) + now.tv_usec / 1000;
 
-		// overflow 경우 - INFINITY 처리
 		if ((long) aggregateMilliSec < now.tv_usec / 1000)
 		{
 			pthread_cond_wait(&m->cond, &TimeMutex);
@@ -308,7 +307,6 @@ bool threadsafe CCSemaphore::Try(unsigned long msec)
 
 
 
-
 void threadsafe CCSemaphore::Give(void)
 {
 	ASSERT(FlagCreate() == true);
@@ -327,3 +325,7 @@ void threadsafe CCSemaphore::Give(void)
 #endif
 
 }
+
+
+
+

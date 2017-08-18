@@ -54,18 +54,14 @@ void TimerMain(void* arg)
 
 			m->sync.Lock();
 
-			// Try에서 fail한 후 Lock 직전에 Reset 또는 Destroy가 일어난
-			// 경우가 있을 수 있으므로 Lock을 획득한 후 한 번 더 check
 			if (ret == false)
 				ret = m->wait.Try(0);
 
-			// Destroy가 호출된 경우
 			if ((ret == true) && (m->destroy == true))
 			{
 				return;
 			}
 
-			// Reset이 호출된 경우
 			if (ret == true)
 			{
 				progress = 0;
@@ -75,7 +71,6 @@ void TimerMain(void* arg)
 //					m->event->param.l[0] = m->count;
 //				}
 			}
-			// Alarm time-out이 발생하여 Alarm 이벤트를 보내야 하는 경우
 			else
 			{
 				if (m->event != NULL)
@@ -284,7 +279,7 @@ bool CCTimer::UnsubscribeEvent(int condType, const CTEvent* event)
 
 
 
-#if 0
+/*
 
 void CCTimer::Reset(unsigned long interval, unsigned long count)
 {
@@ -306,6 +301,8 @@ void CCTimer::Reset(unsigned long interval, unsigned long count)
 	m->sync.Unlock();
 }
 
-#endif
+*/
+
+
 
 

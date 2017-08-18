@@ -65,30 +65,6 @@ extern CCErrorManager g_errorManager;
 
 
 
-#if defined (_USE_RA)
-
-#include "Common/RADefines.h"
-#include "Common/RAConfiguration.h"
-#include "Wrapper/RAEventReceiver.h"
-#include "Common/RAHashTable.h"
-#include "Wrapper/RACall.h"
-#include "Agent/Message/RAClassMsg.h"
-#include "Wrapper/RACallMessage.h"
-#include "Wrapper/RACallNetwork.h"
-#include "Wrapper/RACallDummy.h"
-#include "Wrapper/RAVirtualFrame.h"
-#include "Common/RAInformation.h"
-
-
-extern RAInformation g_Information;
-
-#endif
-
-
-
-
-#if defined (RA_CONFIG_TLS)
-
 #if defined (_WIN32)
 
 extern __declspec(thread) void *t_Call[];
@@ -98,8 +74,6 @@ extern __declspec(thread) void *t_Call[];
 #if defined (_LINUX)
 
 extern __thread void *t_Call[];
-
-#endif
 
 #endif
 
@@ -115,54 +89,7 @@ static DWORD WINAPI StartThread(LPVOID param)
 
 	m->sync[0].Give();
 	
-#if defined (RA_CONFIG_TLS)
-
-	int i;
-
-	for (i = 0; i < RAConfiguration::CATEGORY_MAX; i++)
-	{
-		t_Call[i] = NULL;
-	}
-
-#endif
-
 	(*threadArg->start)(threadArg->arg);
-
-#if defined (RA_CONFIG_TLS)
-
-	int commType;
-
-	for (i = 0; i < RAConfiguration::CATEGORY_MAX; i++)
-	{
-		commType = g_Information.CommuncationType(i);
-
-		if (commType == RAInformation::TYPE_MESSAGE)
-		{
-			if (t_Call[i] != NULL)
-			{
-				((RACallMessage *) t_Call[i])->Destroy();
-				delete (RACallMessage*) t_Call[i];
-			}
-		}
-		else if (commType == RAInformation::TYPE_NETWORK)
-		{
-			if (t_Call[i] != NULL)
-			{
-				((RACallNetwork *) t_Call[i])->Destroy();
-				delete (RACallNetwork*) t_Call[i];
-			}
-		}
-		else
-		{
-			if (t_Call[i] != NULL)
-			{
-				((RACallDummy *) t_Call[i])->Destroy();
-				delete (RACallDummy*) t_Call[i];
-			}
-		}
-	}
-
-#endif
 
 	bool flagDestroy = false;
 
@@ -209,31 +136,7 @@ static void* StartThread(void* param)
 	g_errorManager.AddItem();
 #endif
 
-#if defined (RA_CONFIG_TLS)
-
-	int i;
-
-	for (i = 0; i < RAConfiguration::CATEGORY_MAX; i++)
-	{
-		t_Call[i] = NULL;
-	}
-
-#endif
-
 	(*threadArg->start)(threadArg->arg);
-
-#if defined (RA_CONFIG_TLS)
-
-	for (i = 0; i < RAConfiguration::CATEGORY_MAX; i++)
-	{
-		if (t_Call[i] != NULL)
-		{
-			((RACallNetwork *) t_Call[i])->Destroy();
-			delete (RACallNetwork*) t_Call[i];
-		}
-	}
-
-#endif
 
 #if (CONFIG_TLS_ERROR == 0)
 	g_errorManager.DeleteItem();
