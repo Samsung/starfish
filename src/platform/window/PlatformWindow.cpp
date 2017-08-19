@@ -113,7 +113,7 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
     registerOrUpdateIdleTimeCleaner();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-    if (!webView()->hasFocus()) {
+    if (!isIMEEnabledNow()) {
         const int virtualCursorInitialSpeed = 1;
         const int virtualCursorMaxSpeed = 24;
         bool isMouseMoved = false;

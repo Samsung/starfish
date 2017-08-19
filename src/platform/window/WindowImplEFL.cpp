@@ -140,6 +140,11 @@ public:
         ecore_imf_context_hide(m_imfContext);
     }
 
+    virtual bool isIMEEnabledNow()
+    {
+        return evas_object_focus_get(m_mainBox) == EINA_TRUE;
+    }
+
     uintptr_t m_handle;
     Evas_Object* m_window;
     Evas_Object* m_canvasAdpater;
