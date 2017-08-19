@@ -70,6 +70,10 @@ public:
     virtual void hideSoftwareKeyboardIfPossible()
     {
     }
+    virtual bool isIMEEnabledNow()
+    {
+        return false;
+    }
 
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                             size_t touchCount);
