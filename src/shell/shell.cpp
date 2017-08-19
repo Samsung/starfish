@@ -194,8 +194,7 @@ void* mainShellThread(void* data)
     uv_signal_init(uv_default_loop(), &g_sigint);
     uv_signal_start(&g_sigint, &uv_term_cb, SIGINT);
 
-    pthread_mutex_t* initMutext = (pthread_mutex_t*)data;
-    pthread_mutex_unlock(initMutext);
+    pthread_mutex_unlock(g_initMutex);
 
     uv_async_init(
         uv_default_loop(), &g_launcher_handle, [](uv_async_t* handle) {
@@ -225,9 +224,6 @@ void* mainShellThread(void* data)
 
             // uv_close((uv_handle_t*)handle, nullptr);
         });
-
-    g_initMutex = new pthread_mutex_t;
-    pthread_mutex_init(g_initMutex, NULL);
 
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     return NULL;

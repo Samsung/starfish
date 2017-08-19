@@ -72,16 +72,7 @@ void* mainThread(void* data)
     uv_signal_init(uv_default_loop(), &g_sigint);
     uv_signal_start(&g_sigint, &uv_term_cb, SIGINT);
 
-    uv_idle_t idler;
-    idler.data = data;
-    uv_idle_init(uv_default_loop(), &idler);
-    uv_idle_start(&idler, [](uv_idle_t* handle) {
-        pthread_mutex_t* initMutext = (pthread_mutex_t*)handle->data;
-        pthread_mutex_unlock(initMutext);
-    });
-
-    g_initMutex = new pthread_mutex_t;
-    pthread_mutex_init(g_initMutex, NULL);
+    pthread_mutex_unlock(g_initMutex);
 
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     return NULL;
@@ -89,19 +80,17 @@ void* mainThread(void* data)
 
 void initMainThread(void* (*f)(void*))
 {
-    pthread_mutex_t* initMutex = new pthread_mutex_t;
-    pthread_mutex_init(initMutex, NULL);
+    g_initMutex = new pthread_mutex_t;
+    pthread_mutex_init(g_initMutex, NULL);
 
-    pthread_mutex_lock(initMutex);
+    pthread_mutex_lock(g_initMutex);
     pthread_t t;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-    pthread_create(&t, &attr, f, initMutex);
+    pthread_create(&t, &attr, f, NULL);
 
-    pthread_mutex_lock(initMutex);
-    pthread_mutex_unlock(initMutex);
-    pthread_mutex_destroy(initMutex);
-    delete initMutex;
+    pthread_mutex_lock(g_initMutex);
+    pthread_mutex_unlock(g_initMutex);
 }
 
 class StarFishController : public Dali::ConnectionTracker {
