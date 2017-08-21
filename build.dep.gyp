@@ -409,5 +409,29 @@
                 ],
             },
         },
+        {
+            'target_name': 'csp.x64',
+            'type': '<(dep_lib)',
+            'dependencies': [
+            ],
+            'include_dirs': [
+               '<!@(find third_party/csp/ -type d)',
+            ],
+            'sources': [
+                '<!@(find third_party/csp/source -name *.cpp)',
+            ],
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    'third_party/csp/include/',
+                    'third_party/csp/source/',
+                ],
+            },
+            'defines': [
+                '_LINUX',
+            ],
+            'cflags': [
+                '-fpermissive',
+            ],
+        },
     ],
 }
