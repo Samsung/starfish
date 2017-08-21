@@ -3711,7 +3711,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
 
                     FrameBox* flexItem = f->asFrameBox();
                     LayoutUnit basisSize = fCtx.basisSize(flexItem);
-                    // TODO: should appply max width
+                    // TODO: should apply max width
                     if (maxContentFlexGrowFraction >
                         maxContentFlexShrinkFraction) {
                         lineWidth +=
@@ -3725,7 +3725,8 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                     }
                     f = f->next();
                 }
-                ctx.updatePreferredWidth(lineWidth);
+                ctx.updatePreferredWidth(
+                    std::min(ctx.remainingWidth(), lineWidth));
             } else {
                 LayoutUnit w;
                 Frame* f = firstChild();

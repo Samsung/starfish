@@ -598,6 +598,8 @@ void FrameBox::establishesStackingContextIfNeeds()
                         break;
                     } else if (p->needsGraphicsBuffer()) {
                         break;
+                    } else if (p->style()->position() == FixedPositionValue) {
+                        break;
                     } else if ((p->isPositioned() || p->isFlexItem()) &&
                                p->style()->IsSpecifiedZIndex()) {
                         break;
