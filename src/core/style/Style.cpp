@@ -24,6 +24,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/HTMLStyleElement.h"
 #include "core/dom/Text.h"
@@ -2889,7 +2890,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
     ComputedStyle* style = new ComputedStyle(parent);
     matchAllRules(element, style, parent);
     style->loadResources(element, element->style());
-    style->arrangeStyleValues(parent);
+    ComputedStyle* rootStyle = element->document()->rootElement()->style();
+    style->arrangeStyleValues(parent, rootStyle);
     return style;
 }
 
@@ -3178,8 +3180,13 @@ void StyleResolver::apply(Element* element,
                                 CSSStyleValuePair::ValueKind::Length);
                 style->m_inheritedStyles.m_fontSize =
                     cssValues[k].lengthValue().toLength();
+                ComputedStyle* rootStyle =
+                    element->document()->rootElement()->style();
+                Length rootFontSize =
+                    rootStyle ? rootStyle->fontSize()
+                              : Length(Length::Fixed, DEFAULT_FONT_SIZE);
                 style->m_inheritedStyles.m_fontSize.changeToFixedIfNeeded(
-                    parentStyle->fontSize(), parentStyle->font());
+                    parentStyle->fontSize(), rootFontSize, parentStyle->font());
             }
             break;
         case CSSStyleValuePair::KeyKind::FontStyle:
@@ -5113,7 +5120,10 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
                     if (childStyle == nullptr) {
                         childStyle = new ComputedStyle(element->style());
                         childStyle->loadResources(element);
-                        childStyle->arrangeStyleValues(element->style());
+                        ComputedStyle* rootStyle =
+                            element->document()->rootElement()->style();
+                        childStyle->arrangeStyleValues(element->style(),
+                                                       rootStyle);
                     }
 
                     child->setStyle(childStyle);

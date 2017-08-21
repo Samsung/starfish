@@ -84,17 +84,18 @@ public:
     float specifiedValue(LayoutUnit parentLength, LayoutUnit viewportLength)
     {
         STARFISH_ASSERT(isSpecified());
-        if (isLength())
+        if (isLength()) {
             return length().specifiedValue(parentLength, viewportLength);
-        else
+        } else {
             return parentLength * number();
+        }
     }
 
     String* dumpString()
     {
-        if (m_type == LengthType)
+        if (m_type == LengthType) {
             return m_length.dumpString();
-        else if (m_type == NumberType) {
+        } else if (m_type == NumberType) {
             char temp[100];
             snprintf(temp, sizeof(temp), "%f", m_number);
             return String::fromUTF8(temp);
@@ -102,10 +103,11 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    void checkComputed(Length fontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
     {
-        if (m_type == LengthType)
-            m_length.changeToFixedIfNeeded(fontSize, font);
+        if (m_type == LengthType) {
+            m_length.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        }
     }
 
     bool operator==(const BorderImageLength& o)
@@ -155,12 +157,12 @@ public:
     {
     }
 
-    void checkComputed(Length fontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
     {
-        m_left.checkComputed(fontSize, font);
-        m_right.checkComputed(fontSize, font);
-        m_top.checkComputed(fontSize, font);
-        m_bottom.checkComputed(fontSize, font);
+        m_left.checkComputed(curFontSize, rootFontSize, font);
+        m_right.checkComputed(curFontSize, rootFontSize, font);
+        m_top.checkComputed(curFontSize, rootFontSize, font);
+        m_bottom.checkComputed(curFontSize, rootFontSize, font);
     }
 
     BorderImageLength& left()

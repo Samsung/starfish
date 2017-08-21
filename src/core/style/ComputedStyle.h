@@ -1021,7 +1021,7 @@ public:
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
             nullptr);
     void arrangeStyleValues(ComputedStyle* parentStyle,
-                            Node* current = nullptr);
+                            ComputedStyle* rootStyle, Node* current = nullptr);
     void blockify(Node* current, bool force);
 
     void clearTransforms()

@@ -19,41 +19,47 @@
 #include "core/style/Length.h"
 
 namespace StarFish {
-void Length::changeToFixedIfNeeded(Length fontSize, Font* font)
+void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
+                                   Font* font)
 {
     if (!isComputed()) {
-        float fSize = 0.0f;
-        if (fontSize.isFixed()) {
-            fSize = fontSize.fixed();
-        }
         if (m_type == EmToBeFixed) {
+            float fSize = curFontSize.isFixed() ? curFontSize.fixed() : 0.0f;
             m_data = fSize * m_data;
             m_type = Fixed;
         } else if (m_type == ExToBeFixed) {
+            float fSize = curFontSize.isFixed() ? curFontSize.fixed() : 0.0f;
             m_data = fSize * m_data * font->metrics().m_xheightRate;
+            m_type = Fixed;
+        } else if (m_type == RemToBeFixed) {
+            float fSize = rootFontSize.isFixed() ? rootFontSize.fixed() : 0.0f;
+            m_data = fSize * m_data;
             m_type = Fixed;
         }
         // InheritableNumber does not change its value
     }
 }
 
-void LengthSize::checkComputed(Length fontSize, Font* font)
+void LengthSize::checkComputed(Length curFontSize, Length rootFontSize,
+                               Font* font)
 {
-    m_width.changeToFixedIfNeeded(fontSize, font);
-    m_height.changeToFixedIfNeeded(fontSize, font);
+    m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
 }
 
-void LengthPosition::checkComputed(Length fontSize, Font* font)
+void LengthPosition::checkComputed(Length curFontSize, Length rootFontSize,
+                                   Font* font)
 {
-    m_x.changeToFixedIfNeeded(fontSize, font);
-    m_y.changeToFixedIfNeeded(fontSize, font);
+    m_x.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    m_y.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
 }
 
-void LengthBox::checkComputed(Length fontSize, Font* font)
+void LengthBox::checkComputed(Length curFontSize, Length rootFontSize,
+                              Font* font)
 {
-    m_left.changeToFixedIfNeeded(fontSize, font);
-    m_right.changeToFixedIfNeeded(fontSize, font);
-    m_top.changeToFixedIfNeeded(fontSize, font);
-    m_bottom.changeToFixedIfNeeded(fontSize, font);
+    m_left.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    m_right.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    m_top.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    m_bottom.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
 }
 }

@@ -871,7 +871,8 @@ ComputedStyle* Frame::pseudoStyleForFirstLine(
     result->setDisplay(DisplayValue::InlineDisplayValue);
     result->setPosition(PositionValue::StaticPositionValue);
     result->loadResources(element);
-    result->arrangeStyleValues(parentStyle, element);
+    ComputedStyle* rootStyle = document()->rootElement()->style();
+    result->arrangeStyleValues(parentStyle, rootStyle, element);
 
     return result;
 }
@@ -944,7 +945,8 @@ void Frame::updateComputedStyle(Node* refNode)
     ComputedStyle* newStyle = new ComputedStyle(refNode->style());
     newStyle->setDisplay(m_styleWhenNodeIsAnonymous->display());
     newStyle->loadResources(refNode, m_styleWhenNodeIsAnonymous);
-    newStyle->arrangeStyleValues(refNode->style(), refNode);
+    ComputedStyle* rootStyle = document()->rootElement()->style();
+    newStyle->arrangeStyleValues(refNode->style(), rootStyle, refNode);
     m_styleWhenNodeIsAnonymous = newStyle;
 }
 

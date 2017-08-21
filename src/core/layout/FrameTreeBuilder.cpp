@@ -111,7 +111,8 @@ static FrameBlockBox* createAnonymouseBlockBox(FrameBlockBox* blockContainer,
     ComputedStyle* style = new ComputedStyle(blockContainer->style());
     style->setDisplay(DisplayValue::BlockDisplayValue);
     style->loadResources(node);
-    style->arrangeStyleValues(blockContainer->style(), node);
+    ComputedStyle* rootStyle = node->document()->rootElement()->style();
+    style->arrangeStyleValues(blockContainer->style(), rootStyle, node);
 
     return new FrameBlockBox(nullptr, style);
 }
@@ -214,7 +215,8 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
         style->setPosition(PositionValue::StaticPositionValue);
     }
     style->loadResources(parent);
-    style->arrangeStyleValues(parentStyle, parent);
+    ComputedStyle* rootStyle = parent->document()->rootElement()->style();
+    style->arrangeStyleValues(parentStyle, rootStyle, parent);
 
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
     damage = compareStyle(parentStyle, style);
@@ -284,6 +286,8 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
     }
     pseudoElement->setStyle(pseudoStyle);
 
+    ComputedStyle* rootStyle = parent->document()->rootElement()->style();
+
     Frame* pseudoFrame;
     if (pseudoStyle->floating() != FloatValue::NoneFloatValue) {
         pseudoFrame = new FrameBlockBox(pseudoElement, nullptr);
@@ -305,7 +309,7 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
                                 originalText->substring(0, length));
         ComputedStyle* letterStyle = new ComputedStyle(pseudoStyle);
         letterStyle->loadResources(pseudoElement);
-        letterStyle->arrangeStyleValues(pseudoStyle);
+        letterStyle->arrangeStyleValues(pseudoStyle, rootStyle);
         letter->setStyle(letterStyle);
         letter->setParentNode(pseudoElement);
         letter->clearNeedsStyleRecalc();
@@ -394,7 +398,8 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
                     new ComputedStyle(pseudoStyle);
                 contentTextStyle->setDisplay(DisplayValue::InlineDisplayValue);
                 contentTextStyle->loadResources(pseudoElement);
-                contentTextStyle->arrangeStyleValues(contentTextStyle);
+                contentTextStyle->arrangeStyleValues(contentTextStyle,
+                                                     rootStyle);
 
                 Text* contentText =
                     new Text(parent->document(), iter->text()->text());
