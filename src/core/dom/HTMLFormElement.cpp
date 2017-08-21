@@ -58,6 +58,12 @@ HTMLFormElement::HTMLFormElement(Document* document)
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
 
+HTMLFormObject::HTMLFormObject(Document* document)
+    : HTMLElement(document)
+    , m_disabled(false)
+{
+}
+
 String* HTMLFormObject::domName()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
@@ -80,8 +86,7 @@ void HTMLFormObject::setType(String* type)
 
 bool HTMLFormObject::disabled()
 {
-    String* val = getAttributeOrEmpty(starFish()->staticStrings()->m_disabled);
-    if (val->equals("true")) {
+    if (m_disabled) {
         return true;
     }
 
@@ -116,10 +121,7 @@ Node* HTMLFormObject::findAncestor(Node* ancestorToFind, Node* fromThisNode)
 
 void HTMLFormObject::setDisabled(bool disabled)
 {
-    if (disabled) {
-        setAttribute(starFish()->staticStrings()->m_disabled,
-                     String::createASCIIString("true"));
-    }
+    m_disabled = disabled;
 }
 
 HTMLFormElement* HTMLFormObject::form()

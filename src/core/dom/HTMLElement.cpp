@@ -53,6 +53,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
     StaticStrings* ss = starFish()->staticStrings();
     if (name == ss->m_onclick) {
         setAttributeEventListener(ss->m_click, value, this);
+    } else if (name == ss->m_onchange) {
+        setAttributeEventListener(ss->m_change, value, this);
     } else if (name == ss->m_onmouseover) {
         setAttributeEventListener(ss->m_mouseover, value, this);
     } else if (name == ss->m_onmouseup) {
@@ -309,6 +311,7 @@ DEFINE_EVENT_LISTENER(HTMLElement, abort);
 DEFINE_EVENT_LISTENER(HTMLElement, canplay);
 DEFINE_EVENT_LISTENER(HTMLElement, canplaythrough);
 DEFINE_EVENT_LISTENER(HTMLElement, click);
+DEFINE_EVENT_LISTENER(HTMLElement, change);
 DEFINE_EVENT_LISTENER(HTMLElement, durationchange);
 DEFINE_EVENT_LISTENER(HTMLElement, emptied);
 DEFINE_EVENT_LISTENER(HTMLElement, ended);

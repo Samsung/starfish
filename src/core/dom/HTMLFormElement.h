@@ -62,13 +62,12 @@ public:
     virtual HTMLFieldSetElement* fieldSet();
 
 protected:
-    HTMLFormObject(Document* document)
-        : HTMLElement(document)
-    {
-    }
+    HTMLFormObject(Document* document);
 
 private:
     Node* findAncestor(Node* ancestorToFind, Node* fromThisNode);
+
+    bool m_disabled;
 };
 
 class HTMLFormElement : public HTMLFormObject {
