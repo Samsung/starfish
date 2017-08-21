@@ -139,7 +139,7 @@ void _ASSERT(const char* expression, const char* file, unsigned long line)
 
 
 
-
+/*
 #if defined (_LINUX)
 
 int main(void)
@@ -172,7 +172,28 @@ int main(void)
 
 	return ret;
 }
+*/
 
+void init_csp()
+{
+#if (CONFIG_TLS_ERROR == 0)
+	g_errorManager.Create();
+	ASSERT(g_errorManager.FlagCreate() == true);
+#endif
 
+	g_taskMutex.Create();
+	ASSERT(g_taskMutex.FlagCreate() == true);
 
+	g_taskList.Create();
+	ASSERT(g_taskList.FlagCreate() == true);
+}
 
+void deinit_csp()
+{
+	g_taskList.Destroy();
+	g_taskMutex.Destroy();
+
+#if (CONFIG_TLS_ERROR == 0)
+	g_errorManager.Destroy();
+#endif
+}

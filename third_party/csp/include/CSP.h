@@ -67,7 +67,7 @@
 
 
 
-#define VERSION 20200
+// #define VERSION 20200
 
 
 
@@ -169,8 +169,11 @@ extern void _PRINT(const char* format = NULL, ...);
  * Every application developer must define this function in their
  * source code when linking with Core Software Platform library.
  */
-int Main(void);
+// int Main(void);
 
 
+// CSP Initialization
+void init_csp();
 
-
+// CSP Deinitialization
+void deinit_csp();

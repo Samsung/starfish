@@ -39,6 +39,7 @@ struct CTEvent
 
     void* ret;                 //!< The return value
     void* reserved;            //!< Reserved Area, Internal Use Only
+    void (*fn)( void*);		   // For MessageLoop Execution
 };
 
 
