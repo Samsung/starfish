@@ -192,6 +192,11 @@ StaticStrings::StaticStrings(StarFish* sf)
                             AtomicString::createAtomicString(sf, "click"));
     m_onclick = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "onclick"));
+    m_change = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "change"));
+    m_onchange =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onchange"));
     m_mousedown =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "mousedown"));

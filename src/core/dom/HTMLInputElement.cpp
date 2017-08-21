@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
+#include "core/dom/Event.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/Document.h"
 #include "core/dom/Text.h"
@@ -35,6 +36,7 @@ HTMLInputElement::HTMLInputElement(Document* document)
     , m_caretBlinkingIntervalId(SIZE_MAX)
     , m_currentCaretPosition(SIZE_MAX)
     , m_currentEditingText(String::emptyString)
+    , m_checked(false)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
     setTabIndex(0, false);
@@ -112,22 +114,32 @@ void HTMLInputElement::setFormAction(String* formAction)
 
 bool HTMLInputElement::checked()
 {
-    String* val = getAttributeOrEmpty(starFish()->staticStrings()->m_checked);
-    return val->equals("true");
+    return m_checked;
+}
+
+String* HTMLInputElement::checkboxTickSymbol()
+{
+    return String::createUTF32String(U'\u2714'); // tick
 }
 
 void HTMLInputElement::setChecked(bool checked)
 {
-    if (checked) {
-        setAttribute(starFish()->staticStrings()->m_checked,
-                     String::createASCIIString("true"));
+    m_checked = checked;
+    String* value = String::createUTF32String(U"");
+    if (m_checked) {
+        value = checkboxTickSymbol();
     }
+    didAttributeChanged(starFish()->staticStrings()->m_value,
+                        String::emptyString, value, false, false);
 }
 
 String* HTMLInputElement::obscurePhrase(String* phrase)
 {
-    std::string s(phrase->length(), '*');
-    return String::createASCIIString(s.c_str());
+    StringBuilder sb;
+    for (size_t i = 0; i < phrase->length(); i++) {
+        sb.appendChar(U'\u25CF'); // block circle
+    }
+    return sb.finalize();
 }
 
 void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
@@ -141,19 +153,20 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
         if (type()->equalsWithoutCase("password")) {
             value = obscurePhrase(value);
         }
+        if (frame()) {
+            FrameInputBox* box = frame()->asFrameInputBox();
+            STARFISH_ASSERT(box->firstChild());
+            box->firstChild()->asFrameText()->node()->asText()->setData(value);
 
-        if (frame() && !document()->browsingContext()->needsLayout()) {
-            auto box = frame()->asFrameInputBox();
-            box->firstChild()->asFrameText()->node()->asText()->setData(value);
-            // Do partial layout for performance
-            LayoutContext ctx(starFish(),
-                              document()->frame()->asFrameDocument());
-            box->layout(ctx, Frame::ResolveAll);
-            setNeedsPainting();
-        } else if (frame()) {
-            auto box = frame()->asFrameInputBox();
-            box->firstChild()->asFrameText()->node()->asText()->setData(value);
-            setNeedsLayout();
+            if (!document()->browsingContext()->needsLayout()) {
+                // Do partial layout for performance
+                LayoutContext ctx(starFish(),
+                                  document()->frame()->asFrameDocument());
+                box->layout(ctx, Frame::ResolveAll);
+                setNeedsPainting();
+            } else {
+                setNeedsLayout();
+            }
         } else if (document()->doesParticipateInRendering()) {
             setNeedsFrameTreeBuild();
         }
@@ -166,14 +179,18 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
         return true;
     }
 
-    if (((event->isMouseEvent() || event->isTouchEvent())) &&
-        event->type()->equalsWithoutCase("click")) {
-        if (type()->equalsWithoutCase("submit") ||
-            type()->equalsWithoutCase("button")) {
-            HTMLFormElement* formNode = form();
-            if (formNode) {
-                formNode->setSubmitter(this);
-                formNode->submit();
+    if (event->isMouseEvent() || event->isTouchEvent()) {
+        if (event->type()->equalsWithoutCase("click")) {
+            if (type()->equalsWithoutCase("submit") ||
+                type()->equalsWithoutCase("button")) {
+                HTMLFormElement* formNode = form();
+                if (formNode) {
+                    formNode->setSubmitter(this);
+                    formNode->submit();
+                    return true;
+                }
+            } else if (type()->equalsWithoutCase("checkbox")) {
+                checked() ? setChecked(false) : setChecked(true);
                 return true;
             }
         }

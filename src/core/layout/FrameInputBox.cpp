@@ -62,13 +62,11 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         inputNode->type()->equalsWithoutCase("submit") ||
         inputNode->type()->equalsWithoutCase("button") ||
         inputNode->type()->equalsWithoutCase("email") ||
-        inputNode->type()->equalsWithoutCase("password")) {
-        // TODO: Input boxes require a GUI component from
-        // the backend library. For time being, direct user text inputs to
-        // input boxes is not supported. Input boxes display
-        // the text value assigned to "value" attribute only. To integrate with
-        // current layout, a tmp pseudo element is created to display the
-        // text value.
+        inputNode->type()->equalsWithoutCase("password") ||
+        inputNode->type()->equalsWithoutCase("checkbox")) {
+        // NOTE: Input boxes display the text value assigned to "value"
+        // attribute. To integrate with current layout, a tmp pseudo element is
+        // created to display the text value.
         PseudoElement* textElement = new PseudoElement(
             parent->document(),
             StyleResolver::PseudoElementType::PseudoElementFormOnly);
@@ -82,6 +80,9 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
             userVal = String::createASCIIString("submit");
         } else if (inputNode->type()->equalsWithoutCase("password")) {
             userVal = inputNode->obscurePhrase(userVal);
+        } else if (inputNode->type()->equalsWithoutCase("checkbox")) {
+            userVal = inputNode->checked() ? inputNode->checkboxTickSymbol()
+                                           : String::emptyString;
         }
 
         Text* textNode = new Text(current->document(), userVal);

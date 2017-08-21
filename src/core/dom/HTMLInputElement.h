@@ -62,6 +62,7 @@ public:
 
     // Other methods
     String* obscurePhrase(String* phrase);
+    String* checkboxTickSymbol();
     bool handleDefaultEvent(Event* event) override;
 
     bool supportsFocus() const override;
@@ -72,6 +73,9 @@ protected:
     size_t m_caretBlinkingIntervalId;
     size_t m_currentCaretPosition;
     String* m_currentEditingText;
+
+private:
+    bool m_checked;
 };
 }
 
