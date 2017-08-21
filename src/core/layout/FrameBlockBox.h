@@ -600,6 +600,8 @@ public:
                         Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void layoutInline(LineFormattingContext& ctx);
+    void computeContentWidth(LayoutContext& ctx,
+                             LayoutUnit containgBlockContentWidth);
     void computeContentHeight(LayoutContext& ctx, LayoutUnit contentHeight);
 
 #ifdef STARFISH_ENABLE_TEST
@@ -665,9 +667,6 @@ public:
 protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
-    void computeContentWidth(LayoutContext& ctx,
-                             LayoutUnit containgBlockContentWidth,
-                             LayoutUnit viewportWidth);
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
 
     virtual bool hasFrameTreeItemModel()

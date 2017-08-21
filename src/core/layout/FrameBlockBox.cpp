@@ -86,8 +86,7 @@ public:
 };
 
 void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
-                                        LayoutUnit containgBlockContentWidth,
-                                        LayoutUnit viewportWidth)
+                                        LayoutUnit containgBlockContentWidth)
 {
     if (isFrameTableBox()) {
         // Table starts its own layout algorithm that has minimum
@@ -106,6 +105,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
         Length width = style()->width();
         BoxSizingValue boxSizing = style()->boxSizing();
         LayoutUnit contentWidth;
+        LayoutUnit viewportWidth = ctx.viewportWidth();
 
         if (width.isAuto()) {
             if (isNormalFlow() &&
@@ -146,46 +146,55 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
 
 void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 {
-    STARFISH_ASSERT(isAbsolutePositioned() || cb == nullptr);
-
-    LayoutUnit contentHeight;
-    LayoutUnit parentHeight;
-    LayoutUnit viewportHeight = ctx.viewportHeight();
-    Length height = style()->height();
-    BoxSizingValue boxSizing = style()->boxSizing();
-
-    if (hasBlockFlow()) {
-        contentHeight = layoutBlock(ctx);
+    if (isFrameTableBox()) {
+        asFrameTableBox()->layoutHeight(ctx);
+    } else if (isFrameFlexibleBox()) {
+        asFrameFlexibleBox()->layoutFlex(ctx);
     } else {
-        contentHeight = layoutInline(ctx);
-    }
+        STARFISH_ASSERT(isAbsolutePositioned() || cb == nullptr);
 
-    // The contentHeight is used when table cell contents are vertically
-    // aligned in the table row.
-    if (isFrameTableCellBox()) {
-        asFrameTableCellBox()->setActualContentHeight(contentHeight);
-    }
+        LayoutUnit contentHeight;
+        LayoutUnit parentHeight;
+        LayoutUnit viewportHeight = ctx.viewportHeight();
+        Length height = style()->height();
+        BoxSizingValue boxSizing = style()->boxSizing();
 
-    if (isAbsolutePositioned()) {
-        parentHeight = cb->contentHeight() + cb->paddingHeight();
-        if (height.isAuto()) {
-            Length top = style()->top();
-            Length bottom = style()->bottom();
-            if (top.isSpecified() && bottom.isSpecified()) {
-                LayoutUnit t = top.specifiedValue(parentHeight, viewportHeight);
-                LayoutUnit b =
-                    bottom.specifiedValue(parentHeight, viewportHeight);
-                contentHeight =
-                    parentHeight - t - b - paddingHeight() - borderHeight();
-            }
+        if (hasBlockFlow()) {
+            contentHeight = layoutBlock(ctx);
         } else {
-            contentHeight = height.specifiedValue(parentHeight, viewportHeight);
-            contentHeight = contentHeightApplyingBoxSizing(contentHeight);
+            contentHeight = layoutInline(ctx);
         }
 
-        applyMinMaxHeightIfNeeds(contentHeight, parentHeight, viewportHeight);
-    } else {
-        computeContentHeight(ctx, contentHeight);
+        // The contentHeight is used when table cell contents are vertically
+        // aligned in the table row.
+        if (isFrameTableCellBox()) {
+            asFrameTableCellBox()->setActualContentHeight(contentHeight);
+        }
+
+        if (isAbsolutePositioned()) {
+            parentHeight = cb->contentHeight() + cb->paddingHeight();
+            if (height.isAuto()) {
+                Length top = style()->top();
+                Length bottom = style()->bottom();
+                if (top.isSpecified() && bottom.isSpecified()) {
+                    LayoutUnit t =
+                        top.specifiedValue(parentHeight, viewportHeight);
+                    LayoutUnit b =
+                        bottom.specifiedValue(parentHeight, viewportHeight);
+                    contentHeight =
+                        parentHeight - t - b - paddingHeight() - borderHeight();
+                }
+            } else {
+                contentHeight =
+                    height.specifiedValue(parentHeight, viewportHeight);
+                contentHeight = contentHeightApplyingBoxSizing(contentHeight);
+            }
+
+            applyMinMaxHeightIfNeeds(contentHeight, parentHeight,
+                                     viewportHeight);
+        } else {
+            computeContentHeight(ctx, contentHeight);
+        }
     }
 }
 
@@ -326,7 +335,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         FrameBox* cb = containingBlock(this);
         LayoutUnit parentContentWidth = cb->contentWidth();
-        LayoutUnit viewportWidth = ctx.viewportWidth();
         computeBorderMarginPadding(ctx, parentContentWidth);
 
         if (isAbsolutePositioned()) {
@@ -345,15 +353,12 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                 if (width.isAuto()) {
                     if (parentDirection == LtrDirectionValue) {
                         computeContentWidth(ctx, data.m_contentWidth -
-                                                     data.m_absX - x(),
-                                            viewportWidth);
+                                                     data.m_absX - x());
                     } else {
-                        computeContentWidth(ctx, x() + data.m_absX,
-                                            viewportWidth);
+                        computeContentWidth(ctx, x() + data.m_absX);
                     }
                 } else {
-                    computeContentWidth(ctx, data.m_contentWidth,
-                                        viewportWidth);
+                    computeContentWidth(ctx, data.m_contentWidth);
                 }
 
                 if (parentDirection == LtrDirectionValue) {
@@ -368,7 +373,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                     moveX(-FrameBox::width() - FrameBox::marginRight());
                 }
             } else if (!left.isAuto() && !right.isAuto()) {
-                computeContentWidth(ctx, data.m_contentWidth, viewportWidth);
+                computeContentWidth(ctx, data.m_contentWidth);
                 if (width.isAuto()) {
                     setX(data.m_left + FrameBox::marginLeft() - data.m_absX);
                 } else {
@@ -397,11 +402,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             } else {
                 if (width.isAuto()) {
                     computeContentWidth(ctx, data.m_contentWidth - data.m_left -
-                                                 data.m_right,
-                                        viewportWidth);
+                                                 data.m_right);
                 } else {
-                    computeContentWidth(ctx, data.m_contentWidth,
-                                        viewportWidth);
+                    computeContentWidth(ctx, data.m_contentWidth);
                 }
 
                 if (left.isSpecified()) {
@@ -415,7 +418,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         } else {
             // 10.3.3 Block-level, non-replaced elements in normal flow
             // 10.3.5 Floating, non-replaced elements
-            computeContentWidth(ctx, parentContentWidth, viewportWidth);
+            computeContentWidth(ctx, parentContentWidth);
             if (isNormalFlow() && isBlockLevel()) {
                 computeHorizontalMargin(parentContentWidth);
             }
@@ -431,13 +434,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         cb = containingBlock(this);
     }
 
-    if (isFrameTableBox()) {
-        asFrameTableBox()->layoutHeight(ctx);
-    } else if (isFrameFlexibleBox()) {
-        asFrameFlexibleBox()->layoutFlex(ctx);
-    } else {
-        computeContentHeight(ctx, cb);
-    }
+    computeContentHeight(ctx, cb);
 
     // Now the intrinsic height of the object is known because the children are
     // placed
