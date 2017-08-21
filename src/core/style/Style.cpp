@@ -4450,7 +4450,9 @@ void StyleResolver::apply(Element* element,
             break;
         case CSSStyleValuePair::KeyKind::FlexBasis:
             if (cssValues[k].valueKind() ==
-                CSSStyleValuePair::ValueKind::Initial) {
+                    CSSStyleValuePair::ValueKind::Initial ||
+                cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Auto) {
                 style->setFlexBasis(FlexBasisData(true));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
