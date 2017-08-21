@@ -27,11 +27,13 @@ class FrameFlexibleBox;
 
 struct FlexLine {
     std::vector<FrameBox*> m_flexItems;
+    LayoutUnit m_lineWidth;
     LayoutUnit m_lineHeight;
     bool m_hasAbsolutePositionedBox;
 
     FlexLine()
-        : m_lineHeight(0)
+        : m_lineWidth(0)
+        , m_lineHeight(0)
         , m_hasAbsolutePositionedBox(false)
     {
     }
@@ -44,15 +46,13 @@ public:
 
     void computeAvailableSpace(LayoutUnit availableWidth);
 
-    void computeMainSize();
-    void computeHypotheticalMainSize();
-    void resolveMainSize();
     LayoutUnit basisSize(FrameBox* flexItem);
+    void computeMainSize();
     bool isMainSizeFlexible(FrameBox* flexItem, bool usingGrowFactor);
-    void applyFlexFactor(LayoutUnit lineWidth);
+    void applyFlexFactor();
     void resolveMainMargin();
     void applyJustifyContent();
-    void layoutMain(LayoutUnit lineWidth);
+    void layoutMain();
 
     void computeCrossSize();
     void resolveCrossMargin();
@@ -60,24 +60,23 @@ public:
     void applyAlignContent();
     void layoutCross();
 
-    void addNewLine(LayoutUnit lineWidth)
+    void addNewLine()
     {
-        layoutMain(lineWidth);
         m_currentLineIdx++;
         m_flexLines.emplace_back(FlexLine());
     }
 
-    bool isMainAxisInInlineAxis()
+    bool isMainAxisInInlineAxis() const
     {
         return m_isMainAxisInInlineAxis;
     }
 
-    bool isLtrDirection()
+    bool isLtrDirection() const
     {
         return m_isLtrDirection;
     }
 
-    bool isSingleLine()
+    bool isSingleLine() const
     {
         return m_isSingleLine;
     }
@@ -123,7 +122,7 @@ public:
     bool isSingleLine();
     bool isLtrDirection();
 
-    LayoutUnit layoutFlex(LayoutContext& ctx);
+    void layoutFlex(LayoutContext& ctx);
 };
 }
 #endif

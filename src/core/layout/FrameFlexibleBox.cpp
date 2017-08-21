@@ -29,7 +29,7 @@ FlexFormattingContext::FlexFormattingContext(LayoutContext& ctx,
     , m_isSingleLine(m_container->isSingleLine())
     , m_currentLineIdx(SIZE_MAX)
 {
-    addNewLine(0);
+    addNewLine();
     computeAvailableSpace(availableWidth);
 }
 
@@ -67,12 +67,6 @@ void FlexFormattingContext::computeAvailableSpace(LayoutUnit availableWidth)
     }
 }
 
-void FlexFormattingContext::computeMainSize()
-{
-    computeHypotheticalMainSize();
-    resolveMainSize();
-}
-
 LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
 {
     auto iter = m_basisSizes.find(flexItem);
@@ -86,19 +80,34 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
     return basisSize;
 }
 
-void FlexFormattingContext::computeHypotheticalMainSize()
+void FlexFormattingContext::computeMainSize()
 {
-    // https://www.w3.org/TR/css-flexbox-1/#algo-main-item
-    // 3. Determine the flex base size and hypothetical main size of each item:
+    std::vector<FrameBox*> orderedFlexItems;
+    LayoutUnit lineMainSize;
     Frame* child = m_container->firstChild();
-    LayoutUnit sumOfMainSize;
+    LayoutUnit maxMainSize = 0;
+
     while (child) {
         if (isAnonymousFlexItemContainingOnlyWhitespace(child)) {
             child = child->next();
             continue;
         }
 
-        FrameBox* flexItem = child->asFrameBox();
+        orderedFlexItems.push_back(child->asFrameBox());
+        child = child->next();
+    }
+
+    std::sort(orderedFlexItems.begin(), orderedFlexItems.end(),
+              [](FrameBox* a, FrameBox* b) {
+                  return a->style()->order() < b->style()->order();
+              });
+
+    auto iter = orderedFlexItems.begin();
+
+    while (iter != orderedFlexItems.end()) {
+        FlexLine& flexLine = m_flexLines[m_currentLineIdx];
+        std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
+        FrameBox* flexItem = *iter;
         LayoutUnit mainSize = basisSize(flexItem);
         STARFISH_ASSERT(mainSize != intMaxForLayoutUnit);
 
@@ -106,24 +115,68 @@ void FlexFormattingContext::computeHypotheticalMainSize()
             flexItem->applyMinMaxWidthIfNeeds(m_layoutContext, mainSize,
                                               m_availableMainSize,
                                               m_layoutContext.viewportWidth());
-            sumOfMainSize += flexItem->outerWidth();
         } else {
             bool parentHasFixedHeight =
                 m_layoutContext.parentHasFixedHeight(flexItem);
             flexItem->applyMinMaxHeightIfNeeds(mainSize, m_availableMainSize,
                                                m_layoutContext.viewportHeight(),
                                                parentHasFixedHeight);
-            sumOfMainSize += flexItem->outerHeight();
         }
 
-        child = child->next();
+        if (flexItem->isAbsolutePositioned()) {
+            m_layoutContext.registerAbsolutePositionedBox(flexItem);
+            if (flexItems.size() > 0) {
+                maxMainSize = std::max(maxMainSize, lineMainSize);
+                flexLine.m_lineWidth = lineMainSize;
+                addNewLine();
+            }
+            FlexLine& newFlexLine = m_flexLines[m_currentLineIdx];
+            std::vector<FrameBox*>& newFlexItems = newFlexLine.m_flexItems;
+            newFlexItems.push_back(flexItem);
+            newFlexLine.m_hasAbsolutePositionedBox = true;
+            addNewLine();
+            lineMainSize = 0;
+            iter++;
+            continue;
+        }
+
+        if (m_isSingleLine || (lineMainSize == 0) ||
+            ((m_isMainAxisInInlineAxis &&
+              lineMainSize + flexItem->outerWidth() <= m_availableMainSize) ||
+             (!m_isMainAxisInInlineAxis &&
+              lineMainSize + flexItem->outerHeight() <= m_availableMainSize))) {
+            flexItems.push_back(flexItem);
+            if (m_isMainAxisInInlineAxis) {
+                lineMainSize += flexItem->outerWidth();
+            } else {
+                lineMainSize += flexItem->outerHeight();
+            }
+        } else {
+            maxMainSize = std::max(maxMainSize, lineMainSize);
+            flexLine.m_lineWidth = lineMainSize;
+            addNewLine();
+            lineMainSize = 0;
+            continue;
+        }
+
+        iter++;
+    }
+
+    FlexLine& flexLine = m_flexLines[m_currentLineIdx];
+    std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
+    if (flexItems.size() == 0) {
+        m_currentLineIdx--;
+    } else {
+        maxMainSize = std::max(maxMainSize, lineMainSize);
+        flexLine.m_lineWidth = lineMainSize;
     }
 
     if (!m_isMainAxisInInlineAxis) {
-        m_container->computeContentHeight(m_layoutContext, sumOfMainSize);
-        m_availableMainSize = m_container->contentHeight();
+        m_container->computeContentHeight(m_layoutContext, maxMainSize);
+        if (m_availableMainSize == intMaxForLayoutUnit) {
+            m_availableMainSize = m_container->contentHeight();
+        }
     }
-
     STARFISH_ASSERT(m_availableMainSize != intMaxForLayoutUnit);
 }
 
@@ -163,88 +216,96 @@ bool FlexFormattingContext::isMainSizeFlexible(FrameBox* flexItem,
     return true;
 }
 
-void FlexFormattingContext::applyFlexFactor(LayoutUnit lineWidth)
+void FlexFormattingContext::applyFlexFactor()
 {
-    bool usingGrowFactor = lineWidth < m_availableMainSize;
+    size_t lines = m_currentLineIdx + 1;
 
-    FlexLine& flexLine = m_flexLines[m_currentLineIdx];
-    std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
-    LayoutUnit initialFreeSpace = m_availableMainSize - lineWidth;
-    float sumOfFactor = 0;
-    bool allFrozen = true;
-    LayoutUnit scaledFlexShrinkFactor;
-
-    for (size_t i = 0; i < flexItems.size(); i++) {
-        FrameBox* flexItem = flexItems[i];
-        if (flexItem->isAbsolutePositioned()) {
+    for (size_t i = 0; i < lines; i++) {
+        FlexLine& flexLine = m_flexLines[i];
+        std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
+        LayoutUnit lineWidth = flexLine.m_lineWidth;
+        if (lineWidth == m_availableMainSize) {
             continue;
         }
 
-        if (usingGrowFactor) {
-            if (isMainSizeFlexible(flexItem, usingGrowFactor)) {
-                sumOfFactor += flexItem->style()->flexGrow();
-                allFrozen = false;
+        bool usingGrowFactor = lineWidth < m_availableMainSize;
+        LayoutUnit initialFreeSpace = m_availableMainSize - lineWidth;
+        float sumOfFactor = 0;
+        bool allFrozen = true;
+        LayoutUnit scaledFlexShrinkFactor;
+
+        for (size_t j = 0; j < flexItems.size(); j++) {
+            FrameBox* flexItem = flexItems[j];
+            if (flexItem->isAbsolutePositioned()) {
+                continue;
             }
-        } else {
-            if (isMainSizeFlexible(flexItem, usingGrowFactor)) {
-                sumOfFactor += flexItem->style()->flexShrink();
-                scaledFlexShrinkFactor +=
-                    flexItem->style()->flexShrink() * basisSize(flexItem);
-                allFrozen = false;
-            }
-        }
-    }
 
-    if (allFrozen) {
-        return;
-    }
-
-    LayoutUnit remainingFreeSpace = initialFreeSpace;
-    if (sumOfFactor < 1) {
-        remainingFreeSpace = initialFreeSpace * sumOfFactor;
-    }
-
-    if (remainingFreeSpace == 0) {
-        return;
-    }
-
-    for (size_t i = 0; i < flexItems.size(); i++) {
-        FrameBox* flexItem = flexItems[i];
-        if (flexItem->isAbsolutePositioned()) {
-            continue;
-        }
-
-        if (usingGrowFactor) {
-            float factor = flexItem->style()->flexGrow();
-            if (factor != 0) {
-                LayoutUnit mainSize =
-                    basisSize(flexItem) +
-                    (factor / sumOfFactor) * remainingFreeSpace;
-                if (m_isMainAxisInInlineAxis) {
-                    flexItem->applyMinMaxWidthIfNeeds(
-                        m_layoutContext, mainSize, m_availableMainSize,
-                        m_layoutContext.viewportWidth());
-                } else {
-                    flexItem->applyMinMaxHeightIfNeeds(
-                        mainSize, m_availableMainSize,
-                        m_layoutContext.viewportHeight());
+            if (usingGrowFactor) {
+                if (isMainSizeFlexible(flexItem, usingGrowFactor)) {
+                    sumOfFactor += flexItem->style()->flexGrow();
+                    allFrozen = false;
+                }
+            } else {
+                if (isMainSizeFlexible(flexItem, usingGrowFactor)) {
+                    sumOfFactor += flexItem->style()->flexShrink();
+                    scaledFlexShrinkFactor +=
+                        flexItem->style()->flexShrink() * basisSize(flexItem);
+                    allFrozen = false;
                 }
             }
-        } else {
-            float factor = flexItem->style()->flexShrink();
-            if (factor != 0) {
-                LayoutUnit mainSize =
-                    basisSize(flexItem) +
-                    (factor * basisSize(flexItem) / scaledFlexShrinkFactor) *
-                        remainingFreeSpace;
-                if (m_isMainAxisInInlineAxis) {
-                    flexItem->applyMinMaxWidthIfNeeds(
-                        m_layoutContext, mainSize, m_availableMainSize,
-                        m_layoutContext.viewportWidth());
-                } else {
-                    flexItem->applyMinMaxHeightIfNeeds(
-                        mainSize, m_availableMainSize,
-                        m_layoutContext.viewportHeight());
+        }
+
+        if (allFrozen) {
+            continue;
+        }
+
+        LayoutUnit remainingFreeSpace = initialFreeSpace;
+        if (sumOfFactor < 1) {
+            remainingFreeSpace = initialFreeSpace * sumOfFactor;
+        }
+
+        if (remainingFreeSpace == 0) {
+            continue;
+        }
+
+        for (size_t j = 0; j < flexItems.size(); j++) {
+            FrameBox* flexItem = flexItems[j];
+            if (flexItem->isAbsolutePositioned()) {
+                continue;
+            }
+
+            if (usingGrowFactor) {
+                float factor = flexItem->style()->flexGrow();
+                if (factor != 0) {
+                    LayoutUnit mainSize =
+                        basisSize(flexItem) +
+                        (factor / sumOfFactor) * remainingFreeSpace;
+                    if (m_isMainAxisInInlineAxis) {
+                        flexItem->applyMinMaxWidthIfNeeds(
+                            m_layoutContext, mainSize, m_availableMainSize,
+                            m_layoutContext.viewportWidth());
+                    } else {
+                        flexItem->applyMinMaxHeightIfNeeds(
+                            mainSize, m_availableMainSize,
+                            m_layoutContext.viewportHeight());
+                    }
+                }
+            } else {
+                float factor = flexItem->style()->flexShrink();
+                if (factor != 0) {
+                    LayoutUnit mainSize = basisSize(flexItem) +
+                                          (factor * basisSize(flexItem) /
+                                           scaledFlexShrinkFactor) *
+                                              remainingFreeSpace;
+                    if (m_isMainAxisInInlineAxis) {
+                        flexItem->applyMinMaxWidthIfNeeds(
+                            m_layoutContext, mainSize, m_availableMainSize,
+                            m_layoutContext.viewportWidth());
+                    } else {
+                        flexItem->applyMinMaxHeightIfNeeds(
+                            mainSize, m_availableMainSize,
+                            m_layoutContext.viewportHeight());
+                    }
                 }
             }
         }
@@ -253,81 +314,85 @@ void FlexFormattingContext::applyFlexFactor(LayoutUnit lineWidth)
 
 void FlexFormattingContext::resolveMainMargin()
 {
-    FlexLine& flexLine = m_flexLines[m_currentLineIdx];
-    std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
-    LayoutUnit sumOfMainSize;
-    size_t autoMarginCnt = 0;
+    size_t lines = m_currentLineIdx + 1;
 
-    for (size_t i = 0; i < flexItems.size(); i++) {
-        FrameBox* flexItem = flexItems[i];
+    for (size_t i = 0; i < lines; i++) {
+        FlexLine& flexLine = m_flexLines[i];
+        std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
+        LayoutUnit sumOfMainSize;
+        size_t autoMarginCnt = 0;
 
-        if (flexItem->isAbsolutePositioned()) {
-            continue;
-        }
-
-        if (m_isMainAxisInInlineAxis) {
-            if (sumOfMainSize <= m_availableMainSize &&
-                flexItem->style()->marginLeft().isAuto()) {
-                autoMarginCnt++;
-            }
-            sumOfMainSize += flexItem->outerWidth();
-            if (sumOfMainSize <= m_availableMainSize &&
-                flexItem->style()->marginRight().isAuto()) {
-                autoMarginCnt++;
-            }
-        } else {
-            if (sumOfMainSize <= m_availableMainSize &&
-                flexItem->style()->marginTop().isAuto()) {
-                autoMarginCnt++;
-            }
-            sumOfMainSize += flexItem->outerHeight();
-            if (sumOfMainSize <= m_availableMainSize &&
-                flexItem->style()->marginBottom().isAuto()) {
-                autoMarginCnt++;
-            }
-        }
-    }
-
-    if (m_availableMainSize > sumOfMainSize && autoMarginCnt > 0) {
-        LayoutUnit margin =
-            (m_availableMainSize - sumOfMainSize) / autoMarginCnt;
-        for (size_t i = 0; i < flexItems.size(); i++) {
-            FrameBox* flexItem = flexItems[i];
+        for (size_t j = 0; j < flexItems.size(); j++) {
+            FrameBox* flexItem = flexItems[j];
 
             if (flexItem->isAbsolutePositioned()) {
                 continue;
             }
 
             if (m_isMainAxisInInlineAxis) {
-                if (flexItem->style()->marginLeft().isAuto()) {
-                    flexItem->setMarginLeft(margin);
-                    sumOfMainSize += margin;
-                    autoMarginCnt--;
+                if (sumOfMainSize <= m_availableMainSize &&
+                    flexItem->style()->marginLeft().isAuto()) {
+                    autoMarginCnt++;
                 }
-
-                if (autoMarginCnt > 0 &&
+                sumOfMainSize += flexItem->outerWidth();
+                if (sumOfMainSize <= m_availableMainSize &&
                     flexItem->style()->marginRight().isAuto()) {
-                    flexItem->setMarginRight(margin);
-                    sumOfMainSize += margin;
-                    autoMarginCnt--;
+                    autoMarginCnt++;
                 }
             } else {
-                if (flexItem->style()->marginTop().isAuto()) {
-                    flexItem->setMarginTop(margin);
-                    sumOfMainSize += margin;
-                    autoMarginCnt--;
+                if (sumOfMainSize <= m_availableMainSize &&
+                    flexItem->style()->marginTop().isAuto()) {
+                    autoMarginCnt++;
                 }
-
-                if (autoMarginCnt > 0 &&
+                sumOfMainSize += flexItem->outerHeight();
+                if (sumOfMainSize <= m_availableMainSize &&
                     flexItem->style()->marginBottom().isAuto()) {
-                    flexItem->setMarginBottom(margin);
-                    sumOfMainSize += margin;
-                    autoMarginCnt--;
+                    autoMarginCnt++;
                 }
             }
+        }
 
-            if (autoMarginCnt == 0) {
-                break;
+        if (m_availableMainSize > sumOfMainSize && autoMarginCnt > 0) {
+            LayoutUnit margin =
+                (m_availableMainSize - sumOfMainSize) / autoMarginCnt;
+            for (size_t j = 0; j < flexItems.size(); j++) {
+                FrameBox* flexItem = flexItems[j];
+
+                if (flexItem->isAbsolutePositioned()) {
+                    continue;
+                }
+
+                if (m_isMainAxisInInlineAxis) {
+                    if (flexItem->style()->marginLeft().isAuto()) {
+                        flexItem->setMarginLeft(margin);
+                        sumOfMainSize += margin;
+                        autoMarginCnt--;
+                    }
+
+                    if (autoMarginCnt > 0 &&
+                        flexItem->style()->marginRight().isAuto()) {
+                        flexItem->setMarginRight(margin);
+                        sumOfMainSize += margin;
+                        autoMarginCnt--;
+                    }
+                } else {
+                    if (flexItem->style()->marginTop().isAuto()) {
+                        flexItem->setMarginTop(margin);
+                        sumOfMainSize += margin;
+                        autoMarginCnt--;
+                    }
+
+                    if (autoMarginCnt > 0 &&
+                        flexItem->style()->marginBottom().isAuto()) {
+                        flexItem->setMarginBottom(margin);
+                        sumOfMainSize += margin;
+                        autoMarginCnt--;
+                    }
+                }
+
+                if (autoMarginCnt == 0) {
+                    break;
+                }
             }
         }
     }
@@ -335,98 +400,105 @@ void FlexFormattingContext::resolveMainMargin()
 
 void FlexFormattingContext::applyJustifyContent()
 {
-    FlexLine& flexLine = m_flexLines[m_currentLineIdx];
-    std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
-    LayoutUnit sumOfMainSize;
+    size_t lines = m_currentLineIdx + 1;
 
-    for (size_t i = 0; i < flexItems.size(); i++) {
-        FrameBox* flexItem = flexItems[i];
-        if (m_isMainAxisInInlineAxis) {
-            sumOfMainSize += flexItem->outerWidth();
-        } else {
-            sumOfMainSize += flexItem->outerHeight();
-        }
-    }
+    for (size_t i = 0; i < lines; i++) {
+        FlexLine& flexLine = m_flexLines[i];
+        std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
+        LayoutUnit sumOfMainSize;
 
-    LayoutUnit offset;
-    LayoutUnit separator;
-    JustifyContentValue justifyContent = m_container->style()->justifyContent();
-    FlexDirectionValue flexDirection = m_container->style()->flexDirection();
-    switch (justifyContent) {
-    case JustifyContentValue::FlexStartJustifyContentValue:
-        offset = 0;
-        break;
-    case JustifyContentValue::FlexEndJustifyContentValue:
-        offset = m_availableMainSize - sumOfMainSize;
-        break;
-    case JustifyContentValue::CenterJustifyContentValue:
-        offset = (m_availableMainSize - sumOfMainSize) / 2;
-        break;
-    case JustifyContentValue::SpaceAroundJustifyContentValue:
-        separator =
-            (m_availableMainSize - sumOfMainSize) / (flexItems.size() + 1);
-        offset = separator;
-        break;
-    case JustifyContentValue::SpaceBetweenJustifyContentValue:
-        if (flexItems.size() > 1) {
-            separator =
-                (m_availableMainSize - sumOfMainSize) / (flexItems.size() - 1);
-        }
-        break;
-    }
-
-    if (m_isMainAxisInInlineAxis) {
-        if (m_isLtrDirection) {
-            LayoutUnit x =
-                offset + m_container->borderLeft() + m_container->paddingLeft();
-            for (size_t i = 0; i < flexItems.size(); i++) {
-                FrameBox* flexItem = flexItems[i];
-                flexItem->setX(x);
-                if (flexItem->isAbsolutePositioned()) {
-                    STARFISH_ASSERT(flexItems.size() == 1);
-                } else {
-                    flexItem->moveX(flexItem->marginLeft());
-                    x += flexItem->outerWidth() + separator;
-                }
-            }
-        } else {
-            LayoutUnit x = m_availableMainSize - offset +
-                           m_container->borderLeft() +
-                           m_container->paddingLeft();
-            for (size_t i = 0; i < flexItems.size(); i++) {
-                FrameBox* flexItem = flexItems[i];
-                flexItem->setX(x - flexItem->outerWidth());
-                if (flexItem->isAbsolutePositioned()) {
-                    STARFISH_ASSERT(flexItems.size() == 1);
-                } else {
-                    flexItem->moveX(flexItem->marginLeft());
-                    x -= flexItem->outerWidth() + separator;
-                }
-            }
-        }
-    } else {
-        LayoutUnit y =
-            offset + m_container->borderTop() + m_container->paddingTop();
-        for (size_t i = 0; i < flexItems.size(); i++) {
-            FrameBox* flexItem = flexItems[i];
-            flexItem->setY(y);
-            if (flexItem->isAbsolutePositioned()) {
-                STARFISH_ASSERT(flexItems.size() == 1);
+        for (size_t j = 0; j < flexItems.size(); j++) {
+            FrameBox* flexItem = flexItems[j];
+            if (m_isMainAxisInInlineAxis) {
+                sumOfMainSize += flexItem->outerWidth();
             } else {
-                flexItem->moveY(flexItem->marginTop());
-                y += flexItem->outerHeight() + separator;
+                sumOfMainSize += flexItem->outerHeight();
+            }
+        }
+
+        LayoutUnit offset;
+        LayoutUnit separator;
+        JustifyContentValue justifyContent =
+            m_container->style()->justifyContent();
+        FlexDirectionValue flexDirection =
+            m_container->style()->flexDirection();
+        switch (justifyContent) {
+        case JustifyContentValue::FlexStartJustifyContentValue:
+            break;
+        case JustifyContentValue::FlexEndJustifyContentValue:
+            offset = m_availableMainSize - sumOfMainSize;
+            break;
+        case JustifyContentValue::CenterJustifyContentValue:
+            offset = (m_availableMainSize - sumOfMainSize) / 2;
+            break;
+        case JustifyContentValue::SpaceAroundJustifyContentValue:
+            if (m_availableMainSize > sumOfMainSize) {
+                offset = (m_availableMainSize - sumOfMainSize) /
+                         (flexItems.size() + 1);
+                separator = offset;
+            } else {
+                offset = (m_availableMainSize - sumOfMainSize) /
+                         (flexItems.size() + 1);
+            }
+            break;
+        case JustifyContentValue::SpaceBetweenJustifyContentValue:
+            if (flexItems.size() > 1 && m_availableMainSize > sumOfMainSize) {
+                separator = (m_availableMainSize - sumOfMainSize) /
+                            (flexItems.size() - 1);
+            }
+            break;
+        }
+
+        if (m_isMainAxisInInlineAxis) {
+            if (m_isLtrDirection) {
+                LayoutUnit x = offset + m_container->borderLeft() +
+                               m_container->paddingLeft();
+                for (size_t j = 0; j < flexItems.size(); j++) {
+                    FrameBox* flexItem = flexItems[j];
+                    flexItem->setX(x);
+                    if (flexItem->isAbsolutePositioned()) {
+                        STARFISH_ASSERT(flexItems.size() == 1);
+                    } else {
+                        flexItem->moveX(flexItem->marginLeft());
+                        x += flexItem->outerWidth() + separator;
+                    }
+                }
+            } else {
+                LayoutUnit x = m_availableMainSize - offset +
+                               m_container->borderLeft() +
+                               m_container->paddingLeft();
+                for (size_t j = 0; j < flexItems.size(); j++) {
+                    FrameBox* flexItem = flexItems[j];
+                    flexItem->setX(x - flexItem->outerWidth());
+                    if (flexItem->isAbsolutePositioned()) {
+                        STARFISH_ASSERT(flexItems.size() == 1);
+                    } else {
+                        flexItem->moveX(flexItem->marginLeft());
+                        x -= flexItem->outerWidth() + separator;
+                    }
+                }
+            }
+        } else {
+            LayoutUnit y =
+                offset + m_container->borderTop() + m_container->paddingTop();
+            for (size_t j = 0; j < flexItems.size(); j++) {
+                FrameBox* flexItem = flexItems[j];
+                flexItem->setY(y);
+                if (flexItem->isAbsolutePositioned()) {
+                    STARFISH_ASSERT(flexItems.size() == 1);
+                } else {
+                    flexItem->moveY(flexItem->marginTop());
+                    y += flexItem->outerHeight() + separator;
+                }
             }
         }
     }
 }
 
-void FlexFormattingContext::layoutMain(LayoutUnit lineWidth)
+void FlexFormattingContext::layoutMain()
 {
-    if (m_currentLineIdx == SIZE_MAX) {
-        return;
-    }
-
-    applyFlexFactor(lineWidth);
+    computeMainSize();
+    applyFlexFactor();
     resolveMainMargin();
     applyJustifyContent();
 }
@@ -448,79 +520,6 @@ bool FlexFormattingContext::isAnonymousFlexItemContainingOnlyWhitespace(
     }
 
     return false;
-}
-
-void FlexFormattingContext::resolveMainSize()
-{
-    std::vector<FrameBox*> orderedFlexItems;
-    LayoutUnit lineMainSize;
-    Frame* child = m_container->firstChild();
-
-    while (child) {
-        if (isAnonymousFlexItemContainingOnlyWhitespace(child)) {
-            child = child->next();
-            continue;
-        }
-
-        orderedFlexItems.push_back(child->asFrameBox());
-        child = child->next();
-    }
-
-    std::sort(orderedFlexItems.begin(), orderedFlexItems.end(),
-              [](FrameBox* a, FrameBox* b) {
-                  return a->style()->order() < b->style()->order();
-              });
-
-    auto iter = orderedFlexItems.begin();
-
-    while (iter != orderedFlexItems.end()) {
-        FlexLine& flexLine = m_flexLines[m_currentLineIdx];
-        std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
-        FrameBox* flexItem = *iter;
-
-        if (flexItem->isAbsolutePositioned()) {
-            m_layoutContext.registerAbsolutePositionedBox(flexItem);
-            if (flexItems.size() > 0) {
-                addNewLine(lineMainSize);
-            }
-            FlexLine& newFlexLine = m_flexLines[m_currentLineIdx];
-            std::vector<FrameBox*>& newFlexItems = newFlexLine.m_flexItems;
-            newFlexItems.push_back(flexItem);
-            newFlexLine.m_hasAbsolutePositionedBox = true;
-            addNewLine(0);
-            lineMainSize = 0;
-            iter++;
-            continue;
-        }
-
-        if (m_isSingleLine || (lineMainSize == 0) ||
-            ((m_isMainAxisInInlineAxis &&
-              lineMainSize + flexItem->outerWidth() <= m_availableMainSize) ||
-             (!m_isMainAxisInInlineAxis &&
-              lineMainSize + flexItem->outerHeight() <= m_availableMainSize))) {
-            flexItems.push_back(flexItem);
-            if (m_isMainAxisInInlineAxis) {
-                lineMainSize += flexItem->outerWidth();
-            } else {
-                lineMainSize += flexItem->outerHeight();
-            }
-        } else {
-            STARFISH_ASSERT(flexItems.size() > 0);
-            addNewLine(lineMainSize);
-            lineMainSize = 0;
-            continue;
-        }
-
-        iter++;
-    }
-
-    FlexLine& flexLine = m_flexLines[m_currentLineIdx];
-    std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
-    if (flexItems.size() > 0) {
-        layoutMain(lineMainSize);
-    } else {
-        m_currentLineIdx--;
-    }
 }
 
 void FlexFormattingContext::computeCrossSize()
@@ -602,7 +601,9 @@ void FlexFormattingContext::computeCrossSize()
 
     if (m_isMainAxisInInlineAxis) {
         m_container->computeContentHeight(m_layoutContext, sumOfCrossSize);
-        m_availableCrossSize = m_container->contentHeight();
+        if (m_availableCrossSize == intMaxForLayoutUnit) {
+            m_availableCrossSize = m_container->contentHeight();
+        }
     }
     STARFISH_ASSERT(m_availableCrossSize != intMaxForLayoutUnit);
 
@@ -636,11 +637,15 @@ void FlexFormattingContext::computeCrossSize()
                                           flexItem->marginHeight()));
             flexItem->layout(m_layoutContext,
                              Frame::LayoutWantToResolve::ResolveHeight);
-            flexItem->applyMinMaxHeightIfNeeds(
-                flexItem->contentHeight(), m_availableCrossSize,
-                m_layoutContext.viewportHeight());
             flexItem->style()->setHeight(old);
-            flexItem->setContentWidth(oldContentWidth);
+            if (oldContentWidth > flexItem->contentWidth()) {
+                flexItem->setContentWidth(oldContentWidth);
+            } else if (flexItem->contentWidth() > oldContentWidth) {
+                m_container->computeContentWidth(m_layoutContext,
+                                                 m_container->contentWidth() +
+                                                     flexItem->contentWidth() -
+                                                     oldContentWidth);
+            }
         } else {
             if (m_flexLines[lineIdx].m_lineHeight < flexItem->outerWidth()) {
                 continue;
@@ -652,15 +657,17 @@ void FlexFormattingContext::computeCrossSize()
                                           flexItem->marginWidth()));
             flexItem->layout(m_layoutContext,
                              Frame::LayoutWantToResolve::ResolveAll);
-            flexItem->applyMinMaxWidthIfNeeds(
-                m_layoutContext, flexItem->contentWidth(), m_availableCrossSize,
-                m_layoutContext.viewportWidth());
             flexItem->style()->setWidth(old);
-            flexItem->setContentHeight(oldContentHeight);
+            if (oldContentHeight > flexItem->contentHeight()) {
+                flexItem->setContentHeight(oldContentHeight);
+            } else if (flexItem->contentHeight() > oldContentHeight) {
+                m_container->computeContentHeight(
+                    m_layoutContext, m_container->contentHeight() +
+                                         flexItem->contentHeight() -
+                                         oldContentHeight);
+            }
         }
     }
-
-    layoutCross();
 }
 
 void FlexFormattingContext::resolveCrossMargin()
@@ -810,11 +817,17 @@ void FlexFormattingContext::applyAlignContent()
         offset = (m_availableCrossSize - sumOfCrossSize) / 2;
         break;
     case SpaceAroundAlignContentValue:
-        separator = (m_availableCrossSize - sumOfCrossSize) / (normalLines + 1);
-        offset = separator;
+        if (m_availableCrossSize > sumOfCrossSize) {
+            offset =
+                (m_availableCrossSize - sumOfCrossSize) / (normalLines + 1);
+            separator = offset;
+        } else {
+            offset =
+                (m_availableCrossSize - sumOfCrossSize) / (normalLines + 1);
+        }
         break;
     case SpaceBetweenAlignContentValue:
-        if (normalLines > 1) {
+        if (normalLines > 1 && m_availableCrossSize > sumOfCrossSize) {
             separator =
                 (m_availableCrossSize - sumOfCrossSize) / (normalLines - 1);
         }
@@ -894,6 +907,7 @@ void FlexFormattingContext::applyAlignContent()
 
 void FlexFormattingContext::layoutCross()
 {
+    computeCrossSize();
     resolveCrossMargin();
     applyAlignSelf();
     applyAlignContent();
@@ -1046,17 +1060,15 @@ bool FrameFlexibleBox::isLtrDirection()
     }
 }
 
-LayoutUnit FrameFlexibleBox::layoutFlex(LayoutContext& ctx)
+void FrameFlexibleBox::layoutFlex(LayoutContext& ctx)
 {
     if (!isNecessaryBlockBox()) {
-        return LayoutUnit(0);
+        return;
     }
 
     FlexFormattingContext flexFormattingContext(ctx, this, contentWidth());
 
-    flexFormattingContext.computeMainSize();
-    flexFormattingContext.computeCrossSize();
-
-    return contentHeight();
+    flexFormattingContext.layoutMain();
+    flexFormattingContext.layoutCross();
 }
 }

@@ -722,6 +722,7 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutUnit height,
             style->overflowY() == VisibleOverflow) {
             if (!(style->height().isAuto() ||
                   (style->height().isPercent() && !parentHasFixedValue))) {
+                // TODO: should compare `min-content` size of flex-item, too.
                 minHeight =
                     std::min(height, LayoutUnit(style->height().specifiedValue(
                                          parentHeight, viewportHeight)));
