@@ -77,12 +77,12 @@ public:
         m_left = left;
     }
 
-    void checkComputed(Length fontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
     {
-        m_left.changeToFixedIfNeeded(fontSize, font);
-        m_right.changeToFixedIfNeeded(fontSize, font);
-        m_top.changeToFixedIfNeeded(fontSize, font);
-        m_bottom.changeToFixedIfNeeded(fontSize, font);
+        m_left.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_right.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_top.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_bottom.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
     }
 
     bool operator==(const LengthData& o)

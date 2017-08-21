@@ -136,14 +136,14 @@ public:
         return LengthSize();
     }
 
-    void checkComputed(Length fontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
     {
         if (m_sizeValue) {
-            m_sizeValue->checkComputed(fontSize, font);
+            m_sizeValue->checkComputed(curFontSize, rootFontSize, font);
         }
 
-        m_positionX.changeToFixedIfNeeded(fontSize, font);
-        m_positionY.changeToFixedIfNeeded(fontSize, font);
+        m_positionX.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_positionY.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
     }
 
 private:
@@ -350,7 +350,8 @@ public:
         return m_layers[layer].positionY();
     }
 
-    void checkComputed(Length fontSize, Font* font, Unit::Color color)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       Unit::Color color)
     {
         // NOTE: To support background layer
         if (m_layers.size() > m_maxLayerImages) {
@@ -391,7 +392,7 @@ public:
 
         if (m_layers.size()) {
             for (unsigned int i = 0; i < m_layers.size(); i++) {
-                m_layers[i].checkComputed(fontSize, font);
+                m_layers[i].checkComputed(curFontSize, rootFontSize, font);
             }
         }
 

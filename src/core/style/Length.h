@@ -34,6 +34,7 @@ public:
         // After finishing resolveStyle, ex/em values should be changed to Fixed
         ExToBeFixed,
         EmToBeFixed,
+        RemToBeFixed,
         Vw,
         Vh,
         Vmin,
@@ -51,7 +52,8 @@ public:
     {
     }
 
-    void changeToFixedIfNeeded(Length fontSize, Font* font);
+    void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
+                               Font* font);
 
     void roundBorderWidth()
     {
@@ -249,7 +251,7 @@ public:
         return !operator==(o);
     }
 
-    void checkComputed(Length fontSize, Font* font);
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font);
 
     Length m_width;
     Length m_height;
@@ -292,7 +294,7 @@ public:
         return !operator==(o);
     }
 
-    void checkComputed(Length fontSize, Font* font);
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font);
 
     Length m_x;
     Length m_y;
@@ -340,7 +342,7 @@ public:
         return !operator==(o);
     }
 
-    void checkComputed(Length fontSize, Font* font);
+    void checkComputed(Length fontSize, Length rootFontSize, Font* font);
 
     const Length& left() const
     {

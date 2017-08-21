@@ -164,13 +164,14 @@ public:
         return String::fromUTF8(temp);
     }
 
-    void changeToFixedIfNeeded(Length fontSize, Font* font)
+    void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
+                               Font* font)
     {
         STARFISH_ASSERT(type() == OperationType::Translate);
         Length x = translate()->tx();
         Length y = translate()->ty();
-        x.changeToFixedIfNeeded(fontSize, font);
-        y.changeToFixedIfNeeded(fontSize, font);
+        x.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        y.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
         translate()->setData(x, y);
     }
 

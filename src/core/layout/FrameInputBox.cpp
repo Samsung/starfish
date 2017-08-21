@@ -18,6 +18,8 @@
 
 #include "FrameInputBox.h"
 
+#include "core/dom/Document.h"
+#include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/PseudoElement.h"
@@ -105,7 +107,8 @@ ComputedStyle* FrameInputBox::createInputElementStyleFrom(Node* parent)
 {
     ComputedStyle* childStyle = new ComputedStyle(parent->style());
     childStyle->loadResources(parent);
-    childStyle->arrangeStyleValues(parent->style());
+    ComputedStyle* rootStyle = parent->document()->rootElement()->style();
+    childStyle->arrangeStyleValues(parent->style(), rootStyle);
     childStyle->setDisplay(DisplayValue::InlineDisplayValue);
     return childStyle;
 }

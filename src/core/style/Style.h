@@ -189,7 +189,7 @@ enum UnitType {
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
 class CSSLength {
 public:
-    enum Kind { PX, EM, EX, IN, CM, MM, PT, PC, VW, VH, VMIN, VMAX };
+    enum Kind { PX, EM, EX, IN, CM, MM, PT, PC, VW, VH, VMIN, VMAX, REM };
 
     CSSLength(float f)
     {
@@ -229,6 +229,8 @@ public:
             m_kind = VMIN;
         } else if (unit->equals("vmax")) {
             m_kind = VMAX;
+        } else if (unit->equals("rem")) {
+            m_kind = REM;
         }
 
         m_value = f;
@@ -260,7 +262,7 @@ public:
             return Length(Length::Fixed, convertFromPtToPx(m_value));
         } else if (m_kind == EM) { // font-relative length
             return Length(Length::EmToBeFixed, m_value);
-        } else if (m_kind == EX) {
+        } else if (m_kind == EX) { // font-relative length
             return Length(Length::ExToBeFixed, m_value);
         } else if (m_kind == VW) {
             return Length(Length::Vw, m_value);
@@ -270,6 +272,8 @@ public:
             return Length(Length::Vmin, m_value);
         } else if (m_kind == VMAX) {
             return Length(Length::Vmax, m_value);
+        } else if (m_kind == REM) { // font-relative length
+            return Length(Length::RemToBeFixed, m_value);
         }
 
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -302,6 +306,8 @@ public:
             return String::fromUTF8(stdStr.append("vmin").c_str());
         } else if (m_kind == VMAX) {
             return String::fromUTF8(stdStr.append("vmax").c_str());
+        } else if (m_kind == REM) {
+            return String::fromUTF8(stdStr.append("rem").c_str());
         }
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

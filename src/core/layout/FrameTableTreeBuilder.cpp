@@ -17,6 +17,8 @@
 #include "StarFishConfig.h"
 #include "core/layout/FrameTableTreeBuilder.h"
 
+#include "core/dom/Document.h"
+#include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/Node.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameTreeBuilder.h"
@@ -220,6 +222,7 @@ FrameTableTreeBuilder::createAnonymousFrameTableObjectBoxWithParent(
     STARFISH_ASSERT(current->style());
     DisplayValue parentDisplay = parent->style()->display();
     ComputedStyle* style = new ComputedStyle(parent->style());
+    ComputedStyle* rootStyle = current->document()->rootElement()->style();
 
     if (!parent->isFrameTableObjectBox() ||
         isTableCellDisplayValue(parentDisplay)) {
@@ -227,7 +230,7 @@ FrameTableTreeBuilder::createAnonymousFrameTableObjectBoxWithParent(
         STARFISH_ASSERT(ComputedStyle::isDisplayTableValueType(currentDisplay));
         style->setDisplay(DisplayValue::TableDisplayValue);
         style->loadResources(current);
-        style->arrangeStyleValues(parent->style(), current);
+        style->arrangeStyleValues(parent->style(), rootStyle, current);
         return new FrameTableBox(nullptr, style);
     }
 
@@ -236,12 +239,12 @@ FrameTableTreeBuilder::createAnonymousFrameTableObjectBoxWithParent(
         if (isTableColumnDisplayValue(currentDisplay)) {
             style->setDisplay(DisplayValue::TableColumnGroupDisplayValue);
             style->loadResources(current);
-            style->arrangeStyleValues(parent->style(), current);
+            style->arrangeStyleValues(parent->style(), rootStyle, current);
             return new FrameTableColBox(nullptr, style);
         } else {
             style->setDisplay(DisplayValue::TableRowGroupDisplayValue);
             style->loadResources(current);
-            style->arrangeStyleValues(parent->style(), current);
+            style->arrangeStyleValues(parent->style(), rootStyle, current);
             return new FrameTableSectionBox(nullptr, style);
         }
     }
@@ -249,14 +252,14 @@ FrameTableTreeBuilder::createAnonymousFrameTableObjectBoxWithParent(
     if (isTableRowGroupDisplayValue(parentDisplay)) {
         style->setDisplay(DisplayValue::TableRowDisplayValue);
         style->loadResources(current);
-        style->arrangeStyleValues(parent->style(), current);
+        style->arrangeStyleValues(parent->style(), rootStyle, current);
         return new FrameTableRowBox(nullptr, style);
     }
 
     if (isTableRowDisplayValue(parentDisplay)) {
         style->setDisplay(DisplayValue::TableCellDisplayValue);
         style->loadResources(current);
-        style->arrangeStyleValues(parent->style(), current);
+        style->arrangeStyleValues(parent->style(), rootStyle, current);
         return new FrameTableCellBox(nullptr, style);
     }
 

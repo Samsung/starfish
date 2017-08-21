@@ -94,7 +94,8 @@ public:
         if (str->equals("px") || str->equals("em") || str->equals("ex") ||
             str->equals("in") || str->equals("cm") || str->equals("mm") ||
             str->equals("pt") || str->equals("pc") || str->equals("vw") ||
-            str->equals("vh") || str->equals("vmin") || str->equals("vmax")) {
+            str->equals("vh") || str->equals("vmin") || str->equals("vmax") ||
+            str->equals("rem")) {
             return true;
         }
         return false;
@@ -807,6 +808,7 @@ public:
         case UnitType::Ems:
         case UnitType::Exs:
         case UnitType::Points:
+        case UnitType::Rems:
             return true;
         default:
             return false;

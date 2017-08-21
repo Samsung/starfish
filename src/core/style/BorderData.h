@@ -70,13 +70,13 @@ public:
         return m_image;
     }
 
-    void checkComputed(Length fontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
     {
-        m_left.checkComputed(fontSize, font);
-        m_right.checkComputed(fontSize, font);
-        m_top.checkComputed(fontSize, font);
-        m_bottom.checkComputed(fontSize, font);
-        m_image.checkComputed(fontSize, font);
+        m_left.checkComputed(curFontSize, rootFontSize, font);
+        m_right.checkComputed(curFontSize, rootFontSize, font);
+        m_top.checkComputed(curFontSize, rootFontSize, font);
+        m_bottom.checkComputed(curFontSize, rootFontSize, font);
+        m_image.checkComputed(curFontSize, rootFontSize, font);
     }
 
     bool operator==(const BorderData& o)

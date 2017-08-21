@@ -323,7 +323,7 @@ void ComputedStyle::blockify(Node* current, bool force)
 }
 
 void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
-                                       Node* current)
+                                       ComputedStyle* rootStyle, Node* current)
 {
     m_originalDisplay = m_display;
     blockify(current, false);
@@ -352,28 +352,33 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     // Convert all non-computed Lengths to computed Length
     STARFISH_ASSERT(m_inheritedStyles.m_fontSize.isFixed() ||
                     m_inheritedStyles.m_fontSize.isViewportPercent());
-    Length baseFontSize = fontSize();
-    m_inheritedStyles.m_letterSpacing.changeToFixedIfNeeded(baseFontSize,
-                                                            font());
-    m_inheritedStyles.m_lineHeight.changeToFixedIfNeeded(baseFontSize, font());
-    m_inheritedStyles.m_textIndent.changeToFixedIfNeeded(baseFontSize, font());
+    Length curFontSize = fontSize();
+    Length rootFontSize = rootStyle ? rootStyle->fontSize()
+                                    : Length(Length::Fixed, DEFAULT_FONT_SIZE);
+    m_inheritedStyles.m_letterSpacing.changeToFixedIfNeeded(
+        curFontSize, rootFontSize, font());
+    m_inheritedStyles.m_lineHeight.changeToFixedIfNeeded(curFontSize,
+                                                         rootFontSize, font());
+    m_inheritedStyles.m_textIndent.changeToFixedIfNeeded(curFontSize,
+                                                         rootFontSize, font());
     m_inheritedStyles.m_horizontalBorderSpacing.changeToFixedIfNeeded(
-        baseFontSize, font());
+        curFontSize, rootFontSize, font());
     m_inheritedStyles.m_verticalBorderSpacing.changeToFixedIfNeeded(
-        baseFontSize, font());
-    m_width.changeToFixedIfNeeded(baseFontSize, font());
-    m_height.changeToFixedIfNeeded(baseFontSize, font());
+        curFontSize, rootFontSize, font());
+    m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+    m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
     if (hasRareComputeStyleData()) {
-        m_rareComputedStyleData->m_minWidth.changeToFixedIfNeeded(baseFontSize,
-                                                                  font());
-        m_rareComputedStyleData->m_maxWidth.changeToFixedIfNeeded(baseFontSize,
-                                                                  font());
-        m_rareComputedStyleData->m_minHeight.changeToFixedIfNeeded(baseFontSize,
-                                                                   font());
-        m_rareComputedStyleData->m_maxHeight.changeToFixedIfNeeded(baseFontSize,
-                                                                   font());
+        m_rareComputedStyleData->m_minWidth.changeToFixedIfNeeded(
+            curFontSize, rootFontSize, font());
+        m_rareComputedStyleData->m_maxWidth.changeToFixedIfNeeded(
+            curFontSize, rootFontSize, font());
+        m_rareComputedStyleData->m_minHeight.changeToFixedIfNeeded(
+            curFontSize, rootFontSize, font());
+        m_rareComputedStyleData->m_maxHeight.changeToFixedIfNeeded(
+            curFontSize, rootFontSize, font());
     }
-    m_verticalAlignLength.changeToFixedIfNeeded(baseFontSize, font());
+    m_verticalAlignLength.changeToFixedIfNeeded(curFontSize, rootFontSize,
+                                                font());
     if (hasTransforms()) {
         size_t sz = m_rareComputedStyleData->m_transforms->size();
         for (size_t i = 0; i < sz; i++) {
@@ -382,17 +387,14 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
             if (std.type() != StyleTransformData::OperationType::Translate) {
                 continue;
             }
-            std.changeToFixedIfNeeded(baseFontSize, font());
+            std.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
         }
     }
     if (m_surround) {
-        m_surround->margin.checkComputed(baseFontSize, font());
-
-        m_surround->padding.checkComputed(baseFontSize, font());
-
-        m_surround->offset.checkComputed(baseFontSize, font());
-
-        m_surround->border.checkComputed(baseFontSize, font());
+        m_surround->margin.checkComputed(curFontSize, rootFontSize, font());
+        m_surround->padding.checkComputed(curFontSize, rootFontSize, font());
+        m_surround->offset.checkComputed(curFontSize, rootFontSize, font());
+        m_surround->border.checkComputed(curFontSize, rootFontSize, font());
 
         if (hasBorderStyle() && !hasBorderColor()) {
             // If an element's border color is not specified with a border
@@ -407,7 +409,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     }
 
     if (m_background) {
-        m_background->checkComputed(baseFontSize, font(), color());
+        m_background->checkComputed(curFontSize, rootFontSize, font(), color());
     }
 
     if (!m_alignSelfSpecifiedByUser) {

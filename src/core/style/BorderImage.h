@@ -44,9 +44,9 @@ public:
     {
     }
 
-    void checkComputed(Length fontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
     {
-        m_slices.checkComputed(fontSize, font);
+        m_slices.checkComputed(curFontSize, rootFontSize, font);
     }
 
     bool operator==(const BorderImageImpl& o)
@@ -144,10 +144,10 @@ public:
         data()->m_imageResource = value;
     }
 
-    void checkComputed(Length fontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
     {
         if (m_data) {
-            m_data->checkComputed(fontSize, font);
+            m_data->checkComputed(curFontSize, rootFontSize, font);
         }
     }
 
