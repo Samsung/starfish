@@ -242,15 +242,23 @@ public:
                 new std::vector<FloatingBoxInfo>();
             std::unordered_map<FrameBlockBox*, LayoutUnit>* s3 =
                 new std::unordered_map<FrameBlockBox*, LayoutUnit>();
+            std::unordered_map<Frame*, FrameBlockBox*>* s4 =
+                new std::unordered_map<Frame*, FrameBlockBox*>();
+            std::vector<FrameBlockBox*>* s5 = new std::vector<FrameBlockBox*>();
+            std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
+                s6 = new std::unordered_map<FrameBlockBox*,
+                                            std::pair<LineBox*, LayoutUnit>>();
             m_blockFormattingContextInfo.emplace_back(isNormalFlow, isRoot, s,
-                                                      s2, s3);
+                                                      s2, s3, s4, s5, s6);
         } else {
             BlockFormattingContext& back = m_blockFormattingContextInfo.back();
             std::vector<FloatingBoxInfo>* s =
                 new std::vector<FloatingBoxInfo>();
             m_blockFormattingContextInfo.emplace_back(
                 isNormalFlow, isRoot, back.m_inlineBlockBoxStack, s,
-                back.m_registeredYPositionPerVAInlineBlock);
+                back.m_lineBoxAscenders, back.m_firstLineCandidates,
+                back.m_blockBoxAligningAtFirstBaselineStack,
+                back.m_firstLineAscenders);
         }
     }
 
@@ -259,8 +267,11 @@ public:
         if (m_blockFormattingContextInfo.back().m_isRoot ||
             !m_blockFormattingContextInfo.back().m_isNormalFlow) {
             delete m_blockFormattingContextInfo.back().m_inlineBlockBoxStack;
+            delete m_blockFormattingContextInfo.back().m_lineBoxAscenders;
+            delete m_blockFormattingContextInfo.back().m_firstLineCandidates;
             delete m_blockFormattingContextInfo.back()
-                .m_registeredYPositionPerVAInlineBlock;
+                .m_blockBoxAligningAtFirstBaselineStack;
+            delete m_blockFormattingContextInfo.back().m_firstLineAscenders;
         }
         delete m_blockFormattingContextInfo.back().m_floatBoxes;
         m_blockFormattingContextInfo.pop_back();
@@ -299,9 +310,26 @@ public:
         m_blockFormattingContextInfo.back().m_inlineBlockBoxStack->pop_back();
     }
 
-    void registerYPositionPerVAInlineBlock(LineBox* lb, LayoutUnit ascender);
-    std::pair<bool, LayoutUnit> registeredLastLineBoxYPosition(
-        FrameBlockBox* box);
+    void registerLineBoxAscender(FrameBlockBox* blockBox, LineBox* lb,
+                                 LayoutUnit ascender);
+    std::pair<bool, LayoutUnit> lineBoxAscender(FrameBlockBox* box);
+
+    void pushBlockBoxAligningAtFirstBaseline(FrameBlockBox* blockBox)
+    {
+        m_blockFormattingContextInfo.back()
+            .m_blockBoxAligningAtFirstBaselineStack->push_back(blockBox);
+    }
+
+    void popBlockBoxAligningAtFirstBaseline()
+    {
+        m_blockFormattingContextInfo.back()
+            .m_blockBoxAligningAtFirstBaselineStack->pop_back();
+    }
+
+    void registerFirstLineAscender(FrameBlockBox* owner, LineBox* lineBox,
+                                   LayoutUnit ascender);
+    std::pair<bool, std::pair<LineBox*, LayoutUnit>> firstLineAscender(
+        FrameBlockBox* blockBox);
     void registerAbsolutePositionedBox(FrameBox* box);
 
     void layoutRegisteredAbsolutePositionedBoxes(
@@ -388,28 +416,32 @@ public:
 
     bool canFloatCollapseWithMarginTop(size_t idx);
 
-    void registerFirstLineAscender(LineBox* l, LayoutUnit a);
-    LayoutUnit firstLineAscender(LineBox* l);
-
-    bool checkIfThisIsFirstLineCandidate(Frame* parent, FrameBlockBox* child);
+    bool checkIfThisIsFirstLineCandidate(FrameBlockBox* blockBox);
 
     LayoutUnit viewportWidth();
     LayoutUnit viewportHeight();
 
 private:
     struct BlockFormattingContext {
-        BlockFormattingContext(bool isNormalFlow, bool isRoot,
-                               std::vector<FrameBlockBox*>* inlineBlockBoxStack,
-                               std::vector<FloatingBoxInfo>* floatBoxes,
-                               std::unordered_map<FrameBlockBox*, LayoutUnit>*
-                                   registeredYPositionPerVAInlineBlock)
+        BlockFormattingContext(
+            bool isNormalFlow, bool isRoot,
+            std::vector<FrameBlockBox*>* inlineBlockBoxStack,
+            std::vector<FloatingBoxInfo>* floatBoxes,
+            std::unordered_map<FrameBlockBox*, LayoutUnit>* lineBoxAscenders,
+            std::unordered_map<Frame*, FrameBlockBox*>* firstLineCandidates,
+            std::vector<FrameBlockBox*>* blockBoxAligningFirstLineStack,
+            std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
+                firstLineAscenders)
+            : m_isRoot(isRoot)
+            , m_isNormalFlow(isNormalFlow)
+            , m_inlineBlockBoxStack(inlineBlockBoxStack)
+            , m_floatBoxes(floatBoxes)
+            , m_lineBoxAscenders(lineBoxAscenders)
+            , m_firstLineCandidates(firstLineCandidates)
+            , m_blockBoxAligningAtFirstBaselineStack(
+                  blockBoxAligningFirstLineStack)
+            , m_firstLineAscenders(firstLineAscenders)
         {
-            m_isRoot = isRoot;
-            m_isNormalFlow = isNormalFlow;
-            m_inlineBlockBoxStack = inlineBlockBoxStack;
-            m_floatBoxes = floatBoxes;
-            m_registeredYPositionPerVAInlineBlock =
-                registeredYPositionPerVAInlineBlock;
         }
         bool m_isRoot;
         bool m_isNormalFlow;
@@ -420,8 +452,11 @@ private:
         LayoutUnit m_topLocOfFloatBox;
         std::vector<FrameBlockBox*>* m_inlineBlockBoxStack;
         std::vector<FloatingBoxInfo>* m_floatBoxes;
-        std::unordered_map<FrameBlockBox*, LayoutUnit>*
-            m_registeredYPositionPerVAInlineBlock;
+        std::unordered_map<FrameBlockBox*, LayoutUnit>* m_lineBoxAscenders;
+        std::unordered_map<Frame*, FrameBlockBox*>* m_firstLineCandidates;
+        std::vector<FrameBlockBox*>* m_blockBoxAligningAtFirstBaselineStack;
+        std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
+            m_firstLineAscenders;
     };
 
     StarFish* m_starFish;
@@ -436,8 +471,6 @@ private:
     // TODO move these maps into BlockFormattingContext
     std::unordered_map<FrameBox*, MarginCollapseResult> m_marginCollapseResult;
     std::unordered_map<FrameBox*, MarginInfo*> m_marginInfo;
-    std::unordered_map<LineBox*, LayoutUnit> m_firstLineAscender;
-    std::unordered_map<Frame*, FrameBlockBox*> m_firstLineCandidates;
 
     void applyRelativePosition(FrameBox* box);
     void applyRelativePositionInlineCase(Frame* refF, FrameBox* box);
@@ -1150,10 +1183,6 @@ public:
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    virtual LineBox* firstLineBox()
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
 
     virtual void establishesStackingContextIfNeeds()
     {
@@ -1247,19 +1276,7 @@ public:
         return m_flags.m_isFloating;
     }
 
-    void markFlexItem()
-    {
-        m_flags.m_isFlexItem = true;
-        // https://www.w3.org/TR/css-flexbox-1/#painting
-        // Flex items paint exactly the same as inline blocks [CSS21], except
-        // that order-modified document order is used in place of raw document
-        // order, and z-index values other than auto create a stacking context
-        // even if position is static.
-        if (!isAnonymous()) {
-            m_flags.m_isEstablishesStackingContext = true;
-            m_flags.m_isEstablishesBlockFormattingContext = true;
-        }
-    }
+    void markFlexItem();
 
     bool isFlexItem() const
     {

@@ -24,6 +24,7 @@
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameDocument.h"
+#include "core/layout/FrameFlexibleBox.h"
 
 namespace StarFish {
 
@@ -539,29 +540,84 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
     return result;
 }
 
-void LayoutContext::registerYPositionPerVAInlineBlock(LineBox* lb,
-                                                      LayoutUnit ascender)
+void LayoutContext::registerLineBoxAscender(FrameBlockBox* blockBox,
+                                            LineBox* lb, LayoutUnit ascender)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     for (size_t i = 0; i < c.m_inlineBlockBoxStack->size(); i++) {
-        (*c.m_registeredYPositionPerVAInlineBlock)[(
-            *c.m_inlineBlockBoxStack)[i]] =
-            lb->absolutePoint((*c.m_inlineBlockBoxStack)[i]).y() + ascender;
+        FrameBlockBox* blockBox = (*c.m_inlineBlockBoxStack)[i];
+        auto& lineBoxAscenders = (*c.m_lineBoxAscenders);
+        if (blockBox->style()->verticalAlign() == BaselineVAlignValue ||
+            blockBox->style()->verticalAlign() == NumericVAlignValue) {
+            if (blockBox->isFrameFlexibleBox() ||
+                blockBox->isFrameTableCellBox()) {
+                auto iter = lineBoxAscenders.find(blockBox);
+                if (iter == lineBoxAscenders.end()) {
+                    lineBoxAscenders[blockBox] =
+                        lb->absolutePoint(blockBox).y() + ascender;
+                }
+            } else if (blockBox->style()->display() ==
+                       InlineBlockDisplayValue) {
+                lineBoxAscenders[blockBox] =
+                    lb->absolutePoint(blockBox).y() + ascender;
+            }
+        }
     }
+
+    registerFirstLineAscender(blockBox, lb, ascender);
 }
 
-std::pair<bool, LayoutUnit> LayoutContext::registeredLastLineBoxYPosition(
-    FrameBlockBox* box)
+std::pair<bool, LayoutUnit> LayoutContext::lineBoxAscender(
+    FrameBlockBox* blockBox)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
-    STARFISH_ASSERT(c.m_inlineBlockBoxStack->back() == box);
-    auto iter = (*c.m_registeredYPositionPerVAInlineBlock).find(box);
-    if (iter == c.m_registeredYPositionPerVAInlineBlock->end()) {
+    STARFISH_ASSERT(c.m_inlineBlockBoxStack->back() == blockBox);
+    auto iter = (*c.m_lineBoxAscenders).find(blockBox);
+    if (iter == c.m_lineBoxAscenders->end()) {
         return std::pair<bool, LayoutUnit>(false, 0);
     }
     LayoutUnit r = iter->second;
-    c.m_registeredYPositionPerVAInlineBlock->erase(iter);
+    c.m_lineBoxAscenders->erase(iter);
     return std::pair<bool, LayoutUnit>(true, r);
+}
+
+void LayoutContext::registerFirstLineAscender(FrameBlockBox* owner,
+                                              LineBox* lineBox,
+                                              LayoutUnit ascender)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    for (size_t i = 0; i < c.m_blockBoxAligningAtFirstBaselineStack->size();
+         i++) {
+        FrameBlockBox* blockBox =
+            (*c.m_blockBoxAligningAtFirstBaselineStack)[i];
+        if ((blockBox->isFlexItem()) || (blockBox->isFrameTableCellBox() &&
+                                         !owner->isFrameTableCaptionBox())) {
+            auto iter = c.m_firstLineAscenders->find(blockBox);
+            if (iter == c.m_firstLineAscenders->end()) {
+                // TODO: Because of the table's specific implementation,
+                // we can't make use of line ascender in share.
+                // So here we make different version of saving ascender only.
+                (*c.m_firstLineAscenders)[blockBox] =
+                    std::make_pair(lineBox, ascender);
+            }
+        }
+    }
+}
+
+std::pair<bool, std::pair<LineBox*, LayoutUnit>>
+LayoutContext::firstLineAscender(FrameBlockBox* blockBox)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    auto iter = c.m_firstLineAscenders->find(blockBox);
+    if (iter == c.m_firstLineAscenders->end()) {
+        return std::make_pair(false, std::make_pair(nullptr, 0));
+    }
+
+    auto l = iter->second;
+    // TODO: table cell can call these more than once, so that we can't remove
+    // it.
+    // c.m_firstLineBoxes->erase(iter);
+    return std::make_pair(true, l);
 }
 
 void LayoutContext::registerAbsolutePositionedBox(FrameBox* box)
@@ -622,31 +678,23 @@ void LayoutContext::layoutRegisteredRelativePositionedBoxes(
     }
 }
 
-void LayoutContext::registerFirstLineAscender(LineBox* l, LayoutUnit a)
+bool LayoutContext::checkIfThisIsFirstLineCandidate(FrameBlockBox* blockBox)
 {
-    m_firstLineAscender[l] = a;
-}
-
-LayoutUnit LayoutContext::firstLineAscender(LineBox* l)
-{
-    STARFISH_ASSERT(m_firstLineAscender.find(l) != m_firstLineAscender.end());
-    return m_firstLineAscender[l];
-}
-
-bool LayoutContext::checkIfThisIsFirstLineCandidate(Frame* parent,
-                                                    FrameBlockBox* child)
-{
-    if (!child->isNecessaryBlockBox()) {
+    if (!blockBox->isNecessaryBlockBox()) {
         return false;
     }
 
-    auto it = m_firstLineCandidates.find(parent);
-    if (it == m_firstLineCandidates.end()) {
-        m_firstLineCandidates[parent] = child;
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    auto& firstLineCandidates = c.m_firstLineCandidates;
+    Frame* parent = blockBox->parent();
+
+    auto it = firstLineCandidates->find(parent);
+    if (it == firstLineCandidates->end()) {
+        (*firstLineCandidates)[parent] = blockBox;
         return true;
     }
 
-    return (*it).second == child;
+    return (*it).second == blockBox;
 }
 
 LayoutUnit LayoutContext::viewportWidth()
@@ -948,6 +996,21 @@ void Frame::updateComputedStyle(Node* refNode)
     ComputedStyle* rootStyle = document()->rootElement()->style();
     newStyle->arrangeStyleValues(refNode->style(), rootStyle, refNode);
     m_styleWhenNodeIsAnonymous = newStyle;
+}
+
+void Frame::markFlexItem()
+{
+    m_flags.m_isFlexItem = true;
+    // https://www.w3.org/TR/css-flexbox-1/#painting
+    // Flex items paint exactly the same as inline blocks [CSS21], except
+    // that order-modified document order is used in place of raw document
+    // order, and z-index values other than auto create a stacking context
+    // even if position is static.
+    if (!FlexFormattingContext::isAnonymousFlexItemContainingOnlyWhitespace(
+            this)) {
+        m_flags.m_isEstablishesStackingContext = true;
+        m_flags.m_isEstablishesBlockFormattingContext = true;
+    }
 }
 
 bool Frame::isDocumentElement() const

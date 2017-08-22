@@ -24,16 +24,19 @@ namespace StarFish {
 class ComputedStyle;
 class FrameBox;
 class FrameFlexibleBox;
+class LineBox;
 
 struct FlexLine {
     std::vector<FrameBox*> m_flexItems;
     LayoutUnit m_lineWidth;
     LayoutUnit m_lineHeight;
+    LayoutUnit m_maxAscender;
     bool m_hasAbsolutePositionedBox;
 
     FlexLine()
         : m_lineWidth(0)
         , m_lineHeight(0)
+        , m_maxAscender(0)
         , m_hasAbsolutePositionedBox(false)
     {
     }
@@ -81,7 +84,8 @@ public:
         return m_isSingleLine;
     }
 
-    bool isAnonymousFlexItemContainingOnlyWhitespace(Frame* flexItem) const;
+    static bool isAnonymousFlexItemContainingOnlyWhitespace(Frame* flexItem);
+    std::pair<bool, LayoutUnit> firstLineBoxYPosition(FrameBox* flexItem) const;
 
 private:
     LayoutContext& m_layoutContext;
@@ -95,6 +99,7 @@ private:
 
     std::vector<FlexLine> m_flexLines;
     std::unordered_map<FrameBox*, LayoutUnit> m_basisSizes;
+    std::unordered_map<FrameBox*, LayoutUnit> m_firstLineBoxYPositions;
 };
 
 class FrameFlexibleBox : public FrameBlockBox {
