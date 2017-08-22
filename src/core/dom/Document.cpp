@@ -973,6 +973,7 @@ DEFINE_EVENT_LISTENER(Document, abort);
 DEFINE_EVENT_LISTENER(Document, canplay);
 DEFINE_EVENT_LISTENER(Document, canplaythrough);
 DEFINE_EVENT_LISTENER(Document, click);
+DEFINE_EVENT_LISTENER(Document, change);
 DEFINE_EVENT_LISTENER(Document, durationchange);
 DEFINE_EVENT_LISTENER(Document, emptied);
 DEFINE_EVENT_LISTENER(Document, ended);

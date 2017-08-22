@@ -8,7 +8,7 @@ interface GlobalEventHandlers {
   [Unimplemented] attribute EventHandler oncancel;
   attribute EventHandler oncanplay;
   attribute EventHandler oncanplaythrough;
-  [Unimplemented] attribute EventHandler onchange;
+  attribute EventHandler onchange;
   attribute EventHandler onclick;
   [Unimplemented] attribute EventHandler onclose;
   [Unimplemented] attribute EventHandler oncontextmenu;

@@ -197,7 +197,7 @@ public:
     // DECLARE_EVENT_LISTENER(cancel);
     DECLARE_EVENT_LISTENER(canplay);
     DECLARE_EVENT_LISTENER(canplaythrough);
-    // DECLARE_EVENT_LISTENER(change);
+    DECLARE_EVENT_LISTENER(change);
     DECLARE_EVENT_LISTENER(click);
     // DECLARE_EVENT_LISTENER(close);
     // DECLARE_EVENT_LISTENER(contextmenu);

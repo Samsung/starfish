@@ -24,6 +24,7 @@
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/CompositionEvent.h"
 #include "core/dom/HTMLFormElement.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/layout/FrameInputBox.h"
@@ -122,15 +123,29 @@ String* HTMLInputElement::checkboxTickSymbol()
     return String::createUTF32String(U'\u2714'); // tick
 }
 
+void HTMLInputElement::toggleChecked()
+{
+    return checked() ? setChecked(false) : setChecked(true);
+}
+
 void HTMLInputElement::setChecked(bool checked)
 {
-    m_checked = checked;
-    String* value = String::createUTF32String(U"");
-    if (m_checked) {
-        value = checkboxTickSymbol();
+    if (m_checked == checked) {
+        return;
     }
-    didAttributeChanged(starFish()->staticStrings()->m_value,
-                        String::emptyString, value, false, false);
+
+    m_checked = checked;
+    auto fn = [](size_t handle, void* data) {
+        HTMLInputElement* element = (HTMLInputElement*)data;
+        String* eventType =
+            element->starFish()->staticStrings()->m_change.localName();
+        Event* e =
+            new Event(element->document(), eventType, EventInit(true, false));
+        element->EventTarget::dispatchEvent(element, e);
+    };
+    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
+                                        this);
+    updateInputboxValue(m_checked ? checkboxTickSymbol() : String::emptyString);
 }
 
 String* HTMLInputElement::obscurePhrase(String* phrase)
@@ -143,33 +158,46 @@ String* HTMLInputElement::obscurePhrase(String* phrase)
 }
 
 void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
-                                           String* value, bool attributeCreated,
+                                           String* val, bool attributeCreated,
                                            bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+    HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
                                      attributeRemoved);
-
-    if (starFish()->staticStrings()->m_value == name) {
-        if (type()->equalsWithoutCase("password")) {
-            value = obscurePhrase(value);
-        }
-        if (frame()) {
-            FrameInputBox* box = frame()->asFrameInputBox();
-            STARFISH_ASSERT(box->firstChild());
-            box->firstChild()->asFrameText()->node()->asText()->setData(value);
-
-            if (!document()->browsingContext()->needsLayout()) {
-                // Do partial layout for performance
-                LayoutContext ctx(starFish(),
-                                  document()->frame()->asFrameDocument());
-                box->layout(ctx, Frame::ResolveAll);
-                setNeedsPainting();
-            } else {
-                setNeedsLayout();
+    if (starFish()->staticStrings()->m_type == name ||
+        starFish()->staticStrings()->m_value == name) {
+        if (type()->equalsWithoutCase("text")) {
+            val = value();
+        } else if (type()->equalsWithoutCase("password")) {
+            val = obscurePhrase(value());
+        } else if (type()->equalsWithoutCase("checkbox")) {
+            val = String::emptyString;
+            if (m_checked) {
+                val = checkboxTickSymbol();
             }
-        } else if (document()->doesParticipateInRendering()) {
-            setNeedsFrameTreeBuild();
         }
+
+        updateInputboxValue(val);
+    }
+}
+
+void HTMLInputElement::updateInputboxValue(String* value)
+{
+    if (frame()) {
+        FrameInputBox* box = frame()->asFrameInputBox();
+        STARFISH_ASSERT(box->firstChild());
+        box->firstChild()->asFrameText()->node()->asText()->setData(value);
+
+        if (!document()->browsingContext()->needsLayout()) {
+            // Do partial layout for performance
+            LayoutContext ctx(starFish(),
+                              document()->frame()->asFrameDocument());
+            box->layout(ctx, Frame::ResolveAll);
+            setNeedsPainting();
+        } else {
+            setNeedsLayout();
+        }
+    } else if (document()->doesParticipateInRendering()) {
+        setNeedsFrameTreeBuild();
     }
 }
 
@@ -190,7 +218,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                     return true;
                 }
             } else if (type()->equalsWithoutCase("checkbox")) {
-                checked() ? setChecked(false) : setChecked(true);
+                toggleChecked();
                 return true;
             }
         }

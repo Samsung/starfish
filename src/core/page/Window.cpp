@@ -490,6 +490,7 @@ DEFINE_EVENT_LISTENER(Window, abort);
 DEFINE_EVENT_LISTENER(Window, canplay);
 DEFINE_EVENT_LISTENER(Window, canplaythrough);
 DEFINE_EVENT_LISTENER(Window, click);
+DEFINE_EVENT_LISTENER(Window, change);
 DEFINE_EVENT_LISTENER(Window, durationchange);
 DEFINE_EVENT_LISTENER(Window, emptied);
 DEFINE_EVENT_LISTENER(Window, ended);
