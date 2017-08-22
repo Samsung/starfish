@@ -834,7 +834,7 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
             name = starFish()->staticStrings()->m_click.localName();
             MouseData clickData(MouseData::MouseButtonValue::LeftButton,
                                 MouseData::MouseButtonsValue::LeftButtonDown,
-                                targetX, targetY, 0);
+                                targetX, targetY, 1);
             Event* click = createMouseEvent(document(), name, clickData);
             document()->window()->dispatchEvent(t, click);
         }

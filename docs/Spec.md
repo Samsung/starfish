@@ -752,7 +752,12 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | shiftKey | Returns a Boolean that is true if the Shift key was active when the key event was generated. |
 |  | attribute | altKey | Returns a Boolean that is true if the Alt key was active when the key event was generated. |
 |  | attribute | metaKey | Returns a Boolean that is true if the Meta key was active when the key event was generated. |
+|  | attribute | repeat | Returns a Boolean that is true if the key has been pressed in a sustained manner. |
 |  | attribute | keyCode | Returns a Number representing a system and implementation dependent numerical code identifying the unmodified value of the pressed key. |
+| [KeyboardEventInit](https://w3c.github.io/uievents/#idl-keyboardeventinit) | dictionary | KeyboardEventInit |  |
+|  | attribute | key | Initializes the key attribute of the KeyboardEvent object to the unicode character string representing the meaning of a key after taking into account all keyboard modifiers (such as shift-state). This value is the final effective value of the key. |
+|  | attribute | code | Initializes the code attribute of the KeyboardEvent object to the unicode character string representing the key that was pressed, ignoring any keyboard modifications such as keyboard layout. |
+|  | attribute | repeat | Initializes the repeat attribute of the KeyboardEvent object. |
 | [ProgressEvent](https://www.w3.org/TR/progress-events/#interface-progressevent) | interface | ProgressEvent | The ProgressEvent interface represents events measuring progress of an underlying process, like an HTTP request (for an XMLHttpRequest, or the loading of the underlying resource of an \<img\>, \<audio\>, \<video\>, \<style\> or \<link\>). |
 | | constructor | ProgressEvent(DOMString type, optional FocusEventInit eventInitDict) | Create a new ProgressEvent |
 | | attribute | lengthComputable | Is a Boolean flag indicating if the total work to be done, and the amount of work already done, by the underlying process is calculable. In other words, it tells if the progress is measurable or not. |
