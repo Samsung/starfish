@@ -370,7 +370,7 @@ bool DaliShellController::TouchEventHandler(Dali::Actor actor,
             StarFishEnterer enter(m_sf);
             StarFish::MouseData data(MouseData::MouseButtonValue::NoButton,
                                      MouseData::MouseButtonsValue::NoButtonDown,
-                                     screen.x, screen.y);
+                                     screen.x, screen.y, 0);
             d->data = data;
             m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                 m_sf->platformWindow()->webView()->mainBrowsingContext(),
@@ -390,7 +390,7 @@ bool DaliShellController::TouchEventHandler(Dali::Actor actor,
                 m_isMouseLbuttonDown
                     ? MouseData::MouseButtonsValue::LeftButtonDown
                     : 0;
-            StarFish::MouseData data(0, buttons, screen.x, screen.y);
+            StarFish::MouseData data(0, buttons, screen.x, screen.y, 0);
 
             d->data = data;
             m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
@@ -418,7 +418,7 @@ bool DaliShellController::HoverEventHandler(Dali::Actor actor,
     StarFishEnterer enter(m_sf);
     unsigned char buttons =
         m_isMouseLbuttonDown ? MouseData::MouseButtonsValue::LeftButtonDown : 0;
-    StarFish::MouseData data(0, buttons, point.x, point.y);
+    StarFish::MouseData data(0, buttons, point.x, point.y, 0);
 
     struct dummy {
         StarFish::StarFish* starfish;
