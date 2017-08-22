@@ -710,6 +710,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | onabort | Fired at the Window when the download was aborted by the user |
 | | attribute | oncanplay | Fired when the user agent can resume playback of the media data, but estimates that if playback were to be started now, the media resource could not be rendered at the current playback rate up to its end without having to stop for further buffering of content. |
 | | attribute | oncanplaythrough | Fired when the user agent estimates that if playback were to be started now, the media resource could be rendered at the current playback rate all the way to its end without having to stop for further buffering. |
+| | attribute | onchange | Fired at controls when the user commits a value change. |
 | | attribute | onclick | Fired when the click event is raised. |
 | | attribute | ondurationchange | Fired when the duration attribute has just been updated. |
 | | attribute | onemptied | Fired when a media element whose networkState was previously not in the NETWORK_EMPTY state has just switched to that state. |

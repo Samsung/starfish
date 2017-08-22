@@ -75,6 +75,9 @@ protected:
     String* m_currentEditingText;
 
 private:
+    void toggleChecked();
+    void updateInputboxValue(String* value);
+
     bool m_checked;
 };
 }
