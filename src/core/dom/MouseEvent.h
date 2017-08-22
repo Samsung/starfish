@@ -21,6 +21,10 @@
 
 namespace StarFish {
 
+#ifdef PORT_GRAPHIC_BACKEND_EFL
+const uint32_t CLICK_REFRESH_DELAY = 400;
+#endif
+
 // https://w3c.github.io/uievents/#idl-mouseevent
 // https://w3c.github.io/uievents/#idl-mouseeventinit
 class MouseData {
@@ -43,24 +47,26 @@ public:
 
     MouseData()
         : MouseData(MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
-                    0, 0)
+                    0, 0, 0)
     {
     }
 
     MouseData(unsigned char button, unsigned char buttons, double clientX,
-              double clientY)
-        : MouseData(button, buttons, clientX, clientY, clientX, clientY)
+              double clientY, int32_t clickCount)
+        : MouseData(button, buttons, clientX, clientY, clientX, clientY,
+                    clickCount)
     {
     }
 
     MouseData(unsigned char button, unsigned char buttons, double clientX,
-              double clientY, double screenX, double screenY)
+              double clientY, double screenX, double screenY, int8_t clickCount)
         : m_button(button)
         , m_buttons(buttons)
         , m_clientX(clientX)
         , m_clientY(clientY)
         , m_screenX(screenX)
         , m_screenY(screenY)
+        , m_clickCount(clickCount)
     {
     }
 
@@ -124,6 +130,16 @@ public:
         m_buttons = buttons;
     }
 
+    int32_t clickCount() const
+    {
+        return m_clickCount;
+    }
+
+    void setClickCount(int32_t clickCount)
+    {
+        m_clickCount = clickCount;
+    }
+
 protected:
     unsigned char m_button;
     unsigned char m_buttons;
@@ -132,6 +148,8 @@ protected:
     double m_clientY;
     double m_screenX;
     double m_screenY;
+
+    int32_t m_clickCount;
 };
 
 // Binding interface
@@ -165,6 +183,7 @@ public:
         : UIEvent(document, eventType)
         , m_mouseData(data)
     {
+        setDetail(data.clickCount());
     }
 
     MouseEvent(Document* document, String* eventType, MouseEventInit& init)

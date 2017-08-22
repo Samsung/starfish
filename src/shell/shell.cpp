@@ -352,7 +352,7 @@ bool DaliShellController::TouchEventHandler(Dali::Actor actor,
             StarFishEnterer enter(m_sf);
             MouseData data(MouseData::MouseButtonValue::LeftButton,
                            MouseData::MouseButtonsValue::LeftButtonDown,
-                           screen.x, screen.y);
+                           screen.x, screen.y, 0);
             d->data = data;
             m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                 m_sf->platformWindow()->webView()->mainBrowsingContext(),

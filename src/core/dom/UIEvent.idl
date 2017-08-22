@@ -3,13 +3,13 @@
 [Constructor(DOMString type, optional UIEventInit eventInitDict), ConstructorCallWith=Document]
 interface UIEvent : Event {
   readonly attribute Window? view;
-  [Unimplemented] readonly attribute long detail;
+  readonly attribute long detail;
 };
 
 // https://w3c.github.io/uievents/#dictdef-uieventinit
 dictionary UIEventInit : EventInit {
   Window? view = null;
-  [Unimplemented] long detail = 0;
+  long detail = 0;
 };
 
 // https://w3c.github.io/uievents/#dictdef-eventmodifierinit
