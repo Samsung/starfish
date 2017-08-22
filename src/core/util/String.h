@@ -152,15 +152,15 @@ inline bool isASCIILower(CharType c)
 }
 
 template <typename CharType>
+inline bool isASCIIDigit(CharType c)
+{
+    return c >= '0' && c <= '9';
+}
+
+template <typename CharType>
 inline CharType toASCIILower(CharType c)
 {
-#if defined(_MSC_FULL_VER) && _MSC_FULL_VER == 170060610
-    // Make a workaround for VS2012 update 3 optimizer bug, remove once VS2012
-    // fix it.
-    return (c >= 'A' && c <= 'Z') ? c + 0x20 : c;
-#else
     return c | ((c >= 'A' && c <= 'Z') << 5);
-#endif
 }
 
 size_t utf32ToUtf8(char32_t uc, char* UTF8);
@@ -344,10 +344,12 @@ public:
     {
         return c >= '0' && c <= '9';
     }
+
     static inline bool isASCIISpace(char32_t c)
     {
         return c <= ' ' && (c == ' ' || (c <= 0xD && c >= 0x9));
     }
+
     static inline bool isSpaceOrNewline(char32_t c)
     {
         // Use isASCIISpace() for basic Latin-1.

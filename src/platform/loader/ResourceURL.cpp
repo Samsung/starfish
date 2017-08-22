@@ -20,6 +20,33 @@
 
 namespace StarFish {
 
+static bool isUnreserved(char32_t c)
+{
+    // RFC 3986 section 2.3 Unreserved Characters (January 2005)
+    return isASCIILower(c) || isASCIIUpper(c) || isASCIIDigit(c) ||
+           (c == '-') || (c == '_') || (c == '.') || (c == '~');
+}
+
+String* ResourceURL::createPercentEncodingString(String* src)
+{
+    StringBuilder encoded;
+    size_t len = src->bufferAccessData().length;
+    const char* asciiBuffer = src->bufferAccessData().asciiData();
+
+    for (size_t i = 0; i < len; i++) {
+        if (isUnreserved(asciiBuffer[i])) {
+            encoded.appendChar(asciiBuffer[i]);
+        } else {
+            char buf[4];
+            snprintf(buf, 4, "%%%02X", asciiBuffer[i]);
+            encoded.appendChar(buf[0]);
+            encoded.appendChar(buf[1]);
+            encoded.appendChar(buf[2]);
+        }
+    }
+    return encoded.finalize();
+}
+
 ResourceURL::ResourceURL(String* url)
     : ResourceURL(url, String::emptyString)
 {

@@ -40,6 +40,8 @@ public:
         UNKNOWN,
     };
 
+    static String* createPercentEncodingString(String* src);
+
     ResourceURL(const char* url)
         : ResourceURL(String::createASCIIString(url))
     {
