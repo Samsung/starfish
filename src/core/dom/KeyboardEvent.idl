@@ -20,7 +20,7 @@ interface KeyboardEvent : UIEvent {
   readonly attribute boolean altKey;
   readonly attribute boolean metaKey;
 
-  [Unimplemented] readonly attribute boolean repeat;
+  readonly attribute boolean repeat;
   [Unimplemented] readonly attribute boolean isComposing;
 
   [Unimplemented] boolean getModifierState(DOMString keyArg);

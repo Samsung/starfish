@@ -21,6 +21,10 @@
 
 namespace StarFish {
 
+#ifdef PORT_GRAPHIC_BACKEND_EFL
+const uint32_t REPEAT_DURATION = 1000;
+#endif
+
 // This table has same chars with
 // ASCII printable char(32-126)
 enum KeyValue {
@@ -247,6 +251,7 @@ public:
         , m_shiftKey(false)
         , m_altKey(false)
         , m_metaKey(false)
+        , m_repeat(false)
     {
     }
 
@@ -289,6 +294,10 @@ public:
     {
         return m_metaKey;
     }
+    bool repeat() const
+    {
+        return m_repeat;
+    }
     void setCtrlKey()
     {
         m_ctrlKey = true;
@@ -305,6 +314,10 @@ public:
     {
         m_metaKey = true;
     }
+    void setRepeat()
+    {
+        m_repeat = true;
+    }
 
 protected:
     KeyValue m_keyValue;
@@ -315,6 +328,7 @@ protected:
     bool m_shiftKey;
     bool m_altKey;
     bool m_metaKey;
+    bool m_repeat;
 };
 
 class KeyboardEvent : public UIEvent {
@@ -376,6 +390,15 @@ public:
     bool metaKey()
     {
         return m_keyboardData.m_metaKey;
+    }
+    bool repeat()
+    {
+#ifndef NDEBUG
+#ifndef PORT_GRAPHIC_BACKEND_EFL
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+#endif
+#endif
+        return m_keyboardData.m_repeat;
     }
 
 private:

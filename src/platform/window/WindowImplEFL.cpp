@@ -77,10 +77,12 @@ public:
         m_dummyBoxClipper = nullptr;
         m_renderingAnimator = nullptr;
         m_isMouseLbuttonDown = false;
+        m_isKeyDown = false;
         m_lastClickedTimestamp = 0;
         m_clickedCount = 0;
         m_canRendering = true;
         m_imfContext = nullptr;
+        m_lastKeyPressedTimestamp = 0;
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -178,9 +180,11 @@ public:
 
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
+    bool m_isKeyDown;
     bool m_canRendering;
     uint32_t m_lastClickedTimestamp;
     uint32_t m_clickedCount;
+    uint32_t m_lastKeyPressedTimestamp;
 };
 
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -432,6 +436,19 @@ static void setModifiersToKeyboardData(Evas_Modifier* d, KeyboardData& k)
     }
 }
 
+static void setRepeatToKeyboardData(WindowImplEFL* window, uint32_t timestamp,
+                                    KeyboardData& k)
+{
+    if (!window->m_isKeyDown) {
+        window->m_lastKeyPressedTimestamp = timestamp;
+        return;
+    }
+
+    if (timestamp - window->m_lastKeyPressedTimestamp < REPEAT_DURATION) {
+        k.setRepeat();
+    }
+}
+
 static const char* getImfMethod()
 {
     Eina_List* modules;
@@ -568,9 +585,11 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
             auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
             KeyboardData kdata(keyValue);
+            setRepeatToKeyboardData(sf, d->timestamp, kdata);
             setModifiersToKeyboardData(d, kdata);
             StarFishEnterer enter(sf->m_starFish);
             sf->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
+            sf->m_isKeyDown = true;
             return EINA_TRUE;
         },
         wnd);
@@ -588,6 +607,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             setModifiersToKeyboardData(d, kdata);
             StarFishEnterer enter(sf->m_starFish);
             sf->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);
+            sf->m_isKeyDown = false;
             return EINA_TRUE;
         },
         wnd);
@@ -830,9 +850,11 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                              (evas_key_modifier_is_set(
                                   ev->modifiers, "Shift_R") == EINA_TRUE));
             KeyboardData kdata(keyValue);
+            setRepeatToKeyboardData(self, ev->timestamp, kdata);
             setModifiersToKeyboardData(ev->modifiers, kdata);
             StarFishEnterer enter(self->m_starFish);
             self->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
+            self->m_isKeyDown = true;
         },
         wnd);
     evas_object_event_callback_add(
@@ -859,6 +881,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             setModifiersToKeyboardData(ev->modifiers, kdata);
             StarFishEnterer enter(self->m_starFish);
             self->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);
+            self->m_isKeyDown = false;
         },
         wnd);
 
