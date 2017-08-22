@@ -1631,6 +1631,7 @@ public:
     {
         switch (m_valueKind) {
         case StringValueKind:
+        case UrlValueKind:
             return m_value.m_stringValue;
         case ValueListKind:
             return m_value.m_multiValue;

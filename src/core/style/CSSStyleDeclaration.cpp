@@ -32,7 +32,9 @@ namespace StarFish {
 void CSSStyleDeclaration::rootPointerValueIfExists(CSSStyleValuePair v)
 {
     auto p = v.pointerValue();
-    m_pointerRooter.insert(p);
+    if (p) {
+        m_pointerRooter.insert(p);
+    }
 }
 
 void CSSStyleDeclaration::addValuePair(CSSStyleValuePair p)
