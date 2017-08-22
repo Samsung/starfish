@@ -603,31 +603,32 @@ bool WebView::rendering()
 
                     auto fr = ctx->visibleRect();
 
-                    std::string className;
-                    for (unsigned i = 0; i < ctx->owner()
-                                                 ->node()
-                                                 ->asHTMLElement()
-                                                 ->classNames()
-                                                 .size();
-                         i++) {
-                        className += ctx->owner()
-                                         ->node()
-                                         ->asHTMLElement()
-                                         ->classNames()[i]
-                                         .string()
-                                         ->utf8Data();
-                        className += " ";
-                    }
+                    if (ctx->owner()->node() &&
+                        ctx->owner()->node()->isHTMLElement()) {
+                        std::string className;
+                        HTMLElement* element =
+                            ctx->owner()->node()->asHTMLElement();
+                        for (unsigned i = 0; i < element->classNames().size();
+                             i++) {
+                            className +=
+                                element->classNames()[i].string()->utf8Data();
+                            className += " ";
+                        }
 
-                    printf(
-                        "StackingContext[%p, node %p %s id:%s className:%s "
-                        ", frame %p, buf %p %d %d %d %d]\n",
-                        ctx, ctx->owner()->node(),
-                        ctx->owner()->node()->localName()->utf8Data(),
-                        ctx->owner()->node()->asHTMLElement()->id()->utf8Data(),
-                        className.data(), ctx->owner(), ctx->buffer(),
-                        (int)fr.x(), (int)fr.y(), (int)fr.width(),
-                        (int)fr.height());
+                        printf(
+                            "StackingContext[%p, node %p %s id:%s className:%s"
+                            ", frame %p, buf %p %d %d %d %d]\n",
+                            ctx, element, element->localName()->utf8Data(),
+                            element->id()->utf8Data(), className.data(),
+                            ctx->owner(), ctx->buffer(), (int)fr.x(),
+                            (int)fr.y(), (int)fr.width(), (int)fr.height());
+                    } else {
+                        printf(
+                            "StackingContext[%p, anonymous node"
+                            ", frame %p, buf %p %d %d %d %d]\n",
+                            ctx, ctx->owner(), ctx->buffer(), (int)fr.x(),
+                            (int)fr.y(), (int)fr.width(), (int)fr.height());
+                    }
 
                     auto iter = ctx->childContexts().begin();
                     while (iter != ctx->childContexts().end()) {

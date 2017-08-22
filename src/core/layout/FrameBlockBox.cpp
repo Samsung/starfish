@@ -651,25 +651,6 @@ InlineNonReplacedBox* FrameBlockBox::firstInlineNonReplacedBox(FrameInline* f)
     return ret;
 }
 
-// This function returns nullptr if
-// * This block box contains no lineboxes, OR
-// * This function is called before doing layout.
-LineBox* FrameBlockBox::firstLineBox()
-{
-    LineBox* ret = nullptr;
-    if (hasBlockFlow()) {
-        for (Frame* child = firstChild(); child; child = child->next()) {
-            if ((ret = child->firstLineBox())) {
-                return ret;
-            }
-        }
-    } else if (!m_lineBoxes.empty()) {
-        return m_lineBoxes[0];
-    }
-
-    return ret;
-}
-
 void FrameBlockBox::establishesStackingContextIfNeeds()
 {
     FrameBox::establishesStackingContextIfNeeds();

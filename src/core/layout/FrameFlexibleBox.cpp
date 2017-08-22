@@ -504,7 +504,7 @@ void FlexFormattingContext::layoutMain()
 }
 
 bool FlexFormattingContext::isAnonymousFlexItemContainingOnlyWhitespace(
-    Frame* flexItem) const
+    Frame* flexItem)
 {
     if (flexItem->isFrameBlockBox()) {
         FrameBlockBox* blockBox = flexItem->asFrameBlockBox();
@@ -522,6 +522,17 @@ bool FlexFormattingContext::isAnonymousFlexItemContainingOnlyWhitespace(
     return false;
 }
 
+std::pair<bool, LayoutUnit> FlexFormattingContext::firstLineBoxYPosition(
+    FrameBox* flexItem) const
+{
+    auto it = m_firstLineBoxYPositions.find(flexItem);
+    if (it == m_firstLineBoxYPositions.end()) {
+        return std::make_pair(false, 0);
+    }
+
+    return std::make_pair(true, it->second);
+}
+
 void FlexFormattingContext::computeCrossSize()
 {
     size_t lines = m_currentLineIdx + 1;
@@ -532,26 +543,45 @@ void FlexFormattingContext::computeCrossSize()
     for (size_t i = 0; i < lines; i++) {
         FlexLine& flexLine = m_flexLines[i];
         std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
-        LayoutUnit ascender = 0;
-        LayoutUnit descender = 0;
+        LayoutUnit maxAscender = 0;
         LayoutUnit maxHypotheticalCrossSize = 0;
 
         for (size_t j = 0; j < flexItems.size(); j++) {
             FrameBox* flexItem = flexItems[j];
+            bool shouldAlignAtFirstBaseline = false;
+
+            if (!flexItem->isAbsolutePositioned() &&
+                flexItem->isFrameBlockBox() &&
+                flexItem->style()->alignSelf() == BaselineAlignItemValue &&
+                m_isMainAxisInInlineAxis &&
+                !flexItem->style()->marginTop().isAuto() &&
+                !flexItem->style()->marginBottom().isAuto()) {
+                shouldAlignAtFirstBaseline = true;
+            }
 
             if (m_isMainAxisInInlineAxis) {
+                if (shouldAlignAtFirstBaseline) {
+                    m_layoutContext.pushBlockBoxAligningAtFirstBaseline(
+                        flexItem->asFrameBlockBox());
+                }
                 flexItem->layout(m_layoutContext,
                                  Frame::LayoutWantToResolve::ResolveHeight);
+                if (shouldAlignAtFirstBaseline) {
+                    auto it = m_layoutContext.firstLineAscender(
+                        flexItem->asFrameBlockBox());
+                    if (it.first) {
+                        LineBox* flb = it.second.first;
+                        LayoutUnit ascender =
+                            flb->absolutePoint(flexItem).y() + it.second.second;
+                        m_firstLineBoxYPositions[flexItem] = ascender;
+                        maxAscender = std::max(maxAscender, ascender);
+                    }
+                    m_layoutContext.popBlockBoxAligningAtFirstBaseline();
+                }
             }
 
             if (flexItem->isAbsolutePositioned()) {
                 continue;
-            }
-
-            if (flexItem->style()->alignSelf() == BaselineAlignItemValue &&
-                ((m_isMainAxisInInlineAxis && flexItem->marginTop() != 0 &&
-                  flexItem->marginBottom() != 0))) {
-                // TODO
             }
 
             if (m_isMainAxisInInlineAxis) {
@@ -581,6 +611,7 @@ void FlexFormattingContext::computeCrossSize()
         } else {
             normalLines++;
             flexLine.m_lineHeight = maxHypotheticalCrossSize;
+            flexLine.m_maxAscender = maxAscender;
             sumOfCrossSize += maxHypotheticalCrossSize;
         }
     }
@@ -720,7 +751,6 @@ void FlexFormattingContext::resolveCrossMargin()
 void FlexFormattingContext::applyAlignSelf()
 {
     size_t lines = m_currentLineIdx + 1;
-
     for (size_t i = 0; i < lines; i++) {
         FlexLine& flexLine = m_flexLines[i];
         std::vector<FrameBox*>& flexItems = flexLine.m_flexItems;
@@ -733,9 +763,6 @@ void FlexFormattingContext::applyAlignSelf()
             LayoutUnit offset;
 
             switch (flexItem->style()->alignSelf()) {
-            case FlexStartAlignItemValue:
-                offset = 0;
-                break;
             case FlexEndAlignItemValue:
                 if (m_isMainAxisInInlineAxis) {
                     offset = crossSize - flexItem->outerHeight();
@@ -751,9 +778,20 @@ void FlexFormattingContext::applyAlignSelf()
                 }
                 break;
             case BaselineAlignItemValue:
-                // TODO
+                if (m_isMainAxisInInlineAxis) {
+                    auto it = firstLineBoxYPosition(flexItem);
+                    if (it.first) {
+                        offset = flexLine.m_maxAscender - it.second -
+                                 flexItem->marginTop();
+                    } else {
+                        offset = flexLine.m_maxAscender - flexItem->height() -
+                                 flexItem->marginTop();
+                    }
+                } else {
+                    offset = 0;
+                }
                 break;
-            case StretchAlignItemValue:
+            default:
                 offset = 0;
                 break;
             }

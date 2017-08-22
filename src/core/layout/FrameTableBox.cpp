@@ -1086,7 +1086,7 @@ FrameTableSectionBox* FrameTableBox::firstSectionBoxInVisualOrder()
 //   empty cells
 // * Use Y position of the first row if the first row is empty
 
-LayoutUnit FrameTableBox::calBaseline()
+LayoutUnit FrameTableBox::calBaseline(LayoutContext& ctx)
 {
     STARFISH_ASSERT(style()->display() ==
                     DisplayValue::InlineTableDisplayValue);
@@ -1101,10 +1101,11 @@ LayoutUnit FrameTableBox::calBaseline()
     bool isBaseLine = false;
     for (size_t i = 0; i < firstRS.cells().size(); ++i) {
         FrameTableCellBox* c = firstRS.cells()[i].cell();
-        LineBox* flb = c->firstLineBox();
+        auto it = ctx.firstLineAscender(c);
 
-        if (flb && (!tallestLB || (tallestLB->height() < flb->height()))) {
-            tallestLB = flb;
+        if (it.first &&
+            (!tallestLB || (tallestLB->height() < it.second.first->height()))) {
+            tallestLB = it.second.first;
             isBaseLine = c->style()->verticalAlign() ==
                          VerticalAlignValue::BaselineVAlignValue;
         }

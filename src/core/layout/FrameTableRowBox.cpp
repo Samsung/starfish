@@ -134,7 +134,9 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableCellBox());
         FrameTableCellBox* cell = c->asFrameTableCellBox();
+        ctx.pushBlockBoxAligningAtFirstBaseline(cell);
         cell->layoutHeight(ctx);
+        ctx.popBlockBoxAligningAtFirstBaseline();
         LayoutUnit cellHeight = cell->height();
         maxHeightSoFar = std::max(maxHeightSoFar, cellHeight);
     }

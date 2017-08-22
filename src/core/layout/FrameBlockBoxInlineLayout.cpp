@@ -1060,12 +1060,11 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     // m_block.m_lineBoxes.shrink_to_fit();
     resetLineBox();
     if ((!block->isAnonymous() && !block->hasBlockFlow()) ||
-        ctx.checkIfThisIsFirstLineCandidate(block->parent(), block)) {
+        ctx.checkIfThisIsFirstLineCandidate(block)) {
         Length textIndent = block->style()->textIndent();
         FrameBox* cb = containingBlock(block);
         m_textIndentWidth =
             textIndent.specifiedValue(cb->contentWidth(), ctx.viewportWidth());
-        ;
     }
 }
 
@@ -1080,7 +1079,7 @@ void LineFormattingContext::registerInlineContent(FrameLineBreak* br)
         }
     }
     if (hasNormalFlowContent) {
-        m_layoutContext.registerYPositionPerVAInlineBlock(back, ascender(back));
+        m_layoutContext.registerLineBoxAscender(m_block, back, ascender(back));
     }
 }
 
@@ -2574,17 +2573,17 @@ void FrameBlockBox::layoutInline(LineFormattingContext& ctx)
     } else {
         DisplayValue display = style()->display();
         STARFISH_ASSERT(isInlineLevel());
-        // inline-block, inline-table
+        // inline-block, inline-table, inline-flex
         ctx.m_layoutContext.pushInlineBlockBox(this);
         setLayoutParent(ctx.m_currentLayoutParent);
         layout(ctx.m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
         LayoutUnit ascender;
 
         if (display == InlineTableDisplayValue) {
-            ascender = asFrameTableBox()->calBaseline();
+            ascender = asFrameTableBox()->calBaseline(ctx.m_layoutContext);
         } else {
             std::pair<bool, LayoutUnit> p =
-                ctx.m_layoutContext.registeredLastLineBoxYPosition(this);
+                ctx.m_layoutContext.lineBoxAscender(this);
             if (p.first && style()->overflowX() == VisibleOverflow) {
                 ascender = p.second;
             } else {
@@ -3200,21 +3199,15 @@ LayoutUnit LineFormattingContext::contentHeightForBlock()
         riter++;
     }
 
-    if (!m_block->m_lineBoxes.empty()) {
-        // register ascender of first line for table-layout
-        m_layoutContext.registerFirstLineAscender(
-            m_block->m_lineBoxes[0], ascender(m_block->m_lineBoxes[0]));
-    } else {
-        if (m_block->isFrameInputBox()) {
-            STARFISH_ASSERT(m_block->firstChild()->isFrameText());
-            LayoutUnit fontHeight = m_block->firstChild()
-                                        ->asFrameText()
-                                        ->style()
-                                        ->font()
-                                        ->metrics()
-                                        .m_fontHeight;
-            return fontHeight;
-        }
+    if (m_block->isFrameInputBox()) {
+        STARFISH_ASSERT(m_block->firstChild()->isFrameText());
+        LayoutUnit fontHeight = m_block->firstChild()
+                                    ->asFrameText()
+                                    ->style()
+                                    ->font()
+                                    ->metrics()
+                                    .m_fontHeight;
+        return fontHeight;
     }
 
     if (m_block->isEstablishesBlockFormattingContext()) {
@@ -3756,8 +3749,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             } else {
                 LayoutUnit textIndentWidth = LayoutUnit(0);
                 if ((!isAnonymous() && !hasBlockFlow()) ||
-                    ctx.layoutContext().checkIfThisIsFirstLineCandidate(
-                        parent(), this)) {
+                    ctx.layoutContext().checkIfThisIsFirstLineCandidate(this)) {
                     Length textIndent = style()->textIndent();
                     textIndentWidth = textIndent.specifiedValue(
                         ctx.remainingWidth(),

@@ -184,9 +184,10 @@ LayoutUnit FrameTableCellBox::calBaseline(LayoutContext& ctx)
     case VerticalAlignValue::TextTopVAlignValue:
     case VerticalAlignValue::TextBottomVAlignValue:
     case VerticalAlignValue::NumericVAlignValue: {
-        LineBox* flb = firstLineBox();
-        if (flb) {
-            return flb->absolutePoint(this).y() + ctx.firstLineAscender(flb);
+        auto it = ctx.firstLineAscender(this);
+        if (it.first) {
+            LineBox* flb = it.second.first;
+            return flb->absolutePoint(this).y() + it.second.second;
         }
         break;
     }

@@ -125,7 +125,7 @@ public:
     void layoutHeight(LayoutContext& ctx);
     void calCellWidth(LayoutContext& ctx);
     void calCellWidthsWithColspans();
-    LayoutUnit calBaseline();
+    LayoutUnit calBaseline(LayoutContext& ctx);
 
     // This function return nullptr if there is no valid column object
     FrameTableColBox* columnAtAbsoluteColumnIndex(unsigned index);
