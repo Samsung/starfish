@@ -1630,8 +1630,8 @@ public:
     void* pointerValue()
     {
         switch (m_valueKind) {
-        case StringValueKind:
         case UrlValueKind:
+        case StringValueKind:
             return m_value.m_stringValue;
         case ValueListKind:
             return m_value.m_multiValue;
