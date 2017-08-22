@@ -358,8 +358,12 @@ String* ResourceRequest::encodeFormDataSet(
     if (formEnctype == APPLICATION_X_WWW_FORM_URLENCODED) {
         for (size_t i = 0; i < formDataSet->size(); i++) {
             FormDataSetItem* item = (*formDataSet)[i];
-            String* name = item->m_name->replaceAll(space, plus);
-            String* value = item->m_value->replaceAll(space, plus);
+            String* name =
+                ResourceURL::createPercentEncodingString(item->m_name)
+                    ->replaceAll(space, plus);
+            String* value =
+                ResourceURL::createPercentEncodingString(item->m_value)
+                    ->replaceAll(space, plus);
             String* type = item->m_type->replaceAll(space, plus);
 
             if (i == 0 && name->equalsWithoutCase("isindex") &&
