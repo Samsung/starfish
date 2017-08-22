@@ -29,14 +29,14 @@ public:
     UIEventInit()
         : EventInit()
         , m_view(nullptr)
-        , m_detail(false)
+        , m_detail(0)
     {
     }
 
     UIEventInit(bool bubbles, bool cancelable)
         : EventInit(bubbles, cancelable)
         , m_view(nullptr)
-        , m_detail(false)
+        , m_detail(0)
     {
     }
 
@@ -107,18 +107,21 @@ public:
     UIEvent(Document* document)
         : Event(document)
         , m_view(nullptr)
+        , m_detail(0)
     {
     }
 
     UIEvent(Document* document, String* eventType)
         : Event(document, eventType)
         , m_view(nullptr)
+        , m_detail(0)
     {
     }
 
     UIEvent(Document* document, String* eventType, const UIEventInit& init)
         : Event(document, eventType, init)
         , m_view(init.view())
+        , m_detail(0)
     {
     }
 
@@ -136,8 +139,24 @@ public:
         m_view = view;
     }
 
+    int32_t detail() const
+    {
+#ifndef NDEBUG
+#ifndef PORT_GRAPHIC_BACKEND_EFL
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+#endif
+#endif
+        return m_detail;
+    }
+
+    void setDetail(int32_t detail)
+    {
+        m_detail = detail;
+    }
+
 private:
     Window* m_view;
+    int32_t m_detail;
 };
 }
 

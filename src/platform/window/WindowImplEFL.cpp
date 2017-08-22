@@ -77,6 +77,8 @@ public:
         m_dummyBoxClipper = nullptr;
         m_renderingAnimator = nullptr;
         m_isMouseLbuttonDown = false;
+        m_lastClickedTimestamp = 0;
+        m_clickedCount = 0;
         m_canRendering = true;
         m_imfContext = nullptr;
 
@@ -177,6 +179,8 @@ public:
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
     bool m_canRendering;
+    uint32_t m_lastClickedTimestamp;
+    uint32_t m_clickedCount;
 };
 
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -492,9 +496,16 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             // We care just left button now
             if (d->buttons == 1) {
                 StarFishEnterer enter(sf->starFish());
+                if (d->timestamp - sf->m_lastClickedTimestamp >
+                    CLICK_REFRESH_DELAY) {
+                    sf->m_clickedCount = 1;
+                    sf->m_lastClickedTimestamp = d->timestamp;
+                } else {
+                    sf->m_clickedCount++;
+                }
                 MouseData mdata(MouseData::MouseButtonValue::LeftButton,
                                 MouseData::MouseButtonsValue::LeftButtonDown,
-                                d->x, d->y);
+                                d->x, d->y, sf->m_clickedCount);
                 sf->dispatchMouseEvent(PlatformWindow::MouseEventDown, mdata);
                 sf->m_isMouseLbuttonDown = true;
             }
@@ -512,7 +523,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 StarFishEnterer enter(sf->starFish());
                 MouseData mdata(MouseData::MouseButtonValue::NoButton,
                                 MouseData::MouseButtonsValue::NoButtonDown,
-                                d->x, d->y);
+                                d->x, d->y, sf->m_clickedCount);
                 sf->dispatchMouseEvent(PlatformWindow::MouseEventUp, mdata);
                 sf->m_isMouseLbuttonDown = false;
             }
@@ -541,7 +552,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 sf->m_isMouseLbuttonDown
                     ? MouseData::MouseButtonsValue::LeftButtonDown
                     : 0;
-            MouseData mdata(0, buttons, d->x, d->y);
+            MouseData mdata(0, buttons, d->x, d->y, 0);
             sf->dispatchMouseEvent(PlatformWindow::MouseEventMove, mdata);
             return EINA_TRUE;
         },

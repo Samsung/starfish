@@ -163,7 +163,7 @@ public:
                 StarFish::MouseData data(
                     StarFish::MouseData::MouseButtonValue::LeftButton,
                     StarFish::MouseData::MouseButtonsValue::LeftButtonDown,
-                    screen.x, screen.y);
+                    screen.x, screen.y, 0);
                 d->data = data;
                 TO_STARFISH(m_instance)
                     ->messageLoop()
@@ -185,7 +185,7 @@ public:
                 StarFish::MouseData data(
                     StarFish::MouseData::MouseButtonValue::NoButton,
                     StarFish::MouseData::MouseButtonsValue::NoButtonDown,
-                    screen.x, screen.y);
+                    screen.x, screen.y, 0);
                 d->data = data;
                 TO_STARFISH(m_instance)
                     ->messageLoop()
@@ -208,7 +208,7 @@ public:
                     m_isMouseLbuttonDown
                         ? StarFish::MouseData::MouseButtonsValue::LeftButtonDown
                         : 0;
-                StarFish::MouseData data(0, buttons, screen.x, screen.y);
+                StarFish::MouseData data(0, buttons, screen.x, screen.y, 0);
 
                 d->data = data;
                 TO_STARFISH(m_instance)
@@ -240,7 +240,7 @@ public:
             m_isMouseLbuttonDown
                 ? StarFish::MouseData::MouseButtonsValue::LeftButtonDown
                 : 0;
-        StarFish::MouseData data(0, buttons, point.x, point.y);
+        StarFish::MouseData data(0, buttons, point.x, point.y, 0);
 
         struct dummy {
             StarFish::StarFish* starfish;

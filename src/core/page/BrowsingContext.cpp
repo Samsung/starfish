@@ -696,14 +696,14 @@ void BrowsingContext::handleHover(PlatformWindow::MouseEventKind kind,
             if (oldTarget) {
                 String* name =
                     starFish()->staticStrings()->m_mouseout.localName();
-                MouseData data(button, buttons, posX, posY);
+                MouseData data(button, buttons, posX, posY, 0);
                 Event* e = createMouseEvent(document(), name, data);
                 Node* t = oldTarget->nearestParentElement();
                 t = t ? t : document();
                 document()->window()->dispatchEvent(t ? t : document(), e);
             }
             String* name = starFish()->staticStrings()->m_mouseover.localName();
-            MouseData data(button, buttons, posX, posY);
+            MouseData data(button, buttons, posX, posY, 0);
             Event* e = createMouseEvent(document(), name, data);
             Node* t = newTarget->nearestParentElement();
             t = t ? t : document();
@@ -834,7 +834,7 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
             name = starFish()->staticStrings()->m_click.localName();
             MouseData clickData(MouseData::MouseButtonValue::LeftButton,
                                 MouseData::MouseButtonsValue::LeftButtonDown,
-                                targetX, targetY);
+                                targetX, targetY, 0);
             Event* click = createMouseEvent(document(), name, clickData);
             document()->window()->dispatchEvent(t, click);
         }
@@ -919,7 +919,7 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         handleHover(kind, targetNode, data.button(), data.buttons(), targetX,
                     targetY);
 
-        MouseData newData(data.button(), data.buttons(), newX, newY);
+        MouseData newData(data.button(), data.buttons(), newX, newY, 0);
         if (targetNode->asHTMLIFrameElement()
                 ->browsingContext()
                 ->dispatchMouseEvent(kind, newData)) {
