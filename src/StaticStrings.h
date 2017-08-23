@@ -282,6 +282,8 @@ public:
     QualifiedName m_ontouchend;
     QualifiedName m_load;
     QualifiedName m_onload;
+    QualifiedName m_submit;
+    QualifiedName m_onsubmit;
     QualifiedName m_error;
     QualifiedName m_onerror;
     QualifiedName m_unload;

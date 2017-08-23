@@ -235,8 +235,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 type()->equalsWithoutCase("button")) {
                 HTMLFormElement* formNode = form();
                 if (formNode) {
-                    formNode->setSubmitter(this);
-                    formNode->submit();
+                    fireSubmitEvent(this);
                     return true;
                 }
             } else if (type()->equalsWithoutCase("checkbox")) {

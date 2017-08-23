@@ -28,6 +28,7 @@
 #include "core/dom/HTMLLegendElement.h"
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Location.h"
 #include "core/page/Window.h"
@@ -52,7 +53,6 @@ FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
 
 HTMLFormElement::HTMLFormElement(Document* document)
     : HTMLFormObject(document)
-    , m_submitter(nullptr)
     , m_elements(nullptr)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
@@ -124,6 +124,21 @@ void HTMLFormObject::setDisabled(bool disabled)
     m_disabled = disabled;
 }
 
+void HTMLFormObject::fireSubmitEvent(Node* fromThisNode)
+{
+    auto fn = [](size_t handle, void* data) {
+        Node* node = (Node*)data;
+        String* eventType =
+            node->starFish()->staticStrings()->m_submit.localName();
+        Event* e =
+            new Event(node->document(), eventType, EventInit(true, true));
+        e->setTarget(node);
+        node->EventTarget::dispatchEvent(node, e);
+    };
+    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
+                                        fromThisNode);
+}
+
 HTMLFormElement* HTMLFormObject::form()
 {
     for (Node* p = parentNode(); p; p = p->parentNode()) {
@@ -158,7 +173,6 @@ void* HTMLFormElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLFormElement)] = { 0 };
-        GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormElement, m_submitter));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormElement, m_elements));
         HTMLElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLFormElement));
@@ -212,19 +226,34 @@ void HTMLFormElement::setAction(String* action)
     setAttribute(starFish()->staticStrings()->m_action, action);
 }
 
-void HTMLFormElement::setSubmitter(Element* elem)
+bool HTMLFormElement::handleDefaultEvent(Event* event)
 {
-    m_submitter = elem;
+    if (HTMLElement::handleDefaultEvent(event)) {
+        return true;
+    }
+
+    if (starFish()->staticStrings()->m_submit.localName() == event->type()) {
+        STARFISH_ASSERT(event->target()->isHTMLElement());
+        submit(event->target()->asHTMLElement());
+        return true;
+    }
+
+    return false;
+}
+
+void HTMLFormElement::submit()
+{
+    return submit(nullptr);
 }
 
 // https://www.w3.org/TR/html5/forms.html#concept-form-submit
-void HTMLFormElement::submit()
+void HTMLFormElement::submit(HTMLElement* submitter)
 {
-    GCVector<FormDataSetItem*>* formDataSet = createFormDataSet();
+    GCVector<FormDataSetItem*>* formDataSet = createFormDataSet(submitter);
     String* formAction = String::emptyString;
     HTMLInputElement* inputNode = nullptr;
-    if (m_submitter && m_submitter->isHTMLInputElement()) {
-        inputNode = m_submitter->asHTMLInputElement();
+    if (submitter && submitter->isHTMLInputElement()) {
+        inputNode = submitter->asHTMLInputElement();
         if (inputNode->type()->equalsWithoutCase("button")) {
             formAction = inputNode->formAction();
         }
@@ -329,12 +358,13 @@ Element* HTMLFormElement::defaultNamedGetter(String* name)
 }
 
 // https://www.w3.org/TR/html5/forms.html#constructing-the-form-data-set
-GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet()
+GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
+    HTMLElement* submitter)
 {
     GCVector<Element*> inputNodes;
     Traverse::collectDescendants(
         inputNodes, asNode(),
-        [this](Node* node) -> bool {
+        [this, submitter](Node* node) -> bool {
             // TODO: datalist, img button, and object is not supported
             if (node->isHTMLInputElement()) {
                 HTMLInputElement* inputNode = node->asHTMLInputElement();
@@ -343,7 +373,7 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet()
                     return false;
                 }
                 if (inputNode->type()->equalsWithoutCase("button") &&
-                    (inputNode != m_submitter)) {
+                    (inputNode != submitter)) {
                     return false;
                 }
                 if (inputNode->type()->equalsWithoutCase("checkbox") &&
