@@ -567,18 +567,17 @@ void LayoutContext::registerLineBoxAscender(FrameBlockBox* blockBox,
     registerFirstLineAscender(blockBox, lb, ascender);
 }
 
-std::pair<bool, LayoutUnit> LayoutContext::lineBoxAscender(
-    FrameBlockBox* blockBox)
+Nullable<LayoutUnit> LayoutContext::lineBoxAscender(FrameBlockBox* blockBox)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     STARFISH_ASSERT(c.m_inlineBlockBoxStack->back() == blockBox);
     auto iter = (*c.m_lineBoxAscenders).find(blockBox);
     if (iter == c.m_lineBoxAscenders->end()) {
-        return std::pair<bool, LayoutUnit>(false, 0);
+        return Nullable<LayoutUnit>();
     }
     LayoutUnit r = iter->second;
     c.m_lineBoxAscenders->erase(iter);
-    return std::pair<bool, LayoutUnit>(true, r);
+    return r;
 }
 
 void LayoutContext::registerFirstLineAscender(FrameBlockBox* owner,
@@ -604,20 +603,20 @@ void LayoutContext::registerFirstLineAscender(FrameBlockBox* owner,
     }
 }
 
-std::pair<bool, std::pair<LineBox*, LayoutUnit>>
-LayoutContext::firstLineAscender(FrameBlockBox* blockBox)
+Nullable<std::pair<LineBox*, LayoutUnit>> LayoutContext::firstLineAscender(
+    FrameBlockBox* blockBox)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     STARFISH_ASSERT(c.m_blockBoxAligningAtFirstBaselineStack->back() ==
                     blockBox);
     auto iter = c.m_firstLineAscenders->find(blockBox);
     if (iter == c.m_firstLineAscenders->end()) {
-        return std::make_pair(false, std::make_pair(nullptr, 0));
+        return Nullable<std::pair<LineBox*, LayoutUnit>>();
     }
 
     auto l = iter->second;
     c.m_firstLineAscenders->erase(iter);
-    return std::make_pair(true, l);
+    return l;
 }
 
 void LayoutContext::tempReigsterFirstLineAscender(
@@ -627,16 +626,35 @@ void LayoutContext::tempReigsterFirstLineAscender(
     (*c.m_tempAscenders)[cellBox] = ascenderInfo;
 }
 
-std::pair<bool, std::pair<LineBox*, LayoutUnit>>
-LayoutContext::tempFirstLineAscender(FrameTableCellBox* cellBox)
+Nullable<std::pair<LineBox*, LayoutUnit>> LayoutContext::tempFirstLineAscender(
+    FrameTableCellBox* cellBox)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     auto it = c.m_tempAscenders->find(cellBox);
     if (it == c.m_tempAscenders->end()) {
-        return std::make_pair(false, std::make_pair(nullptr, 0));
+        return Nullable<std::pair<LineBox*, LayoutUnit>>();
     }
 
-    return std::make_pair(true, it->second);
+    return it->second;
+}
+
+Nullable<PreferredWidthValue> LayoutContext::preferredWidthInfo(
+    PreferredWidthKey key)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    auto it = c.m_preferredWidthValues->find(key);
+    if (it == c.m_preferredWidthValues->end()) {
+        return Nullable<PreferredWidthValue>();
+    }
+
+    return it->second;
+}
+
+void LayoutContext::registerPreferredWidthInfo(PreferredWidthKey key,
+                                               PreferredWidthValue value)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    (*c.m_preferredWidthValues)[key] = value;
 }
 
 void LayoutContext::registerAbsolutePositionedBox(FrameBox* box)

@@ -57,8 +57,8 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx,
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
-    PreferredWidthContext p(ctx, LayoutUnit::max());
-    computePreferredWidth(p);
+    PreferredWidthContext p(ctx, this, LayoutUnit::max());
+    p.computePreferredWidth();
     m_minCellWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
     m_maxCellWidth = p.preferredWidth() + borderWidth() + paddingWidth();
 }
@@ -185,9 +185,9 @@ LayoutUnit FrameTableCellBox::calBaseline(LayoutContext& ctx)
     case VerticalAlignValue::TextBottomVAlignValue:
     case VerticalAlignValue::NumericVAlignValue: {
         auto it = ctx.tempFirstLineAscender(this);
-        if (it.first) {
-            LineBox* flb = it.second.first;
-            return flb->absolutePoint(this).y() + it.second.second;
+        if (it.hasValue()) {
+            LineBox* flb = it.getValue().first;
+            return flb->absolutePoint(this).y() + it.getValue().second;
         }
         break;
     }

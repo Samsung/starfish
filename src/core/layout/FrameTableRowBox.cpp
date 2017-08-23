@@ -137,8 +137,8 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
         ctx.pushBlockBoxAligningAtFirstBaseline(cell);
         cell->layoutHeight(ctx);
         auto it = ctx.firstLineAscender(cell);
-        if (it.first) {
-            ctx.tempReigsterFirstLineAscender(cell, it.second);
+        if (it.hasValue()) {
+            ctx.tempReigsterFirstLineAscender(cell, it.getValue());
         }
         ctx.popBlockBoxAligningAtFirstBaseline();
         LayoutUnit cellHeight = cell->height();

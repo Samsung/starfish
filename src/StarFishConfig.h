@@ -394,6 +394,13 @@ template <typename T, typename Hasher = std::hash<T>,
           typename Allocator = gc_allocator_ignore_off_page<T>>
 using GCUnorderedSet = std::unordered_set<T, Hasher, Predicate, Allocator>;
 
+template <class T>
+inline void hash_combine(std::size_t& seed, const T& v)
+{
+    std::hash<T> hasher;
+    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
 #include "core/layout/LayoutUtil.h"
 #include "core/util/String.h"
 #include "core/util/AtomicString.h"

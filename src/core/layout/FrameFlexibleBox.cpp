@@ -522,15 +522,15 @@ bool FlexFormattingContext::isAnonymousFlexItemContainingOnlyWhitespace(
     return false;
 }
 
-std::pair<bool, LayoutUnit> FlexFormattingContext::firstLineBoxYPosition(
+Nullable<LayoutUnit> FlexFormattingContext::firstLineBoxYPosition(
     FrameBox* flexItem) const
 {
     auto it = m_firstLineBoxYPositions.find(flexItem);
     if (it == m_firstLineBoxYPositions.end()) {
-        return std::make_pair(false, 0);
+        return Nullable<LayoutUnit>();
     }
 
-    return std::make_pair(true, it->second);
+    return it->second;
 }
 
 void FlexFormattingContext::computeCrossSize()
@@ -569,10 +569,10 @@ void FlexFormattingContext::computeCrossSize()
                 if (shouldAlignAtFirstBaseline) {
                     auto it = m_layoutContext.firstLineAscender(
                         flexItem->asFrameBlockBox());
-                    if (it.first) {
-                        LineBox* flb = it.second.first;
-                        LayoutUnit ascender =
-                            flb->absolutePoint(flexItem).y() + it.second.second;
+                    if (it.hasValue()) {
+                        LineBox* flb = it.getValue().first;
+                        LayoutUnit ascender = flb->absolutePoint(flexItem).y() +
+                                              it.getValue().second;
                         m_firstLineBoxYPositions[flexItem] = ascender;
                         maxAscender = std::max(maxAscender, ascender);
                     }
@@ -780,8 +780,8 @@ void FlexFormattingContext::applyAlignSelf()
             case BaselineAlignItemValue:
                 if (m_isMainAxisInInlineAxis) {
                     auto it = firstLineBoxYPosition(flexItem);
-                    if (it.first) {
-                        offset = flexLine.m_maxAscender - it.second -
+                    if (it.hasValue()) {
+                        offset = flexLine.m_maxAscender - it.getValue() -
                                  flexItem->marginTop();
                     } else {
                         offset = flexLine.m_maxAscender - flexItem->height() -
@@ -1039,13 +1039,15 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
     // as the flex item’s cross size.
     if (isMainAxisInInlineAxis) {
         if (basisSize == intMaxForLayoutUnit) {
-            PreferredWidthContext p(ctx, availableMainSize);
-            flexItem->computePreferredWidth(p);
+            PreferredWidthContext p(ctx, flexItem,
+                                    availableMainSize - flexItem->mbpWidth());
+            p.computePreferredWidth();
             basisSize = p.preferredWidth();
         }
     } else {
-        PreferredWidthContext p(ctx, availableCrossSize);
-        flexItem->computePreferredWidth(p);
+        PreferredWidthContext p(ctx, flexItem,
+                                availableCrossSize - flexItem->mbpWidth());
+        p.computePreferredWidth();
         flexItem->setContentWidth(p.preferredWidth());
         flexItem->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
         if (basisSize == intMaxForLayoutUnit) {

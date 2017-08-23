@@ -207,6 +207,64 @@ public:
     LayoutUnit m_negativeMargin;
 };
 
+struct PreferredWidthKey {
+    LayoutUnit m_availableWidth;
+    Frame* m_frame;
+
+    PreferredWidthKey()
+        : PreferredWidthKey(0, nullptr)
+    {
+    }
+
+    PreferredWidthKey(LayoutUnit availableWidth, Frame* frame)
+        : m_availableWidth(availableWidth)
+        , m_frame(frame)
+    {
+    }
+};
+};
+
+namespace std {
+template <>
+struct hash<StarFish::PreferredWidthKey> {
+    size_t operator()(StarFish::PreferredWidthKey const& x) const
+    {
+        std::size_t seed = 0;
+        hash_combine(seed, x.m_availableWidth.toInt());
+        hash_combine(seed, x.m_frame);
+        return seed;
+    }
+};
+
+template <>
+struct equal_to<StarFish::PreferredWidthKey> {
+    bool operator()(StarFish::PreferredWidthKey const& a,
+                    StarFish::PreferredWidthKey const& b) const
+    {
+        return a.m_availableWidth == b.m_availableWidth &&
+               a.m_frame == b.m_frame;
+    }
+};
+}
+
+namespace StarFish {
+
+struct PreferredWidthValue {
+    LayoutUnit m_preferredWidth;
+    LayoutUnit m_preferredMinWidth;
+
+    PreferredWidthValue()
+        : PreferredWidthValue(0, 0)
+    {
+    }
+
+    PreferredWidthValue(LayoutUnit preferredWidth, LayoutUnit preferredMinWidth)
+        : m_preferredWidth(preferredWidth)
+        , m_preferredMinWidth(preferredMinWidth)
+    {
+    }
+};
+
 class LayoutContext {
 public:
     LayoutContext(StarFish* starFish, FrameDocument* frameDocument)
@@ -252,8 +310,11 @@ public:
                                std::pair<LineBox*, LayoutUnit>>* s7 =
                 new std::unordered_map<FrameTableCellBox*,
                                        std::pair<LineBox*, LayoutUnit>>();
-            m_blockFormattingContextInfo.emplace_back(isNormalFlow, isRoot, s,
-                                                      s2, s3, s4, s5, s6, s7);
+            std::unordered_map<PreferredWidthKey, PreferredWidthValue>* s8 =
+                new std::unordered_map<PreferredWidthKey,
+                                       PreferredWidthValue>();
+            m_blockFormattingContextInfo.emplace_back(
+                isNormalFlow, isRoot, s, s2, s3, s4, s5, s6, s7, s8);
         } else {
             BlockFormattingContext& back = m_blockFormattingContextInfo.back();
             std::vector<FloatingBoxInfo>* s =
@@ -262,7 +323,8 @@ public:
                 isNormalFlow, isRoot, back.m_inlineBlockBoxStack, s,
                 back.m_lineBoxAscenders, back.m_firstLineCandidates,
                 back.m_blockBoxAligningAtFirstBaselineStack,
-                back.m_firstLineAscenders, back.m_tempAscenders);
+                back.m_firstLineAscenders, back.m_tempAscenders,
+                back.m_preferredWidthValues);
         }
     }
 
@@ -277,6 +339,7 @@ public:
                 .m_blockBoxAligningAtFirstBaselineStack;
             delete m_blockFormattingContextInfo.back().m_firstLineAscenders;
             delete m_blockFormattingContextInfo.back().m_tempAscenders;
+            delete m_blockFormattingContextInfo.back().m_preferredWidthValues;
         }
         delete m_blockFormattingContextInfo.back().m_floatBoxes;
         m_blockFormattingContextInfo.pop_back();
@@ -317,7 +380,7 @@ public:
 
     void registerLineBoxAscender(FrameBlockBox* blockBox, LineBox* lb,
                                  LayoutUnit ascender);
-    std::pair<bool, LayoutUnit> lineBoxAscender(FrameBlockBox* box);
+    Nullable<LayoutUnit> lineBoxAscender(FrameBlockBox* box);
 
     void pushBlockBoxAligningAtFirstBaseline(FrameBlockBox* blockBox)
     {
@@ -333,14 +396,18 @@ public:
 
     void registerFirstLineAscender(FrameBlockBox* owner, LineBox* lineBox,
                                    LayoutUnit ascender);
-    std::pair<bool, std::pair<LineBox*, LayoutUnit>> firstLineAscender(
+    Nullable<std::pair<LineBox*, LayoutUnit>> firstLineAscender(
         FrameBlockBox* blockBox);
 
     void tempReigsterFirstLineAscender(
         FrameTableCellBox* cellBox,
         std::pair<LineBox*, LayoutUnit> ascenderInfo);
-    std::pair<bool, std::pair<LineBox*, LayoutUnit>> tempFirstLineAscender(
+    Nullable<std::pair<LineBox*, LayoutUnit>> tempFirstLineAscender(
         FrameTableCellBox* cellBox);
+
+    Nullable<PreferredWidthValue> preferredWidthInfo(PreferredWidthKey key);
+    void registerPreferredWidthInfo(PreferredWidthKey key,
+                                    PreferredWidthValue value);
 
     void registerAbsolutePositionedBox(FrameBox* box);
 
@@ -445,7 +512,9 @@ private:
             std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
                 firstLineAscenders,
             std::unordered_map<FrameTableCellBox*,
-                               std::pair<LineBox*, LayoutUnit>>* tempAscenders)
+                               std::pair<LineBox*, LayoutUnit>>* tempAscenders,
+            std::unordered_map<PreferredWidthKey, PreferredWidthValue>*
+                preferredWidthValues)
             : m_isRoot(isRoot)
             , m_isNormalFlow(isNormalFlow)
             , m_inlineBlockBoxStack(inlineBlockBoxStack)
@@ -456,6 +525,7 @@ private:
                   blockBoxAligningFirstLineStack)
             , m_firstLineAscenders(firstLineAscenders)
             , m_tempAscenders(tempAscenders)
+            , m_preferredWidthValues(preferredWidthValues)
         {
         }
         bool m_isRoot;
@@ -474,6 +544,8 @@ private:
             m_firstLineAscenders;
         std::unordered_map<FrameTableCellBox*, std::pair<LineBox*, LayoutUnit>>*
             m_tempAscenders;
+        std::unordered_map<PreferredWidthKey, PreferredWidthValue>*
+            m_preferredWidthValues;
     };
 
     StarFish* m_starFish;
@@ -558,8 +630,10 @@ enum WordType {
 
 class PreferredWidthContext {
 public:
-    PreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth)
+    PreferredWidthContext(LayoutContext& lc, Frame* frame,
+                          LayoutUnit lastKnownWidth)
         : m_layoutContext(lc)
+        , m_frame(frame)
         , m_preferredWidthSoFar(0)
         , m_preferredMinWidthSoFar(0)
         , m_currentLineWidth(0)
@@ -574,6 +648,8 @@ public:
         , m_hasAppliedTextIndent(false)
     {
     }
+
+    void computePreferredWidth();
 
     LayoutContext& layoutContext()
     {
@@ -731,6 +807,7 @@ public:
 
 private:
     LayoutContext& m_layoutContext;
+    Frame* m_frame;
     LayoutUnit m_preferredWidthSoFar;
     LayoutUnit m_preferredMinWidthSoFar;
     LayoutUnit m_currentLineWidth;

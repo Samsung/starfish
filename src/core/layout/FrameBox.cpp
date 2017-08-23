@@ -653,47 +653,57 @@ void FrameBox::clearStackingContextIfNeeds(bool shouldDetachNativeBuffer)
     }
 }
 
-LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(LayoutContext& ctx,
-                                               LayoutUnit width,
-                                               LayoutUnit parentWidth,
-                                               LayoutUnit viewportWidth)
+LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
+    LayoutContext& ctx, LayoutUnit width, LayoutUnit parentWidth,
+    LayoutUnit viewportWidth, bool underComputingPreferredWidth)
 {
     ComputedStyle* style = Frame::style();
     if (style->minWidth().isSpecified()) {
-        LayoutUnit minWidth =
-            style->minWidth().specifiedValue(parentWidth, viewportWidth);
+        if (!(underComputingPreferredWidth && style->minWidth().isPercent())) {
+            LayoutUnit minWidth =
+                style->minWidth().specifiedValue(parentWidth, viewportWidth);
 
-        minWidth = contentWidthApplyingBoxSizing(minWidth);
+            minWidth = contentWidthApplyingBoxSizing(minWidth);
 
-        if (minWidth > width) {
-            return minWidth;
+            if (minWidth > width) {
+                return minWidth;
+            }
         }
     } else if (isFlexItem()) {
-        LayoutUnit minWidth;
-        if (layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
-            style->overflowX() == VisibleOverflow) {
-            PreferredWidthContext p(ctx, parentWidth - mbpWidth());
-            computePreferredWidth(p);
-            minWidth = p.preferredMinWidth();
-            if (style->width().isSpecified()) {
-                minWidth =
-                    std::min(minWidth, LayoutUnit(style->width().specifiedValue(
-                                           parentWidth, viewportWidth)));
+        LayoutUnit minWidth = intMaxForLayoutUnit;
+        if (style->width().isSpecified()) {
+            if (!(underComputingPreferredWidth && style->width().isPercent())) {
+                LayoutUnit width =
+                    style->width().specifiedValue(parentWidth, viewportWidth);
+
+                width = contentWidthApplyingBoxSizing(width);
+
+                minWidth = width;
             }
         }
 
-        if (minWidth > width) {
+        if (!underComputingPreferredWidth &&
+            layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
+            style->overflowX() == VisibleOverflow) {
+            PreferredWidthContext p(ctx, this, parentWidth - mbpWidth());
+            p.computePreferredWidth();
+            minWidth = std::min(minWidth, p.preferredMinWidth());
+        }
+
+        if (minWidth != intMaxForLayoutUnit && minWidth > width) {
             return minWidth;
         }
     }
     if (style->maxWidth().isSpecified()) {
-        LayoutUnit maxWidth =
-            style->maxWidth().specifiedValue(parentWidth, viewportWidth);
+        if (!(underComputingPreferredWidth && style->maxWidth().isPercent())) {
+            LayoutUnit maxWidth =
+                style->maxWidth().specifiedValue(parentWidth, viewportWidth);
 
-        maxWidth = contentWidthApplyingBoxSizing(maxWidth);
+            maxWidth = contentWidthApplyingBoxSizing(maxWidth);
 
-        if (maxWidth >= 0 && maxWidth < width) {
-            return maxWidth;
+            if (maxWidth >= 0 && maxWidth < width) {
+                return maxWidth;
+            }
         }
     }
     return width;
