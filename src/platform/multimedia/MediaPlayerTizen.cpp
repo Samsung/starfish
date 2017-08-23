@@ -33,25 +33,6 @@
 #include "core/page/Window.h"
 #include "platform/window/PlatformWindow.h"
 
-#define PLAYER_DEBUG
-#ifdef PLAYER_DEBUG
-#include <sys/types.h>
-#include <sys/syscall.h>
-#include <pthread.h>
-
-#define PLAYER_LOGI(...)                                          \
-    STARFISH_LOG_INFO("[MediaPlayer|%ld] ", syscall(SYS_gettid)); \
-    STARFISH_LOG_INFO(__VA_ARGS__);                               \
-    STARFISH_LOG_INFO("\n");
-#define PLAYER_LOGE(...)                                                 \
-    STARFISH_LOG_ERROR("[MediaPlayer|Error|%ld] ", syscall(SYS_gettid)); \
-    STARFISH_LOG_ERROR(__VA_ARGS__);                                     \
-    STARFISH_LOG_ERROR("\n");
-#else
-#define PLAYER_LOGI(...)
-#define PLAYER_LOGE(...)
-#endif
-
 namespace StarFish {
 
 void MediaPlayerTizen::printNativePlayerError(int errorCode)
@@ -97,7 +78,7 @@ public:
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
             [](void* obj, void* cd) {
-                STARFISH_LOG_INFO(
+                PLAYER_LOGI(
                     "[TRACE_MSE_GC] "
                     "MediaPlayerTizenMediaSourceClient::~"
                     "MediaPlayerTizenMediaSourceClient (%p)\n",
@@ -205,7 +186,7 @@ void MediaPlayerTizen::fillAudioBufferIfNeeded()
 void MediaPlayerTizen::seek(double time)
 {
     if (m_inPrepare) {
-        STARFISH_LOG_INFO(
+        PLAYER_LOGI(
             "MediaPlayerTizen::seek -> seeking failed saving time %lf\n", time);
         m_container->setDefaultPlaybackStartPosition(time);
         return;
@@ -227,7 +208,7 @@ void MediaPlayerTizen::seek(double time)
         time = 0;
     } else if (dur != 0 && !std::isnan(dur) && time >= dur) {
         // Note: Seeking to EOS is impossible!!! (player_set_position fault)
-        STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() reaches EOS\n");
+        PLAYER_LOGI("MediaPlayerTizenTV::seek() reaches EOS\n");
         m_container->mediaPlayerNotifySeekedItsContainer(duration());
         endOfStream();
         return;
@@ -244,7 +225,7 @@ void MediaPlayerTizen::seek(double time)
     m_seekingTimer = m_container->window()->setTimeout(
         [](Window* window, void* data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() : timeout\n");
+            PLAYER_LOGI("MediaPlayerTizenTV::seek() : timeout\n");
             self->handleSeekTimeout();
         },
         MAX_WAITING_SECONDS_FOR_SEEK_OPERATION, this);
@@ -261,7 +242,7 @@ void MediaPlayerTizen::seekOperation(int timeInMS)
 void MediaPlayerTizen::handleSeeked()
 {
     if (isMainThread()) {
-        STARFISH_LOG_INFO("MediaPlayerTizen::handleSeeked\n");
+        PLAYER_LOGI("MediaPlayerTizen::handleSeeked\n");
         if (m_seekState == SEEKSTATE_NO_SEEK) {
             return;
         }
@@ -304,7 +285,7 @@ void MediaPlayerTizen::handleSeekFail()
 void MediaPlayerTizen::handleSeekTimeout()
 {
     if (isMainThread()) {
-        STARFISH_LOG_INFO("MediaPlayerTizen::handleSeekTimeout\n");
+        PLAYER_LOGI("MediaPlayerTizen::handleSeekTimeout\n");
         if (m_seekState == SEEKSTATE_NO_SEEK) {
             return;
         }
@@ -410,7 +391,7 @@ void MediaPlayerTizen::close()
     m_container = nullptr;
 
 #ifndef NDEBUG
-    STARFISH_LOG_INFO(
+    PLAYER_LOGI(
         "[TRACE_MSE_GC] MediaPlayerTizen::close() : Rooting count of "
         "player(%p) is %d\n",
         this, (int)m_container->starFish()->countPointersInRootSet(this));
@@ -431,21 +412,18 @@ void MediaPlayerTizen::play()
 {
     player_state_e state;
     player_get_state(m_nativePlayer, &state);
-    STARFISH_LOG_INFO("MediaPlayerTizen::play() state : %d state2: %d ms: %p\n",
-                      (int)state, (int)m_playbackState, m_activeMediaSource);
+    PLAYER_LOGI("MediaPlayerTizen::play() state : %d state2: %d ms: %p\n",
+                (int)state, (int)m_playbackState, m_activeMediaSource);
     if (m_activeMediaSource &&
         m_playbackState == PlaybackState::PLAYBACK_STATE_END) {
-        STARFISH_LOG_INFO(
-            "MediaPlayerTizen::play() meets mse && playback end\n");
+        PLAYER_LOGI("MediaPlayerTizen::play() meets mse && playback end\n");
         int ret;
         unprepareOperation();
-        STARFISH_LOG_INFO("MediaPlayerTizen::play() unprepare end %d\n",
-                          (int)ret);
+        PLAYER_LOGI("MediaPlayerTizen::play() unprepare end %d\n", (int)ret);
         ret = player_destroy(m_nativePlayer);
-        STARFISH_LOG_INFO("MediaPlayerTizen::play() destory end %d\n",
-                          (int)ret);
+        PLAYER_LOGI("MediaPlayerTizen::play() destory end %d\n", (int)ret);
         ret = player_create(&m_nativePlayer);
-        STARFISH_LOG_INFO("MediaPlayerTizen::play() create end %d\n", (int)ret);
+        PLAYER_LOGI("MediaPlayerTizen::play() create end %d\n", (int)ret);
         m_playbackState = PLAYBACK_STATE_NONE;
         m_needsPlayAfterPrepare = true;
         appendToOperationQueueInContainer(
@@ -506,7 +484,7 @@ void MediaPlayerTizen::closePreparingMode()
 
 void MediaPlayerTizen::endOfStream()
 {
-    STARFISH_LOG_INFO("MediaPlayerTizen::endOfStream\n");
+    PLAYER_LOGI("MediaPlayerTizen::endOfStream\n");
     mediaEndOperation();
     stopPlaying();
     m_playbackState = MediaPlayer::PLAYBACK_STATE_END;
@@ -516,18 +494,18 @@ void MediaPlayerTizen::endOfStream()
 void MediaPlayerTizen::prepare(ResourceURL* url)
 {
     m_currentURL = url;
-    STARFISH_LOG_INFO("MediaPlayerTizen::prepare\n");
+    PLAYER_LOGI("MediaPlayerTizen::prepare\n");
     player_set_volume(m_nativePlayer, 1, 1);
     player_set_mute(m_nativePlayer, false);
     int ret;
-    ret = player_set_error_cb(m_nativePlayer,
-                              [](int errorCode, void* data) {
-                                  PLAYER_LOGI("player_error_cb");
-                                  MediaPlayerTizen* player =
-                                      (MediaPlayerTizen*)data;
-                                  player->handlePlayerError(errorCode);
-                              },
-                              this);
+    ret = player_set_error_cb(
+        m_nativePlayer,
+        [](int errorCode, void* data) {
+            PLAYER_LOGI("MediaPlayerTizen::player_error_cb\n");
+            MediaPlayerTizen* player = (MediaPlayerTizen*)data;
+            player->handlePlayerError(errorCode);
+        },
+        this);
     STARFISH_ASSERT(ret == 0);
     m_completeCallback = [](void* data) {
         MediaPlayerTizen* player = (MediaPlayerTizen*)data;
@@ -546,8 +524,7 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
     ret = player_set_buffering_cb(
         m_nativePlayer,
         [](int percent, void* data) {
-            STARFISH_LOG_INFO("MediaPlayerTizen -> buffering state... %d\n",
-                              percent);
+            PLAYER_LOGI("MediaPlayerTizen -> buffering state... %d\n", percent);
         },
         this);
     setNativePlayerDefaultOptions(url);
@@ -587,7 +564,7 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
 
     openPreparingMode();
     m_preparedCallback = [](void* user_data) {
-        PLAYER_LOGI("player_prepare_async_cb");
+        PLAYER_LOGI("MediaPlayerTizen::player_prepare_async_cb\n");
         MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
         self->completePrepare();
     };
@@ -595,7 +572,8 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
         player_prepare_async(m_nativePlayer, m_preparedCallback, this);
 
     if (nativeResult != PLAYER_ERROR_NONE) {
-        PLAYER_LOGE("player_prepare_async return error !!!");
+        PLAYER_LOGE(
+            "MediaPlayerTizen::player_prepare_async return error !!!\n");
         printNativePlayerError(nativeResult);
         STARFISH_ASSERT_NOT_REACHED();
 
@@ -608,72 +586,70 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
 
 void MediaPlayerTizen::completePrepare()
 {
-    STARFISH_ASSERT(!isMainThread());
-    STARFISH_LOG_INFO("MediaPlayerTizen::completePrepare in non-MainThread");
-    MessageLoop* msgLoop = m_container->starFish()->messageLoop();
-    msgLoop->addIdlerWithNoGCRootingInOtherThread(
-        m_container->document()->browsingContext(),
-        [](size_t, void* user_data) {
-            STARFISH_LOG_INFO(
-                "MediaPlayerTizen::completePrepare in MainThread");
-            MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
+    if (!isMainThread()) {
+        PLAYER_LOGI("MediaPlayerTizen::completePrepare in non-MainThread\n");
+        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        msgLoop->addIdlerWithNoGCRootingInOtherThread(
+            m_container->document()->browsingContext(),
+            [](size_t, void* user_data) {
+                MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
+                self->completePrepare();
+            },
+            this);
+    } else {
+        PLAYER_LOGI("MediaPlayerTizen::completePrepare in MainThread\n");
 
-            STARFISH_ASSERT(self->m_inPrepare);
-            self->closePreparingMode();
+        STARFISH_ASSERT(m_inPrepare);
+        closePreparingMode();
 
-            if (!self->m_alive) {
-                self->close(); // unprepare() and destroy() to free data
-                return;
+        if (!m_alive) {
+            close(); // unprepare() and destroy() to free data
+            return;
+        }
+
+        char* videoCodec = nullptr;
+        char* audioCodec = nullptr;
+        player_get_codec_info(m_nativePlayer, &audioCodec, &videoCodec);
+
+        if (videoCodec) {
+            m_hasVideo = true;
+            int width = 1;
+            int height = 1;
+            player_get_video_size(m_nativePlayer, &width, &height);
+            STARFISH_ASSERT(width > 0);
+            STARFISH_ASSERT(height > 0);
+            m_videoWidth = (unsigned long)width;
+            m_videoHeight = (unsigned long)height;
+            if (m_canvasSurface) {
+                m_canvasSurface->resize(m_videoWidth, m_videoHeight);
             }
+        }
 
-            char* videoCodec = nullptr;
-            char* audioCodec = nullptr;
-            player_get_codec_info(self->m_nativePlayer, &audioCodec,
-                                  &videoCodec);
+        PLAYER_LOGI("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec,
+                    audioCodec, (int)m_videoWidth, (int)m_videoHeight);
 
-            if (videoCodec) {
-                self->m_hasVideo = true;
-                int width = 1;
-                int height = 1;
-                player_get_video_size(self->m_nativePlayer, &width, &height);
-                STARFISH_ASSERT(width > 0);
-                STARFISH_ASSERT(height > 0);
-                self->m_videoWidth = (unsigned long)width;
-                self->m_videoHeight = (unsigned long)height;
-                if (self->m_canvasSurface) {
-                    self->m_canvasSurface->resize(self->m_videoWidth,
-                                                  self->m_videoHeight);
-                }
-            }
+        free(videoCodec);
+        free(audioCodec);
 
-            STARFISH_LOG_INFO("MediaPlayerTizen::prepare ok %s %s %d %d\n",
-                              videoCodec, audioCodec, (int)self->m_videoWidth,
-                              (int)self->m_videoHeight);
+        if (m_needsPlayAfterPrepare) {
+            startPlaying();
+            m_needsPlayAfterPrepare = false;
+        }
 
-            free(videoCodec);
-            free(audioCodec);
-
-            if (self->m_needsPlayAfterPrepare) {
-                self->startPlaying();
-                self->m_needsPlayAfterPrepare = false;
-            }
-
-            if (!self->m_activeMediaSource) {
-                self->processNextOperationQueueInContainer();
-                self->m_container
-                    ->mediaPlayerNotifyUpdateReadyStateItsContainer(
-                        HTMLMediaElement::HAVE_METADATA);
-            }
-            self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
-                HTMLMediaElement::HAVE_ENOUGH_DATA);
-        },
-        this);
+        if (!m_activeMediaSource) {
+            processNextOperationQueueInContainer();
+            m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
+                HTMLMediaElement::HAVE_METADATA);
+        }
+        m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
+            HTMLMediaElement::HAVE_ENOUGH_DATA);
+    }
 }
 
 void MediaPlayerTizen::unprepareOperation()
 {
     if (m_nativePlayer) {
-        STARFISH_LOG_INFO(
+        PLAYER_LOGI(
             "[TRACE_MSE_GC] MediaPlayerTizen::unprepareOperation (%p)\n", this);
         stopPlaying();
 
@@ -697,7 +673,7 @@ void MediaPlayerTizen::unprepareOperation()
 
 void MediaPlayerTizen::setVolume(double volume)
 {
-    STARFISH_LOG_INFO("MediaPlayerTizen::setVolume(%f)\n", volume);
+    PLAYER_LOGI("MediaPlayerTizen::setVolume(%f)\n", volume);
     if (!m_nativePlayer) {
         return;
     }
@@ -712,15 +688,14 @@ void MediaPlayerTizen::setVolume(double volume)
 
         int ret = player_set_volume(m_nativePlayer, volume, volume);
         if (ret != PLAYER_ERROR_NONE) {
-            STARFISH_LOG_ERROR("**ERROR: player_set_volume %x -> ", ret);
+            PLAYER_LOGE("**ERROR: player_set_volume %x -> ", ret);
         }
     }
 }
 
 void MediaPlayerTizen::setMuted(bool muted)
 {
-    STARFISH_LOG_INFO("MediaPlayerTizen::setMuted(%s)\n",
-                      muted ? "true" : "false");
+    PLAYER_LOGI("MediaPlayerTizen::setMuted(%s)\n", muted ? "true" : "false");
     if (!m_nativePlayer) {
         return;
     }

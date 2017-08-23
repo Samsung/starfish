@@ -110,36 +110,39 @@ void MockMediaPlayer::play()
                 MockMediaPlayer* self = (MockMediaPlayer*)data;
 
                 if (self->activeMediaSource()) {
-                    uint64_t videoStart = self->m_currentTimestamp;
-                    uint64_t audioStart = self->m_currentTimestamp;
-                    while (self->m_currentTimestamp - videoStart < 250) {
-                        std::pair<MediaPacket*, size_t> packet =
-                            self->activeMediaSource()
-                                ->activeVideoSourceBuffer()
-                                ->findProperMediaPacket(
-                                    self->activeMediaSource()
-                                        ->activeVideoStreamIndex(),
-                                    self->m_currentTimestamp);
-                        if (!packet.first) {
-                            break;
+                    if (self->activeMediaSource()->activeVideoSourceBuffer()) {
+                        uint64_t videoStart = self->m_currentTimestamp;
+                        while (self->m_currentTimestamp - videoStart < 250) {
+                            std::pair<MediaPacket*, size_t> packet =
+                                self->activeMediaSource()
+                                    ->activeVideoSourceBuffer()
+                                    ->findProperMediaPacket(
+                                        self->activeMediaSource()
+                                            ->activeVideoStreamIndex(),
+                                        self->m_currentTimestamp);
+                            if (!packet.first) {
+                                break;
+                            }
+                            self->m_currentTimestamp =
+                                packet.first->m_pts + packet.first->m_duration;
                         }
-                        self->m_currentTimestamp =
-                            packet.first->m_pts + packet.first->m_duration;
                     }
-
-                    while (audioStart < self->m_currentTimestamp) {
-                        std::pair<MediaPacket*, size_t> packet =
-                            self->activeMediaSource()
-                                ->activeAudioSourceBuffer()
-                                ->findProperMediaPacket(
-                                    self->activeMediaSource()
-                                        ->activeAudioStreamIndex(),
-                                    audioStart);
-                        if (!packet.first) {
-                            break;
+                    if (self->activeMediaSource()->activeAudioSourceBuffer()) {
+                        uint64_t audioStart = self->m_currentTimestamp;
+                        while (audioStart < self->m_currentTimestamp) {
+                            std::pair<MediaPacket*, size_t> packet =
+                                self->activeMediaSource()
+                                    ->activeAudioSourceBuffer()
+                                    ->findProperMediaPacket(
+                                        self->activeMediaSource()
+                                            ->activeAudioStreamIndex(),
+                                        audioStart);
+                            if (!packet.first) {
+                                break;
+                            }
+                            audioStart =
+                                packet.first->m_pts + packet.first->m_duration;
                         }
-                        audioStart =
-                            packet.first->m_pts + packet.first->m_duration;
                     }
                 } else {
                     self->m_currentTimestamp += 250;

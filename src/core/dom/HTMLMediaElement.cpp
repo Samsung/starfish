@@ -540,22 +540,19 @@ bool HTMLMediaElement::paused()
 
 double HTMLMediaElement::defaultPlaybackRate()
 {
-    // Unimplmented
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return 1;
 }
 
 double HTMLMediaElement::playbackRate()
 {
-    // Unimplmented
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return 1;
 }
 
 TimeRanges* HTMLMediaElement::played()
 {
-    // Unimplmented
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return nullptr;
 }
 
@@ -729,14 +726,12 @@ void HTMLMediaElement::setOfficialPlaybackPosition(double time)
 
 void HTMLMediaElement::setDefaultPlaybackRate(double defaultPlaybackRate)
 {
-    // Unimplmented
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void HTMLMediaElement::setPlaybackRate(double playbackRate)
 {
-    // Unimplmented
-    STARFISH_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void HTMLMediaElement::setAutoplay(bool autoplay)

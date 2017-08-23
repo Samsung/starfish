@@ -479,26 +479,19 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                                     }
                                     if (!thisBufferAdded) {
                                         activeSourceBuffers->addWithoutEvent(
-                                            m_activeVideoSourceBuffer);
+                                            m_activeAudioSourceBuffer);
                                         thisBufferAdded = true;
                                     }
                                 }
                             }
                         }
                     }
-                    double newDuration = 0;
-                    if (newDurationMS == 0) {
-                        newDuration = std::numeric_limits<double>::infinity();
-                    } else {
-                        newDuration = newDurationMS / 1000.0;
+                    if (newDurationMS != 0) {
+                        setDuration(newDurationMS / 1000.0, false);
+                    } else if (std::isnan(m_duration)) {
+                        setDuration(std::numeric_limits<double>::infinity(),
+                                    false);
                     }
-
-                    STARFISH_LOG_INFO(
-                        "MediaSource didSourceBufferUpdated compute duration "
-                        "-> %lf\n",
-                        newDuration);
-
-                    setDuration(newDuration, false);
                     m_isActiveBufferComputed = true;
 
                     for (size_t i = 0; i < m_clients.size(); i++) {

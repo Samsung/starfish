@@ -88,7 +88,7 @@ void MediaPlayerTizenTV::setVideoStreamInfo(size_t initSegmentIndex)
     // set video options
     player_video_stream_info_s videoInfo;
     if (m_activeMediaSource->activeVideoSourceBuffer()) {
-        STARFISH_LOG_INFO("MediaPlayerTizenTV::setVideoStreamInfo\n");
+        PLAYER_LOGI("MediaPlayerTizenTV::setVideoStreamInfo\n");
         VideoStreamInfo* info =
             (VideoStreamInfo*)(m_activeMediaSource->activeVideoSourceBuffer()
                                    ->streamInfo(
@@ -133,16 +133,18 @@ void MediaPlayerTizenTV::setVideoStreamInfo(size_t initSegmentIndex)
         videoInfo.extradata_size =
             fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
                 ->codec->extradata_size;
-        STARFISH_LOG_INFO(
+        PLAYER_LOGI(
             "ffmpegVideo Info[%d].. %d %d\n",
             (int)m_activeMediaSource->activeVideoStreamIndex(),
             (int)fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
                 ->codec->width,
             (int)fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
                 ->codec->height);
-        STARFISH_LOG_INFO("tizen video Info.. %d %d %d %d\n", info->m_width,
-                          info->m_height, (int)videoInfo.framerate_den,
-                          (int)videoInfo.framerate_num);
+        PLAYER_LOGI("Video Info-----------------------------\n");
+        PLAYER_LOGI("> mime      : %s\n", videoInfo.mime);
+        PLAYER_LOGI("> format    : %s\n", mediaFormat);
+        PLAYER_LOGI("> size      : %dx%d\n", info->m_width, info->m_height);
+        PLAYER_LOGI("---------------------------------------\n");
 
         int ret = player_set_video_stream_info(m_nativePlayer, &videoInfo);
         STARFISH_RELEASE_ASSERT(ret == 0);
@@ -164,7 +166,7 @@ void MediaPlayerTizenTV::setAudioStreamInfo(size_t initSegmentIndex)
     // set audio options
     player_audio_stream_info_s audioInfo;
     if (m_activeMediaSource->activeAudioSourceBuffer()) {
-        STARFISH_LOG_INFO("MSE set Audio\n");
+        PLAYER_LOGI("MediaPlayerTizenTV::setAudioStreamInfo\n");
         memset(&audioInfo, 0, sizeof(player_audio_stream_info_s));
 
         StreamInfo* info =

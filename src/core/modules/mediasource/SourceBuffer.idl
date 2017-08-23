@@ -4,7 +4,7 @@
 interface SourceBuffer : EventTarget {
   attribute AppendMode mode;
   readonly attribute boolean updating;
-  readonly attribute TimeRanges buffered;
+  [RaisesException] readonly attribute TimeRanges buffered;
   attribute double timestampOffset;
   [Unimplemented] readonly attribute AudioTrackList audioTracks;
   [Unimplemented] readonly attribute VideoTrackList videoTracks;
