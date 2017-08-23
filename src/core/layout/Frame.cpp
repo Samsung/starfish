@@ -608,16 +608,35 @@ std::pair<bool, std::pair<LineBox*, LayoutUnit>>
 LayoutContext::firstLineAscender(FrameBlockBox* blockBox)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    STARFISH_ASSERT(c.m_blockBoxAligningAtFirstBaselineStack->back() ==
+                    blockBox);
     auto iter = c.m_firstLineAscenders->find(blockBox);
     if (iter == c.m_firstLineAscenders->end()) {
         return std::make_pair(false, std::make_pair(nullptr, 0));
     }
 
     auto l = iter->second;
-    // TODO: table cell can call these more than once, so that we can't remove
-    // it.
-    // c.m_firstLineBoxes->erase(iter);
+    c.m_firstLineAscenders->erase(iter);
     return std::make_pair(true, l);
+}
+
+void LayoutContext::tempReigsterFirstLineAscender(
+    FrameTableCellBox* cellBox, std::pair<LineBox*, LayoutUnit> ascenderInfo)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    (*c.m_tempAscenders)[cellBox] = ascenderInfo;
+}
+
+std::pair<bool, std::pair<LineBox*, LayoutUnit>>
+LayoutContext::tempFirstLineAscender(FrameTableCellBox* cellBox)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    auto it = c.m_tempAscenders->find(cellBox);
+    if (it == c.m_tempAscenders->end()) {
+        return std::make_pair(false, std::make_pair(nullptr, 0));
+    }
+
+    return std::make_pair(true, it->second);
 }
 
 void LayoutContext::registerAbsolutePositionedBox(FrameBox* box)

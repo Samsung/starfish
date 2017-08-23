@@ -1101,7 +1101,7 @@ LayoutUnit FrameTableBox::calBaseline(LayoutContext& ctx)
     bool isBaseLine = false;
     for (size_t i = 0; i < firstRS.cells().size(); ++i) {
         FrameTableCellBox* c = firstRS.cells()[i].cell();
-        auto it = ctx.firstLineAscender(c);
+        auto it = ctx.tempFirstLineAscender(c);
 
         if (it.first &&
             (!tallestLB || (tallestLB->height() < it.second.first->height()))) {
