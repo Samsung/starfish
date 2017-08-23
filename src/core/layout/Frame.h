@@ -248,8 +248,12 @@ public:
             std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
                 s6 = new std::unordered_map<FrameBlockBox*,
                                             std::pair<LineBox*, LayoutUnit>>();
+            std::unordered_map<FrameTableCellBox*,
+                               std::pair<LineBox*, LayoutUnit>>* s7 =
+                new std::unordered_map<FrameTableCellBox*,
+                                       std::pair<LineBox*, LayoutUnit>>();
             m_blockFormattingContextInfo.emplace_back(isNormalFlow, isRoot, s,
-                                                      s2, s3, s4, s5, s6);
+                                                      s2, s3, s4, s5, s6, s7);
         } else {
             BlockFormattingContext& back = m_blockFormattingContextInfo.back();
             std::vector<FloatingBoxInfo>* s =
@@ -258,7 +262,7 @@ public:
                 isNormalFlow, isRoot, back.m_inlineBlockBoxStack, s,
                 back.m_lineBoxAscenders, back.m_firstLineCandidates,
                 back.m_blockBoxAligningAtFirstBaselineStack,
-                back.m_firstLineAscenders);
+                back.m_firstLineAscenders, back.m_tempAscenders);
         }
     }
 
@@ -272,6 +276,7 @@ public:
             delete m_blockFormattingContextInfo.back()
                 .m_blockBoxAligningAtFirstBaselineStack;
             delete m_blockFormattingContextInfo.back().m_firstLineAscenders;
+            delete m_blockFormattingContextInfo.back().m_tempAscenders;
         }
         delete m_blockFormattingContextInfo.back().m_floatBoxes;
         m_blockFormattingContextInfo.pop_back();
@@ -330,6 +335,13 @@ public:
                                    LayoutUnit ascender);
     std::pair<bool, std::pair<LineBox*, LayoutUnit>> firstLineAscender(
         FrameBlockBox* blockBox);
+
+    void tempReigsterFirstLineAscender(
+        FrameTableCellBox* cellBox,
+        std::pair<LineBox*, LayoutUnit> ascenderInfo);
+    std::pair<bool, std::pair<LineBox*, LayoutUnit>> tempFirstLineAscender(
+        FrameTableCellBox* cellBox);
+
     void registerAbsolutePositionedBox(FrameBox* box);
 
     void layoutRegisteredAbsolutePositionedBoxes(
@@ -431,7 +443,9 @@ private:
             std::unordered_map<Frame*, FrameBlockBox*>* firstLineCandidates,
             std::vector<FrameBlockBox*>* blockBoxAligningFirstLineStack,
             std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
-                firstLineAscenders)
+                firstLineAscenders,
+            std::unordered_map<FrameTableCellBox*,
+                               std::pair<LineBox*, LayoutUnit>>* tempAscenders)
             : m_isRoot(isRoot)
             , m_isNormalFlow(isNormalFlow)
             , m_inlineBlockBoxStack(inlineBlockBoxStack)
@@ -441,6 +455,7 @@ private:
             , m_blockBoxAligningAtFirstBaselineStack(
                   blockBoxAligningFirstLineStack)
             , m_firstLineAscenders(firstLineAscenders)
+            , m_tempAscenders(tempAscenders)
         {
         }
         bool m_isRoot;
@@ -457,6 +472,8 @@ private:
         std::vector<FrameBlockBox*>* m_blockBoxAligningAtFirstBaselineStack;
         std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
             m_firstLineAscenders;
+        std::unordered_map<FrameTableCellBox*, std::pair<LineBox*, LayoutUnit>>*
+            m_tempAscenders;
     };
 
     StarFish* m_starFish;
