@@ -34,7 +34,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/page/Window.h"
 
-#define STARFISH_ENABLE_TIMER
+// #define STARFISH_ENABLE_TIMER
 #define TRACE_MSE_GC
 
 namespace StarFish {
@@ -1060,7 +1060,8 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                 inputBuffer->m_sourceBuffer
                                     ->m_indexPerInitSegment++;
                                 STARFISH_LOG_INFO(
-                                    "SourceBuffer got init segment : %p, "
+                                    "SourceBuffer::bufferAppend got init "
+                                    "segment : %p, "
                                     "findedVideoStream %d, findedAudioStream "
                                     "%d\n",
                                     inputBuffer->m_sourceBuffer,
@@ -1092,9 +1093,10 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                             ->m_streamInfo->m_type);
 
                                     STARFISH_LOG_INFO(
-                                        "packetGroupInfo initSegmentIndex%d "
+                                        "SourceBuffer::bufferAppend got "
+                                        "packetGroup (initSegmentIndex%d, "
                                         "streamIndex:%d, packetCount: "
-                                        "%d(%dms->%dms)\n",
+                                        "%d(%dms->%dms))\n",
                                         (int)cl->m_packetGroup[i]
                                             ->m_initSegmentIndex,
                                         (int)cl->m_packetGroup[i]

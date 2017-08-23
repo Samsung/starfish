@@ -22,6 +22,21 @@
 
 #include "core/dom/HTMLMediaElement.h"
 
+#define PLAYER_DEBUG
+#ifdef PLAYER_DEBUG
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <pthread.h>
+
+#define PLAYER_LOGI(...)                                         \
+    STARFISH_LOG_INFO("[PLAYER_LOG|%ld] ", syscall(SYS_gettid)); \
+    STARFISH_LOG_INFO(__VA_ARGS__);
+#define PLAYER_LOGE(...) PLAYER_LOGI(__VA_ARGS__)
+#else
+#define PLAYER_LOGI(...)
+#define PLAYER_LOGE(...)
+#endif
+
 namespace StarFish {
 
 class Canvas;
