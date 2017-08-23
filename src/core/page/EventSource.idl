@@ -1,0 +1,27 @@
+// https://html.spec.whatwg.org/multipage/comms.html#the-eventsource-interface
+
+[
+    Constructor(DOMString url, optional EventSourceInit eventSourceInitDict),
+    ConstructorCallWith=Document,
+    Exposed=(Window,Worker),
+    RaisesException=Constructor,
+] interface EventSource : EventTarget {
+    [Unimplemented] readonly attribute DOMString url;
+    [Unimplemented] readonly attribute boolean withCredentials;
+
+    // ready state
+    [Unimplemented] const unsigned short CONNECTING = 0;
+    [Unimplemented] const unsigned short OPEN = 1;
+    [Unimplemented] const unsigned short CLOSED = 2;
+    [Unimplemented] readonly attribute unsigned short readyState;
+
+    // networking
+    [Unimplemented] attribute EventHandler onopen;
+    attribute EventHandler onmessage;
+    [Unimplemented] attribute EventHandler onerror;
+    [Unimplemented] void close();
+};
+
+dictionary EventSourceInit {
+    boolean withCredentials = false;
+};

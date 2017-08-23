@@ -1,0 +1,22 @@
+// Input Events
+// https://w3c.github.io/input-events/#interface-InputEvent
+[
+    Constructor(DOMString type, optional InputEventInit eventInitDict),
+    ConstructorCallWith=Document
+] interface InputEvent : UIEvent {
+    readonly attribute DOMString inputType;
+    readonly attribute DOMString? data;
+    [Unimplemented] readonly attribute DataTransfer? dataTransfer;
+    [Unimplemented] readonly attribute boolean isComposing;
+    [Unimplemented] sequence<StaticRange> getTargetRanges();
+};
+
+// InputEventInit
+// https://w3c.github.io/input-events/#interface-InputEventInit
+dictionary InputEventInit : UIEventInit {
+     DOMString inputType = "";
+     DOMString data = "";
+     [Unimplemented] DataTransfer? dataTransfer;
+     [Unimplemented] boolean isComposing = false;
+     [Unimplemented] sequence<StaticRange> targetRanges = [];
+};

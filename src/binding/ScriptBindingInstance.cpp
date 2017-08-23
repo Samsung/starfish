@@ -98,6 +98,14 @@ static ValueRef* logFunction(ExecutionStateRef* state, ValueRef* thisValue,
     fetchStarFish(state->context())
         ->console()
         ->log(toBrowserStringForConsole(state, val));
+
+    for (size_t i = 1; i < argc; i++) {
+        ValueRef* val = argv[i];
+        fetchStarFish(state->context())
+            ->console()
+            ->log(toBrowserStringForConsole(state, val));
+    }
+
     return ValueRef::createUndefined();
 }
 
@@ -109,6 +117,13 @@ static ValueRef* infoFunction(ExecutionStateRef* state, ValueRef* thisValue,
     fetchStarFish(state->context())
         ->console()
         ->info(toBrowserStringForConsole(state, val));
+
+    for (size_t i = 1; i < argc; i++) {
+        ValueRef* val = argv[i];
+        fetchStarFish(state->context())
+            ->console()
+            ->info(toBrowserStringForConsole(state, val));
+    }
     return ValueRef::createUndefined();
 }
 
@@ -120,6 +135,13 @@ static ValueRef* errorFunction(ExecutionStateRef* state, ValueRef* thisValue,
     fetchStarFish(state->context())
         ->console()
         ->error(toBrowserStringForConsole(state, val));
+
+    for (size_t i = 1; i < argc; i++) {
+        ValueRef* val = argv[i];
+        fetchStarFish(state->context())
+            ->console()
+            ->error(toBrowserStringForConsole(state, val));
+    }
     return ValueRef::createUndefined();
 }
 
@@ -131,6 +153,13 @@ static ValueRef* warnFunction(ExecutionStateRef* state, ValueRef* thisValue,
     fetchStarFish(state->context())
         ->console()
         ->warn(toBrowserStringForConsole(state, val));
+
+    for (size_t i = 1; i < argc; i++) {
+        ValueRef* val = argv[i];
+        fetchStarFish(state->context())
+            ->console()
+            ->warn(toBrowserStringForConsole(state, val));
+    }
     return ValueRef::createUndefined();
 }
 
@@ -142,6 +171,13 @@ static ValueRef* debugFunction(ExecutionStateRef* state, ValueRef* thisValue,
     fetchStarFish(state->context())
         ->console()
         ->debug(toBrowserStringForConsole(state, val));
+
+    for (size_t i = 1; i < argc; i++) {
+        ValueRef* val = argv[i];
+        fetchStarFish(state->context())
+            ->console()
+            ->debug(toBrowserStringForConsole(state, val));
+    }
     return ValueRef::createUndefined();
 }
 

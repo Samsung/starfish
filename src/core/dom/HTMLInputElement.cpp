@@ -22,6 +22,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/Text.h"
 #include "core/dom/KeyboardEvent.h"
+#include "core/dom/InputEvent.h"
 #include "core/dom/CompositionEvent.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -179,6 +180,25 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
         }
 
         updateInputboxValue(val);
+
+        if (!old->equals(val)) {
+            InputEvent* event =
+                new InputEvent(document(), String::createASCIIString("input"));
+            event->setCancelable(false);
+            event->setBubbles(true);
+            event->setComposed(true);
+            event->setData(val);
+            event->setCurrentTarget(this);
+            event->setInputType(String::createASCIIString("insertText"));
+            starFish()->messageLoop()->addIdler(
+                document()->browsingContext(),
+                [](size_t, void* data, void* data2) {
+                    HTMLInputElement* self = (HTMLInputElement*)data;
+                    InputEvent* e = (InputEvent*)data2;
+                    self->dispatchEvent(e);
+                },
+                this, event);
+        }
     }
 }
 
