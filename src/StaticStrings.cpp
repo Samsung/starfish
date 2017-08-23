@@ -248,6 +248,11 @@ StaticStrings::StaticStrings(StarFish* sf)
                            AtomicString::createAtomicString(sf, "load"));
     m_onload = QualifiedName(AtomicString::emptyAtomicString(),
                              AtomicString::createAtomicString(sf, "onload"));
+    m_submit = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "submit"));
+    m_onsubmit =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onsubmit"));
     m_error = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "error"));
     m_onerror = QualifiedName(AtomicString::emptyAtomicString(),
