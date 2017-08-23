@@ -165,7 +165,9 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
                                      attributeRemoved);
     if (starFish()->staticStrings()->m_type == name ||
         starFish()->staticStrings()->m_value == name) {
-        if (type()->equalsWithoutCase("text")) {
+        if (type()->equalsWithoutCase("text") ||
+            type()->equalsWithoutCase("submit") ||
+            type()->equalsWithoutCase("button")) {
             val = value();
         } else if (type()->equalsWithoutCase("password")) {
             val = obscurePhrase(value());
