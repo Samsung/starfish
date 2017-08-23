@@ -65,6 +65,7 @@ void throwJSTypeErrorException(Escargot::ExecutionStateRef* state,
                                String* message);
 
 ScriptString createScriptString(String* str);
+ScriptValue createScriptValue(ScriptString s);
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error);

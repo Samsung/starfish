@@ -730,6 +730,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | onprogress | Fired when the user agent is fetching media data. |
 | | attribute | onratechange | Fired when either the defaultPlaybackRate or the playbackRate attribute has just been updated. |
 | | attribute | onresize | Fired at the Window when the viewport is resized. |
+| [InputEvent](https://w3c.github.io/input-events/#interface-InputEvent) | interface | InputEvent | The InputEvent interface represents an event notifying of editable content change. |
+| | attribute | data | Returns a DOMString with the inserted characters. |
 | [MouseEvent](https://w3c.github.io/uievents/#idl-mouseevent) | interface | MouseEvent |  |
 | | attribute | screenX | The horizontal coordinate at which the event occurred relative to the origin of the screen |
 | | attribute | screenY | The vertical coordinate at which the event occurred relative to the origin of the screen |
