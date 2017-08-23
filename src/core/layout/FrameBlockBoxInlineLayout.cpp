@@ -2582,10 +2582,9 @@ void FrameBlockBox::layoutInline(LineFormattingContext& ctx)
         if (display == InlineTableDisplayValue) {
             ascender = asFrameTableBox()->calBaseline(ctx.m_layoutContext);
         } else {
-            std::pair<bool, LayoutUnit> p =
-                ctx.m_layoutContext.lineBoxAscender(this);
-            if (p.first && style()->overflowX() == VisibleOverflow) {
-                ascender = p.second;
+            Nullable<LayoutUnit> p = ctx.m_layoutContext.lineBoxAscender(this);
+            if (p.hasValue() && style()->overflowX() == VisibleOverflow) {
+                ascender = p.getValue();
             } else {
                 ascender = height();
             }
@@ -3279,6 +3278,22 @@ void InlineNonReplacedBox::layoutInline(LineFormattingContext& ctx)
     }
 }
 
+void PreferredWidthContext::computePreferredWidth()
+{
+    PreferredWidthKey key(m_remainingWidth, m_frame);
+    auto it = m_layoutContext.preferredWidthInfo(key);
+    if (it.hasValue()) {
+        updatePreferredWidth(it.getValue().m_preferredWidth);
+        updatePreferredWidth(it.getValue().m_preferredMinWidth);
+        return;
+    }
+
+    m_frame->computePreferredWidth(*this);
+
+    PreferredWidthValue value(preferredWidth(), preferredMinWidth());
+    m_layoutContext.registerPreferredWidthInfo(key, value);
+}
+
 void PreferredWidthContext::handleTextToken(TextToken& token)
 {
     if (m_isPendingWrapLine) {
@@ -3459,8 +3474,9 @@ LayoutUnit PreferredWidthContext::mbpWidth(ComputedStyle* style)
 LayoutUnit PreferredWidthContext::preferredWidthWithNewContext(Frame* f)
 {
     LayoutUnit mbpWidth = this->mbpWidth(f->style());
-    PreferredWidthContext newCtx(m_layoutContext, m_remainingWidth - mbpWidth);
-    f->computePreferredWidth(newCtx);
+    PreferredWidthContext newCtx(m_layoutContext, f,
+                                 m_remainingWidth - mbpWidth);
+    newCtx.computePreferredWidth();
 
     return newCtx.preferredWidth() + mbpWidth;
 }
@@ -3575,7 +3591,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
         }
 
         w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), w,
-                                      parentContentWidth, viewportWidth);
+                                      parentContentWidth, viewportWidth, true);
     } else {
         w = intrinsicWidth;
         h = intrinsicHeight;
@@ -3637,21 +3653,17 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     FrameBox* cb = containingBlock(this);
     computeBorderMarginPadding(ctx.layoutContext(), cb->contentWidth());
     Length width = style()->width();
+    LayoutUnit w;
 
-    if (width.isSpecified() && !isFrameTableCellBox()) {
-        LayoutUnit w;
+    if ((width.isFixed() || width.isViewportPercent()) &&
+        !isFrameTableCellBox()) {
         if (width.isFixed()) {
             w = width.fixed();
         } else if (width.isViewportPercent()) {
             w = width.viewportPercentValue(ctx.layoutContext().viewportWidth());
-        } else {
-            LayoutUnit parentContentWidth =
-                ctx.layoutContext().parentContentWidth(this);
-            w = width.percentValue(parentContentWidth);
         }
 
         w = contentWidthApplyingBoxSizing(w);
-        ctx.updatePreferredWidth(w);
     } else {
         if (isFrameFlexibleBox()) {
             FrameFlexibleBox* flexibleBox = asFrameFlexibleBox();
@@ -3661,7 +3673,6 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             // TODO: Implement following
             // https://www.w3.org/TR/css-flexbox-1/#intrinsic-sizes
             if (fCtx.isMainAxisInInlineAxis()) {
-                LayoutUnit lineWidth;
                 float maxContentFlexGrowFraction = 0;
                 float maxContentFlexShrinkFraction = 0;
                 Frame* f = firstChild();
@@ -3673,9 +3684,12 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                     }
 
                     FrameBox* flexItem = f->asFrameBox();
+                    LayoutUnit mbpWidth = ctx.mbpWidth(f->style());
                     LayoutUnit outerBasisSize =
-                        fCtx.basisSize(flexItem) + flexItem->mbpWidth();
-                    LayoutUnit diff = ctx.remainingWidth() - outerBasisSize;
+                        fCtx.basisSize(flexItem) + mbpWidth;
+                    LayoutUnit diff =
+                        ctx.preferredWidthWithNewContext(f->asFrameBox()) -
+                        outerBasisSize;
                     if (diff > 0) {
                         if (f->style()->flexGrow() > 0) {
                             maxContentFlexGrowFraction = std::max(
@@ -3704,24 +3718,26 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
 
                     FrameBox* flexItem = f->asFrameBox();
                     LayoutUnit basisSize = fCtx.basisSize(flexItem);
+                    LayoutUnit mbpWidth = flexItem->mbpWidth();
                     // TODO: should apply max width
                     if (maxContentFlexGrowFraction >
                         maxContentFlexShrinkFraction) {
-                        lineWidth +=
+                        w +=
                             basisSize +
                             f->style()->flexGrow() * maxContentFlexGrowFraction;
                     } else if (maxContentFlexShrinkFraction >
                                maxContentFlexGrowFraction) {
-                        lineWidth += basisSize +
-                                     f->style()->flexShrink() * basisSize *
-                                         -maxContentFlexShrinkFraction;
+                        w += basisSize +
+                             f->style()->flexShrink() * basisSize *
+                                 -maxContentFlexShrinkFraction;
+                    } else {
+                        w += basisSize;
                     }
+                    w += mbpWidth;
                     f = f->next();
                 }
-                ctx.updatePreferredWidth(
-                    std::min(ctx.remainingWidth(), lineWidth));
+                w = std::min(ctx.remainingWidth(), w);
             } else {
-                LayoutUnit w;
                 Frame* f = firstChild();
                 while (f) {
                     if (f->isAbsolutePositioned() ||
@@ -3734,18 +3750,15 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                         w, ctx.preferredWidthWithNewContext(f->asFrameBox()));
                     f = f->next();
                 }
-                ctx.updatePreferredWidth(w);
             }
         } else {
             if (hasBlockFlow()) {
-                LayoutUnit w;
                 Frame* f = firstChild();
                 while (f) {
                     w = std::max(
                         w, ctx.preferredWidthWithNewContext(f->asFrameBox()));
                     f = f->next();
                 }
-                ctx.updatePreferredWidth(w);
             } else {
                 LayoutUnit textIndentWidth = LayoutUnit(0);
                 if ((!isAnonymous() && !hasBlockFlow()) ||
@@ -3758,9 +3771,17 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 ctx.setTextIndentWidth(textIndentWidth);
                 ctx.computePreferredWidthInline(this);
                 ctx.finishLine(false);
+                w = ctx.preferredWidth();
             }
         }
     }
+
+    if (width.isPercent()) {
+        w = width.percentValue(w);
+    }
+    w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), w, cb->contentWidth(),
+                                  ctx.layoutContext().viewportWidth(), true);
+    ctx.updatePreferredWidth(w);
 }
 
 void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)

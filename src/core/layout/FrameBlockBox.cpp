@@ -128,9 +128,9 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
                              containgBlockContentWidth - l - r - mbpWidth());
                 contentWidth = w;
             } else {
-                PreferredWidthContext p(ctx,
+                PreferredWidthContext p(ctx, this,
                                         containgBlockContentWidth - mbpWidth());
-                computePreferredWidth(p);
+                p.computePreferredWidth();
                 contentWidth = p.preferredWidth();
             }
         } else {

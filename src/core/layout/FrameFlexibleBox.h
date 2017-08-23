@@ -85,7 +85,7 @@ public:
     }
 
     static bool isAnonymousFlexItemContainingOnlyWhitespace(Frame* flexItem);
-    std::pair<bool, LayoutUnit> firstLineBoxYPosition(FrameBox* flexItem) const;
+    Nullable<LayoutUnit> firstLineBoxYPosition(FrameBox* flexItem) const;
 
 private:
     LayoutContext& m_layoutContext;

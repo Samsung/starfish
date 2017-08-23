@@ -1103,9 +1103,9 @@ LayoutUnit FrameTableBox::calBaseline(LayoutContext& ctx)
         FrameTableCellBox* c = firstRS.cells()[i].cell();
         auto it = ctx.tempFirstLineAscender(c);
 
-        if (it.first &&
-            (!tallestLB || (tallestLB->height() < it.second.first->height()))) {
-            tallestLB = it.second.first;
+        if (it.hasValue() && (!tallestLB || (tallestLB->height() <
+                                             it.getValue().first->height()))) {
+            tallestLB = it.getValue().first;
             isBaseLine = c->style()->verticalAlign() ==
                          VerticalAlignValue::BaselineVAlignValue;
         }

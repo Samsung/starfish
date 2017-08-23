@@ -172,8 +172,8 @@ public:
                                  LayoutUnit parentWidth,
                                  LayoutUnit viewportWidth)
     {
-        setContentWidth(
-            minMaxWidthAppliedIfNeeds(ctx, width, parentWidth, viewportWidth));
+        setContentWidth(minMaxWidthAppliedIfNeeds(ctx, width, parentWidth,
+                                                  viewportWidth, false));
     }
 
     void applyMinMaxHeightIfNeeds(LayoutUnit height, LayoutUnit parentHeight,
@@ -675,7 +675,8 @@ public:
 protected:
     LayoutUnit minMaxWidthAppliedIfNeeds(LayoutContext& ctx, LayoutUnit width,
                                          LayoutUnit parentWidth,
-                                         LayoutUnit viewportWidth);
+                                         LayoutUnit viewportWidth,
+                                         bool underComputingPreferredWidth);
 
     LayoutUnit minMaxHeightAppliedIfNeeds(LayoutUnit height,
                                           LayoutUnit parentHeight,
