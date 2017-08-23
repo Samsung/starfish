@@ -34,21 +34,20 @@ ScriptEngineInstance::ScriptEngineInstance(StarFish* starFish)
     Escargot::Globals::initialize();
     m_engineInstance = VMInstanceRef::create(
         starFish->locale().getName(), starFish->timezoneID()->utf8Data());
-    m_engineInstance->setNewPromiseJobListener([](ExecutionStateRef* state) {
+    m_engineInstance->setNewPromiseJobListener([](ExecutionStateRef* state,
+                                                  JobRef* job) {
         Window* window = (Window*)state->context()->globalObject()->extraData();
         window->starFish()->messageLoop()->addIdler(
             window->browsingContext(),
-            [](size_t, void* data) {
+            [](size_t, void* data, void* data2) {
                 Window* window = (Window*)data;
                 ExecutionStateRef* state = ExecutionStateRef::create(
                     window->scriptBindingInstance()->scriptContext());
-                window->scriptBindingInstance()
-                    ->scriptContext()
-                    ->vmInstance()
-                    ->drainJobQueue(state);
+                JobRef* job = (JobRef*)data2;
+                job->run(state);
                 state->destroy();
             },
-            window);
+            window, job);
     });
 }
 
