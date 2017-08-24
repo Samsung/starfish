@@ -2414,7 +2414,6 @@ void LineFormattingContext::handleTextToken(TextToken& token)
     }
 
     if (token.m_type == WordType::CollapsibleWhiteSpace &&
-        !token.m_frameText->shouldPreserveWhiteSpaces() &&
         isWhiteSpaceAtLast()) {
         return;
     }
@@ -2537,7 +2536,17 @@ void FrameText::layoutInline(LineFormattingContext& ctx)
 {
     // split the text into tokens using the ICU divider, and for each
     // token, execute the following function
+    WhiteSpaceValue oldWhiteSpace;
+    if (ctx.m_block->isFrameInputBox()) {
+        oldWhiteSpace = style()->whiteSpace();
+        WhiteSpaceValue whiteSpace = (WhiteSpaceValue)(
+            oldWhiteSpace | WhiteSpaceValue::PreWhiteSpaceValue);
+        style()->setWhiteSpace(whiteSpace);
+    }
     tokenizeText(ctx.m_layoutContext.starFish(), this, ctx);
+    if (ctx.m_block->isFrameInputBox()) {
+        style()->setWhiteSpace(oldWhiteSpace);
+    }
 }
 
 void FrameReplaced::layoutInline(LineFormattingContext& ctx)
@@ -3305,7 +3314,6 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
     }
 
     if (token.m_type == WordType::CollapsibleWhiteSpace &&
-        !token.m_frameText->shouldPreserveWhiteSpaces() &&
         isWhiteSpaceAtLast()) {
         return;
     }

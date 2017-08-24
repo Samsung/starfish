@@ -300,6 +300,11 @@ public:
         return m_inheritedStyles.m_whiteSpace;
     }
 
+    void setWhiteSpace(WhiteSpaceValue val)
+    {
+        m_inheritedStyles.m_whiteSpace = val;
+    }
+
     void setLineHeight(Length length)
     {
         m_inheritedStyles.m_lineHeight = length;
