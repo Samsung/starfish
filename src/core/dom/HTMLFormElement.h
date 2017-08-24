@@ -63,7 +63,7 @@ public:
 
 protected:
     HTMLFormObject(Document* document);
-    void fireSubmitEvent(Node* fromThisNode);
+    void fireSubmitEvent();
 
 private:
     Node* findAncestor(Node* ancestorToFind, Node* fromThisNode);
@@ -99,7 +99,6 @@ public:
     void setTarget(String* target);
 
     void submit();
-    void submit(HTMLElement* submitter);
 
     HTMLFormControlsCollection* elements();
     uint32_t length();
@@ -110,6 +109,7 @@ public:
     bool handleDefaultEvent(Event* event) override;
 
 private:
+    void submit(HTMLElement* submitter);
     GCVector<FormDataSetItem*>* createFormDataSet(HTMLElement* submitter);
     void submitData(ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
                     ResourceRequest::EncodeType encodeType,

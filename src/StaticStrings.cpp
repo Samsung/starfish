@@ -253,6 +253,15 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_onsubmit =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "onsubmit"));
+    m_input = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "input"));
+    m_oninput = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "oninput"));
+    m_invalid = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "invalid"));
+    m_oninvalid =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "oninvalid"));
     m_error = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "error"));
     m_onerror = QualifiedName(AtomicString::emptyAtomicString(),
