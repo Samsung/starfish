@@ -85,7 +85,7 @@ String* Element::localName()
     return name().localName();
 }
 
-size_t Element::hasAttribute(const AttributeName& name)
+size_t Element::hasAttribute(const AttributeName& name) const
 {
     for (size_t i = 0; i < m_attributes.size(); i++) {
         if (name.equals(m_attributes[i].name())) {
@@ -122,7 +122,7 @@ size_t Element::hasAttributeNode(const AttributeName& name)
     return SIZE_MAX;
 }
 
-Nullable<String*> Element::getAttribute(const AttributeName& name)
+Nullable<String*> Element::getAttribute(const AttributeName& name) const
 {
     size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
@@ -167,7 +167,7 @@ Attr* Element::getAttributeNodeNS(Nullable<String*> ns, String* localName)
     return getAttributeNode(attrName);
 }
 
-String* Element::getAttributeOrEmpty(const AttributeName& name)
+String* Element::getAttributeOrEmpty(const AttributeName& name) const
 {
     Nullable<String*> result = getAttribute(name);
     if (result.hasValue()) {

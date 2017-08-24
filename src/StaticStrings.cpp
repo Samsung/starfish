@@ -170,6 +170,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                       AtomicString::createAtomicString(sf, "formTarget"));
     m_checked = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "checked"));
+    m_text = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "text"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

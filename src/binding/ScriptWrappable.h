@@ -37,6 +37,8 @@ typedef Escargot::FunctionObjectRef* ScriptFunction;
 ScriptValue scriptNull();
 ScriptValue scriptUndefined();
 ScriptValue scriptStringToScriptValue(ScriptString s);
+bool scriptValueIsBoolean(ScriptValue v);
+bool scriptValueAsBoolean(ScriptValue v);
 
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
     Escargot::ExecutionStateRef* state, Escargot::ObjectRef* obj,

@@ -34,7 +34,7 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
-    virtual String* type() override;
+    virtual String* type() const override;
 };
 }
 

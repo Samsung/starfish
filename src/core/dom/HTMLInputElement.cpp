@@ -170,13 +170,12 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     String* textToDisplay = val;
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
-        if (type()->equalsWithoutCase("text") ||
-            type()->equalsWithoutCase("submit") ||
-            type()->equalsWithoutCase("button")) {
+        if (type()->equals("text") || type()->equals("submit") ||
+            type()->equals("button")) {
             textToDisplay = value();
-        } else if (type()->equalsWithoutCase("password")) {
+        } else if (type()->equals("password")) {
             textToDisplay = obscurePhrase(value());
-        } else if (type()->equalsWithoutCase("checkbox")) {
+        } else if (type()->equals("checkbox")) {
             textToDisplay = String::emptyString;
             if (m_checked) {
                 textToDisplay = checkboxTickSymbol();
@@ -349,16 +348,13 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
 
 bool HTMLInputElement::supportsFocus() const
 {
-    auto type = starFish()->staticStrings()->m_type;
-    return !const_cast<HTMLInputElement*>(this)
-                ->getAttributeOrEmpty(type)
-                ->equalsWithoutCase("hidden");
+    return !type()->equalsWithoutCase("hidden");
 }
 
 bool HTMLInputElement::isContentEditable()
 {
     String* typeString = type();
-    if (typeString->equals("") || typeString->equalsWithoutCase("text")) {
+    if (typeString->equals("text")) {
         return true;
     } else if (typeString->equals("email")) {
         return true;

@@ -84,8 +84,9 @@ void EventSourceParser::EventSourceParser::parseLine()
         // We dispatch an event when seeing an empty line.
         if (!m_data.empty()) {
             STARFISH_ASSERT(m_data[m_data.size() - 1] == '\n');
-            String* data = String::createASCIIString(m_data.data());
+            String* data = String::fromUTF8(m_data.data(), m_data.size());
             String* messageType = String::createASCIIString("message");
+
             m_client->onMessageEvent(m_eventType->isEmpty() ? messageType
                                                             : m_eventType,
                                      data, m_lastEventId);
