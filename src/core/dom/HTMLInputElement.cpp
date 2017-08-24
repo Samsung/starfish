@@ -34,11 +34,11 @@ namespace StarFish {
 
 HTMLInputElement::HTMLInputElement(Document* document)
     : HTMLFormObject(document)
+    , m_checked(false)
     , m_shouldDrawCaret(false)
     , m_caretBlinkingIntervalId(SIZE_MAX)
     , m_currentCaretPosition(SIZE_MAX)
     , m_currentEditingText(String::emptyString)
-    , m_checked(false)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
     setTabIndex(0, false);
@@ -136,6 +136,9 @@ void HTMLInputElement::setChecked(bool checked)
     }
 
     m_checked = checked;
+
+    updateInputboxValue(m_checked ? checkboxTickSymbol() : String::emptyString);
+
     auto fn = [](size_t handle, void* data) {
         HTMLInputElement* element = (HTMLInputElement*)data;
         String* eventType =
@@ -146,7 +149,6 @@ void HTMLInputElement::setChecked(bool checked)
     };
     starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
                                         this);
-    updateInputboxValue(m_checked ? checkboxTickSymbol() : String::emptyString);
 }
 
 String* HTMLInputElement::obscurePhrase(String* phrase)
@@ -164,24 +166,31 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
                                      attributeRemoved);
-    if (starFish()->staticStrings()->m_type == name ||
-        starFish()->staticStrings()->m_value == name) {
+
+    String* textToDisplay = val;
+    if (name == starFish()->staticStrings()->m_type ||
+        name == starFish()->staticStrings()->m_value) {
         if (type()->equalsWithoutCase("text") ||
             type()->equalsWithoutCase("submit") ||
             type()->equalsWithoutCase("button")) {
-            val = value();
+            textToDisplay = value();
         } else if (type()->equalsWithoutCase("password")) {
-            val = obscurePhrase(value());
+            textToDisplay = obscurePhrase(value());
         } else if (type()->equalsWithoutCase("checkbox")) {
-            val = String::emptyString;
+            textToDisplay = String::emptyString;
             if (m_checked) {
-                val = checkboxTickSymbol();
+                textToDisplay = checkboxTickSymbol();
             }
         }
 
-        updateInputboxValue(val);
+        if (name == starFish()->staticStrings()->m_type ||
+            !old->equals(textToDisplay)) {
+            updateInputboxValue(textToDisplay);
+        }
 
-        if (!old->equals(val)) {
+        if (isContentEditable() &&
+            name == starFish()->staticStrings()->m_value && !old->equals(val)) {
+            // TODO: fire correct inputevent
             InputEvent* event =
                 new InputEvent(document(), String::createASCIIString("input"));
             event->setCancelable(false);
@@ -235,7 +244,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 type()->equalsWithoutCase("button")) {
                 HTMLFormElement* formNode = form();
                 if (formNode) {
-                    fireSubmitEvent(this);
+                    fireSubmitEvent();
                     return true;
                 }
             } else if (type()->equalsWithoutCase("checkbox")) {
@@ -245,7 +254,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
         }
     } else {
         if (document()->browsingContext()->focusedNode() == this &&
-            isUserKeyboardInputAllowed()) {
+            isContentEditable()) {
             String* value =
                 getAttributeOrEmpty(starFish()->staticStrings()->m_value);
             String* oldValue = value;
@@ -316,7 +325,7 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
     bool oldGotFocus = oldState & Node::NodeStateFocused;
     bool newGotFocus = newState & Node::NodeStateFocused;
 
-    if (isUserKeyboardInputAllowed()) {
+    if (isContentEditable()) {
         if (!oldGotFocus && newGotFocus) {
             String* value =
                 getAttributeOrEmpty(starFish()->staticStrings()->m_value);
@@ -346,7 +355,7 @@ bool HTMLInputElement::supportsFocus() const
                 ->equalsWithoutCase("hidden");
 }
 
-bool HTMLInputElement::isUserKeyboardInputAllowed()
+bool HTMLInputElement::isContentEditable()
 {
     String* typeString = type();
     if (typeString->equals("") || typeString->equalsWithoutCase("text")) {

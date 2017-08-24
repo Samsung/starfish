@@ -124,7 +124,7 @@ void HTMLFormObject::setDisabled(bool disabled)
     m_disabled = disabled;
 }
 
-void HTMLFormObject::fireSubmitEvent(Node* fromThisNode)
+void HTMLFormObject::fireSubmitEvent()
 {
     auto fn = [](size_t handle, void* data) {
         Node* node = (Node*)data;
@@ -132,11 +132,10 @@ void HTMLFormObject::fireSubmitEvent(Node* fromThisNode)
             node->starFish()->staticStrings()->m_submit.localName();
         Event* e =
             new Event(node->document(), eventType, EventInit(true, true));
-        e->setTarget(node);
         node->EventTarget::dispatchEvent(node, e);
     };
     starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
-                                        fromThisNode);
+                                        this);
 }
 
 HTMLFormElement* HTMLFormObject::form()
@@ -246,7 +245,7 @@ void HTMLFormElement::submit()
     return submit(nullptr);
 }
 
-// https://www.w3.org/TR/html5/forms.html#concept-form-submit
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-submit
 void HTMLFormElement::submit(HTMLElement* submitter)
 {
     GCVector<FormDataSetItem*>* formDataSet = createFormDataSet(submitter);

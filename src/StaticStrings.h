@@ -284,6 +284,10 @@ public:
     QualifiedName m_onload;
     QualifiedName m_submit;
     QualifiedName m_onsubmit;
+    QualifiedName m_input;
+    QualifiedName m_oninput;
+    QualifiedName m_invalid;
+    QualifiedName m_oninvalid;
     QualifiedName m_error;
     QualifiedName m_onerror;
     QualifiedName m_unload;

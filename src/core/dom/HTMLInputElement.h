@@ -76,17 +76,17 @@ public:
     bool supportsFocus() const override;
 
 protected:
-    bool isUserKeyboardInputAllowed();
+private:
+    void toggleChecked();
+    bool isContentEditable();
+    void updateInputboxValue(String* value);
+
+    bool m_checked;
+
     bool m_shouldDrawCaret;
     size_t m_caretBlinkingIntervalId;
     size_t m_currentCaretPosition;
     String* m_currentEditingText;
-
-private:
-    void toggleChecked();
-    void updateInputboxValue(String* value);
-
-    bool m_checked;
 };
 }
 
