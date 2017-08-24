@@ -28,8 +28,6 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/Timer.h"
 
-#define CURL_HANDLE_DATA_CLEAR_TIME_S 1
-
 namespace StarFish {
 
 void* EventSourceWorkerHelper::networkWorker(void* data)
@@ -88,6 +86,8 @@ void EventSourceWorkerHelper::responseHandler(size_t handle, void* data)
 
     // TODO : handle close()
 
+    // We should calling abort function for clear ResourceRequest
+    requestData->request->abort(false);
     requestData->request->m_activeEventSourceWorkerData = nullptr;
     requestData->~EventSourceWorkerData();
     GC_FREE(requestData);

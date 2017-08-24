@@ -25,6 +25,9 @@ EventSourceParser::EventSourceParser(String* lastEventId, Client* client)
     , m_id(lastEventId)
     , m_lastEventId(lastEventId)
     , m_client(client)
+    , m_isRecognizingCRLF(false)
+    , m_isRecognizingBOM(true)
+    , m_isStopped(false)
 {
 }
 
