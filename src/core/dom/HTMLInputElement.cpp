@@ -255,6 +255,8 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                     KeyValue::BackspaceKey) {
                     if (value->length()) {
                         if (m_currentCaretPosition > 0) {
+                            m_currentCaretPosition = std::min(
+                                m_currentCaretPosition, value->length());
                             StringBuilder sb;
                             sb.appendSubString(value, 0,
                                                m_currentCaretPosition - 1);

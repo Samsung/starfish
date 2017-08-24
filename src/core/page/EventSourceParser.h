@@ -54,9 +54,9 @@ private:
     String* m_lastEventId;
     Client* m_client;
 
-    bool m_isRecognizingCRLF = false;
-    bool m_isRecognizingBOM = true;
-    bool m_isStopped = false;
+    bool m_isRecognizingCRLF;
+    bool m_isRecognizingBOM;
+    bool m_isStopped;
 };
 }
 

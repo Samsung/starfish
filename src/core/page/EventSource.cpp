@@ -56,7 +56,7 @@ public:
             uint16_t statusCode = request->status();
             bool isMimeTypeValid = request->responseMimeType()->contains(
                 String::createASCIIString("text/event-stream"), false);
-            ResponseHeaderMap headerMap = request->responseHeaderMap();
+            const ResponseHeaderMap& headerMap = request->responseHeaderMap();
             m_isResponseValid = statusCode == 200 && isMimeTypeValid;
 
             if (m_isResponseValid) {
