@@ -224,6 +224,7 @@ public:
     QualifiedName m_size;
     QualifiedName m_charset;
     QualifiedName m_content;
+    QualifiedName m_contentEditable;
     QualifiedName m_lang;
     QualifiedName m_colspan;
     QualifiedName m_cellspacing;

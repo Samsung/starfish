@@ -22,6 +22,7 @@
 #include "core/dom/Event.h"
 #include "core/dom/Text.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/dom/HTMLBRElement.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
@@ -305,6 +306,35 @@ void HTMLElement::click()
 {
     String* eventType = starFish()->staticStrings()->m_click.localName();
     dispatchEvent(new Event(document(), eventType, EventInit(true, true)));
+}
+
+String* HTMLElement::contentEditable()
+{
+    String* value =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_contentEditable);
+
+    if (value->equalsWithoutCase("true")) {
+        return String::createASCIIString("true");
+    } else if (value->equalsWithoutCase("false")) {
+        return String::createASCIIString("false");
+    }
+    return String::createASCIIString("inherit");
+}
+
+void HTMLElement::setContentEditable(const String* value)
+{
+    if (value->equalsWithoutCase("true")) {
+        setAttribute(starFish()->staticStrings()->m_contentEditable,
+                     String::createASCIIString("true"));
+    } else if (value->equalsWithoutCase("false")) {
+        setAttribute(starFish()->staticStrings()->m_contentEditable,
+                     String::createASCIIString("false"));
+    } else if (value->equalsWithoutCase("inherit")) {
+        removeAttribute(starFish()->staticStrings()->m_contentEditable);
+    } else {
+        throw new DOMException(document(), DOMException::SYNTAX_ERR);
+    }
+    return;
 }
 
 DEFINE_EVENT_LISTENER(HTMLElement, abort);

@@ -679,7 +679,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments) | Calls a function or evaluates an expression at specified intervals (in milliseconds). |
 |  | method | void clearInterval(optional long handle = 0) | Clears a timer set with setInterval(). |
 |  | typedef | (DOMString or Function) TimerHandler | |
-
+| [ElementContentEditable](https://html.spec.whatwg.org/multipage/interaction.html#elementcontenteditable) | interface |  |  |
+|  | attribute | contentEditable | contentEditable property is used to indicate whether or not the element is editable. |
 
 ## Event
 | Interface | Type | Name | Description |

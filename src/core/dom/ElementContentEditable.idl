@@ -3,6 +3,6 @@
 [PartialInterface,
  NoInterfaceObject]
 interface ElementContentEditable {
-  [Unimplemented, CEReactions] attribute DOMString contentEditable;
+  [RaisesException, CEReactions] attribute DOMString contentEditable;
   [Unimplemented] readonly attribute boolean isContentEditable;
 };
