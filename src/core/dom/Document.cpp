@@ -67,6 +67,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
     , m_doesParticipateInRendering(doesParticipateInRendering)
+    , m_designMode(false)
     , m_compatibilityMode(Document::NoQuirksMode)
     , m_pageVisibilityState(VisibilityStateVisible)
     , m_window(window)
@@ -795,6 +796,38 @@ bool Document::hasFocus() const
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return true;
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#designMode
+String* Document::designMode()
+{
+    if (m_designMode) {
+        return String::createASCIIString("on");
+    }
+    return String::createASCIIString("off");
+}
+
+void Document::setDesignMode(String* value)
+{
+    bool newValue = m_designMode;
+
+    if (value->equalsWithoutCase("on")) {
+        newValue = true;
+    } else if (value->equalsWithoutCase("off")) {
+        newValue = false;
+    }
+
+    if (newValue == m_designMode) {
+        return;
+    }
+
+    m_designMode = newValue;
+    if (m_designMode) {
+        // TODO : immediately reset the document's active range's start and end
+        // boundary points to be at the start of the Document
+        browsingContext()->setFocusedNode(this);
+        browsingContext()->setNeedsStyleRecalc();
+    }
 }
 
 String* Document::origin()

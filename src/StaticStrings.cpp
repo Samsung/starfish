@@ -121,6 +121,9 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_contentEditable =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "contentEditable"));
+    m_designMode =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "designMode"));
     m_lang = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "lang"));
     m_colspan = QualifiedName(AtomicString::emptyAtomicString(),

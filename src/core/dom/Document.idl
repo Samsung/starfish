@@ -104,7 +104,7 @@ interface Document : Node {
   [Custom=Getter] readonly attribute WindowProxy? defaultView;
   readonly attribute Element? activeElement;
   [Unimplemented] boolean hasFocus();
-  [Unimplemented, CEReactions] attribute DOMString designMode;
+  [CEReactions] attribute DOMString designMode;
   [Unimplemented, CEReactions] boolean execCommand(DOMString commandId, optional boolean showUI = false, optional DOMString value = "");
   [Unimplemented] boolean queryCommandEnabled(DOMString commandId);
   [Unimplemented] boolean queryCommandIndeterm(DOMString commandId);

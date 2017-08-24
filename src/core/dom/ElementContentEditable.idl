@@ -4,5 +4,5 @@
  NoInterfaceObject]
 interface ElementContentEditable {
   [RaisesException, CEReactions] attribute DOMString contentEditable;
-  [Unimplemented] readonly attribute boolean isContentEditable;
+  readonly attribute boolean isContentEditable;
 };

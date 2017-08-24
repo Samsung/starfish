@@ -340,6 +340,14 @@ public:
     Element* activeElement();
     bool hasFocus() const;
 
+    String* designMode();
+    void setDesignMode(String* value);
+
+    bool inDesignMode()
+    {
+        return m_designMode;
+    }
+
     QualifiedName validateAndExtractQualifiedName(Nullable<String*> ns,
                                                   String* qualifiedName);
 
@@ -443,6 +451,8 @@ protected:
     bool m_didLoadBrokenImage : 1;
     bool m_isXMLDocument : 1;
     bool m_doesParticipateInRendering : 1;
+    bool m_designMode : 1;
+
     CompatibilityMode m_compatibilityMode : 2;
     VisibilityState m_pageVisibilityState : 2;
 
