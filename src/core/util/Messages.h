@@ -42,6 +42,8 @@ static const char* ARG_TYPE_MISMATCH_WITH_ENUM =
 static const char* SIGNATURE_NOT_FOUND =
     "No function was found that matched the signature provided.";
 static const char* QUERY_SELECTOR_IS_EMPTY = "The provided selector is empty.";
+static const char* INVALID_SIZE =
+    "The value provided %s, which is an invalid size.";
 static const char* INVALID_TARGET_ORIGIN =
     "Invalid target origin '%s' in a call to '%s'";
 static const char* INVALID_DATA_CLONE = "'%s' could not be cloned.";

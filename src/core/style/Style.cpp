@@ -2891,7 +2891,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
     matchAllRules(element, style, parent);
     style->loadResources(element, element->style());
     ComputedStyle* rootStyle = element->document()->rootElement()->style();
-    style->arrangeStyleValues(parent, rootStyle);
+    style->arrangeStyleValues(parent, rootStyle, element);
     return style;
 }
 

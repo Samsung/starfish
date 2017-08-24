@@ -31,7 +31,8 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented, CEReactions] attribute DOMString placeholder;
     [Unimplemented, CEReactions] attribute boolean readOnly;
     [Unimplemented, CEReactions] attribute boolean required;
-    [Unimplemented, CEReactions] attribute unsigned long size;
+    // FIXME: later size should be implemented RaisesException=Setter
+    [CEReactions, Custom=Setter] attribute unsigned long size;
     [Unimplemented, CEReactions] attribute USVString src;
     [Unimplemented, CEReactions] attribute DOMString step;
     [CEReactions] attribute DOMString type;
