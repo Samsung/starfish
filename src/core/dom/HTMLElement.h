@@ -77,6 +77,7 @@ public:
 
     String* contentEditable();
     void setContentEditable(const String* value);
+    bool isContentEditable();
 
 #define VIRTUAL
 #define OVERRIDE

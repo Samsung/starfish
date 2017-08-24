@@ -32,6 +32,49 @@
 
 namespace StarFish {
 
+static bool isEditinghost(Node* node)
+{
+    // https://w3c.github.io/editing/execCommand.html#editing-host
+    if ((node && node->isHTMLElement() &&
+         node->asHTMLElement()->contentEditable()->equals("true")) ||
+        node->document()->inDesignMode()) {
+        return true;
+    }
+    return false;
+}
+
+static bool isEditable(Node* node)
+{
+    // https://w3c.github.io/editing/execCommand.html#editable
+    if (!node) {
+        return false;
+    }
+    if (isEditinghost(node)) {
+        return false;
+    }
+    if (node->isHTMLElement() &&
+        node->asHTMLElement()->contentEditable()->equals("false")) {
+        return false;
+    }
+    if (!node->parentNode()) {
+        return false;
+    }
+    if (!isEditinghost(node->parentNode()) && !isEditable(node->parentNode())) {
+        return false;
+    }
+    if (node->isHTMLElement()) {
+        return true;
+    }
+
+    // TODO :: return true if the node is SVG Element
+
+    if (node->isElement() && node->asElement()->tagName()->equals("math")) {
+        return true;
+    }
+
+    return !node->isElement() && node->parentNode()->isHTMLElement();
+}
+
 void* HTMLElement::operator new(size_t size)
 {
     static bool typeInited = false;
@@ -335,6 +378,11 @@ void HTMLElement::setContentEditable(const String* value)
         throw new DOMException(document(), DOMException::SYNTAX_ERR);
     }
     return;
+}
+
+bool HTMLElement::isContentEditable()
+{
+    return isEditinghost(this) || isEditable(this);
 }
 
 DEFINE_EVENT_LISTENER(HTMLElement, abort);
