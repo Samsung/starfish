@@ -118,6 +118,9 @@ StaticStrings::StaticStrings(StarFish* sf)
                               AtomicString::createAtomicString(sf, "charset"));
     m_content = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "content"));
+    m_contentEditable =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "contentEditable"));
     m_lang = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "lang"));
     m_colspan = QualifiedName(AtomicString::emptyAtomicString(),

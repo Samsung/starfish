@@ -75,6 +75,9 @@ public:
 
     void click();
 
+    String* contentEditable();
+    void setContentEditable(const String* value);
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
