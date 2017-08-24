@@ -74,9 +74,36 @@ void HTMLFormObject::setDomName(String* name)
     setAttribute(starFish()->staticStrings()->m_name, name);
 }
 
-String* HTMLFormObject::type()
+String* HTMLFormObject::type() const
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    String* typeAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    typeAttr = typeAttr->toLower();
+
+    if (typeAttr->equals("text")) {
+        return typeAttr;
+    } else if (typeAttr->equals("email")) {
+        return typeAttr;
+    } else if (typeAttr->equals("number")) {
+        return typeAttr;
+    } else if (typeAttr->equals("password")) {
+        return typeAttr;
+    } else if (typeAttr->equals("url")) {
+        return typeAttr;
+    } else if (typeAttr->equals("tel")) {
+        return typeAttr;
+    } else if (typeAttr->equals("search")) {
+        return typeAttr;
+    } else if (typeAttr->equals("checkbox")) {
+        return typeAttr;
+    } else if (typeAttr->equals("button")) {
+        return typeAttr;
+    } else if (typeAttr->equals("radio")) {
+        return typeAttr;
+    } else if (typeAttr->equals("submit")) {
+        return typeAttr;
+    }
+
+    return starFish()->staticStrings()->m_text.localName();
 }
 
 void HTMLFormObject::setType(String* type)

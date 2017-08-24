@@ -115,17 +115,17 @@ public:
         return m_attributes[t].value();
     }
 
-    size_t hasAttribute(const AttributeName& name);
+    size_t hasAttribute(const AttributeName& name) const;
     bool hasAttribute(String* qualifiedName);
     bool hasAttributeNS(Nullable<String*> ns, String* localName);
 
-    Nullable<String*> getAttribute(const AttributeName& name);
+    Nullable<String*> getAttribute(const AttributeName& name) const;
     Nullable<String*> getAttribute(String* qualifiedName);
     Nullable<String*> getAttributeNS(Nullable<String*> ns, String* localName);
     Attr* getAttributeNode(const AttributeName& name);
     Attr* getAttributeNode(String* qualifiedName);
     Attr* getAttributeNodeNS(Nullable<String*> ns, String* localName);
-    String* getAttributeOrEmpty(const AttributeName& name);
+    String* getAttributeOrEmpty(const AttributeName& name) const;
 
     void setAttribute(const AttributeName& name, String* value);
     void setAttribute(String* qualifiedName, String* value);

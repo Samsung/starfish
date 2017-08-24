@@ -42,14 +42,6 @@ public:
     virtual QualifiedName name();
 
     // 4.10 Interface Input
-    virtual String* type() override
-    {
-        String* ret = HTMLFormObject::type();
-        if (ret->equals("")) {
-            return String::createASCIIString("text");
-        }
-        return ret;
-    }
     String* value();
     void setValue(String* value);
 

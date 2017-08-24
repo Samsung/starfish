@@ -46,6 +46,16 @@ ScriptValue scriptStringToScriptValue(ScriptString s)
     return ValueRef::create(s);
 }
 
+bool scriptValueIsBoolean(ScriptValue v)
+{
+    return v->isBoolean();
+}
+
+bool scriptValueAsBoolean(ScriptValue v)
+{
+    return v->asBoolean();
+}
+
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
     ExecutionStateRef* state, ObjectRef* obj, StringRef* propertyName,
     ScriptNativeFunctionPointer getter, ScriptNativeFunctionPointer setter,

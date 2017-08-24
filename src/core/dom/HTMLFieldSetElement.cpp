@@ -25,7 +25,7 @@ QualifiedName HTMLFieldSetElement::name()
     return starFish()->staticStrings()->m_fieldsetTagName;
 }
 
-String* HTMLFieldSetElement::type()
+String* HTMLFieldSetElement::type() const
 {
     return String::createASCIIString("fieldset");
 }

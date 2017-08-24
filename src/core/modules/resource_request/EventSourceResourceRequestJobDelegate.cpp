@@ -153,9 +153,14 @@ void EventSourceResourceRequestJobDelegate::send(String* body)
         worker(data);
     } else {
         data->eventSourceNetworkWorker = new AsyncEventSourceWorkHelper();
-        m_orgProxy->starFish()->threadPool()->addWork(
-            m_orgProxy->document()->browsingContext(),
-            EventSourceResourceRequestJobDelegate::worker, data);
+        Thread* t = new Thread();
+        t->run(m_orgProxy->starFish()->messageLoop(),
+               [](void* data) -> void* {
+                   EventSourceWorkerData* d = (EventSourceWorkerData*)data;
+                   EventSourceResourceRequestJobDelegate::worker(d);
+                   return nullptr;
+               },
+               data);
     }
 }
 
@@ -272,6 +277,7 @@ size_t EventSourceResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                     std::move(eventSourceData->httpTransaction
                                                   ->httpResponse()
                                                   .entityBody());
+
                                 if (eventSourceData->isRedirected &&
                                     eventSourceData->lastLocation.compare("") !=
                                         0) {

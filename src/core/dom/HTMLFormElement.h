@@ -51,7 +51,7 @@ public:
     virtual String* domName();
     virtual void setDomName(String* name);
 
-    virtual String* type();
+    virtual String* type() const;
     virtual void setType(String* type);
 
     virtual bool disabled();

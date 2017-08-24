@@ -45,8 +45,13 @@ ScriptValue EventListener::call(Event* event)
     ScriptValue listenerFunc = scriptValue();
     if (isCallableScriptValue(listenerFunc)) {
         ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-        callScriptFunction(event->scriptBindingInstance(), listenerFunc, argv,
-                           1, event->currentTarget()->scriptValue());
+        ScriptValue value =
+            callScriptFunction(event->scriptBindingInstance(), listenerFunc,
+                               argv, 1, event->currentTarget()->scriptValue());
+        if (isAttribute() && scriptValueIsBoolean(value) &&
+            !scriptValueAsBoolean(value)) {
+            event->preventDefault();
+        }
     }
     return listenerFunc;
 }
