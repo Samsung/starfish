@@ -174,7 +174,7 @@ public:
 
     static Kind stringToKind(String* kindStr)
     {
-        if (kindStr && kindStr->length() > 7) {
+        if (kindStr->length() > 7) {
             switch (kindStr->charAt(2)) {
             case 'a':
             case 'A':
@@ -230,7 +230,7 @@ public:
 
     static Mode stringToMode(String* modeStr)
     {
-        if (modeStr && modeStr->length() > 5) {
+        if (modeStr->length() > 5) {
             if (modeStr->equals("disabled")) {
                 return Mode::Off;
             } else if (modeStr->equals("hidden")) {

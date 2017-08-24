@@ -52,6 +52,61 @@ const char* sstrstr(const char* haystack, size_t length, const char* needle,
     return NULL;
 }
 
+struct EncodingResult {
+    char m_encoding[10];
+    size_t m_skip;
+
+    EncodingResult()
+        : m_skip(0)
+    {
+    }
+};
+
+EncodingResult detectAndRemoveBOM(GCVector<char>& buffer)
+{
+    EncodingResult er;
+    size_t len = buffer.size();
+    uint8_t c, c2, c3, c4;
+
+    if (len > 0) {
+        c = buffer[0] & 0xff;
+    }
+    if (len > 1) {
+        c2 = buffer[1] & 0xff;
+        if (c == 0xff && c2 == 0xfe) {
+            strncpy(er.m_encoding, "utf-16le", 8);
+            er.m_skip = 2;
+            return er;
+        } else if (c == 0xfe && c2 == 0xff) {
+            strncpy(er.m_encoding, "utf-16be", 8);
+            er.m_skip = 2;
+            return er;
+        }
+    }
+    if (len > 2) {
+        c3 = buffer[2] & 0xff;
+        if (c == 0xef && c2 == 0xbb && c3 == 0xbf) {
+            strncpy(er.m_encoding, "utf-8", 5);
+            er.m_skip = 3;
+            return er;
+        }
+    }
+    if (len > 3) {
+        c4 = buffer[3] & 0xff;
+        if (c == 0x00 && c2 == 0x00 && c3 == 0xfe && c4 == 0xff) {
+            strncpy(er.m_encoding, "utf-32be", 8);
+            er.m_skip = 4;
+            return er;
+        } else if (c == 0xff && c2 == 0xfe && c3 == 0x00 && c4 == 0x00) {
+            strncpy(er.m_encoding, "utf-32le", 8);
+            er.m_skip = 4;
+            return er;
+        }
+    }
+
+    return er;
+}
+
 class HTMLResourceClient : public ResourceClient {
 public:
     HTMLResourceClient(Resource* res, HTMLDocumentBuilder& builder)
@@ -84,8 +139,9 @@ public:
         ResourceClient::didLoadFinished();
 
         String* m = m_resource->resourceRequest()->responseMimeType();
-        if (!m->contains("charset", false)) {
-            // TODO check BOM
+        EncodingResult er = detectAndRemoveBOM(m_buffer);
+
+        if (!m->contains("charset", false) && er.m_skip == 0) {
             size_t bufferLen = m_buffer.size();
             std::string charSetInMeta;
             for (size_t i = 0; i < bufferLen; i++) {
@@ -167,13 +223,15 @@ public:
             if (charSetInMeta.length()) {
                 m = String::fromUTF8(charSetInMeta.data());
             }
+        } else if (!m->contains("charset", false)) {
+            m = String::fromUTF8(er.m_encoding);
         }
 
-        TextConverter* converter =
-            new TextConverter(m, String::createASCIIString("UTF-8"),
-                              m_buffer.data(), m_buffer.size());
-        m_htmlSource =
-            converter->convert(m_buffer.data(), m_buffer.size(), true);
+        TextConverter* converter = new TextConverter(
+            m, String::createASCIIString("UTF-8"), m_buffer.data() + er.m_skip,
+            m_buffer.size() - er.m_skip);
+        m_htmlSource = converter->convert(m_buffer.data() + er.m_skip,
+                                          m_buffer.size() - er.m_skip, true);
         m_builder.document()->setCharacterSet(converter->encoding());
 
         if (!m_resource->resourceRequest()->lastLocation()->equals(

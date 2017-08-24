@@ -3181,6 +3181,17 @@ void LineFormattingContext::registerRelativePositionedBoxes()
 
 LayoutUnit LineFormattingContext::contentHeightForBlock()
 {
+    if (m_block->isFrameInputBox()) {
+        STARFISH_ASSERT(m_block->firstChild()->isFrameText());
+        LayoutUnit fontHeight = m_block->firstChild()
+                                    ->asFrameText()
+                                    ->style()
+                                    ->font()
+                                    ->metrics()
+                                    .m_fontHeight;
+        return fontHeight;
+    }
+
     LayoutUnit top = m_block->paddingTop() + m_block->borderTop();
     LayoutUnit bottom;
     LayoutUnit height;
@@ -3196,17 +3207,6 @@ LayoutUnit LineFormattingContext::contentHeightForBlock()
         }
 
         riter++;
-    }
-
-    if (m_block->isFrameInputBox()) {
-        STARFISH_ASSERT(m_block->firstChild()->isFrameText());
-        LayoutUnit fontHeight = m_block->firstChild()
-                                    ->asFrameText()
-                                    ->style()
-                                    ->font()
-                                    ->metrics()
-                                    .m_fontHeight;
-        return fontHeight;
     }
 
     if (m_block->isEstablishesBlockFormattingContext()) {

@@ -329,8 +329,23 @@ double Window::pageYOffset()
     return scrollY();
 }
 
-bool Window::scrollTo(double x, double y)
+bool Window::scrollTo(ScrollToOptions options)
 {
+    LayoutUnit x;
+    LayoutUnit y;
+
+    if (options.hasLeft()) {
+        x = options.left();
+    } else {
+        x = scrollX();
+    }
+
+    if (options.hasTop()) {
+        y = options.top();
+    } else {
+        y = scrollY();
+    }
+
     browsingContext()->webView()->layoutIfNeeds();
     if (document()->frame()) {
         if (document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(

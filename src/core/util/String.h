@@ -380,8 +380,8 @@ public:
         }
         if (CHAR == 0xAD || CHAR == 0x200B || CHAR == 0x200E ||
             CHAR == 0x200F || CHAR == 0x202A || CHAR == 0x202B ||
-            CHAR == 0x202C || CHAR == 0x202D || CHAR == 0x202C ||
-            CHAR == 0x202E || CHAR == 0xFEFF || CHAR == 0xFFFC) {
+            CHAR == 0x202C || CHAR == 0x202D || CHAR == 0x202E ||
+            CHAR == 0xFEFF || CHAR == 0xFFFC) {
             return true;
         }
         return false;

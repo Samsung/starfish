@@ -1,6 +1,15 @@
 // https://html.spec.whatwg.org/#the-window-object
 // NOTE Using DOMString instead of USVString
 
+enum ScrollBehavior { "auto", "instant", "smooth" };
+
+dictionary ScrollOptions {
+    ScrollBehavior behavior = "auto";
+};
+dictionary ScrollToOptions : ScrollOptions {
+    unrestricted double left;
+    unrestricted double top;
+};
 
 [PrimaryGlobal, LegacyUnenumerableNamedProperties]
 interface Window : EventTarget {
@@ -85,9 +94,9 @@ interface Window : EventTarget {
   [Replaceable] readonly attribute double pageXOffset;
   [Replaceable] readonly attribute double scrollY;
   [Replaceable] readonly attribute double pageYOffset;
-  [Unimplemented] void scroll(optional ScrollToOptions options);
+  void scroll(optional ScrollToOptions options);
   void scroll(unrestricted double x, unrestricted double y);
-  [Unimplemented] void scrollTo(optional ScrollToOptions options);
+  void scrollTo(optional ScrollToOptions options);
   void scrollTo(unrestricted double x, unrestricted double y);
   [Unimplemented] void scrollBy(optional ScrollToOptions options);
   [Unimplemented] void scrollBy(unrestricted double x, unrestricted double y);
