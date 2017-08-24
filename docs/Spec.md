@@ -644,13 +644,21 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | history | Return the object implementing the History interface for this Window object's associated Document. |
 |  | attribute | navigator | Return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
 |  | method | postMessage(message, targetOrigin, transfer) | Posts a message to the given window. |
-| [Window](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface) | attribute | innerWidth | Return the viewport width including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
+| [Window](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface) | enum | ScrollBehvior | "auto", "instant", "smooth" |
+|  [ScrollOptions](https://www.w3.org/TR/cssom-view-1/#dictdef-scrolloptions) | dictionary | ScrollOptions |  |
+|    | attribute | behavior | Initializes the behavior attribute of the ScrollOptions object |
+|  [ScrollToOptions](https://www.w3.org/TR/cssom-view-1/#dictdef-scrolltooptions) | dictionary | ScrollToOptions |  |
+|    | attribute | left | Initializes the left attribute of the ScrollToOptions object |
+|    | attribute | top | Initializes the top attribute of the ScrollToOptions object |
+|  | attribute | innerWidth | Return the viewport width including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
 |  | attribute | innerHeight | Return the viewport height including the size of a rendered scroll bar (if any), or zero if there is no viewport. |
 |  | attribute | scrollX | property of the Window interface returns the number of pixels that the document is currently scrolled horizontally |
 |  | attribute | scrollY | property of the Window interface returns the number of pixels that the document is currently scrolled vertically |
 |  | attribute | pageXOffset | property of the Window interface returns the number of pixels that the document is currently scrolled horizontally |
 |  | attribute | pageYOffset | property of the Window interface returns the number of pixels that the document is currently scrolled vertically |
+|  | method | scroll(optional ScrollToOptions) | Scrolls the window to a particular place in the document. |
 |  | method | scroll(x, y) | Scrolls the window to a particular place in the document. |
+|  | method | scrollTo(optional ScrollToOptions) | Scrolls the window to a particular place in the document. |
 |  | method | scrollTo(x, y) | Scrolls the window to a particular place in the document. |
 | [Window](https://www.w3.org/TR/animation-timing/#Window-interface-extensions) | method | unsigned long requestAnimationFrame(FrameRequestCallback callback) | Used to signal to the user agent that a script-based animation needs to be resampled. |
 | | method | void cancelAnimationFrame(unsigned long handle) | Used to cancel a previously made request to schedule an animation frame update. |

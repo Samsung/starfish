@@ -36,6 +36,129 @@ class StorageNamespace;
 class WebApis;
 class WebView;
 
+struct ScrollOptions {
+public:
+    enum ScrollBehavior { Auto, Instant, Smooth };
+
+    STARFISH_MAKE_STACK_ALLOCATED()
+    ScrollOptions()
+        : m_behavior(Auto)
+    {
+    }
+
+    void setBehavior(ScrollBehavior scrollBehavior)
+    {
+        m_behavior = scrollBehavior;
+    }
+
+    void setBehavior(String* scrollBehaviorStr)
+    {
+        m_behavior = stringToBehavior(scrollBehaviorStr);
+    }
+
+    ScrollBehavior behaviorValue() const
+    {
+        return m_behavior;
+    }
+
+    String* behavior() const
+    {
+        return ScrollOptions::behaviorToString(m_behavior);
+    }
+
+    static ScrollBehavior stringToBehavior(String* scrollBehaviorStr)
+    {
+        if (scrollBehaviorStr->length() > 3) {
+            if (scrollBehaviorStr->equals("auto")) {
+                return ScrollOptions::Auto;
+            } else if (scrollBehaviorStr->equals("instant")) {
+                return ScrollOptions::Instant;
+            } else if (scrollBehaviorStr->equals("smooth")) {
+                return ScrollOptions::Smooth;
+            }
+        }
+        return ScrollOptions::Auto;
+    }
+
+    static String* behaviorToString(ScrollBehavior scrollBehavior)
+    {
+        switch (scrollBehavior) {
+        case ScrollBehavior::Auto:
+            return String::fromUTF8("auto");
+        case ScrollBehavior::Instant:
+            return String::fromUTF8("instant");
+        case ScrollBehavior::Smooth:
+            return String::fromUTF8("smooth");
+        default:
+            return String::emptyString;
+        }
+        return String::emptyString;
+    }
+
+private:
+    ScrollBehavior m_behavior;
+};
+
+struct ScrollToOptions : public ScrollOptions {
+public:
+    STARFISH_MAKE_STACK_ALLOCATED()
+    ScrollToOptions()
+        : ScrollOptions()
+        , m_left(0)
+        , m_top(0)
+        , m_hasLeft(false)
+        , m_hasTop(false)
+    {
+    }
+
+    ScrollToOptions(double left, double top)
+        : ScrollOptions()
+        , m_left(left)
+        , m_top(top)
+        , m_hasLeft(true)
+        , m_hasTop(true)
+    {
+    }
+
+    void setLeft(double left)
+    {
+        m_left = left;
+        m_hasLeft = true;
+    }
+
+    double left() const
+    {
+        return m_left;
+    }
+
+    void setTop(double top)
+    {
+        m_top = top;
+        m_hasTop = true;
+    }
+
+    double top() const
+    {
+        return m_top;
+    }
+
+    bool hasLeft() const
+    {
+        return m_hasLeft;
+    }
+
+    bool hasTop() const
+    {
+        return m_hasTop;
+    }
+
+private:
+    double m_left;
+    double m_top;
+    bool m_hasLeft;
+    bool m_hasTop;
+};
+
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
 class Window : public EventTarget {
@@ -156,8 +279,31 @@ public:
     double scrollY();
     double pageXOffset();
     double pageYOffset();
-    bool scrollTo(double x, double y); // returns scrolling is actually happened
-    bool scroll(double x, double y)    // returns scrolling is actually happened
+
+    bool scrollTo() // returns scrolling is actually happened
+    {
+        ScrollToOptions options;
+        return scrollTo(options);
+    }
+
+    bool scrollTo(ScrollToOptions options);
+    bool scrollTo(double x, double y)
+    {
+        ScrollToOptions options(x, y);
+        return scrollTo(options);
+    }
+
+    bool scroll() // returns scrolling is actually happened
+    {
+        return scrollTo();
+    }
+
+    bool scroll(ScrollToOptions options)
+    {
+        return scrollTo(options);
+    }
+
+    bool scroll(double x, double y)
     {
         return scrollTo(x, y);
     }
