@@ -22,6 +22,7 @@
 namespace StarFish {
 class Event;
 class HTMLInputElement : public HTMLFormObject {
+    const int DEFAULT_SIZE = 20;
     friend class FrameInputBox;
 
 public:
@@ -59,6 +60,9 @@ public:
 
     bool checked();
     void setChecked(bool checked);
+
+    uint32_t size();
+    void setSize(String* size);
 
     // Other methods
     String* obscurePhrase(String* phrase);

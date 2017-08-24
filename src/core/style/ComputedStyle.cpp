@@ -20,6 +20,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
+#include "core/dom/HTMLInputElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/page/Window.h"
@@ -366,6 +367,13 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     m_inheritedStyles.m_verticalBorderSpacing.changeToFixedIfNeeded(
         curFontSize, rootFontSize, font());
     m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+    if (current && current->isHTMLInputElement()) {
+        if (m_width.isAuto()) {
+            size_t size = current->asHTMLInputElement()->size();
+            m_width = Length(Length::EmToBeFixed, size);
+            m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+        }
+    }
     m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
     if (hasRareComputeStyleData()) {
         m_rareComputedStyleData->m_minWidth.changeToFixedIfNeeded(
@@ -390,6 +398,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
             std.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
         }
     }
+
     if (m_surround) {
         m_surround->margin.checkComputed(curFontSize, rootFontSize, font());
         m_surround->padding.checkComputed(curFontSize, rootFontSize, font());

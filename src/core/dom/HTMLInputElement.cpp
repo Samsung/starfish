@@ -20,6 +20,7 @@
 #include "core/dom/Event.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/dom/Text.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/InputEvent.h"
@@ -149,6 +150,33 @@ void HTMLInputElement::setChecked(bool checked)
     };
     starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
                                         this);
+}
+
+uint32_t HTMLInputElement::size()
+{
+    String* size = getAttributeOrEmpty(starFish()->staticStrings()->m_size);
+    if (size != String::emptyString) {
+        return String::parseInt64(size);
+    }
+
+    return DEFAULT_SIZE;
+}
+
+void HTMLInputElement::setSize(String* sizeStr)
+{
+    int size = String::parseInt64(sizeStr);
+    if (size == 0) {
+        COMPOSE_MESSAGE(reason, INVALID_SIZE, "0");
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "size", "HTMLInputElement",
+                        reason);
+        throw new DOMException(document(), DOMException::Code::INDEX_SIZE_ERR,
+                               msg);
+    } else if (size < 0) {
+        setAttribute(starFish()->staticStrings()->m_size,
+                     String::fromInt(DEFAULT_SIZE));
+    } else {
+        setAttribute(starFish()->staticStrings()->m_size, sizeStr);
+    }
 }
 
 String* HTMLInputElement::obscurePhrase(String* phrase)
