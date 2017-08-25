@@ -786,10 +786,10 @@ DOMImplementation* Document::implementation()
 
 Element* Document::activeElement()
 {
-    if (!browsingContext()->focusedNode()) {
+    if (!browsingContext()->activeElement()) {
         return body() ? body()->asElement() : nullptr;
     }
-    return browsingContext()->focusedNode()->asElement();
+    return browsingContext()->activeElement();
 }
 
 bool Document::hasFocus() const
