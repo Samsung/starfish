@@ -221,10 +221,28 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
         data->networkWorker = new SyncNetworkWorkHelper();
         worker(data);
     } else {
-        data->networkWorker = new AsyncNetworkWorkHelper();
-        m_orgProxy->starFish()->threadPool()->addWork(
-            m_orgProxy->document()->browsingContext(),
-            NetworkURLResourceRequestJobDelegate::worker, data);
+        auto& header = headers.headerMap();
+        auto pos = std::find_if(
+            header.begin(), header.end(),
+            [](const std::unordered_map<std::string, std::string>::value_type&
+                   o) { return o.second == "text/event-stream"; });
+
+        if (pos != header.end()) {
+            data->networkWorker = new AsyncNetworkWorkHelper();
+            Thread* t = new Thread();
+            t->run(m_orgProxy->starFish()->messageLoop(),
+                   [](void* data) -> void* {
+                       NetworkURLWorkerData* d = (NetworkURLWorkerData*)data;
+                       NetworkURLResourceRequestJobDelegate::worker(d);
+                       return nullptr;
+                   },
+                   data);
+        } else {
+            data->networkWorker = new AsyncNetworkWorkHelper();
+            m_orgProxy->starFish()->threadPool()->addWork(
+                m_orgProxy->document()->browsingContext(),
+                NetworkURLResourceRequestJobDelegate::worker, data);
+        }
     }
 }
 
