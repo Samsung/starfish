@@ -68,10 +68,8 @@ EncodingResult detectAndRemoveBOM(GCVector<char>& buffer)
     size_t len = buffer.size();
     uint8_t c, c2, c3, c4;
 
-    if (len > 0) {
-        c = buffer[0] & 0xff;
-    }
     if (len > 1) {
+        c = buffer[0] & 0xff;
         c2 = buffer[1] & 0xff;
         if (c == 0xff && c2 == 0xfe) {
             strncpy(er.m_encoding, "utf-16le", 8);
