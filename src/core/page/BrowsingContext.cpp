@@ -28,6 +28,7 @@
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLInputElement.h"
 #include "core/dom/EventTarget.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
@@ -518,6 +519,10 @@ void BrowsingContext::releaseFocusedNode(Node* n, bool resetActiveElement)
                 m_focusedNode->asHTMLIFrameElement()->browsingContext();
             childBrowsingContext->releaseFocusedNode(nullptr, false);
             return;
+        } else if (m_focusedNode->isHTMLInputElement()) {
+            m_focusedNode->asElement()
+                ->ensureRareElementMembers()
+                ->m_scrollLeft = 0;
         }
 
         m_focusedNode->setState(Node::NodeStateFocused,
@@ -947,10 +952,10 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
     bool returnValue = false;
     // Dispatch events
     String* name = String::emptyString;
+    Node* t = targetNode->nearestParentElement();
+    t = t ? t : document();
     switch (kind) {
     case PlatformWindow::MouseEventDown: {
-        Node* t = targetNode->nearestParentElement();
-        t = t ? t : document();
         // Dispatch mousedown event
         name = starFish()->staticStrings()->m_mousedown.localName();
         Event* e = createMouseEvent(document(), name, data);
@@ -958,8 +963,6 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         break;
     }
     case PlatformWindow::MouseEventMove: {
-        Node* t = targetNode->nearestParentElement();
-        t = t ? t : document();
         // Dispatch mousemove event
         name = starFish()->staticStrings()->m_mousemove.localName();
         Event* e = createMouseEvent(document(), name, data);
@@ -967,9 +970,6 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         break;
     }
     case PlatformWindow::MouseEventUp: {
-        // Check whether it is skippable or not
-        Node* t = targetNode->nearestParentElement();
-        t = t ? t : document();
         // Dispatch mouseup event
         name = starFish()->staticStrings()->m_mouseup.localName();
         Event* mouseup = createMouseEvent(document(), name, data);
@@ -987,9 +987,8 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     // Handle properties
-    handleActiveAndFocus(kind, targetNode, targetX, targetY);
-    handleHover(kind, targetNode, data.button(), data.buttons(), targetX,
-                targetY);
+    handleActiveAndFocus(kind, t, targetX, targetY);
+    handleHover(kind, t, data.button(), data.buttons(), targetX, targetY);
     return returnValue;
 }
 

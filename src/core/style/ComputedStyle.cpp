@@ -370,12 +370,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     if (current && current->isHTMLInputElement()) {
         HTMLInputElement* element = current->asHTMLInputElement();
         String* type = element->type();
-        if (m_width.isAuto() &&
-            (type->equalsWithoutCase("text") ||
-             type->equalsWithoutCase("search") ||
-             type->equalsWithoutCase("tel") || type->equalsWithoutCase("url") ||
-             type->equalsWithoutCase("email") ||
-             type->equalsWithoutCase("password"))) {
+        if (m_width.isAuto() && element->isSizableType()) {
             size_t size = element->size();
             m_width = Length(Length::EmToBeFixed, size);
             m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font());

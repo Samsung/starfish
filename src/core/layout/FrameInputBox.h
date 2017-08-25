@@ -41,6 +41,8 @@ public:
         return true;
     }
 
+    virtual void layout(LayoutContext& ctx,
+                        Frame::LayoutWantToResolve resolveWhat) override;
     void paint(PaintingContext& ctx);
 
 private:

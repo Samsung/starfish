@@ -75,6 +75,34 @@ void HTMLInputElement::setValue(String* value)
     setAttribute(starFish()->staticStrings()->m_value, value);
 }
 
+bool HTMLInputElement::canHaveValue() const
+{
+    String* typeString = type();
+    if (typeString->equalsWithoutCase("")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("text")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("submit")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("button")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("email")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("password")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("checkbox")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("search")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("tel")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("url")) {
+        return true;
+    }
+
+    return false;
+}
+
 String* HTMLInputElement::formEnctype()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_formEnctype);
@@ -179,6 +207,25 @@ void HTMLInputElement::setSize(String* sizeStr)
     }
 }
 
+bool HTMLInputElement::isSizableType() const
+{
+    String* typeString = type();
+    if (typeString->equalsWithoutCase("text")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("email")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("password")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("url")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("tel")) {
+        return true;
+    } else if (typeString->equalsWithoutCase("search")) {
+        return true;
+    }
+    return false;
+}
+
 String* HTMLInputElement::obscurePhrase(String* phrase)
 {
     StringBuilder sb;
@@ -198,15 +245,16 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     String* textToDisplay = val;
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
-        if (type()->equals("text") || type()->equals("submit") ||
-            type()->equals("button")) {
-            textToDisplay = value();
-        } else if (type()->equals("password")) {
-            textToDisplay = obscurePhrase(value());
-        } else if (type()->equals("checkbox")) {
-            textToDisplay = String::emptyString;
-            if (m_checked) {
-                textToDisplay = checkboxTickSymbol();
+        if (canHaveValue()) {
+            if (type()->equals("password")) {
+                textToDisplay = obscurePhrase(value());
+            } else if (type()->equals("checkbox")) {
+                textToDisplay = String::emptyString;
+                if (m_checked) {
+                    textToDisplay = checkboxTickSymbol();
+                }
+            } else {
+                textToDisplay = value();
             }
         }
 
@@ -375,22 +423,27 @@ bool HTMLInputElement::supportsFocus() const
     return !type()->equalsWithoutCase("hidden");
 }
 
-bool HTMLInputElement::isEditableType()
+LayoutUnit HTMLInputElement::caretThickness() const
+{
+    return LayoutUnit(CARET_THICKNESS / window()->devicePixelRatio());
+}
+
+bool HTMLInputElement::isEditableType() const
 {
     String* typeString = type();
-    if (typeString->equals("text")) {
+    if (typeString->equalsWithoutCase("text")) {
         return true;
-    } else if (typeString->equals("email")) {
+    } else if (typeString->equalsWithoutCase("email")) {
         return true;
-    } else if (typeString->equals("number")) {
+    } else if (typeString->equalsWithoutCase("number")) {
         return true;
-    } else if (typeString->equals("password")) {
+    } else if (typeString->equalsWithoutCase("password")) {
         return true;
-    } else if (typeString->equals("url")) {
+    } else if (typeString->equalsWithoutCase("url")) {
         return true;
-    } else if (typeString->equals("tel")) {
+    } else if (typeString->equalsWithoutCase("tel")) {
         return true;
-    } else if (typeString->equals("search")) {
+    } else if (typeString->equalsWithoutCase("search")) {
         return true;
     }
     return false;

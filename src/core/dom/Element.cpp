@@ -476,8 +476,10 @@ double Element::scrollLeft(bool layoutIfNeeds)
         return 0;
     }
 
-    if (style()->overflowX() < OverflowValue::AutoOverflow) {
-        return 0;
+    if (!isHTMLInputElement()) {
+        if (style()->overflowX() < OverflowValue::AutoOverflow) {
+            return 0;
+        }
     }
 
     if (hasRareMembers()) {

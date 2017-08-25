@@ -45,7 +45,7 @@ public:
     }
 
     virtual void layout(LayoutContext& ctx,
-                        Frame::LayoutWantToResolve resolveWhat);
+                        Frame::LayoutWantToResolve resolveWhat) override;
 
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {

@@ -90,7 +90,7 @@ public:
 
 private:
     virtual void layout(LayoutContext& ctx,
-                        Frame::LayoutWantToResolve resolveWhat);
+                        Frame::LayoutWantToResolve resolveWhat) override;
 
     unsigned m_rowIndex;
     unsigned m_lastAbsoluteColumnIndex;

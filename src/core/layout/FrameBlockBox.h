@@ -231,7 +231,7 @@ public:
         m_boxes.push_back(box);
         box->setLayoutParent(this);
     }
-    LayoutUnit layoutInlineBoxes(LineFormattingContext* ctx, LayoutUnit start);
+    void layoutInlineBoxes(LineFormattingContext* ctx, LayoutUnit start);
     virtual void coordinateVerticalProperties(LineFormattingContext* ctx,
                                               LayoutUnit yOffset);
     void registerRelativePositionedBoxes(LayoutContext& ctx);
@@ -597,7 +597,7 @@ public:
     }
 
     virtual void layout(LayoutContext& ctx,
-                        Frame::LayoutWantToResolve resolveWhat);
+                        Frame::LayoutWantToResolve resolveWhat) override;
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void layoutInline(LineFormattingContext& ctx);
     void computeContentWidth(LayoutContext& ctx,
@@ -844,6 +844,7 @@ private:
         return m_inlineBlockAscender[box];
     }
 
+    LayoutUnit offsetApplyingTextAlign();
     void computeHorizontalProperties();
     LayoutUnit distanceToNextLineBox(FrameLineBreak* br,
                                      bool hasMoreInlineBoxes);

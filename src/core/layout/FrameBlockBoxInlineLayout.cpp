@@ -1246,8 +1246,8 @@ bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes(
     return true;
 }
 
-LayoutUnit InlineBoxLayoutParentBox::layoutInlineBoxes(
-    LineFormattingContext* ctx, LayoutUnit start)
+void InlineBoxLayoutParentBox::layoutInlineBoxes(LineFormattingContext* ctx,
+                                                 LayoutUnit start)
 {
     LayoutUnit x = start;
     for (size_t k = 0; k < m_boxes.size(); k++) {
@@ -1263,8 +1263,6 @@ LayoutUnit InlineBoxLayoutParentBox::layoutInlineBoxes(
             childBox->setX(x);
         }
     }
-
-    return x;
 }
 
 void InlineBoxLayoutParentBox::coordinateVerticalProperties(
@@ -1559,40 +1557,23 @@ void LineFormattingContext::insertFloatingBoxAndReLayoutLineBoxIfNeeds(
     m_layoutContext.registerFloatingBox(box);
 }
 
-void LineFormattingContext::computeHorizontalProperties()
+LayoutUnit LineFormattingContext::offsetApplyingTextAlign()
 {
-    LineBox* back = m_block->m_lineBoxes.back();
-    DirectionValue direction = m_block->style()->direction();
-
-    if (m_currentLanguageDirection.isMixed()) {
-        resolveBidi(direction, back->boxes());
-    }
-    m_currentLayoutParent->setLeftMBPs(this);
-    m_currentLayoutParent->setRightMBPs(this);
-
-    back->setX(m_lineBoxX);
-    back->setWidth(m_lineBoxWidth);
-    LayoutUnit inlineBoxesWidth = back->layoutInlineBoxes(this, 0);
     TextAlignValue textAlign = m_block->style()->textAlign();
+    DirectionValue direction = m_block->style()->direction();
+    LayoutUnit offset;
 
-    // text align
     if (textAlign == LeftTextAlignValue ||
         (textAlign == StartTextAlignValue && direction == LtrDirectionValue) ||
         (textAlign == EndTextAlignValue && direction == RtlDirectionValue)) {
-        LayoutUnit diff;
         if (direction == LtrDirectionValue) {
-            diff = m_textIndentWidth;
+            offset = m_textIndentWidth;
         } else {
-            if (m_lineBoxWidth - inlineBoxesWidth > m_textIndentWidth) {
-                diff = 0;
+            if (m_lineBoxWidth - m_currentLineWidth > m_textIndentWidth) {
+                offset = 0;
             } else {
-                diff = (m_lineBoxWidth - inlineBoxesWidth - m_textIndentWidth);
-            }
-        }
-        for (size_t k = 0; k < back->m_boxes.size(); k++) {
-            FrameBox* childBox = back->m_boxes[k];
-            if (!childBox->isFloating()) {
-                childBox->moveX(diff);
+                offset =
+                    (m_lineBoxWidth - m_currentLineWidth - m_textIndentWidth);
             }
         }
     } else if (textAlign == TextAlignValue::RightTextAlignValue ||
@@ -1600,21 +1581,14 @@ void LineFormattingContext::computeHorizontalProperties()
                 direction == RtlDirectionValue) ||
                (textAlign == EndTextAlignValue &&
                 direction == LtrDirectionValue)) {
-        LayoutUnit diff;
         if (direction == LtrDirectionValue) {
-            if (m_lineBoxWidth - inlineBoxesWidth > m_textIndentWidth) {
-                diff = (m_lineBoxWidth - inlineBoxesWidth);
+            if (m_lineBoxWidth - m_currentLineWidth > m_textIndentWidth) {
+                offset = (m_lineBoxWidth - m_currentLineWidth);
             } else {
-                diff = m_textIndentWidth;
+                offset = m_textIndentWidth;
             }
         } else {
-            diff = (m_lineBoxWidth - inlineBoxesWidth - m_textIndentWidth);
-        }
-        for (size_t k = 0; k < back->m_boxes.size(); k++) {
-            FrameBox* childBox = back->m_boxes[k];
-            if (!childBox->isFloating()) {
-                childBox->moveX(diff);
-            }
+            offset = (m_lineBoxWidth - m_currentLineWidth - m_textIndentWidth);
         }
         /*
          * justify: No supported value
@@ -1656,30 +1630,44 @@ void LineFormattingContext::computeHorizontalProperties()
             */
     } else {
         STARFISH_ASSERT(textAlign == TextAlignValue::CenterTextAlignValue);
-        LayoutUnit diff;
         if (direction == LtrDirectionValue) {
-            if (m_lineBoxWidth - inlineBoxesWidth > m_textIndentWidth) {
-                diff =
-                    (m_lineBoxWidth - inlineBoxesWidth + m_textIndentWidth) / 2;
+            if (m_lineBoxWidth - m_currentLineWidth > m_textIndentWidth) {
+                offset =
+                    (m_lineBoxWidth - m_currentLineWidth + m_textIndentWidth) /
+                    2;
             } else {
-                diff = m_textIndentWidth;
+                offset = m_textIndentWidth;
             }
         } else {
-            if (m_lineBoxWidth - inlineBoxesWidth > m_textIndentWidth) {
-                diff =
-                    (m_lineBoxWidth - inlineBoxesWidth - m_textIndentWidth) / 2;
+            if (m_lineBoxWidth - m_currentLineWidth > m_textIndentWidth) {
+                offset =
+                    (m_lineBoxWidth - m_currentLineWidth - m_textIndentWidth) /
+                    2;
             } else {
-                diff = (m_lineBoxWidth - inlineBoxesWidth - m_textIndentWidth);
-            }
-        }
-
-        for (size_t k = 0; k < back->m_boxes.size(); k++) {
-            FrameBox* childBox = back->m_boxes[k];
-            if (!childBox->isFloating()) {
-                childBox->moveX(diff);
+                offset =
+                    (m_lineBoxWidth - m_currentLineWidth - m_textIndentWidth);
             }
         }
     }
+
+    return offset;
+}
+
+void LineFormattingContext::computeHorizontalProperties()
+{
+    LineBox* back = m_block->m_lineBoxes.back();
+    DirectionValue direction = m_block->style()->direction();
+
+    if (m_currentLanguageDirection.isMixed()) {
+        resolveBidi(direction, back->boxes());
+    }
+    m_currentLayoutParent->setLeftMBPs(this);
+    m_currentLayoutParent->setRightMBPs(this);
+
+    back->setX(m_lineBoxX);
+    back->setWidth(m_lineBoxWidth);
+    LayoutUnit offset = offsetApplyingTextAlign();
+    back->layoutInlineBoxes(this, offset);
 }
 
 LayoutUnit LineFormattingContext::distanceToNextLineBox(FrameLineBreak* br,
