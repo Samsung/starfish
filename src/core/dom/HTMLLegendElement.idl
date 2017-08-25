@@ -2,5 +2,5 @@
 
 [HTMLConstructor]
 interface HTMLLegendElement : HTMLElement {
-  [Unimplemented] readonly attribute HTMLFormElement? form;
+  readonly attribute HTMLFormElement? form;
 };

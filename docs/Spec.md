@@ -352,6 +352,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | value | Returns the value of the input element. |
 |  | attribute | checked | Returns  the checkedness of the input element. |
 |  | attribute | disabled | Returns whether the input element is disabled. |
+|  | attribte  | form | Returns the element's form owner, or null if there is not one. |
 |  | attribute | size | Returns the number of characters that, in a visual rendering. |
 | [HTMLIFrameElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element) | interface | HTMLIFrameElement |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
@@ -359,6 +360,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the frame in CSS pixels. |
 |  | attribute | contentWindow | Returns the WindowProxy object of the iframe element's nested browsing context, if its nested browsing context is non-null, or null otherwise. |
 | [HTMLLegendElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-legend-element) | interface | HTMLLegendElement | Represents a caption for the rest of the contents of the legend element's parent fieldset element, if any. |
+|  | attribte  | form | Returns the element's form owner, or null if there is not one. |
 | [HTMLLinkElement](https://html.spec.whatwg.org/multipage/semantics.html#the-link-element) | interface | HTMLLinkElement | The HTMLLinkElement interface represents reference information for external resources and the relationship of those resources to a document and vice-versa |
 |  | attribute | href | Is a DOMString representing the URI for the target resource. |
 |  | attribute | rel | Is a DOMString representing the forward relationship of the linked resource from the document to the resource. |

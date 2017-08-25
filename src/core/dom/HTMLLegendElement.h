@@ -18,13 +18,14 @@
 #define __StarFishHTMLLegendElement__
 
 #include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLFormElement.h"
 
 namespace StarFish {
 
-class HTMLLegendElement : public HTMLElement {
+class HTMLLegendElement : public HTMLFormObject {
 public:
     HTMLLegendElement(Document* document)
-        : HTMLElement(document)
+        : HTMLFormObject(document)
     {
     }
 

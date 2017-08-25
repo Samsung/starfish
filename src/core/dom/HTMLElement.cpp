@@ -147,6 +147,12 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         setAttributeEventListener(ss->m_keydown, value, this);
     } else if (name == ss->m_onresize) {
         setAttributeEventListener(ss->m_resize, value, this);
+    } else if (name == ss->m_onsubmit) {
+        setAttributeEventListener(ss->m_submit, value, this);
+    } else if (name == ss->m_oninput) {
+        setAttributeEventListener(ss->m_input, value, this);
+    } else if (name == ss->m_oninvalid) {
+        setAttributeEventListener(ss->m_invalid, value, this);
     }
 }
 

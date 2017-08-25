@@ -48,8 +48,11 @@ ScriptValue EventListener::call(Event* event)
         ScriptValue value =
             callScriptFunction(event->scriptBindingInstance(), listenerFunc,
                                argv, 1, event->currentTarget()->scriptValue());
-        if (isAttribute() && scriptValueIsBoolean(value) &&
-            !scriptValueAsBoolean(value)) {
+
+        // NOTE: non-standard, but many browsers do this.
+        // https://www.w3.org/TR/DOM-Level-3-Events/#event-flow
+        if (isAttribute() && event->cancelable() &&
+            scriptValueIsBoolean(value) && !scriptValueAsBoolean(value)) {
             event->preventDefault();
         }
     }
