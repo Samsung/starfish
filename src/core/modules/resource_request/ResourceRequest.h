@@ -222,8 +222,6 @@ protected:
                                                     size_t startAt,
                                                     size_t endAt);
     void changeReadyState(ReadyState readyState, bool isExplicitAction);
-    void changeReadyStateForEventSource(ReadyState readyState,
-                                        bool isExplicitAction);
     void changeProgress(ProgressState progress, bool isExplicitAction);
     void handleResponseEOF();
     void handleError(ProgressState error);

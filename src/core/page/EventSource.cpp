@@ -60,9 +60,9 @@ public:
 
                 String* text = m_textConverter->convert(response.data(),
                                                         response.size(), true);
-
-                m_eventSource->m_parser->addBytes(text->utf8Data(),
-                                                  text->length());
+                auto utf8Data = text->toUTF8NonGCString();
+                m_eventSource->m_parser->addBytes(utf8Data.data(),
+                                                  utf8Data.size());
             }
             response.clear();
         }
