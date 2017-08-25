@@ -246,9 +246,9 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
         if (canHaveValue()) {
-            if (type()->equals("password")) {
+            if (type()->equalsWithoutCase("password")) {
                 textToDisplay = obscurePhrase(value());
-            } else if (type()->equals("checkbox")) {
+            } else if (type()->equalsWithoutCase("checkbox")) {
                 textToDisplay = String::emptyString;
                 if (m_checked) {
                     textToDisplay = checkboxTickSymbol();
