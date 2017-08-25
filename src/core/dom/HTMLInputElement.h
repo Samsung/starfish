@@ -23,6 +23,7 @@ namespace StarFish {
 class Event;
 class HTMLInputElement : public HTMLFormObject {
     const int DEFAULT_SIZE = 20;
+    const int CARET_THICKNESS = 2;
     friend class FrameInputBox;
 
 public:
@@ -45,6 +46,7 @@ public:
     // 4.10 Interface Input
     String* value();
     void setValue(String* value);
+    bool canHaveValue() const;
 
     String* formEnctype();
     void setFormEnctype(String* enctype);
@@ -63,6 +65,7 @@ public:
 
     uint32_t size();
     void setSize(String* size);
+    bool isSizableType() const;
 
     // Other methods
     String* obscurePhrase(String* phrase);
@@ -71,10 +74,16 @@ public:
 
     bool supportsFocus() const override;
 
+    LayoutUnit caretThickness() const;
+    LayoutLocation& currentCaretLayoutLocation()
+    {
+        return m_currentCaretLayoutLocation;
+    }
+
 protected:
 private:
     void toggleChecked();
-    bool isEditableType();
+    bool isEditableType() const;
     void updateInputboxValue(String* value);
 
     bool m_checked;
@@ -82,6 +91,7 @@ private:
     bool m_shouldDrawCaret;
     size_t m_caretBlinkingIntervalId;
     size_t m_currentCaretPosition;
+    LayoutLocation m_currentCaretLayoutLocation;
     String* m_currentEditingText;
 };
 }

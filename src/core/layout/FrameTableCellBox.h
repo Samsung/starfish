@@ -89,7 +89,7 @@ public:
 
 private:
     virtual void layout(LayoutContext& ctx,
-                        Frame::LayoutWantToResolve resolveWhat);
+                        Frame::LayoutWantToResolve resolveWhat) override;
     bool emptyContent();
 
     unsigned m_absoluteColumnIndex; // starts with 0

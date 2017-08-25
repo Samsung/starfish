@@ -41,7 +41,7 @@ public:
     }
 
     virtual void layout(LayoutContext& ctx,
-                        Frame::LayoutWantToResolve resolveWhat);
+                        Frame::LayoutWantToResolve resolveWhat) override;
     virtual void paint(PaintingContext& ctx);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 

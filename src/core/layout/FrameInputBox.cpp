@@ -59,13 +59,7 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
     STARFISH_ASSERT(current->isHTMLInputElement());
 
     HTMLInputElement* inputNode = current->asHTMLInputElement();
-    if (inputNode->type()->equalsWithoutCase("") ||
-        inputNode->type()->equalsWithoutCase("text") ||
-        inputNode->type()->equalsWithoutCase("submit") ||
-        inputNode->type()->equalsWithoutCase("button") ||
-        inputNode->type()->equalsWithoutCase("email") ||
-        inputNode->type()->equalsWithoutCase("password") ||
-        inputNode->type()->equalsWithoutCase("checkbox")) {
+    if (inputNode->canHaveValue()) {
         // NOTE: Input boxes display the text value assigned to "value"
         // attribute. To integrate with current layout, a tmp pseudo element is
         // created to display the text value.
@@ -113,6 +107,68 @@ ComputedStyle* FrameInputBox::createInputElementStyleFrom(Node* parent)
     return childStyle;
 }
 
+void FrameInputBox::layout(LayoutContext& ctx,
+                           Frame::LayoutWantToResolve resolveWhat)
+{
+    FrameBlockBox::layout(ctx, resolveWhat);
+
+    HTMLInputElement* e = node()->asHTMLInputElement();
+    size_t cPos = e->m_currentCaretPosition;
+
+    if (!e->m_shouldDrawCaret) {
+        return;
+    }
+
+    bool found = false;
+    bool isLTR = style()->direction() == DirectionValue::LtrDirectionValue;
+    LayoutUnit caretThickness = e->caretThickness();
+    LayoutUnit mostRight;
+    LayoutUnit mostLeft;
+    LayoutUnit x, y;
+    iterateChildFrameBox([&](FrameBox* box) {
+        if (box->isInlineTextBox()) {
+            mostRight =
+                std::max(mostRight, box->asInlineTextBox()->x() +
+                                        box->asInlineTextBox()->width());
+            mostLeft = std::max(mostLeft, box->asInlineTextBox()->x());
+            if (!found && box->asInlineTextBox()->text().end() == cPos) {
+                found = true;
+
+                auto absPoint = box->absolutePoint(this);
+                x = absPoint.x();
+                y = absPoint.y();
+                if (isLTR) {
+                    x += box->width();
+                }
+            }
+        }
+    });
+
+    if (!found && (e->state() & Node::NodeStateFocused)) {
+        String* value = e->value();
+        y = paddingTop() + borderTop();
+        if (isLTR) {
+            x = paddingLeft() + borderLeft();
+            if (value->length()) {
+                x += mostRight;
+            }
+        } else {
+            x = paddingRight() + borderRight();
+            if (value->length()) {
+                x = mostLeft;
+            }
+        }
+    }
+
+    e->currentCaretLayoutLocation().setX(x);
+    e->currentCaretLayoutLocation().setY(y);
+
+    if (x + caretThickness > contentWidth()) {
+        node()->asElement()->ensureRareElementMembers()->m_scrollLeft =
+            x + caretThickness - contentWidth();
+    }
+}
+
 void FrameInputBox::paint(PaintingContext& ctx)
 {
     FrameBlockBox::paint(ctx);
@@ -125,70 +181,18 @@ void FrameInputBox::paint(PaintingContext& ctx)
             return;
         }
 
-        bool didDraw = false;
-        bool isLTR = style()->direction() == DirectionValue::LtrDirectionValue;
-
+        LayoutUnit caretThickness = e->caretThickness();
+        LayoutUnit x, y;
+        x = e->currentCaretLayoutLocation().x();
+        y = e->currentCaretLayoutLocation().y();
         ctx.m_canvas->save();
         ctx.m_canvas->clip(Unit::Rect(paddingLeft() + borderLeft(),
                                       paddingTop() + borderTop(),
                                       contentWidth(), contentHeight()));
         ctx.m_canvas->setColor(Unit::Color(0, 0, 0, 128));
-
-#ifndef STARFISH_CARET_THICKNESS
-#define STARFISH_CARET_THICKNESS 2
-#endif
-        float caretThickness =
-            STARFISH_CARET_THICKNESS / e->window()->devicePixelRatio();
-        LayoutUnit mostRight;
-        LayoutUnit mostLeft;
-        iterateChildFrameBox([&](FrameBox* box) {
-            if (box->isInlineTextBox()) {
-                mostRight =
-                    std::max(mostRight, box->asInlineTextBox()->x() +
-                                            box->asInlineTextBox()->width());
-                mostLeft = std::max(mostLeft, box->asInlineTextBox()->x());
-                if (!didDraw && box->asInlineTextBox()->text().end() == cPos) {
-                    didDraw = true;
-
-                    auto absPoint = box->absolutePoint(this);
-                    LayoutUnit x = absPoint.x();
-                    LayoutUnit y = absPoint.y();
-                    if (isLTR) {
-                        ctx.m_canvas->drawRect(LayoutRect(x + box->width(), y,
-                                                          caretThickness,
-                                                          box->height()));
-                    } else {
-                        ctx.m_canvas->drawRect(LayoutRect(x - caretThickness, y,
-                                                          caretThickness,
-                                                          box->height()));
-                    }
-                }
-            }
-        });
-
-        if (!didDraw && (e->state() & Node::NodeStateFocused)) {
-            String* value = e->value();
-            if (isLTR) {
-                LayoutUnit x = paddingLeft() + borderLeft();
-                LayoutUnit y = paddingTop() + borderTop();
-                if (value->length()) {
-                    x = mostRight + x;
-                }
-                ctx.m_canvas->drawRect(
-                    LayoutRect(x, y, caretThickness,
-                               style()->font()->metrics().m_fontHeight));
-            } else {
-                LayoutUnit x = paddingRight() + borderRight();
-                LayoutUnit y = paddingTop() + borderTop();
-                if (value->length()) {
-                    x = mostLeft;
-                }
-                ctx.m_canvas->drawRect(
-                    LayoutRect(x - caretThickness, y, caretThickness,
-                               style()->font()->metrics().m_fontHeight));
-            }
-        }
-
+        ctx.m_canvas->drawRect(
+            LayoutRect(x - scrollLeft(), y, caretThickness,
+                       style()->font()->metrics().m_fontHeight));
         ctx.m_canvas->restore();
     }
 }
