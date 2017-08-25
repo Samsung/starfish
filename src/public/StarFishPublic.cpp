@@ -43,10 +43,9 @@
 #include <tbm_surface.h>
 #endif
 
-uv_signal_t g_sigterm;
-uv_signal_t g_sigint;
 uv_async_t g_launcher_handle;
 pthread_mutex_t* g_initMutex;
+bool g_MainLoopAlive = false;
 
 void uv_term_cb(uv_signal_t* handle, int signum)
 {
@@ -54,7 +53,7 @@ void uv_term_cb(uv_signal_t* handle, int signum)
 }
 bool needToInitMainThread()
 {
-    return !uv_loop_alive(uv_default_loop());
+    return !g_MainLoopAlive;
 }
 
 void* mainThread(void* data)
@@ -66,15 +65,11 @@ void* mainThread(void* data)
     GC_allow_register_threads();
     GC_register_my_thread(&sb);
 
-    uv_signal_init(uv_default_loop(), &g_sigterm);
-    uv_signal_start(&g_sigterm, &uv_term_cb, SIGTERM);
-
-    uv_signal_init(uv_default_loop(), &g_sigint);
-    uv_signal_start(&g_sigint, &uv_term_cb, SIGINT);
-
+    g_MainLoopAlive = true;
     pthread_mutex_unlock(g_initMutex);
-
-    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+    while (true) {
+        uv_run(uv_default_loop(), UV_RUN_ONCE);
+    }
     return NULL;
 }
 

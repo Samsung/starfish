@@ -372,9 +372,9 @@ CXXFLAGS += -Ithird_party/rapidxml/
 
 #libuv TODO: Should be removed!
 ifeq ($(BACKEND), DALI)
-  CXXFLAGS += -Ithird_party/libuv/include
-  CFLAGS += -Ithird_party/libuv/include
-  CFLAGS += -Ithird_party/libuv/src
+  CXXFLAGS += -Ithird_party/libtuv/include
+  CFLAGS += -Ithird_party/libtuv/include
+  CFLAGS += -Ithird_party/libtuv/src
 endif
 
 #webm, libav
@@ -529,7 +529,7 @@ else ifeq ($(HOST), tizen_obs)
   CXXFLAGS    += $(shell pkg-config --cflags $(TIZEN_DEPS))
   LDFLAGS     += $(shell pkg-config --libs $(TIZEN_DEPS)) -lssl -lcrypto
   ifeq ($(BACKEND), DALI)
-    LDFLAGS += -luv -lturbojpeg -lgif
+    LDFLAGS += -lturbojpeg -lgif third_party/libtuv/build/arm-tizen/debug/lib/libtuv.a
   endif
   LIB = libWebWidgetEngine.so
   ifeq ($(TYPE), exe)

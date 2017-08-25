@@ -114,8 +114,8 @@ static void printMemps(
 using namespace Dali;
 
 char* url = nullptr;
-extern uv_signal_t g_sigterm;
-extern uv_signal_t g_sigint;
+// extern uv_signal_t g_sigterm;
+// extern uv_signal_t g_sigint;
 extern uv_async_t g_launcher_handle;
 extern pthread_mutex_t* g_initMutex;
 
@@ -188,14 +188,6 @@ void* mainShellThread(void* data)
     GC_allow_register_threads();
     GC_register_my_thread(&sb);
 
-    uv_signal_init(uv_default_loop(), &g_sigterm);
-    uv_signal_start(&g_sigterm, &uv_term_cb, SIGTERM);
-
-    uv_signal_init(uv_default_loop(), &g_sigint);
-    uv_signal_start(&g_sigint, &uv_term_cb, SIGINT);
-
-    pthread_mutex_unlock(g_initMutex);
-
     uv_async_init(
         uv_default_loop(), &g_launcher_handle, [](uv_async_t* handle) {
 
@@ -221,11 +213,12 @@ void* mainShellThread(void* data)
 #endif
             app->m_isInit = true;
             pthread_mutex_unlock(g_initMutex);
-
-            // uv_close((uv_handle_t*)handle, nullptr);
         });
-
-    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+    g_MainLoopAlive = true;
+    pthread_mutex_unlock(g_initMutex);
+    while (true) {
+        uv_run(uv_default_loop(), UV_RUN_ONCE);
+    }
     return NULL;
 }
 
@@ -514,6 +507,8 @@ int main(int argc, char* argv[])
     }
 
 #if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+    width = 1920;
+    height = 1080;
 
     url = argv[1];
     Application application = Application::New(&argc, &argv);

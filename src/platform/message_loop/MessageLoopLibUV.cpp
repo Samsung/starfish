@@ -29,6 +29,8 @@
 
 namespace StarFish {
 
+void on_close_handle(uv_handle_t* handle);
+
 uv_async_t m_idler_thread_async_handle1;
 uv_async_t m_idler_thread_async_handle2;
 
@@ -37,7 +39,7 @@ struct IdlerData {
     void* m_data;
     void* m_data1;
     void* m_data2;
-    uv_idle_t m_idler_uv;
+    uv_idle_t* m_idler_uv;
     MessageLoop* m_ml;
     BrowsingContext* m_ctx;
     volatile bool m_shouldExecute;
@@ -108,19 +110,22 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
 {
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
+    id->m_isMainThreadData = true;
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
     id->m_ctx = ctx;
-    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
+    id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
+    uv_idle_init(uv_default_loop(), id->m_idler_uv);
+    id->m_idler_uv->data = id;
+    uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
         StarFishEnterer enter(id->m_ml->m_starFish);
         id->m_fn((size_t)id, id->m_data);
         uv_idle_stop(handle);
         GC_FREE(id);
+        uv_close((uv_handle_t*)handle, on_close_handle);
     });
 
     return (size_t)id;
@@ -133,15 +138,15 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
-    id->m_isMainThreadData = true;
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
     id->m_data1 = data1;
     id->m_ml = this;
     id->m_ctx = ctx;
-    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
+    id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
+    uv_idle_init(uv_default_loop(), id->m_idler_uv);
+    id->m_idler_uv->data = id;
+    uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
         StarFishEnterer enter(id->m_ml->m_starFish);
@@ -149,6 +154,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
                                                    id->m_data1);
         uv_idle_stop(handle);
         GC_FREE(id);
+        uv_close((uv_handle_t*)handle, on_close_handle);
+
     });
     return (size_t)id;
 }
@@ -167,9 +174,9 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data2 = data2;
     id->m_ml = this;
     id->m_ctx = ctx;
-    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
+    uv_idle_init(uv_default_loop(), id->m_idler_uv);
+    id->m_idler_uv->data = id;
+    uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
 
@@ -178,6 +185,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
             (size_t)id, id->m_data, id->m_data1, id->m_data2);
         uv_idle_stop(handle);
         GC_FREE(id);
+        uv_close((uv_handle_t*)handle, on_close_handle);
+
     });
     return (size_t)id;
 }
@@ -244,15 +253,17 @@ size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(
     id->m_data1 = data1;
     id->m_ml = this;
     id->m_ctx = ctx;
-    uv_idle_init(uv_default_loop(), &id->m_idler_uv);
-    id->m_idler_uv.data = id;
-    uv_idle_start(&id->m_idler_uv, [](uv_idle_t* handle) {
+    id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
+    uv_idle_init(uv_default_loop(), id->m_idler_uv);
+    id->m_idler_uv->data = id;
+    uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
         ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
                                                    id->m_data1);
         uv_idle_stop(handle);
         GC_FREE(id);
+        uv_close((uv_handle_t*)handle, on_close_handle);
     });
     return (size_t)id;
 }
@@ -262,7 +273,8 @@ void MessageLoop::removeIdler(size_t handle)
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = (IdlerData*)handle;
     m_idlers.erase(m_idlers.find(handle));
-    uv_idle_stop(&id->m_idler_uv);
+    uv_idle_stop(id->m_idler_uv);
+    uv_close((uv_handle_t*)id->m_idler_uv, on_close_handle);
     GC_FREE(id);
 }
 
@@ -278,7 +290,8 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
         if (id->m_ctx == ctx || ctx == nullptr) {
-            uv_idle_stop(&id->m_idler_uv);
+            uv_idle_stop(id->m_idler_uv);
+            uv_close((uv_handle_t*)id->m_idler_uv, on_close_handle);
             GC_FREE(id);
             m_idlers.erase(iter++);
         } else {
