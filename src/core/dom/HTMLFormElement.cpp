@@ -54,6 +54,7 @@ FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
 HTMLFormElement::HTMLFormElement(Document* document)
     : HTMLFormObject(document)
     , m_elements(nullptr)
+    , m_plannedNavigationTaskId((size_t)-1)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
@@ -258,7 +259,7 @@ bool HTMLFormElement::handleDefaultEvent(Event* event)
         return true;
     }
 
-    if (starFish()->staticStrings()->m_submit.localName() == event->type()) {
+    if (event->type() == starFish()->staticStrings()->m_submit.localName()) {
         STARFISH_ASSERT(event->target()->isHTMLElement());
         submit(event->target()->asHTMLElement());
         return true;
@@ -344,9 +345,26 @@ void HTMLFormElement::submitData(ResourceURL* url,
                                  ResourceRequest::EncodeType enctype,
                                  ResourceRequest::MethodType method)
 {
+    if (m_plannedNavigationTaskId != (size_t)-1) {
+        starFish()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
+    }
+
     DocumentURL* urlToOpen =
         new DocumentURL(url, new FormSubmitData(formDataSet, enctype, method));
-    document()->window()->location()->assign(urlToOpen);
+    auto fn = [](size_t handle, void* data1, void* data2) {
+        HTMLFormElement* formElement = (HTMLFormElement*)data1;
+        DocumentURL* urlToOpen = (DocumentURL*)data2;
+        formElement->document()->window()->location()->assign(urlToOpen);
+        formElement->clearPlannedNavigationTask();
+    };
+
+    m_plannedNavigationTaskId = starFish()->messageLoop()->addIdler(
+        document()->browsingContext(), fn, this, urlToOpen);
+}
+
+void HTMLFormElement::clearPlannedNavigationTask()
+{
+    m_plannedNavigationTaskId = (size_t)-1;
 }
 
 HTMLFormControlsCollection* HTMLFormElement::elements()

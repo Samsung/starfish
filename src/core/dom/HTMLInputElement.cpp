@@ -215,8 +215,8 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
             updateInputboxValue(textToDisplay);
         }
 
-        if (isContentEditable() &&
-            name == starFish()->staticStrings()->m_value && !old->equals(val)) {
+        if (isEditableType() && name == starFish()->staticStrings()->m_value &&
+            !old->equals(val)) {
             // TODO: fire correct inputevent
             InputEvent* event =
                 new InputEvent(document(), String::createASCIIString("input"));
@@ -267,13 +267,9 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
 
     if (event->isMouseEvent() || event->isTouchEvent()) {
         if (event->type()->equalsWithoutCase("click")) {
-            if (type()->equalsWithoutCase("submit") ||
-                type()->equalsWithoutCase("button")) {
-                HTMLFormElement* formNode = form();
-                if (formNode) {
-                    fireSubmitEvent();
-                    return true;
-                }
+            if (type()->equalsWithoutCase("submit")) {
+                fireSubmitEvent();
+                return true;
             } else if (type()->equalsWithoutCase("checkbox")) {
                 toggleChecked();
                 return true;
@@ -281,7 +277,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
         }
     } else {
         if (document()->browsingContext()->focusedNode() == this &&
-            isContentEditable()) {
+            isEditableType()) {
             String* value =
                 getAttributeOrEmpty(starFish()->staticStrings()->m_value);
             String* oldValue = value;
@@ -352,7 +348,7 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
     bool oldGotFocus = oldState & Node::NodeStateFocused;
     bool newGotFocus = newState & Node::NodeStateFocused;
 
-    if (isContentEditable()) {
+    if (isEditableType()) {
         if (!oldGotFocus && newGotFocus) {
             String* value =
                 getAttributeOrEmpty(starFish()->staticStrings()->m_value);
@@ -379,7 +375,7 @@ bool HTMLInputElement::supportsFocus() const
     return !type()->equalsWithoutCase("hidden");
 }
 
-bool HTMLInputElement::isContentEditable()
+bool HTMLInputElement::isEditableType()
 {
     String* typeString = type();
     if (typeString->equals("text")) {

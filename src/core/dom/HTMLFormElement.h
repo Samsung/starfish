@@ -114,8 +114,11 @@ private:
     void submitData(ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
                     ResourceRequest::EncodeType encodeType,
                     ResourceRequest::MethodType methodType);
+    void clearPlannedNavigationTask();
 
     HTMLFormControlsCollection* m_elements;
+
+    size_t m_plannedNavigationTaskId;
 };
 }
 

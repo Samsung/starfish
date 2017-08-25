@@ -74,7 +74,7 @@ public:
 protected:
 private:
     void toggleChecked();
-    bool isContentEditable();
+    bool isEditableType();
     void updateInputboxValue(String* value);
 
     bool m_checked;
