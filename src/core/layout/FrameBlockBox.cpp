@@ -528,6 +528,15 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         }
     }
 
+    if (m_flags.m_hasBiggerContentThanFrameWidth) {
+        frameBlockBoxRareData()->m_scrollWidth = 0;
+        m_flags.m_hasBiggerContentThanFrameWidth = false;
+    }
+    if (m_flags.m_hasBiggerContentThanFrameHeight) {
+        frameBlockBoxRareData()->m_scrollHeight = 0;
+        m_flags.m_hasBiggerContentThanFrameHeight = false;
+    }
+
     // compute scroll width & height
     LayoutRect visibleRect = LayoutRect(0, 0, width(), height());
     if (hasBlockFlow()) {
