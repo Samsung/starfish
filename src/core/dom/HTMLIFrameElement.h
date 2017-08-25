@@ -47,11 +47,9 @@ public:
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 
+    /* DOM APIs */
     void setSrc(String* src);
     String* src();
-
-    uint32_t frameWidth();
-    uint32_t frameHeight();
 
     String* width();
     void setWidth(String* width);
@@ -59,20 +57,24 @@ public:
     String* height();
     void setHeight(String* height);
 
-    /* Other methods (not in DOM API) */
+    Document* contentDocument() const;
+    Window* contentWindow() const;
 
+    /* Other methods (not in DOM API) */
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
     virtual void didNodeInsertedToDocumentTree();
     virtual void didNodeRemovedFromDocumentTree();
 
+    uint32_t frameWidth();
+    uint32_t frameHeight();
+
     BrowsingContext* browsingContext()
     {
         return m_browsingContext;
     }
 
-    Window* contentWindow() const;
     void navigate(ResourceURL* url, HistoryManager::Action type);
 
 private:

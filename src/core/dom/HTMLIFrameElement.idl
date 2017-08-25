@@ -10,7 +10,7 @@ interface HTMLIFrameElement : HTMLElement {
     [CEReactions] attribute DOMString width;
     [CEReactions] attribute DOMString height;
 
-    [Unimplemented] readonly attribute Document? contentDocument;
+    readonly attribute Document? contentDocument;
     readonly attribute Window? contentWindow;
 //    [Unimplemented, RaisesException] Document? getSVGDocument();
 //    [Unimplemented, CEReactions] attribute DOMString referrerPolicy;

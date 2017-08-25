@@ -171,10 +171,10 @@ public:
     bool setHoveredNode(Node* n);
     void releaseHoveredNode();
 
-    // TODO: Nested browsing contexts should be considered.
     Node* focusedNode();
     void setFocusedNode(Node* n);
-    void releaseFocusedNode(Node* n);
+    void releaseFocusedNode(Node* n, bool resetActiveElement = true);
+    Element* activeElement();
 
     void paintWindowBackground(Canvas* canvas);
 
@@ -237,6 +237,7 @@ private:
     size_t m_documentVersionWhenComputingHoveredNodeSet;
 
     Node* m_focusedNode;
+    Element* m_activeElement;
 
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;

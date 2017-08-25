@@ -1092,6 +1092,7 @@ bool Element::tabIndexSetExplicitly() const
 
 void Element::focus()
 {
+    // TODO: Consider nested browsing contexts.
     window()->browsingContext()->setFocusedNode(this);
 }
 

@@ -84,6 +84,7 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView,
     , m_hoveredNodeTarget(nullptr)
     , m_documentVersionWhenComputingHoveredNodeSet(0)
     , m_focusedNode(nullptr)
+    , m_activeElement(nullptr)
 {
     initFlags();
 }
@@ -364,6 +365,7 @@ void BrowsingContext::close()
     }
 
     m_focusedNode = nullptr;
+    m_activeElement = nullptr;
 
     m_activeNodeSet.clear();
     m_activeNodeTarget = nullptr;
@@ -454,35 +456,36 @@ void BrowsingContext::setFocusedNode(Node* n)
     if (!n->isInDocumentScope() || !n->document()->browsingContext()) {
         return;
     }
-    // NOTE Handle iframe related focus
-    // When a child browsing context is focused, its browsing context
-    // container is also focused, by definition. For example, if the user moves
-    // the focus to a text field in an iframe, the iframe is the element with
-    // focus in the parent browsing context.
-    if (n->isHTMLIFrameElement() && m_focusedNode != n) {
-        releaseFocusedNode(n);
-        m_focusedNode = n;
-        return;
-    }
-    if (m_focusedNode && m_focusedNode->isHTMLIFrameElement() &&
-        m_focusedNode->asHTMLIFrameElement()->browsingContext() &&
-        m_focusedNode != n) {
-        m_focusedNode->asHTMLIFrameElement()
-            ->browsingContext()
-            ->releaseFocusedNode(nullptr);
-        m_focusedNode = nullptr;
-    }
 
     Element* e = n->isElement() ? n->asElement() : n->parentElement();
-    if (!e || e->isHTMLBodyElement() || !e->isFocusable()) {
-        // Run the unfocusing steps and skip the focusing steps.
+    if (!e) {
+        // If document area is selected.
         releaseFocusedNode(nullptr);
         return;
     } else if (e == m_focusedNode) {
+        // If the element is already focused.
+        return;
+    } else if (e->isHTMLIFrameElement()) {
+        // When a child browsing context is focused, its browsing context
+        // container is also focused. For example, if the user moves the focus
+        // to a text field in an iframe, the iframe is the element with focus in
+        // the parent browsing context.
+        // If an iframe is selected, the active element of this browsing context
+        // should be the iframe element.
+        releaseFocusedNode(nullptr);
+        m_focusedNode = e->asNode();
+        m_activeElement = e;
+        return;
+    } else if (e->isHTMLBodyElement() || !e->isFocusable()) {
+        // If the body or non-focusable elements are selected.
+        releaseFocusedNode(nullptr);
         return;
     }
 
-    Node* relatedTarget = m_focusedNode;
+    // Set the related target for the focus/fucusin events.
+    Node* relatedTarget = m_focusedNode && m_focusedNode->isHTMLIFrameElement()
+                              ? nullptr
+                              : m_focusedNode;
 
     // Run the unfocusing steps for this element.
     releaseFocusedNode(e);
@@ -503,16 +506,20 @@ void BrowsingContext::setFocusedNode(Node* n)
     document()->dispatchEvent(e->asNode(), event);
 
     m_focusedNode = e->asNode();
+    m_activeElement = e;
 }
 
 // https://www.w3.org/TR/html5/editing.html#unfocusing-steps
-void BrowsingContext::releaseFocusedNode(Node* n)
+void BrowsingContext::releaseFocusedNode(Node* n, bool resetActiveElement)
 {
     if (m_focusedNode) {
         if (m_focusedNode->isHTMLIFrameElement()) {
-            m_focusedNode = nullptr;
+            auto childBrowsingContext =
+                m_focusedNode->asHTMLIFrameElement()->browsingContext();
+            childBrowsingContext->releaseFocusedNode(nullptr, false);
             return;
         }
+
         m_focusedNode->setState(Node::NodeStateFocused,
                                 Node::ChildrenOrSiblingsAffectedByFocus, false);
 
@@ -532,6 +539,16 @@ void BrowsingContext::releaseFocusedNode(Node* n)
 
         m_focusedNode = nullptr;
     }
+
+    // active element
+    if (resetActiveElement) {
+        m_activeElement = nullptr;
+    }
+}
+
+Element* BrowsingContext::activeElement()
+{
+    return m_activeElement;
 }
 
 static bool updateEventNodeSet(Document* document, Node* n,

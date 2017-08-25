@@ -145,6 +145,14 @@ void HTMLIFrameElement::unloadSrc()
     }
 }
 
+Document* HTMLIFrameElement::contentDocument() const
+{
+    if (m_browsingContext) {
+        return m_browsingContext->document();
+    }
+    return nullptr;
+}
+
 Window* HTMLIFrameElement::contentWindow() const
 {
     if (m_browsingContext) {

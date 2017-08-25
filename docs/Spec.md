@@ -358,6 +358,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the frame in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the frame in CSS pixels. |
+|  | attribute | contentDocument | Returns the iframe element's content document. |
 |  | attribute | contentWindow | Returns the WindowProxy object of the iframe element's nested browsing context, if its nested browsing context is non-null, or null otherwise. |
 | [HTMLLegendElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-legend-element) | interface | HTMLLegendElement | Represents a caption for the rest of the contents of the legend element's parent fieldset element, if any. |
 |  | attribte  | form | Returns the element's form owner, or null if there is not one. |
