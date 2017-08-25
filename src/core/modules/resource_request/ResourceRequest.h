@@ -24,7 +24,6 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/resource_request/ResourceRequestJob.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
-#include "core/modules/resource_request/EventSourceResourceRequestJobDelegate.h"
 
 namespace StarFish {
 
@@ -56,15 +55,12 @@ class ResourceRequest : public gc,
                         public ResourceRequestJobInterface {
     friend class XMLHttpRequest;
     friend class NetworkURLWorkerHelper;
-    friend class EventSourceWorkerHelper;
     friend class AsyncNetworkWorkHelper;
-    friend class AsyncEventSourceWorkHelper;
     friend class FileURLResourceRequestJobDelegate;
     friend class DataURLResourceRequestJobDelegate;
     friend class BlobURLResourceRequestJobDelegate;
     friend class AboutURLResourceRequestJobDelegate;
     friend class NetworkURLResourceRequestJobDelegate;
-    friend class EventSourceResourceRequestJobDelegate;
     friend class EventSource;
 
 public:
@@ -96,9 +92,6 @@ public:
         HEADERS_RECEIVED,
         LOADING,
         DONE,
-        CONNECTING,
-        OPEN,
-        CLOSED
     };
 
     enum ProgressState {
@@ -122,8 +115,7 @@ public:
     ResourceRequest(Document* document);
     void open(ResourceRequest::MethodType method, String* url, bool async,
               String* userName = String::emptyString,
-              String* password = String::emptyString,
-              bool isEventSource = false);
+              String* password = String::emptyString);
     void abort(bool isExplicitAction = true);
     virtual void send(String* body = String::emptyString);
 
@@ -172,6 +164,8 @@ public:
         return m_responseHeaderMap;
     }
 
+    // Reading response is only safe when onProgress callback fired | request
+    // ended
     NetworkRequestResponse& response()
     {
         return m_response;
@@ -233,6 +227,7 @@ protected:
     void changeProgress(ProgressState progress, bool isExplicitAction);
     void handleResponseEOF();
     void handleError(ProgressState error);
+    void handleConnectError();
 
     void pushIdlerHandle(size_t handle)
     {
@@ -257,7 +252,6 @@ protected:
     uint16_t m_status;
     uint32_t m_timeout;
     NetworkURLWorkerData* m_activeNetworkURLWorkerData;
-    EventSourceWorkerData* m_activeEventSourceWorkerData;
     Mutex* m_mutex;
     String* m_responseMimeType;
     String* m_lastLocation;

@@ -6,20 +6,20 @@
     Exposed=(Window,Worker),
     RaisesException=Constructor,
 ] interface EventSource : EventTarget {
-    [Unimplemented] readonly attribute DOMString url;
-    [Unimplemented] readonly attribute boolean withCredentials;
+    readonly attribute DOMString url;
+    readonly attribute boolean withCredentials;
 
     // ready state
-    [Unimplemented] const unsigned short CONNECTING = 0;
-    [Unimplemented] const unsigned short OPEN = 1;
-    [Unimplemented] const unsigned short CLOSED = 2;
-    [Unimplemented] readonly attribute unsigned short readyState;
+    const unsigned short CONNECTING = 0;
+    const unsigned short OPEN = 1;
+    const unsigned short CLOSED = 2;
+    readonly attribute unsigned short readyState;
 
     // networking
-    [Unimplemented] attribute EventHandler onopen;
+    attribute EventHandler onopen;
     attribute EventHandler onmessage;
-    [Unimplemented] attribute EventHandler onerror;
-    [Unimplemented] void close();
+    attribute EventHandler onerror;
+    void close();
 };
 
 dictionary EventSourceInit {

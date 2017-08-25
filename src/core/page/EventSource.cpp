@@ -19,6 +19,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/MessageEvent.h"
+#include "core/extra/Console.h"
 #include "core/page/EventSource.h"
 #include "core/page/EventSourceParser.h"
 #include "core/page/Window.h"
@@ -33,6 +34,7 @@ DEFINE_EVENT_LISTENER(EventSource, load);
 DEFINE_EVENT_LISTENER(EventSource, timeout);
 DEFINE_EVENT_LISTENER(EventSource, loadend);
 DEFINE_EVENT_LISTENER(EventSource, message);
+DEFINE_EVENT_LISTENER(EventSource, open);
 
 const unsigned long long EventSource::defaultReconnectDelay = 3000;
 
@@ -41,6 +43,7 @@ public:
     EventSourceResourceRequestClient(EventSource* es)
         : m_eventSource(es)
         , m_isResponseValid(false)
+        , m_lastResponseReadingPosition(0)
         , m_textConverter(nullptr)
     {
     }
@@ -48,6 +51,21 @@ public:
     virtual void onProgressEvent(ResourceRequest* request,
                                  bool isExplicitAction) override
     {
+        if (request->progressState() == ResourceRequest::PROGRESS) {
+            auto& response = request->response();
+
+            if (m_isResponseValid) {
+                STARFISH_ASSERT(m_textConverter);
+                STARFISH_ASSERT(m_eventSource->m_parser);
+
+                String* text = m_textConverter->convert(response.data(),
+                                                        response.size(), true);
+
+                m_eventSource->m_parser->addBytes(text->utf8Data(),
+                                                  text->length());
+            }
+            response.clear();
+        }
     }
 
     void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
@@ -59,14 +77,13 @@ public:
             const ResponseHeaderMap& headerMap = request->responseHeaderMap();
             m_isResponseValid = statusCode == 200 && isMimeTypeValid;
 
-            if (m_isResponseValid) {
-                auto cs = headerMap.find(std::string("charset"));
-                bool isCharsetValid = (cs == headerMap.end()) ||
-                                      (cs->second.compare("utf-8") == 0);
-                if (!isCharsetValid) {
-                    // TODO: use console.log()
-                }
+            auto cs = headerMap.find(std::string("charset"));
+            bool isCharsetValid = (cs == headerMap.end()) ||
+                                  StringUtils::equalsWithoutCase(
+                                      cs->second, std::string("utf-8"));
 
+            m_isResponseValid &= isCharsetValid;
+            if (m_isResponseValid) {
                 String* lastEventId = String::emptyString;
                 if (m_eventSource->m_parser) {
                     lastEventId = m_eventSource->m_parser->lastEventId();
@@ -80,23 +97,53 @@ public:
                     String::fromUTF8("UTF-8"),
                     m_eventSource->m_resourceRequest->response().data(),
                     m_eventSource->m_resourceRequest->response().size());
-            }
-        } else if (request->readyState() == ResourceRequest::OPEN) {
-            if (m_isResponseValid) {
-                String* text = m_textConverter->convert(
-                    m_eventSource->m_resourceRequest->response().data(),
-                    m_eventSource->m_resourceRequest->response().size(), true);
 
-                m_eventSource->m_parser->addBytes(text->utf8Data(),
-                                                  text->length());
+                String* eventName =
+                    request->starFish()->staticStrings()->m_open.localName();
+                Event* e = new Event(m_eventSource->document(), eventName);
+                e->setBubbles(false);
+                e->setCancelable(false);
+                e->setComposed(false);
+                m_eventSource->dispatchEvent(m_eventSource, e);
+
+                m_eventSource->m_readyState = EventSource::OPEN;
+            } else {
+                StringBuilder msg;
+                if (!isCharsetValid) {
+                    msg.appendString(
+                        "EventSource's response has a charset (\"");
+                    msg.appendString(cs->second.data());
+                    msg.appendString(
+                        "\") that is not UTF-8. Aborting the connection.");
+                } else if (!isMimeTypeValid) {
+                    msg.appendString(
+                        "EventSource's response has a MIME type (\"");
+                    msg.appendString(request->responseMimeType());
+                    msg.appendString(
+                        "\") that is not \"text/event-stream\". Aborting the "
+                        "connection.");
+                }
+
+                STARFISH_LOG_ERROR("console.error: %s\n",
+                                   msg.finalize()->utf8Data());
+
+                m_eventSource->cancel();
             }
-        } else if (request->readyState() == ResourceRequest::CLOSED) {
+        } else if (request->readyState() == ResourceRequest::LOADING) {
+        } else if (request->readyState() == ResourceRequest::DONE) {
+            m_isResponseValid = false;
+            m_eventSource->m_readyState = EventSource::CLOSED;
+            m_eventSource->failed();
+
+        } else if (request->readyState() == ResourceRequest::UNSENT ||
+                   request->readyState() == ResourceRequest::OPENED) {
         }
     }
 
 private:
     EventSource* m_eventSource;
     bool m_isResponseValid;
+    size_t m_lastResponseReadingPosition;
     TextConverter* m_textConverter;
 };
 
@@ -108,37 +155,34 @@ EventSource::EventSource(::StarFish::Document* document, String* url)
 EventSource::EventSource(::StarFish::Document* document, String* url,
                          const EventSourceInit& init)
     : EventTarget(document)
+    , m_readyState(CONNECTING)
     , m_withCredentials(init.withCredentials())
-    , m_state(Connecting)
+    , m_delay(10)
     , m_reconnectDelay(defaultReconnectDelay)
     , m_resourceRequest(new ResourceRequest(document))
     , m_parser(nullptr)
+    , m_stopReconnect(false)
+    , m_isAbort(false)
 {
     if (url->isEmpty()) {
-        // TODO: throw exception
+        throw new DOMException(document, DOMException::SYNTAX_ERR,
+                               "Cannot open an EventSource to an empty URL.");
     }
 
     ResourceURL* fullURL =
         new ResourceURL(url, document->documentURI()->baseURI());
-    if (!ResourceURL::isValidURL(fullURL->urlString())) {
-        // TODO: throw exception
+    if (fullURL->protocolKind() != ResourceURL::Protocol::HTTP_PROTOCOL &&
+        fullURL->protocolKind() != ResourceURL::Protocol::HTTPS_PROTOCOL) {
+        StringBuilder msg;
+        msg.appendString("Cannot open an EventSource to '");
+        msg.appendString(url);
+        msg.appendString("'. The URL is invalid.");
+        throw new DOMException(document, DOMException::SYNTAX_ERR,
+                               msg.finalize()->utf8Data());
     }
 
     m_resourceRequest->addResourceRequestClient(
         new EventSourceResourceRequestClient(this));
-
-    m_url = fullURL;
-    document->window()->setTimeout(
-        [](Window* window, void* data) {
-            EventSource* self = (EventSource*)data;
-            self->connect();
-        },
-        m_reconnectDelay, this);
-}
-
-void EventSource::connect()
-{
-    STARFISH_ASSERT(m_state == Connecting);
 
     m_resourceRequest->m_requestHeaders.push_back(
         std::make_pair(String::createASCIIString("Accept"),
@@ -148,16 +192,38 @@ void EventSource::connect()
                        String::createASCIIString("no-cache")));
 
     if (m_parser && !m_parser->lastEventId()->isEmpty()) {
-        String* lastId = m_parser->lastEventId();
         m_resourceRequest->m_requestHeaders.push_back(
-            std::make_pair(String::createASCIIString("Last-Event-ID"), lastId));
+            std::make_pair(String::createASCIIString("Last-Event-ID"),
+                           m_parser->lastEventId()));
     }
 
-    // TODO: set CORS settings attribute: anonymous or use-credentials
-    // TODO: set resource loader using credentials if needed
+    m_url = fullURL;
+    connectFired();
+}
+
+void EventSource::connect()
+{
+    // TODO: set OPTION request : preflightPolicy, crossOriginRequestPolicy,
+    // contentSecurityPolicyEnforcement
+    // TODO: set resource loader options: allowCredentials,
+    // credentialsRequested, dataBufferingPolicy, securityOrigin
     // < ------------------------------------------------- >
 
-    start(ResourceRequest::MethodType::GET_METHOD);
+    if (m_parser && !m_parser->lastEventId()->isEmpty()) {
+        auto& header = m_resourceRequest->m_requestHeaders;
+        header.erase(std::remove_if(header.begin(), header.end(),
+                                    [](const std::pair<String*, String*>& o) {
+                                        return o.first->equals("Last-Event-ID");
+                                    }),
+                     header.end());
+        header.push_back(
+            std::make_pair(String::createASCIIString("Last-Event-ID"),
+                           m_parser->lastEventId()));
+    }
+
+    if (m_readyState == CONNECTING) {
+        start(ResourceRequest::MethodType::GET_METHOD);
+    }
 }
 
 void EventSource::start(ResourceRequest::MethodType method)
@@ -168,8 +234,14 @@ void EventSource::start(ResourceRequest::MethodType method)
                                "InvalidAccessError");
     }
 
+    m_isAbort = false;
+    if (m_reconnectDelay != defaultReconnectDelay) {
+        m_delay = m_reconnectDelay;
+    } else {
+        m_delay = defaultReconnectDelay;
+    }
     m_resourceRequest->open(method, m_url->urlString(), true,
-                            String::emptyString, String::emptyString, true);
+                            String::emptyString, String::emptyString);
     m_resourceRequest->send();
 }
 
@@ -187,14 +259,63 @@ void EventSource::onMessageEvent(String* eventType, String* data,
     e->setLastEventId(lastEventId);
     e->setSource(document()->window());
     e->setData(createScriptValue(createScriptString(data)));
-    EventTarget::dispatchEvent(this, e);
+    dispatchEvent(this, e);
 }
 
 void EventSource::onReconnectionTimeSet(unsigned long long reconnectionTime)
 {
+    m_delay = m_reconnectDelay = reconnectionTime;
+    ;
+}
+
+void EventSource::connectFired()
+{
+    if (!m_stopReconnect) {
+        document()->window()->setTimeout(
+            [](Window* window, void* data) {
+                EventSource* self = (EventSource*)data;
+                self->connect();
+            },
+            m_delay, this);
+    }
+}
+
+void EventSource::scheduleReconnect()
+{
+    connectFired();
+}
+
+void EventSource::failed()
+{
+    if (!m_isAbort) {
+        m_readyState = CONNECTING;
+        scheduleReconnect();
+    }
+
+    String* eventName =
+        m_resourceRequest->starFish()->staticStrings()->m_error.localName();
+    Event* e = new Event(document(), eventName, EventInit(false, false));
+    dispatchEvent(this, e);
+}
+
+void EventSource::cancel()
+{
+    m_isAbort = true;
+    m_resourceRequest->abort(true);
 }
 
 void EventSource::close()
 {
+    m_isAbort = true;
+    m_resourceRequest->abort(true);
+    if (m_parser) {
+        m_parser->stop();
+    }
+
+    if (!m_stopReconnect) {
+        m_stopReconnect = true;
+    }
+
+    m_readyState = EventSource::CLOSED;
 }
 }

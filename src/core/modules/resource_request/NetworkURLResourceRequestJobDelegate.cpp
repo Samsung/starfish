@@ -81,10 +81,6 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_ASSERT(
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
             SIZE_MAX);
-        requestData->request->m_status =
-            requestData->httpTransaction->httpResponse().responseCode();
-        requestData->request->m_response = std::move(
-            requestData->httpTransaction->httpResponse().entityBody());
 
         if (requestData->isRedirected &&
             requestData->lastLocation.compare("") != 0) {
@@ -108,8 +104,6 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             "got timeout %s[%d]\n",
             requestData->request->m_url->urlString()->utf8Data(),
             (int)requestData->httpTransaction->httpResponse().responseCode());
-        requestData->request->m_status =
-            requestData->httpTransaction->httpResponse().responseCode();
         requestData->request->handleError(ResourceRequest::TIMEOUT);
     } else {
         if (!requestData->request->isSync()) {
@@ -122,8 +116,6 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             SIZE_MAX);
         STARFISH_LOG_INFO("failed to open %s\n",
                           requestData->request->m_url->urlString()->utf8Data());
-        requestData->request->m_status =
-            requestData->httpTransaction->httpResponse().responseCode();
         requestData->request->handleError(ResourceRequest::ERROR);
     }
 
@@ -216,7 +208,6 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
         HTTPRequest::create(m_orgProxy->m_url->urlString()->toUTF8NonGCString(),
                             m_orgProxy->m_url->host()->toUTF8NonGCString(),
                             method, headers, body->toUTF8NonGCString()));
-
     data->httpTransaction->setTimeout(
         static_cast<unsigned long>(m_orgProxy->m_timeout));
 
@@ -319,7 +310,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
     size_t realSize = size * nmemb;
     const char* memPtr = (const char*)ptr;
 
-    auto& entityBody = workerData->httpTransaction->httpResponse().entityBody();
+    auto& entityBody = request->response();
     entityBody.insert(entityBody.end(), memPtr, memPtr + realSize);
 
     if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
@@ -366,6 +357,9 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     workerData->httpTransaction->updateTransactionStatus();
     size_t realSize = size * nmemb;
     std::string rawHeader(static_cast<const char*>(ptr), realSize);
+
+    request->m_status =
+        workerData->httpTransaction->httpResponse().responseCode();
 
     if (workerData->httpTransaction->httpResponse()
             .isSuccessfulResponseStatus()) {
