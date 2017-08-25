@@ -975,7 +975,7 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         Event* mouseup = createMouseEvent(document(), name, data);
         returnValue = !document()->window()->dispatchEvent(t, mouseup);
 
-        if (m_activeNodeTarget == targetNode) {
+        if (m_activeNodeTarget == t) {
             // Dispatch click event
             name = starFish()->staticStrings()->m_click.localName();
             Event* click = createMouseEvent(document(), name, data);
