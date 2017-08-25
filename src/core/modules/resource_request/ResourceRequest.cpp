@@ -55,7 +55,6 @@ ResourceRequest::ResourceRequest(Document* document)
     , m_status(0)
     , m_timeout(0)
     , m_activeNetworkURLWorkerData(nullptr)
-    , m_activeEventSourceWorkerData(nullptr)
     , m_mutex(new Mutex())
     , m_lastLocation(String::emptyString)
     , m_networkRequestJobDelegate(nullptr)
@@ -123,11 +122,6 @@ void ResourceRequest::clearIdlers()
     if (m_activeNetworkURLWorkerData) {
         m_activeNetworkURLWorkerData->isAborted = true;
         m_activeNetworkURLWorkerData = nullptr;
-    }
-
-    if (m_activeEventSourceWorkerData) {
-        m_activeEventSourceWorkerData->isAborted = true;
-        m_activeEventSourceWorkerData = nullptr;
     }
 }
 
@@ -214,46 +208,6 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
     }
 }
 
-void ResourceRequest::changeReadyStateForEventSource(ReadyState readyState,
-                                                     bool isExplicitAction)
-{
-    STARFISH_ASSERT(isMainThread());
-
-    if (readyState == HEADERS_RECEIVED) {
-        auto it = m_responseHeaderMap.find("Content-Type");
-        if (it != m_responseHeaderMap.end()) {
-            size_t pos = it->second.find(";");
-            if (pos != std::string::npos) {
-                m_responseMimeType = String::fromUTF8(it->second.data());
-            } else {
-                m_responseMimeType =
-                    String::fromUTF8(it->second.substr(0, pos).data());
-            }
-        }
-    }
-
-    if (readyState != m_readyState ||
-        (readyState == OPEN && m_readyState == OPEN)) {
-        m_readyState = readyState;
-        for (size_t i = 0; i < m_clients.size(); i++) {
-            m_clients[i]->onReadyStateChange(this, isExplicitAction);
-        }
-    }
-
-    if (m_readyState == ReadyState::DONE) {
-        starFish()->messageLoop()->addIdler(
-            document()->browsingContext(),
-            [](size_t, void* data, void* data2) {
-                ResourceRequest* self = (ResourceRequest*)data2;
-                ((BrowsingContext*)data)->removePointerFromRootSet(data2);
-            },
-            document()->browsingContext(), this);
-        if (m_networkRequestJobDelegate) {
-            m_networkRequestJobDelegate = nullptr;
-        }
-    }
-}
-
 void ResourceRequest::changeProgress(ProgressState progress,
                                      bool isExplicitAction)
 {
@@ -272,8 +226,7 @@ void ResourceRequest::changeProgress(ProgressState progress,
 }
 
 void ResourceRequest::open(MethodType method, String* url, bool async,
-                           String* userName, String* password,
-                           bool isEventSource)
+                           String* userName, String* password)
 {
     bool shouldAbort = false;
     {
@@ -298,15 +251,9 @@ void ResourceRequest::open(MethodType method, String* url, bool async,
 
     STARFISH_ASSERT(!m_networkRequestJobDelegate);
 
-    if (isEventSource) {
-        m_networkRequestJobDelegate =
-            new EventSourceResourceRequestJobDelegate(this);
-        changeReadyStateForEventSource(CONNECTING, true);
-    } else {
-        m_networkRequestJobDelegate =
-            ResourceRequestJobDelegateFactory::createJob(this);
-        changeReadyState(OPENED, true);
-    }
+    m_networkRequestJobDelegate =
+        ResourceRequestJobDelegateFactory::createJob(this);
+    changeReadyState(OPENED, true);
 }
 
 void ResourceRequest::abort(bool isExplicitAction)

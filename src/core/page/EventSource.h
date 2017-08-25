@@ -70,13 +70,11 @@ public:
     virtual bool isEventSource() const override;
 
     enum ResponseType { Unspecified, Text, ArrayBuffer, Document, Blob, Json };
-
+    enum ReadyState { CONNECTING, OPEN, CLOSED };
     ResourceRequest* resourceRequest()
     {
         return m_resourceRequest;
     }
-
-    enum State : short { Connecting = 0, Open = 1, Closed = 2 };
 
     String* url() const
     {
@@ -88,11 +86,12 @@ public:
         return m_withCredentials;
     }
 
-    State readyState() const
+    ReadyState readyState() const
     {
-        return m_state;
+        return m_readyState;
     }
 
+    void connectFired();
     void start(ResourceRequest::MethodType method);
     void initResponseData();
 
@@ -101,7 +100,10 @@ public:
 
     void onMessageEvent(String* type, String* data, String* lastEventId);
     void onReconnectionTimeSet(unsigned long long reconnectionTime);
+    void scheduleReconnect();
 
+    void failed();
+    void cancel();
     void close();
 
 #define VIRTUAL
@@ -114,18 +116,21 @@ public:
     DECLARE_EVENT_LISTENER(timeout);
     DECLARE_EVENT_LISTENER(loadend);
     DECLARE_EVENT_LISTENER(message);
+    DECLARE_EVENT_LISTENER(open);
 #undef VIRTUAL
 #undef OVERRIDE
 
 private:
     void connect();
-
+    ReadyState m_readyState;
     ResourceURL* m_url;
     bool m_withCredentials;
-    State m_state;
+    int32_t m_delay;
     int32_t m_reconnectDelay;
     ResourceRequest* m_resourceRequest;
     EventSourceParser* m_parser;
+    bool m_stopReconnect;
+    bool m_isAbort;
 };
 }
 
