@@ -48,7 +48,6 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:dali.x64',
-                    './build.dep.gyp:csp.x64',
                 ],
             }],
             ['enable_ffmpeg_demuxer=="true"', {
