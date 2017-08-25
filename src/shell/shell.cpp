@@ -38,6 +38,7 @@
 #include "core/dom/TouchEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include <uv.h>
+extern bool g_MainLoopAlive;
 #endif
 
 #include <Elementary.h>
