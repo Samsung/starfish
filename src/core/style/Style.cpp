@@ -1415,10 +1415,23 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::TextAlignValueKind:
+        switch (sideValue()) {
+        case TextAlignValue::StartTextAlignValue:
+            return String::fromUTF8("start");
+        case TextAlignValue::EndTextAlignValue:
+            return String::fromUTF8("end");
+        case TextAlignValue::LeftTextAlignValue:
+            return String::fromUTF8("left");
+        case TextAlignValue::RightTextAlignValue:
+            return String::fromUTF8("right");
+        case TextAlignValue::CenterTextAlignValue:
+            return String::fromUTF8("center");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     case CSSStyleValuePair::ValueKind::SideValueKind:
         switch (sideValue()) {
-        case SideValue::NoneSideValue:
-            return String::fromUTF8("left");
         case SideValue::LeftSideValue:
             return String::fromUTF8("left");
         case SideValue::RightSideValue:
@@ -1568,7 +1581,7 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     case CSSStyleValuePair::ValueKind::TextDecorationValueKind:
-        switch (textDecoration()) {
+        switch (textDecorationValue()) {
         case TextDecorationValue::NoneTextDecorationValue:
             return String::fromUTF8("none");
         case TextDecorationValue::UnderLineTextDecorationValue:
@@ -1583,7 +1596,7 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     case CSSStyleValuePair::ValueKind::VisibilityValueKind:
-        switch (visibility()) {
+        switch (visibilityValue()) {
         case VisibilityValue::VisibleVisibilityValue:
             return String::fromUTF8("visible");
         case VisibilityValue::HiddenVisibilityValue:
@@ -2876,7 +2889,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     ComputedStyle* ret = new ComputedStyle(m_mediumFontSize);
     ret->m_display = DisplayValue::BlockDisplayValue;
     ret->m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
-    ret->m_inheritedStyles.m_textAlign = SideValue::NoneSideValue;
+    ret->m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
     ret->m_inheritedStyles.m_whiteSpace =
         WhiteSpaceValue::NormalWhiteSpaceValue;
@@ -3293,18 +3306,15 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::TextAlign:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                // NOTICE: Do not use getter of parent's textAlign here.
-                //         (to remove direction dependency)
-                style->setTextAlign(parentStyle->m_inheritedStyles.m_textAlign);
+                style->setTextAlign(parentStyle->textAlign());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                // Initial: none_value that acts as 'left' if 'direction' is
-                // 'ltr', 'right' if 'direction' is 'rtl'
-                style->setTextAlign(ComputedStyle::initialTextAlign());
+                style->setTextAlign(TextAlignValue::StartTextAlignValue);
             } else {
-                STARFISH_ASSERT(cssValues[k].valueKind() ==
-                                CSSStyleValuePair::ValueKind::SideValueKind);
-                style->setTextAlign(cssValues[k].sideValue());
+                STARFISH_ASSERT(
+                    cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::TextAlignValueKind);
+                style->setTextAlign(cssValues[k].textAlignValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::TextIndent:
@@ -3332,12 +3342,12 @@ void StyleResolver::apply(Element* element,
                     TextDecorationValue::NoneTextDecorationValue);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->setTextDecoration(cssValues[k].textDecoration());
+                style->setTextDecoration(cssValues[k].textDecorationValue());
             } else {
                 STARFISH_ASSERT(
                     cssValues[k].valueKind() ==
                     CSSStyleValuePair::ValueKind::TextDecorationValueKind);
-                style->setTextDecoration(cssValues[k].textDecoration());
+                style->setTextDecoration(cssValues[k].textDecorationValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::Direction:
@@ -4066,7 +4076,7 @@ void StyleResolver::apply(Element* element,
                     VisibilityValue::VisibleVisibilityValue;
             } else {
                 style->m_inheritedStyles.m_visibility =
-                    cssValues[k].visibility();
+                    cssValues[k].visibilityValue();
             }
             break;
         case CSSStyleValuePair::KeyKind::ZIndex:
@@ -6516,15 +6526,21 @@ bool CSSStyleValuePair::updateValueTextAlign(const CSSTokenVector& tokens)
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("left")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
-        m_value.m_side = SideValue::LeftSideValue;
+    if (STRING_VALUE_IS_STRING("start")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
+        m_value.m_textAlign = TextAlignValue::StartTextAlignValue;
+    } else if (STRING_VALUE_IS_STRING("end")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
+        m_value.m_textAlign = TextAlignValue::EndTextAlignValue;
+    } else if (STRING_VALUE_IS_STRING("left")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
+        m_value.m_textAlign = TextAlignValue::LeftTextAlignValue;
     } else if (STRING_VALUE_IS_STRING("center")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
-        m_value.m_side = SideValue::CenterSideValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
+        m_value.m_textAlign = TextAlignValue::CenterTextAlignValue;
     } else if (STRING_VALUE_IS_STRING("right")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
-        m_value.m_side = SideValue::RightSideValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
+        m_value.m_textAlign = TextAlignValue::RightTextAlignValue;
     } else {
         return false;
     }

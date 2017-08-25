@@ -72,14 +72,18 @@ void HTMLHeadingElement::styleForPresentationAttribute(
     if (!value->isEmpty()) {
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::TextAlignValueKind);
 
-        if (value->equals("left")) {
-            pair.setValue(SideValue::LeftSideValue);
+        if (value->equals("start")) {
+            pair.setValue(TextAlignValue::StartTextAlignValue);
+        } else if (value->equals("end")) {
+            pair.setValue(TextAlignValue::EndTextAlignValue);
+        } else if (value->equals("left")) {
+            pair.setValue(TextAlignValue::LeftTextAlignValue);
         } else if (value->equals("center")) {
-            pair.setValue(SideValue::CenterSideValue);
+            pair.setValue(TextAlignValue::CenterTextAlignValue);
         } else if (value->equals("right")) {
-            pair.setValue(SideValue::RightSideValue);
+            pair.setValue(TextAlignValue::RightTextAlignValue);
         }
 
         cssValues.push_back(pair);
