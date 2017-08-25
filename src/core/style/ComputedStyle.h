@@ -248,19 +248,12 @@ public:
         return (verticalAlign() == VerticalAlignValue::NumericVAlignValue);
     }
 
-    SideValue textAlign()
+    TextAlignValue textAlign()
     {
-        if (m_inheritedStyles.m_textAlign == SideValue::NoneSideValue) {
-            if (m_inheritedStyles.m_direction ==
-                DirectionValue::RtlDirectionValue) {
-                return SideValue::RightSideValue;
-            }
-            return SideValue::LeftSideValue;
-        }
         return m_inheritedStyles.m_textAlign;
     }
 
-    void setTextAlign(SideValue t)
+    void setTextAlign(TextAlignValue t)
     {
         m_inheritedStyles.m_textAlign = t;
     }
@@ -966,10 +959,6 @@ public:
     {
         return VerticalAlignValue::BaselineVAlignValue;
     }
-    static SideValue initialTextAlign()
-    {
-        return SideValue::NoneSideValue;
-    }
     static Length initialPadding()
     {
         return Length(Length::Fixed, 0);
@@ -1320,7 +1309,7 @@ protected:
     struct InheritedStyles {
         FontStyleValue m_fontStyle : 2;
         FontWeightValue m_fontWeight : 4;
-        SideValue m_textAlign : 3;
+        TextAlignValue m_textAlign : 3;
         DirectionValue m_direction : 1;
         WhiteSpaceValue m_whiteSpace : 3;
         VisibilityValue m_visibility : 1;

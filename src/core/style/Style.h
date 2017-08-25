@@ -570,9 +570,16 @@ enum VerticalAlignValue {
     NumericVAlignValue,
 };
 
-// text-align, transform-origin, background-position
+enum TextAlignValue {
+    StartTextAlignValue,
+    EndTextAlignValue,
+    LeftTextAlignValue,
+    RightTextAlignValue,
+    CenterTextAlignValue
+};
+
+// transform-origin, background-position
 enum SideValue {
-    NoneSideValue, // Depends on direction
     TopSideValue,
     RightSideValue,
     BottomSideValue,
@@ -1038,6 +1045,7 @@ public:
         FloatValueKind,
         ClearValueKind,
         VerticalAlignValueKind,
+        TextAlignValueKind,
         SideValueKind,
         DirectionValueKind,
         WhiteSpaceValueKind,
@@ -1168,6 +1176,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == VerticalAlignValueKind);
         return m_value.m_verticalAlign;
+    }
+
+    TextAlignValue textAlignValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == TextAlignValueKind);
+        return m_value.m_textAlign;
     }
 
     SideValue sideValue() const
@@ -1305,13 +1319,13 @@ public:
         return m_value.m_overflow;
     }
 
-    VisibilityValue visibility() const
+    VisibilityValue visibilityValue() const
     {
         STARFISH_ASSERT(m_valueKind == VisibilityValueKind);
         return m_value.m_visibility;
     }
 
-    TextDecorationValue textDecoration() const
+    TextDecorationValue textDecorationValue() const
     {
         return m_value.m_textDecoration;
     }
@@ -1423,6 +1437,7 @@ public:
         FontSizeValue m_fontSize;
         FontStyleValue m_fontStyle;
         FontWeightValue m_fontWeight;
+        TextAlignValue m_textAlign;
         SideValue m_side;
         DirectionValue m_direction;
         WhiteSpaceValue m_whiteSpace;
@@ -1492,6 +1507,10 @@ public:
         }
         ValueData(FontWeightValue v)
             : m_fontWeight(v)
+        {
+        }
+        ValueData(TextAlignValue v)
+            : m_textAlign(v)
         {
         }
         ValueData(SideValue v)

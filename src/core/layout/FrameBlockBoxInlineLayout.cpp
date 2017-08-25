@@ -1573,9 +1573,12 @@ void LineFormattingContext::computeHorizontalProperties()
     back->setX(m_lineBoxX);
     back->setWidth(m_lineBoxWidth);
     LayoutUnit inlineBoxesWidth = back->layoutInlineBoxes(this, 0);
+    TextAlignValue textAlign = m_block->style()->textAlign();
 
     // text align
-    if (m_block->style()->textAlign() == SideValue::LeftSideValue) {
+    if (textAlign == LeftTextAlignValue ||
+        (textAlign == StartTextAlignValue && direction == LtrDirectionValue) ||
+        (textAlign == EndTextAlignValue && direction == RtlDirectionValue)) {
         LayoutUnit diff;
         if (direction == LtrDirectionValue) {
             diff = m_textIndentWidth;
@@ -1592,7 +1595,11 @@ void LineFormattingContext::computeHorizontalProperties()
                 childBox->moveX(diff);
             }
         }
-    } else if (m_block->style()->textAlign() == SideValue::RightSideValue) {
+    } else if (textAlign == TextAlignValue::RightTextAlignValue ||
+               (textAlign == StartTextAlignValue &&
+                direction == RtlDirectionValue) ||
+               (textAlign == EndTextAlignValue &&
+                direction == LtrDirectionValue)) {
         LayoutUnit diff;
         if (direction == LtrDirectionValue) {
             if (m_lineBoxWidth - inlineBoxesWidth > m_textIndentWidth) {
@@ -1648,8 +1655,7 @@ void LineFormattingContext::computeHorizontalProperties()
             }
             */
     } else {
-        STARFISH_ASSERT(m_block->style()->textAlign() ==
-                        SideValue::CenterSideValue);
+        STARFISH_ASSERT(textAlign == TextAlignValue::CenterTextAlignValue);
         LayoutUnit diff;
         if (direction == LtrDirectionValue) {
             if (m_lineBoxWidth - inlineBoxesWidth > m_textIndentWidth) {
