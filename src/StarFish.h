@@ -28,6 +28,7 @@ class Window;
 class PlatformWindow;
 class ImageData;
 class LineBreakIteratorPool;
+class Thread;
 class ThreadPool;
 class Console;
 class Inspector;
@@ -176,6 +177,10 @@ public:
     void setNeedsUpdate();
     int frameBufferUpdate();
 #endif
+    void addActiveThread(Thread* thread);
+    void removeActiveThread(Thread* thread);
+    void joinAllActiveThread();
+
 protected:
     void enter();
     void exit();
@@ -220,6 +225,8 @@ protected:
     GCUnorderedMap<void*, size_t> m_rootMap;
     AtomicStringMap m_atomicStringMap;
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
+    GCVector<Thread*> m_activeThreadList;
+    Mutex* m_activeThreadListMutex;
 
 private:
     void initCookieSession();

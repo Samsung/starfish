@@ -27,6 +27,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/modules/threading/Locker.h"
+#include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Window.h"
@@ -290,14 +291,16 @@ StarFish::~StarFish()
 {
     STARFISH_LOG_INFO("StarFish::~StarFish\n");
 #ifdef STARFISH_ENABLE_TEST
-    if (fp_mem)
+    if (fp_mem) {
         fclose(fp_mem);
+    }
 #endif
     close();
 #if defined(STARFISH_ENABLE_INSPECTOR)
     delete m_inspector;
 #endif
     delete m_platformWindow;
+    joinAllActiveThread();
     NetworkSharedResourceManager::close();
 }
 
@@ -400,6 +403,30 @@ void StarFish::pause()
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
+}
+
+void StarFish::addActiveThread(Thread* thread)
+{
+    STARFISH_ASSERT(isMainThread());
+    m_activeThreadList.push_back(thread);
+}
+
+void StarFish::joinAllActiveThread()
+{
+    STARFISH_ASSERT(isMainThread());
+    for (auto th : m_activeThreadList) {
+        th->joinIfNeeds();
+    }
+}
+
+void StarFish::removeActiveThread(Thread* thread)
+{
+    STARFISH_ASSERT(isMainThread());
+    auto it =
+        std::find(m_activeThreadList.end(), m_activeThreadList.end(), thread);
+    if (it != m_activeThreadList.end()) {
+        m_activeThreadList.erase(it);
+    }
 }
 
 void StarFish::close()

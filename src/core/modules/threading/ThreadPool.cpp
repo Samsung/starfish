@@ -25,7 +25,7 @@ ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
 {
     m_workerQueueMutex = new Mutex();
     for (size_t i = 0; i < maxThreadCount; i++) {
-        m_threads.push_back(new Thread());
+        m_threads.push_back(new Thread(m_messageLoop->starFish()));
     }
 }
 

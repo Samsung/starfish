@@ -31,7 +31,7 @@ Inspector::Inspector(StarFish* starFish, uint32_t portNumber)
     , m_zmqContext(1)
     , m_zmqSocket(m_zmqContext, ZMQ_DEALER)
 {
-    m_ioThread = new Thread();
+    m_ioThread = new Thread(m_starFish);
     std::string addr;
     addr = "tcp://127.0.0.1:";
     addr += std::to_string(portNumber);

@@ -17,22 +17,26 @@
 #ifndef __StarFishThread__
 #define __StarFishThread__
 
+#include "binding/StarFishHoldable.h"
 namespace StarFish {
 
 class MessageLoop;
+class Mutex;
+
 typedef void* (*ThreadWorker)(void*);
 
 void registerMainThread();
 bool isMainThread();
 
-class Thread : public gc {
+class Thread : public gc, public StarFishHoldable {
 public:
-    Thread();
+    Thread(StarFish* starFish);
     ~Thread()
     {
     }
 
     void run(MessageLoop* msgLoop, ThreadWorker fn, void* data);
+    void joinIfNeeds();
     bool isAlive()
     {
         return m_alive;
@@ -40,6 +44,9 @@ public:
 
 protected:
     volatile bool m_alive;
+    volatile bool m_isJoined;
+    pthread_t m_tid;
+    Mutex* m_mutex;
 };
 }
 
