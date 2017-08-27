@@ -15,9 +15,11 @@
  */
 
 #include "StarFishConfig.h"
+#include "StarFish.h"
 #include "Thread.h"
 #include "core/modules/message_loop/MessageLoop.h"
-
+#include "Mutex.h"
+#include "Locker.h"
 #include <unistd.h>
 #include <sys/syscall.h>
 
@@ -43,17 +45,22 @@ bool isMainThread()
     return true;
 }
 
-Thread::Thread()
+Thread::Thread(StarFish* starFish)
+    : StarFishHoldable(starFish)
+    , m_alive(false)
+    , m_isJoined(false)
+    , m_tid(0)
+    , m_mutex(new Mutex())
 {
-    m_alive = false;
 }
 
 void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
 {
     STARFISH_ASSERT(isMainThread());
     STARFISH_ASSERT(!m_alive);
-    m_alive = true;
 
+    Locker<Mutex> l(*m_mutex);
+    m_starFish->addActiveThread(this);
     struct ThreadData {
         Thread* thread;
         MessageLoop* messageLoop;
@@ -68,22 +75,50 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
     d->fn = fn;
     d->data = data;
 
-    pthread_create(&d->tid, NULL,
-                   [](void* data) -> void* {
-                       ThreadData* d = (ThreadData*)data;
-                       auto ret = d->fn(d->data);
-                       d->thread->m_alive = false;
-                       d->messageLoop->addIdlerWithNoGCRootingInOtherThread(
-                           nullptr,
-                           [](size_t handle, void* data) {
-                               ThreadData* d = (ThreadData*)data;
-                               void* ret;
-                               pthread_join(d->tid, &ret);
-                               GC_FREE(data);
-                           },
-                           d);
-                       pthread_exit(ret);
-                   },
-                   d);
+    int retValue = pthread_create(
+        &d->tid, NULL,
+        [](void* data) -> void* {
+            ThreadData* d = (ThreadData*)data;
+            Locker<Mutex> l(*d->thread->m_mutex);
+            auto ret = d->fn(d->data);
+            d->thread->m_alive = false;
+            d->messageLoop->addIdlerWithNoGCRootingInOtherThread(
+                nullptr,
+                [](size_t handle, void* data) {
+                    ThreadData* d = (ThreadData*)data;
+                    if (!d->thread->m_isJoined) {
+                        d->thread->m_isJoined = true;
+                        void* ret;
+                        pthread_join(d->tid, &ret);
+                        d->thread->m_starFish->removeActiveThread(d->thread);
+                    }
+                    GC_FREE(data);
+                },
+                d);
+            pthread_exit(ret);
+        },
+        d);
+    if (retValue == 0) {
+        m_tid = d->tid;
+        m_alive = true;
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+void Thread::joinIfNeeds()
+{
+    STARFISH_ASSERT(isMainThread());
+    m_mutex->lock();
+    if (m_tid && !m_isJoined) {
+        m_isJoined = true;
+        m_mutex->unlock();
+        pthread_join(m_tid, nullptr);
+        m_starFish->removeActiveThread(this);
+    } else {
+        m_mutex->unlock();
+    }
+    m_alive = false;
+    m_tid = 0;
+    m_isJoined = false;
 }
 }

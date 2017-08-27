@@ -229,7 +229,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
 
         if (pos != header.end()) {
             data->networkWorker = new AsyncNetworkWorkHelper();
-            Thread* t = new Thread();
+            Thread* t = new Thread(m_orgProxy->starFish());
             t->run(m_orgProxy->starFish()->messageLoop(),
                    [](void* data) -> void* {
                        NetworkURLWorkerData* d = (NetworkURLWorkerData*)data;

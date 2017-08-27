@@ -18,12 +18,13 @@
 #define __StarFishMessageLoop__
 
 #include "core/modules/threading/Mutex.h"
+#include "binding/StarFishHoldable.h"
 
 namespace StarFish {
 
 class BrowsingContext;
 
-class MessageLoop : public gc {
+class MessageLoop : public gc, public StarFishHoldable {
     friend class StarFish;
     friend class Window;
 
@@ -61,7 +62,6 @@ public:
     void run();
 
 protected:
-    StarFish* m_starFish;
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
     std::unordered_set<size_t> m_idlersFromOtherThread;

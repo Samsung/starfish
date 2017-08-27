@@ -29,7 +29,7 @@
 namespace StarFish {
 
 MessageLoop::MessageLoop(StarFish* sf)
-    : m_starFish(sf)
+    : StarFishHoldable(sf)
     , m_idlersFromOtherThreadMutex(new Mutex())
 {
 }
