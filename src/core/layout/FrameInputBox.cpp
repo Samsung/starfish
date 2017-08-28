@@ -116,10 +116,6 @@ void FrameInputBox::layout(LayoutContext& ctx,
     HTMLInputElement* e = node()->asHTMLInputElement();
     size_t cPos = e->m_currentCaretPosition;
 
-    if (!e->m_shouldDrawCaret) {
-        return;
-    }
-
     bool found = false;
     bool isLTR = style()->direction() == DirectionValue::LtrDirectionValue;
     LayoutUnit caretThickness = e->caretThickness();
