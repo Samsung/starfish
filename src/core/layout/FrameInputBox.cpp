@@ -41,7 +41,7 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
                                              FrameTreeBuilderContext& ctx,
                                              bool force)
 {
-    if (current->asHTMLInputElement()->type()->equalsWithoutCase("hidden")) {
+    if (current->asHTMLInputElement()->type()->equals("hidden")) {
         return nullptr;
     }
 
@@ -71,12 +71,12 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         textElement->setStyle(pseudoStyle);
 
         String* userVal = inputNode->value();
-        if (inputNode->type()->equalsWithoutCase("submit") &&
+        if (inputNode->type()->equals("submit") &&
             userVal == String::emptyString) {
             userVal = String::createASCIIString("submit");
-        } else if (inputNode->type()->equalsWithoutCase("password")) {
+        } else if (inputNode->type()->equals("password")) {
             userVal = inputNode->obscurePhrase(userVal);
-        } else if (inputNode->type()->equalsWithoutCase("checkbox")) {
+        } else if (inputNode->type()->equals("checkbox")) {
             userVal = inputNode->checked() ? inputNode->checkboxTickSymbol()
                                            : String::emptyString;
         }
