@@ -270,21 +270,33 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     tmpStr = m_orgProxy->starFish()->locale().getName();
     std::replace(tmpStr.begin(), tmpStr.end(), '_', '-');
     headers.setHeader(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
-
-    headers.setHeader(HTTPHeaderMap::kAcceptCharset, "utf-8");
-
+    headers.setHeader(HTTPHeaderMap::kPragma, "no-cache");
+    headers.setHeader(HTTPHeaderMap::kCacheControl, "no-cache");
     headers.setHeader(HTTPHeaderMap::kUserAgent,
                       USER_AGENT(APP_CODE_NAME, VERSION));
+
+    headers.setHeader(HTTPHeaderMap::kUpgradeInsecureRequests, "1");
+
+    auto it = headers.findHeader(HTTPHeaderMap::kAcceptCharset);
+    if (it != headers.headerMap().end()) {
+        headers.setHeader(HTTPHeaderMap::kAcceptCharset, "utf-8");
+    }
+
     if (!m_orgProxy->m_document->documentURI()->isNetworkURL()) {
         headers.setHeader(HTTPHeaderMap::kOrigin, "null");
     } else {
-        headers.setHeader(HTTPHeaderMap::kHost,
-                          m_orgProxy->m_url->hostname()->utf8Data());
-        headers.setHeader(HTTPHeaderMap::kOrigin,
-                          m_orgProxy->m_url->origin()->utf8Data());
-        headers.setHeader(
-            HTTPHeaderMap::kReferer,
-            m_orgProxy->document()->documentURI()->urlString()->utf8Data());
+        auto it = headers.findHeader(HTTPHeaderMap::kOrigin);
+        if (it != headers.headerMap().end()) {
+            headers.setHeader(HTTPHeaderMap::kOrigin,
+                              m_orgProxy->m_url->origin()->utf8Data());
+        }
+
+        auto it2 = headers.findHeader(HTTPHeaderMap::kReferer);
+        if (it2 != headers.headerMap().end()) {
+            headers.setHeader(
+                HTTPHeaderMap::kReferer,
+                m_orgProxy->document()->documentURI()->urlString()->utf8Data());
+        }
     }
 }
 

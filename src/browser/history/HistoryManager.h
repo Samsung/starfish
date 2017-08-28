@@ -23,8 +23,11 @@ namespace StarFish {
 
 class ResourceURL;
 class WebView;
+class HTMLFormElement;
 
 class HistoryManager : public gc {
+    friend class HTMLFormElement;
+
 public:
     const uint32_t MAX_ENTRY_SIZE = 256;
     enum Action { Add, Replace, Intact };

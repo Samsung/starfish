@@ -18,10 +18,13 @@
 #include "StarFish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
+#include "core/page/History.h"
+#include "browser/history/HistoryManager.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/HTMLFormElement.h"
 #include "platform/loader/ResourceURL.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 
@@ -234,8 +237,15 @@ public:
 
         if (!m_resource->resourceRequest()->lastLocation()->equals(
                 String::emptyString)) {
-            m_builder.document()->setDocumentURI(
-                new ResourceURL(m_resource->resourceRequest()->lastLocation()));
+            // Change documentURI and last history when request was redirected.
+            ResourceURL* newURL =
+                new ResourceURL(m_resource->resourceRequest()->lastLocation());
+            m_builder.document()->setDocumentURI(newURL);
+            m_builder.document()
+                ->window()
+                ->history()
+                ->historyManager()
+                ->replace(newURL);
         }
         load();
     }
