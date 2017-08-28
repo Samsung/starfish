@@ -124,7 +124,7 @@ struct curl_slist* HTTPHeaderMap::generateCurlList()
     curl_slist* list = nullptr;
     std::string header;
     for (auto it = m_headerMap.begin(); it != m_headerMap.end(); ++it) {
-        header = std::string(it->first) + ":" + it->second;
+        header = std::string(it->first) + ": " + it->second;
         list = curl_slist_append(list, header.data());
         if (list == nullptr) {
             STARFISH_ASSERT_NOT_REACHED();

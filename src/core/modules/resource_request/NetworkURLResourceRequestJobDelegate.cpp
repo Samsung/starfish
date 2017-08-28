@@ -82,10 +82,12 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
             SIZE_MAX);
 
-        if (requestData->isRedirected &&
-            requestData->lastLocation.compare("") != 0) {
+        if (requestData->isRedirected) {
             requestData->request->m_lastLocation =
-                String::createASCIIString(requestData->lastLocation.data())
+                String::createASCIIString(
+                    requestData->httpTransaction->httpResponse()
+                        .lastEffectiveURL()
+                        .data())
                     ->trim();
         }
 
@@ -266,7 +268,7 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     //  * User-Agent ...
     std::string tmpStr;
     tmpStr = m_orgProxy->starFish()->locale().getName();
-    tmpStr.replace(tmpStr.begin(), tmpStr.end(), '_', '-');
+    std::replace(tmpStr.begin(), tmpStr.end(), '_', '-');
     headers.setHeader(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
 
     headers.setHeader(HTTPHeaderMap::kAcceptCharset, "utf-8");
@@ -278,8 +280,11 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     } else {
         headers.setHeader(HTTPHeaderMap::kHost,
                           m_orgProxy->m_url->hostname()->utf8Data());
-        headers.setHeader(HTTPHeaderMap::kReferer,
-                          m_orgProxy->m_document->urlString()->utf8Data());
+        headers.setHeader(HTTPHeaderMap::kOrigin,
+                          m_orgProxy->m_url->origin()->utf8Data());
+        headers.setHeader(
+            HTTPHeaderMap::kReferer,
+            m_orgProxy->document()->documentURI()->urlString()->utf8Data());
     }
 }
 
@@ -426,14 +431,6 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                    .isRedirectionResponseStatus()) {
         if (!workerData->isRedirected) {
             workerData->isRedirected = true;
-        }
-        size_t pos = rawHeader.find(":");
-        if (pos != std::string::npos) {
-            std::string key = rawHeader.substr(0, pos);
-            std::string value = rawHeader.substr(pos + 1);
-            if (StringUtils::equalsWithoutCase(key, HTTPHeaderMap::kLocation)) {
-                workerData->lastLocation = value;
-            }
         }
     }
 
