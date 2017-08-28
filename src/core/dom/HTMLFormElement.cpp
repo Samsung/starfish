@@ -102,6 +102,8 @@ String* HTMLFormObject::type() const
         return typeAttr;
     } else if (typeAttr->equals("submit")) {
         return typeAttr;
+    } else if (typeAttr->equals("hidden")) {
+        return typeAttr;
     }
 
     return starFish()->staticStrings()->m_text.localName();

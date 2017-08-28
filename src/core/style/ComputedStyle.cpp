@@ -369,7 +369,6 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
     if (current && current->isHTMLInputElement()) {
         HTMLInputElement* element = current->asHTMLInputElement();
-        String* type = element->type();
         if (m_width.isAuto() && element->isSizableType()) {
             size_t size = element->size();
             m_width = Length(Length::EmToBeFixed, size);
