@@ -1037,18 +1037,35 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
     // when the flex item’s main size is in its block axis) and the flex item’s
     // cross size is auto and not definite, in this calculation use fit-content
     // as the flex item’s cross size.
+    Length width = flexItem->style()->width();
+
     if (isMainAxisInInlineAxis) {
         if (basisSize == intMaxForLayoutUnit) {
-            PreferredWidthContext p(ctx, flexItem,
-                                    availableMainSize - flexItem->mbpWidth());
-            p.computePreferredWidth();
-            basisSize = p.preferredWidth();
+            if (width.isAuto() || (availableMainSize == intMaxForLayoutUnit &&
+                                   width.isPercent())) {
+                PreferredWidthContext p(
+                    ctx, flexItem, availableMainSize - flexItem->mbpWidth());
+                p.computePreferredWidth();
+                basisSize = p.preferredWidth();
+            } else {
+                basisSize = width.specifiedValue(availableMainSize,
+                                                 ctx.viewportWidth());
+                basisSize = flexItem->contentWidthApplyingBoxSizing(basisSize);
+            }
         }
     } else {
-        PreferredWidthContext p(ctx, flexItem,
-                                availableCrossSize - flexItem->mbpWidth());
-        p.computePreferredWidth();
-        flexItem->setContentWidth(p.preferredWidth());
+        if (width.isAuto() ||
+            (availableCrossSize == intMaxForLayoutUnit && width.isPercent())) {
+            PreferredWidthContext p(ctx, flexItem,
+                                    availableCrossSize - flexItem->mbpWidth());
+            p.computePreferredWidth();
+            flexItem->setContentWidth(p.preferredWidth());
+        } else {
+            LayoutUnit w =
+                width.specifiedValue(availableCrossSize, ctx.viewportWidth());
+            w = flexItem->contentWidthApplyingBoxSizing(w);
+            flexItem->setContentWidth(w);
+        }
         flexItem->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
         if (basisSize == intMaxForLayoutUnit) {
             basisSize = flexItem->contentHeight();
