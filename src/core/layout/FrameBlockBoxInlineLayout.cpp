@@ -3778,9 +3778,6 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
         }
     }
 
-    if (width.isPercent()) {
-        w = width.percentValue(w);
-    }
     w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), w, cb->contentWidth(),
                                   ctx.layoutContext().viewportWidth(), true);
     ctx.updatePreferredWidth(w);

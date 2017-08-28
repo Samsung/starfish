@@ -1416,7 +1416,7 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     case CSSStyleValuePair::ValueKind::TextAlignValueKind:
-        switch (sideValue()) {
+        switch (textAlignValue()) {
         case TextAlignValue::StartTextAlignValue:
             return String::fromUTF8("start");
         case TextAlignValue::EndTextAlignValue:
