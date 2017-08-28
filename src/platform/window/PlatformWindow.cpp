@@ -54,8 +54,8 @@ PlatformWindow::PlatformWindow(StarFish* starFish)
     , m_idleCleanerTimerID(SIZE_MAX)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     , m_isButtonOfVirtualCursorClicked(false)
-    , m_virtualCursorX(0)
-    , m_virtualCursorY(0)
+    , m_virtualCursorX(-1)
+    , m_virtualCursorY(-1)
     , m_virtualCursorSpeed(0)
     , m_virtualCursorMoveingLastTimestamp(0)
     , m_virtualCursorImageData(nullptr)
@@ -115,7 +115,7 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     if (!isIMEEnabledNow()) {
         const int virtualCursorInitialSpeed = 1;
-        const int virtualCursorMaxSpeed = 24;
+        const int virtualCursorMaxSpeed = 30;
         bool isMouseMoved = false;
         MouseEventKind eventKind = MouseEventMove;
 #define ADJEST_VIRTUAL_CURSOR_POSITION()                                    \
@@ -160,14 +160,15 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
                   m_isButtonOfVirtualCursorClicked                   \
                       ? MouseData::MouseButtonsValue::LeftButtonDown \
                       : MouseData::MouseButtonsValue::NoButtonDown,  \
-                  m_virtualCursorX, m_virtualCursorY));
+                  m_virtualCursorX, m_virtualCursorY,                \
+                  m_isButtonOfVirtualCursorClicked));
         if (KeyEventDown == kind) {
             if (data.keyCode() >= 37 && data.keyCode() <= 40) {
                 auto ts = timestamp();
                 if ((ts - m_virtualCursorMoveingLastTimestamp) > 250) {
                     m_virtualCursorSpeed = virtualCursorInitialSpeed;
                 } else {
-                    m_virtualCursorSpeed += 2;
+                    m_virtualCursorSpeed += 3;
                     if (m_virtualCursorSpeed > virtualCursorMaxSpeed) {
                         m_virtualCursorSpeed = virtualCursorMaxSpeed;
                     }
@@ -198,8 +199,8 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
                 m_virtualCursorY += virtualCursorSpeed;
                 ADJEST_VIRTUAL_CURSOR_POSITION()
                 DO_REDRAW_DISPATCH()
-            } else if (data.keyCode() == 32 || data.keyCode() == 13 ||
-                       data.keyCode() == 8) {
+            } else if (data.keyValue() == SpaceKey ||
+                       data.keyValue() == EnterKey) {
                 // click
                 eventKind = MouseEventDown;
                 m_isButtonOfVirtualCursorClicked = true;
@@ -264,8 +265,16 @@ void PlatformWindow::paintVirtualCursor(Canvas* canvas)
 void PlatformWindow::onResize()
 {
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-    m_virtualCursorX = width() / 2;
-    m_virtualCursorY = height() / 2;
+    if (m_virtualCursorX > width()) {
+        m_virtualCursorX = width() - 10;
+    } else if (m_virtualCursorX == -1) {
+        m_virtualCursorX = width() / 2;
+    }
+    if (m_virtualCursorY > height()) {
+        m_virtualCursorY = height() - 10;
+    } else if (m_virtualCursorY == -1) {
+        m_virtualCursorY = height() / 2;
+    }
 #endif
     webView()->mainBrowsingContext()->window()->resize(width(), height());
 }

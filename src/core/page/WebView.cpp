@@ -470,7 +470,7 @@ void WebView::layoutIfNeeds()
     }
 }
 
-bool WebView::rendering()
+bool WebView::rendering(bool force)
 {
     if (!m_needsRendering) {
         return false;
@@ -478,7 +478,7 @@ bool WebView::rendering()
 
     bool didPaintingOrCompositing = false;
 
-    if (mainBrowsingContext()->hasPendingStyleSheet() &&
+    if (!force && mainBrowsingContext()->hasPendingStyleSheet() &&
         mainBrowsingContext()->document() &&
         mainBrowsingContext()
             ->document()
@@ -784,22 +784,27 @@ void WebView::initRenderingFlags()
     m_needsComposite = false;
 }
 
-bool WebView::hasFocus()
+Node* WebView::focusedNode()
 {
     if (!m_mainBrowsingContext) {
-        return false;
+        return nullptr;
     }
     if (mainBrowsingContext()->focusedNode()) {
-        return true;
+        return mainBrowsingContext()->focusedNode();
     }
-    bool ret = false;
+    Node* ret = nullptr;
     std::function<void(BrowsingContext*)> fn = [&](BrowsingContext* ctx) {
         if (ctx->focusedNode()) {
-            ret = true;
+            ret = ctx->focusedNode();
         }
     };
     mainBrowsingContext()->iterateChildContext(fn);
     return ret;
+}
+
+bool WebView::hasFocus()
+{
+    return focusedNode() != nullptr;
 }
 
 void WebView::blur()

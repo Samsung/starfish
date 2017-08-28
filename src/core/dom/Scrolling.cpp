@@ -77,6 +77,7 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                 m_isScrollTarget = true;
                 m_pointingEventX = x;
                 m_pointingEventY = y;
+                return true;
             } else if (isPointingUpEvent) {
                 m_isScrollTarget = false;
             } else if (m_isScrollTarget) {

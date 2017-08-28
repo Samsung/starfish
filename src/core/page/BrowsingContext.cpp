@@ -1016,6 +1016,54 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
         }
     }
 
+    bool useEventInDOMTree = false;
+    Node* node = targetNode;
+    while (node) {
+        if (node->isElement()) {
+            Element* e = node->asElement();
+            if (isVerticalWheelEvent) {
+                if (e->style()->overflowY() >= OverflowValue::AutoOverflow) {
+                    if (e->frame()->isFrameBlockBox()) {
+                        if (e->frame()
+                                ->asFrameBlockBox()
+                                ->hasBiggerContentThanFrameHeight()) {
+                            double t = e->scrollTop();
+                            double scrollBefore = t;
+                            t += z * 15;
+                            e->setScrollTop(t);
+                            if (scrollBefore != e->scrollTop()) {
+                                useEventInDOMTree = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } else {
+                if (e->style()->overflowX() >= OverflowValue::AutoOverflow) {
+                    if (e->frame()->isFrameBlockBox()) {
+                        if (e->frame()
+                                ->asFrameBlockBox()
+                                ->hasBiggerContentThanFrameWidth()) {
+                            double t = e->scrollLeft();
+                            double scrollBefore = t;
+                            t += z * 15;
+                            e->setScrollLeft(t);
+                            if (scrollBefore != e->scrollLeft()) {
+                                useEventInDOMTree = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        node = node->parentElement();
+    }
+
+    if (useEventInDOMTree) {
+        return true;
+    }
+
     double sx = window()->scrollX();
     double sy = window()->scrollY();
     if (isVerticalWheelEvent) {

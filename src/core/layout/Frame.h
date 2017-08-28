@@ -1469,6 +1469,8 @@ public:
     Document* document();
     LayoutLocation adjustedPositionRelativeToOffsetParent();
 
+    FrameBox* findNearestAssociateBox();
+
 protected:
     virtual bool hasFrameTreeItemModel()
     {

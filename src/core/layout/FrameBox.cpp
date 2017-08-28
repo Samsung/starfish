@@ -47,6 +47,22 @@ void* FrameBoxRareData::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+LayoutLocation FrameBox::absolutePointIncludingScroll(FrameBox* top)
+{
+    LayoutLocation l(0, 0);
+    Frame* p = this;
+    while (top != p) {
+        l.setX(l.x() + p->asFrameBox()->x());
+        l.setY(l.y() + p->asFrameBox()->y());
+        if (p->isFrameBlockBox() && p != this) {
+            l.setX(l.x() - p->asFrameBlockBox()->scrollLeft());
+            l.setY(l.y() - p->asFrameBlockBox()->scrollTop());
+        }
+        p = p->layoutParent();
+    }
+    return l;
+}
+
 void FrameBox::paintChildrenWith(PaintingContext& ctx)
 {
     Frame* child = firstChild();

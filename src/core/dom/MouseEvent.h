@@ -59,7 +59,8 @@ public:
     }
 
     MouseData(unsigned char button, unsigned char buttons, double clientX,
-              double clientY, double screenX, double screenY, int8_t clickCount)
+              double clientY, double screenX, double screenY,
+              int32_t clickCount)
         : m_button(button)
         , m_buttons(buttons)
         , m_clientX(clientX)

@@ -246,7 +246,8 @@ ScriptValue Serializer::deserialize(Document* document,
                 value->data()->asSerializedPrimitiveValueData()->numberData()));
         return ValueRef::create(dateObj);
     } else if (value->isRegExp()) {
-        STARFISH_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return ValueRef::createUndefined();
     } else if (value->isArray()) {
         ArrayObjectRef* array = ArrayObjectRef::create(state);
         array->set(

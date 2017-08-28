@@ -603,6 +603,13 @@ public:
         return LayoutRect(absolutePoint(top), frameRect().size());
     }
 
+    LayoutLocation absolutePointIncludingScroll(FrameBox* top);
+    LayoutRect absoluteRectIncludingScroll(FrameBox* top)
+    {
+        return LayoutRect(absolutePointIncludingScroll(top),
+                          frameRect().size());
+    }
+
     void computeBorderMarginPadding(LayoutContext& ctx,
                                     LayoutUnit parentContentWidth);
 

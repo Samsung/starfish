@@ -1117,8 +1117,22 @@ LayoutLocation Frame::adjustedPositionRelativeToOffsetParent()
         offsetParent = document()->frame()->asFrameBox();
     }
 
-    FrameBox* box = nullptr;
+    FrameBox* box = frameObj->findNearestAssociateBox();
+    LayoutRect rect = box->absoluteRect(offsetParent);
+    result.unite(rect);
 
+    if (offsetParent->node()->isHTMLBodyElement()) {
+        result.setX(result.x() + offsetParent->x());
+        result.setY(result.y() + offsetParent->y());
+    }
+
+    return result.location();
+}
+
+FrameBox* Frame::findNearestAssociateBox()
+{
+    Frame* frameObj = this;
+    FrameBox* box = nullptr;
     if (frameObj->isFrameBox()) {
         box = frameObj->asFrameBox();
     } else {
@@ -1131,15 +1145,7 @@ LayoutLocation Frame::adjustedPositionRelativeToOffsetParent()
             box = c;
         }
     }
-    LayoutRect rect = box->absoluteRect(offsetParent);
-    result.unite(rect);
-
-    if (offsetParent->node()->isHTMLBodyElement()) {
-        result.setX(result.x() + offsetParent->x());
-        result.setY(result.y() + offsetParent->y());
-    }
-
-    return result.location();
+    return box;
 }
 
 Document* Frame::document()

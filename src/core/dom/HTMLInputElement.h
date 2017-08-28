@@ -65,7 +65,6 @@ public:
 
     uint32_t size();
     void setSize(String* size);
-    bool isSizableType() const;
 
     // Other methods
     String* obscurePhrase(String* phrase);
@@ -80,10 +79,14 @@ public:
         return m_currentCaretLayoutLocation;
     }
 
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues) override;
+
 protected:
 private:
     void toggleChecked();
     bool isEditableType() const;
+    bool isSizableType() const;
     void updateInputboxValue(String* value);
 
     bool m_checked;

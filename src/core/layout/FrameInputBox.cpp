@@ -68,6 +68,7 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
             StyleResolver::PseudoElementType::PseudoElementFormOnly);
         textElement->setParentNode(current);
         ComputedStyle* pseudoStyle = createInputElementStyleFrom(current);
+        pseudoStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
         textElement->setStyle(pseudoStyle);
 
         String* userVal = inputNode->value();
