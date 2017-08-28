@@ -98,7 +98,7 @@ void EventSourceParser::EventSourceParser::parseLine()
     auto fieldNameEnd = std::find(m_line.begin(), m_line.end(), ':');
     auto fieldValueStart = fieldNameEnd;
     if (fieldNameEnd == m_line.end()) {
-        fieldNameEnd = m_line.end() - 1;
+        fieldNameEnd = m_line.end();
         fieldValueStart = fieldNameEnd;
     } else {
         fieldValueStart = fieldNameEnd + 1;
