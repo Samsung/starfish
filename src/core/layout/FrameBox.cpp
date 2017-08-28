@@ -333,42 +333,59 @@ VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
                                             b);
 }
 
-void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth)
+void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth,
+                                       DirectionValue parentDirection)
 {
     Length marginLeft = style()->marginLeft();
     Length marginRight = style()->marginRight();
+    LayoutUnit remainingWidth = parentContentWidth - width();
 
-    LayoutUnit remainedWidth = parentContentWidth - FrameBox::width();
     if (marginLeft.isAuto() && marginRight.isAuto()) {
-        if (remainedWidth > 0) {
-            setMarginLeft(remainedWidth / 2);
-            setMarginRight(remainedWidth / 2);
+        if (remainingWidth > 0) {
+            setMarginLeft(remainingWidth / 2);
+            setMarginRight(remainingWidth / 2);
+        } else if (isAbsolutePositioned()) {
+            if (parentDirection == LtrDirectionValue) {
+                setMarginRight(remainingWidth);
+            } else {
+                setMarginLeft(remainingWidth);
+            }
         }
     } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
-        remainedWidth -= FrameBox::marginRight();
-        if (remainedWidth > 0) {
-            setMarginLeft(remainedWidth);
+        remainingWidth -= FrameBox::marginRight();
+        if (isAbsolutePositioned() || remainingWidth > 0) {
+            setMarginLeft(remainingWidth);
         }
     } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
-        remainedWidth -= FrameBox::marginLeft();
-        if (remainedWidth > 0) {
-            setMarginRight(remainedWidth);
+        remainingWidth -= FrameBox::marginLeft();
+        if (isAbsolutePositioned() || remainingWidth > 0) {
+            setMarginRight(remainingWidth);
         }
     }
 }
 
-void FrameBox::applyVerticalMarginForAbsoluteBox()
+void FrameBox::computeVerticalMargin(LayoutUnit parentContentHeight)
 {
     STARFISH_ASSERT(isAbsolutePositioned());
     Length marginTop = style()->marginTop();
     Length marginBottom = style()->marginBottom();
+    LayoutUnit remainingHeight = parentContentHeight - height();
 
-    if (!marginTop.isAuto() && !marginBottom.isAuto()) {
-        moveY(FrameBox::marginTop());
-    } else if (!marginTop.isAuto() && marginBottom.isAuto()) {
-        moveY(FrameBox::marginTop());
+    if (marginTop.isAuto() && marginBottom.isAuto()) {
+        if (isAbsolutePositioned() || remainingHeight > 0) {
+            setMarginTop(remainingHeight / 2);
+            setMarginBottom(remainingHeight / 2);
+        }
     } else if (marginTop.isAuto() && !marginBottom.isAuto()) {
-        moveY(-FrameBox::marginBottom());
+        remainingHeight -= FrameBox::marginBottom();
+        if (isAbsolutePositioned() || remainingHeight > 0) {
+            setMarginTop(remainingHeight);
+        }
+    } else if (!marginTop.isAuto() && marginBottom.isAuto()) {
+        remainingHeight -= FrameBox::marginTop();
+        if (isAbsolutePositioned() || remainingHeight > 0) {
+            setMarginBottom(remainingHeight);
+        }
     }
 }
 

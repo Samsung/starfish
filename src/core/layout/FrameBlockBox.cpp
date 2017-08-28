@@ -335,13 +335,13 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         FrameBox* cb = containingBlock(this);
         LayoutUnit parentContentWidth = cb->contentWidth();
+        DirectionValue parentDirection =
+            blockContainer(this)->style()->direction();
         computeBorderMarginPadding(ctx, parentContentWidth);
 
         if (isAbsolutePositioned()) {
             // 10.3.7 Absolutely positioned, non-replaced elements
             STARFISH_ASSERT(!isAnonymous());
-            DirectionValue parentDirection =
-                blockContainer(this)->style()->direction();
             HorizontalDataLocToContainingBlock data =
                 computeHorizontalDataToContainingBlock(ctx, cb);
 
@@ -390,7 +390,26 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                     // value for 'left' (in case the 'direction' property of
                     // the containing block is 'rtl') or 'right' (in case
                     // 'direction' is 'ltr') and solve for that value.
-                    if (parentDirection == DirectionValue::LtrDirectionValue) {
+                    computeHorizontalMargin(data.m_contentWidth - data.m_left -
+                                                data.m_right,
+                                            parentDirection);
+                    Length marginLeft = style()->marginLeft();
+                    Length marginRight = style()->marginRight();
+                    bool relativeToLeft = false;
+
+                    if (marginLeft.isAuto() && marginRight.isAuto()) {
+                        relativeToLeft = parentDirection ==
+                                         DirectionValue::LtrDirectionValue;
+                    } else if (marginLeft.isAuto()) {
+                        relativeToLeft = false;
+                    } else if (marginRight.isAuto()) {
+                        relativeToLeft = true;
+                    } else {
+                        relativeToLeft = parentDirection ==
+                                         DirectionValue::LtrDirectionValue;
+                    }
+
+                    if (relativeToLeft) {
                         setX(data.m_left + FrameBox::marginLeft() -
                              data.m_absX);
                     } else {
@@ -420,7 +439,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             // 10.3.5 Floating, non-replaced elements
             computeContentWidth(ctx, parentContentWidth);
             if (isNormalFlow() && isBlockLevel()) {
-                computeHorizontalMargin(parentContentWidth);
+                computeHorizontalMargin(parentContentWidth, parentDirection);
             }
         }
     }
@@ -446,7 +465,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
 
         Length top = style()->top();
         Length bottom = style()->bottom();
-        Length height = style()->height();
 
         // 10.6.4 Absolutely positioned, non-replaced elements
 
@@ -456,60 +474,18 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         // + 'padding-bottom' + 'border-bottom-width' + 'margin-bottom' +
         // 'bottom' = height of containing block
 
-        if (top.isAuto() && height.isAuto() && bottom.isAuto()) {
-            // If all three of 'top', 'height', and 'bottom' are auto, set 'top'
-            // to the static position and apply rule number three below.
-        } else if (!top.isAuto() && !height.isAuto() && !bottom.isAuto()) {
-            // If none of the three are 'auto': If both 'margin-top' and
-            // 'margin-bottom' are 'auto', solve the equation under the extra
-            // constraint that the two margins get equal values. If one of
-            // 'margin-top' or 'margin-bottom' is 'auto', solve the equation
-            // for that value. If the values are over-constrained, ignore the
-            // value for 'bottom' and solve for that value.
-            setY(data.m_top - data.m_absY);
-        } else if (top.isAuto() && height.isAuto() && !bottom.isAuto()) {
-            // 'top' and 'height' are 'auto' and 'bottom' is not 'auto', then
-            // the height is based on the content per 10.6.7 set 'auto' values
-            // for 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
-            setY(data.m_contentHeight - asFrameBox()->contentHeight() -
-                 paddingHeight() - borderHeight() - data.m_bottom -
-                 data.m_absY);
-        } else if (top.isAuto() && bottom.isAuto() && !height.isAuto()) {
-            // 'top' and 'bottom' are 'auto' and 'height' is not 'auto', then
-            // set 'top' to the static position set 'auto' values for
-            // 'margin-top' and 'margin-bottom' to 0, and  solve for 'bottom'
-        } else if (height.isAuto() && bottom.isAuto() && !top.isAuto()) {
-            // 'height' and 'bottom' are 'auto' and 'top' is not 'auto', then
-            // the height is based on the content per 10.6.7, set 'auto' values
-            // for 'margin-top' and 'margin-bottom' to 0, and solve for 'bottom'
-            setY(data.m_top - data.m_absY);
-        } else if (top.isAuto() && !height.isAuto() && !bottom.isAuto()) {
-            // 'top' is 'auto', 'height' and 'bottom' are not 'auto', then set
-            // 'auto' values for 'margin-top' and 'margin-bottom' to 0, and
-            // solve for 'top'
-            LayoutUnit h = height.specifiedValue(data.m_contentHeight,
-                                                 ctx.viewportHeight());
-            if (style()->boxSizing() == BorderBoxBoxSizingValue) {
-                setY(data.m_contentHeight - h - data.m_bottom - data.m_absY);
-            } else {
-                setY(data.m_contentHeight - h - data.m_bottom -
-                     paddingHeight() - borderHeight() - data.m_absY);
-            }
-        } else if (height.isAuto() && !top.isAuto() && !bottom.isAuto()) {
-            // 'height' is 'auto', 'top' and 'bottom' are not 'auto', then
-            // 'auto' values for 'margin-top' and 'margin-bottom' are set to 0
-            // and solve for 'height'
-            setY(data.m_top - data.m_absY);
+        if (top.isAuto() && bottom.isAuto()) {
+            // static location computed in normal flow processing
+            moveY(marginTop());
+        } else if (!top.isAuto() && bottom.isAuto()) {
+            setY(data.m_top - data.m_absY + marginTop());
+        } else if (top.isAuto() && !bottom.isAuto()) {
+            setY(data.m_contentHeight - data.m_bottom - height() - data.m_absY +
+                 marginTop());
         } else {
-            // 'bottom' is 'auto', 'top' and 'height' are not 'auto', then set
-            // 'auto' values for 'margin-top' and 'margin-bottom' to 0 and solve
-            // for 'bottom'
-            STARFISH_ASSERT(bottom.isAuto() && !top.isAuto() &&
-                            !height.isAuto());
-            setY(data.m_top - data.m_absY);
+            computeVerticalMargin(data.m_contentHeight);
+            setY(data.m_top - data.m_absY + marginTop());
         }
-
-        applyVerticalMarginForAbsoluteBox();
     } else if (style()->position() == PositionValue::RelativePositionValue) {
         ctx.registerRelativePositionedBox(this, true);
     }

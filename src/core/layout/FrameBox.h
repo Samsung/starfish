@@ -606,9 +606,9 @@ public:
     void computeBorderMarginPadding(LayoutContext& ctx,
                                     LayoutUnit parentContentWidth);
 
-    void computeHorizontalMargin(LayoutUnit parentContentWidth);
-
-    void applyVerticalMarginForAbsoluteBox();
+    void computeHorizontalMargin(LayoutUnit parentContentWidth,
+                                 DirectionValue parentDirection);
+    void computeVerticalMargin(LayoutUnit parentContentHeight);
 
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
     {
