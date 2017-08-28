@@ -28,6 +28,7 @@ public:
 
     static const char kCacheControl[];
     static const char kConnection[];
+    static const char kContentType[];
     static const char kDate[];
     static const char kPragma[];
     static const char kTrailer[];
@@ -57,6 +58,7 @@ public:
     static const char kTE[];
     static const char kUserAgent[];
     static const char kLocation[];
+    static const char kUpgradeInsecureRequests[];
 
     HTTPHeaderMap();
     ~HTTPHeaderMap();

@@ -25,6 +25,7 @@ namespace StarFish {
 class DocumentBuilder;
 class HTMLFieldSetElement;
 class HTMLFormControlsCollection;
+class ResourceURL;
 
 class FormDataSetItem : public gc {
 public:
@@ -39,10 +40,11 @@ class FormSubmitData : public gc {
 public:
     FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
                    ResourceRequest::EncodeType enctype,
-                   ResourceRequest::MethodType method);
+                   ResourceRequest::MethodType method, ResourceURL* url);
     GCVector<FormDataSetItem*>* m_formDataSet;
     ResourceRequest::EncodeType m_enctype;
     ResourceRequest::MethodType m_method;
+    ResourceURL* m_documentURIfromLastHistoryEntry;
 };
 
 class HTMLFormObject : public HTMLElement {

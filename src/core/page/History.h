@@ -23,10 +23,17 @@
 namespace StarFish {
 
 class HistoryManager;
+class HTMLFormElement;
+class HTMLResourceClient;
+class NetworkURLResourceRequestJobDelegate;
 class StarFish;
 class URL;
 
 class History : public ScriptWrappable, public DocumentHoldable {
+    friend class HTMLFormElement;
+    friend class HTMLResourceClient;
+    friend class NetworkURLResourceRequestJobDelegate;
+
 public:
     History(Document* doc);
 

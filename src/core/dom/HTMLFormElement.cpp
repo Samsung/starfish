@@ -27,11 +27,14 @@
 #include "core/dom/HTMLFieldSetElement.h"
 #include "core/dom/HTMLLegendElement.h"
 #include "core/dom/Node.h"
+#include "platform/loader/ResourceURL.h"
 #include "core/dom/Traverse.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Location.h"
 #include "core/page/Window.h"
+#include "core/page/History.h"
+#include "browser/history/HistoryManager.h"
 
 namespace StarFish {
 
@@ -44,10 +47,12 @@ FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
 
 FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
                                ResourceRequest::EncodeType enctype,
-                               ResourceRequest::MethodType method)
+                               ResourceRequest::MethodType method,
+                               ResourceURL* url)
     : m_formDataSet(formDataSet)
     , m_enctype(enctype)
     , m_method(method)
+    , m_documentURIfromLastHistoryEntry(url)
 {
 }
 
@@ -352,7 +357,13 @@ void HTMLFormElement::submitData(ResourceURL* url,
     }
 
     DocumentURL* urlToOpen =
-        new DocumentURL(url, new FormSubmitData(formDataSet, enctype, method));
+        new DocumentURL(url, new FormSubmitData(formDataSet, enctype, method,
+                                                document()
+                                                    ->window()
+                                                    ->history()
+                                                    ->historyManager()
+                                                    ->currentEntry()
+                                                    ->url()));
     auto fn = [](size_t handle, void* data1, void* data2) {
         HTMLFormElement* formElement = (HTMLFormElement*)data1;
         DocumentURL* urlToOpen = (DocumentURL*)data2;

@@ -21,6 +21,7 @@ namespace StarFish {
 
 const char HTTPHeaderMap::kCacheControl[] = "Cache-Control";
 const char HTTPHeaderMap::kConnection[] = "Connection";
+const char HTTPHeaderMap::kContentType[] = "Content-type";
 const char HTTPHeaderMap::kDate[] = "Date";
 const char HTTPHeaderMap::kPragma[] = "Pragma";
 const char HTTPHeaderMap::kTrailer[] = "Trailer";
@@ -50,6 +51,8 @@ const char HTTPHeaderMap::kReferer[] = "Referer";
 const char HTTPHeaderMap::kTE[] = "TE";
 const char HTTPHeaderMap::kUserAgent[] = "User-Agent";
 const char HTTPHeaderMap::kLocation[] = "Location";
+const char HTTPHeaderMap::kUpgradeInsecureRequests[] =
+    "Upgrade-Insecure-Requests";
 
 HTTPHeaderMap::HTTPHeaderMap()
 {

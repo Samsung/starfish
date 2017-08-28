@@ -20,9 +20,11 @@
 #include "core/dom/HTMLFormElement.h"
 #include "platform/loader/Resource.h"
 #include "platform/loader/ResourceLoader.h"
+#include "platform/loader/ResourceURL.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/page/Window.h"
+#include "platform/network/http/HTTPHeaderMap.h"
 
 namespace StarFish {
 
@@ -37,13 +39,13 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
 
         if (isImageResource()) {
             m_resourceRequest->setRequestHeader(
-                String::createASCIIString("Accept"),
+                String::createASCIIString(HTTPHeaderMap::kAccept),
                 String::createASCIIString("image/*"));
         } else {
             // The current implementation has no difference between
             // text resource and default resource.
             m_resourceRequest->setRequestHeader(
-                String::createASCIIString("Accept"),
+                String::createASCIIString(HTTPHeaderMap::kAccept),
                 String::createASCIIString("text/html,text/plain,text/*"));
         }
 
@@ -53,13 +55,29 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
             if (url->formSubmitData()) {
                 FormSubmitData* formSubmitData = url->formSubmitData();
                 if (url->isNetworkURL()) {
+                    m_resourceRequest->setRequestHeader(
+                        String::createASCIIString(HTTPHeaderMap::kAccept),
+                        String::createASCIIString(
+                            "text/html,application/xhtml+xml,application/"
+                            "xml;q=0.9,image/webp,image/apng,*/*;q=0.8"));
                     method = formSubmitData->m_method;
                     m_resourceRequest->setRequestHeader(
-                        String::createASCIIString("content-type"),
+                        String::createASCIIString(HTTPHeaderMap::kContentType),
                         ResourceRequest::encodeType(formSubmitData->m_enctype));
                     m_resourceRequest->setRequestHeader(
-                        String::createASCIIString("charset"),
+                        String::createASCIIString(
+                            HTTPHeaderMap::kAcceptCharset),
                         String::createASCIIString("utf-8"));
+
+                    m_resourceRequest->setRequestHeader(
+                        String::createASCIIString(HTTPHeaderMap::kOrigin),
+                        formSubmitData->m_documentURIfromLastHistoryEntry
+                            ->origin());
+
+                    m_resourceRequest->setRequestHeader(
+                        String::createASCIIString(HTTPHeaderMap::kReferer),
+                        formSubmitData->m_documentURIfromLastHistoryEntry
+                            ->urlString());
 
                     if (formSubmitData->m_method ==
                         ResourceRequest::GET_METHOD) {
