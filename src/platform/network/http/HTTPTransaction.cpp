@@ -158,8 +158,8 @@ void HTTPTransaction::start()
     curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
     curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
 
-    curl_easy_setopt(m_curl, CURLOPT_ACCEPT_ENCODING, "");
-    curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(m_curl, CURLOPT_AUTOREFERER, 1L);
     curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 128);
 
     curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
@@ -224,6 +224,14 @@ void HTTPTransaction::start()
     m_res = curl_easy_perform(m_curl);
 
     updateTransactionStatus();
+
+    char* LastEffectiveURL = nullptr;
+    curl_easy_getinfo(m_curl, CURLINFO_EFFECTIVE_URL, &LastEffectiveURL);
+    if (LastEffectiveURL) {
+        m_httpResponse->setLastEffectiveURL(LastEffectiveURL);
+        // Do not free LastEffectiveURL
+    }
+
     m_curl = nullptr;
 
     NetworkSharedResourceManager::getInstance()->cachingCurlHandleData(

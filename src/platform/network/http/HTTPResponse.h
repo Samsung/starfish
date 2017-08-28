@@ -61,11 +61,21 @@ public:
         return m_entityBody;
     }
 
+    std::string lastEffectiveURL()
+    {
+        return m_lastEffectiveURL;
+    }
+
+    void setLastEffectiveURL(const std::string& url)
+    {
+        m_lastEffectiveURL = url;
+    }
+
 private:
     HTTPResponse();
-    CURL* m_curl;
     long m_responseCode;
     std::string m_reasonPhrase;
+    std::string m_lastEffectiveURL;
     HTTPHeaderMap m_headers;
     EntityBody m_entityBody;
 };

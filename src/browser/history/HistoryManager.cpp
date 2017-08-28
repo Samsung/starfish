@@ -20,6 +20,7 @@
 
 #include "core/page/WebView.h"
 #include "platform/loader/ResourceURL.h"
+#include "core/page/BrowsingContext.h"
 
 namespace StarFish {
 
@@ -110,9 +111,16 @@ ScriptValue HistoryManager::state()
 void HistoryManager::pushState(ScriptValue state, String* title,
                                Nullable<String*> url)
 {
-    ResourceURL* newURL;
+    ResourceURL* newURL = nullptr;
     if (url.hasValue()) {
-        newURL = new ResourceURL(url.getValue());
+        if (url.getValue()->startsWith("/")) {
+            String* str = ResourceURL::mergeDocumentURIWithURIString(
+                m_webView->mainBrowsingContext()->document(), url.getValue());
+            newURL = new ResourceURL(str);
+        } else {
+            newURL = new ResourceURL(url.getValue());
+        }
+
     } else {
         newURL = new ResourceURL(*(currentEntry()->url()));
     }
