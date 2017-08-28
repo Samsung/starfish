@@ -38,7 +38,7 @@ HTMLInputElement::HTMLInputElement(Document* document)
     , m_checked(false)
     , m_shouldDrawCaret(false)
     , m_caretBlinkingIntervalId(SIZE_MAX)
-    , m_currentCaretPosition(SIZE_MAX)
+    , m_currentCaretPosition(0)
     , m_currentEditingText(String::emptyString)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
@@ -414,9 +414,10 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
                 },
                 500, this);
             starFish()->platformWindow()->showSoftwareKeyboardIfPossible();
+            updateInputboxValue(value);
         } else if (oldGotFocus && !newGotFocus) {
             starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
-            m_currentCaretPosition = SIZE_MAX;
+            m_currentCaretPosition = 0;
             m_currentEditingText = String::emptyString;
             window()->clearInterval(m_caretBlinkingIntervalId);
         }
