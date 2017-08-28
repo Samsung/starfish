@@ -1528,17 +1528,8 @@ CSSTokenString CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
             }
             break;
         }
-        if (token->isIdent("inherit")) {
-            if (willBeConcat.size() > 0) {
-                return combineAndTrimTokenValues(willBeConcat);
-            } else {
-                willBeConcat.clear();
-                willBeConcat.push_back(token);
-                token = getToken(true, true);
-                break;
-            }
-        } else if (token->isSymbol('{') || token->isSymbol('(') ||
-                   token->isSymbol('[') || token->isFunction()) {
+        if (token->isSymbol('{') || token->isSymbol('(') ||
+            token->isSymbol('[') || token->isFunction()) {
             if (token->isFunction() && token->value()->equals("url(")) {
                 blocks.push_back(token);
                 isURLFunc = true;
