@@ -197,16 +197,22 @@ public:
     uint32_t clientWidth();
     uint32_t clientHeight();
 
+    void scrollIntoView()
+    {
+        scrollIntoView(true);
+    }
+    void scrollIntoView(bool alignToTop);
     double scrollLeft(bool layoutIfNeeds = true);
-    void setScrollLeft(double s);
+    void setScrollLeft(double s, bool layoutIfNeeds = true);
     double scrollTop(bool layoutIfNeeds = true);
-    void setScrollTop(double s);
+    void setScrollTop(double s, bool layoutIfNeeds = true);
+    bool canScrollVerticaly(bool layoutIfNeeds = true);
     uint32_t scrollWidth();
     uint32_t scrollHeight();
 
     // https://www.w3.org/TR/cssom-view-1/#dom-element-getclientrects
     DOMRectList* getClientRects();
-    DOMRect* getBoundingClientRect();
+    DOMRect* getBoundingClientRect(bool layoutIfNeeds = true);
 
     virtual RareNodeMembers* ensureRareMembers() override;
     RareElementMembers* ensureRareElementMembers();
@@ -326,7 +332,7 @@ protected:
     // this function is only for client{Left, Top, Width, Top}
     LayoutRect clientRect();
 
-    void getClientQuads(GCVector<DOMQuad*>& quads);
+    void getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds = true);
 
     // DO NOT MODIFY ATTRIBUTES.
     const GCVector<Attribute>* getAttributes()

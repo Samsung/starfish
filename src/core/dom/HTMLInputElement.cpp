@@ -183,7 +183,7 @@ void HTMLInputElement::setChecked(bool checked)
 uint32_t HTMLInputElement::size()
 {
     String* size = getAttributeOrEmpty(starFish()->staticStrings()->m_size);
-    if (size != String::emptyString) {
+    if (!size->equals(String::emptyString)) {
         return String::parseInt64(size);
     }
 
@@ -322,6 +322,11 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 toggleChecked();
                 return true;
             }
+        } else if (event->type()->equals("mousedown") ||
+                   event->type()->equals("touchstart")) {
+            if (isEditableType()) {
+                return true;
+            }
         }
     } else {
         if (document()->browsingContext()->focusedNode() == this &&
@@ -447,5 +452,20 @@ bool HTMLInputElement::isEditableType() const
         return true;
     }
     return false;
+}
+
+void HTMLInputElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues);
+
+    if (isSizableType()) {
+        auto siz = size();
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        pair.setLengthValue(CSSLength(CSSLength::EM, siz));
+        cssValues.push_back(pair);
+    }
 }
 }

@@ -367,14 +367,6 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     m_inheritedStyles.m_verticalBorderSpacing.changeToFixedIfNeeded(
         curFontSize, rootFontSize, font());
     m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-    if (current && current->isHTMLInputElement()) {
-        HTMLInputElement* element = current->asHTMLInputElement();
-        if (m_width.isAuto() && element->isSizableType()) {
-            size_t size = element->size();
-            m_width = Length(Length::EmToBeFixed, size);
-            m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-        }
-    }
     m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
     if (hasRareComputeStyleData()) {
         m_rareComputedStyleData->m_minWidth.changeToFixedIfNeeded(

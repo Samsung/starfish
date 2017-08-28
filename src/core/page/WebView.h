@@ -126,13 +126,23 @@ public:
     }
 
     bool hasFocus();
+    Node* focusedNode();
     void blur();
+
+    void renderingIfNeeds()
+    {
+        if (m_needsRendering) {
+            rendering(true);
+            m_needsRendering = false;
+        }
+    }
 
 private:
     WebView(StarFish* starFish);
 
     void initRenderingFlags();
-    bool rendering(); // returns did painting | did compositing
+    bool rendering(
+        bool force = false); // returns did painting | did compositing
     void setNeedsRendering();
     void setNeedsPainting()
     {
@@ -147,13 +157,6 @@ private:
         if (!m_needsComposite) {
             m_needsComposite = true;
             setNeedsRendering();
-        }
-    }
-    void renderingIfNeeds()
-    {
-        if (m_needsRendering) {
-            rendering();
-            m_needsRendering = false;
         }
     }
 

@@ -87,6 +87,11 @@ public:
         return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
     }
 
+    SkMatrix transformMatrix()
+    {
+        return m_rareData ? m_rareData->m_matrix : SkMatrix::I();
+    }
+
     void unite(const LayoutRect& other)
     {
         STARFISH_ASSERT(m_rareData);

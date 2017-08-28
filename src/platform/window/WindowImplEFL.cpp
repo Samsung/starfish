@@ -19,6 +19,7 @@
 #ifdef PORT_GRAPHIC_BACKEND_EFL
 #include "StarFish.h"
 
+#include "core/dom/Element.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/KeyboardEvent.h"
@@ -83,6 +84,7 @@ public:
         m_canRendering = true;
         m_imfContext = nullptr;
         m_lastKeyPressedTimestamp = 0;
+        m_offsetYDueToSoftwareKeyboard = 0;
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -118,7 +120,7 @@ public:
         int height;
         evas_object_geometry_get(eflWindow->m_window, NULL, NULL, NULL,
                                  &height);
-        return height;
+        return height - m_offsetYDueToSoftwareKeyboard;
     }
 
     virtual void resizeTo(int w, int h)
@@ -142,6 +144,26 @@ public:
     {
         evas_object_focus_set(m_mainBox, EINA_FALSE);
         ecore_imf_context_hide(m_imfContext);
+    }
+
+    void adjustOffsetYDueToFocusChanging()
+    {
+        int x, y, w, h;
+        ecore_imf_context_input_panel_geometry_get(m_imfContext, &x, &y, &w,
+                                                   &h);
+
+        if (h != m_offsetYDueToSoftwareKeyboard) {
+            m_offsetYDueToSoftwareKeyboard = h;
+            onResize();
+
+            if (webView()->hasFocus()) {
+                Node* nd = webView()->focusedNode();
+                Node* e = nd->nearestParentElement();
+                if (e->isElement()) {
+                    e->asElement()->scrollIntoView(true);
+                }
+            }
+        }
     }
 
     virtual bool isIMEEnabledNow()
@@ -185,6 +207,7 @@ public:
     uint32_t m_lastClickedTimestamp;
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
+    int m_offsetYDueToSoftwareKeyboard;
 };
 
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -814,8 +837,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             if (ecore_imf_context_input_panel_state_get(ctx) ==
                 ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
                 self->webView()->blur();
+                self->adjustOffsetYDueToFocusChanging();
             } else if (ecore_imf_context_input_panel_state_get(ctx) ==
                        ECORE_IMF_INPUT_PANEL_STATE_SHOW) {
+                self->adjustOffsetYDueToFocusChanging();
             }
         },
         wnd);

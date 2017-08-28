@@ -63,8 +63,10 @@ interface Element : Node {
   // sequence<DOMRect> getClientRects();
   DOMRectList getClientRects();
   [NewObject] DOMRect getBoundingClientRect();
-  [Unimplemented] void scrollIntoView();
-  [Unimplemented] void scrollIntoView((boolean or object) arg);
+  void scrollIntoView();
+  // void scrollIntoView((boolean or object) arg);
+  // TODO implement options version of scrollIntoView
+  void scrollIntoView(boolean arg);
   [Unimplemented] void scroll(optional ScrollToOptions options);
   [Unimplemented] void scroll(unrestricted double x, unrestricted double y);
   [Unimplemented] void scrollTo(optional ScrollToOptions options);

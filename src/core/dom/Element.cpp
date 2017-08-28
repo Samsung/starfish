@@ -38,6 +38,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/StackingContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -466,6 +467,61 @@ bool Element::handleDefaultEvent(Event* event)
     return false;
 }
 
+void Element::scrollIntoView(bool alignToTop)
+{
+    DOMRect* rect = getBoundingClientRect();
+
+    LayoutUnit remainSpaceToScrollEnd;
+    if (alignToTop) {
+        remainSpaceToScrollEnd = rect->top();
+
+        Element* e = this->parentElement();
+        while (e && remainSpaceToScrollEnd) {
+            if (e->canScrollVerticaly()) {
+                LayoutUnit initialValue = e->scrollTop(false);
+                LayoutUnit outer = e->frame()->asFrameBox()->paddingTop() +
+                                   e->frame()->asFrameBox()->borderTop();
+                DOMRect* eBounds = e->getBoundingClientRect();
+                outer += (LayoutUnit)eBounds->top();
+                e->setScrollTop(initialValue + remainSpaceToScrollEnd - outer,
+                                false);
+                LayoutUnit now = e->scrollTop(false);
+                remainSpaceToScrollEnd -= (now - initialValue);
+            }
+            e = e->parentElement();
+        }
+
+        if (remainSpaceToScrollEnd) {
+            window()->scrollTo(window()->scrollX(),
+                               window()->scrollY() + remainSpaceToScrollEnd);
+        }
+    } else {
+        remainSpaceToScrollEnd = rect->bottom();
+
+        Element* e = this->parentElement();
+        while (e && remainSpaceToScrollEnd) {
+            if (e->canScrollVerticaly()) {
+                LayoutUnit initialValue = e->scrollTop(false);
+                LayoutUnit outer = -e->frame()->asFrameBox()->paddingBottom() -
+                                   e->frame()->asFrameBox()->borderBottom();
+                DOMRect* eBounds = e->getBoundingClientRect();
+                outer += (LayoutUnit)eBounds->bottom();
+                e->setScrollTop(initialValue + remainSpaceToScrollEnd - outer,
+                                false);
+                LayoutUnit now = e->scrollTop(false);
+                remainSpaceToScrollEnd -= (now - initialValue);
+            }
+            e = e->parentElement();
+        }
+
+        if (remainSpaceToScrollEnd) {
+            remainSpaceToScrollEnd -= window()->height();
+            window()->scrollTo(window()->scrollX(),
+                               window()->scrollY() + remainSpaceToScrollEnd);
+        }
+    }
+}
+
 double Element::scrollLeft(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
@@ -488,9 +544,11 @@ double Element::scrollLeft(bool layoutIfNeeds)
     return 0;
 }
 
-void Element::setScrollLeft(double s)
+void Element::setScrollLeft(double s, bool layoutIfNeeds)
 {
-    window()->browsingContext()->webView()->layoutIfNeeds();
+    if (layoutIfNeeds) {
+        window()->browsingContext()->webView()->layoutIfNeeds();
+    }
 
     if (!frame() || !frame()->isFrameBlockBox()) {
         return;
@@ -532,9 +590,28 @@ double Element::scrollTop(bool layoutIfNeeds)
     return 0;
 }
 
-void Element::setScrollTop(double s)
+bool Element::canScrollVerticaly(bool layoutIfNeeds)
 {
-    window()->browsingContext()->webView()->layoutIfNeeds();
+    if (layoutIfNeeds) {
+        window()->browsingContext()->webView()->layoutIfNeeds();
+    }
+
+    if (!frame() || !frame()->isFrameBlockBox()) {
+        return false;
+    }
+
+    if (style()->overflowY() < OverflowValue::AutoOverflow) {
+        return false;
+    }
+
+    return frame()->asFrameBlockBox()->hasBiggerContentThanFrameHeight();
+}
+
+void Element::setScrollTop(double s, bool layoutIfNeeds)
+{
+    if (layoutIfNeeds) {
+        window()->browsingContext()->webView()->layoutIfNeeds();
+    }
 
     if (!frame() || !frame()->isFrameBlockBox()) {
         return;
@@ -581,8 +658,54 @@ uint32_t Element::scrollHeight()
     return frame()->asFrameBlockBox()->scrollHeight();
 }
 
-void Element::getClientQuads(GCVector<DOMQuad*>& quads)
+static void applyMatrixToPoint(DOMPoint* p, const SkMatrix& mat)
 {
+    // TODO transform-3d
+    float x, y;
+    x = p->x();
+    y = p->y();
+    SkPoint skP = SkPoint::Make(SkFloatToScalar(x), SkFloatToScalar(y));
+    mat.mapPoints(&skP, 1);
+    p->setX(SkScalarToFloat(skP.x()));
+    p->setY(SkScalarToFloat(skP.y()));
+}
+
+static void applyTransform(DOMQuad* q, FrameBox* box)
+{
+    SkMatrix mat;
+    mat.reset();
+    Frame* f = box;
+    std::vector<SkMatrix> m;
+    while (f) {
+        StackingContext* sc = f->asFrameBox()->stackingContext();
+        if (sc) {
+            m.push_back(sc->transformMatrix());
+        }
+        f = f->layoutParent();
+    }
+
+    auto iter = m.rbegin();
+
+    while (iter != m.rend()) {
+        mat.preConcat(*iter);
+        iter++;
+    }
+
+    applyMatrixToPoint(q->p1(), mat);
+    applyMatrixToPoint(q->p2(), mat);
+    applyMatrixToPoint(q->p3(), mat);
+    applyMatrixToPoint(q->p4(), mat);
+}
+
+void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
+{
+    if (layoutIfNeeds) {
+        // FIXME
+        // now computing matrix of stacking needs painting/ compositing
+        // move computing into other step
+        window()->webView()->renderingIfNeeds();
+    }
+
     Frame* frameObject = this->frame();
     if (!frameObject) {
         return;
@@ -591,10 +714,12 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads)
     // there is Getting bounding rectangle from the SVG model in the spec, but
     // SVG model is not supported
 
-    if (frameObject->isFrameBox() &&
-        frameObject->style()->display() == DisplayValue::BlockDisplayValue) {
-        LayoutRect rect = frameObject->asFrameBox()->absoluteRect(
-            document()->frame()->asFrameBox());
+    if (frameObject->isFrameBox()) {
+        LayoutRect rect =
+            frameObject->asFrameBox()->absoluteRectIncludingScroll(
+                document()->frame()->asFrameBox());
+        rect.setX(rect.x() - (LayoutUnit)window()->scrollX());
+        rect.setY(rect.y() - (LayoutUnit)window()->scrollY());
 
         DOMQuad* q = new DOMQuad(
             document(), DOMPointInit(rect.location().x(), rect.location().y()),
@@ -605,44 +730,44 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads)
             DOMPointInit(rect.location().x(),
                          rect.location().y() + rect.size().height()));
 
+        applyTransform(q, frameObject->asFrameBox());
         quads.push_back(q);
     } else {
-        if (frameObject->isFrameInline()) {
-            Frame* nearestFrameBox = frameObject->parent();
-            while (!nearestFrameBox->isFrameBox()) {
-                nearestFrameBox = nearestFrameBox->parent();
-            }
+        STARFISH_ASSERT(frameObject->isFrameInline());
+        Frame* nearestFrameBox = frameObject->parent();
+        while (!nearestFrameBox->isFrameBox()) {
+            nearestFrameBox = nearestFrameBox->parent();
+        }
 
-            if (nearestFrameBox) {
-                FrameBox* box = nearestFrameBox->asFrameBox();
-                box->iterateChildFrameBox([&](FrameBox* childBox) {
-                    if (childBox->isInlineNonReplacedBox()) {
-                        if (childBox->asInlineNonReplacedBox()
-                                ->origin()
-                                ->node() == this) {
-                            LayoutRect rect = childBox->absoluteRect(
-                                document()->frame()->asFrameBox());
+        if (nearestFrameBox) {
+            FrameBox* box = nearestFrameBox->asFrameBox();
+            box->iterateChildFrameBox([&](FrameBox* childBox) {
+                if (childBox->isInlineNonReplacedBox()) {
+                    if (childBox->asInlineNonReplacedBox()->origin()->node() ==
+                        this) {
+                        LayoutRect rect = childBox->absoluteRectIncludingScroll(
+                            document()->frame()->asFrameBox());
+                        rect.setX(rect.x() - (LayoutUnit)window()->scrollX());
+                        rect.setY(rect.y() - (LayoutUnit)window()->scrollY());
 
-                            DOMQuad* q = new DOMQuad(
-                                document(), DOMPointInit(rect.location().x(),
-                                                         rect.location().y()),
-                                DOMPointInit(rect.location().x() +
-                                                 rect.size().width(),
-                                             rect.location().y()),
-                                DOMPointInit(
-                                    rect.location().x() + rect.size().width(),
-                                    rect.location().y() + rect.size().height()),
-                                DOMPointInit(rect.location().x(),
-                                             rect.location().y() +
-                                                 rect.size().height()));
+                        DOMQuad* q = new DOMQuad(
+                            document(), DOMPointInit(rect.location().x(),
+                                                     rect.location().y()),
+                            DOMPointInit(rect.location().x() +
+                                             rect.size().width(),
+                                         rect.location().y()),
+                            DOMPointInit(
+                                rect.location().x() + rect.size().width(),
+                                rect.location().y() + rect.size().height()),
+                            DOMPointInit(rect.location().x(),
+                                         rect.location().y() +
+                                             rect.size().height()));
 
-                            quads.push_back(q);
-                        }
+                        applyTransform(q, childBox->asFrameBox());
+                        quads.push_back(q);
                     }
-                });
-            }
-        } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                }
+            });
         }
     }
     return;
@@ -657,14 +782,13 @@ DOMRectList* Element::getClientRects()
         return DOMRectList::create(document());
     }
 
-    // TODO : Apply the transforms
     return DOMRectList::create(document(), quads);
 }
 
-DOMRect* Element::getBoundingClientRect()
+DOMRect* Element::getBoundingClientRect(bool layoutIfNeeds)
 {
     GCVector<DOMQuad*> quads;
-    getClientQuads(quads);
+    getClientQuads(quads, layoutIfNeeds);
     if (quads.empty()) {
         return new DOMRect(document());
     }
@@ -675,7 +799,6 @@ DOMRect* Element::getBoundingClientRect()
         rect->unite(quads[i]->getBounds());
     }
 
-    // TODO : Apply the transforms
     return rect;
 }
 

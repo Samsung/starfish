@@ -286,6 +286,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | scrollTop | gets or sets the number of pixels that an element's content is scrolled to the top |
 |  | attribute | scrollWidth | returns either the width in pixels of the content of an element or the width of the element itself, whichever is greater |
 |  | attribute | scrollHeight | returns either the height in pixels of the content of an element or the height of the element itself, whichever is greater |
+|  | method | scrollIntoView | scrolls the element on which it's called into the visible area of the browser window. |
+|  | method | scrollIntoView(bool alignToTop) | scrolls the element on which it's called into the visible area of the browser window. |
 | [EventTarget](https://dom.spec.whatwg.org/#interface-eventtarget) | interface | EventTarget | Represents the target to which an event is dispatched when something has occurred. |
 | | method | void addEventListener(DOMString type, EventListener? callback, optional boolean capture=false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: Starfish only support boolean type for third argument) |
 | | method | void removeEventListener(DOMString type, EventListener? callback, optional boolean captures=false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: Starfish only support boolean type for third argument) |
