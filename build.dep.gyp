@@ -402,12 +402,24 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@(pkg-config --cflags-only-I elementary ecore ecore-x | sed s/-I//g)','/usr/include/dali'
+                    '<!@(pkg-config --cflags-only-I elementary ecore ecore-x | sed s/-I//g)','/usr/include/dali','third_party/libtuv/include','third_party/libtuv/src'
                 ],
                 'libraries': [
-                    '<!@(pkg-config --libs-only-l elementary ecore ecore-x)','-ldali-core -ldali-adaptor -ldali-toolkit -luv -lturbojpeg -lgif'
+                    '<!@(pkg-config --libs-only-l elementary ecore ecore-x)','-ldali-core -ldali-adaptor -ldali-toolkit -lturbojpeg -lgif','lib/debug/libtuv.a',
                 ],
             },
+        },
+        {
+            'target_name': 'libtuv.x64.debug',
+            'type': '<(dep_lib)',
+            'copies': [
+                {
+                    'files': [
+                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
+                    ],
+                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                },
+            ],
         },
     ],
 }

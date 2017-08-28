@@ -370,7 +370,7 @@ CXXFLAGS += -Ithird_party/clipper/cpp/
 #rapidxml
 CXXFLAGS += -Ithird_party/rapidxml/
 
-#libuv TODO: Should be removed!
+#libtuv
 ifeq ($(BACKEND), DALI)
   CXXFLAGS += -Ithird_party/libtuv/include
   CFLAGS += -Ithird_party/libtuv/include
@@ -435,11 +435,6 @@ SRC += third_party/skia_matrix/SkDebug.cpp
 
 # clipper
 SRC += third_party/clipper/cpp/clipper.cpp
-
-# libuv
-# SRC += third_party/libuv/src/uv-common.c
-# SRC_C += third_party/libuv/src/version.c
-# SRC_C += $(foreach dir, third_party/libuv/src/unix, $(wildcard $(dir)/*.c))
 
 # webm, libav, mp4parser
 ifeq ($(MEDIA_SUPPORT), true)
@@ -509,8 +504,8 @@ ifeq ($(HOST), linux)
     CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n )
     LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n )
   else ifeq ($(BACKEND), DALI)
-    CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n dali-core dali-adaptor dali-toolkit libuv)
-    LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n dali-adaptor dali-toolkit libuv)
+    CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n dali-core dali-adaptor dali-toolkit)
+    LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n dali-adaptor dali-toolkit)
     endif
   CXXFLAGS += -I/usr/local/include/
   LDFLAGS += -L/usr/local/lib/ -Wl,-rpath /usr/local/lib

@@ -47,6 +47,7 @@
                     'STARFISH_DALI','GC_THREADS'
                 ],
                 'deps_extra': [
+                    './build.dep.gyp:libtuv.x64.debug',
                     './build.dep.gyp:dali.x64',
                 ],
             }],
