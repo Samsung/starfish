@@ -341,15 +341,15 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
 void FrameReplaced::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
+    FrameBox* cb = containingBlock(this);
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
-        FrameBox* cb = containingBlock(this);
         LayoutUnit parentContentWidth = cb->contentWidth();
+        DirectionValue parentDirection =
+            blockContainer(this)->style()->direction();
         computeBorderMarginPadding(ctx, parentContentWidth);
         computeContentWidthAndHeight(ctx, cb);
 
         if (isAbsolutePositioned()) {
-            DirectionValue parentDirection =
-                blockContainer(this)->style()->direction();
             HorizontalDataLocToContainingBlock data =
                 computeHorizontalDataToContainingBlock(ctx, cb);
             Length left = style()->left();
@@ -368,20 +368,21 @@ void FrameReplaced::layout(LayoutContext& ctx,
                     moveX(-FrameBox::width() - FrameBox::marginRight());
                 }
             } else if (!left.isAuto() && !right.isAuto()) {
+                // If at this point both 'margin-left' and 'margin-right'
+                // are still 'auto', solve the equation under the extra
+                // constraint that the two margins must get equal values,
+                // unless this would make them negative, in which case when
+                // the direction of the containing block is 'ltr' ('rtl'),
+                // set 'margin-left' ('margin-right') to zero and solve
+                // for 'margin-right' ('margin-left').
+                computeHorizontalMargin(data.m_contentWidth - data.m_left -
+                                            data.m_right,
+                                        parentDirection);
                 Length marginLeft = style()->marginLeft();
                 Length marginRight = style()->marginRight();
                 bool relativeToLeft = false;
 
                 if (marginLeft.isAuto() && marginRight.isAuto()) {
-                    // If at this point both 'margin-left' and 'margin-right'
-                    // are still 'auto', solve the equation under the extra
-                    // constraint that the two margins must get equal values,
-                    // unless this would make them negative, in which case when
-                    // the direction of the containing block is 'ltr' ('rtl'),
-                    // set 'margin-left' ('margin-right') to zero and solve
-                    // for 'margin-right' ('margin-left').
-                    computeHorizontalMargin(data.m_contentWidth - data.m_left -
-                                            data.m_right);
                     relativeToLeft =
                         parentDirection == DirectionValue::LtrDirectionValue;
                 } else if (marginLeft.isAuto()) {
@@ -409,13 +410,12 @@ void FrameReplaced::layout(LayoutContext& ctx,
                 }
             }
         } else if (isNormalFlow() && isBlockLevel()) {
-            computeHorizontalMargin(parentContentWidth);
+            computeHorizontalMargin(parentContentWidth, parentDirection);
         }
     }
 
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
         if (isAbsolutePositioned()) {
-            FrameBox* cb = containingBlock(this);
             VerticalDataLocToContainingBlock data =
                 computeVerticalDataToContainingBlock(ctx, cb);
             Length top = style()->top();
@@ -423,16 +423,16 @@ void FrameReplaced::layout(LayoutContext& ctx,
 
             if (top.isAuto() && bottom.isAuto()) {
                 // static location computed in normal flow processing
+                moveY(marginTop());
             } else if (!top.isAuto() && bottom.isAuto()) {
-                setY(data.m_top - data.m_absY);
+                setY(data.m_top - data.m_absY + marginTop());
             } else if (top.isAuto() && !bottom.isAuto()) {
-                setY(data.m_contentHeight - data.m_bottom - FrameBox::height() -
-                     data.m_absY);
+                setY(data.m_contentHeight - data.m_bottom - height() -
+                     data.m_absY + marginTop());
             } else {
-                setY(data.m_top - data.m_absY);
+                computeVerticalMargin(data.m_contentHeight);
+                setY(data.m_top - data.m_absY + marginTop());
             }
-
-            applyVerticalMarginForAbsoluteBox();
         }
     }
 }
