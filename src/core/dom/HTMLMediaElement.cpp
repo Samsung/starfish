@@ -511,6 +511,23 @@ TimeRanges* HTMLMediaElement::buffered()
 String* HTMLMediaElement::canPlayType(String* type)
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    // TODO We need get informaton from media-player
+    MimeType mt = MimeType::parseFromString(type);
+    if (mt.type()->equals("video")) {
+        if (mt.subtype()->equals("mp4")) {
+            return String::createASCIIString("probably");
+        } else if (mt.subtype()->equals("webm")) {
+            return String::emptyString;
+        } else {
+            return String::createASCIIString("maybe");
+        }
+    } else if (mt.type()->equals("audio")) {
+        if (mt.subtype()->equals("webm")) {
+            return String::emptyString;
+        } else {
+            return String::createASCIIString("maybe");
+        }
+    }
     return String::emptyString;
 }
 
