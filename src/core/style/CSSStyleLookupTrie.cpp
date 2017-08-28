@@ -750,7 +750,7 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "maxWidth", 8) == 0) {
                 return CSSStyleKind::MaxWidth;
             }
-            if (memcmp(data, "minHeight", 8) == 0) {
+            if (memcmp(data, "minWidth", 8) == 0) {
                 return CSSStyleKind::MinWidth;
             }
             break;
