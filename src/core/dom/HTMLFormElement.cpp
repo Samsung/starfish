@@ -422,23 +422,29 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
     Traverse::collectDescendants(
         inputNodes, asNode(),
         [this, submitter](Node* node) -> bool {
-            // TODO: datalist, img button, and object is not supported
+            // TODO: datalist and object are not supported
             if (node->isHTMLInputElement()) {
                 HTMLInputElement* inputNode = node->asHTMLInputElement();
 
                 if (inputNode->disabled()) {
                     return false;
                 }
-                if (inputNode->type()->equalsWithoutCase("button") &&
+                if ((inputNode->type()->equals("submit") ||
+                     inputNode->type()->equals("button") ||
+                     inputNode->type()->equals("image")) &&
                     (inputNode != submitter)) {
                     return false;
                 }
-                if (inputNode->type()->equalsWithoutCase("checkbox") &&
+                if (inputNode->type()->equals("checkbox") &&
                     (!inputNode->checked())) {
                     return false;
                 }
-                if (inputNode->type()->equalsWithoutCase("radio") &&
+                if (inputNode->type()->equals("radio") &&
                     (!inputNode->checked())) {
+                    return false;
+                }
+                if (!inputNode->type()->equals("image") &&
+                    (inputNode->domName()->isEmpty())) {
                     return false;
                 }
 
@@ -455,8 +461,8 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
             HTMLInputElement* inputNode = node->asHTMLInputElement();
             String* val = inputNode->value();
 
-            if (inputNode->type()->equalsWithoutCase("checkbox") ||
-                inputNode->type()->equalsWithoutCase("radio")) {
+            if (inputNode->type()->equals("checkbox") ||
+                inputNode->type()->equals("radio")) {
                 if (inputNode->value() == String::emptyString) {
                     val = String::createASCIIString("on");
                 }
