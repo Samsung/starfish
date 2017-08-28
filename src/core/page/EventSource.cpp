@@ -20,9 +20,11 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/MessageEvent.h"
 #include "core/extra/Console.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/EventSource.h"
 #include "core/page/EventSourceParser.h"
 #include "core/page/Window.h"
+#include "platform/network/http/HTTPStatusCode.h"
 
 namespace StarFish {
 
@@ -75,7 +77,7 @@ public:
             bool isMimeTypeValid = request->responseMimeType()->contains(
                 String::createASCIIString("text/event-stream"), false);
             const ResponseHeaderMap& headerMap = request->responseHeaderMap();
-            m_isResponseValid = statusCode == 200 && isMimeTypeValid;
+            m_isResponseValid = statusCode == HTTP_STATUS_OK && isMimeTypeValid;
 
             auto cs = headerMap.find(std::string("charset"));
             bool isCharsetValid = (cs == headerMap.end()) ||
@@ -109,7 +111,12 @@ public:
                 m_eventSource->m_readyState = EventSource::OPEN;
             } else {
                 StringBuilder msg;
-                if (!isCharsetValid) {
+                if (statusCode != HTTP_STATUS_OK) {
+                    msg.appendString(
+                        "Failed to load resource: the server responded with a "
+                        "status of ");
+                    msg.appendString(String::fromInt(statusCode));
+                } else if (!isCharsetValid) {
                     msg.appendString(
                         "EventSource's response has a charset (\"");
                     msg.appendString(cs->second.data());
@@ -131,10 +138,17 @@ public:
             }
         } else if (request->readyState() == ResourceRequest::LOADING) {
         } else if (request->readyState() == ResourceRequest::DONE) {
-            m_isResponseValid = false;
-            m_eventSource->m_readyState = EventSource::CLOSED;
-            m_eventSource->failed();
+            if (m_eventSource->readyState() == EventSource::CLOSED) {
+                m_eventSource->cancel();
+            } else {
+                m_eventSource->failed();
+            }
 
+            String* eventName =
+                request->starFish()->staticStrings()->m_error.localName();
+            Event* e = new Event(m_eventSource->document(), eventName,
+                                 EventInit(false, false));
+            m_eventSource->dispatchEvent(m_eventSource, e);
         } else if (request->readyState() == ResourceRequest::UNSENT ||
                    request->readyState() == ResourceRequest::OPENED) {
         }
@@ -162,7 +176,7 @@ EventSource::EventSource(::StarFish::Document* document, String* url,
     , m_resourceRequest(new ResourceRequest(document))
     , m_parser(nullptr)
     , m_stopReconnect(false)
-    , m_isAbort(false)
+    , m_time(std::numeric_limits<uint32_t>::max())
 {
     if (url->isEmpty()) {
         throw new DOMException(document, DOMException::SYNTAX_ERR,
@@ -199,6 +213,8 @@ EventSource::EventSource(::StarFish::Document* document, String* url,
 
     m_url = fullURL;
     connectFired();
+
+    document->browsingContext()->addPointerInRootSet(this);
 }
 
 void EventSource::connect()
@@ -234,7 +250,6 @@ void EventSource::start(ResourceRequest::MethodType method)
                                "InvalidAccessError");
     }
 
-    m_isAbort = false;
     if (m_reconnectDelay != defaultReconnectDelay) {
         m_delay = m_reconnectDelay;
     } else {
@@ -265,13 +280,12 @@ void EventSource::onMessageEvent(String* eventType, String* data,
 void EventSource::onReconnectionTimeSet(unsigned long long reconnectionTime)
 {
     m_delay = m_reconnectDelay = reconnectionTime;
-    ;
 }
 
 void EventSource::connectFired()
 {
     if (!m_stopReconnect) {
-        document()->window()->setTimeout(
+        m_time = document()->window()->setTimeout(
             [](Window* window, void* data) {
                 EventSource* self = (EventSource*)data;
                 self->connect();
@@ -282,40 +296,40 @@ void EventSource::connectFired()
 
 void EventSource::scheduleReconnect()
 {
+    m_readyState = CONNECTING;
     connectFired();
 }
 
 void EventSource::failed()
 {
-    if (!m_isAbort) {
-        m_readyState = CONNECTING;
+    if (m_readyState != CLOSED) {
         scheduleReconnect();
     }
-
-    String* eventName =
-        m_resourceRequest->starFish()->staticStrings()->m_error.localName();
-    Event* e = new Event(document(), eventName, EventInit(false, false));
-    dispatchEvent(this, e);
 }
 
 void EventSource::cancel()
 {
-    m_isAbort = true;
+    m_readyState = CLOSED;
     m_resourceRequest->abort(true);
+    document()->window()->clearTimeout(m_time);
+    document()->browsingContext()->removePointerFromRootSet(this);
 }
 
 void EventSource::close()
 {
-    m_isAbort = true;
+    if (m_readyState == CLOSED) {
+        return;
+    }
+
+    m_readyState = CLOSED;
     m_resourceRequest->abort(true);
     if (m_parser) {
         m_parser->stop();
     }
-
     if (!m_stopReconnect) {
         m_stopReconnect = true;
     }
-
-    m_readyState = EventSource::CLOSED;
+    document()->window()->clearTimeout(m_time);
+    document()->browsingContext()->removePointerFromRootSet(this);
 }
 }

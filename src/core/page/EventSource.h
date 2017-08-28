@@ -130,7 +130,7 @@ private:
     ResourceRequest* m_resourceRequest;
     EventSourceParser* m_parser;
     bool m_stopReconnect;
-    bool m_isAbort;
+    uint32_t m_time;
 };
 }
 
