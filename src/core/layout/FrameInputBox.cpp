@@ -189,7 +189,7 @@ void FrameInputBox::paint(PaintingContext& ctx)
         ctx.m_canvas->clip(Unit::Rect(paddingLeft() + borderLeft(),
                                       paddingTop() + borderTop(),
                                       contentWidth(), contentHeight()));
-        ctx.m_canvas->setColor(Unit::Color(0, 0, 0, 128));
+        ctx.m_canvas->setColor(node()->style()->color());
         ctx.m_canvas->drawRect(
             LayoutRect(x - scrollLeft(), y, caretThickness,
                        style()->font()->metrics().m_fontHeight));
