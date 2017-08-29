@@ -280,15 +280,16 @@ Nullable<String*> CSSStyleDeclaration::defaultNamedGetter(String* name)
     return Nullable<String*>();
 }
 
-void CSSStyleDeclaration::defaultNamedEnumerator(
-    std::vector<const char*>& enums)
+void CSSStyleDeclaration::defaultNamedEnumerator(GCVector<String*>& enums)
 {
-#define ENUM_ATTR(name, nameLower, ...) enums.push_back(#nameLower);
+#define ENUM_ATTR(name, nameLower, ...) \
+    enums.push_back(String::createASCIIString(#nameLower));
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ENUM_ATTR)
 #undef ENUM_ATTR
 }
 
-void CSSStyleDeclaration::defaultSetter(String* name, Nullable<String*> value)
+void CSSStyleDeclaration::defaultNamedSetter(String* name,
+                                             Nullable<String*> value)
 {
     auto str = name->toNullableUTF8String();
     CSSStyleKind kind = lookupCSSStyleCamelCase(str.m_buffer, str.m_bufferSize);
