@@ -52,7 +52,8 @@ public:
         return Type::ImageResourceType;
     }
 
-    virtual void request(ResourceRequestSyncLevel syncLevel = NeverSync);
+    virtual void request(ResourceRequestSyncLevel syncLevel,
+                         ResourceURL* referrerURL);
     virtual void didLoadFinished();
     virtual void didCacheHit(Resource* cache)
     {

@@ -270,6 +270,7 @@ public:
     }
 
     Location* location();
+    String* referrer();
 
     ResourceURL* cookieURI()
     {
@@ -284,7 +285,7 @@ public:
     String* cookie();
     void setCookie(String* cookie);
 
-    void open();
+    void open(ResourceURL* referrerURL);
 
     // method for script element
     void resumeDocumentParsing();
@@ -424,6 +425,7 @@ protected:
     {
         Node::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentURI));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_referrer));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_cookieURI));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webOrigin));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_characterSet));
@@ -458,6 +460,7 @@ protected:
 
     Window* m_window;
     ResourceURL* m_documentURI;
+    ResourceURL* m_referrer;
     ResourceURL* m_cookieURI;
     WebOrigin* m_webOrigin;
     String* m_characterSet;

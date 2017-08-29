@@ -204,7 +204,9 @@ void HTMLLinkElement::loadStyleSheet()
     m_styleSheetTextResource->addResourceClient(
         new ElementResourceClient(this, m_styleSheetTextResource));
     willStyleSheetLoad();
-    m_styleSheetTextResource->request();
+    m_styleSheetTextResource->request(
+        Resource::ResourceRequestSyncLevel::NeverSync,
+        document()->documentURI());
 }
 
 void HTMLLinkElement::unloadStyleSheetIfExists()

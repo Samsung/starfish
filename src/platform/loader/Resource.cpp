@@ -28,7 +28,8 @@
 
 namespace StarFish {
 
-void Resource::request(ResourceRequestSyncLevel syncLevel)
+void Resource::request(ResourceRequestSyncLevel syncLevel,
+                       ResourceURL* referrerURL)
 {
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
@@ -97,9 +98,12 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
 
         m_resourceRequest->addResourceRequestClient(
             new ResourceNetworkRequestClient(this));
+
         m_resourceRequest->open(
             method, urlToOpen,
-            !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync));
+            !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync),
+            referrerURL);
+
         m_resourceRequest->send(entityBody);
     }
 }

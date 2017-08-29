@@ -95,7 +95,8 @@ public:
         return m_historyManager;
     }
 
-    void navigate(ResourceURL* url, HistoryManager::Action type);
+    void navigate(ResourceURL* url, HistoryManager::Action type,
+                  ResourceURL* referrerURL);
     ScriptEngineInstance* scriptEngineInstance()
     {
         return m_scriptEngineInstance;

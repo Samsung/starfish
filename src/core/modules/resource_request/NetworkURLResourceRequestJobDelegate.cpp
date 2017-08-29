@@ -277,25 +277,19 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
 
     headers.setHeader(HTTPHeaderMap::kUpgradeInsecureRequests, "1");
 
-    auto it = headers.findHeader(HTTPHeaderMap::kAcceptCharset);
-    if (it != headers.headerMap().end()) {
-        headers.setHeader(HTTPHeaderMap::kAcceptCharset, "utf-8");
-    }
-
     if (!m_orgProxy->m_document->documentURI()->isNetworkURL()) {
         headers.setHeader(HTTPHeaderMap::kOrigin, "null");
     } else {
         auto it = headers.findHeader(HTTPHeaderMap::kOrigin);
-        if (it != headers.headerMap().end()) {
+        if (it == headers.headerMap().end()) {
             headers.setHeader(HTTPHeaderMap::kOrigin,
                               m_orgProxy->m_url->origin()->utf8Data());
         }
 
         auto it2 = headers.findHeader(HTTPHeaderMap::kReferer);
-        if (it2 != headers.headerMap().end()) {
-            headers.setHeader(
-                HTTPHeaderMap::kReferer,
-                m_orgProxy->document()->documentURI()->urlString()->utf8Data());
+        if (it2 == headers.headerMap().end() && m_orgProxy->referrer()) {
+            headers.setHeader(HTTPHeaderMap::kReferer,
+                              m_orgProxy->referrer()->urlString()->utf8Data());
         }
     }
 }

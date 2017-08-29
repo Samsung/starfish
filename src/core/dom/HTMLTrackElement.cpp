@@ -217,7 +217,8 @@ void HTMLTrackElement::load(String* srcURL)
         new VTTFileDownloadClient(this, m_VTTFileResource));
     m_VTTFileResource->addResourceClient(
         new ElementResourceClient(this, m_VTTFileResource));
-    m_VTTFileResource->request();
+    m_VTTFileResource->request(Resource::ResourceRequestSyncLevel::NeverSync,
+                               document()->documentURI());
 
     m_hasPendingRequest = false;
 }

@@ -135,6 +135,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | length | Returns the number of CSSRule objects represented by the collection. |
 | [Document](https://www.w3.org/TR/dom/#interface-document) | interface | Document | Also refer to Document [1](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface), [2](https://www.w3.org/TR/dom/#interface-nonelementparentnode) and [3](https://www.w3.org/TR/dom/#parentnode)   |
 |  | attribute | documentURI | Returns document's URL. |
+|  | attribute | referrer | Returns the URL of the Document from which the user navigated to this one, unless it was blocked or there was no such document, in which case it returns the empty string. |
 |  | attribute | origin | Returns document's origin. |
 |  | attribute | compatMode | Returns the string "CSS1Compat". |
 |  | attribute | charset | Returns document's encoding type ""UTF8"". |

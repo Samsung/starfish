@@ -16,8 +16,8 @@
 
 #include "StarFishConfig.h"
 
+#include "core/dom/Document.h"
 #include "HistoryManager.h"
-
 #include "core/page/WebView.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/page/BrowsingContext.h"
@@ -90,7 +90,9 @@ void HistoryManager::go(int delta)
     }
 
     m_curEntry = itr;
-    m_webView->navigate(currentEntry()->url(), Intact);
+    m_webView->navigate(
+        currentEntry()->url(), Intact,
+        m_webView->mainBrowsingContext()->document()->documentURI());
 }
 
 uint32_t HistoryManager::length()

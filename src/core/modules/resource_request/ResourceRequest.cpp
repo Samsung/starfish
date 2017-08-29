@@ -48,6 +48,7 @@ public:
 ResourceRequest::ResourceRequest(Document* document)
     : DocumentHoldable(document)
     , m_url(nullptr)
+    , m_referrer(nullptr)
     , m_readyState(UNSENT)
     , m_progressState(NONE)
     , m_method(UNKNOWN_METHOD)
@@ -226,9 +227,12 @@ void ResourceRequest::changeProgress(ProgressState progress,
 }
 
 void ResourceRequest::open(MethodType method, String* url, bool async,
-                           String* userName, String* password)
+                           ResourceURL* referrer, String* userName,
+                           String* password)
 {
     bool shouldAbort = false;
+    m_referrer = referrer;
+
     {
         STARFISH_ASSERT(!(!async && m_timeout != 0));
         shouldAbort = m_progressState >= LOADSTART;

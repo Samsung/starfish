@@ -256,7 +256,8 @@ void EventSource::start(ResourceRequest::MethodType method)
         m_delay = defaultReconnectDelay;
     }
     m_resourceRequest->open(method, m_url->urlString(), true,
-                            String::emptyString, String::emptyString);
+                            document()->documentURI(), String::emptyString,
+                            String::emptyString);
     m_resourceRequest->send();
 }
 

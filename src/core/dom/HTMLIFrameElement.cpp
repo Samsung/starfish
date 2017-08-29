@@ -130,10 +130,10 @@ void HTMLIFrameElement::loadSrc()
     String* s = src();
     if (s->length()) {
         navigate(new ResourceURL(s, document()->documentURI()->baseURI()),
-                 HistoryManager::Action::Intact);
+                 HistoryManager::Action::Intact, nullptr);
     } else {
         navigate(new ResourceURL(String::createASCIIString("about:blank")),
-                 HistoryManager::Action::Intact);
+                 HistoryManager::Action::Intact, nullptr);
     }
 }
 
@@ -161,10 +161,11 @@ Window* HTMLIFrameElement::contentWindow() const
     return nullptr;
 }
 
-void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type)
+void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
+                                 ResourceURL* referrerURL)
 {
     unloadSrc();
     m_browsingContext = BrowsingContext::create(this);
-    m_browsingContext->navigate(url, type);
+    m_browsingContext->navigate(url, type, referrerURL);
 }
 }

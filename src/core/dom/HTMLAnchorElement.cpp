@@ -40,7 +40,7 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
     if (HTMLElement::handleDefaultEvent(event)) {
         return true;
     }
-
+    // TODO : Apply noreferrer
     if (((event->isMouseEvent() || event->isTouchEvent())) &&
         event->type()->equals("click")) {
         auto href = starFish()->staticStrings()->m_href;

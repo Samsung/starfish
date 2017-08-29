@@ -292,7 +292,9 @@ void StyleRuleImport::requestStyleSheet()
     m_styleSheetTextResource->addResourceClient(
         new ImportedStyleSheetDownloadClient(this, m_styleSheetTextResource));
 
-    m_styleSheetTextResource->request();
+    m_styleSheetTextResource->request(
+        Resource::ResourceRequestSyncLevel::NeverSync,
+        document()->documentURI());
     m_loading = true;
 }
 }

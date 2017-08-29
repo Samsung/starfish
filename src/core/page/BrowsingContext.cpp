@@ -103,7 +103,8 @@ void BrowsingContext::initFlags()
     m_pendingStyleSheetCount = 0;
 }
 
-void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type)
+void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type,
+                               ResourceURL* referrerURL)
 {
     close();
     initFlags();
@@ -145,7 +146,7 @@ void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type)
         break;
     }
 
-    m_window->document()->open();
+    m_window->document()->open(referrerURL);
 }
 
 Document* BrowsingContext::document()

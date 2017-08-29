@@ -163,12 +163,13 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url)
             [](size_t id, void* data, void* data2) {
                 BrowsingContext* ctx = (BrowsingContext*)data;
                 ResourceURL* url = (ResourceURL*)data2;
-                ctx->webView()->navigate(url, HistoryManager::Action::Add);
+                ctx->webView()->navigate(url, HistoryManager::Action::Add,
+                                         ctx->document()->documentURI());
             },
             ctx, url);
     } else {
-        ctx->window()->browsingContext()->navigate(url,
-                                                   HistoryManager::Action::Add);
+        ctx->window()->browsingContext()->navigate(
+            url, HistoryManager::Action::Add, ctx->document()->documentURI());
     }
 }
 
@@ -182,10 +183,12 @@ void Location::replace(String* url)
     if (ResourceURL::isValidURL(url)) {
         if (document()->browsingContext()->isMainBrowsingContext()) {
             document()->browsingContext()->webView()->navigate(
-                new ResourceURL(url), HistoryManager::Action::Replace);
+                new ResourceURL(url), HistoryManager::Action::Replace,
+                document()->documentURI());
         } else {
             document()->browsingContext()->sourceElement()->navigate(
-                new ResourceURL(url), HistoryManager::Action::Replace);
+                new ResourceURL(url), HistoryManager::Action::Replace,
+                document()->documentURI());
         }
     }
 }
