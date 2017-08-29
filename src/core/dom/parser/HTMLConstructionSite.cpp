@@ -52,6 +52,7 @@
 #include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLScriptElement.h"
 #include "core/dom/Text.h"
+#include "core/dom/svg/SVGDocument.h"
 #include "core/dom/parser/AtomicHTMLToken.h"
 #include "core/dom/parser/HTMLConstructionSite.h"
 #include "core/dom/parser/HTMLParserIdioms.h"
@@ -921,10 +922,12 @@ Element* HTMLConstructionSite::createElement(AtomicHTMLToken* token,
     QualifiedName tagName(namespaceURI, AtomicString::createAttrAtomicString(
                                             starFish(), token->name()));
 
-    // TODO add special xml documents here!
     if (namespaceURI == starFish()->staticStrings()->m_xhtmlNamespaceURI) {
         element = HTMLDocument::createHTMLElement(
             &ownerDocumentForCurrentNode(), tagName.localNameAtomic());
+    } else if (namespaceURI == starFish()->staticStrings()->m_svgNamespaceURI) {
+        element = SVGDocument::createSVGElement(&ownerDocumentForCurrentNode(),
+                                                tagName.localNameAtomic());
     } else {
         element = new NamedElement(&ownerDocumentForCurrentNode(), tagName);
     }

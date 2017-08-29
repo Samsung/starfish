@@ -30,6 +30,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
+#include "core/modules/threading/Thread.h"
 #include "core/dom/CompositionEvent.h"
 
 #include <Elementary.h>
@@ -720,6 +721,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                             EVAS_CALLBACK_RENDER_POST,
                             [](void* data, Evas* e, void* event_info) {
                                 WindowImplEFL* wnd = (WindowImplEFL*)data;
+                                STARFISH_RELEASE_ASSERT(isMainThread());
                                 wnd->m_canRendering = true;
                             },
                             wnd);
@@ -1010,6 +1012,11 @@ void WebView::setNeedsRendering()
         [](void* data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
             if (!wnd->m_canRendering) {
+#ifdef STARFISH_TIZEN
+                STARFISH_LOG_INFO(
+                    "delay rendering due to try rendering too early(prev "
+                    "rendering result not computed yet in evas)\n");
+#endif
                 return ECORE_CALLBACK_RENEW;
             }
             StarFishEnterer enter(wnd->starFish());

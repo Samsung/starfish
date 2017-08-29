@@ -291,10 +291,12 @@ void PlatformWindow::registerOrUpdateIdleTimeCleaner()
         [](Window* wnd, void* data) {
             PlatformWindow* pwnd = (PlatformWindow*)data;
 
-            STARFISH_LOG_INFO("Do idle time GC\n");
+            // STARFISH_LOG_INFO("Do idle time GC\n");
+            auto fn = GC_get_on_collection_event();
             GC_gcollect_and_unmap();
             GC_gcollect_and_unmap();
             GC_gcollect_and_unmap();
+            GC_set_on_collection_event(fn);
 
             pwnd->registerOrUpdateIdleTimeCleaner();
         },

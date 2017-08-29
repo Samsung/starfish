@@ -67,8 +67,6 @@ public:
     void setSize(String* size);
 
     // Other methods
-    String* obscurePhrase(String* phrase);
-    String* checkboxTickSymbol();
     bool handleDefaultEvent(Event* event) override;
 
     bool supportsFocus() const override;
@@ -81,6 +79,11 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
+
+    static String* obscurePhrase(String* phrase);
+    static String* checkboxTickSymbol();
+
+    String* visibleValue();
 
 protected:
 private:

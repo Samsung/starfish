@@ -1,0 +1,9 @@
+// https://www.w3.org/TR/SVG/struct.html#InterfaceSVGDocument
+// TODO inherit DocumentEvent
+interface SVGDocument : Document {
+  readonly attribute DOMString title;
+  [Unimplemented] readonly attribute DOMString referrer;
+  readonly attribute DOMString domain;
+  [Unimplemented] readonly attribute DOMString URL;
+  [Unimplemented] readonly attribute SVGSVGElement rootElement;
+};
