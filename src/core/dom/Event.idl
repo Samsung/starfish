@@ -25,7 +25,7 @@ interface Event {
   readonly attribute boolean defaultPrevented;
   readonly attribute boolean composed;
 
-  [Unimplemented, Unforgeable] readonly attribute boolean isTrusted;
+  [Unforgeable] readonly attribute boolean isTrusted;
   readonly attribute DOMTimeStamp timeStamp;
 
   void initEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false);

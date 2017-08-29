@@ -41,7 +41,7 @@ void TextTrackCue::dispatchEnterEvent()
         eventType = String::fromUTF8("enter");
     }
     Event* e = new Event(document(), eventType, EventInit(false, false));
-    dispatchEvent(e);
+    dispatchEventByUA(e);
 }
 
 void TextTrackCue::dispatchExitEvent()
@@ -56,7 +56,7 @@ void TextTrackCue::dispatchExitEvent()
         eventType = String::fromUTF8("exit");
     }
     Event* e = new Event(document(), eventType, EventInit(false, false));
-    dispatchEvent(e);
+    dispatchEventByUA(e);
 }
 
 void TextTrackCue::setPayload(String* payload)

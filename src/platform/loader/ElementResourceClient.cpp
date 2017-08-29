@@ -33,7 +33,7 @@ void ElementResourceClient::didLoadFinished()
             element->starFish()->staticStrings()->m_load.localName();
         Event* e =
             new Event(element->document(), eventType, EventInit(false, false));
-        element->EventTarget::dispatchEvent(element, e);
+        element->EventTarget::dispatchEventByUA(element, e);
     };
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
@@ -52,7 +52,7 @@ void ElementResourceClient::didLoadFailed()
             element->starFish()->staticStrings()->m_error.localName();
         Event* e =
             new Event(element->document(), eventType, EventInit(false, false));
-        element->EventTarget::dispatchEvent(element, e);
+        element->EventTarget::dispatchEventByUA(element, e);
     };
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);

@@ -123,7 +123,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 
     Event* e = new Event(document(), String::fromUTF8("addsourcebuffer"),
                          EventInit(false, false));
-    m_sourceBuffers->dispatchEvent(m_sourceBuffers, e);
+    m_sourceBuffers->dispatchEventByUA(m_sourceBuffers, e);
     return buffer;
 }
 

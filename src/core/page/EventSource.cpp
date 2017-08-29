@@ -106,7 +106,7 @@ public:
                 e->setBubbles(false);
                 e->setCancelable(false);
                 e->setComposed(false);
-                m_eventSource->dispatchEvent(m_eventSource, e);
+                m_eventSource->dispatchEventByUA(m_eventSource, e);
 
                 m_eventSource->m_readyState = EventSource::OPEN;
             } else {
@@ -148,7 +148,7 @@ public:
                 request->starFish()->staticStrings()->m_error.localName();
             Event* e = new Event(m_eventSource->document(), eventName,
                                  EventInit(false, false));
-            m_eventSource->dispatchEvent(m_eventSource, e);
+            m_eventSource->dispatchEventByUA(m_eventSource, e);
         } else if (request->readyState() == ResourceRequest::UNSENT ||
                    request->readyState() == ResourceRequest::OPENED) {
         }
@@ -274,7 +274,7 @@ void EventSource::onMessageEvent(String* eventType, String* data,
     e->setLastEventId(lastEventId);
     e->setSource(document()->window());
     e->setData(createScriptValue(createScriptString(data)));
-    dispatchEvent(this, e);
+    dispatchEventByUA(this, e);
 }
 
 void EventSource::onReconnectionTimeSet(unsigned long long reconnectionTime)

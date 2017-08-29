@@ -56,7 +56,7 @@ void TextTrack::dispatchCueChangeEvent()
         eventType = String::fromUTF8("cuechange");
     }
     Event* e = new Event(document(), eventType, EventInit(false, false));
-    dispatchEvent(e);
+    dispatchEventByUA(e);
 }
 
 void TextTrack::addCue(TextTrackCue* cue)
