@@ -71,18 +71,8 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         pseudoStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
         textElement->setStyle(pseudoStyle);
 
-        String* userVal = inputNode->value();
-        if (inputNode->type()->equals("submit") &&
-            userVal == String::emptyString) {
-            userVal = String::createASCIIString("submit");
-        } else if (inputNode->type()->equals("password")) {
-            userVal = inputNode->obscurePhrase(userVal);
-        } else if (inputNode->type()->equals("checkbox")) {
-            userVal = inputNode->checked() ? inputNode->checkboxTickSymbol()
-                                           : String::emptyString;
-        }
-
-        Text* textNode = new Text(current->document(), userVal);
+        Text* textNode =
+            new Text(current->document(), inputNode->visibleValue());
         textNode->setParentNode(textElement);
         ComputedStyle* textStyle = createInputElementStyleFrom(textElement);
         textNode->setStyle(textStyle);

@@ -492,13 +492,6 @@ bool WebView::rendering(bool force)
               .documentOpenTime()) < 1000)) {
         STARFISH_LOG_INFO("delay rendering due to pending stylesheet\n");
         m_needsRendering = false;
-        starFish()->timer()->addTimer(
-            0.01, mainBrowsingContext()->window(),
-            [](Window* wnd, void* data) {
-                wnd->browsingContext()->webView()->setNeedsRendering();
-            },
-            mainBrowsingContext()->window(), false);
-
         Canvas* canvas = starFish()->platformWindow()->preparePainting(true);
 #ifndef STARFISH_TIZEN
         canvas->clearColor(Unit::Color(255, 255, 255, 255));

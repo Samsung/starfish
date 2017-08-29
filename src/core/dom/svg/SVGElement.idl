@@ -1,0 +1,9 @@
+// https://www.w3.org/TR/SVG11/types.html#InterfaceSVGElement
+interface SVGElement : Element {
+  [CEReactions, RaisesException] attribute DOMString id;
+  [CEReactions, RaisesException] attribute DOMString xmlbase;
+  readonly attribute SVGElement ownerSVGElement;
+  readonly attribute SVGElement viewportElement;
+};
+
+SVGElemen implements ElementCSSInlineStyle;

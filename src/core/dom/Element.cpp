@@ -996,6 +996,9 @@ Node* Element::clone()
     if (isHTMLElement()) {
         newNode = HTMLDocument::createHTMLElement(document(),
                                                   name().localNameAtomic());
+    } else if (isSVGElement()) {
+        newNode = HTMLDocument::createHTMLElement(document(),
+                                                  name().localNameAtomic());
     } else {
         newNode = new NamedElement(document(), name());
     }

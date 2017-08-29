@@ -1,0 +1,43 @@
+// https://www.w3.org/TR/SVG/struct.html#InterfaceSVGSVGElement
+// TODO inherit SVGTests, SVGLangSpace, SVGExternalResourcesRequired, SVGStylable, SVGLocatable, SVGFitToViewBox, SVGZoomAndPan, DocumentEvent, ViewCSS, DocumentCSS
+interface SVGSVGElement : SVGElement {
+  [Unimplemented] readonly attribute SVGAnimatedLength x;
+  [Unimplemented] readonly attribute SVGAnimatedLength y;
+  [Unimplemented] readonly attribute SVGAnimatedLength width;
+  [Unimplemented] readonly attribute SVGAnimatedLength height;
+  [Unimplemented] attribute DOMString contentScriptType;
+  [Unimplemented] attribute DOMString contentStyleType;
+  [Unimplemented] readonly attribute SVGRect viewport;
+  [Unimplemented] readonly attribute float pixelUnitToMillimeterX;
+  [Unimplemented] readonly attribute float pixelUnitToMillimeterY;
+  [Unimplemented] readonly attribute float screenPixelToMillimeterX;
+  [Unimplemented] readonly attribute float screenPixelToMillimeterY;
+  [Unimplemented] readonly attribute boolean useCurrentView;
+  [Unimplemented] readonly attribute SVGViewSpec currentView;
+  [Unimplemented] attribute float currentScale;
+  [Unimplemented] readonly attribute SVGPoint currentTranslate;
+
+  [Unimplemented] unsigned long suspendRedraw(unsigned long maxWaitMilliseconds);
+  [Unimplemented] void unsuspendRedraw(unsigned long suspendHandleID);
+  [Unimplemented] void unsuspendRedrawAll();
+  [Unimplemented] void forceRedraw();
+  [Unimplemented] void pauseAnimations();
+  [Unimplemented] void unpauseAnimations();
+  [Unimplemented] boolean animationsPaused();
+  [Unimplemented] float getCurrentTime();
+  [Unimplemented] void setCurrentTime(float seconds);
+  [Unimplemented] NodeList getIntersectionList(SVGRect rect, SVGElement referenceElement);
+  [Unimplemented] NodeList getEnclosureList(SVGRect rect, SVGElement referenceElement);
+  [Unimplemented] boolean checkIntersection(SVGElement element, SVGRect rect);
+  [Unimplemented] boolean checkEnclosure(SVGElement element, SVGRect rect);
+  [Unimplemented] void deselectAll();
+  [Unimplemented] SVGNumber createSVGNumber();
+  [Unimplemented] SVGLength createSVGLength();
+  [Unimplemented] SVGAngle createSVGAngle();
+  [Unimplemented] SVGPoint createSVGPoint();
+  [Unimplemented] SVGMatrix createSVGMatrix();
+  [Unimplemented] SVGRect createSVGRect();
+  [Unimplemented] SVGTransform createSVGTransform();
+  [Unimplemented] SVGTransform createSVGTransformFromMatrix(SVGMatrix matrix);
+  [Unimplemented] Element getElementById(DOMString elementId);
+};

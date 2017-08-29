@@ -155,6 +155,8 @@ namespace StarFish {
     F(wbr)                              \
     F(xmp)
 
+#define STARFISH_ENUM_SVG_TAG_NAMES(F) F(svg)
+
 class StaticStrings : public gc {
     friend class QualifiedName;
     friend class AtomicString;
@@ -165,6 +167,7 @@ public:
     AtomicString m_xhtmlNamespaceURI;
     AtomicString m_xmlNamespaceURI;
     AtomicString m_xmlnsNamespaceURI;
+    AtomicString m_svgNamespaceURI;
     AtomicString m_xml;
     AtomicString m_xmlns;
     AtomicString m_documentLocalName;
@@ -205,6 +208,11 @@ public:
 #define DEFINE_HTML_LOCAL_NAMES(name) QualifiedName m_##name##TagName;
     STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
 #undef DEFINE_HTML_LOCAL_NAMES
+
+// svg Tag Names
+#define DEFINE_SVG_LOCAL_NAMES(name) QualifiedName m_##name##TagName;
+    STARFISH_ENUM_SVG_TAG_NAMES(DEFINE_SVG_LOCAL_NAMES)
+#undef DEFINE_SVG_LOCAL_NAMES
 
     // Attribute Names
     QualifiedName m_id;
@@ -261,6 +269,8 @@ public:
     QualifiedName m_label;
     QualifiedName m_srclang;
 #endif
+    // xml:base
+    QualifiedName m_xmlBase;
 
     // Event Names
     QualifiedName m_click;

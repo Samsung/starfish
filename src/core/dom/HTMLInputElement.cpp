@@ -242,24 +242,10 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
                                      attributeRemoved);
 
-    String* textToDisplay = val;
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
-        if (canHaveValue()) {
-            if (type()->equals("password")) {
-                textToDisplay = obscurePhrase(value());
-            } else if (type()->equals("checkbox")) {
-                textToDisplay = String::emptyString;
-                if (m_checked) {
-                    textToDisplay = checkboxTickSymbol();
-                }
-            } else {
-                textToDisplay = value();
-            }
-        }
-
-        if (name == starFish()->staticStrings()->m_type ||
-            !old->equals(textToDisplay)) {
+        if (name == starFish()->staticStrings()->m_type || !old->equals(val)) {
+            String* textToDisplay = visibleValue();
             updateInputboxValue(textToDisplay);
         }
 
@@ -284,6 +270,21 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
                 this, event);
         }
     }
+}
+
+String* HTMLInputElement::visibleValue()
+{
+    String* val = value();
+    String* typeVal = type();
+    if (typeVal->equals("submit") && val == String::emptyString) {
+        val = String::createASCIIString("submit");
+    } else if (typeVal->equals("password")) {
+        val = HTMLInputElement::obscurePhrase(val);
+    } else if (typeVal->equals("checkbox")) {
+        val = checked() ? HTMLInputElement::checkboxTickSymbol()
+                        : String::emptyString;
+    }
+    return val;
 }
 
 void HTMLInputElement::updateInputboxValue(String* value)
@@ -403,8 +404,7 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
 
     if (isEditableType()) {
         if (!oldGotFocus && newGotFocus) {
-            String* value =
-                getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+            String* value = visibleValue();
             m_currentCaretPosition = value->length();
             m_caretBlinkingIntervalId = window()->setInterval(
                 [](Window* window, void* data) {

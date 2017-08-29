@@ -29,6 +29,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     // https://infra.spec.whatwg.org/#xmlns-namespace
     , m_xmlnsNamespaceURI(
           AtomicString::createAtomicString(sf, "http://www.w3.org/2000/xmlns/"))
+    , m_svgNamespaceURI(
+          AtomicString::createAtomicString(sf, "http://www.w3.org/2000/svg"))
     , m_xml(AtomicString::createAtomicString(sf, "xml"))
     , m_xmlns(AtomicString::createAtomicString(sf, "xmlns"))
     , m_documentLocalName(AtomicString::createAtomicString(sf, "#document"))
@@ -44,6 +46,12 @@ StaticStrings::StaticStrings(StarFish* sf)
         m_xhtmlNamespaceURI, AtomicString::createAtomicString(sf, #name));
     STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
 #undef DEFINE_HTML_LOCAL_NAMES
+
+#define DEFINE_SVG_LOCAL_NAMES(name)   \
+    m_##name##TagName = QualifiedName( \
+        m_xhtmlNamespaceURI, AtomicString::createAtomicString(sf, #name));
+    STARFISH_ENUM_SVG_TAG_NAMES(DEFINE_SVG_LOCAL_NAMES)
+#undef DEFINE_SVG_LOCAL_NAMES
 
     m_firstChildSelector = AtomicString::createAtomicString(sf, "first-child");
     m_firstOfTypeSelector =
@@ -195,6 +203,9 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_srclang = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "srclang"));
 #endif
+    m_xmlBase = QualifiedName(AtomicString::createAtomicString(sf, "xml"),
+                              AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "base"));
 
     m_click = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "click"));

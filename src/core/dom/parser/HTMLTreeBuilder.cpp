@@ -963,13 +963,15 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         m_tree.insertForeignElement(token, MathMLNames::mathmlNamespaceURI);
         return;
     }
-    if (token->name() == SVGNames::svgTag.localName()) {
+    */
+    if (token->name() == s->m_svgTagName) {
         m_tree.reconstructTheActiveFormattingElements();
-        adjustSVGAttributes(token);
-        adjustForeignAttributes(token);
-        m_tree.insertForeignElement(token, SVGNames::svgNamespaceURI);
+        // TODO
+        // adjustSVGAttributes(token);
+        // adjustForeignAttributes(token);
+        m_tree.insertForeignElement(token, s->m_svgNamespaceURI);
         return;
-    }*/
+    }
     if (isCaptionColOrColgroupTag(s, token->name()) ||
         token->name() == s->m_frameTagName ||
         token->name() == s->m_headTagName ||
