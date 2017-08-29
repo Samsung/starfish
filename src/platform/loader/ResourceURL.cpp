@@ -18,6 +18,9 @@
 #include "core/dom/Document.h"
 #include "core/dom/HTMLFormElement.h"
 
+#define MAX_PORT_DIGITS 5
+#define MAX_PORT_NUMBER 65535
+
 namespace StarFish {
 
 static bool isUnreserved(char32_t c)
@@ -57,6 +60,7 @@ ResourceURL::ResourceURL(String* url, String* baseURL)
 {
     m_protocolEnd = m_userStart = m_userEnd = m_passwordEnd = m_hostEnd =
         m_portEnd = m_pathEnd = m_queryEnd = m_fragmentEnd = 0;
+    m_isValid = false;
 
     parseURLString(baseURL, url);
 }
@@ -272,6 +276,7 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
 {
     unsigned numLeadingSpaces = 0;
     unsigned numTrailingSpaces = 0;
+    m_isValid = true;
 
     size_t urlLength = url->length();
     for (; numLeadingSpaces < urlLength; ++numLeadingSpaces) {
@@ -383,6 +388,33 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
             setPathname(newPath, false);
         }
     }
+
+    // TODO: need to check validity for other components (protocol, host, etc)
+    m_isValid = isValidPort();
+}
+
+bool ResourceURL::isValidPort()
+{
+    String* p = port();
+    size_t len = p->length();
+
+    if (len == 0) {
+        return true;
+    } else if (len > MAX_PORT_DIGITS) {
+        return false;
+    }
+
+    for (size_t i = 0; i < len; ++i) {
+        if (!String::isASCIIDigit(p->charAt(i))) {
+            return false;
+        }
+    }
+
+    if (String::parseInt(p) > MAX_PORT_NUMBER) {
+        return false;
+    }
+
+    return true;
 }
 
 String* ResourceURL::mergeDocumentURIWithURIString(Document* document,

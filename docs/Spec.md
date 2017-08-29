@@ -1005,6 +1005,27 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 | LOADING        | 	The response entity body is being received. | 3 |
 | DONE           | The data transfer has been completed or something went wrong during the transfer (for example, infinite redirects). | 4 |
 
+### EventSource
+The EventSource interface is used to receive server-sent events. It connects to a server over HTTP and receives events in text/event-stream format without closing the connection.
+
+| Interface            | Type   | Name                      | Description |
+|----------------------|--------|---------------------------|-------------|
+| [EventSource](https://html.spec.whatwg.org/multipage/comms.html#the-eventsource-interface) | constructor | EventSource() |  |
+| | attribute | url | A DOMString representing the URL of the source. |
+| | attribute	| readyState	| A number representing the state of the connection. Possible values are CONNECTING (0), OPEN (1), or CLOSED (2). |
+| | attribute | onopen    | An EventHandler called when an open event is received, that is when the connection was just opened. |
+| | attribute | onmessage | An EventHandler called when a message event is received, that is when a message is coming from the source. |
+| | attribute | onerror   | An EventHandler called when an error occurs and the error event is dispatched on an EventSource object. |
+| | method    | void close() | Closes the connection, if any, and sets the readyState attribute to CLOSED. If the connection is already closed, the method does nothing. |
+
+
+\* The readyState code are as follows.
+
+| readyStateCode | Description | Numeric Value |
+|----------------|-------------|---------------|
+| CONNECTING     | The connection has not yet been established, or it was closed and the user agent is reconnecting. | 0 |
+| OPEN           | The user agent has an open connection and is dispatching events as it receives them. | 1 |
+| CLOSED         | The connection is not open, and the user agent is not trying to reconnect. Either there was a fatal error or the close() method was invoked. | 2 |
 
 ### Blob
 Blob object is used by an XMLHTTPRequest object to retrieve binary data. Supported binary data are the resources supported by the widget engine. When blob is used for other types of binary data, it is likely that the binary data is not recognized by the widget engine.

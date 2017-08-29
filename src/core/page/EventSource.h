@@ -103,6 +103,7 @@ public:
     void scheduleReconnect();
 
     void failed();
+    void failedAccessControlCheck();
     void cancel();
     void close();
 
