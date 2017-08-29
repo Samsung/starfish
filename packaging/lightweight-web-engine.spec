@@ -1,7 +1,7 @@
-Name:          web-widget-engine
+Name:          lightweight-web-engine
 Version:       0.0.1
 Release:       0
-Summary:       Web Widget Engine
+Summary:       Lightweight Web Engine
 Source:        %{name}-%{version}.tar.gz
 Group:         Development/Libraries
 License:       Apache-2.0 and LGPL-2.1+ and BSD-2.0 and ICU and BSL-1.0 and MIT and MPL-1.1
@@ -52,15 +52,15 @@ BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
 %description
-Implementation of Web Widget Engine
+Implementation of Lightweight Web Engine
 
 %package devel
-Summary:    web-widget-engine development headers
+Summary:    lightweight-web-engine development headers
 Group:      Development/Libraries
 Requires:   %{name} = %{version}
 
 %description devel
-web-widget-engine development headers
+lightweight-web-engine development headers
 
 %prep
 %setup -q
@@ -75,10 +75,10 @@ export MAKE_TARGET=tizen_obs_emulator
 %if 0%{?only_devel}
 %ifarch %{arm}
 mkdir -p out/tizen_obs/arm/lib/release
-touch    out/tizen_obs/arm/lib/release/libWebWidgetEngine.so
+touch    out/tizen_obs/arm/lib/release/liblightweight-web-engine.so
 %else
 mkdir -p out/tizen_obs/x86/lib/release
-touch    out/tizen_obs/x86/lib/release/libWebWidgetEngine.so
+touch    out/tizen_obs/x86/lib/release/liblightweight-web-engine.so
 %endif
 %else
 make ${MAKE_TARGET}.lib.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
@@ -116,7 +116,7 @@ cat LICENSE* > %{buildroot}%{_datadir}/license/%{name}
 
 mkdir -p %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_bindir}
-cp out/tizen_obs/${STARFISH_ARCH}/lib/release/libWebWidgetEngine.so %{buildroot}%{_libdir}
+cp out/tizen_obs/${STARFISH_ARCH}/lib/release/liblightweight-web-engine.so %{buildroot}%{_libdir}
 
 %if "%{mode}" == "release"
 cp out/tizen_obs/${STARFISH_ARCH}/exe/release/StarFish %{buildroot}%{_bindir}
