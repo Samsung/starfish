@@ -417,6 +417,7 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
             updateInputboxValue(value);
         } else if (oldGotFocus && !newGotFocus) {
             starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
+            m_shouldDrawCaret = false;
             m_currentCaretPosition = 0;
             m_currentEditingText = String::emptyString;
             window()->clearInterval(m_caretBlinkingIntervalId);
