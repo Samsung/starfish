@@ -84,7 +84,7 @@ public:
         pe->setLengthComputable(request->total() > 0);
         pe->setLoaded(request->loaded());
         pe->setTotal(request->total());
-        m_xhr->EventTarget::dispatchEvent(m_xhr, pe);
+        m_xhr->EventTarget::dispatchEventByUA(m_xhr, pe);
     }
 
     void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
@@ -151,7 +151,7 @@ public:
             Event* e =
                 new Event(m_xhr->scriptBindingInstance()->ownerDocument(),
                           eventType, EventInit(true, true));
-            m_xhr->EventTarget::dispatchEvent(m_xhr, e);
+            m_xhr->EventTarget::dispatchEventByUA(m_xhr, e);
         }
     }
 

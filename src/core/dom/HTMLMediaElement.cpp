@@ -993,7 +993,7 @@ void HTMLMediaElement::addEventToOperationQueue(EventTarget* t, Event* e)
     {                                                                          \
         String* eventType = starFish()->staticStrings()->m_##name.localName(); \
         Event* e = new Event(document(), eventType, EventInit(false, false));  \
-        dispatchEvent(e);                                                      \
+        dispatchEventByUA(e);                                                  \
     }                                                                          \
     void HTMLMediaElement::dispatch##Name##Event()                             \
     {                                                                          \
@@ -1349,7 +1349,7 @@ void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
         "-> %s\n",
         m_event->type()->utf8Data());
     m_mediaElement->processNextOperationQueue();
-    m_target->dispatchEvent(m_event);
+    m_target->dispatchEventByUA(m_event);
 }
 
 MediaOperationQueueDataRequestPlay::MediaOperationQueueDataRequestPlay(

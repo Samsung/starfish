@@ -177,7 +177,7 @@ void HTMLStyleElement::dispatchLoadEvent()
                     element->starFish()->staticStrings()->m_load.localName();
                 Event* e = new Event(element->document(), eventType,
                                      EventInit(false, false));
-                element->dispatchEvent(e);
+                element->dispatchEventByUA(e);
                 element->setLoaded();
             }
         },

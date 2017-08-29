@@ -204,7 +204,7 @@ void Document::notifyDomContentLoaded()
     String* eventType =
         window()->starFish()->staticStrings()->m_DOMContentLoaded.localName();
     Event* e = new Event(this, eventType, EventInit(true, true));
-    EventTarget::dispatchEvent(e);
+    EventTarget::dispatchEventByUA(e);
 
     m_resourceLoader->notifyEndParseDocument();
     m_documentBuilder = nullptr;
@@ -248,7 +248,7 @@ void Document::close()
         String* eventType =
             window()->starFish()->staticStrings()->m_unload.localName();
         Event* e = new Event(this, eventType);
-        EventTarget::dispatchEvent(body, e);
+        EventTarget::dispatchEventByUA(body, e);
     }
 
     resourceLoader().clear();
@@ -637,7 +637,7 @@ void Document::setVisibilityState(VisibilityState visibilityState)
         String* eventType =
             starFish()->staticStrings()->m_visibilitychange.localName();
         Event* e = new Event(this, eventType, EventInit(true));
-        EventTarget::dispatchEvent(this->asNode(), e);
+        EventTarget::dispatchEventByUA(this->asNode(), e);
     }
 }
 
@@ -856,148 +856,159 @@ void Document::setDomain(String* domain)
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
+// https://dom.spec.whatwg.org/#dom-document-createevent
 Event* Document::createEvent(String* type)
 {
+    type = type->toLower();
     size_t len = type->length();
+    Event* e = nullptr;
+
     switch (len) {
     case 5:
-        if (type->equalsWithoutCase("event")) {
-            return new Event(this);
+        if (type->equals("event")) {
+            e = new Event(this);
         }
     case 6:
-        if (type->equalsWithoutCase("events")) {
-            return new Event(this);
+        if (type->equals("events")) {
+            e = new Event(this);
         }
     case 7:
-        if (type->equalsWithoutCase("uievent")) {
-            return new UIEvent(this);
+        if (type->equals("uievent")) {
+            e = new UIEvent(this);
         }
     case 8:
-        if (type->equalsWithoutCase("uievents")) {
-            return new UIEvent(this);
+        if (type->equals("uievents")) {
+            e = new UIEvent(this);
         }
     case 9:
-        if (type->equalsWithoutCase("dragevent")) {
+        if (type->equals("dragevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
-        } else if (type->equalsWithoutCase("svgevents")) {
+            e = new Event(this);
+        } else if (type->equals("svgevents")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
-        } else if (type->equalsWithoutCase("textevent")) {
+            e = new Event(this);
+        } else if (type->equals("textevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
+            e = new Event(this);
         }
     case 10:
-        switch (std::tolower(type->charAt(0))) {
+        switch (type->charAt(0)) {
         case 'c':
-            if (type->equalsWithoutCase("closeevent")) {
+            if (type->equals("closeevent")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                return new Event(this);
+                e = new Event(this);
             }
         case 'e':
-            if (type->equalsWithoutCase("errorevent")) {
+            if (type->equals("errorevent")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                return new Event(this);
+                e = new Event(this);
             }
         case 'f':
-            if (type->equalsWithoutCase("focusevent")) {
-                return new FocusEvent(this);
+            if (type->equals("focusevent")) {
+                e = new FocusEvent(this);
             }
         case 'h':
-            if (type->equalsWithoutCase("htmlevents")) {
+            if (type->equals("htmlevents")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                return new Event(this);
+                e = new Event(this);
             }
         case 'm':
-            if (type->equalsWithoutCase("mouseevent")) {
-                return new MouseEvent(this);
+            if (type->equals("mouseevent")) {
+                e = new MouseEvent(this);
             }
         case 't':
-            if (type->equalsWithoutCase("touchevent")) {
-                return new TouchEvent(this);
-            } else if (type->equalsWithoutCase("trackevent")) {
+            if (type->equals("touchevent")) {
+                e = new TouchEvent(this);
+            } else if (type->equals("trackevent")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                return new Event(this);
+                e = new Event(this);
             }
         case 'w':
-            if (type->equalsWithoutCase("wheelevent")) {
+            if (type->equals("wheelevent")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                return new Event(this);
+                e = new Event(this);
             }
         default:
             break;
         }
         break;
     case 11:
-        if (type->equalsWithoutCase("customevent")) {
+        if (type->equals("customevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
-        } else if (type->equalsWithoutCase("mouseevents")) {
-            return new MouseEvent(this);
+            e = new Event(this);
+        } else if (type->equals("mouseevents")) {
+            e = new MouseEvent(this);
         }
     case 12:
-        if (type->equalsWithoutCase("messageevent")) {
+        if (type->equals("messageevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
-        } else if (type->equalsWithoutCase("storageevent")) {
+            e = new Event(this);
+        } else if (type->equals("storageevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
+            e = new Event(this);
         }
     case 13:
-        if (type->equalsWithoutCase("keyboardevent")) {
-            return new KeyboardEvent(this);
-        } else if (type->equalsWithoutCase("popstateevent")) {
+        if (type->equals("keyboardevent")) {
+            e = new KeyboardEvent(this);
+        } else if (type->equals("popstateevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
-        } else if (type->equalsWithoutCase("mutationEvent")) {
+            e = new Event(this);
+        } else if (type->equals("mutationevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
+            e = new Event(this);
         }
     case 14:
-        if (type->equalsWithoutCase("animationevent")) {
+        if (type->equals("animationevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
-        } else if (type->equalsWithoutCase("mutationEvents")) {
+            e = new Event(this);
+        } else if (type->equals("mutationevents")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
+            e = new Event(this);
         }
     case 15:
-        if (type->equalsWithoutCase("hashchangeevent")) {
+        if (type->equals("hashchangeevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
-        } else if (type->equalsWithoutCase("transitionevent")) {
+            e = new Event(this);
+        } else if (type->equals("transitionevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
+            e = new Event(this);
         }
     case 17:
-        if (type->equalsWithoutCase("beforeunloadevent")) {
+        if (type->equals("beforeunloadevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
-        } else if (type->equalsWithoutCase("devicemotionevent")) {
+            e = new Event(this);
+        } else if (type->equals("devicemotionevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
-        } else if (type->equalsWithoutCase("webglcontextevent")) {
+            e = new Event(this);
+        } else if (type->equals("webglcontextevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
+            e = new Event(this);
         }
     case 19:
-        if (type->equalsWithoutCase("pagetransitionevent")) {
+        if (type->equals("pagetransitionevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
+            e = new Event(this);
         }
     case 21:
-        if (type->equalsWithoutCase("idbversionchangeevent")) {
+        if (type->equals("idbversionchangeevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
+            e = new Event(this);
         }
     case 22:
-        if (type->equalsWithoutCase("deviceorientationevent")) {
+        if (type->equals("deviceorientationevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new Event(this);
+            e = new Event(this);
         }
     default:
         break;
     }
+
+    if (e) {
+        // TODO: set timeStamp
+        e->setIsTrusted(false);
+        return e;
+    }
+
     throw new DOMException(this, DOMException::Code::NOT_SUPPORTED_ERR,
                            nullptr);
 }

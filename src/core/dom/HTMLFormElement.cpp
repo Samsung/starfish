@@ -167,7 +167,7 @@ void HTMLFormObject::fireSubmitEvent()
             node->starFish()->staticStrings()->m_submit.localName();
         Event* e =
             new Event(node->document(), eventType, EventInit(true, true));
-        node->EventTarget::dispatchEvent(node, e);
+        node->EventTarget::dispatchEventByUA(node, e);
     };
     starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
                                         this);

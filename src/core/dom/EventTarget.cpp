@@ -153,8 +153,23 @@ bool EventTarget::removeEventListener(const String* eventType,
     return false;
 }
 
+// Use this method if user agent dispatches an event
+bool EventTarget::dispatchEventByUA(Event* event)
+{
+    return dispatchEventByUA(this, event);
+}
+
+bool EventTarget::dispatchEventByUA(EventTarget* origin, Event* event)
+{
+    event->setIsTrusted(true);
+    return dispatchEvent(origin, event);
+}
+
+// This method should only be called by JS binding
 bool EventTarget::dispatchEvent(Event* event)
 {
+    // https://www.w3.org/TR/dom/#dom-eventtarget-dispatchevent
+    event->setIsTrusted(false);
     return dispatchEvent(this, event);
 }
 

@@ -81,6 +81,7 @@ Event::Event(Document* document)
     , m_cancelable(false)
     , m_defaultPrevented(false)
     , m_composed(false)
+    , m_isTrusted(false)
     , m_timeStamp(timestamp())
     , m_isDispatched(false)
 {

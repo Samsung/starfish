@@ -498,13 +498,13 @@ void BrowsingContext::setFocusedNode(Node* n)
     String* eventType = starFish()->staticStrings()->m_focus.localName();
     Event* event = new FocusEvent(document(), eventType,
                                   FocusEventInit(false, false, relatedTarget));
-    document()->dispatchEvent(e->asNode(), event);
+    document()->dispatchEventByUA(e->asNode(), event);
 
     // focusin event
     eventType = starFish()->staticStrings()->m_focusin.localName();
     event = new FocusEvent(document(), eventType,
                            FocusEventInit(true, false, relatedTarget));
-    document()->dispatchEvent(e->asNode(), event);
+    document()->dispatchEventByUA(e->asNode(), event);
 
     m_focusedNode = e->asNode();
     m_activeElement = e;
@@ -534,13 +534,13 @@ void BrowsingContext::releaseFocusedNode(Node* n, bool resetActiveElement)
         String* eventType = starFish()->staticStrings()->m_blur.localName();
         Event* event = new FocusEvent(
             document(), eventType, FocusEventInit(false, false, relatedTarget));
-        document()->dispatchEvent(m_focusedNode, event);
+        document()->dispatchEventByUA(m_focusedNode, event);
 
         // focusout event
         eventType = starFish()->staticStrings()->m_focusout.localName();
         event = new FocusEvent(document(), eventType,
                                FocusEventInit(true, false, relatedTarget));
-        document()->dispatchEvent(m_focusedNode, event);
+        document()->dispatchEventByUA(m_focusedNode, event);
 
         m_focusedNode = nullptr;
     }
@@ -722,14 +722,14 @@ void BrowsingContext::handleHover(PlatformWindow::MouseEventKind kind,
                 Event* e = createMouseEvent(document(), name, data);
                 Node* t = oldTarget->nearestParentElement();
                 t = t ? t : document();
-                document()->window()->dispatchEvent(t ? t : document(), e);
+                document()->window()->dispatchEventByUA(t ? t : document(), e);
             }
             String* name = starFish()->staticStrings()->m_mouseover.localName();
             MouseData data(button, buttons, posX, posY, 0);
             Event* e = createMouseEvent(document(), name, data);
             Node* t = newTarget->nearestParentElement();
             t = t ? t : document();
-            document()->window()->dispatchEvent(t ? t : document(), e);
+            document()->window()->dispatchEventByUA(t ? t : document(), e);
         }
     }
 }
@@ -835,7 +835,7 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         Event* e = createTouchEvent(document(), name, touches, count);
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
-        returnValue = !document()->window()->dispatchEvent(t, e);
+        returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
     case PlatformWindow::TouchEventMove: {
@@ -844,7 +844,7 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         Event* e = createTouchEvent(document(), name, touches, count);
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
-        returnValue = !document()->window()->dispatchEvent(t, e);
+        returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
     case PlatformWindow::TouchEventEnd: {
@@ -858,12 +858,12 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
                                 MouseData::MouseButtonsValue::LeftButtonDown,
                                 targetX, targetY, 1);
             Event* click = createMouseEvent(document(), name, clickData);
-            document()->window()->dispatchEvent(t, click);
+            document()->window()->dispatchEventByUA(t, click);
         }
         // Dispatch touchend event
         name = starFish()->staticStrings()->m_touchend.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
-        returnValue = !document()->window()->dispatchEvent(t, e);
+        returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
     default:
@@ -959,27 +959,27 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
         // Dispatch mousedown event
         name = starFish()->staticStrings()->m_mousedown.localName();
         Event* e = createMouseEvent(document(), name, data);
-        returnValue = !document()->window()->dispatchEvent(t, e);
+        returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
     case PlatformWindow::MouseEventMove: {
         // Dispatch mousemove event
         name = starFish()->staticStrings()->m_mousemove.localName();
         Event* e = createMouseEvent(document(), name, data);
-        returnValue = !document()->window()->dispatchEvent(t, e);
+        returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
     case PlatformWindow::MouseEventUp: {
         // Dispatch mouseup event
         name = starFish()->staticStrings()->m_mouseup.localName();
         Event* mouseup = createMouseEvent(document(), name, data);
-        returnValue = !document()->window()->dispatchEvent(t, mouseup);
+        returnValue = !document()->window()->dispatchEventByUA(t, mouseup);
 
         if (m_activeNodeTarget == t) {
             // Dispatch click event
             name = starFish()->staticStrings()->m_click.localName();
             Event* click = createMouseEvent(document(), name, data);
-            document()->window()->dispatchEvent(t, click);
+            document()->window()->dispatchEventByUA(t, click);
         }
         break;
     }
@@ -1113,7 +1113,7 @@ void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
     e->setBubbles(true);
     e->setCancelable(true);
     e->setView(document()->window());
-    document()->window()->dispatchEvent(target, e);
+    document()->window()->dispatchEventByUA(target, e);
 }
 
 void BrowsingContext::dispatchCompositionEvent(
@@ -1164,7 +1164,7 @@ void BrowsingContext::dispatchCompositionEvent(
     }
     e->setComposed(true);
     e->setView(document()->window());
-    document()->window()->dispatchEvent(target, e);
+    document()->window()->dispatchEventByUA(target, e);
 }
 
 void BrowsingContext::pause()

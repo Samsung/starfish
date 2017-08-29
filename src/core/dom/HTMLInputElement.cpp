@@ -174,7 +174,7 @@ void HTMLInputElement::setChecked(bool checked)
             element->starFish()->staticStrings()->m_change.localName();
         Event* e =
             new Event(element->document(), eventType, EventInit(true, false));
-        element->EventTarget::dispatchEvent(element, e);
+        element->EventTarget::dispatchEventByUA(element, e);
     };
     starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
                                         this);
@@ -279,7 +279,7 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
                 [](size_t, void* data, void* data2) {
                     HTMLInputElement* self = (HTMLInputElement*)data;
                     InputEvent* e = (InputEvent*)data2;
-                    self->dispatchEvent(e);
+                    self->dispatchEventByUA(e);
                 },
                 this, event);
         }

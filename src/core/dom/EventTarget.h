@@ -139,12 +139,15 @@ public:
                           bool useCapture = false);
     bool removeEventListener(const String* eventType, EventListener* listener,
                              bool useCapture = false);
+
     bool dispatchEvent(Event* event);
+    bool dispatchEventByUA(Event* event);
+    bool dispatchEventByUA(EventTarget* origin, Event* event);
+
     virtual bool handleDefaultEvent(Event* event)
     {
         return false;
     }
-    bool dispatchEvent(EventTarget* origin, Event* event);
 
     void setAttributeEventListener(const QualifiedName& eventTypeName,
                                    EventListener* l)
@@ -196,6 +199,9 @@ public:
 
 protected:
     GCVector<std::pair<String*, GCVector<EventListener*>*>> m_eventListeners;
+
+private:
+    bool dispatchEvent(EventTarget* origin, Event* event);
 };
 
 #define DECLARE_EVENT_LISTENER(EVENT)            \

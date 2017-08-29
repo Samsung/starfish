@@ -172,6 +172,16 @@ public:
         m_defaultPrevented = defaultPrevented;
     }
 
+    bool isTrusted() const
+    {
+        return m_isTrusted;
+    }
+
+    void setIsTrusted(bool trusted)
+    {
+        m_isTrusted = trusted;
+    }
+
     DOMTimeStamp timeStamp() const
     {
         return m_timeStamp;
@@ -199,6 +209,7 @@ public:
         m_type = type;
         m_bubbles = bubbles;
         m_cancelable = cancelable;
+        m_isTrusted = false;
     }
 
 private:
@@ -219,6 +230,7 @@ private:
     bool m_defaultPrevented; // canceled flag
     bool m_composed;
 
+    bool m_isTrusted;
     DOMTimeStamp m_timeStamp;
 
     bool m_isDispatched; // dispatch flag
