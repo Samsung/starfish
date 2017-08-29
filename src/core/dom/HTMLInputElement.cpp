@@ -314,7 +314,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
     }
 
     if (event->isMouseEvent() || event->isTouchEvent()) {
-        if (event->type()->equalsWithoutCase("click")) {
+        if (event->type()->equalsIgnoreCase("click")) {
             if (type()->equals("submit")) {
                 fireSubmitEvent();
                 return true;
@@ -335,7 +335,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 getAttributeOrEmpty(starFish()->staticStrings()->m_value);
             String* oldValue = value;
             if (event->isKeyboardEvent() &&
-                event->type()->equalsWithoutCase("keydown")) {
+                event->type()->equalsIgnoreCase("keydown")) {
                 if (event->asKeyboardEvent()->keyValue() ==
                     KeyValue::BackspaceKey) {
                     if (value->length()) {
@@ -365,8 +365,8 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 }
                 return true;
             } else if (event->isCompositionEvent()) {
-                if (event->type()->equalsWithoutCase("compositionstart")) {
-                } else if (event->type()->equalsWithoutCase(
+                if (event->type()->equalsIgnoreCase("compositionstart")) {
+                } else if (event->type()->equalsIgnoreCase(
                                "compositionupdate")) {
                     value = value->remove(m_currentCaretPosition,
                                           m_currentEditingText->length());
@@ -374,7 +374,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                     value = value->insert(m_currentEditingText,
                                           m_currentCaretPosition);
                     m_shouldDrawCaret = true;
-                } else if (event->type()->equalsWithoutCase("compositionend")) {
+                } else if (event->type()->equalsIgnoreCase("compositionend")) {
                     value = value->remove(m_currentCaretPosition,
                                           m_currentEditingText->length());
                     value = value->insert(event->asCompositionEvent()->data(),

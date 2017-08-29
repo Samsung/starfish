@@ -362,9 +362,9 @@ String* HTMLElement::contentEditable()
     String* value =
         getAttributeOrEmpty(starFish()->staticStrings()->m_contentEditable);
 
-    if (value->equalsWithoutCase("true")) {
+    if (value->equalsIgnoreCase("true")) {
         return String::createASCIIString("true");
-    } else if (value->equalsWithoutCase("false")) {
+    } else if (value->equalsIgnoreCase("false")) {
         return String::createASCIIString("false");
     }
     return String::createASCIIString("inherit");
@@ -372,13 +372,13 @@ String* HTMLElement::contentEditable()
 
 void HTMLElement::setContentEditable(const String* value)
 {
-    if (value->equalsWithoutCase("true")) {
+    if (value->equalsIgnoreCase("true")) {
         setAttribute(starFish()->staticStrings()->m_contentEditable,
                      String::createASCIIString("true"));
-    } else if (value->equalsWithoutCase("false")) {
+    } else if (value->equalsIgnoreCase("false")) {
         setAttribute(starFish()->staticStrings()->m_contentEditable,
                      String::createASCIIString("false"));
-    } else if (value->equalsWithoutCase("inherit")) {
+    } else if (value->equalsIgnoreCase("inherit")) {
         removeAttribute(starFish()->staticStrings()->m_contentEditable);
     } else {
         throw new DOMException(document(), DOMException::SYNTAX_ERR);

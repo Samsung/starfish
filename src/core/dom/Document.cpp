@@ -820,9 +820,9 @@ void Document::setDesignMode(String* value)
 {
     bool newValue = m_designMode;
 
-    if (value->equalsWithoutCase("on")) {
+    if (value->equalsIgnoreCase("on")) {
         newValue = true;
-    } else if (value->equalsWithoutCase("off")) {
+    } else if (value->equalsIgnoreCase("off")) {
         newValue = false;
     }
 

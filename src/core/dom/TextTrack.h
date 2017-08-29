@@ -178,28 +178,28 @@ public:
             switch (kindStr->charAt(2)) {
             case 'a':
             case 'A':
-                if (kindStr->equalsWithoutCase(String::fromUTF8("chapters"))) {
+                if (kindStr->equalsIgnoreCase(String::fromUTF8("chapters"))) {
                     return Kind::Chapters;
                 }
             case 'b':
             case 'B':
-                if (kindStr->equalsWithoutCase(String::fromUTF8("subtitles"))) {
+                if (kindStr->equalsIgnoreCase(String::fromUTF8("subtitles"))) {
                     return Kind::Subtitles;
                 }
             case 'p':
             case 'P':
-                if (kindStr->equalsWithoutCase(String::fromUTF8("captions"))) {
+                if (kindStr->equalsIgnoreCase(String::fromUTF8("captions"))) {
                     return Kind::Captions;
                 }
             case 's':
             case 'S':
-                if (kindStr->equalsWithoutCase(
+                if (kindStr->equalsIgnoreCase(
                         String::fromUTF8("descriptions"))) {
                     return Kind::Descriptions;
                 }
             case 't':
             case 'T':
-                if (kindStr->equalsWithoutCase(String::fromUTF8("metadata"))) {
+                if (kindStr->equalsIgnoreCase(String::fromUTF8("metadata"))) {
                     return Kind::Metadata;
                 }
             default:

@@ -616,14 +616,14 @@ void HTMLConstructionSite::setCompatibilityModeFromDoctype(String* name,
         publicId->startsWith("-//W3C//DTD HTML Experimental 970421//", false) ||
         publicId->startsWith("-//W3C//DTD W3 HTML//", false) ||
         publicId->startsWith("-//W3O//DTD W3 HTML 3.0//", false) ||
-        publicId->equalsWithoutCase(String::createASCIIString(
+        publicId->equalsIgnoreCase(String::createASCIIString(
             "-//W3O//DTD W3 HTML Strict 3.0//EN//")) ||
         publicId->startsWith("-//WebTechs//DTD Mozilla HTML 2.0//", false) ||
         publicId->startsWith("-//WebTechs//DTD Mozilla HTML//", false) ||
-        publicId->equalsWithoutCase(
+        publicId->equalsIgnoreCase(
             String::createASCIIString("-/W3C/DTD HTML 4.0 Transitional/EN")) ||
-        publicId->equalsWithoutCase(String::createASCIIString("HTML")) ||
-        systemId->equalsWithoutCase(String::createASCIIString(
+        publicId->equalsIgnoreCase(String::createASCIIString("HTML")) ||
+        systemId->equalsIgnoreCase(String::createASCIIString(
             "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd")) ||
         ((systemId->length() == 0) &&
          publicId->startsWith("-//W3C//DTD HTML 4.01 Frameset//", false)) ||

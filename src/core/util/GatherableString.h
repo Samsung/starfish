@@ -140,7 +140,7 @@ public:
     }
 
     bool equals(const char* src) const;
-    bool equalsWithoutCase(const char* src) const;
+    bool equalsIgnoreCase(const char* src) const;
     void toLower();
     String* toString() const;
     size_t peekASCIIBuffer(size_t (*cb)(const char* buffer, size_t len,
@@ -186,7 +186,7 @@ bool GatherableString<InlineStorageSize>::equals(const char* src) const
 }
 
 template <unsigned int InlineStorageSize>
-bool GatherableString<InlineStorageSize>::equalsWithoutCase(
+bool GatherableString<InlineStorageSize>::equalsIgnoreCase(
     const char* src) const
 {
     size_t len = strlen(src);

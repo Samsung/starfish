@@ -1014,11 +1014,11 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
 
     // in case of string (odd and even)
     if (token->isIdent()) {
-        if (token->value()->equalsWithoutCase("odd")) {
+        if (token->value()->equalsIgnoreCase("odd")) {
             result = std::make_pair(2, 1);
             return true;
         }
-        if (token->value()->equalsWithoutCase("even")) {
+        if (token->value()->equalsIgnoreCase("even")) {
             result = std::make_pair(2, 0);
             return true;
         }
@@ -1151,7 +1151,7 @@ CSSSelector::AttributeMatchType CSSParser::getAttributeFlags()
         return CSSSelector::CaseSensitive;
     }
     RefPtr<CSSToken> flag = getToken(true, true);
-    if (flag->hasStringValue() && flag->value()->equalsWithoutCase("i")) {
+    if (flag->hasStringValue() && flag->value()->equalsIgnoreCase("i")) {
         return CSSSelector::CaseInsensitive;
     }
     m_failedParsing = true;
@@ -1550,7 +1550,7 @@ CSSTokenString CSSParser::parseDefaultPropertyValue(RefPtr<CSSToken> token)
                     (token->isSymbol(']') && ontop->isSymbol('['))) {
                     blocks.pop_back();
                 } else if (token->isSymbol(')') &&
-                           ontop->value()->equalsWithoutCase("url(")) {
+                           ontop->value()->equalsIgnoreCase("url(")) {
                     blocks.pop_back();
                     if (urlTokens > 2) {
                         return CSSTokenString();
@@ -1730,7 +1730,7 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
         } else if (token->isSymbol('{') || token->isSymbol('(') ||
                    token->isSymbol('[') || token->isFunction()) {
             if (token->isFunction() &&
-                token->value()->equalsWithoutCase("url(")) {
+                token->value()->equalsIgnoreCase("url(")) {
                 blocks.push_back(token);
                 isURLFunc = true;
             } else {
@@ -1750,7 +1750,7 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
                     (token->isSymbol(']') && ontop->isSymbol('['))) {
                     blocks.pop_back();
                 } else if (token->isSymbol(')') &&
-                           ontop->value()->equalsWithoutCase("url(")) {
+                           ontop->value()->equalsIgnoreCase("url(")) {
                     blocks.pop_back();
                     isURLFunc = false;
                 }
@@ -2317,7 +2317,7 @@ void CSSParser::readRestrictor(RefPtr<CSSToken> token)
 
 void CSSParser::readMediaNot(RefPtr<CSSToken> token)
 {
-    if (token->isIdent() && token->value()->equalsWithoutCase("not"))
+    if (token->isIdent() && token->value()->equalsIgnoreCase("not"))
         setStateAndRestrict(ReadFeatureStart, MediaQuery::Not);
     else
         readFeatureStart(token);
@@ -2327,8 +2327,8 @@ static bool isRestrictorOrLogicalOperator(RefPtr<CSSToken> token)
 {
     STARFISH_ASSERT(token->isIdent());
     CSSTokenString* val = token->value();
-    return val->equalsWithoutCase("not") || val->equalsWithoutCase("and") ||
-           val->equalsWithoutCase("or") || val->equalsWithoutCase("only");
+    return val->equalsIgnoreCase("not") || val->equalsIgnoreCase("and") ||
+           val->equalsIgnoreCase("or") || val->equalsIgnoreCase("only");
 }
 
 void CSSParser::readMediaType(RefPtr<CSSToken> token)
@@ -2340,10 +2340,10 @@ void CSSParser::readMediaType(RefPtr<CSSToken> token)
             m_state = ReadFeature;
     } else if (token->isIdent()) {
         if (m_state == ReadRestrictor &&
-            token->value()->equalsWithoutCase("not")) {
+            token->value()->equalsIgnoreCase("not")) {
             setStateAndRestrict(ReadMediaType, MediaQuery::Not);
         } else if (m_state == ReadRestrictor &&
-                   token->value()->equalsWithoutCase("only")) {
+                   token->value()->equalsIgnoreCase("only")) {
             setStateAndRestrict(ReadMediaType, MediaQuery::Only);
         } else if (m_mediaQueryData.restrictor() != MediaQuery::None &&
                    isRestrictorOrLogicalOperator(token)) {
@@ -2366,7 +2366,7 @@ void CSSParser::readMediaType(RefPtr<CSSToken> token)
 
 void CSSParser::readAnd(RefPtr<CSSToken> token)
 {
-    if (token->isIdent() && token->value()->equalsWithoutCase("and")) {
+    if (token->isIdent() && token->value()->equalsIgnoreCase("and")) {
         m_state = ReadFeatureStart;
     } else if (token->isSymbol(',') && m_parserType != MediaConditionParser) {
         m_querySet->addMediaQuery(m_mediaQueryData.mediaQuery());
@@ -2615,25 +2615,25 @@ static inline bool featureWithValidIdent(const String* mediaFeature,
                                          const String* ident)
 {
     if (mediaFeature->equals(displayModeMediaFeature)) {
-        return ident->equalsWithoutCase("fullscreen") ||
-               ident->equalsWithoutCase("standalone") ||
-               ident->equalsWithoutCase("minimalui") ||
-               ident->equalsWithoutCase("browser");
+        return ident->equalsIgnoreCase("fullscreen") ||
+               ident->equalsIgnoreCase("standalone") ||
+               ident->equalsIgnoreCase("minimalui") ||
+               ident->equalsIgnoreCase("browser");
     }
 
     if (mediaFeature->equals(orientationMediaFeature)) {
-        return ident->equalsWithoutCase("portrait") ||
-               ident->equalsWithoutCase("landscape");
+        return ident->equalsIgnoreCase("portrait") ||
+               ident->equalsIgnoreCase("landscape");
     }
 
     if (mediaFeature->equals(scanMediaFeature)) {
-        return ident->equalsWithoutCase("interlace") ||
-               ident->equalsWithoutCase("progressive");
+        return ident->equalsIgnoreCase("interlace") ||
+               ident->equalsIgnoreCase("progressive");
     }
 
     if (mediaFeature->equals(hoverMediaFeature)) {
-        return ident->equalsWithoutCase("none") ||
-               ident->equalsWithoutCase("hover");
+        return ident->equalsIgnoreCase("none") ||
+               ident->equalsIgnoreCase("hover");
     }
 
     return false;

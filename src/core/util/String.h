@@ -308,8 +308,8 @@ public:
     bool equals(const String* src) const;
     bool equals(const char* src) const;
 
-    bool equalsWithoutCase(const String* str) const;
-    bool equalsWithoutCase(const char* str) const;
+    bool equalsIgnoreCase(const String* str) const;
+    bool equalsIgnoreCase(const char* str) const;
     bool equals(const char32_t* str) const;
 
     size_t indexOf(char32_t ch) const;
@@ -841,7 +841,7 @@ public:
     // token is only 1-byte char now.
     static GCVector<StringView> tokenize(String* src, const char* tokens,
                                          size_t tokensLength);
-    static bool equalsWithoutCase(const std::string& a, const std::string& b);
+    static bool equalsIgnoreCase(const std::string& a, const std::string& b);
 };
 
 #ifndef STRING_BUILDER_INLINE_STORAGE_MAX

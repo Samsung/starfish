@@ -32,7 +32,7 @@ bool MediaQueryEvaluator::mediaTypeMatch(String* mediaTypeToMatch) const
     // types.
     return m_mediaType->equals(String::emptyString) ||
            mediaTypeToMatch->equals(String::emptyString) ||
-           mediaTypeToMatch->equalsWithoutCase("all") ||
+           mediaTypeToMatch->equalsIgnoreCase("all") ||
            mediaTypeToMatch->equals(m_mediaType);
 }
 
@@ -266,9 +266,9 @@ static bool orientationMediaFeatureEval(MediaQueryExpValue& value,
     // ‘width’ media feature. Otherwise ‘orientation’ is ‘landscape’.
     if (value.isID) {
         if (width > height) {
-            return value.id->equalsWithoutCase("landscape");
+            return value.id->equalsIgnoreCase("landscape");
         } else {
-            return value.id->equalsWithoutCase("portrait");
+            return value.id->equalsIgnoreCase("portrait");
         }
     }
 
@@ -440,7 +440,7 @@ static bool hoverMediaFeatureEval(MediaQueryExpValue& value,
     // https://drafts.csswg.org/mediaqueries-4/#hover
     // TODO: Suppose that the primary pointing device we support can hover.
     // However, there may be no pointing device and it can't hover if it exists.
-    return value.id->equalsWithoutCase("hover");
+    return value.id->equalsIgnoreCase("hover");
 }
 
 bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const

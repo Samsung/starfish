@@ -370,14 +370,14 @@ String* ResourceRequest::encodeFormDataSet(
                     ->replaceAll(space, plus);
             String* type = item->m_type->replaceAll(space, plus);
 
-            if (i == 0 && name->equalsWithoutCase("isindex") &&
-                type->equalsWithoutCase("text")) {
+            if (i == 0 && name->equalsIgnoreCase("isindex") &&
+                type->equalsIgnoreCase("text")) {
                 result = result->concat(value);
                 continue;
             }
 
-            if (name->equalsWithoutCase("_charset_") &&
-                type->equalsWithoutCase("hidden")) {
+            if (name->equalsIgnoreCase("_charset_") &&
+                type->equalsIgnoreCase("hidden")) {
                 value = String::createASCIIString("UTF-8");
             }
 

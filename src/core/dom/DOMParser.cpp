@@ -130,7 +130,7 @@ static void buildDocumentFromXML(
 
 Document* DOMParser::parseFromString(String* str, String* type)
 {
-    if (type->equalsWithoutCase("text/html")) {
+    if (type->equalsIgnoreCase("text/html")) {
         Document* document =
             new HTMLDocument(window(), window()->scriptBindingInstance(),
                              DOMParser::document()->documentURI(),
@@ -140,8 +140,8 @@ Document* DOMParser::parseFromString(String* str, String* type)
         builder.build(str);
 
         return document;
-    } else if (type->equalsWithoutCase("text/xml") ||
-               type->equalsWithoutCase("application/xml")) {
+    } else if (type->equalsIgnoreCase("text/xml") ||
+               type->equalsIgnoreCase("application/xml")) {
         rapidxml::xml_document<char> doc;
         char* cStr = (char*)str->utf8Data();
         try {

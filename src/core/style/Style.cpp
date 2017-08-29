@@ -2071,7 +2071,7 @@ static bool attributeValueMatches(
         if (caseSensitivity) {
             return selectorValue->equals(attrValue);
         }
-        return selectorValue->equalsWithoutCase(attrValue);
+        return selectorValue->equalsIgnoreCase(attrValue);
     case CSSSelector::AttributeList: // Example: E[foo~="bar"]
     {
         if (selectorValue->equals(String::emptyString) ||
@@ -4829,7 +4829,7 @@ static bool isFirstOfType(Element* element)
     Node* sibling = element->previousSibling();
     while (sibling) {
         if (sibling->isElement() &&
-            sibling->localName()->equalsWithoutCase(element->localName())) {
+            sibling->localName()->equalsIgnoreCase(element->localName())) {
             return false;
         }
         sibling = sibling->previousSibling();
@@ -4843,7 +4843,7 @@ static bool isLastOfType(Element* element)
     Node* sibling = element->nextSibling();
     while (sibling) {
         if (sibling->isElement() &&
-            sibling->localName()->equalsWithoutCase(element->localName())) {
+            sibling->localName()->equalsIgnoreCase(element->localName())) {
             return false;
         }
         sibling = sibling->nextSibling();

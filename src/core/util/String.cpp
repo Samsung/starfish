@@ -377,7 +377,7 @@ size_t String::lastIndexOf(char32_t ch) const
 }
 
 // TODO use BufferAccessData for performance
-bool String::equalsWithoutCase(const char* str) const
+bool String::equalsIgnoreCase(const char* str) const
 {
 #ifndef NDEBUG
     {
@@ -1048,7 +1048,7 @@ GCVector<StringView> StringUtils::tokenize(String* src, const char* tokens,
     return result;
 }
 
-bool StringUtils::equalsWithoutCase(const std::string& a, const std::string& b)
+bool StringUtils::equalsIgnoreCase(const std::string& a, const std::string& b)
 {
     unsigned int sz = a.size();
     if (b.size() != sz) {
@@ -1287,7 +1287,7 @@ bool stringEqualWithoutCase(const char32_t* s, const char* s1,
     return true;
 }
 
-bool String::equalsWithoutCase(const String* str) const
+bool String::equalsIgnoreCase(const String* str) const
 {
     auto dataA = bufferAccessData();
     auto dataB = str->bufferAccessData();

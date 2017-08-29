@@ -420,8 +420,8 @@ String* XMLHttpRequest::getAllResponseHeaders()
         const auto& key = it.first;
         const auto& value = it.second;
 
-        if (StringUtils::equalsWithoutCase(key, std::string("set-cookie")) ||
-            StringUtils::equalsWithoutCase(key, std::string("set-cookie2"))) {
+        if (StringUtils::equalsIgnoreCase(key, std::string("set-cookie")) ||
+            StringUtils::equalsIgnoreCase(key, std::string("set-cookie2"))) {
             continue;
         }
 
@@ -443,15 +443,15 @@ Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
         return nullptr;
     }
     if (name->length() == 0 || !name->containsOnlyASCIIChars() ||
-        name->equalsWithoutCase("set-cookie") ||
-        name->equalsWithoutCase("set-cookie2")) {
+        name->equalsIgnoreCase("set-cookie") ||
+        name->equalsIgnoreCase("set-cookie2")) {
         return nullptr;
     }
 
     const ResponseHeaderMap& map = m_resourceRequest->responseHeaderMap();
 
     for (const auto& pair : map) {
-        if (name->equalsWithoutCase(pair.first.data())) {
+        if (name->equalsIgnoreCase(pair.first.data())) {
             return String::createASCIIString(pair.second.data());
         }
     }

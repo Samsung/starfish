@@ -476,19 +476,19 @@ HTMLMediaElement::PreloadState HTMLMediaElement::preloadValue()
         String* value = getAttributeOrEmpty(preload);
         if (value->length() == 0 ||
             (value->length() == 4 &&
-             value->equalsWithoutCase(
+             value->equalsIgnoreCase(
                  AtomicString::createAtomicString(starFish(), "auto")
                      .string()))) {
             // The empty string is also a valid keyword, and maps to the
             // Automatic state
             return HTMLMediaElement::PRELOAD_AUTOMATIC;
         } else if (value->length() == 8 &&
-                   value->equalsWithoutCase(
+                   value->equalsIgnoreCase(
                        AtomicString::createAtomicString(starFish(), "metadata")
                            .string())) {
             return HTMLMediaElement::PRELOAD_METADATA;
         } else if (value->length() == 4 &&
-                   value->equalsWithoutCase(
+                   value->equalsIgnoreCase(
                        AtomicString::createAtomicString(starFish(), "none")
                            .string())) {
             return HTMLMediaElement::PRELOAD_NONE;

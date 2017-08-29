@@ -288,7 +288,7 @@ void HTMLFormElement::submit(HTMLElement* submitter)
     HTMLInputElement* inputNode = nullptr;
     if (submitter && submitter->isHTMLInputElement()) {
         inputNode = submitter->asHTMLInputElement();
-        if (inputNode->type()->equalsWithoutCase("button")) {
+        if (inputNode->type()->equalsIgnoreCase("button")) {
             formAction = inputNode->formAction();
         }
     }
