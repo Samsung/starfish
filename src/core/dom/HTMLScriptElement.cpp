@@ -166,7 +166,8 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
             res->addResourceClient(new ElementResourceClient(this, res, true));
             res->request(forceSync
                              ? Resource::ResourceRequestSyncLevel::AlwaysSync
-                             : Resource::ResourceRequestSyncLevel::NeverSync);
+                             : Resource::ResourceRequestSyncLevel::NeverSync,
+                         document()->documentURI());
             return true;
         }
     }

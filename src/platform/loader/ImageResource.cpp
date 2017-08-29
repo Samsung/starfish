@@ -58,7 +58,8 @@ void ImageResource::doLoadFile(void* data)
 }
 #endif
 
-void ImageResource::request(ResourceRequestSyncLevel syncLevel)
+void ImageResource::request(ResourceRequestSyncLevel syncLevel,
+                            ResourceURL* referrerURL)
 {
 #if defined(PORT_GRAPHIC_BACKEND_EFL) || \
     defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
@@ -79,10 +80,10 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel)
             }
         }
     } else {
-        Resource::request(syncLevel);
+        Resource::request(syncLevel, referrerURL);
     }
 #else
-    Resource::request(syncLevel);
+    Resource::request(syncLevel, referrerURL);
 #endif
 }
 

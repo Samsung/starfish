@@ -77,7 +77,8 @@ public:
         return m_sourceElement;
     }
 
-    void navigate(ResourceURL* url, HistoryManager::Action type);
+    void navigate(ResourceURL* url, HistoryManager::Action type,
+                  ResourceURL* referrerURL);
 
     void pause();
     void resume();

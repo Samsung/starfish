@@ -105,7 +105,8 @@ void WebView::initStorage()
         m_storageNamespaceProvider->createSessionStorageNamespace();
 }
 
-void WebView::navigate(ResourceURL* url, HistoryManager::Action type)
+void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
+                       ResourceURL* referrerURL)
 {
     clearBlobURLStore();
     initRenderingFlags();
@@ -115,7 +116,7 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type)
         m_mainBrowsingContext->close();
     }
     m_mainBrowsingContext = BrowsingContext::create(starFish(), this);
-    m_mainBrowsingContext->navigate(url, type);
+    m_mainBrowsingContext->navigate(url, type, referrerURL);
 }
 
 bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)

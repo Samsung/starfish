@@ -232,7 +232,8 @@ void XMLHttpRequest::open(ResourceRequest::MethodType method, String* url,
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
-    m_resourceRequest->open(method, url, async, userName, password);
+    m_resourceRequest->open(method, url, async, document()->documentURI(),
+                            userName, password);
     initResponseData();
 }
 

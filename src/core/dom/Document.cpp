@@ -72,6 +72,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_pageVisibilityState(VisibilityStateVisible)
     , m_window(window)
     , m_documentURI(uri)
+    , m_referrer(nullptr)
     , m_cookieURI(uri)
     , m_webOrigin(WebOrigin::createDocumentOrigin(uri))
     , m_characterSet(charSet)
@@ -162,6 +163,14 @@ Location* Document::location()
     return window()->location();
 }
 
+String* Document::referrer()
+{
+    if (!m_referrer) {
+        return String::emptyString;
+    }
+    return m_referrer->urlString();
+}
+
 String* Document::cookie()
 {
     // TODO : Throw a "SecurityError" DOMException on getting and setting.
@@ -179,12 +188,12 @@ void Document::setCookie(String* cookie)
                                                             cookie);
 }
 
-void Document::open()
+void Document::open(ResourceURL* referrerURL)
 {
     m_resourceLoader->markDocumentOpenState();
 
     m_documentBuilder = new HTMLDocumentBuilder(this);
-    m_documentBuilder->build(documentURI());
+    m_documentBuilder->build(documentURI(), referrerURL);
 }
 
 void Document::resumeDocumentParsing()
@@ -744,7 +753,7 @@ ImageData* Document::brokenImage()
             "CUTAKqAMABlQAAUOHH5wAAAAASUVORK5CYII=");
         ImageResource* res = resourceLoader().fetchImage(
             new ResourceURL(brokenImg, String::emptyString));
-        res->request(Resource::ResourceRequestSyncLevel::AlwaysSync);
+        res->request(Resource::ResourceRequestSyncLevel::AlwaysSync, nullptr);
         m_brokenImage = res->imageData();
         m_didLoadBrokenImage = true;
         return m_brokenImage;

@@ -23,6 +23,7 @@
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/HTMLFormElement.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/page/Window.h"
 
@@ -247,6 +248,10 @@ public:
                 ->historyManager()
                 ->replace(newURL);
         }
+        if (m_resource->resourceRequest()->referrer()) {
+            m_builder.document()->m_referrer =
+                m_resource->resourceRequest()->referrer();
+        }
         load();
     }
 
@@ -266,14 +271,16 @@ protected:
     String* m_htmlSource;
 };
 
-void HTMLDocumentBuilder::build(ResourceURL* url)
+void HTMLDocumentBuilder::build(ResourceURL* url, ResourceURL* referrerURL)
 {
     m_resource = m_document->resourceLoader().fetch(url);
     m_resource->addResourceClient(new HTMLResourceClient(m_resource, *this));
 #ifndef STARFISH_TIZEN_WEARABLE
-    m_resource->request();
+    m_resource->request(Resource::ResourceRequestSyncLevel::NeverSync,
+                        referrerURL);
 #else
-    m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync);
+    m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
+                        referrerURL);
 #endif
 }
 

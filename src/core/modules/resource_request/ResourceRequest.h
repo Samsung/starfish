@@ -114,7 +114,7 @@ public:
 
     ResourceRequest(Document* document);
     void open(ResourceRequest::MethodType method, String* url, bool async,
-              String* userName = String::emptyString,
+              ResourceURL* referrer, String* userName = String::emptyString,
               String* password = String::emptyString);
     void abort(bool isExplicitAction = true);
     virtual void send(String* body = String::emptyString);
@@ -196,6 +196,11 @@ public:
         return m_url;
     }
 
+    ResourceURL* referrer()
+    {
+        return m_referrer;
+    }
+
     bool isError()
     {
         return m_gotError;
@@ -243,6 +248,7 @@ protected:
     bool m_gotError;
     bool m_containsBase64Content;
     ResourceURL* m_url;
+    ResourceURL* m_referrer;
     ReadyState m_readyState;
     ProgressState m_progressState;
     MethodType m_method;

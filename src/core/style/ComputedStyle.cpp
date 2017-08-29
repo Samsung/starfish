@@ -217,10 +217,12 @@ void ComputedStyle::loadResources(
                     (g_enablePixelTest || enableRegressionTest)
                         ? Resource::ResourceRequestSyncLevel::AlwaysSync
                         : Resource::ResourceRequestSyncLevel::
-                              SyncIfAlreadyLoaded);
+                              SyncIfAlreadyLoaded,
+                    consumer->document()->documentURI());
 #else
                 res->request(
-                    Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
+                    Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
+                    consumer->document()->documentURI());
 #endif
             }
         }
@@ -267,10 +269,12 @@ void ComputedStyle::loadResources(
             res->request(
                 (g_enablePixelTest || enableRegressionTest)
                     ? Resource::ResourceRequestSyncLevel::AlwaysSync
-                    : Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
+                    : Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
+                consumer->document()->documentURI());
 #else
             res->request(
-                Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
+                Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
+                consumer->document()->documentURI());
 #endif
             setBorderImageResource(res);
         }

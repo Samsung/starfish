@@ -33,7 +33,7 @@ public:
     {
     }
 
-    virtual void build(ResourceURL* url) = 0;
+    virtual void build(ResourceURL* url, ResourceURL* referrerURL) = 0;
     virtual void build(String* str) = 0;
     virtual void resume() = 0;
 };

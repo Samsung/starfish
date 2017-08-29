@@ -70,7 +70,7 @@ interface Document : Node {
   // resource metadata management
   [PutForwards=href, Unforgeable] readonly attribute Location? location;
   [RaisesException=Setter] attribute DOMString domain;
-  [Unimplemented] readonly attribute DOMString referrer;
+  readonly attribute DOMString referrer;
   attribute DOMString cookie;
   [Unimplemented] readonly attribute DOMString lastModified;
   [Unimplemented] readonly attribute DocumentReadyState readyState;

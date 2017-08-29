@@ -386,7 +386,7 @@ void StarFish::loadHTMLDocument(String* filePath)
     WebView* webView = WebView::create(this);
     m_platformWindow->setWebView(webView);
     ResourceURL* url = new ResourceURL(String::fromUTF8(path.c_str()));
-    webView->navigate(url, HistoryManager::Action::Add);
+    webView->navigate(url, HistoryManager::Action::Add, nullptr);
 }
 
 void StarFish::resume()
