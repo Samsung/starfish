@@ -870,7 +870,7 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         m_tree.reconstructTheActiveFormattingElements();
         m_tree.insertSelfClosingHTMLElement(token);
         if (!typeAttribute ||
-            !typeAttribute->value()->equalsWithoutCase(
+            !typeAttribute->value()->equalsIgnoreCase(
                 String::createASCIIString("hidden"))) {
             m_framesetOk = false;
         }
@@ -1127,7 +1127,7 @@ void HTMLTreeBuilder::processStartTagForInTable(AtomicHTMLToken* token)
     if (token->name() == s->m_inputTagName) {
         Attribute* typeAttribute = token->getAttributeItem(s->m_type);
         if (typeAttribute &&
-            typeAttribute->value()->equalsWithoutCase(
+            typeAttribute->value()->equalsIgnoreCase(
                 String::createASCIIString("hidden"))) {
             parseError(token);
             m_tree.insertSelfClosingHTMLElement(token);

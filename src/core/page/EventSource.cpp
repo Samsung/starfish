@@ -80,9 +80,9 @@ public:
             m_isResponseValid = statusCode == HTTP_STATUS_OK && isMimeTypeValid;
 
             auto cs = headerMap.find(std::string("charset"));
-            bool isCharsetValid = (cs == headerMap.end()) ||
-                                  StringUtils::equalsWithoutCase(
-                                      cs->second, std::string("utf-8"));
+            bool isCharsetValid =
+                (cs == headerMap.end()) ||
+                StringUtils::equalsIgnoreCase(cs->second, std::string("utf-8"));
 
             m_isResponseValid &= isCharsetValid;
             if (m_isResponseValid) {

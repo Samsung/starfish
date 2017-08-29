@@ -188,7 +188,7 @@ void AboutURLResourceRequestJobDelegate::send(String* body)
 void AboutURLResourceRequestJobDelegate::worker(ResourceRequest* res,
                                                 String* url)
 {
-    if (res->url()->pathname()->equalsWithoutCase("blank")) {
+    if (res->url()->pathname()->equalsIgnoreCase("blank")) {
         res->m_status = 200;
     } else {
         res->m_status = 404;

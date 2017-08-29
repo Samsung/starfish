@@ -226,7 +226,7 @@ bool isFormElements(Node* node, void* data, GCVector<Node*>* collection)
             return true;
         }
         if (node->isHTMLInputElement()) {
-            if (!node->asHTMLInputElement()->type()->equalsWithoutCase(
+            if (!node->asHTMLInputElement()->type()->equalsIgnoreCase(
                     "image")) {
                 return true;
             }

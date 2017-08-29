@@ -78,7 +78,7 @@ void HTMLMetaElement::checkPlatformFlags()
 {
     if (isInDocumentScopeAndDocumentParticipateInRendering()) {
 #ifdef STARFISH_ENABLE_TEST
-        if (m_name->equalsWithoutCase("pixel-test")) {
+        if (m_name->equalsIgnoreCase("pixel-test")) {
             g_enablePixelTest = true;
             document()->setStyle(
                 document()->styleResolver().resolveDocumentStyle(document()));
@@ -86,8 +86,8 @@ void HTMLMetaElement::checkPlatformFlags()
         }
 #endif
 #ifdef STARFISH_TIZEN
-        if (m_name->equalsWithoutCase("tizen-widget-transparent-background") &&
-            m_content->equalsWithoutCase("yes")) {
+        if (m_name->equalsIgnoreCase("tizen-widget-transparent-background") &&
+            m_content->equalsIgnoreCase("yes")) {
             if (!m_tizenWidgetTransparentBackground) {
                 document()->m_tizenWidgetTransparentBackground++;
                 setNeedsPainting();

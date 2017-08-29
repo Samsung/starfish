@@ -871,8 +871,8 @@ void Element::setOuterHTML(String* text)
 void Element::insertAdjacentHTML(String* position, String* text)
 {
     Element* context = nullptr;
-    if (position->equalsWithoutCase("beforebegin") ||
-        position->equalsWithoutCase("afterend")) {
+    if (position->equalsIgnoreCase("beforebegin") ||
+        position->equalsIgnoreCase("afterend")) {
         context = parentElement();
         // If context is null or a Document, throw a
         // "NoModificationAllowedError" DOMException.
@@ -881,8 +881,8 @@ void Element::insertAdjacentHTML(String* position, String* text)
                                    DOMException::NO_MODIFICATION_ALLOWED_ERR,
                                    "Can not execute `insertAdjacentHTML`.");
         }
-    } else if (position->equalsWithoutCase("afterbegin") ||
-               position->equalsWithoutCase("beforeend")) {
+    } else if (position->equalsIgnoreCase("afterbegin") ||
+               position->equalsIgnoreCase("beforeend")) {
         context = this;
     } else {
         throw new DOMException(document(), DOMException::SYNTAX_ERR,
@@ -910,24 +910,24 @@ void Element::insertAdjacentHTML(String* position, String* text)
     DocumentFragment* df = fragmentParsingAlgorithm(document(), text, context);
 
     Element* contextObject = this;
-    if (position->equalsWithoutCase("beforebegin")) {
+    if (position->equalsIgnoreCase("beforebegin")) {
         // If position is an ASCII case-insensitive match for the string
         // "beforebegin"
         // Insert fragment into the context object's parent before the context
         // object.
         contextObject->parentNode()->insertBefore(df, contextObject);
-    } else if (position->equalsWithoutCase("afterbegin")) {
+    } else if (position->equalsIgnoreCase("afterbegin")) {
         // If position is an ASCII case-insensitive match for the string
         // "afterbegin"
         // Insert fragment into the context object before its first child.
         contextObject->insertBefore(df, firstChild());
-    } else if (position->equalsWithoutCase("beforeend")) {
+    } else if (position->equalsIgnoreCase("beforeend")) {
         // If position is an ASCII case-insensitive match for the string
         // "beforeend"
         // Append fragment to the context object.
         contextObject->appendChild(df);
     } else {
-        STARFISH_ASSERT(position->equalsWithoutCase("afterend"));
+        STARFISH_ASSERT(position->equalsIgnoreCase("afterend"));
         // If position is an ASCII case-insensitive match for the string
         // "afterend"
         // Insert fragment into the context object's parent before the context
@@ -943,21 +943,21 @@ static Node* insertAdjacent(Element* element, String* where, Node* node)
 {
     // run the steps associated with the first ASCII case-insensitive match for
     // where:
-    if (where->equalsWithoutCase("beforebegin")) {
+    if (where->equalsIgnoreCase("beforebegin")) {
         // If element’s parent is null, return null.
         if (element->parentNode() == nullptr)
             return nullptr;
         // Return the result of pre-inserting node into element’s parent before
         // element.
         return element->parentNode()->insertBefore(node, element);
-    } else if (where->equalsWithoutCase("afterbegin")) {
+    } else if (where->equalsIgnoreCase("afterbegin")) {
         // Return the result of pre-inserting node into element before element’s
         // first child.
         return element->insertBefore(node, element->firstChild());
-    } else if (where->equalsWithoutCase("beforeend")) {
+    } else if (where->equalsIgnoreCase("beforeend")) {
         // Return the result of pre-inserting node into element before null.
         return element->insertBefore(node, nullptr);
-    } else if (where->equalsWithoutCase("afterend")) {
+    } else if (where->equalsIgnoreCase("afterend")) {
         // If element’s parent is null, return null.
         if (element->parentNode() == nullptr)
             return nullptr;

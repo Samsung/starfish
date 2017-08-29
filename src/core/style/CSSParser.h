@@ -378,11 +378,11 @@ public:
         parser.consumeString();
         String* str = parser.parsedString();
 
-        if (str->equalsWithoutCase("s") ||
-            str->equalsWithoutCase(String::emptyString)) {
+        if (str->equalsIgnoreCase("s") ||
+            str->equalsIgnoreCase(String::emptyString)) {
             *ret = CSSTime(CSSTime::Kind::S, num);
             return parser.isEnd();
-        } else if (str->equalsWithoutCase("ms")) {
+        } else if (str->equalsIgnoreCase("ms")) {
             *ret = CSSTime(CSSTime::Kind::MS, num);
             return parser.isEnd();
         }
@@ -667,7 +667,7 @@ public:
     bool isOfType(char aType, const char* aValue)
     {
         return (m_type == aType &&
-                (!aValue || value()->equalsWithoutCase(aValue)));
+                (!aValue || value()->equalsIgnoreCase(aValue)));
     }
 
     bool isOfType(char aType)
@@ -733,7 +733,7 @@ public:
 
     bool isIdent(const char* s)
     {
-        return isOfType(CSSToken::IDENT_TYPE) && value()->equalsWithoutCase(s);
+        return isOfType(CSSToken::IDENT_TYPE) && value()->equalsIgnoreCase(s);
     }
 
     bool isFunction(const char* f = nullptr)

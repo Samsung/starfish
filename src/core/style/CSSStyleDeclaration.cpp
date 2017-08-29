@@ -208,7 +208,7 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
 {
     bool isImportant = false;
     if (prior->length() > 0) {
-        if (prior->equalsWithoutCase("important")) {
+        if (prior->equalsIgnoreCase("important")) {
             isImportant = true;
         } else {
             return;
