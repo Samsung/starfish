@@ -712,6 +712,7 @@ $(OUTDIR)/%.o: %.c $(DEPENDENCY_MAKEFILE)
 clean:
 	rm -rf out
 	find src -type f -name "*Binding.cpp" ! -name "*CustomBinding.cpp" | xargs -r rm
+	find src -type f -name "*Union.h" ! -name "*CustomUnion.h" | xargs -r rm
 
 $(AUTOGEN_SRC): $(AUTOGEN_DEPENDENCY)
 	@echo "[GEN] $@"

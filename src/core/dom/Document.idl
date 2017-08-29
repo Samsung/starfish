@@ -11,7 +11,7 @@
 
 // [REF3]----------------------------------------------------------------
 enum DocumentReadyState { "loading", "interactive", "complete" };
-typedef (HTMLScriptElement or SVGScriptElement) HTMLOrSVGScriptElement;
+// typedef (HTMLScriptElement or SVGScriptElement) HTMLOrSVGScriptElement;
 
 
 // [REF4]----------------------------------------------------------------

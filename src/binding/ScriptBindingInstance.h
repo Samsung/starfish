@@ -29,6 +29,8 @@ class FunctionObjectRef;
 class ScriptRef;
 class ScriptParserRef;
 class ExecutionStateRef;
+class ArrayBufferObjectRef;
+class ArrayBufferViewRef;
 typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
                                                  ValueRef* thisValue,
                                                  size_t argc, ValueRef** argv,

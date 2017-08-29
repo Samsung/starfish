@@ -33,6 +33,8 @@ typedef Escargot::ValueRef* ScriptValue;
 typedef Escargot::ObjectRef* ScriptObject;
 typedef Escargot::StringRef* ScriptString;
 typedef Escargot::FunctionObjectRef* ScriptFunction;
+typedef Escargot::ArrayBufferObjectRef* ScriptArrayBuffer;
+typedef Escargot::ArrayBufferViewRef* ScriptArrayBufferView;
 
 ScriptValue scriptNull();
 ScriptValue scriptUndefined();

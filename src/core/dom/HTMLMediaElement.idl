@@ -4,8 +4,8 @@
 [STARFISH_ENABLE_MULTIMEDIA]
 enum CanPlayTypeResult { "", "maybe", "probably" };
 
-[STARFISH_ENABLE_MULTIMEDIA]
-typedef (MediaStream or MediaSource or Blob) MediaProvider;
+// [STARFISH_ENABLE_MULTIMEDIA]
+// typedef (MediaStream or MediaSource or Blob) MediaProvider;
 
 [STARFISH_ENABLE_MULTIMEDIA]
 interface HTMLMediaElement : HTMLElement {

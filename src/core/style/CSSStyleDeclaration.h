@@ -141,10 +141,10 @@ public:
     void setProperty(String* name, String* value, String* priority);
 
     // NOTE Based on IDL,
-    // CSSStyleDeclaration has namedGetter, namedEnumerator, setter
+    // CSSStyleDeclaration has namedGetter, namedEnumerator, namedSetter
     Nullable<String*> defaultNamedGetter(String* name);
-    void defaultSetter(String* name, Nullable<String*> value);
-    void defaultNamedEnumerator(std::vector<const char*>& enums);
+    void defaultNamedSetter(String* name, Nullable<String*> value);
+    void defaultNamedEnumerator(GCVector<String*>& enums);
 
     const GCAtomicVector<CSSStyleValuePair>& cssValues()
     {
