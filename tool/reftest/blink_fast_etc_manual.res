@@ -32,3 +32,5 @@ test/reftest/vendor/blink_original/fast/block/float/nested-floats-expand-formatt
 test/reftest/vendor/blink_original/fast/block/positioning/offsetLeft-relative-td.html
 test/reftest/vendor/blink/fast/block/positioning/offsetLeft-offsetTop-multicolumn.html
 test/reftest/vendor/blink_original/fast/block/positioning/offsetLeft-relative-iframe.html
+test/reftest/vendor/blink/fast/eventsource/eventsource-attribute-listeners.html
+test/reftest/vendor/blink/fast/eventsource/eventsource-constructor.html

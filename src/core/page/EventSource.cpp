@@ -133,22 +133,26 @@ public:
 
                 STARFISH_LOG_ERROR("console.error: %s\n",
                                    msg.finalize()->utf8Data());
-
                 m_eventSource->cancel();
+
+                String* eventName =
+                    request->starFish()->staticStrings()->m_error.localName();
+                Event* e = new Event(m_eventSource->document(), eventName,
+                                     EventInit(false, false));
+                m_eventSource->dispatchEventByUA(m_eventSource, e);
             }
         } else if (request->readyState() == ResourceRequest::LOADING) {
         } else if (request->readyState() == ResourceRequest::DONE) {
-            if (m_eventSource->readyState() == EventSource::CLOSED) {
-                m_eventSource->cancel();
-            } else {
+            if (m_eventSource->readyState() != EventSource::CLOSED) {
                 m_eventSource->failed();
+
+                String* eventName =
+                    request->starFish()->staticStrings()->m_error.localName();
+                Event* e = new Event(m_eventSource->document(), eventName,
+                                     EventInit(false, false));
+                m_eventSource->dispatchEventByUA(m_eventSource, e);
             }
 
-            String* eventName =
-                request->starFish()->staticStrings()->m_error.localName();
-            Event* e = new Event(m_eventSource->document(), eventName,
-                                 EventInit(false, false));
-            m_eventSource->dispatchEventByUA(m_eventSource, e);
         } else if (request->readyState() == ResourceRequest::UNSENT ||
                    request->readyState() == ResourceRequest::OPENED) {
         }
@@ -185,8 +189,7 @@ EventSource::EventSource(::StarFish::Document* document, String* url,
 
     ResourceURL* fullURL =
         new ResourceURL(url, document->documentURI()->baseURI());
-    if (fullURL->protocolKind() != ResourceURL::Protocol::HTTP_PROTOCOL &&
-        fullURL->protocolKind() != ResourceURL::Protocol::HTTPS_PROTOCOL) {
+    if (!fullURL->isValid()) {
         StringBuilder msg;
         msg.appendString("Cannot open an EventSource to '");
         msg.appendString(url);
@@ -224,6 +227,12 @@ void EventSource::connect()
     // TODO: set resource loader options: allowCredentials,
     // credentialsRequested, dataBufferingPolicy, securityOrigin
     // < ------------------------------------------------- >
+
+    if (!(m_url->protocolKind() == ResourceURL::HTTP_PROTOCOL ||
+          m_url->protocolKind() == ResourceURL::HTTPS_PROTOCOL ||
+          m_url->protocolKind() == ResourceURL::DATA_PROTOCOL)) {
+        failedAccessControlCheck();
+    }
 
     if (m_parser && !m_parser->lastEventId()->isEmpty()) {
         auto& header = m_resourceRequest->m_requestHeaders;
@@ -306,6 +315,23 @@ void EventSource::failed()
     if (m_readyState != CLOSED) {
         scheduleReconnect();
     }
+}
+
+void EventSource::failedAccessControlCheck()
+{
+    StringBuilder msg;
+    msg.appendString("EventSource cannot load ");
+    msg.appendString(m_url->urlString());
+    msg.appendString(". ");
+    msg.appendString(
+        "Cross origin requests are only supported for protocol schemes: http, "
+        "https, data.");
+    STARFISH_LOG_ERROR("console.error: %s\n", msg.finalize()->utf8Data());
+
+    m_readyState = CLOSED;
+    m_resourceRequest->abort(true);
+    document()->window()->clearTimeout(m_time);
+    document()->browsingContext()->removePointerFromRootSet(this);
 }
 
 void EventSource::cancel()

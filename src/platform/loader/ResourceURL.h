@@ -65,6 +65,7 @@ public:
         m_fragmentEnd = src.m_fragmentEnd;
 
         m_protocol = src.m_protocol;
+        m_isValid = src.m_isValid;
     }
 
     static String* mergeDocumentURIWithURIString(Document* document,
@@ -74,6 +75,11 @@ public:
     String* baseURI() const;
 
     static bool isValidURL(String* url);
+
+    bool isValid()
+    {
+        return m_isValid;
+    }
 
     bool url()
     {
@@ -164,6 +170,7 @@ public:
 protected:
     void resolvePositions();
     void parseURLString(String* baseURL, String* url);
+    bool isValidPort();
 
     String* m_string;
     String* m_urlString;
@@ -179,6 +186,8 @@ protected:
     unsigned int m_fragmentEnd;
 
     enum Protocol m_protocol;
+
+    bool m_isValid;
 };
 
 class DocumentURL : public ResourceURL {
