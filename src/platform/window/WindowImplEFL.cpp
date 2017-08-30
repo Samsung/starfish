@@ -161,7 +161,8 @@ public:
                 Node* nd = webView()->focusedNode();
                 Node* e = nd->nearestParentElement();
                 if (e->isElement()) {
-                    e->asElement()->scrollIntoView(true);
+                    // FIXME (enable this)
+                    // e->asElement()->scrollIntoView(true);
                 }
             }
         }
@@ -749,7 +750,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         wnd->m_imfContext,
         [](void* data, Ecore_IMF_Context* ctx, char** text,
            int* cursor_pos) -> Eina_Bool {
-            // fputs("ecore_imf_context_retrieve_surrounding_callback_set\n",stderr);
             // This callback will be called when the Input Method Context module
             // requests the surrounding context.
             if (text)
@@ -767,22 +767,34 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             char* commit_str = (char*)event_info;
             WindowImplEFL* self = (WindowImplEFL*)data;
             STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_COMMIT %s\n", commit_str);
-            if (strlen(commit_str) == 1 &&
-                String::isASCIIPrintableKey(commit_str[0])) {
-                // ASCII char
-                KeyValue kv = (KeyValue)commit_str[0];
 
-                KeyboardData kdata(kv);
-                // setModifiersToKeyboardData(ev->modifiers, kdata);
-                StarFishEnterer enter(self->m_starFish);
-                self->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
-                self->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);
+            bool isAllASCII = true;
+            String* str = String::fromUTF8(commit_str);
+            for (size_t i = 0; i < str->length(); i++) {
+                if (str->charAt(i) < 128 &&
+                    String::isASCIIPrintableKey(str->charAt(i))) {
+                } else {
+                    isAllASCII = false;
+                    break;
+                }
+            }
+
+            if (isAllASCII) {
+                for (size_t i = 0; i < str->length(); i++) {
+                    // ASCII char
+                    KeyValue kv = (KeyValue)str->charAt(i);
+                    KeyboardData kdata(kv);
+                    StarFishEnterer enter(self->m_starFish);
+                    self->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
+                    self->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);
+                }
             } else {
                 // non-ASCII char
                 self->dispatchCompositionEvent(
                     PlatformWindow::CompositionEventEnd,
                     String::fromUTF8(commit_str));
             }
+
         },
         wnd);
 
@@ -859,10 +871,38 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             if ((strcmp(ev->key, "XF86Exit") == 0) ||
                 (strcmp(ev->key, "Select") == 0) ||
                 (strcmp(ev->key, "Cancel") == 0)) {
-                self->hideSoftwareKeyboardIfPossible();
-                return;
+                if (strcmp(ev->key, "Select") == 0) {
+                    self->m_starFish->messageLoop()->addIdler(
+                        nullptr,
+                        [](size_t, void* data) {
+                            WindowImplEFL* self = (WindowImplEFL*)data;
+                            StarFishEnterer enter(self->m_starFish);
+                            KeyValue kv = KeyValue::EnterKey;
+                            KeyboardData kdata(kv);
+                            self->dispatchKeyEvent(PlatformWindow::KeyEventDown,
+                                                   kdata);
+                            self->dispatchKeyEvent(PlatformWindow::KeyEventUp,
+                                                   kdata);
+                            self->hideSoftwareKeyboardIfPossible();
+                        },
+                        self);
+                } else {
+                    self->m_starFish->messageLoop()->addIdler(
+                        nullptr,
+                        [](size_t, void* data) {
+                            WindowImplEFL* self = (WindowImplEFL*)data;
+                            self->hideSoftwareKeyboardIfPossible();
+                        },
+                        self);
+                }
             }
-
+            /*
+            #ifdef STARFISH_TIZEN_TV
+                        if (strcmp(ev->key, "Select") == 0) {
+                            ev->key = "Return";
+                        }
+            #endif
+            */
             Ecore_IMF_Event_Key_Down ecore_ev;
             ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
             if (ecore_imf_context_filter_event(self->m_imfContext,
@@ -871,6 +911,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 return;
             }
             // process non-char keys
+            STARFISH_LOG_INFO("process non-char [%s]\n", ev->key);
             auto keyValue = ecoreEventKeyToKeyValue(
                 ev->key, (evas_key_modifier_is_set(ev->modifiers, "Shift_L") ==
                           EINA_TRUE) ||
@@ -889,6 +930,13 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
             WindowImplEFL* self = (WindowImplEFL*)data;
             Evas_Event_Key_Up* ev = (Evas_Event_Key_Up*)event_info;
+            /*
+#ifdef STARFISH_TIZEN_TV
+            if (strcmp(ev->key, "Select") == 0) {
+                ev->key = "Return";
+            }
+#endif
+            */
             STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_UP for ime object [%s]\n",
                               ev->key);
             Ecore_IMF_Event_Key_Up ecore_ev;
@@ -940,9 +988,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         },
         wnd);
 
-    // ecore_imf_context_autocapital_type_set(wnd->m_imfContext,
-    //                                        ECORE_IMF_AUTOCAPITAL_TYPE_NONE);
-    // ecore_imf_context_prediction_allow_set(wnd->m_imfContext, EINA_FALSE);
+    ecore_imf_context_autocapital_type_set(wnd->m_imfContext,
+                                           ECORE_IMF_AUTOCAPITAL_TYPE_NONE);
+    ecore_imf_context_prediction_allow_set(wnd->m_imfContext, EINA_FALSE);
 
     return wnd;
 }
@@ -1012,16 +1060,13 @@ void WebView::setNeedsRendering()
         [](void* data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
             if (!wnd->m_canRendering) {
-#ifdef STARFISH_TIZEN
-                STARFISH_LOG_INFO(
-                    "delay rendering due to try rendering too early(prev "
-                    "rendering result not computed yet in evas)\n");
-#endif
                 return ECORE_CALLBACK_RENEW;
             }
             StarFishEnterer enter(wnd->starFish());
             if (wnd->rendering()) {
                 wnd->m_canRendering = false;
+            } else {
+                wnd->m_canRendering = true;
             }
             wnd->m_renderingAnimator = nullptr;
             return ECORE_CALLBACK_CANCEL;

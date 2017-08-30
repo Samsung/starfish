@@ -209,25 +209,17 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
             updateInputboxValue(textToDisplay);
         }
 
-        if (isEditableType() && name == starFish()->staticStrings()->m_value &&
-            !old->equals(val)) {
+        if (isEditableType() && name == starFish()->staticStrings()->m_value) {
             // TODO: fire correct inputevent
+            // TODO: we should fire this event in handleDefaultEvent
             InputEvent* event =
                 new InputEvent(document(), String::createASCIIString("input"));
             event->setCancelable(false);
             event->setBubbles(true);
             event->setComposed(true);
             event->setData(val);
-            event->setCurrentTarget(this);
             event->setInputType(String::createASCIIString("insertText"));
-            starFish()->messageLoop()->addIdler(
-                document()->browsingContext(),
-                [](size_t, void* data, void* data2) {
-                    HTMLInputElement* self = (HTMLInputElement*)data;
-                    InputEvent* e = (InputEvent*)data2;
-                    self->dispatchEventByUA(e);
-                },
-                this, event);
+            dispatchEventByUA(event);
         }
     }
 }
@@ -255,16 +247,7 @@ void HTMLInputElement::updateInputboxValue(String* value)
         FrameInputBox* box = frame()->asFrameInputBox();
         STARFISH_ASSERT(box->firstChild());
         box->firstChild()->asFrameText()->node()->asText()->setData(value);
-
-        if (!document()->browsingContext()->needsLayout()) {
-            // Do partial layout for performance
-            LayoutContext ctx(starFish(),
-                              document()->frame()->asFrameDocument());
-            box->layout(ctx, Frame::ResolveAll);
-            setNeedsPainting();
-        } else {
-            setNeedsLayout();
-        }
+        setNeedsLayout();
     } else if (document()->doesParticipateInRendering()) {
         setNeedsFrameTreeBuild();
     }

@@ -468,6 +468,7 @@ void WebView::layoutIfNeeds()
             FrameTreeBuilder::dumpFrameTree(m_mainBrowsingContext->document());
         }
 #endif
+        m_needsPainting = true;
     }
 }
 
@@ -497,7 +498,7 @@ bool WebView::rendering(bool force)
         canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
         delete canvas;
-        return true;
+        return false;
     }
 
     uint64_t currentTick = tickCount();

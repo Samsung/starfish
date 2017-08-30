@@ -265,6 +265,7 @@ ifneq (,$(findstring tizen,$(HOST)))
     MULTIPAGE_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_TV
     CXXFLAGS += -DSTARFISH_ENABLE_TEST
+    CXXFLAGS += -DSTARFISH_ENABLE_VIRTUAL_CURSOR=1
     # At present, this feature is not required. 
     # CXXFLAGS += -DSTARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER=false
   endif

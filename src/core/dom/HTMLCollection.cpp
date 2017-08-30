@@ -53,8 +53,7 @@ Element* HTMLCollection::namedItem(String* key)
     if (key->length()) {
         for (unsigned i = 0; i < m_nodeListImpl.length(); i++) {
             Element* elem = m_nodeListImpl.item(i)->asElement();
-            if (elem->asHTMLElement()->hasId() &&
-                elem->asHTMLElement()->id()->equals(key)) {
+            if (elem->hasId() && elem->id()->equals(key)) {
                 return elem;
             }
             Nullable<String*> attrStr =
