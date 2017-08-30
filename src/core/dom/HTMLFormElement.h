@@ -70,12 +70,12 @@ public:
     String* value();
     void setValue(String* value);
 
-    virtual bool disabled();
-    virtual void setDisabled(bool disabled);
+    bool disabled();
+    void setDisabled(bool disabled);
 
     // Other method
-    virtual HTMLFormElement* form();
-    virtual HTMLFieldSetElement* fieldSet();
+    HTMLFormElement* form();
+    HTMLFieldSetElement* fieldSet();
     virtual bool isHTMLFormObject() const override
     {
         return true;

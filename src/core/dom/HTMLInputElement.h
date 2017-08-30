@@ -47,6 +47,9 @@ public:
     bool checked();
     void setChecked(bool checked);
 
+    String* placeholder();
+    void setPlaceholder(String* target);
+
     uint32_t size();
     void setSize(String* size);
 
@@ -75,6 +78,7 @@ private:
     bool isEditableType() const;
     bool isSizableType() const;
     void updateInputboxValue(String* value);
+    bool shouldUsePlaceholder();
 
     bool m_checked;
 
