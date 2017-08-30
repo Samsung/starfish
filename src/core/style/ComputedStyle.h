@@ -80,10 +80,16 @@ public:
         m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
         m_inheritedStyles.m_fontSize = Length(Length::Fixed, mediumFontSize);
         m_inheritedStyles.m_fontWeight = FontWeightValue::NormalFontWeightValue;
+        m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
         m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
         m_inheritedStyles.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
         m_inheritedStyles.m_visibility =
             VisibilityValue::VisibleVisibilityValue;
+        m_inheritedStyles.m_borderCollapse =
+            BorderCollapseValue::SeparateBorderCollapseValue;
+        m_inheritedStyles.m_captionSide = CaptionSideValue::TopCaptionSideValue;
+        m_inheritedStyles.m_emptyCells = EmptyCellsValue::ShowEmptyCellsValue;
+
         m_inheritedStyles.m_letterSpacing = Length(Length::Fixed, 0);
         // -100 is used to represent 'normal' value.
         m_inheritedStyles.m_lineHeight = Length(Length::Percent, -100);
