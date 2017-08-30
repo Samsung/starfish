@@ -526,7 +526,7 @@ else ifeq ($(HOST), tizen_obs)
   ifeq ($(BACKEND), DALI)
     LDFLAGS += -lturbojpeg -lgif third_party/libtuv/build/arm-tizen/debug/lib/libtuv.a
   endif
-  LIB = libWebWidgetEngine.so
+  LIB = liblightweight-web-engine.so
   ifeq ($(TYPE), exe)
     LDFLAGS += -lrt
   endif
@@ -574,7 +574,7 @@ else ifneq (,$(findstring tizen,$(HOST)))
     endif
   endif
 
-  LIB = libWebWidgetEngine.so
+  LIB = liblightweight-web-engine.so
 endif
 
 ifeq ($(LTO), 1)
