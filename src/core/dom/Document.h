@@ -20,6 +20,7 @@
 #include "core/dom/Node.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/style/Style.h"
+#include "binding/HTMLScriptElementOrSVGScriptElementUnion.h"
 
 namespace StarFish {
 
@@ -60,6 +61,8 @@ enum VisibilityState {
 #define SVG_NAMESPACE "http://www.w3.org/2000/svg"
 #define XML_NAMESPACE "http://www.w3.org/XML/1998/namespace"
 #define XMLNS_NAMESPACE "http://www.w3.org/2000/xmlns/"
+
+typedef HTMLScriptElementOrSVGScriptElement HTMLOrSVGScriptElement;
 
 class Document : public Node {
     friend class DOMImplementation;
@@ -342,6 +345,22 @@ public:
     QualifiedName validateAndExtractQualifiedName(Nullable<String*> ns,
                                                   String* qualifiedName);
 
+    Nullable<HTMLOrSVGScriptElement> currentScript();
+    void appendCurrentScript(HTMLScriptElement* element)
+    {
+        m_currentScripts.push_back(element);
+    }
+    void appendCurrentScript(SVGScriptElement* element)
+    {
+        m_currentScripts.push_back(element);
+    }
+    void popCurrentScript()
+    {
+        if (m_currentScripts.size() > 0) {
+            m_currentScripts.pop_back();
+        }
+    }
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -430,6 +449,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document,
                                         m_namedAccessActiveHTMLCollectionList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_implementation));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_currentScripts));
     }
 
     // only used in html document builder
@@ -464,6 +484,7 @@ protected:
     GCVector<ResourceRequest*> m_activeResourceRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
     DOMImplementation* m_implementation;
+    GCVector<Element*> m_currentScripts;
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif

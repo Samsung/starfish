@@ -122,6 +122,14 @@ protected:
 
 bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
 {
+    document()->appendCurrentScript(this);
+    bool result = executeScriptImpl(forceSync, inParser);
+    document()->popCurrentScript();
+    return result;
+}
+
+bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
+{
     if (m_isParserInserted) {
         return false;
     }

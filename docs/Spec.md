@@ -145,6 +145,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | documentElement | Returns the document element. |
 |  | attribute | title | Returns the title of document. |
 |  | attribute | dir | Returns the dir attribute of html element. |
+|  | attribute | currentScript | Returns HTMLScriptElement, or SVGScriptElement, that is currently executing |
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | If localName is "\*" returns an HTMLCollection of all descendant elements.Otherwise, returns an HTMLCollection of all descendant elements whose local name is localName. |
 |  | method | NodeList getElementsByName(DOMString name) | returns an NodeList of all descendant elements whose name is name. |
 |  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns an HTMLCollection of the elements in the object on which the method was invoked (a document or an element) that have all the classes given by classes. |
@@ -656,6 +657,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [Window](https://html.spec.whatwg.org/#the-window-object) | interface | Window | The Window has an associated Document, which is a Document object. |
 |  | attribute | window | Returns window. |
 |  | attribute | self | Returns window. |
+|  | attribute | top | Returns window for the top-level browsing context. |
 |  | attribute | parent | Returns parent window. |
 |  | attribute | document | Returns the document associated with window. |
 |  | attribute | location | Return this Window object's Location object. |

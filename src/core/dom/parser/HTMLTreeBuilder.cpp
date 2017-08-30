@@ -964,7 +964,7 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         return;
     }
     */
-    if (token->name() == s->m_svgTagName) {
+    if (token->name() == s->m_svgsvgTagName) {
         m_tree.reconstructTheActiveFormattingElements();
         // TODO
         // adjustSVGAttributes(token);

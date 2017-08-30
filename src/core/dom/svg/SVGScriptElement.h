@@ -14,22 +14,28 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "core/dom/svg/SVGDocument.h"
-#include "core/dom/svg/SVGSVGElement.h"
-#include "StarFish.h"
+#ifndef __StarFishSVGScriptElement__
+#define __StarFishSVGScriptElement__
+
+#include "core/dom/svg/SVGElement.h"
 
 namespace StarFish {
 
-Element* SVGDocument::createSVGElement(Document* document,
-                                       AtomicString localName)
-{
-    StaticStrings* str = document->starFish()->staticStrings();
-    if (str->m_svgsvgTagName == localName) {
-        return new SVGSVGElement(document);
-    } else {
-        return new SVGNamedElement(
-            document, QualifiedName(str->m_svgNamespaceURI, localName));
+class SVGScriptElement : public SVGElement {
+public:
+    SVGScriptElement(Document* document)
+        : SVGElement(document)
+    {
     }
+
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isSVGScriptElement() const override;
+
+    virtual QualifiedName name();
+
+protected:
+};
 }
-}
+
+#endif

@@ -203,6 +203,7 @@ public:
     // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
     // WindowProxy == Window are same in StarFish
     Window* parent();
+    Window* top();
 
     History* history()
     {

@@ -47,8 +47,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
 #undef DEFINE_HTML_LOCAL_NAMES
 
-#define DEFINE_SVG_LOCAL_NAMES(name)   \
-    m_##name##TagName = QualifiedName( \
+#define DEFINE_SVG_LOCAL_NAMES(name)      \
+    m_svg##name##TagName = QualifiedName( \
         m_xhtmlNamespaceURI, AtomicString::createAtomicString(sf, #name));
     STARFISH_ENUM_SVG_TAG_NAMES(DEFINE_SVG_LOCAL_NAMES)
 #undef DEFINE_SVG_LOCAL_NAMES

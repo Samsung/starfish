@@ -15,21 +15,13 @@
  */
 
 #include "StarFishConfig.h"
-#include "core/dom/svg/SVGDocument.h"
-#include "core/dom/svg/SVGSVGElement.h"
 #include "StarFish.h"
+#include "core/dom/svg/SVGScriptElement.h"
 
 namespace StarFish {
 
-Element* SVGDocument::createSVGElement(Document* document,
-                                       AtomicString localName)
+QualifiedName SVGScriptElement::name()
 {
-    StaticStrings* str = document->starFish()->staticStrings();
-    if (str->m_svgsvgTagName == localName) {
-        return new SVGSVGElement(document);
-    } else {
-        return new SVGNamedElement(
-            document, QualifiedName(str->m_svgNamespaceURI, localName));
-    }
+    return starFish()->staticStrings()->m_svgscriptTagName;
 }
 }
