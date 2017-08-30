@@ -35,6 +35,10 @@ namespace StarFish {
 FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
     Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
+    if (current->style()->display() == DisplayValue::NoneDisplayValue) {
+        return nullptr;
+    }
+
     FrameTableObjectBox* currentFrame = nullptr;
     FrameBlockBox* parent = ctx.currentBlockContainer();
     bool isProperChild = isProperChildDisplayValueType(
@@ -59,7 +63,9 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             if (force || c->needsFrameTreeBuild() ||
                 c->childNeedsFrameTreeBuild()) {
-                currentFrame->addChild(c, ctx, force);
+                if (c->style()->display() != DisplayValue::NoneDisplayValue) {
+                    currentFrame->addChild(c, ctx, force);
+                }
             }
         }
         current->clearNeedsFrameTreeBuild();
