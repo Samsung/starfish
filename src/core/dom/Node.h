@@ -31,6 +31,7 @@ class DOMTokenList;
 class Element;
 class Frame;
 class HTMLCollection;
+class HTMLFormObject;
 class NodeList;
 class RareNodeMembers;
 class RareElementMembers;
@@ -568,6 +569,17 @@ public:
     virtual bool isContainerNode()
     {
         return true;
+    }
+
+    virtual bool isHTMLFormObject() const
+    {
+        return false;
+    }
+
+    HTMLFormObject* asHTMLFormObject()
+    {
+        STARFISH_ASSERT(isHTMLFormObject());
+        return reinterpret_cast<HTMLFormObject*>(this);
     }
 
 private:

@@ -22,6 +22,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLInputElement.h"
+#include "core/dom/HTMLButtonElement.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/HTMLFormControlsCollection.h"
 #include "core/dom/HTMLFieldSetElement.h"
@@ -335,10 +336,12 @@ void HTMLFormElement::submit(HTMLElement* submitter)
 {
     GCVector<FormDataSetItem*>* formDataSet = createFormDataSet(submitter);
     String* formAction = String::emptyString;
-    HTMLInputElement* inputNode = nullptr;
-    if (submitter && submitter->isHTMLInputElement()) {
-        inputNode = submitter->asHTMLInputElement();
-        if (inputNode->type()->equalsIgnoreCase("button")) {
+    HTMLFormObject* inputNode = nullptr;
+    if (submitter &&
+        (submitter->isHTMLInputElement() || submitter->isHTMLButtonElement())) {
+        inputNode = submitter->asHTMLFormObject();
+        if (inputNode->type()->equals("submit") ||
+            inputNode->type()->equals("image")) {
             formAction = inputNode->formAction();
         }
     }
@@ -474,7 +477,7 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
         [this, submitter](Node* node) -> bool {
             // TODO: datalist and object are not supported
             if (node->isHTMLInputElement() || node->isHTMLButtonElement()) {
-                HTMLInputElement* inputNode = node->asHTMLInputElement();
+                HTMLFormObject* inputNode = node->asHTMLFormObject();
 
                 if (inputNode->disabled()) {
                     return false;
@@ -486,13 +489,15 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
                     (inputNode != submitter)) {
                     return false;
                 }
-                if (inputNode->type()->equals("checkbox") &&
-                    (!inputNode->checked())) {
-                    return false;
-                }
-                if (inputNode->type()->equals("radio") &&
-                    (!inputNode->checked())) {
-                    return false;
+                if (node->isHTMLInputElement()) {
+                    if (inputNode->type()->equals("checkbox") &&
+                        (!inputNode->asHTMLInputElement()->checked())) {
+                        return false;
+                    }
+                    if (inputNode->type()->equals("radio") &&
+                        (!inputNode->asHTMLInputElement()->checked())) {
+                        return false;
+                    }
                 }
                 if (!inputNode->type()->equals("image") &&
                     (inputNode->domName()->isEmpty())) {

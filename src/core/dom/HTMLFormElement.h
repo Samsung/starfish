@@ -56,20 +56,20 @@ public:
     virtual String* type() const;
     virtual void setType(String* type);
 
-    virtual String* formEnctype();
-    virtual void setFormEnctype(String* enctype);
+    String* formEnctype();
+    void setFormEnctype(String* enctype);
 
-    virtual String* formMethod();
-    virtual void setFormMethod(String* method);
+    String* formMethod();
+    void setFormMethod(String* method);
 
-    virtual String* formTarget();
-    virtual void setFormTarget(String* target);
+    String* formTarget();
+    void setFormTarget(String* target);
 
-    virtual String* formAction();
-    virtual void setFormAction(String* formAction);
+    String* formAction();
+    void setFormAction(String* formAction);
 
-    virtual String* value();
-    virtual void setValue(String* value);
+    String* value();
+    void setValue(String* value);
 
     virtual bool disabled();
     virtual void setDisabled(bool disabled);
@@ -77,6 +77,10 @@ public:
     // Other method
     virtual HTMLFormElement* form();
     virtual HTMLFieldSetElement* fieldSet();
+    virtual bool isHTMLFormObject() const override
+    {
+        return true;
+    }
 
 protected:
     HTMLFormObject(Document* document);
