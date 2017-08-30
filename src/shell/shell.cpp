@@ -158,6 +158,7 @@ public:
     void Create(Application& application);
     bool TouchEventHandler(Dali::Actor actor, const Dali::TouchData& data);
     bool HoverEventHandler(Dali::Actor actor, const Dali::HoverEvent& event);
+    void KeyEventHandler(const Dali::KeyEvent& event);
 
     bool m_isInit;
     bool m_isMouseLbuttonDown;
@@ -296,6 +297,8 @@ void DaliShellController::Create(Application& application)
         this, &DaliShellController::TouchEventHandler);
     Dali::Stage::GetCurrent().GetRootLayer().HoveredSignal().Connect(
         this, &DaliShellController::HoverEventHandler);
+    Dali::Stage::GetCurrent().KeyEventSignal().Connect(
+        this, &DaliShellController::KeyEventHandler);
 
     m_timer = Dali::Timer::New(20);
     m_timer.TickSignal().Connect(this, &DaliShellController::updateTick);
@@ -435,6 +438,49 @@ bool DaliShellController::HoverEventHandler(Dali::Actor actor,
 
     return true;
 }
+
+void DaliShellController::KeyEventHandler(const Dali::KeyEvent& event)
+{
+    // TODO:Fix Me only works for ascii
+    auto keyValue = (StarFish::KeyValue)*event.keyPressed.c_str();
+    KeyboardData kdata(keyValue);
+
+    struct dummy {
+        StarFish::StarFish* starfish;
+        StarFish::KeyboardData data;
+    };
+    dummy* d = new dummy;
+    d->starfish = m_sf;
+    d->data = kdata;
+    if (event.state == Dali::KeyEvent::Down) {
+        m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            m_sf->platformWindow()->webView()->mainBrowsingContext(),
+            [](size_t, void* data) {
+                dummy* d = (dummy*)data;
+                StarFish::StarFish* m_sf = d->starfish;
+                StarFish::KeyboardData keyData = d->data;
+                StarFishEnterer enter(m_sf);
+                m_sf->platformWindow()->dispatchKeyEvent(
+                    PlatformWindow::KeyEventDown, keyData);
+                delete d;
+            },
+            d);
+    } else if (event.state == Dali::KeyEvent::Down) {
+        m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            m_sf->platformWindow()->webView()->mainBrowsingContext(),
+            [](size_t, void* data) {
+                dummy* d = (dummy*)data;
+                StarFish::StarFish* m_sf = d->starfish;
+                StarFish::KeyboardData keyData = d->data;
+                StarFishEnterer enter(m_sf);
+                m_sf->platformWindow()->dispatchKeyEvent(
+                    PlatformWindow::KeyEventUp, keyData);
+                delete d;
+            },
+            d);
+    }
+}
+
 #endif
 
 int main(int argc, char* argv[])
