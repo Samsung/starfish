@@ -48,12 +48,10 @@ FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
 
 FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
                                ResourceRequest::EncodeType enctype,
-                               ResourceRequest::MethodType method,
-                               ResourceURL* url)
+                               ResourceRequest::MethodType method)
     : m_formDataSet(formDataSet)
     , m_enctype(enctype)
     , m_method(method)
-    , m_documentURIfromLastHistoryEntry(url)
 {
 }
 
@@ -410,13 +408,7 @@ void HTMLFormElement::submitData(ResourceURL* url,
     }
 
     DocumentURL* urlToOpen =
-        new DocumentURL(url, new FormSubmitData(formDataSet, enctype, method,
-                                                document()
-                                                    ->window()
-                                                    ->history()
-                                                    ->historyManager()
-                                                    ->currentEntry()
-                                                    ->url()));
+        new DocumentURL(url, new FormSubmitData(formDataSet, enctype, method));
     auto fn = [](size_t handle, void* data1, void* data2) {
         HTMLFormElement* formElement = (HTMLFormElement*)data1;
         DocumentURL* urlToOpen = (DocumentURL*)data2;

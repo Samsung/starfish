@@ -72,13 +72,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
 
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString(HTTPHeaderMap::kOrigin),
-                        formSubmitData->m_documentURIfromLastHistoryEntry
-                            ->origin());
-
-                    m_resourceRequest->setRequestHeader(
-                        String::createASCIIString(HTTPHeaderMap::kReferer),
-                        formSubmitData->m_documentURIfromLastHistoryEntry
-                            ->urlString());
+                        referrerURL->origin());
 
                     if (formSubmitData->m_method ==
                         ResourceRequest::GET_METHOD) {

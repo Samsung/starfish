@@ -40,11 +40,10 @@ class FormSubmitData : public gc {
 public:
     FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
                    ResourceRequest::EncodeType enctype,
-                   ResourceRequest::MethodType method, ResourceURL* url);
+                   ResourceRequest::MethodType method);
     GCVector<FormDataSetItem*>* m_formDataSet;
     ResourceRequest::EncodeType m_enctype;
     ResourceRequest::MethodType m_method;
-    ResourceURL* m_documentURIfromLastHistoryEntry;
 };
 
 class HTMLFormObject : public HTMLElement {

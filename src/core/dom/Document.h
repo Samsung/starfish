@@ -272,16 +272,6 @@ public:
     Location* location();
     String* referrer();
 
-    ResourceURL* cookieURI()
-    {
-        return m_cookieURI;
-    }
-
-    void setCookieURI(ResourceURL* url)
-    {
-        m_cookieURI = url;
-    }
-
     String* cookie();
     void setCookie(String* cookie);
 
@@ -426,7 +416,6 @@ protected:
         Node::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentURI));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_referrer));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_cookieURI));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webOrigin));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_characterSet));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentType));
@@ -461,7 +450,6 @@ protected:
     Window* m_window;
     ResourceURL* m_documentURI;
     ResourceURL* m_referrer;
-    ResourceURL* m_cookieURI;
     WebOrigin* m_webOrigin;
     String* m_characterSet;
     String* m_contentType;
