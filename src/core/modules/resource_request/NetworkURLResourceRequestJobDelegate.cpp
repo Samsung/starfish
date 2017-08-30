@@ -280,12 +280,6 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     if (!m_orgProxy->m_document->documentURI()->isNetworkURL()) {
         headers.setHeader(HTTPHeaderMap::kOrigin, "null");
     } else {
-        auto it = headers.findHeader(HTTPHeaderMap::kOrigin);
-        if (it == headers.headerMap().end()) {
-            headers.setHeader(HTTPHeaderMap::kOrigin,
-                              m_orgProxy->m_url->origin()->utf8Data());
-        }
-
         auto it2 = headers.findHeader(HTTPHeaderMap::kReferer);
         if (it2 == headers.headerMap().end() && m_orgProxy->referrer()) {
             headers.setHeader(HTTPHeaderMap::kReferer,

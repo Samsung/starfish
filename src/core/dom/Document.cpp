@@ -73,7 +73,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_window(window)
     , m_documentURI(uri)
     , m_referrer(nullptr)
-    , m_cookieURI(uri)
     , m_webOrigin(WebOrigin::createDocumentOrigin(uri))
     , m_characterSet(charSet)
     , m_contentType(String::createASCIIString("application/xml"))
@@ -178,13 +177,13 @@ String* Document::cookie()
     // * If the contents are sandboxed into a unique origin (e.g. in an iframe
     //   with the sandbox attribute)
     String* ret =
-        NetworkSharedResourceManager::getInstance()->cookeis(m_cookieURI);
+        NetworkSharedResourceManager::getInstance()->cookeis(documentURI());
     return ret;
 }
 
 void Document::setCookie(String* cookie)
 {
-    NetworkSharedResourceManager::getInstance()->setCookies(this, m_cookieURI,
+    NetworkSharedResourceManager::getInstance()->setCookies(this, documentURI(),
                                                             cookie);
 }
 
