@@ -17,11 +17,11 @@
 #ifndef __StarFishHTMLButtonElement__
 #define __StarFishHTMLButtonElement__
 
-#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLFormElement.h"
 
 namespace StarFish {
 
-class HTMLButtonElement : public HTMLElement {
+class HTMLButtonElement : public HTMLFormObject {
 public:
     HTMLButtonElement(Document* document);
 
@@ -35,15 +35,10 @@ public:
     virtual QualifiedName name();
 
     // 4.10.6 Interface Button
-    String* domName();
-    void setDomName(String* name);
+    String* type() const override;
 
-    String* type();
-    void setType(String* type);
-
-    String* value();
-    void setValue(String* value);
-
+    // Other methods
+    bool handleDefaultEvent(Event* event) override;
     bool supportsFocus() const override;
 };
 }

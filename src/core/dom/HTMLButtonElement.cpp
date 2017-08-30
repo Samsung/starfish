@@ -20,12 +20,13 @@
 #include "core/dom/HTMLButtonElement.h"
 
 #include "core/dom/Document.h"
+#include "core/dom/Event.h"
 #include "core/page/BrowsingContext.h"
 
 namespace StarFish {
 
 HTMLButtonElement::HTMLButtonElement(Document* document)
-    : HTMLElement(document)
+    : HTMLFormObject(document)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
     setTabIndex(0, false);
@@ -41,34 +42,42 @@ QualifiedName HTMLButtonElement::name()
     return starFish()->staticStrings()->m_buttonTagName;
 }
 
-String* HTMLButtonElement::domName()
+String* HTMLButtonElement::type() const
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
+    String* typeAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    typeAttr = typeAttr->toLower();
+
+    if (typeAttr->equals("submit")) {
+        return typeAttr;
+    } else if (typeAttr->equals("reset")) {
+        return typeAttr;
+    } else if (typeAttr->equals("button")) {
+        return typeAttr;
+    }
+
+    return starFish()->staticStrings()->m_submit.localName();
 }
 
-void HTMLButtonElement::setDomName(String* name)
+bool HTMLButtonElement::handleDefaultEvent(Event* event)
 {
-    setAttribute(starFish()->staticStrings()->m_name, name);
-}
+    if (HTMLElement::handleDefaultEvent(event)) {
+        return true;
+    }
 
-String* HTMLButtonElement::type()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
-}
+    if (event->isMouseEvent() || event->isTouchEvent()) {
+        if (event->type()->equalsIgnoreCase("click")) {
+            if (form()) {
+                if (type()->equals("submit")) {
+                    fireSubmitEvent();
+                } else if (type()->equals("reset")) {
+                    // TODO
+                }
+                return true;
+            }
+        }
+    }
 
-void HTMLButtonElement::setType(String* type)
-{
-    setAttribute(starFish()->staticStrings()->m_type, type);
-}
-
-String* HTMLButtonElement::value()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_value);
-}
-
-void HTMLButtonElement::setValue(String* value)
-{
-    setAttribute(starFish()->staticStrings()->m_value, value);
+    return false;
 }
 
 bool HTMLButtonElement::supportsFocus() const

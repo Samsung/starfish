@@ -119,6 +119,56 @@ void HTMLFormObject::setType(String* type)
     setAttribute(starFish()->staticStrings()->m_type, type);
 }
 
+String* HTMLFormObject::value()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+}
+
+void HTMLFormObject::setValue(String* value)
+{
+    setAttribute(starFish()->staticStrings()->m_value, value);
+}
+
+String* HTMLFormObject::formEnctype()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_formEnctype);
+}
+
+void HTMLFormObject::setFormEnctype(String* enctype)
+{
+    setAttribute(starFish()->staticStrings()->m_formEnctype, enctype);
+}
+
+String* HTMLFormObject::formMethod()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_formMethod);
+}
+
+void HTMLFormObject::setFormMethod(String* method)
+{
+    setAttribute(starFish()->staticStrings()->m_formMethod, method);
+}
+
+String* HTMLFormObject::formTarget()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_formTarget);
+}
+
+void HTMLFormObject::setFormTarget(String* target)
+{
+    setAttribute(starFish()->staticStrings()->m_formTarget, target);
+}
+
+String* HTMLFormObject::formAction()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_formAction);
+}
+
+void HTMLFormObject::setFormAction(String* formAction)
+{
+    setAttribute(starFish()->staticStrings()->m_formAction, formAction);
+}
+
 bool HTMLFormObject::disabled()
 {
     if (m_disabled) {
@@ -423,7 +473,7 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
         inputNodes, asNode(),
         [this, submitter](Node* node) -> bool {
             // TODO: datalist and object are not supported
-            if (node->isHTMLInputElement()) {
+            if (node->isHTMLInputElement() || node->isHTMLButtonElement()) {
                 HTMLInputElement* inputNode = node->asHTMLInputElement();
 
                 if (inputNode->disabled()) {
@@ -431,6 +481,7 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
                 }
                 if ((inputNode->type()->equals("submit") ||
                      inputNode->type()->equals("button") ||
+                     inputNode->type()->equals("reset") ||
                      inputNode->type()->equals("image")) &&
                     (inputNode != submitter)) {
                     return false;

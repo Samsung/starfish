@@ -44,22 +44,6 @@ public:
     virtual QualifiedName name();
 
     // 4.10 Interface Input
-    String* value();
-    void setValue(String* value);
-    bool canHaveValue() const;
-
-    String* formEnctype();
-    void setFormEnctype(String* enctype);
-
-    String* formMethod();
-    void setFormMethod(String* method);
-
-    String* formTarget();
-    void setFormTarget(String* target);
-
-    String* formAction();
-    void setFormAction(String* formAction);
-
     bool checked();
     void setChecked(bool checked);
 
@@ -68,7 +52,7 @@ public:
 
     // Other methods
     bool handleDefaultEvent(Event* event) override;
-
+    bool canHaveValue() const;
     bool supportsFocus() const override;
 
     LayoutUnit caretThickness() const;
