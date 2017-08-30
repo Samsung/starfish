@@ -303,6 +303,15 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constructor | Audio(optional DOMString src="") | |
 | [HTMLBodyElement](https://html.spec.whatwg.org/multipage/semantics.html#the-body-element) | interface | HTMLBodyElement | The body element represents the main content of the document. |
 |  | attribute | onload | Fired at the Window when the document has finished loading; fired at an element containing a resource (e.g. img, embed) when its resource has finished loading |
+| [HTMLButtonElement](https://html.spec.whatwg.org/#the-button-element) | interface | HTMLButtonElement | The button element represents a button labeled by its contents. |
+|  | attribute | disabled | Returns whether the button is disabled. |
+|  | attribute | form | Returns the element's form element, if any, or null otherwise. |
+|  | attribute | formAction | Specifies the URL of the file that will process the input control when the form is submitted. |
+|  | attribute | formEnctype | Specifies how the form-data should be encoded when submitting it to the server. |
+|  | attribute | formMethod | Defines the HTTP method for sending data to the action URL. |
+|  | attribute | name | Returns the name of the input element. |
+|  | attribute | type | Returns the type of the input element. |
+|  | attribute | value | Returns the value of the input element. |
 | [HTMLBRElement](https://html.spec.whatwg.org/multipage/semantics.html#the-br-element) | interface | HTMLBRElement | The br element represents a line break. |
 |  [HTMLCollection](https://dom.spec.whatwg.org/#htmlcollection)  |  attribute  |  length  |  Returns the number of elements in the collection.  |
 |    |  method  |  Element? item(unsigned long index) (or collection[index])  |  Returns the element with index index number from the collection. The elements are sorted in tree order.  |

@@ -65,16 +65,6 @@ QualifiedName HTMLInputElement::name()
     return starFish()->staticStrings()->m_inputTagName;
 }
 
-String* HTMLInputElement::value()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_value);
-}
-
-void HTMLInputElement::setValue(String* value)
-{
-    setAttribute(starFish()->staticStrings()->m_value, value);
-}
-
 bool HTMLInputElement::canHaveValue() const
 {
     String* typeString = type();
@@ -101,46 +91,6 @@ bool HTMLInputElement::canHaveValue() const
     }
 
     return false;
-}
-
-String* HTMLInputElement::formEnctype()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_formEnctype);
-}
-
-void HTMLInputElement::setFormEnctype(String* enctype)
-{
-    setAttribute(starFish()->staticStrings()->m_formEnctype, enctype);
-}
-
-String* HTMLInputElement::formMethod()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_formMethod);
-}
-
-void HTMLInputElement::setFormMethod(String* method)
-{
-    setAttribute(starFish()->staticStrings()->m_formMethod, method);
-}
-
-String* HTMLInputElement::formTarget()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_formTarget);
-}
-
-void HTMLInputElement::setFormTarget(String* target)
-{
-    setAttribute(starFish()->staticStrings()->m_formTarget, target);
-}
-
-String* HTMLInputElement::formAction()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_formAction);
-}
-
-void HTMLInputElement::setFormAction(String* formAction)
-{
-    setAttribute(starFish()->staticStrings()->m_formAction, formAction);
 }
 
 bool HTMLInputElement::checked()

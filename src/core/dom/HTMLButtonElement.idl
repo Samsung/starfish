@@ -3,13 +3,13 @@
 [HTMLConstructor]
 interface HTMLButtonElement : HTMLElement {
     [Unimplemented, CEReactions] attribute boolean autofocus;
-    [Unimplemented, CEReactions] attribute boolean disabled;
-    [Unimplemented] readonly attribute HTMLFormElement? form;
-    [Unimplemented, CEReactions] attribute USVString formAction;
-    [Unimplemented, CEReactions] attribute DOMString formEnctype;
-    [Unimplemented, CEReactions] attribute DOMString formMethod;
+    [CEReactions] attribute boolean disabled;
+    readonly attribute HTMLFormElement? form;
+    [CEReactions] attribute USVString formAction;
+    [CEReactions] attribute DOMString formEnctype;
+    [CEReactions] attribute DOMString formMethod;
     [Unimplemented, CEReactions] attribute boolean formNoValidate;
-    [Unimplemented, CEReactions] attribute DOMString formTarget;
+    [CEReactions] attribute DOMString formTarget;
     [CEReactions, Rename=domName] attribute DOMString name;
     [CEReactions] attribute DOMString type;
     [CEReactions] attribute DOMString value;
