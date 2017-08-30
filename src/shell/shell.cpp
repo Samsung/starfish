@@ -459,6 +459,10 @@ int main(int argc, char* argv[])
 
     std::string screenShot;
     int width = 1280, height = 720;
+#ifdef STARFISH_TIZEN_TV
+    width = 1920;
+    height = 1080;
+#endif
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
             flag |= StarFish::enableComputedStyleDump;

@@ -110,6 +110,8 @@ void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
 
 void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
 {
+    STARFISH_LOG_INFO("PlatformWindow::dispatchKeyEvent %d\n",
+                      (int)data.keyValue());
     registerOrUpdateIdleTimeCleaner();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
