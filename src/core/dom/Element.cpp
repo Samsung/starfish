@@ -23,6 +23,7 @@
 #include "core/dom/DOMQuad.h"
 #include "core/dom/DOMRect.h"
 #include "core/dom/DOMRectList.h"
+#include "core/dom/DOMStringMap.h"
 #include "core/dom/DOMTokenList.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLDocument.h"
@@ -1010,6 +1011,15 @@ Node* Element::clone()
     }
 
     return newNode;
+}
+
+DOMStringMap* Element::dataset()
+{
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    if (!rareMembers->m_dataset) {
+        rareMembers->m_dataset = new DOMStringMap(this);
+    }
+    return rareMembers->m_dataset;
 }
 
 NamedNodeMap* Element::attributes()

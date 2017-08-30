@@ -6,7 +6,7 @@ interface HTMLElement : Element {
   [CEReactions] attribute DOMString lang;
   [Unimplemented, CEReactions] attribute boolean translate;
   [CEReactions] attribute DOMString dir;
-  [Unimplemented, SameObject] readonly attribute DOMStringMap dataset;
+  [SameObject] readonly attribute DOMStringMap dataset;
 
   // user interaction
   [Unimplemented, CEReactions] attribute boolean hidden;
