@@ -260,6 +260,54 @@ public:
 
         return true;
     }
+    void KeyEventHandler(const Dali::KeyEvent& event)
+    {
+        if (TO_STARFISH(m_instance) == nullptr || !m_isInit)
+            return;
+
+        // TODO:Fix Me only works for ascii
+        auto keyValue = (StarFish::KeyValue)*event.keyPressed.c_str();
+        StarFish::KeyboardData kdata(keyValue);
+
+        struct dummy {
+            StarFish::StarFish* starfish;
+            StarFish::KeyboardData data;
+        };
+        dummy* d = new dummy;
+        d->starfish = TO_STARFISH(m_instance);
+        d->data = kdata;
+        if (event.state == Dali::KeyEvent::Down) {
+            TO_STARFISH(m_instance)
+                ->messageLoop()
+                ->addIdlerWithNoGCRootingInOtherThread(
+                    nullptr,
+                    [](size_t, void* data) {
+                        dummy* d = (dummy*)data;
+                        StarFish::StarFish* m_sf = d->starfish;
+                        StarFish::KeyboardData keyData = d->data;
+                        StarFish::StarFishEnterer enter(m_sf);
+                        m_sf->platformWindow()->dispatchKeyEvent(
+                            StarFish::PlatformWindow::KeyEventDown, keyData);
+                        delete d;
+                    },
+                    d);
+        } else if (event.state == Dali::KeyEvent::Down) {
+            TO_STARFISH(m_instance)
+                ->messageLoop()
+                ->addIdlerWithNoGCRootingInOtherThread(
+                    nullptr,
+                    [](size_t, void* data) {
+                        dummy* d = (dummy*)data;
+                        StarFish::StarFish* m_sf = d->starfish;
+                        StarFish::KeyboardData keyData = d->data;
+                        StarFish::StarFishEnterer enter(m_sf);
+                        m_sf->platformWindow()->dispatchKeyEvent(
+                            StarFish::PlatformWindow::KeyEventUp, keyData);
+                        delete d;
+                    },
+                    d);
+        }
+    }
 
     bool m_isInit;
     bool m_isMouseLbuttonDown;
@@ -390,6 +438,8 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
         starFishControl, &StarFishController::TouchEventHandler);
     Dali::Stage::GetCurrent().GetRootLayer().HoveredSignal().Connect(
         starFishControl, &StarFishController::HoverEventHandler);
+    Dali::Stage::GetCurrent().KeyEventSignal().Connect(
+        starFishControl, &StarFishController::KeyEventHandler);
 
     starFishControl->m_timer = Dali::Timer::New(20);
     starFishControl->m_timer.TickSignal().Connect(
