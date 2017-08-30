@@ -28,7 +28,7 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented, CEReactions] attribute boolean multiple;
     [CEReactions, Rename=domName] attribute DOMString name;
     [Unimplemented, CEReactions] attribute DOMString pattern;
-    [Unimplemented, CEReactions] attribute DOMString placeholder;
+    [CEReactions] attribute DOMString placeholder;
     [Unimplemented, CEReactions] attribute boolean readOnly;
     [Unimplemented, CEReactions] attribute boolean required;
     // FIXME: later size should be implemented RaisesException=Setter

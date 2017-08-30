@@ -259,6 +259,7 @@ public:
     QualifiedName m_formTarget;
     QualifiedName m_checked;
     QualifiedName m_text;
+    QualifiedName m_placeholder;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

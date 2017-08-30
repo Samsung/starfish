@@ -103,6 +103,16 @@ String* HTMLInputElement::checkboxTickSymbol()
     return String::createUTF32String(U'\u2714'); // tick
 }
 
+String* HTMLInputElement::placeholder()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_placeholder);
+}
+
+void HTMLInputElement::setPlaceholder(String* value)
+{
+    setAttribute(starFish()->staticStrings()->m_placeholder, value);
+}
+
 void HTMLInputElement::toggleChecked()
 {
     return checked() ? setChecked(false) : setChecked(true);
@@ -226,13 +236,15 @@ String* HTMLInputElement::visibleValue()
 {
     String* val = value();
     String* typeVal = type();
-    if (typeVal->equals("submit") && val == String::emptyString) {
+    if (typeVal->equals("submit") && val->equals(String::emptyString)) {
         val = String::createASCIIString("submit");
     } else if (typeVal->equals("password")) {
         val = HTMLInputElement::obscurePhrase(val);
     } else if (typeVal->equals("checkbox")) {
         val = checked() ? HTMLInputElement::checkboxTickSymbol()
                         : String::emptyString;
+    } else if (shouldUsePlaceholder()) {
+        val = placeholder();
     }
     return val;
 }
@@ -258,6 +270,15 @@ void HTMLInputElement::updateInputboxValue(String* value)
     }
 }
 
+bool HTMLInputElement::shouldUsePlaceholder()
+{
+    if (isEditableType() && value()->equals(String::emptyString) &&
+        !placeholder()->equals(String::emptyString)) {
+        return true;
+    }
+    return false;
+}
+
 bool HTMLInputElement::handleDefaultEvent(Event* event)
 {
     if (HTMLElement::handleDefaultEvent(event)) {
@@ -271,6 +292,9 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 return true;
             } else if (type()->equals("checkbox")) {
                 toggleChecked();
+                return true;
+            } else if (shouldUsePlaceholder()) {
+                setValue(String::emptyString);
                 return true;
             }
         } else if (event->type()->equals("mousedown") ||
@@ -355,7 +379,8 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
     if (isEditableType()) {
         if (!oldGotFocus && newGotFocus) {
             String* value = visibleValue();
-            m_currentCaretPosition = value->length();
+            m_currentCaretPosition =
+                shouldUsePlaceholder() ? 0 : value->length();
             m_caretBlinkingIntervalId = window()->setInterval(
                 [](Window* window, void* data) {
                     HTMLInputElement* e = (HTMLInputElement*)data;
