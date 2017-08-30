@@ -25,7 +25,7 @@ Element* SVGDocument::createSVGElement(Document* document,
                                        AtomicString localName)
 {
     StaticStrings* str = document->starFish()->staticStrings();
-    if (str->m_svgTagName == localName) {
+    if (str->m_svgsvgTagName == localName) {
         return new SVGSVGElement(document);
     } else {
         return new SVGNamedElement(

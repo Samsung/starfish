@@ -155,7 +155,9 @@ namespace StarFish {
     F(wbr)                              \
     F(xmp)
 
-#define STARFISH_ENUM_SVG_TAG_NAMES(F) F(svg)
+#define STARFISH_ENUM_SVG_TAG_NAMES(F) \
+    F(svg)                             \
+    F(script)
 
 class StaticStrings : public gc {
     friend class QualifiedName;
@@ -210,7 +212,7 @@ public:
 #undef DEFINE_HTML_LOCAL_NAMES
 
 // svg Tag Names
-#define DEFINE_SVG_LOCAL_NAMES(name) QualifiedName m_##name##TagName;
+#define DEFINE_SVG_LOCAL_NAMES(name) QualifiedName m_svg##name##TagName;
     STARFISH_ENUM_SVG_TAG_NAMES(DEFINE_SVG_LOCAL_NAMES)
 #undef DEFINE_SVG_LOCAL_NAMES
 

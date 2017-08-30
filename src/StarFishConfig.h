@@ -246,7 +246,6 @@ inline void __attribute__((optimize("O0"))) clearStack()
             "STARFISH_BINDING_ASSERT_UNIMPLEMENTED at %s (%s:%d)\n", \
             __PRETTY_FUNCTION__, __FILE__, __LINE__);                \
         STARFISH_LOG_ERROR(__VA_ARGS__);                             \
-        ::abort();                                                   \
     } while (0)
 
 #define STARFISH_MAKE_STACK_ALLOCATED()              \

@@ -81,6 +81,7 @@ public:
         return m_didScriptExecuted;
     }
     bool executeScript(bool forceSync = false, bool inParser = false);
+    bool executeScriptImpl(bool forceSync, bool inParser);
     void markScriptExecuted()
     {
         m_isAlreadyStarted = true;

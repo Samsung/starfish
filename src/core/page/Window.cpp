@@ -140,6 +140,19 @@ Window* Window::parent()
     }
 }
 
+Window* Window::top()
+{
+    if (browsingContext()->isMainBrowsingContext()) {
+        return this;
+    }
+    Window* current = this;
+    while (current != nullptr &&
+           !current->browsingContext()->isMainBrowsingContext()) {
+        current = current->parent();
+    }
+    return current;
+}
+
 Storage* Window::localStorage()
 {
     ResourceURL* url = m_document->documentURI();

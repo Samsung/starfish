@@ -864,6 +864,22 @@ void Document::setDomain(String* domain)
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
+Nullable<HTMLOrSVGScriptElement> Document::currentScript()
+{
+    if (m_currentScripts.size() == 0) {
+        return Nullable<HTMLOrSVGScriptElement>();
+    }
+    STARFISH_ASSERT(m_currentScripts.back());
+    STARFISH_ASSERT(m_currentScripts.back()->isHTMLScriptElement() ||
+                    m_currentScripts.back()->isSVGScriptElement());
+    if (m_currentScripts.back()->isHTMLScriptElement()) {
+        return HTMLOrSVGScriptElement::createHTMLScriptElement(
+            m_currentScripts.back()->asHTMLScriptElement());
+    }
+    return HTMLOrSVGScriptElement::createSVGScriptElement(
+        m_currentScripts.back()->asSVGScriptElement());
+}
+
 // https://dom.spec.whatwg.org/#dom-document-createevent
 Event* Document::createEvent(String* type)
 {

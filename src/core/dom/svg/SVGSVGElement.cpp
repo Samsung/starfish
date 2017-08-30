@@ -23,6 +23,6 @@ namespace StarFish {
 
 QualifiedName SVGSVGElement::name()
 {
-    return starFish()->staticStrings()->m_svgTagName;
+    return starFish()->staticStrings()->m_svgsvgTagName;
 }
 }

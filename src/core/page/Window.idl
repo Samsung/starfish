@@ -39,7 +39,7 @@ interface Window : EventTarget {
   // other browsing contexts
   [Unimplemented, Replaceable] readonly attribute WindowProxy frames;
   [Unimplemented, Replaceable] readonly attribute unsigned long length;
-  [Unimplemented, Unforgeable] readonly attribute WindowProxy? top;
+  [Unforgeable] readonly attribute Window? top; // Change WindowProxy -> Window
   [Unimplemented] attribute any opener;
   // [Unimplemented, Replaceable] readonly attribute WindowProxy? parent;
   [Replaceable] readonly attribute Window? parent;
