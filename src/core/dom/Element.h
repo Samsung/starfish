@@ -31,6 +31,7 @@ class HTMLElement;
 class NamedNodeMap;
 class PseudoElement;
 class PseudoElementData;
+class DOMStringMap;
 
 class RareElementMembers : public RareNodeMembers {
 public:
@@ -40,6 +41,7 @@ public:
         , m_attrList(nullptr)
         , m_pseudoElementData(nullptr)
         , m_scrolling(nullptr)
+        , m_dataset(nullptr)
     {
     }
 
@@ -54,6 +56,7 @@ public:
     LayoutUnit m_scrollTop;
     LayoutUnit m_scrollLeft;
     Scrolling* m_scrolling;
+    DOMStringMap* m_dataset;
 };
 
 class Element : public Node {
@@ -190,6 +193,7 @@ public:
     }
 
     NamedNodeMap* attributes();
+    DOMStringMap* dataset();
 
     // https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface
     uint32_t clientLeft();

@@ -163,6 +163,12 @@ inline CharType toASCIILower(CharType c)
     return c | ((c >= 'A' && c <= 'Z') << 5);
 }
 
+template <typename CharType>
+inline CharType toASCIIUpper(CharType c)
+{
+    return static_cast<CharType>(c & ~((c >= 'a' && c <= 'z') << 5));
+}
+
 size_t utf32ToUtf8(char32_t uc, char* UTF8);
 
 struct NullableUTF8String : public gc {
