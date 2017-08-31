@@ -4622,7 +4622,8 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     }
 
     // inline style
-    if (element->inlineStyleWithoutCreation()) {
+    if (pseudoElementType == PseudoElementNone &&
+        element->inlineStyleWithoutCreation()) {
         apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
               element->document()->documentURI(), ret, parent, false);
     }
@@ -4638,7 +4639,8 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     }
 
     // inline style
-    if (element->inlineStyleWithoutCreation()) {
+    if (pseudoElementType == PseudoElementNone &&
+        element->inlineStyleWithoutCreation()) {
         apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
               element->document()->documentURI(), ret, parent, true);
     }

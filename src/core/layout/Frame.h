@@ -1411,7 +1411,8 @@ public:
     {
         if (isFrameBlockBox()) {
             if (isFrameTableBox() || isFrameTableRowBox() ||
-                isFrameTableSectionBox() || isFrameTableColBox()) {
+                isFrameTableSectionBox() || isFrameTableColBox() ||
+                isFrameFlexibleBox()) {
                 return false;
             }
             return true;
