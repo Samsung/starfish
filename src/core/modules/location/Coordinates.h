@@ -18,15 +18,18 @@
 #define __StarFishCoordinates__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
-class Coordinates : public ScriptWrappable {
+class Coordinates : public ScriptWrappable, public DocumentHoldable {
 public:
-    Coordinates(double latitude, double longitude, Nullable<double> altitude,
-                double accuracy, Nullable<double> altitudeAccuracy,
-                Nullable<double> heading, Nullable<double> speed)
+    Coordinates(Document* document, double latitude, double longitude,
+                Nullable<double> altitude, double accuracy,
+                Nullable<double> altitudeAccuracy, Nullable<double> heading,
+                Nullable<double> speed)
         : ScriptWrappable(this)
+        , DocumentHoldable(document)
         , m_latitude(latitude)
         , m_longitude(longitude)
         , m_altitude(altitude)
@@ -40,6 +43,11 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCoordinates() const override;
+
+    virtual ScriptBindingInstance* scriptBindingInstance()
+    {
+        return DocumentHoldable::scriptBindingInstance();
+    }
 
     double latitude()
     {

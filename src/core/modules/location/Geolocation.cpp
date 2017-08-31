@@ -24,7 +24,8 @@
 
 namespace StarFish {
 
-#if !defined(STARFISH_TIZEN_MOBILE) && !defined(STARFISH_TIZEN_WEARABLE)
+#if !defined(STARFISH_TIZEN_MOBILE) && !defined(STARFISH_TIZEN_WEARABLE) && \
+    !defined(STARFISH_TIZEN_TV)
 Geolocation* Geolocation::create(Document* document)
 {
     return new Geolocation(document);

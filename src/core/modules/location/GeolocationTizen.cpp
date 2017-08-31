@@ -16,12 +16,16 @@
 
 #include "StarFishConfig.h"
 #include "core/modules/location/Geolocation.h"
-
-#if defined(STARFISH_TIZEN_MOBILE) || defined(STARFISH_TIZEN_WEARABLE)
-
+#if defined(STARFISH_TIZEN_MOBILE) || defined(STARFISH_TIZEN_WEARABLE) || \
+    defined(STARFISH_TIZEN_TV)
+#include "core/modules/location/Geoposition.h"
+#include "core/modules/location/Coordinates.h"
+#include "core/modules/location/PositionError.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
 #include "core/page/Window.h"
+#include "core/dom/Document.h"
+#include "StarFish.h"
 
 #include <locations.h>
 #include <Elementary.h>
@@ -33,7 +37,7 @@ class GeolocationTizen;
 struct LocationRequestInfoTizen {
     location_manager_h manager;
     GeolocationTizen* geolocation;
-    StarFish* starFish;
+    Document* document;
     uint32_t timeoutId;
     GeoPositionCallback cb;
     void* cbData;
@@ -59,8 +63,8 @@ struct LocationRequestInfoTizen {
 
 class GeolocationTizen : public Geolocation {
 public:
-    GeolocationTizen(StarFish* starFish)
-        : Geolocation(starFish)
+    GeolocationTizen(Document* document)
+        : Geolocation(document)
     {
         m_cachedLocation.timestamp = 0;
     }
@@ -91,20 +95,23 @@ public:
     } m_cachedLocation;
 };
 
-#if defined(STARFISH_TIZEN_MOBILE) || defined(STARFISH_TIZEN_WEARABLE)
-Geolocation* Geolocation::create(StarFish* starFish)
+#if defined(STARFISH_TIZEN_MOBILE) || defined(STARFISH_TIZEN_WEARABLE) || \
+    defined(STARFISH_TIZEN_TV)
+Geolocation* Geolocation::create(Document* d)
 {
-    return new GeolocationTizen(starFish);
+    return new GeolocationTizen(d);
 }
 #endif
 
 static void sendResult(LocationRequestInfoTizen* info)
 {
     Coordinates* c = new Coordinates(
-        info->latitude, info->longitude, Nullable(info->altitude),
-        info->horizontalAccuracy, Nullable(), Nullable(info->direction),
-        Nullable(info->speed * 1000));
-    info->cb(info->starFish, new Geoposition(c, info->timestamp), info->cbData);
+        info->document, info->latitude, info->longitude,
+        Nullable<double>(info->altitude), info->horizontalAccuracy,
+        Nullable<double>(), Nullable<double>(info->direction),
+        Nullable<double>(info->speed * 1000));
+    info->cb(info->document,
+             new Geoposition(info->document, c, info->timestamp), info->cbData);
 
     GCVector<LocationRequestInfoTizen*>& v =
         info->geolocation->m_pendingRequest;
@@ -115,25 +122,27 @@ static void sendResult(LocationRequestInfoTizen* info)
 static void handleError(int error, LocationRequestInfoTizen* info)
 {
     if (error == TIZEN_ERROR_PERMISSION_DENIED) {
-        info->starFish->messageLoop()->addIdler(
+        info->document->starFish()->messageLoop()->addIdler(
+            info->document->browsingContext(),
             [](size_t, void* data, void* data2, void* data3) {
-                StarFish* sf = (StarFish*)data;
+                Document* d = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(sf,
-                   new PositionError(PositionError::Error::PERMISSION_DENIED),
+                cb(d, new PositionError(
+                          d, PositionError::Error::PERMISSION_DENIED),
                    data3);
             },
-            info->starFish, (void*)info->errorCb, info->errorCbData);
+            info->document, (void*)info->errorCb, info->errorCbData);
     } else {
-        info->starFish->messageLoop()->addIdler(
+        info->document->starFish()->messageLoop()->addIdler(
+            info->document->browsingContext(),
             [](size_t, void* data, void* data2, void* data3) {
-                StarFish* sf = (StarFish*)data;
+                Document* d = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(sf, new PositionError(
-                           PositionError::Error::POSITION_UNAVAILABLE),
+                cb(d, new PositionError(
+                          d, PositionError::Error::POSITION_UNAVAILABLE),
                    data3);
             },
-            info->starFish, (void*)info->errorCb, info->errorCbData);
+            info->document, (void*)info->errorCb, info->errorCbData);
     }
     GC_FREE(info);
 }
@@ -148,7 +157,7 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                                         enableHighAccuracy, timeout,
                                         maximumAge)) {
         LocationRequestInfoTizen* info = new (NoGC) LocationRequestInfoTizen();
-        info->starFish = m_starFish;
+        info->document = document();
         info->geolocation = this;
         info->shouldContinueRequest = true;
         info->shouldApplyMaxAge = true;
@@ -176,7 +185,8 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
             info->horizontalAccuracy = m_cachedLocation.horizontalAccuracy;
             info->verticalAccuracy = m_cachedLocation.verticalAccuracy;
             info->timestamp = m_cachedLocation.timestamp;
-            info->starFish->messageLoop()->addIdler(
+            info->document->starFish()->messageLoop()->addIdler(
+                document()->browsingContext(),
                 [](size_t, void* data) {
                     LocationRequestInfoTizen* info =
                         (LocationRequestInfoTizen*)data;
@@ -204,6 +214,7 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                double direction, double climb, void* user_data) {
                 LocationRequestInfoTizen* info =
                     (LocationRequestInfoTizen*)user_data;
+                STARFISH_ASSERT(isMainThread());
                 if (error) {
                     ecore_idler_add(
                         [](void* data) -> Eina_Bool {
@@ -231,7 +242,7 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                     return;
                 }
 
-                info->starFish->window()->clearTimeout(info->timeoutId);
+                info->document->window()->clearTimeout(info->timeoutId);
 
                 location_accuracy_level_e level;
                 location_manager_get_last_accuracy(info->manager, &level,
@@ -255,7 +266,8 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                 info->geolocation->m_cachedLocation.verticalAccuracy =
                     info->verticalAccuracy;
 
-                info->starFish->messageLoop()->addIdler(
+                info->document->starFish()->messageLoop()->addIdler(
+                    info->document->browsingContext(),
                     [](size_t, void* data) {
                         LocationRequestInfoTizen* info =
                             (LocationRequestInfoTizen*)data;
@@ -275,21 +287,22 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
         if (ret) {
             handleError(ret, info);
         } else {
-            info->timeoutId = m_starFish->window()->setTimeout(
+            info->timeoutId = document()->window()->setTimeout(
                 [](Window*, void* data) {
                     LocationRequestInfoTizen* info =
                         (LocationRequestInfoTizen*)data;
                     info->shouldContinueRequest = false;
-                    info->starFish->messageLoop()->addIdler(
+                    info->document->starFish()->messageLoop()->addIdler(
+                        info->document->browsingContext(),
                         [](size_t, void* data, void* data2, void* data3) {
-                            StarFish* sf = (StarFish*)data;
+                            Document* d = (Document*)data;
                             GeoPositionErrorCallback cb =
                                 (GeoPositionErrorCallback)data2;
-                            cb(sf,
-                               new PositionError(PositionError::Error::TIMEOUT),
+                            cb(d, new PositionError(
+                                      d, PositionError::Error::TIMEOUT),
                                data3);
                         },
-                        info->starFish, (void*)info->errorCb,
+                        info->document, (void*)info->errorCb,
                         info->errorCbData);
                 },
                 timeout, info);
