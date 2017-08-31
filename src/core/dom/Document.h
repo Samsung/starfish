@@ -55,6 +55,12 @@ enum VisibilityState {
     VisibilityStateUnloaded
 };
 
+enum DocumentReadyState {
+    DocumentReadyStateLoading,
+    DocumentReadyStateInteractive,
+    DocumentReadyStateComplete,
+};
+
 // Namespaces
 #define HTML_NAMESPACE "http://www.w3.org/1999/xhtml"
 #define MathML_NAMESPACE "http://www.w3.org/1998/Math/MathML"
@@ -224,6 +230,26 @@ public:
     }
 
     void setVisibilityState(VisibilityState visibilityState);
+
+    String* readyState()
+    {
+        String* str = String::emptyString;
+        switch (m_readyState) {
+        case DocumentReadyStateLoading:
+            str = String::createASCIIString("loading");
+            break;
+        case DocumentReadyStateInteractive:
+            str = String::createASCIIString("interactive");
+            break;
+        case DocumentReadyStateComplete:
+            str = String::createASCIIString("complete");
+            break;
+        }
+
+        return str;
+    }
+
+    void setReadyState(DocumentReadyState state);
 
     void updateDOMVersion()
     {
@@ -426,6 +452,7 @@ public:
     // DECLARE_EVENT_LISTENER(toggle);
     DECLARE_EVENT_LISTENER(volumechange);
     DECLARE_EVENT_LISTENER(waiting);
+    DECLARE_EVENT_LISTENER(readystatechange);
 #undef VIRTUAL
 #undef OVERRIDE
 
@@ -466,6 +493,7 @@ protected:
 
     CompatibilityMode m_compatibilityMode : 2;
     VisibilityState m_pageVisibilityState : 2;
+    DocumentReadyState m_readyState : 2;
 
     Window* m_window;
     ResourceURL* m_documentURI;

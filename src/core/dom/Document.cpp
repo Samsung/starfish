@@ -70,6 +70,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_designMode(false)
     , m_compatibilityMode(Document::NoQuirksMode)
     , m_pageVisibilityState(VisibilityStateVisible)
+    , m_readyState(DocumentReadyStateLoading)
     , m_window(window)
     , m_documentURI(uri)
     , m_referrer(nullptr)
@@ -649,6 +650,18 @@ void Document::setVisibilityState(VisibilityState visibilityState)
     }
 }
 
+void Document::setReadyState(DocumentReadyState newState)
+{
+    DocumentReadyState old = m_readyState;
+    m_readyState = newState;
+    if (old != newState) {
+        String* eventType =
+            starFish()->staticStrings()->m_readystatechange.localName();
+        Event* e = new Event(this, eventType, EventInit(false, false));
+        dispatchEventByUA(e);
+    }
+}
+
 String* Document::urlString()
 {
     return m_documentURI->urlString();
@@ -1074,4 +1087,5 @@ DEFINE_EVENT_LISTENER(Document, suspend);
 DEFINE_EVENT_LISTENER(Document, timeupdate);
 DEFINE_EVENT_LISTENER(Document, volumechange);
 DEFINE_EVENT_LISTENER(Document, waiting);
+DEFINE_EVENT_LISTENER(Document, readystatechange);
 }
