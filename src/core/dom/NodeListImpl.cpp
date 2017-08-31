@@ -54,9 +54,9 @@ bool isSameTagName(Node* node, void* data, GCVector<Node*>* collection)
 bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection)
 {
     String* classNames = (String*)data;
-    if (node->isHTMLElement()) {
-        HTMLElement* htmlElement = node->asHTMLElement();
-        if (htmlElement->classNames().size() > 0) {
+    if (node->isElement()) {
+        Element* element = node->asElement();
+        if (element->classNames().size() > 0) {
             size_t length = classNames->length();
             bool isWhiteSpaceState = true;
 
@@ -76,7 +76,7 @@ bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection)
 
                         String* tok = new StringDataUTF32(std::move(str));
 
-                        if (!htmlElement->hasClassName(tok)) {
+                        if (!element->hasClassName(tok)) {
                             return false;
                         }
 
@@ -89,7 +89,7 @@ bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection)
 
             if (str.length()) {
                 String* tok = new StringDataUTF32(std::move(str));
-                if (!htmlElement->hasClassName(tok)) {
+                if (!element->hasClassName(tok)) {
                     return false;
                 }
             }
@@ -106,11 +106,11 @@ bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection)
 {
     QualifiedName* namedAccess = (QualifiedName*)data;
 
-    if (node->isHTMLElement()) {
+    if (node->isElement()) {
         // a, applet, area, embed, form, frameset, img, or object elements
         // that have a name content attribute whose value is name, or
-        HTMLElement* htmlElement = node->asHTMLElement();
-        QualifiedName name = htmlElement->name();
+        Element* element = node->asElement();
+        QualifiedName name = element->name();
         StaticStrings* ss = node->starFish()->staticStrings();
         bool shouldConsiderNameAttribute = false;
         if (name == ss->m_aTagName) {
@@ -130,7 +130,7 @@ bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection)
         }
 
         if (shouldConsiderNameAttribute) {
-            if (htmlElement->getAttributeOrEmpty(ss->m_name)
+            if (element->getAttributeOrEmpty(ss->m_name)
                     ->equals(namedAccess->localName())) {
                 return true;
             }
@@ -138,8 +138,8 @@ bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection)
 
         // HTML elements that have an id content attribute whose value is
         // name
-        if (htmlElement->hasId() &&
-            htmlElement->atomicId() == namedAccess->localNameAtomic()) {
+        if (element->hasId() &&
+            element->atomicId() == namedAccess->localNameAtomic()) {
             return true;
         }
     }
