@@ -146,6 +146,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | title | Returns the title of document. |
 |  | attribute | dir | Returns the dir attribute of html element. |
 |  | attribute | currentScript | Returns HTMLScriptElement, or SVGScriptElement, that is currently executing |
+|  | attribute | readyState | Returns loading state of the document |
+|  | attribute | onreadystatechange | Event handler related with document's readyState |
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | If localName is "\*" returns an HTMLCollection of all descendant elements.Otherwise, returns an HTMLCollection of all descendant elements whose local name is localName. |
 |  | method | NodeList getElementsByName(DOMString name) | returns an NodeList of all descendant elements whose name is name. |
 |  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns an HTMLCollection of the elements in the object on which the method was invoked (a document or an element) that have all the classes given by classes. |

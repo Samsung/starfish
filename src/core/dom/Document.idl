@@ -73,7 +73,7 @@ interface Document : Node {
   readonly attribute DOMString referrer;
   attribute DOMString cookie;
   [Unimplemented] readonly attribute DOMString lastModified;
-  [Unimplemented] readonly attribute DocumentReadyState readyState;
+  readonly attribute DocumentReadyState readyState;
 
   // DOM tree accessors
   // NOTE: getter is implemented in HTMLDocument.idl due to
@@ -113,7 +113,7 @@ interface Document : Node {
   [Unimplemented] DOMString queryCommandValue(DOMString commandId);
 
   // special event handler IDL attributes that only apply to Document objects
-  [Unimplemented, LenientThis] attribute EventHandler onreadystatechange;
+  [LenientThis] attribute EventHandler onreadystatechange;
 
 
 

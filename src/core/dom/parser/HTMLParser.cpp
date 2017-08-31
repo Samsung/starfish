@@ -36,6 +36,7 @@ void HTMLParser::endParse()
     m_treeBuilder.detach();
     m_document->setInParsing(false);
     if (!m_treeBuilder.isParsingFragment()) {
+        m_document->setReadyState(DocumentReadyStateInteractive);
         m_document->notifyDomContentLoaded();
     }
 }
