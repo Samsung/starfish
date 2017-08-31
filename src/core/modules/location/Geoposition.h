@@ -18,15 +18,17 @@
 #define __StarFishGeoposition__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
 class Coordinates;
 
-class Geoposition : public ScriptWrappable {
+class Geoposition : public ScriptWrappable, public DocumentHoldable {
 public:
-    Geoposition(Coordinates* c, DOMTimeStamp timestamp)
+    Geoposition(Document* document, Coordinates* c, DOMTimeStamp timestamp)
         : ScriptWrappable(this)
+        , DocumentHoldable(document)
         , m_coords(c)
         , m_timestamp(timestamp)
     {
@@ -45,6 +47,11 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isGeoposition() const override;
+
+    virtual ScriptBindingInstance* scriptBindingInstance()
+    {
+        return DocumentHoldable::scriptBindingInstance();
+    }
 
 protected:
     Coordinates* m_coords;
