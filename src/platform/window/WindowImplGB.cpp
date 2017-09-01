@@ -57,6 +57,8 @@ public:
     {
         m_renderingAnimator = 0;
         m_renderingIdlerData = nullptr;
+        m_lastKeyPressedTimestamp = 0;
+        m_offsetYDueToSoftwareKeyboard = 0;
         initBuffer();
 
         GC_REGISTER_FINALIZER_NO_ORDER(this,
@@ -133,11 +135,18 @@ public:
     int32_t m_height;
     size_t m_renderingAnimator;
     IdlerData* m_renderingIdlerData;
-    float m_lastMouseX, m_lastMouseY;
-
     void* m_internalBuffer;
     size_t m_stride;
     Mutex* m_rendingLockMutex;
+
+    float m_lastMouseX, m_lastMouseY;
+    bool m_isMouseLbuttonDown;
+    bool m_isKeyDown;
+    bool m_canRendering;
+    uint32_t m_lastClickedTimestamp;
+    uint32_t m_clickedCount;
+    uint32_t m_lastKeyPressedTimestamp;
+    int m_offsetYDueToSoftwareKeyboard;
 };
 
 class CanvasSurfaceDALI : public CanvasSurface {

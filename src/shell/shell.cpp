@@ -115,14 +115,14 @@ static void printMemps(
 using namespace Dali;
 
 char* url = nullptr;
-// extern uv_signal_t g_sigterm;
-// extern uv_signal_t g_sigint;
 extern uv_async_t g_launcher_handle;
 extern pthread_mutex_t* g_initMutex;
 
 void uv_term_cb(uv_signal_t* handle, int signum);
 bool needToInitMainThread();
 void initMainThread(void* (*f)(void*));
+StarFish::KeyboardData DaliEventKeyToKeyboardData(const char* DALIKeyString,
+                                                  bool isShiftPressed);
 
 class DaliShellController : public ConnectionTracker {
 public:
@@ -441,10 +441,8 @@ bool DaliShellController::HoverEventHandler(Dali::Actor actor,
 
 void DaliShellController::KeyEventHandler(const Dali::KeyEvent& event)
 {
-    // TODO:Fix Me only works for ascii
-    auto keyValue = (StarFish::KeyValue)*event.keyPressed.c_str();
-    KeyboardData kdata(keyValue);
-
+    auto kdata = DaliEventKeyToKeyboardData(event.keyPressedName.c_str(),
+                                            event.keyModifier & 1);
     struct dummy {
         StarFish::StarFish* starfish;
         StarFish::KeyboardData data;
