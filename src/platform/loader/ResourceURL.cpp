@@ -23,6 +23,24 @@
 
 namespace StarFish {
 
+static bool toHexAndAppend(StringBuilder& builder, char32_t ch)
+{
+    unsigned char dig1 = (ch & 0xF0) >> 4;
+    unsigned char dig2 = (ch & 0x0F);
+
+    if (dig1 > 15 || dig2 > 15) {
+        return false;
+    }
+    char ch1 = (dig1 <= 9) ? dig1 + '0' : dig1 - 10 + 'A';
+    char ch2 = (dig2 <= 9) ? dig2 + '0' : dig2 - 10 + 'A';
+
+    builder.appendChar('%');
+    builder.appendChar(ch1);
+    builder.appendChar(ch2);
+
+    return true;
+}
+
 static bool isUnreserved(char32_t c)
 {
     // RFC 3986 section 2.3 Unreserved Characters (January 2005)
@@ -33,18 +51,45 @@ static bool isUnreserved(char32_t c)
 String* ResourceURL::createPercentEncodingString(String* src)
 {
     StringBuilder encoded;
-    size_t len = src->bufferAccessData().length;
-    const char* asciiBuffer = src->bufferAccessData().asciiData();
+    auto bufferAccessData = src->bufferAccessData();
 
-    for (size_t i = 0; i < len; i++) {
-        if (isUnreserved(asciiBuffer[i])) {
-            encoded.appendChar(asciiBuffer[i]);
-        } else {
-            char buf[4];
-            snprintf(buf, 4, "%%%02X", asciiBuffer[i]);
-            encoded.appendChar(buf[0]);
-            encoded.appendChar(buf[1]);
-            encoded.appendChar(buf[2]);
+    if (bufferAccessData.hasASCIIContent) {
+        for (size_t i = 0; i < bufferAccessData.length; i++) {
+            char ch = bufferAccessData.charAt(i);
+            if (isUnreserved(ch) || ch == ' ') {
+                encoded.appendChar(ch);
+            } else {
+                toHexAndAppend(encoded, ch);
+            }
+        }
+    } else {
+        for (size_t i = 0; i < bufferAccessData.length; i++) {
+            char32_t ch32 = bufferAccessData.charAt(i);
+            if (isUnreserved(ch32) || ch32 == U' ') {
+                encoded.appendChar(ch32);
+            } else {
+                // https://tools.ietf.org/html/rfc3629#section-3
+                if (ch32 <= 0x007F) {
+                    toHexAndAppend(encoded, ch32);
+                } else if (0x0080 <= ch32 && ch32 <= 0x07FF) {
+                    toHexAndAppend(encoded, 0x00C0 + (ch32 & 0x07C0) / 0x0040);
+                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x003F));
+                } else if (0x0800 <= ch32 && ch32 <= 0xFFFF) {
+                    toHexAndAppend(encoded, 0x00E0 + (ch32 & 0xF000) / 0x1000);
+                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x0FC0) / 0x0040);
+                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x003F));
+                } else if (0x10000 <= ch32 && ch32 <= 0x10FFFF) {
+                    toHexAndAppend(encoded,
+                                   0x00F0 + (ch32 & 0x1C0000) / 0x40000);
+                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x3F000) / 0x1000);
+                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x0FC0) / 0x0040);
+                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x003F));
+                } else {
+                    STARFISH_LOG_INFO(
+                        "Got invalid unicode while convert to "
+                        "PercentEncoding(URI Encoding). Ignore it");
+                }
+            }
         }
     }
     return encoded.finalize();
