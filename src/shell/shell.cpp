@@ -204,7 +204,8 @@ void* mainShellThread(void* data)
 
             app->m_sf = new StarFish::StarFish(
                 (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", app,
-                app->m_width, app->m_height, 1, info, "", "");
+                app->m_width, app->m_height, 1, info, "",
+                "/tmp/StarFish_Cookies.txt");
 
 #if defined(STARFISH_TIZEN)
             app->m_sf->registerFrameBuffer(app->m_surface_info1.planes[0].ptr,
@@ -463,7 +464,7 @@ void DaliShellController::KeyEventHandler(const Dali::KeyEvent& event)
                 delete d;
             },
             d);
-    } else if (event.state == Dali::KeyEvent::Down) {
+    } else if (event.state == Dali::KeyEvent::Up) {
         m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
             m_sf->platformWindow()->webView()->mainBrowsingContext(),
             [](size_t, void* data) {
