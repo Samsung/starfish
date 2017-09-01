@@ -428,7 +428,7 @@ public:
                         delete d;
                     },
                     d);
-        } else if (event.state == Dali::KeyEvent::Down) {
+        } else if (event.state == Dali::KeyEvent::Up) {
             TO_STARFISH(m_instance)
                 ->messageLoop()
                 ->addIdlerWithNoGCRootingInOtherThread(
