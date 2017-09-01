@@ -47,6 +47,145 @@ uv_async_t g_launcher_handle;
 pthread_mutex_t* g_initMutex;
 bool g_MainLoopAlive = false;
 
+StarFish::KeyboardData DaliEventKeyToKeyboardData(const char* DALIKeyString,
+                                                  bool isShiftPressed)
+{
+    StarFish::KeyValue keyValue = StarFish::KeyValue::UnidentifiedKey;
+    if (strcmp("Left", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::ArrowLeftKey;
+    } else if (strcmp("Right", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::ArrowRightKey;
+    } else if (strcmp("Up", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::ArrowUpKey;
+    } else if (strcmp("Down", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::ArrowDownKey;
+    } else if (strcmp("space", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::SpaceKey;
+    } else if (strcmp("Return", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::EnterKey;
+    } else if (strcmp("BackSpace", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::BackspaceKey;
+    } else if (strcmp("Escape", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::EscapeKey;
+    } else if (strcmp("minus", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::MinusMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::UnderScoreMarkKey;
+        }
+    } else if (strcmp("equal", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::PlusMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::EqualitySignKey;
+        }
+    } else if (strcmp("bracketleft", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::LeftCurlyBracketMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::LeftSquareBracketKey;
+        }
+    } else if (strcmp("bracketright", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::RightCurlyBracketMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::RightSquareBracketKey;
+        }
+    } else if (strcmp("semicolon", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::ColonMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::SemiColonMarkKey;
+        }
+    } else if (strcmp("apostrophe", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::DoubleQuoteMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::SingleQuoteMarkKey;
+        }
+    } else if (strcmp("comma", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::LessThanMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::CommaMarkKey;
+        }
+    } else if (strcmp("period", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::GreaterThanSignKey;
+        } else {
+            keyValue = StarFish::KeyValue::PeriodKey;
+        }
+    } else if (strcmp("slash", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::QuestionMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::SlashKey;
+        }
+    } else if (strlen(DALIKeyString) == 1) {
+        char ch = DALIKeyString[0];
+        if (ch >= '0' && ch <= '9') {
+            if (isShiftPressed) {
+                switch (ch) {
+                case '1':
+                    keyValue = StarFish::KeyValue::ExclamationMarkKey;
+                    break;
+                case '2':
+                    keyValue = StarFish::KeyValue::AtMarkKey;
+                    break;
+                case '3':
+                    keyValue = StarFish::KeyValue::SharpMarkKey;
+                    break;
+                case '4':
+                    keyValue = StarFish::KeyValue::DollarMarkKey;
+                    break;
+                case '5':
+                    keyValue = StarFish::KeyValue::PercentMarkKey;
+                    break;
+                case '6':
+                    keyValue = StarFish::KeyValue::CaretMarkKey;
+                    break;
+                case '7':
+                    keyValue = StarFish::KeyValue::AmpersandMarkKey;
+                    break;
+                case '8':
+                    keyValue = StarFish::KeyValue::AsteriskMarkKey;
+                    break;
+                case '9':
+                    keyValue = StarFish::KeyValue::LeftParenthesisMarkKey;
+                    break;
+                case '0':
+                    keyValue = StarFish::KeyValue::RightParenthesisMarkKey;
+                    break;
+                }
+            } else {
+                keyValue = (StarFish::KeyValue)(StarFish::KeyValue::Digit0Key +
+                                                ch - '0');
+            }
+        } else if (ch >= 'a' && ch <= 'z') {
+            int kv = StarFish::KeyValue::LowerAKey + ch - 'a';
+            if (isShiftPressed) {
+                kv -= ('z' - 'a');
+                kv -= 7;
+            }
+            keyValue = (StarFish::KeyValue)kv;
+        }
+    }
+
+    StarFish::KeyboardData kdata(keyValue);
+    if (strcmp("Shift_L", DALIKeyString) == 0 ||
+        strcmp("Shift_R", DALIKeyString) == 0) {
+        kdata.setShiftKey();
+    } else if (strcmp("Control_L", DALIKeyString) == 0 ||
+               strcmp("Control_R", DALIKeyString) == 0) {
+        kdata.setCtrlKey();
+    } else if (strcmp("Alt_L", DALIKeyString) == 0 ||
+               strcmp("Alt_R", DALIKeyString) == 0) {
+        kdata.setAltKey();
+    }
+
+    return kdata;
+}
+
 void uv_term_cb(uv_signal_t* handle, int signum)
 {
     exit(0);
@@ -265,10 +404,8 @@ public:
         if (TO_STARFISH(m_instance) == nullptr || !m_isInit)
             return;
 
-        // TODO:Fix Me only works for ascii
-        auto keyValue = (StarFish::KeyValue)*event.keyPressed.c_str();
-        StarFish::KeyboardData kdata(keyValue);
-
+        auto kdata = DaliEventKeyToKeyboardData(event.keyPressedName.c_str(),
+                                                event.keyModifier & 1);
         struct dummy {
             StarFish::StarFish* starfish;
             StarFish::KeyboardData data;

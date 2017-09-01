@@ -174,6 +174,7 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data2 = data2;
     id->m_ml = this;
     id->m_ctx = ctx;
+    id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
     uv_idle_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
     uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
