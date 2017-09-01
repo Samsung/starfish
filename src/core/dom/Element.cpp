@@ -40,6 +40,7 @@
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/StackingContext.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -1231,11 +1232,23 @@ bool Element::tabIndexSetExplicitly() const
 void Element::focus()
 {
     // TODO: Consider nested browsing contexts.
-    window()->browsingContext()->setFocusedNode(this);
+    starFish()->messageLoop()->addIdler(
+        window()->browsingContext(),
+        [](size_t, void* data) {
+            Element* element = (Element*)data;
+            element->window()->browsingContext()->setFocusedNode(element);
+        },
+        this);
 }
 
 void Element::blur()
 {
-    window()->browsingContext()->releaseFocusedNode(this);
+    starFish()->messageLoop()->addIdler(
+        window()->browsingContext(),
+        [](size_t, void* data) {
+            Element* element = (Element*)data;
+            element->window()->browsingContext()->releaseFocusedNode(element);
+        },
+        this);
 }
 }
