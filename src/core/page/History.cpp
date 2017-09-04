@@ -35,7 +35,7 @@ History::History(Document* doc)
 
 HistoryManager* History::historyManager()
 {
-    return document()->window()->browsingContext()->webView()->historyManager();
+    return document()->window()->browsingContext()->historyManager();
 }
 
 void History::back()
@@ -64,17 +64,17 @@ uint32_t History::length()
 
 ScriptValue History::state()
 {
-    return historyManager()->state();
+    return historyManager()->state(document());
 }
 
 void History::pushState(ScriptValue state, String* title, Nullable<String*> url)
 {
-    historyManager()->pushState(state, title, url);
+    historyManager()->pushState(document(), state, title, url);
 }
 
 void History::replaceState(ScriptValue state, String* title,
                            Nullable<String*> url)
 {
-    historyManager()->replaceState(state, title, url);
+    historyManager()->replaceState(document(), state, title, url);
 }
 }

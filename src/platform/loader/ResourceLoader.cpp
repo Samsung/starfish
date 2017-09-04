@@ -404,8 +404,9 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now,
 void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
 {
     if (m_pendingResourceCountWhileDocumentOpening == 0 &&
-        m_isDocumentInOpenState) {
+        m_isDocumentInOpenState && !m_document->m_onLoadFired) {
         m_isDocumentInOpenState = false;
+        m_document->m_onLoadFired = true;
         starFish()->platformWindow()->registerOrUpdateIdleTimeCleaner();
         starFish()->messageLoop()->addIdler(
             document()->browsingContext(),

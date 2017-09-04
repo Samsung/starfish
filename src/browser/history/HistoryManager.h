@@ -21,8 +21,10 @@
 
 namespace StarFish {
 
+class SerializedTypedData;
 class ResourceURL;
 class WebView;
+class HTMLIFrameElement;
 class HTMLFormElement;
 
 class HistoryManager : public gc {
@@ -33,14 +35,15 @@ public:
     enum Action { Add, Replace, Intact };
     class HistoryEntry : public gc {
     public:
-        HistoryEntry(ScriptValue state, String* title, ResourceURL* url)
+        HistoryEntry(SerializedTypedData* state, String* title,
+                     ResourceURL* url)
             : m_state(state)
             , m_title(title)
             , m_url(url)
         {
         }
 
-        ScriptValue state()
+        SerializedTypedData* state()
         {
             return m_state;
         }
@@ -55,7 +58,7 @@ public:
             return m_url;
         }
 
-        void init(ScriptValue state, String* title, ResourceURL* url)
+        void init(SerializedTypedData* state, String* title, ResourceURL* url)
         {
             m_state = state;
             m_title = title;
@@ -63,31 +66,45 @@ public:
         }
 
     private:
-        ScriptValue m_state;
+        SerializedTypedData* m_state;
         String* m_title;
         ResourceURL* m_url;
     };
 
     static HistoryManager* create(WebView* webView);
+    static HistoryManager* create(HTMLIFrameElement* iframe);
 
     void go(int delta);
     uint32_t length();
-    void pushState(ScriptValue state, String* title, Nullable<String*> url);
-    void replaceState(ScriptValue state, String* title, Nullable<String*> url);
-    ScriptValue state();
+    void pushState(Document* document, ScriptValue state, String* title,
+                   Nullable<String*> url);
+    void replaceState(Document* document, ScriptValue state, String* title,
+                      Nullable<String*> url);
+    ScriptValue state(Document* document);
 
-    void push(ResourceURL* url);
-    void replace(ResourceURL* url);
+    void push(Document* document, ResourceURL* url);
+    void replace(Document* document, ResourceURL* url);
+
+    HistoryEntry* currentEntry();
 
 private:
     HistoryManager(WebView* webView);
+    HistoryManager(HTMLIFrameElement* iframe);
     void addHistoryEntry(HistoryEntry* entry);
-    HistoryEntry* currentEntry();
 
-    WebView* m_webView;
+    enum HistoryManagerOwner {
+        OwnerIsWebView,
+        OwnerIsHTMLIFrame,
+    };
+    HistoryManagerOwner m_ower;
+
+    union {
+        WebView* m_webView;
+        HTMLIFrameElement* m_iframe;
+    };
+
     GCList<HistoryEntry*> m_historyEntries;
-    std::list<HistoryEntry*,
-              gc_allocator_ignore_off_page<HistoryEntry*>>::iterator m_curEntry;
+    GCList<HistoryEntry*>::iterator m_curEntry;
 };
 }
 

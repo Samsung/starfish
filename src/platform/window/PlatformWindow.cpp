@@ -295,6 +295,7 @@ void PlatformWindow::registerOrUpdateIdleTimeCleaner()
 
             // STARFISH_LOG_INFO("Do idle time GC\n");
             auto fn = GC_get_on_collection_event();
+            GC_set_on_collection_event(nullptr);
             GC_gcollect_and_unmap();
             GC_gcollect_and_unmap();
             GC_gcollect_and_unmap();

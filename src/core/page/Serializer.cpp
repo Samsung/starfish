@@ -16,7 +16,9 @@
 
 #include "StarFishConfig.h"
 #include <EscargotPublic.h>
+using namespace Escargot;
 #include "core/dom/DOMException.h"
+#include "core/dom/Document.h"
 #include "core/page/Serializer.h"
 
 namespace StarFish {
@@ -77,9 +79,70 @@ void* SerializedTypedData::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-SerializedTypedData* Serializer::serialize(Document* document,
-                                           ExecutionStateRef* state,
-                                           ScriptValue value)
+static SerializedTypedData* serializeInternal(Document* document,
+                                              ExecutionStateRef* state,
+                                              ScriptValue value);
+static ScriptValue deserializeInternal(Document* document,
+                                       Escargot::ExecutionStateRef* state,
+                                       SerializedTypedData* value);
+
+static void deepcopy(Document* document, Escargot::ExecutionStateRef* state,
+                     Escargot::ObjectRef* dst, SerializedData* src)
+{
+    if (src->isSerializedArrayData()) {
+        SerializedArrayData* serializedArray = src->asSerializedArrayData();
+        size_t len = serializedArray->length();
+        for (size_t i = 0; i < len; i++) {
+            SerializedTypedData* serialized = (*serializedArray)[i];
+            ValueRef* deserialized =
+                deserializeInternal(document, state, serialized);
+            dst->defineDataProperty(
+                state, ValueRef::create(ValueRef::create(i)->toString(state)),
+                deserialized, true, true, true);
+        }
+    } else {
+        SerializedObjectData* serializedObject = src->asSerializedObjectData();
+        size_t len = serializedObject->length();
+        for (size_t i = 0; i < len; i++) {
+            auto& propertyAndValue = serializedObject->keyAndValue(i);
+            ValueRef* deserialized =
+                deserializeInternal(document, state, propertyAndValue.second);
+            dst->defineDataProperty(state, propertyAndValue.first, deserialized,
+                                    true, true, true);
+        }
+    }
+}
+
+static void deepcopy(Document* document, Escargot::ExecutionStateRef* state,
+                     SerializedData* dst, Escargot::ObjectRef* src)
+{
+    ValueVectorRef* values = src->getOwnPropertyKeys(state);
+    if (dst->isSerializedArrayData()) {
+        SerializedArrayData* serializedArray = dst->asSerializedArrayData();
+        for (size_t i = 0; i < serializedArray->length(); i++) {
+            ValueRef* key = ValueRef::create(i);
+            if (src->hasOwnProperty(state, key)) {
+                SerializedTypedData* serialized =
+                    serializeInternal(document, state, src->get(state, key));
+                serializedArray->insert(i, serialized);
+            }
+        }
+    } else {
+        SerializedObjectData* serializedObject = dst->asSerializedObjectData();
+        for (size_t i = 0; i < values->size(); i++) {
+            ValueRef* key = values->at(i);
+            if (key->isString() && src->hasOwnProperty(state, key)) {
+                SerializedTypedData* serialized =
+                    serializeInternal(document, state, src->get(state, key));
+                serializedObject->setKeyAndValue(key, serialized);
+            }
+        }
+    }
+}
+
+static SerializedTypedData* serializeInternal(Document* document,
+                                              ExecutionStateRef* state,
+                                              ScriptValue value)
 {
     uint8_t type = SerializedTypedData::Undefined;
     SerializedData* data = nullptr;
@@ -159,45 +222,15 @@ SerializedTypedData* Serializer::serialize(Document* document,
     }
 
     if (failed) {
-        COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
-                        value->toString(state)->toStdUTF8String().c_str());
-        throw new DOMException(document, DOMException::DATA_CLONE_ERR, reason);
+        return nullptr;
     }
 
     return new SerializedTypedData(type, data);
 }
 
-void Serializer::deepcopy(Document* document,
-                          Escargot::ExecutionStateRef* state,
-                          SerializedData* dst, Escargot::ObjectRef* src)
-{
-    ValueVectorRef* values = src->getOwnPropertyKeys(state);
-    if (dst->isSerializedArrayData()) {
-        SerializedArrayData* serializedArray = dst->asSerializedArrayData();
-        for (size_t i = 0; i < serializedArray->length(); i++) {
-            ValueRef* key = ValueRef::create(i);
-            if (src->hasOwnProperty(state, key)) {
-                SerializedTypedData* serialized =
-                    serialize(document, state, src->get(state, key));
-                serializedArray->insert(i, serialized);
-            }
-        }
-    } else {
-        SerializedObjectData* serializedObject = dst->asSerializedObjectData();
-        for (size_t i = 0; i < values->size(); i++) {
-            ValueRef* key = values->at(i);
-            if (key->isString() && src->hasOwnProperty(state, key)) {
-                SerializedTypedData* serialized =
-                    serialize(document, state, src->get(state, key));
-                serializedObject->setKeyAndValue(key, serialized);
-            }
-        }
-    }
-}
-
-ScriptValue Serializer::deserialize(Document* document,
-                                    Escargot::ExecutionStateRef* state,
-                                    SerializedTypedData* value)
+static ScriptValue deserializeInternal(Document* document,
+                                       Escargot::ExecutionStateRef* state,
+                                       SerializedTypedData* value)
 {
     if (value->isUndefined()) {
         return ValueRef::createUndefined();
@@ -268,30 +301,45 @@ ScriptValue Serializer::deserialize(Document* document,
     }
 }
 
-void Serializer::deepcopy(Document* document,
-                          Escargot::ExecutionStateRef* state,
-                          Escargot::ObjectRef* dst, SerializedData* src)
+SerializedTypedData* Serializer::serialize(Document* document,
+                                           ScriptValue value)
 {
-    if (src->isSerializedArrayData()) {
-        SerializedArrayData* serializedArray = src->asSerializedArrayData();
-        size_t len = serializedArray->length();
-        for (size_t i = 0; i < len; i++) {
-            SerializedTypedData* serialized = (*serializedArray)[i];
-            ValueRef* deserialized = deserialize(document, state, serialized);
-            dst->defineDataProperty(
-                state, ValueRef::create(ValueRef::create(i)->toString(state)),
-                deserialized, true, true, true);
-        }
+    SandBoxRef* sandBox =
+        SandBoxRef::create(document->scriptBindingInstance()->scriptContext());
+    SerializedTypedData* data = nullptr;
+    auto result = sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
+        data = serializeInternal(document, state, value);
+        return ValueRef::createNull();
+    });
+    sandBox->destroy();
+
+    if (result.error->isEmpty()) {
+        return data;
     } else {
-        SerializedObjectData* serializedObject = src->asSerializedObjectData();
-        size_t len = serializedObject->length();
-        for (size_t i = 0; i < len; i++) {
-            auto& propertyAndValue = serializedObject->keyAndValue(i);
-            ValueRef* deserialized =
-                deserialize(document, state, propertyAndValue.second);
-            dst->defineDataProperty(state, propertyAndValue.first, deserialized,
-                                    true, true, true);
-        }
+        COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
+                        result.msgStr->toStdUTF8String().data());
+        throw new DOMException(document, DOMException::DATA_CLONE_ERR, reason);
+    }
+}
+
+ScriptValue Serializer::deserialize(Document* document,
+                                    SerializedTypedData* value)
+{
+    SandBoxRef* sandBox =
+        SandBoxRef::create(document->scriptBindingInstance()->scriptContext());
+    ScriptValue data = ValueRef::createUndefined();
+    auto result = sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
+        data = deserializeInternal(document, state, value);
+        return ValueRef::createNull();
+    });
+    sandBox->destroy();
+
+    if (result.error->isEmpty()) {
+        return data;
+    } else {
+        COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
+                        result.msgStr->toStdUTF8String().data());
+        throw new DOMException(document, DOMException::DATA_CLONE_ERR, reason);
     }
 }
 }

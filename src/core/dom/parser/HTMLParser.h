@@ -62,6 +62,11 @@ public:
         return &m_treeBuilder;
     }
 
+    HTMLInputStream* input()
+    {
+        return &m_input;
+    }
+
     TextPosition textPosition() const
     {
         const SegmentedString& currentString = m_input.current();

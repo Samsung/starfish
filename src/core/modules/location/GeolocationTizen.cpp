@@ -72,7 +72,7 @@ public:
                                     GeoPositionErrorCallback errorCb,
                                     void* errorCbData, bool enableHighAccuracy,
                                     int32_t timeout, int32_t maximumAge);
-    virtual void close()
+    virtual void dispose()
     {
         auto iter = m_pendingRequest.begin();
         while (iter != m_pendingRequest.end()) {

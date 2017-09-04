@@ -44,7 +44,7 @@ public:
                                     int32_t timeout, int32_t maximumAge);
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    virtual void close()
+    virtual void dispose()
     {
     }
 

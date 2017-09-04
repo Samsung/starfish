@@ -67,7 +67,7 @@ public:
     void setSearch(String* search);
     void setHash(String* search);
 
-    void close()
+    void dispose()
     {
     }
 

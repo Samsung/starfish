@@ -34,6 +34,7 @@ public:
     HTMLIFrameElement(Document* document)
         : HTMLElement(document)
         , m_browsingContext(nullptr)
+        , m_historyManager(nullptr)
     {
     }
 
@@ -80,6 +81,7 @@ public:
 
 private:
     BrowsingContext* m_browsingContext;
+    HistoryManager* m_historyManager;
     void loadSrc();
     void unloadSrc();
 };

@@ -183,7 +183,7 @@ public:
                                        GlobalPointingEventKind kind) override;
     virtual bool handleDefaultEvent(Event* event);
     void deleteScriptBindingInstance();
-    void close();
+    void dispose();
 
     // IDL methods
     Document* document()

@@ -6,10 +6,10 @@ enum ScrollRestoration { "auto", "manual" };
 interface History {
   readonly attribute unsigned long length;
   [Unimplemented] attribute ScrollRestoration scrollRestoration;
-  readonly attribute any state;
+  [RaisesException, CEReactions] readonly attribute any state;
   void go(optional long delta = 0);
   void back();
   void forward();
-  void pushState(any data, DOMString title, optional DOMString? url = null);
-  void replaceState(any data, DOMString title, optional DOMString? url = null);
+  [RaisesException, CEReactions] void pushState(any data, DOMString title, optional DOMString? url = null);
+  [RaisesException, CEReactions] void replaceState(any data, DOMString title, optional DOMString? url = null);
 };

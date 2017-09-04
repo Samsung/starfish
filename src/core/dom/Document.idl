@@ -94,11 +94,12 @@ interface Document : Node {
   readonly attribute HTMLOrSVGScriptElement? currentScript; // classic scripts in a document tree only
 
   // dynamic markup insertion
-  [Unimplemented, CEReactions] Document open(optional DOMString type = "text/html", optional DOMString replace = "");
-  [Unimplemented] WindowProxy open(DOMString url, DOMString name, DOMString features);
-  [Unimplemented, CEReactions] void close();
-  [Unimplemented, CEReactions] void write(DOMString... text);
-  [Unimplemented, CEReactions] void writeln(DOMString... text);
+  [RaisesException, CEReactions] Document open(optional DOMString type = "text/html", optional DOMString replace = "");
+  // WindowProxy open(DOMString url, DOMString name, DOMString features);
+  Window open(DOMString url, DOMString name, DOMString features);
+  [RaisesException, CEReactions] void close();
+  [RaisesException, CEReactions] void write(DOMString... text);
+  [RaisesException, CEReactions] void writeln(DOMString... text);
 
   // user interaction
   [Custom=Getter] readonly attribute WindowProxy? defaultView;

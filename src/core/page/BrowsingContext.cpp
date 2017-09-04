@@ -106,7 +106,7 @@ void BrowsingContext::initFlags()
 void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type,
                                ResourceURL* referrerURL)
 {
-    close();
+    dispose();
     initFlags();
 
     m_isActive = true;
@@ -134,19 +134,28 @@ void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type,
         }
     }
 
+    m_window->document()->init(referrerURL);
+
     switch (type) {
     case HistoryManager::Action::Add:
-        webView()->historyManager()->push(url);
+        historyManager()->push(document(), url);
         break;
     case HistoryManager::Action::Replace:
-        webView()->historyManager()->replace(url);
+        historyManager()->replace(document(), url);
         break;
     case HistoryManager::Action::Intact:
     default:
         break;
     }
+}
 
-    m_window->document()->open(referrerURL);
+HistoryManager* BrowsingContext::historyManager()
+{
+    if (isMainBrowsingContext()) {
+        return webView()->historyManager();
+    } else {
+        return m_sourceElement->m_historyManager;
+    }
 }
 
 Document* BrowsingContext::document()
@@ -352,7 +361,7 @@ void BrowsingContext::iterateChildContext(
     }
 }
 
-void BrowsingContext::close()
+void BrowsingContext::dispose()
 {
     if (m_window) {
         GCVector<Element*> iframeCollection;
@@ -381,8 +390,8 @@ void BrowsingContext::close()
 
     if (m_window) {
         StarFishEnterer enter(m_starFish);
-        document()->window()->close();
-        document()->close();
+        document()->window()->dispose();
+        document()->dispose();
 
         if (scriptBindingInstance()) {
             {

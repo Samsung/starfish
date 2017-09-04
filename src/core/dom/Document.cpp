@@ -44,6 +44,7 @@
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
+#include "core/dom/parser/HTMLParser.h"
 #include "core/dom/WebOrigin.h"
 #include "core/layout/FrameDocument.h"
 #include "platform/loader/ImageResource.h"
@@ -71,6 +72,11 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_compatibilityMode(Document::NoQuirksMode)
     , m_pageVisibilityState(VisibilityStateVisible)
     , m_readyState(DocumentReadyStateLoading)
+    , m_throwOnDynamicMarkupInsertion(false)
+    , m_ignoreOpensDuringUnloadCounter(false)
+    , m_salvageable(true)
+    , m_domContentLoadedFired(false)
+    , m_onLoadFired(false)
     , m_window(window)
     , m_documentURI(uri)
     , m_referrer(nullptr)
@@ -188,12 +194,293 @@ void Document::setCookie(String* cookie)
                                                             cookie);
 }
 
-void Document::open(ResourceURL* referrerURL)
+void Document::init(ResourceURL* referrerURL)
 {
     m_resourceLoader->markDocumentOpenState();
 
     m_documentBuilder = new HTMLDocumentBuilder(this);
     m_documentBuilder->build(documentURI(), referrerURL);
+}
+
+Window* Document::open(String* url, String* name, String* features)
+{
+    // TODO If this Document object is not an active document, then throw an
+    // "InvalidStateError" DOMException exception.
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+Document* Document::open(String* type, String* replaceInput)
+{
+    // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#opening-the-input-stream
+
+    // If document is an XML document, then throw an "InvalidStateError"
+    // DOMException exception.
+    if (isXMLDocument()) {
+        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+    }
+    STARFISH_ASSERT(isHTMLDocument());
+    // If document's throw-on-dynamic-markup-insertion counter is greater than
+    // 0, then throw an "InvalidStateError" DOMException.
+    if (m_throwOnDynamicMarkupInsertion) {
+        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+    }
+    // TODO (implement WindowProxy) If document is not an active document, then
+    // return document.
+    // TODO (implement WindowProxy) If document's origin is not same origin to
+    // the origin of the responsible document specified by the entry settings
+    // object, then throw a "SecurityError" DOMException.
+    // If document has an active parser whose script nesting level is greater
+    // than 0, then return document.
+    if (m_documentBuilder && currentScript().hasValue()) {
+        return this;
+    }
+
+    // Similarly, if document's ignore-opens-during-unload counter is greater
+    // than 0, then return document.
+    if (m_ignoreOpensDuringUnloadCounter) {
+        return this;
+    }
+
+    // Let replace be false.
+    bool replace = false;
+    // If replaceInput is an ASCII case-insensitive match for "replace", then
+    // set replace to true.
+    if (replaceInput->equalsIgnoreCase("replace")) {
+        replace = true;
+    } else {
+        // Otherwise, if document's browsing context's session history contains
+        // only one Document object,
+        // and that was the about:blank Document created when document's
+        // browsing context was created,
+        // and that Document object has never had the unload a document
+        // algorithm invoked on it
+        // (e.g., by a previous call to document.open()), then set replace to
+        // true.
+        if (browsingContext()->historyManager()->length() == 1) {
+            if (browsingContext()
+                    ->historyManager()
+                    ->currentEntry()
+                    ->url()
+                    ->isAboutURL()) {
+                replace = true;
+            }
+        }
+    }
+    // Set document's salvageable state to false.
+    m_salvageable = false;
+    // TODO Prompt to unload document. If the user refused to allow the document
+    // to be unloaded, then return document.
+    // Unload document,
+    // TODO with the recycle parameter set to true.
+    // Abort document.
+    // Unregister all event listeners registered on document and its
+    // descendants.
+    // Remove any tasks associated with document in any task source.
+    dispose();
+
+    // Remove all child nodes of document, without firing any mutation events.
+    while (firstChild()) {
+        removeChild(firstChild());
+    }
+    // TODO Call the JavaScript InitializeHostDefinedRealm() abstract operation
+    // with the following customizations:
+    // TODO For the global object, create a new Window object window.
+    // TODO For the global this value, use document's browsing context's
+    // associated WindowProxy.
+    // TODO Let realm execution context be the created JavaScript execution
+    // context.
+    // TODO Set up a window environment settings object with realm execution
+    // context.
+    // TODO Set the active document of document's browsing context to document
+    // with window.
+    // TODO Replace document's singleton objects with new instances of those
+    // objects, created in window's Realm. (This includes in particular the
+    // History, ApplicationCache, and Navigator, objects, the various BarProp
+    // objects, the two Storage objects, the various HTMLCollection objects, and
+    // objects defined by other specifications, like Selection. It also includes
+    // all the Web IDL prototypes in the JavaScript binding, including
+    // document's prototype.)
+    // Change document's character encoding to UTF-8.
+    m_characterSet = String::fromUTF8("UTF-8");
+
+    // TODO If document is ready for post-load tasks, then set document's reload
+    // override flag and set document's reload override buffer to the empty
+    // string.
+    // Set document's salvageable state back to true.
+    m_salvageable = true;
+
+    // TODO Change document's URL to the URL of the responsible document
+    // specified by the entry settings object.
+    // TODO If document's iframe load in progress flag is set, then set
+    // document's mute iframe load flag.
+
+    invalidNamedAccessCacheIfNeeded();
+    // Create a new HTML parser and associate it with document. This is a
+    // script-created parser
+    // (meaning that it can be closed by the document.open() and
+    // document.close() methods,
+    // and that the tokenizer will wait for an explicit call to document.close()
+    // before emitting an end-of-file token). The encoding confidence is
+    // irrelevant.
+    m_resourceLoader->markDocumentOpenState();
+    m_documentBuilder = new HTMLDocumentBuilder(this);
+    m_documentBuilder->asHTMLDocumentBuilder()->openFunctionExplicitCalled();
+    m_openFunctionExplicitCalled = true;
+
+    // TODO Set the current document readiness of document to "loading".
+    // If type is an ASCII case-insensitive match for the string "replace",
+    // then, for historical reasons, set it to the string "text/html".
+    if (type->equalsIgnoreCase("replace")) {
+        type = String::createASCIIString("text/html");
+    } else {
+        // Otherwise:
+        // If the type string contains a U+003B SEMICOLON character (;), remove
+        // the first such character and all characters from it up to the end of
+        // the string.
+        if (type->contains(";")) {
+            type = type->substring(0, type->find(';'));
+        }
+        // Strip leading and trailing ASCII whitespace from type.
+        type = type->stripAndCollapseASCIIwhitespace();
+    }
+
+    // If type is not now an ASCII case-insensitive match for the string
+    // "text/html",
+    if (!type->equalsIgnoreCase("text/html")) {
+        // then act as if the tokenizer had emitted a start tag token with the
+        // tag name "pre" followed by a single U+000A LINE FEED (LF) character,
+        // then switch the HTML parser's tokenizer to the PLAINTEXT state.
+        m_documentBuilder->asHTMLDocumentBuilder()
+            ->parser()
+            ->input()
+            ->appendToEnd(
+                SegmentedString(String::createASCIIString("<pre>\n")));
+        m_documentBuilder->asHTMLDocumentBuilder()->parser()->parseStep();
+        m_documentBuilder->asHTMLDocumentBuilder()
+            ->parser()
+            ->tokenizer()
+            ->setState(HTMLTokenizer::PLAINTEXTState);
+    }
+
+    // TODO Remove any tasks queued by the history traversal task source that
+    // are associated with any Document objects in the top-level browsing
+    // context's document family.
+    // TODO Remove all the entries in the browsing context's session history
+    // after the current entry. If the current entry is the last entry in the
+    // session history, then no entries are removed.
+    // TODO This doesn't necessarily have to affect the user agent's user
+    // interface.
+    // TODO Remove any earlier entries whose Document object is document.
+    // TODO If replace is false, then add a new entry, just before the last
+    // entry, and associate with the new entry the text that was parsed by the
+    // previous parser associated with document, as well as the state of
+    // document at the start of these steps. This allows the user to step
+    // backwards in the session history to see the page before it was blown away
+    // by the document.open() call. This new entry does not have a Document
+    // object, so a new one will be created if the session history is traversed
+    // to that entry.
+    // TODO Set document's fired unload flag to false. (It could have been set
+    // to true during the unload step above.)
+    // TODO Finally, set the insertion point to point at just before the end of
+    // the input stream (which at this point will be empty).
+    // TODO Return document.
+    return this;
+}
+
+void Document::close()
+{
+    // If the Document object is an XML document, then throw an
+    // "InvalidStateError" DOMException and abort these steps.
+    if (isXMLDocument()) {
+        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+    }
+    // If the Document object's throw-on-dynamic-markup-insertion counter is
+    // greater than zero, then throw an "InvalidStateError" DOMException and
+    // abort these steps.
+    if (m_throwOnDynamicMarkupInsertion) {
+        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+    }
+
+    // If there is no script-created parser associated with the document, then
+    // abort these steps.
+    if (!m_openFunctionExplicitCalled || !m_documentBuilder) {
+        return;
+    }
+
+    // Insert an explicit "EOF" character at the end of the parser's input
+    // stream.
+    m_documentBuilder->asHTMLDocumentBuilder()->parser()->input()->appendToEnd(
+        SegmentedString(String::createASCIIString('\0')));
+    // If there is a pending parsing-blocking script, then abort these steps.
+    if (currentScript().hasValue()) {
+        return;
+    }
+    // Run the tokenizer, processing resulting tokens as they are emitted, and
+    // stopping when the tokenizer reaches the explicit "EOF" character or spins
+    // the event loop.
+    m_documentBuilder->asHTMLDocumentBuilder()->parser()->parseStep();
+}
+
+void Document::write(const GCVector<String*>& str)
+{
+    // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
+    // If document is an XML document, then throw an "InvalidStateError"
+    // DOMException.
+    if (isXMLDocument()) {
+        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+    }
+    // If document's throw-on-dynamic-markup-insertion counter is greater than
+    // 0, then throw an "InvalidStateError" DOMException.
+    if (m_throwOnDynamicMarkupInsertion) {
+        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+    }
+    // TODO(implement WindowProxy) If document is not an active document, then
+    // return.
+
+    // If the insertion point is undefined, then:
+    if (!m_documentBuilder) {
+        // If document's ignore-opens-during-unload counter is greater than 0 or
+        // document's
+        // TODO ignore-destructive-writes counter is greater than 0, then
+        // return.
+        if (m_ignoreOpensDuringUnloadCounter) {
+            return;
+        }
+        // Run the document open steps with document, "text/html", and the empty
+        // string.
+        // TODO If the user refused to allow the document to be unloaded, then
+        // abort these steps.
+        // Otherwise, the insertion point will point at just before the end of
+        // the (empty) input stream.
+        open(String::createASCIIString("text/html"), String::emptyString);
+    }
+
+    // Insert input into the input stream just before the insertion point.
+    for (size_t i = 0; i < str.size(); i++) {
+        m_documentBuilder->asHTMLDocumentBuilder()
+            ->parser()
+            ->input()
+            ->insertAtCurrentInsertionPoint(SegmentedString(str[i]));
+    }
+
+    // If document's reload override flag is set, then append input to
+    // document's reload override buffer.
+    // If there is no pending parsing-blocking script, have the HTML parser
+    // process input, one code point at a time,
+    // processing resulting tokens as they are emitted, and stopping when the
+    // tokenizer reaches the insertion point or
+    // when the processing of the tokenizer is aborted by the tree construction
+    // stage (this can happen if a script end tag token is emitted by the
+    // tokenizer).
+    m_documentBuilder->asHTMLDocumentBuilder()->parser()->parseStep();
+}
+
+void Document::writeln(const GCVector<String*>& str)
+{
+    GCVector<String*> newStr = str;
+    newStr.push_back(String::createASCIIString('\n'));
+    write(str);
 }
 
 void Document::resumeDocumentParsing()
@@ -210,47 +497,55 @@ void Document::resumeDocumentParsing()
 
 void Document::notifyDomContentLoaded()
 {
-    String* eventType =
-        window()->starFish()->staticStrings()->m_DOMContentLoaded.localName();
-    Event* e = new Event(this, eventType, EventInit(true, true));
-    EventTarget::dispatchEventByUA(e);
-
-    m_resourceLoader->notifyEndParseDocument();
     m_documentBuilder = nullptr;
 
+    if (!m_domContentLoadedFired) {
+        m_resourceLoader->notifyEndParseDocument();
+        m_domContentLoadedFired = true;
+        String* eventType = window()
+                                ->starFish()
+                                ->staticStrings()
+                                ->m_DOMContentLoaded.localName();
+        Event* e = new Event(this, eventType, EventInit(true, true));
+        EventTarget::dispatchEventByUA(e);
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    // Trigger HTMLMediaElement's preload
-    // FIXME : Should consider detached HTMLMediaElements as well
-    GCVector<Element*> mediaElements;
-    Traverse::collectDescendants(
-        mediaElements, this,
-        [&](Element* element) { return element->isHTMLMediaElement(); }, false);
-    for (size_t i = 0; i < mediaElements.size(); i++) {
-        HTMLMediaElement* target = mediaElements[i]->asHTMLMediaElement();
-        target->onDOMContentLoaded();
-    }
+        // Trigger HTMLMediaElement's preload
+        // FIXME : Should consider detached HTMLMediaElements as well
+        GCVector<Element*> mediaElements;
+        Traverse::collectDescendants(
+            mediaElements, this,
+            [&](Element* element) { return element->isHTMLMediaElement(); },
+            false);
+        for (size_t i = 0; i < mediaElements.size(); i++) {
+            HTMLMediaElement* target = mediaElements[i]->asHTMLMediaElement();
+            target->onDOMContentLoaded();
+        }
 #endif
 
-    STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
-    if (m_compatibilityMode != NoQuirksMode) {
-        STARFISH_LOG_ERROR(
-            "%s is not specified standard mode doctype. currently, StarFish "
-            "could not support quirks mode.\n",
-            m_documentURI->urlString()->utf8Data());
-        STARFISH_LOG_ERROR(
-            "You could got unexpected rendering result. please use standard "
-            "mode doctype[<!DOCTYPE html>]\n");
-    }
+        STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
+        if (m_compatibilityMode != NoQuirksMode) {
+            STARFISH_LOG_ERROR(
+                "%s is not specified standard mode doctype. currently, "
+                "StarFish "
+                "could not support quirks mode.\n",
+                m_documentURI->urlString()->utf8Data());
+            STARFISH_LOG_ERROR(
+                "You could got unexpected rendering result. please use "
+                "standard "
+                "mode doctype[<!DOCTYPE html>]\n");
+        }
 
-    // if there is a fragment identifier, set cssTarget.
-    String* fragment = documentURI()->hash();
-    if (!fragment->equals(String::emptyString)) {
-        window()->processUrlFragment(
-            fragment->substring(1, fragment->length() - 1));
+        // if there is a fragment identifier, set cssTarget.
+        String* fragment = documentURI()->hash();
+        if (!fragment->equals(String::emptyString)) {
+            window()->processUrlFragment(
+                fragment->substring(1, fragment->length() - 1));
+        }
     }
 }
 
-void Document::close()
+void Document::dispose()
 {
     HTMLElement* body = this->body();
     if (body) {

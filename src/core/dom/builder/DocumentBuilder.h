@@ -22,6 +22,8 @@
 
 namespace StarFish {
 
+class HTMLDocumentBuilder;
+
 class DocumentBuilder : public gc, public DocumentHoldable {
 public:
     DocumentBuilder(Document* document)
@@ -36,6 +38,17 @@ public:
     virtual void build(ResourceURL* url, ResourceURL* referrerURL) = 0;
     virtual void build(String* str) = 0;
     virtual void resume() = 0;
+
+    virtual bool isHTMLDocumentBuilder()
+    {
+        return false;
+    }
+
+    HTMLDocumentBuilder* asHTMLDocumentBuilder()
+    {
+        STARFISH_ASSERT(isHTMLDocumentBuilder());
+        return (HTMLDocumentBuilder*)this;
+    }
 };
 }
 

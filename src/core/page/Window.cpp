@@ -17,9 +17,6 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
-#include <EscargotPublic.h>
-using namespace Escargot;
-
 #include "core/page/Window.h"
 
 #include "binding/ScriptBindingInstance.h"
@@ -115,13 +112,13 @@ void Window::initFlags()
 {
 }
 
-void Window::close()
+void Window::dispose()
 {
     clearEventListeners();
 
     ResourceURL* url = m_document->documentURI();
-    m_location->close();
-    m_navigator->close();
+    m_location->dispose();
+    m_navigator->dispose();
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
@@ -193,20 +190,16 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
         targetOrigin = url->origin();
     }
 
-    ContextRef* context = scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(context);
     SerializedTypedData* serialized;
     try {
-        serialized = Serializer::serialize(document(), state, message);
+        serialized = Serializer::serialize(document(), message);
     } catch (DOMException* e) {
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         e->message()->utf8Data());
-        state->destroy();
         e->setMessage(String::fromUTF8(msg));
         throw e;
     }
 
-    state->destroy();
     if (!targetOrigin->equals("*") && targetOrigin) {
         COMPOSE_MESSAGE(reason, ORIGINS_ARE_NOT_MATCHED,
                         targetOrigin->utf8Data(), origin->utf8Data());
@@ -222,15 +215,17 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
             [](size_t handle, void* data, void* data1) {
                 Window* window = (Window*)data;
                 SerializedTypedData* serialized = (SerializedTypedData*)data1;
-                ContextRef* context =
-                    window->scriptBindingInstance()->scriptContext();
-                ExecutionStateRef* state = ExecutionStateRef::create(context);
-                ScriptValue deserialized = Serializer::deserialize(
-                    window->document(), state, serialized);
-                state->destroy();
+                ScriptValue deserialized;
+                bool fail = false;
+                try {
+                    deserialized =
+                        Serializer::deserialize(window->document(), serialized);
+                } catch (DOMException* e) {
+                    fail = true;
+                }
                 MessageEvent* e;
                 String* eventType;
-                if (deserialized) {
+                if (fail == false) {
                     eventType = window->starFish()
                                     ->staticStrings()
                                     ->m_message.localName();
@@ -609,7 +604,7 @@ ScriptValue Window::namedAccess(String* name)
         }
     }
 
-    return ValueRef::createNull();
+    return scriptNull();
 }
 
 void Window::screenShot(std::string filePath)

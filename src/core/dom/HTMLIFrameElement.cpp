@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
+#include "browser/history/HistoryManager.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/page/BrowsingContext.h"
 
@@ -140,7 +141,7 @@ void HTMLIFrameElement::loadSrc()
 void HTMLIFrameElement::unloadSrc()
 {
     if (m_browsingContext) {
-        m_browsingContext->close();
+        m_browsingContext->dispose();
         m_browsingContext = nullptr;
     }
 }
@@ -165,6 +166,9 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
                                  ResourceURL* referrerURL)
 {
     unloadSrc();
+    if (!m_historyManager) {
+        m_historyManager = HistoryManager::create(this);
+    }
     m_browsingContext = BrowsingContext::create(this);
     m_browsingContext->navigate(url, type, referrerURL);
 }
