@@ -61,7 +61,7 @@ public:
 
     Geolocation* geolocation();
 
-    void close();
+    void dispose();
 
 protected:
     Geolocation* m_geolocation;

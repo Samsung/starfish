@@ -19,6 +19,8 @@
 
 #include "binding/ScriptWrappable.h"
 
+// https://html.spec.whatwg.org/multipage/structured-data.html#safe-passing-of-structured-data
+
 namespace StarFish {
 
 using namespace Escargot;
@@ -170,7 +172,7 @@ private:
         int32_t m_int32Data;
         uint32_t m_uint32Data;
         double m_numberData;
-        Escargot::StringRef* m_stringData;
+        ScriptString m_stringData;
     };
 
     Data m_data;
@@ -191,18 +193,18 @@ public:
         return true;
     }
 
-    Escargot::StringRef* stringData() const
+    ScriptString stringData() const
     {
         return m_data;
     }
 
-    void setStringData(Escargot::StringRef* data)
+    void setStringData(ScriptString data)
     {
         m_data = data;
     }
 
 private:
-    Escargot::StringRef* m_data;
+    ScriptString m_data;
 };
 
 class SerializedArrayData : public SerializedData {
@@ -437,15 +439,9 @@ private:
 class Serializer {
 public:
     static SerializedTypedData* serialize(Document* document,
-                                          Escargot::ExecutionStateRef* state,
                                           ScriptValue value);
-    static void deepcopy(Document* document, Escargot::ExecutionStateRef* state,
-                         SerializedData* dst, Escargot::ObjectRef* src);
     static ScriptValue deserialize(Document* document,
-                                   Escargot::ExecutionStateRef* state,
                                    SerializedTypedData* value);
-    static void deepcopy(Document* document, Escargot::ExecutionStateRef* state,
-                         Escargot::ObjectRef* dst, SerializedData* src);
 };
 }
 

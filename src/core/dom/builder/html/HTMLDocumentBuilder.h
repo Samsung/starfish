@@ -40,6 +40,13 @@ public:
     virtual void build(ResourceURL* url, ResourceURL* referrerURL);
     virtual void build(String* str);
     virtual void resume();
+    void openFunctionExplicitCalled();
+
+    virtual bool isHTMLDocumentBuilder()
+    {
+        return true;
+    }
+
     HTMLParser* parser()
     {
         return m_parser;

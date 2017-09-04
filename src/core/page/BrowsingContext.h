@@ -82,7 +82,7 @@ public:
 
     void pause();
     void resume();
-    void close();
+    void dispose();
 
     void setNeedsStyleRecalc()
     {
@@ -188,6 +188,8 @@ public:
     {
         return m_parentBrowsingContext;
     }
+
+    HistoryManager* historyManager();
 
     void addGlobalPointingEventInterceptListener(EventTarget* node);
     void removeGlobalPointingEventInterceptListener(EventTarget* node);

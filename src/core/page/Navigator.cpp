@@ -36,10 +36,10 @@ Geolocation* Navigator::geolocation()
     return m_geolocation;
 }
 
-void Navigator::close()
+void Navigator::dispose()
 {
     if (m_geolocation) {
-        m_geolocation->close();
+        m_geolocation->dispose();
     }
 }
 

@@ -90,8 +90,8 @@ WebView::WebView(StarFish* starFish)
 
 void WebView::close()
 {
-    mainBrowsingContext()->close();
-    m_scriptEngineInstance->close();
+    mainBrowsingContext()->dispose();
+    m_scriptEngineInstance->dispose();
 }
 
 void WebView::initStorage()
@@ -113,7 +113,7 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
 
     clearStack<1024 * 20>();
     if (m_mainBrowsingContext) {
-        m_mainBrowsingContext->close();
+        m_mainBrowsingContext->dispose();
     }
     m_mainBrowsingContext = BrowsingContext::create(starFish(), this);
     m_mainBrowsingContext->navigate(url, type, referrerURL);

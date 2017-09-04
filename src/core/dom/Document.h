@@ -76,6 +76,7 @@ class Document : public Node {
     friend class ActiveResourceRequestTracker;
     friend class HTMLMetaElement;
     friend class DOMParser;
+    friend class ResourceLoader;
 
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
@@ -304,12 +305,19 @@ public:
     String* cookie();
     void setCookie(String* cookie);
 
-    void open(ResourceURL* referrerURL);
+    void init(ResourceURL* referrerURL);
+    void dispose();
+
+    Document* open(String* type, String* replace);
+    Window* open(String* url, String* name, String* features);
+    void close();
+    void unload();
+    void write(const GCVector<String*>& str);
+    void writeln(const GCVector<String*>& str);
 
     // method for script element
     void resumeDocumentParsing();
     void notifyDomContentLoaded();
-    void close();
 
     DocumentBuilder* documentBuilder()
     {
@@ -494,6 +502,13 @@ protected:
     CompatibilityMode m_compatibilityMode : 2;
     VisibilityState m_pageVisibilityState : 2;
     DocumentReadyState m_readyState : 2;
+
+    bool m_throwOnDynamicMarkupInsertion : 1;
+    bool m_ignoreOpensDuringUnloadCounter : 1;
+    bool m_salvageable : 1;
+    bool m_openFunctionExplicitCalled : 1;
+    bool m_domContentLoadedFired : 1;
+    bool m_onLoadFired : 1;
 
     Window* m_window;
     ResourceURL* m_documentURI;

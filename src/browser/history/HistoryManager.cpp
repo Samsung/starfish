@@ -21,11 +21,20 @@
 #include "core/page/WebView.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/Serializer.h"
 
 namespace StarFish {
 
 HistoryManager::HistoryManager(WebView* webView)
-    : m_webView(webView)
+    : m_ower(HistoryManagerOwner::OwnerIsWebView)
+    , m_webView(webView)
+    , m_curEntry(m_historyEntries.end())
+{
+}
+
+HistoryManager::HistoryManager(HTMLIFrameElement* element)
+    : m_ower(HistoryManagerOwner::OwnerIsHTMLIFrame)
+    , m_iframe(element)
     , m_curEntry(m_historyEntries.end())
 {
 }
@@ -35,21 +44,29 @@ HistoryManager* HistoryManager::create(WebView* webView)
     return new HistoryManager(webView);
 }
 
-void HistoryManager::push(ResourceURL* url)
+HistoryManager* HistoryManager::create(HTMLIFrameElement* iframe)
 {
+    return new HistoryManager(iframe);
+}
+
+void HistoryManager::push(Document* document, ResourceURL* url)
+{
+    auto serializedState = Serializer::serialize(document, scriptNull());
     ScriptValue state = scriptNull();
     if (!m_historyEntries.empty()) {
         m_historyEntries.erase(std::next(m_curEntry, 1),
                                m_historyEntries.end());
     }
-    addHistoryEntry(new HistoryEntry(state, String::emptyString, url));
+    addHistoryEntry(
+        new HistoryEntry(serializedState, String::emptyString, url));
 }
 
-void HistoryManager::replace(ResourceURL* url)
+void HistoryManager::replace(Document* document, ResourceURL* url)
 {
     HistoryEntry* entry = currentEntry();
     if (entry) {
-        entry->init(scriptNull(), String::emptyString, url);
+        auto serializedState = Serializer::serialize(document, scriptNull());
+        entry->init(serializedState, String::emptyString, url);
     }
 }
 
@@ -100,19 +117,20 @@ uint32_t HistoryManager::length()
     return m_historyEntries.size();
 }
 
-ScriptValue HistoryManager::state()
+ScriptValue HistoryManager::state(Document* document)
 {
     HistoryEntry* entry = currentEntry();
     if (entry) {
-        return currentEntry()->state();
+        return Serializer::deserialize(document, currentEntry()->state());
     } else {
         return scriptNull();
     }
 }
 
-void HistoryManager::pushState(ScriptValue state, String* title,
-                               Nullable<String*> url)
+void HistoryManager::pushState(Document* document, ScriptValue state,
+                               String* title, Nullable<String*> url)
 {
+    auto serializedState = Serializer::serialize(document, state);
     ResourceURL* newURL = nullptr;
     if (url.hasValue()) {
         if (url.getValue()->startsWith("/")) {
@@ -128,12 +146,14 @@ void HistoryManager::pushState(ScriptValue state, String* title,
     }
 
     m_historyEntries.erase(std::next(m_curEntry, 1), m_historyEntries.end());
-    addHistoryEntry(new HistoryEntry(state, title, newURL));
+    addHistoryEntry(new HistoryEntry(serializedState, title, newURL));
 }
 
-void HistoryManager::replaceState(ScriptValue state, String* title,
-                                  Nullable<String*> url)
+void HistoryManager::replaceState(Document* document, ScriptValue state,
+                                  String* title, Nullable<String*> url)
 {
+    auto serializedState = Serializer::serialize(document, state);
+
     ResourceURL* newURL;
     if (url.hasValue()) {
         newURL = new ResourceURL(url.getValue());
@@ -141,7 +161,7 @@ void HistoryManager::replaceState(ScriptValue state, String* title,
         newURL = new ResourceURL(*(currentEntry()->url()));
     }
 
-    currentEntry()->init(state, title, newURL);
+    currentEntry()->init(serializedState, title, newURL);
 }
 
 HistoryManager::HistoryEntry* HistoryManager::currentEntry()

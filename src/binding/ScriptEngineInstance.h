@@ -36,7 +36,7 @@ public:
         return m_engineInstance;
     }
 
-    void close();
+    void dispose();
 
 protected:
     ScriptEngine m_engineInstance;

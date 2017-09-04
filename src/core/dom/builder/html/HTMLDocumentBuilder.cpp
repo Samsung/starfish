@@ -29,7 +29,7 @@
 
 namespace StarFish {
 
-int strcicmp(char const* a, size_t len1, char const* b, size_t len2)
+static int strcicmp(char const* a, size_t len1, char const* b, size_t len2)
 {
     char const* aEnd = a + len1;
     char const* bEnd = b + len2;
@@ -42,8 +42,8 @@ int strcicmp(char const* a, size_t len1, char const* b, size_t len2)
     return 0;
 }
 
-const char* sstrstr(const char* haystack, size_t length, const char* needle,
-                    size_t needleLength)
+static const char* sstrstr(const char* haystack, size_t length,
+                           const char* needle, size_t needleLength)
 {
     for (size_t i = 0; i < length; i++) {
         if (i + needleLength > length) {
@@ -66,7 +66,7 @@ struct EncodingResult {
     }
 };
 
-EncodingResult detectAndRemoveBOM(GCVector<char>& buffer)
+static EncodingResult detectAndRemoveBOM(GCVector<char>& buffer)
 {
     EncodingResult er;
     size_t len = buffer.size();
@@ -133,7 +133,7 @@ public:
 
     virtual void didDataReceived(const char* buffer, size_t length)
     {
-        m_buffer.assign(&buffer[0], &buffer[length]);
+        m_buffer.insert(m_buffer.end(), &buffer[0], &buffer[length]);
     }
 
     virtual void didLoadFinished()
@@ -246,7 +246,7 @@ public:
                 ->window()
                 ->history()
                 ->historyManager()
-                ->replace(newURL);
+                ->replace(m_builder.document(), newURL);
         }
         if (m_resource->resourceRequest()->referrer()) {
             m_builder.document()->m_referrer =
@@ -290,6 +290,12 @@ void HTMLDocumentBuilder::build(String* str)
     HTMLParser parser(starFish(), m_document, str);
     parser.startParse();
     parser.parseStep();
+}
+
+void HTMLDocumentBuilder::openFunctionExplicitCalled()
+{
+    m_parser = new HTMLParser(starFish(), m_document, String::emptyString);
+    m_parser->startParse();
 }
 
 void HTMLDocumentBuilder::resume()

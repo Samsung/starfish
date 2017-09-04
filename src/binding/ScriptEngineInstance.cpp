@@ -51,7 +51,7 @@ ScriptEngineInstance::ScriptEngineInstance(StarFish* starFish)
     });
 }
 
-void ScriptEngineInstance::close()
+void ScriptEngineInstance::dispose()
 {
     m_engineInstance->destroy();
 }
