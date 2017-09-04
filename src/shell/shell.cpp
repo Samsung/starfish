@@ -442,8 +442,14 @@ bool DaliShellController::HoverEventHandler(Dali::Actor actor,
 
 void DaliShellController::KeyEventHandler(const Dali::KeyEvent& event)
 {
-    auto kdata = DaliEventKeyToKeyboardData(event.keyPressedName.c_str(),
-                                            event.keyModifier & 1);
+    StarFish::KeyboardData kdata(StarFish::KeyValue::UnidentifiedKey);
+    if (32 < event.keyPressed.c_str()[0] && 127 > event.keyPressed.c_str()[0]) {
+        kdata = StarFish::KeyboardData(
+            (StarFish::KeyValue)event.keyPressed.c_str()[0]);
+    } else {
+        kdata = DaliEventKeyToKeyboardData(event.keyPressedName.c_str(),
+                                           event.keyModifier & 1);
+    }
     struct dummy {
         StarFish::StarFish* starfish;
         StarFish::KeyboardData data;
