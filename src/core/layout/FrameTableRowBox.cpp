@@ -63,13 +63,9 @@ void FrameTableRowBox::calCellWidth(LayoutContext& ctx)
 {
     // We traverse the cells first to calculate min/max cell width
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableCellBox()) {
-            c->asFrameTableCellBox()->calCellWidth(
-                ctx, Frame::LayoutWantToResolve::ResolveWidth);
-        } else {
-            // Only FrameTableCell should appear
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_ASSERT(c->isFrameTableCellBox());
+        c->asFrameTableCellBox()->calCellWidth(
+            ctx, Frame::LayoutWantToResolve::ResolveWidth);
     }
 }
 
@@ -106,7 +102,7 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
         STARFISH_ASSERT(i < sectionBox()->tableBox()->columnWidths().size());
 
         LayoutUnit cellWidth = 0;
-        if (cell->colspan() > 1) {
+        if (cell->updatedColspan() > 1) {
             cellWidth = colWithColspanAt(i)->cellWidth;
         } else {
             cellWidth = sectionBox()->tableBox()->columnWidths()[i].cellWidth;
@@ -120,7 +116,7 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
             xSoFar += borderSpacing;
         }
 
-        i += cell->colspan();
+        i += cell->updatedColspan();
     }
 
     setWidth(xSoFar);

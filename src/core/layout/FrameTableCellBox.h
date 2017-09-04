@@ -44,7 +44,9 @@ public:
         return parent()->asFrameTableRowBox();
     }
 
-    unsigned colspan();
+    size_t colspan();
+    size_t updatedColspan();
+    void updateColspanForLayout(size_t colspan);
 
     virtual bool isFrameTableCellBox()
     {
@@ -96,6 +98,8 @@ private:
     LayoutUnit m_minCellWidth;
     LayoutUnit m_maxCellWidth;
     LayoutUnit m_actualContentHeight;
+
+    size_t m_colspan;
 };
 }
 

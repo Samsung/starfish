@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLTableElement.h"
+#include "core/dom/HTMLTableCellElement.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCaptionBox.h"
@@ -96,6 +97,27 @@ FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)
 
 void FrameTableBox::calCellWidth(LayoutContext& ctx)
 {
+    // 0. The spec says to look at the first row only to get the width for each
+    // cell. But, there are cases where the following rows contains more cells
+    // than the first row. In this case, the spec leaves what to do to
+    // implementors. We try to obtain the width of those cells similar to
+    // "table-layout: auto", i.e., we perform the following
+    // to get:
+    //  * min/max cell widths of the table if "width: auto"
+    m_columnWidths.clear();
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSectionBox()) {
+            c->asFrameTableSectionBox()->calCellWidth(ctx);
+            collectColumnWidths(m_columnWidths,
+                                c->asFrameTableSectionBox()->columnWidths());
+        }
+    }
+
+    // 0. Remove unneeded colspan="x", where x > 1, if colspan does not
+    // collapse any cells.
+    // i.e., all columns have the same colspan="x", x > 1.
+    resetColspanIfPossible();
+
     // 0. Get the cells in the first row. These are used to determine:
     // * the width of each cell, and
     // * the width property (i.e., auto or specified) in the table.
@@ -109,25 +131,9 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         for (Frame* c = row->firstChild(); c; c = c->next()) {
             FrameTableCellBox* cell = c->asFrameTableCellBox();
             m_cellsInTheFirstRow.push_back(cell);
-            for (unsigned i = 1; i < cell->colspan(); i++) {
+            for (unsigned i = 1; i < cell->updatedColspan(); i++) {
                 m_cellsInTheFirstRow.push_back(nullptr);
             }
-        }
-    }
-
-    // 1. The spec says to look at the first row only to get the width for each
-    // cell. But, there are cases where the following rows contains more cells
-    // than the first row. In this case, the spec leaves what to do to
-    // implementors. We try to obtain the width of those cells similar to
-    // "table-layout: auto", i.e., we perform the following
-    // to get:
-    //  * min/max cell widths of the table if "width: auto"
-    m_columnWidths.clear();
-    for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSectionBox()) {
-            c->asFrameTableSectionBox()->calCellWidth(ctx);
-            collectColumnWidths(m_columnWidths,
-                                c->asFrameTableSectionBox()->columnWidths());
         }
     }
 
@@ -545,6 +551,47 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     }
 }
 
+template <typename Func>
+void FrameTableBox::forEachRowStruct(Func filter)
+{
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSectionBox()) {
+            FrameTableSectionBox* section = c->asFrameTableSectionBox();
+
+            for (auto& row : section->grid()) {
+                filter(&row);
+            }
+        }
+    }
+}
+
+void FrameTableBox::resetColspanIfPossible()
+{
+    GCVector<FrameTableCellBox*> cellsInTheFirstRowTmp;
+    GCAtomicVector<ColSizeStruct> columnWidthsTmp;
+
+    for (size_t i = 0; i < m_columnWidths.size(); i++) {
+        if (m_columnWidths[i].isNullCell) {
+            forEachRowStruct([i](RowStruct* rowStruct) {
+                FrameTableCellBox* c =
+                    rowStruct->physicalCellAtLogicalColumn(i);
+                if (c->colspan() > 1) {
+                    c->updateColspanForLayout(1);
+                }
+            });
+
+            continue;
+        }
+        columnWidthsTmp.push_back(m_columnWidths[i]);
+    }
+
+    m_columnWidths.clear();
+    for (size_t i = 0; i < columnWidthsTmp.size(); i++) {
+        m_columnWidths.push_back(columnWidthsTmp[i]);
+        m_columnWidths[i].id = i;
+    }
+}
+
 // All input parameters are used as out parameters
 void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
     LayoutUnit remainingWidth, LayoutUnit* sumOfAutoCellPreferredWidths,
@@ -564,7 +611,7 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
             continue;
         }
 
-        if (cell->colspan() > 1) {
+        if (cell->updatedColspan() > 1) {
             if (col.hasSpecifiedWidth()) {
                 LayoutUnit specifiedWidth = col.maxSpecifiedWidth;
                 specifiedWidth += cell->borderWidth() + cell->paddingWidth();
@@ -674,41 +721,35 @@ void FrameTableBox::calCellWidthsWithColspans()
     LayoutUnit borderSpacing =
         LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
 
-    for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSectionBox()) {
-            FrameTableSectionBox* section = c->asFrameTableSectionBox();
+    forEachRowStruct([this, borderSpacing](RowStruct* rowStruct) {
+        FrameTableRowBox* row = rowStruct->tableRow();
 
-            for (auto& rowStruct : section->grid()) {
-                FrameTableRowBox* row = rowStruct.tableRow();
+        unsigned id = 0;
+        for (auto& cellStruct : rowStruct->cells()) {
+            FrameTableCellBox* cell = cellStruct.cell();
 
-                unsigned id = 0;
-                for (auto& cellStruct : rowStruct.cells()) {
-                    FrameTableCellBox* cell = cellStruct.cell();
+            if (cell->updatedColspan() > 1) {
+                ColSizeStruct* colSize = row->colWithColspanAt(id);
 
-                    if (cell->colspan() > 1) {
-                        ColSizeStruct* colSize = row->colWithColspanAt(id);
-
-                        LayoutUnit sumOfCellWidth = 0;
-                        for (size_t i = id; i < id + cell->colspan(); i++) {
-                            sumOfCellWidth += m_columnWidths[i].cellWidth;
-                            if (i < id + cell->colspan() - 1) {
-                                sumOfCellWidth += borderSpacing;
-                            }
-                        }
-
-                        if (m_columnWidths[id].hasSpecifiedWidth()) {
-                            colSize->cellWidth =
-                                std::max(sumOfCellWidth,
-                                         m_columnWidths[id].maxSpecifiedWidth);
-                        } else {
-                            colSize->cellWidth = sumOfCellWidth;
-                        }
+                LayoutUnit sumOfCellWidth = 0;
+                for (size_t i = id; i < id + cell->updatedColspan(); i++) {
+                    sumOfCellWidth += m_columnWidths[i].cellWidth;
+                    if (i < id + cell->updatedColspan() - 1) {
+                        sumOfCellWidth += borderSpacing;
                     }
-                    id += cell->colspan();
                 }
+
+                if (m_columnWidths[id].hasSpecifiedWidth()) {
+                    colSize->cellWidth = std::max(
+                        sumOfCellWidth, m_columnWidths[id].maxSpecifiedWidth);
+                } else {
+                    colSize->cellWidth = sumOfCellWidth;
+                }
+                // printf(": cellWidth: %d\n", colSize->cellWidth.toInt());
             }
+            id += cell->updatedColspan();
         }
-    }
+    });
 }
 
 void FrameTableBox::layoutWidth(LayoutContext& ctx)
@@ -881,7 +922,6 @@ void FrameTableBox::collectColumnWidths(
         }
 
     } else {
-        // FIXME: Update to support colspans
         for (unsigned i = 0; i < columnWidths.size(); i++) {
             ColSizeStruct& col = columnWidths[i];
 
@@ -896,6 +936,10 @@ void FrameTableBox::collectColumnWidths(
             colSoFar.minCellWidth =
                 std::max(colSoFar.minCellWidth, col.minCellWidth);
             colSoFar.cellWidth = colSoFar.maxCellWidth;
+
+            if (!col.isNullCell) {
+                colSoFar.isNullCell = false;
+            }
         }
     }
 }

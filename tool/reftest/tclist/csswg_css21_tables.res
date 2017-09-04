@@ -713,7 +713,7 @@ test/reftest/csswg-test/css21_original/tables/fixed-table-layout-003f07-ref.htm
 test/reftest/csswg-test/css21_original/tables/fixed-table-layout-003f08-ref.htm
 #test/reftest/csswg-test/css21_original/tables/fixed-table-layout-003.htm
 #test/reftest/csswg-test/css21_original/tables/fixed-table-layout-004.htm
-#test/reftest/csswg-test/css21_original/tables/fixed-table-layout-005.htm
+test/reftest/csswg-test/css21_original/tables/fixed-table-layout-005.htm
 test/reftest/csswg-test/css21_original/tables/fixed-table-layout-006.htm
 test/reftest/csswg-test/css21_original/tables/fixed-table-layout-007.htm
 #test/reftest/csswg-test/css21_original/tables/fixed-table-layout-009.htm
@@ -1101,7 +1101,7 @@ test/reftest/csswg-test/css21_original/tables/table-height-algorithm-027.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-028.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-029.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-030.htm
-#test/reftest/csswg-test/css21_original/tables/table-height-algorithm-031.htm
+test/reftest/csswg-test/css21_original/tables/table-height-algorithm-031.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-032.htm
 test/reftest/csswg-test/css21_original/tables/table-intro-example-001.htm
 test/reftest/csswg-test/css21_original/tables/table-intro-example-002.htm

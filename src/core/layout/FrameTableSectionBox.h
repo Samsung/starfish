@@ -31,6 +31,7 @@ class CellStruct {
 public:
     CellStruct()
         : m_cell(nullptr)
+        , m_id(0)
     {
     }
 
@@ -80,6 +81,8 @@ public:
 
         return nullptr;
     }
+
+    FrameTableCellBox* physicalCellAtLogicalColumn(size_t id);
 
     FrameTableRowBox* tableRow()
     {

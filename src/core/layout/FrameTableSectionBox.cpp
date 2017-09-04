@@ -70,6 +70,25 @@ CellStruct* RowStruct::logicalCellStructAt(size_t id)
     return nullptr;
 }
 
+FrameTableCellBox* RowStruct::physicalCellAtLogicalColumn(size_t id)
+{
+    if (id < m_cells.size()) {
+        if (m_cells[id].id() == id) {
+            return m_cells[id].cell();
+        }
+    }
+
+    for (size_t i = 0; i < m_cells.size(); i++) {
+        if (id <= m_cells[i].id()) {
+            STARFISH_ASSERT(m_cells.size() - i > 0);
+            return m_cells[i - 1].cell();
+        }
+    }
+
+    STARFISH_ASSERT(false);
+    return nullptr;
+}
+
 FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
 {
@@ -162,13 +181,15 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
         LayoutUnit maxSpecifiedWidth = 0;
         float maxPercentageWidth = 0;
 
+        ColSizeStruct col;
+
         // TODO: rowspan is not yet supported
         for (size_t r = 0; r < m_grid.size(); r++) {
             RowStruct& row = m_grid[r];
             if (c < row.logicalColumnSize()) {
                 FrameTableCellBox* cell = row.logicalCellAt(c);
 
-                if (cell && cell->colspan() == 1) {
+                if (cell) {
                     minCellWidthSoFar =
                         std::max(minCellWidthSoFar, cell->minCellWidth());
                     maxCellWidthSoFar =
@@ -182,10 +203,11 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
                             std::max(maxPercentageWidth,
                                      cell->style()->width().percent());
                     }
+                    col.isNullCell = false;
                 }
             }
         }
-        ColSizeStruct col;
+
         col.id = c;
         col.maxSpecifiedWidth = maxSpecifiedWidth;
         col.maxPercentageWidth = maxPercentageWidth;
@@ -209,11 +231,11 @@ void FrameTableSectionBox::calCellWidthsWithColspans()
         for (auto& cellStruct : rowStruct.cells()) {
             FrameTableCellBox* cell = cellStruct.cell();
 
-            if (cell->colspan() > 1) {
+            if (cell->updatedColspan() > 1) {
                 LayoutUnit maxCellWidth = 0;
                 LayoutUnit minCellWidth = 0;
 
-                for (size_t i = id; i < id + cell->colspan(); i++) {
+                for (size_t i = id; i < id + cell->updatedColspan(); i++) {
                     if (tableBox()->columnWidths()[i].hasSpecifiedWidth()) {
                         maxCellWidth +=
                             tableBox()->columnWidths()[i].maxSpecifiedWidth;
@@ -224,7 +246,7 @@ void FrameTableSectionBox::calCellWidthsWithColspans()
 
                     minCellWidth += tableBox()->columnWidths()[i].minCellWidth;
 
-                    if (i < id + cell->colspan() - 1) {
+                    if (i < id + cell->updatedColspan() - 1) {
                         maxCellWidth += borderSpacing;
                         minCellWidth += borderSpacing;
                     }
@@ -237,7 +259,7 @@ void FrameTableSectionBox::calCellWidthsWithColspans()
                 row->colsWithColspans().push_back(col);
             }
 
-            id += cell->colspan();
+            id += cell->updatedColspan();
         }
     }
 }
