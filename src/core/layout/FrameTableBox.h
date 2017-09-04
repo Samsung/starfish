@@ -54,6 +54,7 @@ public:
         , minCellWidth(0)
         , maxCellWidth(0)
         , cellWidth(0)
+        , isNullCell(true)
     {
     }
 
@@ -78,6 +79,7 @@ public:
     LayoutUnit minCellWidth;
     LayoutUnit maxCellWidth;
     LayoutUnit cellWidth;
+    bool isNullCell;
 };
 
 class FrameTableBox : public FrameTableObjectBox {
@@ -162,6 +164,8 @@ private:
     void collectColumnWidths(GCAtomicVector<ColSizeStruct>& columnWidthsSoFar,
                              GCAtomicVector<ColSizeStruct>& columnWidths);
 
+    void resetColspanIfPossible();
+
     // This function returns nullptr if the table has no non-empty sections.
     FrameTableSectionBox* firstNonEmptySectionBoxInVisualOrder();
 
@@ -171,6 +175,9 @@ private:
     // used in w3c test cases.
     LayoutUnit widthFromAttribute(LayoutUnit parentContentWidth);
     LayoutUnit cellspacingFromAttribute();
+
+    template <typename Func>
+    void forEachRowStruct(Func filter);
 
     GCVector<FrameTableCaptionBox*> m_captions;
     GCVector<FrameTableColBox*> m_colObjects;

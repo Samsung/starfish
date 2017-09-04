@@ -31,9 +31,11 @@ namespace StarFish {
 
 FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
+    , m_absoluteColumnIndex(0)
     , m_minCellWidth(0)
     , m_maxCellWidth(0)
     , m_actualContentHeight(0)
+    , m_colspan((size_t)-1)
 {
 }
 
@@ -197,7 +199,7 @@ LayoutUnit FrameTableCellBox::calBaseline(LayoutContext& ctx)
     return 0;
 }
 
-unsigned FrameTableCellBox::colspan()
+size_t FrameTableCellBox::colspan()
 {
     if (!(node() && node()->isHTMLElement())) {
         return 1;
@@ -206,6 +208,7 @@ unsigned FrameTableCellBox::colspan()
     HTMLElement* e = node()->asHTMLElement();
     // Use 1 as the default value
     uint32_t colspan = 1;
+
     if (e->isHTMLTableCellElement()) {
         colspan = e->asHTMLTableCellElement()->colSpan();
     } else {
@@ -215,6 +218,19 @@ unsigned FrameTableCellBox::colspan()
         // In this case, we ignore the colspan value
     }
     return colspan;
+}
+
+size_t FrameTableCellBox::updatedColspan()
+{
+    if (m_colspan != (size_t)-1) {
+        return m_colspan;
+    }
+    return colspan();
+}
+
+void FrameTableCellBox::updateColspanForLayout(size_t colspan)
+{
+    m_colspan = colspan;
 }
 
 void* FrameTableCellBox::operator new(size_t size)
