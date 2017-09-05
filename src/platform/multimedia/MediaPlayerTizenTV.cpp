@@ -110,8 +110,7 @@ void MediaPlayerTizenTV::mediaEndOperation()
 {
     player_stop(m_nativePlayer);
     if (m_activeMediaSource) {
-        Locker<Mutex> videoLock(*m_videoBufferMutex);
-        Locker<Mutex> audioLock(*m_audioBufferMutex);
+        Locker<Mutex> locker(*m_bufferMutex);
         m_lastAudioPts = m_lastVideoPts = 0;
     }
 }
@@ -121,8 +120,7 @@ void MediaPlayerTizenTV::seekOperation(int timeInMS)
     STARFISH_LOG_INFO("MediaPlayerTizenTV::seekOperation() (time: %d)\n",
                       timeInMS);
     if (m_activeMediaSource) {
-        Locker<Mutex> videoLock(*m_videoBufferMutex);
-        Locker<Mutex> audioLock(*m_audioBufferMutex);
+        Locker<Mutex> locker(*m_bufferMutex);
         if (m_activeMediaSource->activeVideoSourceBuffer()) {
             m_activeMediaSource->activeVideoSourceBuffer()
                 ->clearPacketAccessCache();
@@ -155,11 +153,9 @@ void MediaPlayerTizenTV::seekOperation(int timeInMS)
         return;
     }
     if (m_activeMediaSource) {
-        m_videoBufferMutex->lock();
-        m_audioBufferMutex->lock();
+        m_bufferMutex->lock();
         m_lastVideoPts = m_lastAudioPts = timeInMS;
-        m_videoBufferMutex->unlock();
-        m_audioBufferMutex->unlock();
+        m_bufferMutex->unlock();
 
         if (m_activeMediaSource->activeVideoSourceBuffer()) {
             fillVideoBufferIfNeeded();
@@ -291,7 +287,7 @@ void MediaPlayerTizenTV::prepareMediaSource()
 void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
 {
     if (useLock) {
-        m_videoBufferMutex->lock();
+        m_bufferMutex->lock();
     }
 
     PLAYER_LOGI("MediaPlayerTizenTV::fillVideoBuffer start %dms\n",
@@ -326,7 +322,7 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
                     "MediaPlayerTizenTV::fillVideoBuffer detect end of "
                     "Video!\n");
                 if (useLock) {
-                    m_videoBufferMutex->unlock();
+                    m_bufferMutex->unlock();
                 }
                 return;
             }
@@ -336,7 +332,7 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
                 "under run state[1]\n");
             m_isVideoBufferUnderrunState = true;
             if (useLock) {
-                m_videoBufferMutex->unlock();
+                m_bufferMutex->unlock();
             }
             return;
         }
@@ -382,14 +378,14 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
                 (int)m_lastVideoPts);
 
     if (useLock) {
-        m_videoBufferMutex->unlock();
+        m_bufferMutex->unlock();
     }
 }
 
 void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
 {
     if (useLock) {
-        m_audioBufferMutex->lock();
+        m_bufferMutex->lock();
     }
 
     PLAYER_LOGI("MediaPlayerTizenTV::fillAudioBuffer start %dms\n",
@@ -424,7 +420,7 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
                     "MediaPlayerTizenTV::fillAudioBuffer detect end of "
                     "Audio!\n");
                 if (useLock) {
-                    m_audioBufferMutex->unlock();
+                    m_bufferMutex->unlock();
                 }
                 return;
             }
@@ -434,7 +430,7 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
                 "under run state[1]\n");
             m_isAudioBufferUnderrunState = true;
             if (useLock) {
-                m_audioBufferMutex->unlock();
+                m_bufferMutex->unlock();
             }
             return;
         }
@@ -467,7 +463,7 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
     PLAYER_LOGI("MediaPlayerTizenTV::fillAudioBuffer end %dms\n\n",
                 (int)m_lastAudioPts);
     if (useLock) {
-        m_audioBufferMutex->unlock();
+        m_bufferMutex->unlock();
     }
 }
 

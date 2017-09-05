@@ -95,8 +95,8 @@ public:
         if (m_readPos < m_bufferRemain->size()) {
             size_t fillAmount;
 
-            if (sizeWantToRead < (m_readPos - m_bufferRemain->size())) {
-                fillAmount = m_readPos - m_bufferRemain->size();
+            if (sizeWantToRead > m_bufferRemain->size() - m_readPos) {
+                fillAmount = m_bufferRemain->size() - m_readPos;
             } else {
                 fillAmount = sizeWantToRead;
             }
@@ -110,8 +110,12 @@ public:
             m_readPos >= m_bufferRemain->size()) {
             size_t diff = m_readPos - m_bufferRemain->size();
             size_t fillAmount;
-
-            fillAmount = sizeWantToRead - sizeSuccessToRead;
+            if (sizeWantToRead - sizeSuccessToRead >
+                m_inputBuffer->m_length - diff) {
+                fillAmount = m_inputBuffer->m_length - diff;
+            } else {
+                fillAmount = sizeWantToRead - sizeSuccessToRead;
+            }
 
             memcpy(buffer, m_inputBuffer->m_data + diff, fillAmount);
             sizeSuccessToRead += fillAmount;
@@ -302,7 +306,6 @@ public:
             pkt->m_data = packet.m_data;
             pkt->m_hasIdr = packet.m_hasIdr;
             ret = true;
-            memcpy(pkt->m_data, packet.m_data, packet.m_dataSize);
             // STARFISH_LOG_INFO("[%d] pkt data pts %d len %d %d\n",streamIndex,
             // (int)pkt->m_pts, (int)pkt->m_dataSize, (int)
             // m_packetGroup.size());
@@ -585,13 +588,14 @@ DEFINE_EVENT_LISTENER(SourceBuffer, updateend);
 DEFINE_EVENT_LISTENER(SourceBuffer, error);
 DEFINE_EVENT_LISTENER(SourceBuffer, abort);
 
-void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length)
+void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length,
+                                ScriptValue origin)
 {
     // Run the prepare append algorithm.
     prepareAppend();
 
     // Add data to the end of the input buffer.
-    auto d = new SourceBufferData(this, data, length);
+    auto d = new SourceBufferData(this, data, length, origin);
 
     // Set the updating attribute to true.
     // Queue a task to fire a simple event named updatestart at this
@@ -601,6 +605,20 @@ void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length)
 
     // Asynchronously run the buffer append algorithm.
     bufferAppend(d);
+}
+
+void SourceBuffer::appendBuffer(ArrayBufferViewOrArrayBuffer buffer)
+{
+    if (buffer.isArrayBufferViewValue()) {
+        ScriptArrayBufferView unwrap = buffer.getArrayBufferViewValue();
+        appendBuffer(arrayBufferViewRawData(unwrap),
+                     arrayBufferViewSize(unwrap), createScriptValue(unwrap));
+    } else {
+        STARFISH_ASSERT(buffer.isArrayBufferValue());
+        ScriptArrayBuffer unwrap = buffer.getArrayBufferValue();
+        appendBuffer(arrayBufferRawData(unwrap), arrayBufferSize(unwrap),
+                     createScriptValue(unwrap));
+    }
 }
 
 void SourceBuffer::prepareAppend()

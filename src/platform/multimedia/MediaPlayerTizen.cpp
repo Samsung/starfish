@@ -124,8 +124,7 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_isEnded(false)
     , m_seekingTimer(SIZE_MAX)
     , m_mseClient(nullptr)
-    , m_videoBufferMutex(new Mutex())
-    , m_audioBufferMutex(new Mutex())
+    , m_bufferMutex(new Mutex())
     , m_preparedCallback(nullptr)
     , m_completeCallback(nullptr)
     , m_canvasSurface(nullptr)
@@ -169,7 +168,7 @@ void MediaPlayerTizen::handlePlayerError(int error)
 
 void MediaPlayerTizen::fillVideoBufferIfNeeded()
 {
-    Locker<Mutex> locker(*m_videoBufferMutex);
+    Locker<Mutex> locker(*m_bufferMutex);
     if (m_isVideoBufferUnderrunState) {
         fillVideoBuffer(false);
     }
@@ -177,7 +176,7 @@ void MediaPlayerTizen::fillVideoBufferIfNeeded()
 
 void MediaPlayerTizen::fillAudioBufferIfNeeded()
 {
-    Locker<Mutex> locker(*m_audioBufferMutex);
+    Locker<Mutex> locker(*m_bufferMutex);
     if (m_isAudioBufferUnderrunState) {
         fillAudioBuffer(false);
     }

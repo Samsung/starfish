@@ -70,6 +70,8 @@ void throwJSTypeErrorException(Escargot::ExecutionStateRef* state,
 
 ScriptString createScriptString(String* str);
 ScriptValue createScriptValue(ScriptString s);
+ScriptValue createScriptValue(ScriptArrayBuffer buffer);
+ScriptValue createScriptValue(ScriptArrayBufferView buffer);
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error);
@@ -91,6 +93,11 @@ void throwScriptTypeError(String* message);
 
 bool isCallableScriptValue(ScriptValue v);
 bool isObjectScriptValue(ScriptValue v);
+
+uint8_t* arrayBufferRawData(ScriptArrayBuffer buffer);
+uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer);
+unsigned arrayBufferSize(ScriptArrayBuffer buffer);
+unsigned arrayBufferViewSize(ScriptArrayBufferView buffer);
 
 #ifdef STARFISH_ENABLE_TEST
 void invokeTestStartFunction(ScriptBindingInstance* instance);

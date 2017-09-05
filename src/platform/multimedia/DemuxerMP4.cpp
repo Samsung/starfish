@@ -70,17 +70,22 @@ private:
 
 namespace StarFish {
 
-static uint32_t readBigEndianUnsignedInteger(DemuxerSource* source)
+static uint32_t readBigEndianUnsignedInteger(DemuxerSource* source, int& error)
 {
+    error = 0;
     uint8_t c[4];
     uint32_t n;
 
     size_t t1;
     int err;
     source->onRead(4, t1, err, c);
-
-    n = (uint32_t)c[0] << 24 | (uint32_t)c[1] << 16 | (uint32_t)c[2] << 8 |
-        (uint32_t)c[3];
+    if (t1 != 4) {
+        error = -1;
+        source->onSeek(-t1, DemuxerSource::SeekWhenceCurrent);
+    } else {
+        n = (uint32_t)c[0] << 24 | (uint32_t)c[1] << 16 | (uint32_t)c[2] << 8 |
+            (uint32_t)c[3];
+    }
 
     return n;
 }
@@ -98,19 +103,38 @@ static void parseMP4(DemuxerSource* source, bool findStream,
     memset(type, 0, 5);
 
     int64_t maxPos = source->onSeek(0, DemuxerSource::SeekWhenceLookSize);
-    while (maxPos != source->onSeek(0, DemuxerSource::SeekWhenceCurrent)) {
+    while (source->onSeek(0, DemuxerSource::SeekWhenceCurrent) < maxPos) {
+        int err;
         size_t orgPos = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
-        size_t orgLength = length = readBigEndianUnsignedInteger(source);
+        size_t orgLength = length = readBigEndianUnsignedInteger(source, err);
+        if (err < 0) {
+            source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
+            break;
+        }
         dataLength = 0;
 
         size_t t1;
-        int err;
         source->onRead(4, t1, err, (uint8_t*)type);
+        if (err < 0) {
+            source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
+            break;
+        }
 
         if (length == 1) {
-            dataLength = readBigEndianUnsignedInteger(source) - 16;
+            dataLength = readBigEndianUnsignedInteger(source, err) - 16;
+            if (err < 0) {
+                source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
+                break;
+            }
         } else {
             dataLength = length - 8;
+        }
+
+        if (source->onSeek(0, DemuxerSource::SeekWhenceCurrent) +
+                (int64_t)dataLength >
+            maxPos) {
+            source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
+            break;
         }
 
         // STARFISH_LOG_INFO("found %x %s\n", (int)orgPos, type);
@@ -373,13 +397,21 @@ public:
 
                     STARFISH_RELEASE_ASSERT(has_sample_size ||
                                             has_default_sample_size);
-                    for (size_t i = 0; i < samples.size(); i++) {
+                    size_t sizeSum = 0;
+                    for (size_t i = 0;
+                         i < samples.size() && sizeSum < mdat->size; i++) {
                         if (has_sample_size) {
                             packet.m_dataSize = samples[i].size;
                         } else {
                             packet.m_dataSize = default_sample_size;
                         }
                         packet.m_pts = ptsInMP4 * 1000LL / scale;
+                        if (sizeSum + packet.m_dataSize > mdat->size) {
+                            STARFISH_LOG_INFO("Wrong sample size ");
+                            STARFISH_LOG_INFO("Reduce to fit in mdat size\n");
+                            packet.m_dataSize = mdat->size - sizeSum;
+                        }
+                        sizeSum += packet.m_dataSize;
 
                         if (has_sample_duration) {
                             ptsInMP4 += samples[i].duration;

@@ -126,8 +126,7 @@ public:
     bool m_isEnded;
     size_t m_seekingTimer;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
-    Mutex* m_videoBufferMutex;
-    Mutex* m_audioBufferMutex;
+    Mutex* m_bufferMutex;
     ResourceURL* m_currentURL;
     void (*m_preparedCallback)(void*);
     void (*m_completeCallback)(void*);
