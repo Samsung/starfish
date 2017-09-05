@@ -38,6 +38,7 @@
 #include "core/dom/HTMLMetaElement.h"
 #include "core/dom/HTMLObjectElement.h"
 #include "core/dom/HTMLParagraphElement.h"
+#include "core/dom/HTMLHRElement.h"
 #include "core/dom/HTMLPreElement.h"
 #include "core/dom/HTMLScriptElement.h"
 #include "core/dom/HTMLSelectElement.h"
@@ -106,6 +107,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLParagraphElement(document);
     } else if (name == str->m_preTagName.localNameAtomic()) {
         return new HTMLPreElement(document);
+    } else if (name == str->m_hrTagName.localNameAtomic()) {
+        return new HTMLHRElement(document);
     } else if (name == str->m_spanTagName.localNameAtomic()) {
         return new HTMLSpanElement(document);
     } else if (name == str->m_brTagName.localNameAtomic()) {

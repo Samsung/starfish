@@ -1553,6 +1553,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("none");
         case BorderStyleValue::SolidBorderStyleValue:
             return String::fromUTF8("solid");
+        case BorderStyleValue::InsetBorderStyleValue:
+            return String::fromUTF8("inset");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -5303,6 +5305,8 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
         m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
     } else if (STRING_VALUE_IS_STRING("solid")) {
         m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
+    } else if (STRING_VALUE_IS_STRING("inset")) {
+        m_value.m_borderStyle = BorderStyleValue::InsetBorderStyleValue;
     } else {
         return false;
     }
