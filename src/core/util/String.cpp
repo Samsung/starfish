@@ -580,45 +580,6 @@ size_t String::hashValue() const
     return hash;
 }
 
-const char* String::utf8Data()
-{
-    auto data = bufferAccessData();
-    if (data.isNullTerminated) {
-        if (data.hasASCIIContent) {
-            return data.asciiData();
-        } else {
-            return utf32ToUtf8(data.utf32Data(), data.length);
-        }
-    } else {
-        if (data.hasASCIIContent) {
-            char* newBuffer =
-                (char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(data.length + 1);
-            memcpy(newBuffer, data.asciiData(), data.length);
-            newBuffer[data.length] = 0;
-            data.buffer = newBuffer;
-            return data.asciiData();
-        } else {
-            return utf32ToUtf8(data.utf32Data(), data.length);
-        }
-    }
-}
-
-const char* String::utf8DataIgnoreZeroWidthChar()
-{
-    auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
-        ASCIIString newStr;
-        for (size_t i = 0; i < data.length; i++) {
-            if (!String::isZeroWidthChar(data.asciiData()[i])) {
-                newStr += data.asciiData();
-            }
-        }
-        return newStr.data();
-    } else {
-        return utf32ToUtf8IgnoreZeroWidthChar(data.utf32Data(), data.length);
-    }
-}
-
 String* String::fromUTF8(const char* src, size_t len)
 {
     for (unsigned i = 0; i < len; i++) {

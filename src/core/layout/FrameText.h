@@ -65,7 +65,7 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
-        std::string str = text()->utf8Data();
+        UTF8StringDataNonGCStd str = text()->toUTF8NonGCString();
         str = replaceAll(str, "\n", "\\n");
         printf("text-> %s", str.data());
     }

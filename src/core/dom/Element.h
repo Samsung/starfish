@@ -164,10 +164,10 @@ public:
     {
         Node::dump();
 
-        printf("id:%s, ", id()->utf8Data());
-        std::string className;
+        printf("id:%s, ", id()->toUTF8NonGCString().data());
+        UTF8StringDataNonGCStd className;
         for (unsigned i = 0; i < m_classNames.size(); i++) {
-            className += m_classNames[i].string()->utf8Data();
+            className += m_classNames[i].string()->toUTF8NonGCString().data();
             className += " ";
         }
 

@@ -132,7 +132,7 @@ void HTMLLinkElement::checkLoadStyleSheet()
     Nullable<String*> rel = getAttribute(starFish()->staticStrings()->m_rel);
 
     if (((type.hasValue() &&
-          isCSSType(type.getValue()->toLower()->utf8Data())) ||
+          isCSSType(type.getValue()->toLower()->toUTF8NonGCString().data())) ||
          !type.hasValue()) &&
         href.hasValue() && !href.getValue()->isEmpty() && rel.hasValue() &&
         rel.getValue()->toLower()->equals("stylesheet")) {

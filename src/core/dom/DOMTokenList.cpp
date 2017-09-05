@@ -92,12 +92,12 @@ void DOMTokenList::concatTokensInsideParentheses(GCVector<String*>* tokens)
         if (combinedCount) {
             combined = combined->concat(token);
             combinedCount++;
-            if (strstr(token->utf8Data(), ")")) {
+            if (strstr(token->toUTF8NonGCString().data(), ")")) {
                 newTokens.push_back(combined);
                 combined = String::emptyString;
                 combinedCount = 0;
             }
-        } else if (strstr(token->utf8Data(), "(")) {
+        } else if (strstr(token->toUTF8NonGCString().data(), "(")) {
             combined = combined->concat(token);
             combinedCount++;
         } else {
@@ -295,7 +295,7 @@ String* DOMTokenList::toString()
 // Throw Exceptions
 void DOMTokenList::validateToken(String* token)
 {
-    std::string stdToken = token->utf8Data();
+    UTF8StringDataNonGCStd stdToken = token->toUTF8NonGCString();
     if (stdToken.length() == 0) {
         throw new DOMException(m_element->document(),
                                DOMException::Code::SYNTAX_ERR);

@@ -37,11 +37,11 @@ public:
 
     bool open(String* filePath, FileIOType mode)
     {
-        return open(filePath->utf8Data(), mode);
+        return open(filePath->toUTF8NonGCString().data(), mode);
     }
     bool open(ResourceURL* filePath, FileIOType mode)
     {
-        return open(filePath->string()->utf8Data(), mode);
+        return open(filePath->string()->toUTF8NonGCString().data(), mode);
     }
     virtual bool open(const char* filePath, FileIOType mode) = 0;
     virtual long int length() = 0;

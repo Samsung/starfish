@@ -84,7 +84,8 @@ public:
         if (isJavaScriptType(m_resource->resourceRequest()
                                  ->responseMimeType()
                                  ->toLower()
-                                 ->utf8Data()) ||
+                                 ->toUTF8NonGCString()
+                                 .data()) ||
             m_resource->resourceRequest()
                 ->responseMimeType()
                 ->toLower()
@@ -141,7 +142,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
         Nullable<String*> typeStr =
             getAttribute(starFish()->staticStrings()->m_type);
         if (typeStr.hasValue() &&
-            !isJavaScriptType(typeStr.getValue()->toLower()->utf8Data())) {
+            !isJavaScriptType(
+                typeStr.getValue()->toLower()->toUTF8NonGCString().data())) {
             return false;
         }
         Nullable<String*> srcStr =

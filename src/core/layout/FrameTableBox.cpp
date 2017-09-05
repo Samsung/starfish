@@ -1029,7 +1029,8 @@ LayoutUnit FrameTableBox::widthFromAttribute(LayoutUnit parentContentWidth)
     }
 
     CSSStyleValuePair pair;
-    CSSPropertyParser::parseLength(w->utf8Data(), false, true, &pair);
+    CSSPropertyParser::parseLength(w->toUTF8NonGCString().data(), false, true,
+                                   &pair);
 
     switch (pair.valueKind()) {
     case CSSStyleValuePair::ValueKind::Length: {

@@ -30,14 +30,19 @@ namespace StarFish {
 static rapidxml::xml_node<char>* createXMLNodeFromElement(
     Element* e, rapidxml::xml_document<char>& xmlDocument)
 {
+    char* allocateName =
+        xmlDocument.allocate_string(e->localName()->toUTF8NonGCString().data());
     rapidxml::xml_node<char>* xmlNode = xmlDocument.allocate_node(
-        rapidxml::node_type::node_element, e->localName()->utf8Data());
+        rapidxml::node_type::node_element, allocateName);
 
     size_t attributeCount = e->attributeCount();
     for (size_t i = 0; i < attributeCount; i++) {
         rapidxml::xml_attribute<char>* attr = xmlDocument.allocate_attribute(
-            e->getAssuredAttributeName(i).localName()->utf8Data(),
-            e->getAssuredAttribute(i)->utf8Data());
+            e->getAssuredAttributeName(i)
+                .localName()
+                ->toUTF8NonGCString()
+                .data(),
+            e->getAssuredAttribute(i)->toUTF8NonGCString().data());
         xmlNode->append_attribute(attr);
     }
 
@@ -49,17 +54,23 @@ static rapidxml::xml_node<char>* createXMLNodeFromElement(
             childXMLNode =
                 createXMLNodeFromElement(child->asElement(), xmlDocument);
         } else if (child->isComment()) {
+            char* allocateValue = xmlDocument.allocate_string(
+                child->asCharacterData()->data()->toUTF8NonGCString().data());
             childXMLNode = xmlDocument.allocate_node(
-                rapidxml::node_type::node_comment, "",
-                child->asCharacterData()->data()->utf8Data());
+                rapidxml::node_type::node_comment, "", allocateValue);
         } else if (child->isText()) {
+            char* allocateValue = xmlDocument.allocate_string(
+                child->asCharacterData()->data()->toUTF8NonGCString().data());
             childXMLNode = xmlDocument.allocate_node(
-                rapidxml::node_type::node_data, "",
-                child->asCharacterData()->data()->utf8Data());
+                rapidxml::node_type::node_data, "", allocateValue);
         } else if (child->isDocumentType()) {
+            char* allocateName =
+                xmlDocument.allocate_string(child->asDocumentType()
+                                                ->nodeName()
+                                                ->toUTF8NonGCString()
+                                                .data());
             childXMLNode = xmlDocument.allocate_node(
-                rapidxml::node_type::node_doctype,
-                child->asDocumentType()->nodeName()->utf8Data());
+                rapidxml::node_type::node_doctype, allocateName);
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

@@ -343,8 +343,6 @@ public:
     size_t peekUTF16Buffer(size_t (*)(const char16_t* buffer, size_t len,
                                       void* data),
                            void* data) const;
-    const char* utf8Data();                    // TODO remove this method
-    const char* utf8DataIgnoreZeroWidthChar(); // TODO remove this method
 
     static inline bool isASCIIDigit(char32_t c)
     {

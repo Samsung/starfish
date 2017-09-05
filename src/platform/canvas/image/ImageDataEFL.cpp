@@ -31,11 +31,13 @@ public:
     ImageDataEFL(String* localImageSrc)
     {
         // STARFISH_LOG_INFO("ImageDataEFL::ImageDataEFL %s\n",
-        // localImageSrc->utf8Data());
+        // localImageSrc->toUTF8NonGCString().data();
         m_image = evas_object_image_add(internalCanvas());
-        evas_object_image_file_set(
-            m_image, PathResolver::matchLocation(localImageSrc)->utf8Data(),
-            NULL);
+        evas_object_image_file_set(m_image,
+                                   PathResolver::matchLocation(localImageSrc)
+                                       ->toUTF8NonGCString()
+                                       .data(),
+                                   NULL);
         evas_object_data_set(m_image, "local", "1");
         int w, h, err;
         err = evas_object_image_load_error_get(m_image);

@@ -132,7 +132,7 @@ bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
     }
     String* uuid = url->substring(idx, url->length() - idx);
 
-    const char* str = uuid->utf8Data();
+    const char* str = uuid->toUTF8NonGCString().data();
     if (strlen(str) != 36) {
         return false;
     }
@@ -198,8 +198,8 @@ bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
 
 String* WebView::blobURLStoreToString(BlobURLStore store, String* origin)
 {
-    std::string url = "blob:";
-    url += origin->utf8Data();
+    UTF8StringDataNonGCStd url = "blob:";
+    url += origin->toUTF8NonGCString();
     url += "/";
 
     union {
@@ -605,18 +605,21 @@ bool WebView::rendering(bool force)
                             ctx->owner()->node()->asHTMLElement();
                         for (unsigned i = 0; i < element->classNames().size();
                              i++) {
-                            className +=
-                                element->classNames()[i].string()->utf8Data();
+                            className += element->classNames()[i]
+                                             .string()
+                                             ->toUTF8NonGCString();
                             className += " ";
                         }
 
                         printf(
                             "StackingContext[%p, node %p %s id:%s className:%s"
                             ", frame %p, buf %p %d %d %d %d]\n",
-                            ctx, element, element->localName()->utf8Data(),
-                            element->id()->utf8Data(), className.data(),
-                            ctx->owner(), ctx->buffer(), (int)fr.x(),
-                            (int)fr.y(), (int)fr.width(), (int)fr.height());
+                            ctx, element,
+                            element->localName()->toUTF8NonGCString().data(),
+                            element->id()->toUTF8NonGCString().data(),
+                            className.data(), ctx->owner(), ctx->buffer(),
+                            (int)fr.x(), (int)fr.y(), (int)fr.width(),
+                            (int)fr.height());
                     } else {
                         printf(
                             "StackingContext[%p, anonymous node"

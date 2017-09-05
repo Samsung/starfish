@@ -143,7 +143,7 @@ Document* DOMParser::parseFromString(String* str, String* type)
     } else if (type->equalsIgnoreCase("text/xml") ||
                type->equalsIgnoreCase("application/xml")) {
         rapidxml::xml_document<char> doc;
-        char* cStr = (char*)str->utf8Data();
+        char* cStr = (char*)str->toUTF8NonGCString().data();
         try {
             doc.parse<rapidxml::parse_doctype_node |
                       rapidxml::parse_comment_nodes>(cStr);

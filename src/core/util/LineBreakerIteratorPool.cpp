@@ -512,7 +512,7 @@ icu::BreakIterator* openLineBreakIterator(BreakIteratorInfo& info,
     if (mode == LineBreakIteratorModeUAX14) {
         brkIter = BreakIterator::createLineInstance(
             Locale::createCanonical(
-                makeLocaleWithBreakKeyword(info)->utf8Data()),
+                makeLocaleWithBreakKeyword(info)->toUTF8NonGCString().data()),
             openStatus);
     } else {
         UParseError parseError;

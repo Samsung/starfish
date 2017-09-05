@@ -289,7 +289,8 @@ static ValueRef* screenShotFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    std::string path = window->document()->documentURI()->baseURI()->utf8Data();
+    UTF8StringDataNonGCStd path =
+        window->document()->documentURI()->baseURI()->toUTF8NonGCString();
     path = path.substr(strlen("file://"));
     path += argv[0]->toString(state)->toStdUTF8String().data();
     window->screenShot(path);
@@ -311,7 +312,7 @@ static ValueRef* screenShotRelativePathFunction(ExecutionStateRef* state,
             ->concat(String::fromUTF8("/"))
             ->concat(String::fromUTF8(
                 getenv("SCREEN_SHOT_FILE") ? getenv("SCREEN_SHOT_FILE") : ""));
-    window->screenShot(path->utf8Data());
+    window->screenShot(path->toUTF8NonGCString());
     callScriptFunction(
         window->scriptBindingInstance(), argv[0], nullptr, 0,
         ValueRef::create(
@@ -465,7 +466,8 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
     std::string cmd = "./tool/imgdiff/imgdiff ";
 
     Window* wnd = window;
-    std::string path = wnd->document()->documentURI()->baseURI()->utf8Data();
+    UTF8StringDataNonGCStd path =
+        wnd->document()->documentURI()->baseURI()->toUTF8NonGCString();
     path = path.substr(strlen("file://"));
 
     cmd += path;

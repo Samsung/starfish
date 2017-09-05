@@ -331,7 +331,8 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
     if (name.localName()->equals("style")) {
         STARFISH_LOG_INFO("+++attr:&&&style\n");
     } else {
-        STARFISH_LOG_INFO("+++attr:%s\n", name.localName()->utf8Data());
+        STARFISH_LOG_INFO("+++attr:%s\n",
+                          name.localName()->toUTF8NonGCString().data());
     }
 #endif
 
