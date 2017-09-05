@@ -399,54 +399,45 @@ public:
         cairo_save(m_canvas);
         cairo_translate(m_canvas, xx, yy);
 
-        UTF8StringDataNonGCStd us =
-            sv.originalString()->toUTF8NonGCString(sv.start(), sv.end(), true);
-
-        FT_Face face = lastState().m_font->metrics().m_FTFace;
+        FT_Face face = nullptr;
         cairo_font_face_t* fontFace;
-        fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
         int size = lastState().m_font->size();
+        int glyph_count = sv.length();
+        cairo_translate(m_canvas, 0, size);
 
-        cairo_set_font_face(m_canvas, fontFace);
-        cairo_set_font_size(m_canvas, size);
-        auto scaled_face = cairo_get_scaled_font(m_canvas);
+        FT_Int x_bias = 0;
+        FT_Int y_bias = 0;
+        for (int i = 0; i < glyph_count; i++) {
+            FT_UInt glyph_index = 0;
+            cairo_glyph_t glyph;
+            cairo_font_extents_t font_ext;
+            face = lastState().m_font->findFCChar(sv.charAt(i), &glyph_index);
+            if (face != nullptr) {
+                fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
+                size = lastState().m_font->size();
 
-        // get glyphs for the text
-        cairo_glyph_t* glyphs = NULL;
-        int glyph_count;
-        cairo_text_cluster_t* clusters = NULL;
-        int cluster_count;
-        cairo_text_cluster_flags_t clusterflags;
+                cairo_set_font_face(m_canvas, fontFace);
+                cairo_set_font_size(m_canvas, size);
+                cairo_scaled_font_t* scaled_face =
+                    cairo_get_scaled_font(m_canvas);
 
-        auto stat = cairo_scaled_font_text_to_glyphs(
-            scaled_face, 0, 0, us.c_str(), strlen(us.c_str()), &glyphs,
-            &glyph_count, &clusters, &cluster_count, &clusterflags);
+                FT_Set_Pixel_Sizes(face, 0, size);
+                FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
 
-        // check if conversion was successful
-        if (stat == CAIRO_STATUS_SUCCESS) {
-            // text paints on bottom line
-            cairo_translate(m_canvas, 0, size);
-            // draw each cluster
-            int glyph_index = 0;
-            int byte_index = 0;
-            for (int i = 0; i < cluster_count; i++) {
-                cairo_text_cluster_t* cluster = &clusters[i];
-                cairo_glyph_t* clusterglyphs = &glyphs[glyph_index];
-
-                // get extents for the glyphs in the cluster
-                cairo_text_extents_t extents;
-                cairo_scaled_font_glyph_extents(scaled_face, clusterglyphs,
-                                                cluster->num_glyphs, &extents);
-                cairo_glyph_path(m_canvas, clusterglyphs, cluster->num_glyphs);
-                cairo_fill(m_canvas);
-                // glyph/byte position
-                glyph_index += cluster->num_glyphs;
-                byte_index += cluster->num_bytes;
+                glyph.index = glyph_index;
+                glyph.x = x_bias;
+                glyph.y = 0;
+                x_bias += face->glyph->advance.x >> 6;
+                y_bias += face->glyph->advance.y >> 6;
+            } else {
+                // TODO
+                glyph.index = 0;
+                glyph.x = 0;
+                glyph.y = 0;
             }
+            cairo_glyph_path(m_canvas, &glyph, 1);
         }
-        cairo_glyph_free(glyphs);
-        cairo_text_cluster_free(clusters);
-
+        cairo_fill(m_canvas);
         cairo_restore(m_canvas);
     }
 

@@ -33,7 +33,7 @@ class ImageDataMISC : public ImageData {
 public:
     ImageDataMISC(String* localImageSrc)
     {
-        FILE* fp = fopen(localImageSrc->toUTF8NonGCString(), "rb");
+        FILE* fp = fopen(localImageSrc->toUTF8NonGCString().data(), "rb");
         decodeImage(fp, localImageSrc, nullptr, 0);
         fclose(fp);
         reigsterFinalizer();

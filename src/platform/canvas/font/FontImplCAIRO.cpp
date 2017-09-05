@@ -30,14 +30,14 @@ namespace StarFish {
 class FontImplCAIRO : public Font {
 public:
     FontImplCAIRO(String* familyName, float size, char style, char weight,
-                  FontMetrics met)
+                  FontMetrics met, FontSelector* fontSelector)
     {
         m_metrics = met;
         m_size = size;
         m_weight = weight;
         m_style = style;
         m_fontFamily = familyName;
-
+        m_fontSelector = fontSelector;
 #ifdef STARFISH_ENABLE_TEST
 // if (!g_enablePixelTest) {
 //     m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
@@ -68,8 +68,7 @@ public:
                                            FontImplCAIRO* m =
                                                (FontImplCAIRO*)obj;
                                            FontMetrics fm = m->metrics();
-                                           FT_Done_Face(fm.m_FTFace);
-                                           FT_Done_FreeType(fm.m_FTFaceLib);
+
                                        },
                                        NULL, NULL, NULL);
     }
@@ -96,7 +95,10 @@ public:
 
         surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 120, 120);
         cr = cairo_create(surface);
-        FT_Face face = metrics().m_FTFace;
+
+        // TODO(MONG)
+        uint tmp = 0;
+        FT_Face face = findFCChar(str.charAt(0), &tmp);
         cairo_font_face_t* fontFace;
         fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
 
@@ -143,6 +145,60 @@ public:
     {
         return nullptr;
     }
+
+    virtual FT_Face findFCChar(char32_t uniCode, uint* glyphIdx)
+    {
+        // check cache;
+        auto it = m_fontSelector->m_FTFaceCaches.find(uniCode);
+        if (it != m_fontSelector->m_FTFaceCaches.end()) {
+            // std::tuple<FT_Face, unsigned int, int, int> tmp = it->second;
+            auto fc = std::get<0>(it->second);
+            FT_UInt glyph_index = FT_Get_Char_Index(fc, uniCode);
+            if (glyph_index != 0) {
+                *glyphIdx = glyph_index;
+                return fc;
+            }
+        }
+
+        // load FTFace;
+        FT_Error error;
+        FT_Face face;
+        auto iter = m_fontSelector->m_systemFonts.begin();
+        while (iter != m_fontSelector->m_systemFonts.end()) {
+            std::pair<std::string, FT_Face>& font = *iter;
+
+            if (font.second == nullptr) {
+                error = FT_New_Face(m_fontSelector->m_FTFaceLib,
+                                    font.first.data(), 0, &face);
+                FT_UInt glyph_index = FT_Get_Char_Index(face, uniCode);
+                if (glyph_index != 0) {
+                    font.second = face;
+                    *glyphIdx = glyph_index;
+                    m_fontSelector->m_FTFaceCaches.emplace(
+                        uniCode, std::make_tuple(face, glyph_index));
+                    return face;
+                } else {
+                    FT_Done_Face(face);
+                }
+
+            } else {
+                face = font.second;
+                FT_UInt glyph_index = FT_Get_Char_Index(face, uniCode);
+                if (glyph_index != 0) {
+                    *glyphIdx = glyph_index;
+                    m_fontSelector->m_FTFaceCaches.emplace(
+                        uniCode, std::make_tuple(face, glyph_index));
+                    return face;
+                }
+            }
+            iter++;
+        }
+        // STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        return nullptr;
+    }
+
+private:
+    FontSelector* m_fontSelector;
 };
 
 #define CHECK_ERROR                            \
@@ -170,20 +226,10 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
         met.m_fontHeight = iter->second.second.m_fontHeight * factor;
         met.m_xheightRate = iter->second.second.m_xheightRate * factor;
 
-        met.m_FTFace = iter->second.second.m_FTFace;
-        met.m_FTFaceLib = iter->second.second.m_FTFaceLib;
         return met;
     }
 
     FcPattern* pattern = FcNameParse((const FcChar8*)(u8FontName.data()));
-
-// TODO : need to fallback font
-#ifdef STARFISH_TIZEN
-// pattern = FcNameParse((const FcChar8*)("BreezeSansKorean-Regular")); // TM1
-// pattern = FcNameParse((const FcChar8*)("SamsungOneUIKorean"));
-#else
-    pattern = FcNameParse((const FcChar8*)("NanumGothic")); // ubuntu
-#endif
 
     FcConfigSubstitute(config, pattern, FcMatchPattern);
     FcDefaultSubstitute(pattern);
@@ -231,14 +277,72 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
     met.m_descender = met.m_ascender - met.m_fontHeight;
     met.m_xheightRate = xheight / size;
 
-    met.m_FTFace = face;
-    met.m_FTFaceLib = library;
-
-    // FT_Done_Face(face);
-    // FT_Done_FreeType(library);
+    FT_Done_Face(face);
+    FT_Done_FreeType(library);
 
     metricsMap[u8FontName] = std::make_pair(size, met);
     return met;
+}
+
+FontSelector::FontSelector()
+{
+    static FcConfig* config = FcInitLoadConfigAndFonts();
+
+#ifdef STARFISH_TIZEN_TV
+    std::string fallbackFont = "SamsungOneFallback";
+#else
+    std::string fallbackFont = "";
+#endif
+
+    FcPattern* pattern = FcNameParse((const FcChar8*)(fallbackFont.data()));
+
+#ifdef STARFISH_TIZEN_TV
+    FcPatternAddString(pattern, FC_FAMILY, (const FcChar8*)"SamsungOneUI");
+    FcPatternAddString(pattern, FC_FAMILY,
+                       (const FcChar8*)"SamsungOneUIKoreanH");
+#endif
+
+    FcConfigSubstitute(config, pattern, FcMatchPattern);
+    FcDefaultSubstitute(pattern);
+
+    FcResult res;
+    FcFontSet* set = FcFontSort(config, pattern, FcTrue, NULL, &res);
+
+    if (!set) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    std::string fontPath;
+    for (int i = 0; i < set->nfont; i++) {
+        FcPattern* font = set->fonts[i];
+        FcChar8* file;
+        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
+            fontPath = (char*)file;
+
+            // Add every font which's in system.
+            m_systemFonts.emplace_back(std::make_pair(fontPath, nullptr));
+        }
+    }
+
+    FcFontSetDestroy(set);
+    FcPatternDestroy(pattern);
+
+    FT_Error error;
+    error = FT_Init_FreeType(&m_FTFaceLib);
+    CHECK_ERROR;
+}
+
+FontSelector::~FontSelector()
+{
+    auto iter = m_systemFonts.begin();
+    while (iter != m_systemFonts.end()) {
+        std::pair<std::string, FT_Face> font = *iter;
+        if (font.second != nullptr) {
+            FT_Done_Face(font.second);
+        }
+        iter++;
+    }
+    FT_Done_FreeType(m_FTFaceLib);
 }
 
 Font* FontSelector::loadFont(String* familyName, float size, char style,
@@ -256,8 +360,8 @@ Font* FontSelector::loadFont(String* familyName, float size, char style,
         }
     }
 
-    Font::FontMetrics fontMetrics = loadFontMetrics(familyName, size);
-    f = new FontImplCAIRO(familyName, size, style, weight, fontMetrics);
+    f = new FontImplCAIRO(familyName, size, style, weight,
+                          loadFontMetrics(familyName, size), this);
     m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
     return f;
 }
