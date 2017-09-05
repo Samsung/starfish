@@ -74,7 +74,7 @@ static uint32_t readBigEndianUnsignedInteger(DemuxerSource* source, int& error)
 {
     error = 0;
     uint8_t c[4];
-    uint32_t n;
+    uint32_t n = 0;
 
     size_t t1;
     int err;
