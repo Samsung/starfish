@@ -91,6 +91,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_animationExecutor(new AnimationExecutor(window))
     , m_domVersion(0)
     , m_implementation(nullptr)
+    , m_pendingDocumentParsingIdlerHandle(SIZE_MAX)
 #ifdef STARFISH_TIZEN
     , m_tizenWidgetTransparentBackground(0)
 #endif
@@ -473,7 +474,7 @@ void Document::write(const GCVector<String*>& str)
     // when the processing of the tokenizer is aborted by the tree construction
     // stage (this can happen if a script end tag token is emitted by the
     // tokenizer).
-    m_documentBuilder->asHTMLDocumentBuilder()->parser()->parseStep();
+    m_documentBuilder->asHTMLDocumentBuilder()->parser()->parseStep(false);
 }
 
 void Document::writeln(const GCVector<String*>& str)
@@ -485,18 +486,26 @@ void Document::writeln(const GCVector<String*>& str)
 
 void Document::resumeDocumentParsing()
 {
-    window()->starFish()->messageLoop()->addIdler(
-        browsingContext(),
-        [](size_t handle, void* data) {
-            Document* document = (Document*)data;
-            STARFISH_ASSERT(document->m_documentBuilder);
-            document->m_documentBuilder->resume();
-        },
-        this);
+    STARFISH_ASSERT(m_pendingDocumentParsingIdlerHandle == SIZE_MAX);
+    m_pendingDocumentParsingIdlerHandle =
+        window()->starFish()->messageLoop()->addIdler(
+            browsingContext(),
+            [](size_t handle, void* data) {
+                Document* document = (Document*)data;
+                STARFISH_ASSERT(document->m_documentBuilder);
+                document->m_pendingDocumentParsingIdlerHandle = SIZE_MAX;
+                document->m_documentBuilder->resume();
+            },
+            this);
 }
 
 void Document::notifyDomContentLoaded()
 {
+    if (m_pendingDocumentParsingIdlerHandle != SIZE_MAX) {
+        window()->starFish()->messageLoop()->removeIdler(
+            m_pendingDocumentParsingIdlerHandle);
+        m_pendingDocumentParsingIdlerHandle = SIZE_MAX;
+    }
     m_documentBuilder = nullptr;
 
     if (!m_domContentLoadedFired) {
