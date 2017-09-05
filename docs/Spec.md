@@ -355,6 +355,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | length | A long reflecting  the number of controls in the form. |
 |  | method | submit | Submits the form. |
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
+| [HTMLHRElement](https://html.spec.whatwg.org/multipage/grouping-content.html#the-hr-element) | interface | HTMLHRElement | The hr element represents a thematic break between paragraph-level elements. |
 | [HTMLHeadingElement](https://html.spec.whatwg.org/#htmlheadingelement) | interface | HTMLHeadingElement | The h1, h2, h3, h4, h5 and h6 elements represent headings for their sections. |
 |  | attribute | align | Returns the current value of the align content attribute. |
 | [HTMLHtmlElement](https://html.spec.whatwg.org/multipage/semantics.html#the-html-element) | interface | HTMLHtmlElement | The html element represents the root of an HTML document. |
