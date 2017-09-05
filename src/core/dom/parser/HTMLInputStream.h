@@ -80,6 +80,11 @@ public:
         m_first.append(string);
     }
 
+    void prependAtCurrentInsertionPoint(const SegmentedString& string)
+    {
+        m_first.prepend(string);
+    }
+
     bool hasInsertionPoint() const
     {
         return &m_first != m_last;
