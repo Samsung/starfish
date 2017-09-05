@@ -90,7 +90,7 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
         res->handleResponseEOF();
     } else {
         STARFISH_LOG_INFO("failed to open %s\n",
-                          res->m_url->urlString()->utf8Data());
+                          res->m_url->urlString()->toUTF8NonGCString().data());
         res->m_status = 0;
         res->handleError(ResourceRequest::ERROR);
     }
@@ -149,9 +149,9 @@ void DataURLResourceRequestJobDelegate::worker(ResourceRequest* res,
 
     // TODO filter url string correctly according RFC 3986
     String* decodedURL = decodeURL(url, idx + 1);
-    const char* utf8Data = decodedURL->utf8Data();
+    UTF8StringDataNonGCStd utf8Data = decodedURL->toUTF8NonGCString();
 
-    size_t len = strlen(utf8Data);
+    size_t len = utf8Data.length();
     for (size_t i = 0; i < len; i++) {
         res->m_response.push_back(utf8Data[i]);
     }

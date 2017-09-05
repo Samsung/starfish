@@ -332,17 +332,17 @@ void StarFish::exit()
 
 void StarFish::loadHTMLDocument(String* filePath)
 {
-    std::string path;
+    UTF8StringDataNonGCStd path;
     if (filePath->startsWith("http")) {
-        path = filePath->utf8Data();
+        path = filePath->toUTF8NonGCString();
     } else if (filePath->startsWith("about")) {
-        path = filePath->utf8Data();
+        path = filePath->toUTF8NonGCString();
     } else {
-        std::string d = filePath->utf8Data();
+        UTF8StringDataNonGCStd d = filePath->toUTF8NonGCString();
         if (d.length() && d[0] == '/') {
             path = std::string("file://") + d;
         } else {
-            std::string fileName;
+            UTF8StringDataNonGCStd fileName;
             if (d.find('/') == std::string::npos) {
                 path = "./";
                 fileName = d;

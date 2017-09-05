@@ -92,7 +92,7 @@ void HTMLMediaElement::onDOMContentLoaded()
         (autoplay() || preloadValue() != HTMLMediaElement::PRELOAD_NONE)) {
         // STARFISH_LOG_INFO("HTMLMediaElement::onDOMContentLoaded() causes
         // content load (autoplay:%s, preload:%s)\n", autoplay() ? "true" :
-        // "false", preload()->utf8Data());
+        // "false", preload()->toUTF8NonGCString().data());
         load();
         if (autoplay()) {
             appendToPlayOperationQueue(
@@ -113,7 +113,7 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
             (autoplay() || preloadValue() != HTMLMediaElement::PRELOAD_NONE)) {
             // STARFISH_LOG_INFO("HTMLMediaElement::Changing src attribute
             // causes content load (autoplay:%s, preload:%s)\n", autoplay() ?
-            // "true" : "false", preload()->utf8Data());
+            // "true" : "false", preload()->toUTF8NonGCString().data());
             load();
             if (autoplay()) {
                 appendToPlayOperationQueue(
@@ -1386,7 +1386,7 @@ void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
     STARFISH_LOG_INFO(
         "MediaOperationQueueDataRequestDispatchEvent::processOperationQueue() "
         "-> %s\n",
-        m_event->type()->utf8Data());
+        m_event->type()->toUTF8NonGCString().data());
     m_mediaElement->processNextOperationQueue();
     m_target->dispatchEventByUA(m_event);
 }

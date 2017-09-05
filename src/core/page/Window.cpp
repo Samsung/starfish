@@ -180,7 +180,8 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
         targetOrigin = origin;
     } else if (targetOrigin->equals("*")) {
     } else if (!ResourceURL::isValidURL(targetOrigin)) {
-        COMPOSE_MESSAGE(reason, INVALID_TARGET_ORIGIN, targetOrigin->utf8Data(),
+        COMPOSE_MESSAGE(reason, INVALID_TARGET_ORIGIN,
+                        targetOrigin->toUTF8NonGCString().data(),
                         "postMessage");
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         reason);
@@ -195,14 +196,15 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
         serialized = Serializer::serialize(document(), message);
     } catch (DOMException* e) {
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
-                        e->message()->utf8Data());
+                        e->message()->toUTF8NonGCString().data());
         e->setMessage(String::fromUTF8(msg));
         throw e;
     }
 
     if (!targetOrigin->equals("*") && targetOrigin) {
         COMPOSE_MESSAGE(reason, ORIGINS_ARE_NOT_MATCHED,
-                        targetOrigin->utf8Data(), origin->utf8Data());
+                        targetOrigin->toUTF8NonGCString().data(),
+                        origin->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         reason);
         starFish()->console()->error(String::fromUTF8(msg));

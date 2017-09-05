@@ -538,7 +538,7 @@ void Document::notifyDomContentLoaded()
                 "%s is not specified standard mode doctype. currently, "
                 "StarFish "
                 "could not support quirks mode.\n",
-                m_documentURI->urlString()->utf8Data());
+                m_documentURI->urlString()->toUTF8NonGCString().data());
             STARFISH_LOG_ERROR(
                 "You could got unexpected rendering result. please use "
                 "standard "

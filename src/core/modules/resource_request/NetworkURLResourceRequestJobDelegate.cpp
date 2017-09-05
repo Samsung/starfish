@@ -103,8 +103,9 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
             SIZE_MAX);
         STARFISH_LOG_INFO(
-            "got timeout %s[%d]\n",
-            requestData->request->m_url->urlString()->utf8Data(),
+            "got timeout %s[%d]\n", requestData->request->m_url->urlString()
+                                        ->toUTF8NonGCString()
+                                        .data(),
             (int)requestData->httpTransaction->httpResponse().responseCode());
         requestData->request->handleError(ResourceRequest::TIMEOUT);
     } else {
@@ -117,7 +118,9 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
             SIZE_MAX);
         STARFISH_LOG_INFO("failed to open %s\n",
-                          requestData->request->m_url->urlString()->utf8Data());
+                          requestData->request->m_url->urlString()
+                              ->toUTF8NonGCString()
+                              .data());
         requestData->request->handleError(ResourceRequest::ERROR);
     }
 
@@ -282,8 +285,9 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     } else {
         auto it2 = headers.findHeader(HTTPHeaderMap::kReferer);
         if (it2 == headers.headerMap().end() && m_orgProxy->referrer()) {
-            headers.setHeader(HTTPHeaderMap::kReferer,
-                              m_orgProxy->referrer()->urlString()->utf8Data());
+            headers.setHeader(
+                HTTPHeaderMap::kReferer,
+                m_orgProxy->referrer()->urlString()->toUTF8NonGCString());
         }
     }
 }
@@ -292,8 +296,9 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithResourceRequestHeader(
     HTTPHeaderMap& headers)
 {
     for (size_t i = 0; i < m_orgProxy->m_requestHeaders.size(); i++) {
-        headers.setHeader(m_orgProxy->m_requestHeaders[i].first->utf8Data(),
-                          m_orgProxy->m_requestHeaders[i].second->utf8Data());
+        headers.setHeader(
+            m_orgProxy->m_requestHeaders[i].first->toUTF8NonGCString(),
+            m_orgProxy->m_requestHeaders[i].second->toUTF8NonGCString());
     }
 }
 

@@ -42,7 +42,8 @@ struct TextRun {
 #ifndef NDEBUG
     void dump() const
     {
-        std::string str = m_stringView.substring()->utf8Data();
+        UTF8StringDataNonGCStd str =
+            m_stringView.substring()->toUTF8NonGCString();
         str = FrameText::replaceAll(str, "\n", "\\n");
         printf("%s", m_direction == Ltr
                          ? "L"
@@ -85,7 +86,7 @@ public:
         FrameBox::dump(depth);
         StringView tv = text();
         printf(" [(%s), dir: %d, start: %d, end %d] ",
-               tv.substring()->utf8Data(), (int)charDirection(),
+               tv.substring()->toUTF8NonGCString().data(), (int)charDirection(),
                (int)tv.start(), (int)tv.end());
     }
 #endif

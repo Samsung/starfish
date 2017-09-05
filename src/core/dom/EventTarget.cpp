@@ -105,14 +105,15 @@ bool EventTarget::addEventListener(const String* eventType,
     for (auto i = v->begin(); i != v->end(); i++) {
         if (listener->compare(*i)) {
             // STARFISH_LOG_INFO("EventTarget::addEventListener - Duplicated
-            // listener \"%s[%lu]\"\n", eventType.string()->utf8Data(), i -
+            // listener \"%s[%lu]\"\n",
+            // eventType.string()->toUTF8NonGCString().data(), i -
             // v->begin());
             return false;
         }
     }
     v->push_back(listener);
     // STARFISH_LOG_INFO("EventTarget::addEventListener - Added \"%s[%lu]\"\n",
-    // eventType.string()->utf8Data(), v->size() - 1);
+    // eventType.string()->toUTF8NonGCString().data(), v->size() - 1);
     return true;
 }
 
@@ -136,20 +137,21 @@ bool EventTarget::removeEventListener(const String* eventType,
     }
     if (!hasEvent) {
         // STARFISH_LOG_INFO("EventTarget::removeEventListener - No such
-        // listener \"%s\"\n", eventType.string()->utf8Data());
+        // listener \"%s\"\n", eventType.string()->toUTF8NonGCString().data());
         return false;
     }
 
     for (auto i = v->begin(); i != v->end(); i++) {
         if (listener->compare(*i)) {
             // STARFISH_LOG_INFO("EventTarget::removeEventListener - Removed
-            // \"%s[%lu]\"\n", eventType.string()->utf8Data(), i - v->begin());
+            // \"%s[%lu]\"\n", eventType.string()->toUTF8NonGCString().data(), i
+            // - v->begin());
             v->erase(i);
             return true;
         }
     }
     // STARFISH_LOG_INFO("EventTarget::removeEventListener - No such listener
-    // \"%s\"\n", eventType.string()->utf8Data());
+    // \"%s\"\n", eventType.string()->toUTF8NonGCString().data());
     return false;
 }
 
@@ -244,7 +246,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                     std::find(originals->begin(), originals->end(), listener) !=
                         originals->end()) {
                     // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s\n",
-                    // node->localName()->utf8Data());
+                    // node->localName()->toUTF8NonGCString().data());
                     event->setCurrentTarget(eventTarget);
                     listener->call(event);
                 }
@@ -269,7 +271,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 if (std::find(originals->begin(), originals->end(), listener) !=
                     originals->end()) {
                     // STARFISH_LOG_INFO("[AT_TARGET] node: %s\n",
-                    // origin->localName()->utf8Data());
+                    // origin->localName()->toUTF8NonGCString().data());
                     event->setCurrentTarget(origin);
                     listener->call(event);
                 }
@@ -305,7 +307,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                         std::find(originals->begin(), originals->end(),
                                   listener) != originals->end()) {
                         // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s\n",
-                        // node->localName()->utf8Data());
+                        // node->localName()->toUTF8NonGCString().data());
                         event->setCurrentTarget(eventTarget);
                         listener->call(event);
                     }

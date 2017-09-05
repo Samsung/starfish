@@ -89,9 +89,9 @@ struct TextToken {
 #ifndef NDEBUG
     void dump()
     {
-        std::string str = m_frameText->text()
-                              ->substring(m_start, m_end - m_start)
-                              ->utf8Data();
+        UTF8StringDataNonGCStd str = m_frameText->text()
+                                         ->substring(m_start, m_end - m_start)
+                                         ->toUTF8NonGCString();
         str = FrameText::replaceAll(str, "\n", "\\n");
         printf("%s (", str.data());
         printf("width:%d, ", width().toInt());

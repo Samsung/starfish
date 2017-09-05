@@ -228,14 +228,14 @@ static void traverseChildFrames(
     if (c->isFrameReplaced() && c->asFrameReplaced()->isFrameReplacedImage()) {
         String* u = ResourceURL::mergeDocumentURIWithURIString(
             c->node()->document(), c->node()->asHTMLImageElement()->src());
-        currentUsingResourcePaths.insert(u->utf8Data());
+        currentUsingResourcePaths.insert(u->toUTF8NonGCString().data());
     }
 
     size_t i = 0;
     while (i < c->style()->backgroundLayerSize()) {
         if (c->style()->backgroundImage(i)->length()) {
             currentUsingResourcePaths.insert(
-                c->style()->backgroundImage(i)->utf8Data());
+                c->style()->backgroundImage(i)->toUTF8NonGCString().data());
         }
         i++;
     }
@@ -267,8 +267,10 @@ void ResourceLoader::cachePruning()
         auto iter = m_imageResourceCache.begin();
         while (iter != m_imageResourceCache.end()) {
             ResourceCacheData data = iter->second;
-            if ((currentUsingResourcePaths.find(
-                     data.m_resource->url()->urlString()->utf8Data()) !=
+            if ((currentUsingResourcePaths.find(data.m_resource->url()
+                                                    ->urlString()
+                                                    ->toUTF8NonGCString()
+                                                    .data()) !=
                  currentUsingResourcePaths.end()) &&
                 !data.m_resource->m_isReferencedByAnoterResource &&
                 data.m_resource->state() == Resource::State::Finished) {
@@ -289,7 +291,7 @@ void ResourceLoader::cachePruning()
                    removedSize < STARFISH_RESOURCE_CACHE_SIZE * 0.25) {
                 Resource* res = (*iter);
                 auto iter2 = m_imageResourceCache.find(
-                    res->url()->urlString()->utf8Data());
+                    res->url()->urlString()->toUTF8NonGCString().data());
                 if (m_imageResourceCache.end() != iter2 &&
                     res->state() == Resource::State::Finished &&
                     ((currentTick - iter2->second.m_lastUsedTime) >
@@ -313,7 +315,8 @@ void ResourceLoader::cachePruning()
 
 void ResourceLoader::notifyImageResourceActiveState(ImageResource* res)
 {
-    auto iter = m_imageResourceCache.find(res->url()->urlString()->utf8Data());
+    auto iter = m_imageResourceCache.find(
+        res->url()->urlString()->toUTF8NonGCString().data());
     if (iter != m_imageResourceCache.end()) {
         iter->second.m_lastUsedTime = tickCount();
     }
@@ -372,7 +375,7 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now,
     Resource::State s = org->state();
     org->m_isReferencedByAnoterResource = true;
     // STARFISH_LOG_INFO("cache hit! %s\n",
-    // org->url()->urlString()->utf8Data());
+    // org->url()->urlString()->toUTF8NonGCString().data());
     if (s == Resource::State::Finished) {
         if (syncLevel ==
             Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded) {

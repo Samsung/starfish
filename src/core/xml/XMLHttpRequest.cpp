@@ -288,7 +288,7 @@ void XMLHttpRequest::setResponseType(String* typeStr)
         STARFISH_LOG_ERROR(
             "The provided value '%s' is not a valid enum value of "
             "type XMLHttpRequestResponseType.",
-            typeStr->utf8Data());
+            typeStr->toUTF8NonGCString().data());
     }
 
     setResponseType(type);

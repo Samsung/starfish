@@ -132,7 +132,7 @@ public:
                 }
 
                 STARFISH_LOG_ERROR("console.error: %s\n",
-                                   msg.finalize()->utf8Data());
+                                   msg.finalize()->toUTF8NonGCString().data());
                 m_eventSource->cancel();
 
                 String* eventName =
@@ -195,7 +195,7 @@ EventSource::EventSource(::StarFish::Document* document, String* url,
         msg.appendString(url);
         msg.appendString("'. The URL is invalid.");
         throw new DOMException(document, DOMException::SYNTAX_ERR,
-                               msg.finalize()->utf8Data());
+                               msg.finalize()->toUTF8NonGCString().data());
     }
 
     m_resourceRequest->addResourceRequestClient(
@@ -326,7 +326,8 @@ void EventSource::failedAccessControlCheck()
     msg.appendString(
         "Cross origin requests are only supported for protocol schemes: http, "
         "https, data.");
-    STARFISH_LOG_ERROR("console.error: %s\n", msg.finalize()->utf8Data());
+    STARFISH_LOG_ERROR("console.error: %s\n",
+                       msg.finalize()->toUTF8NonGCString().data());
 
     m_readyState = CLOSED;
     m_resourceRequest->abort(true);

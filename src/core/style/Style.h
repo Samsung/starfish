@@ -281,7 +281,8 @@ public:
 
     String* toString() const
     {
-        std::string stdStr = String::fromFloat(m_value)->utf8Data();
+        UTF8StringDataNonGCStd stdStr =
+            String::fromFloat(m_value)->toUTF8NonGCString();
         if (m_kind == PX) {
             return String::fromUTF8(stdStr.append("px").c_str());
         } else if (m_kind == CM) {

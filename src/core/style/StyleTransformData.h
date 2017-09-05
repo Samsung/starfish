@@ -155,9 +155,10 @@ public:
             snprintf(temp, sizeof(temp), "skew(%.3f %.3f) ", skew()->angleX(),
                      skew()->angleY());
         } else if (m_type == Translate) {
-            snprintf(temp, sizeof(temp), "translate(%s %s) ",
-                     translate()->tx().dumpString()->utf8Data(),
-                     translate()->ty().dumpString()->utf8Data());
+            snprintf(
+                temp, sizeof(temp), "translate(%s %s) ",
+                translate()->tx().dumpString()->toUTF8NonGCString().data(),
+                translate()->ty().dumpString()->toUTF8NonGCString().data());
         } else {
             return String::emptyString;
         }

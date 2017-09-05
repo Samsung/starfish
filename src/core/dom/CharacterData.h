@@ -100,7 +100,7 @@ public:
     {
         Node::dump();
 
-        std::string str = m_data->utf8Data();
+        UTF8StringDataNonGCStd str = m_data->toUTF8NonGCString();
         str = replaceAll(str, "\n", "\\n");
         printf("data:%s ", str.data());
     }

@@ -277,7 +277,8 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
         STARFISH_LOG_ERROR(
             "Uncaught %s\n",
             toBrowserString(instance, ValueRef::create(result.error))
-                ->utf8Data());
+                ->toUTF8NonGCString()
+                .data());
 
         for (size_t i = 0; i < result.stackTraceData.size(); i++) {
             STARFISH_LOG_ERROR(
@@ -285,7 +286,8 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                 toBrowserString(
                     instance,
                     ValueRef::create(result.stackTraceData[i].fileName))
-                    ->utf8Data(),
+                    ->toUTF8NonGCString()
+                    .data(),
                 (int)result.stackTraceData[i].loc.line,
                 (int)result.stackTraceData[i].loc.column);
         }
@@ -327,14 +329,16 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
             STARFISH_LOG_ERROR(
                 "Uncaught %s\n",
                 toBrowserString(instance, ValueRef::create(sbresult.error))
-                    ->utf8Data());
+                    ->toUTF8NonGCString()
+                    .data());
             for (size_t i = 0; i < sbresult.stackTraceData.size(); i++) {
                 STARFISH_LOG_ERROR(
                     "at %s(%d:%d)\n",
                     toBrowserString(
                         instance,
                         ValueRef::create(sbresult.stackTraceData[i].fileName))
-                        ->utf8Data(),
+                        ->toUTF8NonGCString()
+                        .data(),
                     (int)sbresult.stackTraceData[i].loc.line,
                     (int)sbresult.stackTraceData[i].loc.column);
             }
@@ -356,7 +360,8 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
         STARFISH_LOG_ERROR(
             "Script parse error %s\n",
             toBrowserString(instance, ValueRef::create(scriptRef.m_error))
-                ->utf8Data());
+                ->toUTF8NonGCString()
+                .data());
         if (result)
             *result = false;
         return scriptUndefined();
@@ -368,16 +373,18 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     });
     sb->destroy();
     if (!sbresult.error->isEmpty()) {
-        STARFISH_LOG_ERROR(
-            "Uncaught %s\n",
-            toBrowserString(instance, sbresult.error)->utf8Data());
+        STARFISH_LOG_ERROR("Uncaught %s\n",
+                           toBrowserString(instance, sbresult.error)
+                               ->toUTF8NonGCString()
+                               .data());
         for (size_t i = 0; i < sbresult.stackTraceData.size(); i++) {
             STARFISH_LOG_ERROR(
                 "at %s(%d:%d)\n",
                 toBrowserString(
                     instance,
                     ValueRef::create(sbresult.stackTraceData[i].fileName))
-                    ->utf8Data(),
+                    ->toUTF8NonGCString()
+                    .data(),
                 (int)sbresult.stackTraceData[i].loc.line,
                 (int)sbresult.stackTraceData[i].loc.column);
         }

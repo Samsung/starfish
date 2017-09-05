@@ -33,7 +33,8 @@ ScriptEngineInstance::ScriptEngineInstance(StarFish* starFish)
 
     Escargot::Globals::initialize();
     m_engineInstance = VMInstanceRef::create(
-        starFish->locale().getName(), starFish->timezoneID()->utf8Data());
+        starFish->locale().getName(),
+        starFish->timezoneID()->toUTF8NonGCString().data());
     m_engineInstance->setNewPromiseJobListener([](ExecutionStateRef* state,
                                                   JobRef* job) {
         Window* window = (Window*)state->context()->globalObject()->extraData();

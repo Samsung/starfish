@@ -411,7 +411,7 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
         msg.appendString(").");
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INDEX_SIZE_ERR,
-                               msg.finalize()->utf8Data());
+                               msg.finalize()->toUTF8NonGCString().data());
     }
 
     CSSParser parser(scriptBindingInstance()->ownerDocument());
@@ -427,7 +427,7 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
         msg.appendString("'.");
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::SYNTAX_ERR,
-                               msg.finalize()->utf8Data());
+                               msg.finalize()->toUTF8NonGCString().data());
     }
 
     bool success = wrapperInsertRule(rules[0], index);
@@ -481,7 +481,7 @@ void CSSStyleSheet::deleteRule(unsigned index)
         msg.appendString(").");
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INDEX_SIZE_ERR,
-                               msg.finalize()->utf8Data());
+                               msg.finalize()->toUTF8NonGCString().data());
     }
 
     bool success = wrapperDeleteRule(index);

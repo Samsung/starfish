@@ -52,7 +52,7 @@ public:
         printf("[VTTCue]\n");
         printf("    StartTime : %lf\n", m_timeRange.start());
         printf("    EndTime : %lf\n", m_timeRange.end());
-        printf("    text : \n\"%s\"\n", m_payload->utf8Data());
+        printf("    text : \n\"%s\"\n", m_payload->toUTF8NonGCString().data());
     }
 #endif
 };

@@ -76,7 +76,7 @@ static bool parseLegacyFontSize(String* size, int& fontSize)
     }
 
     // Step 1 ~ 4
-    const char* position = size->utf8Data();
+    const char* position = size->toUTF8NonGCString().data();
     const char* end = position + size->length();
     while (position < end) {
         if (!String::isASCIISpace(*position)) {

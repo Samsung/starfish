@@ -119,7 +119,7 @@ public:
                                  ->toLower();
                 STARFISH_LOG_INFO(
                     "DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format %s\n",
-                    formatHint->utf8Data());
+                    formatHint->toUTF8NonGCString().data());
             } else {
                 STARFISH_LOG_INFO(
                     "DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format X\n");
@@ -132,8 +132,8 @@ public:
             m_formatContext = avformat_alloc_context();
 
             if (formatHint->length()) {
-                m_formatContext->iformat =
-                    av_find_input_format(formatHint->utf8Data());
+                m_formatContext->iformat = av_find_input_format(
+                    formatHint->toUTF8NonGCString().data());
             }
             m_formatContext->flags = AVFMT_FLAG_CUSTOM_IO |
                                      AVFMT_FLAG_NOFILLIN | AVFMT_FLAG_NOBUFFER |
