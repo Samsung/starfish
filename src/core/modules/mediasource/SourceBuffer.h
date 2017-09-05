@@ -20,6 +20,7 @@
 
 #include "core/dom/EventTarget.h"
 #include "platform/multimedia/Demuxer.h"
+#include "binding/ArrayBufferViewOrArrayBufferUnion.h"
 
 namespace StarFish {
 
@@ -39,13 +40,15 @@ struct SourceBufferData : public gc {
     const uint8_t* m_data;
     unsigned long m_length;
     std::vector<uint8_t> m_headerBuffer;
+    ScriptValue m_originScript;
     SourceBufferData(SourceBuffer* buf, const uint8_t* data,
-                     unsigned long length)
+                     unsigned long length, ScriptValue origin)
         : m_sourceBuffer(buf)
         , m_isProcessed(false)
         , m_foundInitSegmentHere(false)
         , m_data(data)
         , m_length(length)
+        , m_originScript(origin)
     {
     }
 };
@@ -125,7 +128,9 @@ public:
 #undef VIRTUAL
 #undef OVERRIDE
 
-    void appendBuffer(const uint8_t* data, unsigned long length);
+    void appendBuffer(const uint8_t* data, unsigned long length,
+                      ScriptValue origin);
+    void appendBuffer(ArrayBufferViewOrArrayBuffer buffer);
     void abort();
     void remove(double start, double end);
 

@@ -253,6 +253,16 @@ ScriptValue createScriptValue(ScriptString s)
     return ValueRef::create(str);
 }
 
+ScriptValue createScriptValue(ScriptArrayBuffer buffer)
+{
+    return ValueRef::create(buffer);
+}
+
+ScriptValue createScriptValue(ScriptArrayBufferView buffer)
+{
+    return ValueRef::create(buffer);
+}
+
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error)
@@ -456,6 +466,26 @@ void invokeTestStartFunction(ScriptBindingInstance* instance)
     callScriptFunction(instance, fn, nullptr, 0, scriptUndefined());
 }
 #endif
+
+uint8_t* arrayBufferRawData(ScriptArrayBuffer buffer)
+{
+    return buffer->rawBuffer();
+}
+
+uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer)
+{
+    return buffer->buffer()->rawBuffer();
+}
+
+unsigned arrayBufferSize(ScriptArrayBuffer buffer)
+{
+    return buffer->bytelength();
+}
+
+unsigned arrayBufferViewSize(ScriptArrayBufferView buffer)
+{
+    return buffer->bytelength();
+}
 
 Promise::Promise(ScriptBindingInstance* instance)
 {
