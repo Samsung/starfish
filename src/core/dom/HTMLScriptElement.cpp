@@ -51,6 +51,8 @@ static bool isJavaScriptType(const char* type)
         return true;
     } else if (strcmp("application/x-javascript", type) == 0) {
         return true;
+    } else if (strcmp("application/octet-stream", type) == 0) {
+        return true;
     } else if (strcmp("application/ecmascript", type) == 0) {
         return true;
     } else if (strcmp("text/ecmascript", type) == 0) {
