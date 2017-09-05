@@ -41,7 +41,7 @@ void HTMLParser::endParse()
     }
 }
 
-void HTMLParser::parseStep()
+void HTMLParser::parseStep(bool shouldEndParseWhenThereIsNoToken)
 {
     while (true) {
         if (m_treeBuilder.hasParserBlockingScript()) {
@@ -49,7 +49,11 @@ void HTMLParser::parseStep()
             HTMLScriptElement* script =
                 m_treeBuilder.takeScriptToProcess(pos)->asHTMLScriptElement();
             script->clearParserInserted();
-            bool shouldStop = script->executeScript(false, true);
+            bool forceSync = !shouldEndParseWhenThereIsNoToken;
+            if (m_document->openFunctionExplicitCalled()) {
+                forceSync = true;
+            }
+            bool shouldStop = script->executeScript(forceSync, true);
             script->markScriptExecuted();
             if (shouldStop) {
                 break;
@@ -57,7 +61,9 @@ void HTMLParser::parseStep()
         }
 
         if (!m_tokenizer.nextToken(m_input.current(), token())) {
-            endParse();
+            if (shouldEndParseWhenThereIsNoToken) {
+                endParse();
+            }
             break;
         }
         HTMLToken& rawToken = token();

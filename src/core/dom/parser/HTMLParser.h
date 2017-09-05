@@ -50,7 +50,7 @@ public:
     }
 
     void startParse();
-    void parseStep();
+    void parseStep(bool shouldEndParseWhenThereIsNoToken = true);
     void endParse();
 
     HTMLTokenizer* tokenizer()

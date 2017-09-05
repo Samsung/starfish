@@ -310,6 +310,10 @@ public:
 
     Document* open(String* type, String* replace);
     Window* open(String* url, String* name, String* features);
+    bool openFunctionExplicitCalled()
+    {
+        return m_openFunctionExplicitCalled;
+    }
     void close();
     void unload();
     void write(const GCVector<String*>& str);
@@ -528,6 +532,7 @@ protected:
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
     DOMImplementation* m_implementation;
     GCVector<Element*> m_currentScripts;
+    size_t m_pendingDocumentParsingIdlerHandle;
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif
