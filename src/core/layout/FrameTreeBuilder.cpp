@@ -22,6 +22,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/PseudoElement.h"
 #include "core/dom/Text.h"
+#include "core/dom/svg/SVGSVGElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameText.h"
 #include "core/layout/FrameInline.h"
@@ -42,6 +43,7 @@
 #include "core/layout/FrameReplacedObject.h"
 #include "core/layout/FrameLineBreak.h"
 #include "core/layout/FrameTableTreeBuilder.h"
+#include "core/layout/svg/FrameSVGSVGBox.h"
 
 namespace StarFish {
 void dump(Frame* frm, unsigned depth);
@@ -492,6 +494,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             shouldSkipChildren = true;
         } else if (current->isHTMLObjectElement()) {
             currentFrame = new FrameReplacedObject(current);
+            shouldSkipChildren = true;
+        } else if (current->isSVGSVGElement()) {
+            currentFrame = new FrameSVGSVGBox(current);
+            FrameTreeBuilder::buildSVGFrameTree(current->asSVGSVGElement());
             shouldSkipChildren = true;
         } else if (isTableType) {
             // table has its own frametree builder

@@ -31,6 +31,7 @@ class FrameTableCaptionBox;
 class FrameTableCellBox;
 class Node;
 class StyleResolver;
+class SVGElement;
 
 class FrameTreeBuilderContext {
 public:
@@ -70,6 +71,8 @@ public:
     static ComputedStyle* pseudoStyleForElementInternal(
         Node* node, StyleResolver::PseudoElementType pseudoId,
         ComputedStyle* parentStyle);
+
+    static void buildSVGFrameTree(SVGElement* svgElement);
 #ifdef STARFISH_ENABLE_TEST
     // debug function
     static void dumpFrameTree(Document* document);
