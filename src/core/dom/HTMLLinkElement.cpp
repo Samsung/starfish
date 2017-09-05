@@ -20,6 +20,7 @@
 
 #include "StarFish.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMTokenList.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "platform/file/FileIO.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -134,12 +135,18 @@ void HTMLLinkElement::checkLoadStyleSheet()
     if (((type.hasValue() &&
           isCSSType(type.getValue()->toLower()->toUTF8NonGCString().data())) ||
          !type.hasValue()) &&
-        href.hasValue() && !href.getValue()->isEmpty() && rel.hasValue() &&
-        rel.getValue()->toLower()->equals("stylesheet")) {
-        loadStyleSheet();
-    } else {
-        unloadStyleSheetIfExists();
+        href.hasValue() && !href.getValue()->isEmpty() && rel.hasValue()) {
+        String* relString = rel.getValue();
+        GCVector<StringView> tokens = DOMTokenList::tokenize(relString);
+        for (size_t i = 0; i < tokens.size(); i++) {
+            if (tokens[i].equals("stylesheet")) {
+                loadStyleSheet();
+                return;
+            }
+        }
     }
+
+    unloadStyleSheetIfExists();
 }
 
 class StyleSheetDownloadClient : public ResourceClient {
