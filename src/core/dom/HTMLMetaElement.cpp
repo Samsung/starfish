@@ -86,7 +86,8 @@ void HTMLMetaElement::checkPlatformFlags()
         }
 #endif
 #ifdef STARFISH_TIZEN
-        if (m_name->equalsIgnoreCase("tizen-widget-transparent-background") &&
+        if ((m_name->equalsIgnoreCase("tizen-transparent-background") ||
+             m_name->equalsIgnoreCase("tizen-widget-transparent-background")) &&
             m_content->equalsIgnoreCase("yes")) {
             if (!m_tizenWidgetTransparentBackground) {
                 document()->m_tizenWidgetTransparentBackground++;

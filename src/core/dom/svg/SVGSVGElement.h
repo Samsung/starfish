@@ -19,6 +19,9 @@
 
 #include "core/dom/svg/SVGElement.h"
 
+#define STARFISH_DEFAULT_SVG_WIDTH 300
+#define STARFISH_DEFAULT_SVG_HEIGHT 150
+
 namespace StarFish {
 
 class SVGSVGElement : public SVGElement {
@@ -33,6 +36,13 @@ public:
     virtual bool isSVGSVGElement() const override;
 
     virtual QualifiedName name();
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
+
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues) override;
 
 protected:
 };
