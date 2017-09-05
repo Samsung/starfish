@@ -409,9 +409,11 @@ SourceBufferList* MediaSource::activeSourceBuffers()
 
 bool MediaSource::anySourceBufferInUpdatingState()
 {
-    for (size_t i = 0; i < m_sourceBuffers->length(); i++) {
-        if ((*m_sourceBuffers)[i]->updating()) {
-            return true;
+    if (m_sourceBuffers) {
+        for (size_t i = 0; i < m_sourceBuffers->length(); i++) {
+            if ((*m_sourceBuffers)[i]->updating()) {
+                return true;
+            }
         }
     }
 
