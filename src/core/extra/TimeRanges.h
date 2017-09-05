@@ -23,11 +23,25 @@
 namespace StarFish {
 
 class TimeRanges : public ScriptWrappable,
-                   public GCVector<TimeRange>,
+                   public GCAtomicVector<TimeRange>,
                    public DocumentHoldable {
 public:
     TimeRanges(Document* document)
         : ScriptWrappable(this)
+        , DocumentHoldable(document)
+    {
+    }
+
+    TimeRanges(Document* document, const GCAtomicVector<TimeRange>& other)
+        : ScriptWrappable(this)
+        , GCAtomicVector<TimeRange>(other)
+        , DocumentHoldable(document)
+    {
+    }
+
+    TimeRanges(Document* document, GCAtomicVector<TimeRange>&& other)
+        : ScriptWrappable(this)
+        , GCAtomicVector<TimeRange>(other)
         , DocumentHoldable(document)
     {
     }

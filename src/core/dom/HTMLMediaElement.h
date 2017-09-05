@@ -19,6 +19,7 @@
 #define __StarFishHTMLMediaElement__
 
 #include "core/dom/HTMLElement.h"
+#include "core/extra/TimeRange.h"
 
 namespace StarFish {
 
@@ -292,6 +293,9 @@ public:
     void setVolume(double volume);
     void setMuted(bool muted);
 
+    void setPlayStartPos(double start);
+    void setPlayEndPos(double end);
+
     static String* preloadToString(StarFish* starfish, PreloadState state)
     {
         switch (state) {
@@ -371,6 +375,8 @@ protected:
     size_t m_currentPendingOperationCount;
     size_t m_currentPendingOperationHandle;
     ResourceSelectionContext* m_resourceSelectionContext;
+    double m_currentPlayStart;
+    GCAtomicVector<TimeRange> m_pastPlayed;
 
     void initMediaPlayer();
     void closeMediaPlayer();

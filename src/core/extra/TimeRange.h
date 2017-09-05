@@ -67,6 +67,57 @@ public:
         return (m_start <= pivot && m_end >= pivot);
     }
 
+    // NOTE Should use for already normalized TimeRanges
+    static void appendToNormalizedVector(GCAtomicVector<TimeRange>& v,
+                                         double start, double end)
+    {
+        bool merging = false;
+        size_t mergingIdx = 0;
+        size_t size = v.size();
+        for (size_t i = 0; i < size; i++) {
+            TimeRange& item = v.at(i);
+            if (merging) {
+                if (end < item.start()) {
+                    v.at(mergingIdx).setEnd(end);
+                    if (mergingIdx + 1 < i) {
+                        v.erase(mergingIdx + 1, i);
+                    }
+                    return;
+                } else if (end < item.end()) {
+                    v.at(mergingIdx).setEnd(item.end());
+                    v.erase(mergingIdx + 1, i + 1);
+                    return;
+                }
+            } else if (start < item.start()) {
+                if (end < item.start()) {
+                    v.insert(i, TimeRange(start, end));
+                    return;
+                } else if (end < item.end()) {
+                    item.setStart(start);
+                    return;
+                } else {
+                    merging = true;
+                    mergingIdx = i;
+                }
+            } else if (start < item.end()) {
+                if (end > item.end()) {
+                    merging = true;
+                    mergingIdx = i;
+                } else {
+                    return;
+                }
+            }
+        }
+        if (merging) {
+            v.at(mergingIdx).setEnd(end);
+            if (mergingIdx + 1 < size) {
+                v.erase(mergingIdx + 1, size);
+            }
+        } else {
+            v.emplace_back(start, end);
+        }
+    }
+
 private:
     double m_start;
     double m_end;
