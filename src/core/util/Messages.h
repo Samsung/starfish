@@ -48,7 +48,7 @@ static const char* INVALID_TARGET_ORIGIN =
     "Invalid target origin '%s' in a call to '%s'";
 static const char* INVALID_DATA_CLONE = "'%s' could not be cloned.";
 static const char* ORIGINS_ARE_NOT_MATCHED =
-    "The target origin provided ('%s')"
+    "The target origin provided('%s') "
     "does not match the recipient window's origin('%s')";
 
 size_t bufferSize(std::initializer_list<const char*> args);

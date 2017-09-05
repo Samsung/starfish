@@ -201,7 +201,8 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
         throw e;
     }
 
-    if (!targetOrigin->equals("*") && targetOrigin) {
+    if (!targetOrigin->equals("*") && !targetOrigin->equals("about://blank") &&
+        !targetOrigin->equals(origin)) {
         COMPOSE_MESSAGE(reason, ORIGINS_ARE_NOT_MATCHED,
                         targetOrigin->toUTF8NonGCString().data(),
                         origin->toUTF8NonGCString().data());
