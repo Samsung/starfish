@@ -82,16 +82,15 @@ public:
         LayoutUnit m_descender;
         LayoutUnit m_fontHeight;
         float m_xheightRate;
-#ifdef PORT_CANVAS_BACKEND_CAIRO
-        FT_Face m_FTFace;
-        FT_Library m_FTFaceLib;
-#endif
     };
 
     const FontMetrics& metrics()
     {
         return m_metrics;
     }
+#ifdef PORT_CANVAS_BACKEND_CAIRO
+    virtual FT_Face findFCChar(char32_t uniCode, uint* glyphIdx) = 0;
+#endif
 
 #ifdef STARFISH_ENABLE_TEST
 #define SPACE_SIZE_DENOMINATOR 60
@@ -131,12 +130,17 @@ protected:
 class FontSelector {
 protected:
     friend class StarFish;
+#ifndef PORT_CANVAS_BACKEND_CAIRO
     FontSelector()
     {
     }
     ~FontSelector()
     {
     }
+#else
+    FontSelector();
+    ~FontSelector();
+#endif
     Font* loadFont(String* familyName, float size, char style = 0,
                    char weight = 4);
     void clearCache()
@@ -147,6 +151,14 @@ protected:
 
 public:
     GCVector<std::tuple<Font*, String*, float, char, char>> m_fontCache;
+
+#ifdef PORT_CANVAS_BACKEND_CAIRO
+    FT_Library m_FTFaceLib;
+    std::vector<std::pair<std::string, FT_Face>> m_systemFonts;
+    std::unordered_map<char32_t, std::tuple<FT_Face, unsigned int>>
+        m_FTFaceCaches;
+
+#endif
 };
 };
 #endif
