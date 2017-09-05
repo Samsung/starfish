@@ -452,9 +452,6 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
     }
     FrameBlockBox* container = blockContainer(currentFrame);
     while (container) {
-        if (container->node()->isHTMLHtmlElement()) {
-            return true;
-        }
         Length height = container->style()->height();
         if (height.isFixed() || height.isViewportPercent()) {
             return true;
@@ -482,12 +479,6 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
     FrameBlockBox* container = blockContainer(currentFrame);
     std::vector<std::pair<FrameBox*, Length>> reverse;
     while (container) {
-        if (container->node()->isHTMLHtmlElement()) {
-            reverse.emplace_back(container,
-                                 Length(Length::Fixed, viewportHeight()));
-            break;
-        }
-
         Length height = container->style()->height();
         if (height.isFixed() || height.isViewportPercent()) {
             reverse.emplace_back(container, height);
