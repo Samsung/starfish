@@ -411,8 +411,10 @@ void Document::close()
 
     // Insert an explicit "EOF" character at the end of the parser's input
     // stream.
-    m_documentBuilder->asHTMLDocumentBuilder()->parser()->input()->appendToEnd(
-        SegmentedString(String::createASCIIString('\0')));
+    m_documentBuilder->asHTMLDocumentBuilder()
+        ->parser()
+        ->input()
+        ->markEndOfFile();
     // If there is a pending parsing-blocking script, then abort these steps.
     if (currentScript().hasValue()) {
         return;
@@ -462,7 +464,7 @@ void Document::write(const GCVector<String*>& str)
         m_documentBuilder->asHTMLDocumentBuilder()
             ->parser()
             ->input()
-            ->insertAtCurrentInsertionPoint(SegmentedString(str[i]));
+            ->prependAtCurrentInsertionPoint(SegmentedString(str[i]));
     }
 
     // If document's reload override flag is set, then append input to
