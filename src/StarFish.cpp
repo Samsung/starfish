@@ -256,6 +256,16 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
     if (!platformHandle) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
+#ifdef STARFISH_TIZEN
+        elm_win_alpha_set(wndObj, EINA_TRUE);
+        Evas_Object* bg = elm_bg_add(wndObj);
+        evas_object_color_set(bg, 0x00, 0x00, 0x00, 0x00);
+
+        evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND,
+                                         EVAS_HINT_EXPAND);
+        elm_win_resize_object_add(wndObj, bg);
+        evas_object_show(bg);
+#endif
         elm_win_title_set(wndObj, "StarFish");
         elm_win_autodel_set(wndObj, EINA_TRUE);
         evas_object_resize(wndObj, w, h);
