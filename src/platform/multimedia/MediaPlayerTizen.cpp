@@ -558,8 +558,8 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     } else {
-        player_set_uri(m_nativePlayer,
-                       url->urlString()->toUTF8NonGCString().data());
+        auto s = url->urlString()->toUTF8NonGCString();
+        player_set_uri(m_nativePlayer, s.data());
     }
 
     openPreparingMode();

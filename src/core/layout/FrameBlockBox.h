@@ -85,9 +85,9 @@ public:
     {
         FrameBox::dump(depth);
         StringView tv = text();
-        printf(" [(%s), dir: %d, start: %d, end %d] ",
-               tv.substring()->toUTF8NonGCString().data(), (int)charDirection(),
-               (int)tv.start(), (int)tv.end());
+        auto s = tv.substring()->toUTF8NonGCString();
+        printf(" [(%s), dir: %d, start: %d, end %d] ", s.data(),
+               (int)charDirection(), (int)tv.start(), (int)tv.end());
     }
 #endif
     virtual const char* name()

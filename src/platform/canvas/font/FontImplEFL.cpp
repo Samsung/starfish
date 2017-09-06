@@ -149,8 +149,8 @@ public:
             unloadFont();
         }
         m_text = evas_object_text_add(internalCanvas());
-        evas_object_text_font_set(
-            m_text, m_fontFamily->toUTF8NonGCString().data(), size);
+        auto utf8Data = m_fontFamily->toUTF8NonGCString();
+        evas_object_text_font_set(m_text, utf8Data.data(), size);
     }
 
     void unloadFont()

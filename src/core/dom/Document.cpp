@@ -536,11 +536,12 @@ void Document::notifyDomContentLoaded()
 
         STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
         if (m_compatibilityMode != NoQuirksMode) {
+            auto s = m_documentURI->urlString()->toUTF8NonGCString();
             STARFISH_LOG_ERROR(
                 "%s is not specified standard mode doctype. currently, "
                 "StarFish "
                 "could not support quirks mode.\n",
-                m_documentURI->urlString()->toUTF8NonGCString().data());
+                s.data());
             STARFISH_LOG_ERROR(
                 "You could got unexpected rendering result. please use "
                 "standard "

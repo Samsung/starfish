@@ -228,14 +228,15 @@ static void traverseChildFrames(
     if (c->isFrameReplaced() && c->asFrameReplaced()->isFrameReplacedImage()) {
         String* u = ResourceURL::mergeDocumentURIWithURIString(
             c->node()->document(), c->node()->asHTMLImageElement()->src());
-        currentUsingResourcePaths.insert(u->toUTF8NonGCString().data());
+        auto utf8Data = u->toUTF8NonGCString();
+        currentUsingResourcePaths.insert(utf8Data.data());
     }
 
     size_t i = 0;
     while (i < c->style()->backgroundLayerSize()) {
         if (c->style()->backgroundImage(i)->length()) {
-            currentUsingResourcePaths.insert(
-                c->style()->backgroundImage(i)->toUTF8NonGCString().data());
+            auto utf8Data = c->style()->backgroundImage(i)->toUTF8NonGCString();
+            currentUsingResourcePaths.insert(utf8Data.data());
         }
         i++;
     }
@@ -267,10 +268,9 @@ void ResourceLoader::cachePruning()
         auto iter = m_imageResourceCache.begin();
         while (iter != m_imageResourceCache.end()) {
             ResourceCacheData data = iter->second;
-            if ((currentUsingResourcePaths.find(data.m_resource->url()
-                                                    ->urlString()
-                                                    ->toUTF8NonGCString()
-                                                    .data()) !=
+            auto utf8Data =
+                data.m_resource->url()->urlString()->toUTF8NonGCString();
+            if ((currentUsingResourcePaths.find(utf8Data.data()) !=
                  currentUsingResourcePaths.end()) &&
                 !data.m_resource->m_isReferencedByAnoterResource &&
                 data.m_resource->state() == Resource::State::Finished) {
@@ -290,8 +290,8 @@ void ResourceLoader::cachePruning()
             while (m_imageResourceCacheLRUList.size() &&
                    removedSize < STARFISH_RESOURCE_CACHE_SIZE * 0.25) {
                 Resource* res = (*iter);
-                auto iter2 = m_imageResourceCache.find(
-                    res->url()->urlString()->toUTF8NonGCString().data());
+                auto utf8Data = res->url()->urlString()->toUTF8NonGCString();
+                auto iter2 = m_imageResourceCache.find(utf8Data.data());
                 if (m_imageResourceCache.end() != iter2 &&
                     res->state() == Resource::State::Finished &&
                     ((currentTick - iter2->second.m_lastUsedTime) >
@@ -315,8 +315,8 @@ void ResourceLoader::cachePruning()
 
 void ResourceLoader::notifyImageResourceActiveState(ImageResource* res)
 {
-    auto iter = m_imageResourceCache.find(
-        res->url()->urlString()->toUTF8NonGCString().data());
+    auto utf8Data = res->url()->urlString()->toUTF8NonGCString();
+    auto iter = m_imageResourceCache.find(utf8Data.data());
     if (iter != m_imageResourceCache.end()) {
         iter->second.m_lastUsedTime = tickCount();
     }

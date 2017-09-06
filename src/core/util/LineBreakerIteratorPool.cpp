@@ -510,10 +510,9 @@ icu::BreakIterator* openLineBreakIterator(BreakIteratorInfo& info,
     icu::BreakIterator* brkIter;
     UErrorCode openStatus = U_ZERO_ERROR;
     if (mode == LineBreakIteratorModeUAX14) {
+        auto utf8Data = makeLocaleWithBreakKeyword(info)->toUTF8NonGCString();
         brkIter = BreakIterator::createLineInstance(
-            Locale::createCanonical(
-                makeLocaleWithBreakKeyword(info)->toUTF8NonGCString().data()),
-            openStatus);
+            Locale::createCanonical(utf8Data.data()), openStatus);
     } else {
         UParseError parseError;
         auto rules = makeRule(mode, isCJK);

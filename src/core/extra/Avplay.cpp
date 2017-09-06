@@ -143,8 +143,8 @@ Avplay::~Avplay()
 
 void Avplay::open(String* url)
 {
-    STARFISH_LOG_INFO("avplay::open() :: URL %s\n",
-                      url->toUTF8NonGCString().data());
+    auto s = url->toUTF8NonGCString();
+    STARFISH_LOG_INFO("avplay::open() :: URL %s\n", s.data());
     if (m_nativePlayer) {
         player_destroy(m_nativePlayer);
         m_nativePlayer = nullptr;
@@ -188,7 +188,8 @@ void Avplay::open(String* url)
     player_set_display_mode(m_nativePlayer, display_mode);
     player_set_x11_display_roi_mode(m_nativePlayer, roi_mode);
 
-    ret = player_set_uri(m_nativePlayer, url->toUTF8NonGCString().data());
+    auto s = url->urlString()->toUTF8NonGCString();
+    ret = player_set_uri(m_nativePlayer, s.data());
     if (ret != PLAYER_ERROR_NONE) {
         printNativePlayerError(ret);
     }

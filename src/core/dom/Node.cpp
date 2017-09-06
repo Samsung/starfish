@@ -1887,8 +1887,8 @@ void Node::dumpStyle()
 {
     dump();
     printf(", style: { ");
-    printf("%s",
-           getComputedStyle()->generateCSSText()->toUTF8NonGCString().data());
+    auto s = getComputedStyle()->generateCSSText()->toUTF8NonGCString();
+    printf("%s", s.data());
     printf(" }");
 }
 #endif

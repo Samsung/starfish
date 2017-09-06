@@ -98,9 +98,9 @@ void MediaList::deleteMedium(String* oldMedium)
         msg.appendString("Failed to delete '");
         msg.appendString(oldMedium);
         msg.appendString("'.");
+        auto s = msg.finalize()->toUTF8NonGCString();
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
-                               DOMException::NOT_FOUND_ERR,
-                               msg.finalize()->toUTF8NonGCString().data());
+                               DOMException::NOT_FOUND_ERR, s.data());
     }
     modifyStyleSheet();
 }

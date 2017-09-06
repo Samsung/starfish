@@ -1637,12 +1637,10 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
                 }
 
                 if (!aToken->value()->hasASCIIContent()) {
+                    auto s = aToken->value()->toString()->toUTF8NonGCString();
                     STARFISH_LOG_ERROR(
                         "unsupported property name(CSSParser) -> %s\n",
-                        aToken->value()
-                            ->toString()
-                            ->toUTF8NonGCString()
-                            .data());
+                        s.data());
                 } else {
                     struct Sender {
                         bool priority;

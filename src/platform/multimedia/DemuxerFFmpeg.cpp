@@ -117,9 +117,10 @@ public:
                 formatHint->startsWith("audio/", false)) {
                 formatHint = formatHint->substring(6, formatHint->length() - 6)
                                  ->toLower();
+                auto s = formatHint->toUTF8NonGCString();
                 STARFISH_LOG_INFO(
                     "DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format %s\n",
-                    formatHint->toUTF8NonGCString().data());
+                    s.data());
             } else {
                 STARFISH_LOG_INFO(
                     "DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format X\n");
@@ -132,8 +133,9 @@ public:
             m_formatContext = avformat_alloc_context();
 
             if (formatHint->length()) {
-                m_formatContext->iformat = av_find_input_format(
-                    formatHint->toUTF8NonGCString().data());
+                auto utf8Data = formatHint->toUTF8NonGCString();
+                m_formatContext->iformat =
+                    av_find_input_format(utf8Data.data());
             }
             m_formatContext->flags = AVFMT_FLAG_CUSTOM_IO |
                                      AVFMT_FLAG_NOFILLIN | AVFMT_FLAG_NOBUFFER |

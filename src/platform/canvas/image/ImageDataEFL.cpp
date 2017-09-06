@@ -33,11 +33,9 @@ public:
         // STARFISH_LOG_INFO("ImageDataEFL::ImageDataEFL %s\n",
         // localImageSrc->toUTF8NonGCString().data();
         m_image = evas_object_image_add(internalCanvas());
-        evas_object_image_file_set(m_image,
-                                   PathResolver::matchLocation(localImageSrc)
-                                       ->toUTF8NonGCString()
-                                       .data(),
-                                   NULL);
+        auto utf8Data =
+            PathResolver::matchLocation(localImageSrc)->toUTF8NonGCString();
+        evas_object_image_file_set(m_image, utf8Data.data(), NULL);
         evas_object_data_set(m_image, "local", "1");
         int w, h, err;
         err = evas_object_image_load_error_get(m_image);

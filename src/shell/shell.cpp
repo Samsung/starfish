@@ -647,7 +647,8 @@ int main(int argc, char* argv[])
                                    StarFishEnterer enter(p->sf);
                                    String* str = p->sf->evaluate(
                                        String::fromUTF8(p->buf));
-                                   puts(str->toUTF8NonGCString().data());
+                                   auto s = str->toUTF8NonGCString();
+                                   puts(s.data());
 
                                    delete[] p->buf;
                                    delete p;

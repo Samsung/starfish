@@ -23,10 +23,11 @@ TextConverter::TextConverter(String* charsetName)
     : m_converter(nullptr)
 {
     UErrorCode err = U_ZERO_ERROR;
-    m_converter = ucnv_open(charsetName->toUTF8NonGCString().data(), &err);
+    auto utf8Data = charsetName->toUTF8NonGCString();
+    m_converter = ucnv_open(utf8Data.data(), &err);
     if (U_FAILURE(err)) {
         STARFISH_LOG_ERROR("TextConverter got unknown encoding -> %s\n",
-                           charsetName->toUTF8NonGCString().data());
+                           utf8Data.data());
         m_converter = nullptr;
     }
     m_encoding = charsetName;
@@ -48,15 +49,15 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
         } else {
             type = mimetype->substring(charset, mimetype->length() - charset);
         }
-
-        m_converter = ucnv_open(type->toUTF8NonGCString().data(), &err);
+        auto utf8Data = type->toUTF8NonGCString();
+        m_converter = ucnv_open(utf8Data.data(), &err);
         if (!U_FAILURE(err)) {
             m_encoding = String::fromUTF8(ucnv_getName(m_converter, &err));
             registerFinalizer();
             return;
         } else {
             STARFISH_LOG_ERROR("TextConverter got unknown encoding -> %s\n",
-                               type->toUTF8NonGCString().data());
+                               utf8Data.data());
             m_converter = nullptr;
         }
     }
@@ -108,8 +109,8 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
             break;
         }
 
-        if (ucnv_compareNames(
-                charset, preferredEncoding->toUTF8NonGCString().data()) == 0) {
+        auto utf8Data = preferredEncoding->toUTF8NonGCString();
+        if (ucnv_compareNames(charset, utf8Data.data()) == 0) {
             bestCharset = charset;
             break;
         }

@@ -187,8 +187,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
     }
 #endif
 
-    STARFISH_LOG_INFO("got unknown html element - %s\n",
-                      name.string()->toUTF8NonGCString().data());
+    auto s = name.string()->toUTF8NonGCString();
+    STARFISH_LOG_INFO("got unknown html element - %s\n", s.data());
     return new HTMLUnknownElement(document, name);
 }
 

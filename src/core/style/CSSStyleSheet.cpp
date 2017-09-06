@@ -409,9 +409,9 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
         msg.appendString(") is larger than the maximum index (");
         msg.appendString(String::fromInt(length()));
         msg.appendString(").");
+        auto s = msg.finalize()->toUTF8NonGCString();
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
-                               DOMException::INDEX_SIZE_ERR,
-                               msg.finalize()->toUTF8NonGCString().data());
+                               DOMException::INDEX_SIZE_ERR, s.data());
     }
 
     CSSParser parser(scriptBindingInstance()->ownerDocument());
@@ -425,9 +425,9 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
         msg.appendString("Failed to parse the rule '");
         msg.appendString(ruleString);
         msg.appendString("'.");
+        auto s = msg.finalize()->toUTF8NonGCString();
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
-                               DOMException::SYNTAX_ERR,
-                               msg.finalize()->toUTF8NonGCString().data());
+                               DOMException::SYNTAX_ERR, s.data());
     }
 
     bool success = wrapperInsertRule(rules[0], index);
@@ -479,9 +479,9 @@ void CSSStyleSheet::deleteRule(unsigned index)
         msg.appendString(") is larger than the maximum index (");
         msg.appendString(String::fromInt(length() - 1));
         msg.appendString(").");
+        auto s = msg.finalize()->toUTF8NonGCString();
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
-                               DOMException::INDEX_SIZE_ERR,
-                               msg.finalize()->toUTF8NonGCString().data());
+                               DOMException::INDEX_SIZE_ERR, s.data());
     }
 
     bool success = wrapperDeleteRule(index);

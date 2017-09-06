@@ -89,8 +89,8 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
         fio->close();
         res->handleResponseEOF();
     } else {
-        STARFISH_LOG_INFO("failed to open %s\n",
-                          res->m_url->urlString()->toUTF8NonGCString().data());
+        auto s = res->m_url->urlString()->toUTF8NonGCString();
+        STARFISH_LOG_INFO("failed to open %s\n", s.data());
         res->m_status = 0;
         res->handleError(ResourceRequest::ERROR);
     }

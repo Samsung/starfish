@@ -130,9 +130,8 @@ public:
                         "\") that is not \"text/event-stream\". Aborting the "
                         "connection.");
                 }
-
-                STARFISH_LOG_ERROR("console.error: %s\n",
-                                   msg.finalize()->toUTF8NonGCString().data());
+                auto s = msg.finalize()->toUTF8NonGCString();
+                STARFISH_LOG_ERROR("console.error: %s\n", s.data());
                 m_eventSource->cancel();
 
                 String* eventName =
@@ -194,8 +193,8 @@ EventSource::EventSource(::StarFish::Document* document, String* url,
         msg.appendString("Cannot open an EventSource to '");
         msg.appendString(url);
         msg.appendString("'. The URL is invalid.");
-        throw new DOMException(document, DOMException::SYNTAX_ERR,
-                               msg.finalize()->toUTF8NonGCString().data());
+        auto s = msg.finalize()->toUTF8NonGCString();
+        throw new DOMException(document, DOMException::SYNTAX_ERR, s.data());
     }
 
     m_resourceRequest->addResourceRequestClient(
@@ -326,8 +325,8 @@ void EventSource::failedAccessControlCheck()
     msg.appendString(
         "Cross origin requests are only supported for protocol schemes: http, "
         "https, data.");
-    STARFISH_LOG_ERROR("console.error: %s\n",
-                       msg.finalize()->toUTF8NonGCString().data());
+    auto s = msg.finalize()->toUTF8NonGCString();
+    STARFISH_LOG_ERROR("console.error: %s\n", s.data());
 
     m_readyState = CLOSED;
     m_resourceRequest->abort(true);
