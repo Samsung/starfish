@@ -51,8 +51,6 @@ void* FrameTableRowBox::operator new(size_t size)
                                               m_treeItemModel.m_firstChild));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableRowBox,
                                               m_treeItemModel.m_lastChild));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableRowBox, m_colsWithColspans));
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableRowBox));
         typeInited = true;
     }
@@ -69,25 +67,6 @@ void FrameTableRowBox::calCellWidth(LayoutContext& ctx)
     }
 }
 
-ColSizeStruct* FrameTableRowBox::colWithColspanAt(unsigned id)
-{
-    if (id < m_colsWithColspans.size()) {
-        if (id == m_colsWithColspans[id].id) {
-            return &m_colsWithColspans[id];
-        }
-    }
-
-    for (size_t i = 0; i < m_colsWithColspans.size(); i++) {
-        ColSizeStruct* col = &m_colsWithColspans[i];
-        if (col->id == id) {
-            return col;
-        }
-    }
-
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return nullptr;
-}
-
 void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 {
     LayoutUnit xSoFar = 0;
@@ -98,25 +77,44 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableCellBox());
         FrameTableCellBox* cell = c->asFrameTableCellBox();
-        cell->setX(xSoFar);
-        STARFISH_ASSERT(i < sectionBox()->tableBox()->columnWidths().size());
 
-        LayoutUnit cellWidth = 0;
-        if (cell->updatedColspan() > 1) {
-            cellWidth = colWithColspanAt(i)->cellWidth;
-        } else {
-            cellWidth = sectionBox()->tableBox()->columnWidths()[i].cellWidth;
+        // shift cells to the right as this column is occupied by
+        // upper cell that has rowspan
+        for (; i < cell->absoluteColumnIndex(); i++) {
+            STARFISH_ASSERT(i <
+                            sectionBox()->tableBox()->columnWidths().size());
+            xSoFar += sectionBox()->tableBox()->columnWidths()[i].cellWidth;
+
+            if (i < sectionBox()->tableBox()->columnWidths().size() - 1) {
+                xSoFar += borderSpacing;
+            }
         }
 
-        cell->setWidth(cellWidth);
-        cell->asFrameTableCellBox()->layoutWidth(ctx);
-        xSoFar += cellWidth;
+        if (cell->absoluteColumnIndex() == i) {
+            cell->setX(xSoFar);
 
-        if (i < sectionBox()->tableBox()->columnWidths().size() - 1) {
-            xSoFar += borderSpacing;
+            LayoutUnit cellWidth = 0;
+            if (cell->updatedColspan() > 1) {
+                // The cell width has been set in
+                // FrameTableBox::calCellWidthsWithColspans() already
+                cellWidth = cell->width();
+            } else {
+                STARFISH_ASSERT(
+                    i < sectionBox()->tableBox()->columnWidths().size());
+                cellWidth =
+                    sectionBox()->tableBox()->columnWidths()[i].cellWidth;
+                cell->setWidth(cellWidth);
+            }
+
+            cell->asFrameTableCellBox()->layoutWidth(ctx);
+            xSoFar += cellWidth;
+
+            if (i < sectionBox()->tableBox()->columnWidths().size() - 1) {
+                xSoFar += borderSpacing;
+            }
+
+            i += cell->updatedColspan();
         }
-
-        i += cell->updatedColspan();
     }
 
     setWidth(xSoFar);

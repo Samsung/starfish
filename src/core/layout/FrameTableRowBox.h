@@ -45,13 +45,6 @@ public:
     void increaseCellHeightBy(LayoutUnit cellHeightOffset);
     void applyVerticalAlign(LayoutContext& ctx);
 
-    GCAtomicVector<ColSizeStruct>& colsWithColspans()
-    {
-        return m_colsWithColspans;
-    }
-
-    ColSizeStruct* colWithColspanAt(unsigned id);
-
     LayoutUnit calBaseline(LayoutContext& ctx);
 
     LayoutUnit baseline()
@@ -95,7 +88,6 @@ private:
     unsigned m_rowIndex;
     unsigned m_lastAbsoluteColumnIndex;
     LayoutUnit m_baseline;
-    GCAtomicVector<ColSizeStruct> m_colsWithColspans;
 };
 }
 

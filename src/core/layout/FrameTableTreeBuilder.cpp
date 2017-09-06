@@ -417,9 +417,8 @@ void FrameTableRowBox::addChild(Node* child, FrameTreeBuilderContext& ctx,
                 RowStruct& row = parentRow->parent()
                                      ->asFrameTableSectionBox()
                                      ->grid()[parentRow->rowIndex()];
-                unsigned curId = row.logicalColumnSize();
                 row.cells().push_back(
-                    CellStruct(childFrame->asFrameTableCellBox(), curId));
+                    CellStruct(childFrame->asFrameTableCellBox()));
             }
         }
         STARFISH_ASSERT(childFrame->parent());
