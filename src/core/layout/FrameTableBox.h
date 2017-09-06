@@ -123,8 +123,10 @@ public:
     }
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
-    void calTableWidth(LayoutContext& ctx);
-    void layoutHeight(LayoutContext& ctx);
+
+    void computeTableWidth(LayoutContext& ctx);
+    void layoutTable(LayoutContext& ctx);
+
     LayoutUnit calBaseline(LayoutContext& ctx);
 
     // This function return nullptr if there is no valid column object
@@ -147,9 +149,11 @@ public:
     void* operator new[](size_t size) = delete;
 
 private:
-    void layoutWidth(LayoutContext& ctx);
     void calCellWidth(LayoutContext& ctx);
     void calCellWidthsWithColspans();
+    void layoutWidth(LayoutContext& ctx);
+    void layoutHeight(LayoutContext& ctx);
+
     LayoutUnit calCellHeightWithRowspan(FrameTableCellBox* cell, size_t rowId,
                                         size_t colId);
 

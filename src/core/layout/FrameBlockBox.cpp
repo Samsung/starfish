@@ -90,7 +90,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
 {
     if (isFrameTableBox()) {
         FrameTableBox* tableBox = asFrameTableBox();
-        tableBox->calTableWidth(ctx);
+        tableBox->computeTableWidth(ctx);
     } else {
         Length left = style()->left();
         Length right = style()->right();
@@ -139,7 +139,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
 void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 {
     if (isFrameTableBox()) {
-        asFrameTableBox()->layoutHeight(ctx);
+        asFrameTableBox()->layoutTable(ctx);
     } else if (isFrameFlexibleBox()) {
         asFrameFlexibleBox()->layoutFlex(ctx);
     } else {

@@ -111,8 +111,8 @@ private:
     LayoutUnit m_maxCellWidth;
     LayoutUnit m_actualContentHeight;
 
-    size_t m_colspan;
-    size_t m_rowspan;
+    size_t m_updatedColspan;
+    size_t m_updatedRowspan;
 };
 }
 

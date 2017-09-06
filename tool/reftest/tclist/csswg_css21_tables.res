@@ -795,7 +795,7 @@ test/reftest/csswg-test/css21_original/tables/table-anonymous-block-011.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-012.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-013.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-014.htm
-#test/reftest/csswg-test/css21_original/tables/table-anonymous-block-015.htm
+test/reftest/csswg-test/css21_original/tables/table-anonymous-block-015.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-016.htm
 #test/reftest/csswg-test/css21_original/tables/table-anonymous-block-017.htm
 test/reftest/csswg-test/css21_original/tables/table-anonymous-block-018.htm
@@ -1176,7 +1176,7 @@ test/reftest/csswg-test/css21_original/tables/table-visual-layout-006.htm
 test/reftest/csswg-test/css21_original/tables/table-visual-layout-007.htm
 #test/reftest/csswg-test/css21_original/tables/table-visual-layout-008.htm
 test/reftest/csswg-test/css21_original/tables/table-visual-layout-009.htm
-#test/reftest/csswg-test/css21_original/tables/table-visual-layout-010.htm
+test/reftest/csswg-test/css21_original/tables/table-visual-layout-010.htm
 #test/reftest/csswg-test/css21_original/tables/table-visual-layout-011.htm
 #test/reftest/csswg-test/css21_original/tables/table-visual-layout-012.htm
 #test/reftest/csswg-test/css21_original/tables/table-visual-layout-013.htm
