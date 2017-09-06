@@ -151,7 +151,6 @@ public:
         // check cache;
         auto it = m_fontSelector->m_FTFaceCaches.find(uniCode);
         if (it != m_fontSelector->m_FTFaceCaches.end()) {
-            // std::tuple<FT_Face, unsigned int, int, int> tmp = it->second;
             auto fc = std::get<0>(it->second);
             FT_UInt glyph_index = FT_Get_Char_Index(fc, uniCode);
             if (glyph_index != 0) {
@@ -161,8 +160,8 @@ public:
         }
 
         // load FTFace;
-        FT_Error error;
         FT_Face face;
+        FT_Error error;
         auto iter = m_fontSelector->m_systemFonts.begin();
         while (iter != m_fontSelector->m_systemFonts.end()) {
             std::pair<std::string, FT_Face>& font = *iter;
@@ -193,7 +192,16 @@ public:
             }
             iter++;
         }
-        // STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        // There is no font which contains this unicode
+        // Use FallBack;
+        {
+            iter = m_fontSelector->m_systemFonts.begin();
+            *glyphIdx = 0;
+            std::pair<std::string, FT_Face> font = *iter;
+            return font.second;
+        }
+
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
     }
 
