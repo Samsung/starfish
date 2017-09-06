@@ -429,11 +429,13 @@ public:
                 glyph.x = x_bias;
                 glyph.y = 0;
                 x_bias += face->glyph->advance.x >> 6;
+                x_bias++;
                 y_bias += face->glyph->advance.y >> 6;
             } else {
                 face =
                     lastState().m_font->findFCChar(sv.charAt(i), &glyph_index);
                 if (glyph_index != 0) {
+                    cairo_font_face_destroy(fontFace);
                     fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
                     cairo_set_font_face(m_canvas, fontFace);
                     cairo_set_font_size(m_canvas, size);
@@ -446,6 +448,7 @@ public:
                     glyph.x = x_bias;
                     glyph.y = 0;
                     x_bias += face->glyph->advance.x >> 6;
+                    x_bias++;
                     y_bias += face->glyph->advance.y >> 6;
                 } else {
                     glyph.x = 0;
@@ -456,6 +459,7 @@ public:
             cairo_glyph_path(m_canvas, &glyph, 1);
         }
         cairo_fill(m_canvas);
+        cairo_font_face_destroy(fontFace);
         cairo_restore(m_canvas);
     }
 
