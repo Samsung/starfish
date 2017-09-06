@@ -939,4 +939,17 @@ void ComputedStyle::removeCachedPseudoStyle(
                        }),
         cachedPseudoStyles().end());
 }
+
+bool ComputedStyle::isFourSideBorderStyleValueSolid()
+{
+    if (m_surround == nullptr) {
+        return false;
+    } else {
+        return (borderTopStyle() == BorderStyleValue::SolidBorderStyleValue) &&
+               (borderBottomStyle() ==
+                BorderStyleValue::SolidBorderStyleValue) &&
+               (borderLeftStyle() == BorderStyleValue::SolidBorderStyleValue) &&
+               (borderRightStyle() == BorderStyleValue::SolidBorderStyleValue);
+    }
+}
 }

@@ -313,6 +313,18 @@ namespace Unit {
             return (double)value / 255.0;
         }
 
+        Color getDarkerColor()
+        {
+            if (m_r == 0 && m_g == 0 && m_b == 0) {
+                return Color(171.0, 171.0, 171.0, m_a);
+            }
+            double max = std::max(R(), std::max(G(), B()));
+            double mul = (max == 0.0) ? 0.0 : std::max(0.0, (max - 0.33) / max);
+
+            return Color(mul * R() * 255.0, mul * G() * 255.0,
+                         mul * B() * 255.0, m_a);
+        }
+
         unsigned char m_r, m_g, m_b, m_a;
     };
 } // namespace Unit
