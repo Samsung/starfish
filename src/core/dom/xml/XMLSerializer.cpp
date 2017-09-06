@@ -30,19 +30,22 @@ namespace StarFish {
 static rapidxml::xml_node<char>* createXMLNodeFromElement(
     Element* e, rapidxml::xml_document<char>& xmlDocument)
 {
-    char* allocateName =
-        xmlDocument.allocate_string(e->localName()->toUTF8NonGCString().data());
+    auto utf8Data = e->localName()->toUTF8NonGCString();
+    char* allocateName = xmlDocument.allocate_string(utf8Data.data());
     rapidxml::xml_node<char>* xmlNode = xmlDocument.allocate_node(
         rapidxml::node_type::node_element, allocateName);
 
     size_t attributeCount = e->attributeCount();
     for (size_t i = 0; i < attributeCount; i++) {
+        auto utf8DataName =
+            e->getAssuredAttributeName(i).localName()->toUTF8NonGCString();
+        char* allocateCountName =
+            xmlDocument.allocate_string(utf8DataName.data());
+        auto utf8DataValue = e->getAssuredAttribute(i)->toUTF8NonGCString();
+        char* allocateCountValue =
+            xmlDocument.allocate_string(utf8DataValue.data());
         rapidxml::xml_attribute<char>* attr = xmlDocument.allocate_attribute(
-            e->getAssuredAttributeName(i)
-                .localName()
-                ->toUTF8NonGCString()
-                .data(),
-            e->getAssuredAttribute(i)->toUTF8NonGCString().data());
+            allocateCountName, allocateCountValue);
         xmlNode->append_attribute(attr);
     }
 
@@ -54,21 +57,21 @@ static rapidxml::xml_node<char>* createXMLNodeFromElement(
             childXMLNode =
                 createXMLNodeFromElement(child->asElement(), xmlDocument);
         } else if (child->isComment()) {
-            char* allocateValue = xmlDocument.allocate_string(
-                child->asCharacterData()->data()->toUTF8NonGCString().data());
+            auto utf8Data =
+                child->asCharacterData()->data()->toUTF8NonGCString();
+            char* allocateValue = xmlDocument.allocate_string(utf8Data.data());
             childXMLNode = xmlDocument.allocate_node(
                 rapidxml::node_type::node_comment, "", allocateValue);
         } else if (child->isText()) {
-            char* allocateValue = xmlDocument.allocate_string(
-                child->asCharacterData()->data()->toUTF8NonGCString().data());
+            auto utf8Data =
+                child->asCharacterData()->data()->toUTF8NonGCString();
+            char* allocateValue = xmlDocument.allocate_string(utf8Data.data());
             childXMLNode = xmlDocument.allocate_node(
                 rapidxml::node_type::node_data, "", allocateValue);
         } else if (child->isDocumentType()) {
-            char* allocateName =
-                xmlDocument.allocate_string(child->asDocumentType()
-                                                ->nodeName()
-                                                ->toUTF8NonGCString()
-                                                .data());
+            auto utf8Data =
+                child->asDocumentType()->nodeName()->toUTF8NonGCString();
+            char* allocateName = xmlDocument.allocate_string(utf8Data.data());
             childXMLNode = xmlDocument.allocate_node(
                 rapidxml::node_type::node_doctype, allocateName);
         } else {

@@ -102,10 +102,9 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_ASSERT(
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
             SIZE_MAX);
+        auto s = requestData->request->m_url->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO(
-            "got timeout %s[%d]\n", requestData->request->m_url->urlString()
-                                        ->toUTF8NonGCString()
-                                        .data(),
+            "got timeout %s[%d]\n", s.data(),
             (int)requestData->httpTransaction->httpResponse().responseCode());
         requestData->request->handleError(ResourceRequest::TIMEOUT);
     } else {
@@ -117,10 +116,8 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_ASSERT(
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
             SIZE_MAX);
-        STARFISH_LOG_INFO("failed to open %s\n",
-                          requestData->request->m_url->urlString()
-                              ->toUTF8NonGCString()
-                              .data());
+        auto s = requestData->request->m_url->urlString()->toUTF8NonGCString();
+        STARFISH_LOG_INFO("failed to open %s\n", s.data());
         requestData->request->handleError(ResourceRequest::ERROR);
     }
 
@@ -209,10 +206,11 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
     fillHeadersWithClientHeaders(headers);
     fillHeadersWithResourceRequestHeader(headers);
 
-    data->httpTransaction->setHTTPRequest(
-        HTTPRequest::create(m_orgProxy->m_url->urlString()->toUTF8NonGCString(),
-                            m_orgProxy->m_url->host()->toUTF8NonGCString(),
-                            method, headers, body->toUTF8NonGCString()));
+    auto urlUTF8Data = m_orgProxy->m_url->urlString()->toUTF8NonGCString();
+    auto hostUTF8Data = m_orgProxy->m_url->host()->toUTF8NonGCString();
+    auto bodyUTF8Data = body->toUTF8NonGCString();
+    data->httpTransaction->setHTTPRequest(HTTPRequest::create(
+        urlUTF8Data, hostUTF8Data, method, headers, bodyUTF8Data));
     data->httpTransaction->setTimeout(
         static_cast<unsigned long>(m_orgProxy->m_timeout));
 
@@ -285,9 +283,9 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     } else {
         auto it2 = headers.findHeader(HTTPHeaderMap::kReferer);
         if (it2 == headers.headerMap().end() && m_orgProxy->referrer()) {
-            headers.setHeader(
-                HTTPHeaderMap::kReferer,
-                m_orgProxy->referrer()->urlString()->toUTF8NonGCString());
+            auto urlUTF8Data =
+                m_orgProxy->referrer()->urlString()->toUTF8NonGCString();
+            headers.setHeader(HTTPHeaderMap::kReferer, urlUTF8Data);
         }
     }
 }
@@ -296,9 +294,11 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithResourceRequestHeader(
     HTTPHeaderMap& headers)
 {
     for (size_t i = 0; i < m_orgProxy->m_requestHeaders.size(); i++) {
-        headers.setHeader(
-            m_orgProxy->m_requestHeaders[i].first->toUTF8NonGCString(),
-            m_orgProxy->m_requestHeaders[i].second->toUTF8NonGCString());
+        auto utf8Data1 =
+            m_orgProxy->m_requestHeaders[i].first->toUTF8NonGCString();
+        auto utf8Data2 =
+            m_orgProxy->m_requestHeaders[i].second->toUTF8NonGCString();
+        headers.setHeader(utf8Data1, utf8Data2);
     }
 }
 

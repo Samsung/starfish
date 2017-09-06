@@ -525,8 +525,8 @@ bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
     } else if (feature->equals("hover")) {
         return hoverMediaFeatureEval(value, m_mediaValues, NoPrefix);
     } else {
-        STARFISH_LOG_INFO("unsupported media feature: %s\n",
-                          exp->mediaFeature()->toUTF8NonGCString().data());
+        auto s = exp->mediaFeature()->toUTF8NonGCString();
+        STARFISH_LOG_INFO("unsupported media feature: %s\n", s.data());
         return false;
     }
 }

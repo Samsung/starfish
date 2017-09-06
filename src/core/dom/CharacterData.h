@@ -100,9 +100,9 @@ public:
     {
         Node::dump();
 
-        UTF8StringDataNonGCStd str = m_data->toUTF8NonGCString();
-        str = replaceAll(str, "\n", "\\n");
-        printf("data:%s ", str.data());
+        auto utf8String = m_data->toUTF8NonGCString();
+        utf8String = replaceAll(utf8String, "\n", "\\n");
+        printf("data:%s ", utf8String.data());
     }
 #endif
 

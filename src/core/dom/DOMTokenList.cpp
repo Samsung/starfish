@@ -92,12 +92,12 @@ void DOMTokenList::concatTokensInsideParentheses(GCVector<String*>* tokens)
         if (combinedCount) {
             combined = combined->concat(token);
             combinedCount++;
-            if (strstr(token->toUTF8NonGCString().data(), ")")) {
+            if (token->indexOf(')') != SIZE_MAX) {
                 newTokens.push_back(combined);
                 combined = String::emptyString;
                 combinedCount = 0;
             }
-        } else if (strstr(token->toUTF8NonGCString().data(), "(")) {
+        } else if (token->indexOf('(') != SIZE_MAX) {
             combined = combined->concat(token);
             combinedCount++;
         } else {

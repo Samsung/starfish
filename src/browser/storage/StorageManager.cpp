@@ -170,8 +170,8 @@ void StorageManager::setItem(SecurityOriginData* securityOriginData,
         jsonDocumentWrite();
         return;
     }
-    (*itrItem)[VALUE].SetString(value->toUTF8NonGCString().data(),
-                                value->length());
+    auto s = value->toUTF8NonGCString();
+    (*itrItem)[VALUE].SetString(s.data(), s.length());
     jsonDocumentWrite();
 }
 
@@ -234,7 +234,8 @@ void StorageManager::jsonDocumentRead()
     if (canLoad == true) {
         String* filedata = m_fileIO->readAll();
         m_fileIO->close();
-        document->Parse(filedata->toUTF8NonGCString().data());
+        auto s = filedata->toUTF8NonGCString();
+        document->Parse(s.data());
     } else {
         m_fileIO->open(m_localStoragePath, ReadWrite);
         m_fileIO->close();

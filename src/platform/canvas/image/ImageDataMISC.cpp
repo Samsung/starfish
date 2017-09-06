@@ -33,7 +33,8 @@ class ImageDataMISC : public ImageData {
 public:
     ImageDataMISC(String* localImageSrc)
     {
-        FILE* fp = fopen(localImageSrc->toUTF8NonGCString().data(), "rb");
+        auto utf8Data = localImageSrc->toUTF8NonGCString();
+        FILE* fp = fopen(utf8Data.data(), "rb");
         decodeImage(fp, localImageSrc, nullptr, 0);
         fclose(fp);
         reigsterFinalizer();
@@ -406,8 +407,8 @@ private:
         GIF_READ_DATA readData;
 
         if (localImageSrc) {
-            gifFile = DGifOpenFileName(
-                localImageSrc->toUTF8NonGCString().data(), &errorCode);
+            auto utf8Data = localImageSrc->toUTF8NonGCString();
+            gifFile = DGifOpenFileName(utf8Data.data(), &errorCode);
             if (!gifFile) {
                 STARFISH_LOG_ERROR("Gif Open File Error, %d\n", errorCode);
                 return;

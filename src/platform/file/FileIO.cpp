@@ -92,7 +92,8 @@ public:
     }
     size_t writeLine(String* buf)
     {
-        return fprintf(m_fp, "%s", buf->toUTF8NonGCString().data());
+        auto s = buf->toUTF8NonGCString();
+        return fprintf(m_fp, "%s", s.data());
     }
     size_t writeLine(const char* buf)
     {
@@ -161,7 +162,8 @@ public:
         }
 
         if (open_cb) {
-            m_fp = open_cb(newName->toUTF8NonGCString().data());
+            auto s = newName->toUTF8NonGCString();
+            m_fp = open_cb(s.data());
         } else {
             m_fp = fopen(filePath, FileIOTypeCheck(filemode));
         }
@@ -217,7 +219,8 @@ public:
     size_t writeLine(String* buf)
     {
         // TODO : It will connect to the Tizen file I/O interface.
-        return fprintf(m_fp, "%s", buf->toUTF8NonGCString().data());
+        auto s = buf->toUTF8NonGCString();
+        return fprintf(m_fp, "%s", s.data());
     }
     size_t writeLine(const char* buf)
     {
@@ -252,8 +255,8 @@ String* PathResolver::matchLocation(String* filePath)
     if (!matchLocation_cb) {
         return filePath;
     }
-
-    const char* ret = matchLocation_cb(filePath->toUTF8NonGCString().data());
+    auto s = filePath->toUTF8NonGCString();
+    const char* ret = matchLocation_cb(s.data());
     if (!ret) {
         return nullptr;
     }

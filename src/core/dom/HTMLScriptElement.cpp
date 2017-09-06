@@ -81,11 +81,11 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        if (isJavaScriptType(m_resource->resourceRequest()
-                                 ->responseMimeType()
-                                 ->toLower()
-                                 ->toUTF8NonGCString()
-                                 .data()) ||
+        auto s = m_resource->resourceRequest()
+                     ->responseMimeType()
+                     ->toLower()
+                     ->toUTF8NonGCString();
+        if (isJavaScriptType(s.data()) ||
             m_resource->resourceRequest()
                 ->responseMimeType()
                 ->toLower()
@@ -141,10 +141,11 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
         isInDocumentScopeAndDocumentParticipateInRendering()) {
         Nullable<String*> typeStr =
             getAttribute(starFish()->staticStrings()->m_type);
-        if (typeStr.hasValue() &&
-            !isJavaScriptType(
-                typeStr.getValue()->toLower()->toUTF8NonGCString().data())) {
-            return false;
+        if (typeStr.hasValue()) {
+            auto utf8Data = typeStr.getValue()->toLower()->toUTF8NonGCString();
+            if (!isJavaScriptType(utf8Data.data())) {
+                return false;
+            }
         }
         Nullable<String*> srcStr =
             getAttribute(starFish()->staticStrings()->m_src);

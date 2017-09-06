@@ -1383,10 +1383,11 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
 
 void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
 {
+    auto s = m_event->type()->toUTF8NonGCString();
     STARFISH_LOG_INFO(
         "MediaOperationQueueDataRequestDispatchEvent::processOperationQueue() "
         "-> %s\n",
-        m_event->type()->toUTF8NonGCString().data());
+        s.data());
     m_mediaElement->processNextOperationQueue();
     m_target->dispatchEventByUA(m_event);
 }

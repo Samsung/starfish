@@ -473,7 +473,8 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump()
     {
-        printf("[%s] ", localName()->toUTF8NonGCString().data());
+        auto s = localName()->toUTF8NonGCString();
+        printf("[%s] ", s.data());
     }
     virtual void dumpStyle();
     CSSStyleDeclaration* getComputedStyle();

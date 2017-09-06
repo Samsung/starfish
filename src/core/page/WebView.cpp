@@ -132,7 +132,8 @@ bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
     }
     String* uuid = url->substring(idx, url->length() - idx);
 
-    const char* str = uuid->toUTF8NonGCString().data();
+    auto utf8Data = uuid->toUTF8NonGCString();
+    const char* str = utf8Data.data();
     if (strlen(str) != 36) {
         return false;
     }
@@ -605,21 +606,23 @@ bool WebView::rendering(bool force)
                             ctx->owner()->node()->asHTMLElement();
                         for (unsigned i = 0; i < element->classNames().size();
                              i++) {
-                            className += element->classNames()[i]
-                                             .string()
-                                             ->toUTF8NonGCString();
+                            auto s = element->classNames()[i]
+                                         .string()
+                                         ->toUTF8NonGCString();
+                            className += s;
                             className += " ";
                         }
 
+                        auto utf8DataLog1 =
+                            element->localName()->toUTF8NonGCString();
+                        auto utf8DataLog2 = element->id()->toUTF8NonGCString();
                         printf(
                             "StackingContext[%p, node %p %s id:%s className:%s"
                             ", frame %p, buf %p %d %d %d %d]\n",
-                            ctx, element,
-                            element->localName()->toUTF8NonGCString().data(),
-                            element->id()->toUTF8NonGCString().data(),
-                            className.data(), ctx->owner(), ctx->buffer(),
-                            (int)fr.x(), (int)fr.y(), (int)fr.width(),
-                            (int)fr.height());
+                            ctx, element, utf8DataLog1.data(),
+                            utf8DataLog2.data(), className.data(), ctx->owner(),
+                            ctx->buffer(), (int)fr.x(), (int)fr.y(),
+                            (int)fr.width(), (int)fr.height());
                     } else {
                         printf(
                             "StackingContext[%p, anonymous node"
