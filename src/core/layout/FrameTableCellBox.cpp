@@ -36,6 +36,7 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     , m_maxCellWidth(0)
     , m_actualContentHeight(0)
     , m_colspan((size_t)-1)
+    , m_rowspan((size_t)-1)
 {
 }
 
@@ -220,12 +221,41 @@ size_t FrameTableCellBox::colspan()
     return colspan;
 }
 
+size_t FrameTableCellBox::rowspan()
+{
+    if (!(node() && node()->isHTMLElement())) {
+        return 1;
+    }
+
+    HTMLElement* e = node()->asHTMLElement();
+    // Use 1 as the default value
+    uint32_t rowspan = 1;
+
+    if (e->isHTMLTableCellElement()) {
+        rowspan = e->asHTMLTableCellElement()->rowSpan();
+    } else {
+        // rowspan is only accepted when HTML element is either <td> or <th>,
+        // hence it is not applied when used in other elements.
+        // e.g., <div style="display: table-cell" rowspan="2">
+        // In this case, we ignore the rowspan value
+    }
+    return rowspan;
+}
+
 size_t FrameTableCellBox::updatedColspan()
 {
     if (m_colspan != (size_t)-1) {
         return m_colspan;
     }
     return colspan();
+}
+
+size_t FrameTableCellBox::updatedRowspan()
+{
+    if (m_rowspan != (size_t)-1) {
+        return m_rowspan;
+    }
+    return rowspan();
 }
 
 void FrameTableCellBox::updateColspanForLayout(size_t colspan)

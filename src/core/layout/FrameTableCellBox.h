@@ -45,7 +45,9 @@ public:
     }
 
     size_t colspan();
+    size_t rowspan();
     size_t updatedColspan();
+    size_t updatedRowspan();
     void updateColspanForLayout(size_t colspan);
 
     virtual bool isFrameTableCellBox()
@@ -76,9 +78,19 @@ public:
         return m_minCellWidth;
     }
 
+    void setMinCellWidth(LayoutUnit minCellWidth)
+    {
+        m_minCellWidth = minCellWidth;
+    }
+
     LayoutUnit maxCellWidth()
     {
         return m_maxCellWidth;
+    }
+
+    void setMaxCellWidth(LayoutUnit maxCellWidth)
+    {
+        m_maxCellWidth = maxCellWidth;
     }
 
     void paintBackgroundAndBorders(Canvas* canvas);
@@ -100,6 +112,7 @@ private:
     LayoutUnit m_actualContentHeight;
 
     size_t m_colspan;
+    size_t m_rowspan;
 };
 }
 

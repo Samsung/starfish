@@ -30,14 +30,12 @@ class ColSizeStruct;
 class CellStruct {
 public:
     CellStruct()
-        : m_cell(nullptr)
-        , m_id(0)
+        : CellStruct(nullptr)
     {
     }
 
-    CellStruct(FrameTableCellBox* cell, unsigned id)
+    CellStruct(FrameTableCellBox* cell)
         : m_cell(cell)
-        , m_id(id)
     {
     }
 
@@ -46,14 +44,8 @@ public:
         return m_cell;
     }
 
-    unsigned id()
-    {
-        return m_id;
-    }
-
 private:
     FrameTableCellBox* m_cell;
-    unsigned m_id; // logical Id
 };
 
 class RowStruct {
@@ -70,17 +62,6 @@ public:
     }
 
     unsigned logicalColumnSize();
-    CellStruct* logicalCellStructAt(size_t id);
-
-    FrameTableCellBox* logicalCellAt(size_t id)
-    {
-        CellStruct* cell = logicalCellStructAt(id);
-        if (cell) {
-            return cell->cell();
-        }
-
-        return nullptr;
-    }
 
     FrameTableCellBox* physicalCellAtLogicalColumn(size_t id);
 
@@ -104,7 +85,9 @@ public:
     FrameTableSectionBox(Node* node, ComputedStyle* style);
 
     void calCellWidth(LayoutContext& ctx);
+    void calAbsoluteColumnIndicesForCells();
     void calCellWidthsWithColspans();
+    void calCellHeightsWithRowspans();
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
@@ -151,9 +134,19 @@ public:
 
 private:
     void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
-    // represent the logical table structure
-    GCVector<RowStruct> m_grid;
+
+    void calAbsoluteColumnIndicesForCellsAffectedByColspan(
+        FrameTableCellBox* cell, size_t rowId, size_t colId);
+    void calAbsoluteColumnIndicesForCellsAffectedByRowspan(
+        FrameTableCellBox* cell, size_t rowId, size_t colId);
+
+    LayoutUnit calCellHeightWithRowspan(FrameTableCellBox* cell, size_t rowId,
+                                        size_t colId);
+
+    GCVector<RowStruct> m_grid; // cells in a 2D table for easier traversal
     GCAtomicVector<ColSizeStruct> m_columnWidths;
+
+    GCUnorderedSet<RowStruct*> m_affectedRowsByRowspans;
 };
 }
 

@@ -89,16 +89,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
                                         LayoutUnit containgBlockContentWidth)
 {
     if (isFrameTableBox()) {
-        // Table starts its own layout algorithm that has minimum
-        // interaction with the existing layout algorithm.
-        // In brief, after establishes a table context, we calculate
-        // the width of the table, and place cells in rows and columns.
-        // To do so, we calculate x positions of cells first, and then
-        // calculate the y positions of cells.
         FrameTableBox* tableBox = asFrameTableBox();
-        tableBox->calCellWidth(ctx);
-        tableBox->calCellWidthsWithColspans();
-        tableBox->layoutWidth(ctx);
+        tableBox->calTableWidth(ctx);
     } else {
         Length left = style()->left();
         Length right = style()->right();
