@@ -650,6 +650,8 @@ public:
         }
     }
 
+    bool isFourSideBorderStyleValueSolid();
+
 #define BORDER_COLOR(UPOS, LPOS, ...)                      \
     Unit::Color border##UPOS##Color()                      \
     {                                                      \
