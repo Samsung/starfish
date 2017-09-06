@@ -160,9 +160,8 @@ void MediaPlayerTizen::handlePlayerError(int error)
         closePreparingMode();
         if (m_alive) {
             m_container->giveupFetchingResource();
-        } else {
-            close();
         }
+        close();
     }
 }
 
@@ -454,7 +453,7 @@ void MediaPlayerTizen::initDisplay()
 
 void MediaPlayerTizen::setNativePlayerDefaultOptions(ResourceURL* url)
 {
-    if (m_container->isHTMLVideoElement() && m_container->frame()) {
+    if (m_container->isHTMLVideoElement()) {
         player_display_h displayHandle = GET_DISPLAY(m_canvasSurface->unwrap());
         player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_EVAS,
                            displayHandle);
@@ -570,7 +569,6 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
     };
     int nativeResult =
         player_prepare_async(m_nativePlayer, m_preparedCallback, this);
-
     if (nativeResult != PLAYER_ERROR_NONE) {
         PLAYER_LOGE(
             "MediaPlayerTizen::player_prepare_async return error !!!\n");
@@ -599,7 +597,7 @@ void MediaPlayerTizen::completePrepare()
     } else {
         PLAYER_LOGI("MediaPlayerTizen::completePrepare in MainThread\n");
 
-        STARFISH_ASSERT(m_inPrepare);
+        STARFISH_ASSERT(m_inPrepare || !m_alive);
         closePreparingMode();
 
         if (!m_alive) {
