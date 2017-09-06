@@ -862,10 +862,19 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
 
     LayoutUnit specifiedHeight = 0;
     bool hasTableHeight = false;
-    if (style()->height().isFixed()) {
+    if (!style()->height().isAuto()) {
         hasTableHeight = true;
-        specifiedHeight = LayoutUnit::fromPixel(style()->height().fixed());
-        specifiedHeight += borderHeight() + paddingHeight();
+
+        if (style()->height().isFixed()) {
+            specifiedHeight = LayoutUnit::fromPixel(style()->height().fixed());
+            specifiedHeight += borderHeight() + paddingHeight();
+        } else if (style()->height().isPercent()) {
+            if (ctx.parentHasFixedHeight(this)) {
+                LayoutUnit parentContentHeight = ctx.parentFixedHeight(this);
+                specifiedHeight =
+                    parentContentHeight.toInt() * style()->height().percent();
+            }
+        }
     }
 
     LayoutUnit sectionHeight = ySoFar - m_tableRect.y();
