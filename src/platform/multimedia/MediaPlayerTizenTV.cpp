@@ -83,7 +83,7 @@ void MediaPlayerTizenTV::printNativePlayerError(int errorCode)
 
 void MediaPlayerTizenTV::setNativePlayerDefaultOptions(ResourceURL* url)
 {
-    if (m_container->isHTMLVideoElement() && m_container->frame()) {
+    if (m_container->isHTMLVideoElement()) {
         player_display_h displayHandle = GET_DISPLAY(
             (Evas_Object*)m_container->starFish()->platformWindow()->unwrap());
         player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
