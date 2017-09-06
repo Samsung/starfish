@@ -90,55 +90,34 @@ public:
             return m_size * ((float)count / SPACE_SIZE_DENOMINATOR);
         }
 #endif
-        cairo_surface_t* surface;
-        cairo_t* cr;
+        FT_Int x_bias = 0;
+        FT_Int y_bias = 0;
+        FT_UInt glyph_index = 0;
 
-        surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 120, 120);
-        cr = cairo_create(surface);
+        FT_Face face = findFCChar(str.charAt(0), &glyph_index);
 
-        // TODO(MONG)
-        uint tmp = 0;
-        FT_Face face = findFCChar(str.charAt(0), &tmp);
-        cairo_font_face_t* fontFace;
-        fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
+        int size = m_size;
+        int glyph_count = str.length();
+        int result = 0;
 
-        cairo_set_font_face(cr, fontFace);
-        cairo_set_font_size(cr, m_size);
-        auto scaled_face = cairo_get_scaled_font(cr);
-        cairo_glyph_t* glyphs = NULL;
-        int glyph_count;
-        cairo_text_extents_t extents;
-
-        if (str.originalString()->bufferAccessData().hasASCIIContent) {
-            bool isShort = str.length() < 128;
-            auto data = str.bufferAccessData();
-            char* buf =
-                isShort ? (char*)alloca(128) : (char*)malloc(str.length() + 1);
-            strncpy(buf, data.asciiData(), data.length);
-            buf[str.length()] = 0;
-
-            cairo_scaled_font_text_to_glyphs(scaled_face, 0, 0, buf,
-                                             strlen(buf), &glyphs, &glyph_count,
-                                             nullptr, nullptr, nullptr);
-
-            if (!isShort) {
-                free(buf);
+        for (int i = 0; i < glyph_count; i++) {
+            glyph_index = FT_Get_Char_Index(face, str.charAt(i));
+            if (glyph_index != 0) {
+                FT_Set_Pixel_Sizes(face, 0, size);
+                FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
+                result += face->glyph->advance.x >> 6;
+            } else {
+                face = findFCChar(str.charAt(i), &glyph_index);
+                if (glyph_index != 0) {
+                    FT_Set_Pixel_Sizes(face, 0, size);
+                    FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
+                    result += face->glyph->advance.x >> 6;
+                } else {
+                    // DO nothing?
+                }
             }
-
-        } else {
-            UTF8StringDataNonGCStd s =
-                str.originalString()->toUTF8NonGCString(str.start(), str.end());
-            cairo_scaled_font_text_to_glyphs(scaled_face, 0, 0, s.c_str(),
-                                             s.length(), &glyphs, &glyph_count,
-                                             nullptr, nullptr, nullptr);
         }
-        cairo_scaled_font_glyph_extents(scaled_face, glyphs, glyph_count,
-                                        &extents);
-
-        cairo_font_face_destroy(fontFace);
-        cairo_surface_destroy(surface);
-        cairo_destroy(cr);
-        return extents.x_advance;
+        return result;
     }
 
     virtual void* unwrap()
