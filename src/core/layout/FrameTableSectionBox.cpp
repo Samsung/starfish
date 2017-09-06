@@ -237,12 +237,15 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCellsAffectedByRowspan(
 {
     size_t rowEnd = rowId + cell->rowspan();
     for (size_t curRowId = rowId + 1; curRowId < rowEnd; curRowId++) {
-        RowStruct& rowStruct = grid()[curRowId];
+        if (curRowId < grid().size()) {
+            RowStruct& rowStruct = grid()[curRowId];
 
-        for (size_t i = colId; i < rowStruct.cells().size(); i++) {
-            CellStruct& cellStruct = rowStruct.cells()[i];
-            FrameTableCellBox* curCell = cellStruct.cell();
-            curCell->setAbsoluteColumnIndex(curCell->absoluteColumnIndex() + 1);
+            for (size_t i = colId; i < rowStruct.cells().size(); i++) {
+                CellStruct& cellStruct = rowStruct.cells()[i];
+                FrameTableCellBox* curCell = cellStruct.cell();
+                curCell->setAbsoluteColumnIndex(curCell->absoluteColumnIndex() +
+                                                1);
+            }
         }
     }
 }
@@ -316,21 +319,22 @@ LayoutUnit FrameTableSectionBox::calCellHeightWithRowspan(
         tableBox()->style()->verticalBorderSpacing().fixed());
 
     LayoutUnit cellHeight = 0;
-
     size_t rowspan = cell->updatedRowspan();
     size_t rowEnd = rowId + rowspan;
     for (size_t curRowId = rowId; curRowId < rowEnd; curRowId++) {
-        RowStruct& rowStruct = grid()[curRowId];
+        if (curRowId < grid().size()) {
+            RowStruct& rowStruct = grid()[curRowId];
 
-        if (colId < rowStruct.cells().size()) {
-            CellStruct& cellStruct = rowStruct.cells()[colId];
-            cellHeight += cellStruct.cell()->height();
+            if (colId < rowStruct.cells().size()) {
+                CellStruct& cellStruct = rowStruct.cells()[colId];
+                cellHeight += cellStruct.cell()->height();
 
-            if (curRowId < rowEnd - 1) {
-                cellHeight += borderSpacing;
-            }
-            if (curRowId > rowId) {
-                m_affectedRowsByRowspans.insert(&rowStruct);
+                if (curRowId < rowEnd - 1) {
+                    cellHeight += borderSpacing;
+                }
+                if (curRowId > rowId) {
+                    m_affectedRowsByRowspans.insert(&rowStruct);
+                }
             }
         }
     }
@@ -378,6 +382,7 @@ void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
     setHeight(ySoFar);
 
     calCellHeightsWithRowspans();
+    m_affectedRowsByRowspans.clear();
 }
 
 void FrameTableSectionBox::increaseRowHeightBy(LayoutUnit rowHeightOffset)

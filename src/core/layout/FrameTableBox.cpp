@@ -72,7 +72,14 @@ void* FrameTableBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void FrameTableBox::calTableWidth(LayoutContext& ctx)
+void FrameTableBox::computeTableWidth(LayoutContext& ctx)
+{
+    calCellWidth(ctx);
+    calCellWidthsWithColspans();
+    layoutWidth(ctx);
+}
+
+void FrameTableBox::layoutTable(LayoutContext& ctx)
 {
     // Table starts its own layout algorithm that has minimum
     // interaction with the existing layout algorithm.
@@ -80,9 +87,7 @@ void FrameTableBox::calTableWidth(LayoutContext& ctx)
     // the width of the table, and place cells in rows and columns.
     // To do so, we calculate x positions of cells first, and then
     // calculate the y positions of cells.
-    calCellWidth(ctx);
-    calCellWidthsWithColspans();
-    layoutWidth(ctx);
+    layoutHeight(ctx);
 }
 
 FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)
@@ -592,36 +597,51 @@ void FrameTableBox::resetColspanIfPossible()
     GCVector<FrameTableCellBox*> cellsInTheFirstRowTmp;
     GCAtomicVector<ColSizeStruct> columnWidthsTmp;
 
-    for (size_t i = 0; i < m_columnWidths.size(); i++) {
-        if (m_columnWidths[i].isNullCell) {
-            forEachRowStruct([i](RowStruct* rowStruct, size_t _rowId) {
-                FrameTableCellBox* cell =
-                    rowStruct->physicalCellAtLogicalColumn(i);
-                STARFISH_ASSERT(cell->colspan() > 1);
-                size_t reduceAbsoluteIndexBy = cell->colspan() - 1;
-                cell->updateColspanForLayout(1);
-
-                // find the following affected cells and adjust
-                // absoluteColumnIndices
-                size_t colId = 0;
-                for (; rowStruct->cells().size(); colId++) {
-                    FrameTableCellBox* curCell =
-                        rowStruct->cells()[colId].cell();
-                    if (cell == curCell) {
-                        break;
-                    }
-                }
-                for (colId += 1; colId < rowStruct->cells().size(); colId++) {
-                    FrameTableCellBox* curCell =
-                        rowStruct->cells()[colId].cell();
-                    curCell->setAbsoluteColumnIndex(
-                        curCell->absoluteColumnIndex() - reduceAbsoluteIndexBy);
-                }
-            });
-
-            continue;
+    forEachRowStruct([](RowStruct* rowStruct, size_t _rowId) {
+        for (auto& cellStruct : rowStruct->cells()) {
+            FrameTableCellBox* cell = cellStruct.cell();
+            cell->updateColspanForLayout((size_t)-1);
         }
-        columnWidthsTmp.push_back(m_columnWidths[i]);
+    });
+
+    for (size_t i = 0; i < m_columnWidths.size(); i++) {
+        bool deleted = false;
+        if (m_columnWidths[i].isNullCell) {
+            forEachRowStruct(
+                [i, &deleted](RowStruct* rowStruct, size_t _rowId) {
+                    FrameTableCellBox* cell =
+                        rowStruct->physicalCellAtLogicalColumn(i);
+
+                    size_t reduceAbsoluteIndexBy = cell->colspan() - 1;
+                    if (reduceAbsoluteIndexBy > 0) {
+                        cell->updateColspanForLayout(1);
+
+                        // find the following affected cells and adjust
+                        // absoluteColumnIndices
+                        size_t colId = 0;
+                        for (; rowStruct->cells().size(); colId++) {
+                            FrameTableCellBox* curCell =
+                                rowStruct->cells()[colId].cell();
+                            if (cell == curCell) {
+                                break;
+                            }
+                        }
+                        for (colId += 1; colId < rowStruct->cells().size();
+                             colId++) {
+                            FrameTableCellBox* curCell =
+                                rowStruct->cells()[colId].cell();
+                            curCell->setAbsoluteColumnIndex(
+                                curCell->absoluteColumnIndex() -
+                                reduceAbsoluteIndexBy);
+                        }
+                        deleted = true;
+                    }
+                });
+        }
+
+        if (!deleted) {
+            columnWidthsTmp.push_back(m_columnWidths[i]);
+        }
     }
 
     m_columnWidths.clear();

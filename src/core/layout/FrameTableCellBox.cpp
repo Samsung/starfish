@@ -35,8 +35,8 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     , m_minCellWidth(0)
     , m_maxCellWidth(0)
     , m_actualContentHeight(0)
-    , m_colspan((size_t)-1)
-    , m_rowspan((size_t)-1)
+    , m_updatedColspan((size_t)-1)
+    , m_updatedRowspan((size_t)-1)
 {
 }
 
@@ -244,23 +244,23 @@ size_t FrameTableCellBox::rowspan()
 
 size_t FrameTableCellBox::updatedColspan()
 {
-    if (m_colspan != (size_t)-1) {
-        return m_colspan;
+    if (m_updatedColspan != (size_t)-1) {
+        return m_updatedColspan;
     }
     return colspan();
 }
 
 size_t FrameTableCellBox::updatedRowspan()
 {
-    if (m_rowspan != (size_t)-1) {
-        return m_rowspan;
+    if (m_updatedRowspan != (size_t)-1) {
+        return m_updatedRowspan;
     }
     return rowspan();
 }
 
 void FrameTableCellBox::updateColspanForLayout(size_t colspan)
 {
-    m_colspan = colspan;
+    m_updatedColspan = colspan;
 }
 
 void* FrameTableCellBox::operator new(size_t size)
