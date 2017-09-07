@@ -115,18 +115,11 @@ void HTMLInputElement::setPlaceholder(String* value)
 
 void HTMLInputElement::toggleChecked()
 {
-    return checked() ? setChecked(false) : setChecked(true);
-}
-
-void HTMLInputElement::setChecked(bool checked)
-{
-    if (m_checked == checked) {
-        return;
+    if (checked()) {
+        setChecked(false);
+    } else {
+        setChecked(true);
     }
-
-    m_checked = checked;
-
-    updateInputboxValue(m_checked ? checkboxTickSymbol() : String::emptyString);
 
     auto fn = [](size_t handle, void* data) {
         HTMLInputElement* element = (HTMLInputElement*)data;
@@ -138,6 +131,15 @@ void HTMLInputElement::setChecked(bool checked)
     };
     starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
                                         this);
+}
+
+void HTMLInputElement::setChecked(bool checked)
+{
+    if (m_checked == checked) {
+        return;
+    }
+    m_checked = checked;
+    updateInputboxValue(m_checked ? checkboxTickSymbol() : String::emptyString);
 }
 
 uint32_t HTMLInputElement::size()
