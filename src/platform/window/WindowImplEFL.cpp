@@ -608,6 +608,15 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 return EINA_TRUE;
             }
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
+
+#ifdef STARFISH_TIZEN_TV
+            if ((strcmp(d->key, "XF86Exit") == 0) ||
+                (strcmp(d->key, "XF86Back") == 0)) {
+                evas_object_del(sf->m_window);
+                return EINA_FALSE;
+            }
+#endif
+
             auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
             KeyboardData kdata(keyValue);
             setRepeatToKeyboardData(sf, d->timestamp, kdata);
