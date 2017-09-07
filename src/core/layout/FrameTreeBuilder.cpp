@@ -496,9 +496,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             currentFrame = new FrameReplacedObject(current);
             shouldSkipChildren = true;
         } else if (current->isSVGSVGElement()) {
-            currentFrame = new FrameSVGSVGBox(current);
-            FrameTreeBuilder::buildSVGFrameTree(current->asSVGSVGElement());
-            shouldSkipChildren = true;
+            return FrameTreeBuilder::buildSVGFrameTree(
+                current->asSVGSVGElement());
         } else if (isTableType) {
             // table has its own frametree builder
             // return nullptr, if buildFrameTable reuse before anonymous table

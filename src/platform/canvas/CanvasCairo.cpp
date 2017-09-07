@@ -16,12 +16,11 @@
 
 #include "StarFishConfig.h"
 
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER) && \
-    defined(PORT_CANVAS_BACKEND_CAIRO)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
 
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules//canvas/font/Font.h"
-#include "core/modules//canvas/image/ImageData.h"
+#include "core/modules/canvas/font/Font.h"
+#include "core/modules/canvas/image/ImageData.h"
 #include "core/style/UnitHelper.h"
 
 #include <vector>
@@ -63,7 +62,6 @@ public:
         m_canvas = nullptr;
         m_surface = nullptr;
         m_buffer = NULL;
-        m_directDraw = true;
         struct dummy {
             void* image;
             int w;
@@ -85,7 +83,6 @@ public:
     {
         m_canvas = nullptr;
         m_surface = nullptr;
-        m_directDraw = false;
 
         m_buffer = (void*)data->unwrap();
         initFromBuffer(
@@ -662,6 +659,60 @@ public:
         lp.setY(y);
     }
 
+    virtual void beginPath()
+    {
+        cairo_new_path(m_canvas);
+    }
+    virtual void closePath()
+    {
+        cairo_close_path(m_canvas);
+    }
+    virtual void moveTo(float x, float y)
+    {
+        cairo_move_to(m_canvas, x, y);
+    }
+    virtual void lineTo(float x, float y)
+    {
+        cairo_line_to(m_canvas, x, y);
+    }
+    virtual void curveTo(float x1, float y1, float x2, float y2, float x3,
+                         float y3)
+    {
+        cairo_curve_to(m_canvas, x1, y1, x2, y2, x3, y3);
+    }
+    virtual void stroke()
+    {
+        cairo_stroke(m_canvas);
+    }
+    virtual void strokePreserve()
+    {
+        cairo_stroke_preserve(m_canvas);
+    }
+    virtual void fill()
+    {
+        cairo_fill(m_canvas);
+    }
+    virtual void fillPreserve()
+    {
+        cairo_fill_preserve(m_canvas);
+    }
+
+    virtual void setFillRule(bool shouldUseNonZeroFillRule)
+    {
+        if (shouldUseNonZeroFillRule) {
+            cairo_set_fill_rule(m_canvas,
+                                cairo_fill_rule_t::CAIRO_FILL_RULE_WINDING);
+        } else {
+            cairo_set_fill_rule(m_canvas,
+                                cairo_fill_rule_t::CAIRO_FILL_RULE_EVEN_ODD);
+        }
+    }
+
+    virtual void setStrokeWidth(float width)
+    {
+        cairo_set_line_width(m_canvas, width);
+    }
+
     virtual void* unwrap()
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -679,12 +730,12 @@ protected:
     std::unordered_map<Frame*, CanvasStateCairo> m_statePerFrame;
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
-    bool m_directDraw;
     void* m_buffer;
     unsigned m_width;
     unsigned m_height;
 };
 
+#if !defined(PORT_GRAPHIC_BACKEND_EFL)
 Canvas* Canvas::createDirect(void* data)
 {
     return new CanvasCairo(data);
@@ -693,6 +744,22 @@ Canvas* Canvas::createDirect(void* data)
 Canvas* Canvas::create(CanvasSurface* data)
 {
     return new CanvasCairo(data);
+}
+#endif
+
+Canvas* Canvas::createGenericCanvas(ImageData* data)
+{
+    struct dummy {
+        void* image;
+        int w;
+        int h;
+        int stride;
+    } d;
+    d.image = data->data();
+    d.w = data->width();
+    d.h = data->height();
+    d.stride = data->width() * 4;
+    return new CanvasCairo(&d);
 }
 }
 

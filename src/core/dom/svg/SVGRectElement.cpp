@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,32 +14,15 @@
  *    limitations under the License.
  */
 
-#ifndef __ImageData__
-#define __ImageData__
+#include "StarFishConfig.h"
+#include "StarFish.h"
+#include "core/dom/svg/SVGDocument.h"
+#include "core/dom/svg/SVGRectElement.h"
 
 namespace StarFish {
 
-class ImageData : public gc {
-protected:
-    ImageData()
-    {
-    }
-
-public:
-    static ImageData* create(String* localImageSrc);
-    static ImageData* create(const char* buf, size_t len);
-    static ImageData* create(size_t width, size_t height);
-
-    virtual size_t bufferSize() = 0;
-    virtual uint8_t* data() = 0;
-    virtual void clear() = 0;
-    virtual void* unwrap() = 0;
-    virtual size_t width() = 0;
-    virtual size_t height() = 0;
-    virtual ~ImageData()
-    {
-    }
-};
+QualifiedName SVGRectElement::name()
+{
+    return starFish()->staticStrings()->m_svgrectTagName;
 }
-
-#endif
+}

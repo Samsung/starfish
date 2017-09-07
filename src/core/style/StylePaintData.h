@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,31 +14,38 @@
  *    limitations under the License.
  */
 
-#ifndef __ImageData__
-#define __ImageData__
+#ifndef __StarFishStylePaintData__
+#define __StarFishStylePaintData__
+
+#include "core/style/Style.h"
 
 namespace StarFish {
 
-class ImageData : public gc {
-protected:
-    ImageData()
-    {
-    }
-
+class StylePaintData : public gc {
 public:
-    static ImageData* create(String* localImageSrc);
-    static ImageData* create(const char* buf, size_t len);
-    static ImageData* create(size_t width, size_t height);
-
-    virtual size_t bufferSize() = 0;
-    virtual uint8_t* data() = 0;
-    virtual void clear() = 0;
-    virtual void* unwrap() = 0;
-    virtual size_t width() = 0;
-    virtual size_t height() = 0;
-    virtual ~ImageData()
+    StylePaintData(Unit::Color clr = Unit::Color(0, 0, 0, 0))
+        : m_color(clr)
     {
     }
+
+    bool operator==(const StylePaintData& o)
+    {
+        return m_color == o.m_color;
+    }
+
+    bool operator!=(const StylePaintData& o)
+    {
+        return !operator==(o);
+    }
+
+    Unit::Color color() const
+    {
+        return m_color;
+    }
+
+private:
+    // TODO add fill functions
+    Unit::Color m_color;
 };
 }
 

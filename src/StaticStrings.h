@@ -157,6 +157,7 @@ namespace StarFish {
 
 #define STARFISH_ENUM_SVG_TAG_NAMES(F) \
     F(svg)                             \
+    F(rect)                            \
     F(script)
 
 class StaticStrings : public gc {
@@ -272,6 +273,13 @@ public:
     QualifiedName m_label;
     QualifiedName m_srclang;
 #endif
+    QualifiedName m_fill;
+    QualifiedName m_fillRule;
+    QualifiedName m_fillOpacity;
+    QualifiedName m_stroke;
+    QualifiedName m_strokeWidth;
+    QualifiedName m_x;
+    QualifiedName m_y;
     // xml:base
     QualifiedName m_xmlBase;
 

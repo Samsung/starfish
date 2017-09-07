@@ -49,6 +49,23 @@ public:
     {
         Element::fillGCDescriptor(desc);
     }
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
+
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues) override;
+
+    virtual bool needsFillAttributes()
+    {
+        return false;
+    }
+
+    virtual bool needsStrokeAttributes()
+    {
+        return false;
+    }
 };
 
 class SVGNamedElement : public SVGElement {

@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "FrameSVGSVGBox.h"
+#include "StarFish.h"
 #include "core/dom/svg/SVGSVGElement.h"
 
 namespace StarFish {
@@ -64,8 +65,54 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
     return result;
 }
 
-void FrameSVGSVGBox::paint(PaintingContext& ctx)
+void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 {
-    FrameReplaced::paint(ctx);
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+    Canvas* outerCanvas = canvas;
+    outerCanvas->save();
+    outerCanvas->translate(borderLeft() + paddingLeft(),
+                           borderTop() + paddingTop());
+
+    if (!m_surface || (float)contentWidth() != m_surface->width() ||
+        (float)contentHeight() != m_surface->height()) {
+        m_surface =
+            ImageData::create((float)contentWidth(), (float)contentHeight());
+    }
+    m_surface->clear();
+
+    canvas = Canvas::createGenericCanvas(m_surface);
+
+    PaintingContext ctx(canvas);
+    Frame* child = firstChild();
+    while (child) {
+        ctx.m_canvas->save();
+        ctx.m_canvas->translate(child->asFrameBox()->x(),
+                                child->asFrameBox()->y());
+        child->asFrameSVGBox()->paintSVG(ctx);
+        ctx.m_canvas->restore();
+        child = child->next();
+    }
+
+    delete canvas;
+
+    outerCanvas->drawImage(m_surface,
+                           Unit::Rect(0, 0, contentWidth(), contentHeight()));
+    outerCanvas->restore();
+#else
+    canvas->save();
+    canvas->translate(borderLeft() + paddingLeft(), borderTop() + paddingTop());
+
+    PaintingContext ctx(canvas);
+    Frame* child = firstChild();
+    while (child) {
+        ctx.m_canvas->save();
+        ctx.m_canvas->translate(child->asFrameBox()->x(),
+                                child->asFrameBox()->y());
+        child->asFrameSVGBox()->paintSVG(ctx);
+        ctx.m_canvas->restore();
+        child = child->next();
+    }
+    canvas->restore();
+#endif
 }
 }

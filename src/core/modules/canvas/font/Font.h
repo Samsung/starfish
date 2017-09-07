@@ -89,8 +89,14 @@ public:
         return m_metrics;
     }
 #ifdef PORT_CANVAS_BACKEND_CAIRO
-    virtual FT_Face findFCChar(char32_t uniCode, uint* glyphIdx) = 0;
-    virtual int getGlaphAdvanceX(char32_t uniCode) = 0;
+    virtual int getGlaphAdvanceX(char32_t uniCode)
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    virtual FT_Face findFCChar(char32_t uniCode, uint* glyphIdx)
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 #endif
 
 #ifdef STARFISH_ENABLE_TEST

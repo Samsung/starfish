@@ -67,9 +67,10 @@ public:
 
     void notifyNeedsStyleRecalc();
 
-    void tokenizeCSSValue(CSSTokenVector& tokens, const char* src, size_t len,
-                          const char* seperator = "", size_t seperatorCount = 0,
-                          bool isCaseSensitive = false);
+    static void tokenizeCSSValue(CSSTokenVector& tokens, const char* src,
+                                 size_t len, const char* seperator = "",
+                                 size_t seperatorCount = 0,
+                                 bool isCaseSensitive = false);
 
     String* Border();
     String* BorderTop();

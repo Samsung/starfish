@@ -16,6 +16,12 @@
 
 #include "StarFishConfig.h"
 #include "FrameSVGBox.h"
+#include "core/dom/Node.h"
+#include "core/dom/Element.h"
+#include "core/dom/Document.h"
+#include "core/dom/HTMLHtmlElement.h"
+#include "core/style/CSSParser.h"
+#include "core/style/CSSStyleDeclaration.h"
 
 namespace StarFish {
 
@@ -46,15 +52,96 @@ void* FrameSVGBox::operator new(size_t size)
 void FrameSVGBox::layout(LayoutContext& ctx,
                          Frame::LayoutWantToResolve resolveWhat)
 {
+    FrameBox* cb = layoutParent()->asFrameBox();
     if (resolveWhat & Frame::ResolveWidth) {
+        auto styleWidth = style()->width();
+        LayoutUnit width;
+        if (!styleWidth.isAuto()) {
+            width = styleWidth.specifiedValue(cb->width(), ctx.viewportWidth());
+        }
+        setWidth(width);
     }
 
     if (resolveWhat & Frame::ResolveHeight) {
+        auto styleHeight = style()->height();
+        LayoutUnit height;
+        if (!styleHeight.isAuto()) {
+            height =
+                styleHeight.specifiedValue(cb->height(), ctx.viewportHeight());
+        }
+        setHeight(height);
     }
+
+    Frame* f = firstChild();
+    while (f) {
+        f->asFrameSVGBox()->resolvePosition(ctx);
+        f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+        f = f->next();
+    }
+}
+
+void FrameSVGBox::resolvePosition(LayoutContext& ctx)
+{
+    FrameBox* cb = layoutParent()->asFrameBox();
+
+    LayoutUnit xResult;
+    String* x = node()->asElement()->getAttributeOrEmpty(
+        node()->starFish()->staticStrings()->m_x);
+    if (x->length()) {
+        auto s = x->toUTF8NonGCString();
+        CSSStyleValuePair pair;
+        if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
+                                                   &pair)) {
+            auto l = pair.lengthValue();
+            Length ll = l.toLength();
+
+            ComputedStyle* rootStyle =
+                node()->document()->rootElement()->style();
+            ll.changeToFixedIfNeeded(style()->fontSize(), rootStyle->fontSize(),
+                                     style()->font());
+            xResult = ll.specifiedValue(cb->width(), ctx.viewportWidth());
+        }
+    }
+
+    setX(xResult);
+
+    LayoutUnit yResult;
+    String* y = node()->asElement()->getAttributeOrEmpty(
+        node()->starFish()->staticStrings()->m_y);
+    if (y->length()) {
+        auto s = y->toUTF8NonGCString();
+        CSSStyleValuePair pair;
+        if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
+                                                   &pair)) {
+            auto l = pair.lengthValue();
+            Length ll = l.toLength();
+
+            ComputedStyle* rootStyle =
+                node()->document()->rootElement()->style();
+            ll.changeToFixedIfNeeded(style()->fontSize(), rootStyle->fontSize(),
+                                     style()->font());
+            yResult = ll.specifiedValue(cb->height(), ctx.viewportHeight());
+        }
+    }
+
+    setY(yResult);
 }
 
 void FrameSVGBox::paint(PaintingContext& ctx)
 {
-    FrameBox::paint(ctx);
+    ctx.m_canvas->save();
+
+    if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+        ctx.m_canvas->setVisible(false);
+    } else {
+        ctx.m_canvas->setVisible(true);
+    }
+
+    ctx.m_canvas->save();
+    paintSVG(ctx);
+    ctx.m_canvas->restore();
+    paintChildrenWith(ctx);
+
+    ctx.m_canvas->restore();
 }
 }

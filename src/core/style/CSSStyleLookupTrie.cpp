@@ -32,6 +32,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Font
         // Flex
         // Left
+        // Fill
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font", 4) == 0) {
@@ -39,6 +40,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "flex", 4) == 0) {
                 return CSSStyleKind::Flex;
+            }
+            if (memcmp(data, "fill", 4) == 0) {
+                return CSSStyleKind::Fill;
             }
             break;
         case 'l':
@@ -91,6 +95,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border
         // Height
         // Margin
+        // Stroke
         switch (data[0]) {
         case 'b':
             switch (data[1]) {
@@ -112,6 +117,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "margin", 6) == 0) {
                 return CSSStyleKind::Margin;
+            }
+            break;
+        case 's':
+            if (memcmp(data, "stroke", 6) == 0) {
+                return CSSStyleKind::Stroke;
             }
             break;
         }
@@ -175,6 +185,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Direction
         // Max-Width
         // Min-Width
+        // Fill-Rule
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font-size", 9) == 0) {
@@ -188,6 +199,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "flex-grow", 9) == 0) {
                 return CSSStyleKind::FlexGrow;
+            }
+            if (memcmp(data, "fill-rule", 9) == 0) {
+                return CSSStyleKind::FillRule;
             }
             break;
         case 't':
@@ -355,6 +369,8 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Margin-Right
         // unicode-bidi
         // caption-side
+        // Fill-Opacity
+        // Stroke-Width
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-style", 12) == 0) {
@@ -393,6 +409,16 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'u':
             if (memcmp(data, "unicode-bidi", 12) == 0) {
                 return CSSStyleKind::UnicodeBidi;
+            }
+            break;
+        case 'f':
+            if (memcmp(data, "fill-opacity", 12) == 0) {
+                return CSSStyleKind::FillOpacity;
+            }
+            break;
+        case 's':
+            if (memcmp(data, "stroke-width", 12) == 0) {
+                return CSSStyleKind::StrokeWidth;
             }
             break;
         }
@@ -630,6 +656,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "flex", 4) == 0) {
                 return CSSStyleKind::Flex;
             }
+            if (memcmp(data, "fill", 4) == 0) {
+                return CSSStyleKind::Fill;
+            }
             break;
         case 'l':
             if (memcmp(data, "left", 4) == 0) {
@@ -699,6 +728,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::ZIndex;
             }
             break;
+        case 's':
+            if (memcmp(data, "stroke", 6) == 0) {
+                return CSSStyleKind::Stroke;
+            }
+            break;
         }
         break;
     case 7:
@@ -744,6 +778,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "flexGrow", 8) == 0) {
                 return CSSStyleKind::FlexGrow;
+            }
+            if (memcmp(data, "fillRule", 8) == 0) {
+                return CSSStyleKind::FillRule;
             }
             break;
         case 'm':
@@ -925,6 +962,16 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'u':
             if (memcmp(data, "unicodeBidi", 11) == 0) {
                 return CSSStyleKind::UnicodeBidi;
+            }
+            break;
+        case 'f':
+            if (memcmp(data, "fillOpacity", 11) == 0) {
+                return CSSStyleKind::FillOpacity;
+            }
+            break;
+        case 's':
+            if (memcmp(data, "strokeWidth", 11) == 0) {
+                return CSSStyleKind::StrokeWidth;
             }
             break;
         }

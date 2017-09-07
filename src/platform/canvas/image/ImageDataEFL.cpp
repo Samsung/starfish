@@ -75,6 +75,38 @@ public:
         m_image = NULL;
     }
 
+    ImageDataEFL(size_t w, size_t h)
+    {
+        m_image = evas_object_image_add(internalCanvas());
+        evas_object_image_size_set(m_image, w, h);
+        evas_object_image_filled_set(m_image, EINA_TRUE);
+        evas_object_image_colorspace_set(
+            m_image, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
+        evas_object_image_alpha_set(m_image, EINA_TRUE);
+        evas_object_anti_alias_set(m_image, EINA_TRUE);
+        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
+                                EVAS_COLORSPACE_ARGB8888);
+        m_width = w;
+        m_height = h;
+
+        reigsterFinalizer();
+    }
+
+    virtual void clear()
+    {
+        void* address = evas_object_image_data_get(m_image, EINA_TRUE);
+        size_t end = m_width * m_height * sizeof(uint32_t);
+        memset(address, 0xff, end);
+        evas_object_image_data_set(m_image, address);
+    }
+
+    virtual uint8_t* data()
+    {
+        void* address = evas_object_image_data_get(m_image, EINA_TRUE);
+        evas_object_image_data_set(m_image, address);
+        return (uint8_t*)address;
+    }
+
     virtual size_t bufferSize()
     {
         if (m_image) {
@@ -133,6 +165,11 @@ ImageData* ImageData::create(const char* buf, size_t len)
         return NULL;
     }
     return imageData;
+}
+
+ImageData* ImageData::create(size_t width, size_t height)
+{
+    return new ImageDataEFL(width, height);
 }
 }
 

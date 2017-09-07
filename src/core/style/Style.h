@@ -783,6 +783,11 @@ enum TransitionTimingFunctionValue {
 
 enum BoxSizingValue { ContentBoxBoxSizingValue, BorderBoxBoxSizingValue };
 
+enum FillRuleValue {
+    FillRuleNonZero,
+    FillRuleEvenOdd,
+};
+
 class ValueList;
 class CSSStyleDeclaration;
 
@@ -877,6 +882,11 @@ class CSSStyleDeclaration;
       "transitionTimingFunction")                                        \
     F(TransitionDelay, transitionDelay, "transitionDelay")               \
     F(BoxSizing, boxSizing, "box-sizing")                                \
+    F(Fill, fill, "fill")                                                \
+    F(FillOpacity, fillOpacity, "fill-opacity")                          \
+    F(FillRule, fillRule, "fill-rule")                                   \
+    F(Stroke, stroke, "stroke")                                          \
+    F(StrokeWidth, strokeWidth, "stroke-width")                          \
     F(FlexDirection, flexDirection, "flex-direction")                    \
     F(FlexWrap, flexWrap, "flex-wrap")                                   \
     F(Order, order, "order")                                             \
@@ -1095,7 +1105,10 @@ public:
         TransitionTimingFunctionValueKind,
 
         // content
-        Attr
+        Attr,
+
+        // svg
+        FillRuleValueKind
     };
 
     CSSStyleValuePair()
@@ -1428,6 +1441,12 @@ public:
         return m_value.m_flexBasis;
     }
 
+    FillRuleValue fillRuleValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == FlexBasisValueKind);
+        return m_value.m_fillRule;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1471,6 +1490,8 @@ public:
         AlignItemValue m_alignItem;
         AlignContentValue m_alignContent;
         FlexBasisValue m_flexBasis;
+        FillRuleValue m_fillRule;
+
         ValueData(int v)
             : m_floatValue(v)
         {
@@ -1637,6 +1658,10 @@ public:
         }
         ValueData(FlexBasisValue v)
             : m_flexBasis(v)
+        {
+        }
+        ValueData(FillRuleValue v)
+            : m_fillRule(v)
         {
         }
     };

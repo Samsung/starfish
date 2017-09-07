@@ -340,6 +340,34 @@ public:
         return false;
     }
 
+    static bool parseLengthOrNumber(const char* token, bool allowNegative,
+                                    bool allowPercent, CSSStyleValuePair* pair)
+    {
+        CSSPropertyParser parser((char*)token);
+        if (!parser.consumeNumber()) {
+            return false;
+        }
+        float num = parser.parsedNumber();
+        if (!allowNegative && num < 0) {
+            return false;
+        }
+        parser.consumeString();
+        String* str = parser.parsedString();
+        if (str->equals("%")) {
+            if (allowPercent) {
+                pair->setPercentageValue(num / 100.f);
+                return parser.isEnd();
+            }
+        } else if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
+            pair->setLengthValue(CSSLength(str, num));
+            return parser.isEnd();
+        } else if (str->length() == 0) {
+            pair->setLengthValue(CSSLength(CSSLength::PX, num));
+            return parser.isEnd();
+        }
+        return false;
+    }
+
     static bool parseLength(const char* token, bool allowNegative,
                             bool allowPercent, CSSStyleValuePair* pair)
     {

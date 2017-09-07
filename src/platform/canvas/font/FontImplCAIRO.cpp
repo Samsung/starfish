@@ -347,7 +347,7 @@ FontSelector::~FontSelector()
     }
     FT_Done_FreeType(m_FTFaceLib);
 }
-
+#if !defined(PORT_GRAPHIC_BACKEND_EFL)
 Font* FontSelector::loadFont(String* familyName, float size, char style,
                              char weight)
 {
@@ -368,6 +368,7 @@ Font* FontSelector::loadFont(String* familyName, float size, char style,
     m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
     return f;
 }
+#endif
 }
 
 #endif

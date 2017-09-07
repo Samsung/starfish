@@ -1836,6 +1836,15 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::FillRuleValueKind:
+        switch (fillRuleValue()) {
+        case FillRuleNonZero:
+            return String::fromUTF8("nonzero");
+        case FillRuleEvenOdd:
+            return String::fromUTF8("evenodd");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -3128,80 +3137,76 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::FontSize:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_inheritedStyles.m_fontSize =
-                    parentStyle->m_inheritedStyles.m_fontSize;
+                style->setFontSize(parentStyle->fontSize());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->m_inheritedStyles.m_fontSize =
-                    parseAbsoluteFontSize(3, this->m_mediumFontSize);
+                style->setFontSize(
+                    parseAbsoluteFontSize(3, this->m_mediumFontSize));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::FontSizeValueKind) {
                 if (cssValues[k].fontSizeValue() ==
                     FontSizeValue::XXSmallFontSizeValue) {
-                    style->m_inheritedStyles.m_fontSize =
-                        parseAbsoluteFontSize(0, this->m_mediumFontSize);
+                    style->setFontSize(
+                        parseAbsoluteFontSize(0, this->m_mediumFontSize));
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::XSmallFontSizeValue) {
-                    style->m_inheritedStyles.m_fontSize =
-                        parseAbsoluteFontSize(1, this->m_mediumFontSize);
+                    style->setFontSize(
+                        parseAbsoluteFontSize(1, this->m_mediumFontSize));
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::SmallFontSizeValue) {
-                    style->m_inheritedStyles.m_fontSize =
-                        parseAbsoluteFontSize(2, this->m_mediumFontSize);
+                    style->setFontSize(
+                        parseAbsoluteFontSize(2, this->m_mediumFontSize));
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::MediumFontSizeValue) {
-                    style->m_inheritedStyles.m_fontSize =
-                        parseAbsoluteFontSize(3, this->m_mediumFontSize);
+                    style->setFontSize(
+                        parseAbsoluteFontSize(3, this->m_mediumFontSize));
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::LargeFontSizeValue) {
-                    style->m_inheritedStyles.m_fontSize =
-                        parseAbsoluteFontSize(4, this->m_mediumFontSize);
+                    style->setFontSize(
+                        parseAbsoluteFontSize(4, this->m_mediumFontSize));
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::XLargeFontSizeValue) {
-                    style->m_inheritedStyles.m_fontSize =
-                        parseAbsoluteFontSize(5, this->m_mediumFontSize);
+                    style->setFontSize(
+                        parseAbsoluteFontSize(5, this->m_mediumFontSize));
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::XXLargeFontSizeValue) {
-                    style->m_inheritedStyles.m_fontSize =
-                        parseAbsoluteFontSize(6, this->m_mediumFontSize);
+                    style->setFontSize(
+                        parseAbsoluteFontSize(6, this->m_mediumFontSize));
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::XXXLargeFontSizeValue) {
-                    style->m_inheritedStyles.m_fontSize =
+                    style->setFontSize(
                         Length(Length::Fixed,
                                parseAbsoluteFontSize(6, this->m_mediumFontSize)
                                        .fixed() *
-                                   1.5f);
+                                   1.5f));
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::LargerFontSizeValue) {
-                    style->m_inheritedStyles.m_fontSize = Length(
-                        Length::Fixed,
-                        parentStyle->m_inheritedStyles.m_fontSize.fixed() *
-                            1.2f);
+                    style->setFontSize(Length(
+                        Length::Fixed, parentStyle->fontSize().fixed() * 1.2f));
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::SmallerFontSizeValue) {
-                    style->m_inheritedStyles.m_fontSize = Length(
-                        Length::Fixed,
-                        parentStyle->m_inheritedStyles.m_fontSize.fixed() /
-                            1.2f);
+                    style->setFontSize(Length(
+                        Length::Fixed, parentStyle->fontSize().fixed() / 1.2f));
                 }
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Percentage) {
                 float parentComputedFontSize = parentStyle->fontSize().fixed();
-                style->m_inheritedStyles.m_fontSize =
+                style->setFontSize(
                     Length(Length::Fixed, cssValues[k].percentageValue() *
-                                              parentComputedFontSize);
+                                              parentComputedFontSize));
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::Length);
-                style->m_inheritedStyles.m_fontSize =
-                    cssValues[k].lengthValue().toLength();
+                style->setFontSize(cssValues[k].lengthValue().toLength());
                 ComputedStyle* rootStyle =
                     element->document()->rootElement()->style();
                 Length rootFontSize =
                     rootStyle ? rootStyle->fontSize()
                               : Length(Length::Fixed, DEFAULT_FONT_SIZE);
-                style->m_inheritedStyles.m_fontSize.changeToFixedIfNeeded(
-                    parentStyle->fontSize(), rootFontSize, parentStyle->font());
+                auto f = style->fontSize();
+                f.changeToFixedIfNeeded(parentStyle->fontSize(), rootFontSize,
+                                        parentStyle->font());
+                style->setFontSize(f);
             }
             break;
         case CSSStyleValuePair::KeyKind::FontStyle:
@@ -3778,35 +3783,29 @@ void StyleResolver::apply(Element* element,
 
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Inherit:
-                style->m_inheritedStyles.m_horizontalBorderSpacing =
-                    parentStyle->m_inheritedStyles.m_horizontalBorderSpacing;
-                style->m_inheritedStyles.m_verticalBorderSpacing =
-                    parentStyle->m_inheritedStyles.m_verticalBorderSpacing;
+                style->setHorizontalBorderSpacing(
+                    parentStyle->horizontalBorderSpacing());
+                style->setVerticalBorderSpacing(
+                    parentStyle->verticalBorderSpacing());
                 break;
             case CSSStyleValuePair::ValueKind::Initial:
-                style->m_inheritedStyles.m_horizontalBorderSpacing =
-                    Length(Length::Fixed, 0);
-                style->m_inheritedStyles.m_verticalBorderSpacing =
-                    Length(Length::Fixed, 0);
+                style->setHorizontalBorderSpacing(Length(Length::Fixed, 0));
+                style->setVerticalBorderSpacing(Length(Length::Fixed, 0));
                 break;
             case CSSStyleValuePair::ValueKind::Length:
-                style->m_inheritedStyles.m_horizontalBorderSpacing =
-                    convertValueToLength(cssValues[k].valueKind(),
-                                         cssValues[k].value());
-                style->m_inheritedStyles.m_verticalBorderSpacing =
-                    convertValueToLength(cssValues[k].valueKind(),
-                                         cssValues[k].value());
+                style->setHorizontalBorderSpacing(convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value()));
+                style->setVerticalBorderSpacing(convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value()));
                 break;
             default:
                 STARFISH_ASSERT(CSSStyleValuePair::ValueKind::ValueListKind ==
                                 cssValues[k].valueKind());
                 ValueList* list = cssValues[k].multiValue();
-                style->m_inheritedStyles.m_horizontalBorderSpacing =
-                    convertValueToLength((*list)[0].valueKind(),
-                                         (*list)[0].value());
-                style->m_inheritedStyles.m_verticalBorderSpacing =
-                    convertValueToLength((*list)[1].valueKind(),
-                                         (*list)[1].value());
+                style->setHorizontalBorderSpacing(convertValueToLength(
+                    (*list)[0].valueKind(), (*list)[0].value()));
+                style->setVerticalBorderSpacing(convertValueToLength(
+                    (*list)[1].valueKind(), (*list)[1].value()));
             }
             break;
         case CSSStyleValuePair::KeyKind::CaptionSide:
@@ -4492,6 +4491,76 @@ void StyleResolver::apply(Element* element,
                 Length length =
                     Length(Length::Percent, cssValues[k].percentageValue());
                 style->setFlexBasis(FlexBasisData(false, length));
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::Fill:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setFill(StylePaintData());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setFill(parentStyle->fill());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::ColorValueKind) {
+                style->setFill(StylePaintData(cssValues[k].colorValue()));
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::FillRule:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setFillRule(FillRuleValue::FillRuleNonZero);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setFillRule(parentStyle->fillRule());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::FillRuleValueKind) {
+                style->setFillRule(cssValues[k].fillRuleValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::FillOpacity:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setFillOpacity(1);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setFillOpacity(parentStyle->fillOpacity());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Number) {
+                style->setFillOpacity(cssValues[k].numberValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::Stroke:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setStroke(StylePaintData());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setStroke(parentStyle->stroke());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::ColorValueKind) {
+                style->setStroke(StylePaintData(cssValues[k].colorValue()));
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::StrokeWidth:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setStrokeWidth(Length(Length::Fixed, 1));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setStrokeWidth(parentStyle->strokeWidth());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Length) {
+                style->setStrokeWidth(cssValues[k].lengthValue().toLength());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -7062,6 +7131,45 @@ bool CSSStyleValuePair::updateValueUnitFlexBasis(const CSSTokenValue& value)
         return updateValueUnitLength(value, AllowPercent | AllowAuto);
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueFill(const CSSTokenVector& tokens)
+{
+    return updateValueUnitColor(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueFillOpacity(const CSSTokenVector& tokens)
+{
+    return updateValueOpacity(tokens);
+}
+
+bool CSSStyleValuePair::updateValueFillRule(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::FillRuleValueKind;
+    if (STRING_VALUE_IS_STRING("nonzero")) {
+        m_value = FillRuleValue::FillRuleNonZero;
+    } else if (STRING_VALUE_IS_STRING("evenodd")) {
+        m_value = FillRuleValue::FillRuleEvenOdd;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueStroke(const CSSTokenVector& tokens)
+{
+    return updateValueUnitColor(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueStrokeWidth(const CSSTokenVector& tokens)
+{
+    return updateValueUnitLength(tokens[0],
+                                 CSSStyleValuePair::LengthOption::AllowPercent);
 }
 
 static void removeFlexCSSValuePairs(CSSStyleDeclaration* target)
