@@ -194,6 +194,8 @@ void* mainShellThread(void* data)
         uv_default_loop(), &g_launcher_handle, [](uv_async_t* handle) {
 
             int flag = 0;
+            int x = 100;
+            int y = 100;
             DaliShellController* app = (DaliShellController*)handle->data;
 
             ScreenInfo info;
@@ -204,7 +206,7 @@ void* mainShellThread(void* data)
 
             app->m_sf = new StarFish::StarFish(
                 (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", app,
-                app->m_width, app->m_height, 1, info, "",
+                app->m_width, app->m_height, x, y, 1, info, "",
                 "/tmp/StarFish_Cookies.txt");
 
 #if defined(STARFISH_TIZEN)
