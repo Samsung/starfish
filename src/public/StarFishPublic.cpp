@@ -457,6 +457,8 @@ public:
     bool m_isMouseLbuttonDown;
     int m_width;
     int m_height;
+    int m_windowX;
+    int m_windowY;
     StarFishInstance* m_instance;
     Dali::Toolkit::ImageView m_mainView;
     Dali::Timer m_timer;
@@ -483,9 +485,10 @@ void starfishCreate_internal(uv_async_t* handle)
     info.availableRect.setWidth(app->m_width);
     info.availableRect.setHeight(app->m_height);
 
-    StarFish::StarFish* starFish = new (NoGC) StarFish::StarFish(
-        (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
-        app->m_width, app->m_height, 1, info, "", "");
+    StarFish::StarFish* starFish = new (NoGC)
+        StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
+                           "Asia/Seoul", nullptr, app->m_width, app->m_height,
+                           app->m_windowX, app->m_windowY, 1, info, "", "");
 
 #if defined(STARFISH_TIZEN)
     starFish->registerFrameBuffer(app->m_surface_info1.planes[0].ptr,
