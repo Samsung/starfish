@@ -59,8 +59,8 @@ class StarFish : public gc {
 
 public:
     StarFish(StarFishStartUpFlag flag, const char* locale,
-             const char* timezoneID, void* platformHandle, int w, int h,
-             float defaultFontSizeMultiplier, ScreenInfo& info,
+             const char* timezoneID, void* platformHandle, int w, int h, int x,
+             int y, float defaultFontSizeMultiplier, ScreenInfo& info,
              const char* localStorageFilePath,
              const char* m_cookieStoreFilePath);
     ~StarFish();

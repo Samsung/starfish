@@ -510,6 +510,7 @@ int main(int argc, char* argv[])
 
     std::string screenShot;
     int width = 1280, height = 720;
+    int x = 100, y = 100;
 #ifdef STARFISH_TIZEN_TV
     width = 1920;
     height = 1080;
@@ -604,7 +605,7 @@ int main(int argc, char* argv[])
     info.availableRect.setHeight(height);
     StarFish::StarFish* sf = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
-        width, height, 1, info, "", "/tmp/StarFish_Cookies.txt");
+        width, height, x, y, 1, info, "", "/tmp/StarFish_Cookies.txt");
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();
