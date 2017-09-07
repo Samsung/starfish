@@ -169,8 +169,8 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
 
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    const char* timezoneID, void* platformHandle, int w, int h,
-                   float defaultFontSizeMultiplier, ScreenInfo& info,
-                   const char* localStorageFilePath,
+                   int x, int y, float defaultFontSizeMultiplier,
+                   ScreenInfo& info, const char* localStorageFilePath,
                    const char* cookieStoreFilePath)
     : m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
@@ -269,9 +269,11 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         elm_win_title_set(wndObj, "StarFish");
         elm_win_autodel_set(wndObj, EINA_TRUE);
         evas_object_resize(wndObj, w, h);
+        evas_object_move(wndObj, x, y);
         platformHandle = wndObj;
     } else {
         evas_object_resize((Evas_Object*)platformHandle, w, h);
+        evas_object_move((Evas_Object*)platformHandle, x, y);
     }
 
 #endif

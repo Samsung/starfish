@@ -520,8 +520,8 @@ sfmatchLocation_cb matchLocation_cb = nullptr;
 }
 
 extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
-    void* window, int windowWidth, int windowHeight, const char* locale,
-    const char* timezoneID, float defaultFontSizeMultiplier)
+    void* window, int windowWidth, int windowHeight, int windowX, int windowY,
+    const char* locale, const char* timezoneID, float defaultFontSizeMultiplier)
 {
 #if defined(STARFISH_DALI)
     if (needToInitMainThread()) {
@@ -605,7 +605,8 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     StarFishInstance* instance = new (NoGC) StarFishInstance;
     instance->m_starfish = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)0, locale, timezoneID, window,
-        windowWidth, windowHeight, defaultFontSizeMultiplier, info, "", "");
+        windowWidth, windowHeight, windowX, windowY, defaultFontSizeMultiplier,
+        info, "", "");
 #if defined(STARFISH_ENABLE_INSPECTOR)
     TO_STARFISH(instance)->setupInspector();
 #endif
