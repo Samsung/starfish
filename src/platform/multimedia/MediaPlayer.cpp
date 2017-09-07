@@ -24,7 +24,10 @@
 namespace StarFish {
 
 MediaPlayer::MediaPlayer(HTMLMediaElement* element)
-    : m_isLooping(false)
+    : m_alive(true)
+    , m_foundError(false)
+    , m_isEnded(false)
+    , m_isLooping(false)
     , m_hasVideo(false)
     , m_inPlaying(false)
     , m_seekState(SEEKSTATE_NO_SEEK)

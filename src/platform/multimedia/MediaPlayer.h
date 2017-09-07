@@ -64,9 +64,14 @@ public:
     virtual void play() = 0;
     virtual void pause() = 0;
     virtual void seek(double time) = 0;
-    void setLoop(bool loop)
+
+    bool alive()
     {
-        m_isLooping = true;
+        return m_alive && !m_foundError;
+    }
+    virtual void setLoop(bool loop)
+    {
+        m_isLooping = loop;
     }
     bool loop()
     {
@@ -129,6 +134,9 @@ protected:
     void updateElementReadyState(HTMLMediaElement::ReadyState state);
     void processNextOperationQueueInContainer();
     void appendToOperationQueueInContainer(MediaOperationQueueData* data);
+    bool m_alive;
+    bool m_foundError;
+    bool m_isEnded;
     bool m_isLooping;
     bool m_hasVideo;
     bool m_inPlaying;

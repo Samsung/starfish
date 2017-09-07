@@ -310,10 +310,7 @@ public:
         return String::emptyString;
     }
 
-    MediaPlayer* mediaPlayer()
-    {
-        return m_mediaPlayer;
-    }
+    MediaPlayer* activeMediaPlayer();
 
     void mediaPlayerNotifyUpdateReadyStateItsContainer(ReadyState state);
     void mediaPlayerNotifySeekedItsContainer(double currentTime);

@@ -44,8 +44,8 @@ void FrameReplacedVideo::didCompsiteStackingContext(Canvas* c)
                          contentHeight());
     LayoutRect absVideoRect(videoRect);
     c->applyMatrixTo(absVideoRect);
-    if (v->mediaPlayer()) {
-        v->mediaPlayer()->drawVideo(c, videoRect, absVideoRect);
+    if (v->activeMediaPlayer()) {
+        v->activeMediaPlayer()->drawVideo(c, videoRect, absVideoRect);
     }
 }
 }

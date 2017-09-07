@@ -42,17 +42,9 @@ public:
     virtual void play();
     virtual void pause();
 
-    void setLoop(bool loop)
-    {
-        m_isLooping = true;
-    }
-    bool loop()
-    {
-        return m_isLooping;
-    }
-
     void setVolume(double volume);
     void setMuted(bool muted);
+    void setLoop(bool loop);
 
     virtual void prepare(ResourceURL* url);
     virtual void initDisplay();
@@ -62,7 +54,9 @@ public:
     virtual void fillAudioBuffer(bool useLock = true);
     virtual void mediaEndOperation()
     {
-        player_stop(m_nativePlayer);
+        if (m_nativePlayer) {
+            player_stop(m_nativePlayer);
+        }
     }
     void fillVideoBufferIfNeeded();
     void fillAudioBufferIfNeeded();
@@ -70,7 +64,7 @@ public:
 
     void openPreparingMode();
     void closePreparingMode();
-    void completePrepare();
+    void handlePrepared();
     void endOfStream();
 
     void startPlaying();
@@ -83,7 +77,6 @@ public:
     virtual void seekOperation(int timeInMS);
     virtual void handleSeekTimeout();
     virtual void handleSeeked();
-    virtual void handleSeekFail();
 
     virtual unsigned long videoWidth()
     {
@@ -119,11 +112,9 @@ public:
     virtual void prepareMediaSource();
 
     bool m_inPrepare;
-    bool m_alive;
     bool m_isVideoBufferUnderrunState;
     bool m_isAudioBufferUnderrunState;
     bool m_needsPlayAfterPrepare;
-    bool m_isEnded;
     size_t m_seekingTimer;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_bufferMutex;
