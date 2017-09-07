@@ -363,7 +363,7 @@ private:
     GCVector<Attribute> m_attributes;
 };
 
-// used for not of html, xhtml, svg element
+// For elements other than html, xhtml, and svg elements
 class NamedElement : public Element {
 public:
     NamedElement(Document* document, const QualifiedName& name)

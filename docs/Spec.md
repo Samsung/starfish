@@ -268,10 +268,14 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | className | Reflects the "class" content attribute. |
 |  | attribute | classList | Returns the associated DOMTokenList object representing the context object's classes. |
 |  | attribute | attributes | Returns a NamedNodeMap. |
-|  | method | DOMString? getAttribute(DOMString qualifiedName) | Returns the value of the first attribute in the context object's attribute list whose name is name, and null otherwise. |
-|  | method | void setAttribute(DOMString qualifiedName, DOMString value) | Changes the attribute whose name is name from context object to value. |
-|  | method | void removeAttribute(DOMString qualifiedName) | Removes the first attribute from the context object whose name is name, if any. |
-|  | method | boolean hasAttribute(DOMString qualifiedName) | Returns true if the context object has an attribute whose name is name, and false otherwise. |
+|  | method | DOMString? getAttribute(DOMString qualifiedName) | Returns the value of the first attribute in the context object's attribute list whose name is *qualifiedName*, or null otherwise. |
+|  | method | DOMString? getAttributeNS(DOMString? namespace, DOMString localName) | Returns the value of the first attribute in the context object's attribute list whose name is *localName* and namespace is *namespace*, or null otherwise. |
+|  | method | void setAttribute(DOMString qualifiedName, DOMString value) | Changes the attribute from context object whose name is *qualifiedName* to *value*. |
+|  | method | void setAttributeNS(DOMString? namespace, DOMString localName, DOMString value) | Changes the attribute from context object whose name is *localName* and namespace is *namespace*  to *value*. |
+|  | method | void removeAttribute(DOMString qualifiedName) | Removes the first attribute from the context object whose name is *qualifiedName*, if exists. |
+|  | method | void removeAttributeNS(DOMString? namespace, DOMString localName) | Removes the first attribute from the context object whose name is *localName* and namespace is *namespace*, if exists. |
+|  | method | boolean hasAttribute(DOMString qualifiedName) | Returns true if the context object has an attribute whose name is *qualifiedName*, or false otherwise. |
+|  | method | boolean hasAttributeNS(DOMString? namespace, DOMString localName) | Returns true if the context object has an attribute whose name is *localName* and namespace is *namespace*, or false otherwise. |
 |  | method | Attr? getAttributeNode(DOMString qualifiedName) | Returns the specified attribute of the specified element, as an Attr node. |
 |  | method | Attr? getAttributeNodeNS(DOMString? namespace, DOMString localName) | Retrieves an Attr node by local name and namespace URI. |
 |  | method | Attr? setAttributeNode(Attr attr) | Adds a new Attr node to the specified element. If the attribute named already exists on the element, that attribute is replaced with the new one and the replaced one is returned. |
