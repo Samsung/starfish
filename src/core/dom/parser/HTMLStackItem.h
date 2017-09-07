@@ -42,6 +42,7 @@
 #define __StarFishHTMLStackItem__
 
 #include "StarFish.h"
+#include "core/dom/Node.h"
 #include "core/dom/Attribute.h"
 
 namespace StarFish {
@@ -114,8 +115,9 @@ public:
         // parsing // fragments and should be considered in the HTML namespace.
         //
         // FIXME: Does this also apply to ShadowRoot?
-        // return namespaceURI() == HTMLNames::xhtmlNamespaceURI
-        //    || isDocumentFragmentNode();
+        return namespaceURI() ==
+                   m_node->starFish()->staticStrings()->m_xhtmlNamespaceURI ||
+               isDocumentFragmentNode();
         return true;
     }
 

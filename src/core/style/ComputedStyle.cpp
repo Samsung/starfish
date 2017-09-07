@@ -58,6 +58,8 @@ void* ComputedStyle::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ComputedStyle)] = { 0 };
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle, m_inheritedStyles.m_rareData));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_background));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_surround));
@@ -120,7 +122,7 @@ void ComputedStyle::loadResources(
     ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
 {
     StarFish* sf = consumer->starFish();
-    float fontSize = m_inheritedStyles.m_fontSize.fixed();
+    float fontSize = m_inheritedStyles.m_fontSize;
 
     char style = m_inheritedStyles.m_fontStyle;
     char fontWeight = 4;
@@ -355,21 +357,46 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     }
 
     // Convert all non-computed Lengths to computed Length
-    STARFISH_ASSERT(m_inheritedStyles.m_fontSize.isFixed() ||
-                    m_inheritedStyles.m_fontSize.isViewportPercent());
+    STARFISH_ASSERT(fontSize().isFixed() || fontSize().isViewportPercent());
     Length curFontSize = fontSize();
     Length rootFontSize = rootStyle ? rootStyle->fontSize()
                                     : Length(Length::Fixed, DEFAULT_FONT_SIZE);
-    m_inheritedStyles.m_letterSpacing.changeToFixedIfNeeded(
-        curFontSize, rootFontSize, font());
-    m_inheritedStyles.m_lineHeight.changeToFixedIfNeeded(curFontSize,
-                                                         rootFontSize, font());
-    m_inheritedStyles.m_textIndent.changeToFixedIfNeeded(curFontSize,
-                                                         rootFontSize, font());
-    m_inheritedStyles.m_horizontalBorderSpacing.changeToFixedIfNeeded(
-        curFontSize, rootFontSize, font());
-    m_inheritedStyles.m_verticalBorderSpacing.changeToFixedIfNeeded(
-        curFontSize, rootFontSize, font());
+
+    if (!letterSpacing().isComputed()) {
+        auto v = letterSpacing();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+        setLetterSpacing(v);
+    }
+    if (!lineHeight().isComputed()) {
+        auto v = lineHeight();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+        setLineHeight(v);
+    }
+    if (!textIndent().isComputed()) {
+        auto v = textIndent();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+        setTextIndent(v);
+    }
+    if (!textIndent().isComputed()) {
+        auto v = textIndent();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+        setTextIndent(v);
+    }
+    if (!horizontalBorderSpacing().isComputed()) {
+        auto v = horizontalBorderSpacing();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+        setHorizontalBorderSpacing(v);
+    }
+    if (!verticalBorderSpacing().isComputed()) {
+        auto v = verticalBorderSpacing();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+        setVerticalBorderSpacing(v);
+    }
+    if (!strokeWidth().isComputed()) {
+        auto v = strokeWidth();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+        setStrokeWidth(v);
+    }
     m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
     m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
     if (hasRareComputeStyleData()) {
@@ -468,105 +495,111 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                  ComputedStyle* newStyle)
 {
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
-    if (memcmp(&oldStyle->m_inheritedStyles, &newStyle->m_inheritedStyles,
-               sizeof(ComputedStyle::InheritedStyles)) != 0) {
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageInherited | damage);
-    }
-
     if (newStyle->m_inheritedStyles.m_color !=
         oldStyle->m_inheritedStyles.m_color) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_direction !=
         oldStyle->m_inheritedStyles.m_direction) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_whiteSpace !=
         oldStyle->m_inheritedStyles.m_whiteSpace) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_inheritedStyles.m_fontSize !=
-        oldStyle->m_inheritedStyles.m_fontSize) {
+    if (newStyle->fontSize() != oldStyle->fontSize()) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_fontStyle !=
         oldStyle->m_inheritedStyles.m_fontStyle) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_fontWeight !=
         oldStyle->m_inheritedStyles.m_fontWeight) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_inheritedStyles.m_letterSpacing !=
-        oldStyle->m_inheritedStyles.m_letterSpacing) {
+    if (newStyle->letterSpacing() != oldStyle->letterSpacing()) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_inheritedStyles.m_lineHeight !=
-        oldStyle->m_inheritedStyles.m_lineHeight) {
+    if (newStyle->lineHeight() != oldStyle->lineHeight()) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_inheritedStyles.m_textIndent !=
-        oldStyle->m_inheritedStyles.m_textIndent) {
+    if (newStyle->textIndent() != oldStyle->textIndent()) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_textAlign !=
         oldStyle->m_inheritedStyles.m_textAlign) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_visibility !=
         oldStyle->m_inheritedStyles.m_visibility) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_borderCollapse !=
         oldStyle->m_inheritedStyles.m_borderCollapse) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_inheritedStyles.m_horizontalBorderSpacing !=
-        oldStyle->m_inheritedStyles.m_horizontalBorderSpacing) {
+    if (newStyle->horizontalBorderSpacing() !=
+        oldStyle->horizontalBorderSpacing()) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_inheritedStyles.m_verticalBorderSpacing !=
-        oldStyle->m_inheritedStyles.m_verticalBorderSpacing) {
+    if (newStyle->verticalBorderSpacing() !=
+        oldStyle->verticalBorderSpacing()) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_captionSide !=
         oldStyle->m_inheritedStyles.m_captionSide) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_inheritedStyles.m_emptyCells !=
         oldStyle->m_inheritedStyles.m_emptyCells) {
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 

@@ -116,6 +116,11 @@ public:
         return m_type;
     }
 
+    float rawData() const
+    {
+        return m_data;
+    }
+
     float viewportPercent() const
     {
         STARFISH_ASSERT(isViewportPercent());

@@ -18,6 +18,7 @@
 #define __StarFishFrameSVGSVGBox__
 
 #include "core/layout/FrameReplaced.h"
+#include "core/layout/svg/FrameSVGBox.h"
 
 namespace StarFish {
 
@@ -25,6 +26,7 @@ class FrameSVGSVGBox : public FrameReplaced {
 public:
     FrameSVGSVGBox(Node* node)
         : FrameReplaced(node, nullptr)
+        , m_surface(nullptr)
     {
     }
 
@@ -35,15 +37,33 @@ public:
 
     virtual const char* name()
     {
-        return "FrameSVGBox";
+        return "FrameSVGSVGBox";
     }
 
+    virtual void layout(LayoutContext& ctx,
+                        Frame::LayoutWantToResolve resolveWhat) override
+    {
+        FrameReplaced::layout(ctx, resolveWhat);
+
+        if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
+            Frame* f = firstChild();
+            while (f) {
+                f->asFrameSVGBox()->resolvePosition(ctx);
+                f->asFrameSVGBox()->moveX(borderLeft() + paddingLeft());
+                f->asFrameSVGBox()->moveY(borderTop() + paddingTop());
+                f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+
+                f = f->next();
+            }
+        }
+    }
     virtual IntrinsicSize intrinsicSize() override;
-    virtual void paint(PaintingContext& ctx) override;
+    virtual void paintReplaced(Canvas* canvas) override;
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
 protected:
+    ImageData* m_surface;
 };
 }
 

@@ -272,7 +272,14 @@ public:
     virtual void resize(size_t w, size_t h)
     {
         STARFISH_ASSERT(m_image);
-        evas_object_image_size_set(m_image, w, h);
+        if (m_width != w || m_height != h) {
+            evas_object_image_size_set(m_image, w, h);
+        }
+#ifndef NDEBUG
+        void* address = evas_object_image_data_get(m_image, EINA_TRUE);
+        STARFISH_ASSERT(address);
+        evas_object_image_data_set(m_image, address);
+#endif
     }
 
     virtual void* unwrap()

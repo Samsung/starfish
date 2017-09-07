@@ -72,7 +72,7 @@ public:
         Node* node, StyleResolver::PseudoElementType pseudoId,
         ComputedStyle* parentStyle);
 
-    static void buildSVGFrameTree(SVGElement* svgElement);
+    static Frame* buildSVGFrameTree(SVGElement* svgElement);
 #ifdef STARFISH_ENABLE_TEST
     // debug function
     static void dumpFrameTree(Document* document);

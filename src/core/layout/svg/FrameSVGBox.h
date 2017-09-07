@@ -18,6 +18,8 @@
 #define __StarFishFrameSVGBox__
 
 #include "core/layout/FrameBox.h"
+#include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/image/ImageData.h"
 
 namespace StarFish {
 
@@ -38,9 +40,11 @@ public:
         return "FrameSVGBox";
     }
 
+    void resolvePosition(LayoutContext& ctx);
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void paint(PaintingContext& ctx);
+    virtual void paintSVG(PaintingContext& ctx) = 0;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

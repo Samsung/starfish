@@ -26,6 +26,7 @@
 #include "core/style/StyleTransformData.h"
 #include "core/style/StyleTransformOrigin.h"
 #include "core/style/StyleTransitionData.h"
+#include "core/style/StylePaintData.h"
 
 namespace StarFish {
 
@@ -72,13 +73,49 @@ class ComputedStyle : public gc {
     friend ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                             ComputedStyle* newStyle);
 
+    struct InheritedStylesRareData {
+        Length m_letterSpacing;
+        Length m_lineHeight;
+        Length m_textIndent;
+        Length m_horizontalBorderSpacing; // table
+        Length m_verticalBorderSpacing;   // table
+
+        StylePaintData m_fill;    // svg
+        FillRuleValue m_fillRule; // svg
+        float m_fillOpacity;      // svg
+        StylePaintData m_stroke;  // svg
+        Length m_strokeWidth;     // svg
+
+        InheritedStylesRareData()
+        {
+            m_letterSpacing = Length(Length::Fixed, 0);
+            // -100 is used to represent 'normal' value.
+            m_lineHeight = Length(Length::Percent, -100);
+            m_textIndent = Length(Length::Fixed, 0);
+            m_horizontalBorderSpacing = Length(Length::Fixed, 0);
+            m_verticalBorderSpacing = Length(Length::Fixed, 0);
+
+            m_fill = Unit::Color(0, 0, 0, 0);
+            m_fillRule = FillRuleNonZero;
+            m_fillOpacity = 1;
+            m_stroke = Unit::Color(0, 0, 0, 0);
+            m_strokeWidth = Length(Length::Fixed, 1);
+        }
+
+        void* operator new(size_t size)
+        {
+            return GC_MALLOC_ATOMIC(size);
+        }
+    };
+
 public:
     ComputedStyle(float mediumFontSize = DEFAULT_FONT_SIZE)
     {
         m_font = nullptr;
 
         m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
-        m_inheritedStyles.m_fontSize = Length(Length::Fixed, mediumFontSize);
+        m_inheritedStyles.m_fontSize = mediumFontSize;
+        m_inheritedStyles.m_fontSizeType = Length::Fixed;
         m_inheritedStyles.m_fontWeight = FontWeightValue::NormalFontWeightValue;
         m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
         m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
@@ -89,13 +126,9 @@ public:
             BorderCollapseValue::SeparateBorderCollapseValue;
         m_inheritedStyles.m_captionSide = CaptionSideValue::TopCaptionSideValue;
         m_inheritedStyles.m_emptyCells = EmptyCellsValue::ShowEmptyCellsValue;
+        m_inheritedStyles.m_rareData = nullptr;
+        m_inheritedStyles.m_isRareDataAllocated = false;
 
-        m_inheritedStyles.m_letterSpacing = Length(Length::Fixed, 0);
-        // -100 is used to represent 'normal' value.
-        m_inheritedStyles.m_lineHeight = Length(Length::Percent, -100);
-        m_inheritedStyles.m_textIndent = Length(Length::Fixed, 0);
-        m_inheritedStyles.m_horizontalBorderSpacing = Length(Length::Fixed, 0);
-        m_inheritedStyles.m_verticalBorderSpacing = Length(Length::Fixed, 0);
         initNonInheritedStyles();
     }
 
@@ -104,6 +137,8 @@ public:
         m_font = nullptr;
 
         m_inheritedStyles = from->m_inheritedStyles;
+        m_inheritedStyles.m_isRareDataAllocated = false;
+
         initNonInheritedStyles();
     }
 
@@ -266,12 +301,16 @@ public:
 
     Length textIndent()
     {
-        return m_inheritedStyles.m_textIndent;
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_textIndent;
+        }
+        return InheritedStylesRareData().m_textIndent;
     }
 
     void setTextIndent(Length val)
     {
-        m_inheritedStyles.m_textIndent = val;
+        if (val != textIndent())
+            ensureRareData()->m_textIndent = val;
     }
 
     TextDecorationValue textDecoration()
@@ -306,7 +345,9 @@ public:
 
     void setLineHeight(Length length)
     {
-        m_inheritedStyles.m_lineHeight = length;
+        if (length != lineHeight()) {
+            ensureRareData()->m_lineHeight = length;
+        }
     }
 
     void setBackgroundIfNeeded()
@@ -594,13 +635,15 @@ public:
         // According to the CSS spec, the computed value is the absolute value
         // for <length> and <percentage> & otherwise as specified.
         // However, our computed value is the absolute value.
-        return m_inheritedStyles.m_lineHeight;
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_lineHeight;
+        }
+        return InheritedStylesRareData().m_lineHeight;
     }
 
     bool hasNormalLineHeight()
     {
-        return m_inheritedStyles.m_lineHeight.isPercent() &&
-               m_inheritedStyles.m_lineHeight.percent() == -100;
+        return lineHeight().isPercent() && lineHeight().percent() == -100;
     }
 
     float opacity()
@@ -935,12 +978,20 @@ public:
 
     Length fontSize()
     {
-        return m_inheritedStyles.m_fontSize;
+        return Length(m_inheritedStyles.m_fontSizeType,
+                      m_inheritedStyles.m_fontSize);
+    }
+
+    void setFontSize(Length l)
+    {
+        m_inheritedStyles.m_fontSizeType = l.type();
+        m_inheritedStyles.m_fontSize = l.rawData();
     }
 
     void setLetterSpacing(Length len)
     {
-        m_inheritedStyles.m_letterSpacing = len;
+        if (letterSpacing() != len)
+            ensureRareData()->m_letterSpacing = len;
     }
 
     VisibilityValue visibility()
@@ -960,7 +1011,10 @@ public:
 
     Length letterSpacing()
     {
-        return m_inheritedStyles.m_letterSpacing;
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_letterSpacing;
+        }
+        return InheritedStylesRareData().m_letterSpacing;
     }
 
     static VerticalAlignValue initialVerticalAlign()
@@ -1055,12 +1109,100 @@ public:
 
     Length horizontalBorderSpacing()
     {
-        return m_inheritedStyles.m_horizontalBorderSpacing;
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_horizontalBorderSpacing;
+        }
+        return InheritedStylesRareData().m_horizontalBorderSpacing;
+    }
+
+    void setHorizontalBorderSpacing(Length v)
+    {
+        if (v != horizontalBorderSpacing())
+            ensureRareData()->m_horizontalBorderSpacing = v;
     }
 
     Length verticalBorderSpacing()
     {
-        return m_inheritedStyles.m_verticalBorderSpacing;
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_verticalBorderSpacing;
+        }
+        return InheritedStylesRareData().m_verticalBorderSpacing;
+    }
+
+    void setVerticalBorderSpacing(Length v)
+    {
+        if (v != verticalBorderSpacing())
+            ensureRareData()->m_verticalBorderSpacing = v;
+    }
+
+    StylePaintData fill()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_fill;
+        }
+        return InheritedStylesRareData().m_fill;
+    }
+
+    void setFill(StylePaintData v)
+    {
+        if (v != fill())
+            ensureRareData()->m_fill = v;
+    }
+
+    FillRuleValue fillRule()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_fillRule;
+        }
+        return InheritedStylesRareData().m_fillRule;
+    }
+
+    void setFillRule(FillRuleValue v)
+    {
+        if (v != fillRule())
+            ensureRareData()->m_fillRule = v;
+    }
+
+    float fillOpacity()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_fillOpacity;
+        }
+        return InheritedStylesRareData().m_fillOpacity;
+    }
+
+    void setFillOpacity(float v)
+    {
+        if (v != fillOpacity())
+            ensureRareData()->m_fillOpacity = v;
+    }
+
+    StylePaintData stroke()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_stroke;
+        }
+        return InheritedStylesRareData().m_stroke;
+    }
+
+    void setStroke(StylePaintData v)
+    {
+        if (v != stroke())
+            ensureRareData()->m_stroke = v;
+    }
+
+    Length strokeWidth()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_strokeWidth;
+        }
+        return InheritedStylesRareData().m_strokeWidth;
+    }
+
+    void setStrokeWidth(Length v)
+    {
+        if (v != strokeWidth())
+            ensureRareData()->m_strokeWidth = v;
     }
 
     BorderCollapseValue borderCollapse()
@@ -1277,6 +1419,21 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    InheritedStylesRareData* ensureRareData()
+    {
+        if (m_inheritedStyles.m_isRareDataAllocated) {
+            return m_inheritedStyles.m_rareData;
+        }
+        InheritedStylesRareData* newData = new InheritedStylesRareData();
+        if (m_inheritedStyles.m_rareData)
+            *newData = *m_inheritedStyles.m_rareData;
+
+        m_inheritedStyles.m_rareData = newData;
+        m_inheritedStyles.m_isRareDataAllocated = true;
+
+        return m_inheritedStyles.m_rareData;
+    }
+
     void initNonInheritedStyles()
     {
         m_display = DisplayValue::InlineDisplayValue;
@@ -1313,7 +1470,6 @@ protected:
     // NOTICE
     // if you add new property, you MUST implement comparing style for new
     // property in [compareStyle function]
-
     struct InheritedStyles {
         FontStyleValue m_fontStyle : 2;
         FontWeightValue m_fontWeight : 4;
@@ -1324,14 +1480,12 @@ protected:
         BorderCollapseValue m_borderCollapse : 1; // table
         CaptionSideValue m_captionSide : 1;       // table
         EmptyCellsValue m_emptyCells : 1;         // table
+        Length::Type m_fontSizeType : 4;
+        bool m_isRareDataAllocated : 1;
 
         Unit::Color m_color;
-        Length m_fontSize;
-        Length m_letterSpacing;
-        Length m_lineHeight;
-        Length m_textIndent;
-        Length m_horizontalBorderSpacing; // table
-        Length m_verticalBorderSpacing;   // table
+        float m_fontSize;
+        InheritedStylesRareData* m_rareData;
     } m_inheritedStyles;
 
     FloatValue m_float : 2;

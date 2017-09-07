@@ -15,8 +15,10 @@
  */
 
 #include "StarFishConfig.h"
-#include "core/dom/svg/SVGElement.h"
 #include "StarFish.h"
+#include "core/dom/svg/SVGElement.h"
+#include "core/style/CSSParser.h"
+#include "core/style/CSSStyleDeclaration.h"
 
 namespace StarFish {
 
@@ -31,6 +33,43 @@ void* SVGElement::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void SVGElement::didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved)
+{
+    Element::didAttributeChanged(name, old, value, attributeCreated,
+                                 attributeRemoved);
+    StaticStrings* ss = starFish()->staticStrings();
+
+    if (ss->m_x == name) {
+        setNeedsLayout();
+    } else if (ss->m_y == name) {
+        setNeedsLayout();
+    } else if (ss->m_width == name) {
+        setNeedsLayout();
+    } else if (ss->m_height == name) {
+        setNeedsLayout();
+    }
+
+    if (needsFillAttributes()) {
+        if (ss->m_fill == name) {
+            setNeedsPainting();
+        } else if (ss->m_fillOpacity == name) {
+            setNeedsPainting();
+        } else if (ss->m_fillRule == name) {
+            setNeedsPainting();
+        }
+    }
+
+    if (needsStrokeAttributes()) {
+        if (ss->m_stroke == name) {
+            setNeedsPainting();
+        } else if (ss->m_strokeWidth == name) {
+            setNeedsPainting();
+        }
+    }
 }
 
 String* SVGElement::xmlbase()
@@ -62,6 +101,108 @@ SVGElement* SVGElement::viewportElement()
     // ancestor ‘svg’ element. Null if the given element is the outermost svg
     // element.
     return ownerSVGElement();
+}
+
+void SVGElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    Element::styleForPresentationAttribute(cssValues);
+    CSSStyleValuePair pair;
+
+    String* width = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+    if (width->length()) {
+        pair.setKeyKind(CSSStyleValuePair::Width);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        auto s = width->toUTF8NonGCString();
+        if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
+                                                   &pair)) {
+            cssValues.push_back(pair);
+        }
+    }
+
+    String* height = getAttributeOrEmpty(starFish()->staticStrings()->m_height);
+    if (height->length()) {
+        pair.setKeyKind(CSSStyleValuePair::Height);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        auto s = height->toUTF8NonGCString();
+        if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
+                                                   &pair)) {
+            cssValues.push_back(pair);
+        }
+    }
+
+    if (needsFillAttributes()) {
+        String* fill = getAttributeOrEmpty(starFish()->staticStrings()->m_fill);
+        if (fill->length()) {
+            pair.setKeyKind(CSSStyleValuePair::Fill);
+
+            auto fillStr = fill->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, fillStr.data(),
+                                                  fillStr.length());
+            if (pair.updateValueFill(tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+
+        String* fillRule =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_fillRule);
+        if (fillRule->length()) {
+            pair.setKeyKind(CSSStyleValuePair::FillRule);
+
+            auto str = fillRule->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueFillRule(tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+
+        String* fillOpacity =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_fillOpacity);
+        if (fillOpacity->length()) {
+            pair.setKeyKind(CSSStyleValuePair::FillOpacity);
+
+            auto str = fillOpacity->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueFillOpacity(tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+    }
+
+    if (needsStrokeAttributes()) {
+        String* stroke =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_stroke);
+        if (stroke->length()) {
+            pair.setKeyKind(CSSStyleValuePair::Stroke);
+
+            auto str = stroke->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueStroke(tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+
+        String* strokeWidth =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_strokeWidth);
+        if (strokeWidth->length()) {
+            pair.setKeyKind(CSSStyleValuePair::StrokeWidth);
+
+            auto str = strokeWidth->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueStrokeWidth(tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+    }
 }
 
 void* SVGNamedElement::operator new(size_t size)

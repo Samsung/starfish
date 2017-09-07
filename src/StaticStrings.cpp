@@ -206,6 +206,24 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_srclang = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "srclang"));
 #endif
+    m_fill = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "fill"));
+    m_fillRule =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "fill-rule"));
+    m_fillOpacity =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "fill-opacity"));
+    m_stroke = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "stroke"));
+    m_strokeWidth =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "stroke-width"));
+    m_x = QualifiedName(AtomicString::emptyAtomicString(),
+                        AtomicString::createAtomicString(sf, "x"));
+    m_y = QualifiedName(AtomicString::emptyAtomicString(),
+                        AtomicString::createAtomicString(sf, "y"));
+
     m_xmlBase = QualifiedName(AtomicString::createAtomicString(sf, "xml"),
                               AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "base"));

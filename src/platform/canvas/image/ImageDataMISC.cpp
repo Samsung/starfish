@@ -48,6 +48,26 @@ public:
         }
     }
 
+    ImageDataMISC(size_t w, size_t h)
+    {
+        m_image = (unsigned char*)malloc(w * h * 4);
+        m_width = w;
+        m_height = h;
+        reigsterFinalizer();
+    }
+
+    virtual uint8_t* data()
+    {
+        return (uint8_t*)m_image;
+    }
+
+    virtual void clear()
+    {
+        void* address = m_image;
+        size_t end = bufferSize();
+        memset(address, 0xff, end);
+    }
+
     virtual size_t bufferSize()
     {
         if (m_image) {
@@ -569,6 +589,11 @@ ImageData* ImageData::create(const char* buf, size_t len)
         return NULL;
     }
     return imageData;
+}
+
+ImageData* ImageData::create(size_t width, size_t height)
+{
+    return new ImageDataMISC(width, height);
 }
 }
 

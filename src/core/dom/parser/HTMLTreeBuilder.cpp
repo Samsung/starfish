@@ -3037,29 +3037,25 @@ void HTMLTreeBuilder::processTokenInForeignContent(AtomicHTMLToken* token)
             processStartTag(token);
             return;
         }
-        /*
-        const AtomicString& currentNamespace =
-        adjustedCurrentNode->namespaceURI();
-        if (currentNamespace == MathMLNames::mathmlNamespaceURI) {
-            adjustMathMLAttributes(token);
-        }
-        if (currentNamespace == SVGNames::svgNamespaceURI) {
-            adjustSVGTagNameCase(token);
-            adjustSVGAttributes(token);
-        }
-        adjustForeignAttributes(token);*/
+
         const AtomicString& currentNamespace =
             adjustedCurrentNode->namespaceURI();
-        m_tree.insertForeignElement(token, currentNamespace);
-        // TODO
+        /*
+        if (currentNamespace == MathMLNames::mathmlNamespaceURI) {
+            adjustMathMLAttributes(token);
+        }*/
+        if (currentNamespace == s->m_svgNamespaceURI) {
+            // adjustSVGTagNameCase(token);
+            // adjustSVGAttributes(token);
+        }
         // adjustForeignAttributes(token);
+        m_tree.insertForeignElement(token, currentNamespace);
         break;
     }
     case HTMLToken::EndTag: {
-        /*
-        if (adjustedCurrentNode->namespaceURI() == SVGNames::svgNamespaceURI) {
-            adjustSVGTagNameCase(token);
-        }*/
+        if (adjustedCurrentNode->namespaceURI() == s->m_svgNamespaceURI) {
+            // adjustSVGTagNameCase(token);
+        }
 
         /*
         if (token->name() == SVGNames::scriptTag &&

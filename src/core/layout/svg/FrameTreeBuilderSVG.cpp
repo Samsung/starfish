@@ -19,17 +19,53 @@
 #include "core/style/ComputedStyle.h"
 #include "core/dom/svg/SVGElement.h"
 
+#include "core/layout/svg/FrameSVGSVGBox.h"
+#include "core/layout/svg/FrameSVGRectBox.h"
+
 namespace StarFish {
 
-void FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
+Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
 {
     Frame* parentFrame = svgElement->parentElement()->frame();
 
     ComputedStyle* style = svgElement->style();
     if (!style || style->display() == DisplayValue::NoneDisplayValue) {
-        return;
+        FrameTreeBuilder::clearTree(svgElement);
+        svgElement->setFrame(nullptr);
+        svgElement->clearNeedsFrameTreeBuild();
+        return nullptr;
     }
-    // Frame* currentFrame;
-    return;
+
+    bool shouldContinue = false;
+
+    Frame* currentFrame = nullptr;
+    if (svgElement->isSVGSVGElement()) {
+        shouldContinue = true;
+        currentFrame = new FrameSVGSVGBox(svgElement);
+    } else if (svgElement->isSVGRectElement()) {
+        shouldContinue = true;
+        currentFrame = new FrameSVGRectBox(svgElement);
+    }
+
+    svgElement->clearNeedsFrameTreeBuild();
+
+    if (shouldContinue) {
+        parentFrame->appendChild(currentFrame);
+        svgElement->setFrame(currentFrame);
+
+        if (svgElement->childNeedsFrameTreeBuild()) {
+            Element* e = svgElement->firstElementChild();
+            while (e) {
+                if (e->isSVGElement())
+                    buildSVGFrameTree(e->asSVGElement());
+                e = e->nextElementSibling();
+            }
+
+            svgElement->clearChildNeedsFrameTreeBuild();
+        }
+        return currentFrame;
+    }
+
+    return nullptr;
 }
 }

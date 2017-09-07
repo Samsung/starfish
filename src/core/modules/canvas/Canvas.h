@@ -77,6 +77,7 @@ public:
 
     static Canvas* createDirect(void* data);
     static Canvas* create(CanvasSurface* data);
+    static Canvas* createGenericCanvas(ImageData* data);
 
     virtual ~Canvas()
     {
@@ -155,6 +156,53 @@ public:
     virtual void applyMatrixTo(LayoutRect& lp) = 0;
 
     virtual void setVisible(bool visible) = 0;
+
+    // Generic canvas functions
+    virtual void beginPath()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void closePath()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void moveTo(float x, float y)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void lineTo(float x, float y)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void curveTo(float x1, float y1, float x2, float y2, float x3,
+                         float y3)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void stroke()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void strokePreserve()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void setFillRule(bool shouldUseNonZeroFillRule = true)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void fill()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void fillPreserve()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void setStrokeWidth(float width)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
 
     virtual void* unwrap() = 0;
 };
