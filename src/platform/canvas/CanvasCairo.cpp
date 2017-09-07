@@ -140,7 +140,7 @@ public:
 
     virtual void restoreState(Canvas* canvas)
     {
-        m_statePerFame = ((CanvasCairo*)canvas)->m_statePerFrame;
+        m_statePerFrame = ((CanvasCairo*)canvas)->m_statePerFrame;
     }
 
     virtual void saveByFrame(Frame* f)
