@@ -5,10 +5,10 @@
 interface HTMLHyperlinkElementUtils {
   [CEReactions] attribute USVString href;
   [Unimplemented] readonly attribute USVString origin;
-  [Unimplemented, CEReactions] attribute USVString protocol;
+  [CEReactions] attribute USVString protocol;
   [Unimplemented, CEReactions] attribute USVString username;
   [Unimplemented, CEReactions] attribute USVString password;
-  [Unimplemented, CEReactions] attribute USVString host;
+  [CEReactions] attribute USVString host;
   [Unimplemented, CEReactions] attribute USVString hostname;
   [Unimplemented, CEReactions] attribute USVString port;
   [Unimplemented, CEReactions] attribute USVString pathname;
