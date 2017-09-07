@@ -146,10 +146,6 @@ void HTTPTransaction::start()
     if (NetworkSharedResourceManager::getInstance()
             ->cookieStoreFilePath()
             .compare("") != 0) {
-        curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE,
-                         NetworkSharedResourceManager::getInstance()
-                             ->cookieStoreFilePath()
-                             .data());
         curl_easy_setopt(m_curl, CURLOPT_COOKIEJAR,
                          NetworkSharedResourceManager::getInstance()
                              ->cookieStoreFilePath()
