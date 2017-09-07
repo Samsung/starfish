@@ -66,8 +66,6 @@ public:
     virtual void printNativePlayerError(int errorCode);
     virtual void mediaEndOperation();
     virtual void seekOperation(int timeInMS);
-    virtual void handleSeeked();
-    virtual void handleSeekFail();
 
     uint64_t m_lastVideoPts;
     uint64_t m_lastAudioPts;
