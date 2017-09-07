@@ -188,9 +188,34 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     return needsOwnBuffer();
 }
 
-void StackingContext::replaceCanvasState(Canvas* canvas, StackingContext* sCtx)
+void StackingContext::resetOrigin(Canvas* canvas, StackingContext* sCtx,
+                                  bool isCompositing)
 {
     FrameBox* self = sCtx->owner();
+    if (isCompositing) {
+        LayoutLocation l = self->absolutePoint(m_owner);
+        canvas->translate(l.x(), l.y());
+
+        if (self->style()->position() == FixedPositionValue) {
+            Frame* parent = self->layoutParent();
+            LayoutUnit offsetX = self->x(), offsetY = self->y();
+            while (
+                (!parent->style() || !parent->style()->hasTransforms(parent)) &&
+                !parent->isFrameDocument()) {
+                offsetX += parent->asFrameBox()->x();
+                offsetY += parent->asFrameBox()->y();
+                parent = parent->layoutParent();
+            }
+
+            if (parent->isFrameBlockBox()) {
+                canvas->translate(parent->asFrameBlockBox()->scrollLeft(),
+                                  parent->asFrameBlockBox()->scrollTop());
+            }
+        }
+
+        return;
+    }
+
     CanvasState* state = canvas->getByFrame(self);
     if (state == nullptr) {
         LayoutLocation l = self->absolutePoint(m_owner);
@@ -271,6 +296,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         oldCanvas = canvas;
         canvas = Canvas::create(m_rareData->m_buffer);
         canvas->setViewportWidthAndHeight(oldCanvas);
+        canvas->restoreState(oldCanvas);
         canvas->translate(-minX, -minY);
     } else {
         if (m_rareData && m_rareData->m_buffer) {
@@ -392,7 +418,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                 StackingContext* sCtx = *iter2;
                 canvas->save();
 
-                replaceCanvasState(canvas, sCtx);
+                resetOrigin(canvas, sCtx, false);
 
                 sCtx->paintStackingContext(canvas);
 
@@ -418,7 +444,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                     StackingContext* sCtx = *iter2;
                     canvas->save();
 
-                    replaceCanvasState(canvas, sCtx);
+                    resetOrigin(canvas, sCtx, false);
                     sCtx->paintStackingContext(canvas);
 
                     canvas->restore();
@@ -536,8 +562,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
                 StackingContext* sCtx = *iter2;
                 canvas->save();
 
-                LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
-                canvas->translate(l.x(), l.y());
+                resetOrigin(canvas, sCtx, true);
                 sCtx->compositeStackingContext(canvas);
 
                 canvas->restore();
@@ -560,8 +585,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
                     StackingContext* sCtx = *iter2;
                     canvas->save();
 
-                    LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
-                    canvas->translate(l.x(), l.y());
+                    resetOrigin(canvas, sCtx, true);
                     sCtx->compositeStackingContext(canvas);
 
                     canvas->restore();

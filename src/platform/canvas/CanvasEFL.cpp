@@ -268,6 +268,11 @@ public:
         m_state.erase(m_state.end() - 1);
     }
 
+    virtual void restoreState(Canvas* canvas)
+    {
+        m_statePerFrame = ((CanvasEFL*)canvas)->m_statePerFrame;
+    }
+
     virtual void saveByFrame(Frame* f)
     {
         m_statePerFrame.emplace(f, lastState());

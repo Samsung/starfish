@@ -100,7 +100,7 @@ public:
 
     bool computeStackingContextProperties(bool forceNeedsBuffer = false);
 
-    void replaceCanvasState(Canvas* canvas, StackingContext* sCtx);
+    void resetOrigin(Canvas* canvas, StackingContext* sCtx, bool isCompositing);
     void paintStackingContext(Canvas* canvas);
     void compositeStackingContext(Canvas* canvas);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,

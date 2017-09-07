@@ -108,6 +108,7 @@ public:
     // state
     virtual void save() = 0;    // push state on state stack
     virtual void restore() = 0; // pop state stack and restore state
+    virtual void restoreState(Canvas* canvas) = 0;
     virtual void saveByFrame(Frame* f) = 0;
     virtual CanvasState* getByFrame(Frame* f) = 0;
     virtual void replace(CanvasState* state, ReplaceFlag flag) = 0;
