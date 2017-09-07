@@ -87,4 +87,54 @@ void HTMLAnchorElement::setHref(String* href)
 {
     setAttribute(starFish()->staticStrings()->m_href, href);
 }
+
+String* HTMLAnchorElement::host()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        return (new ResourceURL(hrefAttr.getValue()->trim(),
+                                document()->urlString()))
+            ->host();
+    }
+    return String::emptyString;
+}
+
+void HTMLAnchorElement::setHost(String* host)
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (!hrefAttr.hasValue()) {
+        return;
+    }
+    ResourceURL* resourceURL =
+        new ResourceURL(hrefAttr.getValue()->trim(), document()->urlString());
+    resourceURL = resourceURL->setHost(host);
+    setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
+}
+
+String* HTMLAnchorElement::protocol()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        return (new ResourceURL(hrefAttr.getValue()->trim(),
+                                document()->urlString()))
+            ->protocol();
+    }
+    return String::emptyString;
+}
+
+void HTMLAnchorElement::setProtocol(String* protocol)
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (!hrefAttr.hasValue()) {
+        return;
+    }
+    ResourceURL* resourceURL =
+        new ResourceURL(hrefAttr.getValue()->trim(), document()->urlString());
+    resourceURL = resourceURL->setProtocol(protocol);
+    setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
+}
 }

@@ -622,15 +622,24 @@ ResourceURL* ResourceURL::setPassword(String* newPass)
 
 String* ResourceURL::host()
 {
-    size_t start =
-        (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
-    return m_urlString->substring(start, m_hostEnd - start);
+    String* port = ResourceURL::port();
+    String* hostname = ResourceURL::hostname();
+    if (port != String::emptyString) {
+        return hostname->concat(":")->concat(port);
+    } else {
+        return hostname;
+    }
 }
 
 ResourceURL* ResourceURL::setHost(String* newHost)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return new ResourceURL(m_urlString);
+    STARFISH_ASSERT(newHost->length());
+    size_t start =
+        (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
+    return new ResourceURL(
+        m_urlString->substring(0, start)->concat(newHost)->concat(
+            m_urlString->substring(m_portEnd,
+                                   m_urlString->length() - m_portEnd)));
 }
 
 String* ResourceURL::hostname()

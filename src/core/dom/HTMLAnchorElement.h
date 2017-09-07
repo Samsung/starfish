@@ -51,6 +51,12 @@ public:
 
     String* href();
     void setHref(String* href);
+
+    String* host();
+    void setHost(String* host);
+
+    String* protocol();
+    void setProtocol(String* protocol);
 };
 }
 
