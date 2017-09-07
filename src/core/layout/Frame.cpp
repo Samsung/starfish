@@ -1130,7 +1130,7 @@ FrameBox* Frame::findNearestAssociateBox()
         FrameBlockBox* c = blockContainer(frameObj);
         FrameInline* in = asFrameInline();
         InlineNonReplacedBox* inrb = c->firstInlineNonReplacedBox(in);
-        if (inrb->boxes().size() > 0) {
+        if (inrb && inrb->boxes().size() > 0) {
             box = inrb->boxes()[0];
         } else {
             box = c;
