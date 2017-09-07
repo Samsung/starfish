@@ -417,20 +417,13 @@ public:
         cairo_scaled_font_t* scaled_face = cairo_get_scaled_font(m_canvas);
         cairo_translate(m_canvas, 0, size);
 
+        cairo_glyph_t glyph;
         for (int i = 0; i < glyph_count; i++) {
-            cairo_glyph_t glyph;
-            cairo_font_extents_t font_ext;
             glyph_index = FT_Get_Char_Index(face, sv.charAt(i));
-
             if (glyph_index != 0) {
-                FT_Set_Pixel_Sizes(face, 0, size);
-                FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
-
                 glyph.x = x_bias;
                 glyph.y = 0;
-                x_bias += face->glyph->advance.x >> 6;
-                x_bias++;
-                y_bias += face->glyph->advance.y >> 6;
+                x_bias += lastState().m_font->getGlaphAdvanceX(sv.charAt(i));
             } else {
                 face =
                     lastState().m_font->findFCChar(sv.charAt(i), &glyph_index);
@@ -441,15 +434,10 @@ public:
                     cairo_set_font_size(m_canvas, size);
                     cairo_scaled_font_t* scaled_face =
                         cairo_get_scaled_font(m_canvas);
-
-                    FT_Set_Pixel_Sizes(face, 0, size);
-                    FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
-
                     glyph.x = x_bias;
                     glyph.y = 0;
-                    x_bias += face->glyph->advance.x >> 6;
-                    x_bias++;
-                    y_bias += face->glyph->advance.y >> 6;
+                    x_bias +=
+                        lastState().m_font->getGlaphAdvanceX(sv.charAt(i));
                 } else {
                     glyph.x = 0;
                     glyph.y = 0;
