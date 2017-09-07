@@ -99,25 +99,44 @@ public:
         int size = m_size;
         int glyph_count = str.length();
         int result = 0;
+        int advanceX = 0;
+        char32_t unicode;
 
         for (int i = 0; i < glyph_count; i++) {
-            glyph_index = FT_Get_Char_Index(face, str.charAt(i));
-            if (glyph_index != 0) {
-                FT_Set_Pixel_Sizes(face, 0, size);
-                FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
-                result += face->glyph->advance.x >> 6;
+            unicode = str.charAt(i);
+            advanceX = getGlaphAdvanceX(unicode);
+            if (advanceX >= 0) {
+                result += advanceX;
             } else {
-                face = findFCChar(str.charAt(i), &glyph_index);
+                glyph_index = FT_Get_Char_Index(face, unicode);
                 if (glyph_index != 0) {
                     FT_Set_Pixel_Sizes(face, 0, size);
                     FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
+                    m_GlaphCaches.emplace(unicode, face->glyph->advance.x >> 6);
                     result += face->glyph->advance.x >> 6;
                 } else {
-                    // DO nothing?
+                    face = findFCChar(unicode, &glyph_index);
+                    if (glyph_index != 0) {
+                        FT_Set_Pixel_Sizes(face, 0, size);
+                        FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
+                        m_GlaphCaches.emplace(unicode,
+                                              face->glyph->advance.x >> 6);
+                        result += face->glyph->advance.x >> 6;
+                    } else {
+                        // DO nothing?
+                    }
                 }
             }
         }
         return result;
+    }
+    virtual int getGlaphAdvanceX(char32_t uniCode)
+    {
+        auto it = m_GlaphCaches.find(uniCode);
+        if (it != m_GlaphCaches.end()) {
+            return it->second;
+        }
+        return -1;
     }
 
     virtual void* unwrap()
@@ -130,12 +149,8 @@ public:
         // check cache;
         auto it = m_fontSelector->m_FTFaceCaches.find(uniCode);
         if (it != m_fontSelector->m_FTFaceCaches.end()) {
-            auto fc = std::get<0>(it->second);
-            FT_UInt glyph_index = FT_Get_Char_Index(fc, uniCode);
-            if (glyph_index != 0) {
-                *glyphIdx = glyph_index;
-                return fc;
-            }
+            *glyphIdx = std::get<1>(it->second);
+            return std::get<0>(it->second);
         }
 
         // load FTFace;
@@ -186,6 +201,7 @@ public:
 
 private:
     FontSelector* m_fontSelector;
+    std::unordered_map<char32_t, int> m_GlaphCaches;
 };
 
 #define CHECK_ERROR                            \

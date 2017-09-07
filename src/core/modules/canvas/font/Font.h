@@ -90,6 +90,7 @@ public:
     }
 #ifdef PORT_CANVAS_BACKEND_CAIRO
     virtual FT_Face findFCChar(char32_t uniCode, uint* glyphIdx) = 0;
+    virtual int getGlaphAdvanceX(char32_t uniCode) = 0;
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
