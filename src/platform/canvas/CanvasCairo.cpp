@@ -138,6 +138,11 @@ public:
         cairo_restore(m_canvas);
     }
 
+    virtual void restoreState(Canvas* canvas)
+    {
+        m_statePerFame = ((CanvasCairo*)canvas)->m_statePerFrame;
+    }
+
     virtual void saveByFrame(Frame* f)
     {
         cairo_get_matrix(m_canvas, &lastState().m_matrix);
