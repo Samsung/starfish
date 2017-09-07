@@ -658,9 +658,6 @@ void FlexFormattingContext::computeCrossSize()
         FrameBox* flexItem = flexItemsToStretchInfo.second;
 
         if (m_isMainAxisInInlineAxis) {
-            if (m_flexLines[lineIdx].m_lineHeight <= flexItem->outerHeight()) {
-                continue;
-            }
             Length old = flexItem->style()->height();
             LayoutUnit oldContentWidth = flexItem->contentWidth();
             flexItem->style()->setHeight(
@@ -678,9 +675,6 @@ void FlexFormattingContext::computeCrossSize()
                                                      oldContentWidth);
             }
         } else {
-            if (m_flexLines[lineIdx].m_lineHeight <= flexItem->outerWidth()) {
-                continue;
-            }
             Length old = flexItem->style()->width();
             LayoutUnit oldContentHeight = flexItem->contentHeight();
             flexItem->style()->setWidth(
