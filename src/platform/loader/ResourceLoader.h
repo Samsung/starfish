@@ -54,14 +54,12 @@ public:
     {
         m_isDocumentInOpenState = true;
         m_documentOpenTime = timestamp();
-        m_pendingResourceCountWhileDocumentOpening = 1;
+        increasependingResourceCountWhileDocumentOpening();
     }
 
     void notifyEndParseDocument()
     {
-        STARFISH_ASSERT(m_pendingResourceCountWhileDocumentOpening > 0);
-        m_pendingResourceCountWhileDocumentOpening--;
-        fireDocumentOnLoadEventIfNeeded();
+        decreasependingResourceCountWhileDocumentOpening();
     }
 
     void clear()
@@ -84,6 +82,9 @@ public:
     {
         return m_documentOpenTime;
     }
+
+    void increasependingResourceCountWhileDocumentOpening();
+    void decreasependingResourceCountWhileDocumentOpening();
 
 private:
     void cancelAllOfPendingRequests();

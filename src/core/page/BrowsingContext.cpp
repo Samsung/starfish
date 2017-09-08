@@ -50,6 +50,7 @@
 #include "core/animation/Animation.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/HTMLIFrameElement.h"
+#include "platform/loader/ResourceLoader.h"
 
 // #define STARFISH_ENABLE_TIMER
 
@@ -390,6 +391,11 @@ void BrowsingContext::dispose()
 
     if (m_window) {
         StarFishEnterer enter(m_starFish);
+        if (!document()->onLoadFired()) {
+            document()
+                ->resourceLoader()
+                .decreasependingResourceCountWhileDocumentOpening();
+        }
         document()->window()->dispose();
         document()->dispose();
 

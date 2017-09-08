@@ -103,11 +103,8 @@ public:
             return;
         }
         m_didFire = true;
-        STARFISH_ASSERT(
-            m_resource->loader()->m_pendingResourceCountWhileDocumentOpening >
-            0);
-        m_resource->loader()->m_pendingResourceCountWhileDocumentOpening--;
-        m_resource->loader()->fireDocumentOnLoadEventIfNeeded();
+        m_resource->loader()
+            ->decreasependingResourceCountWhileDocumentOpening();
     }
 
     bool m_didFire;
@@ -322,12 +319,46 @@ void ResourceLoader::notifyImageResourceActiveState(ImageResource* res)
     }
 }
 
+void ResourceLoader::increasependingResourceCountWhileDocumentOpening()
+{
+    m_pendingResourceCountWhileDocumentOpening++;
+
+    if (!window()->browsingContext()->isMainBrowsingContext()) {
+        BrowsingContext* ctx = window()->browsingContext();
+        while (ctx->parentBrowsingContext()) {
+            ctx = ctx->parentBrowsingContext();
+        }
+        ctx->document()
+            ->resourceLoader()
+            .m_pendingResourceCountWhileDocumentOpening++;
+    }
+}
+
+void ResourceLoader::decreasependingResourceCountWhileDocumentOpening()
+{
+    STARFISH_ASSERT(m_pendingResourceCountWhileDocumentOpening > 0);
+    m_pendingResourceCountWhileDocumentOpening--;
+    fireDocumentOnLoadEventIfNeeded();
+
+    if (!window()->browsingContext()->isMainBrowsingContext()) {
+        BrowsingContext* ctx = window()->browsingContext();
+        while (ctx->parentBrowsingContext()) {
+            ctx = ctx->parentBrowsingContext();
+        }
+        ctx->document()
+            ->resourceLoader()
+            .m_pendingResourceCountWhileDocumentOpening--;
+
+        ctx->document()->resourceLoader().fireDocumentOnLoadEventIfNeeded();
+    }
+}
+
 bool ResourceLoader::requestResourcePreprocess(
     Resource* res, Resource::ResourceRequestSyncLevel syncLevel)
 {
     if (m_isDocumentInOpenState &&
         res->isThisResourceDoesAffectWindowOnLoad()) {
-        m_pendingResourceCountWhileDocumentOpening++;
+        increasependingResourceCountWhileDocumentOpening();
         res->addResourceClient(new DocumentOnLoadChecker(res));
         auto it = res->m_resourceClients.begin();
         res->m_resourceClients.insert(it, new ResourceAliveChecker(res));

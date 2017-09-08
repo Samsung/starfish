@@ -399,6 +399,11 @@ public:
         }
     }
 
+    bool onLoadFired() const
+    {
+        return m_onLoadFired;
+    }
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
