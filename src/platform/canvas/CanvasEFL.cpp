@@ -1268,8 +1268,10 @@ public:
             if (((char*)evas_object_data_get(imgData, "local"))[0] == '0') {
                 void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
                 evas_object_image_size_set(eo, data->width(), data->height());
+#ifndef STARFISH_TIZEN_TV
                 evas_object_image_colorspace_set(
                     eo, evas_object_image_colorspace_get(imgData));
+#endif
                 evas_object_image_data_set(eo, imgBuf);
             } else {
                 const char* path;
