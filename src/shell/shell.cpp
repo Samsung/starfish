@@ -512,7 +512,7 @@ int main(int argc, char* argv[])
 
     std::string screenShot;
     int width = 1280, height = 720;
-    int x = 100, y = 100;
+    int x = 0, y = 0;
 #ifdef STARFISH_TIZEN_TV
     width = 1920;
     height = 1080;
@@ -555,6 +555,10 @@ int main(int argc, char* argv[])
 #endif
         } else if (strcmp(argv[i], "--network-log-verbose") == 0) {
             setenv("NETWORK_LOG_VERBOSE", "1", 1);
+        } else if (strstr(argv[i], "--posX=") == argv[i]) {
+            x = std::atoi(argv[i] + strlen("--posX="));
+        } else if (strstr(argv[i], "--posY=") == argv[i]) {
+            y = std::atoi(argv[i] + strlen("--posY="));
         }
     }
 
