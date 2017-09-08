@@ -257,6 +257,10 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     if (!platformHandle) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
 #ifdef STARFISH_TIZEN
+        // Set efl configuration for resizing window (Without this, Window'll be
+        // full-screen only )
+        elm_win_aux_hint_add(wndObj, "wm.policy.win.user.geometry", "1");
+
         elm_win_alpha_set(wndObj, EINA_TRUE);
         Evas_Object* bg = elm_bg_add(wndObj);
         evas_object_color_set(bg, 0x00, 0x00, 0x00, 0x00);
