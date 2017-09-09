@@ -21,6 +21,7 @@
 
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/layout/svg/FrameSVGRectBox.h"
+#include "core/layout/svg/FrameSVGPathBox.h"
 
 namespace StarFish {
 
@@ -45,6 +46,12 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
     } else if (svgElement->isSVGRectElement()) {
         shouldContinue = true;
         currentFrame = new FrameSVGRectBox(svgElement);
+    } else if (svgElement->isSVGGElement()) {
+        shouldContinue = true;
+        currentFrame = new FrameSVGBox(svgElement);
+    } else if (svgElement->isSVGPathElement()) {
+        shouldContinue = true;
+        currentFrame = new FrameSVGPathBox(svgElement);
     }
 
     svgElement->clearNeedsFrameTreeBuild();

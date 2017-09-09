@@ -57,14 +57,24 @@ public:
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 
-    virtual bool needsFillAttributes()
+    virtual bool needsGeometryAttributes()
     {
         return false;
     }
 
+    virtual bool needsFillAttributes()
+    {
+        return true;
+    }
+
     virtual bool needsStrokeAttributes()
     {
-        return false;
+        return true;
+    }
+
+    virtual bool needsTransformAttributes()
+    {
+        return true;
     }
 };
 

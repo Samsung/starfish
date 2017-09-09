@@ -18,6 +18,9 @@
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGRectElement.h"
+#include "core/dom/svg/SVGPathElement.h"
+#include "core/dom/svg/SVGGElement.h"
+#include "core/dom/svg/SVGStyleElement.h"
 #include "StarFish.h"
 
 namespace StarFish {
@@ -30,6 +33,12 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGSVGElement(document);
     } else if (str->m_svgrectTagName == localName) {
         return new SVGRectElement(document);
+    } else if (str->m_svggTagName == localName) {
+        return new SVGGElement(document);
+    } else if (str->m_svgpathTagName == localName) {
+        return new SVGPathElement(document);
+    } else if (str->m_svgstyleTagName == localName) {
+        return new SVGStyleElement(document);
     } else {
         return new SVGNamedElement(
             document, QualifiedName(str->m_svgNamespaceURI, localName));

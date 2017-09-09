@@ -158,6 +158,14 @@ namespace StarFish {
 #define STARFISH_ENUM_SVG_TAG_NAMES(F) \
     F(svg)                             \
     F(rect)                            \
+    F(circle)                          \
+    F(g)                               \
+    F(path)                            \
+    F(polygon)                         \
+    F(polyline)                        \
+    F(ellipse)                         \
+    F(image)                           \
+    F(style)                           \
     F(script)
 
 class StaticStrings : public gc {
@@ -280,6 +288,9 @@ public:
     QualifiedName m_strokeWidth;
     QualifiedName m_x;
     QualifiedName m_y;
+    QualifiedName m_transform;
+    QualifiedName m_viewBox;
+    QualifiedName m_d;
     // xml:base
     QualifiedName m_xmlBase;
 

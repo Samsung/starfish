@@ -1754,7 +1754,8 @@ public:
         AllowNegative = 1 << 0,
         AllowPercent = 1 << 1,
         AllowAuto = 1 << 2,
-        AllowNone = 1 << 3
+        AllowLengthWithoutUnit = 1 << 3,
+        AllowNone = 1 << 4
     };
     bool updateValueLength(const CSSTokenVector& tokens, uint8_t option);
     bool updateValueUnitLength(const CSSTokenValue& token, uint8_t option);

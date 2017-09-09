@@ -4503,8 +4503,15 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Inherit) {
                 style->setFill(parentStyle->fill());
             } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::None) {
+                style->setFill(StylePaintData());
+            } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ColorValueKind) {
                 style->setFill(StylePaintData(cssValues[k].colorValue()));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                style->setFill(StylePaintData(NamedColor::namedColorToColor(
+                    cssValues[k].namedColorValue())));
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -4545,8 +4552,15 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Inherit) {
                 style->setStroke(parentStyle->stroke());
             } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::None) {
+                style->setStroke(StylePaintData());
+            } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ColorValueKind) {
                 style->setStroke(StylePaintData(cssValues[k].colorValue()));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                style->setStroke(StylePaintData(NamedColor::namedColorToColor(
+                    cssValues[k].namedColorValue())));
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -5728,6 +5742,8 @@ bool CSSStyleValuePair::updateValueUnitLength(const CSSTokenValue& token,
     bool allowPercent =
         (option & CSSStyleValuePair::LengthOption::AllowPercent);
     bool allowAuto = (option & CSSStyleValuePair::LengthOption::AllowAuto);
+    bool allowLengthWithoutUnit =
+        (option & CSSStyleValuePair::LengthOption::AllowLengthWithoutUnit);
     bool allowNone = (option & CSSStyleValuePair::LengthOption::AllowNone);
 
     if (allowAuto) {
@@ -5744,9 +5760,16 @@ bool CSSStyleValuePair::updateValueUnitLength(const CSSTokenValue& token,
         }
     }
 
-    if (!CSSPropertyParser::parseLength(token.data(), allowNegative,
-                                        allowPercent, this)) {
-        return false;
+    if (allowLengthWithoutUnit) {
+        if (!CSSPropertyParser::parseLengthOrNumber(token.data(), allowNegative,
+                                                    allowPercent, this)) {
+            return false;
+        }
+    } else {
+        if (!CSSPropertyParser::parseLength(token.data(), allowNegative,
+                                            allowPercent, this)) {
+            return false;
+        }
     }
 
     return true;
@@ -7135,6 +7158,13 @@ bool CSSStyleValuePair::updateValueUnitFlexBasis(const CSSTokenValue& value)
 
 bool CSSStyleValuePair::updateValueFill(const CSSTokenVector& tokens)
 {
+    if (tokens.size() == 1) {
+        const CSSTokenValue& value = tokens[0];
+        if (STRING_VALUE_IS_STRING("none")) {
+            m_valueKind = CSSStyleValuePair::ValueKind::None;
+            return true;
+        }
+    }
     return updateValueUnitColor(tokens[0]);
 }
 
@@ -7163,13 +7193,22 @@ bool CSSStyleValuePair::updateValueFillRule(const CSSTokenVector& tokens)
 
 bool CSSStyleValuePair::updateValueStroke(const CSSTokenVector& tokens)
 {
+    if (tokens.size() == 1) {
+        const CSSTokenValue& value = tokens[0];
+        if (STRING_VALUE_IS_STRING("none")) {
+            m_valueKind = CSSStyleValuePair::ValueKind::None;
+            return true;
+        }
+    }
+
     return updateValueUnitColor(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueStrokeWidth(const CSSTokenVector& tokens)
 {
-    return updateValueUnitLength(tokens[0],
-                                 CSSStyleValuePair::LengthOption::AllowPercent);
+    return updateValueUnitLength(
+        tokens[0], CSSStyleValuePair::LengthOption::AllowPercent |
+                       CSSStyleValuePair::LengthOption::AllowLengthWithoutUnit);
 }
 
 static void removeFlexCSSValuePairs(CSSStyleDeclaration* target)

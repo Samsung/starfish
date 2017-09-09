@@ -36,12 +36,7 @@ public:
 
     virtual QualifiedName name();
 
-    virtual bool needsFillAttributes()
-    {
-        return true;
-    }
-
-    virtual bool needsStrokeAttributes()
+    virtual bool needsGeometryAttributes()
     {
         return true;
     }
