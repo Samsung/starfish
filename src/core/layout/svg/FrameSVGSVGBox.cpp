@@ -49,16 +49,27 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
 {
     IntrinsicSize result;
     result.m_isContentExists = true;
-    result.m_hasAspectRatio = false;
+    result.m_hasAspectRatio = true;
 
     LayoutUnit width = STARFISH_DEFAULT_SVG_WIDTH;
     LayoutUnit height = STARFISH_DEFAULT_SVG_HEIGHT;
 
-    if (style()->width().isFixed()) {
+    if (style()->width().isFixed() && style()->height().isFixed()) {
         width = style()->width().fixed();
-    }
-    if (style()->height().isFixed()) {
         height = style()->height().fixed();
+    } else if (style()->width().isFixed()) {
+        width = style()->width().fixed();
+        height = style()->width().fixed();
+    } else if (style()->height().isFixed()) {
+        width = style()->height().fixed();
+        height = style()->height().fixed();
+    } else {
+        if (node()->asSVGSVGElement()->hasViewBox()) {
+            width = STARFISH_DEFAULT_SVG_WIDTH;
+            height = STARFISH_DEFAULT_SVG_WIDTH *
+                     node()->asSVGSVGElement()->viewBox().width() /
+                     node()->asSVGSVGElement()->viewBox().height();
+        }
     }
 
     result.m_intrinsicContentSize = LayoutSize(width, height);
@@ -82,17 +93,26 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 
     canvas = Canvas::createGenericCanvas(m_surface);
 
+    if (node()->asSVGSVGElement()->hasViewBox()) {
+        Unit::Rect rt = node()->asSVGSVGElement()->viewBox();
+        float sx = contentWidth() / rt.width();
+        float sy = contentHeight() / rt.height();
+        float tx = rt.x();
+        float ty = rt.y();
+        canvas->scale(sx, sy);
+        canvas->translate(-tx, -ty);
+    }
+
     PaintingContext ctx(canvas);
     Frame* child = firstChild();
     while (child) {
         ctx.m_canvas->save();
         ctx.m_canvas->translate(child->asFrameBox()->x(),
                                 child->asFrameBox()->y());
-        child->asFrameSVGBox()->paintSVG(ctx);
+        child->asFrameSVGBox()->paint(ctx);
         ctx.m_canvas->restore();
         child = child->next();
     }
-
     delete canvas;
 
     outerCanvas->drawImage(m_surface,
@@ -101,6 +121,17 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 #else
     canvas->save();
     canvas->translate(borderLeft() + paddingLeft(), borderTop() + paddingTop());
+    canvas->clip(Unit::Rect(0, 0, contentWidth(), contentHeight()));
+
+    if (node()->asSVGSVGElement()->hasViewBox()) {
+        Unit::Rect rt = node()->asSVGSVGElement()->viewBox();
+        float sx = contentWidth() / rt.width();
+        float sy = contentHeight() / rt.height();
+        float tx = rt.x();
+        float ty = rt.y();
+        canvas->scale(sx, sy);
+        canvas->translate(-tx, -ty);
+    }
 
     PaintingContext ctx(canvas);
     Frame* child = firstChild();
@@ -112,6 +143,7 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         ctx.m_canvas->restore();
         child = child->next();
     }
+
     canvas->restore();
 #endif
 }

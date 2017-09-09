@@ -671,14 +671,45 @@ public:
     {
         cairo_move_to(m_canvas, x, y);
     }
+    virtual void moveToRel(float x, float y)
+    {
+        cairo_rel_move_to(m_canvas, x, y);
+    }
     virtual void lineTo(float x, float y)
     {
         cairo_line_to(m_canvas, x, y);
+    }
+    virtual void lineToRel(float x, float y)
+    {
+        cairo_rel_line_to(m_canvas, x, y);
     }
     virtual void curveTo(float x1, float y1, float x2, float y2, float x3,
                          float y3)
     {
         cairo_curve_to(m_canvas, x1, y1, x2, y2, x3, y3);
+    }
+    virtual void curveToRel(float x1, float y1, float x2, float y2, float x3,
+                            float y3)
+    {
+        cairo_rel_curve_to(m_canvas, x1, y1, x2, y2, x3, y3);
+    }
+    virtual void quadraticCurveTo(float x1, float y1, float x2, float y2)
+    {
+        double x0, y0;
+        cairo_get_current_point(m_canvas, &x0, &y0);
+        cairo_curve_to(m_canvas, 2.0 / 3.0 * x1 + 1.0 / 3.0 * x0,
+                       2.0 / 3.0 * y1 + 1.0 / 3.0 * y0,
+                       2.0 / 3.0 * x1 + 1.0 / 3.0 * x2,
+                       2.0 / 3.0 * y1 + 1.0 / 3.0 * y2, x2, y2);
+    }
+    virtual void quadraticCurveToRel(float x1, float y1, float x2, float y2)
+    {
+        double x0, y0;
+        cairo_get_current_point(m_canvas, &x0, &y0);
+        cairo_rel_curve_to(m_canvas, 2.0 / 3.0 * x1 + 1.0 / 3.0 * x0,
+                           2.0 / 3.0 * y1 + 1.0 / 3.0 * y0,
+                           2.0 / 3.0 * x1 + 1.0 / 3.0 * x2,
+                           2.0 / 3.0 * y1 + 1.0 / 3.0 * y2, y1, y2);
     }
     virtual void stroke()
     {

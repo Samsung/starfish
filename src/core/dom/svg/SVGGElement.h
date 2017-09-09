@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishSVGRectElement__
-#define __StarFishSVGRectElement__
+#ifndef __StarFishSVGGElement__
+#define __StarFishSVGGElement__
 
 #include "core/dom/svg/SVGElement.h"
 
@@ -23,22 +23,21 @@ namespace StarFish {
 
 class SVGSVGElement;
 
-class SVGRectElement : public SVGElement {
+class SVGGElement : public SVGElement {
 public:
-    SVGRectElement(Document* document)
+    SVGGElement(Document* document)
         : SVGElement(document)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isSVGRectElement() const override;
+    virtual bool isSVGGElement() const override;
 
     virtual QualifiedName name();
-
     virtual bool needsGeometryAttributes()
     {
-        return true;
+        return false;
     }
 };
 }

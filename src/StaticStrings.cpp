@@ -223,6 +223,13 @@ StaticStrings::StaticStrings(StarFish* sf)
                         AtomicString::createAtomicString(sf, "x"));
     m_y = QualifiedName(AtomicString::emptyAtomicString(),
                         AtomicString::createAtomicString(sf, "y"));
+    m_transform =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "transform"));
+    m_viewBox = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "viewBox"));
+    m_d = QualifiedName(AtomicString::emptyAtomicString(),
+                        AtomicString::createAtomicString(sf, "d"));
 
     m_xmlBase = QualifiedName(AtomicString::createAtomicString(sf, "xml"),
                               AtomicString::emptyAtomicString(),

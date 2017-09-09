@@ -43,14 +43,16 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
                                  attributeRemoved);
     StaticStrings* ss = starFish()->staticStrings();
 
-    if (ss->m_x == name) {
-        setNeedsLayout();
-    } else if (ss->m_y == name) {
-        setNeedsLayout();
-    } else if (ss->m_width == name) {
-        setNeedsLayout();
-    } else if (ss->m_height == name) {
-        setNeedsLayout();
+    if (needsGeometryAttributes()) {
+        if (ss->m_x == name) {
+            setNeedsLayout();
+        } else if (ss->m_y == name) {
+            setNeedsLayout();
+        } else if (ss->m_width == name) {
+            setNeedsLayout();
+        } else if (ss->m_height == name) {
+            setNeedsLayout();
+        }
     }
 
     if (needsFillAttributes()) {
@@ -199,6 +201,22 @@ void SVGElement::styleForPresentationAttribute(
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
             if (pair.updateValueStrokeWidth(tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+    }
+
+    if (needsTransformAttributes()) {
+        String* transform =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_transform);
+        if (transform->length()) {
+            pair.setKeyKind(CSSStyleValuePair::Transform);
+
+            auto str = transform->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueTransform(tokens)) {
                 cssValues.push_back(pair);
             }
         }

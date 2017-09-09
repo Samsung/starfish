@@ -14,32 +14,33 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishSVGRectElement__
-#define __StarFishSVGRectElement__
+#ifndef __StarFishFrameSVGPathBox__
+#define __StarFishFrameSVGPathBox__
 
-#include "core/dom/svg/SVGElement.h"
+#include "core/layout/svg/FrameSVGBox.h"
 
 namespace StarFish {
 
-class SVGSVGElement;
-
-class SVGRectElement : public SVGElement {
+class FrameSVGPathBox : public FrameSVGBox {
 public:
-    SVGRectElement(Document* document)
-        : SVGElement(document)
+    FrameSVGPathBox(Node* node)
+        : FrameSVGBox(node)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isSVGRectElement() const override;
-
-    virtual QualifiedName name();
-
-    virtual bool needsGeometryAttributes()
+    virtual bool isFrameSVGRectBox()
     {
         return true;
     }
+
+    virtual const char* name()
+    {
+        return "FrameSVGPathBox";
+    }
+
+    virtual void paintSVG(PaintingContext& ctx);
+
+protected:
 };
 }
 

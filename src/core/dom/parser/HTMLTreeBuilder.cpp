@@ -658,6 +658,20 @@ static void adjustForeignAttributes(AtomicHTMLToken* token)
     }
 }
 */
+
+static void adjustSVGAttributes(AtomicHTMLToken* token)
+{
+    // adjustAttributes<SVGNames::getSVGAttrs, SVGNames::SVGAttrsCount>(token);
+    for (unsigned i = 0; i < token->attributes().size(); ++i) {
+        Attribute& tokenAttribute = token->attributes()[i];
+        if (tokenAttribute.name().localName()->equals("viewbox")) {
+            tokenAttribute =
+                Attribute(token->starFish()->staticStrings()->m_viewBox,
+                          tokenAttribute.value());
+        }
+    }
+}
+
 void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
 {
     STARFISH_ASSERT(token->type() == HTMLToken::StartTag);
@@ -967,7 +981,7 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
     if (token->name() == s->m_svgsvgTagName) {
         m_tree.reconstructTheActiveFormattingElements();
         // TODO
-        // adjustSVGAttributes(token);
+        adjustSVGAttributes(token);
         // adjustForeignAttributes(token);
         m_tree.insertForeignElement(token, s->m_svgNamespaceURI);
         return;
@@ -3046,7 +3060,7 @@ void HTMLTreeBuilder::processTokenInForeignContent(AtomicHTMLToken* token)
         }*/
         if (currentNamespace == s->m_svgNamespaceURI) {
             // adjustSVGTagNameCase(token);
-            // adjustSVGAttributes(token);
+            adjustSVGAttributes(token);
         }
         // adjustForeignAttributes(token);
         m_tree.insertForeignElement(token, currentNamespace);

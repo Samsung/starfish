@@ -44,7 +44,9 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void paint(PaintingContext& ctx);
-    virtual void paintSVG(PaintingContext& ctx) = 0;
+    virtual void paintSVG(PaintingContext& ctx)
+    {
+    }
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

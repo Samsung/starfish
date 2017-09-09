@@ -95,7 +95,7 @@ class ComputedStyle : public gc {
             m_horizontalBorderSpacing = Length(Length::Fixed, 0);
             m_verticalBorderSpacing = Length(Length::Fixed, 0);
 
-            m_fill = Unit::Color(0, 0, 0, 0);
+            m_fill = Unit::Color(0, 0, 0, 0xff);
             m_fillRule = FillRuleNonZero;
             m_fillOpacity = 1;
             m_stroke = Unit::Color(0, 0, 0, 0);

@@ -28,8 +28,13 @@ class SVGSVGElement : public SVGElement {
 public:
     SVGSVGElement(Document* document)
         : SVGElement(document)
+        , m_hasViewBox(false)
+        , m_viewBox(0, 0, 0, 0)
     {
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -44,7 +49,20 @@ public:
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 
+    bool hasViewBox() const
+    {
+        return m_hasViewBox;
+    }
+
+    Unit::Rect viewBox() const
+    {
+        STARFISH_ASSERT(m_hasViewBox);
+        return m_viewBox;
+    }
+
 protected:
+    bool m_hasViewBox;
+    Unit::Rect m_viewBox;
 };
 }
 

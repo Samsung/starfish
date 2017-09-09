@@ -53,23 +53,34 @@ void FrameSVGBox::layout(LayoutContext& ctx,
                          Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBox* cb = layoutParent()->asFrameBox();
-    if (resolveWhat & Frame::ResolveWidth) {
-        auto styleWidth = style()->width();
-        LayoutUnit width;
-        if (!styleWidth.isAuto()) {
-            width = styleWidth.specifiedValue(cb->width(), ctx.viewportWidth());
+    if (node()->asSVGElement()->needsGeometryAttributes()) {
+        if (resolveWhat & Frame::ResolveWidth) {
+            auto styleWidth = style()->width();
+            LayoutUnit width;
+            if (!styleWidth.isAuto()) {
+                width =
+                    styleWidth.specifiedValue(cb->width(), ctx.viewportWidth());
+            }
+            setWidth(width);
         }
-        setWidth(width);
-    }
 
-    if (resolveWhat & Frame::ResolveHeight) {
-        auto styleHeight = style()->height();
-        LayoutUnit height;
-        if (!styleHeight.isAuto()) {
-            height =
-                styleHeight.specifiedValue(cb->height(), ctx.viewportHeight());
+        if (resolveWhat & Frame::ResolveHeight) {
+            auto styleHeight = style()->height();
+            LayoutUnit height;
+            if (!styleHeight.isAuto()) {
+                height = styleHeight.specifiedValue(cb->height(),
+                                                    ctx.viewportHeight());
+            }
+            setHeight(height);
         }
-        setHeight(height);
+    } else {
+        if (resolveWhat & Frame::ResolveWidth) {
+            setWidth(cb->width());
+        }
+
+        if (resolveWhat & Frame::ResolveHeight) {
+            setHeight(cb->height());
+        }
     }
 
     Frame* f = firstChild();
@@ -82,49 +93,52 @@ void FrameSVGBox::layout(LayoutContext& ctx,
 
 void FrameSVGBox::resolvePosition(LayoutContext& ctx)
 {
-    FrameBox* cb = layoutParent()->asFrameBox();
+    if (node()->asSVGElement()->needsGeometryAttributes()) {
+        FrameBox* cb = layoutParent()->asFrameBox();
+        LayoutUnit xResult;
+        String* x = node()->asElement()->getAttributeOrEmpty(
+            node()->starFish()->staticStrings()->m_x);
+        if (x->length()) {
+            auto s = x->toUTF8NonGCString();
+            CSSStyleValuePair pair;
+            if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
+                                                       &pair)) {
+                auto l = pair.lengthValue();
+                Length ll = l.toLength();
 
-    LayoutUnit xResult;
-    String* x = node()->asElement()->getAttributeOrEmpty(
-        node()->starFish()->staticStrings()->m_x);
-    if (x->length()) {
-        auto s = x->toUTF8NonGCString();
-        CSSStyleValuePair pair;
-        if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
-                                                   &pair)) {
-            auto l = pair.lengthValue();
-            Length ll = l.toLength();
-
-            ComputedStyle* rootStyle =
-                node()->document()->rootElement()->style();
-            ll.changeToFixedIfNeeded(style()->fontSize(), rootStyle->fontSize(),
-                                     style()->font());
-            xResult = ll.specifiedValue(cb->width(), ctx.viewportWidth());
+                ComputedStyle* rootStyle =
+                    node()->document()->rootElement()->style();
+                ll.changeToFixedIfNeeded(style()->fontSize(),
+                                         rootStyle->fontSize(),
+                                         style()->font());
+                xResult = ll.specifiedValue(cb->width(), ctx.viewportWidth());
+            }
         }
-    }
 
-    setX(xResult);
+        setX(xResult);
 
-    LayoutUnit yResult;
-    String* y = node()->asElement()->getAttributeOrEmpty(
-        node()->starFish()->staticStrings()->m_y);
-    if (y->length()) {
-        auto s = y->toUTF8NonGCString();
-        CSSStyleValuePair pair;
-        if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
-                                                   &pair)) {
-            auto l = pair.lengthValue();
-            Length ll = l.toLength();
+        LayoutUnit yResult;
+        String* y = node()->asElement()->getAttributeOrEmpty(
+            node()->starFish()->staticStrings()->m_y);
+        if (y->length()) {
+            auto s = y->toUTF8NonGCString();
+            CSSStyleValuePair pair;
+            if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
+                                                       &pair)) {
+                auto l = pair.lengthValue();
+                Length ll = l.toLength();
 
-            ComputedStyle* rootStyle =
-                node()->document()->rootElement()->style();
-            ll.changeToFixedIfNeeded(style()->fontSize(), rootStyle->fontSize(),
-                                     style()->font());
-            yResult = ll.specifiedValue(cb->height(), ctx.viewportHeight());
+                ComputedStyle* rootStyle =
+                    node()->document()->rootElement()->style();
+                ll.changeToFixedIfNeeded(style()->fontSize(),
+                                         rootStyle->fontSize(),
+                                         style()->font());
+                yResult = ll.specifiedValue(cb->height(), ctx.viewportHeight());
+            }
         }
-    }
 
-    setY(yResult);
+        setY(yResult);
+    }
 }
 
 void FrameSVGBox::paint(PaintingContext& ctx)
@@ -135,6 +149,19 @@ void FrameSVGBox::paint(PaintingContext& ctx)
         ctx.m_canvas->setVisible(false);
     } else {
         ctx.m_canvas->setVisible(true);
+    }
+
+    if (style()->hasTransforms()) {
+        LayoutUnit viewportWidth =
+            node()->document()->frame()->style()->width().fixed();
+        LayoutUnit viewportHeight =
+            node()->document()->frame()->style()->height().fixed();
+        FrameBox* cb = layoutParent()->asFrameBox();
+        auto matrix = style()->transformsToMatrix(
+            cb->width(), cb->height(), viewportWidth, viewportHeight, true);
+        if (!matrix.isIdentity()) {
+            ctx.m_canvas->postMatrix(matrix);
+        }
     }
 
     ctx.m_canvas->save();

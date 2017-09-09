@@ -1,0 +1,4 @@
+// https://www.w3.org/TR/SVG11/struct.html#InterfaceSVGGElement
+// TODO implement SVGTests, SVGLangSpace, SVGExternalResourcesRequired, SVGStylable, SVGTransformable 
+interface SVGGElement : SVGElement {
+};
