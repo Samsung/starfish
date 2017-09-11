@@ -1720,9 +1720,9 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
     bool isURLFunc = false;
 
     while (token->isNotNull()) {
-        if (token->isSymbol(';')) {
+        if (token->isSymbol(';') && blocks.size() == 0) {
             break;
-        } else if (token->isSymbol('}') && !blocks.size()) {
+        } else if (token->isSymbol('}') && blocks.size() == 0) {
             ungetToken();
             break;
         } else if (token->isSymbol('{') || token->isSymbol('(') ||
