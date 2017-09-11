@@ -184,7 +184,6 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
         };
         Mode mode = Mode::WaitCommand;
         bool gotMinus = false;
-        bool isClosed = false;
         float x, y, x2, y2;
         float x3, y3, x4, y4;
         float lastX = 0, lastY = 0;
@@ -269,7 +268,8 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                 } else if (token.equals("M")) {
                     TO_WAIT_COORDS_MODE('M');
                 } else if (token.equals("z") || token.equals("Z")) {
-                    break;
+                    ctx.m_canvas->closePath();
+                    continue;
                 } else if (token.equals("l")) {
                     TO_WAIT_COORDS_MODE('l');
                 } else if (token.equals("L")) {
