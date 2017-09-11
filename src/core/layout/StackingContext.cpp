@@ -383,13 +383,15 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                               ->asFrameBox();
             canvas->translate(f->borderLeft() + f->paddingLeft(),
                               f->borderTop() + f->paddingTop());
-            canvas->save();
-            canvas->clip(Unit::Rect(0, 0, f->width(), f->height()));
+            canvas->clip(
+                Unit::Rect(0, 0, f->contentWidth(), f->contentHeight()));
             m_owner->node()
                 ->document()
                 ->browsingContext()
                 ->paintWindowBackground(canvas);
-            canvas->restore();
+            FrameBlockBox* document =
+                m_owner->layoutParent()->asFrameBlockBox();
+            canvas->translate(-document->scrollLeft(), -document->scrollTop());
         }
     }
     m_owner->paintBackgroundAndBorders(canvas);
@@ -457,6 +459,23 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     if (!hasStackingBuffer && owner()->style()->opacity() != 1) {
         canvas->endOpacityLayer();
+    }
+
+    if (m_owner->layoutParent()->isFrameDocument()) {
+        if (!m_owner->node()
+                 ->document()
+                 ->browsingContext()
+                 ->isMainBrowsingContext()) {
+            FrameBlockBox* document =
+                m_owner->layoutParent()->asFrameBlockBox();
+            m_owner->node()
+                ->document()
+                ->browsingContext()
+                ->window()
+                ->scrolling()
+                ->paintScrollbars(canvas, document, OverflowValue::AutoOverflow,
+                                  OverflowValue::AutoOverflow);
+        }
     }
 
     canvas->restore();
