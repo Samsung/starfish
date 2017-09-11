@@ -24,6 +24,7 @@ namespace StarFish {
 
 class DocumentBuilder;
 class HTMLFieldSetElement;
+class HTMLSelectElement;
 class HTMLFormControlsCollection;
 class ResourceURL;
 
@@ -76,6 +77,7 @@ public:
     // Other method
     HTMLFormElement* form();
     HTMLFieldSetElement* fieldSet();
+    HTMLSelectElement* select();
     virtual bool isHTMLFormObject() const override
     {
         return true;

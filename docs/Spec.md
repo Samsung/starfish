@@ -442,6 +442,17 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | type | Type of embedded resource.<br>Allowed value: text/javascript |
 |  | attribute | charset | Character encoding of the external script resource.<br>Allowed value: UTF-8 |
 |  | attribute | text | Return the child text content of the script element |
+| [HTMLSelectElement](https://html.spec.whatwg.org/#the-select-element) | interface | HTMLSelectElement |  The select element represents a control for selecting amongst a set of options. |
+|  | attribute | disabled | Returns whether the select element is disabled. |
+|  | attribute | form | Returns the element's form owner, or null if there is not one. |
+|  | attribute | name | Returns the name of the select element. |
+|  | attribute | selectedOptions | Returns an HTMLCollection that contains options that have their selectedness set to true. |
+| [HTMLOptionElement](https://html.spec.whatwg.org/#htmloptionelement) | interface | HTMLOptionElement | The option element represents an option in a select element or as part of a list of suggestions in a datalist element. |
+|  | attribute | disabled | Returns whether the option element is disabled. |
+|  | attribute | form | Returns the element's form owner, or null if there is not one. |
+|  | attribute | selected | Returns true if the element's selectedness is true, or false otherwise. |
+|  | attribute | value | Returns the value of the option element. |
+| [HTMLOptGroupElement](https://html.spec.whatwg.org/#htmloptgroupelement) | interface | HTMLOptGroupElement | The optgroup element represents a group of option elements with a common label. |
 | [HTMLSourceElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSourceElement) | interface | HTMLSourceElement | The HTMLSourceElement interface provides special properties for manipulating <source> elements. |
 |  | attribute | src | DOMString reflecting the src HTML attribute, containing the URL for the media resource. (Note: Current version of HTMLSourceElement considers only media element related case, not picture case.) |
 |  | attribute | type | DOMString reflecting the type HTML attribute, containing the type of the media resource. |

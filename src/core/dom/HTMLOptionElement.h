@@ -14,40 +14,50 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLSelectElement__
-#define __StarFishHTMLSelectElement__
+#ifndef __StarFishHTMLOptionElement__
+#define __StarFishHTMLOptionElement__
 
+#include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLFormElement.h"
 
 namespace StarFish {
 
-class HTMLOptionElement;
-class HTMLCollection;
+class FrameOptionBox;
+class FrameSelectBox;
 
-class HTMLSelectElement : public HTMLFormObject {
+class HTMLOptionElement : public HTMLFormObject {
+    friend FrameOptionBox;
+    friend FrameSelectBox;
+
 public:
-    HTMLSelectElement(Document* document);
+    HTMLOptionElement(Document* document);
+    HTMLOptionElement(Document* document, String* text, String* value,
+                      bool defaultSelected);
+    HTMLOptionElement(Document* document, String* text, String* value,
+                      bool defaultSelected, bool selected);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLSelectElement() const override;
+    virtual bool isHTMLOptionElement() const override;
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 
-    HTMLCollection* selectedOptions();
+    // Interface Option
+    bool selected();
+    void setSelected(bool selected);
 
     // Other methods
-    HTMLOptionElement* firstOptionElement();
-
-    bool supportsFocus() const override;
+    void didAttributeChanged(QualifiedName name, String* old, String* val,
+                             bool attributeCreated, bool attributeRemoved);
 
 private:
-    HTMLCollection* m_selectedOptions;
+    bool m_dirtiness;
+    bool m_selectedness;
+    bool m_drawOptionBox;
 };
 }
-
 #endif

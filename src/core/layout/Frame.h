@@ -991,6 +991,21 @@ public:
         return false;
     }
 
+    virtual bool isFrameSelectBox()
+    {
+        return false;
+    }
+
+    virtual bool isFrameOptGroupBox()
+    {
+        return false;
+    }
+
+    virtual bool isFrameOptionBox()
+    {
+        return false;
+    }
+
     FrameText* asFrameText()
     {
         STARFISH_ASSERT(isFrameText());

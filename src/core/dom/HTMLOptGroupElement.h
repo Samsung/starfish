@@ -14,39 +14,30 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLSelectElement__
-#define __StarFishHTMLSelectElement__
+#ifndef __StarFishHTMLOptGroupElement__
+#define __StarFishHTMLOptGroupElement__
 
+#include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLFormElement.h"
 
 namespace StarFish {
 
-class HTMLOptionElement;
-class HTMLCollection;
-
-class HTMLSelectElement : public HTMLFormObject {
+class HTMLOptGroupElement : public HTMLFormObject {
 public:
-    HTMLSelectElement(Document* document);
+    HTMLOptGroupElement(Document* document)
+        : HTMLFormObject(document)
+    {
+    }
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLSelectElement() const override;
+    virtual bool isHTMLOptGroupElement() const override;
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
-
-    HTMLCollection* selectedOptions();
-
-    // Other methods
-    HTMLOptionElement* firstOptionElement();
-
-    bool supportsFocus() const override;
-
-private:
-    HTMLCollection* m_selectedOptions;
 };
 }
 

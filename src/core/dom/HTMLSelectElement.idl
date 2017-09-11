@@ -2,17 +2,16 @@
 
 [HTMLConstructor]
 interface HTMLSelectElement : HTMLElement {
-    /*
     [Unimplemented, CEReactions] attribute DOMString autocomplete;
     [Unimplemented, CEReactions] attribute boolean autofocus;
-    [Unimplemented, CEReactions] attribute boolean disabled;
-    [Unimplemented] readonly attribute HTMLFormElement? form;
+    [CEReactions] attribute boolean disabled;
+    readonly attribute HTMLFormElement? form;
     [Unimplemented, CEReactions] attribute boolean multiple;
-    [Unimplemented, CEReactions] attribute DOMString name;
+    [CEReactions,Rename=domName] attribute DOMString name;
     [Unimplemented, CEReactions] attribute boolean required;
     [Unimplemented, CEReactions] attribute unsigned long size;
 
-    [Unimplemented] readonly attribute DOMString type;
+    readonly attribute DOMString type;
 
     [Unimplemented, SameObject] readonly attribute HTMLOptionsCollection options;
     [Unimplemented, CEReactions] attribute unsigned long length;
@@ -23,7 +22,7 @@ interface HTMLSelectElement : HTMLElement {
     [Unimplemented, CEReactions] void remove(long index);
     [Unimplemented, CEReactions] setter void (unsigned long index, HTMLOptionElement? option);
 
-    [Unimplemented, SameObject] readonly attribute HTMLCollection selectedOptions;
+    [SameObject] readonly attribute HTMLCollection selectedOptions;
     [Unimplemented] attribute long selectedIndex;
     [Unimplemented] attribute DOMString value;
 
@@ -35,5 +34,4 @@ interface HTMLSelectElement : HTMLElement {
     [Unimplemented] void setCustomValidity(DOMString error);
 
     [Unimplemented] readonly attribute NodeList labels;
-    */
 };
