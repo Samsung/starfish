@@ -397,6 +397,16 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
         setStrokeWidth(v);
     }
+    if (stroke() != InheritedStylesRareData().m_stroke) {
+        auto s = stroke();
+        s.updateCurrentColorToFixedColorIfNeeds(color());
+        setStroke(s);
+    }
+    if (fill() != InheritedStylesRareData().m_fill) {
+        auto s = fill();
+        s.updateCurrentColorToFixedColorIfNeeds(color());
+        setFill(s);
+    }
     m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
     m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
     if (hasRareComputeStyleData()) {

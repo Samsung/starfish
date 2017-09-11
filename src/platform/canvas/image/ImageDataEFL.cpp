@@ -96,7 +96,7 @@ public:
     {
         void* address = evas_object_image_data_get(m_image, EINA_TRUE);
         size_t end = m_width * m_height * sizeof(uint32_t);
-        memset(address, 0xff, end);
+        memset(address, 0x00, end);
         evas_object_image_data_set(m_image, address);
     }
 

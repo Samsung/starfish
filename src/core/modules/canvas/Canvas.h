@@ -170,15 +170,7 @@ public:
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
-    virtual void moveToRel(float x, float y)
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    }
     virtual void lineTo(float x, float y)
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    }
-    virtual void lineToRel(float x, float y)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
@@ -187,16 +179,12 @@ public:
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
-    virtual void curveToRel(float x1, float y1, float x2, float y2, float x3,
-                            float y3)
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    }
     virtual void quadraticCurveTo(float x1, float y1, float x2, float y2)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
-    virtual void quadraticCurveToRel(float x1, float y1, float x2, float y2)
+    virtual void arc(double xc, double yc, double radius, double angle1,
+                     double angle2)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }

@@ -233,6 +233,14 @@ StaticStrings::StaticStrings(StarFish* sf)
                               AtomicString::createAtomicString(sf, "viewBox"));
     m_d = QualifiedName(AtomicString::emptyAtomicString(),
                         AtomicString::createAtomicString(sf, "d"));
+    m_points = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "points"));
+    m_cx = QualifiedName(AtomicString::emptyAtomicString(),
+                         AtomicString::createAtomicString(sf, "cx"));
+    m_cy = QualifiedName(AtomicString::emptyAtomicString(),
+                         AtomicString::createAtomicString(sf, "cy"));
+    m_r = QualifiedName(AtomicString::emptyAtomicString(),
+                        AtomicString::createAtomicString(sf, "r"));
 
     m_xmlBase = QualifiedName(AtomicString::createAtomicString(sf, "xml"),
                               AtomicString::emptyAtomicString(),

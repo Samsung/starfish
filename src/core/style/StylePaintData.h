@@ -23,14 +23,22 @@ namespace StarFish {
 
 class StylePaintData : public gc {
 public:
+    StylePaintData(NamedColor::NamedColorValue e)
+        : m_hasCurrentColorValue(true)
+        , m_color(Unit::Color(0, 0, 0, 0))
+    {
+        STARFISH_ASSERT(e == NamedColor::currentColor);
+    }
     StylePaintData(Unit::Color clr = Unit::Color(0, 0, 0, 0))
-        : m_color(clr)
+        : m_hasCurrentColorValue(false)
+        , m_color(clr)
     {
     }
 
     bool operator==(const StylePaintData& o)
     {
-        return m_color == o.m_color;
+        return m_color == o.m_color &&
+               m_hasCurrentColorValue == o.m_hasCurrentColorValue;
     }
 
     bool operator!=(const StylePaintData& o)
@@ -40,11 +48,21 @@ public:
 
     Unit::Color color() const
     {
+        STARFISH_ASSERT(!m_hasCurrentColorValue);
         return m_color;
+    }
+
+    void updateCurrentColorToFixedColorIfNeeds(Unit::Color clr)
+    {
+        if (m_hasCurrentColorValue) {
+            m_hasCurrentColorValue = false;
+            m_color = clr;
+        }
     }
 
 private:
     // TODO add fill functions
+    bool m_hasCurrentColorValue;
     Unit::Color m_color;
 };
 }

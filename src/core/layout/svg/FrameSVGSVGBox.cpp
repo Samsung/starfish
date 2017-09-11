@@ -97,9 +97,10 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         Unit::Rect rt = node()->asSVGSVGElement()->viewBox();
         float sx = contentWidth() / rt.width();
         float sy = contentHeight() / rt.height();
+        float s = std::min(sx, sy);
         float tx = rt.x();
         float ty = rt.y();
-        canvas->scale(sx, sy);
+        canvas->scale(s, s);
         canvas->translate(-tx, -ty);
     }
 
@@ -107,8 +108,9 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     Frame* child = firstChild();
     while (child) {
         ctx.m_canvas->save();
-        ctx.m_canvas->translate(child->asFrameBox()->x(),
-                                child->asFrameBox()->y());
+        ctx.m_canvas->translate(
+            child->asFrameBox()->x() - borderLeft() - paddingLeft(),
+            child->asFrameBox()->y() - borderTop() - paddingTop());
         child->asFrameSVGBox()->paint(ctx);
         ctx.m_canvas->restore();
         child = child->next();
@@ -137,8 +139,9 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     Frame* child = firstChild();
     while (child) {
         ctx.m_canvas->save();
-        ctx.m_canvas->translate(child->asFrameBox()->x(),
-                                child->asFrameBox()->y());
+        ctx.m_canvas->translate(
+            child->asFrameBox()->x() - borderLeft() - paddingLeft(),
+            child->asFrameBox()->y() - borderTop() - paddingTop());
         child->asFrameSVGBox()->paintSVG(ctx);
         ctx.m_canvas->restore();
         child = child->next();

@@ -48,6 +48,9 @@ public:
     {
     }
 
+    static std::vector<std::pair<double, double>> parsePointsFromString(
+        String* str);
+    double resolveLengthFromAttribute(QualifiedName attr);
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 

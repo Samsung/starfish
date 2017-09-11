@@ -171,4 +171,116 @@ void FrameSVGBox::paint(PaintingContext& ctx)
 
     ctx.m_canvas->restore();
 }
+
+std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
+    String* str)
+{
+    std::vector<std::pair<double, double>> result;
+    auto utf8Str = str->toUTF8NonGCString();
+    CSSTokenVector tokensInput;
+    const char* sep = ",-";
+    CSSStyleDeclaration::tokenizeCSSValue(tokensInput, utf8Str.data(),
+                                          utf8Str.length(), sep, 2, true);
+    std::vector<CSSTokenValue> tokens;
+    tokens.reserve(tokensInput.size());
+    for (size_t i = 0; i < tokensInput.size(); i++) {
+        tokens.push_back(std::move(tokensInput[i]));
+    }
+    enum Mode {
+        WaitCoordsX,
+        WaitCoordsY,
+    };
+    Mode mode = Mode::WaitCoordsX;
+    bool gotMinus = false;
+    float x, y;
+
+#define READ_NUMBER(n)                                                       \
+    if (!CSSPropertyParser::parseNumber(token.data(), token.length(), &n)) { \
+        break;                                                               \
+    }                                                                        \
+    if (gotMinus) {                                                          \
+        n = -n;                                                              \
+    }                                                                        \
+    gotMinus = false;
+
+    for (size_t i = 0; i < tokens.size(); i++) {
+        const auto& token = tokens[i];
+        if (token.equals(",")) {
+            continue;
+        }
+
+        if (token.equals("-")) {
+            if (gotMinus) {
+                // error
+                break;
+            }
+            gotMinus = true;
+            continue;
+        }
+
+        {
+            auto token = tokens[i];
+            bool hasMultipleDot = false;
+            bool seenDot = false;
+            for (size_t k = 0; k < token.size(); k++) {
+                if (token[k] == '.') {
+                    if (!seenDot) {
+                        seenDot = true;
+                    } else {
+                        hasMultipleDot = true;
+                        tokens.erase(tokens.begin() + i);
+                        CSSTokenValue s1 = token.substr(0, k);
+                        CSSTokenValue s2 = token.substr(k, token.size() - k);
+                        tokens.insert(tokens.begin() + i, s1);
+                        tokens.insert(tokens.begin() + i + 1, s2);
+                        i--;
+                        break;
+                    }
+                }
+            }
+            if (hasMultipleDot) {
+                continue;
+            }
+        }
+
+        if (mode == Mode::WaitCoordsX) {
+            READ_NUMBER(x);
+            mode = Mode::WaitCoordsY;
+        } else {
+            READ_NUMBER(y);
+            mode = Mode::WaitCoordsX;
+
+            result.push_back(std::make_pair(x, y));
+        }
+    }
+
+    return result;
+}
+
+double FrameSVGBox::resolveLengthFromAttribute(QualifiedName attr)
+{
+    FrameBox* cb = layoutParent()->asFrameBox();
+    LayoutUnit viewportWidth =
+        node()->document()->frame()->style()->width().fixed();
+
+    double result = 0;
+    String* str = node()->asElement()->getAttributeOrEmpty(attr);
+    if (str->length()) {
+        auto s = str->toUTF8NonGCString();
+        CSSStyleValuePair pair;
+        if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
+                                                   &pair)) {
+            auto l = pair.lengthValue();
+            Length ll = l.toLength();
+
+            ComputedStyle* rootStyle =
+                node()->document()->rootElement()->style();
+            ll.changeToFixedIfNeeded(style()->fontSize(), rootStyle->fontSize(),
+                                     style()->font());
+            result = ll.specifiedValue(cb->width(), viewportWidth);
+        }
+    }
+
+    return result;
+}
 }

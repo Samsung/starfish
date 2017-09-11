@@ -4504,14 +4504,19 @@ void StyleResolver::apply(Element* element,
                 style->setFill(parentStyle->fill());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->setFill(StylePaintData());
+                style->setFill(StylePaintData(Unit::Color(0, 0, 0, 0)));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ColorValueKind) {
                 style->setFill(StylePaintData(cssValues[k].colorValue()));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                style->setFill(StylePaintData(NamedColor::namedColorToColor(
-                    cssValues[k].namedColorValue())));
+                if (cssValues[k].namedColorValue() ==
+                    NamedColor::currentColor) {
+                    style->setFill(StylePaintData(NamedColor::currentColor));
+                } else {
+                    style->setFill(StylePaintData(NamedColor::namedColorToColor(
+                        cssValues[k].namedColorValue())));
+                }
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -4553,14 +4558,20 @@ void StyleResolver::apply(Element* element,
                 style->setStroke(parentStyle->stroke());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->setStroke(StylePaintData());
+                style->setStroke(StylePaintData(Unit::Color(0, 0, 0, 0)));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ColorValueKind) {
                 style->setStroke(StylePaintData(cssValues[k].colorValue()));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                style->setStroke(StylePaintData(NamedColor::namedColorToColor(
-                    cssValues[k].namedColorValue())));
+                if (cssValues[k].namedColorValue() ==
+                    NamedColor::currentColor) {
+                    style->setStroke(StylePaintData(NamedColor::currentColor));
+                } else {
+                    style->setStroke(
+                        StylePaintData(NamedColor::namedColorToColor(
+                            cssValues[k].namedColorValue())));
+                }
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }

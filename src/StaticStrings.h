@@ -292,6 +292,10 @@ public:
     QualifiedName m_transform;
     QualifiedName m_viewBox;
     QualifiedName m_d;
+    QualifiedName m_points;
+    QualifiedName m_r;
+    QualifiedName m_cx;
+    QualifiedName m_cy;
     // xml:base
     QualifiedName m_xmlBase;
 
