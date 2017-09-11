@@ -1444,7 +1444,7 @@ public:
 
     FillRuleValue fillRuleValue() const
     {
-        STARFISH_ASSERT(m_valueKind == FlexBasisValueKind);
+        STARFISH_ASSERT(m_valueKind == FillRuleValueKind);
         return m_value.m_fillRule;
     }
 

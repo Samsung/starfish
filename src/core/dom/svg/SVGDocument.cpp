@@ -20,6 +20,9 @@
 #include "core/dom/svg/SVGRectElement.h"
 #include "core/dom/svg/SVGPathElement.h"
 #include "core/dom/svg/SVGGElement.h"
+#include "core/dom/svg/SVGPolygonElement.h"
+#include "core/dom/svg/SVGPolylineElement.h"
+#include "core/dom/svg/SVGCircleElement.h"
 #include "core/dom/svg/SVGStyleElement.h"
 #include "StarFish.h"
 
@@ -37,6 +40,12 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGGElement(document);
     } else if (str->m_svgpathTagName == localName) {
         return new SVGPathElement(document);
+    } else if (str->m_svgcircleTagName == localName) {
+        return new SVGCircleElement(document);
+    } else if (str->m_svgpolygonTagName == localName) {
+        return new SVGPolygonElement(document);
+    } else if (str->m_svgpolylineTagName == localName) {
+        return new SVGPolylineElement(document);
     } else if (str->m_svgstyleTagName == localName) {
         return new SVGStyleElement(document);
     } else {

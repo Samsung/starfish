@@ -186,7 +186,7 @@ public:
 
     virtual void scale(double x, double y, double ox, double oy)
     {
-        // TODO
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     virtual void rotate(double angle)
@@ -196,7 +196,7 @@ public:
 
     virtual void rotate(double angle, double ox, double oy)
     {
-        // TODO
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     virtual void translate(double x, double y)
@@ -504,7 +504,7 @@ public:
             return;
         }
 
-        void* imgData = data->unwrap();
+        void* imgData = data->data();
         double surfaceWidth = 0, surfaceHeight = 0;
         cairo_surface_t* image = nullptr;
 
@@ -631,7 +631,7 @@ public:
         cairo_matrix_init(&b_matrix, matrix.getScaleX(), matrix.getSkewY(),
                           matrix.getSkewX(), matrix.getScaleY(),
                           matrix.getTranslateX(), matrix.getTranslateY());
-        cairo_matrix_multiply(&result_matrix, &a_matrix, &b_matrix);
+        cairo_matrix_multiply(&result_matrix, &b_matrix, &a_matrix);
         cairo_set_matrix(m_canvas, &result_matrix);
     }
 
@@ -671,27 +671,14 @@ public:
     {
         cairo_move_to(m_canvas, x, y);
     }
-    virtual void moveToRel(float x, float y)
-    {
-        cairo_rel_move_to(m_canvas, x, y);
-    }
     virtual void lineTo(float x, float y)
     {
         cairo_line_to(m_canvas, x, y);
-    }
-    virtual void lineToRel(float x, float y)
-    {
-        cairo_rel_line_to(m_canvas, x, y);
     }
     virtual void curveTo(float x1, float y1, float x2, float y2, float x3,
                          float y3)
     {
         cairo_curve_to(m_canvas, x1, y1, x2, y2, x3, y3);
-    }
-    virtual void curveToRel(float x1, float y1, float x2, float y2, float x3,
-                            float y3)
-    {
-        cairo_rel_curve_to(m_canvas, x1, y1, x2, y2, x3, y3);
     }
     virtual void quadraticCurveTo(float x1, float y1, float x2, float y2)
     {
@@ -701,15 +688,6 @@ public:
                        2.0 / 3.0 * y1 + 1.0 / 3.0 * y0,
                        2.0 / 3.0 * x1 + 1.0 / 3.0 * x2,
                        2.0 / 3.0 * y1 + 1.0 / 3.0 * y2, x2, y2);
-    }
-    virtual void quadraticCurveToRel(float x1, float y1, float x2, float y2)
-    {
-        double x0, y0;
-        cairo_get_current_point(m_canvas, &x0, &y0);
-        cairo_rel_curve_to(m_canvas, 2.0 / 3.0 * x1 + 1.0 / 3.0 * x0,
-                           2.0 / 3.0 * y1 + 1.0 / 3.0 * y0,
-                           2.0 / 3.0 * x1 + 1.0 / 3.0 * x2,
-                           2.0 / 3.0 * y1 + 1.0 / 3.0 * y2, y1, y2);
     }
     virtual void stroke()
     {
@@ -742,6 +720,12 @@ public:
     virtual void setStrokeWidth(float width)
     {
         cairo_set_line_width(m_canvas, width);
+    }
+
+    virtual void arc(double xc, double yc, double radius, double angle1,
+                     double angle2)
+    {
+        cairo_arc(m_canvas, xc, yc, radius, angle1, angle2);
     }
 
     virtual void* unwrap()
