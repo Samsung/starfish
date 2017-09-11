@@ -111,8 +111,6 @@ export TIZEN_ARCH=i586
 %endif
 
 rm -rf %{buildroot}
-mkdir -p %{buildroot}%{_datadir}/license
-cat LICENSE* > %{buildroot}%{_datadir}/license/%{name}
 
 mkdir -p %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_bindir}
@@ -130,8 +128,8 @@ cp inc/StarFishExport.h %{buildroot}%{_includedir}/%{name}/
 
 %files
 %manifest %{name}.manifest
-%{_datadir}/license/%{name}
 %{_libdir}/*.so
+%license LICENSE LICENSE.BSL-1.0 LICENSE.LGPL-2.1+ LICENSE.MPL-1.1 LICENSE.BSD-2.0 LICENSE.ICU LICENSE.MIT
 
 %files devel
 %{_includedir}
