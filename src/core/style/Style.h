@@ -896,7 +896,8 @@ class CSSStyleDeclaration;
     F(AlignContent, alignContent, "align-content")                       \
     F(FlexGrow, flexGrow, "flex-grow")                                   \
     F(FlexShrink, flexShrink, "flex-shrink")                             \
-    F(FlexBasis, flexBasis, "flex-basis")
+    F(FlexBasis, flexBasis, "flex-basis")                                \
+    F(Cursor, cursor, "cursor")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
     FOR_EACH_STYLE_ATTRIBUTE(F)                                      \
