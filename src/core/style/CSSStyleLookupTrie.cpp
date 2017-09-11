@@ -96,6 +96,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Height
         // Margin
         // Stroke
+        // Cursor
         switch (data[0]) {
         case 'b':
             switch (data[1]) {
@@ -107,6 +108,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                     return CSSStyleKind::Border;
                 }
                 break;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "cursor", 6) == 0) {
+                return CSSStyleKind::Cursor;
             }
             break;
         case 'h':

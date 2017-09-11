@@ -5638,6 +5638,12 @@ bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens)
     return updateValueBackgroundImage(tokens, true);
 }
 
+bool CSSStyleValuePair::updateValueCursor(const CSSTokenVector& tokens)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueContent(const CSSTokenVector& tokens)
 {
     ValueList* values = new ValueList();
