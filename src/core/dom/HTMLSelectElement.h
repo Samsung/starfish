@@ -17,17 +17,19 @@
 #ifndef __StarFishHTMLSelectElement__
 #define __StarFishHTMLSelectElement__
 
-#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLFormElement.h"
 
 namespace StarFish {
 
-class HTMLSelectElement : public HTMLElement {
+class HTMLOptionElement;
+class HTMLCollection;
+
+class HTMLSelectElement : public HTMLFormObject {
 public:
-    HTMLSelectElement(Document* document)
-        : HTMLElement(document)
-    {
-        setTabIndex(0, false);
-    }
+    HTMLSelectElement(Document* document);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -36,7 +38,15 @@ public:
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 
+    HTMLCollection* selectedOptions();
+
+    // Other methods
+    HTMLOptionElement* firstOptionElement();
+
     bool supportsFocus() const override;
+
+private:
+    HTMLCollection* m_selectedOptions;
 };
 }
 

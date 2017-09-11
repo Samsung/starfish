@@ -37,6 +37,8 @@
 #include "core/dom/HTMLLIElement.h"
 #include "core/dom/HTMLMetaElement.h"
 #include "core/dom/HTMLObjectElement.h"
+#include "core/dom/HTMLOptGroupElement.h"
+#include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLParagraphElement.h"
 #include "core/dom/HTMLHRElement.h"
 #include "core/dom/HTMLPreElement.h"
@@ -174,6 +176,10 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLSelectElement(document);
     } else if (name == str->m_textareaTagName.localNameAtomic()) {
         return new HTMLTextAreaElement(document);
+    } else if (name == str->m_optionTagName.localNameAtomic()) {
+        return new HTMLOptionElement(document);
+    } else if (name == str->m_optgroupTagName.localNameAtomic()) {
+        return new HTMLOptGroupElement(document);
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {

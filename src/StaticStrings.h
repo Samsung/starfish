@@ -271,6 +271,7 @@ public:
     QualifiedName m_checked;
     QualifiedName m_text;
     QualifiedName m_placeholder;
+    QualifiedName m_selected;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

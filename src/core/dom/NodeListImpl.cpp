@@ -21,6 +21,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/NodeListImpl.h"
 #include "core/dom/HTMLInputElement.h"
+#include "core/dom/HTMLOptionElement.h"
 
 namespace StarFish {
 
@@ -232,6 +233,16 @@ bool isFormElements(Node* node, void* data, GCVector<Node*>* collection)
             }
         }
         // TODO : output element
+    }
+    return false;
+}
+
+bool isSelectedOption(Node* node, void* data, GCVector<Node*>* collection)
+{
+    if (node->isHTMLOptionElement()) {
+        if (node->asHTMLOptionElement()->selected()) {
+            return true;
+        }
     }
     return false;
 }

@@ -250,6 +250,20 @@ HTMLFieldSetElement* HTMLFormObject::fieldSet()
     return nullptr;
 }
 
+HTMLSelectElement* HTMLFormObject::select()
+{
+    for (Node* p = parentNode(); p; p = p->parentNode()) {
+        if (p == nullptr) {
+            break;
+        } else if (p->isHTMLIFrameElement()) {
+            return nullptr;
+        } else if (p->isHTMLSelectElement()) {
+            return p->asHTMLSelectElement();
+        }
+    }
+    return nullptr;
+}
+
 void* HTMLFormElement::operator new(size_t size)
 {
     static bool typeInited = false;

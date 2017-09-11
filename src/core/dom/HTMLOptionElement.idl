@@ -1,0 +1,17 @@
+// https://html.spec.whatwg.org/#the-option-element
+
+[Exposed=Window,
+ HTMLConstructor,
+ ConstructorCallWith=Document,
+ NamedConstructor=Option(optional DOMString text = "", optional DOMString value, optional boolean defaultSelected = false, optional boolean selected = false)]
+interface HTMLOptionElement : HTMLElement {
+  [CEReactions] attribute boolean disabled;
+  readonly attribute HTMLFormElement? form;
+  [Unimplemented, CEReactions] attribute DOMString label;
+  [Unimplemented, CEReactions] attribute boolean defaultSelected;
+  attribute boolean selected;
+  [CEReactions] attribute DOMString value;
+
+  [Unimplemented, CEReactions] attribute DOMString text;
+  [Unimplemented] readonly attribute long index;
+};

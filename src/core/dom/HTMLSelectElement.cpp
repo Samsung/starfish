@@ -16,13 +16,63 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+
 #include "core/dom/HTMLSelectElement.h"
 
+#include "core/dom/HTMLOptionElement.h"
+#include "core/dom/HTMLCollection.h"
+#include "core/dom/Node.h"
+#include "core/dom/Traverse.h"
+
 namespace StarFish {
+
+HTMLSelectElement::HTMLSelectElement(Document* document)
+    : HTMLFormObject(document)
+    , m_selectedOptions(nullptr)
+{
+    setTabIndex(0, false);
+}
+
+void* HTMLSelectElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLSelectElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLSelectElement, m_selectedOptions));
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLSelectElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
 
 QualifiedName HTMLSelectElement::name()
 {
     return starFish()->staticStrings()->m_selectTagName;
+}
+
+HTMLOptionElement* HTMLSelectElement::firstOptionElement()
+{
+    Node* firstOptionNode = Traverse::findDescendant(this, [](Node* d) {
+        if (d->isHTMLOptionElement()) {
+            return true;
+        }
+        return false;
+    });
+
+    return firstOptionNode ? firstOptionNode->asHTMLOptionElement() : nullptr;
+}
+
+HTMLCollection* HTMLSelectElement::selectedOptions()
+{
+    if (m_selectedOptions) {
+        return m_selectedOptions;
+    }
+
+    m_selectedOptions = new HTMLCollection(
+        this, NodeListImpl::SelectedOptionsFilter, nullptr, false);
+    return m_selectedOptions;
 }
 
 bool HTMLSelectElement::supportsFocus() const

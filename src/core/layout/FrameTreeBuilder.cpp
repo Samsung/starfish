@@ -36,6 +36,9 @@
 #include "core/layout/FrameTableSectionBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/FrameInputBox.h"
+#include "core/layout/FrameSelectBox.h"
+#include "core/layout/FrameOptGroupBox.h"
+#include "core/layout/FrameOptionBox.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/layout/FrameReplacedVideo.h"
 #endif
@@ -524,6 +527,12 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                 return nullptr;
             }
             shouldSkipChildren = true;
+        } else if (current->isHTMLSelectElement()) {
+            currentFrame = new FrameSelectBox(current, nullptr);
+        } else if (current->isHTMLOptGroupElement()) {
+            currentFrame = new FrameOptGroupBox(current, nullptr);
+        } else if (current->isHTMLOptionElement()) {
+            currentFrame = new FrameOptionBox(current, nullptr);
         } else if (display == DisplayValue::FlexDisplayValue ||
                    display == DisplayValue::InlineFlexDisplayValue) {
             currentFrame = new FrameFlexibleBox(current, nullptr);
