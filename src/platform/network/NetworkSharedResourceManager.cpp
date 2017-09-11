@@ -354,6 +354,7 @@ CurlHandleData NetworkSharedResourceManager::getCurlHandleData(
         // cache hit
         ret = iter->second;
         m_curlHandleDataCache.erase(iter);
+        curl_easy_reset(ret.curl);
     } else {
         ret.curl = curl_easy_init();
     }
