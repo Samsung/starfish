@@ -32,7 +32,7 @@ FrameOptionBox::FrameOptionBox(Node* node, ComputedStyle* style)
 void FrameOptionBox::layout(LayoutContext& ctx,
                             Frame::LayoutWantToResolve resolveWhat)
 {
-    STARFISH_ASSERT(node()->isHTMLOptionElement())
+    STARFISH_ASSERT(node()->isHTMLOptionElement());
     HTMLOptionElement* optionNode = node()->asHTMLOptionElement();
 
     if (optionNode->m_drawOptionBox) {
