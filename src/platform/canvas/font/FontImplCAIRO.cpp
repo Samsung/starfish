@@ -234,6 +234,10 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
 
     FcPattern* pattern = FcNameParse((const FcChar8*)(u8FontName.data()));
 
+    if (!pattern) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
     FcConfigSubstitute(config, pattern, FcMatchPattern);
     FcDefaultSubstitute(pattern);
 
@@ -298,6 +302,10 @@ FontSelector::FontSelector()
 #endif
 
     FcPattern* pattern = FcNameParse((const FcChar8*)(fallbackFont.data()));
+
+    if (!pattern) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 
 #ifdef STARFISH_TIZEN_TV
     FcPatternAddString(pattern, FC_FAMILY, (const FcChar8*)"SamsungOneUI");
