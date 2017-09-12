@@ -6,4 +6,4 @@ interface SVGElement : Element {
   readonly attribute SVGElement viewportElement;
 };
 
-SVGElemen implements ElementCSSInlineStyle;
+SVGElement implements ElementCSSInlineStyle;

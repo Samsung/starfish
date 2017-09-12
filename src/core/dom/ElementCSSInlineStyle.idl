@@ -3,7 +3,5 @@
 [PartialInterface,
  NoInterfaceObject]
 interface ElementCSSInlineStyle {
-  // FIXME cssText is not implemented so we implement here using Custom extended attribute
-  // [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
-  [Custom=(Getter, Setter)] attribute CSSStyleDeclaration style;
+  [Rename=inlineStyle, PutForwards=cssText, SameObject] attribute CSSStyleDeclaration style;
 };
