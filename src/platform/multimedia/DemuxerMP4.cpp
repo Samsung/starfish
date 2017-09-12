@@ -90,12 +90,13 @@ static uint32_t readBigEndianUnsignedInteger(DemuxerSource* source, int& error)
     return n;
 }
 
-static void parseMP4(DemuxerSource* source, bool findStream,
+static void parseMP4(DemuxerSource* source, bool findPacket,
                      const std::function<void(MP4::Atom* atom)>& fn)
 {
     bool container = false;
     uint32_t length;
     uint64_t dataLength;
+    size_t lastUnpairedMoofPos = SIZE_MAX;
     char type[5];
     char* data = NULL;
     MP4::Atom* atom = NULL;
@@ -145,24 +146,35 @@ static void parseMP4(DemuxerSource* source, bool findStream,
         }
 
         if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("moov")) {
-            if (!findStream) {
+            if (!findPacket) {
                 maxPos = orgPos + orgLength;
                 STARFISH_LOG_INFO("found movv. (endpos %d)\n", (int)maxPos);
             }
         }
 
-        if (!findStream) {
-            if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("mdat") ||
-                typeInt == MP4_PARSER_DEFINE_TYPE_STRING("moof")) {
+        if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("moof")) {
+            if (!findPacket) {
                 source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
                 break;
             }
+            lastUnpairedMoofPos = orgPos;
+        }
+
+        if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("mdat")) {
+            if (!findPacket) {
+                source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
+                break;
+            }
+            lastUnpairedMoofPos = SIZE_MAX;
         }
 
         MP4::Atom* atom = MP4::atomFactory(typeInt);
         ((MP4::DataAtom*)atom)->processData(&src, dataLength);
         fn(atom);
         delete atom;
+    }
+    if (lastUnpairedMoofPos != SIZE_MAX) {
+        source->onSeek(lastUnpairedMoofPos, DemuxerSource::SeekWhenceSet);
     }
 }
 
@@ -251,7 +263,7 @@ public:
                         info.m_width = track_width;
                         info.m_height = track_height;
                         STARFISH_LOG_INFO(
-                            "DemuxerMP4::findStreamInfo finded video. %d %d "
+                            "DemuxerMP4::findStreamInfo found video. %d %d "
                             "%d\n",
                             (int)info.m_streamIndex, (int)info.m_width,
                             (int)info.m_height);
@@ -274,8 +286,9 @@ public:
                         // info.m_channels =
                         // m_formatContext->streams[i]->codec->channels;
                         info.m_sampleRate = mdhd->_timeScale;
-                        // STARFISH_LOG_INFO("DemuxerMP4::findStreamInfo finded
-                        // audio. %d\n", (int)info.m_streamIndex);
+                        STARFISH_LOG_INFO(
+                            "DemuxerMP4::findStreamInfo found audio. %d\n",
+                            (int)info.m_streamIndex);
                         for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                             m_demuxerClients[j]->onDetectAudioStream(info);
                         }
@@ -400,6 +413,7 @@ public:
                     size_t sizeSum = 0;
                     for (size_t i = 0;
                          i < samples.size() && sizeSum < mdat->size; i++) {
+                        // STARFISH_LOG_INFO("Demuxer handle sample %d\n", i);
                         if (has_sample_size) {
                             packet.m_dataSize = samples[i].size;
                         } else {

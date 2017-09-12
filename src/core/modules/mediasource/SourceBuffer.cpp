@@ -37,6 +37,23 @@
 // #define STARFISH_ENABLE_TIMER
 #define TRACE_MSE_GC
 
+#ifdef STARFISH_ENABLE_TIMER
+#define CREATE_TIMER(name, msg) ProfilerTimer name(msg);
+#else
+#define CREATE_TIMER(name, msg)
+#endif
+
+#ifdef TRACE_MSE_GC
+#define SOURCEBUFFER_LOG(sb, ...)                                            \
+    STARFISH_LOG_INFO("[SourceBuffer|%p|%s] ", sb,                           \
+                      sb->type()->charAt(0) == 'v'                           \
+                          ? "video"                                          \
+                          : sb->type()->charAt(0) == 'a' ? "audio" : "etc"); \
+    STARFISH_LOG_INFO(__VA_ARGS__);
+#else
+#define SOURCEBUFFER_LOG(sourcebuffer, ...)
+#endif
+
 namespace StarFish {
 
 #ifdef TRACE_MSE_GC
@@ -595,7 +612,7 @@ void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length,
     prepareAppend();
 
     // Add data to the end of the input buffer.
-    auto d = new SourceBufferData(this, data, length, origin);
+    auto d = new (NoGC) SourceBufferData(this, data, length, origin);
 
     // Set the updating attribute to true.
     // Queue a task to fire a simple event named updatestart at this
@@ -895,23 +912,20 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
         document()->browsingContext(),
         [](void* data) -> void* {
             SourceBufferData* inputBuffer = (SourceBufferData*)data;
-#ifdef STARFISH_ENABLE_TIMER
-            ProfilerTimer timer(
-                "[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend");
-#endif
-            STARFISH_LOG_INFO("SourceBuffer::bufferAppend start (size %d)\n",
-                              (int)inputBuffer->m_length);
+            CREATE_TIMER(timer,
+                         "[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend");
+            SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
+                             "bufferAppend start (size %d)\n",
+                             (int)inputBuffer->m_length);
             DemuxerSourceForSourceBuffer src(
                 inputBuffer, &inputBuffer->m_sourceBuffer->m_bufferUnprocessed);
 
             int64_t before = src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
 
             {
-#ifdef STARFISH_ENABLE_TIMER
-                ProfilerTimer timer(
-                    "[TRACE_MSE_PROFILE] "
-                    "SourceBuffer::bufferAppend::findSteramInfo");
-#endif
+                CREATE_TIMER(timer,
+                             "[TRACE_MSE_PROFILE] "
+                             "SourceBuffer::bufferAppend::findStreamInfo");
                 if (inputBuffer->m_sourceBuffer->m_demuxer->findStreamInfo(
                         &src, inputBuffer->m_sourceBuffer->m_type)) {
                     inputBuffer->m_foundInitSegmentHere = true;
@@ -924,19 +938,19 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                     int error;
                     src.onRead(after - before, s, error,
                                (uint8_t*)inputBuffer->m_headerBuffer.data());
-
-                    STARFISH_LOG_INFO(
-                        "SourceBuffer %p detect initSegment(%d->%d)\n",
-                        inputBuffer->m_sourceBuffer, (int)before, (int)after);
+                    SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
+                                     "Demuxer detect initSegment(%d->%d)\n",
+                                     (int)before, (int)after);
+                    STARFISH_ASSERT(
+                        after ==
+                        src.onSeek(0, DemuxerSource::SeekWhenceCurrent));
                 }
             }
 
             {
-#ifdef STARFISH_ENABLE_TIMER
-                ProfilerTimer timer(
-                    "[TRACE_MSE_PROFILE] "
-                    "SourceBuffer::bufferAppend::findStreamPacket");
-#endif
+                CREATE_TIMER(timer,
+                             "[TRACE_MSE_PROFILE] "
+                             "SourceBuffer::bufferAppend::findStreamPacket");
                 double timestampOffset =
                     inputBuffer->m_sourceBuffer->timestampOffset();
                 double appendWindowStart =
@@ -959,12 +973,13 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                         DemuxerClientSourceBuffer* cl =
                             (DemuxerClientSourceBuffer*)inputBuffer
                                 ->m_sourceBuffer->m_demuxer->client(0);
-#ifdef STARFISH_ENABLE_TIMER
-                        ProfilerTimer timer(
-                            "[TRACE_MSE_PROFILE] "
-                            "SourceBuffer::bufferAppend::deliverResult");
-#endif
+                        CREATE_TIMER(timer,
+                                     "[TRACE_MSE_PROFILE] "
+                                     "SourceBuffer::bufferAppend::"
+                                     "deliverResult");
                         if (cl->m_isAborted) {
+                            SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
+                                             "Aborted. clear demuxed data.\n");
                             for (size_t i = 0; i < cl->m_packetGroup.size();
                                  i++) {
                                 MediaPacketGroup* grp = cl->m_packetGroup[i];
@@ -1015,10 +1030,9 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                             ->m_bufferUnprocessed.end(),
                                         inputBuffer->m_data + copyStart,
                                         inputBuffer->m_data + copyEnd);
-                            STARFISH_LOG_INFO(
-                                "SourceBuffer::bufferAppend got unprocessed "
-                                "(size %d)\n",
-                                (int)(copyEnd - copyStart));
+                            SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
+                                             "Got unprocessed (size %d)\n",
+                                             (int)(copyEnd - copyStart));
                         }
 
                         {
@@ -1077,12 +1091,9 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                     .push_back(std::move(streamInfo));
                                 inputBuffer->m_sourceBuffer
                                     ->m_indexPerInitSegment++;
-                                STARFISH_LOG_INFO(
-                                    "SourceBuffer::bufferAppend got init "
-                                    "segment : %p, "
-                                    "findedVideoStream %d, findedAudioStream "
-                                    "%d\n",
+                                SOURCEBUFFER_LOG(
                                     inputBuffer->m_sourceBuffer,
+                                    "Got init segments: video(%d), audio(%d)\n",
                                     (int)cl->m_detectedVideoStream.size(),
                                     (int)cl->m_detectedAudioStream.size());
                             }
@@ -1110,11 +1121,11 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                         cl->m_packetGroup[i]
                                             ->m_streamInfo->m_type);
 
-                                    STARFISH_LOG_INFO(
-                                        "SourceBuffer::bufferAppend got "
-                                        "packetGroup (initSegmentIndex%d, "
-                                        "streamIndex:%d, packetCount: "
-                                        "%d(%dms->%dms))\n",
+                                    SOURCEBUFFER_LOG(
+                                        inputBuffer->m_sourceBuffer,
+                                        "Got packetGroup (initIdx%d, "
+                                        "streamIdx:%d, count:%d, "
+                                        "dur:%dms->%dms)\n",
                                         (int)cl->m_packetGroup[i]
                                             ->m_initSegmentIndex,
                                         (int)cl->m_packetGroup[i]
@@ -1147,6 +1158,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                         }
                         inputBuffer->m_sourceBuffer->setUpdating(
                             false, UpdateState::Success);
+                        delete inputBuffer;
                     },
                     inputBuffer, (void*)src.m_readPos);
             return nullptr;

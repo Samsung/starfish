@@ -216,6 +216,11 @@ public:
 
     StreamInfo* streamInfo(size_t initSegmentIndex, size_t streamIndex);
 
+    String* type()
+    {
+        return m_type;
+    }
+
 protected:
     // this method needs packet group lock
     void rangeRemoval(uint64_t start, uint64_t end,
