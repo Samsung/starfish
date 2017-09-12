@@ -47,14 +47,25 @@ ValueRef* windowWindowGetterFunction(ExecutionStateRef* state,
     return ValueRef::create(state->context()->globalObject());
 }
 
+struct TimeOutData : public gc {
+    TimeOutData()
+        : listener(nullptr)
+    {
+    }
+    void* listener;
+    GCVector<ScriptValue> argVector;
+};
+
 static void timeoutHandler(Window* wnd, void* data)
 {
-    FunctionObjectRef* fn = (FunctionObjectRef*)data;
+    TimeOutData* td = (TimeOutData*)data;
+    FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
+
     callScriptFunction(wnd->scriptBindingInstance(), ValueRef::create(fn),
-                       nullptr, 0, scriptUndefined());
+                       td->argVector.data(), td->argVector.size(),
+                       scriptUndefined());
 }
 
-// TODO : Pass "any... arguments" if exist
 ValueRef* setTimeoutWindowFunction(ExecutionStateRef* state,
                                    ValueRef* thisValue, size_t argc,
                                    ValueRef** argv, bool isNewExpression)
@@ -68,23 +79,36 @@ ValueRef* setTimeoutWindowFunction(ExecutionStateRef* state,
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "setTimeout", "Window", reason);
         THROW_EXCEPTION(msg);
     }
-    int32_t value1 = 0;
-    if (argc > 1) {
-        value1 = argv[1]->toInt32(state);
-    }
+    // Declare native value (empty when type is void)
+    int32_t result;
+    TimeOutData* td = new TimeOutData();
+    ValueRef* arg1 = (argc > 1) ? argv[1] : ValueRef::createUndefined();
 
+    // Handle ellipsis arguments from index2
+    for (size_t i = 2; i < argCount; i++) {
+        td->argVector.push_back(argv[i]);
+    }
+    // Handle argument arg1
+    int32_t value1 = 0;
+    if (!arg1->isUndefinedOrNull()) {
+        value1 = arg1->toInt32(state);
+    }
+    // Handle argument arg0
     if (argv[0]->isFunction()) {
-        return ValueRef::create(
-            window->setTimeout(timeoutHandler, value1, argv[0]->asObject()));
+        td->listener = argv[0]->asObject();
     } else {
         String* bodyStr = toBrowserString(state, argv[0]);
         String* name[] = { String::emptyString };
         bool error = false;
-        ScriptValue m_listener = createScriptFunction(
-            window->scriptBindingInstance(), name, 1, bodyStr, error);
-        return ValueRef::create(
-            window->setTimeout(timeoutHandler, value1, m_listener));
+        td->listener = createScriptFunction(window->scriptBindingInstance(),
+                                            name, 1, bodyStr, error);
     }
+
+    // Call native function (nargs: 3)
+    result = window->setTimeout(timeoutHandler, value1, td);
+
+    // Return ValueRef* from native value
+    return ValueRef::create(result);
 }
 
 ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
@@ -103,31 +127,34 @@ ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
     }
     // Declare native value (empty when type is void)
     int32_t result;
-    ValueRef* arg0 = argv[0];
-    ValueRef* arg1 = argv[1];
-    ValueRef* arg2 = argv[2];
+    TimeOutData* td = new TimeOutData();
+    ValueRef* arg1 = (argc > 1) ? argv[1] : ValueRef::createUndefined();
 
-    // Handle argument arg2
-    ScriptValue value2;
-    value2 = arg2;
+    // Handle ellipsis arguments from index2
+    for (size_t i = 2; i < argCount; i++) {
+        td->argVector.push_back(argv[i]);
+    }
     // Handle argument arg1
     int32_t value1 = 0;
     if (!arg1->isUndefinedOrNull()) {
         value1 = arg1->toInt32(state);
     }
-
-    if (arg0->isFunction()) {
-        return ValueRef::create(
-            window->setInterval(timeoutHandler, value1, arg0->asObject()));
+    // Handle argument arg0
+    if (argv[0]->isFunction()) {
+        td->listener = argv[0]->asObject();
     } else {
-        String* bodyStr = toBrowserString(state, arg0);
+        String* bodyStr = toBrowserString(state, argv[0]);
         String* name[] = { String::emptyString };
         bool error = false;
-        ScriptValue m_listener = createScriptFunction(
-            window->scriptBindingInstance(), name, 1, bodyStr, error);
-        return ValueRef::create(
-            window->setInterval(timeoutHandler, value1, m_listener));
+        td->listener = createScriptFunction(window->scriptBindingInstance(),
+                                            name, 1, bodyStr, error);
     }
+
+    // Call native function (nargs: 3)
+    result = window->setInterval(timeoutHandler, value1, td);
+
+    // Return ValueRef* from native value
+    return ValueRef::create(result);
 }
 
 static void animationFrameTimeoutHandler(Window* wnd, void* data)
