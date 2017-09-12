@@ -201,8 +201,8 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* val, bool attributeCreated,
                                            bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
-                                     attributeRemoved);
+    HTMLFormObject::didAttributeChanged(name, old, val, attributeCreated,
+                                        attributeRemoved);
 
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
@@ -268,6 +268,10 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
 {
     if (HTMLElement::handleDefaultEvent(event)) {
         return true;
+    }
+
+    if (disabled()) {
+        return false;
     }
 
     if (event->isMouseEvent() || event->isTouchEvent()) {
@@ -357,6 +361,10 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
 void HTMLInputElement::didStateChanged(int oldState, int newState)
 {
     HTMLElement::didStateChanged(oldState, newState);
+
+    if (disabled()) {
+        return;
+    }
 
     bool oldGotFocus = oldState & Node::NodeStateFocused;
     bool newGotFocus = newState & Node::NodeStateFocused;

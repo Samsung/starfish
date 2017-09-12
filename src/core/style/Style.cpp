@@ -5119,6 +5119,22 @@ bool StyleResolver::checkPseudoClass(Element* element,
         return !checkOne(element, elementName, elementId, elementClasses,
                          selector->pseudoSelectorList()[0], result);
     }
+    case CSSSelector::PseudoEnabled: {
+        if (element->isHTMLFormObject()) {
+            return !element->asHTMLElement()->disabled();
+        }
+        if (element->isHTMLAnchorElement()) {
+            return element->getAttribute(starFish()->staticStrings()->m_href)
+                .hasValue();
+        }
+        break;
+    }
+    case CSSSelector::PseudoDisabled: {
+        if (element->isHTMLFormObject()) {
+            return element->asHTMLElement()->disabled();
+        }
+        break;
+    }
     default:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         break;

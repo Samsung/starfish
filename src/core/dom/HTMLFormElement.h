@@ -83,6 +83,10 @@ public:
         return true;
     }
 
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* val, bool attributeCreated,
+                                     bool attributeRemoved) override;
+
 protected:
     HTMLFormObject(Document* document);
     void fireSubmitEvent();

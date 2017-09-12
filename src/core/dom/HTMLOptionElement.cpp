@@ -87,8 +87,8 @@ void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
                                             String* val, bool attributeCreated,
                                             bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
-                                     attributeRemoved);
+    HTMLFormObject::didAttributeChanged(name, old, val, attributeCreated,
+                                        attributeRemoved);
     if (name == starFish()->staticStrings()->m_selected) {
         if (attributeCreated && !m_dirtiness) {
             m_selectedness = true;

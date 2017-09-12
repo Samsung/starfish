@@ -222,6 +222,21 @@ void HTMLFormObject::fireSubmitEvent()
                                         this);
 }
 
+void HTMLFormObject::didAttributeChanged(QualifiedName name, String* old,
+                                         String* val, bool attributeCreated,
+                                         bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
+                                     attributeRemoved);
+    if (name == starFish()->staticStrings()->m_disabled) {
+        if (attributeCreated) {
+            setDisabled(true);
+        } else if (attributeRemoved) {
+            setDisabled(false);
+        }
+    }
+}
+
 HTMLFormElement* HTMLFormObject::form()
 {
     for (Node* p = parentNode(); p; p = p->parentNode()) {

@@ -18,13 +18,14 @@
 #define __StarFishHTMLTextAreaElement__
 
 #include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLFormElement.h"
 
 namespace StarFish {
 
-class HTMLTextAreaElement : public HTMLElement {
+class HTMLTextAreaElement : public HTMLFormObject {
 public:
     HTMLTextAreaElement(Document* document)
-        : HTMLElement(document)
+        : HTMLFormObject(document)
     {
         setTabIndex(0, false);
     }
