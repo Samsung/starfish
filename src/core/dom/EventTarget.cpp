@@ -43,11 +43,19 @@ ScriptValue EventListener::scriptValue() const
 ScriptValue EventListener::call(Event* event)
 {
     ScriptValue listenerFunc = scriptValue();
-    if (isCallableScriptValue(listenerFunc)) {
+    if (isCallableScriptValue(listenerFunc) ||
+        isObjectScriptValue(listenerFunc)) {
         ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-        ScriptValue value =
-            callScriptFunction(event->scriptBindingInstance(), listenerFunc,
-                               argv, 1, event->currentTarget()->scriptValue());
+        ScriptValue value;
+        if (isCallableScriptValue(listenerFunc)) {
+            value = callScriptFunction(event->scriptBindingInstance(),
+                                       listenerFunc, argv, 1,
+                                       event->currentTarget()->scriptValue());
+        } else {
+            value = callHandleEventFunction(
+                event->scriptBindingInstance(), listenerFunc, argv, 1,
+                event->currentTarget()->scriptValue());
+        }
 
         // NOTE: non-standard, but many browsers do this.
         // https://www.w3.org/TR/DOM-Level-3-Events/#event-flow
