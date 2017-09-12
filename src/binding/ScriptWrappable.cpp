@@ -359,6 +359,34 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
     return result;
 }
 
+ScriptValue callHandleEventFunction(ScriptBindingInstance* instance,
+                                    ScriptValue obj, ScriptValue* argv,
+                                    size_t argc, ScriptValue thisValue)
+{
+    ScriptValue result = ValueRef::createUndefined();
+    ContextRef* ctx = instance->scriptContext();
+    SandBoxRef* sb = SandBoxRef::create(ctx);
+    auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
+        ValueRef* v = obj->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("handleEvent")));
+        return v;
+    });
+    sb->destroy();
+
+    if (!sbresult.error->isEmpty()) {
+        STARFISH_LOG_ERROR(
+            "Uncaught %s\n",
+            toBrowserString(instance, ValueRef::create(sbresult.error))
+                ->toUTF8NonGCString()
+                .data());
+    } else {
+        return callScriptFunction(instance, sbresult.result, argv, argc,
+                                  thisValue);
+    }
+
+    return result;
+}
+
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName, bool* result)
 {

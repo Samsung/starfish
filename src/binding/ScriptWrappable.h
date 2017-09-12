@@ -81,6 +81,9 @@ ScriptValue createAttributeStringEventFunction(Element* target,
 ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
                                ScriptValue* argv, size_t argc,
                                ScriptValue thisValue);
+ScriptValue callHandleEventFunction(ScriptBindingInstance* instance,
+                                    ScriptValue obj, ScriptValue* argv,
+                                    size_t argc, ScriptValue thisValue);
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName = String::emptyString,
                            bool* result = nullptr);
