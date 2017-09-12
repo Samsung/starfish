@@ -79,6 +79,11 @@ public:
     void setContentEditable(const String* value);
     bool isContentEditable();
 
+    virtual bool disabled()
+    {
+        return false;
+    }
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers

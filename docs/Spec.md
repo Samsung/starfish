@@ -978,6 +978,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | | | [att*=val] | a[href*="w3schools"] | Selects every \<a\> element whose href attribute value contains the substring "w3schools" |
 | | Pseudo-classes | :hover | a:hover | Selects links on mouse over |
 | | | :active | a:active | Selects the active link |
+| | | :disabled | input:disabled | Selects every disabled <input> element |
+| | | :enabled | input:enabled | Selects every enabled <input> element |
 | | | :focus | input:focus | Selects the input element which has focus |
 | | | :target | #news:target | Selects the current active #news element (clicked on a URL containing that anchor name) |
 | | | :lang(language) | p:lang(it) | Selects every \<p\> element with a lang attribute equal to "it" (Italian) |
