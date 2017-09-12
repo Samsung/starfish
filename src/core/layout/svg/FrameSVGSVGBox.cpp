@@ -29,6 +29,7 @@ void* FrameSVGSVGBox::operator new(size_t size)
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameSVGSVGBox)] = { 0 };
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGSVGBox, m_node));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGSVGBox, m_layoutParent));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGSVGBox, m_surface));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(FrameSVGSVGBox, m_treeItemModel.m_parent));
         GC_set_bit(obj_bitmap,
