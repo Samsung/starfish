@@ -143,6 +143,8 @@ void MediaPlayerTizenTV::setVideoStreamInfo(size_t initSegmentIndex)
         PLAYER_LOGI("Video Info-----------------------------\n");
         PLAYER_LOGI("> mime      : %s\n", videoInfo.mime);
         PLAYER_LOGI("> format    : %s\n", mediaFormat);
+        PLAYER_LOGI("> framerate : %d/%d\n", videoInfo.framerate_num,
+                    videoInfo.framerate_den);
         PLAYER_LOGI("> size      : %dx%d\n", info->m_width, info->m_height);
         PLAYER_LOGI("---------------------------------------\n");
 
@@ -213,6 +215,13 @@ void MediaPlayerTizenTV::setAudioStreamInfo(size_t initSegmentIndex)
         audioInfo.user_info = 0;
         audioInfo.codec_extradata = audioCodecCtx->extradata;
         audioInfo.extradata_size = audioCodecCtx->extradata_size;
+        PLAYER_LOGI("Audio Info-----------------------------\n");
+        PLAYER_LOGI("> mime      : %s\n", audioInfo.mime);
+        PLAYER_LOGI("> format    : %s\n", mediaFormat);
+        PLAYER_LOGI("> channels  : %d\n", audioInfo.channels);
+        PLAYER_LOGI("> sample_rate : %d\n", audioInfo.sample_rate);
+        PLAYER_LOGI("> bit_rate  : %d\n", audioInfo.bit_rate);
+        PLAYER_LOGI("---------------------------------------\n");
 
         int ret = player_set_audio_stream_info(m_nativePlayer, &audioInfo);
         STARFISH_RELEASE_ASSERT(ret == 0);
