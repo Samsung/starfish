@@ -326,7 +326,20 @@ uint8_t XMLHttpRequest::readyState() const
 
 uint16_t XMLHttpRequest::status() const
 {
+    if (m_resourceRequest->readyState() == ResourceRequest::UNSENT ||
+        m_resourceRequest->readyState() == ResourceRequest::OPENED) {
+        return 0;
+    }
     return m_resourceRequest->status();
+}
+
+String* XMLHttpRequest::statusText() const
+{
+    if (m_resourceRequest->readyState() == ResourceRequest::UNSENT ||
+        m_resourceRequest->readyState() == ResourceRequest::OPENED) {
+        return String::emptyString;
+    }
+    return m_resourceRequest->statusText();
 }
 
 ScriptValue XMLHttpRequest::response() const

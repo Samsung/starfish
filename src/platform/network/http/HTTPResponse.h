@@ -43,6 +43,8 @@ public:
         return m_responseCode;
     }
 
+    std::string responseStatusText();
+
     bool isSuccessfulResponseStatus();
     bool isRedirectionResponseStatus();
 

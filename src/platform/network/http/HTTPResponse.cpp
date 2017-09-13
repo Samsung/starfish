@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 #include "HTTPHeaderMap.h"
 #include "HTTPResponse.h"
-#include "HTTPStatusCode.h"
+#include "HTTPStatus.h"
 
 namespace StarFish {
 
@@ -49,5 +49,10 @@ bool HTTPResponse::isRedirectionResponseStatus()
         return true;
     }
     return false;
+}
+
+std::string HTTPResponse::responseStatusText()
+{
+    return httpStatusCodeToText(m_responseCode);
 }
 }

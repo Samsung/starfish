@@ -24,7 +24,7 @@
 #include "core/page/EventSource.h"
 #include "core/page/EventSourceParser.h"
 #include "core/page/Window.h"
-#include "platform/network/http/HTTPStatusCode.h"
+#include "platform/network/http/HTTPStatus.h"
 
 namespace StarFish {
 
