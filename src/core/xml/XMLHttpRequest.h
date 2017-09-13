@@ -75,6 +75,7 @@ public:
 
     uint8_t readyState() const;
     uint16_t status() const;
+    String* statusText() const;
 
     void open(String* method, String* url);
     void open(String* method, String* url, bool async,

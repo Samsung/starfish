@@ -1022,6 +1022,7 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 | | attribute    | onReadyStateChange | The readyState attribute changes value, except when it changes to UNSENT. Usage: onreadystatechange: function() {} |
 | | attribute	| timeout	| Can be set to a time in milliseconds.Terminates fetching after the given time (in milliseconds) has passed. If the fetching has not completed after the time passed and the synchronous flag is unset, a timeout event will be dispatched. |
 | | attribute	| status	| Returns 0 if the state is UNSENT or OPENED, or error flag is set. Otherwise returns the HTTP status code.|
+| | attribute	| statusText	| Returns empty string if the state is UNSENT or OPENED, or error flag is set. Otherwise returns the HTTP status text.|
 | | attribute	| responseType	| Sets or returns the response type, which is either "", "blob", "json", or "text".|
 | | attribute	| response	| Returns the response entity body, which is either string, Blob object, object, or string when responseType is "", "blob", "json", or "text", respectively.|
 | | attribute	| responseText	| Returns an empty string if the state is not LOADING or DONE, or error flag is set. Returns the text response entity body when responseType is either "" or "text". The allowed character set for response text is UTF-8. Otherwise returns an invalidStateError exception with either "Permission denied", "Position unavailable", or "Timeout expired".|

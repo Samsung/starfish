@@ -388,6 +388,8 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
 
     request->m_status =
         workerData->httpTransaction->httpResponse().responseCode();
+    request->m_statusText =
+        workerData->httpTransaction->httpResponse().responseStatusText();
 
     if (workerData->httpTransaction->httpResponse()
             .isSuccessfulResponseStatus()) {
