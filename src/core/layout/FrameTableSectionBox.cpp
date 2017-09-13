@@ -67,6 +67,7 @@ FrameTableCellBox* RowStruct::physicalCellAtLogicalColumn(size_t id)
 
 FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
+    , m_affectedRowsByRowspans(new (GC) GCUnorderedSet<RowStruct*>())
 {
 }
 
@@ -333,7 +334,7 @@ LayoutUnit FrameTableSectionBox::calCellHeightWithRowspan(
                     cellHeight += borderSpacing;
                 }
                 if (curRowId > rowId) {
-                    m_affectedRowsByRowspans.insert(&rowStruct);
+                    m_affectedRowsByRowspans->insert(&rowStruct);
                 }
             }
         }
@@ -382,7 +383,7 @@ void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
     setHeight(ySoFar);
 
     calCellHeightsWithRowspans();
-    m_affectedRowsByRowspans.clear();
+    m_affectedRowsByRowspans->clear();
 }
 
 void FrameTableSectionBox::increaseRowHeightBy(LayoutUnit rowHeightOffset)

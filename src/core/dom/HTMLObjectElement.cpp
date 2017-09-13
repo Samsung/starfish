@@ -21,6 +21,20 @@
 
 namespace StarFish {
 
+void* HTMLObjectElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLObjectElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLObjectElement, m_content));
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLObjectElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 QualifiedName HTMLObjectElement::name()
 {
     return starFish()->staticStrings()->m_objectTagName;
