@@ -1790,6 +1790,8 @@ public:
     bool updateValueUnitFlexShrink(const CSSTokenValue& value);
     bool updateValueUnitFlexBasis(const CSSTokenValue& value);
 
+    bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit);
+
 protected:
     KeyKind m_keyKind : 8;
     ValueKind m_valueKind : 8;

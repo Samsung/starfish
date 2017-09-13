@@ -835,7 +835,6 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 void FrameBlockBox::paint(PaintingContext& ctx)
 {
     if (isEstablishesStackingContext()) {
-        ctx.m_canvas->saveByFrame(this);
         return;
     }
 

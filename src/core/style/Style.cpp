@@ -6236,189 +6236,7 @@ bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens)
 
 bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens)
 {
-    if (tokens.size() == 1 && tokens[0].equals("none")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::None;
-        return true;
-    } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::TransformFunctions;
-        CSSTransformFunction::Kind fkind;
-        m_value.m_transforms = new CSSTransformFunctions();
-
-        for (unsigned i = 0; i < tokens.size(); i++) {
-            CSSPropertyParser parser((char*)tokens[i].data(),
-                                     tokens[i].length());
-            bool res = parser.consumeString() && parser.consumeIfNext('(');
-            if (!res) {
-                return false;
-            }
-            String* name = parser.parsedString();
-
-            enum TransformUnit {
-                Number,           // <number>
-                Angle,            // <angle>
-                TranslationValue, // <translation-value>: percentage or length
-                Length            // <length>: percentage or length
-            };
-
-            TransformUnit units[16] = {
-                Number,
-            };
-
-            int minArgCnt = 1, maxArgCnt = 1;
-            if (name->equals("matrix")) {
-                fkind = CSSTransformFunction::Kind::Matrix;
-                units[0] = units[1] = units[2] = units[3] = units[4] =
-                    units[5] = Number;
-                minArgCnt = maxArgCnt = 6;
-            } else if (name->equals("matrix3d")) {
-                fkind = CSSTransformFunction::Kind::Matrix3D;
-                units[0] = units[1] = units[2] = units[3] = units[4] =
-                    units[5] = Number;
-                units[6] = units[7] = units[8] = units[9] = units[10] =
-                    units[11] = Number;
-                units[12] = units[13] = units[14] = units[15] = Number;
-                minArgCnt = maxArgCnt = 16;
-            } else if (name->equals("translate")) {
-                fkind = CSSTransformFunction::Kind::Translate;
-                maxArgCnt = 2;
-                units[0] = units[1] = TranslationValue;
-            } else if (name->equals("translate3d")) {
-                fkind = CSSTransformFunction::Kind::Translate3D;
-                maxArgCnt = 3;
-                units[0] = units[1] = TranslationValue;
-                units[2] = Length;
-            } else if (name->equals("translatex")) {
-                fkind = CSSTransformFunction::Kind::TranslateX;
-                units[0] = TranslationValue;
-            } else if (name->equals("translatey")) {
-                fkind = CSSTransformFunction::Kind::TranslateY;
-                units[0] = TranslationValue;
-            } else if (name->equals("translatez")) {
-                fkind = CSSTransformFunction::Kind::TranslateZ;
-                units[0] = Length;
-            } else if (name->equals("scale")) {
-                maxArgCnt = 2;
-                fkind = CSSTransformFunction::Kind::Scale;
-                units[0] = units[1] = Number;
-            } else if (name->equals("scale3d")) {
-                maxArgCnt = 3;
-                fkind = CSSTransformFunction::Kind::Scale3D;
-                units[0] = units[1] = units[2] = Number;
-            } else if (name->equals("scalex")) {
-                fkind = CSSTransformFunction::Kind::ScaleX;
-                units[0] = Number;
-            } else if (name->equals("scaley")) {
-                fkind = CSSTransformFunction::Kind::ScaleY;
-                units[0] = Number;
-            } else if (name->equals("rotate")) {
-                fkind = CSSTransformFunction::Kind::Rotate;
-                units[0] = Angle;
-            } else if (name->equals("rotate3d")) {
-                fkind = CSSTransformFunction::Kind::Rotate3D;
-                minArgCnt = 4;
-                maxArgCnt = 4;
-                units[0] = units[1] = units[2] = Number;
-                units[3] = Angle;
-            } else if (name->equals("skew")) {
-                fkind = CSSTransformFunction::Kind::Skew;
-                maxArgCnt = 2;
-                units[0] = units[1] = Angle;
-            } else if (name->equals("skewx")) {
-                fkind = CSSTransformFunction::Kind::SkewX;
-                units[0] = Angle;
-            } else if (name->equals("skewy")) {
-                fkind = CSSTransformFunction::Kind::SkewY;
-                units[0] = Angle;
-            } else if (name->equals("perspective")) {
-                fkind = CSSTransformFunction::Kind::Perspective;
-                units[0] = Number;
-            } else {
-                return false;
-            }
-
-            ValueList* values =
-                new ValueList(ValueList::Separator::CommaSeparator);
-            int idx = -1;
-            size_t unitIndex = 0;
-            for (idx = 0; idx < maxArgCnt; idx++) {
-                parser.consumeWhitespaces();
-                if (!parser.consumeNumber()) {
-                    return false;
-                }
-                TransformUnit unit = units[unitIndex];
-                float num = parser.parsedNumber();
-
-                if (unit == Number) {
-                    values->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                                         num);
-                } else if (unit == Angle) {
-                    String* str = String::emptyString;
-                    if (parser.consumeString()) {
-                        str = parser.parsedString();
-                        if (!((str->length() == 0 && num == 0) ||
-                              str->equals("deg") || str->equals("grad") ||
-                              str->equals("rad") || str->equals("turn"))) {
-                            return false;
-                        }
-                    } else if (num != 0) {
-                        // After a zero length, the unit identifier is optional
-                        return false;
-                    }
-                    ValueData data = { CSSAngle(str, num) };
-                    values->emplace_back(CSSStyleValuePair::ValueKind::Angle,
-                                         data);
-                } else if (unit == Length) {
-                    if (parser.consumeString()) {
-                        String* str = parser.parsedString();
-                        if (str->equals("%")) {
-                            return false;
-                        } else {
-                            if (!((str->length() == 0 && num == 0) ||
-                                  CSSPropertyParser::isLengthUnit(str))) {
-                                return false;
-                            }
-                            ValueData data = { CSSLength(str, num) };
-                            values->emplace_back(
-                                CSSStyleValuePair::ValueKind::Length, data);
-                        }
-                    } else if (num != 0) {
-                        // After a zero length, the unit identifier is optional
-                        return false;
-                    }
-                } else { // TranslationValue
-                    if (parser.consumeString()) {
-                        String* str = parser.parsedString();
-                        if (str->equals("%")) {
-                            ValueData data = { num / 100.f };
-                            values->emplace_back(
-                                CSSStyleValuePair::ValueKind::Percentage, data);
-                        } else {
-                            if (!((str->length() == 0 && num == 0) ||
-                                  CSSPropertyParser::isLengthUnit(str))) {
-                                return false;
-                            }
-                            ValueData data = { CSSLength(str, num) };
-                            values->emplace_back(
-                                CSSStyleValuePair::ValueKind::Length, data);
-                        }
-                    } else if (num != 0) {
-                        // After a zero length, the unit identifier is optional
-                        return false;
-                    }
-                }
-                parser.consumeWhitespaces();
-                if (!parser.consumeIfNext(',')) {
-                    break;
-                }
-            }
-            if (!(parser.consumeIfNext(')') && parser.isEnd()) ||
-                idx + 1 < minArgCnt) {
-                return false;
-            }
-            m_value.m_transforms->emplace_back(fkind, values);
-        }
-    }
-    return true;
+    return updateValueTransform(tokens, false);
 }
 
 bool CSSStyleValuePair::updateValueOpacity(const CSSTokenVector& tokens)
@@ -7185,6 +7003,197 @@ bool CSSStyleValuePair::updateValueUnitFlexBasis(const CSSTokenValue& value)
         m_value.m_flexBasis = FlexBasisValue::ContentFlexBasisValue;
     } else {
         return updateValueUnitLength(value, AllowPercent | AllowAuto);
+    }
+    return true;
+}
+bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
+                                             bool canIgnoreUnit)
+{
+    if (tokens.size() == 1 && tokens[0].equals("none")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::None;
+        return true;
+    } else {
+        m_valueKind = CSSStyleValuePair::ValueKind::TransformFunctions;
+        CSSTransformFunction::Kind fkind;
+        m_value.m_transforms = new CSSTransformFunctions();
+
+        for (unsigned i = 0; i < tokens.size(); i++) {
+            CSSPropertyParser parser((char*)tokens[i].data(),
+                                     tokens[i].length());
+            bool res = parser.consumeString() && parser.consumeIfNext('(');
+            if (!res) {
+                return false;
+            }
+            String* name = parser.parsedString();
+
+            enum TransformUnit {
+                Number,           // <number>
+                Angle,            // <angle>
+                TranslationValue, // <translation-value>: percentage or length
+                Length            // <length>: percentage or length
+            };
+
+            TransformUnit units[16] = {
+                Number,
+            };
+
+            int minArgCnt = 1, maxArgCnt = 1;
+            if (name->equals("matrix")) {
+                fkind = CSSTransformFunction::Kind::Matrix;
+                units[0] = units[1] = units[2] = units[3] = units[4] =
+                    units[5] = Number;
+                minArgCnt = maxArgCnt = 6;
+            } else if (name->equals("matrix3d")) {
+                fkind = CSSTransformFunction::Kind::Matrix3D;
+                units[0] = units[1] = units[2] = units[3] = units[4] =
+                    units[5] = Number;
+                units[6] = units[7] = units[8] = units[9] = units[10] =
+                    units[11] = Number;
+                units[12] = units[13] = units[14] = units[15] = Number;
+                minArgCnt = maxArgCnt = 16;
+            } else if (name->equals("translate")) {
+                fkind = CSSTransformFunction::Kind::Translate;
+                maxArgCnt = 2;
+                units[0] = units[1] = TranslationValue;
+            } else if (name->equals("translate3d")) {
+                fkind = CSSTransformFunction::Kind::Translate3D;
+                maxArgCnt = 3;
+                units[0] = units[1] = TranslationValue;
+                units[2] = Length;
+            } else if (name->equals("translatex")) {
+                fkind = CSSTransformFunction::Kind::TranslateX;
+                units[0] = TranslationValue;
+            } else if (name->equals("translatey")) {
+                fkind = CSSTransformFunction::Kind::TranslateY;
+                units[0] = TranslationValue;
+            } else if (name->equals("translatez")) {
+                fkind = CSSTransformFunction::Kind::TranslateZ;
+                units[0] = Length;
+            } else if (name->equals("scale")) {
+                maxArgCnt = 2;
+                fkind = CSSTransformFunction::Kind::Scale;
+                units[0] = units[1] = Number;
+            } else if (name->equals("scale3d")) {
+                maxArgCnt = 3;
+                fkind = CSSTransformFunction::Kind::Scale3D;
+                units[0] = units[1] = units[2] = Number;
+            } else if (name->equals("scalex")) {
+                fkind = CSSTransformFunction::Kind::ScaleX;
+                units[0] = Number;
+            } else if (name->equals("scaley")) {
+                fkind = CSSTransformFunction::Kind::ScaleY;
+                units[0] = Number;
+            } else if (name->equals("rotate")) {
+                fkind = CSSTransformFunction::Kind::Rotate;
+                units[0] = Angle;
+            } else if (name->equals("rotate3d")) {
+                fkind = CSSTransformFunction::Kind::Rotate3D;
+                minArgCnt = 4;
+                maxArgCnt = 4;
+                units[0] = units[1] = units[2] = Number;
+                units[3] = Angle;
+            } else if (name->equals("skew")) {
+                fkind = CSSTransformFunction::Kind::Skew;
+                maxArgCnt = 2;
+                units[0] = units[1] = Angle;
+            } else if (name->equals("skewx")) {
+                fkind = CSSTransformFunction::Kind::SkewX;
+                units[0] = Angle;
+            } else if (name->equals("skewy")) {
+                fkind = CSSTransformFunction::Kind::SkewY;
+                units[0] = Angle;
+            } else if (name->equals("perspective")) {
+                fkind = CSSTransformFunction::Kind::Perspective;
+                units[0] = Number;
+            } else {
+                return false;
+            }
+
+            ValueList* values =
+                new ValueList(ValueList::Separator::CommaSeparator);
+            int idx = -1;
+            size_t unitIndex = 0;
+            for (idx = 0; idx < maxArgCnt; idx++) {
+                parser.consumeWhitespaces();
+                if (!parser.consumeNumber()) {
+                    return false;
+                }
+                TransformUnit unit = units[unitIndex];
+                float num = parser.parsedNumber();
+
+                if (unit == Number) {
+                    values->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                                         num);
+                } else if (unit == Angle) {
+                    String* str = String::emptyString;
+                    if (parser.consumeString()) {
+                        str = parser.parsedString();
+                        if (!((str->length() == 0 && num == 0) ||
+                              str->equals("deg") || str->equals("grad") ||
+                              str->equals("rad") || str->equals("turn"))) {
+                            return false;
+                        }
+                    } else if (num != 0) {
+                        // After a zero length, the unit identifier is optional
+                        return false;
+                    }
+                    ValueData data = { CSSAngle(str, num) };
+                    values->emplace_back(CSSStyleValuePair::ValueKind::Angle,
+                                         data);
+                } else if (unit == Length) {
+                    if (parser.consumeString()) {
+                        String* str = parser.parsedString();
+                        if (str->equals("%")) {
+                            return false;
+                        } else {
+                            if (!canIgnoreUnit) {
+                                if (!((str->length() == 0 && num == 0) ||
+                                      CSSPropertyParser::isLengthUnit(str))) {
+                                    return false;
+                                }
+                            }
+                            ValueData data = { CSSLength(str, num) };
+                            values->emplace_back(
+                                CSSStyleValuePair::ValueKind::Length, data);
+                        }
+                    } else if (num != 0) {
+                        // After a zero length, the unit identifier is optional
+                        return false;
+                    }
+                } else { // TranslationValue
+                    if (parser.consumeString()) {
+                        String* str = parser.parsedString();
+                        if (str->equals("%")) {
+                            ValueData data = { num / 100.f };
+                            values->emplace_back(
+                                CSSStyleValuePair::ValueKind::Percentage, data);
+                        } else {
+                            if (!canIgnoreUnit) {
+                                if (!((str->length() == 0 && num == 0) ||
+                                      CSSPropertyParser::isLengthUnit(str))) {
+                                    return false;
+                                }
+                            }
+                            ValueData data = { CSSLength(str, num) };
+                            values->emplace_back(
+                                CSSStyleValuePair::ValueKind::Length, data);
+                        }
+                    } else if (num != 0) {
+                        // After a zero length, the unit identifier is optional
+                        return false;
+                    }
+                }
+                parser.consumeWhitespaces();
+                if (!parser.consumeIfNext(',')) {
+                    break;
+                }
+            }
+            if (!(parser.consumeIfNext(')') && parser.isEnd()) ||
+                idx + 1 < minArgCnt) {
+                return false;
+            }
+            m_value.m_transforms->emplace_back(fkind, values);
+        }
     }
     return true;
 }

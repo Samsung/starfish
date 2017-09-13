@@ -98,6 +98,12 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 #endif
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    virtual bool isGenericFont() const
+    {
+        return true;
+    }
+#endif
 
 #ifdef STARFISH_ENABLE_TEST
 #define SPACE_SIZE_DENOMINATOR 60
@@ -134,37 +140,36 @@ protected:
     String* m_fontFamily;
 };
 
-class FontSelector {
+class FontSelector : public gc {
 protected:
     friend class StarFish;
-#ifndef PORT_CANVAS_BACKEND_CAIRO
     FontSelector()
     {
     }
-    ~FontSelector()
+    virtual ~FontSelector()
     {
     }
-#else
-    FontSelector();
-    ~FontSelector();
-#endif
-    Font* loadFont(String* familyName, float size, char style = 0,
-                   char weight = 4);
+    virtual Font* loadFont(String* familyName, float size, char style = 0,
+                           char weight = 4) = 0;
     void clearCache()
     {
         m_fontCache.clear();
         m_fontCache.shrink_to_fit();
     }
 
-public:
     GCVector<std::tuple<Font*, String*, float, char, char>> m_fontCache;
+
+public:
+    static FontSelector* createFontSelector();
+#ifdef PORT_CANVAS_BACKEND_EFL
+    static FontSelector* createGenericFontSelector();
+#endif
 
 #ifdef PORT_CANVAS_BACKEND_CAIRO
     FT_Library m_FTFaceLib;
     std::vector<std::pair<std::string, FT_Face>> m_systemFonts;
     std::unordered_map<char32_t, std::tuple<FT_Face, unsigned int>>
         m_FTFaceCaches;
-
 #endif
 };
 };

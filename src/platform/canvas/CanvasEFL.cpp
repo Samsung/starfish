@@ -154,8 +154,9 @@ class CanvasEFL : public Canvas {
     }
 
 public:
-    CanvasEFL(void* data)
+    CanvasEFL(StarFish* starfish, void* data)
     {
+        m_starfish = starfish;
         m_imageCount = 0;
         m_image = NULL;
         m_buffer = NULL;
@@ -178,8 +179,9 @@ public:
         initState();
     }
 
-    CanvasEFL(CanvasSurface* data)
+    CanvasEFL(StarFish* starfish, CanvasSurface* data)
     {
+        m_starfish = starfish;
         m_imageCount = 0;
         m_objList = NULL;
         m_surfaceList = NULL;
@@ -187,7 +189,7 @@ public:
         m_image = (Evas_Object*)data->unwrap();
         void* buffer = evas_object_image_data_get(m_image, EINA_TRUE);
         m_buffer = buffer;
-        initFromBuffer(buffer, data->width(), data->height(),
+        initFromBuffer(buffer, data->bufferWidth(), data->bufferHeight(),
                        evas_object_image_stride_get(m_image));
     }
 
@@ -266,48 +268,6 @@ public:
     {
         m_stateSize--;
         m_state.erase(m_state.end() - 1);
-    }
-
-    virtual void restoreState(Canvas* canvas)
-    {
-        m_statePerFrame = ((CanvasEFL*)canvas)->m_statePerFrame;
-    }
-
-    virtual void saveByFrame(Frame* f)
-    {
-        m_statePerFrame.emplace(f, lastState());
-    }
-
-    virtual CanvasState* getByFrame(Frame* f)
-    {
-        auto it = m_statePerFrame.find(f);
-        if (it == m_statePerFrame.end()) {
-            return nullptr;
-        }
-        return &it->second;
-    }
-
-    virtual void replace(CanvasState* state, ReplaceFlag flag)
-    {
-        auto& lastState = m_state.back();
-
-        CanvasStateEFL* eflState = (CanvasStateEFL*)state;
-        lastState.m_clipRect = eflState->m_clipRect;
-        lastState.m_clipPath = eflState->m_clipPath;
-        lastState.m_clipper = eflState->m_clipper;
-        lastState.m_didClip = eflState->m_didClip;
-        lastState.m_hasPathClip = eflState->m_hasPathClip;
-        if (flag == ReplaceFlag::All) {
-            lastState.m_color = eflState->m_color;
-            lastState.m_matrix = eflState->m_matrix;
-            lastState.m_opacity = eflState->m_opacity;
-            lastState.m_baseX = eflState->m_baseX;
-            lastState.m_baseY = eflState->m_baseY;
-            lastState.m_font = eflState->m_font;
-            lastState.m_mapMode = eflState->m_mapMode;
-            lastState.m_visible = eflState->m_visible;
-            lastState.m_textDecorationData = eflState->m_textDecorationData;
-        }
     }
 
     void assureMapMode()
@@ -1496,11 +1456,6 @@ public:
                 curx += imageWidth;
             }
         }
-
-        if (m_imageCount == 101) {
-            STARFISH_LOG_ERROR(
-                "paint more than 100 image makes poor performance\n");
-        }
     }
 
     void drawImage(CanvasSurface* data, const Unit::Rect& dst)
@@ -1747,7 +1702,21 @@ public:
         }
     }
 
+    virtual void resetMatrixAndClip()
+    {
+        lastState().m_clipper = NULL;
+        lastState().m_baseX = 0;
+        lastState().m_baseY = 0;
+        lastState().m_mapMode = false;
+        lastState().m_didClip = false;
+        lastState().m_hasPathClip = false;
+        lastState().m_matrix = SkMatrix::I();
+        lastState().m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
+                                       SkFloatToScalar((float)m_height));
+    }
+
 protected:
+    StarFish* m_starfish;
     std::vector<CanvasStateEFL> m_state;
     size_t m_stateSize;
     std::unordered_map<Frame*, CanvasStateEFL> m_statePerFrame;
@@ -1765,14 +1734,14 @@ protected:
                    std::equal_to<ImageData*>>* m_prevDrawnImageMap;
 };
 
-Canvas* Canvas::createDirect(void* data)
+Canvas* Canvas::createDirect(StarFish* starfish, void* data)
 {
-    return new CanvasEFL(data);
+    return new CanvasEFL(starfish, data);
 }
 
-Canvas* Canvas::create(CanvasSurface* data)
+Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
 {
-    return new CanvasEFL(data);
+    return new CanvasEFL(starfish, data);
 }
 }
 #endif

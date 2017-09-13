@@ -175,6 +175,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     : m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    , m_fontSelectorGeneric(nullptr)
+#endif
     , m_console(new Console(this))
 #if defined(STARFISH_ENABLE_INSPECTOR)
     , m_inspector(nullptr)
@@ -295,6 +298,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_staticStrings = new StaticStrings(this);
     m_messageLoop = new MessageLoop(this);
     m_timer = new Timer(this);
+    m_fontSelector = FontSelector::createFontSelector();
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif

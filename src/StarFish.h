@@ -84,9 +84,23 @@ public:
                     char weight = FontWeight::FontWeightNormal)
     {
         Font* f = nullptr;
-        f = m_fontSelector.loadFont(familyName, size, style, weight);
+        f = m_fontSelector->loadFont(familyName, size, style, weight);
         return f;
     }
+
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    Font* fetchGenericFont(String* familyName, float size,
+                           char style = FontStyle::FontStyleNormal,
+                           char weight = FontWeight::FontWeightNormal)
+    {
+        if (m_fontSelectorGeneric == nullptr) {
+            m_fontSelectorGeneric = FontSelector::createGenericFontSelector();
+        }
+        Font* f = nullptr;
+        f = m_fontSelectorGeneric->loadFont(familyName, size, style, weight);
+        return f;
+    }
+#endif
 
     StaticStrings* staticStrings()
     {
@@ -201,7 +215,10 @@ protected:
     Timer* m_timer;
     void* m_nativeHandle;
     PlatformWindow* m_platformWindow;
-    FontSelector m_fontSelector;
+    FontSelector* m_fontSelector;
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    FontSelector* m_fontSelectorGeneric;
+#endif
     ThreadPool* m_threadPool;
     Console* m_console;
 #if defined(STARFISH_ENABLE_INSPECTOR)
