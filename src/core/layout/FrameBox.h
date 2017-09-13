@@ -565,8 +565,7 @@ public:
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                        HitTestStage stage)
     {
-        if (style()->overflowX() != OverflowValue::VisibleOverflow ||
-            style()->overflowY() != OverflowValue::VisibleOverflow) {
+        if (shouldApplyOverflow()) {
             if (FrameBox::hitTest(x, y, HitTestStageEnd) == nullptr) {
                 return nullptr;
             }

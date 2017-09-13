@@ -714,8 +714,7 @@ bool FrameBlockBox::isSelfCollapsingBlock(LayoutContext& ctx)
 Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                           HitTestStage s)
 {
-    if (style()->overflowX() != OverflowValue::VisibleOverflow ||
-        style()->overflowY() != OverflowValue::VisibleOverflow) {
+    if (shouldApplyOverflow()) {
         if (FrameBox::hitTest(x, y, HitTestStageEnd) == nullptr) {
             return nullptr;
         }
