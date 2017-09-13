@@ -80,8 +80,10 @@ public:
         m_image = evas_object_image_add(internalCanvas());
         evas_object_image_size_set(m_image, w, h);
         evas_object_image_filled_set(m_image, EINA_TRUE);
+#ifndef STARFISH_TIZEN_TV
         evas_object_image_colorspace_set(
             m_image, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
+#endif
         evas_object_image_alpha_set(m_image, EINA_TRUE);
         evas_object_anti_alias_set(m_image, EINA_TRUE);
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==

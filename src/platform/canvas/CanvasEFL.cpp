@@ -587,8 +587,10 @@ public:
 
             evas_object_image_size_set(cl, w, h);
             evas_object_image_filled_set(cl, EINA_TRUE);
+#ifndef STARFISH_TIZEN_TV
             evas_object_image_colorspace_set(
                 cl, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
+#endif
             evas_object_image_alpha_set(cl, EINA_TRUE);
             evas_object_anti_alias_set(cl, EINA_TRUE);
             evas_object_move(cl, clipRt.x(), clipRt.y());
@@ -1279,8 +1281,10 @@ public:
                 evas_object_image_file_set(eo, path, NULL);
             }
             evas_object_image_size_set(eo, data->width(), data->height());
+#ifndef STARFISH_TIZEN_TV
             evas_object_image_colorspace_set(
                 eo, evas_object_image_colorspace_get(imgData));
+#endif
         }
 
         evas_object_image_filled_set(eo, EINA_TRUE);
@@ -1378,8 +1382,10 @@ public:
                         evas_object_image_data_get(imgData, EINA_FALSE);
                     evas_object_image_size_set(eo, data->width(),
                                                data->height());
+#ifndef STARFISH_TIZEN_TV
                     evas_object_image_colorspace_set(
                         eo, evas_object_image_colorspace_get(imgData));
+#endif
                     evas_object_image_data_set(eo, imgBuf);
                 } else {
                     const char* path;
@@ -1387,8 +1393,10 @@ public:
                     evas_object_image_file_set(eo, path, NULL);
                     evas_object_image_size_set(eo, data->width(),
                                                data->height());
+#ifndef STARFISH_TIZEN_TV
                     evas_object_image_colorspace_set(
                         eo, evas_object_image_colorspace_get(imgData));
+#endif
                 }
             }
 
@@ -1445,8 +1453,10 @@ public:
                             evas_object_image_data_get(imgData, EINA_FALSE);
                         evas_object_image_size_set(eo, data->width(),
                                                    data->height());
+#ifndef STARFISH_TIZEN_TV
                         evas_object_image_colorspace_set(
                             eo, evas_object_image_colorspace_get(imgData));
+#endif
                         evas_object_image_data_set(eo, imgBuf);
                     } else {
                         const char* path;
@@ -1454,8 +1464,10 @@ public:
                         evas_object_image_file_set(eo, path, NULL);
                         evas_object_image_size_set(eo, data->width(),
                                                    data->height());
+#ifndef STARFISH_TIZEN_TV
                         evas_object_image_colorspace_set(
                             eo, evas_object_image_colorspace_get(imgData));
+#endif
                     }
 
                     evas_object_image_alpha_set(eo, EINA_TRUE);
@@ -1531,9 +1543,11 @@ public:
             evas_object_resize(eo, ww, hh);
             evas_object_raise(eo);
             evas_object_image_size_set(eo, data->width(), data->height());
+#ifndef STARFISH_TIZEN_TV
             evas_object_image_colorspace_set(
                 eo,
                 evas_object_image_colorspace_get((Evas_Object*)data->unwrap()));
+#endif
             evas_object_image_filled_set(eo, EINA_TRUE);
             evas_object_image_alpha_set(eo, EINA_TRUE);
             evas_object_image_data_set(

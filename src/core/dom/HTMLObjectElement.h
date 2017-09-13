@@ -35,6 +35,9 @@ public:
         m_content = nullptr;
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLObjectElement() const override;
