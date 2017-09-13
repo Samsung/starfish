@@ -7378,7 +7378,7 @@ String* CSSStyleDeclaration::Flex()
 #ifdef STARFISH_ENABLE_TEST
 void dump(Node* node, unsigned depth)
 {
-    if (!node->style()) {
+    if (!node->isElement()) {
         return;
     }
 
@@ -7386,7 +7386,7 @@ void dump(Node* node, unsigned depth)
         printf("  ");
     }
 
-    node->dumpStyle();
+    node->asElement()->dumpStyle();
     printf("\n");
 
     Node* child = node->firstChild();

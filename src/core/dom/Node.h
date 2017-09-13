@@ -476,8 +476,6 @@ public:
         auto s = localName()->toUTF8NonGCString();
         printf("[%s] ", s.data());
     }
-    virtual void dumpStyle();
-    CSSStyleDeclaration* getComputedStyle();
 #endif
 
     Element* firstElementChild();
