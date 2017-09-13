@@ -289,6 +289,10 @@ public:
     }
 
     CSSStyleDeclaration* inlineStyle();
+    CSSStyleDeclaration* getComputedStyle();
+#ifdef STARFISH_ENABLE_TEST
+    void dumpStyle();
+#endif
     void notifyInlineStyleChanged();
     void registerInlineStyleCallback();
 
