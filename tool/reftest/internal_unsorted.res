@@ -190,6 +190,8 @@
 442;test/internal-test/css/table/table_fixed_18.html
 472;test/internal-test/css/table/table_fixed_19.html
 343;test/internal-test/css/table/table_fixed_20.html
+415;test/internal-test/css/table/table_fixed_21.html
+398;test/internal-test/css/table/table_fixed_22.html
 548;test/internal-test/css/table/table_auto_01.html
 639;test/internal-test/css/table/table_auto_02.html
 656;test/internal-test/css/table/table_auto_03.html
