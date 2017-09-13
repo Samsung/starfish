@@ -23,6 +23,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLImageElement.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameReplacedImage.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -450,7 +451,11 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                 String* eventType =
                     doc->starFish()->staticStrings()->m_load.localName();
                 Event* e = new Event(doc, eventType, EventInit(false, false));
-                doc->window()->EventTarget::dispatchEvent(e);
+                doc->window()->dispatchEventByUA(e);
+                if (!doc->browsingContext()->isMainBrowsingContext()) {
+                    doc->browsingContext()->sourceElement()->dispatchEventByUA(
+                        e);
+                }
 #ifdef STARFISH_ENABLE_TEST
                 g_fireOnloadEvent = true;
                 doc->window()->browsingContext()->setNeedsPainting();

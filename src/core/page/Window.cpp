@@ -246,7 +246,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
                 }
                 e->setSource(source);
                 e->setOrigin(source->location()->origin());
-                window->dispatchEvent(e);
+                window->dispatchEventByUA(e);
             },
             this, serialized);
     }
