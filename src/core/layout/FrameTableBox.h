@@ -179,9 +179,6 @@ private:
 
     size_t numOfRowsInTheTable();
 
-    // width() is removed from HTML5. But We implement it as it is extensively
-    // used in w3c test cases.
-    LayoutUnit widthFromAttribute(LayoutUnit parentContentWidth);
     LayoutUnit cellspacingFromAttribute();
 
     template <typename Func>

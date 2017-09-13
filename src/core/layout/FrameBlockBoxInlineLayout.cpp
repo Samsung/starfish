@@ -3816,14 +3816,6 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
         }
     }
 
-    if (node() && node()->isHTMLTableElement()) {
-        LayoutUnit widthAttribute = widthFromAttribute(parentContentWidth);
-        if (widthAttribute > 0) {
-            widthAttribute -= borderWidth() + paddingWidth();
-            tablePreferredWidth = tablePreferredMinWidth = widthAttribute;
-        }
-    }
-
     tablePreferredMinWidth =
         ctx.widthAppliedByTextIndent(tablePreferredMinWidth);
     ctx.updatePreferredMinWidth(tablePreferredMinWidth);
