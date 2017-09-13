@@ -325,6 +325,7 @@ static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv,
     ecore_animator_add(
         [](void* user_data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)user_data;
+            StarFishEnterer enter(wnd->starFish());
             wnd->onResize();
             return ECORE_CALLBACK_CANCEL;
         },
