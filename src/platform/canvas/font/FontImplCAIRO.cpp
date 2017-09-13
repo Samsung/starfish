@@ -291,90 +291,105 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
     return met;
 }
 
-FontSelector::FontSelector()
-{
-    static FcConfig* config = FcInitLoadConfigAndFonts();
+class FontSelectorImplCairo : public FontSelector {
+public:
+    FontSelectorImplCairo()
+    {
+        FcConfig* config = FcInitLoadConfigAndFonts();
 
 #ifdef STARFISH_TIZEN_TV
-    std::string fallbackFont = "SamsungOneFallback";
+        std::string fallbackFont = "SamsungOneFallback";
 #else
-    std::string fallbackFont = "";
+        std::string fallbackFont = "";
 #endif
 
-    FcPattern* pattern = FcNameParse((const FcChar8*)(fallbackFont.data()));
+        FcPattern* pattern = FcNameParse((const FcChar8*)(fallbackFont.data()));
 
-    if (!pattern) {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
+        if (!pattern) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
 
 #ifdef STARFISH_TIZEN_TV
-    FcPatternAddString(pattern, FC_FAMILY, (const FcChar8*)"SamsungOneUI");
-    FcPatternAddString(pattern, FC_FAMILY,
-                       (const FcChar8*)"SamsungOneUIKoreanH");
+        FcPatternAddString(pattern, FC_FAMILY, (const FcChar8*)"SamsungOneUI");
+        FcPatternAddString(pattern, FC_FAMILY,
+                           (const FcChar8*)"SamsungOneUIKoreanH");
 #endif
 
-    FcConfigSubstitute(config, pattern, FcMatchPattern);
-    FcDefaultSubstitute(pattern);
+        FcConfigSubstitute(config, pattern, FcMatchPattern);
+        FcDefaultSubstitute(pattern);
 
-    FcResult res;
-    FcFontSet* set = FcFontSort(config, pattern, FcTrue, NULL, &res);
+        FcResult res;
+        FcFontSet* set = FcFontSort(config, pattern, FcTrue, NULL, &res);
 
-    if (!set) {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    std::string fontPath;
-    for (int i = 0; i < set->nfont; i++) {
-        FcPattern* font = set->fonts[i];
-        FcChar8* file;
-        if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
-            fontPath = (char*)file;
-
-            // Add every font which's in system.
-            m_systemFonts.emplace_back(std::make_pair(fontPath, nullptr));
+        if (!set) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    }
 
-    FcFontSetDestroy(set);
-    FcPatternDestroy(pattern);
+        std::string fontPath;
+        for (int i = 0; i < set->nfont; i++) {
+            FcPattern* font = set->fonts[i];
+            FcChar8* file;
+            if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
+                fontPath = (char*)file;
 
-    FT_Error error;
-    error = FT_Init_FreeType(&m_FTFaceLib);
-    CHECK_ERROR;
-}
-
-FontSelector::~FontSelector()
-{
-    auto iter = m_systemFonts.begin();
-    while (iter != m_systemFonts.end()) {
-        std::pair<std::string, FT_Face> font = *iter;
-        if (font.second != nullptr) {
-            FT_Done_Face(font.second);
-        }
-        iter++;
-    }
-    FT_Done_FreeType(m_FTFaceLib);
-}
-#if !defined(PORT_GRAPHIC_BACKEND_EFL)
-Font* FontSelector::loadFont(String* familyName, float size, char style,
-                             char weight)
-{
-    FontImplCAIRO* f = nullptr;
-
-    for (unsigned i = 0; i < m_fontCache.size(); i++) {
-        if (std::get<1>(m_fontCache[i])->equals(familyName)) {
-            if (std::get<2>(m_fontCache[i]) == size &&
-                std::get<3>(m_fontCache[i]) == style &&
-                std::get<4>(m_fontCache[i]) == weight) {
-                return std::get<0>(m_fontCache[i]);
+                // Add every font which's in system.
+                m_systemFonts.emplace_back(std::make_pair(fontPath, nullptr));
             }
         }
+
+        FcFontSetDestroy(set);
+        FcPatternDestroy(pattern);
+
+        FT_Error error;
+        error = FT_Init_FreeType(&m_FTFaceLib);
+        CHECK_ERROR;
+
+        FcConfigDestroy(config);
     }
 
-    f = new FontImplCAIRO(familyName, size, style, weight,
-                          loadFontMetrics(familyName, size), this);
-    m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
-    return f;
+    ~FontSelectorImplCairo()
+    {
+        auto iter = m_systemFonts.begin();
+        while (iter != m_systemFonts.end()) {
+            std::pair<std::string, FT_Face> font = *iter;
+            if (font.second != nullptr) {
+                FT_Done_Face(font.second);
+            }
+            iter++;
+        }
+        FT_Done_FreeType(m_FTFaceLib);
+    }
+
+    Font* loadFont(String* familyName, float size, char style, char weight)
+    {
+        FontImplCAIRO* f = nullptr;
+
+        for (unsigned i = 0; i < m_fontCache.size(); i++) {
+            if (std::get<1>(m_fontCache[i])->equals(familyName)) {
+                if (std::get<2>(m_fontCache[i]) == size &&
+                    std::get<3>(m_fontCache[i]) == style &&
+                    std::get<4>(m_fontCache[i]) == weight) {
+                    return std::get<0>(m_fontCache[i]);
+                }
+            }
+        }
+
+        f = new FontImplCAIRO(familyName, size, style, weight,
+                              loadFontMetrics(familyName, size), this);
+        m_fontCache.push_back(
+            std::make_tuple(f, familyName, size, style, weight));
+        return f;
+    }
+};
+#if !defined(PORT_CANVAS_BACKEND_EFL)
+FontSelector* FontSelector::createFontSelector()
+{
+    return new FontSelectorImplCairo();
+}
+#else
+FontSelector* FontSelector::createGenericFontSelector()
+{
+    return new FontSelectorImplCairo();
 }
 #endif
 }

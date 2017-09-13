@@ -3939,7 +3939,6 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
 void InlineNonReplacedBox::paint(PaintingContext& ctx)
 {
     if (isEstablishesStackingContext()) {
-        ctx.m_canvas->saveByFrame(this);
         return;
     }
 

@@ -62,7 +62,7 @@ namespace Unit {
 
     class Location {
     public:
-        Location(float x, float y)
+        Location(float x = 0, float y = 0)
         {
             m_x = x;
             m_y = y;
@@ -99,7 +99,7 @@ namespace Unit {
 
     class Rect {
     public:
-        Rect(float x, float y, float w, float h)
+        Rect(float x = 0, float y = 0, float w = 0, float h = 0)
             : m_location(x, y)
             , m_size(w, h)
         {

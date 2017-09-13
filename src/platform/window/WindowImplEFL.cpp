@@ -219,7 +219,6 @@ public:
         m_window = (WindowImplEFL*)wnd;
         m_image =
             evas_object_image_add(evas_object_evas_get(m_window->m_window));
-        evas_object_image_size_set(m_image, w, h);
         evas_object_image_filled_set(m_image, EINA_TRUE);
 #ifndef STARFISH_TIZEN_TV
         evas_object_image_colorspace_set(
@@ -229,8 +228,12 @@ public:
         evas_object_anti_alias_set(m_image, EINA_TRUE);
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
                                 EVAS_COLORSPACE_ARGB8888);
-        m_width = w;
-        m_height = h;
+
+        m_bufferWidth = m_width = -1;
+        m_bufferHeight = m_height = -1;
+        m_pixelRatio = 1;
+
+        resize(w, h);
         // STARFISH_LOG_INFO("create CanvasSurfaceEFL %p %p\n", this, m_image);
 
         STARFISH_ASSERT(evas_object_visible_get(m_image) == EINA_FALSE);
@@ -265,6 +268,14 @@ public:
         }
     }
 
+    virtual uint8_t* data()
+    {
+        void* address = evas_object_image_data_get(m_image, EINA_TRUE);
+        STARFISH_ASSERT(address);
+        evas_object_image_data_set(m_image, address);
+        return (uint8_t*)address;
+    }
+
     virtual void detachNativeBuffer()
     {
         detachNative(m_image);
@@ -273,9 +284,19 @@ public:
 
     virtual void resize(size_t w, size_t h)
     {
-        STARFISH_ASSERT(m_image);
         if (m_width != w || m_height != h) {
-            evas_object_image_size_set(m_image, w, h);
+            m_pixelRatio = 1;
+
+            while ((w / m_pixelRatio > 10000) || (h / m_pixelRatio > 10000)) {
+                m_pixelRatio++;
+            }
+
+            m_width = w;
+            m_height = h;
+            m_bufferWidth = std::max((size_t)1, m_width / m_pixelRatio);
+            m_bufferHeight = std::max((size_t)1, m_height / m_pixelRatio);
+
+            evas_object_image_size_set(m_image, m_bufferWidth, m_bufferHeight);
         }
 #ifndef NDEBUG
         void* address = evas_object_image_data_get(m_image, EINA_TRUE);
@@ -299,10 +320,25 @@ public:
         return m_height;
     }
 
+    virtual size_t bufferWidth()
+    {
+        return m_bufferWidth;
+    }
+
+    virtual size_t bufferHeight()
+    {
+        return m_bufferHeight;
+    }
+
+    virtual size_t pixelRatio()
+    {
+        return m_pixelRatio;
+    }
+
     virtual void clear()
     {
         void* address = evas_object_image_data_get(m_image, EINA_TRUE);
-        size_t end = m_width * m_height * sizeof(uint32_t);
+        size_t end = m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
         memset(address, 0xff, end);
         evas_object_image_data_set(m_image, address);
     }
@@ -312,6 +348,9 @@ protected:
     Evas_Object* m_image;
     size_t m_width;
     size_t m_height;
+    size_t m_bufferWidth;
+    size_t m_bufferHeight;
+    size_t m_pixelRatio;
 };
 
 CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
@@ -1103,7 +1142,7 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
                 CanvasSurface::create(this, width(), height());
             g_imgBufferForScreehShot =
                 (Evas_Object*)g_surfaceForScreehShot->unwrap();
-            Canvas* c = Canvas::create(g_surfaceForScreehShot);
+            Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
             c->setViewportWidthAndHeight(width(), height());
             return c;
         }
@@ -1146,7 +1185,7 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
     m_surfaceList.clear();
     m_surfaceList.shrink_to_fit();
 
-    Canvas* canvas = Canvas::createDirect(d);
+    Canvas* canvas = Canvas::createDirect(starFish(), d);
     delete d;
 
     return canvas;

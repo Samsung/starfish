@@ -27,6 +27,7 @@ void* FrameSVGSVGBox::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameSVGSVGBox)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGSVGBox, m_surface));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGSVGBox, m_node));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGSVGBox, m_layoutParent));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGSVGBox, m_surface));
@@ -92,7 +93,9 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     }
     m_surface->clear();
 
-    canvas = Canvas::createGenericCanvas(m_surface);
+    canvas =
+        Canvas::createGenericCanvas(node()->starFish(), m_surface->data(),
+                                    m_surface->width(), m_surface->height());
 
     if (node()->asSVGSVGElement()->hasViewBox()) {
         Unit::Rect rt = node()->asSVGSVGElement()->viewBox();

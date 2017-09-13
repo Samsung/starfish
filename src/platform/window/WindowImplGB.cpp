@@ -157,9 +157,11 @@ public:
         m_height = h;
         m_window = (WindowImplGB*)wnd;
 
-        buffer = (unsigned char*)malloc(w * h * sizeof(uint32_t));
-        size_t end = m_width * m_height * sizeof(uint32_t);
-        memset(buffer, 0x00, end);
+        m_bufferWidth = m_width = -1;
+        m_bufferHeight = m_height = -1;
+        m_pixelRatio = 1;
+
+        resize(w, h);
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            CanvasSurfaceDALI* s =
@@ -179,6 +181,22 @@ public:
 
     virtual void resize(size_t w, size_t h)
     {
+        if (m_width != w || m_height != h) {
+            m_pixelRatio = 1;
+
+            while ((w / m_pixelRatio > 10000) || (h / m_pixelRatio > 10000)) {
+                m_pixelRatio++;
+            }
+
+            m_width = w;
+            m_height = h;
+            m_bufferWidth = std::max((size_t)1, m_width / m_pixelRatio);
+            m_bufferHeight = std::max((size_t)1, m_height / m_pixelRatio);
+
+            detachNativeBuffer();
+            buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
+                                            sizeof(uint32_t));
+        }
     }
 
     virtual void* unwrap()
@@ -196,9 +214,24 @@ public:
         return m_height;
     }
 
+    virtual size_t bufferWidth()
+    {
+        return m_bufferWidth;
+    }
+
+    virtual size_t bufferHeight()
+    {
+        return m_bufferHeight;
+    }
+
+    virtual size_t pixelRatio()
+    {
+        return m_pixelRatio;
+    }
+
     virtual void clear()
     {
-        size_t end = m_width * m_height * sizeof(uint32_t);
+        size_t end = m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
         memset(buffer, 0x00, end);
     }
 
@@ -207,6 +240,9 @@ protected:
     unsigned char* buffer;
     size_t m_width;
     size_t m_height;
+    size_t m_bufferWidth;
+    size_t m_bufferHeight;
+    size_t m_pixelRatio;
 };
 
 CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
@@ -310,7 +346,7 @@ Canvas* WindowImplGB::preparePainting(bool forPainting)
                 CanvasSurface::create(this, width(), height());
             g_imgBufferForScreehShot =
                 (unsigned char*)g_surfaceForScreehShot->unwrap();
-            Canvas* c = Canvas::create(g_surfaceForScreehShot);
+            Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
             c->setViewportWidthAndHeight(width(), height());
             return c;
         }
@@ -329,7 +365,7 @@ Canvas* WindowImplGB::preparePainting(bool forPainting)
     d->h = m_height;
     d->image = m_internalBuffer;
     d->stride = m_stride;
-    Canvas* canvas = Canvas::createDirect(d);
+    Canvas* canvas = Canvas::createDirect(starFish(), d);
     delete d;
 
     return canvas;

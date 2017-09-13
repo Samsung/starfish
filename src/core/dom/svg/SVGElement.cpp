@@ -216,7 +216,7 @@ void SVGElement::styleForPresentationAttribute(
             CSSTokenVector tokens;
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
-            if (pair.updateValueTransform(tokens)) {
+            if (pair.updateValueTransform(tokens, true)) {
                 cssValues.push_back(pair);
             }
         }

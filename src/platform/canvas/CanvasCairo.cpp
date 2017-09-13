@@ -15,6 +15,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "StarFish.h"
 
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
 
@@ -38,7 +39,6 @@ extern bool g_enablePixelTest;
 
 class CanvasStateCairo : public CanvasState {
 public:
-    cairo_matrix_t m_matrix;
     CanvasStateCairo()
         : CanvasState()
     {
@@ -57,8 +57,9 @@ class CanvasCairo : public Canvas {
     }
 
 public:
-    CanvasCairo(void* data)
+    CanvasCairo(StarFish* starfish, void* data)
     {
+        m_starfish = starfish;
         m_canvas = nullptr;
         m_surface = nullptr;
         m_buffer = NULL;
@@ -79,15 +80,16 @@ public:
         save();
     }
 
-    CanvasCairo(CanvasSurface* data)
+    CanvasCairo(StarFish* starfish, CanvasSurface* data)
     {
+        m_starfish = starfish;
         m_canvas = nullptr;
         m_surface = nullptr;
 
         m_buffer = (void*)data->unwrap();
-        initFromBuffer(
-            m_buffer, data->width(), data->height(),
-            cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, data->width()));
+        initFromBuffer(m_buffer, data->bufferWidth(), data->bufferHeight(),
+                       cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
+                                                     data->bufferWidth()));
 
         save();
     }
@@ -133,49 +135,6 @@ public:
     {
         m_state.erase(m_state.end() - 1);
         cairo_restore(m_canvas);
-    }
-
-    virtual void restoreState(Canvas* canvas)
-    {
-        m_statePerFrame = ((CanvasCairo*)canvas)->m_statePerFrame;
-    }
-
-    virtual void saveByFrame(Frame* f)
-    {
-        cairo_get_matrix(m_canvas, &lastState().m_matrix);
-        m_statePerFrame.emplace(f, lastState());
-    }
-
-    virtual CanvasState* getByFrame(Frame* f)
-    {
-        auto it = m_statePerFrame.find(f);
-        if (it == m_statePerFrame.end()) {
-            return nullptr;
-        }
-        return &it->second;
-    }
-
-    virtual void replace(CanvasState* state, ReplaceFlag flag)
-    {
-        CanvasStateCairo* cairoState = (CanvasStateCairo*)state;
-        auto& lastState = m_state.back();
-
-        // FIXME: Should replace clipping information here!
-
-        if (flag == ReplaceFlag::All) {
-            cairo_set_matrix(m_canvas, &cairoState->m_matrix);
-            lastState.m_color = cairoState->m_color;
-            lastState.m_opacity = cairoState->m_opacity;
-            lastState.m_baseX = cairoState->m_baseX;
-            lastState.m_baseY = cairoState->m_baseY;
-            lastState.m_font = cairoState->m_font;
-            lastState.m_visible = cairoState->m_visible;
-            lastState.m_textDecorationData = cairoState->m_textDecorationData;
-        }
-    }
-
-    virtual void assureMapMode()
-    {
     }
 
     // transformations (default transform is the identity matrix)
@@ -324,6 +283,18 @@ public:
             return;
         }
 
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+        if (!lastState().m_font->isGenericFont()) {
+            Font* nonGenericFont = lastState().m_font;
+            Font* font = m_starfish->fetchGenericFont(
+                nonGenericFont->familyName(), nonGenericFont->size(),
+                nonGenericFont->style(), nonGenericFont->weight());
+            setFont(font);
+        }
+        // force measure text for fill internal glyph cache
+        lastState().m_font->measureText(sv);
+#endif
+
 #ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
             if (sv.originalString() != String::emptyString &&
@@ -413,14 +384,10 @@ public:
         int glyph_count = sv.length();
 
         fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
-
-        cairo_set_font_face(m_canvas, fontFace);
-        cairo_set_font_size(m_canvas, size);
-        cairo_scaled_font_t* scaled_face = cairo_get_scaled_font(m_canvas);
         cairo_translate(m_canvas, 0, size);
 
-        cairo_glyph_t glyph;
         for (int i = 0; i < glyph_count; i++) {
+            cairo_glyph_t glyph;
             glyph_index = FT_Get_Char_Index(face, sv.charAt(i));
             if (glyph_index != 0) {
                 glyph.x = x_bias;
@@ -434,8 +401,6 @@ public:
                     fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
                     cairo_set_font_face(m_canvas, fontFace);
                     cairo_set_font_size(m_canvas, size);
-                    cairo_scaled_font_t* scaled_face =
-                        cairo_get_scaled_font(m_canvas);
                     glyph.x = x_bias;
                     glyph.y = 0;
                     x_bias +=
@@ -445,6 +410,8 @@ public:
                     glyph.y = 0;
                 }
             }
+            cairo_set_font_face(m_canvas, fontFace);
+            cairo_set_font_size(m_canvas, size);
             glyph.index = glyph_index;
             cairo_glyph_path(m_canvas, &glyph, 1);
         }
@@ -740,7 +707,14 @@ public:
         return m_state[m_state.size() - 1];
     }
 
+    virtual void resetMatrixAndClip()
+    {
+        cairo_reset_clip(m_canvas);
+        cairo_identity_matrix(m_canvas);
+    }
+
 protected:
+    StarFish* m_starfish;
     std::vector<CanvasStateCairo> m_state;
     std::unordered_map<Frame*, CanvasStateCairo> m_statePerFrame;
     cairo_surface_t* m_surface;
@@ -751,18 +725,19 @@ protected:
 };
 
 #if !defined(PORT_GRAPHIC_BACKEND_EFL)
-Canvas* Canvas::createDirect(void* data)
+Canvas* Canvas::createDirect(StarFish* starfish, void* data)
 {
-    return new CanvasCairo(data);
+    return new CanvasCairo(starfish, data);
 }
 
-Canvas* Canvas::create(CanvasSurface* data)
+Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
 {
-    return new CanvasCairo(data);
+    return new CanvasCairo(starfish, data);
 }
 #endif
 
-Canvas* Canvas::createGenericCanvas(ImageData* data)
+Canvas* Canvas::createGenericCanvas(StarFish* starfish, void* data, size_t w,
+                                    size_t h)
 {
     struct dummy {
         void* image;
@@ -770,11 +745,11 @@ Canvas* Canvas::createGenericCanvas(ImageData* data)
         int h;
         int stride;
     } d;
-    d.image = data->data();
-    d.w = data->width();
-    d.h = data->height();
-    d.stride = data->width() * 4;
-    return new CanvasCairo(&d);
+    d.image = data;
+    d.w = w;
+    d.h = h;
+    d.stride = w * 4;
+    return new CanvasCairo(starfish, &d);
 }
 }
 

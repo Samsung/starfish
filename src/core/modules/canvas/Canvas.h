@@ -18,6 +18,7 @@
 #define __StarFishCanvas__
 
 #include "core/modules/canvas/TextDecorationData.h"
+#include "core/layout/Frame.h"
 
 namespace StarFish {
 
@@ -53,11 +54,15 @@ protected:
 public:
     static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h);
     virtual void* unwrap() = 0;
+    virtual uint8_t* data() = 0;
     virtual void resize(size_t w, size_t h) = 0;
     virtual size_t width() = 0;
     virtual size_t height() = 0;
     virtual void clear() = 0;
     virtual void detachNativeBuffer() = 0;
+    virtual size_t bufferWidth() = 0;
+    virtual size_t bufferHeight() = 0;
+    virtual size_t pixelRatio() = 0;
     virtual ~CanvasSurface()
     {
     }
@@ -73,11 +78,10 @@ protected:
     LayoutUnit m_viewportHeight;
 
 public:
-    enum ReplaceFlag { All, ClippingOnly };
-
-    static Canvas* createDirect(void* data);
-    static Canvas* create(CanvasSurface* data);
-    static Canvas* createGenericCanvas(ImageData* data);
+    static Canvas* createDirect(StarFish* starfish, void* data);
+    static Canvas* create(StarFish* starfish, CanvasSurface* data);
+    static Canvas* createGenericCanvas(StarFish* starfish, void* data, size_t w,
+                                       size_t h);
 
     virtual ~Canvas()
     {
@@ -109,10 +113,6 @@ public:
     // state
     virtual void save() = 0;    // push state on state stack
     virtual void restore() = 0; // pop state stack and restore state
-    virtual void restoreState(Canvas* canvas) = 0;
-    virtual void saveByFrame(Frame* f) = 0;
-    virtual CanvasState* getByFrame(Frame* f) = 0;
-    virtual void replace(CanvasState* state, ReplaceFlag flag) = 0;
     // transformations (default transform is the identity matrix)
     virtual void scale(double x, double y) = 0;
     virtual void scale(double x, double y, double ox, double oy) = 0;
@@ -123,6 +123,9 @@ public:
     virtual void postMatrix(const SkMatrix& matrix) = 0;
 
     virtual void clip(const Unit::Rect& rt) = 0;
+
+    // reset transform matrix & clip
+    virtual void resetMatrixAndClip() = 0;
 
     virtual void setColor(const Unit::Color& clr) = 0;
     virtual void beginOpacityLayer(float c) = 0;

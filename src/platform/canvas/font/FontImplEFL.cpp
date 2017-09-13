@@ -143,6 +143,11 @@ public:
     {
     }
 
+    virtual bool isGenericFont() const
+    {
+        return false;
+    }
+
     void loadFont(int size)
     {
         if (m_text) {
@@ -285,26 +290,36 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
     return met;
 }
 
-Font* FontSelector::loadFont(String* familyName, float size, char style,
-                             char weight)
-{
-    FontImplEFL* f = nullptr;
+class FontSelectorImplEFL : public FontSelector {
+public:
+    virtual Font* loadFont(String* familyName, float size, char style,
+                           char weight) override
+    {
+        FontImplEFL* f = nullptr;
 
-    for (unsigned i = 0; i < m_fontCache.size(); i++) {
-        if (std::get<1>(m_fontCache[i])->equals(familyName)) {
-            if (std::get<2>(m_fontCache[i]) == size &&
-                std::get<3>(m_fontCache[i]) == style &&
-                std::get<4>(m_fontCache[i]) == weight) {
-                return std::get<0>(m_fontCache[i]);
+        for (unsigned i = 0; i < m_fontCache.size(); i++) {
+            if (std::get<1>(m_fontCache[i])->equals(familyName)) {
+                if (std::get<2>(m_fontCache[i]) == size &&
+                    std::get<3>(m_fontCache[i]) == style &&
+                    std::get<4>(m_fontCache[i]) == weight) {
+                    return std::get<0>(m_fontCache[i]);
+                }
             }
         }
-    }
 
-    f = new FontImplEFL(
-        familyName, size, style, weight,
-        loadFontMetrics(convertStyleParamStr(familyName, style, weight), size));
-    m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
-    return f;
+        f = new FontImplEFL(
+            familyName, size, style, weight,
+            loadFontMetrics(convertStyleParamStr(familyName, style, weight),
+                            size));
+        m_fontCache.push_back(
+            std::make_tuple(f, familyName, size, style, weight));
+        return f;
+    }
+};
+
+FontSelector* FontSelector::createFontSelector()
+{
+    return new FontSelectorImplEFL();
 }
 }
 #endif
