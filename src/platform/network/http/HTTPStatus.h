@@ -94,17 +94,17 @@ enum HTTPStatusCode {
 #undef DEFINE_HTTP_STATUS_CODE
 };
 
-static std::string httpStatusCodeToText(long responseCode)
+static String* httpStatusCodeToText(long responseCode)
 {
     switch (responseCode) {
 #define ADD_CASE_FOR_HTTP_STATUS_TEXT(name, code, text) \
     case code:                                          \
-        return text;
+        return String::createASCIIString(text);
 
         STARFISH_ENUM_HTTP_STATUS(ADD_CASE_FOR_HTTP_STATUS_TEXT)
 #undef ADD_CASE_FOR_HTTP_STATUS_TEXT
     default:
-        return "Unassigned";
+        return String::createASCIIString("Unassigned");
     }
 }
 }

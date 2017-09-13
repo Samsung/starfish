@@ -23,6 +23,7 @@
 #include "core/xml/XMLHttpRequest.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/page/Window.h"
+#include "platform/network/http/HTTPStatus.h"
 
 namespace StarFish {
 
@@ -339,7 +340,7 @@ String* XMLHttpRequest::statusText() const
         m_resourceRequest->readyState() == ResourceRequest::OPENED) {
         return String::emptyString;
     }
-    return m_resourceRequest->statusText();
+    return httpStatusCodeToText(m_resourceRequest->status());
 }
 
 ScriptValue XMLHttpRequest::response() const
