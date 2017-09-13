@@ -154,11 +154,6 @@ public:
         return m_status;
     }
 
-    String* statusText() const
-    {
-        return String::fromUTF8(m_statusText.data());
-    }
-
     bool isSync() const
     {
         return m_isSync;
@@ -259,7 +254,6 @@ protected:
     MethodType m_method;
     ResponseType m_responseType;
     uint16_t m_status;
-    std::string m_statusText;
     uint32_t m_timeout;
     NetworkURLWorkerData* m_activeNetworkURLWorkerData;
     Mutex* m_mutex;

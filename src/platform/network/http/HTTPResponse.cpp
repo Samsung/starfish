@@ -50,9 +50,4 @@ bool HTTPResponse::isRedirectionResponseStatus()
     }
     return false;
 }
-
-std::string HTTPResponse::responseStatusText()
-{
-    return httpStatusCodeToText(m_responseCode);
-}
 }
