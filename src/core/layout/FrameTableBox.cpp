@@ -215,8 +215,24 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                 tableWidth -= borderWidth() + paddingWidth();
             }
         } else if (style()->width().isPercent()) {
-            tableWidth =
-                parentContentWidth.toInt() * style()->width().percent();
+            switch (style()->position()) {
+            case PositionValue::FixedPositionValue:
+                tableWidth = ctx.viewportWidth() * style()->width().percent();
+                break;
+            case PositionValue::AbsolutePositionValue: {
+                FrameBox* cb = containingBlock(this);
+                LayoutUnit containgBlockContentWidth =
+                    cb->contentWidth() + cb->paddingWidth();
+                tableWidth =
+                    containgBlockContentWidth * style()->width().percent();
+                break;
+            }
+            default:
+                tableWidth =
+                    parentContentWidth.toInt() * style()->width().percent();
+                break;
+            }
+
             tableWidth -= borderWidth() + paddingWidth();
         }
     }
@@ -912,10 +928,14 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
             specifiedHeight = LayoutUnit::fromPixel(style()->height().fixed());
             specifiedHeight += borderHeight() + paddingHeight();
         } else if (style()->height().isPercent()) {
-            if (ctx.parentHasFixedHeight(this)) {
-                LayoutUnit parentContentHeight = ctx.parentFixedHeight(this);
+            if (style()->position() == PositionValue::FixedPositionValue) {
                 specifiedHeight =
-                    parentContentHeight.toInt() * style()->height().percent();
+                    ctx.viewportHeight() * style()->height().percent();
+            } else {
+                if (ctx.parentHasFixedHeight(this)) {
+                    specifiedHeight = ctx.parentFixedHeight(this) *
+                                      style()->height().percent();
+                }
             }
         }
     }
