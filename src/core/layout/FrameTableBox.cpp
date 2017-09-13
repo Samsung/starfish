@@ -210,30 +210,13 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             // border and padding.
             // For HTML table, width is the table width INCLUDNIG border and
             // padding.
-            // For our implementation, tableWidth refers to CSS table convention
+            // Internally, tableWidth refers to the CSS table convention
             if (!isAnonymous() && node()->isHTMLTableElement()) {
                 tableWidth -= borderWidth() + paddingWidth();
             }
         } else if (style()->width().isPercent()) {
             tableWidth =
                 parentContentWidth.toInt() * style()->width().percent();
-            tableWidth -= borderWidth() + paddingWidth();
-        }
-    }
-
-    // We support <table width="xx"> unofficially, as it is used to run
-    // w3c test cases, and real-world web sites.
-    // width attribute has the highest priority when defining the width of
-    // a table.
-    //
-    // NOTE: width="0" is handled differently by Blink and Firefox.
-    // When width="0" is given, Blink tries to set table width to 0.
-    // Firefox ignores width="0". We ignore width="0"
-    if (!isAnonymous() && node()->isHTMLTableElement()) {
-        LayoutUnit widthAttribute = widthFromAttribute(parentContentWidth);
-        if (widthAttribute > 0) {
-            hasTableWidth = true;
-            tableWidth = widthAttribute;
             tableWidth -= borderWidth() + paddingWidth();
         }
     }
@@ -1080,44 +1063,6 @@ size_t FrameTableBox::numOfRowsInTheTable()
     }
 
     return rowCount;
-}
-
-LayoutUnit FrameTableBox::widthFromAttribute(LayoutUnit parentContentWidth)
-{
-    LayoutUnit tableWidth = -1;
-    if (isAnonymous() || !node()->isHTMLTableElement()) {
-        return tableWidth;
-    }
-
-    String* w = node()->asHTMLTableElement()->width();
-    if (w && !w->equals(String::emptyString)) {
-        // Use px as the default unit
-        if (!w->contains("px") && !w->contains("%")) {
-            w = w->concat(String::createASCIIString("px"));
-        }
-    }
-
-    CSSStyleValuePair pair;
-    auto utf8Data = w->toUTF8NonGCString();
-    CSSPropertyParser::parseLength(utf8Data.data(), false, true, &pair);
-
-    switch (pair.valueKind()) {
-    case CSSStyleValuePair::ValueKind::Length: {
-        CSSLength len = pair.lengthValue();
-        tableWidth = LayoutUnit::fromPixel(len.value());
-        break;
-    }
-    case CSSStyleValuePair::ValueKind::Percentage:
-        tableWidth = parentContentWidth * pair.percentageValue();
-        break;
-    default:
-        tableWidth = -1;
-    }
-
-    // It is ok to use -1 to indicate both "doesn't exist" and
-    // actual negative width, as negative width is invalid.
-    // FYI, Blink and Firefox ignore a negative width for table
-    return tableWidth;
 }
 
 // Table draws the border around the TableFrameSections

@@ -60,6 +60,10 @@ void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
         if (!old->equals(value)) {
             setAttribute(starFish()->staticStrings()->m_cellspacing, value);
         }
+    } else if (name == starFish()->staticStrings()->m_width) {
+        if (!old->equals(value)) {
+            setAttribute(starFish()->staticStrings()->m_width, value);
+        }
     }
 }
 
@@ -82,6 +86,22 @@ void HTMLTableElement::styleForPresentationAttribute(
         tokens.push_back(token);
         if (pair.updateValueBorderSpacing(tokens)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::BorderSpacing);
+            cssValues.push_back(pair);
+        }
+    }
+    if (!width()->equals(String::emptyString)) {
+        String* w = width();
+        // Use px as the default unit
+        if (!w->contains("px") && !w->contains("%")) {
+            w = w->concat(String::createASCIIString("px"));
+        }
+
+        CSSStyleValuePair pair;
+        CSSTokenVector tokens;
+        CSSTokenValue token = w->toNullableUTF8String().m_buffer;
+        tokens.push_back(token);
+        if (pair.updateValueWidth(tokens)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
             cssValues.push_back(pair);
         }
     }
