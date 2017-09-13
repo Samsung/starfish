@@ -78,6 +78,7 @@ public:
     ImageDataEFL(size_t w, size_t h)
     {
         m_image = evas_object_image_add(internalCanvas());
+        evas_object_data_set(m_image, "local", "0");
         evas_object_image_size_set(m_image, w, h);
         evas_object_image_filled_set(m_image, EINA_TRUE);
 #ifndef STARFISH_TIZEN_TV

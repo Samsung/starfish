@@ -41,6 +41,7 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
 #endif
+#include "core/dom/svg/SVGDocument.h"
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
@@ -710,9 +711,14 @@ Element* Document::createElementNS(Nullable<String*> namespaceString,
     }
     QualifiedName name =
         validateAndExtractQualifiedName(namespaceString, qualifiedName);
-    if (!name.prefix().hasValue() && name.namespaceURI().hasValue() &&
-        name.namespaceURI().getValue().string()->equals(HTML_NAMESPACE)) {
-        return HTMLDocument::createHTMLElement(this, name.localNameAtomic());
+    if (!name.prefix().hasValue() && name.namespaceURI().hasValue()) {
+        if (name.namespaceURI().getValue().string()->equals(HTML_NAMESPACE)) {
+            return HTMLDocument::createHTMLElement(this,
+                                                   name.localNameAtomic());
+        } else if (name.namespaceURI().getValue().string()->equals(
+                       SVG_NAMESPACE)) {
+            return SVGDocument::createSVGElement(this, name.localNameAtomic());
+        }
     }
     return new NamedElement(this, name);
 }
