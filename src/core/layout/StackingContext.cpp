@@ -153,6 +153,7 @@ public:
         : m_canvas(canvas)
     {
         canvas->save();
+
         FrameBox* self = sCtx->owner();
         if (isCompositing) {
             LayoutLocation l = self->absolutePoint(owner);
@@ -182,6 +183,11 @@ public:
         Frame* f = self;
         bool seenFixed = false;
         while (f) {
+            if (f->asFrameBox()->stackingContext() &&
+                f->asFrameBox()->stackingContext()->needsOwnBuffer()) {
+                break;
+            }
+
             if (f->style() && f->style()->position() == FixedPositionValue) {
                 seenFixed = true;
             }
@@ -203,23 +209,21 @@ public:
         canvas->resetMatrixAndClip();
         canvas->resetTextDecorationData();
 
-        {
-            StackingContext* sc = sCtx->parent();
-            while (true) {
-                if (sc == nullptr) {
-                    break;
-                }
-                if (sc->needsOwnBuffer()) {
-                    if (sc->buffer()->pixelRatio() != 1) {
-                        canvas->scale(1.0 / sc->buffer()->pixelRatio(),
-                                      1.0 / sc->buffer()->pixelRatio());
-                    }
-                    canvas->translate(-sc->visibleRect().x(),
-                                      -sc->visibleRect().y());
-                    break;
-                }
-                sc = sc->parent();
+        StackingContext* sc = sCtx->parent();
+        while (true) {
+            if (sc == nullptr) {
+                break;
             }
+            if (sc->needsOwnBuffer()) {
+                if (sc->buffer()->pixelRatio() != 1) {
+                    canvas->scale(1.0 / sc->buffer()->pixelRatio(),
+                                  1.0 / sc->buffer()->pixelRatio());
+                }
+                canvas->translate(-sc->visibleRect().x(),
+                                  -sc->visibleRect().y());
+                break;
+            }
+            sc = sc->parent();
         }
 
         auto iter = frameList.rbegin();
