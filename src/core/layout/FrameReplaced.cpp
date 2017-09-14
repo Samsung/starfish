@@ -18,6 +18,8 @@
 #include "StarFish.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLImageElement.h"
+#include "core/dom/HTMLDocument.h"
 #include "core/layout/FrameReplaced.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
@@ -285,6 +287,15 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
                          parentContentWidth, parentHeightLength);
 
     LayoutUnit w, h;
+
+    if (node()->isHTMLImageElement() &&
+        (node()->asHTMLImageElement()->imageData() ==
+         node()->document()->brokenImage())) {
+        if (width.isAuto() || height.isAuto()) {
+            width = Length(Length::Type::Fixed, intrinsicWidth);
+            height = Length(Length::Type::Fixed, intrinsicHeight);
+        }
+    }
 
     if ((intrinsicWidth == 0 || intrinsicHeight == 0) &&
         (width.isAuto() || height.isAuto())) {
