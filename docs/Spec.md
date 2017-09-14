@@ -774,6 +774,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | onerror | Fired when the error event is raised. |
 | | attribute | onfocus | Fired when the focus event is raised. |
 | | attribute | onkeydown | Fired when the keydown event is raised. |
+| | attribute | onkeypress | Fired when the keypress event is raised. |
 | | attribute | onkeyup | Fired when the keyup event is raised. |
 | | attribute | onload | Fired when the load event is raised. |
 | | attribute | onloadeddata | Fired when the user agent can render the media data at the current playback position for the first time. |

@@ -37,7 +37,7 @@ public:
         TouchEventCancel
     };
 
-    enum KeyEventKind { KeyEventDown, KeyEventUp };
+    enum KeyEventKind { KeyEventDown, KeyEventPress, KeyEventUp };
 
     enum MouseEventKind {
         MouseEventDown,

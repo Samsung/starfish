@@ -1376,6 +1376,7 @@ DEFINE_EVENT_LISTENER(Document, focus);
 DEFINE_EVENT_LISTENER(Document, input);
 DEFINE_EVENT_LISTENER(Document, invalid);
 DEFINE_EVENT_LISTENER(Document, keydown);
+DEFINE_EVENT_LISTENER(Document, keypress);
 DEFINE_EVENT_LISTENER(Document, keyup);
 DEFINE_EVENT_LISTENER(Document, load);
 DEFINE_EVENT_LISTENER(Document, loadeddata);

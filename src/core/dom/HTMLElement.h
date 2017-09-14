@@ -115,7 +115,7 @@ public:
     // DECLARE_EVENT_LISTENER(input);
     // DECLARE_EVENT_LISTENER(invalid);
     DECLARE_EVENT_LISTENER(keydown);
-    // DECLARE_EVENT_LISTENER(keypress);
+    DECLARE_EVENT_LISTENER(keypress);
     DECLARE_EVENT_LISTENER(keyup);
     DECLARE_EVENT_LISTENER(loadeddata);
     DECLARE_EVENT_LISTENER(loadedmetadata);

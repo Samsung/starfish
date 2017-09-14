@@ -432,6 +432,8 @@ public:
                         StarFish::StarFishEnterer enter(m_sf);
                         m_sf->platformWindow()->dispatchKeyEvent(
                             StarFish::PlatformWindow::KeyEventDown, keyData);
+                        m_sf->platformWindow()->dispatchKeyEvent(
+                            StarFish::PlatformWindow::KeyEventPress, keyData);
                         delete d;
                     },
                     d);
