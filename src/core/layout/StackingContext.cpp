@@ -178,10 +178,14 @@ public:
         }
 
         bool hasTransform = false;
-        std::vector<FrameBox*> frameList;
+        std::vector<std::pair<FrameBox*, bool>> frameList; // Frame, seenFixed
         Frame* f = self;
+        bool seenFixed = false;
         while (f) {
-            frameList.push_back(f->asFrameBox());
+            if (f->style() && f->style()->position() == FixedPositionValue) {
+                seenFixed = true;
+            }
+            frameList.push_back(std::make_pair(f->asFrameBox(), seenFixed));
             if (f->style() && f->style()->hasTransforms(f)) {
                 hasTransform = true;
             }
@@ -220,7 +224,8 @@ public:
 
         auto iter = frameList.rbegin();
         while (iter != frameList.rend()) {
-            FrameBox* b = *iter;
+            FrameBox* b = (*iter).first;
+            bool seenFixed = (*iter).second;
             canvas->translate(b->x(), b->y());
             if (b->style()) {
                 if (b != self && b->shouldApplyOverflow() && canApplyOverflow) {
@@ -234,7 +239,7 @@ public:
                     canvas->mergeTextDecorationData(b->style());
                 }
             }
-            if (b->isFrameBlockBox()) {
+            if (b->isFrameBlockBox() && !seenFixed) {
                 canvas->translate(-b->asFrameBlockBox()->scrollLeft(),
                                   -b->asFrameBlockBox()->scrollTop());
             }

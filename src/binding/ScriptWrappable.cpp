@@ -502,7 +502,7 @@ uint8_t* arrayBufferRawData(ScriptArrayBuffer buffer)
 
 uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer)
 {
-    return buffer->buffer()->rawBuffer();
+    return buffer->rawBuffer();
 }
 
 unsigned arrayBufferSize(ScriptArrayBuffer buffer)
