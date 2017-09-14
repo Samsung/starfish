@@ -206,7 +206,7 @@ public:
 
     virtual uint8_t* data()
     {
-        return nullptr;
+        return buffer;
     }
 
     virtual size_t width()
