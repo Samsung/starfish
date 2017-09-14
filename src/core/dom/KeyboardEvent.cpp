@@ -152,7 +152,7 @@ uint32_t keyValueToKeyCode(KeyValue v)
     } else if (v == MediaTrackNextKey) {
         return 417;
     } else if (v == MediaPauseKey) {
-        return 419;
+        return 19;
     } else if (v == MediaRecordKey) {
         return 416;
     } else if (v == MediaPlayKey) {
