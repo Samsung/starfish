@@ -372,7 +372,7 @@ Promise* HTMLMediaElement::play()
         while (iter != m_playOperationQueue.end()) {
             ((MediaOperationQueueDataRequestPlay*)(*iter))
                 ->processOperationQueue();
-            m_playOperationQueue.erase(iter++);
+            iter = m_playOperationQueue.erase(iter);
         }
     }
 
