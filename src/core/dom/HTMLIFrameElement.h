@@ -28,7 +28,8 @@ namespace StarFish {
 class BrowsingContext;
 
 class HTMLIFrameElement : public HTMLElement {
-    friend BrowsingContext;
+    friend class BrowsingContext;
+    friend class ResourceLoader;
 
 public:
     HTMLIFrameElement(Document* document)
@@ -79,7 +80,16 @@ public:
     void navigate(ResourceURL* url, HistoryManager::Action type,
                   ResourceURL* referrerURL);
 
-private:
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLIFrameElement, m_browsingContext));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLIFrameElement, m_historyManager));
+        HTMLElement::fillGCDescriptor(desc);
+    }
+
+    virtual void childBrowsingContextLoaded();
+
     BrowsingContext* m_browsingContext;
     HistoryManager* m_historyManager;
     void loadSrc();

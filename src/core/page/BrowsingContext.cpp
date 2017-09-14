@@ -169,7 +169,7 @@ ScriptBindingInstance* BrowsingContext::scriptBindingInstance()
     return window()->scriptBindingInstance();
 }
 
-bool BrowsingContext::layoutIfNeeds()
+bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleRecalcForWholeDocument) {
@@ -243,7 +243,9 @@ bool BrowsingContext::layoutIfNeeds()
 
     if (m_needsFrameTreeBuild) {
         if (document()->frame()) {
-            webView()->clearStackingContext(true);
+            if (fromWebView) {
+                webView()->clearStackingContext(true);
+            }
 // create frame tree
 #ifdef STARFISH_ENABLE_TIMER
             ProfilerTimer t("create frame tree");
@@ -255,7 +257,9 @@ bool BrowsingContext::layoutIfNeeds()
     }
 
     if (m_needsLayout) {
-        webView()->clearStackingContext(true);
+        if (fromWebView) {
+            webView()->clearStackingContext(true);
+        }
 // lay out frame tree
 #ifdef STARFISH_ENABLE_TIMER
         ProfilerTimer t("lay out frame tree");
