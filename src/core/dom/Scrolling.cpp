@@ -38,7 +38,8 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
         oy >= OverflowValue::AutoOverflow &&
         frame->asFrameBlockBox()->hasBiggerContentThanFrameHeight();
 
-    if (horizontalScrollEnabled || verticalScrollEnabled) {
+    if (m_isScrollTarget ||
+        (horizontalScrollEnabled || verticalScrollEnabled)) {
         bool isPointingDownEvent = false;
         bool isPointingUpEvent = false;
         bool shouldProcess = false;

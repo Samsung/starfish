@@ -510,20 +510,8 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
-            if (child->isFrameBlockBox()) {
-                LayoutRect rect(child->asFrameBox()->x(),
-                                child->asFrameBox()->y(),
-                                child->asFrameBlockBox()->scrollWidth(),
-                                child->asFrameBlockBox()->scrollHeight());
-                if (child->shouldApplyOverflow()) {
-                    rect.setWidth(child->asFrameBox()->width());
-                    rect.setHeight(child->asFrameBox()->height());
-                }
-                visibleRect.unite(rect);
-            } else {
-                LayoutLocation loc;
-                child->computeVisibleRect(nullptr, loc, visibleRect);
-            }
+            LayoutLocation loc;
+            child->computeVisibleRect(nullptr, loc, visibleRect);
             child = child->next();
         }
     } else {
