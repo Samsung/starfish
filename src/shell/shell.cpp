@@ -469,6 +469,8 @@ void DaliShellController::KeyEventHandler(const Dali::KeyEvent& event)
                 StarFishEnterer enter(m_sf);
                 m_sf->platformWindow()->dispatchKeyEvent(
                     PlatformWindow::KeyEventDown, keyData);
+                m_sf->platformWindow()->dispatchKeyEvent(
+                    PlatformWindow::KeyEventPress, keyData);
                 delete d;
             },
             d);

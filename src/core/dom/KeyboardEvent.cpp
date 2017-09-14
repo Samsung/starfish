@@ -133,7 +133,49 @@ uint32_t keyValueToKeyCode(KeyValue v)
         return 27;
     } else if (v == BackspaceKey) {
         return 8;
-    } else {
+    }
+#ifdef STARFISH_TIZEN_TV
+    else if (v == MinusMarkKey) {
+        return 189;
+    } else if (v == TVVolumeUpKey) {
+        return 447;
+    } else if (v == TVVolumeDownKey) {
+        return 448;
+    } else if (v == TVMuteKey) {
+        return 449;
+    } else if (v == TVChannelUpKey) {
+        return 427;
+    } else if (v == TVChannelDownKey) {
+        return 428;
+    } else if (v == MediaTrackPreviousKey) {
+        return 412;
+    } else if (v == MediaTrackNextKey) {
+        return 417;
+    } else if (v == MediaPauseKey) {
+        return 419;
+    } else if (v == MediaRecordKey) {
+        return 416;
+    } else if (v == MediaPlayKey) {
+        return 415;
+    } else if (v == MediaStopKey) {
+        return 413;
+    } else if (v == TVInfoKey) {
+        return 457;
+    } else if (v == TVReturnKey) {
+        return 0;
+    } else if (v == TVRedKey) {
+        return 403;
+    } else if (v == TVGreenKey) {
+        return 404;
+    } else if (v == TVYellowKey) {
+        return 405;
+    } else if (v == TVBlueKey) {
+        return 406;
+    } else if (v == TVMenuKey) {
+        return 18;
+    }
+#endif
+    else {
         return 0;
     }
 }

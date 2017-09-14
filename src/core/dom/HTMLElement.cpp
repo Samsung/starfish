@@ -145,6 +145,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         setAttributeEventListener(ss->m_focusout, value, this);
     } else if (name == ss->m_onkeydown) {
         setAttributeEventListener(ss->m_keydown, value, this);
+    } else if (name == ss->m_onkeypress) {
+        setAttributeEventListener(ss->m_keypress, value, this);
     } else if (name == ss->m_onresize) {
         setAttributeEventListener(ss->m_resize, value, this);
     } else if (name == ss->m_onsubmit) {
@@ -402,6 +404,7 @@ DEFINE_EVENT_LISTENER(HTMLElement, ended);
 DEFINE_EVENT_LISTENER(HTMLElement, error);
 DEFINE_EVENT_LISTENER(HTMLElement, focus);
 DEFINE_EVENT_LISTENER(HTMLElement, keydown);
+DEFINE_EVENT_LISTENER(HTMLElement, keypress);
 DEFINE_EVENT_LISTENER(HTMLElement, keyup);
 DEFINE_EVENT_LISTENER(HTMLElement, load);
 DEFINE_EVENT_LISTENER(HTMLElement, loadeddata);

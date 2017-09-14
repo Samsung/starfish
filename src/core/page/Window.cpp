@@ -524,6 +524,7 @@ DEFINE_EVENT_LISTENER(Window, focus);
 DEFINE_EVENT_LISTENER(Window, input);
 DEFINE_EVENT_LISTENER(Window, invalid);
 DEFINE_EVENT_LISTENER(Window, keydown);
+DEFINE_EVENT_LISTENER(Window, keypress);
 DEFINE_EVENT_LISTENER(Window, keyup);
 DEFINE_EVENT_LISTENER(Window, load);
 DEFINE_EVENT_LISTENER(Window, loadeddata);

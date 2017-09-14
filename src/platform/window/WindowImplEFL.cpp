@@ -392,9 +392,9 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
         return KeyValue::EscapeKey;
     } else if (strcmp("minus", ecoreKeyString) == 0) {
         if (isShiftPressed) {
-            return KeyValue::MinusMarkKey;
-        } else {
             return KeyValue::UnderScoreMarkKey;
+        } else {
+            return KeyValue::MinusMarkKey;
         }
     } else if (strcmp("equal", ecoreKeyString) == 0) {
         if (isShiftPressed) {
@@ -480,6 +480,45 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
             return (KeyValue)kv;
         }
     }
+#ifdef STARFISH_TIZEN_TV
+    else if (strcmp("XF86AudioRaiseVolume", ecoreKeyString) == 0) {
+        return KeyValue::TVVolumeUpKey;
+    } else if (strcmp("XF86AudioLowerVolume", ecoreKeyString) == 0) {
+        return KeyValue::TVVolumeDownKey;
+    } else if (strcmp("XF86AudioMute", ecoreKeyString) == 0) {
+        return KeyValue::TVMuteKey;
+    } else if (strcmp("XF86RaiseChannel", ecoreKeyString) == 0) {
+        return KeyValue::TVChannelUpKey;
+    } else if (strcmp("XF86LowerChannel", ecoreKeyString) == 0) {
+        return KeyValue::TVChannelDownKey;
+    } else if (strcmp("XF86AudioRewind", ecoreKeyString) == 0) {
+        return KeyValue::MediaTrackPreviousKey;
+    } else if (strcmp("XF86AudioNext", ecoreKeyString) == 0) {
+        return KeyValue::MediaTrackNextKey;
+    } else if (strcmp("XF86AudioPause", ecoreKeyString) == 0) {
+        return KeyValue::MediaPauseKey;
+    } else if (strcmp("XF86AudioRecord", ecoreKeyString) == 0) {
+        return KeyValue::MediaRecordKey;
+    } else if (strcmp("XF86AudioPlay", ecoreKeyString) == 0) {
+        return KeyValue::MediaPlayKey;
+    } else if (strcmp("XF86AudioStop", ecoreKeyString) == 0) {
+        return KeyValue::MediaStopKey;
+    } else if (strcmp("XF86Info", ecoreKeyString) == 0) {
+        return KeyValue::TVInfoKey;
+    } else if (strcmp("XF86Back", ecoreKeyString) == 0) {
+        return KeyValue::TVReturnKey;
+    } else if (strcmp("XF86Red", ecoreKeyString) == 0) {
+        return KeyValue::TVRedKey;
+    } else if (strcmp("XF86Green", ecoreKeyString) == 0) {
+        return KeyValue::TVGreenKey;
+    } else if (strcmp("XF86Yellow", ecoreKeyString) == 0) {
+        return KeyValue::TVYellowKey;
+    } else if (strcmp("XF86Blue", ecoreKeyString) == 0) {
+        return KeyValue::TVBlueKey;
+    } else if (strcmp("XF86SysMenu", ecoreKeyString) == 0) {
+        return KeyValue::TVMenuKey;
+    }
+#endif
     STARFISH_LOG_ERROR("WindowImplEFL - unimplemented key %s\n",
                        ecoreKeyString);
     return KeyValue::UnidentifiedKey;
@@ -657,6 +696,14 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 return EINA_TRUE;
             }
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
+            auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
+            KeyboardData kdata(keyValue);
+            setRepeatToKeyboardData(sf, d->timestamp, kdata);
+            setModifiersToKeyboardData(d, kdata);
+            StarFishEnterer enter(sf->m_starFish);
+            sf->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
+            sf->dispatchKeyEvent(PlatformWindow::KeyEventPress, kdata);
+            sf->m_isKeyDown = true;
 
 #ifdef STARFISH_TIZEN_TV
             if ((strcmp(d->key, "XF86Exit") == 0) ||
@@ -665,14 +712,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 return EINA_FALSE;
             }
 #endif
-
-            auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
-            KeyboardData kdata(keyValue);
-            setRepeatToKeyboardData(sf, d->timestamp, kdata);
-            setModifiersToKeyboardData(d, kdata);
-            StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
-            sf->m_isKeyDown = true;
             return EINA_TRUE;
         },
         wnd);
@@ -844,6 +883,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                     KeyboardData kdata(kv);
                     StarFishEnterer enter(self->m_starFish);
                     self->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
+                    self->dispatchKeyEvent(PlatformWindow::KeyEventPress,
+                                           kdata);
                     self->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);
                 }
             } else {
@@ -980,6 +1021,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             setModifiersToKeyboardData(ev->modifiers, kdata);
             StarFishEnterer enter(self->m_starFish);
             self->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
+            self->dispatchKeyEvent(PlatformWindow::KeyEventPress, kdata);
             self->m_isKeyDown = true;
         },
         wnd);

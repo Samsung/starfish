@@ -31,7 +31,7 @@ interface GlobalEventHandlers {
   [Unimplemented] attribute EventHandler oninput;
   [Unimplemented] attribute EventHandler oninvalid;
   attribute EventHandler onkeydown;
-  [Unimplemented] attribute EventHandler onkeypress;
+  attribute EventHandler onkeypress;
   attribute EventHandler onkeyup;
   attribute EventHandler onload;
   attribute EventHandler onloadeddata;

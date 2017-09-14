@@ -388,8 +388,10 @@ public:
     QualifiedName m_volumechange;
 #endif
     QualifiedName m_keydown;
+    QualifiedName m_keypress;
     QualifiedName m_keyup;
     QualifiedName m_onkeydown;
+    QualifiedName m_onkeypress;
     QualifiedName m_compositionstart;
     QualifiedName m_compositionupdate;
     QualifiedName m_compositionend;

@@ -466,11 +466,17 @@ StaticStrings::StaticStrings(StarFish* sf)
 #endif
     m_keydown = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "keydown"));
+    m_keypress =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "keypress"));
     m_keyup = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "keyup"));
     m_onkeydown =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "onkeydown"));
+    m_onkeypress =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onkeypress"));
     m_compositionstart =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "compositionstart"));
