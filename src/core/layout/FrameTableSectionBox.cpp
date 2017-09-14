@@ -67,7 +67,6 @@ FrameTableCellBox* RowStruct::physicalCellAtLogicalColumn(size_t id)
 
 FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
-    , m_affectedRowsByRowspans(new (GC) GCUnorderedSet<RowStruct*>())
 {
 }
 
@@ -95,8 +94,6 @@ void* FrameTableSectionBox::operator new(size_t size)
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox, m_grid));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(FrameTableSectionBox, m_columnWidths));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
-                                              m_affectedRowsByRowspans));
         descr =
             GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableSectionBox));
         typeInited = true;
@@ -326,16 +323,9 @@ LayoutUnit FrameTableSectionBox::calCellHeightWithRowspan(
         if (curRowId < grid().size()) {
             RowStruct& rowStruct = grid()[curRowId];
 
-            if (colId < rowStruct.cells().size()) {
-                CellStruct& cellStruct = rowStruct.cells()[colId];
-                cellHeight += cellStruct.cell()->height();
-
-                if (curRowId < rowEnd - 1) {
-                    cellHeight += borderSpacing;
-                }
-                if (curRowId > rowId) {
-                    m_affectedRowsByRowspans->insert(&rowStruct);
-                }
+            cellHeight += rowStruct.tableRow()->height();
+            if (curRowId < rowEnd - 1) {
+                cellHeight += borderSpacing;
             }
         }
     }
@@ -383,18 +373,24 @@ void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
     setHeight(ySoFar);
 
     calCellHeightsWithRowspans();
-    m_affectedRowsByRowspans->clear();
 }
 
 void FrameTableSectionBox::increaseRowHeightBy(LayoutUnit rowHeightOffset)
 {
     LayoutUnit extraHeight = 0;
+    LayoutUnit heightIncreasedBy = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableRowBox());
+        FrameTableRowBox* row = c->asFrameTableRowBox();
+        row->setY(row->y() + heightIncreasedBy);
+        LayoutUnit heightBefore = row->height();
         c->asFrameTableRowBox()->increaseCellHeightBy(rowHeightOffset);
-        extraHeight += rowHeightOffset;
+        LayoutUnit heightAfter = row->height();
+        heightIncreasedBy = heightAfter - heightBefore;
+        extraHeight += heightIncreasedBy;
     }
     setHeight(height() + extraHeight);
+    calCellHeightsWithRowspans();
 }
 
 void FrameTableSectionBox::applyVerticalAlign(LayoutContext& ctx)

@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "core/dom/Node.h"
+#include "core/dom/HTMLTableCellElement.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCellBox.h"
@@ -122,7 +123,8 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 
 void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
 {
-    LayoutUnit maxHeightSoFar = 0;
+    LayoutUnit maxCellHeightSoFar = 0;
+    LayoutUnit maxRowHeightSoFar = 0;
     // 1. We make the second iteration of cells to layout cells
     //    and calculate the width of each cell
     for (Frame* c = firstChild(); c; c = c->next()) {
@@ -136,14 +138,19 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
         }
         ctx.popBlockBoxAligningAtFirstBaseline();
         LayoutUnit cellHeight = cell->height();
-        maxHeightSoFar = std::max(maxHeightSoFar, cellHeight);
+        maxCellHeightSoFar = std::max(maxCellHeightSoFar, cellHeight);
+
+        // Cells with rowspan > 1 do not contribute to the height of a row
+        if (cell->updatedRowspan() == 1) {
+            maxRowHeightSoFar = std::max(maxRowHeightSoFar, cellHeight);
+        }
     }
 
     // 2. The height of each cell is set to the max height of the cells
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
             FrameTableCellBox* cell = c->asFrameTableCellBox();
-            cell->setHeight(maxHeightSoFar);
+            cell->setHeight(maxCellHeightSoFar);
         }
     }
 
@@ -155,7 +162,7 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
         // is specified in percentage
     }
 
-    setHeight(std::max(maxHeightSoFar, specifiedHeight));
+    setHeight(std::max(maxRowHeightSoFar, specifiedHeight));
 
     // layout absolute positioned blocks
     ctx.layoutRegisteredAbsolutePositionedBoxes(this);
@@ -166,12 +173,17 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
 
 void FrameTableRowBox::increaseCellHeightBy(LayoutUnit cellHeightOffset)
 {
+    LayoutUnit maxRowHeightSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableCellBox());
         FrameTableCellBox* cellBox = c->asFrameTableCellBox();
         cellBox->setHeight(cellBox->height() + cellHeightOffset);
+
+        if (cellBox->updatedRowspan() == 1) {
+            maxRowHeightSoFar = std::max(maxRowHeightSoFar, cellBox->height());
+        }
     }
-    setHeight(height() + cellHeightOffset);
+    setHeight(maxRowHeightSoFar);
 }
 
 void FrameTableRowBox::applyVerticalAlign(LayoutContext& ctx)

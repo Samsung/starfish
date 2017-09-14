@@ -1080,7 +1080,7 @@ test/reftest/csswg-test/css21_original/tables/table-height-algorithm-008b.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-008c.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-008.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-009.htm
-#test/reftest/csswg-test/css21_original/tables/table-height-algorithm-010.htm
+test/reftest/csswg-test/css21_original/tables/table-height-algorithm-010.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-011.htm
 test/reftest/csswg-test/css21_original/tables/table-height-algorithm-012.htm
 #test/reftest/csswg-test/css21_original/tables/table-height-algorithm-013.htm
@@ -1178,8 +1178,8 @@ test/reftest/csswg-test/css21_original/tables/table-visual-layout-007.htm
 test/reftest/csswg-test/css21_original/tables/table-visual-layout-009.htm
 test/reftest/csswg-test/css21_original/tables/table-visual-layout-010.htm
 #test/reftest/csswg-test/css21_original/tables/table-visual-layout-011.htm
-#test/reftest/csswg-test/css21_original/tables/table-visual-layout-012.htm
-#test/reftest/csswg-test/css21_original/tables/table-visual-layout-013.htm
+test/reftest/csswg-test/css21_original/tables/table-visual-layout-012.htm
+test/reftest/csswg-test/css21_original/tables/table-visual-layout-013.htm
 #test/reftest/csswg-test/css21_original/tables/table-visual-layout-014.htm
 #test/reftest/csswg-test/css21_original/tables/table-visual-layout-015.htm
 #test/reftest/csswg-test/css21_original/tables/table-visual-layout-016.htm
