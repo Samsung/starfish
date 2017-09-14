@@ -204,6 +204,11 @@ public:
         return (void*)buffer;
     }
 
+    virtual uint8_t* data()
+    {
+        return nullptr;
+    }
+
     virtual size_t width()
     {
         return m_width;
