@@ -145,8 +145,6 @@ private:
 
     GCVector<RowStruct> m_grid; // cells in a 2D table for easier traversal
     GCAtomicVector<ColSizeStruct> m_columnWidths;
-
-    GCUnorderedSet<RowStruct*>* m_affectedRowsByRowspans;
 };
 }
 
