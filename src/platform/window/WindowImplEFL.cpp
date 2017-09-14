@@ -864,36 +864,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             char* commit_str = (char*)event_info;
             WindowImplEFL* self = (WindowImplEFL*)data;
             STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_COMMIT %s\n", commit_str);
-
-            bool isAllASCII = true;
-            String* str = String::fromUTF8(commit_str);
-            for (size_t i = 0; i < str->length(); i++) {
-                if (str->charAt(i) < 128 &&
-                    String::isASCIIPrintableKey(str->charAt(i))) {
-                } else {
-                    isAllASCII = false;
-                    break;
-                }
-            }
-
-            if (isAllASCII) {
-                for (size_t i = 0; i < str->length(); i++) {
-                    // ASCII char
-                    KeyValue kv = (KeyValue)str->charAt(i);
-                    KeyboardData kdata(kv);
-                    StarFishEnterer enter(self->m_starFish);
-                    self->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
-                    self->dispatchKeyEvent(PlatformWindow::KeyEventPress,
-                                           kdata);
-                    self->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);
-                }
-            } else {
-                // non-ASCII char
-                self->dispatchCompositionEvent(
-                    PlatformWindow::CompositionEventEnd,
-                    String::fromUTF8(commit_str));
-            }
-
+            self->dispatchCompositionEvent(PlatformWindow::CompositionEventEnd,
+                                           String::fromUTF8(commit_str));
         },
         wnd);
 
