@@ -453,8 +453,9 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                 Event* e = new Event(doc, eventType, EventInit(false, false));
                 doc->window()->dispatchEventByUA(e);
                 if (!doc->browsingContext()->isMainBrowsingContext()) {
-                    doc->browsingContext()->sourceElement()->dispatchEventByUA(
-                        e);
+                    doc->browsingContext()
+                        ->sourceElement()
+                        ->childBrowsingContextLoaded();
                 }
 #ifdef STARFISH_ENABLE_TEST
                 g_fireOnloadEvent = true;

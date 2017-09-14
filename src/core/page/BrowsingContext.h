@@ -199,10 +199,10 @@ public:
 #ifndef NDEBUG
     size_t countPointersInRootSet(void* ptr);
 #endif
-private:
     // return did layout
-    bool layoutIfNeeds();
+    bool layoutIfNeeds(bool fromWebView = true);
 
+private:
     void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
 
     BrowsingContext(StarFish* starFish, WebView* webView,

@@ -23,12 +23,17 @@
 namespace StarFish {
 
 class ImageData;
+class MockHTMLIFrameElement;
+
 class ImageResource : public Resource {
     friend class ResourceLoader;
+    friend class MockHTMLIFrameElement;
+
     ImageResource(ResourceURL* url, ResourceLoader* loader)
         : Resource(url, loader)
     {
         m_imageData = nullptr;
+        m_mockFrameForSVGDocument = nullptr;
     }
 
 public:
@@ -66,6 +71,7 @@ public:
 #endif
 protected:
     ImageData* m_imageData;
+    MockHTMLIFrameElement* m_mockFrameForSVGDocument;
 };
 }
 

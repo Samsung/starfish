@@ -28,6 +28,7 @@
 #include "core/dom/XMLDocument.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/HTMLDocument.h"
+#include "core/dom/svg/SVGDocument.h"
 #include "core/page/Window.h"
 
 #include <../third_party/rapidxml/rapidxml.hpp>
@@ -70,6 +71,9 @@ static void buildDocumentFromXML(
         if (namespaceURI == sf->staticStrings()->m_xhtmlNamespaceURI) {
             newNode =
                 HTMLDocument::createHTMLElement(parent->document(), localName);
+        } else if (namespaceURI == sf->staticStrings()->m_svgNamespaceURI) {
+            newNode =
+                SVGDocument::createSVGElement(parent->document(), localName);
         } else {
             newNode = new NamedElement(parent->document(),
                                        QualifiedName(namespaceURI, localName));

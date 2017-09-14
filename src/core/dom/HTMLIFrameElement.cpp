@@ -19,6 +19,7 @@
 #include "core/dom/Document.h"
 #include "browser/history/HistoryManager.h"
 #include "core/dom/HTMLIFrameElement.h"
+#include "core/dom/Event.h"
 #include "core/page/BrowsingContext.h"
 
 namespace StarFish {
@@ -29,8 +30,7 @@ void* HTMLIFrameElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLIFrameElement)] = { 0 };
-        GC_set_bit(desc, GC_WORD_OFFSET(HTMLIFrameElement, m_browsingContext));
-        HTMLElement::fillGCDescriptor(desc);
+        HTMLIFrameElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLIFrameElement));
         typeInited = true;
     }
@@ -171,5 +171,12 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
     }
     m_browsingContext = BrowsingContext::create(this);
     m_browsingContext->navigate(url, type, referrerURL);
+}
+
+void HTMLIFrameElement::childBrowsingContextLoaded()
+{
+    String* eventType = starFish()->staticStrings()->m_load.localName();
+    Event* e = new Event(document(), eventType, EventInit(false, false));
+    dispatchEventByUA(e);
 }
 }

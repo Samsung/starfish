@@ -23,8 +23,79 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/page/Window.h"
+#include "core/extra/MimeType.h"
+#include "core/dom/HTMLIFrameElement.h"
+#include "core/dom/Traverse.h"
+#include "core/dom/svg/SVGSVGElement.h"
+#include "core/layout/svg/FrameSVGSVGBox.h"
+#include "core/page/BrowsingContext.h"
 
 namespace StarFish {
+
+class MockHTMLIFrameElement : public HTMLIFrameElement {
+public:
+    MockHTMLIFrameElement(Document* document, ImageResource* resource)
+        : HTMLIFrameElement(document)
+        , m_resource(resource)
+    {
+    }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(MockHTMLIFrameElement)] = { 0 };
+            GC_set_bit(desc, GC_WORD_OFFSET(MockHTMLIFrameElement, m_resource));
+            HTMLIFrameElement::fillGCDescriptor(desc);
+            descr =
+                GC_make_descriptor(desc, GC_WORD_LEN(MockHTMLIFrameElement));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    virtual void childBrowsingContextLoaded()
+    {
+        HTMLIFrameElement::childBrowsingContextLoaded();
+        Node* r =
+            Traverse::findDescendant(contentDocument(), [](Node* n) -> bool {
+                if (n->isSVGSVGElement()) {
+                    return true;
+                }
+                return false;
+            });
+        if (r) {
+            m_browsingContext->layoutIfNeeds(false);
+            SVGSVGElement* svg = r->asSVGSVGElement();
+            if (!svg->frame()) {
+                m_resource->didLoadFailed();
+            }
+            FrameSVGSVGBox* svgBox = (FrameSVGSVGBox*)svg->frame();
+
+            size_t w = (int)svgBox->width();
+            size_t h = (int)svgBox->height();
+            ImageData* imageData = ImageData::create(w, h);
+            imageData->clear();
+            Canvas* canvas = Canvas::createGenericCanvas(
+                m_browsingContext->starFish(), imageData->data(),
+                imageData->width(), imageData->height());
+            canvas->setViewportWidthAndHeight(
+                m_browsingContext->window()->width(),
+                m_browsingContext->window()->height());
+            svgBox->paintReplaced(canvas);
+            delete canvas;
+
+            m_resource->m_imageData = imageData;
+            m_resource->m_mockFrameForSVGDocument = nullptr;
+            m_resource->Resource::didLoadFinished();
+        }
+    }
+
+    ImageResource* m_resource;
+};
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL) || \
     defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
@@ -63,7 +134,7 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel,
 {
 #if defined(PORT_GRAPHIC_BACKEND_EFL) || \
     defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-    if (m_url->isFileURL()) {
+    if (m_url->isFileURL() && !m_url->urlString()->endsWith(".svg", false)) {
         if (!loader()->requestResourcePreprocess(this, syncLevel)) {
             // cache miss
             if (ResourceRequestSyncLevel::NeverSync != syncLevel) {
@@ -89,6 +160,28 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel,
 
 void ImageResource::didLoadFinished()
 {
+    bool isSVG = false;
+    if (m_resourceRequest) {
+        auto m =
+            MimeType::parseFromString(m_resourceRequest->responseMimeType());
+        isSVG = m.subtype()->contains("svg", false);
+    }
+    if (!isSVG) {
+        isSVG = url()->urlString()->endsWith(".svg", false);
+    }
+
+    if (isSVG) {
+        // FIXME
+        // content of SVGDocument loaded twice from ImageResource &
+        // HTMLIFrameElement
+        m_mockFrameForSVGDocument =
+            new MockHTMLIFrameElement(loader()->document(), this);
+        m_mockFrameForSVGDocument->navigate(
+            url(), HistoryManager::Action::Add,
+            loader()->document()->documentURI());
+        m_imageData = nullptr;
+        return;
+    }
 #if defined(PORT_GRAPHIC_BACKEND_EFL) || \
     defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     if (!m_url->isFileURL()) {
