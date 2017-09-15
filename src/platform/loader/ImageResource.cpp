@@ -90,6 +90,8 @@ protected:
 
             m_resource->m_imageData = imageData;
             m_resource->m_mockFrameForSVGDocument = nullptr;
+            m_resource->m_imageData->setPreserveAspectRatioValue(
+                svg->preserveAspectRatioValue());
             m_resource->Resource::didLoadFinished();
         }
     }

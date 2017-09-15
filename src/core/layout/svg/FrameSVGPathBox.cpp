@@ -163,9 +163,9 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
     if (d->length()) {
         auto utf8Str = d->toUTF8NonGCString();
         CSSTokenVector tokensInput;
-        const char* sep = ",mMzZlLhHvVcCsSqQtTaA-";
+        const char* sep = ",mMzZlLhHvVcCsSqQtTaA-e";
         CSSStyleDeclaration::tokenizeCSSValue(tokensInput, utf8Str.data(),
-                                              utf8Str.length(), sep, 22, true);
+                                              utf8Str.length(), sep, 23, true);
         std::vector<CSSTokenValue> tokens;
         tokens.reserve(tokensInput.size());
         for (size_t i = 0; i < tokensInput.size(); i++) {
@@ -223,7 +223,7 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
     }
 
         for (size_t i = 0; i < tokens.size(); i++) {
-            const auto& token = tokens[i];
+            auto& token = tokens[i];
             if (token.equals(",")) {
                 continue;
             }
@@ -259,6 +259,29 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                 }
                 if (hasMultipleDot) {
                     continue;
+                }
+            }
+            if (mode != Mode::WaitCommand) {
+                if (i + 1 < tokens.size() && tokens[i + 1].size() == 1 &&
+                    tokens[i + 1][0] == 'e') {
+                    if (i + 2 < tokens.size()) {
+                        token = token + tokens[i + 1] + tokens[i + 2];
+                        if (tokens[i + 2].size() == 1 &&
+                            tokens[i + 2][0] == '-') {
+                            if (i + 3 < tokens.size()) {
+                                token += tokens[i + 3];
+                                i += 3;
+                            } else {
+                                // error
+                                break;
+                            }
+                        } else {
+                            i += 2;
+                        }
+                    } else {
+                        // error
+                        break;
+                    }
                 }
             }
 

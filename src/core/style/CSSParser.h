@@ -113,10 +113,39 @@ public:
             sign = true;
             cur++;
         }
+
+        char* numberStart = cur;
+
         while (isDigit(*cur) && cur < m_endPos) {
             res = res * 10 + (*cur - '0');
             cur++;
         }
+
+#define TRY_PARSE_SCIENTIFIC_NOTATION()                                        \
+    if ((*cur == 'e' || *cur == 'E') && (cur + 1 < m_endPos) &&                \
+        (isDigit(*(cur + 1)) || *(cur + 1) == '-' || *(cur + 1) == '+')) {     \
+        char* numberEnd = cur + 1;                                             \
+        while (                                                                \
+            (isDigit(*numberEnd) || *numberEnd == '-' || *numberEnd == '+') && \
+            numberEnd < m_endPos) {                                            \
+            numberEnd++;                                                       \
+        }                                                                      \
+        size_t l = (size_t)numberEnd - (size_t)numberStart;                    \
+        char* buf = (char*)alloca(sizeof(char) * l + 1);                       \
+        memcpy(buf, numberStart, l);                                           \
+        buf[l] = 0;                                                            \
+        double result;                                                         \
+        m_curPos = numberEnd;                                                  \
+        bool r = sscanf(buf, "%lf", &result) == 1;                             \
+        m_parsedNumber = result;                                               \
+        if (!sign) {                                                           \
+            m_parsedNumber *= (-1);                                            \
+        }                                                                      \
+        return r;                                                              \
+    }
+
+        TRY_PARSE_SCIENTIFIC_NOTATION();
+
         // number can just start with '.' without '0'
         if (cur == m_curPos && *cur != '.') {
             return false;
@@ -131,7 +160,10 @@ public:
                 pt *= 10;
                 cur++;
             }
+            TRY_PARSE_SCIENTIFIC_NOTATION();
         }
+
+#undef TRY_PARSE_SCIENTIFIC_NOTATION
 
         m_curPos = cur;
         if (!sign) {

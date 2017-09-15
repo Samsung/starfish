@@ -293,6 +293,7 @@ public:
     QualifiedName m_y;
     QualifiedName m_transform;
     QualifiedName m_viewBox;
+    QualifiedName m_preserveAspectRatio;
     QualifiedName m_d;
     QualifiedName m_points;
     QualifiedName m_r;

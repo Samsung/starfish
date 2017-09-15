@@ -7127,10 +7127,16 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                     String* str = String::emptyString;
                     if (parser.consumeString()) {
                         str = parser.parsedString();
-                        if (!((str->length() == 0 && num == 0) ||
-                              str->equals("deg") || str->equals("grad") ||
-                              str->equals("rad") || str->equals("turn"))) {
-                            return false;
+                        if (canIgnoreUnit) {
+                            if (str->length() != 0) {
+                                return false;
+                            }
+                        } else {
+                            if (!((str->length() == 0 && num == 0) ||
+                                  str->equals("deg") || str->equals("grad") ||
+                                  str->equals("rad") || str->equals("turn"))) {
+                                return false;
+                            }
                         }
                     } else if (num != 0) {
                         // After a zero length, the unit identifier is optional
@@ -7145,7 +7151,11 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                         if (str->equals("%")) {
                             return false;
                         } else {
-                            if (!canIgnoreUnit) {
+                            if (canIgnoreUnit) {
+                                if (str->length() != 0) {
+                                    return false;
+                                }
+                            } else {
                                 if (!((str->length() == 0 && num == 0) ||
                                       CSSPropertyParser::isLengthUnit(str))) {
                                     return false;
@@ -7167,7 +7177,11 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                             values->emplace_back(
                                 CSSStyleValuePair::ValueKind::Percentage, data);
                         } else {
-                            if (!canIgnoreUnit) {
+                            if (canIgnoreUnit) {
+                                if (str->length() != 0) {
+                                    return false;
+                                }
+                            } else {
                                 if (!((str->length() == 0 && num == 0) ||
                                       CSSPropertyParser::isLengthUnit(str))) {
                                     return false;
