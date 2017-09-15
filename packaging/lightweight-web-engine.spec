@@ -125,6 +125,8 @@ cp out/tizen_obs/${STARFISH_ARCH}/exe/release/StarFish %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishPublic.h %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishExport.h %{buildroot}%{_includedir}/%{name}/
+mkdir -p %{buildroot}%{_libdir}/pkgconfig/
+cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
 
 %files
 %manifest %{name}.manifest
@@ -134,3 +136,5 @@ cp inc/StarFishExport.h %{buildroot}%{_includedir}/%{name}/
 %files devel
 %{_includedir}
 %{_bindir}/StarFish
+%{_libdir}/pkgconfig/lightweight-web-engine.pc
+
