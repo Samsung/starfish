@@ -58,12 +58,12 @@ void* FrameTableRowBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void FrameTableRowBox::calCellWidth(LayoutContext& ctx)
+void FrameTableRowBox::collectCellWidthInfo(LayoutContext& ctx)
 {
     // We traverse the cells first to calculate min/max cell width
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableCellBox());
-        c->asFrameTableCellBox()->calCellWidth(
+        c->asFrameTableCellBox()->collectCellWidthInfo(
             ctx, Frame::LayoutWantToResolve::ResolveWidth);
     }
 }

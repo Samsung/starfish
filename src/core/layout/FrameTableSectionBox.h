@@ -27,7 +27,7 @@ class FrameTableRowBox;
 class FrameTableCellBox;
 class ColSizeStruct;
 
-class CellStruct {
+class CellStruct : public gc {
 public:
     CellStruct()
         : CellStruct(nullptr)
@@ -84,7 +84,7 @@ class FrameTableSectionBox : public FrameTableObjectBox {
 public:
     FrameTableSectionBox(Node* node, ComputedStyle* style);
 
-    void calCellWidth(LayoutContext& ctx);
+    void collectCellWidthInfo(LayoutContext& ctx);
     void calAbsoluteColumnIndicesForCells();
     void calCellWidthsWithColspans();
     void calCellHeightsWithRowspans();
@@ -136,9 +136,9 @@ private:
     void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 
     void calAbsoluteColumnIndicesForCellsAffectedByColspan(
-        FrameTableCellBox* cell, size_t rowId, size_t colId);
+        FrameTableCellBox* cell, size_t rowId);
     void calAbsoluteColumnIndicesForCellsAffectedByRowspan(
-        FrameTableCellBox* cell, size_t rowId, size_t colId);
+        FrameTableCellBox* cell, size_t rowId);
 
     LayoutUnit calCellHeightWithRowspan(FrameTableCellBox* cell, size_t rowId,
                                         size_t colId);

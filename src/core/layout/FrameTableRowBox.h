@@ -39,7 +39,7 @@ public:
         return true;
     }
 
-    void calCellWidth(LayoutContext& ctx);
+    void collectCellWidthInfo(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
     void increaseCellHeightBy(LayoutUnit cellHeightOffset);
