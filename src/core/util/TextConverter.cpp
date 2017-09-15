@@ -26,7 +26,7 @@ TextConverter::TextConverter(String* charsetName)
     auto utf8Data = charsetName->toUTF8NonGCString();
     m_converter = ucnv_open(utf8Data.data(), &err);
     if (U_FAILURE(err)) {
-        STARFISH_LOG_ERROR("TextConverter got unknown encoding -> %s\n",
+        STARFISH_LOG_ERROR("TextConverter: Unknown encoding: %s\n",
                            utf8Data.data());
         m_converter = nullptr;
     }
@@ -56,7 +56,7 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
             registerFinalizer();
             return;
         } else {
-            STARFISH_LOG_ERROR("TextConverter got unknown encoding -> %s\n",
+            STARFISH_LOG_ERROR("TextConverter: Unknown encoding: %s\n",
                                utf8Data.data());
             m_converter = nullptr;
         }
@@ -125,7 +125,7 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
 
     m_converter = ucnv_open(bestCharset, &err);
     if (U_FAILURE(err)) {
-        STARFISH_LOG_ERROR("TextConverter got unknown encoding -> %s\n",
+        STARFISH_LOG_ERROR("TextConverter: Unknown encoding: %s\n",
                            bestCharset);
         m_converter = nullptr;
     }

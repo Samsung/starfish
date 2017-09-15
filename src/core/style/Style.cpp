@@ -3699,8 +3699,7 @@ void StyleResolver::apply(Element* element,
                     BorderImageLengthBox(unit, unit, unit, unit));
             } else {
                 STARFISH_LOG_ERROR(
-                    "ValueList in border-image-width Not allow with current "
-                    "spec")
+                    "border-image-width: a list of values is not supported\n")
                 /* NOTE: Not allow ValueList in current spec
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
