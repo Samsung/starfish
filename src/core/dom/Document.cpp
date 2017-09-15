@@ -93,6 +93,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_domVersion(0)
     , m_implementation(nullptr)
     , m_pendingDocumentParsingIdlerHandle(SIZE_MAX)
+    , m_contentLanguage(String::emptyString)
 #ifdef STARFISH_TIZEN
     , m_tizenWidgetTransparentBackground(0)
 #endif
@@ -1162,6 +1163,15 @@ void Document::setDesignMode(String* value)
         browsingContext()->setFocusedNode(this);
         browsingContext()->setNeedsStyleRecalc();
     }
+}
+
+void Document::setContentLanguage(String* value)
+{
+    if (m_contentLanguage == value) {
+        return;
+    }
+    m_contentLanguage = value;
+    browsingContext()->setNeedsStyleRecalc();
 }
 
 String* Document::origin()

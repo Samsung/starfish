@@ -82,6 +82,7 @@ ResourceRequest::ResourceRequest(Document* document)
 void ResourceRequest::initVariables()
 {
     m_responseMimeType = String::emptyString;
+    m_contentLanguage = String::emptyString;
     NetworkRequestResponse().swap(m_response);
     ResponseHeaderMap().swap(m_responseHeaderMap);
     m_isSync = false;
@@ -166,6 +167,17 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
                     m_responseMimeType = String::fromUTF8(it->second.data());
                 } else {
                     m_responseMimeType =
+                        String::fromUTF8(it->second.substr(0, pos).data());
+                }
+            }
+
+            it = m_responseHeaderMap.find("Content-Language");
+            if (it != m_responseHeaderMap.end()) {
+                size_t pos = it->second.find(";");
+                if (pos != std::string::npos) {
+                    m_contentLanguage = String::fromUTF8(it->second.data());
+                } else {
+                    m_contentLanguage =
                         String::fromUTF8(it->second.substr(0, pos).data());
                 }
             }

@@ -126,6 +126,12 @@ StaticStrings::StaticStrings(StarFish* sf)
                               AtomicString::createAtomicString(sf, "charset"));
     m_content = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "content"));
+    m_httpEquiv =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "http-equiv"));
+    m_contentLanguage =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "content-language"));
     m_contentEditable =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "contentEditable"));

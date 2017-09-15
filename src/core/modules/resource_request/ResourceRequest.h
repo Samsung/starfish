@@ -176,6 +176,11 @@ public:
         return m_responseMimeType;
     }
 
+    String* contentLanguage()
+    {
+        return m_contentLanguage;
+    }
+
     String* lastLocation()
     {
         return m_lastLocation;
@@ -258,6 +263,7 @@ protected:
     NetworkURLWorkerData* m_activeNetworkURLWorkerData;
     Mutex* m_mutex;
     String* m_responseMimeType;
+    String* m_contentLanguage;
     String* m_lastLocation;
     NetworkRequestResponse m_response;
     GCVector<size_t> m_requstedIdlers;

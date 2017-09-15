@@ -243,6 +243,8 @@ public:
     QualifiedName m_size;
     QualifiedName m_charset;
     QualifiedName m_content;
+    QualifiedName m_httpEquiv;
+    QualifiedName m_contentLanguage;
     QualifiedName m_contentEditable;
     QualifiedName m_designMode;
     QualifiedName m_lang;
