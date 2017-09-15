@@ -72,8 +72,7 @@ void ScriptBindingInstance::close()
         m_scriptContext->vmInstance()->clearCachesRelatedWithContext();
     }
 #ifdef TIZEN_DEVICE_API
-    // TODO (escargot2)
-    DeviceAPI::close(fetchData(this)->m_instance);
+    DeviceAPI::close(m_scriptContext);
 #endif
 }
 
@@ -331,7 +330,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
         ValueRef::create(console), true, true, true);
 
 #ifdef TIZEN_DEVICE_API
-    DeviceAPI::initialize(fetchData(this)->m_instance);
+    DeviceAPI::initialize(m_scriptContext);
 #endif
 
     context->setVirtualIdentifierCallback(virtualIdentifierCallback);

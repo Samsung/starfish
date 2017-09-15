@@ -144,7 +144,7 @@ ifneq (,$(findstring tizen,$(HOST)))
   #LTO=1
   ifeq ($(TYPE), lib)
     # At present, this feature is not required. 
-    # TIZEN_DEVICE_API=true
+    TIZEN_DEVICE_API=true
   endif
 endif
 

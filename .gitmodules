@@ -1,6 +1,6 @@
 [submodule "third_party/deviceapi"]
 	path = third_party/deviceapi
-	url = git@github.sec.samsung.net:RS7-webtf/tizen_wearable_device_api_loader.git
+	url = git@github.sec.samsung.net:RS7-webtf/tizen_tv_device_api_loader.git
 [submodule "binding_generator"]
 	path = binding_generator
 	url = git@github.sec.samsung.net:RS7-webtf/binding_generator.git
