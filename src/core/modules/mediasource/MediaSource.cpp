@@ -40,6 +40,7 @@ MediaSource::MediaSource(Document* document)
     , m_activeAudioStreamIndex(SIZE_MAX)
     , m_duration(std::numeric_limits<double>::quiet_NaN())
     , m_shortestMediaDuration(std::numeric_limits<uint64_t>::max())
+    , m_usedBufferSize(0)
 {
 #ifndef NDEBUG
     STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::MediaSource (%p)\n", this);
@@ -526,6 +527,15 @@ void MediaSource::removeClient(MediaSourceClient* c)
 {
     c->removeMediaSource();
     m_clients.erase(std::find(m_clients.begin(), m_clients.end(), c));
+}
+
+void MediaSource::evict(uint64_t start, uint64_t end)
+{
+    if (m_sourceBuffers) {
+        for (unsigned i = 0; i < m_sourceBuffers->length(); i++) {
+            (*m_sourceBuffers)[i]->rangeRemovalWithGuard(start, end);
+        }
+    }
 }
 }
 #endif

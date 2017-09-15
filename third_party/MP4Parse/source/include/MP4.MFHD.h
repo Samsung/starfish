@@ -55,6 +55,7 @@ namespace MP4
             {
                 return MP4_PARSER_DEFINE_TYPE_STRING("mfhd");
             }
+            uint32_t sequence_no;
     };
 }
 

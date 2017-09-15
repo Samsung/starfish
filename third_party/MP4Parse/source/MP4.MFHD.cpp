@@ -39,5 +39,7 @@ MFHD::MFHD( void )
 
 void MFHD::processData( MP4::BinaryStream * stream, size_t length )
 {
-    stream->ignore( length );
+    uint8_t v = stream->readUnsignedChar();
+    uint32_t f = (stream->readUnsignedChar() << 16) + (stream->readUnsignedChar() << 8) + (stream->readUnsignedChar() << 0);
+    sequence_no = stream->readBigEndianUnsignedInteger();
 }

@@ -90,14 +90,14 @@ public:
 
     virtual void activeSourceComputed()
     {
-        if (m_player) {
+        if (m_player && m_player->alive()) {
             m_player->prepareMediaSource();
         }
     }
 
     virtual void activeVideoSourceBufferUpdated(SourceBuffer* s)
     {
-        if (m_player && m_player->m_activeMediaSource &&
+        if (m_player && m_player->alive() && m_player->m_activeMediaSource &&
             m_player->m_activeMediaSource->activeVideoSourceBuffer() == s) {
             m_player->fillVideoBufferIfNeeded();
         }
@@ -105,7 +105,7 @@ public:
 
     virtual void activeAudioSourceBufferUpdated(SourceBuffer* s)
     {
-        if (m_player && m_player->m_activeMediaSource &&
+        if (m_player && m_player->alive() && m_player->m_activeMediaSource &&
             m_player->m_activeMediaSource->activeAudioSourceBuffer() == s) {
             m_player->fillAudioBufferIfNeeded();
         }
