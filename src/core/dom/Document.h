@@ -404,6 +404,13 @@ public:
         return m_onLoadFired;
     }
 
+    String* contentLanguage()
+    {
+        return m_contentLanguage;
+    }
+
+    void setContentLanguage(String* value);
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -538,6 +545,7 @@ protected:
     DOMImplementation* m_implementation;
     GCVector<Element*> m_currentScripts;
     size_t m_pendingDocumentParsingIdlerHandle;
+    String* m_contentLanguage;
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif

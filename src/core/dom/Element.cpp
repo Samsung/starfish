@@ -1614,9 +1614,7 @@ String* Element::getLaunguage()
             value = n->asElement()->getAttributeOrEmpty(
                 n->starFish()->staticStrings()->m_lang);
         } else if (n->isDocument()) {
-            // TODO: checking the MIME content-language
-            // value = document()->contentLanguage();
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            value = document()->contentLanguage();
         }
 
         n = n->parentNode();

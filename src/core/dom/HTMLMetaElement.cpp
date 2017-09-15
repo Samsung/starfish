@@ -61,6 +61,12 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
     } else if (name == starFish()->staticStrings()->m_content) {
         m_content = value;
         checkPlatformFlags();
+    } else if (name == starFish()->staticStrings()->m_httpEquiv) {
+        m_httpEquiv = value;
+    }
+
+    if (!m_httpEquiv->isEmpty() && !m_content->isEmpty()) {
+        document()->setContentLanguage(m_content);
     }
 }
 

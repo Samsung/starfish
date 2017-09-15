@@ -236,6 +236,12 @@ public:
                                           m_buffer.size() - er.m_skip, true);
         m_builder.document()->setCharacterSet(converter->encoding());
 
+        String* contentLanguage =
+            m_resource->resourceRequest()->contentLanguage();
+        if (!contentLanguage->isEmpty()) {
+            m_builder.document()->setContentLanguage(contentLanguage);
+        }
+
         if (!m_resource->resourceRequest()->lastLocation()->equals(
                 String::emptyString)) {
             // Change documentURI and last history when request was redirected.

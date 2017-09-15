@@ -27,6 +27,7 @@ public:
         : HTMLElement(document)
         , m_name(String::emptyString)
         , m_content(String::emptyString)
+        , m_httpEquiv(String::emptyString)
 #ifdef STARFISH_TIZEN
         , m_tizenWidgetTransparentBackground(false)
 #endif
@@ -55,6 +56,7 @@ public:
 protected:
     String* m_name;
     String* m_content;
+    String* m_httpEquiv;
 
 #ifdef STARFISH_TIZEN
     bool m_tizenWidgetTransparentBackground;
