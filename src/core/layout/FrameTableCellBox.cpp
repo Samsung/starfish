@@ -55,8 +55,8 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
 //  |                          |
 //  +--------------------------+
 //
-void FrameTableCellBox::calCellWidth(LayoutContext& ctx,
-                                     Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCellBox::collectCellWidthInfo(
+    LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
@@ -64,6 +64,23 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx,
     p.computePreferredWidth();
     m_minCellWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
     m_maxCellWidth = p.preferredWidth() + borderWidth() + paddingWidth();
+
+    if (!isAnonymous()) {
+        if (node()->style()->minWidth().isFixed()) {
+            LayoutUnit minWidth =
+                LayoutUnit::fromPixel(node()->style()->minWidth().fixed());
+            if (minWidth < m_minCellWidth) {
+                m_minCellWidth = minWidth;
+            }
+        }
+        if (node()->style()->maxWidth().isFixed()) {
+            LayoutUnit maxWidth =
+                LayoutUnit::fromPixel(node()->style()->maxWidth().fixed());
+            if (maxWidth < m_maxCellWidth) {
+                m_maxCellWidth = maxWidth;
+            }
+        }
+    }
 }
 
 void FrameTableCellBox::layoutWidth(LayoutContext& ctx)

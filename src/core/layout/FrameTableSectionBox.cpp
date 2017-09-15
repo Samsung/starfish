@@ -132,12 +132,12 @@ void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
     return;
 }
 
-void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
+void FrameTableSectionBox::collectCellWidthInfo(LayoutContext& ctx)
 {
     // 0. We traverse the cells first to determine min/max cell size
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableRowBox());
-        c->asFrameTableRowBox()->calCellWidth(ctx);
+        c->asFrameTableRowBox()->collectCellWidthInfo(ctx);
     }
 
     // 1. get max logical column size
@@ -199,50 +199,53 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCells()
     for (auto& rowStruct : grid()) {
         FrameTableRowBox* row = rowStruct.tableRow();
 
-        size_t colId = 0;
         for (auto& cellStruct : rowStruct.cells()) {
             FrameTableCellBox* cell = cellStruct.cell();
             if (cell->colspan() > 1) {
-                calAbsoluteColumnIndicesForCellsAffectedByColspan(cell, rowId,
-                                                                  colId);
+                calAbsoluteColumnIndicesForCellsAffectedByColspan(cell, rowId);
             }
             if (cell->rowspan() > 1) {
-                calAbsoluteColumnIndicesForCellsAffectedByRowspan(cell, rowId,
-                                                                  colId);
+                calAbsoluteColumnIndicesForCellsAffectedByRowspan(cell, rowId);
             }
-
-            colId++;
         }
         rowId++;
     }
 }
 
 void FrameTableSectionBox::calAbsoluteColumnIndicesForCellsAffectedByColspan(
-    FrameTableCellBox* cell, size_t rowId, size_t colId)
+    FrameTableCellBox* cell, size_t rowId)
 {
     size_t shiftCellBy = cell->colspan() - 1;
+    size_t colId = cell->absoluteColumnIndex();
     RowStruct& rowStruct = grid()[rowId];
-    for (size_t i = colId + 1; i < rowStruct.cells().size(); i++) {
+    for (size_t i = 0; i < rowStruct.cells().size(); i++) {
         CellStruct& cellStruct = rowStruct.cells()[i];
         FrameTableCellBox* curCell = cellStruct.cell();
-        curCell->setAbsoluteColumnIndex(curCell->absoluteColumnIndex() +
-                                        shiftCellBy);
+
+        if (curCell->absoluteColumnIndex() > colId) {
+            curCell->setAbsoluteColumnIndex(curCell->absoluteColumnIndex() +
+                                            shiftCellBy);
+        }
     }
 }
 
 void FrameTableSectionBox::calAbsoluteColumnIndicesForCellsAffectedByRowspan(
-    FrameTableCellBox* cell, size_t rowId, size_t colId)
+    FrameTableCellBox* cell, size_t rowId)
 {
     size_t rowEnd = rowId + cell->rowspan();
+    size_t colId = cell->absoluteColumnIndex();
     for (size_t curRowId = rowId + 1; curRowId < rowEnd; curRowId++) {
         if (curRowId < grid().size()) {
             RowStruct& rowStruct = grid()[curRowId];
 
-            for (size_t i = colId; i < rowStruct.cells().size(); i++) {
+            for (size_t i = 0; i < rowStruct.cells().size(); i++) {
                 CellStruct& cellStruct = rowStruct.cells()[i];
                 FrameTableCellBox* curCell = cellStruct.cell();
-                curCell->setAbsoluteColumnIndex(curCell->absoluteColumnIndex() +
-                                                1);
+
+                if (curCell->absoluteColumnIndex() >= colId) {
+                    curCell->setAbsoluteColumnIndex(
+                        curCell->absoluteColumnIndex() + 1);
+                }
             }
         }
     }

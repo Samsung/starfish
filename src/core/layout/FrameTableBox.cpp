@@ -132,7 +132,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     m_columnWidths.clear();
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSectionBox()) {
-            c->asFrameTableSectionBox()->calCellWidth(ctx);
+            c->asFrameTableSectionBox()->collectCellWidthInfo(ctx);
             collectColumnWidths(m_columnWidths,
                                 c->asFrameTableSectionBox()->columnWidths());
         }

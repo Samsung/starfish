@@ -29,8 +29,8 @@ class FrameTableCellBox : public FrameTableObjectBox {
 public:
     FrameTableCellBox(Node* node, ComputedStyle* style);
 
-    void calCellWidth(LayoutContext& ctx,
-                      Frame::LayoutWantToResolve resolveWhat);
+    void collectCellWidthInfo(LayoutContext& ctx,
+                              Frame::LayoutWantToResolve resolveWhat);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
