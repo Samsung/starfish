@@ -27,6 +27,8 @@
 #include "core/dom/DOMTokenList.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/SelectorQuery.h"
 #include "core/dom/Text.h"
@@ -329,6 +331,79 @@ bool Node::isDescendantOf(const Node* other)
         }
     }
     return false;
+}
+
+OverflowValue Node::appliedOverflowX()
+{
+    if (isDocument()) {
+        HTMLElement* htmlElement = document()->rootElement();
+        HTMLElement* bodyElement = document()->body();
+        OverflowValue htmlOverflowX = VisibleOverflow;
+        OverflowValue bodyOverflowX = VisibleOverflow;
+        OverflowValue appliedOverflowX = AutoOverflow;
+
+        if (htmlElement && htmlElement->style()) {
+            htmlOverflowX = htmlElement->style()->overflowX();
+        }
+
+        if (bodyElement && bodyElement->style()) {
+            bodyOverflowX = bodyElement->style()->overflowX();
+        }
+
+        if (htmlOverflowX == HiddenOverflow) {
+            if (bodyOverflowX == VisibleOverflow ||
+                bodyOverflowX == HiddenOverflow) {
+                appliedOverflowX = HiddenOverflow;
+            }
+        } else if (bodyOverflowX == HiddenOverflow) {
+            if (htmlOverflowX == VisibleOverflow) {
+                appliedOverflowX = HiddenOverflow;
+            }
+        }
+
+        return appliedOverflowX;
+    }
+
+    if (isHTMLHtmlElement()) {
+        return VisibleOverflow;
+    }
+
+    return style()->overflowX();
+}
+
+OverflowValue Node::appliedOverflowY()
+{
+    if (isDocument()) {
+        HTMLElement* htmlElement = document()->rootElement();
+        HTMLElement* bodyElement = document()->body();
+        OverflowValue htmlOverflowY = VisibleOverflow;
+        OverflowValue bodyOverflowY = VisibleOverflow;
+        OverflowValue appliedOverflowY = AutoOverflow;
+
+        if (htmlElement && htmlElement->style()) {
+            htmlOverflowY = htmlElement->style()->overflowY();
+        }
+
+        if (bodyElement && bodyElement->style()) {
+            bodyOverflowY = bodyElement->style()->overflowY();
+        }
+
+        if (htmlOverflowY == HiddenOverflow) {
+            appliedOverflowY = HiddenOverflow;
+        } else if (bodyOverflowY == HiddenOverflow) {
+            if (htmlOverflowY == VisibleOverflow) {
+                appliedOverflowY = HiddenOverflow;
+            }
+        }
+
+        return appliedOverflowY;
+    }
+
+    if (isHTMLHtmlElement()) {
+        return VisibleOverflow;
+    }
+
+    return style()->overflowY();
 }
 
 Element* Node::firstElementChild()

@@ -1151,6 +1151,8 @@ public:
     ComputedStyle* cachedPseudoStyle(StyleResolver::PseudoElementType pseudo,
                                      ComputedStyle* parentStyle);
     ComputedStyle* firstLineStyle(Frame* frame, ComputedStyle* frameStyle);
+    OverflowValue appliedOverflowX();
+    OverflowValue appliedOverflowY();
 
     void updateComputedStyle(Node* refNode);
 
@@ -1432,6 +1434,15 @@ public:
         return (isFrameReplaced()) ||
                (style()->display() == DisplayValue::InlineBlockDisplayValue) ||
                (style()->display() == DisplayValue::InlineTableDisplayValue);
+    }
+
+    bool canBeContainingBlockOfAbsolutePositionedBox(Frame* child)
+    {
+        STARFISH_ASSERT(child->isAbsolutePositioned());
+        return isFrameDocument() ||
+               (child->style()->position() != FixedPositionValue &&
+                isPositioned()) ||
+               style()->hasTransforms(this);
     }
 
     bool canHaveFirstLineOrFirstLetterStyle()

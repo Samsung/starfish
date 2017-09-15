@@ -556,8 +556,8 @@ bool WebView::rendering(bool force)
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
             mainBrowsingContext()->window()->scrolling()->paintScrollbars(
-                canvas, mainFrame, OverflowValue::AutoOverflow,
-                OverflowValue::AutoOverflow);
+                canvas, mainFrame, mainFrame->appliedOverflowX(),
+                mainFrame->appliedOverflowY());
         }
 
         m_needsPainting = false;
@@ -682,8 +682,8 @@ bool WebView::rendering(bool force)
                 ->compositeStackingContext(canvas);
 
             mainBrowsingContext()->window()->scrolling()->paintScrollbars(
-                canvas, mainFrame, OverflowValue::AutoOverflow,
-                OverflowValue::AutoOverflow);
+                canvas, mainFrame, mainFrame->appliedOverflowX(),
+                mainFrame->appliedOverflowY());
 
             canvas->restore();
             m_didCompositeBefore = true;

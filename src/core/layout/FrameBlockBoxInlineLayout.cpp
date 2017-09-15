@@ -2576,7 +2576,7 @@ void FrameBlockBox::layoutInline(LineFormattingContext& ctx)
             ascender = asFrameTableBox()->calBaseline(ctx.m_layoutContext);
         } else {
             Nullable<LayoutUnit> p = ctx.m_layoutContext.lineBoxAscender(this);
-            if (p.hasValue() && style()->overflowX() == VisibleOverflow) {
+            if (p.hasValue() && appliedOverflowX() == VisibleOverflow) {
                 ascender = p.getValue();
             } else {
                 ascender = height();

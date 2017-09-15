@@ -461,8 +461,8 @@ bool Element::handleDefaultEvent(Event* event)
         if (!ensureRareElementMembers()->m_scrolling) {
             ensureRareElementMembers()->m_scrolling = new Scrolling(this);
         }
-        auto ox = frame()->style()->overflowX();
-        auto oy = frame()->style()->overflowY();
+        auto ox = frame()->appliedOverflowX();
+        auto oy = frame()->appliedOverflowY();
 
         if (rareMembers()->m_scrolling->handleDefaultEvent(
                 event, window(), frame()->asFrameBlockBox(), ox, oy)) {
@@ -538,7 +538,7 @@ double Element::scrollLeft(bool layoutIfNeeds)
     }
 
     if (!isHTMLInputElement()) {
-        if (style()->overflowX() < OverflowValue::AutoOverflow) {
+        if (appliedOverflowX() < OverflowValue::AutoOverflow) {
             return 0;
         }
     }
@@ -559,7 +559,7 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
         return;
     }
 
-    if (style()->overflowX() < OverflowValue::AutoOverflow) {
+    if (appliedOverflowX() < OverflowValue::AutoOverflow) {
         return;
     }
 
@@ -585,7 +585,7 @@ double Element::scrollTop(bool layoutIfNeeds)
         return 0;
     }
 
-    if (style()->overflowY() < OverflowValue::AutoOverflow) {
+    if (appliedOverflowY() < OverflowValue::AutoOverflow) {
         return 0;
     }
 
@@ -605,7 +605,7 @@ bool Element::canScrollVerticaly(bool layoutIfNeeds)
         return false;
     }
 
-    if (style()->overflowY() < OverflowValue::AutoOverflow) {
+    if (appliedOverflowY() < OverflowValue::AutoOverflow) {
         return false;
     }
 
@@ -622,7 +622,7 @@ void Element::setScrollTop(double s, bool layoutIfNeeds)
         return;
     }
 
-    if (style()->overflowY() < OverflowValue::AutoOverflow) {
+    if (appliedOverflowY() < OverflowValue::AutoOverflow) {
         return;
     }
 

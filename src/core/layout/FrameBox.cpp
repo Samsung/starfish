@@ -746,7 +746,7 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
 
         if (!underComputingPreferredWidth &&
             layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
-            style->overflowX() == VisibleOverflow) {
+            appliedOverflowX() == VisibleOverflow) {
             PreferredWidthContext p(ctx, this, parentWidth - mbpWidth());
             p.computePreferredWidth();
             minWidth = std::min(minWidth, p.preferredMinWidth());
@@ -793,7 +793,7 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutUnit height,
     } else if (isFlexItem()) {
         LayoutUnit minHeight;
         if (!layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
-            style->overflowY() == VisibleOverflow) {
+            appliedOverflowY() == VisibleOverflow) {
             if (!(style->height().isAuto() ||
                   (style->height().isPercent() && !parentHasFixedValue))) {
                 // TODO: should compare `min-content` size of flex-item, too.

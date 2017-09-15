@@ -40,6 +40,7 @@
 #include "core/style/StyleRule.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/FrameDocument.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
@@ -1042,7 +1043,7 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
         if (node->isElement()) {
             Element* e = node->asElement();
             if (isVerticalWheelEvent) {
-                if (e->style()->overflowY() >= OverflowValue::AutoOverflow) {
+                if (e->appliedOverflowY() >= OverflowValue::AutoOverflow) {
                     if (e->frame()->isFrameBlockBox()) {
                         if (e->frame()
                                 ->asFrameBlockBox()
@@ -1059,7 +1060,7 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
                     }
                 }
             } else {
-                if (e->style()->overflowX() >= OverflowValue::AutoOverflow) {
+                if (e->appliedOverflowX() >= OverflowValue::AutoOverflow) {
                     if (e->frame()->isFrameBlockBox()) {
                         if (e->frame()
                                 ->asFrameBlockBox()
@@ -1086,10 +1087,17 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
 
     double sx = window()->scrollX();
     double sy = window()->scrollY();
+    OverflowValue ox = document()->appliedOverflowX();
+    OverflowValue oy = document()->appliedOverflowY();
+
     if (isVerticalWheelEvent) {
-        sy += z * 15;
+        if (oy >= OverflowValue::AutoOverflow) {
+            sy += z * 15;
+        }
     } else {
-        sx += z * 15;
+        if (ox >= OverflowValue::AutoOverflow) {
+            sx += z * 15;
+        }
     }
 
     return window()->scrollTo(sx, sy);

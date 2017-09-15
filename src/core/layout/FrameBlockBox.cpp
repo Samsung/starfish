@@ -526,7 +526,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         scrollWidth -= visibleRect.x();
     }
 
-    auto overflowX = style()->overflowX();
+    auto overflowX = appliedOverflowX();
     if (isFrameDocument()) {
         overflowX = OverflowValue::AutoOverflow;
     }
@@ -561,7 +561,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         scrollHeight -= visibleRect.y();
     }
 
-    auto overflowY = style()->overflowY();
+    auto overflowY = appliedOverflowY();
     if (isFrameDocument()) {
         overflowY = OverflowValue::AutoOverflow;
     }
@@ -919,8 +919,8 @@ void FrameBlockBox::paint(PaintingContext& ctx)
                     ->asElement()
                     ->rareMembers()
                     ->m_scrolling->paintScrollbars(ctx.m_canvas, this,
-                                                   style()->overflowX(),
-                                                   style()->overflowY());
+                                                   appliedOverflowX(),
+                                                   appliedOverflowY());
             }
         }
     }

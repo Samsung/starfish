@@ -131,6 +131,7 @@ public:
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;
+    virtual void setTextDecorationData(Canvas* canvas) = 0;
     virtual void resetTextDecorationData() = 0;
     virtual void mergeTextDecorationData(ComputedStyle* style) = 0;
 
