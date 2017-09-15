@@ -668,6 +668,11 @@ static void adjustSVGAttributes(AtomicHTMLToken* token)
             tokenAttribute =
                 Attribute(token->starFish()->staticStrings()->m_viewBox,
                           tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "preserveaspectratio")) {
+            tokenAttribute = Attribute(
+                token->starFish()->staticStrings()->m_preserveAspectRatio,
+                tokenAttribute.value());
         }
     }
 }

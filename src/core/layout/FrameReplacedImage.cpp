@@ -26,11 +26,67 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
 {
     ImageData* id = node()->asHTMLImageElement()->imageData();
     if (id) {
-        canvas->drawImage(
-            id,
-            Unit::Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                       width() - borderWidth() - paddingWidth(),
-                       height() - borderHeight() - paddingHeight()));
+        if (id->preserveAspectRatioValue() == ImageData::None) {
+            canvas->drawImage(
+                id, Unit::Rect(borderLeft() + paddingLeft(),
+                               borderTop() + paddingTop(),
+                               width() - borderWidth() - paddingWidth(),
+                               height() - borderHeight() - paddingHeight()));
+        } else {
+            canvas->translate(borderLeft() + paddingLeft(),
+                              borderTop() + paddingTop());
+
+            auto v = id->preserveAspectRatioValue();
+            LayoutUnit containerWidth =
+                width() - borderWidth() - paddingWidth();
+            LayoutUnit containerHeight =
+                height() - borderHeight() - paddingHeight();
+
+            LayoutUnit imageDstWidth;
+            LayoutUnit imageDstHeight;
+
+            if (containerWidth / containerHeight >
+                (float)id->width() / (float)id->height()) {
+                imageDstWidth =
+                    containerHeight * (float)id->width() / (float)id->height();
+                imageDstHeight = containerHeight;
+            } else {
+                imageDstWidth = containerWidth;
+                imageDstHeight =
+                    containerWidth * (float)id->height() / (float)id->width();
+            }
+
+            LayoutUnit remainX = containerWidth - imageDstWidth;
+            LayoutUnit remainY = containerHeight - imageDstHeight;
+
+            LayoutUnit x, y;
+
+            if (v == ImageData::xMinYMin) {
+            } else if (v == ImageData::xMidYMin) {
+                x = remainX / 2;
+            } else if (v == ImageData::xMaxYMin) {
+                x = remainX;
+            } else if (v == ImageData::xMinYMid) {
+                y = remainY / 2;
+            } else if (v == ImageData::xMidYMid) {
+                x = remainX / 2;
+                y = remainY / 2;
+            } else if (v == ImageData::xMaxYMid) {
+                x = remainX;
+                y = remainY / 2;
+            } else if (v == ImageData::xMinYMax) {
+                y = remainY;
+            } else if (v == ImageData::xMidYMax) {
+                x = remainX / 2;
+                y = remainY;
+            } else if (v == ImageData::xMaxYMax) {
+                x = remainX;
+                y = remainY;
+            }
+
+            canvas->drawImage(id,
+                              Unit::Rect(x, y, imageDstWidth, imageDstHeight));
+        }
     }
 }
 

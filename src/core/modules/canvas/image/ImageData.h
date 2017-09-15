@@ -20,12 +20,20 @@
 namespace StarFish {
 
 class ImageData : public gc {
-protected:
-    ImageData()
-    {
-    }
-
 public:
+    enum PreserveAspectRatioValue {
+        None,
+        xMinYMin,
+        xMidYMin,
+        xMaxYMin,
+        xMinYMid,
+        xMidYMid,
+        xMaxYMid,
+        xMinYMax,
+        xMidYMax,
+        xMaxYMax,
+    };
+
     static ImageData* create(String* localImageSrc);
     static ImageData* create(const char* buf, size_t len);
     static ImageData* create(size_t width, size_t height);
@@ -39,6 +47,24 @@ public:
     virtual ~ImageData()
     {
     }
+
+    PreserveAspectRatioValue preserveAspectRatioValue()
+    {
+        return m_preserveAspectRatioValue;
+    }
+
+    void setPreserveAspectRatioValue(PreserveAspectRatioValue v)
+    {
+        m_preserveAspectRatioValue = v;
+    }
+
+protected:
+    ImageData()
+    {
+        m_preserveAspectRatioValue = None;
+    }
+
+    PreserveAspectRatioValue m_preserveAspectRatioValue;
 };
 }
 

@@ -18,6 +18,7 @@
 #define __StarFishSVGSVGElement__
 
 #include "core/dom/svg/SVGElement.h"
+#include "core/modules/canvas/image/ImageData.h"
 
 #define STARFISH_DEFAULT_SVG_WIDTH 300
 #define STARFISH_DEFAULT_SVG_HEIGHT 150
@@ -30,6 +31,7 @@ public:
         : SVGElement(document)
         , m_hasViewBox(false)
         , m_viewBox(0, 0, 0, 0)
+        , m_preserveAspectRatioValue(ImageData::xMidYMid)
     {
     }
 
@@ -60,9 +62,15 @@ public:
         return m_viewBox;
     }
 
+    ImageData::PreserveAspectRatioValue preserveAspectRatioValue()
+    {
+        return m_preserveAspectRatioValue;
+    }
+
 protected:
     bool m_hasViewBox;
     Unit::Rect m_viewBox;
+    ImageData::PreserveAspectRatioValue m_preserveAspectRatioValue;
 };
 }
 

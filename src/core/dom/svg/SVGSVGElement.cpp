@@ -63,6 +63,30 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name, String* old,
                 m_hasViewBox = true;
             }
         }
+    } else if (name == starFish()->staticStrings()->m_preserveAspectRatio) {
+#define SET_PARV(name)                                \
+    else if (value->equals(#name))                    \
+    {                                                 \
+        m_preserveAspectRatioValue = ImageData::name; \
+    }
+
+        if (value->equals("none")) {
+            m_preserveAspectRatioValue = ImageData::None;
+        }
+        SET_PARV(xMinYMin)
+        SET_PARV(xMidYMin)
+        SET_PARV(xMaxYMin)
+        SET_PARV(xMinYMid)
+        SET_PARV(xMidYMid)
+        SET_PARV(xMaxYMid)
+        SET_PARV(xMinYMax)
+        SET_PARV(xMidYMax)
+        SET_PARV(xMaxYMax)
+        else
+        {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
+#undef SET_PARV
     }
 }
 
@@ -74,13 +98,22 @@ void SVGSVGElement::styleForPresentationAttribute(
     if (hasAttribute(starFish()->staticStrings()->m_width) == SIZE_MAX &&
         hasAttribute(starFish()->staticStrings()->m_height) == SIZE_MAX) {
         if (m_hasViewBox) {
+            float w, h;
+            if (m_viewBox.width() / m_viewBox.height() > 1) {
+                w = 1;
+                h = m_viewBox.height() / m_viewBox.width();
+            } else {
+                w = m_viewBox.width() / m_viewBox.height();
+                h = 1;
+            }
+
             CSSStyleValuePair pair;
             pair.setKeyKind(CSSStyleValuePair::Width);
             pair.setValueKind(CSSStyleValuePair::Percentage);
-            pair.setPercentageValue(m_viewBox.width() / m_viewBox.height());
+            pair.setPercentageValue(w);
             cssValues.push_back(pair);
             pair.setKeyKind(CSSStyleValuePair::Height);
-            pair.setPercentageValue(m_viewBox.height() / m_viewBox.width());
+            pair.setPercentageValue(h);
             cssValues.push_back(pair);
         }
     }

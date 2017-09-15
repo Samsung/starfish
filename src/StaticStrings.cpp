@@ -237,6 +237,9 @@ StaticStrings::StaticStrings(StarFish* sf)
                       AtomicString::createAtomicString(sf, "transform"));
     m_viewBox = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "viewBox"));
+    m_preserveAspectRatio = QualifiedName(
+        AtomicString::emptyAtomicString(),
+        AtomicString::createAtomicString(sf, "preserveAspectRatio"));
     m_d = QualifiedName(AtomicString::emptyAtomicString(),
                         AtomicString::createAtomicString(sf, "d"));
     m_points = QualifiedName(AtomicString::emptyAtomicString(),

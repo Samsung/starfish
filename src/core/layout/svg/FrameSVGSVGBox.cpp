@@ -69,8 +69,8 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
         if (node()->asSVGSVGElement()->hasViewBox()) {
             width = STARFISH_DEFAULT_SVG_WIDTH;
             height = STARFISH_DEFAULT_SVG_WIDTH *
-                     node()->asSVGSVGElement()->viewBox().width() /
-                     node()->asSVGSVGElement()->viewBox().height();
+                     node()->asSVGSVGElement()->viewBox().height() /
+                     node()->asSVGSVGElement()->viewBox().width();
         }
     }
 
