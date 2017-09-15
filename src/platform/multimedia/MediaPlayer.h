@@ -22,7 +22,10 @@
 
 #include "core/dom/HTMLMediaElement.h"
 
-#define PLAYER_DEBUG
+// #ifndef PLAYER_DEBUG
+// #define PLAYER_DEBUG
+// #endif
+
 #ifdef PLAYER_DEBUG
 #include <sys/types.h>
 #include <sys/syscall.h>

@@ -19,6 +19,10 @@
 
 #include "core/dom/EventTarget.h"
 
+#ifndef STARFISH_MAX_MEDIASOURCE_BUFFERSPACE
+#define STARFISH_MAX_MEDIASOURCE_BUFFERSPACE 24 * 1024 * 1024
+#endif
+
 namespace StarFish {
 
 class SourceBuffer;
@@ -145,6 +149,19 @@ public:
         return m_attachedMediaElement;
     }
 
+    size_t availableBufferSize()
+    {
+        return bufferFull() ? 0 : STARFISH_MAX_MEDIASOURCE_BUFFERSPACE -
+                                      m_usedBufferSize;
+    }
+
+    bool bufferFull()
+    {
+        return m_usedBufferSize >= STARFISH_MAX_MEDIASOURCE_BUFFERSPACE;
+    }
+
+    void evict(uint64_t start, uint64_t end);
+
 protected:
     bool anySourceBufferInUpdatingState();
     void didSourceBufferUpdated(SourceBuffer* src);
@@ -161,6 +178,7 @@ protected:
     GCVector<MediaSourceClient*> m_clients;
     double m_duration;
     uint64_t m_shortestMediaDuration;
+    size_t m_usedBufferSize;
 };
 
 class MediaSourceClient : public gc {

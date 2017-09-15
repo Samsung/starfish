@@ -23,6 +23,15 @@
 #include "MP4.BinaryStream.h"
 #include "MP4.Parser.h"
 
+#define DEMUXERMP4_DEBUG
+#ifdef DEMUXERMP4_DEBUG
+#define DEMUXERMP4_LOG(...)             \
+    STARFISH_LOG_INFO("[DemuxerMP4] "); \
+    STARFISH_LOG_INFO(__VA_ARGS__);
+#else
+#define DEMUXERMP4_LOG(...)
+#endif
+
 class MP4BinaryStreamAdapter : public MP4::BinaryStream {
 public:
     MP4BinaryStreamAdapter(StarFish::DemuxerSource* source)
@@ -103,12 +112,25 @@ static void parseMP4(DemuxerSource* source, bool findPacket,
     MP4BinaryStreamAdapter src(source);
     memset(type, 0, 5);
 
+#ifdef DEMUXERMP4_DEBUG
+#define PRINT_STOP_REASON(...)                                                 \
+    STARFISH_LOG_INFO(                                                         \
+        "[DemuxerMP4] Stop parsing at %d and rewind to %d (end:%d)\n",         \
+        (int)source->onSeek(0, DemuxerSource::SeekWhenceCurrent), (int)orgPos, \
+        (int)maxPos);                                                          \
+    STARFISH_LOG_INFO("[DemuxerMP4] Reason: ");                                \
+    STARFISH_LOG_INFO(__VA_ARGS__);
+#else
+#define PRINT_STOP_REASON(...)
+#endif
+
     int64_t maxPos = source->onSeek(0, DemuxerSource::SeekWhenceLookSize);
     while (source->onSeek(0, DemuxerSource::SeekWhenceCurrent) < maxPos) {
         int err;
         size_t orgPos = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
         size_t orgLength = length = readBigEndianUnsignedInteger(source, err);
         if (err < 0) {
+            PRINT_STOP_REASON("4byte requried to read \"DataLength\"\n");
             source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
             break;
         }
@@ -117,6 +139,7 @@ static void parseMP4(DemuxerSource* source, bool findPacket,
         size_t t1;
         source->onRead(4, t1, err, (uint8_t*)type);
         if (err < 0) {
+            PRINT_STOP_REASON("4byte requried to read \"DataType\"\n");
             source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
             break;
         }
@@ -124,6 +147,8 @@ static void parseMP4(DemuxerSource* source, bool findPacket,
         if (length == 1) {
             dataLength = readBigEndianUnsignedInteger(source, err) - 16;
             if (err < 0) {
+                PRINT_STOP_REASON(
+                    "4byte requried to read \"DataLength\" (case 2)\n");
                 source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
                 break;
             }
@@ -134,6 +159,8 @@ static void parseMP4(DemuxerSource* source, bool findPacket,
         if (source->onSeek(0, DemuxerSource::SeekWhenceCurrent) +
                 (int64_t)dataLength >
             maxPos) {
+            PRINT_STOP_REASON("%dbyte requried to read \"Data\"\n",
+                              (int)dataLength);
             source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
             break;
         }
@@ -148,12 +175,13 @@ static void parseMP4(DemuxerSource* source, bool findPacket,
         if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("moov")) {
             if (!findPacket) {
                 maxPos = orgPos + orgLength;
-                STARFISH_LOG_INFO("found movv. (endpos %d)\n", (int)maxPos);
+                DEMUXERMP4_LOG("Found movv. (endpos %d)\n", (int)maxPos);
             }
         }
 
         if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("moof")) {
             if (!findPacket) {
+                // PRINT_STOP_REASON("Found MOOF while parsing stream info\n");
                 source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
                 break;
             }
@@ -162,6 +190,7 @@ static void parseMP4(DemuxerSource* source, bool findPacket,
 
         if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("mdat")) {
             if (!findPacket) {
+                // PRINT_STOP_REASON("Found MDAT while parsing stream info\n");
                 source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
                 break;
             }
@@ -174,8 +203,11 @@ static void parseMP4(DemuxerSource* source, bool findPacket,
         delete atom;
     }
     if (lastUnpairedMoofPos != SIZE_MAX) {
+        DEMUXERMP4_LOG("Rewind to last unpaired MOOF position %d (end:%d)\n",
+                       (int)lastUnpairedMoofPos, (int)maxPos);
         source->onSeek(lastUnpairedMoofPos, DemuxerSource::SeekWhenceSet);
     }
+#undef PRINT_STOP_REASON
 }
 
 class DemuxerMP4 : public Demuxer {
@@ -262,11 +294,9 @@ public:
                         // m_formatContext->streams[i]->codec->bit_rate;
                         info.m_width = track_width;
                         info.m_height = track_height;
-                        STARFISH_LOG_INFO(
-                            "DemuxerMP4::findStreamInfo found video. %d %d "
-                            "%d\n",
-                            (int)info.m_streamIndex, (int)info.m_width,
-                            (int)info.m_height);
+                        DEMUXERMP4_LOG("Found video. %d w:%d h:%d\n",
+                                       (int)info.m_streamIndex,
+                                       (int)info.m_width, (int)info.m_height);
                         for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                             m_demuxerClients[j]->onDetectVideoStream(info);
                         }
@@ -286,9 +316,8 @@ public:
                         // info.m_channels =
                         // m_formatContext->streams[i]->codec->channels;
                         info.m_sampleRate = mdhd->_timeScale;
-                        STARFISH_LOG_INFO(
-                            "DemuxerMP4::findStreamInfo found audio. %d\n",
-                            (int)info.m_streamIndex);
+                        DEMUXERMP4_LOG("Found audio. %d\n",
+                                       (int)info.m_streamIndex);
                         for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                             m_demuxerClients[j]->onDetectAudioStream(info);
                         }
@@ -344,8 +373,7 @@ public:
                                         avcc->ppsVector[i].begin(),
                                         avcc->ppsVector[i].end());
                 }
-
-                STARFISH_LOG_INFO("got avcC %d\n", (int)m_spsPpsInfo.size());
+                DEMUXERMP4_LOG("Got avcC at %d\n", (int)m_spsPpsInfo.size());
             }
         });
 
@@ -393,8 +421,15 @@ public:
                 has_sample_duration = trun->has_sample_duration;
                 seenTrun = true;
                 samples = std::move(trun->samples);
-            } else if (atom->getType() ==
-                       MP4_PARSER_DEFINE_TYPE_STRING("mdat")) {
+            }
+#ifdef DEMUXERMP4_DEBUG
+            else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("mfhd")) {
+                MP4::MFHD* mfhd = (MP4::MFHD*)atom;
+                DEMUXERMP4_LOG("Sequence %d data will follow\n",
+                               (int)mfhd->sequence_no);
+            }
+#endif
+            else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("mdat")) {
                 MP4::MDAT* mdat = (MP4::MDAT*)atom;
                 if (trackID != SIZE_MAX && dts != SIZE_MAX && seenTrun &&
                     seenTfhd) {
@@ -421,8 +456,9 @@ public:
                         }
                         packet.m_pts = ptsInMP4 * 1000LL / scale;
                         if (sizeSum + packet.m_dataSize > mdat->size) {
-                            STARFISH_LOG_INFO("Wrong sample size ");
-                            STARFISH_LOG_INFO("Reduce to fit in mdat size\n");
+                            DEMUXERMP4_LOG(
+                                "Wrong sample size: reduce to fit in mdat "
+                                "size\n");
                             packet.m_dataSize = mdat->size - sizeSum;
                         }
                         sizeSum += packet.m_dataSize;
@@ -492,7 +528,7 @@ public:
                                 source->onSeek(
                                     -packet.m_dataSize,
                                     DemuxerSource::SeekWhenceCurrent);
-                                STARFISH_LOG_INFO(
+                                DEMUXERMP4_LOG(
                                     "DemuxerMP4 got AnnexBType? %d\n",
                                     m_isAnnexBType);
                             }
@@ -538,8 +574,8 @@ public:
                                         }
                                         if ((bufPtr + nalSize) > bufEnd ||
                                             nalSize < 0) {
-                                            STARFISH_LOG_ERROR(
-                                                "DemuxerMP4 nalSizeError "
+                                            DEMUXERMP4_LOG(
+                                                "nalSizeError "
                                                 "(%d)!!\n",
                                                 (int)nalSize);
                                             goto fail_in_annexb_idr_check;
@@ -666,10 +702,10 @@ public:
                                         if ((bufPtr + nalSize) > bufEnd ||
                                             nalSize < 0) {
                                             // STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                                            STARFISH_LOG_ERROR(
-                                                "DemuxerMP4 toAnnexBFormat "
-                                                "nalSizeError (%d)!!\n",
-                                                (int)nalSize);
+                                            DEMUXERMP4_LOG(
+                                                "toAnnexBFormat "
+                                                "nalSizeError (%d, %d)!!\n",
+                                                (int)nalSize, (int)bufPtr);
                                             goto fail;
                                         }
 
@@ -817,4 +853,5 @@ Demuxer* Demuxer::createMP4Demuxer()
 }
 }
 
+#undef DEMUXERMP4_LOG
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

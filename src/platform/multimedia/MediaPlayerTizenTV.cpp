@@ -169,6 +169,13 @@ void MediaPlayerTizenTV::seekOperation(int timeInMS)
 void MediaPlayerTizenTV::prepareMediaSource()
 {
     PLAYER_LOGI("MediaPlayerTizenTV::prepareMediaSource\n");
+
+    player_set_media_stream_buffer_max_size(
+        m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
+        (unsigned long long)2 * 1024 * 1024);
+    player_set_media_stream_buffer_max_size(
+        m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO,
+        (unsigned long long)2 * 1024 * 1024);
     player_set_uri(m_nativePlayer, "external_demuxer://MSE");
 
     setVideoStreamInfo();
@@ -180,8 +187,6 @@ void MediaPlayerTizenTV::prepareMediaSource()
     player_set_buffer_need_video_data_cb(
         m_nativePlayer,
         [](unsigned int size, void* user_data) {
-            PLAYER_LOGI(
-                "MediaPlayerTizenTV:: videoPlayerBufferNeedVideoDataCB\n");
             MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
             self->fillVideoBuffer();
         },
@@ -198,8 +203,6 @@ void MediaPlayerTizenTV::prepareMediaSource()
     player_set_buffer_need_audio_data_cb(
         m_nativePlayer,
         [](unsigned int size, void* user_data) {
-            PLAYER_LOGI(
-                "MediaPlayerTizenTV:: videoPlayerBufferNeedAudioDataCB\n");
             MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
             self->fillAudioBuffer();
         },

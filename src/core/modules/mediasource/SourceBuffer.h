@@ -56,6 +56,7 @@ struct SourceBufferData : public gc {
 struct MediaPacketGroup {
     size_t m_streamIndex;
     size_t m_initSegmentIndex;
+    size_t m_dataSize;
     StreamInfo* m_streamInfo;
     uint64_t m_maxFrameDuration;
     uint64_t m_groupTimestampStart;
@@ -67,6 +68,7 @@ struct MediaPacketGroup {
                      uint64_t end = 0)
         : m_streamIndex(idx)
         , m_initSegmentIndex(initSegmentIdx)
+        , m_dataSize(0)
         , m_streamInfo(streamInfo)
         , m_maxFrameDuration(duration)
         , m_groupTimestampStart(start)
@@ -85,6 +87,7 @@ struct MediaPacketGroup {
     {
         m_packets.push_back(packet);
         updateMaxDurationIfNeeded(packet->m_duration);
+        m_dataSize += packet->m_dataSize;
     }
 };
 
@@ -221,6 +224,9 @@ public:
         return m_type;
     }
 
+    void increaseUsedBufferSize(size_t amount);
+    void decreaseUsedBufferSize(size_t amount);
+
 protected:
     // this method needs packet group lock
     void rangeRemoval(uint64_t start, uint64_t end,
@@ -228,6 +234,11 @@ protected:
                           (StreamInfo::Type)((int)StreamInfo::Type::Video |
                                              (int)StreamInfo::Type::Audio |
                                              (int)StreamInfo::Type::Subtitle));
+    void rangeRemovalWithGuard(uint64_t start, uint64_t end,
+                               StreamInfo::Type type = (StreamInfo::Type)(
+                                   (int)StreamInfo::Type::Video |
+                                   (int)StreamInfo::Type::Audio |
+                                   (int)StreamInfo::Type::Subtitle));
     void setUpdating(bool flag, UpdateState state);
 
     void attachedToParent(MediaSource* ms)
@@ -245,8 +256,8 @@ protected:
     }
 
     void clearAll();
-    void prepareAppend();
-    void codedFrameEviction();
+    void prepareAppend(size_t newDataSize);
+    bool codedFrameEviction(size_t newDataSize);
     void bufferAppend(SourceBufferData* data);
 
     AppendMode m_mode;

@@ -54,6 +54,9 @@
 #define SOURCEBUFFER_LOG(sourcebuffer, ...)
 #endif
 
+#define STARFISH_FRAME_EVICTION_BACKWARD_DUR 2
+#define STARFISH_FRAME_EVICTION_FORWARD_DUR 10
+
 namespace StarFish {
 
 #ifdef TRACE_MSE_GC
@@ -461,7 +464,9 @@ SourceBuffer::SourceBuffer(Document* document, String* type)
 
 void SourceBuffer::clearAll()
 {
+    size_t removedSize = 0;
     for (size_t i = 0; i < m_packetGroup.size(); i++) {
+        removedSize += m_packetGroup[i]->m_dataSize;
         std::vector<MediaPacket*>& p = m_packetGroup[i]->m_packets;
         for (size_t j = 0; j < p.size(); j++) {
             delete[] p[j]->m_data;
@@ -471,6 +476,7 @@ void SourceBuffer::clearAll()
         delete m_packetGroup[i];
     }
     std::vector<MediaPacketGroup*>().swap(m_packetGroup);
+    decreaseUsedBufferSize(removedSize);
 }
 
 void SourceBuffer::setUpdating(bool flag, UpdateState state)
@@ -609,7 +615,7 @@ void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length,
                                 ScriptValue origin)
 {
     // Run the prepare append algorithm.
-    prepareAppend();
+    prepareAppend(length);
 
     // Add data to the end of the input buffer.
     auto d = new (NoGC) SourceBufferData(this, data, length, origin);
@@ -638,7 +644,7 @@ void SourceBuffer::appendBuffer(ArrayBufferViewOrArrayBuffer buffer)
     }
 }
 
-void SourceBuffer::prepareAppend()
+void SourceBuffer::prepareAppend(size_t newDataSize)
 {
     // 3.5.4 Prepare Append Algorithm
 
@@ -671,10 +677,10 @@ void SourceBuffer::prepareAppend()
     }
 
     // Run the coded frame eviction algorithm.
-    codedFrameEviction();
-
-    // TODO If the buffer full flag equals true, then throw a QuotaExceededError
-    // exception and abort these step.
+    if (!codedFrameEviction(newDataSize)) {
+        throw new DOMException(document(), DOMException::QUOTA_EXCEEDED_ERR,
+                               "SourceBuffer is full");
+    }
 }
 
 void SourceBuffer::remove(double start, double end)
@@ -730,12 +736,19 @@ void SourceBuffer::remove(double start, double end)
         parentMediaSource()->setReadyState(MediaSource::ReadyState::Open);
     }
 
+    SOURCEBUFFER_LOG(this, "Remove range (%dms->%dms)\n", (int)(start * 1000),
+                     (int)(end * 1000));
     setUpdating(true, UpdateState::Success);
-    {
-        Locker<Mutex> lock(*m_packetGroupMutex);
-        rangeRemoval(start * 1000, end * 1000);
-    }
+    rangeRemovalWithGuard(start * 1000, end * 1000);
     setUpdating(false, UpdateState::Success);
+}
+
+void SourceBuffer::rangeRemovalWithGuard(uint64_t startTimestamp,
+                                         uint64_t endTimestamp,
+                                         StreamInfo::Type type)
+{
+    Locker<Mutex> lock(*m_packetGroupMutex);
+    rangeRemoval(startTimestamp, endTimestamp, type);
 }
 
 void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
@@ -743,6 +756,7 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
 {
     // 3.5.6 Range Removal
     size_t groupIndex = 0;
+    size_t removedSize = 0;
     while (groupIndex < m_packetGroup.size()) {
         MediaPacketGroup* grp = m_packetGroup[groupIndex];
         // Note : Remove Packets
@@ -758,6 +772,7 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
                 // (int)grp->m_groupTimestampEnd);
 
                 for (size_t i = 0; i < grp->m_packets.size(); i++) {
+                    removedSize += grp->m_packets[i]->m_dataSize;
                     delete[] grp->m_packets[i]->m_data;
                     delete grp->m_packets[i];
                 }
@@ -815,6 +830,7 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
                     delete newGroup;
                 }
                 for (size_t i = holeStart; i < holeEnd; i++) {
+                    removedSize += grp->m_packets[i]->m_dataSize;
                     delete[] grp->m_packets[i]->m_data;
                     delete grp->m_packets[i];
                 }
@@ -867,6 +883,7 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
                     // (int)groupIndex, (int)eraseStart, (int)eraseEnd);
 
                     for (size_t i = eraseStart; i < eraseEnd; i++) {
+                        removedSize += grp->m_packets[i]->m_dataSize;
                         delete[] grp->m_packets[i]->m_data;
                         delete grp->m_packets[i];
                     }
@@ -896,12 +913,54 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
         *iter2 = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
         iter2++;
     }
+    decreaseUsedBufferSize(removedSize);
 }
 
-void SourceBuffer::codedFrameEviction()
+bool SourceBuffer::codedFrameEviction(size_t newDataSize)
 {
-    // TODO 3.5.14 Coded Frame Eviction Algorithm
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    // 3.5.14 Coded Frame Eviction Algorithm
+    STARFISH_ASSERT(m_isAttachedToParent && m_parentMediaSource);
+    // NOTE
+    // Data size can be increased by adding extra data
+    size_t maxAssume = (newDataSize + m_bufferUnprocessed.size()) * 1.2;
+    SOURCEBUFFER_LOG(
+        this, "Run Code Frame Eviction algorithm (new: %d, available: %d)\n",
+        (int)maxAssume, (int)m_parentMediaSource->availableBufferSize());
+
+    // 1. Let new data equal the data that is about to be appended to this
+    // SourceBuffer.
+    // 2. If the buffer full flag equals false, then abort these steps.
+    // NOTE Ignore step2 to try eviction when `bufferFull` caused by assumtion
+    // failure of data size
+
+    if (maxAssume >= STARFISH_MAX_MEDIASOURCE_BUFFERSPACE) {
+        return false;
+    }
+    if (maxAssume >= m_parentMediaSource->availableBufferSize()) {
+        HTMLMediaElement* element = m_parentMediaSource->attachedMediaElement();
+        double playbackPos = element ? element->currentTime() : 0;
+        // Try to remove backward packets
+        double backwardPos = playbackPos - STARFISH_FRAME_EVICTION_BACKWARD_DUR;
+        if (backwardPos < 0) {
+            backwardPos = 0;
+        }
+        m_parentMediaSource->evict(0, backwardPos * 1000);
+        SOURCEBUFFER_LOG(this, "Remove backward data (available: %d)\n",
+                         (int)m_parentMediaSource->availableBufferSize());
+        // Try to remove forward packets
+        if (maxAssume >= m_parentMediaSource->availableBufferSize()) {
+            double forwardPos =
+                playbackPos + STARFISH_FRAME_EVICTION_FORWARD_DUR;
+            m_parentMediaSource->evict(forwardPos,
+                                       std::numeric_limits<uint64_t>::max());
+            SOURCEBUFFER_LOG(this, "Remove forward data (available: %d)\n",
+                             (int)m_parentMediaSource->availableBufferSize());
+            if (maxAssume >= m_parentMediaSource->availableBufferSize()) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
@@ -914,9 +973,11 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
             SourceBufferData* inputBuffer = (SourceBufferData*)data;
             CREATE_TIMER(timer,
                          "[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend");
-            SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
-                             "bufferAppend start (size %d)\n",
-                             (int)inputBuffer->m_length);
+            SOURCEBUFFER_LOG(
+                inputBuffer->m_sourceBuffer,
+                "bufferAppend start (size %d + unprocessed %d)\n",
+                (int)inputBuffer->m_length,
+                (int)inputBuffer->m_sourceBuffer->m_bufferUnprocessed.size());
             DemuxerSourceForSourceBuffer src(
                 inputBuffer, &inputBuffer->m_sourceBuffer->m_bufferUnprocessed);
 
@@ -1100,6 +1161,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 
                             if (inputBuffer->m_sourceBuffer
                                     ->m_indexPerInitSegment) {
+                                size_t addedSize = 0;
                                 for (size_t i = 0; i < cl->m_packetGroup.size();
                                      i++) {
                                     cl->m_packetGroup[i]->m_initSegmentIndex =
@@ -1136,6 +1198,8 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                             ->m_groupTimestampStart,
                                         (int)cl->m_packetGroup[i]
                                             ->m_groupTimestampEnd);
+                                    addedSize +=
+                                        cl->m_packetGroup[i]->m_dataSize;
                                 }
 
                                 inputBuffer->m_sourceBuffer->m_packetGroup
@@ -1143,6 +1207,8 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                                 ->m_packetGroup.end(),
                                             cl->m_packetGroup.begin(),
                                             cl->m_packetGroup.end());
+                                inputBuffer->m_sourceBuffer
+                                    ->increaseUsedBufferSize(addedSize);
                             }
 
                             std::vector<VideoStreamInfo>().swap(
@@ -1576,6 +1642,25 @@ StreamInfo* SourceBuffer::streamInfo(size_t initSegmentIndex,
     }
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
+
+void SourceBuffer::increaseUsedBufferSize(size_t amount)
+{
+    if (m_parentMediaSource) {
+        m_parentMediaSource->m_usedBufferSize += amount;
+    }
 }
+
+void SourceBuffer::decreaseUsedBufferSize(size_t amount)
+{
+    if (m_parentMediaSource) {
+        STARFISH_ASSERT(m_parentMediaSource->m_usedBufferSize >= amount);
+        m_parentMediaSource->m_usedBufferSize -= amount;
+    }
+}
+}
+
+#undef STARFISH_FRAME_EVICTION_BACKWARD_DUR
+#undef STARFISH_FRAME_EVICTION_FORWARD_DUR
+#undef SOURCEBUFFER_LOG
 
 #endif
