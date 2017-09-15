@@ -204,6 +204,12 @@ public:
         lastState().m_font = font;
     }
 
+    virtual void setTextDecorationData(Canvas* canvas)
+    {
+        lastState().m_textDecorationData =
+            ((CanvasCairo*)canvas)->lastState().m_textDecorationData;
+    }
+
     virtual void resetTextDecorationData()
     {
         lastState().m_textDecorationData.reset();

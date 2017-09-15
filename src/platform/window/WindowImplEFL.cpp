@@ -666,6 +666,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         [](void* data, int type, void* event) -> Eina_Bool {
             WindowImplEFL* sf = (WindowImplEFL*)data;
             Ecore_Event_Mouse_Wheel* d = (Ecore_Event_Mouse_Wheel*)event;
+            StarFishEnterer enter(sf->m_starFish);
             // We only care vertical wheel
             sf->dispatchMouseWheelEvent(d->x, d->y, d->z, true);
             return EINA_TRUE;

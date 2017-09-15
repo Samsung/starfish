@@ -49,10 +49,8 @@ FrameBlockBox* containingFrameBlockBox(Frame* currentFrame)
 {
     FrameBlockBox* blockBox = blockContainer(currentFrame);
     if (currentFrame->isAbsolutePositioned()) {
-        bool isFixed = currentFrame->style()->position() == FixedPositionValue;
-        while (!blockBox->isFrameDocument() &&
-               (isFixed || !blockBox->isPositioned()) &&
-               !blockBox->style()->hasTransforms(blockBox)) {
+        while (!blockBox->canBeContainingBlockOfAbsolutePositionedBox(
+            currentFrame)) {
             blockBox = blockContainer(blockBox);
         }
         return blockBox;
@@ -65,10 +63,8 @@ FrameBox* containingBlock(Frame* currentFrame)
 {
     // https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#containing-block-details
     if (currentFrame->isAbsolutePositioned()) {
-        bool isFixed = currentFrame->style()->position() == FixedPositionValue;
         Frame* f = currentFrame->parent();
-        while (!f->isFrameDocument() && (isFixed || !f->isPositioned()) &&
-               !f->style()->hasTransforms(f)) {
+        while (!f->canBeContainingBlockOfAbsolutePositionedBox(currentFrame)) {
             f = f->parent();
         }
 
@@ -1022,6 +1018,24 @@ ComputedStyle* Frame::firstLineStyle(Frame* frame, ComputedStyle* frameStyle)
         }
     }
     return Frame::style();
+}
+
+OverflowValue Frame::appliedOverflowX()
+{
+    if (node()) {
+        return node()->appliedOverflowX();
+    }
+
+    return m_styleWhenNodeIsAnonymous->overflowX();
+}
+
+OverflowValue Frame::appliedOverflowY()
+{
+    if (node()) {
+        return node()->appliedOverflowY();
+    }
+
+    return m_styleWhenNodeIsAnonymous->overflowY();
 }
 
 void Frame::updateComputedStyle(Node* refNode)

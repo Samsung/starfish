@@ -17,6 +17,8 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
+#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLHtmlElement.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"

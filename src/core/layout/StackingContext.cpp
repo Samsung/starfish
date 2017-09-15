@@ -147,6 +147,48 @@ void StackingContext::clearOwnBuffer(bool needsDetachNative)
 }
 
 class CanvasStateRestorer {
+private:
+    std::unordered_map<Frame*, std::pair<bool, bool>>
+        m_canApplyOverflowOrScrolls;
+    struct OverflowStatus {
+        Frame* m_child;
+
+        OverflowStatus(Frame* child)
+        {
+            reset(child);
+        }
+
+        bool canApplyOverflow(Frame* parent)
+        {
+            if (!parent) {
+                return false;
+            }
+
+            if (!parent->style()) {
+                STARFISH_ASSERT(parent->isLineBox());
+                return false;
+            }
+
+            if (parent->isFrameReplaced() &&
+                parent->asFrameReplaced()->isFrameReplacedIFrame()) {
+                return true;
+            }
+
+            if (m_child->isAbsolutePositioned()) {
+                return parent->canBeContainingBlockOfAbsolutePositionedBox(
+                           m_child) &&
+                       parent->shouldApplyOverflow();
+            }
+
+            return parent->shouldApplyOverflow();
+        }
+
+        void reset(Frame* f)
+        {
+            m_child = f;
+        }
+    };
+
 public:
     CanvasStateRestorer(Canvas* canvas, StackingContext* sCtx, FrameBox* owner,
                         bool isCompositing)
@@ -162,9 +204,8 @@ public:
             if (self->style()->position() == FixedPositionValue) {
                 Frame* parent = self->layoutParent();
                 LayoutUnit offsetX = self->x(), offsetY = self->y();
-                while ((!parent->style() ||
-                        !parent->style()->hasTransforms(parent)) &&
-                       !parent->isFrameDocument()) {
+                while (
+                    parent->canBeContainingBlockOfAbsolutePositionedBox(self)) {
                     offsetX += parent->asFrameBox()->x();
                     offsetY += parent->asFrameBox()->y();
                     parent = parent->layoutParent();
@@ -178,31 +219,44 @@ public:
             return;
         }
 
-        bool hasTransform = false;
-        std::vector<std::pair<FrameBox*, bool>> frameList; // Frame, seenFixed
-        Frame* f = self;
-        bool seenFixed = false;
-        while (f) {
-            if (f->asFrameBox()->stackingContext() &&
-                f->asFrameBox()->stackingContext()->needsOwnBuffer()) {
-                break;
-            }
+        std::vector<FrameBox*> frameList;
+        Frame* nearstBufferedFrame = nullptr;
+        bool shareWithStackingBuffer = true;
+        {
+            Frame* f = self;
+            OverflowStatus status(f);
+            bool canScroll =
+                status.m_child->style()->position() != FixedPositionValue;
+            while (f) {
+                frameList.push_back(f->asFrameBox());
+                f = f->layoutParent();
 
-            if (f->style() && f->style()->position() == FixedPositionValue) {
-                seenFixed = true;
-            }
-            frameList.push_back(std::make_pair(f->asFrameBox(), seenFixed));
-            if (f->style() && f->style()->hasTransforms(f)) {
-                hasTransform = true;
-            }
-            f = f->layoutParent();
-        }
+                if (shareWithStackingBuffer && f &&
+                    f->asFrameBox()->stackingContext() &&
+                    f->asFrameBox()->stackingContext()->needsOwnBuffer()) {
+                    nearstBufferedFrame = f;
+                    shareWithStackingBuffer = false;
+                }
 
-        bool canApplyOverflow = true;
-        if (self->style()->position() == FixedPositionValue) {
-            canApplyOverflow = false;
-            if (hasTransform) {
-                canApplyOverflow = true;
+                if (shareWithStackingBuffer) {
+                    if (status.canApplyOverflow(f)) {
+                        m_canApplyOverflowOrScrolls[f] = std::make_pair(
+                            true, canScroll && f && f->isFrameBlockBox());
+                        status.reset(f);
+                        canScroll = status.m_child->style()->position() !=
+                                    FixedPositionValue;
+                    } else {
+                        m_canApplyOverflowOrScrolls[f] = std::make_pair(
+                            false, canScroll && f && f->isFrameBlockBox());
+                    }
+                }
+
+                if (canScroll) {
+                    if (f && f->style() &&
+                        f->style()->position() == FixedPositionValue) {
+                        canScroll = false;
+                    }
+                }
             }
         }
 
@@ -227,52 +281,81 @@ public:
         }
 
         auto iter = frameList.rbegin();
+        shareWithStackingBuffer = nearstBufferedFrame == nullptr;
         while (iter != frameList.rend()) {
-            FrameBox* b = (*iter).first;
-            bool seenFixed = (*iter).second;
-            canvas->translate(b->x(), b->y());
+            FrameBox* b = *iter;
+
             if (b->style()) {
-                if (b != self && b->shouldApplyOverflow() && canApplyOverflow) {
-                    canvas->clip(Unit::Rect(b->borderLeft(), b->borderTop(),
-                                            b->width() - b->borderWidth(),
-                                            b->height() - b->borderHeight()));
-                }
-                if (b->shouldResetTextDecoration()) {
-                    canvas->resetTextDecorationData();
-                } else {
-                    canvas->mergeTextDecorationData(b->style());
-                }
-            }
-            if (b->isFrameBlockBox() && !seenFixed) {
-                canvas->translate(-b->asFrameBlockBox()->scrollLeft(),
-                                  -b->asFrameBlockBox()->scrollTop());
-            }
-            if (b->style() && b->style()->hasTransforms(b) && b != self) {
-                SkMatrix m = b->style()->transformsToMatrix(
-                    b->width(), b->height(), canvas->viewportWidth(),
-                    canvas->viewportHeight(), b->style()->hasTransforms(b));
-                if (!m.isIdentity()) {
-                    LayoutUnit ox = b->width() / 2;
-                    LayoutUnit oy = b->height() / 2;
-                    if (b->style()->hasTransformOrigin()) {
-                        ox = b->style()
-                                 ->transformOrigin()
-                                 ->originValue()
-                                 ->getXAxis()
-                                 .specifiedValue(b->width(),
-                                                 canvas->viewportWidth());
-                        oy = b->style()
-                                 ->transformOrigin()
-                                 ->originValue()
-                                 ->getYAxis()
-                                 .specifiedValue(b->height(),
-                                                 canvas->viewportHeight());
+                if (b != self) {
+                    if (b->shouldResetTextDecoration()) {
+                        canvas->resetTextDecorationData();
+                    } else {
+                        canvas->mergeTextDecorationData(b->style());
                     }
-                    canvas->translate(ox, oy);
-                    canvas->postMatrix(m);
-                    canvas->translate(-ox, -oy);
                 }
             }
+
+            if (nearstBufferedFrame && nearstBufferedFrame == b) {
+                shareWithStackingBuffer = true;
+            }
+
+            if (!shareWithStackingBuffer) {
+                iter++;
+                continue;
+            }
+
+            if (!(nearstBufferedFrame && nearstBufferedFrame == b)) {
+                canvas->translate(b->x(), b->y());
+            }
+
+            if (b->style()) {
+                auto overflowOrScroll = m_canApplyOverflowOrScrolls[b];
+
+                if (b != self) {
+                    if (b != nearstBufferedFrame) {
+                        SkMatrix m = b->style()->transformsToMatrix(
+                            b->width(), b->height(), canvas->viewportWidth(),
+                            canvas->viewportHeight(),
+                            b->style()->hasTransforms(b));
+                        if (!m.isIdentity()) {
+                            LayoutUnit ox = b->width() / 2;
+                            LayoutUnit oy = b->height() / 2;
+                            if (b->style()->hasTransformOrigin()) {
+                                ox = b->style()
+                                         ->transformOrigin()
+                                         ->originValue()
+                                         ->getXAxis()
+                                         .specifiedValue(
+                                             b->width(),
+                                             canvas->viewportWidth());
+                                oy = b->style()
+                                         ->transformOrigin()
+                                         ->originValue()
+                                         ->getYAxis()
+                                         .specifiedValue(
+                                             b->height(),
+                                             canvas->viewportHeight());
+                            }
+                            canvas->translate(ox, oy);
+                            canvas->postMatrix(m);
+                            canvas->translate(-ox, -oy);
+                        }
+                    }
+
+                    if (overflowOrScroll.first) {
+                        canvas->clip(
+                            Unit::Rect(b->borderLeft(), b->borderTop(),
+                                       b->width() - b->borderWidth(),
+                                       b->height() - b->borderHeight()));
+                    }
+
+                    if (overflowOrScroll.second) {
+                        canvas->translate(-b->asFrameBlockBox()->scrollLeft(),
+                                          -b->asFrameBlockBox()->scrollTop());
+                    }
+                }
+            }
+
             iter++;
         }
     }
@@ -364,6 +447,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
             canvas = Canvas::create(m_owner->node()->starFish(),
                                     m_rareData->m_buffer);
         }
+        canvas->setTextDecorationData(oldCanvas);
         canvas->setViewportWidthAndHeight(oldCanvas);
         if (m_rareData->m_buffer->pixelRatio() != 1) {
             canvas->scale(1.0 / m_rareData->m_buffer->pixelRatio(),
@@ -447,22 +531,13 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                  ->document()
                  ->browsingContext()
                  ->isMainBrowsingContext()) {
-            FrameBox* f = m_owner->node()
-                              ->document()
-                              ->browsingContext()
-                              ->sourceElement()
-                              ->frame()
-                              ->asFrameBox();
-            canvas->translate(f->borderLeft() + f->paddingLeft(),
-                              f->borderTop() + f->paddingTop());
-            canvas->clip(
-                Unit::Rect(0, 0, f->contentWidth(), f->contentHeight()));
+            FrameBlockBox* document =
+                m_owner->layoutParent()->asFrameBlockBox();
+            canvas->translate(document->scrollLeft(), document->scrollTop());
             m_owner->node()
                 ->document()
                 ->browsingContext()
                 ->paintWindowBackground(canvas);
-            FrameBlockBox* document =
-                m_owner->layoutParent()->asFrameBlockBox();
             canvas->translate(-document->scrollLeft(), -document->scrollTop());
         }
     }
@@ -548,8 +623,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                 ->browsingContext()
                 ->window()
                 ->scrolling()
-                ->paintScrollbars(canvas, document, OverflowValue::AutoOverflow,
-                                  OverflowValue::AutoOverflow);
+                ->paintScrollbars(canvas, document,
+                                  document->appliedOverflowX(),
+                                  document->appliedOverflowY());
         }
     }
 

@@ -478,6 +478,9 @@ public:
     }
 #endif
 
+    OverflowValue appliedOverflowX();
+    OverflowValue appliedOverflowY();
+
     Element* firstElementChild();
     Element* lastElementChild();
     unsigned long childElementCount();
