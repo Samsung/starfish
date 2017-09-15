@@ -527,7 +527,9 @@ icu::BreakIterator* openLineBreakIterator(BreakIteratorInfo& info,
     }
 
     if (U_FAILURE(openStatus)) {
-        STARFISH_LOG_ERROR("ubrk_open failed with status %d", openStatus);
+        STARFISH_LOG_ERROR(
+            "WARNING: Falling back to the default locale. Status code: %d",
+            openStatus);
         return nullptr;
     }
 

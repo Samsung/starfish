@@ -203,7 +203,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         mallopt(M_MMAP_MAX, 1024 * 1024);
 
         GC_set_abort_func([](const char* msg) {
-            STARFISH_LOG_ERROR("gc abort called\n");
+            STARFISH_LOG_ERROR("Starfish: GC aborted\n");
             STARFISH_LOG_ERROR("%s\n", msg);
         });
 
@@ -222,7 +222,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                 auto stat = getSmapsStats();
 
                 STARFISH_LOG_INFO(
-                    "did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB] "
+                    "Done GC: HeapSize: [%f MB , %f MB] RSS[%.1f MB] "
                     "Private_Dirty[%.1fMB]\n",
                     GC_get_memory_use() / 1024.f / 1024.f,
                     GC_get_heap_size() / 1024.f / 1024.f,
@@ -240,7 +240,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 
             if (GC_EVENT_RECLAIM_END == evtType) {
 #ifdef PORT_GRAPHIC_BACKEND_EFL
-                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n",
+                STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]\n",
                                   GC_get_memory_use() / 1024.f / 1024.f,
                                   GC_get_heap_size() / 1024.f / 1024.f);
 #endif
