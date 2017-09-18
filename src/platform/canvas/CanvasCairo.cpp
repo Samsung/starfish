@@ -507,11 +507,12 @@ public:
         }
         cairo_surface_t* image;
         image = cairo_image_surface_create_for_data(
-            (unsigned char*)data->unwrap(), CAIRO_FORMAT, data->width(),
-            data->height(),
-            cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, data->width()));
+            (unsigned char*)data->unwrap(), CAIRO_FORMAT, data->bufferWidth(),
+            data->height(), cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
+                                                          data->bufferWidth()));
 
-        drawImageCairo(image, dst, data->width(), data->height(), true);
+        drawImageCairo(image, dst, data->bufferWidth(), data->bufferHeight(),
+                       true);
         cairo_surface_destroy(image);
     }
 
