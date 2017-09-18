@@ -204,12 +204,6 @@ public:
         lastState().m_font = font;
     }
 
-    virtual void setTextDecorationData(Canvas* canvas)
-    {
-        lastState().m_textDecorationData =
-            ((CanvasCairo*)canvas)->lastState().m_textDecorationData;
-    }
-
     virtual void resetTextDecorationData()
     {
         lastState().m_textDecorationData.reset();
@@ -218,6 +212,16 @@ public:
     virtual void mergeTextDecorationData(ComputedStyle* style)
     {
         lastState().m_textDecorationData.merge(style);
+    }
+
+    virtual TextDecorationData textDecorationData()
+    {
+        return lastState().m_textDecorationData;
+    }
+
+    virtual void setTextDecorationData(TextDecorationData d)
+    {
+        lastState().m_textDecorationData = d;
     }
 
     virtual void punchHole(const Unit::Rect& rt)

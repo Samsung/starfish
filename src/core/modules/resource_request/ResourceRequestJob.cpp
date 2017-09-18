@@ -132,17 +132,21 @@ void DataURLResourceRequestJobDelegate::worker(ResourceRequest* res,
     size_t idxColon = url->indexOf(':');
     size_t idx = url->indexOf(',');
 
+    String* mimeType = String::emptyString;
     if (idx != SIZE_MAX && idxColon != SIZE_MAX && idxColon < idx) {
         String* sub =
             url->substring(idxColon + 1, idx - idxColon - 1)->toLower();
+        mimeType = sub;
         size_t base64 = sub->find(";base64");
 
         if (base64 == sub->length() - 7) {
             sub = sub->substring(0, base64);
+            mimeType = sub;
             res->m_containsBase64Content = true;
         }
     }
 
+    res->m_responseMimeType = mimeType;
     res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
 
     res->changeReadyState(ResourceRequest::LOADING, true);
