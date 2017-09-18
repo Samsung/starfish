@@ -652,6 +652,7 @@ enum BorderStyleValue {
     NoneBorderStyleValue,
     SolidBorderStyleValue,
     InsetBorderStyleValue,
+    OutsetBorderStyleValue,
 };
 
 enum BorderWidthValue {
