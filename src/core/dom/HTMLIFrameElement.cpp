@@ -90,6 +90,16 @@ void HTMLIFrameElement::setHeight(String* height)
     setAttribute(starFish()->staticStrings()->m_height, height);
 }
 
+String* HTMLIFrameElement::scrolling()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_scrolling);
+}
+
+void HTMLIFrameElement::setScrolling(String* scrolling)
+{
+    setAttribute(starFish()->staticStrings()->m_scrolling, scrolling);
+}
+
 void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
                                             String* value,
                                             bool attributeCreated,

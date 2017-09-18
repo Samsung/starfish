@@ -59,6 +59,9 @@ public:
     String* height();
     void setHeight(String* height);
 
+    String* scrolling();
+    void setScrolling(String* scrolling);
+
     Document* contentDocument() const;
     Window* contentWindow() const;
 

@@ -388,6 +388,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the frame in CSS pixels. |
 |  | attribute | contentDocument | Returns the iframe element's content document. |
 |  | attribute | contentWindow | Returns the WindowProxy object of the iframe element's nested browsing context, if its nested browsing context is non-null, or null otherwise. |
+|  | attribute | scrolling | Specifies whether or not to display scrollbars in an iframe |
 | [HTMLLegendElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-legend-element) | interface | HTMLLegendElement | Represents a caption for the rest of the contents of the legend element's parent fieldset element, if any. |
 |  | attribte  | form | Returns the element's form owner, or null if there is not one. |
 | [HTMLLinkElement](https://html.spec.whatwg.org/multipage/semantics.html#the-link-element) | interface | HTMLLinkElement | The HTMLLinkElement interface represents reference information for external resources and the relationship of those resources to a document and vice-versa |

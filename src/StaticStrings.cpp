@@ -254,6 +254,9 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_xmlBase = QualifiedName(AtomicString::createAtomicString(sf, "xml"),
                               AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "base"));
+    m_scrolling =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "scrolling"));
 
     m_click = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "click"));

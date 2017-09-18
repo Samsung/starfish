@@ -301,6 +301,7 @@ public:
     QualifiedName m_cy;
     // xml:base
     QualifiedName m_xmlBase;
+    QualifiedName m_scrolling;
 
     // Event Names
     QualifiedName m_click;

@@ -694,6 +694,10 @@ bool BrowsingContext::isInnerIFrameEvent(Node* targetNode, double& posX,
         targetNode->asHTMLIFrameElement()->browsingContext() &&
         targetNode->asHTMLIFrameElement()->frame()) {
         auto iframe = targetNode->asHTMLIFrameElement();
+        if (iframe->scrolling()->toLower()->equals("no")) {
+            return false;
+        }
+
         auto fb = iframe->frame()->asFrameBox();
         auto absPoint = fb->absolutePoint(document()->frame()->asFrameBox());
         double newPosX = posX - (double)absPoint.x();
