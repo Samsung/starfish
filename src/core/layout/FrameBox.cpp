@@ -549,10 +549,18 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             canvas->drawRect(LayoutRect(0, borderTop(), borderLeft(),
                                         height() - borderHeight()));
         } else {
+            Unit::Color black =
+                NamedColor::namedColorToColor(NamedColor::blackNamedColor);
+
             // top
             if (style()->borderTopStyle() ==
                 BorderStyleValue::InsetBorderStyleValue) {
                 canvas->setColor(style()->borderTopColor().getDarkerColor());
+            } else if ((style()->borderTopStyle() ==
+                        BorderStyleValue::OutsetBorderStyleValue) &&
+                       (style()->borderTopColor() == black)) {
+                canvas->setColor(
+                    Unit::Color(238, 238, 238, style()->borderTopColor().a()));
             } else {
                 canvas->setColor(style()->borderTopColor());
             }
@@ -564,11 +572,12 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             // right
             if ((style()->borderRightStyle() ==
                  BorderStyleValue::InsetBorderStyleValue) &&
-                (style()->borderRightColor().r() == 0 &&
-                 style()->borderRightColor().g() == 0 &&
-                 style()->borderRightColor().b() == 0)) {
+                (style()->borderRightColor() == black)) {
                 canvas->setColor(Unit::Color(238, 238, 238,
                                              style()->borderRightColor().a()));
+            } else if (style()->borderRightStyle() ==
+                       BorderStyleValue::OutsetBorderStyleValue) {
+                canvas->setColor(style()->borderRightColor().getDarkerColor());
             } else {
                 canvas->setColor(style()->borderRightColor());
             }
@@ -581,11 +590,12 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             // bottom
             if ((style()->borderBottomStyle() ==
                  BorderStyleValue::InsetBorderStyleValue) &&
-                (style()->borderBottomColor().r() == 0 &&
-                 style()->borderBottomColor().g() == 0 &&
-                 style()->borderBottomColor().b() == 0)) {
+                (style()->borderBottomColor() == black)) {
                 canvas->setColor(Unit::Color(238, 238, 238,
                                              style()->borderBottomColor().a()));
+            } else if (style()->borderBottomStyle() ==
+                       BorderStyleValue::OutsetBorderStyleValue) {
+                canvas->setColor(style()->borderBottomColor().getDarkerColor());
             } else {
                 canvas->setColor(style()->borderBottomColor());
             }
@@ -599,6 +609,11 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             if (style()->borderLeftStyle() ==
                 BorderStyleValue::InsetBorderStyleValue) {
                 canvas->setColor(style()->borderLeftColor().getDarkerColor());
+            } else if ((style()->borderLeftStyle() ==
+                        BorderStyleValue::OutsetBorderStyleValue) &&
+                       (style()->borderLeftColor() == black)) {
+                canvas->setColor(
+                    Unit::Color(238, 238, 238, style()->borderLeftColor().a()));
             } else {
                 canvas->setColor(style()->borderLeftColor());
             }
