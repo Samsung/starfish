@@ -314,8 +314,10 @@ public:
             std::unordered_map<PreferredWidthKey, PreferredWidthValue>* s8 =
                 new std::unordered_map<PreferredWidthKey,
                                        PreferredWidthValue>();
+            std::unordered_map<FrameBox*, LayoutUnit>* s9 =
+                new std::unordered_map<FrameBox*, LayoutUnit>();
             m_blockFormattingContextInfo.emplace_back(
-                isNormalFlow, isRoot, s, s2, s3, s4, s5, s6, s7, s8);
+                isNormalFlow, isRoot, s, s2, s3, s4, s5, s6, s7, s8, s9);
         } else {
             BlockFormattingContext& back = m_blockFormattingContextInfo.back();
             std::vector<FloatingBoxInfo>* s =
@@ -325,7 +327,7 @@ public:
                 back.m_lineBoxAscenders, back.m_firstLineCandidates,
                 back.m_blockBoxAligningAtFirstBaselineStack,
                 back.m_firstLineAscenders, back.m_tempAscenders,
-                back.m_preferredWidthValues);
+                back.m_preferredWidthValues, back.m_contentHeights);
         }
     }
 
@@ -341,6 +343,7 @@ public:
             delete m_blockFormattingContextInfo.back().m_firstLineAscenders;
             delete m_blockFormattingContextInfo.back().m_tempAscenders;
             delete m_blockFormattingContextInfo.back().m_preferredWidthValues;
+            delete m_blockFormattingContextInfo.back().m_contentHeights;
         }
         delete m_blockFormattingContextInfo.back().m_floatBoxes;
         m_blockFormattingContextInfo.pop_back();
@@ -500,6 +503,8 @@ public:
 
     LayoutUnit viewportWidth();
     LayoutUnit viewportHeight();
+    void registerContentHeight(FrameBox* box, LayoutUnit contentHeight);
+    LayoutUnit contentHeight(FrameBox* box);
 
 private:
     struct BlockFormattingContext {
@@ -515,7 +520,8 @@ private:
             std::unordered_map<FrameTableCellBox*,
                                std::pair<LineBox*, LayoutUnit>>* tempAscenders,
             std::unordered_map<PreferredWidthKey, PreferredWidthValue>*
-                preferredWidthValues)
+                preferredWidthValues,
+            std::unordered_map<FrameBox*, LayoutUnit>* contentHeights)
             : m_isRoot(isRoot)
             , m_isNormalFlow(isNormalFlow)
             , m_inlineBlockBoxStack(inlineBlockBoxStack)
@@ -527,6 +533,7 @@ private:
             , m_firstLineAscenders(firstLineAscenders)
             , m_tempAscenders(tempAscenders)
             , m_preferredWidthValues(preferredWidthValues)
+            , m_contentHeights(contentHeights)
         {
         }
         bool m_isRoot;
@@ -547,6 +554,7 @@ private:
             m_tempAscenders;
         std::unordered_map<PreferredWidthKey, PreferredWidthValue>*
             m_preferredWidthValues;
+        std::unordered_map<FrameBox*, LayoutUnit>* m_contentHeights;
     };
 
     StarFish* m_starFish;

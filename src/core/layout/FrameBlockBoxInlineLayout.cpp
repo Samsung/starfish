@@ -3583,7 +3583,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
         }
 
         w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), w,
-                                      parentContentWidth, viewportWidth, true);
+                                      parentContentWidth, true);
     } else {
         w = intrinsicWidth;
         h = intrinsicHeight;
@@ -3769,7 +3769,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     }
 
     w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), w, cb->contentWidth(),
-                                  ctx.layoutContext().viewportWidth(), true);
+                                  true);
     ctx.updatePreferredWidth(w);
 }
 

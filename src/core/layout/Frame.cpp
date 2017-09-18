@@ -740,6 +740,23 @@ LayoutUnit LayoutContext::viewportHeight()
     return frameDocument()->style()->height().fixed();
 }
 
+void LayoutContext::registerContentHeight(FrameBox* box,
+                                          LayoutUnit contentHeight)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    (*c.m_contentHeights)[box] = contentHeight;
+}
+
+LayoutUnit LayoutContext::contentHeight(FrameBox* box)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    auto iter = c.m_contentHeights->find(box);
+    if (iter == c.m_contentHeights->end()) {
+        return intMaxForLayoutUnit;
+    }
+    return iter->second;
+}
+
 Frame::Frame(Node* node, ComputedStyle* s)
 {
     bool isAnonymous;

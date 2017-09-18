@@ -660,6 +660,8 @@ void FrameBox::establishesStackingContextIfNeeds()
                         break;
                     } else if (p->needsGraphicsBuffer()) {
                         break;
+                    } else if (p->style()->hasTransforms(p)) {
+                        break;
                     } else if (p->style()->position() == FixedPositionValue) {
                         break;
                     } else if ((p->isPositioned() || p->isFlexItem()) &&
@@ -717,9 +719,10 @@ void FrameBox::clearStackingContextIfNeeds(bool shouldDetachNativeBuffer)
 
 LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
     LayoutContext& ctx, LayoutUnit width, LayoutUnit parentWidth,
-    LayoutUnit viewportWidth, bool underComputingPreferredWidth)
+    bool underComputingPreferredWidth)
 {
     ComputedStyle* style = Frame::style();
+    LayoutUnit viewportWidth = ctx.viewportWidth();
     if (style->minWidth().isSpecified()) {
         if (!(underComputingPreferredWidth && style->minWidth().isPercent())) {
             LayoutUnit minWidth =
@@ -733,20 +736,20 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
         }
     } else if (isFlexItem()) {
         LayoutUnit minWidth = intMaxForLayoutUnit;
-        if (style->width().isSpecified()) {
-            if (!(underComputingPreferredWidth && style->width().isPercent())) {
-                LayoutUnit width =
-                    style->width().specifiedValue(parentWidth, viewportWidth);
-
-                width = contentWidthApplyingBoxSizing(width);
-
-                minWidth = width;
-            }
-        }
 
         if (!underComputingPreferredWidth &&
             layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
             appliedOverflowX() == VisibleOverflow) {
+            if (style->width().isSpecified()) {
+                LayoutUnit width =
+                    style->width().specifiedValue(parentWidth, viewportWidth);
+                width = contentWidthApplyingBoxSizing(width);
+
+                minWidth = width;
+            } else if (isFrameReplaced()) {
+                // TODO: calculate transferred size
+            }
+
             PreferredWidthContext p(ctx, this, parentWidth - mbpWidth());
             p.computePreferredWidth();
             minWidth = std::min(minWidth, p.preferredMinWidth());
@@ -771,12 +774,13 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
     return width;
 }
 
-LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutUnit height,
+LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
+                                                LayoutUnit height,
                                                 LayoutUnit parentHeight,
-                                                LayoutUnit viewportHeight,
                                                 bool parentHasFixedValue)
 {
     ComputedStyle* style = Frame::style();
+    LayoutUnit viewportHeight = ctx.viewportHeight();
     if (style->minHeight().isSpecified()) {
         if (!parentHasFixedValue && style->minHeight().isPercent()) {
             return height;
@@ -791,19 +795,25 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutUnit height,
             return minHeight;
         }
     } else if (isFlexItem()) {
-        LayoutUnit minHeight;
+        LayoutUnit minHeight = intMaxForLayoutUnit;
+
         if (!layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
             appliedOverflowY() == VisibleOverflow) {
             if (!(style->height().isAuto() ||
                   (style->height().isPercent() && !parentHasFixedValue))) {
-                // TODO: should compare `min-content` size of flex-item, too.
-                minHeight =
-                    std::min(height, LayoutUnit(style->height().specifiedValue(
-                                         parentHeight, viewportHeight)));
+                LayoutUnit height = LayoutUnit(style->height().specifiedValue(
+                    parentHeight, viewportHeight));
+                height = contentHeightApplyingBoxSizing(height);
+
+                minHeight = height;
+            } else if (isFrameReplaced()) {
+                // TODO: calculate transferred size
             }
+
+            minHeight = std::min(minHeight, ctx.contentHeight(this));
         }
 
-        if (minHeight > height) {
+        if (minHeight != intMaxForLayoutUnit && minHeight > height) {
             return minHeight;
         }
     }

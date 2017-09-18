@@ -483,12 +483,16 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
         if (!m.isIdentity()) {
             ensureRareData()->m_matrix = m;
-            /*
-            STARFISH_LOG_INFO("matrix\n[%f %f %f]\n[%f %f %f]\n[%f %f %f]\n"
-                , m_matrix.get(0), m_matrix.get(1), m_matrix.get(2)
-                , m_matrix.get(3), m_matrix.get(4), m_matrix.get(5)
-                , m_matrix.get(6), m_matrix.get(7), m_matrix.get(8));
-                */
+            /*STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
+                              m_rareData->m_matrix.getScaleX(),
+                              m_rareData->m_matrix.getSkewX(),
+                              m_rareData->m_matrix.getTranslateX(),
+                              m_rareData->m_matrix.getSkewY(),
+                              m_rareData->m_matrix.getScaleY(),
+                              m_rareData->m_matrix.getTranslateY(),
+                              m_rareData->m_matrix.getPerspX(),
+                              m_rareData->m_matrix.getPerspY(),
+                              m_rareData->m_matrix.get(8));*/
             LayoutUnit ox = m_owner->width() / 2;
             LayoutUnit oy = m_owner->height() / 2;
             if (m_owner->style()->hasTransformOrigin()) {
@@ -665,10 +669,16 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             canvas->viewportHeight(), ownerStyle->hasTransforms(m_owner));
 
         if (!m_rareData->m_matrix.isIdentity()) {
-            /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n"
-                , m_matrix.get(0), m_matrix.get(1), m_matrix.get(2)
-                , m_matrix.get(3), m_matrix.get(4), m_matrix.get(5)
-                , m_matrix.get(6), m_matrix.get(7), m_matrix.get(8)); */
+            /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
+                               m_rareData->m_matrix.getScaleX(),
+                               m_rareData->m_matrix.getSkewX(),
+                               m_rareData->m_matrix.getTranslateX(),
+                               m_rareData->m_matrix.getSkewY(),
+                               m_rareData->m_matrix.getScaleY(),
+                               m_rareData->m_matrix.getTranslateY(),
+                               m_rareData->m_matrix.getPerspX(),
+                               m_rareData->m_matrix.getPerspY(),
+                               m_rareData->m_matrix.get(8));*/
             LayoutUnit ox = m_owner->width() / 2;
             LayoutUnit oy = m_owner->height() / 2;
             if (m_owner->style()->hasTransformOrigin()) {
