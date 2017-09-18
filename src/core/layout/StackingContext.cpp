@@ -204,9 +204,9 @@ public:
             if (self->style()->position() == FixedPositionValue) {
                 Frame* parent = self->layoutParent();
                 LayoutUnit offsetX = self->x(), offsetY = self->y();
-                while (
-                    parent->style() &&
-                    parent->canBeContainingBlockOfAbsolutePositionedBox(self)) {
+                while (parent->isLineBox() ||
+                       !parent->canBeContainingBlockOfAbsolutePositionedBox(
+                           self)) {
                     offsetX += parent->asFrameBox()->x();
                     offsetY += parent->asFrameBox()->y();
                     parent = parent->layoutParent();
@@ -621,16 +621,20 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                  ->document()
                  ->browsingContext()
                  ->isMainBrowsingContext()) {
-            FrameBlockBox* document =
-                m_owner->layoutParent()->asFrameBlockBox();
-            m_owner->node()
-                ->document()
-                ->browsingContext()
-                ->window()
-                ->scrolling()
-                ->paintScrollbars(canvas, document,
-                                  document->appliedOverflowX(),
-                                  document->appliedOverflowY());
+            HTMLIFrameElement* iframe =
+                m_owner->node()->document()->browsingContext()->sourceElement();
+            if (!iframe->scrolling()->toLower()->equals("no")) {
+                FrameBlockBox* document =
+                    m_owner->layoutParent()->asFrameBlockBox();
+                m_owner->node()
+                    ->document()
+                    ->browsingContext()
+                    ->window()
+                    ->scrolling()
+                    ->paintScrollbars(canvas, document,
+                                      document->appliedOverflowX(),
+                                      document->appliedOverflowY());
+            }
         }
     }
 

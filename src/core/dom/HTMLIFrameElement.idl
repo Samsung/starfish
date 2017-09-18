@@ -23,7 +23,7 @@ interface HTMLIFrameElement : HTMLElement {
     // obsolete members
     // https://html.spec.whatwg.org/#HTMLIFrameElement-partial
     [Unimplemented, CEReactions] attribute DOMString align;
-    [Unimplemented, CEReactions] attribute DOMString scrolling;
+    [CEReactions] attribute DOMString scrolling;
     [Unimplemented, CEReactions] attribute DOMString frameBorder;
     [Unimplemented, CEReactions] attribute DOMString longDesc;
 
