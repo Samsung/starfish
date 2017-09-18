@@ -131,8 +131,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
             contentWidth = contentWidthApplyingBoxSizing(contentWidth);
         }
 
-        applyMinMaxWidthIfNeeds(ctx, contentWidth, containgBlockContentWidth,
-                                viewportWidth);
+        applyMinMaxWidthIfNeeds(ctx, contentWidth, containgBlockContentWidth);
     }
 }
 
@@ -182,11 +181,14 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                 contentHeight = contentHeightApplyingBoxSizing(contentHeight);
             }
 
-            applyMinMaxHeightIfNeeds(contentHeight, parentHeight,
-                                     viewportHeight);
+            applyMinMaxHeightIfNeeds(ctx, contentHeight, parentHeight);
         } else {
             computeContentHeight(ctx, contentHeight);
         }
+    }
+
+    if (isFlexItem()) {
+        ctx.registerContentHeight(this, contentHeight());
     }
 }
 
@@ -214,7 +216,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
         contentHeight = contentHeightApplyingBoxSizing(contentHeight);
     }
 
-    applyMinMaxHeightIfNeeds(contentHeight, parentHeight, ctx.viewportHeight(),
+    applyMinMaxHeightIfNeeds(ctx, contentHeight, parentHeight,
                              parentHasFixedHeight);
 }
 
@@ -523,7 +525,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
 
     LayoutUnit scrollWidth = visibleRect.width();
     if (visibleRect.x() < 0) {
-        scrollWidth -= visibleRect.x();
+        scrollWidth += visibleRect.x();
     }
 
     auto overflowX = appliedOverflowX();
@@ -558,7 +560,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
 
     LayoutUnit scrollHeight = visibleRect.height();
     if (visibleRect.y() < 0) {
-        scrollHeight -= visibleRect.y();
+        scrollHeight += visibleRect.y();
     }
 
     auto overflowY = appliedOverflowY();

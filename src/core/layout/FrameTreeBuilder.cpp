@@ -767,9 +767,9 @@ void dump(Frame* frm, unsigned depth)
     }
 }
 
-void FrameTreeBuilder::dumpFrameTree(Document* document)
+void FrameTreeBuilder::dumpFrameTree(Document* document, unsigned depth)
 {
-    dump(document->frame(), 0);
+    dump(document->frame(), depth);
 }
 #endif
 }

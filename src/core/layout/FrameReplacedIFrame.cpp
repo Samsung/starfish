@@ -18,12 +18,30 @@
 #include "core/dom/Node.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Document.h"
+#ifdef STARFISH_ENABLE_TEST
+#include "core/layout/FrameTreeBuilder.h"
+#endif
 #include "core/layout/FrameReplacedIFrame.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/modules/canvas/Canvas.h"
 
 namespace StarFish {
+
+#ifdef STARFISH_ENABLE_TEST
+void FrameReplacedIFrame::dump(int depth)
+{
+    FrameBox::dump(depth);
+    printf("\n");
+    HTMLIFrameElement* v = node()->asHTMLIFrameElement();
+    if (v->browsingContext()) {
+        if (v->browsingContext()->window()) {
+            FrameTreeBuilder::dumpFrameTree(v->browsingContext()->document(),
+                                            depth + 1);
+        }
+    }
+}
+#endif
 
 IntrinsicSize FrameReplacedIFrame::intrinsicSize()
 {

@@ -169,19 +169,18 @@ public:
     }
 
     void applyMinMaxWidthIfNeeds(LayoutContext& ctx, LayoutUnit width,
-                                 LayoutUnit parentWidth,
-                                 LayoutUnit viewportWidth)
+                                 LayoutUnit parentWidth)
     {
-        setContentWidth(minMaxWidthAppliedIfNeeds(ctx, width, parentWidth,
-                                                  viewportWidth, false));
+        setContentWidth(
+            minMaxWidthAppliedIfNeeds(ctx, width, parentWidth, false));
     }
 
-    void applyMinMaxHeightIfNeeds(LayoutUnit height, LayoutUnit parentHeight,
-                                  LayoutUnit viewportHeight,
+    void applyMinMaxHeightIfNeeds(LayoutContext& ctx, LayoutUnit height,
+                                  LayoutUnit parentHeight,
                                   bool parentHasFixedValue = true)
     {
-        setContentHeight(minMaxHeightAppliedIfNeeds(
-            height, parentHeight, viewportHeight, parentHasFixedValue));
+        setContentHeight(minMaxHeightAppliedIfNeeds(ctx, height, parentHeight,
+                                                    parentHasFixedValue));
     }
 
     LayoutUnit contentWidthApplyingBoxSizing(LayoutUnit width)
@@ -681,12 +680,10 @@ public:
 protected:
     LayoutUnit minMaxWidthAppliedIfNeeds(LayoutContext& ctx, LayoutUnit width,
                                          LayoutUnit parentWidth,
-                                         LayoutUnit viewportWidth,
                                          bool underComputingPreferredWidth);
 
-    LayoutUnit minMaxHeightAppliedIfNeeds(LayoutUnit height,
+    LayoutUnit minMaxHeightAppliedIfNeeds(LayoutContext& ctx, LayoutUnit height,
                                           LayoutUnit parentHeight,
-                                          LayoutUnit viewportHeight,
                                           bool parentHasFixedValue);
 
     bool hasRareData() const

@@ -44,6 +44,10 @@ public:
         return "FrameReplacedIFrame";
     }
 
+#ifdef STARFISH_ENABLE_TEST
+    virtual void dump(int depth) override;
+#endif
+
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
 

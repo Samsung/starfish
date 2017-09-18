@@ -75,7 +75,7 @@ public:
     static Frame* buildSVGFrameTree(SVGElement* svgElement);
 #ifdef STARFISH_ENABLE_TEST
     // debug function
-    static void dumpFrameTree(Document* document);
+    static void dumpFrameTree(Document* document, unsigned depth);
 #endif
 
 private:

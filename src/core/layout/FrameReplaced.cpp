@@ -347,6 +347,10 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     applyMinMaxWidthAndHeightIfNeeds(ctx, w, h, parentContentWidth,
                                      parentContentHeight, hasAspectRatio,
                                      parentHasFixedHeight);
+
+    if (isFlexItem()) {
+        ctx.registerContentHeight(this, contentHeight());
+    }
 }
 
 void FrameReplaced::layout(LayoutContext& ctx,

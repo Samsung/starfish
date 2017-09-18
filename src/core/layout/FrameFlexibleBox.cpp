@@ -113,13 +113,12 @@ void FlexFormattingContext::computeMainSize()
 
         if (m_isMainAxisInInlineAxis) {
             flexItem->applyMinMaxWidthIfNeeds(m_layoutContext, mainSize,
-                                              m_availableMainSize,
-                                              m_layoutContext.viewportWidth());
+                                              m_availableMainSize);
         } else {
             bool parentHasFixedHeight =
                 m_layoutContext.parentHasFixedHeight(flexItem);
-            flexItem->applyMinMaxHeightIfNeeds(mainSize, m_availableMainSize,
-                                               m_layoutContext.viewportHeight(),
+            flexItem->applyMinMaxHeightIfNeeds(m_layoutContext, mainSize,
+                                               m_availableMainSize,
                                                parentHasFixedHeight);
         }
 
@@ -282,12 +281,10 @@ void FlexFormattingContext::applyFlexFactor()
                         (factor / sumOfFactor) * remainingFreeSpace;
                     if (m_isMainAxisInInlineAxis) {
                         flexItem->applyMinMaxWidthIfNeeds(
-                            m_layoutContext, mainSize, m_availableMainSize,
-                            m_layoutContext.viewportWidth());
+                            m_layoutContext, mainSize, m_availableMainSize);
                     } else {
                         flexItem->applyMinMaxHeightIfNeeds(
-                            mainSize, m_availableMainSize,
-                            m_layoutContext.viewportHeight());
+                            m_layoutContext, mainSize, m_availableMainSize);
                     }
                 }
             } else {
@@ -299,12 +296,10 @@ void FlexFormattingContext::applyFlexFactor()
                                               remainingFreeSpace;
                     if (m_isMainAxisInInlineAxis) {
                         flexItem->applyMinMaxWidthIfNeeds(
-                            m_layoutContext, mainSize, m_availableMainSize,
-                            m_layoutContext.viewportWidth());
+                            m_layoutContext, mainSize, m_availableMainSize);
                     } else {
                         flexItem->applyMinMaxHeightIfNeeds(
-                            mainSize, m_availableMainSize,
-                            m_layoutContext.viewportHeight());
+                            m_layoutContext, mainSize, m_availableMainSize);
                     }
                 }
             }
