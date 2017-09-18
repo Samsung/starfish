@@ -5119,7 +5119,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
                          selector->pseudoSelectorList()[0], result);
     }
     case CSSSelector::PseudoEnabled: {
-        if (element->isHTMLFormObject()) {
+        if (element->isHTMLElement()) {
             return !element->asHTMLElement()->disabled();
         }
         if (element->isHTMLAnchorElement()) {
@@ -5129,7 +5129,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
         break;
     }
     case CSSSelector::PseudoDisabled: {
-        if (element->isHTMLFormObject()) {
+        if (element->isHTMLElement()) {
             return element->asHTMLElement()->disabled();
         }
         break;

@@ -205,6 +205,7 @@ public:
                 Frame* parent = self->layoutParent();
                 LayoutUnit offsetX = self->x(), offsetY = self->y();
                 while (
+                    parent->style() &&
                     parent->canBeContainingBlockOfAbsolutePositionedBox(self)) {
                     offsetX += parent->asFrameBox()->x();
                     offsetY += parent->asFrameBox()->y();
@@ -447,7 +448,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
             canvas = Canvas::create(m_owner->node()->starFish(),
                                     m_rareData->m_buffer);
         }
-        canvas->setTextDecorationData(oldCanvas);
+        canvas->setTextDecorationData(oldCanvas->textDecorationData());
         canvas->setViewportWidthAndHeight(oldCanvas);
         if (m_rareData->m_buffer->pixelRatio() != 1) {
             canvas->scale(1.0 / m_rareData->m_buffer->pixelRatio(),

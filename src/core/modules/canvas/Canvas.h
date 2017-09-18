@@ -131,10 +131,10 @@ public:
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;
-    virtual void setTextDecorationData(Canvas* canvas) = 0;
     virtual void resetTextDecorationData() = 0;
     virtual void mergeTextDecorationData(ComputedStyle* style) = 0;
-
+    virtual TextDecorationData textDecorationData() = 0;
+    virtual void setTextDecorationData(TextDecorationData d) = 0;
     virtual void drawRect(const Unit::Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,

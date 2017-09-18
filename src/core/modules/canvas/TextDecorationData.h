@@ -38,18 +38,6 @@ public:
     {
     }
 
-    static TextDecorationData* create(ComputedStyle* style);
-
-    static TextDecorationData* create(TextDecorationData* data)
-    {
-        if (data) {
-            TextDecorationData* ret = new TextDecorationData(data);
-            return ret;
-        } else {
-            return nullptr;
-        }
-    }
-
     void merge(ComputedStyle* style);
 
     void reset()

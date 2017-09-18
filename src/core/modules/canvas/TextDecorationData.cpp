@@ -19,17 +19,6 @@
 #include "core/style/ComputedStyle.h"
 
 namespace StarFish {
-TextDecorationData* TextDecorationData::create(ComputedStyle* style)
-{
-    if (style->textDecoration() != NoneTextDecorationValue) {
-        TextDecorationData* ret = new TextDecorationData();
-        ret->merge(style);
-
-        return ret;
-    } else {
-        return nullptr;
-    }
-}
 
 void TextDecorationData::merge(ComputedStyle* style)
 {
