@@ -477,7 +477,8 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             setY(data.m_contentHeight - data.m_bottom - height() - data.m_absY +
                  marginTop());
         } else {
-            computeVerticalMargin(data.m_contentHeight);
+            computeVerticalMargin(data.m_contentHeight - data.m_top -
+                                  data.m_bottom);
             setY(data.m_top - data.m_absY + marginTop());
         }
     } else if (style()->position() == PositionValue::RelativePositionValue) {
