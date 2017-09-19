@@ -58,6 +58,16 @@ struct TextRun {
 
 class InlineTextBox : public FrameBox {
 public:
+    InlineTextBox(InlineTextBox* box)
+        : FrameBox(box->node(), box->style())
+        , m_text(nullptr)
+        , m_start(0)
+        , m_end(std::numeric_limits<uint16_t>::max())
+    {
+        m_flags.m_isFirstLine = box->isFirstLine();
+        m_flags.m_direction = box->charDirection();
+    }
+
     InlineTextBox(FrameText* frame, const TextRun& run, bool isFirstLine)
         : FrameBox(frame->node(), frame->style())
     {
@@ -856,6 +866,7 @@ private:
 
     void generateInlineTextBox(TextToken& token);
     void insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
+    InlineTextBox* splitInlineTextBox(InlineTextBox* textBox);
     void insertInlineBox(FrameBox* box);
     void insertAbsolutePositionedBoxes();
 
@@ -974,7 +985,7 @@ public:
         m_absolutePositionedLayoutParentCnt[box]--;
     }
 
-    bool dontBreakLine(Frame* f, LayoutUnit width);
+    bool dontBreakLine(FrameBox* box, LayoutUnit width);
 
     void computeDirection(Frame* parent, DirectionValue direction);
 
@@ -1084,6 +1095,7 @@ public:
     bool m_isPendingBreakLine;
     bool m_isWhiteSpaceAtLast;
     bool m_isSoftHyphenAtLast;
+    bool m_canConcatWord;
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;

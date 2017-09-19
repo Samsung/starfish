@@ -889,7 +889,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | border-image-slice | &lt;number&gt; fill | How to slice the border image. &lt;number&gt; value can take only one value and initial value is 0 (not 100%). | |
 | | border-image-width | &lt;length&gt; &#124; &lt;number&gt;	| Width of the border image. &lt;number&gt; value represents multiples of the corresponding border-top-width. | |
 | [Outline](https://www.w3.org/TR/css-ui-3/) | outline | &lt;border-width&gt; &lt;border-style&gt; &lt;border-color&gt; | Sets all the border properties (shorthand). | In the former case, various properties define the style (&lt;border-style&gt;), color (&lt;border-color&gt;), and thickness (&lt;border-width&gt;) of the border. &lt;border-width&gt; may take one of the following values: thin, medium, thick, and &lt;length&gt;. &lt;border-color&gt; may take one of the following values: &lt;color&gt;, and transparent. &lt;border-style&gt; may take one of the following values: none, solid, inset, and outset. (Also check Border Properties) |
-| | outline-color | &lt;border-color&gt; | Sets the color of the outline | 
+| | outline-color | &lt;border-color&gt; | Sets the color of the outline |
 | | outline-style | &lt;border-style&gt; | Sets the style of the outline | |
 | | outline-width | &lt;border-width&gt; | Sets the width of the outline | |
 | | outline-offset | &lt;length&gt; | Sets the offset of the outline | |
@@ -945,6 +945,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | text-align | left &#124; right &#124; center | Specifies the horizontal alignment of text in an element | This CSS3 module defines properties for text manipulation and specifies their processing model. It covers line breaking, justification and alignment, white space handling, and text transformation. |
 | | text-decoration | none &#124; [ underline &#124;&#124; line-through ] | Specifies the decoration added to the text | |
 | | white-space | normal &#124; pre &#124; nowrap &#124; pre-wrap &#124; pre-line | Describes how whitespace inside the element is handled. | |
+| [Text](https://www.w3.org/TR/css-text-3/) | overflow-wrap &#124; word-wrap | normal &#124; break-word | Specifies whether the UA may break at otherwise disallowed points within a line to prevent overflow, when an otherwise-unbreakable string is too long to fit within the line box, or when sequences of preserved white space would hang. | It only has an effect when white-space allows wrapping. |
 | [Table](https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#q17.0) | table-layout | fixed &#124; auto | Defines the algorithm to be used to lay out table cells, rows, and columns. | |
 | | caption-side | 	top &#124; bottom | Positions the content of a table's &lt;caption&gt; on the specified side. | |
 | | border-spacing | 	&lt;length&gt; &lt;length&gt;? | Specifies the distance between the borders of adjacent table cells (only for the separated borders model). | |
