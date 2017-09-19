@@ -39,7 +39,6 @@ public:
     bool bgColorFromAttribute(Unit::Color* ret);
 
 protected:
-    void paintBorders(Canvas* canvas, LayoutRect& rect);
 };
 }
 
