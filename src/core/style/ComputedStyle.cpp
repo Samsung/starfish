@@ -45,6 +45,8 @@ void* RareComputedStyleData::operator new(size_t size)
                    GC_WORD_OFFSET(RareComputedStyleData, m_content));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(RareComputedStyleData, m_cachedPseudoStyles));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_outline));
         descr =
             GC_make_descriptor(obj_bitmap, GC_WORD_LEN(RareComputedStyleData));
         typeInited = true;
@@ -461,6 +463,13 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         // parent's 'align-items' value; otherwise 'stretch'
         m_alignSelf = parentStyle->m_alignItems;
     }
+
+    if (hasOutline()) {
+        m_rareComputedStyleData->m_outline->m_outline.checkComputed(
+            curFontSize, rootFontSize, font());
+        m_rareComputedStyleData->m_outline->m_outlineOffset
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+    }
 }
 
 void applyTransition(Element* element, ComputedStyle* oldStyle,
@@ -608,6 +617,36 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_emptyCells !=
         oldStyle->m_inheritedStyles.m_emptyCells) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->fill() != oldStyle->fill()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->fillRule() != oldStyle->fillRule()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->fillOpacity() != oldStyle->fillOpacity()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->stroke() != oldStyle->stroke()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->strokeWidth() != oldStyle->strokeWidth()) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
@@ -874,6 +913,26 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
         }
+    }
+
+    if (newStyle->outlineColor() != oldStyle->outlineColor()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->outlineStyle() != oldStyle->outlineStyle()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->outlineWidth() != oldStyle->outlineWidth()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->outlineOffset() != oldStyle->outlineOffset()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     return damage;

@@ -138,6 +138,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Padding
         // Z-Index
         // Opacity
+        // Outline
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "content", 7) == 0) {
@@ -162,6 +163,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'o':
             if (memcmp(data, "opacity", 7) == 0) {
                 return CSSStyleKind::Opacity;
+            }
+            if (memcmp(data, "outline", 7) == 0) {
+                return CSSStyleKind::Outline;
             }
             break;
         }
@@ -434,6 +438,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Margin-Bottom
         // Border-Bottom
         // Align-Content
+        // Outline-Width
+        // Outline-Style
+        // Outline-Color
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "padding-right", 13) == 0) {
@@ -455,6 +462,17 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::AlignContent;
             }
             break;
+        case 'o':
+            if (memcmp(data, "outline-width", 13) == 0) {
+                return CSSStyleKind::OutlineWidth;
+            }
+            if (memcmp(data, "outline-style", 13) == 0) {
+                return CSSStyleKind::OutlineStyle;
+            }
+            if (memcmp(data, "outline-color", 13) == 0) {
+                return CSSStyleKind::OutlineColor;
+            }
+            break;
         }
         break;
     case 14:
@@ -462,6 +480,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Padding-Bottom
         // Border-Spacing
         // Flex-Direction
+        // Outline-Offset
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-spacing", 14) == 0) {
@@ -481,6 +500,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'p':
             if (memcmp(data, "padding-bottom", 14) == 0) {
                 return CSSStyleKind::PaddingBottom;
+            }
+            break;
+        case 'o':
+            if (memcmp(data, "outline-offset", 14) == 0) {
+                return CSSStyleKind::OutlineOffset;
             }
             break;
         }
@@ -762,6 +786,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "opacity", 7) == 0) {
                 return CSSStyleKind::Opacity;
             }
+            if (memcmp(data, "outline", 7) == 0) {
+                return CSSStyleKind::Outline;
+            }
             break;
         }
         break;
@@ -1004,6 +1031,17 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::BorderBottom;
             }
             break;
+        case 'o':
+            if (memcmp(data, "outlineColor", 12) == 0) {
+                return CSSStyleKind::OutlineColor;
+            }
+            if (memcmp(data, "outlineWidth", 12) == 0) {
+                return CSSStyleKind::OutlineWidth;
+            }
+            if (memcmp(data, "outlineStyle", 12) == 0) {
+                return CSSStyleKind::OutlineStyle;
+            }
+            break;
         }
         break;
     case 13:
@@ -1027,6 +1065,12 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "paddingBottom", 13) == 0) {
                 return CSSStyleKind::PaddingBottom;
             }
+            break;
+        case 'o':
+            if (memcmp(data, "outlineOffset", 13) == 0) {
+                return CSSStyleKind::OutlineOffset;
+            }
+            break;
         }
         break;
     case 14:

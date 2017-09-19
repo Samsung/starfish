@@ -3921,9 +3921,8 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
             }
         }
 
-        canvas->save();
         FrameBox::paintBackgroundAndBorders(canvas);
-        canvas->restore();
+        FrameBox::paintOutline(canvas);
 
         m_frameRect = frameRectBack;
         if (hasRareDataBefore) {

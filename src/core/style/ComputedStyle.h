@@ -42,12 +42,38 @@ enum ComputedStyleDamage {
 };
 
 class RareComputedStyleData : public gc {
+    struct OutlineData : public gc {
+        BorderValue m_outline;
+        Length m_outlineOffset;
+        OutlineData()
+            : m_outlineOffset(Length::Fixed, 0)
+        {
+        }
+    };
+
 public:
     RareComputedStyleData()
         : m_transforms(nullptr)
         , m_transformOrigin(nullptr)
         , m_transition(nullptr)
+        , m_outline(nullptr)
     {
+    }
+
+    BorderValue* ensureOutline()
+    {
+        if (m_outline == nullptr) {
+            m_outline = new (PointerFreeGC) OutlineData();
+        }
+        return &m_outline->m_outline;
+    }
+
+    Length* ensureOutlineOffset()
+    {
+        if (m_outline == nullptr) {
+            m_outline = new (PointerFreeGC) OutlineData();
+        }
+        return &m_outline->m_outlineOffset;
     }
 
     void* operator new(size_t size);
@@ -64,6 +90,8 @@ public:
 
     ContentDataGroup m_content;
     GCVector<ComputedStyle*> m_cachedPseudoStyles;
+
+    OutlineData* m_outline;
 };
 
 class ComputedStyle : public gc {
@@ -1415,10 +1443,80 @@ public:
         }
     }
 
+    BorderStyleValue outlineStyle()
+    {
+        if (hasOutline()) {
+            return rareComputedStyleData()->m_outline->m_outline.style();
+        }
+
+        return BorderStyleValue::NoneBorderStyleValue;
+    }
+
+    void setOutlineStyle(BorderStyleValue v)
+    {
+        setRareComputedStyleDataIfNeeded();
+        rareComputedStyleData()->ensureOutline()->setStyle(v);
+    }
+
+    Length outlineWidth()
+    {
+        if (hasOutline()) {
+            return rareComputedStyleData()->m_outline->m_outline.width();
+        }
+        return Length(Length::Fixed, 3);
+    }
+
+    void setOutlineWidth(Length v)
+    {
+        setRareComputedStyleDataIfNeeded();
+        rareComputedStyleData()->ensureOutline()->setWidth(v);
+    }
+
+    Unit::Color outlineColor()
+    {
+        if (hasOutline()) {
+            if (rareComputedStyleData()
+                    ->m_outline->m_outline.hasBorderColor()) {
+                return rareComputedStyleData()->m_outline->m_outline.color();
+            }
+            return color();
+        }
+        return color();
+    }
+
+    void setOutlineColor(Unit::Color v)
+    {
+        setRareComputedStyleDataIfNeeded();
+        rareComputedStyleData()->ensureOutline()->setColor(v);
+    }
+
+    Length outlineOffset()
+    {
+        if (hasOutline()) {
+            return rareComputedStyleData()->m_outline->m_outlineOffset;
+        }
+        return Length(Length::Fixed, 0);
+    }
+
+    void setOutlineOffset(Length v)
+    {
+        setRareComputedStyleDataIfNeeded();
+        *rareComputedStyleData()->ensureOutlineOffset() = v;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
 protected:
+    bool hasOutline()
+    {
+        if (m_rareComputedStyleData == nullptr ||
+            rareComputedStyleData()->m_outline == nullptr) {
+            return false;
+        }
+        return true;
+    }
+
     InheritedStylesRareData* ensureRareData()
     {
         if (m_inheritedStyles.m_isRareDataAllocated) {

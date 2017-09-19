@@ -552,6 +552,7 @@ public:
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
     void paintBorders(Canvas* canvas, const LayoutRect& rect);
+    void paintOutline(Canvas* canvas);
 
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
@@ -715,6 +716,9 @@ protected:
         STARFISH_ASSERT(hasRareData());
         return (FrameBoxRareData*)m_layoutParent;
     }
+
+    // outline-width + outline-offset
+    LayoutUnit outlineThickness();
 
     Frame* m_layoutParent;
 

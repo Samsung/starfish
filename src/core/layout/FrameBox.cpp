@@ -406,8 +406,59 @@ void FrameBox::computeVerticalMargin(LayoutUnit parentContentHeight)
     }
 }
 
+void FrameBox::paintOutline(Canvas* canvas)
+{
+    auto s = style()->outlineStyle();
+    if (s != BorderStyleValue::NoneBorderStyleValue) {
+        canvas->save();
+        LayoutUnit viewportWidth = canvas->viewportWidth();
+        LayoutUnit cbContentWidth = containingBlock(this)->contentWidth();
+        LayoutUnit outlineWidth = style()->outlineWidth().specifiedValue(
+            cbContentWidth, viewportWidth);
+        LayoutUnit outlineOffset = style()->outlineOffset().specifiedValue(
+            cbContentWidth, viewportWidth);
+        LayoutUnit offset = outlineWidth + outlineOffset;
+
+        LayoutRect rt = frameRect();
+
+        rt.setX(-offset);
+        rt.setY(-offset);
+
+        rt.setWidth(rt.width() + offset * 2);
+        rt.setHeight(rt.height() + offset * 2);
+
+        if (s != BorderStyleValue::SolidBorderStyleValue) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
+
+        canvas->setColor(style()->outlineColor());
+
+        // top
+        canvas->drawRect(LayoutRect(rt.x(), rt.y(), rt.width() - outlineWidth,
+                                    outlineWidth));
+        // right
+        canvas->drawRect(LayoutRect(rt.x() + rt.width() - outlineWidth, rt.y(),
+                                    outlineWidth, rt.height() - outlineWidth));
+        // bottom
+        canvas->drawRect(LayoutRect(rt.x() + outlineWidth,
+                                    rt.y() + rt.height() - outlineWidth,
+                                    rt.width() - outlineWidth, outlineWidth));
+        // left
+        canvas->drawRect(LayoutRect(rt.x(), rt.y() + outlineWidth, outlineWidth,
+                                    rt.height() - outlineWidth));
+
+        canvas->restore();
+    }
+}
+
 void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 {
+    canvas->save();
+    bool overflowApplied = shouldApplyOverflow();
+    if (overflowApplied) {
+        canvas->clip(Unit::Rect(0, 0, width(), height()));
+    }
+
     do {
         if (node() && node()->isHTMLHtmlElement()) {
             break;
@@ -441,6 +492,7 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
     } while (false);
 
     paintBorders(canvas, LayoutRect(0, 0, width(), height()));
+    canvas->restore();
 }
 
 // Draws the border around the area defined by "rect"
@@ -559,25 +611,23 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
             //   |_______________|
             //
 
-            // top
             canvas->setColor(style()->borderTopColor());
+
+            // top
             canvas->drawRect(
                 LayoutRect(rect.x(), rect.y(), rect.width(), borderTop()));
 
             // right
-            canvas->setColor(style()->borderRightColor());
             canvas->drawRect(LayoutRect(rect.x() + rect.width() - borderRight(),
                                         rect.y() + borderTop(), borderRight(),
                                         rect.height() - borderHeight()));
 
             // bottom
-            canvas->setColor(style()->borderBottomColor());
             canvas->drawRect(
                 LayoutRect(rect.x(), rect.y() + rect.height() - borderBottom(),
                            width(), borderBottom()));
 
             // left
-            canvas->setColor(style()->borderLeftColor());
             canvas->drawRect(LayoutRect(rect.x(), rect.y() + borderTop(),
                                         borderLeft(),
                                         rect.height() - borderHeight()));
@@ -767,6 +817,13 @@ bool FrameBox::tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
     LayoutRect r = frameRect();
     r.setX(r.x() + loc.x());
     r.setY(r.y() + loc.y());
+    if (style()->outlineStyle() != BorderStyleValue::NoneBorderStyleValue) {
+        LayoutUnit t = outlineThickness();
+        r.setX(r.x() - t);
+        r.setY(r.y() - t);
+        r.setWidth(r.width() + t * 2);
+        r.setHeight(r.height() + t * 2);
+    }
     result.unite(r);
 
     return !shouldApplyOverflow();
@@ -877,6 +934,7 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
                 minHeight = height;
             } else if (isFrameReplaced()) {
                 // TODO: calculate transferred size
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
 
             minHeight = std::min(minHeight, ctx.contentHeight(this));
@@ -902,5 +960,16 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
         }
     }
     return height;
+}
+
+LayoutUnit FrameBox::outlineThickness()
+{
+    LayoutUnit cbContentWidth = containingBlock(this)->contentWidth();
+    LayoutUnit vw = node()->document()->frame()->asFrameDocument()->width();
+    LayoutUnit outlineWidth =
+        style()->outlineWidth().specifiedValue(cbContentWidth, vw);
+    LayoutUnit outlineOffset =
+        style()->outlineOffset().specifiedValue(cbContentWidth, vw);
+    return outlineWidth + outlineOffset;
 }
 }

@@ -898,6 +898,10 @@ class CSSStyleDeclaration;
     F(FlexGrow, flexGrow, "flex-grow")                                   \
     F(FlexShrink, flexShrink, "flex-shrink")                             \
     F(FlexBasis, flexBasis, "flex-basis")                                \
+    F(OutlineColor, outlineColor, "outline-color")                       \
+    F(OutlineStyle, outlineStyle, "outline-style")                       \
+    F(OutlineWidth, outlineWidth, "outline-width")                       \
+    F(OutlineOffset, outlineOffset, "outline-offset")                    \
     F(Cursor, cursor, "cursor")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
@@ -916,6 +920,7 @@ class CSSStyleDeclaration;
     F(Margin, margin, "margin")                                      \
     F(Padding, padding, "padding")                                   \
     F(Font, font, "font")                                            \
+    F(Outline, outline, "outline")                                   \
     F(Overflow, overflow, "overflow")                                \
     F(Transition, transition, "transition")                          \
     F(FlexFlow, flexFlow, "flex-flow")                               \
