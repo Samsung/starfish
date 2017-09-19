@@ -439,10 +439,25 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 
     } while (false);
 
+    paintBorders(canvas, LayoutRect(0, 0, width(), height()));
+}
+
+// Draws the border around the area defined by "rect"
+void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
+{
     canvas->save();
 
     // draw border-image
     if (style()->hasBorderImageData()) {
+        // Draw image borders at the four corners as shown below.
+        //   ______________
+        //  |_|          |_|
+        //  |              |
+        //  |              |
+        //  |_            _|
+        //  |_|__________|_|
+        //
+
         double bWidth =
             style()->surround()->border.top().width().specifiedValue(
                 height(), canvas->viewportHeight());
@@ -497,58 +512,85 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             }
 
             // left-top
-            canvas->drawBorderImage(imgData,
-                                    Unit::Rect(0, 0, drawRect, drawRect),
-                                    lSlice, tSlice, 0, 0, scale, isFill);
-            // right-top
             canvas->drawBorderImage(
-                imgData,
-                Unit::Rect((float)width() - drawRect, 0, drawRect, drawRect), 0,
-                tSlice, rSlice, 0, scale, isFill);
-            // right-bottom
+                imgData, Unit::Rect(rect.x(), rect.y(), drawRect, drawRect),
+                lSlice, tSlice, 0, 0, scale, isFill);
+
+            // right-top
             canvas->drawBorderImage(imgData,
-                                    Unit::Rect((float)width() - drawRect,
-                                               (float)height() - drawRect,
-                                               drawRect, drawRect),
-                                    0, 0, rSlice, bSlice, scale, isFill);
+                                    Unit::Rect((float)rect.width() - drawRect,
+                                               rect.y(), drawRect, drawRect),
+                                    0, tSlice, rSlice, 0, scale, isFill);
+
+            // right-bottom
+            canvas->drawBorderImage(
+                imgData, Unit::Rect((float)rect.width() - drawRect,
+                                    (float)(rect.y() + height()) - drawRect,
+                                    drawRect, drawRect),
+                0, 0, rSlice, bSlice, scale, isFill);
+
             // left-bottom
             canvas->drawBorderImage(
                 imgData,
-                Unit::Rect(0, (float)height() - drawRect, drawRect, drawRect),
+                Unit::Rect(rect.x(), (float)(rect.y() + height()) - drawRect,
+                           drawRect, drawRect),
                 lSlice, 0, 0, bSlice, scale, isFill);
         } else {
             isFill = style()->surround()->border.image().sliceFill();
-            canvas->drawBorderImage(imgData,
-                                    Unit::Rect(0, 0, width(), height()), lSlice,
-                                    tSlice, rSlice, bSlice, scale, isFill);
+            canvas->drawBorderImage(
+                imgData,
+                Unit::Rect(rect.x(), rect.y(), rect.width(), rect.height()),
+                lSlice, tSlice, rSlice, bSlice, scale, isFill);
         }
     } else if (style()->hasBorderStyle()) {
-        // draw border
-        // TODO border-join
-
         if (style()->isFourSideBorderStyleValueSolid() &&
             (style()->borderTopColor() == style()->borderRightColor()) &&
             (style()->borderRightColor() == style()->borderBottomColor()) &&
             (style()->borderBottomColor() == style()->borderLeftColor())) {
-            // if 4-colors are same.
+            // Draw solid borders fast around the given rect
+            // when all 4 colors are the same.
+            //    _______________
+            //   |_______________|
+            //   | |           | |
+            //   | |           | |
+            //   | |           | |
+            //   |_|___________|_|
+            //   |_______________|
+            //
 
             // top
             canvas->setColor(style()->borderTopColor());
-            canvas->drawRect(LayoutRect(0, 0, width(), borderTop()));
+            canvas->drawRect(
+                LayoutRect(rect.x(), rect.y(), rect.width(), borderTop()));
+
             // right
             canvas->setColor(style()->borderRightColor());
-            canvas->drawRect(LayoutRect(width() - borderRight(), borderTop(),
-                                        borderRight(),
-                                        height() - borderHeight()));
+            canvas->drawRect(LayoutRect(rect.x() + rect.width() - borderRight(),
+                                        rect.y() + borderTop(), borderRight(),
+                                        rect.height() - borderHeight()));
+
             // bottom
             canvas->setColor(style()->borderBottomColor());
-            canvas->drawRect(LayoutRect(0, height() - borderBottom(), width(),
-                                        borderBottom()));
+            canvas->drawRect(
+                LayoutRect(rect.x(), rect.y() + rect.height() - borderBottom(),
+                           width(), borderBottom()));
+
             // left
             canvas->setColor(style()->borderLeftColor());
-            canvas->drawRect(LayoutRect(0, borderTop(), borderLeft(),
-                                        height() - borderHeight()));
+            canvas->drawRect(LayoutRect(rect.x(), rect.y() + borderTop(),
+                                        borderLeft(),
+                                        rect.height() - borderHeight()));
         } else {
+            // Draw trapezium-like borders around the given rect
+            //    _______________
+            //   |\_____________/|
+            //   ||             ||
+            //   ||             ||
+            //   ||             ||
+            //   ||_____________||
+            //   |/_____________\|
+            //
+
             Unit::Color black =
                 NamedColor::namedColorToColor(NamedColor::blackNamedColor);
 
@@ -565,9 +607,12 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
                 canvas->setColor(style()->borderTopColor());
             }
             canvas->drawRect(
-                LayoutLocation(0, 0), LayoutLocation(width(), 0),
-                LayoutLocation(width() - borderRight(), borderTop()),
-                LayoutLocation(borderLeft(), borderTop()));
+                LayoutLocation(rect.x(), rect.y()),
+                LayoutLocation(rect.x() + rect.width(), rect.y()),
+                LayoutLocation(rect.x() + rect.width() - borderRight(),
+                               rect.y() + borderTop()),
+                LayoutLocation(rect.x() + borderLeft(),
+                               rect.y() + borderTop()));
 
             // right
             if ((style()->borderRightStyle() ==
@@ -582,10 +627,13 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
                 canvas->setColor(style()->borderRightColor());
             }
             canvas->drawRect(
-                LayoutLocation(width() - borderRight(), borderTop()),
-                LayoutLocation(width(), 0), LayoutLocation(width(), height()),
-                LayoutLocation(width() - borderRight(),
-                               height() - borderBottom()));
+                LayoutLocation(rect.x() + rect.width() - borderRight(),
+                               rect.y() + borderTop()),
+                LayoutLocation(rect.x() + rect.width(), rect.y()),
+                LayoutLocation(rect.x() + rect.width(),
+                               rect.y() + rect.height()),
+                LayoutLocation(rect.x() + rect.width() - borderRight(),
+                               rect.y() + rect.height() - borderBottom()));
 
             // bottom
             if ((style()->borderBottomStyle() ==
@@ -600,10 +648,13 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
                 canvas->setColor(style()->borderBottomColor());
             }
             canvas->drawRect(
-                LayoutLocation(borderLeft(), height() - borderBottom()),
-                LayoutLocation(width() - borderRight(),
-                               height() - borderBottom()),
-                LayoutLocation(width(), height()), LayoutLocation(0, height()));
+                LayoutLocation(rect.x() + borderLeft(),
+                               rect.y() + rect.height() - borderBottom()),
+                LayoutLocation(rect.x() + rect.width() - borderRight(),
+                               rect.y() + rect.height() - borderBottom()),
+                LayoutLocation(rect.x() + rect.width(),
+                               rect.y() + rect.height()),
+                LayoutLocation(rect.x(), rect.y() + rect.height()));
 
             // left
             if (style()->borderLeftStyle() ==
@@ -618,9 +669,11 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
                 canvas->setColor(style()->borderLeftColor());
             }
             canvas->drawRect(
-                LayoutLocation(0, 0), LayoutLocation(borderLeft(), borderTop()),
-                LayoutLocation(borderLeft(), height() - borderBottom()),
-                LayoutLocation(0, height()));
+                LayoutLocation(rect.x(), rect.y()),
+                LayoutLocation(rect.x() + borderLeft(), rect.y() + borderTop()),
+                LayoutLocation(rect.x() + borderLeft(),
+                               rect.y() + rect.height() - borderBottom()),
+                LayoutLocation(rect.x(), rect.y() + rect.height()));
         }
     }
 

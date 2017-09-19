@@ -551,6 +551,7 @@ public:
                                 bool needsToFillBgColorAtBorderBox = false);
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
+    void paintBorders(Canvas* canvas, const LayoutRect& rect);
 
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
