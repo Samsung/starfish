@@ -206,6 +206,16 @@ public:
             snprintf(temp, sizeof(temp), "%.1f", fixed());
         } else if (isPercent()) {
             snprintf(temp, sizeof(temp), "%.1f%%", percent());
+        } else if (isViewportPercent()) {
+            if (m_type == Vw) {
+                snprintf(temp, sizeof(temp), "%.1fvw", viewportPercent());
+            } else if (m_type == Vh) {
+                snprintf(temp, sizeof(temp), "%.1fvh", viewportPercent());
+            } else if (m_type == Vmin) {
+                snprintf(temp, sizeof(temp), "%.1fvmin", viewportPercent());
+            } else if (m_type == Vmax) {
+                snprintf(temp, sizeof(temp), "%.1fvmax", viewportPercent());
+            }
         } else if (isAuto()) {
             snprintf(temp, sizeof(temp), "auto");
         } else if (isInheritableNumber()) {
