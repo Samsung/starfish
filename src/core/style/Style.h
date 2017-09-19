@@ -2191,9 +2191,9 @@ public:
     void addSheet(CSSStyleSheet* sheet);
     void removeSheet(CSSStyleSheet* sheet)
     {
-        STARFISH_ASSERT(std::find(m_sheets.begin(), m_sheets.end(), sheet) !=
-                        m_sheets.end());
-        m_sheets.erase(std::find(m_sheets.begin(), m_sheets.end(), sheet));
+        auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet);
+        STARFISH_ASSERT(iter != m_sheets.end());
+        m_sheets.erase(iter);
     }
 
     GCVector<CSSStyleSheet*>& sheets()

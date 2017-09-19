@@ -190,6 +190,7 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
             deviceDependentResult->clear();
 
             size_t sheets = document()->styleResolver().sheets().size();
+            size_t offset = 0;
             for (size_t i = 1; i < sheets; i++) {
                 CSSStyleSheet* authorSheet =
                     document()->styleResolver().sheets()[i];
@@ -215,12 +216,13 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 
                 size_t rules = authorSheet->rules().size();
                 for (size_t j = 0; j < rules; j++) {
-                    authorSheet->rules()[j].first->setOrder(j);
+                    authorSheet->rules()[j].first->setOrder(j + offset);
                     document()
                         ->styleResolver()
                         .styleSheetWithStyleRules()
                         ->addToRuleSet(authorSheet->rules()[j]);
                 }
+                offset += rules;
             }
         }
 

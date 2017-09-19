@@ -191,6 +191,7 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
                                           LayoutUnit parentContentWidth)
 {
     LayoutUnit viewportWidth = ctx.viewportWidth();
+    LayoutUnit viewportHeight = ctx.viewportHeight();
     // padding
     if (style()->paddingLeft().isSpecified() && !m_flags.m_isLeftMBPCleared) {
         setPaddingLeft(style()->paddingLeft().specifiedValue(parentContentWidth,
@@ -200,7 +201,7 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     }
     if (style()->paddingTop().isSpecified()) {
         setPaddingTop(style()->paddingTop().specifiedValue(parentContentWidth,
-                                                           viewportWidth));
+                                                           viewportHeight));
     } else {
         setPaddingTop(0);
     }
@@ -212,7 +213,7 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     }
     if (style()->paddingBottom().isSpecified()) {
         setPaddingBottom(style()->paddingBottom().specifiedValue(
-            parentContentWidth, viewportWidth));
+            parentContentWidth, viewportHeight));
     } else {
         setPaddingBottom(0);
     }
@@ -228,7 +229,7 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
         }
         if (style()->borderTopWidth().isSpecified()) {
             setBorderTop(style()->borderTopWidth().specifiedValue(
-                parentContentWidth, viewportWidth));
+                parentContentWidth, viewportHeight));
         } else {
             setBorderTop(0);
         }
@@ -241,7 +242,7 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
         }
         if (style()->borderBottomWidth().isSpecified()) {
             setBorderBottom(style()->borderBottomWidth().specifiedValue(
-                parentContentWidth, viewportWidth));
+                parentContentWidth, viewportHeight));
         } else {
             setBorderBottom(0);
         }
@@ -261,7 +262,7 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     }
     if (style()->marginTop().isSpecified()) {
         setMarginTop(style()->marginTop().specifiedValue(parentContentWidth,
-                                                         viewportWidth));
+                                                         viewportHeight));
     } else {
         setMarginTop(0);
     }
@@ -273,7 +274,7 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     }
     if (style()->marginBottom().isSpecified()) {
         setMarginBottom(style()->marginBottom().specifiedValue(
-            parentContentWidth, viewportWidth));
+            parentContentWidth, viewportHeight));
     } else {
         setMarginBottom(0);
     }
