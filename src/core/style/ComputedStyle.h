@@ -145,6 +145,7 @@ public:
         m_inheritedStyles.m_fontSize = mediumFontSize;
         m_inheritedStyles.m_fontSizeType = Length::Fixed;
         m_inheritedStyles.m_fontWeight = FontWeightValue::NormalFontWeightValue;
+        m_inheritedStyles.m_wordWrap = WordWrapValue::NormalWordWrapValue;
         m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
         m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
         m_inheritedStyles.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
@@ -1037,6 +1038,11 @@ public:
         return m_inheritedStyles.m_fontWeight;
     }
 
+    WordWrapValue wordWrap()
+    {
+        return m_inheritedStyles.m_wordWrap;
+    }
+
     Length letterSpacing()
     {
         if (m_inheritedStyles.m_rareData) {
@@ -1571,6 +1577,7 @@ protected:
     struct InheritedStyles {
         FontStyleValue m_fontStyle : 2;
         FontWeightValue m_fontWeight : 4;
+        WordWrapValue m_wordWrap : 1;
         TextAlignValue m_textAlign : 3;
         DirectionValue m_direction : 1;
         WhiteSpaceValue m_whiteSpace : 3;

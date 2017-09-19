@@ -789,9 +789,19 @@ public:
         return m_string;
     }
 
+    void setStart(size_t start)
+    {
+        m_start = start;
+    }
+
     size_t start() const
     {
         return m_start;
+    }
+
+    void setEnd(size_t end)
+    {
+        m_end = end;
     }
 
     size_t end() const

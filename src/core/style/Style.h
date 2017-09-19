@@ -711,6 +711,12 @@ enum FontWeightValue {
     NineHundredsFontWeightValue,
 };
 
+enum WordWrapValue {
+    NormalWordWrapValue,
+    BreakWordWordWrapValue,
+    //    BreakSpaceWordWrapValue,
+};
+
 enum VisibilityValue {
     VisibleVisibilityValue,
     HiddenVisibilityValue,
@@ -835,6 +841,8 @@ class CSSStyleDeclaration;
     F(MinHeight, minHeight, "min-height")                                \
     F(FontSize, fontSize, "font-size")                                   \
     F(FontStyle, fontStyle, "font-style")                                \
+    F(WordWrap, wordWrap, "word-wrap")                                   \
+    F(OverflowWrap, overflowWrap, "overflow-wrap")                       \
     F(Position, position, "position")                                    \
     F(TextDecoration, textDecoration, "text-decoration")                 \
     F(Display, display, "display")                                       \
@@ -1080,6 +1088,7 @@ public:
         FontSizeValueKind,
         FontStyleValueKind,
         FontWeightValueKind,
+        WordWrapValueKind,
 
         BorderStyleValueKind,
         BorderWidthValueKind,
@@ -1228,6 +1237,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == FontWeightValueKind);
         return m_value.m_fontWeight;
+    }
+
+    WordWrapValue wordWrapValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == WordWrapValueKind);
+        return m_value.m_wordWrap;
     }
 
     DirectionValue directionValue() const
@@ -1465,6 +1480,7 @@ public:
         FontSizeValue m_fontSize;
         FontStyleValue m_fontStyle;
         FontWeightValue m_fontWeight;
+        WordWrapValue m_wordWrap;
         TextAlignValue m_textAlign;
         SideValue m_side;
         DirectionValue m_direction;
@@ -1537,6 +1553,10 @@ public:
         }
         ValueData(FontWeightValue v)
             : m_fontWeight(v)
+        {
+        }
+        ValueData(WordWrapValue v)
+            : m_wordWrap(v)
         {
         }
         ValueData(TextAlignValue v)
@@ -1783,6 +1803,7 @@ public:
     bool updateValueUnitFontSize(const CSSTokenValue& token);
     bool updateValueUnitFontStyle(const CSSTokenValue& token);
     bool updateValueUnitFontWeight(const CSSTokenValue& token);
+    bool updateValueUnitWordWrap(const CSSTokenValue& token);
     bool updateValueUnitLineHeight(const CSSTokenValue& token);
     bool updateValueUnitTransitionProperty(const CSSTokenValue& value);
     bool updateValueUnitTransitionTimingFunction(const CSSTokenValue& value);

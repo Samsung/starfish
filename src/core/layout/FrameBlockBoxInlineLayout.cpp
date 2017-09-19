@@ -1792,6 +1792,11 @@ void LineFormattingContext::insertPendingInlineBoxes()
                 handleAbsoluteBox(box, true, false);
             } else {
                 if (!dontBreakLine(box, box->outerWidth())) {
+                    if (!m_canConcatWord && isWord(box)) {
+                        InlineTextBox* box2 =
+                            splitInlineTextBox(box->asInlineTextBox());
+                        insertInlineBox(box2);
+                    }
                     break;
                 }
 
@@ -1814,6 +1819,14 @@ void LineFormattingContext::updateCurrentLayoutParent(Frame* parent)
         m_currentLanguageDirection =
             m_languageDirections[m_currentLayoutParent->asInlineNonReplacedBox()
                                      ->origin()];
+    }
+
+    if (m_currentLayoutParent->isLineBox()) {
+        m_canConcatWord =
+            m_block->style()->wordWrap() != BreakWordWordWrapValue;
+    } else {
+        m_canConcatWord = m_currentLayoutParent->style()->wordWrap() !=
+                          BreakWordWordWrapValue;
     }
 }
 
@@ -2050,10 +2063,11 @@ bool LineFormattingContext::hasFloatingBoxAlreadyInLineBox(Frame* f)
 
 // TODO: when concatenating word, we should check if word to concatenate
 // is shouldWrapLines.
-bool LineFormattingContext::dontBreakLine(Frame* f, LayoutUnit width)
+bool LineFormattingContext::dontBreakLine(FrameBox* box, LayoutUnit width)
 {
-    return (!hasFloatingBoxAlreadyInLineBox(f) && m_currentLineWidth == 0) ||
-           !f->shouldWrapLines() || canInsertToLineBox(f, width);
+    return (!hasFloatingBoxAlreadyInLineBox(box) && m_currentLineWidth == 0 &&
+            !(isWord(box) && !m_canConcatWord)) ||
+           !box->shouldWrapLines() || canInsertToLineBox(box, width);
 }
 
 void LineFormattingContext::handleSoftHyphenate(bool hyphenateOnLine)
@@ -2098,6 +2112,8 @@ void LineFormattingContext::insertWord(Frame* next)
         handleSoftHyphenate(false);
         return;
     }
+
+    STARFISH_ASSERT(m_canConcatWord);
 
     if (dontBreakLine(m_word.boxes()[0], m_word.width())) {
         handleSoftHyphenate(false);
@@ -2193,9 +2209,53 @@ void LineFormattingContext::insertInlineBox(FrameBox* box)
     setIsWhiteSpaceAtLast(isCollapsibleWhiteSpace(box));
 }
 
+InlineTextBox* LineFormattingContext::splitInlineTextBox(InlineTextBox* textBox)
+{
+    TextRun run = textBox->textRun();
+    size_t start = run.m_stringView.start();
+    size_t end = run.m_stringView.end();
+    StringView* sv = new StringView(run.m_stringView);
+    InlineTextBox* ret = new InlineTextBox(textBox);
+    ret->setLayoutParent(m_currentLayoutParent);
+    ret->setHeight(ret->style()->font()->metrics().m_fontHeight);
+    bool splitted = false;
+    size_t splittedIndex;
+    LayoutUnit remainingWidth =
+        (m_lineBoxWidth - m_currentLineWidth - m_unprocessedStartingMBPWidth -
+         m_textIndentWidth);
+    float ratio;
+    if (remainingWidth > 0) {
+        ratio = remainingWidth / textBox->width();
+    } else {
+        ratio = 0;
+    }
+    splittedIndex =
+        std::max((size_t)((end - start) * ratio) + start, start + 1);
+    for (; splittedIndex > start; splittedIndex--) {
+        sv->setEnd(splittedIndex);
+        ret->setText(sv);
+        ret->setWidth(ret->style()->font()->measureText(sv));
+        if (ret->width() < remainingWidth) {
+            splitted = true;
+            break;
+        }
+    }
+
+    StringView* sv2 = new StringView(run.m_stringView);
+    if (splitted) {
+        sv2->setStart(splittedIndex);
+    } else {
+        sv2->setStart(start + 1);
+    }
+    textBox->setText(sv2);
+    textBox->setWidth(textBox->style()->font()->measureText(sv2));
+
+    return ret;
+}
+
 void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
 {
-    if (isWord(box)) {
+    if (m_canConcatWord && isWord(box)) {
         m_word.concat(box);
         return;
     }
@@ -2209,6 +2269,11 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
             if (isCollapsibleWhiteSpace(box)) {
                 m_isPendingBreakLine = true;
             } else {
+                if (!m_canConcatWord && isWord(box)) {
+                    InlineTextBox* box2 =
+                        splitInlineTextBox(box->asInlineTextBox());
+                    insertInlineBox(box2);
+                }
                 breakLine(nullptr);
                 tryInsertInlineBox(box);
             }
@@ -2393,6 +2458,7 @@ void LineFormattingContext::handleAbsoluteBox(FrameBox* box, bool canInsert,
         markAbsolutePositionedBoxLayoutParent(m_currentLayoutParent);
     } else {
         box->setLayoutParent(m_currentLayoutParent);
+        STARFISH_ASSERT(m_canConcatWord);
         m_word.concat(box);
     }
 }
@@ -2610,6 +2676,9 @@ void FrameInline::layoutInline(LineFormattingContext& ctx)
     // isn't visible when FrameInline comes next, not in fire-fox, though.
     // Here we follow the policy of chrome.
     ctx.handleSoftHyphenate(false);
+    if (style()->wordWrap() == BreakWordWordWrapValue) {
+        ctx.insertWord(nullptr);
+    }
 
     InlineNonReplacedBox* inlineBox =
         new InlineNonReplacedBox(&ctx, this, ctx.isFirstLineBox());

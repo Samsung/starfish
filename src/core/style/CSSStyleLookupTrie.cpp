@@ -196,6 +196,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Max-Width
         // Min-Width
         // Fill-Rule
+        // Word-Wrap
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font-size", 9) == 0) {
@@ -230,6 +231,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "min-width", 9) == 0) {
                 return CSSStyleKind::MinWidth;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "word-wrap", 9) == 0) {
+                return CSSStyleKind::WordWrap;
             }
             break;
         }
@@ -441,6 +447,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Outline-Width
         // Outline-Style
         // Outline-Color
+        // Overflow-Wrap
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "padding-right", 13) == 0) {
@@ -471,6 +478,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "outline-color", 13) == 0) {
                 return CSSStyleKind::OutlineColor;
+            }
+            if (memcmp(data, "overflow-wrap", 13) == 0) {
+                return CSSStyleKind::OverflowWrap;
             }
             break;
         }
@@ -834,6 +844,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::Overflow;
             }
             break;
+        case 'w':
+            if (memcmp(data, "wordWrap", 8) == 0) {
+                return CSSStyleKind::WordWrap;
+            }
+            break;
         }
         break;
     case 9:
@@ -1040,6 +1055,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "outlineStyle", 12) == 0) {
                 return CSSStyleKind::OutlineStyle;
+            }
+            if (memcmp(data, "overflowWrap", 12) == 0) {
+                return CSSStyleKind::OverflowWrap;
             }
             break;
         }

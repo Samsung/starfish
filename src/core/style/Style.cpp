@@ -1547,6 +1547,15 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::WordWrapValueKind:
+        switch (wordWrapValue()) {
+        case WordWrapValue::NormalWordWrapValue:
+            return String::fromUTF8("normal");
+        case WordWrapValue::BreakWordWordWrapValue:
+            return String::fromUTF8("break-word");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     case CSSStyleValuePair::ValueKind::BorderStyleValueKind:
         switch (borderStyleValue()) {
         case BorderStyleValue::NoneBorderStyleValue:
@@ -3267,6 +3276,24 @@ void StyleResolver::apply(Element* element,
                     CSSStyleValuePair::ValueKind::FontStyleValueKind);
                 style->m_inheritedStyles.m_fontStyle =
                     cssValues[k].fontStyleValue();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::WordWrap:
+        case CSSStyleValuePair::KeyKind::OverflowWrap:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_inheritedStyles.m_wordWrap =
+                    parentStyle->m_inheritedStyles.m_wordWrap;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->m_inheritedStyles.m_wordWrap =
+                    WordWrapValue::NormalWordWrapValue;
+            } else {
+                STARFISH_ASSERT(
+                    cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::WordWrapValueKind);
+                style->m_inheritedStyles.m_wordWrap =
+                    cssValues[k].wordWrapValue();
             }
             break;
         case CSSStyleValuePair::KeyKind::VerticalAlign:
@@ -6375,6 +6402,38 @@ bool CSSStyleValuePair::updateValueUnitFontWeight(const CSSTokenValue& value)
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueUnitWordWrap(const CSSTokenValue& value)
+{
+    m_valueKind = CSSStyleValuePair::ValueKind::WordWrapValueKind;
+
+    if (STRING_VALUE_IS_STRING("normal")) {
+        m_value.m_wordWrap = WordWrapValue::NormalWordWrapValue;
+    } else if (STRING_VALUE_IS_STRING("break-word")) {
+        m_value.m_wordWrap = WordWrapValue::BreakWordWordWrapValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueWordWrap(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    return updateValueUnitWordWrap(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueOverflowWrap(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    return updateValueUnitWordWrap(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueOverflowX(const CSSTokenVector& tokens)
