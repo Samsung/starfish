@@ -524,6 +524,7 @@ private:
             std::unordered_map<FrameBox*, LayoutUnit>* contentHeights)
             : m_isRoot(isRoot)
             , m_isNormalFlow(isNormalFlow)
+            , m_topLocOfFloatBox(intMinForLayoutUnit)
             , m_inlineBlockBoxStack(inlineBlockBoxStack)
             , m_floatBoxes(floatBoxes)
             , m_lineBoxAscenders(lineBoxAscenders)
