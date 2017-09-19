@@ -297,6 +297,9 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
             isEditableType()) {
             String* value =
                 getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+            m_currentCaretPosition =
+                std::min(m_currentCaretPosition, value->length());
+
             String* oldValue = value;
             if (event->isKeyboardEvent() &&
                 event->type()->equalsIgnoreCase("keydown")) {
@@ -304,8 +307,6 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                     KeyValue::BackspaceKey) {
                     if (value->length()) {
                         if (m_currentCaretPosition > 0) {
-                            m_currentCaretPosition = std::min(
-                                m_currentCaretPosition, value->length());
                             StringBuilder sb;
                             sb.appendSubString(value, 0,
                                                m_currentCaretPosition - 1);

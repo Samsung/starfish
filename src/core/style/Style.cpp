@@ -4591,6 +4591,90 @@ void StyleResolver::apply(Element* element,
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
+        case CSSStyleValuePair::KeyKind::OutlineWidth:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setOutlineWidth(Length(Length::Fixed, 3));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setOutlineWidth(parentStyle->outlineWidth());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Length) {
+                style->setOutlineWidth(cssValues[k].lengthValue().toLength());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
+                if (cssValues[k].borderWidthValue() ==
+                    BorderWidthValue::ThinBorderWidthValue) {
+                    style->setOutlineWidth(Length(Length::Fixed, 1));
+                } else if (cssValues[k].borderWidthValue() ==
+                           BorderWidthValue::MediumBorderWidthValue) {
+                    style->setOutlineWidth(Length(Length::Fixed, 3));
+                } else if (cssValues[k].borderWidthValue() ==
+                           BorderWidthValue::ThickBorderWidthValue) {
+                    style->setOutlineWidth(Length(Length::Fixed, 5));
+                }
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::OutlineColor:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                if (style->hasRareComputeStyleData() &&
+                    style->rareComputedStyleData()->m_outline) {
+                    style->rareComputedStyleData()
+                        ->m_outline->m_outline.clearColor();
+                }
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setOutlineColor(parentStyle->outlineColor());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::ColorValueKind) {
+                style->setOutlineColor(cssValues[k].colorValue());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                if (cssValues[k].namedColorValue() ==
+                    NamedColor::currentColor) {
+                    if (style->hasRareComputeStyleData() &&
+                        style->rareComputedStyleData()->m_outline) {
+                        style->rareComputedStyleData()
+                            ->m_outline->m_outline.clearColor();
+                    }
+                } else {
+                    style->setOutlineColor(NamedColor::namedColorToColor(
+                        cssValues[k].namedColorValue()));
+                }
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::OutlineStyle:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->setOutlineStyle(parentStyle->outlineStyle());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->setOutlineStyle(BorderStyleValue::NoneBorderStyleValue);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::BorderStyleValueKind) {
+                style->setOutlineStyle(cssValues[k].borderStyleValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::OutlineOffset:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setOutlineOffset(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setOutlineOffset(parentStyle->outlineOffset());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Length) {
+                style->setOutlineOffset(cssValues[k].lengthValue().toLength());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -7265,9 +7349,79 @@ bool CSSStyleValuePair::updateValueStroke(const CSSTokenVector& tokens)
 
 bool CSSStyleValuePair::updateValueStrokeWidth(const CSSTokenVector& tokens)
 {
+    if (tokens.size() != 1) {
+        return false;
+    }
     return updateValueUnitLength(
         tokens[0], CSSStyleValuePair::LengthOption::AllowPercent |
                        CSSStyleValuePair::LengthOption::AllowLengthWithoutUnit);
+}
+
+bool CSSStyleValuePair::updateValueOutlineColor(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitColor(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueOutlineWidth(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitBorderWidth(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueOutlineStyle(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitBorderStyle(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueOutlineOffset(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitLength(
+        tokens[0], CSSStyleValuePair::LengthOption::AllowNegative);
+}
+
+String* CSSStyleDeclaration::Outline()
+{
+    String* width = OutlineWidth();
+    String* style = OutlineStyle();
+    String* color = OutlineColor();
+    return BorderString(width, false, style, false, color, false);
+}
+
+void CSSStyleDeclaration::setOutline(const char* value, size_t length,
+                                     bool isImportant)
+{
+    if (length == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    CSSStyleValuePair v, width, style, color;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor, v);
+    } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth, width);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle, style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor, color);
+    }
 }
 
 static void removeFlexCSSValuePairs(CSSStyleDeclaration* target)

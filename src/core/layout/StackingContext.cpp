@@ -585,6 +585,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     }
 
     m_owner->paintStackingContextContent(canvas);
+    m_owner->paintOutline(canvas);
 
     // the child stacking contexts with positive stack levels (least positive
     // first).
