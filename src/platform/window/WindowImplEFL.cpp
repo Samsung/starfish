@@ -52,6 +52,11 @@
 
 #include <cairo.h>
 
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#include <Evas_GL.h>
+#include <cairo-evas-gl.h>
+#endif
+
 #ifndef STARFISH_TIZEN_WEARABLE_LIB
 extern "C" Ecore_Evas* ecore_evas_ecore_evas_get(const Evas* e);
 extern "C" Ecore_Window ecore_evas_window_get(const Ecore_Evas* e);
@@ -91,6 +96,16 @@ public:
         m_imfContext = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
+
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+        m_surface = nullptr;
+        m_cairo = nullptr;
+        m_cairoDevice = nullptr;
+        m_evasGL = nullptr;
+        m_evasGLConfig = nullptr;
+        m_evasGLSurface = nullptr;
+        m_evasGLContext = nullptr;
+#endif
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -186,6 +201,16 @@ public:
     Evas_Object* m_mainBox;
     Evas_Object* m_dummyBox;
     Evas_Object* m_dummyBoxClipper;
+
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+    cairo_surface_t* m_surface;
+    cairo_t* m_cairo;
+    cairo_device_t* m_cairoDevice;
+    Evas_GL* m_evasGL;
+    Evas_GL_Config* m_evasGLConfig;
+    Evas_GL_Surface* m_evasGLSurface;
+    Evas_GL_Context* m_evasGLContext;
+#endif
 
     Ecore_Event_Handler* m_desktopMouseDownEventHandler;
     Ecore_Event_Handler* m_desktopMouseMoveEventHandler;
@@ -476,6 +501,10 @@ static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv,
     ecore_animator_add(
         [](void* user_data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)user_data;
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+            evas_object_image_size_set(wnd->m_canvasAdpater, wnd->width(),
+                                       wnd->height());
+#endif
             StarFishEnterer enter(wnd->starFish());
             wnd->onResize();
             return ECORE_CALLBACK_CANCEL;
@@ -702,11 +731,44 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
     wnd->m_canvasAdpater =
         evas_object_image_filled_add(evas_object_evas_get((Evas_Object*)win));
-    evas_object_image_alpha_set(wnd->m_canvasAdpater, EINA_TRUE);
     evas_object_size_hint_weight_set(wnd->m_canvasAdpater, EVAS_HINT_EXPAND,
                                      EVAS_HINT_EXPAND);
+    evas_object_image_size_set(wnd->m_canvasAdpater, wnd->width(),
+                               wnd->height());
     elm_win_resize_object_add((Evas_Object*)win, wnd->m_canvasAdpater);
+    evas_object_image_alpha_set(wnd->m_canvasAdpater, EINA_TRUE);
     evas_object_show(wnd->m_canvasAdpater);
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+    Evas_Native_Surface ns;
+    wnd->m_evasGL = evas_gl_new(evas_object_evas_get(wnd->m_canvasAdpater));
+    wnd->m_evasGLConfig = evas_gl_config_new();
+    wnd->m_evasGLConfig->color_format = EVAS_GL_RGBA_8888;
+    // wnd->m_evasGLConfig->stencil_bits = EVAS_GL_STENCIL_BIT_8;
+    // wnd->m_evasGLConfig->multisample_bits = EVAS_GL_MULTISAMPLE_MED;
+    wnd->m_evasGLSurface = evas_gl_surface_create(
+        wnd->m_evasGL, wnd->m_evasGLConfig, wnd->width(), wnd->height());
+    wnd->m_evasGLContext = evas_gl_context_create(wnd->m_evasGL, NULL);
+    evas_gl_native_surface_get(wnd->m_evasGL, wnd->m_evasGLSurface, &ns);
+    evas_object_image_native_surface_set(wnd->m_canvasAdpater, &ns);
+    evas_object_image_pixels_get_callback_set(
+        wnd->m_canvasAdpater,
+        [](void* data, Evas_Object* o) {
+            STARFISH_RELEASE_ASSERT(isMainThread());
+            WindowImplEFL* wnd = (WindowImplEFL*)data;
+            StarFishEnterer enter(wnd->starFish());
+            wnd->rendering();
+        },
+        wnd);
+
+    setenv("CAIRO_GL_COMPOSITOR", "msaa", 1);
+    wnd->m_cairoDevice = (cairo_device_t*)cairo_evas_gl_device_create(
+        wnd->m_evasGL, wnd->m_evasGLContext);
+    cairo_gl_device_set_thread_aware(wnd->m_cairoDevice, 0);
+    wnd->m_surface = (cairo_surface_t*)cairo_gl_surface_create_for_evas_gl(
+        wnd->m_cairoDevice, wnd->m_evasGLSurface, wnd->m_evasGLConfig,
+        wnd->width(), wnd->height());
+    wnd->m_cairo = cairo_create(wnd->m_surface);
+#endif
 #ifndef STARFISH_TIZEN_WEARABLE_LIB
     Evas* e = evas_object_evas_get(wnd->m_window);
     Ecore_Evas* ee = ecore_evas_ecore_evas_get(e);
@@ -1247,14 +1309,17 @@ PlatformWindow::~PlatformWindow()
 
 void WebView::setNeedsRendering()
 {
+    m_needsRendering = true;
     WindowImplEFL* wnd = (WindowImplEFL*)starFish()->platformWindow();
 
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+    evas_object_image_pixels_dirty_set(wnd->m_canvasAdpater, EINA_TRUE);
+#else
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {
         ecore_animator_del(wnd->m_renderingAnimator);
     }
 
-    m_needsRendering = true;
     wnd->m_renderingAnimator = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
@@ -1271,6 +1336,7 @@ void WebView::setNeedsRendering()
             return ECORE_CALLBACK_CANCEL;
         },
         wnd);
+#endif
 }
 
 Canvas* WindowImplEFL::preparePainting(bool forPainting)
@@ -1332,6 +1398,19 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
 
     return canvas;
 #else
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+    struct dummy {
+        cairo_t* cairo;
+        cairo_surface_t* surface;
+        int w;
+        int h;
+    } d;
+    d.cairo = m_cairo;
+    d.surface = m_surface;
+    d.w = width();
+    d.h = height();
+    return Canvas::createDirect(starFish(), &d);
+#else
     evas_object_image_size_set(m_canvasAdpater, width(), height());
     int s = evas_object_image_stride_get(m_canvasAdpater);
     void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
@@ -1348,6 +1427,7 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
     d.stride = s;
 
     return Canvas::createDirect(starFish(), &d);
+#endif
 #endif
 }
 

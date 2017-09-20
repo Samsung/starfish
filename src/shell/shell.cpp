@@ -499,9 +499,15 @@ int main(int argc, char* argv[])
     setbuf(stderr, NULL);
 #endif
 
-    // setenv("ELM_ENGINE", "gl", 1);
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+    setenv("ELM_ENGINE", "gl", 1);
+#endif
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
+
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+    elm_config_accel_preference_set("opengl");
+#endif
 
     // GC_disable();
     int flag = 0;
