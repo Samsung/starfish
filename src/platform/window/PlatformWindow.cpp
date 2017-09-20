@@ -38,7 +38,7 @@ bool g_forceRendering = false;
 #endif
 
 #if defined(STARFISH_ENABLE_TEST)
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
 #include <Elementary.h>
 Evas_Object* g_imgBufferForScreehShot;
 #elif defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)

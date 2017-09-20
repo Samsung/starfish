@@ -16,7 +16,7 @@
 
 #include "StarFishConfig.h"
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_CANVAS_BACKEND_EFL)
 #include "StarFish.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"

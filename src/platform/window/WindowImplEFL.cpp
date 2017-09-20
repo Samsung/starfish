@@ -16,7 +16,7 @@
 
 #include "StarFishConfig.h"
 
-#ifdef PORT_GRAPHIC_BACKEND_EFL
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
 #include "StarFish.h"
 
 #include "core/dom/Element.h"
@@ -50,6 +50,8 @@
 #include <tizen.h>
 #endif
 
+#include <cairo.h>
+
 #ifndef STARFISH_TIZEN_WEARABLE_LIB
 extern "C" Ecore_Evas* ecore_evas_ecore_evas_get(const Evas* e);
 extern "C" Ecore_Window ecore_evas_window_get(const Ecore_Evas* e);
@@ -60,6 +62,8 @@ extern bool g_fireOnloadEvent;
 extern Evas_Object* g_imgBufferForScreehShot;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
+
+const uint32_t REPEAT_DURATION = 1000;
 
 // #define STARFISH_ENABLE_TIMER
 namespace StarFish {
@@ -77,6 +81,7 @@ public:
         m_mainBox = nullptr;
         m_dummyBox = nullptr;
         m_dummyBoxClipper = nullptr;
+        m_canvasAdpater = nullptr;
         m_renderingAnimator = nullptr;
         m_isMouseLbuttonDown = false;
         m_isKeyDown = false;
@@ -211,6 +216,8 @@ public:
     uint32_t m_lastKeyPressedTimestamp;
     int m_offsetYDueToSoftwareKeyboard;
 };
+
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
 
 class CanvasSurfaceEFL : public CanvasSurface {
 public:
@@ -357,6 +364,111 @@ CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
 {
     return new CanvasSurfaceEFL(wnd, w, h);
 }
+
+#elif defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+
+class CanvasSurfaceSimple : public CanvasSurface {
+public:
+    CanvasSurfaceSimple(PlatformWindow* wnd, size_t w, size_t h)
+    {
+        m_width = w;
+        m_height = h;
+        m_bufferWidth = m_width = -1;
+        m_bufferHeight = m_height = -1;
+        m_pixelRatio = 1;
+
+        resize(w, h);
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           CanvasSurfaceSimple* s =
+                                               (CanvasSurfaceSimple*)obj;
+                                           s->detachNativeBuffer();
+                                       },
+                                       NULL, NULL, NULL);
+    }
+
+    virtual void detachNativeBuffer()
+    {
+        free(buffer);
+        buffer = nullptr;
+    }
+
+    virtual void resize(size_t w, size_t h)
+    {
+        if (m_width != w || m_height != h) {
+            m_pixelRatio = 1;
+
+            while ((w / m_pixelRatio > 10000) || (h / m_pixelRatio > 10000)) {
+                m_pixelRatio++;
+            }
+
+            m_width = w;
+            m_height = h;
+            m_bufferWidth = std::max((size_t)1, m_width / m_pixelRatio);
+            m_bufferHeight = std::max((size_t)1, m_height / m_pixelRatio);
+
+            detachNativeBuffer();
+            buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
+                                            sizeof(uint32_t));
+        }
+    }
+
+    virtual void* unwrap()
+    {
+        return (void*)buffer;
+    }
+
+    virtual uint8_t* data()
+    {
+        return buffer;
+    }
+
+    virtual size_t width()
+    {
+        return m_width;
+    }
+
+    virtual size_t height()
+    {
+        return m_height;
+    }
+
+    virtual size_t bufferWidth()
+    {
+        return m_bufferWidth;
+    }
+
+    virtual size_t bufferHeight()
+    {
+        return m_bufferHeight;
+    }
+
+    virtual size_t pixelRatio()
+    {
+        return m_pixelRatio;
+    }
+
+    virtual void clear()
+    {
+        size_t end = m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+        memset(buffer, 0x00, end);
+    }
+
+protected:
+    unsigned char* buffer;
+    size_t m_width;
+    size_t m_height;
+    size_t m_bufferWidth;
+    size_t m_bufferHeight;
+    size_t m_pixelRatio;
+};
+
+CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
+{
+    return new CanvasSurfaceSimple(wnd, w, h);
+}
+
+#endif
 
 static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv,
                                   void* user_data)
@@ -579,6 +691,8 @@ static const char* getImfMethod()
     return NULL;
 }
 
+const uint32_t CLICK_REFRESH_DELAY = 400;
+
 PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                        int height)
 {
@@ -586,6 +700,13 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
 
+    wnd->m_canvasAdpater =
+        evas_object_image_filled_add(evas_object_evas_get((Evas_Object*)win));
+    evas_object_image_alpha_set(wnd->m_canvasAdpater, EINA_TRUE);
+    evas_object_size_hint_weight_set(wnd->m_canvasAdpater, EVAS_HINT_EXPAND,
+                                     EVAS_HINT_EXPAND);
+    elm_win_resize_object_add((Evas_Object*)win, wnd->m_canvasAdpater);
+    evas_object_show(wnd->m_canvasAdpater);
 #ifndef STARFISH_TIZEN_WEARABLE_LIB
     Evas* e = evas_object_evas_get(wnd->m_window);
     Ecore_Evas* ee = ecore_evas_ecore_evas_get(e);
@@ -1074,6 +1195,11 @@ PlatformWindow::~PlatformWindow()
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
 
+    if (eflWindow->m_canvasAdpater) {
+        evas_object_del(eflWindow->m_canvasAdpater);
+        eflWindow->m_canvasAdpater = nullptr;
+    }
+
     if (eflWindow->m_dummyBoxClipper) {
         evas_object_del(eflWindow->m_dummyBoxClipper);
         eflWindow->m_dummyBoxClipper = nullptr;
@@ -1149,6 +1275,7 @@ void WebView::setNeedsRendering()
 
 Canvas* WindowImplEFL::preparePainting(bool forPainting)
 {
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
 #ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
@@ -1204,6 +1331,24 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
     delete d;
 
     return canvas;
+#else
+    evas_object_image_size_set(m_canvasAdpater, width(), height());
+    int s = evas_object_image_stride_get(m_canvasAdpater);
+    void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
+    evas_object_image_data_update_add(m_canvasAdpater, 0, 0, width(), height());
+    struct dummy {
+        void* image;
+        int w;
+        int h;
+        int stride;
+    } d;
+    d.image = addr;
+    d.w = width();
+    d.h = height();
+    d.stride = s;
+
+    return Canvas::createDirect(starFish(), &d);
+#endif
 }
 
 void WindowImplEFL::clearResources()
@@ -1213,11 +1358,12 @@ void WindowImplEFL::clearResources()
     }
 
     webView()->clearStackingContext(false);
-
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
     m_objectList.clear();
     m_objectList.shrink_to_fit();
     m_surfaceList.clear();
     m_surfaceList.shrink_to_fit();
+#endif
 }
 }
 #endif

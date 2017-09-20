@@ -21,10 +21,6 @@
 
 namespace StarFish {
 
-#ifdef PORT_GRAPHIC_BACKEND_EFL
-const uint32_t REPEAT_DURATION = 1000;
-#endif
-
 // This table has same chars with
 // ASCII printable char(32-126)
 enum KeyValue {

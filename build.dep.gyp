@@ -11,6 +11,11 @@
                     '-fno-rtti',
                 ],
             }],
+            ['backend=="efl_cairo"', {
+                'cflags_extra': [
+                    '-fno-rtti',
+                ],
+            }],
             ['backend=="dali"', {
                 'cflags_extra': [
                 ],
@@ -394,6 +399,18 @@
                 ],
                 'libraries': [
                     '<!@(pkg-config --libs-only-l elementary ecore ecore-x ecore-imf ecore-imf-evas)',
+                ],
+            },
+        },
+        {
+            'target_name': 'efl_cairo.x64',
+            'type': 'none',
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    '<!@(pkg-config --cflags-only-I elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g)',
+                ],
+                'libraries': [
+                    '<!@(pkg-config --libs-only-l elementary ecore ecore-x ecore-imf ecore-imf-evas)','-lturbojpeg -lgif',
                 ],
             },
         },
