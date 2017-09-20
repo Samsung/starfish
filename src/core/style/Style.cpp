@@ -4123,6 +4123,9 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::Transform:
+            if (style->hasTransforms()) {
+                style->setTransform(nullptr);
+            }
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 style->setTransform(parentStyle->transforms());
@@ -4130,9 +4133,6 @@ void StyleResolver::apply(Element* element,
                            CSSStyleValuePair::ValueKind::Initial ||
                        cssValues[k].valueKind() ==
                            CSSStyleValuePair::ValueKind::None) {
-                if (style->hasTransforms()) {
-                    style->setTransform(nullptr);
-                }
             } else {
                 STARFISH_ASSERT(
                     cssValues[k].valueKind() ==
