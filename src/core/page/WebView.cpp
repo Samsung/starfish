@@ -562,7 +562,6 @@ bool WebView::rendering(bool force)
         }
 
         m_needsPainting = false;
-
         canvas->restore();
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
         if (!m_needsComposite) {

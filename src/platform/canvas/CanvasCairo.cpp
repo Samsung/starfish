@@ -23,6 +23,7 @@
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/image/ImageData.h"
 #include "core/style/UnitHelper.h"
+#include "platform/window/PlatformWindow.h"
 
 #include <vector>
 #include <SkMatrix.h>
@@ -53,18 +54,32 @@ class CanvasCairo : public Canvas {
         m_canvas = cairo_create(m_surface);
         m_width = width;
         m_height = height;
-        m_buffer = buffer;
     }
 
 public:
     CanvasCairo(StarFish* starfish, void* data)
     {
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+        struct dummy {
+            cairo_t* cairo;
+            cairo_surface_t* surface;
+            int w;
+            int h;
+        };
+        dummy* d = (dummy*)data;
+        m_starfish = starfish;
+        m_canvas = (cairo_t*)d->cairo;
+        m_surface = (cairo_surface_t*)d->surface;
+        m_viewportWidth = m_width = d->w;
+        m_viewportHeight = m_height = d->h;
+        m_shouldDestroyCairo = false;
+        m_shouldDestroySurface = false;
+#else
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
         m_starfish = starfish;
         m_canvas = nullptr;
         m_surface = nullptr;
-        m_buffer = NULL;
         struct dummy {
             void* image;
             int w;
@@ -75,10 +90,9 @@ public:
         m_viewportWidth = m_width = d->w;
         m_viewportHeight = m_height = d->h;
         {
-            m_buffer = d->image;
-            initFromBuffer(m_buffer, m_width, m_height, d->stride);
+            initFromBuffer(d->image, m_width, m_height, d->stride);
         }
-
+#endif
         save();
     }
 
@@ -90,8 +104,8 @@ public:
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
 
-        m_buffer = (void*)data->unwrap();
-        initFromBuffer(m_buffer, data->bufferWidth(), data->bufferHeight(),
+        initFromBuffer(data->unwrap(), data->bufferWidth(),
+                       data->bufferHeight(),
                        cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
                                                      data->bufferWidth()));
 
@@ -740,7 +754,6 @@ protected:
     std::vector<CanvasStateCairo> m_state;
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
-    void* m_buffer;
     unsigned m_width;
     unsigned m_height;
 

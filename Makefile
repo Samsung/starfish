@@ -20,6 +20,8 @@ OUTPUT:=bin
 TIZEN_DEVICE_API=
 LTO=
 BACKEND=EFL
+#BACKEND=EFL_CAIRO
+#BACKEND=DALI
 ifeq ($(OS),Linux)
   NPROCS:=$(shell grep -c ^processor /proc/cpuinfo)
   SHELL:=/bin/bash
@@ -187,6 +189,10 @@ CXXFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declaratio
 ifeq ($(BACKEND), EFL)
 	CXXFLAGS += -DSTARFISH_EFL
 	CXXFLAGS += -fno-rtti
+else ifeq ($(BACKEND), EFL_CAIRO)
+	CXXFLAGS += -DSTARFISH_EFL_CAIRO
+	CXXFLAGS += -fno-rtti
+	LDFLAGS += -lturbojpeg -lgif
 else ifeq ($(BACKEND), DALI)
 	CXXFLAGS += -DSTARFISH_DALI
 endif
