@@ -21,10 +21,6 @@
 
 namespace StarFish {
 
-#ifdef PORT_GRAPHIC_BACKEND_EFL
-const uint32_t CLICK_REFRESH_DELAY = 400;
-#endif
-
 // https://w3c.github.io/uievents/#idl-mouseevent
 // https://w3c.github.io/uievents/#idl-mouseeventinit
 class MouseData {

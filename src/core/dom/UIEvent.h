@@ -141,10 +141,8 @@ public:
 
     int32_t detail() const
     {
-#ifndef NDEBUG
-#ifndef PORT_GRAPHIC_BACKEND_EFL
+#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-#endif
 #endif
         return m_detail;
     }

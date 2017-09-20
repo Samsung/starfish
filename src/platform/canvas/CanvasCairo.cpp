@@ -59,6 +59,8 @@ class CanvasCairo : public Canvas {
 public:
     CanvasCairo(StarFish* starfish, void* data)
     {
+        m_shouldDestroyCairo = true;
+        m_shouldDestroySurface = true;
         m_starfish = starfish;
         m_canvas = nullptr;
         m_surface = nullptr;
@@ -85,6 +87,8 @@ public:
         m_starfish = starfish;
         m_canvas = nullptr;
         m_surface = nullptr;
+        m_shouldDestroyCairo = true;
+        m_shouldDestroySurface = true;
 
         m_buffer = (void*)data->unwrap();
         initFromBuffer(m_buffer, data->bufferWidth(), data->bufferHeight(),
@@ -97,11 +101,14 @@ public:
     ~CanvasCairo()
     {
         restore();
-        m_statePerFrame.clear();
         STARFISH_ASSERT(m_state.size() == 0);
-        cairo_destroy(m_canvas);
+        if (m_shouldDestroyCairo) {
+            cairo_destroy(m_canvas);
+        }
         cairo_surface_flush(m_surface);
-        cairo_surface_destroy(m_surface);
+        if (m_shouldDestroySurface) {
+            cairo_surface_destroy(m_surface);
+        }
     }
 
     virtual void clearColor(const Unit::Color& clr)
@@ -238,6 +245,10 @@ public:
                        bool isHole = false)
     {
         cairo_save(m_canvas);
+        if (isHole) {
+            cairo_set_source_rgba(m_canvas, 0, 0, 0, 0);
+            cairo_set_operator(m_canvas, CAIRO_OPERATOR_SOURCE);
+        }
         cairo_translate(m_canvas, xx, yy);
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
         cairo_fill(m_canvas);
@@ -293,7 +304,7 @@ public:
             return;
         }
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_CANVAS_BACKEND_EFL)
         if (!lastState().m_font->isGenericFont()) {
             Font* nonGenericFont = lastState().m_font;
             Font* font = m_starfish->fetchGenericFont(
@@ -727,15 +738,17 @@ public:
 protected:
     StarFish* m_starfish;
     std::vector<CanvasStateCairo> m_state;
-    std::unordered_map<Frame*, CanvasStateCairo> m_statePerFrame;
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
     void* m_buffer;
     unsigned m_width;
     unsigned m_height;
+
+    bool m_shouldDestroyCairo;
+    bool m_shouldDestroySurface;
 };
 
-#if !defined(PORT_GRAPHIC_BACKEND_EFL)
+#if !defined(PORT_CANVAS_BACKEND_EFL)
 Canvas* Canvas::createDirect(StarFish* starfish, void* data)
 {
     return new CanvasCairo(starfish, data);

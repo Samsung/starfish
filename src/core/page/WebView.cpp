@@ -53,7 +53,7 @@ extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 // #define STARFISH_ENABLE_TIMER
 
 #if defined(STARFISH_ENABLE_TEST)
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
 #include <Elementary.h>
 extern Evas_Object* g_imgBufferForScreehShot;
 #elif defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
@@ -706,7 +706,7 @@ bool WebView::rendering(bool force)
     {
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
             evas_object_image_save(g_imgBufferForScreehShot, path, NULL, NULL);
 
             // int writeImage(char* filename, int width, int height, void

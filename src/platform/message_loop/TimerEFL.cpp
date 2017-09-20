@@ -15,7 +15,7 @@
  */
 
 #include "StarFishConfig.h"
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_EVENTLOOP_BACKEND_EFL)
 
 #include "StarFish.h"
 #include "binding/ScriptBindingInstance.h"

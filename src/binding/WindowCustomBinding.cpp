@@ -33,12 +33,12 @@ using namespace Escargot;
 
 namespace StarFish {
 
+#ifdef STARFISH_ENABLE_TEST
 void customExit(int returnCode, Window* window)
 {
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
     exit(returnCode);
-#endif
 }
+#endif
 
 ValueRef* windowWindowGetterFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
@@ -482,7 +482,6 @@ static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
     }
     return ValueRef::createUndefined();
 }
-#endif
 
 static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
@@ -550,6 +549,7 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
     pclose(fp);
     return scriptUndefined();
 }
+#endif
 
 void Window::postInit(ScriptBindingInstance* instance)
 {

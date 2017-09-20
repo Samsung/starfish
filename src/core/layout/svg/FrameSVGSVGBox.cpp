@@ -80,7 +80,7 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
 
 void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 {
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_CANVAS_BACKEND_EFL)
     Canvas* outerCanvas = canvas;
     outerCanvas->save();
     outerCanvas->translate(borderLeft() + paddingLeft(),

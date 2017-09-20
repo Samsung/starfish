@@ -580,7 +580,8 @@ int main(int argc, char* argv[])
     DaliShellController shell(application, width, height);
     application.MainLoop();
 
-#elif defined(PORT_GRAPHIC_BACKEND_EFL)
+#elif defined(PORT_GRAPHIC_BACKEND_EFL) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
 
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);

@@ -396,7 +396,6 @@ private:
     static void releaseGIFResource(GifFileType* gifFile,
                                    GifRowType* screenBuffer, unsigned int size)
     {
-        int errorCode = 0;
         if (screenBuffer) {
             for (unsigned int i = 0; i < size; i++) {
                 if (screenBuffer[i]) {
@@ -405,7 +404,12 @@ private:
             }
             free(screenBuffer);
         }
+#ifdef GIF_LIB_VERSION // order versions of giflib(~4)
+        DGifCloseFile(gifFile);
+#else
+        int errorCode = 0;
         DGifCloseFile(gifFile, &errorCode);
+#endif
     }
 
     void readGIFFileOrBufferedInput(String* localImageSrc,
@@ -428,7 +432,11 @@ private:
 
         if (localImageSrc) {
             auto utf8Data = localImageSrc->toUTF8NonGCString();
+#ifdef GIF_LIB_VERSION // order versions of giflib(~4)
+            gifFile = DGifOpenFileName(utf8Data.data());
+#else
             gifFile = DGifOpenFileName(utf8Data.data(), &errorCode);
+#endif
             if (!gifFile) {
                 STARFISH_LOG_ERROR("Gif Open File Error, %d\n", errorCode);
                 return;
@@ -436,7 +444,11 @@ private:
         } else {
             readData.mem = (void*)bufferedInput;
             readData.size = 0;
+#ifdef GIF_LIB_VERSION // order versions of giflib(~4)
+            gifFile = DGifOpen(&readData, gifRead);
+#else
             gifFile = DGifOpen(&readData, gifRead, &errorCode);
+#endif
             if (!gifFile) {
                 STARFISH_LOG_ERROR("Gif Open Error, %d\n", errorCode);
                 return;

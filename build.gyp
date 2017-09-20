@@ -42,6 +42,17 @@
                     './build.dep.gyp:efl.x64',
                 ],
             }],
+            ['backend=="efl_cairo"', {
+                'defines_extra': [
+                    'STARFISH_EFL_CAIRO',
+                ],
+                'cflags_extra': [
+                    '-fno-rtti',
+                ],
+                'deps_extra': [
+                    './build.dep.gyp:efl_cairo.x64',
+                ],
+            }],
             ['backend=="dali"', {
                 'defines_extra': [
                     'STARFISH_DALI','GC_THREADS'

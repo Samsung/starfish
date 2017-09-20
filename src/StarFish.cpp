@@ -40,7 +40,7 @@
 #include "platform/window/PlatformWindow.h"
 
 #include <malloc.h>
-#ifdef PORT_GRAPHIC_BACKEND_EFL
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
 #include <Elementary.h>
 
 #if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
@@ -239,7 +239,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         GC_set_on_collection_event([](GC_EventType evtType) {
 
             if (GC_EVENT_RECLAIM_END == evtType) {
-#ifdef PORT_GRAPHIC_BACKEND_EFL
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
                 STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]\n",
                                   GC_get_memory_use() / 1024.f / 1024.f,
                                   GC_get_heap_size() / 1024.f / 1024.f);
@@ -256,7 +256,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         GC_set_force_unmap_on_gcollect(1);
     }
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     if (!platformHandle) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
 #ifdef STARFISH_TIZEN
@@ -332,7 +332,7 @@ void StarFish::run()
 void StarFish::enter()
 {
     if (m_enterCount == 0) {
-#ifdef PORT_GRAPHIC_BACKEND_EFL
+#ifdef PORT_CANVAS_BACKEND_EFL
         g_internalCanvas =
             evas_object_evas_get((Evas_Object*)m_platformWindow->unwrap());
 #endif
@@ -343,7 +343,7 @@ void StarFish::enter()
 void StarFish::exit()
 {
     if (m_enterCount == 1) {
-#ifdef PORT_GRAPHIC_BACKEND_EFL
+#ifdef PORT_CANVAS_BACKEND_EFL
         g_internalCanvas = nullptr;
 #endif
     }
@@ -395,7 +395,8 @@ void StarFish::loadHTMLDocument(String* filePath)
 #if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     width = m_width;
     height = m_height;
-#elif defined(PORT_GRAPHIC_BACKEND_EFL)
+#elif defined(PORT_GRAPHIC_BACKEND_EFL) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     evas_object_geometry_get((Evas_Object*)nativeHandle(), NULL, NULL, &width,
                              &height);
 #endif
