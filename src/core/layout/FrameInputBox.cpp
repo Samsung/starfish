@@ -69,6 +69,15 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         textElement->setParentNode(current);
         ComputedStyle* pseudoStyle = createInputElementStyleFrom(current);
         pseudoStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
+
+        // Some input boxes are browser dependent.
+        if (inputNode->type()->equals("checkbox")) {
+            // Increase the size of tick symbol relative to the checkbox
+            if (inputNode->style()->height().isFixed()) {
+                pseudoStyle->setFontSize(inputNode->style()->height());
+            }
+        }
+
         textElement->setStyle(pseudoStyle);
 
         Text* textNode =
