@@ -86,7 +86,9 @@ public:
         m_mainBox = nullptr;
         m_dummyBox = nullptr;
         m_dummyBoxClipper = nullptr;
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
         m_canvasAdpater = nullptr;
+#endif
         m_renderingAnimator = nullptr;
         m_isMouseLbuttonDown = false;
         m_isKeyDown = false;
@@ -195,7 +197,9 @@ public:
 
     uintptr_t m_handle;
     Evas_Object* m_window;
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     Evas_Object* m_canvasAdpater;
+#endif
     std::vector<Evas_Object*> m_objectList;
     std::vector<Evas_Object*> m_surfaceList;
     Evas_Object* m_mainBox;
@@ -728,7 +732,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     auto wnd = new WindowImplEFL(sf);
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
-
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     wnd->m_canvasAdpater =
         evas_object_image_filled_add(evas_object_evas_get((Evas_Object*)win));
     evas_object_size_hint_weight_set(wnd->m_canvasAdpater, EVAS_HINT_EXPAND,
@@ -738,6 +742,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     elm_win_resize_object_add((Evas_Object*)win, wnd->m_canvasAdpater);
     evas_object_image_alpha_set(wnd->m_canvasAdpater, EINA_TRUE);
     evas_object_show(wnd->m_canvasAdpater);
+#endif
 #if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     Evas_Native_Surface ns;
     wnd->m_evasGL = evas_gl_new(evas_object_evas_get(wnd->m_canvasAdpater));
@@ -1256,12 +1261,12 @@ PlatformWindow::~PlatformWindow()
     STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     if (eflWindow->m_canvasAdpater) {
         evas_object_del(eflWindow->m_canvasAdpater);
         eflWindow->m_canvasAdpater = nullptr;
     }
-
+#endif
     if (eflWindow->m_dummyBoxClipper) {
         evas_object_del(eflWindow->m_dummyBoxClipper);
         eflWindow->m_dummyBoxClipper = nullptr;
@@ -1411,10 +1416,12 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
     d.h = height();
     return Canvas::createDirect(starFish(), &d);
 #else
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     evas_object_image_size_set(m_canvasAdpater, width(), height());
     int s = evas_object_image_stride_get(m_canvasAdpater);
     void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
     evas_object_image_data_update_add(m_canvasAdpater, 0, 0, width(), height());
+#endif
     struct dummy {
         void* image;
         int w;
