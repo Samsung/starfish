@@ -18,6 +18,10 @@
 
 #if defined(PORT_IMAGEDECODER_BACKEND_MISC)
 
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
+#define NEEDS_PREMULTIPLIED_ALPHA
+#endif
+
 #define PNG_SKIP_SETJMP_CHECK
 
 #include "core/modules/canvas/image/ImageData.h"
@@ -65,7 +69,7 @@ public:
     {
         void* address = m_image;
         size_t end = bufferSize();
-        memset(address, 0xff, end);
+        memset(address, 0x00, end);
     }
 
     virtual size_t bufferSize()
@@ -287,6 +291,30 @@ private:
         png_read_image(png, rowPointers);
         png_read_end(png, nullptr);
         png_destroy_read_struct(&png, &info, nullptr);
+#ifdef NEEDS_PREMULTIPLIED_ALPHA
+#define ARGB_TO_PREMULTIPLY_ALPHA(sr, sg, sb, sa)                              \
+    (unsigned)(((unsigned)((unsigned char)(sr) * ((unsigned char)(sa) + 1)) >> \
+                8) |                                                           \
+               ((unsigned)((unsigned char)(sg) * ((unsigned char)(sa) + 1) >>  \
+                           8)                                                  \
+                << 8) |                                                        \
+               ((unsigned)((unsigned char)(sb) * ((unsigned char)(sa) + 1) >>  \
+                           8)                                                  \
+                << 16) |                                                       \
+               ((unsigned)(unsigned char)(sa) << 24))
+
+        uint8_t* data = (uint8_t*)m_image;
+        for (png_uint_32 y = 0; y < m_height; y++) {
+            for (png_uint_32 x = 0; x < rowbytes; x += 4) {
+                uint32_t* tmp = (uint32_t*)(&(data[y * rowbytes + x]));
+                *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
+                    data[y * rowbytes + x], data[y * rowbytes + x + 1],
+                    data[y * rowbytes + x + 2], data[y * rowbytes + x + 3]);
+            }
+        }
+
+#undef ARGB_TO_PREMULTIPLY_ALPHA
+#endif
         free(rowPointers);
     }
 

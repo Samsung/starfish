@@ -54,6 +54,8 @@ public:
     Evas_Object* m_clipper;
     SkRect m_clipRect;
     ClipperLib::Paths m_clipPath;
+    LayoutUnit m_baseX;
+    LayoutUnit m_baseY;
 
     bool m_mapMode;
     bool m_didClip;
@@ -1721,6 +1723,15 @@ public:
         lastState().m_didClip = false;
         lastState().m_hasPathClip = false;
         lastState().m_matrix = SkMatrix::I();
+        lastState().m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
+                                       SkFloatToScalar((float)m_height));
+    }
+
+    virtual void resetClip()
+    {
+        lastState().m_clipper = NULL;
+        lastState().m_didClip = false;
+        lastState().m_hasPathClip = false;
         lastState().m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
                                        SkFloatToScalar((float)m_height));
     }
