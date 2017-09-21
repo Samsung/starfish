@@ -31,8 +31,6 @@ public:
     Unit::Color m_color;
     float m_opacity;
     Font* m_font;
-    LayoutUnit m_baseX;
-    LayoutUnit m_baseY;
     TextDecorationData m_textDecorationData;
 
     bool m_visible;
@@ -126,6 +124,8 @@ public:
 
     // reset transform matrix & clip
     virtual void resetMatrixAndClip() = 0;
+    // reset transform clip
+    virtual void resetClip() = 0;
 
     virtual void setColor(const Unit::Color& clr) = 0;
     virtual void beginOpacityLayer(float c) = 0;

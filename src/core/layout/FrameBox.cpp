@@ -411,6 +411,7 @@ void FrameBox::paintOutline(Canvas* canvas)
     auto s = style()->outlineStyle();
     if (s != BorderStyleValue::NoneBorderStyleValue) {
         canvas->save();
+        canvas->resetClip();
         LayoutUnit viewportWidth = canvas->viewportWidth();
         LayoutUnit cbContentWidth = containingBlock(this)->contentWidth();
         LayoutUnit outlineWidth = style()->outlineWidth().specifiedValue(

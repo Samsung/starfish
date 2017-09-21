@@ -141,8 +141,6 @@ public:
             auto& lastState = m_state.back();
             state.m_color = lastState.m_color;
             state.m_opacity = lastState.m_opacity;
-            state.m_baseX = lastState.m_baseX;
-            state.m_baseY = lastState.m_baseY;
             state.m_font = lastState.m_font;
             state.m_visible = lastState.m_visible;
             state.m_textDecorationData = lastState.m_textDecorationData;
@@ -462,8 +460,8 @@ public:
         cairo_save(m_canvas);
 
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-        xx = dst.x() + lastState().m_baseX;
-        yy = dst.y() + lastState().m_baseY;
+        xx = dst.x();
+        yy = dst.y();
         ww = dst.width();
         hh = dst.height();
 
@@ -510,17 +508,12 @@ public:
         double surfaceWidth = 0, surfaceHeight = 0;
         cairo_surface_t* image = nullptr;
 
-        if (imgData) {
-            int stride =
-                cairo_format_stride_for_width(CAIRO_FORMAT, data->width());
-            image = cairo_image_surface_create_for_data(
-                (unsigned char*)imgData, CAIRO_FORMAT, data->width(),
-                data->height(), stride);
-            surfaceWidth = data->width();
-            surfaceHeight = data->height();
-        } else {
-            // TODO
-        }
+        int stride = cairo_format_stride_for_width(CAIRO_FORMAT, data->width());
+        image = cairo_image_surface_create_for_data((unsigned char*)imgData,
+                                                    CAIRO_FORMAT, data->width(),
+                                                    data->height(), stride);
+        surfaceWidth = data->width();
+        surfaceHeight = data->height();
         drawImageCairo(image, dst, surfaceWidth, surfaceHeight);
         cairo_surface_destroy(image);
     }
@@ -532,9 +525,10 @@ public:
         }
         cairo_surface_t* image;
         image = cairo_image_surface_create_for_data(
-            (unsigned char*)data->unwrap(), CAIRO_FORMAT, data->bufferWidth(),
-            data->height(), cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
-                                                          data->bufferWidth()));
+            (unsigned char*)data->unwrap(), CAIRO_FORMAT_ARGB32,
+            data->bufferWidth(), data->height(),
+            cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
+                                          data->bufferWidth()));
 
         drawImageCairo(image, dst, data->bufferWidth(), data->bufferHeight(),
                        true);
@@ -747,6 +741,11 @@ public:
     {
         cairo_reset_clip(m_canvas);
         cairo_identity_matrix(m_canvas);
+    }
+
+    virtual void resetClip()
+    {
+        cairo_reset_clip(m_canvas);
     }
 
 protected:

@@ -133,9 +133,10 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         Unit::Rect rt = node()->asSVGSVGElement()->viewBox();
         float sx = contentWidth() / rt.width();
         float sy = contentHeight() / rt.height();
+        float s = std::min(sx, sy);
         float tx = rt.x();
         float ty = rt.y();
-        canvas->scale(sx, sy);
+        canvas->scale(s, s);
         canvas->translate(-tx, -ty);
     }
 
@@ -146,7 +147,7 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         ctx.m_canvas->translate(
             child->asFrameBox()->x() - borderLeft() - paddingLeft(),
             child->asFrameBox()->y() - borderTop() - paddingTop());
-        child->asFrameSVGBox()->paintSVG(ctx);
+        child->asFrameSVGBox()->paint(ctx);
         ctx.m_canvas->restore();
         child = child->next();
     }
