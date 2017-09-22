@@ -48,6 +48,10 @@
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
+#ifdef STARFISH_ENABLE_TTS
+#include "core/modules/tts/TTS.h"
+#include "core/dom/Event.h"
+#endif
 
 namespace StarFish {
 
@@ -473,6 +477,18 @@ bool Element::handleDefaultEvent(Event* event)
             return true;
         }
     }
+#ifdef STARFISH_ENABLE_TTS
+    StarFish* sf = document()->window()->starFish();
+    if (sf->tts()->isTTSEnable()) {
+        if (isHTMLElement() && isFocusable() && event->isFocusEvent() &&
+            event->type()->equals("focus")) {
+            auto text = textContent();
+            if (text.hasValue()) {
+                sf->tts()->speech(text.getValue());
+            }
+        }
+    }
+#endif
     return false;
 }
 

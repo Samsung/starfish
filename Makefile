@@ -145,7 +145,7 @@ endif
 ifneq (,$(findstring tizen,$(HOST)))
   #LTO=1
   ifeq ($(TYPE), lib)
-    # At present, this feature is not required. 
+    # At present, this feature is not required.
     TIZEN_DEVICE_API=true
   endif
 endif
@@ -273,6 +273,7 @@ ifneq (,$(findstring tizen,$(HOST)))
     CXXFLAGS += -DSTARFISH_ENABLE_TEST
     CXXFLAGS += -DSTARFISH_ENABLE_VIRTUAL_CURSOR=1
     CXXFLAGS += -DSTARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER=false
+    CXXFLAGS += -DSTARFISH_ENABLE_TTS
   endif
   ifeq ($(TIZEN_PROFILE),mobile)
     MEDIA_SUPPORT=true
@@ -520,7 +521,7 @@ else ifeq ($(HOST), tizen_obs)
   CXX          = g++
   STRIP        = strip
   TIZEN_DEPS = dlog elementary ecore libpng cairo freetype2 fontconfig icu-uc icu-i18n \
-               ecore-imf-evas efl-extension libpng capi-network-connection capi-media-player
+               ecore-imf-evas efl-extension libpng capi-network-connection capi-media-player vconf vconf-internal-keys-tv
   ifeq ($(BACKEND), DALI)
     TIZEN_DEPS += dali-core dali-adaptor dali-toolkit
   endif
@@ -553,11 +554,11 @@ else ifneq (,$(findstring tizen,$(HOST)))
 
   TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
                   ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
-                  efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 dbus-1.0 freetype2 media cairo network location
+                  efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 dbus-1.0 freetype2 media cairo network location vconf vconf-internal-keys-tv
   ifneq ($(TIZEN_VERSION), 2.3.1)
     TIZEN_INCLUDE += emile-1 ethumb-client-1
   endif
-  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player elementary fontconfig ecore_evas ecore_input cairo capi-network-connection dlog icui18n icuuc icudata capi-location-manager
+  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player elementary fontconfig ecore_evas ecore_input cairo capi-network-connection dlog icui18n icuuc icudata capi-location-manager vconf vconf-internal-keys-tv
 
   CXXFLAGS += --sysroot=$(TIZEN_SYSROOT)
   CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))

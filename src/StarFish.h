@@ -33,7 +33,9 @@ class ThreadPool;
 class Console;
 class Inspector;
 class Mutex;
-
+#ifdef STARFISH_ENABLE_TTS
+class TTS;
+#endif
 enum StarFishStartUpFlag {
     enableComputedStyleDump = 1 << 1,
     enableFrameTreeDump = 1 << 2,
@@ -195,6 +197,12 @@ public:
     void removeActiveThread(Thread* thread);
     void joinAllActiveThread();
 
+#ifdef STARFISH_ENABLE_TTS
+    TTS* tts()
+    {
+        return m_tts;
+    }
+#endif
 protected:
     void enter();
     void exit();
@@ -244,6 +252,9 @@ protected:
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
     GCVector<Thread*> m_activeThreadList;
     Mutex* m_activeThreadListMutex;
+#ifdef STARFISH_ENABLE_TTS
+    TTS* m_tts;
+#endif
 
 private:
     void initCookieSession();
