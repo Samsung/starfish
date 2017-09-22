@@ -530,6 +530,8 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     // Within each stacking context, the following layers are painted in
     // back-to-front order:
 
+    LayoutUnit vwOld = canvas->viewportWidth(),
+               vhOld = canvas->viewportHeight();
     // the background and borders of the element forming the stacking context.
     if (m_owner->layoutParent()->isFrameDocument()) {
         if (!m_owner->node()
@@ -544,6 +546,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                 ->browsingContext()
                 ->paintWindowBackground(canvas);
             canvas->translate(-document->scrollLeft(), -document->scrollTop());
+            canvas->setViewportWidthAndHeight(
+                m_owner->node()->window()->innerWidth(),
+                m_owner->node()->window()->innerHeight());
         }
     }
     m_owner->paintBackgroundAndBorders(canvas);
@@ -639,6 +644,8 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         }
     }
 
+    canvas->setViewportWidthAndHeight(vwOld, vhOld);
+
     canvas->restore();
     if (hasStackingBuffer) {
         delete canvas;
@@ -650,6 +657,19 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     LayoutRect visibleRect = StackingContext::visibleRect();
     ComputedStyle* ownerStyle = m_owner->style();
     canvas->save();
+
+    LayoutUnit vwOld = canvas->viewportWidth(),
+               vhOld = canvas->viewportHeight();
+    if (m_owner->layoutParent()->isFrameDocument()) {
+        if (!m_owner->node()
+                 ->document()
+                 ->browsingContext()
+                 ->isMainBrowsingContext()) {
+            canvas->setViewportWidthAndHeight(
+                m_owner->node()->window()->innerWidth(),
+                m_owner->node()->window()->innerHeight());
+        }
+    }
 
     if (needsOwnBuffer()) {
         LayoutUnit minX = visibleRect.x();
@@ -793,6 +813,9 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             canvas->endOpacityLayer();
         }
     }
+
+    canvas->setViewportWidthAndHeight(vwOld, vhOld);
+
     canvas->restore();
 }
 

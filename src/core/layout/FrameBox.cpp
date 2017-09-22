@@ -412,6 +412,15 @@ void FrameBox::paintOutline(Canvas* canvas)
     if (s != BorderStyleValue::NoneBorderStyleValue) {
         canvas->save();
         canvas->resetClip();
+        auto u = absolutePointIncludingScroll(
+            node()->document()->frame()->asFrameBox());
+        u.setX(u.x() -
+               node()->document()->frame()->asFrameBlockBox()->scrollLeft());
+        u.setY(u.y() -
+               node()->document()->frame()->asFrameBlockBox()->scrollTop());
+        canvas->clip(Unit::Rect(-u.x(), -u.y(), node()->window()->innerWidth(),
+                                node()->window()->innerHeight()));
+
         LayoutUnit viewportWidth = canvas->viewportWidth();
         LayoutUnit cbContentWidth = containingBlock(this)->contentWidth();
         LayoutUnit outlineWidth = style()->outlineWidth().specifiedValue(

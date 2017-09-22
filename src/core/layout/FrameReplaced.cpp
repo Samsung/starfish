@@ -549,6 +549,7 @@ void FrameReplaced::paint(PaintingContext& ctx)
             paintBackgroundAndBorders(ctx.m_canvas);
         } else if (ctx.m_paintingStage == PaintingNormalFlowInline) {
             paintReplaced(ctx.m_canvas);
+        } else if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintOutline(ctx.m_canvas);
         }
     } else if (isInlineLevel() || isFlexItem()) {
@@ -556,12 +557,14 @@ void FrameReplaced::paint(PaintingContext& ctx)
             ctx.m_paintingInlineStage == PaintingReplaced) {
             paintBackgroundAndBorders(ctx.m_canvas);
             paintReplaced(ctx.m_canvas);
+        } else if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintOutline(ctx.m_canvas);
         }
     } else if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             paintBackgroundAndBorders(ctx.m_canvas);
             paintReplaced(ctx.m_canvas);
+        } else if (ctx.m_paintingStage == PaintingNormalFlowInline) {
             paintOutline(ctx.m_canvas);
         }
     }

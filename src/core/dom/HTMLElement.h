@@ -45,7 +45,6 @@ public:
         CSSStyleValuePairVectorHolder& cssValues);
 
     int tabIndex() const override;
-    void setTabIndex(int index, bool setExplicitly = true) override;
 
     LayoutRect offsetRect();
     long offsetWidth()

@@ -208,6 +208,7 @@ public:
         scrollIntoView(true);
     }
     void scrollIntoView(bool alignToTop);
+    void scrollIntoViewIfNeeded();
     double scrollLeft(bool layoutIfNeeds = true);
     void setScrollLeft(double s, bool layoutIfNeeds = true);
     double scrollTop(bool layoutIfNeeds = true);
@@ -305,7 +306,10 @@ public:
     virtual bool isFocusable();
 
     virtual int tabIndex() const;
-    virtual void setTabIndex(int index, bool setExplicitly = true);
+    void setTabIndex(int32_t t)
+    {
+        m_tabIndex = t;
+    }
     bool tabIndexSetExplicitly() const;
 
     /* Element-level focus APIs */

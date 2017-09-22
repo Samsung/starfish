@@ -887,8 +887,10 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             if (overflowApplied) {
                 ctx.m_canvas->restore();
             }
-            paintOutline(ctx.m_canvas);
             ctx.m_paintingStage = PaintingNormalFlowInline;
+        }
+        if (ctx.m_paintingStage == PaintingPositionedElements) {
+            paintOutline(ctx.m_canvas);
         }
     } else if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats &&
@@ -910,8 +912,10 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             if (overflowApplied) {
                 ctx.m_canvas->restore();
             }
-            paintOutline(ctx.m_canvas);
             ctx.m_paintingStage = PaintingNonPositionedFloats;
+        }
+        if (ctx.m_paintingStage == PaintingNormalFlowInline) {
+            paintOutline(ctx.m_canvas);
         }
     } else {
         if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
@@ -928,7 +932,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         if (overflowApplied) {
             ctx.m_canvas->restore();
         }
-        if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
+        if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             paintOutline(ctx.m_canvas);
         }
     }

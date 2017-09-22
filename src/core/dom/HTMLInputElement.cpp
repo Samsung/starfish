@@ -42,7 +42,6 @@ HTMLInputElement::HTMLInputElement(Document* document)
     , m_currentEditingText(String::emptyString)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
-    setTabIndex(0, false);
 }
 
 void* HTMLInputElement::operator new(size_t size)
@@ -303,6 +302,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
             String* oldValue = value;
             if (event->isKeyboardEvent() &&
                 event->type()->equalsIgnoreCase("keydown")) {
+                bool isUseful = false;
                 if (event->asKeyboardEvent()->keyValue() ==
                     KeyValue::BackspaceKey) {
                     if (value->length()) {
@@ -316,6 +316,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                             m_currentCaretPosition--;
                             m_shouldDrawCaret = true;
                         }
+                        isUseful = true;
                     }
                 } else {
                     if (event->asKeyboardEvent()->isASCIIVisibleChar()) {
@@ -323,12 +324,16 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                         value = value->concat(key);
                         m_currentCaretPosition++;
                         m_shouldDrawCaret = true;
+                        isUseful = true;
                     }
                 }
-                if (!value->equals(oldValue)) {
-                    setAttribute(starFish()->staticStrings()->m_value, value);
+                if (isUseful) {
+                    if (!value->equals(oldValue)) {
+                        setAttribute(starFish()->staticStrings()->m_value,
+                                     value);
+                    }
+                    return true;
                 }
-                return true;
             } else if (event->isCompositionEvent()) {
                 if (event->type()->equalsIgnoreCase("compositionstart")) {
                 } else if (event->type()->equalsIgnoreCase(

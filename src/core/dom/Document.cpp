@@ -38,6 +38,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLTitleElement.h"
+#include "core/dom/HTMLAnchorElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
 #endif
@@ -52,6 +53,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/StyleSheetList.h"
@@ -78,6 +80,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_salvageable(true)
     , m_domContentLoadedFired(false)
     , m_onLoadFired(false)
+    , m_isFocusRingCacheValid(false)
     , m_window(window)
     , m_documentURI(uri)
     , m_referrer(nullptr)
@@ -979,18 +982,23 @@ String* Document::urlString()
     return m_documentURI->urlString();
 }
 
+void Document::updateDOMVersion()
+{
+    m_domVersion++;
+    invalidNamedAccessCacheIfNeeded();
+    invalidFocusRingCacheIfNeeded();
+}
+
 void Document::didNodeInserted(Node* parent, Node* newChild)
 {
     Node::didNodeInserted(parent, newChild);
     updateDOMVersion();
-    invalidNamedAccessCacheIfNeeded();
 }
 
 void Document::didNodeRemoved(Node* parent, Node* oldChild)
 {
     Node::didNodeRemoved(parent, oldChild);
     updateDOMVersion();
-    invalidNamedAccessCacheIfNeeded();
 }
 
 HTMLCollection* Document::namedAccess(String* name)
@@ -1030,6 +1038,98 @@ ScriptWrappable* Document::defaultNamedGetter(String* name)
     }
 
     return nullptr;
+}
+
+void Document::invalidFocusRingCacheIfNeeded()
+{
+    m_isFocusRingCacheValid = false;
+}
+
+const GCAtomicVector<Element*>& Document::focusRing()
+{
+    webView()->layoutIfNeeds();
+
+    if (!m_isFocusRingCacheValid) {
+        m_focusRingCache.clear();
+        size_t nodeIndex = 0;
+
+        class FocusRingItem {
+        public:
+            size_t m_nodeIndex;
+            int m_tabIndex;
+            Element* m_element;
+            FocusRingItem(size_t nodeIndex = 0, int tabIndex = 0,
+                          Element* element = nullptr)
+                : m_nodeIndex(nodeIndex)
+                , m_tabIndex(tabIndex)
+                , m_element(element)
+            {
+            }
+
+            bool operator<(const FocusRingItem& o) const
+            {
+                size_t a = m_tabIndex;
+                size_t b = o.m_tabIndex;
+
+                if (a == 0) {
+                    a = std::numeric_limits<size_t>::max();
+                }
+
+                if (b == 0) {
+                    b = std::numeric_limits<size_t>::max();
+                }
+
+                if (a < b) {
+                    return true;
+                } else if (a > b) {
+                    return false;
+                } else {
+                    if (m_nodeIndex < o.m_nodeIndex) {
+                        return true;
+                    } else {
+                        STARFISH_ASSERT(m_nodeIndex > o.m_nodeIndex);
+                        return false;
+                    }
+                }
+            }
+        };
+
+        std::vector<FocusRingItem> coll; // nodeindex, tabindex, element*
+
+        // there is no meaning `passing m_focusRingCache`
+        // just for compile!
+        Traverse::collectDescendants(
+            m_focusRingCache, this,
+            [&](Element* e) -> bool {
+                if (e->isHTMLElement() && e->tabIndex() >= 0 &&
+                    !e->asHTMLElement()->disabled() && e->frame()) {
+                    if (e->style()->visibility() !=
+                        VisibilityValue::VisibleVisibilityValue) {
+                        return false;
+                    }
+                    if (e->isHTMLAnchorElement()) {
+                        if (!e->asHTMLAnchorElement()->href()->length()) {
+                            return false;
+                        }
+                    }
+                    coll.push_back(
+                        FocusRingItem(nodeIndex++, e->tabIndex(), e));
+                    return false;
+                }
+                return false;
+            },
+            false);
+
+        std::sort(coll.begin(), coll.end());
+
+        m_focusRingCache.reserve(coll.size() + 1);
+        m_focusRingCache.push_back(nullptr); // for focusing body
+        for (size_t i = 0; i < coll.size(); i++) {
+            m_focusRingCache.push_back(coll[i].m_element);
+        }
+    }
+
+    return m_focusRingCache;
 }
 
 void Document::invalidNamedAccessCacheIfNeeded()
@@ -1159,7 +1259,6 @@ void Document::setDesignMode(String* value)
         // TODO : immediately reset the document's active range's start and end
         // boundary points to be at the start of the Document
         browsingContext()->setFocusedNode(this);
-        browsingContext()->setNeedsStyleRecalc();
     }
 }
 

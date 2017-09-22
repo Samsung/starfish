@@ -67,6 +67,8 @@ HTMLFormObject::HTMLFormObject(Document* document)
     : HTMLElement(document)
     , m_disabled(false)
 {
+    m_tabIndexWasSetExplicitly = true;
+    m_tabIndex = 0;
 }
 
 String* HTMLFormObject::domName()
@@ -228,12 +230,17 @@ void HTMLFormObject::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
                                      attributeRemoved);
+
     if (name == starFish()->staticStrings()->m_disabled) {
         if (attributeCreated) {
             setDisabled(true);
         } else if (attributeRemoved) {
             setDisabled(false);
         }
+    } else if (name == starFish()->staticStrings()->m_tabindex) {
+        m_tabIndexWasSetExplicitly = true;
+        if (m_tabIndex == -1)
+            m_tabIndex = 0;
     }
 }
 

@@ -205,11 +205,6 @@ int HTMLElement::tabIndex() const
     return -1;
 }
 
-void HTMLElement::setTabIndex(int index, bool setExplicitly)
-{
-    Element::setTabIndex(index, setExplicitly);
-}
-
 LayoutRect HTMLElement::offsetRect()
 {
     window()->browsingContext()->webView()->layoutIfNeeds();

@@ -117,6 +117,10 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
         if (frame()) {
             setNeedsLayout();
         }
+    } else if (name == starFish()->staticStrings()->m_tabindex) {
+        m_tabIndexWasSetExplicitly = true;
+        if (m_tabIndex == -1)
+            m_tabIndex = 0;
     }
 }
 

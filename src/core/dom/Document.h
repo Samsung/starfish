@@ -252,11 +252,7 @@ public:
 
     void setReadyState(DocumentReadyState state);
 
-    void updateDOMVersion()
-    {
-        m_domVersion++;
-    }
-
+    void updateDOMVersion();
     size_t domVersion()
     {
         return m_domVersion;
@@ -334,6 +330,9 @@ public:
     ScriptWrappable* defaultNamedGetter(String* name);
     HTMLCollection* namedAccess(String* name);
     void invalidNamedAccessCacheIfNeeded();
+    void invalidFocusRingCacheIfNeeded();
+
+    const GCAtomicVector<Element*>& focusRing();
 
     Element* elementFromPoint(float x, float y);
 
@@ -525,6 +524,7 @@ protected:
     bool m_openFunctionExplicitCalled : 1;
     bool m_domContentLoadedFired : 1;
     bool m_onLoadFired : 1;
+    bool m_isFocusRingCacheValid : 1;
 
     Window* m_window;
     ResourceURL* m_documentURI;
@@ -544,6 +544,9 @@ protected:
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
     DOMImplementation* m_implementation;
     GCVector<Element*> m_currentScripts;
+    GCAtomicVector<Element*>
+        m_focusRingCache; // using atomic vector is not accident
+    // each element has strong reference by DOM tree already
     size_t m_pendingDocumentParsingIdlerHandle;
     String* m_contentLanguage;
 #ifdef STARFISH_TIZEN

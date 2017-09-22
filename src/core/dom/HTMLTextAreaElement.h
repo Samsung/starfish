@@ -27,7 +27,6 @@ public:
     HTMLTextAreaElement(Document* document)
         : HTMLFormObject(document)
     {
-        setTabIndex(0, false);
     }
 
     virtual void init(ScriptBindingInstance* instance,
