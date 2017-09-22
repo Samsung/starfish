@@ -55,6 +55,9 @@ extern Evas* g_internalCanvas;
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <tizen.h>
 #endif
+#ifdef STARFISH_ENABLE_TTS
+#include "core/modules/tts/TTS.h"
+#endif
 namespace StarFish {
 
 #ifdef STARFISH_ENABLE_TEST
@@ -186,6 +189,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_screenInfo(info)
     , m_localStorageFilePath(String::fromUTF8(localStorageFilePath))
     , m_cookieStoreFilePath(String::fromUTF8(cookieStoreFilePath))
+#ifdef STARFISH_ENABLE_TTS
+    , m_tts(nullptr)
+#endif
 {
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     m_width = w;
@@ -305,6 +311,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
 
     initCookieSession();
+#ifdef STARFISH_ENABLE_TTS
+    m_tts = new TTS(this);
+#endif
 }
 
 StarFish::~StarFish()

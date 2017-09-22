@@ -51,6 +51,8 @@ BuildRequires: pkgconfig(dali-adaptor)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
+BuildRequires: pkgconfig(vconf)
+BuildRequires: pkgconfig(vconf-internal-keys-tv)
 %description
 Implementation of Lightweight Web Engine
 

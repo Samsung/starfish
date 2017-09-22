@@ -7,6 +7,7 @@
             'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_ENABLE_INSPECTOR',
             'STARFISH_ENABLE_DOMPARSER',
+            'STARFISH_ENABLE_TTS',
         ],
         'defines_extra': [
         ],
