@@ -451,6 +451,14 @@ private:
 #endif
     }
 
+    static int getGifTransparentIndex(GifFileType* gif)
+    {
+        GraphicsControlBlock first_gcb;
+        memset(&first_gcb, 0, sizeof(first_gcb));
+        DGifSavedExtensionToGCB(gif, 0, &first_gcb);
+        return first_gcb.TransparentColor;
+    }
+
     void readGIFFileOrBufferedInput(String* localImageSrc,
                                     const char* bufferedInput)
     {
@@ -484,6 +492,7 @@ private:
             readData.mem = (void*)bufferedInput;
             readData.size = 0;
 #ifdef GIF_LIB_VERSION // order versions of giflib(~4)
+            STARFISH_LOG_ERROR("[youngj] order versions of giflib(~4)\n");
             gifFile = DGifOpen(&readData, gifRead);
 #else
             gifFile = DGifOpen(&readData, gifRead, &errorCode);
@@ -566,6 +575,7 @@ private:
         }
 
         // Convert GIF to RGBA
+        int ti = getGifTransparentIndex(gifFile);
         GifRowType gifRow;
         GifColorType* colorMapEntry = nullptr;
         GifByteType* buffer = nullptr;
@@ -576,10 +586,17 @@ private:
             gifRow = screenBuffer[h];
             for (unsigned long w = 0; w < m_width; w++) {
                 colorMapEntry = &colorMap->Colors[gifRow[w]];
-                *buffer++ = colorMapEntry->Blue;
-                *buffer++ = colorMapEntry->Green;
-                *buffer++ = colorMapEntry->Red;
-                *buffer++ = 255;
+                if (ti == NO_TRANSPARENT_COLOR) {
+                    *buffer++ = colorMapEntry->Blue;
+                    *buffer++ = colorMapEntry->Green;
+                    *buffer++ = colorMapEntry->Red;
+                    *buffer++ = 255;
+                } else {
+                    *buffer++ = 0;
+                    *buffer++ = 0;
+                    *buffer++ = 0;
+                    *buffer++ = 0;
+                }
             }
         }
 
