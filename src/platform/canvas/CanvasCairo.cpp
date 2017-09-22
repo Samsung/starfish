@@ -312,10 +312,10 @@ public:
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
                           const StringView& sv)
     {
-        if (!lastState().m_visible) {
+        int size = lastState().m_font->size();
+        if (!lastState().m_visible || size == 0) {
             return;
         }
-
 #if defined(PORT_CANVAS_BACKEND_EFL)
         if (!lastState().m_font->isGenericFont()) {
             Font* nonGenericFont = lastState().m_font;
@@ -413,10 +413,11 @@ public:
             lastState().m_font->findFCChar(sv.charAt(0), &glyph_index);
         ;
         cairo_font_face_t* fontFace;
-        int size = lastState().m_font->size();
         int glyph_count = sv.length();
 
         fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
+        cairo_set_font_face(m_canvas, fontFace);
+        cairo_set_font_size(m_canvas, size);
         cairo_translate(m_canvas, 0, size);
 
         for (int i = 0; i < glyph_count; i++) {
@@ -443,8 +444,6 @@ public:
                     glyph.y = 0;
                 }
             }
-            cairo_set_font_face(m_canvas, fontFace);
-            cairo_set_font_size(m_canvas, size);
             glyph.index = glyph_index;
             cairo_glyph_path(m_canvas, &glyph, 1);
         }

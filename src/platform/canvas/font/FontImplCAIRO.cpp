@@ -68,7 +68,6 @@ public:
                                            FontImplCAIRO* m =
                                                (FontImplCAIRO*)obj;
                                            FontMetrics fm = m->metrics();
-
                                        },
                                        NULL, NULL, NULL);
     }
@@ -78,7 +77,7 @@ public:
 
     virtual LayoutUnit measureText(const StringView& str)
     {
-        if (str.length() == 0) {
+        if (str.length() == 0 || m_size == 0) {
             return 0;
         }
 #ifdef STARFISH_ENABLE_TEST
@@ -96,7 +95,6 @@ public:
 
         FT_Face face = findFCChar(str.charAt(0), &glyph_index);
 
-        int size = m_size;
         int glyph_count = str.length();
         int result = 0;
         int advanceX = 0;
@@ -110,14 +108,14 @@ public:
             } else {
                 glyph_index = FT_Get_Char_Index(face, unicode);
                 if (glyph_index != 0) {
-                    FT_Set_Pixel_Sizes(face, 0, size);
+                    FT_Set_Pixel_Sizes(face, 0, m_size);
                     FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
                     m_GlaphCaches.emplace(unicode, face->glyph->advance.x >> 6);
                     result += face->glyph->advance.x >> 6;
                 } else {
                     face = findFCChar(unicode, &glyph_index);
                     if (glyph_index != 0) {
-                        FT_Set_Pixel_Sizes(face, 0, size);
+                        FT_Set_Pixel_Sizes(face, 0, m_size);
                         FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
                         m_GlaphCaches.emplace(unicode,
                                               face->glyph->advance.x >> 6);
