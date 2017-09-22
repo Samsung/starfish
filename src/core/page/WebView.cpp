@@ -814,10 +814,5 @@ void WebView::blur()
         return;
     }
     mainBrowsingContext()->releaseFocusedNode(nullptr);
-    bool ret = false;
-    std::function<void(BrowsingContext*)> fn = [&](BrowsingContext* ctx) {
-        ctx->releaseFocusedNode(nullptr);
-    };
-    mainBrowsingContext()->iterateChildContext(fn);
 }
 }

@@ -30,7 +30,6 @@ HTMLSelectElement::HTMLSelectElement(Document* document)
     : HTMLFormObject(document)
     , m_selectedOptions(nullptr)
 {
-    setTabIndex(0, false);
 }
 
 void* HTMLSelectElement::operator new(size_t size)

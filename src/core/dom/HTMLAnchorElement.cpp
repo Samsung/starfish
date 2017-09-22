@@ -35,14 +35,27 @@ QualifiedName HTMLAnchorElement::name()
     return starFish()->staticStrings()->m_aTagName;
 }
 
+void HTMLAnchorElement::didAttributeChanged(QualifiedName name, String* old,
+                                            String* val, bool attributeCreated,
+                                            bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
+                                     attributeRemoved);
+
+    if (name == starFish()->staticStrings()->m_tabindex) {
+        m_tabIndexWasSetExplicitly = true;
+        if (m_tabIndex == -1)
+            m_tabIndex = 0;
+    }
+}
+
 bool HTMLAnchorElement::handleDefaultEvent(Event* event)
 {
     if (HTMLElement::handleDefaultEvent(event)) {
         return true;
     }
     // TODO : Apply noreferrer
-    if (((event->isMouseEvent() || event->isTouchEvent())) &&
-        event->type()->equals("click")) {
+    if (event->type()->equals("click")) {
         auto href = starFish()->staticStrings()->m_href;
         Nullable<String*> hrefAttr = getAttribute(href);
         if (hrefAttr.hasValue()) {

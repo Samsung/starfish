@@ -26,12 +26,17 @@ public:
     HTMLAnchorElement(Document* document)
         : HTMLElement(document)
     {
-        setTabIndex(0, false);
+        m_tabIndexWasSetExplicitly = true;
+        m_tabIndex = 0;
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLAnchorElement() const;
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* val, bool attributeCreated,
+                                     bool attributeRemoved) override;
 
     /* 4.4 Interface Node */
 
@@ -42,12 +47,6 @@ public:
     virtual bool handleDefaultEvent(Event* event) override;
 
     bool supportsFocus() const override;
-
-    int tabIndex() const override
-    {
-        // Don't need to check supportsFocus in HTMLElement::tabIndex.
-        return Element::tabIndex();
-    }
 
     String* href();
     void setHref(String* href);

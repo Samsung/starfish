@@ -42,9 +42,8 @@ public:
         return nullptr;
     }
 
-    template <typename Func>
-    static bool collectDescendants(GCVector<Element*>& collection, Node* root,
-                                   Func filter,
+    template <typename Coll, typename Func>
+    static bool collectDescendants(Coll& collection, Node* root, Func filter,
                                    bool shouldOnlyMatchFirstElement)
     {
         Node* child = root->firstChild();

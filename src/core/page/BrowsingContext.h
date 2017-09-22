@@ -204,6 +204,7 @@ public:
 
 private:
     void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
+    void focusNavigation(bool forward = true);
 
     BrowsingContext(StarFish* starFish, WebView* webView,
                     HTMLIFrameElement* source = nullptr);

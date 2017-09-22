@@ -531,6 +531,8 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
         return KeyValue::SpaceKey;
     } else if (strcmp("Return", ecoreKeyString) == 0) {
         return KeyValue::EnterKey;
+    } else if (strcmp("Tab", ecoreKeyString) == 0) {
+        return KeyValue::TabKey;
     } else if (strcmp("BackSpace", ecoreKeyString) == 0) {
         return KeyValue::BackspaceKey;
     } else if (strcmp("Escape", ecoreKeyString) == 0) {
@@ -1127,6 +1129,11 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             Evas_Event_Key_Down* ev = (Evas_Event_Key_Down*)event_info;
             STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_DOWN for ime object [%s]\n",
                               ev->key);
+
+            if ((strcmp(ev->key, "Tab") == 0)) {
+                self->hideSoftwareKeyboardIfPossible();
+                return;
+            }
 
             if ((strcmp(ev->key, "XF86Exit") == 0) ||
                 (strcmp(ev->key, "Select") == 0) ||

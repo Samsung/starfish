@@ -381,8 +381,12 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
     } else if (name == ss->m_tabindex) {
         int tabIndex = 0;
         if (!value->isEmpty() && parseHTMLInteger(value, tabIndex)) {
-            setTabIndex(tabIndex, true);
+            m_tabIndex = tabIndex;
+            m_tabIndexWasSetExplicitly = true;
+        } else {
+            m_tabIndexWasSetExplicitly = false;
         }
+        document()->invalidFocusRingCacheIfNeeded();
     }
 
     if (name == ss->m_audioTagName || name == ss->m_videoTagName) {
@@ -470,6 +474,22 @@ bool Element::handleDefaultEvent(Event* event)
         }
     }
     return false;
+}
+
+void Element::scrollIntoViewIfNeeded()
+{
+    DOMRect* rect = getBoundingClientRect();
+
+    LayoutRect windowRect(0, 0, window()->innerWidth(),
+                          window()->innerHeight());
+
+    if (!windowRect.contains(rect->x(), rect->y()) ||
+        !windowRect.contains(rect->x() + rect->width(), rect->y()) ||
+        !windowRect.contains(rect->x(), rect->y() + rect->height()) ||
+        !windowRect.contains(rect->x() + rect->width(),
+                             rect->y() + rect->height())) {
+        scrollIntoView();
+    }
 }
 
 void Element::scrollIntoView(bool alignToTop)
@@ -1645,12 +1665,6 @@ bool Element::isFocusable()
 int Element::tabIndex() const
 {
     return m_tabIndex;
-}
-
-void Element::setTabIndex(int index, bool setExplicitly)
-{
-    m_tabIndex = index;
-    m_tabIndexWasSetExplicitly = setExplicitly;
 }
 
 bool Element::tabIndexSetExplicitly() const

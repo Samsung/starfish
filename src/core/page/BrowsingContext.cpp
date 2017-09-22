@@ -541,6 +541,7 @@ void BrowsingContext::releaseFocusedNode(Node* n, bool resetActiveElement)
             auto childBrowsingContext =
                 m_focusedNode->asHTMLIFrameElement()->browsingContext();
             childBrowsingContext->releaseFocusedNode(nullptr, false);
+            m_focusedNode = nullptr;
             return;
         } else if (m_focusedNode->isHTMLInputElement()) {
             m_focusedNode->asElement()
@@ -1150,6 +1151,96 @@ void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
     e->setCancelable(true);
     e->setView(document()->window());
     document()->window()->dispatchEventByUA(target, e);
+
+    if (!e->defaultPrevented()) {
+        if (kind == PlatformWindow::KeyEventKind::KeyEventDown) {
+            if (e->keyValue() == KeyValue::TabKey) {
+                if (e->shiftKey()) {
+                    focusNavigation(false);
+                } else {
+                    focusNavigation();
+                }
+                e->defaultPrevented();
+            } else if (e->keyValue() == KeyValue::EnterKey ||
+                       e->keyValue() == KeyValue::SpaceKey) {
+                String* eventType =
+                    starFish()->staticStrings()->m_click.localName();
+                Node* t = webView()->focusedNode();
+                t = t->nearestParentElement();
+                t->dispatchEventByUA(
+                    new Event(t->document(), eventType, EventInit(true, true)));
+                e->defaultPrevented();
+            } else if (e->keyValue() >= KeyValue::ArrowDownKey &&
+                       e->keyValue() <= KeyValue::ArrowRightKey) {
+                double sx = window()->scrollX();
+                double sy = window()->scrollY();
+                OverflowValue ox = document()->appliedOverflowX();
+                OverflowValue oy = document()->appliedOverflowY();
+
+                if (e->keyValue() == KeyValue::ArrowDownKey &&
+                    oy >= OverflowValue::AutoOverflow) {
+                    sy += 15;
+                } else if (e->keyValue() == KeyValue::ArrowUpKey &&
+                           oy >= OverflowValue::AutoOverflow) {
+                    sy -= 15;
+                } else if (e->keyValue() == KeyValue::ArrowRightKey &&
+                           ox >= OverflowValue::AutoOverflow) {
+                    sx += 15;
+                } else if (e->keyValue() == KeyValue::ArrowLeftKey &&
+                           ox >= OverflowValue::AutoOverflow) {
+                    sx -= 15;
+                }
+
+                window()->scrollTo(sx, sy);
+            }
+        }
+    }
+}
+
+void BrowsingContext::focusNavigation(bool forward)
+{
+    const auto& focusRing = document()->focusRing();
+
+    Node* node = focusedNode();
+
+    size_t current = 0;
+    for (size_t i = 0; i < focusRing.size(); i++) {
+        if (focusRing[i] == node) {
+            current = i;
+            break;
+        }
+    }
+
+    if (forward) {
+        current++;
+    } else {
+        current--;
+    }
+
+    if (current == SIZE_MAX) {
+        if (isMainBrowsingContext()) {
+            current = focusRing.size() - 1;
+        } else {
+            parentBrowsingContext()->focusNavigation(false);
+            return;
+        }
+    }
+
+    if (current == focusRing.size()) {
+        if (isMainBrowsingContext()) {
+            current = 0;
+        } else {
+            parentBrowsingContext()->focusNavigation(true);
+            return;
+        }
+    }
+
+    if (focusRing[current]) {
+        focusRing[current]->scrollIntoViewIfNeeded();
+        setFocusedNode(focusRing[current]);
+    } else {
+        setFocusedNode(document()->body());
+    }
 }
 
 void BrowsingContext::dispatchCompositionEvent(

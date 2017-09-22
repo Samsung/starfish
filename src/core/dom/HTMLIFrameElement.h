@@ -37,6 +37,8 @@ public:
         , m_browsingContext(nullptr)
         , m_historyManager(nullptr)
     {
+        m_tabIndexWasSetExplicitly = true;
+        m_tabIndex = 0;
     }
 
     void* operator new(size_t size);
