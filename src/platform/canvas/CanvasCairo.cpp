@@ -448,6 +448,33 @@ public:
             cairo_glyph_path(m_canvas, &glyph, 1);
         }
         cairo_fill(m_canvas);
+
+        if (lastState().m_textDecorationData.hasUnderLine()) {
+            cairo_set_source_rgba(
+                m_canvas,
+                lastState().m_textDecorationData.underLineColor().r() / 255.f,
+                lastState().m_textDecorationData.underLineColor().g() / 255.f,
+                lastState().m_textDecorationData.underLineColor().b() / 255.f,
+                lastState().m_textDecorationData.underLineColor().a() / 255.f);
+            cairo_move_to(m_canvas, 0, cairo_get_line_width(m_canvas));
+            cairo_line_to(m_canvas, rt.width(), cairo_get_line_width(m_canvas));
+            cairo_stroke(m_canvas);
+        }
+
+        if (lastState().m_textDecorationData.hasLineThrough()) {
+            cairo_set_source_rgba(
+                m_canvas,
+                lastState().m_textDecorationData.lineThroughColor().r() / 255.f,
+                lastState().m_textDecorationData.lineThroughColor().g() / 255.f,
+                lastState().m_textDecorationData.lineThroughColor().b() / 255.f,
+                lastState().m_textDecorationData.lineThroughColor().a() /
+                    255.f);
+            cairo_move_to(m_canvas, 0,
+                          -(lastState().m_font->metrics().m_ascender / 2));
+            cairo_line_to(m_canvas, rt.width(),
+                          -(lastState().m_font->metrics().m_ascender / 2));
+            cairo_stroke(m_canvas);
+        }
         cairo_font_face_destroy(fontFace);
         cairo_restore(m_canvas);
     }
