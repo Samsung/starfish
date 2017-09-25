@@ -1141,6 +1141,9 @@ void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
     if (kind == PlatformWindow::KeyEventKind::KeyEventUp) {
         eventType = starFish()->staticStrings()->m_keyup.localName();
     } else if (kind == PlatformWindow::KeyEventKind::KeyEventPress) {
+        if (!data.isASCIIVisibleChar()) {
+            return;
+        }
         eventType = starFish()->staticStrings()->m_keypress.localName();
     } else {
         // kind == KeyEventKind::KeyEventDown

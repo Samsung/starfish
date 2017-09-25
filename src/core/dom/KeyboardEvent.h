@@ -242,7 +242,7 @@ enum KeyValue {
 
 String* keyValueToKey(KeyValue v);
 String* keyValueToCode(KeyValue v);
-uint32_t keyValueToKeyCode(KeyValue v);
+uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode = false);
 
 class KeyboardData {
     STARFISH_MAKE_STACK_ALLOCATED()
@@ -254,6 +254,7 @@ public:
         , m_key(keyValueToKey(value))
         , m_code(keyValueToCode(value))
         , m_keyCode(keyValueToKeyCode(value))
+        , m_virtualKeyCode(keyValueToKeyCode(value, true))
         , m_ctrlKey(false)
         , m_shiftKey(false)
         , m_altKey(false)
@@ -331,6 +332,7 @@ protected:
     String* m_key;
     String* m_code;
     uint32_t m_keyCode;
+    uint32_t m_virtualKeyCode;
     bool m_ctrlKey;
     bool m_shiftKey;
     bool m_altKey;
@@ -380,6 +382,9 @@ public:
     }
     uint32_t keyCode()
     {
+        if (type()->equals(String::createASCIIString("keydown"))) {
+            return m_keyboardData.m_virtualKeyCode;
+        }
         return m_keyboardData.m_keyCode;
     }
     bool ctrlKey()
