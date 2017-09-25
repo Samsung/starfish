@@ -42,6 +42,7 @@ public:
 
     // Other methods
     HTMLOptionElement* firstOptionElement();
+    HTMLOptionElement* firstSelectedOptionOrFirstOptionElement();
 
     bool supportsFocus() const override;
 

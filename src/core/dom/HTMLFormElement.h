@@ -88,13 +88,13 @@ public:
                                      bool attributeRemoved) override;
 
 protected:
-    HTMLFormObject(Document* document);
+    HTMLFormObject(Document* document, bool supportTabIndex = true);
     void fireSubmitEvent();
 
 private:
     Node* findAncestor(Node* ancestorToFind, Node* fromThisNode);
-
     bool m_disabled;
+    bool m_supportTabIndex;
 };
 
 class HTMLFormElement : public HTMLFormObject {

@@ -24,7 +24,7 @@ namespace StarFish {
 class HTMLFieldSetElement : public HTMLFormObject {
 public:
     HTMLFieldSetElement(Document* document)
-        : HTMLFormObject(document)
+        : HTMLFormObject(document, false)
     {
     }
 

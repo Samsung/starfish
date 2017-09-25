@@ -35,20 +35,13 @@ void FrameSelectBox::layout(LayoutContext& ctx,
 {
     STARFISH_ASSERT(node()->isHTMLSelectElement());
     HTMLSelectElement* selectNode = node()->asHTMLSelectElement();
-    HTMLOptionElement* selected = nullptr;
-
-    HTMLCollection* selectedOptions = selectNode->selectedOptions();
-    if (selectedOptions->length() > 0) {
-        selected = selectedOptions->item(0)->asHTMLOptionElement();
-    }
-
-    if (!selected) {
-        selected = selectNode->firstOptionElement();
-    }
+    HTMLOptionElement* selected =
+        selectNode->firstSelectedOptionOrFirstOptionElement();
 
     if (selected) {
         selected->m_drawOptionBox = true;
     }
+
     FrameBlockBox::layout(ctx, resolveWhat);
 }
 }

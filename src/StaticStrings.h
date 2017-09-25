@@ -274,6 +274,7 @@ public:
     QualifiedName m_text;
     QualifiedName m_placeholder;
     QualifiedName m_selected;
+    QualifiedName m_alt;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;
@@ -302,7 +303,11 @@ public:
     // xml:base
     QualifiedName m_xmlBase;
     QualifiedName m_scrolling;
-
+    // WAI-ARIA
+    QualifiedName m_ariaHidden;
+    QualifiedName m_ariaLabel;
+    QualifiedName m_ariaLabelledby;
+    QualifiedName m_ariaDescribedby;
     // Event Names
     QualifiedName m_click;
     QualifiedName m_onclick;
