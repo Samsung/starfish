@@ -31,6 +31,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "core/style/CalcData.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSParser.h"
@@ -5236,6 +5237,19 @@ bool StyleResolver::checkPseudoClass(Element* element,
             Node::ChildrenOrSiblingsAffectedByActive);
         return element->state() & Node::NodeState::NodeStateActive;
     case CSSSelector::PseudoType::PseudoFocus:
+#if defined(STARFISH_ENABLE_BODY_FOCUS_RING)
+        if (element->isHTMLHtmlElement()) {
+            if (element->document()->webView()->focusedBrowsingContext() ==
+                element->document()->browsingContext()) {
+                if (element->document()->activeElement() &&
+                    element->document()->activeElement()->isHTMLBodyElement()) {
+                    element->setChildrenOrSiblingsAffectedByDynamicEvent(
+                        Node::ChildrenOrSiblingsAffectedByFocus);
+                    return true;
+                }
+            }
+        }
+#endif
         element->setChildrenOrSiblingsAffectedByDynamicEvent(
             Node::ChildrenOrSiblingsAffectedByFocus);
         return element->state() & Node::NodeState::NodeStateFocused;

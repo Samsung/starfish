@@ -28,8 +28,6 @@ namespace StarFish {
 HTMLButtonElement::HTMLButtonElement(Document* document)
     : HTMLFormObject(document)
 {
-    m_tabIndexWasSetExplicitly = true;
-    m_tabIndex = 0;
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
 

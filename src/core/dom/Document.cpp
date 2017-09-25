@@ -842,6 +842,16 @@ HTMLElement* Document::body()
     return nullptr;
 }
 
+HTMLElement* Document::html()
+{
+    Node* body = childMatchedBy(
+        this, [](Node* nd) -> bool { return nd->isHTMLHtmlElement(); });
+    if (body) {
+        return body->asHTMLElement();
+    }
+    return nullptr;
+}
+
 void Document::setBody(HTMLElement* element)
 {
     if (!(element && element->isHTMLBodyElement())) {

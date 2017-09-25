@@ -237,6 +237,8 @@ void HTMLFormObject::didAttributeChanged(QualifiedName name, String* old,
         } else if (attributeRemoved) {
             setDisabled(false);
         }
+
+        document()->invalidFocusRingCacheIfNeeded();
     } else if (name == starFish()->staticStrings()->m_tabindex) {
         m_tabIndexWasSetExplicitly = true;
         if (m_tabIndex == -1)

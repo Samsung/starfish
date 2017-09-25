@@ -128,6 +128,7 @@ public:
 
     bool hasFocus();
     Node* focusedNode();
+    BrowsingContext* focusedBrowsingContext();
     void blur();
 
     void renderingIfNeeds()

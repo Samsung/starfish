@@ -198,6 +198,7 @@ public:
     HTMLHtmlElement* rootElement();
     HTMLHeadElement* head();
     HTMLElement* body();
+    HTMLElement* html();
     void setBody(HTMLElement* element);
 
     // https://html.spec.whatwg.org/multipage/dom.html#document.title

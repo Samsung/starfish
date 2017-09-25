@@ -35,6 +35,7 @@
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLIFrameElement.h"
 
 #include "platform/window/PlatformWindow.h"
 #include "core/dom/Document.h"
@@ -790,17 +791,48 @@ Node* WebView::focusedNode()
     if (!m_mainBrowsingContext) {
         return nullptr;
     }
-    if (mainBrowsingContext()->focusedNode()) {
-        return mainBrowsingContext()->focusedNode();
+    Node* node = mainBrowsingContext()->focusedNode();
+    if (!node) {
+        return nullptr;
     }
-    Node* ret = nullptr;
-    std::function<void(BrowsingContext*)> fn = [&](BrowsingContext* ctx) {
-        if (ctx->focusedNode()) {
-            ret = ctx->focusedNode();
+
+    while (node->isHTMLIFrameElement()) {
+        if (node->asHTMLIFrameElement()->browsingContext()->focusedNode()) {
+            node =
+                node->asHTMLIFrameElement()->browsingContext()->focusedNode();
+        } else {
+            break;
         }
-    };
-    mainBrowsingContext()->iterateChildContext(fn);
-    return ret;
+    }
+    return node;
+}
+
+BrowsingContext* WebView::focusedBrowsingContext()
+{
+    if (!m_mainBrowsingContext) {
+        return nullptr;
+    }
+    Node* node = mainBrowsingContext()->focusedNode();
+    if (!node) {
+        return m_mainBrowsingContext;
+    }
+
+    BrowsingContext* ctx = m_mainBrowsingContext;
+    while (node->isHTMLIFrameElement()) {
+        if (node->asHTMLIFrameElement()->browsingContext()) {
+            ctx = node->asHTMLIFrameElement()->browsingContext();
+            if (node->asHTMLIFrameElement()->browsingContext()->focusedNode()) {
+                node = node->asHTMLIFrameElement()
+                           ->browsingContext()
+                           ->focusedNode();
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+    return ctx;
 }
 
 bool WebView::hasFocus()

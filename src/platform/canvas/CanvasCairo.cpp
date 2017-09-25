@@ -57,6 +57,22 @@ class CanvasCairo : public Canvas {
     }
 
 public:
+    CanvasCairo(StarFish* starfish, void* buffer, int width, int height,
+                int stride)
+    {
+        m_shouldDestroyCairo = true;
+        m_shouldDestroySurface = true;
+        m_starfish = starfish;
+        m_canvas = nullptr;
+        m_surface = nullptr;
+        m_viewportWidth = m_width = width;
+        m_viewportHeight = m_height = height;
+        {
+            initFromBuffer(buffer, m_width, m_height, stride);
+        }
+        save();
+    }
+
     CanvasCairo(StarFish* starfish, void* data)
     {
 #if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
@@ -801,17 +817,7 @@ Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
 Canvas* Canvas::createGenericCanvas(StarFish* starfish, void* data, size_t w,
                                     size_t h)
 {
-    struct dummy {
-        void* image;
-        int w;
-        int h;
-        int stride;
-    } d;
-    d.image = data;
-    d.w = w;
-    d.h = h;
-    d.stride = w * 4;
-    return new CanvasCairo(starfish, &d);
+    return new CanvasCairo(starfish, data, w, h, w * 4);
 }
 }
 
