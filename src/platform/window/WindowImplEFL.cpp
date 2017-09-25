@@ -98,6 +98,7 @@ public:
         m_imfContext = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
+        m_softKeyboardOrigin = nullptr;
 
 #if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
         m_surface = nullptr;
@@ -162,11 +163,18 @@ public:
     virtual void showSoftwareKeyboardIfPossible()
     {
         evas_object_focus_set(m_mainBox, EINA_TRUE);
+        m_softKeyboardOrigin = webView()->focusedNode();
     }
     virtual void hideSoftwareKeyboardIfPossible()
     {
-        evas_object_focus_set(m_mainBox, EINA_FALSE);
-        ecore_imf_context_hide(m_imfContext);
+        starFish()->messageLoop()->addIdler(
+            nullptr,
+            [](size_t a, void* data) {
+                WindowImplEFL* self = ((WindowImplEFL*)data);
+                evas_object_focus_set(self->m_mainBox, EINA_FALSE);
+                ecore_imf_context_hide(self->m_imfContext);
+            },
+            this);
     }
 
     void adjustOffsetYDueToFocusChanging()
@@ -181,10 +189,12 @@ public:
 
             if (webView()->hasFocus()) {
                 Node* nd = webView()->focusedNode();
-                Node* e = nd->nearestParentElement();
-                if (e->isElement()) {
-                    // FIXME (enable this)
-                    // e->asElement()->scrollIntoView(true);
+                if (nd) {
+                    Node* e = nd->nearestParentElement();
+                    if (e->isElement()) {
+                        // FIXME (enable this)
+                        // e->asElement()->scrollIntoView(true);
+                    }
                 }
             }
         }
@@ -235,6 +245,7 @@ public:
     Ecore_Animator* m_renderingAnimator;
 
     Ecore_IMF_Context* m_imfContext;
+    Node* m_softKeyboardOrigin;
 
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
@@ -886,6 +897,11 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             }
 
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
+#ifdef STARFISH_TIZEN_TV
+            if ((strcmp(d->key, "XF86Red") == 0)) {
+                d->key = "Tab";
+            }
+#endif
             auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
             KeyboardData kdata(keyValue);
             setRepeatToKeyboardData(sf, d->timestamp, kdata);
@@ -913,7 +929,13 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
                 return EINA_TRUE;
             }
+
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
+#ifdef STARFISH_TIZEN_TV
+            if ((strcmp(d->key, "XF86Red") == 0)) {
+                d->key = "Tab";
+            }
+#endif
             auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
             KeyboardData kdata(keyValue);
             setModifiersToKeyboardData(d, kdata);
@@ -1111,7 +1133,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             WindowImplEFL* self = (WindowImplEFL*)data;
             if (ecore_imf_context_input_panel_state_get(ctx) ==
                 ECORE_IMF_INPUT_PANEL_STATE_HIDE) {
-                self->webView()->blur();
+                if (self->m_softKeyboardOrigin ==
+                    self->webView()->focusedNode()) {
+                    self->webView()->blur();
+                }
                 self->adjustOffsetYDueToFocusChanging();
             } else if (ecore_imf_context_input_panel_state_get(ctx) ==
                        ECORE_IMF_INPUT_PANEL_STATE_SHOW) {
@@ -1129,9 +1154,15 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_DOWN for ime object [%s]\n",
                               ev->key);
 
+#ifdef STARFISH_TIZEN_TV
+            if ((strcmp(ev->key, "XF86Red") == 0)) {
+                ev->key = "Tab";
+            }
+#endif
+
+            bool tryFilter = true;
             if ((strcmp(ev->key, "Tab") == 0)) {
-                self->hideSoftwareKeyboardIfPossible();
-                return;
+                tryFilter = false;
             }
 
             if ((strcmp(ev->key, "XF86Exit") == 0) ||
@@ -1162,19 +1193,15 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                         self);
                 }
             }
-            /*
-            #ifdef STARFISH_TIZEN_TV
-                        if (strcmp(ev->key, "Select") == 0) {
-                            ev->key = "Return";
-                        }
-            #endif
-            */
-            Ecore_IMF_Event_Key_Down ecore_ev;
-            ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
-            if (ecore_imf_context_filter_event(self->m_imfContext,
-                                               ECORE_IMF_EVENT_KEY_DOWN,
-                                               (Ecore_IMF_Event*)&ecore_ev)) {
-                return;
+
+            if (tryFilter) {
+                Ecore_IMF_Event_Key_Down ecore_ev;
+                ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
+                if (ecore_imf_context_filter_event(
+                        self->m_imfContext, ECORE_IMF_EVENT_KEY_DOWN,
+                        (Ecore_IMF_Event*)&ecore_ev)) {
+                    return;
+                }
             }
             // process non-char keys
             STARFISH_LOG_INFO("process non-char [%s]\n", ev->key);
@@ -1197,21 +1224,29 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
             WindowImplEFL* self = (WindowImplEFL*)data;
             Evas_Event_Key_Up* ev = (Evas_Event_Key_Up*)event_info;
-            /*
-#ifdef STARFISH_TIZEN_TV
-            if (strcmp(ev->key, "Select") == 0) {
-                ev->key = "Return";
-            }
-#endif
-            */
             STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_UP for ime object [%s]\n",
                               ev->key);
-            Ecore_IMF_Event_Key_Up ecore_ev;
-            ecore_imf_evas_event_key_up_wrap(ev, &ecore_ev);
-            if (ecore_imf_context_filter_event(self->m_imfContext,
-                                               ECORE_IMF_EVENT_KEY_UP,
-                                               (Ecore_IMF_Event*)&ecore_ev)) {
-                return;
+
+#ifdef STARFISH_TIZEN_TV
+            if ((strcmp(ev->key, "XF86Red") == 0)) {
+                ev->key = "Tab";
+            }
+#endif
+
+            bool tryFilter = true;
+
+            if ((strcmp(ev->key, "Tab") == 0)) {
+                tryFilter = false;
+            }
+
+            if (tryFilter) {
+                Ecore_IMF_Event_Key_Up ecore_ev;
+                ecore_imf_evas_event_key_up_wrap(ev, &ecore_ev);
+                if (ecore_imf_context_filter_event(
+                        self->m_imfContext, ECORE_IMF_EVENT_KEY_UP,
+                        (Ecore_IMF_Event*)&ecore_ev)) {
+                    return;
+                }
             }
             // process non-char keys
             auto keyValue = ecoreEventKeyToKeyValue(

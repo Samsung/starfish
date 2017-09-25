@@ -474,9 +474,23 @@ Node* BrowsingContext::focusedNode()
     return m_focusedNode;
 }
 
+void BrowsingContext::didFocusEvent()
+{
+#if defined(STARFISH_ENABLE_BODY_FOCUS_RING)
+    {
+        auto html = document()->html();
+        if (html) {
+            html->setNeedsStyleRecalc();
+        }
+    }
+#endif
+}
+
 // https://www.w3.org/TR/html5/editing.html#focusing-steps
 void BrowsingContext::setFocusedNode(Node* n)
 {
+    didFocusEvent();
+
     if (!n->isInDocumentScope() || !n->document()->browsingContext()) {
         return;
     }
@@ -499,6 +513,12 @@ void BrowsingContext::setFocusedNode(Node* n)
         releaseFocusedNode(nullptr);
         m_focusedNode = e->asNode();
         m_activeElement = e;
+
+        if (m_focusedNode->asHTMLIFrameElement()->browsingContext()) {
+            m_focusedNode->asHTMLIFrameElement()
+                ->browsingContext()
+                ->releaseFocusedNode(nullptr);
+        }
         return;
     } else if (e->isHTMLBodyElement() || !e->isFocusable()) {
         // If the body or non-focusable elements are selected.
@@ -514,6 +534,9 @@ void BrowsingContext::setFocusedNode(Node* n)
     // Run the unfocusing steps for this element.
     releaseFocusedNode(e);
 
+    m_focusedNode = e->asNode();
+    m_activeElement = e;
+
     e->setState(Node::NodeStateFocused, Node::ChildrenOrSiblingsAffectedByFocus,
                 true);
 
@@ -528,20 +551,23 @@ void BrowsingContext::setFocusedNode(Node* n)
     event = new FocusEvent(document(), eventType,
                            FocusEventInit(true, false, relatedTarget));
     document()->dispatchEventByUA(e->asNode(), event);
-
-    m_focusedNode = e->asNode();
-    m_activeElement = e;
 }
 
 // https://www.w3.org/TR/html5/editing.html#unfocusing-steps
 void BrowsingContext::releaseFocusedNode(Node* n, bool resetActiveElement)
 {
+    didFocusEvent();
+
     if (m_focusedNode) {
         if (m_focusedNode->isHTMLIFrameElement()) {
             auto childBrowsingContext =
                 m_focusedNode->asHTMLIFrameElement()->browsingContext();
             childBrowsingContext->releaseFocusedNode(nullptr, false);
             m_focusedNode = nullptr;
+            // active element
+            if (resetActiveElement) {
+                m_activeElement = nullptr;
+            }
             return;
         } else if (m_focusedNode->isHTMLInputElement()) {
             m_focusedNode->asElement()
@@ -1242,7 +1268,7 @@ void BrowsingContext::focusNavigation(bool forward)
         focusRing[current]->scrollIntoViewIfNeeded();
         setFocusedNode(focusRing[current]);
     } else {
-        setFocusedNode(document()->body());
+        releaseFocusedNode(nullptr);
     }
 }
 

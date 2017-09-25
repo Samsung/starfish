@@ -203,6 +203,7 @@ public:
     bool layoutIfNeeds(bool fromWebView = true);
 
 private:
+    void didFocusEvent();
     void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
     void focusNavigation(bool forward = true);
 

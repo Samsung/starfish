@@ -64,7 +64,7 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         // attribute. To integrate with current layout, a tmp pseudo element is
         // created to display the text value.
         PseudoElement* textElement = new PseudoElement(
-            parent->document(),
+            current->document(),
             StyleResolver::PseudoElementType::PseudoElementFormOnly);
         textElement->setParentNode(current);
         ComputedStyle* pseudoStyle = createInputElementStyleFrom(current);
