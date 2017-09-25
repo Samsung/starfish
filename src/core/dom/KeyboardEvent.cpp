@@ -48,11 +48,13 @@ String* keyValueToKey(KeyValue v)
         return String::createASCIIString("ArrowLeft");
     } else if (v == ArrowRightKey) {
         return String::createASCIIString("ArrowRight");
+    } else if (v == MinusMarkKey) {
+        return String::createASCIIString("-");
     } else {
         if (v == UnidentifiedKey) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
-        return String::createASCIIString("Unidentified");
+        return String::createASCIIString("undefined");
     }
 }
 
@@ -94,22 +96,27 @@ String* keyValueToCode(KeyValue v)
         return String::createASCIIString("ArrowLeft");
     } else if (v == ArrowRightKey) {
         return String::createASCIIString("ArrowRight");
+    } else if (v == MinusMarkKey) {
+        return String::createASCIIString("Minus");
     } else {
         if (v == UnidentifiedKey) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
-        return String::createASCIIString("");
+        return String::createASCIIString("undefined");
     }
 }
 
-uint32_t keyValueToKeyCode(KeyValue v)
+uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode)
 {
     if (v >= AKey && v <= ZKey) {
         char ch = v - AKey + 'A';
         return ch;
     } else if (v >= LowerAKey && v <= LowerZKey) {
-        char ch = v - LowerAKey + 'a';
-        return ch;
+        if (isForVirtualKeyCode) {
+            return (v - LowerAKey + 'A');
+        } else {
+            return (v - LowerAKey + 'a');
+        }
     } else if (v >= Digit0Key && v <= Digit9Key) {
         char ch = v - Digit0Key + '0';
         return ch;
@@ -133,11 +140,15 @@ uint32_t keyValueToKeyCode(KeyValue v)
         return 27;
     } else if (v == BackspaceKey) {
         return 8;
+    } else if (v == MinusMarkKey) {
+        if (isForVirtualKeyCode) {
+            return 189;
+        } else {
+            return 45;
+        }
     }
 #ifdef STARFISH_TIZEN_TV
-    else if (v == MinusMarkKey) {
-        return 189;
-    } else if (v == TVVolumeUpKey) {
+    else if (v == TVVolumeUpKey) {
         return 447;
     } else if (v == TVVolumeDownKey) {
         return 448;

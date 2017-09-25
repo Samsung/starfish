@@ -620,11 +620,9 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
             }
             return (KeyValue)(KeyValue::Digit0Key + ch - '0');
         } else if (ch >= 'a' && ch <= 'z') {
-            int kv = KeyValue::LowerAKey + ch - 'a';
-            if (isShiftPressed) {
-                kv -= ('z' - 'a');
-            }
-            return (KeyValue)kv;
+            return (KeyValue)(KeyValue::LowerAKey + ch - 'a');
+        } else if (ch >= 'A' && ch <= 'Z') {
+            return (KeyValue)(KeyValue::AKey + ch - 'A');
         }
     }
 #ifdef STARFISH_TIZEN_TV
@@ -886,6 +884,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
                 return EINA_TRUE;
             }
+
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
             auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
             KeyboardData kdata(keyValue);
