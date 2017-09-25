@@ -69,15 +69,6 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         textElement->setParentNode(current);
         ComputedStyle* pseudoStyle = createInputElementStyleFrom(current);
         pseudoStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
-
-        // Some input boxes are browser dependent.
-        if (inputNode->type()->equals("checkbox")) {
-            // Increase the size of tick symbol relative to the checkbox
-            if (inputNode->style()->height().isFixed()) {
-                pseudoStyle->setFontSize(inputNode->style()->height());
-            }
-        }
-
         textElement->setStyle(pseudoStyle);
 
         Text* textNode =
@@ -110,6 +101,31 @@ ComputedStyle* FrameInputBox::createInputElementStyleFrom(Node* parent)
 void FrameInputBox::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
+    if ((node()->asHTMLInputElement()->type()->equals("checkbox"))) {
+        float fontSize;
+        bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
+        if (style()->width().isAuto() || style()->height().isAuto() ||
+            !style()->height().isDefinite(parentHasFixedHeight)) {
+            fontSize = DEFAULT_FONT_SIZE;
+        } else {
+            LayoutUnit parentContentHeight;
+            if (parentHasFixedHeight) {
+                parentContentHeight = ctx.parentFixedHeight(this);
+            }
+
+            LayoutUnit width = style()->width().specifiedValue(
+                ctx.parentContentWidth(this), ctx.viewportWidth(),
+                ctx.viewportHeight());
+            LayoutUnit height = style()->height().specifiedValue(
+                parentContentHeight, ctx.viewportWidth(), ctx.viewportHeight());
+            fontSize = std::min(width, height);
+        }
+
+        style()->setFontSize(Length(Length::Fixed, fontSize));
+        style()->loadFont(node(), fontSize);
+        // TODO: propagate fontsize
+    }
+
     FrameBlockBox::layout(ctx, resolveWhat);
 
     HTMLInputElement* e = node()->asHTMLInputElement();

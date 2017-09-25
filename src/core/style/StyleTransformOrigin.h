@@ -105,19 +105,16 @@ public:
 
     String* dumpString()
     {
-        char temp[100];
-        snprintf(temp, sizeof(temp), "(%.3f %.3f %.3f)",
-                 m_originValue->getXAxis().isFixed()
-                     ? m_originValue->getXAxis().fixed()
-                     : m_originValue->getXAxis().percent(),
-                 m_originValue->getYAxis().isFixed()
-                     ? m_originValue->getYAxis().fixed()
-                     : m_originValue->getYAxis().percent(),
-                 m_originValue->getZAxis().isFixed()
-                     ? m_originValue->getZAxis().fixed()
-                     : m_originValue->getZAxis().percent());
+        StringBuilder builder;
+        builder.appendChar('(');
+        builder.appendString(m_originValue->getXAxis().dumpString());
+        builder.appendString(String::spaceString);
+        builder.appendString(m_originValue->getYAxis().dumpString());
+        builder.appendString(String::spaceString);
+        builder.appendString(m_originValue->getXAxis().dumpString());
+        builder.appendChar(')');
 
-        return String::fromUTF8(temp);
+        return builder.finalize();
     }
 
     bool operator==(const StyleTransformOrigin& origin)

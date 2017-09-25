@@ -101,6 +101,16 @@ public:
         return false;
     }
 
+    char* curPos() const
+    {
+        return m_curPos;
+    }
+
+    void swap(char* pos)
+    {
+        m_curPos = pos;
+    }
+
     bool consumeNumber(bool* hasPoint)
     {
         float res = 0;

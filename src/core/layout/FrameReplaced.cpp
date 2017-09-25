@@ -160,21 +160,17 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
     Length maxWidth = style()->maxWidth();
     Length minHeight = style()->minHeight();
     Length maxHeight = style()->maxHeight();
-    bool canApplyMinHeight =
-        minHeight.isFixed() || minHeight.isViewportPercent() ||
-        (minHeight.isPercent() && parentHeightHasFixedValue);
-    bool canApplyMaxHeight =
-        maxHeight.isFixed() || maxHeight.isViewportPercent() ||
-        (maxHeight.isPercent() && parentHeightHasFixedValue);
+    bool canApplyMinHeight = minHeight.isDefinite(parentHeightHasFixedValue);
+    bool canApplyMaxHeight = maxHeight.isDefinite(parentHeightHasFixedValue);
 
     if (minWidth.isSpecified()) {
         newWidth =
             std::max(w, contentWidthApplyingBoxSizing(minWidth.specifiedValue(
-                            parentWidth, viewportWidth)));
+                            parentWidth, viewportWidth, viewportHeight)));
         if (canApplyMinHeight) {
             newHeight = std::max(
-                h, contentHeightApplyingBoxSizing(
-                       minHeight.specifiedValue(parentHeight, viewportHeight)));
+                h, contentHeightApplyingBoxSizing(minHeight.specifiedValue(
+                       parentHeight, viewportWidth, viewportHeight)));
             if (width.isAuto() && height.isAuto()) {
                 if (hasAspectRatio) {
                     if (newWidth > newHeight) {
@@ -196,8 +192,8 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
             // in the case minWidth and maxHeight, then apply values
             // respectively.
             newHeight = std::min(
-                h, contentHeightApplyingBoxSizing(
-                       maxHeight.specifiedValue(parentHeight, viewportHeight)));
+                h, contentHeightApplyingBoxSizing(maxHeight.specifiedValue(
+                       parentHeight, viewportWidth, viewportHeight)));
         } else {
             if (hasAspectRatio && height.isAuto()) {
                 newHeight = newWidth * (h / w);
@@ -206,17 +202,17 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
     } else if (maxWidth.isSpecified()) {
         newWidth =
             std::min(w, contentWidthApplyingBoxSizing(maxWidth.specifiedValue(
-                            parentWidth, viewportWidth)));
+                            parentWidth, viewportWidth, viewportHeight)));
         if (canApplyMinHeight) {
             // in the case maxWidth and minHeight, then apply values
             // respectively.
             newHeight = std::max(
-                h, contentHeightApplyingBoxSizing(
-                       minHeight.specifiedValue(parentHeight, viewportHeight)));
+                h, contentHeightApplyingBoxSizing(minHeight.specifiedValue(
+                       parentHeight, viewportWidth, viewportHeight)));
         } else if (canApplyMaxHeight) {
             newHeight = std::min(
-                h, contentHeightApplyingBoxSizing(
-                       maxHeight.specifiedValue(parentHeight, viewportHeight)));
+                h, contentHeightApplyingBoxSizing(maxHeight.specifiedValue(
+                       parentHeight, viewportWidth, viewportHeight)));
             if (width.isAuto() && height.isAuto()) {
                 if (hasAspectRatio) {
                     if (newWidth > newHeight) {
@@ -242,15 +238,15 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
     } else {
         if (canApplyMinHeight) {
             newHeight = std::max(
-                h, contentHeightApplyingBoxSizing(
-                       minHeight.specifiedValue(parentHeight, viewportHeight)));
+                h, contentHeightApplyingBoxSizing(minHeight.specifiedValue(
+                       parentHeight, viewportWidth, viewportHeight)));
             if (hasAspectRatio && width.isAuto()) {
                 newWidth = newHeight * (w / h);
             }
         } else if (canApplyMaxHeight) {
             newHeight = std::min(
-                h, contentHeightApplyingBoxSizing(
-                       maxHeight.specifiedValue(parentHeight, viewportHeight)));
+                h, contentHeightApplyingBoxSizing(maxHeight.specifiedValue(
+                       parentHeight, viewportWidth, viewportHeight)));
             if (hasAspectRatio && width.isAuto()) {
                 newWidth = newHeight * (w / h);
             }
@@ -306,7 +302,8 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         w = intrinsicWidth;
         h = intrinsicHeight;
     } else if (height.isAuto()) {
-        w = width.specifiedValue(parentContentWidth, viewportWidth);
+        w = width.specifiedValue(parentContentWidth, viewportWidth,
+                                 viewportHeight);
         w = contentWidthApplyingBoxSizing(w);
         if (hasAspectRatio) {
             h = w * (intrinsicHeight / intrinsicWidth);
@@ -314,9 +311,9 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
             h = intrinsicHeight;
         }
     } else if (width.isAuto()) {
-        if (height.isFixed() || height.isViewportPercent() ||
-            parentHasFixedHeight) {
-            h = height.specifiedValue(parentContentHeight, viewportHeight);
+        if (height.isDefinite(parentHasFixedHeight)) {
+            h = height.specifiedValue(parentContentHeight, viewportWidth,
+                                      viewportHeight);
             h = contentHeightApplyingBoxSizing(h);
             if (hasAspectRatio) {
                 w = h * (intrinsicWidth / intrinsicHeight);
@@ -329,11 +326,12 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         }
     } else {
         STARFISH_ASSERT(width.isSpecified() && height.isSpecified());
-        w = width.specifiedValue(parentContentWidth, viewportWidth);
+        w = width.specifiedValue(parentContentWidth, viewportWidth,
+                                 viewportHeight);
         w = contentWidthApplyingBoxSizing(w);
-        if (height.isFixed() || height.isViewportPercent() ||
-            parentHasFixedHeight) {
-            h = height.specifiedValue(parentContentHeight, viewportHeight);
+        if (height.isDefinite(parentHasFixedHeight)) {
+            h = height.specifiedValue(parentContentHeight, viewportWidth,
+                                      viewportHeight);
             h = contentHeightApplyingBoxSizing(h);
         } else {
             if (hasAspectRatio) {
@@ -442,7 +440,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
             } else if (!top.isAuto() && bottom.isAuto()) {
                 setY(data.m_top - data.m_absY + marginTop());
             } else if (top.isAuto() && !bottom.isAuto()) {
-                setY(data.m_contentHeight - data.m_bottom - height() -
+                setY(data.m_contentHeight - data.m_bottom - outerHeight() -
                      data.m_absY + marginTop());
             } else {
                 computeVerticalMargin(data.m_contentHeight - data.m_top -
@@ -470,48 +468,50 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
         intrinsicWidth = s.m_intrinsicContentSize.width();
         intrinsicHeight = s.m_intrinsicContentSize.height();
     } else if (a.first.isSpecified() && a.second.isAuto()) {
-        intrinsicWidth =
-            a.first.specifiedValue(parentContentWidth, viewportWidth);
+        intrinsicWidth = a.first.specifiedValue(parentContentWidth,
+                                                viewportWidth, viewportHeight);
         if (s.m_hasAspectRatio) {
             intrinsicHeight = intrinsicWidth * (b.height() / b.width());
         } else {
             intrinsicHeight = b.height();
         }
+    } else if (a.first.isSpecified() && (a.second.isDefinite(false))) {
+        intrinsicWidth = a.first.specifiedValue(parentContentWidth,
+                                                viewportWidth, viewportHeight);
+        LayoutUnit unused;
+        intrinsicHeight =
+            a.second.specifiedValue(unused, viewportWidth, viewportHeight);
     } else if (a.first.isSpecified() &&
-               (a.second.isFixed() || a.second.isViewportPercent())) {
-        intrinsicWidth =
-            a.first.specifiedValue(parentContentWidth, viewportWidth);
-        intrinsicHeight = a.second.fixed();
-    } else if (a.first.isSpecified() && a.second.isPercent()) {
-        if ((parentContentHeight.isFixed() ||
-             parentContentHeight.isViewportPercent())) {
-            intrinsicWidth =
-                a.first.specifiedValue(parentContentWidth, viewportWidth);
+               (a.second.isPercent() || a.second.isCalc())) {
+        if ((parentContentHeight.isFixed())) {
+            intrinsicWidth = a.first.specifiedValue(
+                parentContentWidth, viewportWidth, viewportHeight);
             intrinsicHeight = a.second.specifiedValue(
-                parentContentHeight.fixed(), viewportHeight);
+                parentContentHeight.fixed(), viewportWidth, viewportHeight);
         } else {
-            intrinsicWidth =
-                a.first.specifiedValue(parentContentWidth, viewportWidth);
+            intrinsicWidth = a.first.specifiedValue(
+                parentContentWidth, viewportWidth, viewportHeight);
             if (s.m_hasAspectRatio) {
                 intrinsicHeight = intrinsicWidth * (b.height() / b.width());
             } else {
                 intrinsicHeight = b.height();
             }
         }
-    } else if (a.first.isAuto() &&
-               (a.second.isFixed() || a.second.isViewportPercent())) {
+    } else if (a.first.isAuto() && a.second.isDefinite(false)) {
+        LayoutUnit unused;
         intrinsicHeight =
-            a.second.specifiedValue(LayoutUnit(0), viewportHeight);
+            a.second.specifiedValue(unused, viewportWidth, viewportHeight);
         if (s.m_hasAspectRatio) {
             intrinsicWidth = intrinsicHeight * (b.width() / b.height());
         } else {
             intrinsicWidth = b.width();
         }
     } else {
-        STARFISH_ASSERT(a.first.isAuto() && a.second.isPercent());
+        STARFISH_ASSERT(a.first.isAuto() &&
+                        (a.second.isPercent() || a.second.isCalc()));
         if (parentContentHeight.isFixed()) {
             intrinsicHeight = a.second.specifiedValue(
-                parentContentHeight.fixed(), viewportHeight);
+                parentContentHeight.fixed(), viewportWidth, viewportHeight);
             if (s.m_hasAspectRatio) {
                 intrinsicWidth = intrinsicHeight * (b.width() / b.height());
             } else {

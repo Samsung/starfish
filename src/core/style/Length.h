@@ -23,6 +23,7 @@ namespace StarFish {
 
 class String;
 class Font;
+class CalcData;
 
 class Length {
 public:
@@ -32,9 +33,9 @@ public:
         Fixed,
 
         // After finishing resolveStyle, ex/em values should be changed to Fixed
-        ExToBeFixed,
-        EmToBeFixed,
-        RemToBeFixed,
+        Ex,
+        Em,
+        Rem,
         Vw,
         Vh,
         Vmin,
@@ -43,11 +44,21 @@ public:
         // This is for line-height
         // (font-related value but does not change to Fixed since inheritance
         // issue)
-        InheritableNumber
+        InheritableNumber,
+        Calc,
     };
+
+    STARFISH_MAKE_STACK_ALLOCATED();
 
     Length(Type type = Auto, float data = 0.f)
         : m_type(type)
+        , m_data(data)
+    {
+        STARFISH_ASSERT(!isCalc());
+    }
+
+    Length(CalcData* data)
+        : m_type(Calc)
         , m_data(data)
     {
     }
@@ -57,28 +68,44 @@ public:
 
     void roundBorderWidth()
     {
+        if (!isFixed()) {
+            return;
+        }
         // NOTE: Border Widths are rounded to the nearest integer number of
-        // pixels,
-        // but values between zero and one pixels are always rounded up to one
-        // device pixel.
-        if (m_data > 0.0 && m_data < 1.0) {
-            m_data = 1.0;
+        // pixels, but values between zero and one pixels are always rounded
+        // up to one device pixel.
+        if (m_data.m_numberData > 0.0 && m_data.m_numberData < 1.0) {
+            m_data.m_numberData = 1.0;
         } else {
-            if (m_data < 0) {
-                m_data -= 0.01;
+            if (m_data.m_numberData < 0) {
+                m_data.m_numberData -= 0.01;
             } else {
-                m_data += 0.01;
+                m_data.m_numberData += 0.01;
             }
-            m_data = ((m_data > std::numeric_limits<unsigned>::max()) ||
-                      (m_data < std::numeric_limits<unsigned>::min()))
-                         ? 0
-                         : static_cast<unsigned>(m_data);
+            m_data.m_numberData =
+                ((m_data.m_numberData > std::numeric_limits<unsigned>::max()) ||
+                 (m_data.m_numberData < std::numeric_limits<unsigned>::min()))
+                    ? 0
+                    : static_cast<unsigned>(m_data.m_numberData);
         }
     }
 
     bool isSpecified() const
     {
-        return isFixed() || isPercent() || isViewportPercent();
+        return isFixed() || isPercent() || isViewportPercent() || isCalc();
+    }
+
+    bool isDefinite(bool canApplyPercentage) const
+    {
+        if (isSpecified()) {
+            if (isFixed() || isViewportPercent() || isCalcAndLengthOfType()) {
+                return true;
+            } else {
+                return canApplyPercentage;
+            }
+        }
+
+        return false;
     }
 
     bool isAuto() const
@@ -106,6 +133,13 @@ public:
         return m_type == InheritableNumber;
     }
 
+    bool isCalc() const
+    {
+        return m_type == Calc;
+    }
+
+    bool isCalcAndLengthOfType() const;
+
     bool isComputed() const
     {
         return isFixed() || isPercent() || isViewportPercent() || isAuto();
@@ -116,55 +150,39 @@ public:
         return m_type;
     }
 
-    float rawData() const
-    {
-        return m_data;
-    }
-
     float viewportPercent() const
     {
         STARFISH_ASSERT(isViewportPercent());
-        return m_data;
+        return m_data.m_numberData;
     }
 
     float percent() const
     {
         STARFISH_ASSERT(m_type == Percent);
         // 0~1
-        return m_data;
+        return m_data.m_numberData;
     }
 
     float fixed() const
     {
         STARFISH_ASSERT(m_type == Fixed);
-        return m_data;
+        return m_data.m_numberData;
     }
 
     float number() const
     {
         STARFISH_ASSERT(m_type == InheritableNumber);
-        return m_data;
+        return m_data.m_numberData;
     }
 
-    void percentToFixed(float refer)
+    CalcData* calcData() const
     {
-        STARFISH_ASSERT(m_type == Percent);
-        m_data = refer * m_data;
-        m_type = Fixed;
+        STARFISH_ASSERT(m_type == Calc);
+        return m_data.m_calcData;
     }
 
-    float specifiedValue(LayoutUnit parentLength,
-                         LayoutUnit viewportLength) const
-    {
-        STARFISH_ASSERT(isSpecified());
-        if (isFixed()) {
-            return fixed();
-        } else if (isViewportPercent()) {
-            return viewportPercentValue(viewportLength);
-        } else {
-            return percentValue(parentLength);
-        }
-    }
+    float specifiedValue(LayoutUnit parentLength, LayoutUnit viewportWidth,
+                         LayoutUnit viewportHeight) const;
 
     float percentValue(LayoutUnit parentLength) const
     {
@@ -172,61 +190,59 @@ public:
         return parentLength * percent();
     }
 
-    float viewportPercentValue(LayoutUnit viewportLength) const
+    float viewportPercentValue(LayoutUnit viewportWidth,
+                               LayoutUnit viewportHeight) const
     {
-        STARFISH_ASSERT(isViewportPercent());
-        return viewportLength * viewportPercent() / 100;
+        if (m_type == Vw) {
+            return viewportWidth * viewportPercent() / 100;
+        } else if (m_type == Vh) {
+            return viewportHeight * viewportPercent() / 100;
+        } else if (m_type == Vmin) {
+            return std::min(viewportWidth, viewportHeight) * viewportPercent() /
+                   100;
+        } else {
+            STARFISH_ASSERT(m_type == Vmax);
+            return std::max(viewportWidth, viewportHeight) * viewportPercent() /
+                   100;
+        }
     }
 
     bool isZero()
     {
-        return isSpecified() && !m_data;
+        return isSpecified() && !m_data.m_numberData;
     }
 
     bool isPositiveOrZero()
     {
         STARFISH_ASSERT(isSpecified());
-        return m_data >= 0;
+        return m_data.m_numberData >= 0;
     }
 
-    bool operator==(const Length& src) const
-    {
-        return this->m_type == src.m_type && this->m_data == src.m_data;
-    }
-
+    bool operator==(const Length& src) const;
     bool operator!=(const Length& src) const
     {
         return !operator==(src);
     }
 
-    String* dumpString()
-    {
-        char temp[100];
-        if (isFixed()) {
-            snprintf(temp, sizeof(temp), "%.1f", fixed());
-        } else if (isPercent()) {
-            snprintf(temp, sizeof(temp), "%.1f%%", percent());
-        } else if (isViewportPercent()) {
-            if (m_type == Vw) {
-                snprintf(temp, sizeof(temp), "%.1fvw", viewportPercent());
-            } else if (m_type == Vh) {
-                snprintf(temp, sizeof(temp), "%.1fvh", viewportPercent());
-            } else if (m_type == Vmin) {
-                snprintf(temp, sizeof(temp), "%.1fvmin", viewportPercent());
-            } else if (m_type == Vmax) {
-                snprintf(temp, sizeof(temp), "%.1fvmax", viewportPercent());
-            }
-        } else if (isAuto()) {
-            snprintf(temp, sizeof(temp), "auto");
-        } else if (isInheritableNumber()) {
-            snprintf(temp, sizeof(temp), "%.1f(num)", number());
-        }
-        return String::fromUTF8(temp);
-    }
+    String* dumpString();
 
 protected:
     Type m_type;
-    float m_data;
+    union ValueData {
+        float m_numberData;
+        CalcData* m_calcData;
+
+        ValueData(float data)
+            : m_numberData(data)
+        {
+        }
+
+        ValueData(CalcData* data)
+            : m_calcData(data)
+        {
+        }
+    };
+    ValueData m_data;
 };
 
 class LengthSize : public gc {
@@ -317,6 +333,8 @@ public:
 
 class LengthBox {
 public:
+    STARFISH_MAKE_STACK_ALLOCATED();
+
     LengthBox()
     {
     }

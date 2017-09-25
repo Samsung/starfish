@@ -541,7 +541,7 @@ public:
         return outerHeight;
     }
 
-    LayoutUnit lineHeight(LayoutUnit viewportHeight);
+    LayoutUnit lineHeight(LayoutUnit viewportWidth, LayoutUnit viewportHeight);
 
     virtual void paintChildrenWith(PaintingContext& ctx);
 

@@ -58,8 +58,8 @@ void FrameSVGBox::layout(LayoutContext& ctx,
             auto styleWidth = style()->width();
             LayoutUnit width;
             if (!styleWidth.isAuto()) {
-                width =
-                    styleWidth.specifiedValue(cb->width(), ctx.viewportWidth());
+                width = styleWidth.specifiedValue(
+                    cb->width(), ctx.viewportWidth(), ctx.viewportHeight());
             }
             setWidth(width);
         }
@@ -68,8 +68,8 @@ void FrameSVGBox::layout(LayoutContext& ctx,
             auto styleHeight = style()->height();
             LayoutUnit height;
             if (!styleHeight.isAuto()) {
-                height = styleHeight.specifiedValue(cb->height(),
-                                                    ctx.viewportHeight());
+                height = styleHeight.specifiedValue(
+                    cb->height(), ctx.viewportWidth(), ctx.viewportHeight());
             }
             setHeight(height);
         }
@@ -111,7 +111,8 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
                 ll.changeToFixedIfNeeded(style()->fontSize(),
                                          rootStyle->fontSize(),
                                          style()->font());
-                xResult = ll.specifiedValue(cb->width(), ctx.viewportWidth());
+                xResult = ll.specifiedValue(cb->width(), ctx.viewportWidth(),
+                                            ctx.viewportHeight());
             }
         }
 
@@ -133,7 +134,8 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
                 ll.changeToFixedIfNeeded(style()->fontSize(),
                                          rootStyle->fontSize(),
                                          style()->font());
-                yResult = ll.specifiedValue(cb->height(), ctx.viewportHeight());
+                yResult = ll.specifiedValue(cb->height(), ctx.viewportWidth(),
+                                            ctx.viewportHeight());
             }
         }
 
@@ -259,10 +261,6 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
 
 double FrameSVGBox::resolveLengthFromAttribute(QualifiedName attr)
 {
-    FrameBox* cb = layoutParent()->asFrameBox();
-    LayoutUnit viewportWidth =
-        node()->document()->frame()->style()->width().fixed();
-
     double result = 0;
     String* str = node()->asElement()->getAttributeOrEmpty(attr);
     if (str->length()) {
@@ -277,7 +275,13 @@ double FrameSVGBox::resolveLengthFromAttribute(QualifiedName attr)
                 node()->document()->rootElement()->style();
             ll.changeToFixedIfNeeded(style()->fontSize(), rootStyle->fontSize(),
                                      style()->font());
-            result = ll.specifiedValue(cb->width(), viewportWidth);
+            FrameBox* cb = layoutParent()->asFrameBox();
+            LayoutUnit viewportWidth =
+                node()->document()->frame()->style()->width().fixed();
+            LayoutUnit viewportHeight =
+                node()->document()->frame()->style()->height().fixed();
+            result =
+                ll.specifiedValue(cb->width(), viewportWidth, viewportHeight);
         }
     }
 

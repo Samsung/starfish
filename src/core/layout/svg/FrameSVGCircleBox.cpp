@@ -30,6 +30,8 @@ void FrameSVGCircleBox::paintSVG(PaintingContext& ctx)
     FrameBox* cb = layoutParent()->asFrameBox();
     LayoutUnit viewportWidth =
         node()->document()->frame()->style()->width().fixed();
+    LayoutUnit viewportHeight =
+        node()->document()->frame()->style()->height().fixed();
 
     double cx =
         resolveLengthFromAttribute(node()->starFish()->staticStrings()->m_cx);
@@ -44,8 +46,8 @@ void FrameSVGCircleBox::paintSVG(PaintingContext& ctx)
     ctx.m_canvas->setColor(style()->fill().color());
     ctx.m_canvas->fillPreserve();
 
-    ctx.m_canvas->setStrokeWidth(
-        style()->strokeWidth().specifiedValue(cb->width(), viewportWidth));
+    ctx.m_canvas->setStrokeWidth(style()->strokeWidth().specifiedValue(
+        cb->width(), viewportWidth, viewportHeight));
     ctx.m_canvas->setColor(style()->stroke().color());
     ctx.m_canvas->stroke();
 }

@@ -438,7 +438,13 @@ bool LayoutContext::canFloatCollapseWithMarginTop(size_t idx)
 
 LayoutUnit LayoutContext::parentContentWidth(Frame* currentFrame)
 {
-    return blockContainer(currentFrame)->contentWidth();
+    FrameBox* cb = containingBlock(currentFrame);
+    LayoutUnit w = cb->contentWidth();
+    if (currentFrame->isAbsolutePositioned()) {
+        w += cb->paddingWidth();
+    }
+
+    return w;
 }
 
 bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
@@ -449,17 +455,17 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
     FrameBlockBox* container = blockContainer(currentFrame);
     while (container) {
         Length height = container->style()->height();
-        if (height.isFixed() || height.isViewportPercent()) {
+        if (height.isDefinite(false)) {
             return true;
         } else if (container->isAbsolutePositioned() &&
-                   (height.isPercent() ||
+                   ((height.isPercent() || height.isCalc()) ||
                     (container->style()->bottom().isSpecified() &&
                      container->style()->top().isSpecified()))) {
             return true;
         } else if (height.isAuto()) {
             return false;
         } else {
-            STARFISH_ASSERT(height.isPercent());
+            STARFISH_ASSERT(height.isPercent() || height.isCalc());
             container = blockContainer(container);
         }
     }
@@ -474,30 +480,33 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
     }
     FrameBlockBox* container = blockContainer(currentFrame);
     std::vector<std::pair<FrameBox*, Length>> reverse;
+    LayoutUnit viewportWidth = LayoutContext::viewportWidth();
+    LayoutUnit viewportHeight = LayoutContext::viewportHeight();
     while (container) {
         Length height = container->style()->height();
-        if (height.isFixed() || height.isViewportPercent()) {
+        if (height.isDefinite(false)) {
             reverse.emplace_back(container, height);
             break;
         }
 
         if (container->isAbsolutePositioned()) {
-            if (height.isPercent()) {
+            if (height.isCalc() || height.isPercent()) {
                 LayoutUnit parentHeight =
                     containingBlock(container)->contentHeight();
                 reverse.emplace_back(
                     container,
-                    Length(Length::Fixed, height.percentValue(parentHeight)));
+                    Length(Length::Fixed,
+                           height.specifiedValue(parentHeight, viewportWidth,
+                                                 viewportHeight)));
                 break;
             } else if (container->style()->top().isSpecified() &&
                        container->style()->bottom().isSpecified()) {
                 LayoutUnit parentHeight =
                     containingBlock(container)->contentHeight();
-                LayoutUnit viewportHeight = LayoutContext::viewportHeight();
                 LayoutUnit t = container->style()->top().specifiedValue(
-                    parentHeight, viewportHeight);
+                    parentHeight, viewportWidth, viewportHeight);
                 LayoutUnit b = container->style()->bottom().specifiedValue(
-                    parentHeight, viewportHeight);
+                    parentHeight, viewportWidth, viewportHeight);
                 LayoutUnit height;
                 if (container->style()->boxSizing() ==
                     BorderBoxBoxSizingValue) {
@@ -512,17 +521,15 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
             }
         }
 
-        STARFISH_ASSERT(height.isPercent());
+        STARFISH_ASSERT(height.isPercent() || height.isCalc());
         reverse.emplace_back(container, height);
         container = blockContainer(container);
     }
     Length height = reverse.back().second;
     LayoutUnit result;
-    if (height.isFixed()) {
-        result = height.fixed();
-    } else {
-        STARFISH_ASSERT(height.isViewportPercent());
-        result = height.viewportPercentValue(viewportHeight());
+    if (height.isDefinite(false)) {
+        LayoutUnit unused;
+        result = height.specifiedValue(unused, viewportWidth, viewportHeight);
     }
 
     result = reverse.back().first->contentHeightApplyingBoxSizing(result);
@@ -534,6 +541,21 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
     }
 
     return result;
+}
+
+LayoutUnit LayoutContext::specifiedVerticalValue(Frame* f, Length l)
+{
+    bool parentHasFixedHeight = this->parentHasFixedHeight(f);
+    if (l.isDefinite(parentHasFixedHeight)) {
+        LayoutUnit parentContentHeight;
+        if (parentHasFixedHeight) {
+            parentContentHeight = this->parentFixedHeight(f);
+        }
+        return l.specifiedValue(parentContentHeight, viewportWidth(),
+                                viewportHeight());
+    }
+
+    return 0;
 }
 
 void LayoutContext::registerLineBoxAscender(FrameBlockBox* blockBox,

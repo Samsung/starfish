@@ -1224,10 +1224,27 @@ static CSSStyleValuePair lengthToCSSStyleValue(Length len)
     } else if (len.isPercent()) {
         p.setValueKind(CSSStyleValuePair::ValueKind::Percentage);
         p.setValue(len.percent());
+    } else if (len.isViewportPercent()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        Length::Type t = len.type();
+        CSSLength::Kind k;
+        if (t == Length::Vw) {
+            k = CSSLength::VW;
+        } else if (t == Length::Vh) {
+            k = CSSLength::VH;
+        } else if (t == Length::Vmin) {
+            k = CSSLength::VMIN;
+        } else {
+            k = CSSLength::VMAX;
+        }
+        p.setValue(CSSLength(k, len.viewportPercent()));
     } else if (len.isAuto()) {
         p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+    } else if (len.isCalc()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::CalcValueKind);
+        p.setValue(len.calcData());
     } else {
-        STARFISH_ASSERT(false);
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     return p;
 };
@@ -1278,7 +1295,6 @@ CSSStyleDeclaration* Element::getComputedStyle()
     ADD_VALUE_PAIR(OverflowY, OverflowValueKind, overflowY)
     ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiValueKind, unicodeBidi)
     ADD_VALUE_PAIR(Opacity, Number, opacity)
-    ADD_VALUE_PAIR(ZIndex, Int32, zIndex)
     ADD_VALUE_PAIR(BoxSizing, BoxSizingValueKind, boxSizing)
     ADD_VALUE_PAIR(FlexDirection, FlexDirectionValueKind, flexDirection)
     ADD_VALUE_PAIR(FlexWrap, FlexWrapValueKind, flexWrap)
@@ -1290,6 +1306,19 @@ CSSStyleDeclaration* Element::getComputedStyle()
     ADD_VALUE_PAIR(FlexGrow, Number, flexGrow)
     ADD_VALUE_PAIR(FlexShrink, Number, flexShrink)
 #undef ADD_VALUE_PAIR
+
+    {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::ZIndex);
+        if (style->isSpecifiedZIndex()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
+            p.setValue(style->zIndex());
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        d->addValuePair(p);
+    }
+
     {
         CSSStyleValuePair p;
         FlexBasisData flexBasis = style->flexBasis();
@@ -1299,60 +1328,133 @@ CSSStyleDeclaration* Element::getComputedStyle()
             p.setValue(FlexBasisValue::ContentFlexBasisValue);
         } else {
             Length len = flexBasis.width();
-            if (len.isFixed()) {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-                p.setValue(CSSLength(len.fixed()));
-            } else if (len.isPercent()) {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Percentage);
-                p.setValue(len.percent());
-            } else if (len.isAuto()) {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::None);
-            }
+            lengthToCSSStyleValue(len);
         }
         d->addValuePair(p);
     }
 
 // length properties
+#define ADD_ABSOLUTE_LENGTH_PAIR(keyKind, getter)               \
+    {                                                           \
+        CSSStyleValuePair p;                                    \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);      \
+        p.setValueKind(CSSStyleValuePair::ValueKind::Length);   \
+        p.setValue(CSSLength(frame()->asFrameBox()->getter())); \
+        d->addValuePair(p);                                     \
+    }
+    ADD_ABSOLUTE_LENGTH_PAIR(MarginTop, marginTop)
+    ADD_ABSOLUTE_LENGTH_PAIR(MarginRight, marginRight)
+    ADD_ABSOLUTE_LENGTH_PAIR(MarginBottom, marginBottom)
+    ADD_ABSOLUTE_LENGTH_PAIR(MarginLeft, marginLeft)
+    ADD_ABSOLUTE_LENGTH_PAIR(PaddingTop, paddingTop)
+    ADD_ABSOLUTE_LENGTH_PAIR(PaddingRight, paddingRight)
+    ADD_ABSOLUTE_LENGTH_PAIR(PaddingBottom, paddingBottom)
+    ADD_ABSOLUTE_LENGTH_PAIR(PaddingLeft, paddingLeft)
+    ADD_ABSOLUTE_LENGTH_PAIR(BorderTopWidth, borderTop)
+    ADD_ABSOLUTE_LENGTH_PAIR(BorderRightWidth, borderRight)
+    ADD_ABSOLUTE_LENGTH_PAIR(BorderBottomWidth, borderBottom)
+    ADD_ABSOLUTE_LENGTH_PAIR(BorderLeftWidth, borderLeft)
+
 #define ADD_LENGTH_PAIR(keyKind, getter)                              \
     {                                                                 \
-        CSSStyleValuePair p;                                          \
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->getter()); \
         p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);            \
-        if (style->getter().isFixed()) {                              \
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);     \
-            p.setValue(CSSLength(style->getter().fixed()));           \
-        } else if (style->getter().isPercent()) {                     \
-            p.setValueKind(CSSStyleValuePair::ValueKind::Percentage); \
-            p.setValue(style->getter().percent());                    \
-        } else if (style->getter().isAuto()) {                        \
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);       \
-        } else {                                                      \
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);       \
-        }                                                             \
         d->addValuePair(p);                                           \
     }
 
-    ADD_LENGTH_PAIR(Width, width)
     ADD_LENGTH_PAIR(MaxWidth, maxWidth)
     ADD_LENGTH_PAIR(MinWidth, minWidth)
-    ADD_LENGTH_PAIR(Height, height)
     ADD_LENGTH_PAIR(MaxHeight, maxHeight)
     ADD_LENGTH_PAIR(MinHeight, minHeight)
     ADD_LENGTH_PAIR(LineHeight, lineHeight)
     ADD_LENGTH_PAIR(TextIndent, textIndent)
-    ADD_LENGTH_PAIR(Top, top)
-    ADD_LENGTH_PAIR(Right, right)
-    ADD_LENGTH_PAIR(Bottom, bottom)
-    ADD_LENGTH_PAIR(Left, left)
-    ADD_LENGTH_PAIR(MarginTop, marginTop)
-    ADD_LENGTH_PAIR(MarginRight, marginRight)
-    ADD_LENGTH_PAIR(MarginBottom, marginBottom)
-    ADD_LENGTH_PAIR(MarginLeft, marginLeft)
-    ADD_LENGTH_PAIR(PaddingTop, paddingTop)
-    ADD_LENGTH_PAIR(PaddingRight, paddingRight)
-    ADD_LENGTH_PAIR(PaddingBottom, paddingBottom)
-    ADD_LENGTH_PAIR(PaddingLeft, paddingLeft)
+    ADD_LENGTH_PAIR(FontSize, fontSize)
+
+    {
+        CSSStyleValuePair w, h;
+        w.setKeyKind(CSSStyleValuePair::KeyKind::Width);
+        w.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        h.setKeyKind(CSSStyleValuePair::KeyKind::Height);
+        h.setValueKind(CSSStyleValuePair::ValueKind::Length);
+
+        LayoutContext ctx(starFish(), document()->frame()->asFrameDocument());
+
+        if (style->width().isDefinite(true)) {
+            w.setValue(CSSLength(style->width().specifiedValue(
+                ctx.parentContentWidth(frame()), ctx.viewportWidth(),
+                ctx.viewportHeight())));
+        } else {
+            w.setValue(CSSLength(frame()->asFrameBox()->contentWidth()));
+        }
+
+        bool parentHasFixedHeight = ctx.parentHasFixedHeight(frame());
+        if (style->height().isDefinite(parentHasFixedHeight)) {
+            LayoutUnit parentContentHeight;
+            if (parentHasFixedHeight) {
+                parentContentHeight = ctx.parentFixedHeight(frame());
+            }
+            h.setValue(CSSLength(style->height().specifiedValue(
+                parentContentHeight, ctx.viewportWidth(),
+                ctx.viewportHeight())));
+        } else {
+            h.setValue(CSSLength(frame()->asFrameBox()->contentHeight()));
+        }
+
+        d->addValuePair(w);
+        d->addValuePair(h);
+    }
+
+    if (frame()->isPositioned()) {
+        CSSStyleValuePair t, b, l, r;
+        t.setKeyKind(CSSStyleValuePair::KeyKind::Top);
+        t.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        b.setKeyKind(CSSStyleValuePair::KeyKind::Bottom);
+        b.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        l.setKeyKind(CSSStyleValuePair::KeyKind::Left);
+        l.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        r.setKeyKind(CSSStyleValuePair::KeyKind::Right);
+        r.setValueKind(CSSStyleValuePair::ValueKind::Length);
+
+        LayoutContext ctx(starFish(), document()->frame()->asFrameDocument());
+        FrameBox* cb = containingBlock(frame());
+        FrameBox* parent = frame()->layoutParent()->asFrameBox();
+        FrameBox* self = frame()->asFrameBox();
+
+        LayoutLocation l1, l2;
+        if (cb->isAncestorOf(parent)) {
+            l2 = parent->absolutePoint(cb);
+        } else {
+            l1 = cb->absolutePoint(ctx.frameDocument());
+            l2 = parent->absolutePoint(ctx.frameDocument());
+        }
+        LayoutUnit absX = self->x() + l2.x() - l1.x() - cb->borderLeft();
+        LayoutUnit absY = self->y() + l2.y() - l1.y() - cb->borderTop();
+        LayoutUnit left = absX - self->marginLeft();
+        LayoutUnit top = absY - self->marginTop();
+        LayoutUnit parentContentWidth = cb->contentWidth();
+        LayoutUnit parentContentHeight = cb->contentHeight();
+        if (frame()->isAbsolutePositioned()) {
+            parentContentWidth += cb->paddingWidth();
+            parentContentHeight += cb->paddingHeight();
+        }
+
+        t.setValue(CSSLength(top));
+        b.setValue(CSSLength(parentContentHeight - top - self->outerHeight()));
+        l.setValue(CSSLength(left));
+        r.setValue(CSSLength(parentContentWidth - left - self->outerWidth()));
+
+        d->addValuePair(t);
+        d->addValuePair(b);
+        d->addValuePair(l);
+        d->addValuePair(r);
+    } else {
+        ADD_LENGTH_PAIR(Top, top)
+        ADD_LENGTH_PAIR(Right, right)
+        ADD_LENGTH_PAIR(Bottom, bottom)
+        ADD_LENGTH_PAIR(Left, left)
+    }
+
+#undef ADD_ABSOLUTE_LENGTH_PAIR
 #undef ADD_LENGTH_PAIR
 
 // color properties
@@ -1372,24 +1474,6 @@ CSSStyleDeclaration* Element::getComputedStyle()
     ADD_COLOR_PAIR(BorderBottomColor, borderBottomColor)
     ADD_COLOR_PAIR(BorderLeftColor, borderLeftColor)
 #undef ADD_COLOR_PAIR
-
-// fontSize
-// border-width
-#define LENGTH_RELATED(keyKind, getter)                       \
-    {                                                         \
-        CSSStyleValuePair p;                                  \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);    \
-        p.setValueKind(CSSStyleValuePair::ValueKind::Length); \
-        p.setValue(CSSLength(style->getter().fixed()));       \
-        d->addValuePair(p);                                   \
-    }
-
-    LENGTH_RELATED(FontSize, fontSize)
-    LENGTH_RELATED(BorderTopWidth, borderTopWidth)
-    LENGTH_RELATED(BorderRightWidth, borderRightWidth)
-    LENGTH_RELATED(BorderBottomWidth, borderBottomWidth)
-    LENGTH_RELATED(BorderLeftWidth, borderLeftWidth)
-#undef LENGTH_RELATED
 
     // other properties that cannot be generated by macros
 

@@ -322,19 +322,21 @@ public:
                             LayoutUnit ox = b->width() / 2;
                             LayoutUnit oy = b->height() / 2;
                             if (b->style()->hasTransformOrigin()) {
-                                ox = b->style()
-                                         ->transformOrigin()
-                                         ->originValue()
-                                         ->getXAxis()
-                                         .specifiedValue(
-                                             b->width(),
-                                             canvas->viewportWidth());
+                                ox =
+                                    b->style()
+                                        ->transformOrigin()
+                                        ->originValue()
+                                        ->getXAxis()
+                                        .specifiedValue(
+                                            b->width(), canvas->viewportWidth(),
+                                            canvas->viewportHeight());
                                 oy = b->style()
                                          ->transformOrigin()
                                          ->originValue()
                                          ->getYAxis()
                                          .specifiedValue(
                                              b->height(),
+                                             canvas->viewportWidth(),
                                              canvas->viewportHeight());
                             }
                             canvas->translate(ox, oy);
@@ -501,12 +503,14 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                          ->originValue()
                          ->getXAxis()
                          .specifiedValue(m_owner->width(),
-                                         canvas->viewportWidth());
+                                         canvas->viewportWidth(),
+                                         canvas->viewportHeight());
                 oy = m_owner->style()
                          ->transformOrigin()
                          ->originValue()
                          ->getYAxis()
                          .specifiedValue(m_owner->height(),
+                                         canvas->viewportWidth(),
                                          canvas->viewportHeight());
             }
             canvas->translate(ox, oy);
@@ -712,12 +716,14 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
                          ->originValue()
                          ->getXAxis()
                          .specifiedValue(m_owner->width(),
-                                         canvas->viewportWidth());
+                                         canvas->viewportWidth(),
+                                         canvas->viewportHeight());
                 oy = m_owner->style()
                          ->transformOrigin()
                          ->originValue()
                          ->getYAxis()
                          .specifiedValue(m_owner->height(),
+                                         canvas->viewportWidth(),
                                          canvas->viewportHeight());
             }
             canvas->translate(ox, oy);
@@ -852,18 +858,19 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
 
         LayoutUnit ox = m_owner->width() / 2;
         LayoutUnit oy = m_owner->height() / 2;
+        LayoutUnit vw = from->window()->width();
+        LayoutUnit vh = from->window()->height();
         if (m_owner->style()->hasTransformOrigin()) {
             ox = m_owner->style()
                      ->transformOrigin()
                      ->originValue()
                      ->getXAxis()
-                     .specifiedValue(m_owner->width(), from->window()->width());
+                     .specifiedValue(m_owner->width(), vw, vh);
             oy = m_owner->style()
                      ->transformOrigin()
                      ->originValue()
                      ->getYAxis()
-                     .specifiedValue(m_owner->height(),
-                                     from->window()->height());
+                     .specifiedValue(m_owner->height(), vw, vh);
         }
         x -= ox;
         y -= oy;

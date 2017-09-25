@@ -24,6 +24,7 @@
 
 namespace StarFish {
 
+class CalcData;
 class ComputedStyle;
 class StyleRule;
 class StyleRuleImport;
@@ -236,17 +237,17 @@ public:
         m_value = f;
     }
 
-    Kind kind()
+    Kind kind() const
     {
         return m_kind;
     }
 
-    float value()
+    float value() const
     {
         return m_value;
     }
 
-    Length toLength()
+    Length toLength() const
     {
         if (m_kind == PX) { // absolute length
             return Length(Length::Fixed, m_value);
@@ -261,9 +262,9 @@ public:
         } else if (m_kind == PT) {
             return Length(Length::Fixed, convertFromPtToPx(m_value));
         } else if (m_kind == EM) { // font-relative length
-            return Length(Length::EmToBeFixed, m_value);
+            return Length(Length::Em, m_value);
         } else if (m_kind == EX) { // font-relative length
-            return Length(Length::ExToBeFixed, m_value);
+            return Length(Length::Ex, m_value);
         } else if (m_kind == VW) {
             return Length(Length::Vw, m_value);
         } else if (m_kind == VH) {
@@ -273,7 +274,7 @@ public:
         } else if (m_kind == VMAX) {
             return Length(Length::Vmax, m_value);
         } else if (m_kind == REM) { // font-relative length
-            return Length(Length::RemToBeFixed, m_value);
+            return Length(Length::Rem, m_value);
         }
 
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -318,10 +319,26 @@ protected:
     float m_value;
 };
 
+inline CSSLength operator*(const CSSLength& a, const float b)
+{
+    return CSSLength(a.value() * b);
+}
+
+inline CSSLength operator*(const float a, const CSSLength& b)
+{
+    return CSSLength(a * b.value());
+}
+
 // https://www.w3.org/TR/css3-values/#angles
 class CSSAngle {
 public:
     enum Kind { DEG, GRAD, RAD, TURN };
+
+    CSSAngle()
+    {
+        m_kind = DEG;
+        m_value = 0;
+    }
 
     CSSAngle(float f)
     {
@@ -349,17 +366,17 @@ public:
         m_value = f;
     }
 
-    Kind kind()
+    Kind kind() const
     {
         return m_kind;
     }
 
-    float value()
+    float value() const
     {
         return m_value;
     }
 
-    float toDegreeValue()
+    float toDegreeValue() const
     {
         if (m_kind == DEG) {
             return m_value;
@@ -374,7 +391,7 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    String* toString()
+    String* toString() const
     {
         std::stringstream ss(std::stringstream::in | std::stringstream::out);
         ss << m_value;
@@ -397,9 +414,58 @@ protected:
     float m_value;
 };
 
+inline CSSAngle operator+(const CSSAngle& a, const CSSAngle& b)
+{
+    return CSSAngle(a.toDegreeValue() + b.toDegreeValue());
+}
+
+inline CSSAngle& operator+=(CSSAngle& a, const CSSAngle& b)
+{
+    a = a + b;
+    return a;
+}
+
+inline CSSAngle operator-(const CSSAngle& a, const CSSAngle& b)
+{
+    return CSSAngle(a.toDegreeValue() - b.toDegreeValue());
+}
+
+inline CSSAngle operator*(const float a, const CSSAngle& b)
+{
+    return CSSAngle(a * b.toDegreeValue());
+}
+
+inline CSSAngle operator*(const CSSAngle& a, const float b)
+{
+    return CSSAngle(a.toDegreeValue() * b);
+}
+
+inline CSSAngle& operator*=(CSSAngle& a, float b)
+{
+    a = a * b;
+    return a;
+}
+
+inline CSSAngle operator/(const CSSAngle& a, const float b)
+{
+    return CSSAngle(a.toDegreeValue() / b);
+}
+
+inline CSSAngle& operator/=(CSSAngle& a, float b)
+{
+    a = a / b;
+    return a;
+}
+
 class CSSTime {
 public:
     enum Kind { S, MS };
+
+    CSSTime()
+    {
+        m_kind = MS;
+        m_value = 0;
+    }
 
     CSSTime(double time)
     {
@@ -413,22 +479,22 @@ public:
         m_value = time;
     }
 
-    Kind kind()
+    Kind kind() const
     {
         return m_kind;
     }
 
-    bool isZero()
+    bool isZero() const
     {
         return m_value == 0;
     }
 
-    float value()
+    float value() const
     {
         return m_value;
     }
 
-    double toTimeValue()
+    double toTimeValue() const
     {
         if (m_kind == S) {
             return m_value * 1000; // to ms
@@ -439,7 +505,7 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    String* toString()
+    String* toString() const
     {
         std::stringstream ss(std::stringstream::in | std::stringstream::out);
         ss << m_value;
@@ -474,6 +540,49 @@ protected:
     Kind m_kind;
     double m_value; // ms
 };
+
+inline CSSTime operator+(const CSSTime& a, const CSSTime& b)
+{
+    return CSSTime(a.toTimeValue() + b.toTimeValue());
+}
+
+inline CSSTime& operator+=(CSSTime& a, const CSSTime& b)
+{
+    a = a + b;
+    return a;
+}
+
+inline CSSTime operator-(const CSSTime& a, const CSSTime& b)
+{
+    return CSSTime(a.toTimeValue() - b.toTimeValue());
+}
+
+inline CSSTime operator*(const float a, const CSSTime& b)
+{
+    return CSSTime(a * b.toTimeValue());
+}
+
+inline CSSTime operator*(const CSSTime& a, const float b)
+{
+    return CSSTime(a.toTimeValue() * b);
+}
+
+inline CSSTime& operator*=(CSSTime& a, float b)
+{
+    a = a * b;
+    return a;
+}
+
+inline CSSTime operator/(const CSSTime& a, const float b)
+{
+    return CSSTime(a.toTimeValue() / b);
+}
+
+inline CSSTime& operator/=(CSSTime& a, float b)
+{
+    a = a / b;
+    return a;
+}
 
 // inline | block | list-item | inline-block | table | inline-table |
 // table-row-group | table-header-group | table-footer-group | table-row |
@@ -1067,6 +1176,8 @@ public:
         NamedColorValueKind,
         UrlValueKind,
 
+        CalcValueKind,
+
         DisplayValueKind,
         PositionValueKind,
         FloatValueKind,
@@ -1469,6 +1580,12 @@ public:
         return m_value.m_fillRule;
     }
 
+    CalcData* calcValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == CalcValueKind);
+        return m_value.m_calc;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1514,6 +1631,7 @@ public:
         AlignContentValue m_alignContent;
         FlexBasisValue m_flexBasis;
         FillRuleValue m_fillRule;
+        CalcData* m_calc;
 
         ValueData(int v)
             : m_floatValue(v)
@@ -1691,6 +1809,10 @@ public:
             : m_fillRule(v)
         {
         }
+        ValueData(CalcData* v)
+            : m_calc(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -1786,6 +1908,8 @@ public:
     };
     bool updateValueLength(const CSSTokenVector& tokens, uint8_t option);
     bool updateValueUnitLength(const CSSTokenValue& token, uint8_t option);
+    bool updateValueUnitLengthOrCalc(const CSSTokenValue& token,
+                                     uint8_t option);
     bool updateValueBackgroundImage(const CSSTokenVector& tokens,
                                     bool allowComma);
     bool updateValueBackgroundSize(const CSSTokenVector& tokens,
