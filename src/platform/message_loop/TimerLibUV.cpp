@@ -246,7 +246,7 @@ void Timer::clear(BrowsingContext* ctx)
             m_timeoutHandler.erase(timerIter++);
             uv_handle_t* handle = (uv_handle_t*)td->m_timerID;
             uv_timer_stop(td->m_timerID);
-            free(td->m_timerID);
+            uv_close((uv_handle_t*)td->m_timerID, on_close_handle);
             GC_FREE(td);
         } else {
             timerIter++;
@@ -261,7 +261,7 @@ void Timer::clear(BrowsingContext* ctx)
             m_requestAnimationFrameHandler.erase(aniIter++);
             uv_handle_t* handle = (uv_handle_t*)td->m_timerID;
             uv_timer_stop(td->m_timerID);
-            free(td->m_timerID);
+            uv_close((uv_handle_t*)td->m_timerID, on_close_handle);
             GC_FREE(td);
         } else {
             aniIter++;
@@ -276,7 +276,7 @@ void Timer::clear(BrowsingContext* ctx)
             m_animationHandler.erase(aniIter2++);
             uv_handle_t* handle = (uv_handle_t*)ad->m_timerID;
             uv_timer_stop(ad->m_timerID);
-            free(ad->m_timerID);
+            uv_close((uv_handle_t*)ad->m_timerID, on_close_handle);
             GC_FREE(ad);
         } else {
             aniIter2++;
