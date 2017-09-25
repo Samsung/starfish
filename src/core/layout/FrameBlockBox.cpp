@@ -98,6 +98,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
         BoxSizingValue boxSizing = style()->boxSizing();
         LayoutUnit contentWidth;
         LayoutUnit viewportWidth = ctx.viewportWidth();
+        LayoutUnit viewportHeight = ctx.viewportHeight();
 
         if (width.isAuto()) {
             if (isNormalFlow() &&
@@ -111,10 +112,10 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
                                         LayoutUnit(0));
             } else if (isAbsolutePositioned() && left.isSpecified() &&
                        right.isSpecified()) {
-                LayoutUnit l = left.specifiedValue(containgBlockContentWidth,
-                                                   viewportWidth);
-                LayoutUnit r = right.specifiedValue(containgBlockContentWidth,
-                                                    viewportWidth);
+                LayoutUnit l = left.specifiedValue(
+                    containgBlockContentWidth, viewportWidth, viewportHeight);
+                LayoutUnit r = right.specifiedValue(
+                    containgBlockContentWidth, viewportWidth, viewportHeight);
                 LayoutUnit w =
                     std::max(LayoutUnit(0),
                              containgBlockContentWidth - l - r - mbpWidth());
@@ -126,8 +127,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
                 contentWidth = p.preferredWidth();
             }
         } else {
-            contentWidth =
-                width.specifiedValue(containgBlockContentWidth, viewportWidth);
+            contentWidth = width.specifiedValue(containgBlockContentWidth,
+                                                viewportWidth, viewportHeight);
             contentWidth = contentWidthApplyingBoxSizing(contentWidth);
         }
 
@@ -146,6 +147,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 
         LayoutUnit contentHeight;
         LayoutUnit parentHeight;
+        LayoutUnit viewportWidth = ctx.viewportWidth();
         LayoutUnit viewportHeight = ctx.viewportHeight();
         Length height = style()->height();
         BoxSizingValue boxSizing = style()->boxSizing();
@@ -168,16 +170,16 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                 Length top = style()->top();
                 Length bottom = style()->bottom();
                 if (top.isSpecified() && bottom.isSpecified()) {
-                    LayoutUnit t =
-                        top.specifiedValue(parentHeight, viewportHeight);
-                    LayoutUnit b =
-                        bottom.specifiedValue(parentHeight, viewportHeight);
+                    LayoutUnit t = top.specifiedValue(
+                        parentHeight, viewportWidth, viewportHeight);
+                    LayoutUnit b = bottom.specifiedValue(
+                        parentHeight, viewportWidth, viewportHeight);
                     contentHeight =
                         parentHeight - t - b - paddingHeight() - borderHeight();
                 }
             } else {
-                contentHeight =
-                    height.specifiedValue(parentHeight, viewportHeight);
+                contentHeight = height.specifiedValue(
+                    parentHeight, viewportWidth, viewportHeight);
                 contentHeight = contentHeightApplyingBoxSizing(contentHeight);
             }
 
@@ -204,37 +206,14 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
     }
 
     Length height = style()->height();
-    if (height.isFixed()) {
-        contentHeight = height.fixed();
-        contentHeight = contentHeightApplyingBoxSizing(contentHeight);
-    } else if (height.isPercent() && parentHasFixedHeight) {
-        LayoutUnit parentContentHeight = ctx.parentFixedHeight(this);
-        contentHeight = height.percentValue(parentContentHeight);
-        contentHeight = contentHeightApplyingBoxSizing(contentHeight);
-    } else if (height.isViewportPercent()) {
-        contentHeight = height.viewportPercentValue(ctx.viewportHeight());
+    if (height.isDefinite(parentHasFixedHeight)) {
+        contentHeight = height.specifiedValue(parentHeight, ctx.viewportWidth(),
+                                              ctx.viewportHeight());
         contentHeight = contentHeightApplyingBoxSizing(contentHeight);
     }
 
     applyMinMaxHeightIfNeeds(ctx, contentHeight, parentHeight,
                              parentHasFixedHeight);
-}
-
-static LayoutUnit specifiedVerticalPosition(LayoutContext& ctx, Frame* f,
-                                            const Length& l)
-{
-    STARFISH_ASSERT(!l.isAuto());
-    if (l.isFixed()) {
-        return l.fixed();
-    } else if (l.isViewportPercent()) {
-        return l.viewportPercentValue(ctx.viewportHeight());
-    } else {
-        STARFISH_ASSERT(l.isPercent());
-        if (ctx.parentHasFixedHeight(f)) {
-            return l.percentValue(ctx.parentFixedHeight(f));
-        }
-        return 0;
-    }
 }
 
 static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
@@ -243,6 +222,7 @@ static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
     LayoutUnit x = 0;
     LayoutUnit y = 0;
     LayoutUnit viewportWidth = ctx.viewportWidth();
+    LayoutUnit viewportHeight = ctx.viewportHeight();
     Length left = f->style()->left();
     Length right = f->style()->right();
     Length top = f->style()->top();
@@ -251,14 +231,18 @@ static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
     // left, right
     if (!left.isAuto() && !right.isAuto()) {
         if (f->style()->direction() == LtrDirectionValue) {
-            x = left.specifiedValue(parentSize.width(), viewportWidth);
+            x = left.specifiedValue(parentSize.width(), viewportWidth,
+                                    viewportHeight);
         } else {
-            x = -right.specifiedValue(parentSize.width(), viewportWidth);
+            x = -right.specifiedValue(parentSize.width(), viewportWidth,
+                                      viewportHeight);
         }
     } else if (!left.isAuto()) {
-        x = left.specifiedValue(parentSize.width(), viewportWidth);
+        x = left.specifiedValue(parentSize.width(), viewportWidth,
+                                viewportHeight);
     } else if (!right.isAuto()) {
-        x = -right.specifiedValue(parentSize.width(), viewportWidth);
+        x = -right.specifiedValue(parentSize.width(), viewportWidth,
+                                  viewportHeight);
     }
 
     // NOTE: In latest css spec, relative position is decided after the size of
@@ -280,11 +264,11 @@ static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
     }*/
 
     if (!top.isAuto() && !bottom.isAuto()) {
-        y = specifiedVerticalPosition(ctx, f, top);
+        y = ctx.specifiedVerticalValue(f, top);
     } else if (!top.isAuto()) {
-        y = specifiedVerticalPosition(ctx, f, top);
+        y = ctx.specifiedVerticalValue(f, top);
     } else if (!bottom.isAuto()) {
-        y = -specifiedVerticalPosition(ctx, f, bottom);
+        y = -ctx.specifiedVerticalValue(f, bottom);
     }
 
     return LayoutLocation(x, y);
@@ -474,8 +458,8 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         } else if (!top.isAuto() && bottom.isAuto()) {
             setY(data.m_top - data.m_absY + marginTop());
         } else if (top.isAuto() && !bottom.isAuto()) {
-            setY(data.m_contentHeight - data.m_bottom - height() - data.m_absY +
-                 marginTop());
+            setY(data.m_contentHeight - data.m_bottom - outerHeight() -
+                 data.m_absY + marginTop());
         } else {
             computeVerticalMargin(data.m_contentHeight - data.m_top -
                                   data.m_bottom);
@@ -680,7 +664,9 @@ bool FrameBlockBox::isSelfCollapsingBlock(LayoutContext& ctx)
     // NOTE: In case of percentage height,
     // if containing blocks' height is fixed, the block is not
     // self-collapsing block.
-    if (heightLength.isPercent() && !heightLength.isZero() &&
+    // TODO: should we handle the case : calc(100% - 100% + 10px)
+    if (((heightLength.isPercent() && !heightLength.isZero()) ||
+         (heightLength.isCalc() && !heightLength.isCalcAndLengthOfType())) &&
         ctx.parentHasFixedHeight(this)) {
         return false;
     }

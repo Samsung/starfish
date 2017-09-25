@@ -114,6 +114,8 @@ void FrameBox::paintBackground(Canvas* canvas, ComputedStyle* style,
 
         float boxR = bw / bh;
         float imgR = id->width() / (float)id->height();
+        LayoutUnit vw = canvas->viewportWidth();
+        LayoutUnit vh = canvas->viewportHeight();
         if (style->bgSizeType() == BackgroundSizeType::Cover) {
             if (boxR < imgR) {
                 w = bh * imgR;
@@ -133,19 +135,15 @@ void FrameBox::paintBackground(Canvas* canvas, ComputedStyle* style,
                 h = id->height();
             } else if (style->bgSizeValue().width().isAuto() &&
                        !style->bgSizeValue().height().isAuto()) {
-                h = style->bgSizeValue().height().specifiedValue(
-                    bh, canvas->viewportHeight());
+                h = style->bgSizeValue().height().specifiedValue(bh, vw, vh);
                 w = h * id->width() / id->height();
             } else if (!style->bgSizeValue().width().isAuto() &&
                        style->bgSizeValue().height().isAuto()) {
-                w = style->bgSizeValue().width().specifiedValue(
-                    bw, canvas->viewportWidth());
+                w = style->bgSizeValue().width().specifiedValue(bw, vw, vh);
                 h = w * id->height() / id->width();
             } else {
-                w = style->bgSizeValue().width().specifiedValue(
-                    bw, canvas->viewportWidth());
-                h = style->bgSizeValue().height().specifiedValue(
-                    bh, canvas->viewportHeight());
+                w = style->bgSizeValue().width().specifiedValue(bw, vw, vh);
+                h = style->bgSizeValue().height().specifiedValue(bh, vw, vh);
             }
         } else {
             STARFISH_ASSERT(style->bgSizeType() ==
@@ -153,10 +151,10 @@ void FrameBox::paintBackground(Canvas* canvas, ComputedStyle* style,
             STARFISH_ASSERT_NOT_REACHED();
         }
 
-        LayoutUnit x = style->backgroundPositionX().specifiedValue(
-            bw - w, canvas->viewportWidth());
-        LayoutUnit y = style->backgroundPositionY().specifiedValue(
-            bh - h, canvas->viewportHeight());
+        LayoutUnit x =
+            style->backgroundPositionX().specifiedValue(bw - w, vw, vh);
+        LayoutUnit y =
+            style->backgroundPositionY().specifiedValue(bh - h, vw, vh);
 
         if (isRootElement) {
             x += imageRect.x();
@@ -194,26 +192,26 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     LayoutUnit viewportHeight = ctx.viewportHeight();
     // padding
     if (style()->paddingLeft().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-        setPaddingLeft(style()->paddingLeft().specifiedValue(parentContentWidth,
-                                                             viewportWidth));
+        setPaddingLeft(style()->paddingLeft().specifiedValue(
+            parentContentWidth, viewportWidth, viewportHeight));
     } else {
         setPaddingLeft(0);
     }
     if (style()->paddingTop().isSpecified()) {
-        setPaddingTop(style()->paddingTop().specifiedValue(parentContentWidth,
-                                                           viewportHeight));
+        setPaddingTop(style()->paddingTop().specifiedValue(
+            parentContentWidth, viewportWidth, viewportHeight));
     } else {
         setPaddingTop(0);
     }
     if (style()->paddingRight().isSpecified() && !m_flags.m_isRightMBPCleared) {
         setPaddingRight(style()->paddingRight().specifiedValue(
-            parentContentWidth, viewportWidth));
+            parentContentWidth, viewportWidth, viewportHeight));
     } else {
         setPaddingRight(0);
     }
     if (style()->paddingBottom().isSpecified()) {
         setPaddingBottom(style()->paddingBottom().specifiedValue(
-            parentContentWidth, viewportHeight));
+            parentContentWidth, viewportWidth, viewportHeight));
     } else {
         setPaddingBottom(0);
     }
@@ -223,26 +221,26 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
         if (style()->borderLeftWidth().isSpecified() &&
             !m_flags.m_isLeftMBPCleared) {
             setBorderLeft(style()->borderLeftWidth().specifiedValue(
-                parentContentWidth, viewportWidth));
+                parentContentWidth, viewportWidth, viewportHeight));
         } else {
             setBorderLeft(0);
         }
         if (style()->borderTopWidth().isSpecified()) {
             setBorderTop(style()->borderTopWidth().specifiedValue(
-                parentContentWidth, viewportHeight));
+                parentContentWidth, viewportWidth, viewportHeight));
         } else {
             setBorderTop(0);
         }
         if (style()->borderRightWidth().isSpecified() &&
             !m_flags.m_isRightMBPCleared) {
             setBorderRight(style()->borderRightWidth().specifiedValue(
-                parentContentWidth, viewportWidth));
+                parentContentWidth, viewportWidth, viewportHeight));
         } else {
             setBorderRight(0);
         }
         if (style()->borderBottomWidth().isSpecified()) {
             setBorderBottom(style()->borderBottomWidth().specifiedValue(
-                parentContentWidth, viewportHeight));
+                parentContentWidth, viewportWidth, viewportHeight));
         } else {
             setBorderBottom(0);
         }
@@ -255,26 +253,26 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
 
     // margin
     if (style()->marginLeft().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-        setMarginLeft(style()->marginLeft().specifiedValue(parentContentWidth,
-                                                           viewportWidth));
+        setMarginLeft(style()->marginLeft().specifiedValue(
+            parentContentWidth, viewportWidth, viewportHeight));
     } else {
         setMarginLeft(0);
     }
     if (style()->marginTop().isSpecified()) {
-        setMarginTop(style()->marginTop().specifiedValue(parentContentWidth,
-                                                         viewportHeight));
+        setMarginTop(style()->marginTop().specifiedValue(
+            parentContentWidth, viewportWidth, viewportHeight));
     } else {
         setMarginTop(0);
     }
     if (style()->marginRight().isSpecified() && !m_flags.m_isRightMBPCleared) {
-        setMarginRight(style()->marginRight().specifiedValue(parentContentWidth,
-                                                             viewportWidth));
+        setMarginRight(style()->marginRight().specifiedValue(
+            parentContentWidth, viewportWidth, viewportHeight));
     } else {
         setMarginRight(0);
     }
     if (style()->marginBottom().isSpecified()) {
         setMarginBottom(style()->marginBottom().specifiedValue(
-            parentContentWidth, viewportHeight));
+            parentContentWidth, viewportWidth, viewportHeight));
     } else {
         setMarginBottom(0);
     }
@@ -301,16 +299,19 @@ FrameBox::computeHorizontalDataToContainingBlock(LayoutContext& ctx,
     LayoutUnit containgBlockContentWidth =
         cb->contentWidth() + cb->paddingWidth();
     LayoutUnit viewportWidth = ctx.viewportWidth();
+    LayoutUnit viewportHeight = ctx.viewportHeight();
 
     LayoutUnit l, r;
     Length left = style()->left();
     Length right = style()->right();
     if (left.isSpecified()) {
-        l = left.specifiedValue(containgBlockContentWidth, viewportWidth);
+        l = left.specifiedValue(containgBlockContentWidth, viewportWidth,
+                                viewportHeight);
     }
 
     if (right.isSpecified()) {
-        r = right.specifiedValue(containgBlockContentWidth, viewportWidth);
+        r = right.specifiedValue(containgBlockContentWidth, viewportWidth,
+                                 viewportHeight);
     }
 
     return HorizontalDataLocToContainingBlock(containgBlockContentWidth, absX,
@@ -331,6 +332,7 @@ VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
     }
     LayoutUnit containgBlockContentHeight =
         cb->contentHeight() + cb->paddingHeight();
+    LayoutUnit viewportWidth = ctx.viewportWidth();
     LayoutUnit viewportHeight = ctx.viewportHeight();
 
     LayoutUnit absY = l2.y() - l1.y() - cb->borderTop();
@@ -339,11 +341,13 @@ VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
     Length top = style()->top();
     Length bottom = style()->bottom();
     if (top.isSpecified()) {
-        t = top.specifiedValue(containgBlockContentHeight, viewportHeight);
+        t = top.specifiedValue(containgBlockContentHeight, viewportWidth,
+                               viewportHeight);
     }
 
     if (bottom.isSpecified()) {
-        b = bottom.specifiedValue(containgBlockContentHeight, viewportHeight);
+        b = bottom.specifiedValue(containgBlockContentHeight, viewportWidth,
+                                  viewportHeight);
     }
 
     return VerticalDataLocToContainingBlock(containgBlockContentHeight, absY, t,
@@ -422,11 +426,12 @@ void FrameBox::paintOutline(Canvas* canvas)
                                 node()->window()->innerHeight()));
 
         LayoutUnit viewportWidth = canvas->viewportWidth();
+        LayoutUnit viewportHeight = canvas->viewportHeight();
         LayoutUnit cbContentWidth = containingBlock(this)->contentWidth();
         LayoutUnit outlineWidth = style()->outlineWidth().specifiedValue(
-            cbContentWidth, viewportWidth);
+            cbContentWidth, viewportWidth, viewportHeight);
         LayoutUnit outlineOffset = style()->outlineOffset().specifiedValue(
-            cbContentWidth, viewportWidth);
+            cbContentWidth, viewportWidth, viewportHeight);
         LayoutUnit offset = outlineWidth + outlineOffset;
 
         LayoutRect rt = frameRect();
@@ -521,15 +526,17 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
         //  |_|__________|_|
         //
 
+        LayoutUnit viewportWidth = canvas->viewportWidth();
+        LayoutUnit viewportHeight = canvas->viewportHeight();
         double bWidth =
             style()->surround()->border.top().width().specifiedValue(
-                height(), canvas->viewportHeight());
+                height(), viewportWidth, viewportHeight);
         double bImgWidth =
             style()->surround()->border.image().widths().top().specifiedValue(
-                bWidth, canvas->viewportHeight());
+                bWidth, viewportWidth, viewportHeight);
         double bImgSlice =
             style()->surround()->border.image().slices().top().specifiedValue(
-                height(), canvas->viewportHeight());
+                height(), viewportWidth, viewportHeight);
 
         size_t imgWidth =
             style()->surround()->border.image().imageData()->width();
@@ -538,19 +545,20 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
         size_t lSlice =
             style()->surround()->border.image().slices().left().specifiedValue(
-                width(), canvas->viewportWidth());
+                width(), viewportWidth, viewportHeight);
         size_t tSlice =
             style()->surround()->border.image().slices().top().specifiedValue(
-                height(), canvas->viewportHeight());
+                height(), viewportWidth, viewportHeight);
         size_t rSlice =
             style()->surround()->border.image().slices().right().specifiedValue(
-                width(), canvas->viewportWidth());
-        size_t bSlice = style()
-                            ->surround()
-                            ->border.image()
-                            .slices()
-                            .bottom()
-                            .specifiedValue(height(), canvas->viewportHeight());
+                width(), viewportWidth, viewportHeight);
+        size_t bSlice =
+            style()
+                ->surround()
+                ->border.image()
+                .slices()
+                .bottom()
+                .specifiedValue(height(), viewportWidth, viewportHeight);
 
         ImageData* imgData = style()->surround()->border.image().imageData();
 
@@ -794,7 +802,7 @@ void FrameBox::establishesStackingContextIfNeeds()
                     } else if (p->style()->position() == FixedPositionValue) {
                         break;
                     } else if ((p->isPositioned() || p->isFlexItem()) &&
-                               p->style()->IsSpecifiedZIndex()) {
+                               p->style()->isSpecifiedZIndex()) {
                         break;
                     } else if (p->style()->opacity() != 1) {
                         break;
@@ -859,11 +867,11 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
 {
     ComputedStyle* style = Frame::style();
     LayoutUnit viewportWidth = ctx.viewportWidth();
+    LayoutUnit viewportHeight = ctx.viewportHeight();
     if (style->minWidth().isSpecified()) {
-        if (!(underComputingPreferredWidth && style->minWidth().isPercent())) {
-            LayoutUnit minWidth =
-                style->minWidth().specifiedValue(parentWidth, viewportWidth);
-
+        if (style->minWidth().isDefinite(!underComputingPreferredWidth)) {
+            LayoutUnit minWidth = style->minWidth().specifiedValue(
+                parentWidth, viewportWidth, viewportHeight);
             minWidth = contentWidthApplyingBoxSizing(minWidth);
 
             if (minWidth > width) {
@@ -877,8 +885,8 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
             layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
             appliedOverflowX() == VisibleOverflow) {
             if (style->width().isSpecified()) {
-                LayoutUnit width =
-                    style->width().specifiedValue(parentWidth, viewportWidth);
+                LayoutUnit width = style->width().specifiedValue(
+                    parentWidth, viewportWidth, viewportHeight);
                 width = contentWidthApplyingBoxSizing(width);
 
                 minWidth = width;
@@ -896,9 +904,9 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
         }
     }
     if (style->maxWidth().isSpecified()) {
-        if (!(underComputingPreferredWidth && style->maxWidth().isPercent())) {
-            LayoutUnit maxWidth =
-                style->maxWidth().specifiedValue(parentWidth, viewportWidth);
+        if (style->maxWidth().isDefinite(!underComputingPreferredWidth)) {
+            LayoutUnit maxWidth = style->maxWidth().specifiedValue(
+                parentWidth, viewportWidth, viewportHeight);
 
             maxWidth = contentWidthApplyingBoxSizing(maxWidth);
 
@@ -916,14 +924,15 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
                                                 bool parentHasFixedValue)
 {
     ComputedStyle* style = Frame::style();
+    LayoutUnit viewportWidth = ctx.viewportWidth();
     LayoutUnit viewportHeight = ctx.viewportHeight();
     if (style->minHeight().isSpecified()) {
-        if (!parentHasFixedValue && style->minHeight().isPercent()) {
+        if (!style->minHeight().isDefinite(parentHasFixedValue)) {
             return height;
         }
 
-        LayoutUnit minHeight =
-            style->minHeight().specifiedValue(parentHeight, viewportHeight);
+        LayoutUnit minHeight = style->minHeight().specifiedValue(
+            parentHeight, viewportWidth, viewportHeight);
 
         minHeight = contentHeightApplyingBoxSizing(minHeight);
 
@@ -936,9 +945,9 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
         if (!layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
             appliedOverflowY() == VisibleOverflow) {
             if (!(style->height().isAuto() ||
-                  (style->height().isPercent() && !parentHasFixedValue))) {
+                  style->height().isDefinite(parentHasFixedValue))) {
                 LayoutUnit height = LayoutUnit(style->height().specifiedValue(
-                    parentHeight, viewportHeight));
+                    parentHeight, viewportWidth, viewportHeight));
                 height = contentHeightApplyingBoxSizing(height);
 
                 minHeight = height;
@@ -956,12 +965,12 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
     }
 
     if (style->maxHeight().isSpecified()) {
-        if (!parentHasFixedValue && style->maxHeight().isPercent()) {
+        if (!style->maxHeight().isDefinite(parentHasFixedValue)) {
             return height;
         }
 
-        LayoutUnit maxHeight =
-            style->maxHeight().specifiedValue(parentHeight, viewportHeight);
+        LayoutUnit maxHeight = style->maxHeight().specifiedValue(
+            parentHeight, viewportWidth, viewportHeight);
 
         maxHeight = contentHeightApplyingBoxSizing(maxHeight);
 
@@ -976,10 +985,11 @@ LayoutUnit FrameBox::outlineThickness()
 {
     LayoutUnit cbContentWidth = containingBlock(this)->contentWidth();
     LayoutUnit vw = node()->document()->frame()->asFrameDocument()->width();
+    LayoutUnit vh = node()->document()->frame()->asFrameDocument()->height();
     LayoutUnit outlineWidth =
-        style()->outlineWidth().specifiedValue(cbContentWidth, vw);
+        style()->outlineWidth().specifiedValue(cbContentWidth, vw, vh);
     LayoutUnit outlineOffset =
-        style()->outlineOffset().specifiedValue(cbContentWidth, vw);
+        style()->outlineOffset().specifiedValue(cbContentWidth, vw, vh);
     return outlineWidth + outlineOffset;
 }
 }

@@ -82,7 +82,6 @@ public:
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
     {
         m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-        STARFISH_ASSERT(m_width.isFixed() || m_width.isViewportPercent());
         m_width.roundBorderWidth();
     }
 

@@ -158,7 +158,8 @@ private:
                                         size_t colId);
 
     void setCandidateCellWidthsAndReturnCellInfo(
-        LayoutUnit tableWidth, LayoutUnit* sumOfAutoCellPreferredWidths,
+        LayoutContext& ctx, LayoutUnit tableWidth,
+        LayoutUnit* sumOfAutoCellPreferredWidths,
         LayoutUnit* sumOfAdjustedSpecifiedCellWidths,
         std::vector<ColSizeStruct*>* columnsAdjustedToMinWidths,
         std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,

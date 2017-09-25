@@ -31,6 +31,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/page/Window.h"
+#include "core/style/CalcData.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
@@ -134,8 +135,8 @@ static Length parseAbsoluteFontSize(int col, float mediumSize)
     return Length(Length::Fixed, strictFontSizeTable[row][col]);
 }
 
-static Length convertValueToLength(CSSStyleValuePair::ValueKind kind,
-                                   CSSStyleValuePair::ValueData data)
+static Nullable<Length> convertValueToLength(CSSStyleValuePair::ValueKind kind,
+                                             CSSStyleValuePair::ValueData data)
 {
     if (kind == CSSStyleValuePair::ValueKind::Auto) {
         return Length();
@@ -145,6 +146,13 @@ static Length convertValueToLength(CSSStyleValuePair::ValueKind kind,
         return Length(Length::Percent, data.m_floatValue);
     } else if (kind == CSSStyleValuePair::ValueKind::Number) {
         return Length(Length::Fixed, data.m_floatValue);
+    } else if (kind == CSSStyleValuePair::ValueKind::CalcValueKind) {
+        CalcValueType type = data.m_calc->type();
+        if (type.isLength() || type.isPercentage()) {
+            return Length(data.m_calc);
+        } else {
+            return Nullable<Length>();
+        }
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -175,8 +183,13 @@ static void setComputedStyleBackgroundPositionX(ComputedStyle* style,
             setComputedStyleBackgroundPositionX(style, (*list)[i], i);
         }
     } else {
-        style->setBackgroundPositionX(
-            convertValueToLength(value.valueKind(), value.value()), layer);
+        Nullable<Length> len =
+            convertValueToLength(value.valueKind(), value.value());
+        if (len.hasValue()) {
+            style->setBackgroundPositionX(len.getValue(), layer);
+        } else {
+            style->setBackgroundPositionX(Length(Length::Percent, 0.0f), layer);
+        }
     }
 }
 
@@ -204,8 +217,13 @@ static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
             setComputedStyleBackgroundPositionY(style, (*list)[i], i);
         }
     } else {
-        style->setBackgroundPositionY(
-            convertValueToLength(value.valueKind(), value.value()), layer);
+        Nullable<Length> len =
+            convertValueToLength(value.valueKind(), value.value());
+        if (len.hasValue()) {
+            style->setBackgroundPositionY(len.getValue(), layer);
+        } else {
+            style->setBackgroundPositionY(Length(Length::Percent, 0.0f), layer);
+        }
     }
 }
 
@@ -1864,7 +1882,8 @@ String* CSSStyleValuePair::toString() const
 
 void CSSStyleValuePair::setLengthValue(const char* value, size_t len)
 {
-    updateValueUnitLength(CSSTokenValue(value), AllowNegative | AllowPercent);
+    updateValueUnitLengthOrCalc(CSSTokenValue(value),
+                                AllowNegative | AllowPercent);
 }
 
 String* CSSStyleDeclaration::BackgroundRepeat()
@@ -3002,18 +3021,14 @@ void StyleResolver::apply(Element* element,
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->m_width = Length();
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Auto) {
-                style->m_width = Length();
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                style->m_width = cssValues[k].lengthValue().toLength();
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                style->m_width =
-                    Length(Length::Percent, cssValues[k].percentageValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->m_width = length.getValue();
+                } else {
+                    style->m_width = Length();
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::MaxWidth:
@@ -3024,17 +3039,16 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->setMaxWidth(Length());
             } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                style->setMaxWidth(cssValues[k].lengthValue().toLength());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                style->setMaxWidth(
-                    Length(Length::Percent, cssValues[k].percentageValue()));
-            } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
                 style->setMaxWidth(Length());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setMaxWidth(length.getValue());
+                } else {
+                    style->setMaxWidth(Length());
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::MinWidth:
@@ -3044,18 +3058,14 @@ void StyleResolver::apply(Element* element,
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->setMinWidth(Length());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Auto) {
-                style->setMinWidth(Length());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                style->setMinWidth(cssValues[k].lengthValue().toLength());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                style->setMinWidth(
-                    Length(Length::Percent, cssValues[k].percentageValue()));
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setMinWidth(length.getValue());
+                } else {
+                    style->setMinWidth(Length());
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::Height:
@@ -3065,18 +3075,14 @@ void StyleResolver::apply(Element* element,
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->m_height = Length();
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Auto) {
-                style->m_height = Length();
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                style->m_height = cssValues[k].lengthValue().toLength();
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                style->m_height =
-                    Length(Length::Percent, cssValues[k].percentageValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->m_height = length.getValue();
+                } else {
+                    style->m_height = Length();
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::MaxHeight:
@@ -3087,17 +3093,16 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->setMaxHeight(Length());
             } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                style->setMaxHeight(cssValues[k].lengthValue().toLength());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                style->setMaxHeight(
-                    Length(Length::Percent, cssValues[k].percentageValue()));
-            } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
                 style->setMaxHeight(Length());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setMaxHeight(length.getValue());
+                } else {
+                    style->setMaxHeight(Length());
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::MinHeight:
@@ -3107,18 +3112,14 @@ void StyleResolver::apply(Element* element,
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->setMinHeight(Length());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Auto) {
-                style->setMinHeight(Length());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                style->setMinHeight(cssValues[k].lengthValue().toLength());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                style->setMinHeight(
-                    Length(Length::Percent, cssValues[k].percentageValue()));
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setMinHeight(length.getValue());
+                } else {
+                    style->setMinHeight(Length());
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::Color:
@@ -3199,25 +3200,33 @@ void StyleResolver::apply(Element* element,
                     style->setFontSize(Length(
                         Length::Fixed, parentStyle->fontSize().fixed() / 1.2f));
                 }
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                float parentComputedFontSize = parentStyle->fontSize().fixed();
-                style->setFontSize(
-                    Length(Length::Fixed, cssValues[k].percentageValue() *
-                                              parentComputedFontSize));
             } else {
-                STARFISH_ASSERT(cssValues[k].valueKind() ==
-                                CSSStyleValuePair::ValueKind::Length);
-                style->setFontSize(cssValues[k].lengthValue().toLength());
-                ComputedStyle* rootStyle =
-                    element->document()->rootElement()->style();
-                Length rootFontSize =
-                    rootStyle ? rootStyle->fontSize()
-                              : Length(Length::Fixed, DEFAULT_FONT_SIZE);
-                auto f = style->fontSize();
-                f.changeToFixedIfNeeded(parentStyle->fontSize(), rootFontSize,
-                                        parentStyle->font());
-                style->setFontSize(f);
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    Length l = length.getValue();
+                    if (l.isPercent()) {
+                        float parentComputedFontSize =
+                            parentStyle->fontSize().fixed();
+                        style->setFontSize(
+                            Length(Length::Fixed,
+                                   l.percentValue(parentComputedFontSize)));
+                    } else {
+                        ComputedStyle* rootStyle =
+                            element->document()->rootElement()->style();
+                        Length rootFontSize =
+                            rootStyle
+                                ? rootStyle->fontSize()
+                                : Length(Length::Fixed, DEFAULT_FONT_SIZE);
+                        l.changeToFixedIfNeeded(parentStyle->fontSize(),
+                                                rootFontSize,
+                                                parentStyle->font());
+                        style->setFontSize(l);
+                    }
+                } else {
+                    style->setFontSize(
+                        parseAbsoluteFontSize(3, this->m_mediumFontSize));
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::FontStyle:
@@ -3307,20 +3316,19 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->setVerticalAlign(ComputedStyle::initialVerticalAlign());
             } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                style->setVerticalAlignLength(
-                    cssValues[k].lengthValue().toLength());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                style->setVerticalAlignLength(
-                    Length(Length::Percent, cssValues[k].percentageValue()));
-            } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::VerticalAlignValueKind) {
                 STARFISH_ASSERT(cssValues[k].verticalAlignValue() !=
                                 VerticalAlignValue::NumericVAlignValue);
                 style->setVerticalAlign(cssValues[k].verticalAlignValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setVerticalAlignLength(length.getValue());
+                } else {
+                    style->setVerticalAlign(
+                        ComputedStyle::initialVerticalAlign());
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::TableLayout:
@@ -3359,13 +3367,16 @@ void StyleResolver::apply(Element* element,
                 CSSStyleValuePair::ValueKind::Inherit) {
                 style->setTextIndent(parentStyle->textIndent());
             } else if (cssValues[k].valueKind() ==
-                           CSSStyleValuePair::ValueKind::Length ||
-                       cssValues[k].valueKind() ==
-                           CSSStyleValuePair::ValueKind::Percentage) {
-                style->setTextIndent(convertValueToLength(
-                    cssValues[k].valueKind(), cssValues[k].value()));
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->setTextIndent(Length(Length::Fixed, 0));
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                Nullable<Length> len = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (len.hasValue()) {
+                    style->setTextIndent(len.getValue());
+                } else {
+                    style->setTextIndent(Length(Length::Fixed, 0));
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::TextDecoration:
@@ -3530,12 +3541,18 @@ void StyleResolver::apply(Element* element,
                         ValueList* list = layer.multiValue();
                         LengthSize result;
                         if (list->size() >= 1) {
-                            result.m_width = convertValueToLength(
+                            Nullable<Length> width = convertValueToLength(
                                 (*list)[0].valueKind(), (*list)[0].value());
+                            if (width.hasValue()) {
+                                result.m_width = width.getValue();
+                            }
                         }
                         if (list->size() >= 2) {
-                            result.m_height = convertValueToLength(
+                            Nullable<Length> height = convertValueToLength(
                                 (*list)[1].valueKind(), (*list)[1].value());
+                            if (height.hasValue()) {
+                                result.m_height = height.getValue();
+                            }
                         }
                         style->setBackgroundSizeValue(result, l);
                     } else {
@@ -3664,23 +3681,36 @@ void StyleResolver::apply(Element* element,
                     style->setBorderImageSliceFill(true);
                     size--;
                 }
-                top =
+                Nullable<Length> nTop =
                     convertValueToLength((*l)[0].valueKind(), (*l)[0].value());
+                if (nTop.hasValue()) {
+                    top = nTop.getValue();
+                }
+
                 if (size > 1) {
-                    right = convertValueToLength((*l)[1].valueKind(),
-                                                 (*l)[1].value());
+                    Nullable<Length> nRight = convertValueToLength(
+                        (*l)[1].valueKind(), (*l)[1].value());
+                    if (nRight.hasValue()) {
+                        right = nRight.getValue();
+                    }
                 } else {
                     right = top;
                 }
                 if (size > 2) {
-                    bottom = convertValueToLength((*l)[2].valueKind(),
-                                                  (*l)[2].value());
+                    Nullable<Length> nBottom = convertValueToLength(
+                        (*l)[2].valueKind(), (*l)[2].value());
+                    if (nBottom.hasValue()) {
+                        bottom = nBottom.getValue();
+                    }
                 } else {
                     bottom = top;
                 }
                 if (size > 3) {
-                    left = convertValueToLength((*l)[3].valueKind(),
-                                                (*l)[3].value());
+                    Nullable<Length> nLeft = convertValueToLength(
+                        (*l)[3].valueKind(), (*l)[3].value());
+                    if (nLeft.hasValue()) {
+                        left = nLeft.getValue();
+                    }
                 } else {
                     left = right;
                 }
@@ -3720,12 +3750,17 @@ void StyleResolver::apply(Element* element,
                     BorderImageLengthBox(unit, unit, unit, unit));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
-                BorderImageLength unit;
-                unit.setValue(
-                    convertValueToLength(CSSStyleValuePair::ValueKind::Length,
-                                         cssValues[k].value()));
-                style->setBorderImageWidths(
-                    BorderImageLengthBox(unit, unit, unit, unit));
+                Nullable<Length> len = convertValueToLength(
+                    CSSStyleValuePair::ValueKind::Length, cssValues[k].value());
+                if (len.hasValue()) {
+                    BorderImageLength unit;
+                    unit.setValue(len.getValue());
+                    style->setBorderImageWidths(
+                        BorderImageLengthBox(unit, unit, unit, unit));
+                } else {
+                    BorderImageLengthBox box;
+                    style->setBorderImageWidths(box);
+                }
             } else {
                 STARFISH_LOG_ERROR(
                     "border-image-width: a list of values is not supported\n")
@@ -3821,19 +3856,37 @@ void StyleResolver::apply(Element* element,
                 style->setVerticalBorderSpacing(Length(Length::Fixed, 0));
                 break;
             case CSSStyleValuePair::ValueKind::Length:
-                style->setHorizontalBorderSpacing(convertValueToLength(
-                    cssValues[k].valueKind(), cssValues[k].value()));
-                style->setVerticalBorderSpacing(convertValueToLength(
-                    cssValues[k].valueKind(), cssValues[k].value()));
+            case CSSStyleValuePair::ValueKind::CalcValueKind: {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setHorizontalBorderSpacing(length.getValue());
+                    style->setVerticalBorderSpacing(length.getValue());
+                } else {
+                    style->setHorizontalBorderSpacing(Length(Length::Fixed, 0));
+                    style->setVerticalBorderSpacing(Length(Length::Fixed, 0));
+                }
                 break;
+            }
             default:
                 STARFISH_ASSERT(CSSStyleValuePair::ValueKind::ValueListKind ==
                                 cssValues[k].valueKind());
                 ValueList* list = cssValues[k].multiValue();
-                style->setHorizontalBorderSpacing(convertValueToLength(
-                    (*list)[0].valueKind(), (*list)[0].value()));
-                style->setVerticalBorderSpacing(convertValueToLength(
-                    (*list)[1].valueKind(), (*list)[1].value()));
+                Nullable<Length> hbLength = convertValueToLength(
+                    (*list)[0].valueKind(), (*list)[0].value());
+                Nullable<Length> vbLength = convertValueToLength(
+                    (*list)[1].valueKind(), (*list)[1].value());
+                if (hbLength.hasValue()) {
+                    style->setHorizontalBorderSpacing(hbLength.getValue());
+                } else {
+                    style->setHorizontalBorderSpacing(Length(Length::Fixed, 0));
+                }
+
+                if (vbLength.hasValue()) {
+                    style->setVerticalBorderSpacing(vbLength.getValue());
+                } else {
+                    style->setVerticalBorderSpacing(Length(Length::Fixed, 0));
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::CaptionSide:
@@ -3891,14 +3944,14 @@ void StyleResolver::apply(Element* element,
                 // The computed value should be same as the specified value.
                 style->setLineHeight(Length(Length::InheritableNumber,
                                             cssValues[k].numberValue()));
-            } else if (cssValues[k].valueKind() ==
-                           CSSStyleValuePair::ValueKind::Length ||
-                       cssValues[k].valueKind() ==
-                           CSSStyleValuePair::ValueKind::Percentage) {
-                style->setLineHeight(convertValueToLength(
-                    cssValues[k].valueKind(), cssValues[k].value()));
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setLineHeight(length.getValue());
+                } else {
+                    style->setLineHeight(Length(Length::Percent, -100));
+                }
             }
             break;
 #define ADD_RESOLVE_STYLE_POS(POS, pos)                                   \
@@ -4010,46 +4063,46 @@ void StyleResolver::apply(Element* element,
             ADD_RESOLVE_STYLE_BORDER_COLOR(Bottom)
             ADD_RESOLVE_STYLE_BORDER_COLOR(Left)
 #undef ADD_RESOLVE_STYLE_BORDER_COLOR
-#define ADD_RESOLVE_STYLE_MARGIN(POS)                                      \
-    case CSSStyleValuePair::KeyKind::Margin##POS:                          \
-        if (cssValues[k].valueKind() ==                                    \
-            CSSStyleValuePair::ValueKind::Inherit) {                       \
-            style->setMargin##POS(parentStyle->margin##POS());             \
-        } else if (cssValues[k].valueKind() ==                             \
-                   CSSStyleValuePair::ValueKind::Initial) {                \
-            style->setMargin##POS(Length(Length::Fixed, 0));               \
-        } else {                                                           \
-            STARFISH_ASSERT(cssValues[k].valueKind() ==                    \
-                                CSSStyleValuePair::ValueKind::Auto ||      \
-                            cssValues[k].valueKind() ==                    \
-                                CSSStyleValuePair::ValueKind::Length ||    \
-                            cssValues[k].valueKind() ==                    \
-                                CSSStyleValuePair::ValueKind::Percentage); \
-            style->setMargin##POS(convertValueToLength(                    \
-                cssValues[k].valueKind(), cssValues[k].value()));          \
-        }                                                                  \
+#define ADD_RESOLVE_STYLE_MARGIN(POS)                            \
+    case CSSStyleValuePair::KeyKind::Margin##POS:                \
+        if (cssValues[k].valueKind() ==                          \
+            CSSStyleValuePair::ValueKind::Inherit) {             \
+            style->setMargin##POS(parentStyle->margin##POS());   \
+        } else if (cssValues[k].valueKind() ==                   \
+                   CSSStyleValuePair::ValueKind::Initial) {      \
+            style->setMargin##POS(Length(Length::Fixed, 0));     \
+        } else {                                                 \
+            Nullable<Length> length = convertValueToLength(      \
+                cssValues[k].valueKind(), cssValues[k].value()); \
+            if (length.hasValue()) {                             \
+                style->setMargin##POS(length.getValue());        \
+            } else {                                             \
+                style->setMargin##POS(Length(Length::Fixed, 0)); \
+            }                                                    \
+        }                                                        \
         break;
             ADD_RESOLVE_STYLE_MARGIN(Top)
             ADD_RESOLVE_STYLE_MARGIN(Right)
             ADD_RESOLVE_STYLE_MARGIN(Bottom)
             ADD_RESOLVE_STYLE_MARGIN(Left)
 #undef ADD_RESOLVE_STYLE_MARGIN
-#define ADD_RESOLVE_STYLE_PADDING(POS)                                     \
-    case CSSStyleValuePair::KeyKind::Padding##POS:                         \
-        if (cssValues[k].valueKind() ==                                    \
-            CSSStyleValuePair::ValueKind::Inherit) {                       \
-            style->setPadding##POS(parentStyle->padding##POS());           \
-        } else if (cssValues[k].valueKind() ==                             \
-                   CSSStyleValuePair::ValueKind::Initial) {                \
-            style->setPadding##POS(ComputedStyle::initialPadding());       \
-        } else {                                                           \
-            STARFISH_ASSERT(cssValues[k].valueKind() ==                    \
-                                CSSStyleValuePair::ValueKind::Length ||    \
-                            cssValues[k].valueKind() ==                    \
-                                CSSStyleValuePair::ValueKind::Percentage); \
-            style->setPadding##POS(convertValueToLength(                   \
-                cssValues[k].valueKind(), cssValues[k].value()));          \
-        }                                                                  \
+#define ADD_RESOLVE_STYLE_PADDING(POS)                                   \
+    case CSSStyleValuePair::KeyKind::Padding##POS:                       \
+        if (cssValues[k].valueKind() ==                                  \
+            CSSStyleValuePair::ValueKind::Inherit) {                     \
+            style->setPadding##POS(parentStyle->padding##POS());         \
+        } else if (cssValues[k].valueKind() ==                           \
+                   CSSStyleValuePair::ValueKind::Initial) {              \
+            style->setPadding##POS(ComputedStyle::initialPadding());     \
+        } else {                                                         \
+            Nullable<Length> length = convertValueToLength(              \
+                cssValues[k].valueKind(), cssValues[k].value());         \
+            if (length.hasValue()) {                                     \
+                style->setPadding##POS(length.getValue());               \
+            } else {                                                     \
+                style->setPadding##POS(ComputedStyle::initialPadding()); \
+            }                                                            \
+        }                                                                \
         break;
             ADD_RESOLVE_STYLE_PADDING(Top)
             ADD_RESOLVE_STYLE_PADDING(Right)
@@ -4166,29 +4219,44 @@ void StyleResolver::apply(Element* element,
                         break;
                     case CSSTransformFunction::Kind::Translate: {
                         Length a, b(Length::Fixed, 0);
-                        a = convertValueToLength((*f.values())[0].valueKind(),
+                        Nullable<Length> nA =
+                            convertValueToLength((*f.values())[0].valueKind(),
                                                  (*f.values())[0].value());
+                        if (nA.hasValue()) {
+                            a = nA.getValue();
+                        } else {
+                            break;
+                        }
                         if (valueSize > 1) {
-                            b = convertValueToLength(
+                            Nullable<Length> nB = convertValueToLength(
                                 (*f.values())[1].valueKind(),
                                 (*f.values())[1].value());
+                            if (nB.hasValue()) {
+                                b = nB.getValue();
+                            } else {
+                                break;
+                            }
                         }
                         style->setTransformTranslate(a, b);
                         break;
                     }
                     case CSSTransformFunction::Kind::TranslateX: {
-                        Length a =
+                        Nullable<Length> a =
                             convertValueToLength((*f.values())[0].valueKind(),
                                                  (*f.values())[0].value());
-                        style->setTransformTranslate(a,
-                                                     Length(Length::Fixed, 0));
+                        if (a.hasValue()) {
+                            style->setTransformTranslate(
+                                a.getValue(), Length(Length::Fixed, 0));
+                        }
                     } break;
                     case CSSTransformFunction::Kind::TranslateY: {
-                        Length a =
+                        Nullable<Length> a =
                             convertValueToLength((*f.values())[0].valueKind(),
                                                  (*f.values())[0].value());
-                        style->setTransformTranslate(Length(Length::Fixed, 0),
-                                                     a);
+                        if (a.hasValue()) {
+                            style->setTransformTranslate(
+                                Length(Length::Fixed, 0), a.getValue());
+                        }
                     } break;
                     case CSSTransformFunction::Kind::Scale:
                         if (valueSize == 1) {
@@ -4275,18 +4343,27 @@ void StyleResolver::apply(Element* element,
                         }
                     } else {
                         if (i == 0) {
-                            xAxis = convertValueToLength(item.valueKind(),
-                                                         item.value());
+                            Nullable<Length> nXAxis = convertValueToLength(
+                                item.valueKind(), item.value());
+                            if (nXAxis.hasValue()) {
+                                xAxis = nXAxis.getValue();
+                            }
                         } else {
-                            yAxis = convertValueToLength(item.valueKind(),
-                                                         item.value());
+                            Nullable<Length> nYAxis = convertValueToLength(
+                                item.valueKind(), item.value());
+                            if (nYAxis.hasValue()) {
+                                yAxis = nYAxis.getValue();
+                            }
                         }
                     }
                 }
 
                 if (list->size() == 3) {
-                    zAxis = convertValueToLength((*list)[2].valueKind(),
-                                                 (*list)[2].value());
+                    Nullable<Length> nZAxis = convertValueToLength(
+                        (*list)[2].valueKind(), (*list)[2].value());
+                    if (nZAxis.hasValue()) {
+                        zAxis = nZAxis.getValue();
+                    }
                 }
 
                 style->setTransformOriginValue(xAxis, yAxis, zAxis);
@@ -5488,13 +5565,13 @@ bool CSSStyleValuePair::updateValueUnitBorderColor(const CSSTokenValue& token)
 
 bool CSSStyleValuePair::updateValueUnitMargin(const CSSTokenValue& value)
 {
-    return updateValueUnitLength(value,
-                                 AllowNegative | AllowPercent | AllowAuto);
+    return updateValueUnitLengthOrCalc(value, AllowNegative | AllowPercent |
+                                                  AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueUnitPadding(const CSSTokenValue& value)
 {
-    return updateValueUnitLength(CSSTokenValue(value), AllowPercent);
+    return updateValueUnitLengthOrCalc(CSSTokenValue(value), AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValueColor(const CSSTokenVector& tokens)
@@ -5922,13 +5999,135 @@ bool CSSStyleValuePair::updateValueUnitLength(const CSSTokenValue& token,
     return true;
 }
 
+bool CSSStyleValuePair::updateValueUnitLengthOrCalc(const CSSTokenValue& token,
+                                                    uint8_t option)
+{
+    if (token.startsWith("calc")) {
+        option = option & ~CSSStyleValuePair::LengthOption::AllowAuto;
+        option = option & ~CSSStyleValuePair::LengthOption::AllowNone;
+        option =
+            option & ~CSSStyleValuePair::LengthOption::AllowLengthWithoutUnit;
+
+        CSSPropertyParser parser((char*)token.data());
+
+        parser.consumeString();
+        if (parser.parsedString()->equals("calc")) {
+            if (!parser.consumeIfNext('(')) {
+                return false;
+            }
+
+            CalcData* data = new CalcData();
+            bool isPlus = true;
+            while (true) {
+                CalcTerm* term = new CalcTerm();
+                bool isMul = false;
+                bool isLen = false;
+                while (!parser.isEnd()) {
+                    parser.consumeWhitespaces();
+
+                    CSSStyleValuePair ret;
+                    char* pos = parser.curPos();
+                    parser.consumeString();
+                    auto str = parser.parsedString()->toUTF8NonGCString();
+                    CalcValue val;
+                    if (ret.updateValueUnitLength(CSSTokenValue(str.c_str()),
+                                                  option)) {
+                        if (isLen) {
+                            // In one term, there should appear only one length
+                            return false;
+                        }
+                        isLen = true;
+                        if (isPlus) {
+                            if (ret.valueKind() ==
+                                CSSStyleValuePair::ValueKind::Percentage) {
+                                val.setType(CalcValueType::Percentage);
+                                val.setValue(ret.percentageValue());
+                            } else {
+                                val.setType(CalcValueType::Length);
+                                val.setValue(ret.lengthValue());
+                            }
+                        } else {
+                            if (ret.valueKind() ==
+                                CSSStyleValuePair::ValueKind::Percentage) {
+                                val.setType(CalcValueType::Percentage);
+                                val.setValue(-1 * ret.percentageValue());
+                            } else {
+                                val.setType(CalcValueType::Length);
+                                val.setValue(-1 * ret.lengthValue());
+                            }
+                        }
+                    } else {
+                        parser.swap(pos);
+                        if (parser.consumeNumber()) {
+                            float num = parser.parsedNumber();
+                            val.setType(CalcValueType::Number);
+                            if (isPlus) {
+                                val.setValue(num);
+                            } else {
+                                val.setValue(-1 * num);
+                            }
+                        } else {
+                            return false;
+                        }
+                    }
+
+                    if (term->hasValue()) {
+                        term->appendValue(isMul, val);
+                    } else {
+                        term->appendValue(val);
+                    }
+
+                    parser.consumeWhitespaces();
+
+                    if (parser.consumeIfNext('*')) {
+                        isMul = true;
+                    } else if (parser.consumeIfNext('/')) {
+                        isMul = false;
+                    } else {
+                        if (!isLen) {
+                            return false;
+                        }
+                        break;
+                    }
+                }
+
+                data->appendTerm(term);
+
+                parser.consumeWhitespaces();
+
+                if (parser.consumeIfNext('+')) {
+                    isPlus = true;
+                } else if (parser.consumeIfNext('-')) {
+                    isPlus = false;
+                } else if (parser.consumeIfNext(')')) {
+                    break;
+                }
+
+                if (parser.isEnd()) {
+                    return false;
+                }
+            }
+
+            if (parser.isEnd()) {
+                m_valueKind = CSSStyleValuePair::ValueKind::CalcValueKind;
+                m_value = data;
+                return true;
+            }
+        }
+
+        return false;
+    } else {
+        return updateValueUnitLength(token, option);
+    }
+}
+
 bool CSSStyleValuePair::updateValueLength(const CSSTokenVector& tokens,
                                           uint8_t option)
 {
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitLength(tokens[0], option);
+    return updateValueUnitLengthOrCalc(tokens[0], option);
 }
 
 bool CSSStyleValuePair::updateValueBorderImageWidth(
@@ -5958,7 +6157,8 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPositionX(
         m_value.m_side = SideValue::RightSideValue;
     } else if (STRING_VALUE_IS_STRING("center")) {
         m_value.m_side = SideValue::CenterSideValue;
-    } else if (updateValueUnitLength(value, AllowNegative | AllowPercent)) {
+    } else if (updateValueUnitLengthOrCalc(value,
+                                           AllowNegative | AllowPercent)) {
     } else {
         return false;
     }
@@ -5975,7 +6175,8 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPositionY(
         m_value.m_side = SideValue::BottomSideValue;
     } else if (STRING_VALUE_IS_STRING("center")) {
         m_value.m_side = SideValue::CenterSideValue;
-    } else if (updateValueUnitLength(value, AllowNegative | AllowPercent)) {
+    } else if (updateValueUnitLengthOrCalc(value,
+                                           AllowNegative | AllowPercent)) {
     } else {
         return false;
     }
@@ -6037,8 +6238,8 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
                 ret.setValueList(
                     new ValueList(ValueList::Separator::SpaceSeparator));
                 CSSStyleValuePair r;
-                if (!r.updateValueUnitLength(tokens[i - 1],
-                                             AllowPercent | AllowAuto)) {
+                if (!r.updateValueUnitLengthOrCalc(tokens[i - 1],
+                                                   AllowPercent | AllowAuto)) {
                     return false;
                 }
                 ret.multiValue()->push_back(r);
@@ -6047,10 +6248,10 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
             ret.setValueList(
                 new ValueList(ValueList::Separator::SpaceSeparator));
             CSSStyleValuePair r1, r2;
-            if (!r1.updateValueUnitLength(tokens[i - 2],
-                                          AllowPercent | AllowAuto) ||
-                !r2.updateValueUnitLength(tokens[i - 1],
-                                          AllowPercent | AllowAuto)) {
+            if (!r1.updateValueUnitLengthOrCalc(tokens[i - 2],
+                                                AllowPercent | AllowAuto) ||
+                !r2.updateValueUnitLengthOrCalc(tokens[i - 1],
+                                                AllowPercent | AllowAuto)) {
                 return false;
             }
             ret.multiValue()->push_back(r1);
@@ -6132,7 +6333,7 @@ bool CSSStyleValuePair::updateValueUnitFontSize(const CSSTokenValue& value)
     } else if (STRING_VALUE_IS_STRING("smaller")) {
         m_value.m_fontSize = FontSizeValue::SmallerFontSizeValue;
     } else {
-        return updateValueUnitLength(value, AllowPercent);
+        return updateValueUnitLengthOrCalc(value, AllowPercent);
     }
     return true;
 }
@@ -6157,7 +6358,7 @@ bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
         m_value.m_floatValue = result;
         return true;
     } else {
-        return updateValueUnitLength(value, AllowPercent);
+        return updateValueUnitLengthOrCalc(value, AllowPercent);
     }
 }
 
@@ -6251,7 +6452,7 @@ bool CSSStyleValuePair::updateValueVerticalAlign(const CSSTokenVector& tokens)
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::TextBottomVAlignValue;
     } else {
-        return updateValueUnitLength(value, AllowNegative | AllowPercent);
+        return updateValueUnitLengthOrCalc(value, AllowNegative | AllowPercent);
     }
     return true;
 }
@@ -6317,8 +6518,8 @@ bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens)
             }
 
             CSSStyleValuePair ret;
-            if (!ret.updateValueUnitLength(value,
-                                           AllowPercent | AllowNegative)) {
+            if (!ret.updateValueUnitLengthOrCalc(value, AllowPercent |
+                                                            AllowNegative)) {
                 return false;
             }
             values->push_back(ret);
@@ -6327,7 +6528,8 @@ bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens)
 
     if (tokens.size() == 3) {
         const CSSTokenValue& s = tokens[2];
-        if (!zPair.updateValueUnitLength(s, AllowPercent | AllowNegative)) {
+        if (!zPair.updateValueUnitLengthOrCalc(s,
+                                               AllowPercent | AllowNegative)) {
             return false;
         }
         if (zPair.valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
@@ -7148,7 +7350,7 @@ bool CSSStyleValuePair::updateValueUnitFlexBasis(const CSSTokenValue& value)
         m_valueKind = CSSStyleValuePair::ValueKind::FlexBasisValueKind;
         m_value.m_flexBasis = FlexBasisValue::ContentFlexBasisValue;
     } else {
-        return updateValueUnitLength(value, AllowPercent | AllowAuto);
+        return updateValueUnitLengthOrCalc(value, AllowPercent | AllowAuto);
     }
     return true;
 }
@@ -7411,7 +7613,7 @@ bool CSSStyleValuePair::updateValueStrokeWidth(const CSSTokenVector& tokens)
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitLength(
+    return updateValueUnitLengthOrCalc(
         tokens[0], CSSStyleValuePair::LengthOption::AllowPercent |
                        CSSStyleValuePair::LengthOption::AllowLengthWithoutUnit);
 }
@@ -7445,7 +7647,7 @@ bool CSSStyleValuePair::updateValueOutlineOffset(const CSSTokenVector& tokens)
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitLength(
+    return updateValueUnitLengthOrCalc(
         tokens[0], CSSStyleValuePair::LengthOption::AllowNegative);
 }
 

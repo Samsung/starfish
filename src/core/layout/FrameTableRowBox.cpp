@@ -155,11 +155,16 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
     }
 
     LayoutUnit specifiedHeight = 0;
-    if (style()->height().isFixed()) {
-        specifiedHeight = LayoutUnit::fromPixel(style()->height().fixed());
-    } else if (style()->height().isPercent()) {
+    Length height = style()->height();
+    if (height.isDefinite(false)) {
+        LayoutUnit unused;
+        specifiedHeight = height.specifiedValue(unused, ctx.viewportWidth(),
+                                                ctx.viewportHeight());
+    } else if (height.isPercent()) {
         // The spec does not define how to calculate the height when the height
         // is specified in percentage
+    } else if (height.isCalc()) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     setHeight(std::max(maxRowHeightSoFar, specifiedHeight));

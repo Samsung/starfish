@@ -142,8 +142,7 @@ public:
         m_font = nullptr;
 
         m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
-        m_inheritedStyles.m_fontSize = mediumFontSize;
-        m_inheritedStyles.m_fontSizeType = Length::Fixed;
+        m_inheritedStyles.m_fontSize = Length(Length::Fixed, mediumFontSize);
         m_inheritedStyles.m_fontWeight = FontWeightValue::NormalFontWeightValue;
         m_inheritedStyles.m_wordWrap = WordWrapValue::NormalWordWrapValue;
         m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
@@ -685,7 +684,7 @@ public:
         return m_zIndex;
     }
 
-    bool IsSpecifiedZIndex()
+    bool isSpecifiedZIndex()
     {
         return m_zIndexSpecifiedByUser;
     }
@@ -1007,14 +1006,12 @@ public:
 
     Length fontSize()
     {
-        return Length(m_inheritedStyles.m_fontSizeType,
-                      m_inheritedStyles.m_fontSize);
+        return m_inheritedStyles.m_fontSize;
     }
 
     void setFontSize(Length l)
     {
-        m_inheritedStyles.m_fontSizeType = l.type();
-        m_inheritedStyles.m_fontSize = l.rawData();
+        m_inheritedStyles.m_fontSize = l;
     }
 
     void setLetterSpacing(Length len)
@@ -1106,6 +1103,15 @@ public:
                display == DisplayValue::TableCaptionDisplayValue;
     }
 
+    void loadFont(Node* consumer, float fontSize);
+    void loadBackgroundImage(
+        Node* consumer,
+        ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
+            nullptr);
+    void loadBorderImage(
+        Node* consumer,
+        ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
+            nullptr);
     void loadResources(
         Node* consumer,
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
@@ -1585,11 +1591,10 @@ protected:
         BorderCollapseValue m_borderCollapse : 1; // table
         CaptionSideValue m_captionSide : 1;       // table
         EmptyCellsValue m_emptyCells : 1;         // table
-        Length::Type m_fontSizeType : 4;
         bool m_isRareDataAllocated : 1;
 
         Unit::Color m_color;
-        float m_fontSize;
+        Length m_fontSize;
         InheritedStylesRareData* m_rareData;
     } m_inheritedStyles;
 

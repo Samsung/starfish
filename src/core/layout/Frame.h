@@ -370,6 +370,7 @@ public:
     LayoutUnit parentContentWidth(Frame* currentFrame);
     bool parentHasFixedHeight(Frame* currentFrame);
     LayoutUnit parentFixedHeight(Frame* currentFrame);
+    LayoutUnit specifiedVerticalValue(Frame* f, Length l);
 
     void pushInlineBlockBox(FrameBlockBox* blockBox)
     {

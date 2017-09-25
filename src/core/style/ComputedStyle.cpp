@@ -119,13 +119,9 @@ public:
     Document* m_document;
 };
 
-void ComputedStyle::loadResources(
-    Node* consumer,
-    ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
+void ComputedStyle::loadFont(Node* consumer, float fontSize)
 {
     StarFish* sf = consumer->starFish();
-    float fontSize = m_inheritedStyles.m_fontSize;
-
     char style = m_inheritedStyles.m_fontStyle;
     char fontWeight = 4;
 
@@ -177,7 +173,13 @@ void ComputedStyle::loadResources(
 #else
     m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
 #endif
+}
 
+void ComputedStyle::loadBackgroundImage(
+    Node* consumer,
+    ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
+{
+    StarFish* sf = consumer->starFish();
     size_t bgIndex = 0;
     while (bgIndex < backgroundLayerSize()) {
         if (!backgroundImage(bgIndex)->equals(String::emptyString)) {
@@ -232,7 +234,13 @@ void ComputedStyle::loadResources(
         }
         bgIndex++;
     }
+}
 
+void ComputedStyle::loadBorderImage(
+    Node* consumer,
+    ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
+{
+    StarFish* sf = consumer->starFish();
     if (!borderImageSource()->equals(String::emptyString)) {
         ResourceURL* u =
             new ResourceURL(borderImageSource(),
@@ -288,6 +296,22 @@ void ComputedStyle::loadResources(
         setBorderRightStyle(BorderStyleValue::SolidBorderStyleValue);
         setBorderBottomStyle(BorderStyleValue::SolidBorderStyleValue);
     }
+}
+
+void ComputedStyle::loadResources(
+    Node* consumer,
+    ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
+{
+    // TODO: -webkit-appearance : check-box's font-size should be done layout.
+    // Because its font-size is dependent on minimum of width and height.
+    // if (!(consumer->isHTMLInputElement() &&
+    //     consumer->asHTMLInputElement()->type()->equals("checkbox"))) {
+    loadFont(consumer, m_inheritedStyles.m_fontSize.fixed());
+    // }
+    loadBackgroundImage(consumer,
+                        prevComputedStyleValueForReferenceLoadedResources);
+    loadBorderImage(consumer,
+                    prevComputedStyleValueForReferenceLoadedResources);
 }
 
 void ComputedStyle::blockify(Node* current, bool force)
@@ -359,7 +383,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     }
 
     // Convert all non-computed Lengths to computed Length
-    STARFISH_ASSERT(fontSize().isFixed() || fontSize().isViewportPercent());
+    STARFISH_ASSERT(fontSize().isComputed() || fontSize().isCalc());
     Length curFontSize = fontSize();
     Length rootFontSize = rootStyle ? rootStyle->fontSize()
                                     : Length(Length::Fixed, DEFAULT_FONT_SIZE);
@@ -987,8 +1011,10 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
         } else if (t.type() == StyleTransformData::Translate) {
             TranslateTransform* m = t.translate();
             matrix.preTranslate(
-                m->tx().specifiedValue(containerWidth, viewportWidth),
-                m->ty().specifiedValue(containerHeight, viewportHeight));
+                m->tx().specifiedValue(containerWidth, viewportWidth,
+                                       viewportHeight),
+                m->ty().specifiedValue(containerHeight, viewportWidth,
+                                       viewportHeight));
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

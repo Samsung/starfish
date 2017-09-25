@@ -167,15 +167,19 @@ void FrameTableSectionBox::collectCellWidthInfo(LayoutContext& ctx)
                 std::max(col->minCellWidth, cell->minCellWidth());
             col->maxCellWidth =
                 std::max(col->maxCellWidth, cell->maxCellWidth());
-            if (cell->style()->width().isFixed()) {
-                LayoutUnit width = cell->style()->width().fixed();
-                width += cell->borderWidth() + cell->paddingWidth();
-                col->maxSpecifiedWidth =
-                    std::max(col->maxSpecifiedWidth, width);
-            } else if (cell->style()->width().isPercent()) {
+            Length width = cell->style()->width();
+            if (width.isDefinite(false)) {
+                LayoutUnit unused;
+                LayoutUnit w = width.specifiedValue(unused, ctx.viewportWidth(),
+                                                    ctx.viewportHeight());
+                w += cell->borderWidth() + cell->paddingWidth();
+                col->maxSpecifiedWidth = std::max(col->maxSpecifiedWidth, w);
+            } else if (width.isPercent()) {
                 col->maxPercentageWidth =
                     std::max(col->maxPercentageWidth,
                              (double)cell->style()->width().percent());
+            } else if (width.isCalc()) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
             col->isNullCell = false;
         }
