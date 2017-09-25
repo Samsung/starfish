@@ -195,6 +195,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_selected =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "selected"));
+    m_alt = QualifiedName(AtomicString::emptyAtomicString(),
+                          AtomicString::createAtomicString(sf, "alt"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));
@@ -257,6 +259,19 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_scrolling =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "scrolling"));
+
+    m_ariaHidden =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "aria-hidden"));
+    m_ariaLabel =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "aria-label"));
+    m_ariaLabelledby =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "aria-labelledby"));
+    m_ariaDescribedby =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "aria-describedby"));
 
     m_click = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "click"));

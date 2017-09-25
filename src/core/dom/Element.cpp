@@ -49,6 +49,7 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #ifdef STARFISH_ENABLE_TTS
+#include "core/modules/tts/TextAlternativeHelper.h"
 #include "core/modules/tts/TTS.h"
 #include "core/dom/Event.h"
 #endif
@@ -482,9 +483,10 @@ bool Element::handleDefaultEvent(Event* event)
     if (sf->tts()->isTTSEnable()) {
         if (isHTMLElement() && isFocusable() && event->isFocusEvent() &&
             event->type()->equals("focus")) {
-            auto text = textContent();
-            if (text.hasValue()) {
-                sf->tts()->speech(text.getValue());
+            TextAlternativeHelper* tah = new TextAlternativeHelper(sf);
+            String* altText = tah->getComputedTextAlternative(this);
+            if (altText) {
+                sf->tts()->speech(altText);
             }
         }
     }

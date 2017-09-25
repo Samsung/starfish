@@ -71,11 +71,11 @@ public:
     static String* checkboxTickSymbol();
 
     String* visibleValue();
+    bool isEditableType() const;
 
 protected:
 private:
     void toggleChecked();
-    bool isEditableType() const;
     bool isSizableType() const;
     void updateInputboxValue(String* value);
     bool shouldUsePlaceholder();

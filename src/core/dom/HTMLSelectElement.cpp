@@ -74,6 +74,21 @@ HTMLCollection* HTMLSelectElement::selectedOptions()
     return m_selectedOptions;
 }
 
+HTMLOptionElement* HTMLSelectElement::firstSelectedOptionOrFirstOptionElement()
+{
+    HTMLOptionElement* selected = nullptr;
+    HTMLCollection* selectedOptions = HTMLSelectElement::selectedOptions();
+    if (selectedOptions->length() > 0) {
+        selected = selectedOptions->item(0)->asHTMLOptionElement();
+    }
+
+    if (!selected) {
+        selected = firstOptionElement();
+    }
+    // Selected can be nullptr
+    return selected;
+}
+
 bool HTMLSelectElement::supportsFocus() const
 {
     return true;

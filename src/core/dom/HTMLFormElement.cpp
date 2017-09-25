@@ -56,19 +56,22 @@ FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
 }
 
 HTMLFormElement::HTMLFormElement(Document* document)
-    : HTMLFormObject(document)
+    : HTMLFormObject(document, false)
     , m_elements(nullptr)
     , m_plannedNavigationTaskId((size_t)-1)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
 
-HTMLFormObject::HTMLFormObject(Document* document)
+HTMLFormObject::HTMLFormObject(Document* document, bool supportTabIndex)
     : HTMLElement(document)
     , m_disabled(false)
+    , m_supportTabIndex(supportTabIndex)
 {
-    m_tabIndexWasSetExplicitly = true;
-    m_tabIndex = 0;
+    if (m_supportTabIndex) {
+        m_tabIndexWasSetExplicitly = true;
+        m_tabIndex = 0;
+    }
 }
 
 String* HTMLFormObject::domName()
@@ -239,7 +242,8 @@ void HTMLFormObject::didAttributeChanged(QualifiedName name, String* old,
         }
 
         document()->invalidFocusRingCacheIfNeeded();
-    } else if (name == starFish()->staticStrings()->m_tabindex) {
+    } else if (m_supportTabIndex &&
+               name == starFish()->staticStrings()->m_tabindex) {
         m_tabIndexWasSetExplicitly = true;
         if (m_tabIndex == -1)
             m_tabIndex = 0;
