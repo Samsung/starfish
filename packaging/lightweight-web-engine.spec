@@ -70,9 +70,9 @@ lightweight-web-engine development headers
 %setup -q
 
 %build
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen %{gyp_addition_command}
 ninja -C out/release starfish.tizen.release
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen %{gyp_addition_command}
 ninja -C out/release starfish.tizen.release
 
 %install
