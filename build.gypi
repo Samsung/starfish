@@ -4,12 +4,10 @@
         'escargot_root': '<(starfish_root)/third_party/escargot',
         'third_party_libs': 'libpng cairo freetype2 fontconfig icu-uc icu-i18n',
         'defines_default': [
-            'ESCARGOT',
             'ESCARGOT_ENABLE_TYPEDARRAY=1',
             'ESCARGOT_ENABLE_PROMISE=1',
         ],
         'defines_x64': [
-            'ESCARGOT_64=1',
             'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_ENABLE_INSPECTOR',
             'STARFISH_ENABLE_DOMPARSER',
@@ -23,15 +21,12 @@
             'STARFISH_ENABLE_DOMPARSER',
             'STARFISH_ENABLE_TTS',
             'STARFISH_ENABLE_TEST',
-            'STARFISH_ENABLE_VIRTUAL_CURSOR=1',
+            'STARFISH_ENABLE_BODY_FOCUS_RING',
+#            'STARFISH_ENABLE_VIRTUAL_CURSOR',
             'STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER=false',
-            'STARFISH_ENABLE_MULTIPAGE',
             'TIZEN_DEVICE_API',
-            'SIZE_MAX=0xffffffff',
             'USE_PRODUCT_FEATURE',
-            '_REENTRANT',
-            '__TIZEN__',
-            '__TIZEN_BT__',
+            'SIZE_MAX=0xffffffff',
         ],
         'defines_debug': [
             'GC_DEBUG', # bdwgc

@@ -1245,6 +1245,9 @@ static CSSStyleValuePair lengthToCSSStyleValue(Length len)
     } else if (len.isCalc()) {
         p.setValueKind(CSSStyleValuePair::ValueKind::CalcValueKind);
         p.setValue(len.calcData());
+    } else if (len.isInheritableNumber()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Percentage);
+        p.setValue(len.number());
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -1385,7 +1388,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
 
         LayoutContext ctx(starFish(), document()->frame()->asFrameDocument());
 
-        if (style->width().isDefinite(true)) {
+        if (frame() && style->width().isDefinite(true)) {
             w.setValue(CSSLength(style->width().specifiedValue(
                 ctx.parentContentWidth(frame()), ctx.viewportWidth(),
                 ctx.viewportHeight())));
