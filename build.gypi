@@ -38,8 +38,6 @@
             'NDEBUG',
             'STARFISH_ENABLE_TEST',
         ],
-        'defines_extra': [
-        ],
         'cflags_default': [
             '-std=c++11',
             '-Wall',
@@ -72,8 +70,6 @@
             '-O2',
             '-g3',
         ],
-        'cflags_extra': [
-        ],
         'libraries_default': [
             '<!@(pkg-config --libs-only-l <(third_party_libs))',
             '-Wl,-rpath=/usr/local/lib',
@@ -82,38 +78,71 @@
             '-lssl',
             '-lcrypto',
         ],
-        'libraries_extra': [
-        ],
-        'deps_extra': [
-        ],
-        'deps_debug_extra': [
-        ],
-        'deps_release_extra': [
-        ],
         'include_dirs_default': [
            '<(starfish_root)/src',
            '<(starfish_root)/inc',
            #'<(starfish_root)/third_party/rapidxml',
            '<!@(pkg-config --cflags-only-I <(third_party_libs) | sed s/-I//g)',
         ],
-        'include_dirs_extra': [
-        ],
         'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',],
-        'sources_extra': [
-        ],
         'main_file' : 'src/shell/shell.cpp',
         'variables': {
-            'component%': 'static_library',
-            'backend%': 'efl',
-            'enable_ffmpeg_demuxer%': 'false',
-            'platform%': 'linux',
+            'variables': {
+                'component%': 'static_library',
+                'backend%': 'efl',
+                'enable_ffmpeg_demuxer%': 'false',
+                'platform%': 'linux',
+                'deplib%': 'shared_library',
+            },
+            'component%':'<(component)',
+            'backend%': '<(backend)',
+            'enable_ffmpeg_demuxer%': '<(enable_ffmpeg_demuxer)',
+            'platform%': '<(platform)',
+            'deplib%': '<(deplib)',
+
+            'conditions': [
+                ['platform=="tizen"', {
+                    'include_dirs_extra': [
+                        'third_party/deviceapi/src',
+                        '/usr/include/dlog',
+                        '/usr/include/location',
+                    ],
+                    'sources_extra': [
+                        '<!@(find third_party/deviceapi/src -name *.cpp)',
+                    ],
+                    'libraries_extra': [
+                        '-lrt',
+                        '-ldl',
+                        '-lavformat -lavcodec -lavutil',
+                        '-ldivxdrm',
+                        '-lcapi-location-manager',
+                    ],
+                }],
+                ['platform=="linux"', {
+                    'include_dirs_extra': [
+                    ],
+                    'sources_extra': [
+                    ],
+                    'libraries_extra': [
+                    ],
+                }],
+            ],
         },
         'component%':'<(component)',
         'backend%': '<(backend)',
         'platform%': '<(platform)',
+        'deplib%': '<(deplib)',
         'enable_ffmpeg_demuxer%': '<(enable_ffmpeg_demuxer)',
+        'include_dirs_extra%': '<(include_dirs_extra)',
+        'sources_extra%': '<(sources_extra)',
+        'libraries_extra%': '<(libraries_extra)',
+
+        'cflags_extra%': [],
+        'deps_extra%': [],
+        'deps_debug_extra%': [],
+        'deps_release_extra%': [],
         'conditions': [
-            ['backend=="efl"', {
+            ['platform=="linux" and backend=="efl"', {
                 'defines_extra': [
                     'STARFISH_EFL',
                 ],
@@ -124,7 +153,18 @@
                     './build.dep.gyp:efl.x64',
                 ],
             }],
-            ['backend=="efl_cairo"', {
+            ['platform=="tizen" and backend=="efl"', {
+                'defines_extra': [
+                    'STARFISH_EFL',
+                ],
+                'cflags_extra': [
+                    '-fno-rtti',
+                ],
+                'deps_extra': [
+                    './build.dep.gyp:efl.tizen',
+                ],
+            }],
+            ['platform=="linux" and backend=="efl_cairo"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO',
                 ],
@@ -139,13 +179,36 @@
                     './build.dep.gyp:efl_cairo.x64',
                 ],
             }],
-            ['backend=="dali"', {
+            ['platform=="tizen" and backend=="efl_cairo"', {
+                'defines_extra': [
+                    'STARFISH_EFL_CAIRO',
+                ],
+                'cflags_extra': [
+                    '-fno-rtti',
+                ],
+                'libraries_extra': [
+                    '-lturbojpeg',
+                    '-lgif',
+                ],
+                'deps_extra': [
+                ],
+            }],
+            ['platform=="linux" and backend=="dali"', {
                 'defines_extra': [
                     'STARFISH_DALI','GC_THREADS'
                 ],
                 'deps_extra': [
-                    './build.dep.gyp:libtuv.x64.debug',
                     './build.dep.gyp:dali.x64',
+                ],
+                'deps_debug_extra': [
+                    './build.dep.gyp:libtuv.x64.debug',
+                ],
+            }],
+            ['platform=="tizen" and backend=="dali"', {
+                'defines_extra': [
+                    'STARFISH_DALI','GC_THREADS'
+                ],
+                'deps_extra': [
                 ],
             }],
             ['enable_ffmpeg_demuxer=="true"', {
@@ -157,31 +220,6 @@
                 ],
                 'deps_release_extra': [
                     './build.dep.gyp:av.x64.release',
-                ],
-            }],
-            ['platform=="tizen"', {
-                'include_dirs_extra': [
-                    'third_party/deviceapi/src',
-                    '/usr/include/dlog',
-                    '/usr/include/location',
-                ],
-                'sources_extra': [
-                    '<!@(find third_party/deviceapi/src -name *.cpp)',
-                ],
-                'libraries_extra': [
-                    '-lrt',
-                    '-ldl',
-                    '-lavformat -lavcodec -lavutil',
-                    '-ldivxdrm',
-                    '-lcapi-location-manager',
-                ],
-            }],
-            ['platform=="linux"', {
-                'include_dirs_extra': [
-                ],
-                'sources_extra': [
-                ],
-                'libraries_extra': [
                 ],
             }],
         ],

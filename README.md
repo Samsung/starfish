@@ -44,6 +44,8 @@ Default values are written in **bold**.
 
 * -Dcomponent=[ executable | **static_library** | shared_library ]<br>
   Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
+* -Ddeplib=[ **shared_library** | static_library ]<br>
+  Generate third-party libraries as shared libraries or obj files
 * -Dbackend=[ **efl** | dali ]<br>
   Use either efl or dali as the backend graphics library
 * -Dplatform=[ **linux** | tizen ]<br>

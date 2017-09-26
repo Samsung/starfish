@@ -4,10 +4,8 @@
     ],
     'variables' : {
         'variables': {
-            'dep_lib%': 'shared_library',
             'backend%': 'efl',
         },
-        'dep_lib%': '<(dep_lib)',
     },
     #'make_global_settings': [
     #    ['CXX', '/usr/bin/g++'],
@@ -59,7 +57,7 @@
         # Libraries built with our gyp
         {
             'target_name': 'clipper',
-            'type': '<(dep_lib)',
+            'type': '<(deplib)',
             'dependencies': [
             ],
             'include_dirs': [
@@ -96,7 +94,7 @@
         },
         {
             'target_name': 'skia',
-            'type': '<(dep_lib)',
+            'type': '<(deplib)',
             'dependencies': [
             ],
             'include_dirs': [
@@ -117,7 +115,7 @@
         },
         {
             'target_name': 'mp4parse',
-            'type': '<(dep_lib)',
+            'type': '<(deplib)',
             'dependencies': [
             ],
             'include_dirs': [
@@ -134,7 +132,7 @@
         },
         {
             'target_name': 'webm',
-            'type': '<(dep_lib)',
+            'type': '<(deplib)',
             'dependencies': [
             ],
             'include_dirs': [
@@ -324,7 +322,7 @@
         },
         {
             'target_name': 'gc.x64.release',
-            'type': '<(dep_lib)',
+            'type': '<(deplib)',
             'copies': [
                 {
                     'files': [
@@ -353,7 +351,7 @@
         },
         {
             'target_name': 'gc.x64.debug',
-            'type': '<(dep_lib)',
+            'type': '<(deplib)',
             'copies': [
                 {
                     'files': [
@@ -382,7 +380,7 @@
         },
         {
             'target_name': 'gc.tizen.release',
-            'type': '<(dep_lib)',
+            'type': '<(deplib)',
             'copies': [
                 {
                     'files': [
@@ -500,7 +498,7 @@
         },
         {
             'target_name': 'libtuv.x64.debug',
-            'type': '<(dep_lib)',
+            'type': '<(deplib)',
             'copies': [
                 {
                     'files': [

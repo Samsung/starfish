@@ -2,7 +2,6 @@
     'includes': [
         'build.gypi',
     ],
-    'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/',],
     #'make_global_settings': [
     #    ['CXX', '/usr/bin/g++'],
     #],
@@ -138,10 +137,10 @@
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
-                './build.dep.gyp:efl.tizen',
                 './build.dep.gyp:capi-network-connection',
                 './build.dep.gyp:capi-media-player',
                 './build.dep.gyp:vconf',
+                '<@(deps_release_extra)',
             ],
             'defines': [
                 '<@(defines_tizen)',
