@@ -1,94 +1,20 @@
 {
-    'variables' : {
-        'starfish_root': '<!(pwd)',
-        'escargot_root': '<(starfish_root)/third_party/escargot',
-        'third_party_libs': 'libpng cairo freetype2 fontconfig icu-uc icu-i18n',
-        'defines_x64': [
-            'STARFISH_ENABLE_MULTIMEDIA',
-            'STARFISH_ENABLE_INSPECTOR',
-            'STARFISH_ENABLE_DOMPARSER',
-            'STARFISH_ENABLE_TTS',
-        ],
-        'defines_extra': [
-        ],
-        'cflags_extra': [
-        ],
-        'libraries_extra': [
-        ],
-        'deps_extra': [
-        ],
-        'deps_debug_extra': [
-        ],
-        'deps_release_extra': [
-        ],
-        'main_file' : 'src/shell/shell.cpp',
-        'variables': {
-            'component%': 'static_library',
-            'backend%': 'efl',
-            'enable_ffmpeg_demuxer%': 'false',
-        },
-        'component%':'<(component)',
-        'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',],
-        'backend%': '<(backend)',
-        'enable_ffmpeg_demuxer%': '<(enable_ffmpeg_demuxer)',
-        'conditions': [
-            ['backend=="efl"', {
-                'defines_extra': [
-                    'STARFISH_EFL',
-                ],
-                'cflags_extra': [
-                    '-fno-rtti',
-                ],
-                'deps_extra': [
-                    './build.dep.gyp:efl.x64',
-                ],
-            }],
-            ['backend=="efl_cairo"', {
-                'defines_extra': [
-                    'STARFISH_EFL_CAIRO',
-                ],
-                'cflags_extra': [
-                    '-fno-rtti',
-                ],
-                'deps_extra': [
-                    './build.dep.gyp:efl_cairo.x64',
-                ],
-            }],
-            ['backend=="dali"', {
-                'defines_extra': [
-                    'STARFISH_DALI','GC_THREADS'
-                ],
-                'deps_extra': [
-                    './build.dep.gyp:libtuv.x64.debug',
-                    './build.dep.gyp:dali.x64',
-                ],
-            }],
-            ['enable_ffmpeg_demuxer=="true"', {
-                'defines_extra': [
-                    'STARFISH_ENABLE_FFMPEG_DEMUXER',
-                ],
-                'deps_debug_extra': [
-                    './build.dep.gyp:av.x64.debug',
-                ],
-                'deps_release_extra': [
-                    './build.dep.gyp:av.x64.release',
-                ],
-            }],
-        ],
-    },
-    'make_global_settings': [
-        ['CXX', '/usr/bin/g++'],
+    'includes': [
+        'build.gypi',
     ],
+    'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/',],
+    #'make_global_settings': [
+    #    ['CXX', '/usr/bin/g++'],
+    #],
     'target_defaults' : {
         'default_configuration': 'debug',
         'dependencies': [
             './build.dep.gyp:js_binding',
-            './build.dep.gyp:clipper.x64',
-            './build.dep.gyp:cppzmq.x64',
-            './build.dep.gyp:mp4parse.x64',
-            './build.dep.gyp:js_binding',
-            './build.dep.gyp:skia.x64',
-            './build.dep.gyp:webm.x64',
+            './build.dep.gyp:clipper',
+            './build.dep.gyp:cppzmq',
+            './build.dep.gyp:mp4parse',
+            './build.dep.gyp:skia',
+            './build.dep.gyp:webm',
             '<@(deps_extra)',
         ],
         'direct_dependent_settings': {
@@ -103,13 +29,12 @@
             ],
         },
        'include_dirs': [
-           '<(starfish_root)/src',
-           '<(starfish_root)/inc',
-           #'<(starfish_root)/third_party/rapidxml',
-           '<!@(pkg-config --cflags-only-I <(third_party_libs) | sed s/-I//g)',
+           '<@(include_dirs_default)',
+           '<@(include_dirs_extra)',
        ],
        'sources': [
            '<!@(find src -name *.cpp)',
+           '<@(sources_extra)',
        ],
        'conditions': [
            ['component!="executable"', {
@@ -121,36 +46,13 @@
        'conditions': [
            ['OS=="linux"', {
                'cflags' : [
-                   '-std=c++11',
-                   '-Wall',
-                   '-Wextra',
-                   '-Wno-unused-but-set-variable',
-                   '-Wno-unused-but-set-parameter',
-                   '-Wno-unused-parameter',
-                   '-Wno-unused-result',
-                   '-Wno-unused-variable',
-                   '-Wno-unused-function',
-                   '-Wno-deprecated-declarations',
-                   '-Wno-type-limits',
-                   '-fno-math-errno',
-                   '-fdata-sections',
-                   '-ffunction-sections',
-                   '-frounding-math',
-                   '-fsignaling-nans',
-                   '-Wno-invalid-offsetof',
-                   '-fvisibility=hidden',
-                   '-fno-omit-frame-pointer',
-                   '-fstack-protector',
-                   '-fPIC',
+                   '<@(cflags_default)',
                    '<@(cflags_extra)',
                ],
                'ldflags' : [
                ],
                'defines': [
-                   'ESCARGOT_64=1',
-                   'ESCARGOT',
-                   'ESCARGOT_ENABLE_TYPEDARRAY=1',
-                   'ESCARGOT_ENABLE_PROMISE=1',
+                   '<@(defines_default)',
                    '<@(defines_extra)',
                ],
                'include_dirs': [
@@ -158,24 +60,18 @@
                'configurations': {
                    'debug': {
                        'defines': [
-                           'GC_DEBUG', # bdwgc
-                           '_GLIBCXX_DEBUG',
-                           'STARFISH_ENABLE_TEST',
+                           '<@(defines_debug)',
                        ],
                        'cflags' : [
-                           '-O0',
-                           '-g3',
-                           '-Werror',
+                           '<@(cflags_debug)',
                        ],
                    },
                    'release': {
                        'defines': [
-                           'NDEBUG',
-                           'STARFISH_ENABLE_TEST',
+                           '<@(defines_release)',
                        ],
                        'cflags' : [
-                           '-O2',
-                           '-g3',
+	                       '<@(cflags_release)',
                        ],
                    },
                },
@@ -184,12 +80,7 @@
                        '-L/usr/local/lib',
                    ],
                    'libraries': [
-                       '<!@(pkg-config --libs-only-l <(third_party_libs))',
-                       '-Wl,-rpath=/usr/local/lib',
-                       '-lpthread',
-                       '-lcurl',
-                       '-lssl',
-                       '-lcrypto',
+                       '<@(libraries_default)',
                        '<@(libraries_extra)',
                    ],
                    'configurations': {
@@ -233,10 +124,27 @@
                 './build.dep.gyp:escargot.x64.release',
                 './build.dep.gyp:gc.x64.release',
                 './build.dep.gyp:zmq.x64.release',
+                './build.dep.gyp:js_binding',
                 '<@(deps_release_extra)',
             ],
             'defines': [
                 '<@(defines_x64)',
+            ],
+        },
+        {
+            'target_name': 'starfish.tizen.release',
+            'type': '<(component)',
+            'product_name': 'StarFish.tizen.release',
+            'dependencies': [
+                './build.dep.gyp:escargot.tizen.release',
+                './build.dep.gyp:gc.tizen.release',
+                './build.dep.gyp:efl.tizen',
+                './build.dep.gyp:capi-network-connection',
+                './build.dep.gyp:capi-media-player',
+                './build.dep.gyp:vconf',
+            ],
+            'defines': [
+                '<@(defines_tizen)',
             ],
         },
     ],

@@ -23,6 +23,7 @@ License:       Apache-2.0 and LGPL-2.1+ and BSD-2.0 and ICU and BSL-1.0 and MIT 
 
 # build requirements
 BuildRequires: make
+BuildRequires: ninja
 BuildRequires: web-widget-js
 BuildRequires: web-widget-js-devel
 BuildRequires: pkgconfig(dlog)
@@ -53,6 +54,7 @@ BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
+
 %description
 Implementation of Lightweight Web Engine
 
@@ -68,67 +70,28 @@ lightweight-web-engine development headers
 %setup -q
 
 %build
-%ifarch %{arm}
-export MAKE_TARGET=tizen_obs_arm
-%else
-export MAKE_TARGET=tizen_obs_emulator
-%endif
-
-%if 0%{?only_devel}
-%ifarch %{arm}
-mkdir -p out/tizen_obs/arm/lib/release
-touch    out/tizen_obs/arm/lib/release/liblightweight-web-engine.so
-%else
-mkdir -p out/tizen_obs/x86/lib/release
-touch    out/tizen_obs/x86/lib/release/liblightweight-web-engine.so
-%endif
-%else
-make ${MAKE_TARGET}.lib.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
-%endif
-
-%if 0%{?only_release}
-%ifarch %{arm}
-mkdir -p out/tizen_obs/arm/exe/debug
-touch    out/tizen_obs/arm/exe/debug/StarFish
-%else
-mkdir -p out/tizen_obs/x86/exe/debug
-touch    out/tizen_obs/x86/exe/debug/StarFish
-%endif
-%else
-
-%if "%{mode}" == "release"
-make ${MAKE_TARGET}.exe.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
-%else
-make ${MAKE_TARGET}.exe.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
-%endif
-%endif
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen
+ninja -C out/release starfish.tizen.release
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen
+ninja -C out/release starfish.tizen.release
 
 %install
-%ifarch %{arm}
-export STARFISH_ARCH=arm
-export TIZEN_ARCH=armv7l
-%else
-export STARFISH_ARCH=x86
-export TIZEN_ARCH=i586
-%endif
-
 rm -rf %{buildroot}
-
 mkdir -p %{buildroot}%{_libdir}
-mkdir -p %{buildroot}%{_bindir}
-cp out/tizen_obs/${STARFISH_ARCH}/lib/release/liblightweight-web-engine.so %{buildroot}%{_libdir}
-
-%if "%{mode}" == "release"
-cp out/tizen_obs/${STARFISH_ARCH}/exe/release/StarFish %{buildroot}%{_bindir}
-%else
-cp out/tizen_obs/${STARFISH_ARCH}/exe/release/StarFish %{buildroot}%{_bindir}
-%endif
+cp -r out/release/lib/libStarFish.tizen.release.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+mkdir -p %{buildroot}%{_bindir}/StarFish.tv
+mkdir -p %{buildroot}%{_bindir}/StarFish.tv/lib
+cp -r out/release/StarFish.tizen.release %{buildroot}%{_bindir}/StarFish.tv/StarFish
+cp -r out/release/lib %{buildroot}%{_bindir}/StarFish.tv
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishPublic.h %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishExport.h %{buildroot}%{_includedir}/%{name}/
+
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
 cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
+
+cd %{buildroot}/%{_bindir} && ln -sf StarFish.tv/StarFish StarFish
 
 %files
 %manifest %{name}.manifest
@@ -138,5 +101,7 @@ cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
 %files devel
 %{_includedir}
 %{_bindir}/StarFish
+%{_bindir}/StarFish.tv
+%{_bindir}/documentation.list
 %{_libdir}/pkgconfig/lightweight-web-engine.pc
 
