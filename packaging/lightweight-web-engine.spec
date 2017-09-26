@@ -70,19 +70,19 @@ lightweight-web-engine development headers
 %setup -q
 
 %build
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen %{gyp_addition_command}
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen.release
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen %{gyp_addition_command}
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen.release
 
 %install
+%define bin StarFish
+
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}
 cp -r out/release/lib/libStarFish.tizen.release.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
-mkdir -p %{buildroot}%{_bindir}/StarFish.tv
-mkdir -p %{buildroot}%{_bindir}/StarFish.tv/lib
-cp -r out/release/StarFish.tizen.release %{buildroot}%{_bindir}/StarFish.tv/StarFish
-cp -r out/release/lib %{buildroot}%{_bindir}/StarFish.tv
+mkdir -p %{buildroot}%{_bindir}
+cp -r out/release/StarFish.tizen.release %{buildroot}%{_bindir}/%{bin}
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishPublic.h %{buildroot}%{_includedir}/%{name}/
@@ -91,8 +91,6 @@ cp inc/StarFishExport.h %{buildroot}%{_includedir}/%{name}/
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
 cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
 
-cd %{buildroot}/%{_bindir} && ln -sf StarFish.tv/StarFish StarFish
-
 %files
 %manifest %{name}.manifest
 %{_libdir}/*.so
@@ -100,8 +98,6 @@ cd %{buildroot}/%{_bindir} && ln -sf StarFish.tv/StarFish StarFish
 
 %files devel
 %{_includedir}
-%{_bindir}/StarFish
-%{_bindir}/StarFish.tv
-%{_bindir}/documentation.list
+%{_bindir}/%{bin}
 %{_libdir}/pkgconfig/lightweight-web-engine.pc
 
