@@ -324,11 +324,13 @@ StarFish::~StarFish()
         fclose(fp_mem);
     }
 #endif
-    close();
 #if defined(STARFISH_ENABLE_INSPECTOR)
     delete m_inspector;
 #endif
-    delete m_platformWindow;
+    if (m_platformWindow) {
+        close();
+        delete m_platformWindow;
+    }
     joinAllActiveThread();
     NetworkSharedResourceManager::close();
 }
