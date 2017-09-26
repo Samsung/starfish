@@ -2232,6 +2232,9 @@ static void removeTransitionCSSValuePairs(CSSStyleDeclaration* target)
 {
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::TransitionProperty);
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDuration);
+    target->removeCSSValuePair(
+        CSSStyleValuePair::KeyKind::TransitionTimingFunction);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDelay);
 }
 
 static void addTransitionCSSValuePairs(CSSStyleDeclaration* target,
