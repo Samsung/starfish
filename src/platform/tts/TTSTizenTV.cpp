@@ -29,29 +29,24 @@ namespace StarFish {
 
 static void onAccessibilityChanged(keynode_t* keynodeName, void* data)
 {
+    STARFISH_LOG_INFO("onAccessibilityChanged");
     // Do not free data
     TTS* tts = (TTS*)data;
     int at = 0;
-    int vconf_ret = vconf_get_int(VCONFKEY_TV_ACCESSIBILITY_TTS, &at);
+    int vconf_ret = vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &at);
 
-    tts->setTTSEnable(
-        (vconf_ret == 0 && at == VCONFKEY_TV_ACCESSIBILITY_TTS_ON));
+    tts->setTTSEnable((vconf_ret == 0 && at == 1));
 }
 
 void TTS::init()
 {
     int at = 0;
-    int vconf_ret = vconf_get_int(VCONFKEY_TV_ACCESSIBILITY_TTS, &at);
+    int vconf_ret = vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &at);
 
-    m_isTTSEnable = (vconf_ret == 0 && at == VCONFKEY_TV_ACCESSIBILITY_TTS_ON);
-
-    // workaround for vconf bug
-    int ad = 0;
-    vconf_ret = vconf_get_int(VCONFKEY_TV_AUDIO_DESCRIPTION, &ad);
-    m_isTTSEnable |= (vconf_ret == 0 && ad == VCONFKEY_TV_AUDIO_DESCRIPTION_ON);
+    m_isTTSEnable = (vconf_ret == 0 && at == 1);
 
     // Add listener
-    vconf_notify_key_changed(VCONFKEY_TV_ACCESSIBILITY_TTS,
+    vconf_notify_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS,
                              onAccessibilityChanged, this);
 }
 
@@ -63,6 +58,8 @@ void TTS::speech(String* text)
             nullptr,
             [](size_t, void* data) {
                 String* text = (String*)data;
+                STARFISH_LOG_INFO("TTS speech : %s\n",
+                                  text->toUTF8NonGCString().data());
                 elm_access_say((char*)text->toUTF8NonGCString().data());
             },
             text);
