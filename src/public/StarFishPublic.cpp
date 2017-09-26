@@ -170,7 +170,11 @@ StarFish::KeyboardData DaliEventKeyToKeyboardData(const char* DALIKeyString,
             keyValue = (StarFish::KeyValue)kv;
         }
     }
-
+#ifdef STARFISH_TIZEN_TV
+    if ((strcmp("XF86Red", DALIKeyString) == 0)) {
+        keyValue = StarFish::KeyValue::TabKey;
+    }
+#endif
     StarFish::KeyboardData kdata(keyValue);
     if (strcmp("Shift_L", DALIKeyString) == 0 ||
         strcmp("Shift_R", DALIKeyString) == 0) {

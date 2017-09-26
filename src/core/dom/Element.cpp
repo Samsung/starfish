@@ -483,8 +483,8 @@ bool Element::handleDefaultEvent(Event* event)
     if (sf->tts()->isTTSEnable()) {
         if (isHTMLElement() && isFocusable() && event->isFocusEvent() &&
             event->type()->equals("focus")) {
-            TextAlternativeHelper* tah = new TextAlternativeHelper(sf);
-            String* altText = tah->getComputedTextAlternative(this);
+            TextAlternativeHelper tah(sf);
+            String* altText = tah.getComputedTextAlternative(this);
             if (altText) {
                 sf->tts()->speech(altText);
             }
