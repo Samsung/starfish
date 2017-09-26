@@ -401,7 +401,7 @@ void BrowsingContext::dispose()
         if (!document()->onLoadFired()) {
             document()
                 ->resourceLoader()
-                .decreasependingResourceCountWhileDocumentOpening();
+                .decreasePendingResourceCountWhileDocumentOpening();
         }
         document()->window()->dispose();
         document()->dispose();
@@ -824,6 +824,10 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
                 i++;
             }
         }
+
+        if (kind == PlatformWindow::TouchEventKind::TouchEventEnd) {
+            releaseActiveNode();
+        }
         return true;
     }
 
@@ -969,6 +973,10 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
                           nd) != m_globalPointingEventListener.end()) {
                 i++;
             }
+        }
+
+        if (kind == PlatformWindow::MouseEventUp) {
+            releaseActiveNode();
         }
         return true;
     }

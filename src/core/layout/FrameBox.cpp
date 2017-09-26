@@ -649,6 +649,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
             canvas->drawRect(LayoutRect(rect.x(), rect.y() + borderTop(),
                                         borderLeft(),
                                         rect.height() - borderHeight()));
+
         } else {
             // Draw trapezium-like borders around the given rect
             //    _______________

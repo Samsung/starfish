@@ -759,8 +759,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_evasGL = evas_gl_new(evas_object_evas_get(wnd->m_canvasAdpater));
     wnd->m_evasGLConfig = evas_gl_config_new();
     wnd->m_evasGLConfig->color_format = EVAS_GL_RGBA_8888;
-    // wnd->m_evasGLConfig->stencil_bits = EVAS_GL_STENCIL_BIT_8;
-    // wnd->m_evasGLConfig->multisample_bits = EVAS_GL_MULTISAMPLE_MED;
+    wnd->m_evasGLConfig->stencil_bits = EVAS_GL_STENCIL_BIT_8;
+    wnd->m_evasGLConfig->multisample_bits = EVAS_GL_MULTISAMPLE_MED;
     wnd->m_evasGLSurface = evas_gl_surface_create(
         wnd->m_evasGL, wnd->m_evasGLConfig, wnd->width(), wnd->height());
     wnd->m_evasGLContext = evas_gl_context_create(wnd->m_evasGL, NULL);

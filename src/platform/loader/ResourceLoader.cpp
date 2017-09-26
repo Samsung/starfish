@@ -105,7 +105,7 @@ public:
         }
         m_didFire = true;
         m_resource->loader()
-            ->decreasependingResourceCountWhileDocumentOpening();
+            ->decreasePendingResourceCountWhileDocumentOpening();
     }
 
     bool m_didFire;
@@ -320,7 +320,7 @@ void ResourceLoader::notifyImageResourceActiveState(ImageResource* res)
     }
 }
 
-void ResourceLoader::increasependingResourceCountWhileDocumentOpening()
+void ResourceLoader::increasePendingResourceCountWhileDocumentOpening()
 {
     m_pendingResourceCountWhileDocumentOpening++;
 
@@ -335,11 +335,12 @@ void ResourceLoader::increasependingResourceCountWhileDocumentOpening()
     }
 }
 
-void ResourceLoader::decreasependingResourceCountWhileDocumentOpening()
+void ResourceLoader::decreasePendingResourceCountWhileDocumentOpening()
 {
-    STARFISH_ASSERT(m_pendingResourceCountWhileDocumentOpening > 0);
-    m_pendingResourceCountWhileDocumentOpening--;
-    fireDocumentOnLoadEventIfNeeded();
+    if (m_pendingResourceCountWhileDocumentOpening > 0) {
+        m_pendingResourceCountWhileDocumentOpening--;
+        fireDocumentOnLoadEventIfNeeded();
+    }
 
     if (!window()->browsingContext()->isMainBrowsingContext()) {
         BrowsingContext* ctx = window()->browsingContext();
@@ -359,7 +360,7 @@ bool ResourceLoader::requestResourcePreprocess(
 {
     if (m_isDocumentInOpenState &&
         res->isThisResourceDoesAffectWindowOnLoad()) {
-        increasependingResourceCountWhileDocumentOpening();
+        increasePendingResourceCountWhileDocumentOpening();
         res->addResourceClient(new DocumentOnLoadChecker(res));
         auto it = res->m_resourceClients.begin();
         res->m_resourceClients.insert(it, new ResourceAliveChecker(res));

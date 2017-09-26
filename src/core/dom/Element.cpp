@@ -1336,13 +1336,17 @@ CSSStyleDeclaration* Element::getComputedStyle()
     }
 
 // length properties
-#define ADD_ABSOLUTE_LENGTH_PAIR(keyKind, getter)               \
-    {                                                           \
-        CSSStyleValuePair p;                                    \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);      \
-        p.setValueKind(CSSStyleValuePair::ValueKind::Length);   \
-        p.setValue(CSSLength(frame()->asFrameBox()->getter())); \
-        d->addValuePair(p);                                     \
+#define ADD_ABSOLUTE_LENGTH_PAIR(keyKind, getter)                   \
+    {                                                               \
+        CSSStyleValuePair p;                                        \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);          \
+        if (frame() && frame()->isFrameBox()) {                     \
+            p.setValueKind(CSSStyleValuePair::ValueKind::Length);   \
+            p.setValue(CSSLength(frame()->asFrameBox()->getter())); \
+        } else {                                                    \
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);     \
+        }                                                           \
+        d->addValuePair(p);                                         \
     }
     ADD_ABSOLUTE_LENGTH_PAIR(MarginTop, marginTop)
     ADD_ABSOLUTE_LENGTH_PAIR(MarginRight, marginRight)
@@ -1386,27 +1390,35 @@ CSSStyleDeclaration* Element::getComputedStyle()
                 ctx.parentContentWidth(frame()), ctx.viewportWidth(),
                 ctx.viewportHeight())));
         } else {
-            w.setValue(CSSLength(frame()->asFrameBox()->contentWidth()));
+            if (frame() && frame()->isFrameBox()) {
+                w.setValue(CSSLength(frame()->asFrameBox()->contentWidth()));
+            } else {
+                w.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
         }
 
-        bool parentHasFixedHeight = ctx.parentHasFixedHeight(frame());
-        if (style->height().isDefinite(parentHasFixedHeight)) {
-            LayoutUnit parentContentHeight;
-            if (parentHasFixedHeight) {
-                parentContentHeight = ctx.parentFixedHeight(frame());
+        if (frame() && frame()->isFrameBox()) {
+            bool parentHasFixedHeight = ctx.parentHasFixedHeight(frame());
+            if (style->height().isDefinite(parentHasFixedHeight)) {
+                LayoutUnit parentContentHeight;
+                if (parentHasFixedHeight) {
+                    parentContentHeight = ctx.parentFixedHeight(frame());
+                }
+                h.setValue(CSSLength(style->height().specifiedValue(
+                    parentContentHeight, ctx.viewportWidth(),
+                    ctx.viewportHeight())));
+            } else {
+                h.setValue(CSSLength(frame()->asFrameBox()->contentHeight()));
             }
-            h.setValue(CSSLength(style->height().specifiedValue(
-                parentContentHeight, ctx.viewportWidth(),
-                ctx.viewportHeight())));
         } else {
-            h.setValue(CSSLength(frame()->asFrameBox()->contentHeight()));
+            h.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         }
 
         d->addValuePair(w);
         d->addValuePair(h);
     }
 
-    if (frame()->isPositioned()) {
+    if (frame() && frame()->isPositioned()) {
         CSSStyleValuePair t, b, l, r;
         t.setKeyKind(CSSStyleValuePair::KeyKind::Top);
         t.setValueKind(CSSStyleValuePair::ValueKind::Length);
