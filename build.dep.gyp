@@ -1,30 +1,17 @@
 {
+    'includes': [
+        'build.gypi',
+    ],
     'variables' : {
         'variables': {
             'dep_lib%': 'shared_library',
             'backend%': 'efl',
         },
         'dep_lib%': '<(dep_lib)',
-        'conditions': [
-            ['backend=="efl"', {
-                'cflags_extra': [
-                    '-fno-rtti',
-                ],
-            }],
-            ['backend=="efl_cairo"', {
-                'cflags_extra': [
-                    '-fno-rtti',
-                ],
-            }],
-            ['backend=="dali"', {
-                'cflags_extra': [
-                ],
-            }]
-        ],
     },
-    'make_global_settings': [
-        ['CXX', '/usr/bin/g++'],
-    ],
+    #'make_global_settings': [
+    #    ['CXX', '/usr/bin/g++'],
+    #],
     'target_defaults' : {
        'include_dirs': [
        ],
@@ -35,26 +22,11 @@
        'conditions': [
            ['OS=="linux"', {
                'cflags' : [
-                   '-std=c++11',
-                   '-fPIC',
-                   '-Wall',
-                   '-Wno-unused-but-set-variable',
-                   '-Wno-unused-but-set-parameter',
-                   '-Wno-unused-parameter',
-                   '-Wno-unused-result',
-                   '-Wno-unused-variable',
-                   '-Wno-unused-function',
-                   '-Wno-deprecated-declarations',
-                   '-Wno-type-limits',
-                   '-Wno-invalid-offsetof',
-                   '-fno-math-errno',
-                   '-fdata-sections',
-                   '-ffunction-sections',
-                   '-frounding-math',
-                   '-fsignaling-nans',
-                   '-fno-omit-frame-pointer',
-                   '-fstack-protector',
+                   '<@(cflags_default)',
                    '<@(cflags_extra)',
+               ],
+               'cflags!' : [
+                   '-fvisibility=hidden',
                ],
                'ldflags' : [
                ],
@@ -65,19 +37,18 @@
                'configurations': {
                    'debug' : {
                        'defines': [
-                           '_GLIBCXX_DEBUG',
+                           '<@(defines_debug)',
                        ],
                        'cflags': [
-                           '-g3',
+                           '<@(cflags_debug)',
                        ],
                    },
                    'release': {
                        'defines': [
-                           'NDEBUG',
+                           '<@(defines_release)',
                        ],
                        'cflags': [
-                           '-O2',
-                           '-funswitch-loops',
+                           '<@(cflags_release)',
                        ],
                    },
                },
@@ -87,7 +58,7 @@
     'targets': [
         # Libraries built with our gyp
         {
-            'target_name': 'clipper.x64',
+            'target_name': 'clipper',
             'type': '<(dep_lib)',
             'dependencies': [
             ],
@@ -124,7 +95,7 @@
             ],
         },
         {
-            'target_name': 'skia.x64',
+            'target_name': 'skia',
             'type': '<(dep_lib)',
             'dependencies': [
             ],
@@ -145,7 +116,7 @@
             },
         },
         {
-            'target_name': 'mp4parse.x64',
+            'target_name': 'mp4parse',
             'type': '<(dep_lib)',
             'dependencies': [
             ],
@@ -162,7 +133,7 @@
             },
         },
         {
-            'target_name': 'webm.x64',
+            'target_name': 'webm',
             'type': '<(dep_lib)',
             'dependencies': [
             ],
@@ -179,9 +150,8 @@
                 ],
             },
         },
-        # Libraries that have only header files
         {
-            'target_name': 'cppzmq.x64',
+            'target_name': 'cppzmq',
             'type': 'none',
             'dependencies': [
             ],
@@ -233,6 +203,26 @@
                 ],
                 'libraries': [
                     'lib/debug/libescargot.a',
+                ],
+            },
+        },
+        {
+            'target_name': 'escargot.tizen.release',
+            'type': 'none',
+            'copies': [
+                {
+                    'files': [
+                        '/usr/lib/web-widget-js/release/libescargot.a',
+                    ],
+                    'destination': '<(PRODUCT_DIR)/lib/tizen/release',
+                },
+            ],
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    'third_party/escargot/include',
+                ],
+                'libraries': [
+                    'lib/tizen/release/libescargot.a',
                 ],
             },
         },
@@ -391,14 +381,90 @@
             },
         },
         {
+            'target_name': 'gc.tizen.release',
+            'type': '<(dep_lib)',
+            'copies': [
+                {
+                    'files': [
+                        '/usr/lib/web-widget-js/release/libgc.a'
+                    ],
+                    'destination': '<(PRODUCT_DIR)/lib/tizen/release',
+                },
+            ],
+            'include_dirs': [
+                'third_party/GCutil/bdwgc/include/',
+            ],
+            'sources': [
+                '<!@(find third_party/GCutil -maxdepth 1 -name *.cpp)',
+            ],
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    'third_party/GCutil/bdwgc/include',
+                    'third_party/GCutil',
+                ],
+                'libraries': [
+                    'lib/tizen/release/libgc.a',
+                ],
+            },
+        },
+        {
             'target_name': 'efl.x64',
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@(pkg-config --cflags-only-I elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
                 ],
                 'libraries': [
-                    '<!@(pkg-config --libs-only-l elementary ecore ecore-x ecore-imf ecore-imf-evas)',
+                    '<!@((pkg-config --silence-errors --libs-only-l elementary ecore ecore-x ecore-imf ecore-imf-evas) || true)',
+                ],
+            },
+        },
+        {
+            'target_name': 'efl.tizen',
+            'type': 'none',
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    '<!@((pkg-config --silence-errors --cflags-only-I dlog elementary ecore ecore-imf-evas efl-extension | sed s/-I//g) || true)',
+                ],
+                'libraries': [
+                    '<!@((pkg-config --silence-errors --libs-only-l dlog elementary ecore ecore-imf-evas efl-extension) || true)',
+                ],
+            },
+        },
+        {
+            'target_name': 'capi-network-connection',
+            'type': 'none',
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    '<!@((pkg-config --silence-errors --cflags-only-I capi-network-connection | sed s/-I//g) || true)',
+                ],
+                'libraries': [
+                    '<!@((pkg-config --silence-errors --libs-only-l capi-network-connection) || true)',
+                ],
+            },
+
+        },
+        {
+            'target_name': 'capi-media-player',
+            'type': 'none',
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    '<!@((pkg-config --silence-errors --cflags-only-I capi-media-player | sed s/-I//g) || true)',
+                ],
+                'libraries': [
+                    '<!@((pkg-config --silence-errors --libs-only-l capi-media-player) || true)',
+                ],
+            },
+        },
+        {
+            'target_name': 'vconf',
+            'type': 'none',
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    '<!@((pkg-config --silence-errors --cflags-only-I vconf vconf-internal-keys-tv | sed s/-I//g) || true)',
+                ],
+                'libraries': [
+                    '<!@((pkg-config --silence-errors --libs-only-l vconf vconf-internal-keys-tv) || true)',
                 ],
             },
         },
@@ -407,10 +473,11 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@(pkg-config --cflags-only-I elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
                 ],
                 'libraries': [
-                    '<!@(pkg-config --libs-only-l elementary ecore ecore-x ecore-imf ecore-imf-evas)','-lturbojpeg -lgif',
+                    '<!@((pkg-config --silence-errors --libs-only-l elementary ecore ecore-x ecore-imf ecore-imf-evas) || true)',
+                    '-lturbojpeg -lgif',
                 ],
             },
         },
@@ -419,10 +486,15 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@(pkg-config --cflags-only-I elementary ecore ecore-x | sed s/-I//g)','/usr/include/dali','third_party/libtuv/include','third_party/libtuv/src'
+                    '<!@((pkg-config --silence-errors --cflags-only-I elementary ecore ecore-x | sed s/-I//g) || true)',
+                    '/usr/include/dali',
+                    'third_party/libtuv/include',
+                    'third_party/libtuv/src'
                 ],
                 'libraries': [
-                    '<!@(pkg-config --libs-only-l elementary ecore ecore-x)','-ldali-core -ldali-adaptor -ldali-toolkit -lturbojpeg -lgif','lib/debug/libtuv.a',
+                    '<!@((pkg-config --silence-errors --libs-only-l elementary ecore ecore-x) || true)',
+                    '-ldali-core -ldali-adaptor -ldali-toolkit -lturbojpeg -lgif',
+                    'lib/debug/libtuv.a',
                 ],
             },
         },

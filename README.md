@@ -28,6 +28,17 @@ ninja -C out/debug starfish.x64.debug
 ```
 
 ### Build options
+
+The following build targets are available when running ninja script.
+
+* starfish.x64.debug
+* starfish.x64.release
+* starfish.tizen.release
+
+```sh
+ninja -C out/[ debug | release ] starfish.x64.[ debug | release ]
+```
+
 The following build options are supported when generating ninja script using gyp.
 Default values are written in **bold**.
 
@@ -35,11 +46,13 @@ Default values are written in **bold**.
   Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
 * -Dbackend=[ **efl** | dali ]<br>
   Use either efl or dali as the backend graphics library
+* -Dplatform=[ **linux** | tizen ]<br>
+  Use tizen when building for Tizen platform
 
-The following build options are supported when running ninja script.
-
+### GBS Build
 ```sh
-ninja -C out/[ debug | release ] starfish.x64.[ debug | release ]
+./binding_generator/scripts/starfish_code_generator.py src/ src/binding/
+gbs -c packaging/TizenTV_2018.gbs.conf build -A armv7l -P profile.Main2018_KantM --incremental --include-all
 ```
 
 ### Directory Structure
