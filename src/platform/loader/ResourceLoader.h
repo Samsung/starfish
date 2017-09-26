@@ -54,12 +54,12 @@ public:
     {
         m_isDocumentInOpenState = true;
         m_documentOpenTime = timestamp();
-        increasependingResourceCountWhileDocumentOpening();
+        increasePendingResourceCountWhileDocumentOpening();
     }
 
     void notifyEndParseDocument()
     {
-        decreasependingResourceCountWhileDocumentOpening();
+        decreasePendingResourceCountWhileDocumentOpening();
     }
 
     void clear()
@@ -83,8 +83,8 @@ public:
         return m_documentOpenTime;
     }
 
-    void increasependingResourceCountWhileDocumentOpening();
-    void decreasependingResourceCountWhileDocumentOpening();
+    void increasePendingResourceCountWhileDocumentOpening();
+    void decreasePendingResourceCountWhileDocumentOpening();
 
 private:
     void cancelAllOfPendingRequests();

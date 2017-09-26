@@ -141,6 +141,11 @@ public:
         return m_width;
     }
 
+    virtual size_t stride()
+    {
+        return evas_object_image_stride_get(m_image);
+    }
+
     virtual size_t height()
     {
         return m_height;

@@ -57,6 +57,7 @@ public:
         m_image = (unsigned char*)malloc(w * h * 4);
         m_width = w;
         m_height = h;
+        m_stride = w * 4;
         reigsterFinalizer();
     }
 
@@ -75,7 +76,7 @@ public:
     virtual size_t bufferSize()
     {
         if (m_image) {
-            return m_width * m_height * 4;
+            return m_stride * m_height;
         } else {
             return 0;
         }
@@ -83,6 +84,9 @@ public:
 
     void reigsterFinalizer()
     {
+        if (m_width) {
+            STARFISH_ASSERT(m_stride);
+        }
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            // STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL\n");
@@ -99,6 +103,11 @@ public:
     virtual size_t width()
     {
         return m_width;
+    }
+
+    virtual size_t stride()
+    {
+        return m_stride;
     }
 
     virtual size_t height()
@@ -278,6 +287,7 @@ private:
 
         png_uint_32 rowbytes = png_get_rowbytes(png, info);
 
+        m_stride = rowbytes;
         if ((m_image = (unsigned char*)malloc(rowbytes * m_height)) ==
             nullptr) {
             png_destroy_read_struct(&png, &info, nullptr);
@@ -350,6 +360,7 @@ private:
 
         m_width = scaledWidth;
         m_height = scaledHeight;
+        m_stride = m_width * 4;
     }
 
     void readJPGFile(FILE* fp)
@@ -489,6 +500,7 @@ private:
         screenBuffer = (GifRowType*)malloc(m_height * sizeof(GifRowType));
 
         size = m_width * sizeof(GifPixelType);
+        m_stride = m_width * 4;
         screenBuffer[0] = (GifRowType)calloc(1, size);
 
         for (i = 0; i < (int)(m_width); i++) {
@@ -610,6 +622,7 @@ private:
 protected:
     void* m_image;
     size_t m_width;
+    size_t m_stride;
     size_t m_height;
 };
 
