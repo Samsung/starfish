@@ -739,6 +739,36 @@ String* String::toUpper()
     }
 }
 
+String* String::toUnicodeUpper()
+{
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        ASCIIString str(data.asciiData(), data.length);
+        std::transform(str.begin(), str.end(), str.begin(), u_toupper);
+        return new StringDataASCII(std::move(str));
+    } else {
+        UTF32String str(data.utf32Data(), data.length);
+        // TODO use icu to transform utf-32 string
+        std::transform(str.begin(), str.end(), str.begin(), u_toupper);
+        return new StringDataUTF32(std::move(str));
+    }
+}
+
+String* String::toUnicodeLower()
+{
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        ASCIIString str(data.asciiData(), data.length);
+        std::transform(str.begin(), str.end(), str.begin(), u_tolower);
+        return new StringDataASCII(std::move(str));
+    } else {
+        UTF32String str(data.utf32Data(), data.length);
+        // TODO use icu to transform utf-32 string
+        std::transform(str.begin(), str.end(), str.begin(), u_tolower);
+        return new StringDataUTF32(std::move(str));
+    }
+}
+
 String* String::toLower()
 {
     auto data = bufferAccessData();

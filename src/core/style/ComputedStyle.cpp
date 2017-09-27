@@ -604,6 +604,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->textTransform() != oldStyle->textTransform()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     if (newStyle->m_inheritedStyles.m_textAlign !=
         oldStyle->m_inheritedStyles.m_textAlign) {
         damage = (ComputedStyleDamage)(

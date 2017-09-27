@@ -637,6 +637,13 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         if (!currentFrame->parent()) {
             FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
                                           currentFrame, current, ctx);
+
+            if (currentFrame->isFrameText() &&
+                currentFrame->style()->textTransform() !=
+                    NoneTextTransformValue) {
+                currentFrame->asFrameText()->transformText(
+                    currentFrame->asFrameText()->text());
+            }
 #ifndef NDEBUG
             if (ctx.currentBlockContainer()->isFrameFlexibleBox()) {
                 STARFISH_ASSERT(

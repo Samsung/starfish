@@ -1282,6 +1282,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
     ADD_VALUE_PAIR(VerticalAlign, VerticalAlignValueKind, verticalAlign)
     ADD_VALUE_PAIR(TextAlign, SideValueKind, textAlign)
     ADD_VALUE_PAIR(TextDecoration, TextDecorationValueKind, textDecoration)
+    ADD_VALUE_PAIR(TextTransform, TextTransformValueKind, textTransform)
     ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
     ADD_VALUE_PAIR(BackgroundRepeatX, BackgroundRepeatValueKind,
                    backgroundRepeatX)

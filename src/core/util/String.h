@@ -391,6 +391,26 @@ public:
         return false;
     }
 
+    static inline bool isNBPS(char32_t c)
+    {
+        return c == 0x00A0;
+    }
+
+    static inline CharCategory category(char32_t c)
+    {
+        return static_cast<CharCategory>(U_GET_GC_MASK(c));
+    }
+
+    static inline bool isPunctuation(char32_t c)
+    {
+        CharCategory charCategory = category(c);
+        return charCategory == Punctuation_Open ||
+               charCategory == Punctuation_Close ||
+               charCategory == Punctuation_InitialQuote ||
+               charCategory == Punctuation_FinalQuote ||
+               charCategory == Punctuation_Other;
+    }
+
     bool containsWhitespace(size_t start = 0, size_t end = SIZE_MAX);
     bool containsOnlyWhitespace(size_t start = 0, size_t end = SIZE_MAX);
     bool containsOnlyASCIIChars() const;
@@ -415,7 +435,9 @@ public:
     String* insert(String* str, size_t pos);
 
     String* toUpper();
+    String* toUnicodeUpper();
     String* toLower();
+    String* toUnicodeLower();
     String* replaceAll(String* from, String* to);
 
     String* concat(const char32_t c);

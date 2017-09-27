@@ -114,6 +114,8 @@ class ComputedStyle : public gc {
         StylePaintData m_stroke;  // svg
         Length m_strokeWidth;     // svg
 
+        TextTransformValue m_textTransform;
+
         InheritedStylesRareData()
         {
             m_letterSpacing = Length(Length::Fixed, 0);
@@ -128,6 +130,8 @@ class ComputedStyle : public gc {
             m_fillOpacity = 1;
             m_stroke = Unit::Color(0, 0, 0, 0);
             m_strokeWidth = Length(Length::Fixed, 1);
+
+            m_textTransform = NoneTextTransformValue;
         }
 
         void* operator new(size_t size)
@@ -337,8 +341,24 @@ public:
 
     void setTextIndent(Length val)
     {
-        if (val != textIndent())
+        if (val != textIndent()) {
             ensureRareData()->m_textIndent = val;
+        }
+    }
+
+    TextTransformValue textTransform()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_textTransform;
+        }
+        return InheritedStylesRareData().m_textTransform;
+    }
+
+    void setTextTransform(TextTransformValue val)
+    {
+        if (val != textTransform()) {
+            ensureRareData()->m_textTransform = val;
+        }
     }
 
     TextDecorationValue textDecoration()
@@ -1607,6 +1627,7 @@ protected:
     OverflowValue m_overflowX : 2;
     OverflowValue m_overflowY : 2;
     TextDecorationValue m_textDecoration : 3;
+
     UnicodeBidiValue m_unicodeBidi : 2;
     BoxSizingValue m_boxSizing : 1;
     TableLayoutValue m_tableLayout : 1; // table

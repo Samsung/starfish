@@ -23,10 +23,7 @@ namespace StarFish {
 
 class FrameText : public Frame {
 public:
-    FrameText(Node* node, ComputedStyle* style)
-        : Frame(node, style)
-    {
-    }
+    FrameText(Node* node, ComputedStyle* style);
 
     virtual bool isFrameText()
     {
@@ -39,6 +36,10 @@ public:
     }
 
     String* text();
+
+    void transformText(String* text);
+    String* makeCapitalized(String* text, char32_t prev);
+    char32_t previousChar();
 
     virtual bool isSelfCollapsingBlock(LayoutContext& ctx);
 
@@ -92,6 +93,9 @@ public:
                        GC_WORD_OFFSET(FrameText, m_treeItemModel.m_firstChild));
             GC_set_bit(obj_bitmap,
                        GC_WORD_OFFSET(FrameText, m_treeItemModel.m_lastChild));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameText, m_text));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameText, m_originText));
+
             descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameText));
             typeInited = true;
         }
@@ -100,6 +104,8 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    void setText(String* text);
+
     virtual bool hasFrameTreeItemModel()
     {
         return true;
@@ -111,6 +117,8 @@ protected:
     }
 
     FrameTreeItemModel m_treeItemModel;
+    String* m_text;
+    String* m_originText;
 };
 }
 

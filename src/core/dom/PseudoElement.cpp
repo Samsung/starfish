@@ -30,21 +30,6 @@ static inline bool isSpaceForFirstLetter(char32_t c)
     return String::isSpaceOrNewline(c) || c == NonBreakingSpace;
 }
 
-CharCategory category(char32_t c)
-{
-    return static_cast<CharCategory>(U_GET_GC_MASK(c));
-}
-
-static inline bool isPunctuationForFirstLetter(char32_t c)
-{
-    CharCategory charCategory = category(c);
-    return charCategory == Punctuation_Open ||
-           charCategory == Punctuation_Close ||
-           charCategory == Punctuation_InitialQuote ||
-           charCategory == Punctuation_FinalQuote ||
-           charCategory == Punctuation_Other;
-}
-
 QualifiedName PseudoElement::pseudoElementTagName(
     StyleResolver::PseudoElementType pseudoId)
 {
@@ -83,8 +68,7 @@ size_t FirstLetterPseudoElement::firstLetterLength(String* text)
         length++;
     }
 
-    while (length < textLength &&
-           isPunctuationForFirstLetter(text->charAt(length))) {
+    while (length < textLength && String::isPunctuation(text->charAt(length))) {
         length++;
     }
 
@@ -100,7 +84,7 @@ size_t FirstLetterPseudoElement::firstLetterLength(String* text)
     // Keep looking for allowed punctuation for the :first-letter.
     for (; length < textLength; ++length) {
         char32_t c = text->charAt(length);
-        if (!isPunctuationForFirstLetter(c)) {
+        if (!String::isPunctuation(c)) {
             break;
         }
     }

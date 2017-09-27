@@ -904,6 +904,13 @@ enum FillRuleValue {
     FillRuleEvenOdd,
 };
 
+enum TextTransformValue {
+    NoneTextTransformValue,
+    CapitalizeTextTransformValue,
+    UppercaseTextTransformValue,
+    LowercaseTextTransformValue,
+};
+
 class ValueList;
 class CSSStyleDeclaration;
 
@@ -978,6 +985,7 @@ class CSSStyleDeclaration;
     F(EmptyCells, EmptyCells, "empty-cells")                             \
     F(TextAlign, textAlign, "text-align")                                \
     F(TextIndent, textIndent, "text-indent")                             \
+    F(TextTransform, textTransform, "text-transform")                    \
     F(Transform, transform, "transform")                                 \
     F(TransformOrigin, transformOrigin, "transform-origin")              \
     F(Visibility, visibility, "visibility")                              \
@@ -1235,7 +1243,10 @@ public:
         Attr,
 
         // svg
-        FillRuleValueKind
+        FillRuleValueKind,
+
+        // text-transform
+        TextTransformValueKind
     };
 
     CSSStyleValuePair()
@@ -1586,6 +1597,12 @@ public:
         return m_value.m_calc;
     }
 
+    TextTransformValue textTransformValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == TextTransformValueKind);
+        return m_value.m_textTransform;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1632,6 +1649,7 @@ public:
         FlexBasisValue m_flexBasis;
         FillRuleValue m_fillRule;
         CalcData* m_calc;
+        TextTransformValue m_textTransform;
 
         ValueData(int v)
             : m_floatValue(v)
@@ -1811,6 +1829,10 @@ public:
         }
         ValueData(CalcData* v)
             : m_calc(v)
+        {
+        }
+        ValueData(TextTransformValue v)
+            : m_textTransform(v)
         {
         }
     };
