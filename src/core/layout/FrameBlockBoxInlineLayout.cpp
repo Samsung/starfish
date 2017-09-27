@@ -2107,7 +2107,6 @@ void LineFormattingContext::insertWord(Frame* next)
     }
 
     STARFISH_ASSERT(m_canConcatWord);
-
     if (dontBreakLine(m_word.boxes()[0], m_word.width())) {
         handleSoftHyphenate(false);
         auto& boxes = m_word.boxes();
@@ -2583,6 +2582,148 @@ static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
         ctx.handleTextToken(token);
         nextToken(iter, cur, next);
     }
+}
+
+FrameText::FrameText(Node* node, ComputedStyle* style)
+    : Frame(node, style)
+{
+    STARFISH_ASSERT(style);
+    m_text = node->asCharacterData()->data();
+    m_originText = node->asCharacterData()->data();
+}
+
+String* FrameText::text()
+{
+    if (!m_originText->equals(node()->asCharacterData()->data())) {
+        if (style()->textTransform() != NoneTextTransformValue) {
+            transformText(node()->asCharacterData()->data());
+        } else {
+            m_originText = node()->asCharacterData()->data();
+            setText(node()->asCharacterData()->data());
+        }
+    }
+
+    return m_text;
+}
+
+void FrameText::setText(String* text)
+{
+    STARFISH_ASSERT(text);
+    if (!m_text || !m_text->equals(text)) {
+        m_text = text;
+    }
+}
+
+char32_t FrameText::previousChar()
+{
+    Frame* prevText = previousInPreOrder();
+    for (; prevText; prevText = prevText->previousInPreOrder()) {
+        if (!prevText->isFrameText() ||
+            !prevText->asFrameText()->text()->isEmpty()) {
+            break;
+        }
+    }
+
+    char32_t prev = ' ';
+    if (prevText && prevText->isFrameText()) {
+        String* str = prevText->asFrameText()->text();
+        size_t len = str->length();
+        prev = str->charAt(len - 1);
+    }
+
+    return prev;
+}
+
+void FrameText::transformText(String* text)
+{
+    STARFISH_ASSERT(text);
+
+    if (style()->textTransform() == CapitalizeTextTransformValue) {
+        setText(makeCapitalized(text, previousChar()));
+    } else if (style()->textTransform() == UppercaseTextTransformValue) {
+        setText(text->toUnicodeUpper());
+    } else if (style()->textTransform() == LowercaseTextTransformValue) {
+        setText(text->toUnicodeLower());
+    }
+}
+
+String* FrameText::makeCapitalized(String* txt, char32_t prev)
+{
+    auto breaker = node()->starFish()->lineBreakIteratorPool()->get(
+        icu::Locale::getUS(), LineBreakIteratorModeUAX14, false);
+    std::vector<int32_t> locs;
+
+    icu::UnicodeString str = txt->toUnicodeString();
+    breaker->setText(str);
+
+    int32_t cur = 0;
+    int32_t next = 0;
+
+    StringBufferAccessData data = txt->bufferAccessData();
+    if (data.hasASCIIContent) {
+        while ((next = breaker->next()) != icu::BreakIterator::DONE) {
+            locs.push_back(next);
+        }
+    } else {
+        int32_t len = str.length();
+        while ((next = breaker->next()) != icu::BreakIterator::DONE) {
+            if (next == len) {
+                locs.push_back(txt->length());
+            } else {
+                locs.push_back(str.getChar32Start(next));
+            }
+        }
+    }
+
+    cur = 0;
+    next = 0;
+    auto iter = locs.begin();
+
+    StringBuilder sb;
+    char32_t c = txt->charAt(cur);
+    while (iter != locs.end()) {
+        next = *iter;
+        if (String::isNewline(c)) {
+        } else if (isSeparator(c) || String::isNBPS(c) ||
+                   String::isPunctuation(c)) {
+            int32_t offset = cur + 1;
+
+            c = txt->charAt(offset);
+            while (offset < next && (isSeparator(c) || String::isNBPS(c) ||
+                                     String::isPunctuation(c))) {
+                if (String::isNewline(c)) {
+                    break;
+                }
+                c = txt->charAt(++offset);
+            }
+            next = offset;
+        } else {
+            int32_t offset;
+            if (prev == ' ') {
+                c = txt->charAt(cur);
+                sb.appendChar((char32_t)u_totitle(c));
+                offset = ++cur;
+            } else {
+                offset = cur;
+                prev = ' ';
+            }
+
+            c = txt->charAt(offset);
+            while (offset < next &&
+                   !(isSeparator(c) || String::isNBPS(c) ||
+                     String::isPunctuation(c))) {
+                c = txt->charAt(++offset);
+            }
+
+            next = offset;
+        }
+
+        sb.appendSubString(txt, cur, next);
+        nextToken(iter, cur, next);
+        c = txt->charAt(cur);
+    }
+
+    return sb.finalize();
 }
 
 void FrameText::layoutInline(LineFormattingContext& ctx)
@@ -3566,11 +3707,6 @@ void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
 
         f = f->next();
     }
-}
-
-String* FrameText::text()
-{
-    return node()->asCharacterData()->data();
 }
 
 bool FrameText::isSelfCollapsingBlock(LayoutContext& ctx)

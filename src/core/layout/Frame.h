@@ -1275,6 +1275,19 @@ public:
         oldChild->frameTreeItemModel()->m_next = nullptr;
         oldChild->setParent(nullptr);
     }
+
+    Frame* previousInPreOrder() const
+    {
+        if (Frame* f = previous()) {
+            while (Frame* lastChild = f->lastChild()) {
+                f = lastChild;
+            }
+            return f;
+        }
+
+        return parent();
+    }
+
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {

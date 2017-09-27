@@ -1449,6 +1449,20 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::TextTransformValueKind:
+        switch (textTransformValue()) {
+        case TextTransformValue::NoneTextTransformValue:
+            return String::fromUTF8("none");
+        case TextTransformValue::CapitalizeTextTransformValue:
+            return String::fromUTF8("capitalize");
+        case TextTransformValue::UppercaseTextTransformValue:
+            return String::fromUTF8("uppercase");
+        case TextTransformValue::LowercaseTextTransformValue:
+            return String::fromUTF8("lowercase");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
     case CSSStyleValuePair::ValueKind::SideValueKind:
         switch (sideValue()) {
         case SideValue::LeftSideValue:
@@ -4783,6 +4797,21 @@ void StyleResolver::apply(Element* element,
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
+            break;
+        case CSSStyleValuePair::KeyKind::TextTransform:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setTextTransform(NoneTextTransformValue);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setTextTransform(parentStyle->textTransform());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::TextTransformValueKind) {
+                style->setTextTransform(cssValues[k].textTransformValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -6855,6 +6884,34 @@ bool CSSStyleValuePair::updateValueTextAlign(const CSSTokenVector& tokens)
     } else if (STRING_VALUE_IS_STRING("right")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
         m_value.m_textAlign = TextAlignValue::RightTextAlignValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTextTransform(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_STRING("none")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::TextTransformValueKind;
+        m_value.m_textTransform = TextTransformValue::NoneTextTransformValue;
+    } else if (STRING_VALUE_IS_STRING("capitalize")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::TextTransformValueKind;
+        m_value.m_textTransform =
+            TextTransformValue::CapitalizeTextTransformValue;
+    } else if (STRING_VALUE_IS_STRING("uppercase")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::TextTransformValueKind;
+        m_value.m_textTransform =
+            TextTransformValue::UppercaseTextTransformValue;
+    } else if (STRING_VALUE_IS_STRING("lowercase")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::TextTransformValueKind;
+        m_value.m_textTransform =
+            TextTransformValue::LowercaseTextTransformValue;
     } else {
         return false;
     }
