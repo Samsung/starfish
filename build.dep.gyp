@@ -484,15 +484,36 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@((pkg-config --silence-errors --cflags-only-I elementary ecore ecore-x | sed s/-I//g) || true)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I elementary ecore | sed s/-I//g) || true)',
                     '/usr/include/dali',
                     'third_party/libtuv/include',
                     'third_party/libtuv/src'
                 ],
                 'libraries': [
-                    '<!@((pkg-config --silence-errors --libs-only-l elementary ecore ecore-x) || true)',
-                    '-ldali-core -ldali-adaptor -ldali-toolkit -lturbojpeg -lgif',
+                    '<!@((pkg-config --silence-errors --libs-only-l elementary ecore ) || true)',
                     'lib/debug/libtuv.a',
+                    '-ldali-core',
+                    '-ldali-adaptor',
+                    '-ldali-toolkit',
+                ],
+            },
+        },
+        {
+            'target_name': 'dali.tizen',
+            'type': 'none',
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    '<!@((pkg-config --silence-errors --cflags-only-I dlog elementary ecore | sed s/-I//g) || true)',
+                    '/usr/include/dali',
+                    'third_party/libtuv/include',
+                    'third_party/libtuv/src'
+                ],
+                'libraries': [
+                    '<!@((pkg-config --silence-errors --libs-only-l dlog elementary ecore ) || true)',
+                    'lib/tizen/release/libtuv.a',
+                    '-ldali-core',
+                    '-ldali-adaptor',
+                    '-ldali-toolkit',
                 ],
             },
         },
@@ -505,6 +526,42 @@
                         'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
                     ],
                     'destination': '<(PRODUCT_DIR)/lib/debug',
+                },
+            ],
+        },
+        {
+            'target_name': 'libtuv.x64.release',
+            'type': '<(deplib)',
+            'copies': [
+                {
+                    'files': [
+                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
+                    ],
+                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                },
+            ],
+        },
+        {
+            'target_name': 'libtuv.tizen.debug',
+            'type': '<(deplib)',
+            'copies': [
+                {
+                    'files': [
+                        'third_party/libtuv/build/arm-tizen/debug/lib/libtuv.a',
+                    ],
+                    'destination': '<(PRODUCT_DIR)/lib/tizen/debug',
+                },
+            ],
+        },
+        {
+            'target_name': 'libtuv.tizen.release',
+            'type': '<(deplib)',
+            'copies': [
+                {
+                    'files': [
+                        'third_party/libtuv/build/arm-tizen/debug/lib/libtuv.a',
+                    ],
+                    'destination': '<(PRODUCT_DIR)/lib/tizen/release',
                 },
             ],
         },

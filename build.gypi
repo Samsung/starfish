@@ -215,15 +215,33 @@
                 'deps_debug_extra': [
                     './build.dep.gyp:libtuv.x64.debug',
                 ],
+                'deps_release_extra': [
+                    './build.dep.gyp:libtuv.x64.release',
+                ],
+                'libraries_extra': [
+                    '<@(libraries_extra)',
+                    '-lturbojpeg',
+                    '-lgif',
+                ],
             }],
             ['platform=="tizen" and backend=="dali"', {
                 'defines_extra': [
                     'STARFISH_DALI','GC_THREADS'
                 ],
                 'deps_extra': [
+                    './build.dep.gyp:dali.tizen',
+                ],
+                'deps_debug_extra': [
+                    './build.dep.gyp:libtuv.tizen.debug',
+                ],
+                'deps_release_extra': [
+                    './build.dep.gyp:libtuv.tizen.release',
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
+                    '-lturbojpeg',
+                    '-lgif',
+                    '-pthread',
                 ],
             }],
             ['enable_ffmpeg_demuxer=="true"', {
