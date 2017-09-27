@@ -231,7 +231,8 @@ String* HTMLInputElement::visibleValue()
     String* typeVal = type();
     if (typeVal->equals("submit") && val->equals(String::emptyString)) {
         val = String::createASCIIString("submit");
-    } else if (typeVal->equals("password")) {
+    } else if (typeVal->equals("password") &&
+               !val->equals(String::emptyString)) {
         val = HTMLInputElement::obscurePhrase(val);
     } else if (typeVal->equals("checkbox")) {
         val = checked() ? HTMLInputElement::checkboxTickSymbol()
