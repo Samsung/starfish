@@ -98,6 +98,7 @@
             'backend%': '<(backend)',
             'enable_ffmpeg_demuxer%': '<(enable_ffmpeg_demuxer)',
             'platform%': '<(platform)',
+            'cflags_extra%': [],
             'deplib%': '<(deplib)',
 
             'conditions': [
@@ -119,6 +120,8 @@
                     ],
                 }],
                 ['platform=="linux"', {
+                    'cflags_extra': [
+                    ],
                     'include_dirs_extra': [
                     ],
                     'sources_extra': [
@@ -136,8 +139,8 @@
         'include_dirs_extra%': '<(include_dirs_extra)',
         'sources_extra%': '<(sources_extra)',
         'libraries_extra%': '<(libraries_extra)',
-
-        'cflags_extra%': [],
+        'cflags_extra%': '<(cflags_extra)',
+        'defines_extra%': [],
         'deps_extra%': [],
         'deps_debug_extra%': [],
         'deps_release_extra%': [],
@@ -147,6 +150,7 @@
                     'STARFISH_EFL',
                 ],
                 'cflags_extra': [
+                    '<@(cflags_extra)',
                     '-fno-rtti',
                 ],
                 'deps_extra': [
@@ -158,7 +162,11 @@
                     'STARFISH_EFL',
                 ],
                 'cflags_extra': [
+                    '<@(cflags_extra)',
                     '-fno-rtti',
+                ],
+                'libraries_extra': [
+                    '<@(libraries_extra)',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl.tizen',
@@ -169,9 +177,11 @@
                     'STARFISH_EFL_CAIRO',
                 ],
                 'cflags_extra': [
+                    '<@(cflags_extra)',
                     '-fno-rtti',
                 ],
                 'libraries_extra': [
+                    '<@(libraries_extra)',
                     '-lturbojpeg',
                     '-lgif',
                 ],
@@ -184,9 +194,11 @@
                     'STARFISH_EFL_CAIRO',
                 ],
                 'cflags_extra': [
+                    '<@(cflags_extra)',
                     '-fno-rtti',
                 ],
                 'libraries_extra': [
+                    '<@(libraries_extra)',
                     '-lturbojpeg',
                     '-lgif',
                 ],
@@ -209,6 +221,9 @@
                     'STARFISH_DALI','GC_THREADS'
                 ],
                 'deps_extra': [
+                ],
+                'libraries_extra': [
+                    '<@(libraries_extra)',
                 ],
             }],
             ['enable_ffmpeg_demuxer=="true"', {
