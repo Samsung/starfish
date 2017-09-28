@@ -664,6 +664,13 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::BorderBottomColor;
             }
             break;
+        case 't':
+            if (memcmp(data, "transition-property", 19) == 0) {
+                return CSSStyleKind::TransitionProperty;
+            }
+            if (memcmp(data, "transition-duration", 19) == 0) {
+                return CSSStyleKind::TransitionDuration;
+            }
         }
         break;
     case 21:
