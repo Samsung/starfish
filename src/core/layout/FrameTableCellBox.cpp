@@ -35,9 +35,11 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     , m_minCellWidth(0)
     , m_maxCellWidth(0)
     , m_actualContentHeight(0)
-    , m_updatedColspan((size_t)-1)
-    , m_updatedRowspan((size_t)-1)
+    , m_updatedColspan(0)
+    , m_updatedRowspan(0)
 {
+    m_updatedColspan = colspan();
+    m_updatedRowspan = rowspan();
 }
 
 // We follow the CSS definition of width in the implementation.
@@ -260,23 +262,22 @@ size_t FrameTableCellBox::rowspan()
 
 size_t FrameTableCellBox::updatedColspan()
 {
-    if (m_updatedColspan != (size_t)-1) {
-        return m_updatedColspan;
-    }
-    return colspan();
+    return m_updatedColspan;
 }
 
 size_t FrameTableCellBox::updatedRowspan()
 {
-    if (m_updatedRowspan != (size_t)-1) {
-        return m_updatedRowspan;
-    }
-    return rowspan();
+    return m_updatedRowspan;
 }
 
 void FrameTableCellBox::updateColspanForLayout(size_t colspan)
 {
     m_updatedColspan = colspan;
+}
+
+void FrameTableCellBox::resetColspanForLayout()
+{
+    updateColspanForLayout(1);
 }
 
 void* FrameTableCellBox::operator new(size_t size)

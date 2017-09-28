@@ -3473,7 +3473,7 @@ void PreferredWidthContext::computePreferredWidth()
     auto it = m_layoutContext.preferredWidthInfo(key);
     if (it.hasValue()) {
         updatePreferredWidth(it.getValue().m_preferredWidth);
-        updatePreferredWidth(it.getValue().m_preferredMinWidth);
+        updatePreferredMinWidth(it.getValue().m_preferredMinWidth);
         return;
     }
 

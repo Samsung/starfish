@@ -505,9 +505,9 @@ test/reftest/csswg-test/css21_original/tables/border-spacing-initial-001.htm
 test/reftest/csswg-test/css21_original/tables/border-spacing-initial-002.htm
 test/reftest/csswg-test/css21_original/tables/border-spacing-percentage-001.htm
 test/reftest/csswg-test/css21_original/tables/border-spacing-values-001.htm
-#test/reftest/csswg-test/css21_original/tables/border-style-inset-001.htm
+test/reftest/csswg-test/css21_original/tables/border-style-inset-001.htm
 #test/reftest/csswg-test/css21_original/tables/border-style-inset-002.htm
-#test/reftest/csswg-test/css21_original/tables/border-style-outset-001.htm
+test/reftest/csswg-test/css21_original/tables/border-style-outset-001.htm
 #test/reftest/csswg-test/css21_original/tables/border-style-outset-002.htm
 test/reftest/csswg-test/css21_original/tables/caption-position-001.htm
 test/reftest/csswg-test/css21_original/tables/caption-position-001-ref.htm
@@ -761,7 +761,7 @@ test/reftest/csswg-test/css21_original/tables/missing-cell-rendering-001.htm
 test/reftest/csswg-test/css21_original/tables/padding-applies-to-013a.htm
 #test/reftest/csswg-test/css21_original/tables/row-visibility-001.htm
 #test/reftest/csswg-test/css21_original/tables/row-visibility-002.htm
-#test/reftest/csswg-test/css21_original/tables/row-visibility-003.htm
+test/reftest/csswg-test/css21_original/tables/row-visibility-003.htm
 #test/reftest/csswg-test/css21_original/tables/row-visibility-004.htm
 test/reftest/csswg-test/css21_original/tables/separated-border-model-001.htm
 test/reftest/csswg-test/css21_original/tables/separated-border-model-003a.htm

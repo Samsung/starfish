@@ -49,6 +49,7 @@ public:
     size_t updatedColspan();
     size_t updatedRowspan();
     void updateColspanForLayout(size_t colspan);
+    void resetColspanForLayout();
 
     virtual bool isFrameTableCellBox()
     {
