@@ -1048,6 +1048,10 @@ class CSSStyleDeclaration;
     F(Outline, outline, "outline")                                   \
     F(Overflow, overflow, "overflow")                                \
     F(Transition, transition, "transition")                          \
+    F(TransitionTransitionProperty, transitionTransitionProperty,    \
+      "transitionProperty")                                          \
+    F(TransitionTransitionDuration, transitionTransitionDuration,    \
+      "transitionDuration")                                          \
     F(FlexFlow, flexFlow, "flex-flow")                               \
     F(Flex, flex, "flex")
 

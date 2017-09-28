@@ -2267,6 +2267,20 @@ static void addTransitionCSSValuePairs(CSSStyleDeclaration* target,
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDelay, delay);
 }
 
+static void addTransitionPropertyCSSValuePairs(CSSStyleDeclaration* target,
+                                               CSSStyleValuePair property)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionProperty,
+                            property);
+}
+
+static void addTransitionDurationCSSValuePairs(CSSStyleDeclaration* target,
+                                               CSSStyleValuePair duration)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDuration,
+                            duration);
+}
+
 bool CSSStyleValuePair::updateValueUnitTransitionProperty(
     const CSSTokenValue& value)
 {
@@ -2521,6 +2535,44 @@ void CSSStyleDeclaration::setTransition(const char* value, size_t length,
     }
 }
 
+void CSSStyleDeclaration::setTransitionTransitionProperty(const char* value,
+                                                          size_t length,
+                                                          bool isImportant)
+{
+    if (length == 0) {
+        removeTransitionCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    CSSStyleValuePair v, property;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addTransitionPropertyCSSValuePairs(this, v);
+    }
+}
+
+void CSSStyleDeclaration::setTransitionTransitionDuration(const char* value,
+                                                          size_t length,
+                                                          bool isImportant)
+{
+    if (length == 0) {
+        removeTransitionCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    CSSStyleValuePair v, duration;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addTransitionDurationCSSValuePairs(this, v);
+    }
+}
+
 static String* createTransitionString(String* property, String* duration)
 {
     StringBuilder builder;
@@ -2546,6 +2598,18 @@ String* CSSStyleDeclaration::Transition()
     String* property = TransitionProperty();
     String* duration = TransitionDuration();
     return createTransitionString(property, duration);
+}
+
+String* CSSStyleDeclaration::TransitionTransitionProperty()
+{
+    String* property = TransitionProperty();
+    return createTransitionString(property, nullptr);
+}
+
+String* CSSStyleDeclaration::TransitionTransitionDuration()
+{
+    String* duration = TransitionDuration();
+    return createTransitionString(nullptr, duration);
 }
 
 void CSSStyleDeclaration::setBackground(const char* value, size_t length,
@@ -7075,15 +7139,21 @@ bool CSSStyleValuePair::updateValueTableLayout(const CSSTokenVector& tokens)
 bool CSSStyleValuePair::updateValueTransitionProperty(
     const CSSTokenVector& tokens)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return true;
+    if (tokens.size() != 1) {
+        return false;
+    }
+    const CSSTokenValue& value = tokens[0];
+    return updateValueUnitTransitionProperty(value);
 }
 
 bool CSSStyleValuePair::updateValueTransitionDuration(
     const CSSTokenVector& tokens)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return true;
+    if (tokens.size() != 1) {
+        return false;
+    }
+    const CSSTokenValue& value = tokens[0];
+    return updateValueUnitTransitionTime(value);
 }
 
 bool CSSStyleValuePair::updateValueTransitionTimingFunction(

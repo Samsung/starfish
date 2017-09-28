@@ -82,6 +82,8 @@ public:
     String* BackgroundPosition();
     String* Font();
     String* Transition();
+    String* TransitionTransitionProperty();
+    String* TransitionTransitionDuration();
     String* Overflow();
     String* FlexFlow();
     String* Flex();
@@ -110,6 +112,10 @@ public:
     void setBorderColor(const char* value, size_t len, bool isImportant);
     void setFont(const char* value, size_t len, bool isImportant);
     void setTransition(const char* value, size_t len, bool isImportant);
+    void setTransitionTransitionProperty(const char* value, size_t len,
+                                         bool isImportant);
+    void setTransitionTransitionDuration(const char* value, size_t len,
+                                         bool isImportant);
     void setOverflow(const char* value, size_t len, bool isImportant);
     void setFlexFlow(const char* value, size_t len, bool isImportant);
     void setFlex(const char* value, size_t len, bool isImportant);
