@@ -125,7 +125,7 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
             m_hasDirAttribute = false;
         }
         String* orgValue = value;
-        value = value->toLower();
+        value = value->toASCIILower();
         if (value->equals("")) {
             return;
         } else if (value->equals("ltr") || value->equals("rtl")) {
@@ -164,7 +164,7 @@ void HTMLElement::styleForPresentationAttribute(
     if (m_hasDirAttribute) {
         CSSStyleValuePair pair;
         String* str = getAttributeOrEmpty(starFish()->staticStrings()->m_dir);
-        str = str->toLower();
+        str = str->toASCIILower();
         if (str->equals("ltr")) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Direction);
             pair.setValueKind(CSSStyleValuePair::ValueKind::DirectionValueKind);
@@ -316,7 +316,7 @@ void HTMLElement::setInnerText(String* text)
 String* HTMLElement::dir()
 {
     String* dir =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_dir)->toLower();
+        getAttributeOrEmpty(starFish()->staticStrings()->m_dir)->toASCIILower();
     if (dir->equals("ltr") || dir->equals("rtl") || dir->equals("auto")) {
         return dir;
     }

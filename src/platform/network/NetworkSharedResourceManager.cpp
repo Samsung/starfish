@@ -165,7 +165,7 @@ static String* transformetoNetscapeCookieFormat(Document* document,
         if (tokens[i]->contains("=")) {
             GCVector<String*> pair;
             tokens[i]->split('=', pair);
-            String* key = pair[0]->trim()->toLower();
+            String* key = pair[0]->trim()->toASCIILower();
             String* value = pair[1]->trim();
             if (key->equals("expires")) {
                 double parsedDate =
@@ -188,7 +188,7 @@ static String* transformetoNetscapeCookieFormat(Document* document,
                 path = value;
             }
         } else {
-            String* key = tokens[i]->trim()->toLower();
+            String* key = tokens[i]->trim()->toASCIILower();
             if (key->equals("secure")) {
                 secure = "TRUE";
             }

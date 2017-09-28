@@ -1166,7 +1166,7 @@ public:
 
     void updateComputedStyle(Node* refNode);
 
-    Node* node()
+    virtual Node* node() const
     {
         if (isAnonymous()) {
             return nullptr;

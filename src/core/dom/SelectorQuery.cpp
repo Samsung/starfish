@@ -465,8 +465,9 @@ void SelectorQuery::execute(Node& rootNode, GCVector<Element*>& output,
             return;
         case CSSSelector::Tag:
             collectElementsByTagName(
-                rootNode, firstSelector->selectorText().string()->toUpper(),
-                output, shouldOnlyMatchFirstElement);
+                rootNode,
+                firstSelector->selectorText().string()->toASCIIUpper(), output,
+                shouldOnlyMatchFirstElement);
             return;
         default:
             break; // If we need another fast path, add here.

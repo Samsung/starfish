@@ -135,7 +135,7 @@ void DataURLResourceRequestJobDelegate::worker(ResourceRequest* res,
     String* mimeType = String::emptyString;
     if (idx != SIZE_MAX && idxColon != SIZE_MAX && idxColon < idx) {
         String* sub =
-            url->substring(idxColon + 1, idx - idxColon - 1)->toLower();
+            url->substring(idxColon + 1, idx - idxColon - 1)->toASCIILower();
         mimeType = sub;
         size_t base64 = sub->find(";base64");
 

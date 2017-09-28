@@ -435,9 +435,9 @@ public:
     String* insert(String* str, size_t pos);
 
     String* toUpper();
-    String* toUnicodeUpper();
+    String* toASCIIUpper();
     String* toLower();
-    String* toUnicodeLower();
+    String* toASCIILower();
     String* replaceAll(String* from, String* to);
 
     String* concat(const char32_t c);

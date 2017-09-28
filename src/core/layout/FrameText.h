@@ -21,6 +21,23 @@
 
 namespace StarFish {
 
+class FrameTextRareData : public gc {
+public:
+    bool m_isFrameTextRareData;
+    Node* m_node;
+    String* m_text;
+
+    FrameTextRareData(Node* n)
+        : m_isFrameTextRareData(true)
+        , m_node(n)
+        , m_text(String::emptyString)
+    {
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+};
+
 class FrameText : public Frame {
 public:
     FrameText(Node* node, ComputedStyle* style);
@@ -35,7 +52,31 @@ public:
         return "FrameText";
     }
 
+    bool hasRareData() const
+    {
+        size_t* ptr = (size_t*)m_node;
+        if (ptr && *ptr == true) {
+            return true;
+        }
+        return false;
+    }
+
+    FrameTextRareData* frameTextRareData() const
+    {
+        STARFISH_ASSERT(hasRareData());
+        return ((FrameTextRareData*)m_node);
+    }
+
+    virtual Node* node() const
+    {
+        if (hasRareData()) {
+            return frameTextRareData()->m_node;
+        }
+        return Frame::node();
+    }
+
     String* text();
+    void setText(String* text);
 
     void transformText(String* text);
     String* makeCapitalized(String* text, char32_t prev);
@@ -93,8 +134,6 @@ public:
                        GC_WORD_OFFSET(FrameText, m_treeItemModel.m_firstChild));
             GC_set_bit(obj_bitmap,
                        GC_WORD_OFFSET(FrameText, m_treeItemModel.m_lastChild));
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameText, m_text));
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameText, m_originText));
 
             descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameText));
             typeInited = true;
@@ -104,8 +143,6 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    void setText(String* text);
-
     virtual bool hasFrameTreeItemModel()
     {
         return true;
@@ -117,8 +154,6 @@ protected:
     }
 
     FrameTreeItemModel m_treeItemModel;
-    String* m_text;
-    String* m_originText;
 };
 }
 

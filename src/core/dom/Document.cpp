@@ -1326,7 +1326,7 @@ Nullable<HTMLOrSVGScriptElement> Document::currentScript()
 // https://dom.spec.whatwg.org/#dom-document-createevent
 Event* Document::createEvent(String* type)
 {
-    type = type->toLower();
+    type = type->toASCIILower();
     size_t len = type->length();
     Event* e = nullptr;
 

@@ -313,7 +313,7 @@ void ResourceRequest::setRequestHeader(String* h, String* c)
 
 ResourceRequest::MethodType ResourceRequest::toMethodType(String* input)
 {
-    String* lowerMethod = input->toLower();
+    String* lowerMethod = input->toASCIILower();
     if (lowerMethod->equals("post")) {
         return POST_METHOD;
     } else if (lowerMethod->equals("get")) {
@@ -336,7 +336,7 @@ String* ResourceRequest::methodType(ResourceRequest::MethodType method)
 
 ResourceRequest::EncodeType ResourceRequest::toEncodeType(String* input)
 {
-    String* lowerMethod = input->toLower();
+    String* lowerMethod = input->toASCIILower();
     if (lowerMethod->equals("application/x-www-form-urlencoded")) {
         return APPLICATION_X_WWW_FORM_URLENCODED;
     } else if (lowerMethod->equals("multipart/form-data")) {
