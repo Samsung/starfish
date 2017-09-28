@@ -1226,6 +1226,18 @@ static CSSStyleValuePair lengthToCSSStyleValue(Length len)
     } else if (len.isPercent()) {
         p.setValueKind(CSSStyleValuePair::ValueKind::Percentage);
         p.setValue(len.percent());
+    } else if (len.isFontPercent()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        Length::Type t = len.type();
+        CSSLength::Kind k;
+        if (t == Length::Em) {
+            k = CSSLength::EM;
+        } else if (t == Length::Ex) {
+            k = CSSLength::EX;
+        } else {
+            k = CSSLength::REM;
+        }
+        p.setValue(CSSLength(k, len.fontPercent()));
     } else if (len.isViewportPercent()) {
         p.setValueKind(CSSStyleValuePair::ValueKind::Length);
         Length::Type t = len.type();
@@ -1376,9 +1388,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
     ADD_LENGTH_PAIR(MinWidth, minWidth)
     ADD_LENGTH_PAIR(MaxHeight, maxHeight)
     ADD_LENGTH_PAIR(MinHeight, minHeight)
-    ADD_LENGTH_PAIR(LineHeight, lineHeight)
     ADD_LENGTH_PAIR(TextIndent, textIndent)
-    ADD_LENGTH_PAIR(FontSize, fontSize)
 
     {
         CSSStyleValuePair w, h;
@@ -1420,7 +1430,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
         d->addValuePair(h);
     }
 
-    if (frame() && frame()->isPositioned()) {
+    if (frame() && frame()->isFrameBox() && frame()->isPositioned()) {
         CSSStyleValuePair t, b, l, r;
         t.setKeyKind(CSSStyleValuePair::KeyKind::Top);
         t.setValueKind(CSSStyleValuePair::ValueKind::Length);
@@ -1468,6 +1478,30 @@ CSSStyleDeclaration* Element::getComputedStyle()
         ADD_LENGTH_PAIR(Right, right)
         ADD_LENGTH_PAIR(Bottom, bottom)
         ADD_LENGTH_PAIR(Left, left)
+    }
+
+    {
+        CSSStyleValuePair lh;
+        lh.setKeyKind(CSSStyleValuePair::KeyKind::LineHeight);
+        lh.setValueKind(CSSStyleValuePair::ValueKind::Length);
+
+        if (frame()) {
+            lh.setValue(CSSLength(CSSLength::PX, frame()->lineHeight()));
+        } else {
+            lh.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+
+        d->addValuePair(lh);
+    }
+
+    {
+        CSSStyleValuePair fs;
+        fs.setKeyKind(CSSStyleValuePair::KeyKind::FontSize);
+        fs.setValueKind(CSSStyleValuePair::ValueKind::Length);
+
+        fs.setValue(CSSLength(CSSLength::PX, style->fixedFontSize()));
+
+        d->addValuePair(fs);
     }
 
 #undef ADD_ABSOLUTE_LENGTH_PAIR
