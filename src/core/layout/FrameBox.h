@@ -541,8 +541,6 @@ public:
         return outerHeight;
     }
 
-    LayoutUnit lineHeight();
-
     virtual void paintChildrenWith(PaintingContext& ctx);
 
     static void paintBackground(Canvas* canvas, Node* n, ComputedStyle* style,

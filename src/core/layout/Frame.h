@@ -1513,6 +1513,8 @@ public:
         return adjustedPositionRelativeToOffsetParent().y();
     }
 
+    LayoutUnit lineHeight();
+
     bool shouldWrapLines()
     {
         // When true, break lines as necessary to fill line boxes

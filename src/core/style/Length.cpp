@@ -146,11 +146,18 @@ float Length::specifiedFontValue(Node* n)
 
 float Length::specifiedFontValue(Element* e)
 {
+    STARFISH_ASSERT(e);
     if (isFixed()) {
         return fixed();
     } else if (isPercent()) {
         Element* p = e->parentElement();
-        return percentValue(p->style()->fixedFontSize());
+        float fixedParentFontSize;
+        if (p) {
+            fixedParentFontSize = p->style()->fixedFontSize();
+        } else {
+            fixedParentFontSize = e->document()->style()->fixedFontSize();
+        }
+        return percentValue(fixedParentFontSize);
     } else if (isViewportPercent()) {
         Window* w = e->window();
         return viewportPercentValue(w->width(), w->height());
@@ -186,9 +193,14 @@ float Length::fontPercentValue(Node* n, bool isFontSize) const
     float fontSize;
     Font* font;
     if (isFontSize) {
-        Element* pe = e->parentElement();
-        fontSize = pe->style()->fixedFontSize();
-        font = pe->style()->font();
+        Element* p = e->parentElement();
+        if (p) {
+            fontSize = p->style()->fixedFontSize();
+            font = p->style()->font();
+        } else {
+            fontSize = e->document()->style()->fixedFontSize();
+            font = e->document()->style()->font();
+        }
     } else {
         fontSize = e->style()->fixedFontSize();
         font = e->style()->font();

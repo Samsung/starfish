@@ -31,7 +31,7 @@
 
 namespace StarFish {
 
-LayoutUnit FrameBox::lineHeight()
+LayoutUnit Frame::lineHeight()
 {
     LayoutUnit fontSize = style()->font()->metrics().m_ascender -
                           style()->font()->metrics().m_descender;
