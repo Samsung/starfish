@@ -49,18 +49,7 @@ public:
         m_data = data;
     }
 
-    void setData(String* data)
-    {
-        STARFISH_ASSERT(data);
-        String* oldData = m_data;
-        m_data = data;
-
-        setNeedsLayout();
-
-        notifyDOMEventToParentTree(parentNode(), [oldData, data](Node* parent) {
-            parent->didCharacterDataModified(oldData, data);
-        });
-    }
+    void setData(String* data);
 
     uint32_t length() const
     {

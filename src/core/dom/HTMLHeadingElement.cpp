@@ -68,7 +68,7 @@ void HTMLHeadingElement::styleForPresentationAttribute(
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
 
-    String* value = align()->toLower();
+    String* value = align()->toASCIILower();
     if (!value->isEmpty()) {
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);

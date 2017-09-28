@@ -821,10 +821,10 @@ Frame::Frame(Node* node, ComputedStyle* s)
 bool Frame::shouldApplyOverflow()
 {
     if (!isAnonymous()) {
-        if (m_node->isHTMLHtmlElement()) {
+        if (node()->isHTMLHtmlElement()) {
             return false;
-        } else if (m_node->isHTMLBodyElement()) {
-            HTMLHtmlElement* html = m_node->document()->rootElement();
+        } else if (node()->isHTMLBodyElement()) {
+            HTMLHtmlElement* html = node()->document()->rootElement();
             if (html->style()->overflowX() == OverflowValue::VisibleOverflow &&
                 html->style()->overflowY() == OverflowValue::VisibleOverflow) {
                 return false;
@@ -871,7 +871,7 @@ void Frame::computeStyleFlags()
         (style->originalDisplay() == DisplayValue::InlineFlexDisplayValue);
     // https://www.w3.org/TR/html5/rendering.html#the-fieldset-and-legend-elements
     m_flags.m_isEstablishesBlockFormattingContext |=
-        (!isAnonymous() && m_node->isHTMLFieldSetElement());
+        (!isAnonymous() && node()->isHTMLFieldSetElement());
 
     // https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#model
     // The table wrapper box establishes a block formatting context
@@ -1105,13 +1105,13 @@ void Frame::markFlexItem()
 
 bool Frame::isDocumentElement() const
 {
-    return !isAnonymous() && m_node->document() == m_node;
+    return !isAnonymous() && node()->document() == node();
 }
 
 Element* Frame::offsetParent() const
 {
     if (isDocumentElement() ||
-        (!isAnonymous() && m_node->isHTMLBodyElement())) {
+        (!isAnonymous() && node()->isHTMLBodyElement())) {
         return nullptr;
     }
 
@@ -1143,7 +1143,7 @@ Element* Frame::offsetParent() const
 
 LayoutLocation Frame::adjustedPositionRelativeToOffsetParent()
 {
-    if (m_node->isHTMLBodyElement() || !parent()) {
+    if (node()->isHTMLBodyElement() || !parent()) {
         return LayoutLocation();
     }
 
@@ -1195,6 +1195,6 @@ FrameBox* Frame::findNearestAssociateBox()
 Document* Frame::document()
 {
     STARFISH_ASSERT(node() || parent());
-    return isAnonymous() ? parent()->document() : m_node->document();
+    return isAnonymous() ? parent()->document() : node()->document();
 }
 }

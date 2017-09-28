@@ -101,7 +101,7 @@ ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
     ValueRef* secondArg = argCount >= 2 ? argv[1] : scriptUndefined();
     String* type = String::emptyString;
     if (secondArg->isUndefinedOrNull()) {
-        type = toBrowserString(state, secondArg)->toLower();
+        type = toBrowserString(state, secondArg)->toASCIILower();
     }
 
     Document* document = fetchDocument(state->context());

@@ -44,7 +44,7 @@ QualifiedName HTMLButtonElement::name()
 String* HTMLButtonElement::type() const
 {
     String* typeAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_type);
-    typeAttr = typeAttr->toLower();
+    typeAttr = typeAttr->toASCIILower();
 
     if (typeAttr->equals("submit")) {
         return typeAttr;

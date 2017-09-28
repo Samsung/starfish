@@ -61,7 +61,7 @@ String* Element::tagName()
     if (document()->isXMLDocument()) {
         return localName();
     } else {
-        return localName()->toUpper();
+        return localName()->toASCIIUpper();
     }
 }
 

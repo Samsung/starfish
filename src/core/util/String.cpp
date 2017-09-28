@@ -729,21 +729,6 @@ String* String::toUpper()
     auto data = bufferAccessData();
     if (data.hasASCIIContent) {
         ASCIIString str(data.asciiData(), data.length);
-        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-        return new StringDataASCII(std::move(str));
-    } else {
-        UTF32String str(data.utf32Data(), data.length);
-        // TODO use icu to transform utf-32 string
-        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-        return new StringDataUTF32(std::move(str));
-    }
-}
-
-String* String::toUnicodeUpper()
-{
-    auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
-        ASCIIString str(data.asciiData(), data.length);
         std::transform(str.begin(), str.end(), str.begin(), u_toupper);
         return new StringDataASCII(std::move(str));
     } else {
@@ -754,22 +739,37 @@ String* String::toUnicodeUpper()
     }
 }
 
-String* String::toUnicodeLower()
+String* String::toASCIIUpper()
 {
     auto data = bufferAccessData();
     if (data.hasASCIIContent) {
         ASCIIString str(data.asciiData(), data.length);
-        std::transform(str.begin(), str.end(), str.begin(), u_tolower);
+        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
         return new StringDataASCII(std::move(str));
     } else {
         UTF32String str(data.utf32Data(), data.length);
         // TODO use icu to transform utf-32 string
-        std::transform(str.begin(), str.end(), str.begin(), u_tolower);
+        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
         return new StringDataUTF32(std::move(str));
     }
 }
 
 String* String::toLower()
+{
+    auto data = bufferAccessData();
+    if (data.hasASCIIContent) {
+        ASCIIString str(data.asciiData(), data.length);
+        std::transform(str.begin(), str.end(), str.begin(), u_tolower);
+        return new StringDataASCII(std::move(str));
+    } else {
+        UTF32String str(data.utf32Data(), data.length);
+        // TODO use icu to transform utf-32 string
+        std::transform(str.begin(), str.end(), str.begin(), u_tolower);
+        return new StringDataUTF32(std::move(str));
+    }
+}
+
+String* String::toASCIILower()
 {
     auto data = bufferAccessData();
     if (data.hasASCIIContent) {

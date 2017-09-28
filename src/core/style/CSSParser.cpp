@@ -1054,7 +1054,7 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
     }
 
     if (nString->equals(String::emptyString) ||
-        nString->toLower()->charAt(0) != 'n') {
+        nString->toASCIILower()->charAt(0) != 'n') {
         return false;
     }
     if (nString->length() > 1 && nString->charAt(1) != '-') {
@@ -2743,7 +2743,7 @@ MediaQueryExp* MediaQueryExp::createIfValid(
     STARFISH_ASSERT(mediaFeature);
 
     MediaQueryExpValue expValue;
-    String* lowerMediaFeature = mediaFeature->toLower();
+    String* lowerMediaFeature = mediaFeature->toASCIILower();
 
     // Create value for media query expression that must have 1 or more values.
     if (tokenList.size() == 0 && featureWithoutValue(lowerMediaFeature)) {
@@ -2848,7 +2848,7 @@ String* MediaQueryExp::serialize() const
 {
     StringBuilder result;
     result.appendChar('(');
-    result.appendString(m_mediaFeature->toLower());
+    result.appendString(m_mediaFeature->toASCIILower());
     if (m_expValue.isValid()) {
         result.appendString(": ");
         result.appendString(m_expValue.cssText());

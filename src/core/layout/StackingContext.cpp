@@ -633,7 +633,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                  ->isMainBrowsingContext()) {
             HTMLIFrameElement* iframe =
                 m_owner->node()->document()->browsingContext()->sourceElement();
-            if (!iframe->scrolling()->toLower()->equals("no")) {
+            if (!iframe->scrolling()->toASCIILower()->equals("no")) {
                 FrameBlockBox* document =
                     m_owner->layoutParent()->asFrameBlockBox();
                 m_owner->node()

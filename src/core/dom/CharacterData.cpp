@@ -18,6 +18,8 @@
 #include "StarFish.h"
 #include "core/dom/CharacterData.h"
 #include "core/dom/DOMException.h"
+#include "core/layout/Frame.h"
+#include "core/layout/FrameText.h"
 
 namespace StarFish {
 
@@ -55,6 +57,24 @@ String* CharacterData::substringData(unsigned long offset, unsigned long count)
         subLength = length - offset;
     }
     return d->substring(offset, subLength);
+}
+
+void CharacterData::setData(String* data)
+{
+    STARFISH_ASSERT(data);
+    String* oldData = m_data;
+    m_data = data;
+
+    if (frame() && frame()->isFrameText() &&
+        style()->textTransform() != NoneTextTransformValue) {
+        frame()->asFrameText()->transformText(m_data);
+    }
+
+    setNeedsLayout();
+
+    notifyDOMEventToParentTree(parentNode(), [oldData, data](Node* parent) {
+        parent->didCharacterDataModified(oldData, data);
+    });
 }
 
 void CharacterData::appendData(String* d)

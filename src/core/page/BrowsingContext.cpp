@@ -723,7 +723,7 @@ bool BrowsingContext::isInnerIFrameEvent(Node* targetNode, double& posX,
         targetNode->asHTMLIFrameElement()->browsingContext() &&
         targetNode->asHTMLIFrameElement()->frame()) {
         auto iframe = targetNode->asHTMLIFrameElement();
-        if (iframe->scrolling()->toLower()->equals("no")) {
+        if (iframe->scrolling()->toASCIILower()->equals("no")) {
             return false;
         }
 

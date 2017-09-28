@@ -521,7 +521,7 @@ String* ResourceURL::getUrlPathString() const
 String* ResourceURL::origin()
 {
     if (m_protocol == FILE_PROTOCOL) {
-        return m_urlString->substring(0, 7)->toLower(); // "file://"
+        return m_urlString->substring(0, 7)->toASCIILower(); // "file://"
     }
     return m_urlString->substring(0, m_hostEnd);
 }
@@ -538,7 +538,7 @@ ResourceURL* ResourceURL::setHref(String* newHref)
 
 String* ResourceURL::protocol()
 {
-    return m_urlString->substring(0, m_protocolEnd)->toLower();
+    return m_urlString->substring(0, m_protocolEnd)->toASCIILower();
 }
 
 ResourceURL* ResourceURL::setProtocol(String* newProtocol)

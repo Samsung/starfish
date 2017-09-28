@@ -83,24 +83,24 @@ public:
         ResourceClient::didLoadFinished();
         auto s = m_resource->resourceRequest()
                      ->responseMimeType()
-                     ->toLower()
+                     ->toASCIILower()
                      ->toUTF8NonGCString();
         if (isJavaScriptType(s.data()) ||
             m_resource->resourceRequest()
                 ->responseMimeType()
-                ->toLower()
+                ->toASCIILower()
                 ->equals("text/plain") ||
             m_resource->resourceRequest()
                 ->responseMimeType()
-                ->toLower()
+                ->toASCIILower()
                 ->equals("text/html") ||
             m_resource->resourceRequest()
                 ->responseMimeType()
-                ->toLower()
+                ->toASCIILower()
                 ->equals("application/json") ||
             m_resource->resourceRequest()
                 ->responseMimeType()
-                ->toLower()
+                ->toASCIILower()
                 ->contains("javascript")) {
             String* text = m_resource->asTextResource()->text();
             evaluateString(m_element->window()->scriptBindingInstance(), text,
@@ -142,7 +142,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
         Nullable<String*> typeStr =
             getAttribute(starFish()->staticStrings()->m_type);
         if (typeStr.hasValue()) {
-            auto utf8Data = typeStr.getValue()->toLower()->toUTF8NonGCString();
+            auto utf8Data =
+                typeStr.getValue()->toASCIILower()->toUTF8NonGCString();
             if (!isJavaScriptType(utf8Data.data())) {
                 return false;
             }

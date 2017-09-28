@@ -63,7 +63,7 @@ MediaQuery* MediaQuery::create(RestrictorType restrictor, String* mediaType,
 MediaQuery::MediaQuery(RestrictorType restrictor, String* mediaType,
                        GCVector<MediaQueryExp*> expressions)
     : m_restrictor(restrictor)
-    , m_mediaType(mediaType->toLower())
+    , m_mediaType(mediaType->toASCIILower())
     , m_expressions(std::move(expressions))
 {
 }

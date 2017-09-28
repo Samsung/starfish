@@ -2584,33 +2584,38 @@ static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
     }
 }
 
+void* FrameTextRareData::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTextRareData)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTextRareData, m_node));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTextRareData, m_text));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTextRareData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 FrameText::FrameText(Node* node, ComputedStyle* style)
     : Frame(node, style)
 {
-    STARFISH_ASSERT(style);
-    m_text = node->asCharacterData()->data();
-    m_originText = node->asCharacterData()->data();
 }
 
 String* FrameText::text()
 {
-    if (!m_originText->equals(node()->asCharacterData()->data())) {
-        if (style()->textTransform() != NoneTextTransformValue) {
-            transformText(node()->asCharacterData()->data());
-        } else {
-            m_originText = node()->asCharacterData()->data();
-            setText(node()->asCharacterData()->data());
-        }
+    if (hasRareData()) {
+        return frameTextRareData()->m_text;
     }
-
-    return m_text;
+    return node()->asCharacterData()->data();
 }
 
 void FrameText::setText(String* text)
 {
     STARFISH_ASSERT(text);
-    if (!m_text || !m_text->equals(text)) {
-        m_text = text;
+    if (hasRareData()) {
+        frameTextRareData()->m_text = text;
     }
 }
 
@@ -2638,12 +2643,16 @@ void FrameText::transformText(String* text)
 {
     STARFISH_ASSERT(text);
 
+    if (!hasRareData()) {
+        m_node = (Node*)new FrameTextRareData(m_node);
+    }
+
     if (style()->textTransform() == CapitalizeTextTransformValue) {
         setText(makeCapitalized(text, previousChar()));
     } else if (style()->textTransform() == UppercaseTextTransformValue) {
-        setText(text->toUnicodeUpper());
+        setText(text->toUpper());
     } else if (style()->textTransform() == LowercaseTextTransformValue) {
-        setText(text->toUnicodeLower());
+        setText(text->toLower());
     }
 }
 

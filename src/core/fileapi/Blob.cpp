@@ -84,7 +84,7 @@ Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
             break;
         }
     }
-    newType = newType->toLower();
+    newType = newType->toASCIILower();
     size_t span = (size_t)std::max(relativeEnd - relativeStart, (int64_t)0);
     STARFISH_ASSERT(relativeStart >= 0);
     void* newStart = ((char*)m_blobData.m_data) + relativeStart;
