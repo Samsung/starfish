@@ -39,7 +39,7 @@ def exp_img_namer(tc_file):
         return pre + post
     else:
         file = os.path.splitext(tc_file)[0] + "_expected.png"
-        if not "_original/" in file:
+        if not "_original/" in file and "fast/" in file:
             # Support legacy TCs
             pre, post = file.split("fast/", 1)
             mid, post = post.split("/", 1)
