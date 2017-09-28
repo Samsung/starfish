@@ -115,33 +115,47 @@ FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)
 
 void FrameTableBox::calCellWidth(LayoutContext& ctx)
 {
-    // 0. Calculate absoluteColumnIndex for cells
-    for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSectionBox()) {
-            c->asFrameTableSectionBox()->calAbsoluteColumnIndicesForCells();
+    for (int i = 0; i < 2; i++) {
+        // 0. Calculate absoluteColumnIndex for cells
+        for (Frame* c = firstChild(); c; c = c->next()) {
+            if (c->isFrameTableSectionBox()) {
+                c->asFrameTableSectionBox()->calAbsoluteColumnIndicesForCells();
+            }
+        }
+
+        // 0. The spec says to look at the first row only to get the width for
+        // each cell. But, there are cases where the following rows contains
+        // more cells than the first row. In this case, the spec leaves what to
+        // do to implementors. We try to obtain the width of those cells
+        // similar to "table-layout: auto", i.e., we perform the following
+        // to get:
+        //  * min/max cell widths of the table if "width: auto"
+        m_columnWidths.clear();
+        for (Frame* c = firstChild(); c; c = c->next()) {
+            if (c->isFrameTableSectionBox()) {
+                c->asFrameTableSectionBox()->collectCellWidthInfo(ctx);
+                collectColumnWidths(
+                    m_columnWidths,
+                    c->asFrameTableSectionBox()->columnWidths());
+            }
+        }
+
+        // Do not need to run the following steps in the second run
+        if (i == 1) {
+            break;
+        }
+
+        // 0. Remove unneeded colspan="x", where x > 1, if colspan does not
+        // collapse any cells.
+        // i.e., all columns have the same colspan="x", x > 1.
+        // If there are cells that have updated colspans to "colspan=1", we
+        // need to recalculate absoluteColumnIndexes for the cells
+        // one more time.
+        bool colspanUpdated = resetColspanIfPossible();
+        if (!colspanUpdated) {
+            break;
         }
     }
-
-    // 0. The spec says to look at the first row only to get the width for each
-    // cell. But, there are cases where the following rows contains more cells
-    // than the first row. In this case, the spec leaves what to do to
-    // implementors. We try to obtain the width of those cells similar to
-    // "table-layout: auto", i.e., we perform the following
-    // to get:
-    //  * min/max cell widths of the table if "width: auto"
-    m_columnWidths.clear();
-    for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSectionBox()) {
-            c->asFrameTableSectionBox()->collectCellWidthInfo(ctx);
-            collectColumnWidths(m_columnWidths,
-                                c->asFrameTableSectionBox()->columnWidths());
-        }
-    }
-
-    // 0. Remove unneeded colspan="x", where x > 1, if colspan does not
-    // collapse any cells.
-    // i.e., all columns have the same colspan="x", x > 1.
-    resetColspanIfPossible();
 
     // 0. Get the cells in the first row. These are used to determine:
     // * the width of each cell, and
@@ -585,63 +599,22 @@ void FrameTableBox::forEachRowStruct(Func filter)
     }
 }
 
-void FrameTableBox::resetColspanIfPossible()
+bool FrameTableBox::resetColspanIfPossible()
 {
-    GCVector<FrameTableCellBox*> cellsInTheFirstRowTmp;
-    GCAtomicVector<ColSizeStruct> columnWidthsTmp;
-
-    forEachRowStruct([](RowStruct* rowStruct, size_t _rowId) {
-        for (auto& cellStruct : rowStruct->cells()) {
-            FrameTableCellBox* cell = cellStruct.cell();
-            cell->updateColspanForLayout((size_t)-1);
-        }
-    });
-
+    bool colspanUpdated = false;
     for (size_t i = 0; i < m_columnWidths.size(); i++) {
-        bool deleted = false;
         if (m_columnWidths[i].isNullCell) {
             forEachRowStruct(
-                [i, &deleted](RowStruct* rowStruct, size_t _rowId) {
+                [i, &colspanUpdated](RowStruct* rowStruct, size_t _rowId) {
                     FrameTableCellBox* cell =
                         rowStruct->physicalCellAtLogicalColumn(i);
-
-                    size_t reduceAbsoluteIndexBy = cell->colspan() - 1;
-                    if (reduceAbsoluteIndexBy > 0) {
-                        cell->updateColspanForLayout(1);
-
-                        // find the following affected cells and adjust
-                        // absoluteColumnIndices
-                        size_t colId = 0;
-                        for (; rowStruct->cells().size(); colId++) {
-                            FrameTableCellBox* curCell =
-                                rowStruct->cells()[colId].cell();
-                            if (cell == curCell) {
-                                break;
-                            }
-                        }
-                        for (colId += 1; colId < rowStruct->cells().size();
-                             colId++) {
-                            FrameTableCellBox* curCell =
-                                rowStruct->cells()[colId].cell();
-                            curCell->setAbsoluteColumnIndex(
-                                curCell->absoluteColumnIndex() -
-                                reduceAbsoluteIndexBy);
-                        }
-                        deleted = true;
-                    }
+                    cell->resetColspanForLayout();
+                    colspanUpdated = true;
                 });
         }
-
-        if (!deleted) {
-            columnWidthsTmp.push_back(m_columnWidths[i]);
-        }
     }
 
-    m_columnWidths.clear();
-    for (size_t i = 0; i < columnWidthsTmp.size(); i++) {
-        m_columnWidths.push_back(columnWidthsTmp[i]);
-        m_columnWidths[i].id = i;
-    }
+    return colspanUpdated;
 }
 
 // All input parameters are used as out parameters

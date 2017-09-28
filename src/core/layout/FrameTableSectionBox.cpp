@@ -39,7 +39,7 @@ unsigned RowStruct::logicalColumnSize()
 {
     if (lastCell()) {
         FrameTableCellBox* cell = lastCell()->cell();
-        return cell->absoluteColumnIndex() + cell->colspan();
+        return cell->absoluteColumnIndex() + cell->updatedColspan();
     }
     return 0;
 }
@@ -166,23 +166,27 @@ void FrameTableSectionBox::collectCellWidthInfo(LayoutContext& ctx)
             STARFISH_ASSERT(index < m_columnWidths.size());
             ColSizeStruct* col = &m_columnWidths[index];
 
-            col->minCellWidth =
-                std::max(col->minCellWidth, cell->minCellWidth());
-            col->maxCellWidth =
-                std::max(col->maxCellWidth, cell->maxCellWidth());
-            Length width = cell->style()->width();
-            if (width.isDefinite(false)) {
-                LayoutUnit unused;
-                LayoutUnit w = width.specifiedValue(unused, this);
-                w += cell->borderWidth() + cell->paddingWidth();
-                col->maxSpecifiedWidth = std::max(col->maxSpecifiedWidth, w);
-            } else if (width.isPercent()) {
-                col->maxPercentageWidth =
-                    std::max(col->maxPercentageWidth,
-                             (double)cell->style()->width().percent());
-            } else if (width.isCalc()) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            if (cell->updatedColspan() == 1) {
+                col->minCellWidth =
+                    std::max(col->minCellWidth, cell->minCellWidth());
+                col->maxCellWidth =
+                    std::max(col->maxCellWidth, cell->maxCellWidth());
+                Length width = cell->style()->width();
+                if (width.isDefinite(false)) {
+                    LayoutUnit unused;
+                    LayoutUnit w = width.specifiedValue(unused, this);
+                    w += cell->borderWidth() + cell->paddingWidth();
+                    col->maxSpecifiedWidth =
+                        std::max(col->maxSpecifiedWidth, w);
+                } else if (width.isPercent()) {
+                    col->maxPercentageWidth =
+                        std::max(col->maxPercentageWidth,
+                                 (double)cell->style()->width().percent());
+                } else if (width.isCalc()) {
+                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                }
             }
+
             col->isNullCell = false;
         }
     }
@@ -207,10 +211,10 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCells()
 
         for (auto& cellStruct : rowStruct.cells()) {
             FrameTableCellBox* cell = cellStruct.cell();
-            if (cell->colspan() > 1) {
+            if (cell->updatedColspan() > 1) {
                 calAbsoluteColumnIndicesForCellsAffectedByColspan(cell, rowId);
             }
-            if (cell->rowspan() > 1) {
+            if (cell->updatedRowspan() > 1) {
                 calAbsoluteColumnIndicesForCellsAffectedByRowspan(cell, rowId);
             }
         }
@@ -221,7 +225,7 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCells()
 void FrameTableSectionBox::calAbsoluteColumnIndicesForCellsAffectedByColspan(
     FrameTableCellBox* cell, size_t rowId)
 {
-    size_t shiftCellBy = cell->colspan() - 1;
+    size_t shiftCellBy = cell->updatedColspan() - 1;
     size_t colId = cell->absoluteColumnIndex();
     RowStruct& rowStruct = grid()[rowId];
     for (size_t i = 0; i < rowStruct.cells().size(); i++) {
@@ -238,7 +242,7 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCellsAffectedByColspan(
 void FrameTableSectionBox::calAbsoluteColumnIndicesForCellsAffectedByRowspan(
     FrameTableCellBox* cell, size_t rowId)
 {
-    size_t rowEnd = rowId + cell->rowspan();
+    size_t rowEnd = rowId + cell->updatedRowspan();
     size_t colId = cell->absoluteColumnIndex();
     for (size_t curRowId = rowId + 1; curRowId < rowEnd; curRowId++) {
         if (curRowId < grid().size()) {

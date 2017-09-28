@@ -173,7 +173,7 @@ private:
     void collectColumnWidths(GCAtomicVector<ColSizeStruct>& columnWidthsSoFar,
                              GCAtomicVector<ColSizeStruct>& columnWidths);
 
-    void resetColspanIfPossible();
+    bool resetColspanIfPossible();
 
     // This function returns nullptr if the table has no non-empty sections.
     FrameTableSectionBox* firstNonEmptySectionBoxInVisualOrder();
