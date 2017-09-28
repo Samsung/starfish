@@ -91,8 +91,8 @@ public:
         m_starfish = starfish;
         m_canvas = (cairo_t*)d->cairo;
         m_surface = (cairo_surface_t*)d->surface;
-        m_viewportWidth = m_width = d->w;
-        m_viewportHeight = m_height = d->h;
+        m_width = d->w;
+        m_height = d->h;
         m_shouldDestroyCairo = false;
         m_shouldDestroySurface = false;
 #else
@@ -108,6 +108,8 @@ public:
             int stride;
         };
         dummy* d = (dummy*)data;
+        m_width = d->w;
+        m_height = d->h;
         {
             initFromBuffer(d->image, m_width, m_height, d->stride);
         }
