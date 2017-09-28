@@ -71,8 +71,13 @@ void FrameTableRowBox::collectCellWidthInfo(LayoutContext& ctx)
 void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 {
     LayoutUnit xSoFar = 0;
-    LayoutUnit borderSpacing = LayoutUnit::fromPixel(
-        sectionBox()->tableBox()->style()->horizontalBorderSpacing().fixed());
+    LayoutUnit unused;
+    LayoutUnit borderSpacing =
+        sectionBox()
+            ->tableBox()
+            ->style()
+            ->horizontalBorderSpacing()
+            .specifiedValue(unused, sectionBox()->tableBox());
 
     unsigned i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
@@ -158,8 +163,7 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
     Length height = style()->height();
     if (height.isDefinite(false)) {
         LayoutUnit unused;
-        specifiedHeight = height.specifiedValue(unused, ctx.viewportWidth(),
-                                                ctx.viewportHeight());
+        specifiedHeight = height.specifiedValue(unused, this);
     } else if (height.isPercent()) {
         // The spec does not define how to calculate the height when the height
         // is specified in percentage
@@ -228,7 +232,8 @@ void FrameTableRowBox::paintBackgroundAndBorders(Canvas* canvas)
 
             LayoutRect rect(cell->x(), cell->y(), cell->frameRect().width(),
                             cell->frameRect().height());
-            paintBackground(canvas, style(), rect, rect, false);
+            paintBackground(canvas, nearstNotAnonymousNode(), style(), rect,
+                            rect, false);
         }
         child = child->next();
     }

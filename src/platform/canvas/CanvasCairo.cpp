@@ -69,8 +69,8 @@ public:
         m_starfish = starfish;
         m_canvas = nullptr;
         m_surface = nullptr;
-        m_viewportWidth = m_width = width;
-        m_viewportHeight = m_height = height;
+        m_width = width;
+        m_height = height;
         {
             initFromBuffer(buffer, m_width, m_height, stride);
         }
@@ -108,8 +108,6 @@ public:
             int stride;
         };
         dummy* d = (dummy*)data;
-        m_viewportWidth = m_width = d->w;
-        m_viewportHeight = m_height = d->h;
         {
             initFromBuffer(d->image, m_width, m_height, d->stride);
         }

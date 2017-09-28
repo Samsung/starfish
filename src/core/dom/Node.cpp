@@ -333,6 +333,67 @@ bool Node::isDescendantOf(const Node* other)
     return false;
 }
 
+void Node::loadFontAndChangeFontPercentToFixedIfNeeded(
+    StarFish* sf, float fixedParentFontSize, Length parentFontSize,
+    Length rootFontSize, Font* parentFont)
+{
+    ComputedStyle* style = this->style();
+    Length fontSize = parentFontSize;
+    float fixedFontSize = fixedParentFontSize;
+    Font* font = parentFont;
+    if (style) {
+        fontSize = style->fontSize();
+        /*dump();
+        printf("\n");
+        UTF8StringDataNonGCStd str =
+                fontSize.dumpString()->toUTF8NonGCString();
+        printf("fontSize : %s\n", str.data());*/
+        if (style->isFontSizeSpeicifiedByUser()) {
+            fontSize.changeToFixedIfNeeded(parentFontSize, rootFontSize,
+                                           parentFont);
+            style->setFontSize(fontSize);
+            fixedFontSize = fontSize.specifiedFontValue(this);
+            /*str = fontSize.dumpString()->toUTF8NonGCString();
+            printf("After toFixed => fontSize : %s\n",
+                str.data());*/
+        } else if (parentFontSize.isFixed()) {
+            fontSize = parentFontSize;
+            style->setFontSize(fontSize);
+            /*str = fontSize.dumpString()->toUTF8NonGCString();
+            printf("inherit => fontSize : %s\n",
+                str.data());*/
+        }
+
+        if (isHTMLHtmlElement()) {
+            rootFontSize = fontSize;
+        }
+
+        // TODO: -webkit-appearance : check-box's font-size should be done
+        // layout.
+        // Because its font-size is dependent on minimum of width and height.
+        // if (!(isHTMLInputElement() &&
+        //     asHTMLInputElement()->type()->equals("checkbox"))) {
+        // }
+        style->setFixedFontSize(fixedFontSize);
+        style->loadFont(sf, fixedFontSize);
+        font = style->font();
+        style->changeFontPercentToFixedIfNeeded(fontSize, rootFontSize, font);
+
+        if (parentFontSize.hasViewportPercent() && !fontSize.isFixed()) {
+            // parentFontSize propagates view percent to child node if it should
+            // be.
+            fontSize = parentFontSize;
+        }
+    }
+
+    Node* child = firstChild();
+    while (child) {
+        child->loadFontAndChangeFontPercentToFixedIfNeeded(
+            sf, fixedFontSize, fontSize, rootFontSize, font);
+        child = child->nextSibling();
+    }
+}
+
 OverflowValue Node::appliedOverflowX()
 {
     if (isDocument()) {

@@ -82,9 +82,6 @@ protected:
             Canvas* canvas = Canvas::createGenericCanvas(
                 m_browsingContext->starFish(), imageData->data(),
                 imageData->width(), imageData->height());
-            canvas->setViewportWidthAndHeight(
-                m_browsingContext->window()->width(),
-                m_browsingContext->window()->height());
             svgBox->paintReplaced(canvas);
             delete canvas;
 

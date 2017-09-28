@@ -20,7 +20,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
-#include "core/dom/HTMLInputElement.h"
+#include "core/dom/HTMLHtmlElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/page/Window.h"
@@ -119,9 +119,8 @@ public:
     Document* m_document;
 };
 
-void ComputedStyle::loadFont(Node* consumer, float fontSize)
+void ComputedStyle::loadFont(StarFish* sf, float fixedFontSize)
 {
-    StarFish* sf = consumer->starFish();
     char style = m_inheritedStyles.m_fontStyle;
     char fontWeight = 4;
 
@@ -159,19 +158,20 @@ void ComputedStyle::loadFont(Node* consumer, float fontSize)
 
 #ifdef STARFISH_ENABLE_TEST
     if (g_enablePixelTest) {
-        m_font = sf->fetchFont(String::fromUTF8("Ahem"), fontSize, style,
+        m_font = sf->fetchFont(String::fromUTF8("Ahem"), fixedFontSize, style,
                                fontWeight);
     } else {
         if (sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest) {
-            m_font = sf->fetchFont(String::fromUTF8("SamsungOne"), fontSize,
-                                   style, fontWeight);
+            m_font = sf->fetchFont(String::fromUTF8("SamsungOne"),
+                                   fixedFontSize, style, fontWeight);
         } else {
-            m_font =
-                sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
+            m_font = sf->fetchFont(String::emptyString, fixedFontSize, style,
+                                   fontWeight);
         }
     }
 #else
-    m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
+    m_font =
+        sf->fetchFont(String::emptyString, fixedFontSize, style, fontWeight);
 #endif
 }
 
@@ -299,19 +299,16 @@ void ComputedStyle::loadBorderImage(
 }
 
 void ComputedStyle::loadResources(
-    Node* consumer,
+    Node* consumer, bool allowFont,
     ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
 {
-    // TODO: -webkit-appearance : check-box's font-size should be done layout.
-    // Because its font-size is dependent on minimum of width and height.
-    // if (!(consumer->isHTMLInputElement() &&
-    //     consumer->asHTMLInputElement()->type()->equals("checkbox"))) {
-    loadFont(consumer, m_inheritedStyles.m_fontSize.fixed());
-    // }
     loadBackgroundImage(consumer,
                         prevComputedStyleValueForReferenceLoadedResources);
     loadBorderImage(consumer,
                     prevComputedStyleValueForReferenceLoadedResources);
+    if (allowFont) {
+        loadFont(consumer->starFish(), m_inheritedStyles.m_fixedFontSize);
+    }
 }
 
 void ComputedStyle::blockify(Node* current, bool force)
@@ -356,7 +353,8 @@ void ComputedStyle::blockify(Node* current, bool force)
 }
 
 void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
-                                       ComputedStyle* rootStyle, Node* current)
+                                       bool allowChangeFontPercentToFixed,
+                                       Node* current)
 {
     m_originalDisplay = m_display;
     blockify(current, false);
@@ -372,104 +370,17 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         m_overflowY = OverflowValue::AutoOverflow;
     }
 
-    if (lineHeight().isPercent()) {
-        if (lineHeight().percent() == -100) {
-        } else {
-            // The computed value of the property is this percentage multiplied
-            // by the element's computed font size. Negative values are illegal.
-            setLineHeight(Length(Length::Fixed,
-                                 lineHeight().percent() * fontSize().fixed()));
-        }
-    }
-
-    // Convert all non-computed Lengths to computed Length
-    STARFISH_ASSERT(fontSize().isComputed() || fontSize().isCalc());
-    Length curFontSize = fontSize();
-    Length rootFontSize = rootStyle ? rootStyle->fontSize()
-                                    : Length(Length::Fixed, DEFAULT_FONT_SIZE);
-
-    if (!letterSpacing().isComputed()) {
-        auto v = letterSpacing();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-        setLetterSpacing(v);
-    }
-    if (!lineHeight().isComputed()) {
-        auto v = lineHeight();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-        setLineHeight(v);
-    }
-    if (!textIndent().isComputed()) {
-        auto v = textIndent();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-        setTextIndent(v);
-    }
-    if (!textIndent().isComputed()) {
-        auto v = textIndent();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-        setTextIndent(v);
-    }
-    if (!horizontalBorderSpacing().isComputed()) {
-        auto v = horizontalBorderSpacing();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-        setHorizontalBorderSpacing(v);
-    }
-    if (!verticalBorderSpacing().isComputed()) {
-        auto v = verticalBorderSpacing();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-        setVerticalBorderSpacing(v);
-    }
-    if (!strokeWidth().isComputed()) {
-        auto v = strokeWidth();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-        setStrokeWidth(v);
-    }
-    if (stroke() != InheritedStylesRareData().m_stroke) {
-        auto s = stroke();
-        s.updateCurrentColorToFixedColorIfNeeds(color());
-        setStroke(s);
-    }
     if (fill() != InheritedStylesRareData().m_fill) {
         auto s = fill();
         s.updateCurrentColorToFixedColorIfNeeds(color());
         setFill(s);
     }
-    m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-    m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-    if (hasRareComputeStyleData()) {
-        m_rareComputedStyleData->m_minWidth.changeToFixedIfNeeded(
-            curFontSize, rootFontSize, font());
-        m_rareComputedStyleData->m_maxWidth.changeToFixedIfNeeded(
-            curFontSize, rootFontSize, font());
-        m_rareComputedStyleData->m_minHeight.changeToFixedIfNeeded(
-            curFontSize, rootFontSize, font());
-        m_rareComputedStyleData->m_maxHeight.changeToFixedIfNeeded(
-            curFontSize, rootFontSize, font());
-    }
-    m_verticalAlignLength.changeToFixedIfNeeded(curFontSize, rootFontSize,
-                                                font());
-    if (hasTransforms()) {
-        size_t sz = m_rareComputedStyleData->m_transforms->size();
-        for (size_t i = 0; i < sz; i++) {
-            StyleTransformData std =
-                m_rareComputedStyleData->m_transforms->at(i);
-            if (std.type() != StyleTransformData::OperationType::Translate) {
-                continue;
-            }
-            std.changeToFixedIfNeeded(curFontSize, rootFontSize, font());
-        }
-    }
 
     if (m_surround) {
-        m_surround->margin.checkComputed(curFontSize, rootFontSize, font());
-        m_surround->padding.checkComputed(curFontSize, rootFontSize, font());
-        m_surround->offset.checkComputed(curFontSize, rootFontSize, font());
-        m_surround->border.checkComputed(curFontSize, rootFontSize, font());
-
         if (hasBorderStyle() && !hasBorderColor()) {
-            // If an element's border color is not specified with a border
-            // property,
-            // user agents must use the value of the element's 'color' property
-            // as the computed value for the border color.
+            // If an element's  border color is not specified with a border
+            // property, user agents must use the value of the element's
+            // 'color' property as the computed value for the border color.
             setBorderTopColor(m_inheritedStyles.m_color);
             setBorderRightColor(m_inheritedStyles.m_color);
             setBorderBottomColor(m_inheritedStyles.m_color);
@@ -478,21 +389,122 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     }
 
     if (m_background) {
-        m_background->checkComputed(curFontSize, rootFontSize, font(), color());
+        m_background->checkComputed(m_inheritedStyles.m_color);
     }
 
     if (!m_alignSelfSpecifiedByUser) {
         // https://www.w3.org/TR/css-flexbox-1/#propdef-align-self
-        // intial value of 'align-self' is 'auto', 'auto' is computed to
+        // intial value of  'align-self' is 'auto', 'auto' is computed to
         // parent's 'align-items' value; otherwise 'stretch'
         m_alignSelf = parentStyle->m_alignItems;
     }
 
+    if (!allowChangeFontPercentToFixed) {
+        return;
+    }
+
+    Length curFontSize = fontSize();
+    Length rootFontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
+    if (current) {
+        HTMLHtmlElement* root = current->document()->rootElement();
+        if (root->style()) {
+            rootFontSize = root->style()->fontSize();
+        }
+    }
+
+    changeFontPercentToFixedIfNeeded(curFontSize, rootFontSize, font());
+}
+
+void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
+                                                     Length rootFontSize,
+                                                     Font* font)
+{
+    if (!letterSpacing().isComputed()) {
+        auto v = letterSpacing();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        setLetterSpacing(v);
+    }
+
+    if (!lineHeight().isComputed()) {
+        auto v = lineHeight();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        setLineHeight(v);
+    }
+
+    if (!textIndent().isComputed()) {
+        auto v = textIndent();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        setTextIndent(v);
+    }
+
+    if (!textIndent().isComputed()) {
+        auto v = textIndent();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        setTextIndent(v);
+    }
+
+    if (!horizontalBorderSpacing().isComputed()) {
+        auto v = horizontalBorderSpacing();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        setHorizontalBorderSpacing(v);
+    }
+
+    if (!verticalBorderSpacing().isComputed()) {
+        auto v = verticalBorderSpacing();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        setVerticalBorderSpacing(v);
+    }
+
+    if (!strokeWidth().isComputed()) {
+        auto v = strokeWidth();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        setStrokeWidth(v);
+    }
+
+    m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    if (hasRareComputeStyleData()) {
+        m_rareComputedStyleData->m_minWidth.changeToFixedIfNeeded(
+            curFontSize, rootFontSize, font);
+        m_rareComputedStyleData->m_maxWidth.changeToFixedIfNeeded(
+            curFontSize, rootFontSize, font);
+        m_rareComputedStyleData->m_minHeight.changeToFixedIfNeeded(
+            curFontSize, rootFontSize, font);
+        m_rareComputedStyleData->m_maxHeight.changeToFixedIfNeeded(
+            curFontSize, rootFontSize, font);
+    }
+
+    if (m_surround) {
+        m_surround->margin.checkComputed(curFontSize, rootFontSize, font);
+        m_surround->padding.checkComputed(curFontSize, rootFontSize, font);
+        m_surround->offset.checkComputed(curFontSize, rootFontSize, font);
+        m_surround->border.checkComputed(curFontSize, rootFontSize, font);
+    }
+
+    m_verticalAlignLength.changeToFixedIfNeeded(curFontSize, rootFontSize,
+                                                font);
+
+    if (hasTransforms()) {
+        size_t sz = m_rareComputedStyleData->m_transforms->size();
+        for (size_t i = 0; i < sz; i++) {
+            StyleTransformData std =
+                m_rareComputedStyleData->m_transforms->at(i);
+            if (std.type() != StyleTransformData::OperationType::Translate) {
+                continue;
+            }
+            std.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        }
+    }
+
+    if (m_background) {
+        m_background->checkComputed(curFontSize, rootFontSize, font);
+    }
+
     if (hasOutline()) {
         m_rareComputedStyleData->m_outline->m_outline.checkComputed(
-            curFontSize, rootFontSize, font());
+            curFontSize, rootFontSize, font);
         m_rareComputedStyleData->m_outline->m_outlineOffset
-            .changeToFixedIfNeeded(curFontSize, rootFontSize, font());
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
     }
 }
 
@@ -981,9 +993,7 @@ inline double deg2rad(float degree)
 }
 
 SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
-                                           LayoutUnit containerHeight,
-                                           LayoutUnit viewportWidth,
-                                           LayoutUnit viewportHeight,
+                                           LayoutUnit containerHeight, Frame* f,
                                            bool isTransformable)
 {
     SkMatrix matrix;
@@ -1016,11 +1026,8 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
                            tan(deg2rad(m->angleY())));
         } else if (t.type() == StyleTransformData::Translate) {
             TranslateTransform* m = t.translate();
-            matrix.preTranslate(
-                m->tx().specifiedValue(containerWidth, viewportWidth,
-                                       viewportHeight),
-                m->ty().specifiedValue(containerHeight, viewportWidth,
-                                       viewportHeight));
+            matrix.preTranslate(m->tx().specifiedValue(containerWidth, f),
+                                m->ty().specifiedValue(containerHeight, f));
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

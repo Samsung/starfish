@@ -15,17 +15,17 @@
  */
 
 #include "StarFishConfig.h"
+#include "core/dom/DOMException.h"
+#include "core/dom/Element.h"
+#include "core/dom/Document.h"
+#include "core/page/Window.h"
+#include "core/page/BrowsingContext.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleLookupTrie.h"
 #include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/StyleRule.h"
-#include "core/dom/Document.h"
-#include "core/dom/DOMException.h"
-#include "core/dom/Element.h"
-#include "core/page/Window.h"
-#include "core/page/BrowsingContext.h"
 
 namespace StarFish {
 

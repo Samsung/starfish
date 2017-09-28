@@ -147,6 +147,7 @@ public:
 
         m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
         m_inheritedStyles.m_fontSize = Length(Length::Fixed, mediumFontSize);
+        m_inheritedStyles.m_fixedFontSize = mediumFontSize;
         m_inheritedStyles.m_fontWeight = FontWeightValue::NormalFontWeightValue;
         m_inheritedStyles.m_wordWrap = WordWrapValue::NormalWordWrapValue;
         m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
@@ -160,6 +161,7 @@ public:
         m_inheritedStyles.m_emptyCells = EmptyCellsValue::ShowEmptyCellsValue;
         m_inheritedStyles.m_rareData = nullptr;
         m_inheritedStyles.m_isRareDataAllocated = false;
+        m_inheritedStyles.m_isFontSizeSpecifiedByUser = false;
 
         initNonInheritedStyles();
     }
@@ -170,6 +172,7 @@ public:
 
         m_inheritedStyles = from->m_inheritedStyles;
         m_inheritedStyles.m_isRareDataAllocated = false;
+        m_inheritedStyles.m_isFontSizeSpecifiedByUser = false;
 
         initNonInheritedStyles();
     }
@@ -341,7 +344,7 @@ public:
 
     void setTextIndent(Length val)
     {
-        if (val != textIndent()) {
+        if (!val.isFixed() || val != textIndent()) {
             ensureRareData()->m_textIndent = val;
         }
     }
@@ -393,7 +396,7 @@ public:
 
     void setLineHeight(Length length)
     {
-        if (length != lineHeight()) {
+        if (!length.isFixed() || length != lineHeight()) {
             ensureRareData()->m_lineHeight = length;
         }
     }
@@ -444,9 +447,7 @@ public:
     StyleTransformDataGroup* transforms(Frame* frame = nullptr);
 
     SkMatrix transformsToMatrix(LayoutUnit containerWidth,
-                                LayoutUnit containerHeight,
-                                LayoutUnit viewportWidth,
-                                LayoutUnit viewportHeight,
+                                LayoutUnit containerHeight, Frame* f,
                                 bool isTransformable);
 
     void setTransformIfNeeded()
@@ -672,9 +673,13 @@ public:
         return m_background->sizeValue(layer);
     }
 
+    void setFont(Font* font)
+    {
+        m_font = font;
+    }
+
     Font* font()
     {
-        STARFISH_ASSERT(m_font);
         return m_font;
     }
 
@@ -1024,6 +1029,11 @@ public:
     GEN_FOURSIDE(GET_PADDING)
 #undef GET_PADDING
 
+    bool isFontSizeSpeicifiedByUser() const
+    {
+        return m_inheritedStyles.m_isFontSizeSpecifiedByUser;
+    }
+
     Length fontSize()
     {
         return m_inheritedStyles.m_fontSize;
@@ -1034,9 +1044,19 @@ public:
         m_inheritedStyles.m_fontSize = l;
     }
 
+    float fixedFontSize()
+    {
+        return m_inheritedStyles.m_fixedFontSize;
+    }
+
+    void setFixedFontSize(float fixedFontSize)
+    {
+        m_inheritedStyles.m_fixedFontSize = fixedFontSize;
+    }
+
     void setLetterSpacing(Length len)
     {
-        if (letterSpacing() != len)
+        if (!len.isFixed() || letterSpacing() != len)
             ensureRareData()->m_letterSpacing = len;
     }
 
@@ -1123,7 +1143,7 @@ public:
                display == DisplayValue::TableCaptionDisplayValue;
     }
 
-    void loadFont(Node* consumer, float fontSize);
+    void loadFont(StarFish* sf, float fixedFontSize);
     void loadBackgroundImage(
         Node* consumer,
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
@@ -1133,11 +1153,14 @@ public:
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
             nullptr);
     void loadResources(
-        Node* consumer,
+        Node* consumer, bool allowFont,
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
             nullptr);
     void arrangeStyleValues(ComputedStyle* parentStyle,
-                            ComputedStyle* rootStyle, Node* current = nullptr);
+                            bool allowChangeFontPercentToFixed,
+                            Node* current = nullptr);
+    void changeFontPercentToFixedIfNeeded(Length parentFontSize,
+                                          Length rootFontSize, Font* font);
     void blockify(Node* current, bool force);
 
     void clearTransforms()
@@ -1177,7 +1200,7 @@ public:
 
     void setHorizontalBorderSpacing(Length v)
     {
-        if (v != horizontalBorderSpacing())
+        if (!v.isFixed() || v != horizontalBorderSpacing())
             ensureRareData()->m_horizontalBorderSpacing = v;
     }
 
@@ -1191,7 +1214,7 @@ public:
 
     void setVerticalBorderSpacing(Length v)
     {
-        if (v != verticalBorderSpacing())
+        if (!v.isFixed() || v != verticalBorderSpacing())
             ensureRareData()->m_verticalBorderSpacing = v;
     }
 
@@ -1261,7 +1284,7 @@ public:
 
     void setStrokeWidth(Length v)
     {
-        if (v != strokeWidth())
+        if (!v.isFixed() || v != strokeWidth())
             ensureRareData()->m_strokeWidth = v;
     }
 
@@ -1612,9 +1635,11 @@ protected:
         CaptionSideValue m_captionSide : 1;       // table
         EmptyCellsValue m_emptyCells : 1;         // table
         bool m_isRareDataAllocated : 1;
+        bool m_isFontSizeSpecifiedByUser : 1;
 
         Unit::Color m_color;
         Length m_fontSize;
+        float m_fixedFontSize;
         InheritedStylesRareData* m_rareData;
     } m_inheritedStyles;
 

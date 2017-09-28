@@ -30,6 +30,7 @@
 #include "core/dom/Text.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/style/CalcData.h"
@@ -2952,7 +2953,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
     ret->m_inheritedStyles.m_whiteSpace =
         WhiteSpaceValue::NormalWhiteSpaceValue;
-    ret->loadResources(doc);
+    ret->loadResources(doc, false);
     return ret;
 }
 
@@ -2961,9 +2962,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
 {
     ComputedStyle* style = new ComputedStyle(parent);
     matchAllRules(element, style, parent);
-    style->loadResources(element, element->style());
-    ComputedStyle* rootStyle = element->document()->rootElement()->style();
-    style->arrangeStyleValues(parent, rootStyle, element);
+    style->loadResources(element, false, element->style());
+    style->arrangeStyleValues(parent, false, element);
     return style;
 }
 
@@ -3174,6 +3174,7 @@ void StyleResolver::apply(Element* element,
                     parseAbsoluteFontSize(3, this->m_mediumFontSize));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::FontSizeValueKind) {
+                style->m_inheritedStyles.m_isFontSizeSpecifiedByUser = true;
                 if (cssValues[k].fontSizeValue() ==
                     FontSizeValue::XXSmallFontSizeValue) {
                     style->setFontSize(
@@ -3211,35 +3212,22 @@ void StyleResolver::apply(Element* element,
                                    1.5f));
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::LargerFontSizeValue) {
-                    style->setFontSize(Length(
-                        Length::Fixed, parentStyle->fontSize().fixed() * 1.2f));
+                    style->setFontSize(parentStyle->fontSize() * 1.2f);
                 } else if (cssValues[k].fontSizeValue() ==
                            FontSizeValue::SmallerFontSizeValue) {
-                    style->setFontSize(Length(
-                        Length::Fixed, parentStyle->fontSize().fixed() / 1.2f));
+                    style->setFontSize(parentStyle->fontSize() / 1.2f);
                 }
             } else {
+                style->m_inheritedStyles.m_isFontSizeSpecifiedByUser = true;
                 Nullable<Length> length = convertValueToLength(
                     cssValues[k].valueKind(), cssValues[k].value());
                 if (length.hasValue()) {
                     Length l = length.getValue();
-                    if (l.isPercent()) {
-                        float parentComputedFontSize =
-                            parentStyle->fontSize().fixed();
-                        style->setFontSize(
-                            Length(Length::Fixed,
-                                   l.percentValue(parentComputedFontSize)));
-                    } else {
-                        ComputedStyle* rootStyle =
-                            element->document()->rootElement()->style();
-                        Length rootFontSize =
-                            rootStyle
-                                ? rootStyle->fontSize()
-                                : Length(Length::Fixed, DEFAULT_FONT_SIZE);
-                        l.changeToFixedIfNeeded(parentStyle->fontSize(),
-                                                rootFontSize,
-                                                parentStyle->font());
-                        style->setFontSize(l);
+                    style->setFontSize(l);
+                    if (l.hasViewportPercent()) {
+                        element->document()
+                            ->browsingContext()
+                            ->setNeedsFontSizeRecalc();
                     }
                 } else {
                     style->setFontSize(
@@ -5478,11 +5466,8 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
                 if (inheritedStyleChanged || child->needsStyleRecalc()) {
                     if (childStyle == nullptr) {
                         childStyle = new ComputedStyle(element->style());
-                        childStyle->loadResources(element);
-                        ComputedStyle* rootStyle =
-                            element->document()->rootElement()->style();
-                        childStyle->arrangeStyleValues(element->style(),
-                                                       rootStyle);
+                        childStyle->loadResources(element, false);
+                        childStyle->arrangeStyleValues(element->style(), false);
                     }
 
                     child->setStyle(childStyle);
@@ -7893,16 +7878,14 @@ String* CSSStyleDeclaration::Flex()
 #ifdef STARFISH_ENABLE_TEST
 void dump(Node* node, unsigned depth)
 {
-    if (!node->isElement()) {
-        return;
-    }
+    if (node->isElement()) {
+        for (unsigned i = 0; i < depth; i++) {
+            printf("  ");
+        }
 
-    for (unsigned i = 0; i < depth; i++) {
-        printf("  ");
+        node->asElement()->dumpStyle();
+        printf("\n");
     }
-
-    node->asElement()->dumpStyle();
-    printf("\n");
 
     Node* child = node->firstChild();
     while (child) {

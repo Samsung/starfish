@@ -502,8 +502,6 @@ public:
 
     bool checkIfThisIsFirstLineCandidate(FrameBlockBox* blockBox);
 
-    LayoutUnit viewportWidth();
-    LayoutUnit viewportHeight();
     void registerContentHeight(FrameBox* box, LayoutUnit contentHeight);
     LayoutUnit contentHeight(FrameBox* box);
 
@@ -729,11 +727,11 @@ public:
         return m_unprocessedStartingMBPWidth;
     }
 
-    LayoutUnit mbpWidth(ComputedStyle* style);
-    LayoutUnit leftMBPWidth(ComputedStyle* style);
-    LayoutUnit rightMBPWidth(ComputedStyle* style);
-    LayoutUnit startingMBPWidth(ComputedStyle* style);
-    LayoutUnit endingMBPWidth(ComputedStyle* style);
+    LayoutUnit mbpWidth(Frame* f);
+    LayoutUnit leftMBPWidth(Frame* f);
+    LayoutUnit rightMBPWidth(Frame* f);
+    LayoutUnit startingMBPWidth(Frame* f);
+    LayoutUnit endingMBPWidth(Frame* f);
     LayoutUnit preferredWidthWithNewContext(Frame* f);
 
     int hasFloat() const
@@ -1175,6 +1173,20 @@ public:
         }
     }
 
+    Node* nearstNotAnonymousNode()
+    {
+        Frame* cur = this;
+        while (cur && !cur->node()) {
+            cur = cur->parent();
+        }
+
+        if (cur) {
+            return cur->node();
+        } else {
+            return nullptr;
+        }
+    }
+
     virtual void setParent(Frame* f)
     {
         frameTreeItemModel()->m_parent = f;
@@ -1309,6 +1321,8 @@ public:
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+
+    void loadFont(StarFish* sf, float parentFontSize);
 
     virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
     {

@@ -69,15 +69,13 @@ void FrameTableCellBox::collectCellWidthInfo(
     Length maxWidth = style()->maxWidth();
     LayoutUnit unused;
     if (minWidth.isDefinite(false)) {
-        LayoutUnit mw = minWidth.specifiedValue(unused, ctx.viewportWidth(),
-                                                ctx.viewportHeight());
+        LayoutUnit mw = minWidth.specifiedValue(unused, this);
         if (mw < m_minCellWidth) {
             m_minCellWidth = mw;
         }
     }
     if (maxWidth.isDefinite(false)) {
-        LayoutUnit mw = maxWidth.specifiedValue(unused, ctx.viewportWidth(),
-                                                ctx.viewportHeight());
+        LayoutUnit mw = maxWidth.specifiedValue(unused, this);
         if (mw < m_maxCellWidth) {
             m_maxCellWidth = mw;
         }

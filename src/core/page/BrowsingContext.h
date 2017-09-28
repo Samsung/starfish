@@ -117,6 +117,7 @@ public:
 
     void setNeedsPainting();
     void setNeedsComposite();
+    void setNeedsFontSizeRecalc();
 
     bool needsFrameTreeBuild()
     {
@@ -126,6 +127,11 @@ public:
     bool needsLayout()
     {
         return m_needsLayout;
+    }
+
+    bool needsFontSizeRecalc()
+    {
+        return m_needsFontSizeRecalc;
     }
 
     bool hasRootElementBackground()
@@ -224,6 +230,7 @@ private:
     bool m_needsStyleRecalcForWholeDocument;
     bool m_needsFrameTreeBuild;
     bool m_needsLayout;
+    bool m_needsFontSizeRecalc;
 
     size_t m_pendingStyleSheetCount;
     size_t m_pendingRenderingCount;

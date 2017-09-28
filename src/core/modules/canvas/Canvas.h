@@ -72,9 +72,6 @@ protected:
     {
     }
 
-    LayoutUnit m_viewportWidth;
-    LayoutUnit m_viewportHeight;
-
 public:
     static Canvas* createDirect(StarFish* starfish, void* data);
     static Canvas* create(StarFish* starfish, CanvasSurface* data);
@@ -83,27 +80,6 @@ public:
 
     virtual ~Canvas()
     {
-    }
-
-    void setViewportWidthAndHeight(LayoutUnit width, LayoutUnit height)
-    {
-        m_viewportWidth = width;
-        m_viewportHeight = height;
-    }
-
-    void setViewportWidthAndHeight(Canvas* canvas)
-    {
-        m_viewportWidth = canvas->m_viewportWidth;
-        m_viewportHeight = canvas->m_viewportHeight;
-    }
-
-    LayoutUnit viewportWidth()
-    {
-        return m_viewportWidth;
-    }
-    LayoutUnit viewportHeight()
-    {
-        return m_viewportHeight;
     }
 
     virtual void clearColor(const Unit::Color& clr) = 0;

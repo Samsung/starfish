@@ -466,6 +466,12 @@ void WebView::layoutIfNeeds()
         }
 #ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() &
+            StarFishStartUpFlag::enableComputedStyleDump) {
+            // dump style
+            m_mainBrowsingContext->document()->styleResolver().dumpDOMStyle(
+                m_mainBrowsingContext->document());
+        }
+        if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableFrameTreeDump) {
             FrameTreeBuilder::dumpFrameTree(m_mainBrowsingContext->document(),
                                             0);

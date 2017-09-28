@@ -174,6 +174,7 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleRecalcForWholeDocument) {
+            m_needsFontSizeRecalc = false;
 #ifdef STARFISH_ENABLE_TIMER
             ProfilerTimer t("parse sheet & collect rules");
 #endif
@@ -235,13 +236,10 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
         m_needsStyleRecalc = false;
         m_needsStyleRecalcForWholeDocument = false;
 
-#ifdef STARFISH_ENABLE_TEST
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableComputedStyleDump) {
-            // dump style
-            document()->styleResolver().dumpDOMStyle(document());
-        }
-#endif
+        Length rootFontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
+        document()->loadFontAndChangeFontPercentToFixedIfNeeded(
+            starFish(), DEFAULT_FONT_SIZE, rootFontSize, rootFontSize,
+            document()->style()->font());
     }
 
     if (m_needsFrameTreeBuild) {
@@ -260,6 +258,10 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
     }
 
     if (m_needsLayout) {
+        if (m_needsFontSizeRecalc) {
+            document()->frame()->loadFont(starFish(), DEFAULT_FONT_SIZE);
+        }
+
         if (fromWebView) {
             webView()->clearStackingContext(true);
         }
@@ -301,8 +303,8 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
         LayoutRect colorRect(0, 0, document()->window()->width(),
                              document()->window()->height());
         if (m_hasRootElementBackground) {
-            FrameBox* rootRect =
-                document()->rootElement()->frame()->asFrameBox();
+            HTMLHtmlElement* root = document()->rootElement();
+            FrameBox* rootRect = root->frame()->asFrameBox();
             LayoutLocation rootRectPos =
                 rootRect->absolutePoint(document()->frame()->asFrameBox());
             LayoutRect imgRect(rootRectPos.x() + rootRect->borderLeft(),
@@ -310,26 +312,24 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
                                rootRect->width() - rootRect->borderWidth(),
                                rootRect->height() - rootRect->borderHeight());
 
-            FrameBox::paintBackground(canvas,
-                                      document()->rootElement()->style(),
-                                      imgRect, colorRect, true);
+            FrameBox::paintBackground(canvas, root, root->style(), imgRect,
+                                      colorRect, true);
         } else {
-            if (!document()->rootElement()->body()) {
+            HTMLBodyElement* body = document()->rootElement()->body();
+            if (!body) {
                 return;
             }
 
             LayoutRect imgRect(0, 0, document()->window()->width(),
                                document()->window()->height());
-            if (document()->rootElement()->body()->frame()) {
-                FrameBox* bodyRect =
-                    document()->rootElement()->body()->frame()->asFrameBox();
+            if (body->frame()) {
+                FrameBox* bodyRect = body->frame()->asFrameBox();
                 imgRect.setHeight(bodyRect->height() +
                                   bodyRect->marginHeight());
             }
 
-            FrameBox::paintBackground(
-                canvas, document()->rootElement()->body()->style(), imgRect,
-                colorRect, true);
+            FrameBox::paintBackground(canvas, body, body->style(), imgRect,
+                                      colorRect, true);
         }
     }
 }
@@ -1371,6 +1371,11 @@ void BrowsingContext::setNeedsPainting()
 void BrowsingContext::setNeedsComposite()
 {
     m_webView->setNeedsComposite();
+}
+
+void BrowsingContext::setNeedsFontSizeRecalc()
+{
+    m_needsFontSizeRecalc = true;
 }
 
 void BrowsingContext::setNeedsRendering()

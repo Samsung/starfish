@@ -1247,7 +1247,7 @@ static CSSStyleValuePair lengthToCSSStyleValue(Length len)
         p.setValue(len.calcData());
     } else if (len.isInheritableNumber()) {
         p.setValueKind(CSSStyleValuePair::ValueKind::Percentage);
-        p.setValue(len.number());
+        p.setValue(len.inheritableNumber());
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -1391,8 +1391,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
 
         if (frame() && style->width().isDefinite(true)) {
             w.setValue(CSSLength(style->width().specifiedValue(
-                ctx.parentContentWidth(frame()), ctx.viewportWidth(),
-                ctx.viewportHeight())));
+                ctx.parentContentWidth(frame()), this)));
         } else {
             if (frame() && frame()->isFrameBox()) {
                 w.setValue(CSSLength(frame()->asFrameBox()->contentWidth()));
@@ -1408,9 +1407,8 @@ CSSStyleDeclaration* Element::getComputedStyle()
                 if (parentHasFixedHeight) {
                     parentContentHeight = ctx.parentFixedHeight(frame());
                 }
-                h.setValue(CSSLength(style->height().specifiedValue(
-                    parentContentHeight, ctx.viewportWidth(),
-                    ctx.viewportHeight())));
+                h.setValue(CSSLength(
+                    style->height().specifiedValue(parentContentHeight, this)));
             } else {
                 h.setValue(CSSLength(frame()->asFrameBox()->contentHeight()));
             }
@@ -1704,9 +1702,9 @@ CSSStyleDeclaration* Element::getComputedStyle()
             FrameDocument* doc =
                 window()->document()->frame()->asFrameDocument();
             FrameBox* box = frame()->findNearestAssociateBox();
-            SkMatrix m = style->transformsToMatrix(
-                box->width(), box->height(), doc->style()->width().fixed(),
-                doc->style()->height().fixed(), style->hasTransforms(frame()));
+            SkMatrix m =
+                style->transformsToMatrix(box->width(), box->height(), box,
+                                          style->hasTransforms(frame()));
 
             CSSTransformFunctions* transforms = new CSSTransformFunctions();
 

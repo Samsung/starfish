@@ -115,14 +115,17 @@ void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
             if (col) {
                 // Paint background using column-group style
                 if (col->parent()->isFrameTableColBox()) {
-                    paintBackground(canvas, col->parent()->style(), rect, rect,
-                                    false);
+                    paintBackground(canvas,
+                                    col->parent()->nearstNotAnonymousNode(),
+                                    col->parent()->style(), rect, rect, false);
                 }
                 // Paint background using column style
-                paintBackground(canvas, col->style(), rect, rect, false);
+                paintBackground(canvas, col->nearstNotAnonymousNode(),
+                                col->style(), rect, rect, false);
             }
             // Paint background using section style
-            paintBackground(canvas, style(), rect, rect, false);
+            paintBackground(canvas, nearstNotAnonymousNode(), style(), rect,
+                            rect, false);
         }
     }
 
@@ -170,8 +173,7 @@ void FrameTableSectionBox::collectCellWidthInfo(LayoutContext& ctx)
             Length width = cell->style()->width();
             if (width.isDefinite(false)) {
                 LayoutUnit unused;
-                LayoutUnit w = width.specifiedValue(unused, ctx.viewportWidth(),
-                                                    ctx.viewportHeight());
+                LayoutUnit w = width.specifiedValue(unused, this);
                 w += cell->borderWidth() + cell->paddingWidth();
                 col->maxSpecifiedWidth = std::max(col->maxSpecifiedWidth, w);
             } else if (width.isPercent()) {
@@ -257,8 +259,10 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCellsAffectedByRowspan(
 
 void FrameTableSectionBox::calCellWidthsWithColspans()
 {
-    LayoutUnit borderSpacing = LayoutUnit::fromPixel(
-        tableBox()->style()->horizontalBorderSpacing().fixed());
+    LayoutUnit unused;
+    LayoutUnit borderSpacing =
+        tableBox()->style()->horizontalBorderSpacing().specifiedValue(unused,
+                                                                      this);
 
     for (auto& rowStruct : grid()) {
         for (auto& cellStruct : rowStruct.cells()) {
@@ -320,8 +324,10 @@ void FrameTableSectionBox::calCellHeightsWithRowspans()
 LayoutUnit FrameTableSectionBox::calCellHeightWithRowspan(
     FrameTableCellBox* cell, size_t rowId, size_t colId)
 {
-    LayoutUnit borderSpacing = LayoutUnit::fromPixel(
-        tableBox()->style()->verticalBorderSpacing().fixed());
+    LayoutUnit unused;
+    LayoutUnit borderSpacing =
+        tableBox()->style()->verticalBorderSpacing().specifiedValue(unused,
+                                                                    tableBox());
 
     LayoutUnit cellHeight = 0;
     size_t rowspan = cell->updatedRowspan();
@@ -342,8 +348,10 @@ LayoutUnit FrameTableSectionBox::calCellHeightWithRowspan(
 
 void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 {
-    LayoutUnit borderSpacing = LayoutUnit::fromPixel(
-        tableBox()->style()->horizontalBorderSpacing().fixed());
+    LayoutUnit unused;
+    LayoutUnit borderSpacing =
+        tableBox()->style()->horizontalBorderSpacing().specifiedValue(
+            unused, tableBox());
 
     LayoutUnit xSoFar = borderSpacing;
     LayoutUnit maxWidth = 0;
@@ -362,8 +370,10 @@ void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
 {
     LayoutUnit ySoFar = 0;
-    LayoutUnit borderSpacing = LayoutUnit::fromPixel(
-        tableBox()->style()->verticalBorderSpacing().fixed());
+    LayoutUnit unused;
+    LayoutUnit borderSpacing =
+        tableBox()->style()->verticalBorderSpacing().specifiedValue(unused,
+                                                                    tableBox());
 
     if (tableBox()->firstSectionBoxInVisualOrder() == this) {
         ySoFar += borderSpacing;

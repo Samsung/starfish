@@ -155,9 +155,6 @@ static void paintPathArcCommand(Canvas* canvas, double x1, double y1, double rx,
 void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
 {
     FrameBox* cb = layoutParent()->asFrameBox();
-    LayoutUnit viewportWidth =
-        node()->document()->frame()->style()->width().fixed();
-
     Element* e = node()->asElement();
     String* d = e->getAttributeOrEmpty(e->starFish()->staticStrings()->m_d);
     if (d->length()) {
@@ -510,8 +507,8 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
             }
         }
 
-        ctx.m_canvas->setStrokeWidth(style()->strokeWidth().specifiedValue(
-            cb->width(), viewportWidth, ViewportHeight));
+        ctx.m_canvas->setStrokeWidth(
+            style()->strokeWidth().specifiedValue(cb->width(), this));
         ctx.m_canvas->setColor(style()->fill().color());
         ctx.m_canvas->setFillRule(style()->fillRule());
         ctx.m_canvas->fillPreserve();
