@@ -32,6 +32,7 @@ class FrameTableCellBox;
 class Node;
 class StyleResolver;
 class SVGElement;
+class PseudoElement;
 
 class FrameTreeBuilderContext {
 public:
@@ -70,7 +71,7 @@ public:
         FrameTreeBuilderContext& ctx);
     static ComputedStyle* pseudoStyleForElementInternal(
         Node* node, StyleResolver::PseudoElementType pseudoId,
-        ComputedStyle* parentStyle);
+        ComputedStyle* parentStyle, PseudoElement* element);
 
     static Frame* buildSVGFrameTree(SVGElement* svgElement);
 #ifdef STARFISH_ENABLE_TEST

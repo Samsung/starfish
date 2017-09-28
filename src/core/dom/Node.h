@@ -477,6 +477,11 @@ public:
         printf("[%s] ", s.data());
     }
 #endif
+    void loadFontAndChangeFontPercentToFixedIfNeeded(StarFish* sf,
+                                                     float fixedParentFontSize,
+                                                     Length parentFontSize,
+                                                     Length rootFontSize,
+                                                     Font* parentFont);
 
     OverflowValue appliedOverflowX();
     OverflowValue appliedOverflowY();

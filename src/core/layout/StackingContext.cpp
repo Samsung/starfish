@@ -315,29 +315,22 @@ public:
                 if (b != self) {
                     if (b != nearstBufferedFrame) {
                         SkMatrix m = b->style()->transformsToMatrix(
-                            b->width(), b->height(), canvas->viewportWidth(),
-                            canvas->viewportHeight(),
+                            b->width(), b->height(), b,
                             b->style()->hasTransforms(b));
                         if (!m.isIdentity()) {
                             LayoutUnit ox = b->width() / 2;
                             LayoutUnit oy = b->height() / 2;
                             if (b->style()->hasTransformOrigin()) {
-                                ox =
-                                    b->style()
-                                        ->transformOrigin()
-                                        ->originValue()
-                                        ->getXAxis()
-                                        .specifiedValue(
-                                            b->width(), canvas->viewportWidth(),
-                                            canvas->viewportHeight());
+                                ox = b->style()
+                                         ->transformOrigin()
+                                         ->originValue()
+                                         ->getXAxis()
+                                         .specifiedValue(b->width(), b);
                                 oy = b->style()
                                          ->transformOrigin()
                                          ->originValue()
                                          ->getYAxis()
-                                         .specifiedValue(
-                                             b->height(),
-                                             canvas->viewportWidth(),
-                                             canvas->viewportHeight());
+                                         .specifiedValue(b->height(), b);
                             }
                             canvas->translate(ox, oy);
                             canvas->postMatrix(m);
@@ -451,7 +444,6 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                                     m_rareData->m_buffer);
         }
         canvas->setTextDecorationData(oldCanvas->textDecorationData());
-        canvas->setViewportWidthAndHeight(oldCanvas);
         if (m_rareData->m_buffer->pixelRatio() != 1) {
             canvas->scale(1.0 / m_rareData->m_buffer->pixelRatio(),
                           1.0 / m_rareData->m_buffer->pixelRatio());
@@ -480,8 +472,8 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     if (!hasStackingBuffer) {
         SkMatrix m = m_owner->style()->transformsToMatrix(
-            m_owner->width(), m_owner->height(), canvas->viewportWidth(),
-            canvas->viewportHeight(), m_owner->style()->hasTransforms(m_owner));
+            m_owner->width(), m_owner->height(), m_owner,
+            m_owner->style()->hasTransforms(m_owner));
 
         if (!m.isIdentity()) {
             ensureRareData()->m_matrix = m;
@@ -502,16 +494,12 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                          ->transformOrigin()
                          ->originValue()
                          ->getXAxis()
-                         .specifiedValue(m_owner->width(),
-                                         canvas->viewportWidth(),
-                                         canvas->viewportHeight());
+                         .specifiedValue(m_owner->width(), m_owner);
                 oy = m_owner->style()
                          ->transformOrigin()
                          ->originValue()
                          ->getYAxis()
-                         .specifiedValue(m_owner->height(),
-                                         canvas->viewportWidth(),
-                                         canvas->viewportHeight());
+                         .specifiedValue(m_owner->height(), m_owner);
             }
             canvas->translate(ox, oy);
             canvas->postMatrix(m_rareData->m_matrix);
@@ -533,9 +521,6 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     }
     // Within each stacking context, the following layers are painted in
     // back-to-front order:
-
-    LayoutUnit vwOld = canvas->viewportWidth(),
-               vhOld = canvas->viewportHeight();
     // the background and borders of the element forming the stacking context.
     if (m_owner->layoutParent()->isFrameDocument()) {
         if (!m_owner->node()
@@ -550,9 +535,6 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                 ->browsingContext()
                 ->paintWindowBackground(canvas);
             canvas->translate(-document->scrollLeft(), -document->scrollTop());
-            canvas->setViewportWidthAndHeight(
-                m_owner->node()->window()->innerWidth(),
-                m_owner->node()->window()->innerHeight());
         }
     }
     m_owner->paintBackgroundAndBorders(canvas);
@@ -648,8 +630,6 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         }
     }
 
-    canvas->setViewportWidthAndHeight(vwOld, vhOld);
-
     canvas->restore();
     if (hasStackingBuffer) {
         delete canvas;
@@ -661,19 +641,6 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     LayoutRect visibleRect = StackingContext::visibleRect();
     ComputedStyle* ownerStyle = m_owner->style();
     canvas->save();
-
-    LayoutUnit vwOld = canvas->viewportWidth(),
-               vhOld = canvas->viewportHeight();
-    if (m_owner->layoutParent()->isFrameDocument()) {
-        if (!m_owner->node()
-                 ->document()
-                 ->browsingContext()
-                 ->isMainBrowsingContext()) {
-            canvas->setViewportWidthAndHeight(
-                m_owner->node()->window()->innerWidth(),
-                m_owner->node()->window()->innerHeight());
-        }
-    }
 
     if (needsOwnBuffer()) {
         LayoutUnit minX = visibleRect.x();
@@ -694,8 +661,8 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         }
 
         m_rareData->m_matrix = m_owner->style()->transformsToMatrix(
-            m_owner->width(), m_owner->height(), canvas->viewportWidth(),
-            canvas->viewportHeight(), ownerStyle->hasTransforms(m_owner));
+            m_owner->width(), m_owner->height(), m_owner,
+            ownerStyle->hasTransforms(m_owner));
 
         if (!m_rareData->m_matrix.isIdentity()) {
             /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
@@ -715,16 +682,12 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
                          ->transformOrigin()
                          ->originValue()
                          ->getXAxis()
-                         .specifiedValue(m_owner->width(),
-                                         canvas->viewportWidth(),
-                                         canvas->viewportHeight());
+                         .specifiedValue(m_owner->width(), m_owner);
                 oy = m_owner->style()
                          ->transformOrigin()
                          ->originValue()
                          ->getYAxis()
-                         .specifiedValue(m_owner->height(),
-                                         canvas->viewportWidth(),
-                                         canvas->viewportHeight());
+                         .specifiedValue(m_owner->height(), m_owner);
             }
             canvas->translate(ox, oy);
             canvas->postMatrix(m_rareData->m_matrix);
@@ -820,8 +783,6 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         }
     }
 
-    canvas->setViewportWidthAndHeight(vwOld, vhOld);
-
     canvas->restore();
 }
 
@@ -865,12 +826,12 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                      ->transformOrigin()
                      ->originValue()
                      ->getXAxis()
-                     .specifiedValue(m_owner->width(), vw, vh);
+                     .specifiedValue(m_owner->width(), m_owner);
             oy = m_owner->style()
                      ->transformOrigin()
                      ->originValue()
                      ->getYAxis()
-                     .specifiedValue(m_owner->height(), vw, vh);
+                     .specifiedValue(m_owner->height(), m_owner);
         }
         x -= ox;
         y -= oy;

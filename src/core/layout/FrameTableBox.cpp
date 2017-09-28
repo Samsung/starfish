@@ -168,8 +168,9 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     //   * min/max table width
     //     - TODO: Need to consider caption widths too
     //   * collect auto and specified width cells for later calculation
+    LayoutUnit unused;
     LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+        style()->horizontalBorderSpacing().specifiedValue(unused, this);
 
     LayoutUnit minTableWidth = 0;
     LayoutUnit maxTableWidth = 0;
@@ -206,8 +207,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         hasTableWidth = true;
         if (width.isDefinite(false)) {
             LayoutUnit unused;
-            tableWidth = width.specifiedValue(unused, ctx.viewportWidth(),
-                                              ctx.viewportHeight());
+            tableWidth = width.specifiedValue(unused, this);
             // For CSS table, width is the table content width EXCLUDING
             // border and padding.
             // For HTML table, width is the table width INCLUDNIG border and
@@ -217,22 +217,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                 tableWidth -= borderWidth() + paddingWidth();
             }
         } else if (width.isPercent()) {
-            switch (style()->position()) {
-            case PositionValue::FixedPositionValue:
-                tableWidth = width.percentValue(ctx.viewportWidth());
-                break;
-            case PositionValue::AbsolutePositionValue: {
-                FrameBox* cb = containingBlock(this);
-                LayoutUnit containgBlockContentWidth =
-                    cb->contentWidth() + cb->paddingWidth();
-                tableWidth = width.percentValue(containgBlockContentWidth);
-                break;
-            }
-            default:
-                tableWidth = width.percentValue(parentContentWidth);
-                break;
-            }
-
+            tableWidth = width.percentValue(parentContentWidth);
             tableWidth -= borderWidth() + paddingWidth();
         } else if (width.isCalc()) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -327,8 +312,8 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                     Length width = cell->style()->width();
                     if (width.isDefinite(false)) {
                         LayoutUnit unused;
-                        LayoutUnit cellWidth = width.specifiedValue(
-                            unused, ctx.viewportWidth(), ctx.viewportHeight());
+                        LayoutUnit cellWidth =
+                            width.specifiedValue(unused, this);
                         cellWidth += cell->borderWidth() + cell->paddingWidth();
 
                         LayoutUnit extraCellWidth =
@@ -668,8 +653,9 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
     std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
     LayoutUnit* sumOfColWidths)
 {
+    LayoutUnit unused;
     LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+        style()->horizontalBorderSpacing().specifiedValue(unused, this);
 
     for (auto& col : m_columnWidths) {
         STARFISH_ASSERT(col.id < m_columnWidths.size());
@@ -706,8 +692,7 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
             Length width = cell->style()->width();
             if (width.isDefinite(false)) {
                 LayoutUnit unused;
-                specifiedWidth = width.specifiedValue(
-                    unused, ctx.viewportWidth(), ctx.viewportHeight());
+                specifiedWidth = width.specifiedValue(unused, this);
                 specifiedWidth += cell->borderWidth() + cell->paddingWidth();
                 col.cellWidth = specifiedWidth;
             } else if (col.hasPercentageWidth()) {
@@ -787,8 +772,9 @@ void FrameTableBox::calCellWidthsWithColspans()
         }
     }
 
+    LayoutUnit unused;
     LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+        style()->horizontalBorderSpacing().specifiedValue(unused, this);
 
     forEachRowStruct(
         [this, borderSpacing](RowStruct* rowStruct, size_t _rowId) {
@@ -940,17 +926,12 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
 
         if (height.isDefinite(false)) {
             LayoutUnit unused;
-            specifiedHeight = height.specifiedValue(unused, ctx.viewportWidth(),
-                                                    ctx.viewportHeight());
+            specifiedHeight = height.specifiedValue(unused, this);
             specifiedHeight += borderHeight() + paddingHeight();
         } else if (height.isPercent()) {
-            if (style()->position() == PositionValue::FixedPositionValue) {
-                specifiedHeight = height.percentValue(ctx.viewportHeight());
-            } else {
-                if (ctx.parentHasFixedHeight(this)) {
-                    specifiedHeight =
-                        height.percentValue(ctx.parentFixedHeight(this));
-                }
+            if (ctx.parentHasFixedHeight(this)) {
+                specifiedHeight =
+                    height.percentValue(ctx.parentFixedHeight(this));
             }
         } else if (height.isCalc()) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -1116,7 +1097,8 @@ void FrameTableBox::paintBackgroundAndBorders(Canvas* canvas)
         style()->setBackgroundColor(bgColor);
     }
 
-    paintBackground(canvas, style(), bgRect, m_tableRect, false);
+    paintBackground(canvas, nearstNotAnonymousNode(), style(), bgRect,
+                    m_tableRect, false);
 
     paintBorders(canvas, m_tableRect);
 }

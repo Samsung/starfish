@@ -350,8 +350,7 @@ public:
         return m_layers[layer].positionY();
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
-                       Unit::Color color)
+    void checkComputed(Unit::Color color)
     {
         // NOTE: To support background layer
         if (m_layers.size() > m_maxLayerImages) {
@@ -390,18 +389,21 @@ public:
             }
         }
 
-        if (m_layers.size()) {
-            for (unsigned int i = 0; i < m_layers.size(); i++) {
-                m_layers[i].checkComputed(curFontSize, rootFontSize, font);
-            }
-        }
-
         // background-color
         // - default : transparent
         // - currentColor : represents the "calculated" value of the element's
         // color property
         if (m_bgColorNeedToUpdate) {
             setBgColor(color);
+        }
+    }
+
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
+    {
+        if (m_layers.size()) {
+            for (unsigned int i = 0; i < m_layers.size(); i++) {
+                m_layers[i].checkComputed(curFontSize, rootFontSize, font);
+            }
         }
     }
 

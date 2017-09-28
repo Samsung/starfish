@@ -19,15 +19,26 @@
 
 namespace StarFish {
 LayoutUnit CalcValue::specifiedValue(LayoutUnit parentContentLength,
-                                     LayoutUnit viewportWidth,
-                                     LayoutUnit viewportHeight) const
+                                     Node* n) const
 {
     if (m_type.isLength()) {
         return m_data.m_lengthData.toLength().specifiedValue(
-            parentContentLength, viewportWidth, viewportHeight);
+            parentContentLength, n);
     } else if (m_type.isPercentage()) {
         return Length(Length::Percent, m_data.m_numberData)
             .percentValue(parentContentLength);
+    }
+
+    return LayoutUnit();
+}
+
+LayoutUnit CalcValue::specifiedFontValue(Node* n) const
+{
+    if (m_type.isLength()) {
+        return m_data.m_lengthData.toLength().specifiedFontValue(n);
+    } else if (m_type.isPercentage()) {
+        return Length(Length::Percent, m_data.m_numberData)
+            .specifiedFontValue(n);
     }
 
     return LayoutUnit();

@@ -91,9 +91,8 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
 ComputedStyle* FrameInputBox::createInputElementStyleFrom(Node* parent)
 {
     ComputedStyle* childStyle = new ComputedStyle(parent->style());
-    childStyle->loadResources(parent);
-    ComputedStyle* rootStyle = parent->document()->rootElement()->style();
-    childStyle->arrangeStyleValues(parent->style(), rootStyle);
+    childStyle->loadResources(parent, true);
+    childStyle->arrangeStyleValues(parent->style(), true);
     childStyle->setDisplay(DisplayValue::InlineDisplayValue);
     return childStyle;
 }
@@ -102,11 +101,11 @@ void FrameInputBox::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
     if ((node()->asHTMLInputElement()->type()->equals("checkbox"))) {
-        float fontSize;
+        Length fontSize;
         bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
         if (style()->width().isAuto() || style()->height().isAuto() ||
             !style()->height().isDefinite(parentHasFixedHeight)) {
-            fontSize = DEFAULT_FONT_SIZE;
+            fontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
         } else {
             LayoutUnit parentContentHeight;
             if (parentHasFixedHeight) {
@@ -114,15 +113,14 @@ void FrameInputBox::layout(LayoutContext& ctx,
             }
 
             LayoutUnit width = style()->width().specifiedValue(
-                ctx.parentContentWidth(this), ctx.viewportWidth(),
-                ctx.viewportHeight());
-            LayoutUnit height = style()->height().specifiedValue(
-                parentContentHeight, ctx.viewportWidth(), ctx.viewportHeight());
-            fontSize = std::min(width, height);
+                ctx.parentContentWidth(this), this);
+            LayoutUnit height =
+                style()->height().specifiedValue(parentContentHeight, this);
+            fontSize = Length(Length::Fixed, std::min(width, height));
         }
 
-        style()->setFontSize(Length(Length::Fixed, fontSize));
-        style()->loadFont(node(), fontSize);
+        style()->setFontSize(fontSize);
+        style()->loadFont(node()->starFish(), fontSize.fixed());
         // TODO: propagate fontsize
     }
 

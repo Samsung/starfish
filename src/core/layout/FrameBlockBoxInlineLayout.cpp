@@ -31,8 +31,7 @@
 
 namespace StarFish {
 
-LayoutUnit FrameBox::lineHeight(LayoutUnit viewportWidth,
-                                LayoutUnit viewportHeight)
+LayoutUnit FrameBox::lineHeight()
 {
     LayoutUnit fontSize = style()->font()->metrics().m_ascender -
                           style()->font()->metrics().m_descender;
@@ -40,10 +39,9 @@ LayoutUnit FrameBox::lineHeight(LayoutUnit viewportWidth,
     if (!style()->hasNormalLineHeight()) {
         Length lineHeight = style()->lineHeight();
         if (lineHeight.isSpecified()) {
-            return lineHeight.specifiedValue(fontSize, viewportWidth,
-                                             viewportHeight);
+            return lineHeight.specifiedValue(fontSize, this);
         } else if (lineHeight.isInheritableNumber()) {
-            return fontSize * lineHeight.number();
+            return fontSize * lineHeight.inheritableNumber();
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -159,13 +157,9 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
                 Length len = box->style()->verticalAlignLength();
                 LayoutUnit y;
-                LayoutUnit viewportWidth = m_layoutContext.viewportWidth();
-                LayoutUnit viewportHeight = m_layoutContext.viewportHeight();
                 if (len.isSpecified()) {
                     y = LineFormattingContext::ascender(rb) +
-                        len.specifiedValue(
-                            box->lineHeight(viewportWidth, viewportHeight),
-                            viewportWidth, viewportHeight);
+                        len.specifiedValue(box->lineHeight(), box);
                 }
                 maxAscenderSoFar = std::max(y, maxAscenderSoFar);
                 maxDescenderSoFar =
@@ -212,13 +206,9 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
                 Length len = box->style()->verticalAlignLength();
                 LayoutUnit amount;
-                LayoutUnit viewportWidth = m_layoutContext.viewportWidth();
-                LayoutUnit viewportHeight = m_layoutContext.viewportHeight();
                 if (len.isSpecified()) {
                     amount = outerHeight +
-                             len.specifiedValue(
-                                 box->lineHeight(viewportWidth, viewportHeight),
-                                 viewportWidth, viewportHeight);
+                             len.specifiedValue(box->lineHeight(), box);
                 }
                 maxAscenderSoFar = std::max(amount, maxAscenderSoFar);
                 maxDescenderSoFar =
@@ -278,13 +268,9 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                     inlineBlockAscender(box->asFrameBlockBox());
                 Length len = box->style()->verticalAlignLength();
                 LayoutUnit amount;
-                LayoutUnit viewportWidth = m_layoutContext.viewportWidth();
-                LayoutUnit viewportHeight = m_layoutContext.viewportHeight();
                 if (len.isSpecified()) {
-                    amount = ascender +
-                             len.specifiedValue(
-                                 box->lineHeight(viewportWidth, viewportHeight),
-                                 viewportWidth, viewportHeight);
+                    amount =
+                        ascender + len.specifiedValue(box->lineHeight(), box);
                 }
                 maxAscenderSoFar = std::max(amount, maxAscenderSoFar);
                 maxDescenderSoFar =
@@ -328,12 +314,10 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
     // 3. adjusting the line height
     if (!parentStyle->hasNormalLineHeight()) {
         LayoutUnit lineHeight;
-        LayoutUnit viewportWidth = m_layoutContext.viewportWidth();
-        LayoutUnit viewportHeight = m_layoutContext.viewportHeight();
         if (parentBox->isLineBox()) {
-            lineHeight = m_block->lineHeight(viewportWidth, viewportHeight);
+            lineHeight = m_block->lineHeight();
         } else {
-            lineHeight = parentBox->lineHeight(viewportWidth, viewportHeight);
+            lineHeight = parentBox->lineHeight();
         }
         LayoutUnit diff =
             (lineHeight - parentStyle->font()->metrics().m_fontHeight) / 2;
@@ -1056,8 +1040,8 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
         ctx.checkIfThisIsFirstLineCandidate(block)) {
         Length textIndent = block->style()->textIndent();
         FrameBox* cb = containingBlock(block);
-        m_textIndentWidth = textIndent.specifiedValue(
-            cb->contentWidth(), ctx.viewportWidth(), ctx.viewportHeight());
+        m_textIndentWidth =
+            textIndent.specifiedValue(cb->contentWidth(), block);
     }
 }
 
@@ -3529,7 +3513,7 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
 
 void PreferredWidthContext::updateUnprocessedStartingMBPWidth(Frame* f)
 {
-    m_unprocessedStartingMBPWidth += startingMBPWidth(f->style());
+    m_unprocessedStartingMBPWidth += startingMBPWidth(f);
 }
 
 void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w,
@@ -3590,92 +3574,82 @@ void PreferredWidthContext::handleFloatingBox(Frame* f, LayoutUnit w)
     }
 }
 
-LayoutUnit PreferredWidthContext::leftMBPWidth(ComputedStyle* style)
+LayoutUnit PreferredWidthContext::leftMBPWidth(Frame* f)
 {
     LayoutUnit width;
     LayoutUnit unused;
-    LayoutUnit viewportWidth = layoutContext().viewportWidth();
-    LayoutUnit viewportHeight = layoutContext().viewportHeight();
-    Length borderLeftWidth = style->borderLeftWidth();
-    Length paddingLeft = style->paddingLeft();
-    Length marginLeft = style->marginLeft();
+    Length borderLeftWidth = f->style()->borderLeftWidth();
+    Length paddingLeft = f->style()->paddingLeft();
+    Length marginLeft = f->style()->marginLeft();
 
     if (borderLeftWidth.isDefinite(false)) {
-        width += borderLeftWidth.specifiedValue(unused, viewportWidth,
-                                                viewportHeight);
+        width += borderLeftWidth.specifiedValue(unused, f);
     }
 
     if (paddingLeft.isDefinite(false)) {
-        width +=
-            paddingLeft.specifiedValue(unused, viewportWidth, viewportHeight);
+        width += paddingLeft.specifiedValue(unused, f);
     }
 
     if (marginLeft.isDefinite(false)) {
-        width +=
-            marginLeft.specifiedValue(unused, viewportWidth, viewportHeight);
+        width += marginLeft.specifiedValue(unused, f);
     }
 
     return width;
 }
 
-LayoutUnit PreferredWidthContext::rightMBPWidth(ComputedStyle* style)
+LayoutUnit PreferredWidthContext::rightMBPWidth(Frame* f)
 {
     LayoutUnit width;
     LayoutUnit unused;
-    LayoutUnit viewportWidth = layoutContext().viewportWidth();
-    LayoutUnit viewportHeight = layoutContext().viewportHeight();
-    Length borderRightWidth = style->borderRightWidth();
-    Length paddingRight = style->paddingRight();
-    Length marginRight = style->marginRight();
+    Length borderRightWidth = f->style()->borderRightWidth();
+    Length paddingRight = f->style()->paddingRight();
+    Length marginRight = f->style()->marginRight();
 
     if (borderRightWidth.isDefinite(false)) {
-        width += borderRightWidth.specifiedValue(unused, viewportWidth,
-                                                 viewportHeight);
+        width += borderRightWidth.specifiedValue(unused, f);
     }
 
     if (paddingRight.isDefinite(false)) {
-        width +=
-            paddingRight.specifiedValue(unused, viewportWidth, viewportHeight);
+        width += paddingRight.specifiedValue(unused, f);
     }
 
     if (marginRight.isDefinite(false)) {
-        width +=
-            marginRight.specifiedValue(unused, viewportWidth, viewportHeight);
+        width += marginRight.specifiedValue(unused, f);
     }
 
     return width;
 }
 
-LayoutUnit PreferredWidthContext::startingMBPWidth(ComputedStyle* style)
+LayoutUnit PreferredWidthContext::startingMBPWidth(Frame* f)
 {
     LayoutUnit w;
-    if (style->direction() == LtrDirectionValue) {
-        w = leftMBPWidth(style);
+    if (f->style()->direction() == LtrDirectionValue) {
+        w = leftMBPWidth(f);
     } else {
-        w = rightMBPWidth(style);
+        w = rightMBPWidth(f);
     }
     return w;
 }
 
-LayoutUnit PreferredWidthContext::endingMBPWidth(ComputedStyle* style)
+LayoutUnit PreferredWidthContext::endingMBPWidth(Frame* f)
 {
     LayoutUnit w;
-    if (style->direction() == LtrDirectionValue) {
-        w = rightMBPWidth(style);
+    if (f->style()->direction() == LtrDirectionValue) {
+        w = rightMBPWidth(f);
     } else {
-        w = leftMBPWidth(style);
+        w = leftMBPWidth(f);
     }
     return w;
 }
 
-LayoutUnit PreferredWidthContext::mbpWidth(ComputedStyle* style)
+LayoutUnit PreferredWidthContext::mbpWidth(Frame* f)
 {
-    return leftMBPWidth(style) + rightMBPWidth(style);
+    return leftMBPWidth(f) + rightMBPWidth(f);
 }
 
 LayoutUnit PreferredWidthContext::preferredWidthWithNewContext(Frame* f)
 {
-    LayoutUnit mbpWidth = this->mbpWidth(f->style());
+    LayoutUnit mbpWidth = this->mbpWidth(f);
     PreferredWidthContext newCtx(m_layoutContext, f,
                                  m_remainingWidth - mbpWidth);
     newCtx.computePreferredWidth();
@@ -3738,8 +3712,7 @@ void FrameInline::computePreferredWidth(PreferredWidthContext& ctx)
         ctx.updateCurrentLineWidth(this, ctx.unprocessedStartingMBPWidth());
     }
 
-    ctx.setCurrentLineWidth(ctx.currentLineWidth() +
-                            ctx.endingMBPWidth(style()));
+    ctx.setCurrentLineWidth(ctx.currentLineWidth() + ctx.endingMBPWidth(this));
 }
 
 void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
@@ -3777,19 +3750,14 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 
     if (width.isDefinite(false)) {
         LayoutUnit unused;
-        LayoutUnit viewportWidth = ctx.layoutContext().viewportWidth();
-        LayoutUnit viewportHeight = ctx.layoutContext().viewportHeight();
-        w = width.specifiedValue(unused, viewportWidth, viewportHeight);
+        w = width.specifiedValue(unused, this);
         w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), w, unused, true);
     } else {
         w = intrinsicWidth;
         h = intrinsicHeight;
 
         if (height.isDefinite(parentHasFixedHeight)) {
-            LayoutUnit viewportWidth = ctx.layoutContext().viewportWidth();
-            LayoutUnit viewportHeight = ctx.layoutContext().viewportHeight();
-            h = height.specifiedValue(parentContentHeight, viewportWidth,
-                                      viewportHeight);
+            h = height.specifiedValue(parentContentHeight, this);
             h = contentHeightApplyingBoxSizing(h);
 
             if (hasAspectRatio) {
@@ -3847,9 +3815,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
 
     if (width.isDefinite(false) && !isFrameTableCellBox()) {
         LayoutUnit unused;
-        LayoutUnit viewportWidth = ctx.layoutContext().viewportWidth();
-        LayoutUnit viewportHeight = ctx.layoutContext().viewportHeight();
-        w = width.specifiedValue(unused, viewportWidth, viewportHeight);
+        w = width.specifiedValue(unused, this);
         w = contentWidthApplyingBoxSizing(w);
     } else {
         if (isFrameFlexibleBox()) {
@@ -3871,7 +3837,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                     }
 
                     FrameBox* flexItem = f->asFrameBox();
-                    LayoutUnit mbpWidth = ctx.mbpWidth(f->style());
+                    LayoutUnit mbpWidth = ctx.mbpWidth(f);
                     LayoutUnit outerBasisSize =
                         fCtx.basisSize(flexItem) + mbpWidth;
                     LayoutUnit diff =
@@ -3951,12 +3917,8 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 if ((!isAnonymous() && !hasBlockFlow()) ||
                     ctx.layoutContext().checkIfThisIsFirstLineCandidate(this)) {
                     Length textIndent = style()->textIndent();
-                    LayoutUnit viewportWidth =
-                        ctx.layoutContext().viewportWidth();
-                    LayoutUnit viewportHeight =
-                        ctx.layoutContext().viewportHeight();
-                    textIndentWidth = textIndent.specifiedValue(
-                        ctx.remainingWidth(), viewportWidth, viewportHeight);
+                    textIndentWidth =
+                        textIndent.specifiedValue(ctx.remainingWidth(), this);
                 }
                 ctx.setTextIndentWidth(textIndentWidth);
                 ctx.computePreferredWidthInline(this);
@@ -3973,8 +3935,9 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
 
 void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
 {
+    LayoutUnit unused;
     LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(style()->horizontalBorderSpacing().fixed());
+        style()->horizontalBorderSpacing().specifiedValue(unused, this);
 
     LayoutUnit parentContentWidth =
         ctx.layoutContext().parentContentWidth(this);
@@ -3999,13 +3962,10 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
             tablePreferredMinWidth += borderSpacing;
         }
     } else {
-        LayoutUnit viewportWidth = ctx.layoutContext().viewportWidth();
-        LayoutUnit viewportHeight = ctx.layoutContext().viewportHeight();
         // TODO: consider box-sizing and min-max width
         if (width.isDefinite(false)) {
             LayoutUnit unused;
-            tablePreferredWidth =
-                width.specifiedValue(unused, viewportWidth, viewportHeight);
+            tablePreferredWidth = width.specifiedValue(unused, this);
             if (!isAnonymous() && node()->isHTMLTableElement()) {
                 tablePreferredWidth -= borderWidth() + paddingWidth();
             }

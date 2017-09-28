@@ -24,6 +24,9 @@ namespace StarFish {
 class String;
 class Font;
 class CalcData;
+class Node;
+class Frame;
+class Element;
 
 class Length {
 public:
@@ -92,13 +95,15 @@ public:
 
     bool isSpecified() const
     {
-        return isFixed() || isPercent() || isViewportPercent() || isCalc();
+        return isFixed() || isPercent() || isViewportPercent() ||
+               isFontPercent() || isCalc();
     }
 
     bool isDefinite(bool canApplyPercentage) const
     {
         if (isSpecified()) {
-            if (isFixed() || isViewportPercent() || isCalcAndLengthOfType()) {
+            if (isFixed() || isViewportPercent() || isFontPercent() ||
+                isCalcAndLengthOfType()) {
                 return true;
             } else {
                 return canApplyPercentage;
@@ -128,6 +133,11 @@ public:
         return Vw <= m_type && m_type <= Vmax;
     }
 
+    bool isFontPercent() const
+    {
+        return Ex <= m_type && m_type <= Rem;
+    }
+
     bool isInheritableNumber() const
     {
         return m_type == InheritableNumber;
@@ -145,9 +155,17 @@ public:
         return isFixed() || isPercent() || isViewportPercent() || isAuto();
     }
 
+    bool hasViewportPercent() const;
+
     Type type() const
     {
         return m_type;
+    }
+
+    float fontPercent() const
+    {
+        STARFISH_ASSERT(isFontPercent());
+        return m_data.m_numberData;
     }
 
     float viewportPercent() const
@@ -158,20 +176,26 @@ public:
 
     float percent() const
     {
-        STARFISH_ASSERT(m_type == Percent);
+        STARFISH_ASSERT(isPercent());
         // 0~1
         return m_data.m_numberData;
     }
 
     float fixed() const
     {
-        STARFISH_ASSERT(m_type == Fixed);
+        STARFISH_ASSERT(isFixed());
         return m_data.m_numberData;
     }
 
-    float number() const
+    float inheritableNumber() const
     {
-        STARFISH_ASSERT(m_type == InheritableNumber);
+        STARFISH_ASSERT(isInheritableNumber());
+        return m_data.m_numberData;
+    }
+
+    float numberData() const
+    {
+        STARFISH_ASSERT(!isAuto() && !isCalc());
         return m_data.m_numberData;
     }
 
@@ -181,8 +205,10 @@ public:
         return m_data.m_calcData;
     }
 
-    float specifiedValue(LayoutUnit parentLength, LayoutUnit viewportWidth,
-                         LayoutUnit viewportHeight) const;
+    float specifiedValue(LayoutUnit parentLength, Frame* f) const;
+    float specifiedValue(LayoutUnit parentLength, Node* n) const;
+    float specifiedFontValue(Node* n);
+    float specifiedFontValue(Element* e);
 
     float percentValue(LayoutUnit parentLength) const
     {
@@ -206,6 +232,10 @@ public:
                    100;
         }
     }
+
+    float fontPercentValue(LayoutUnit curFontSize, LayoutUnit rootFontSize,
+                           Font* font) const;
+    float fontPercentValue(Node* n, bool isFontSize) const;
 
     bool isZero()
     {
@@ -244,6 +274,11 @@ protected:
     };
     ValueData m_data;
 };
+
+Length operator*(const Length& a, const float b);
+Length operator*(const float a, const Length& b);
+Length operator/(const Length& a, const float b);
+Length operator/(const float a, const Length& b);
 
 class LengthSize : public gc {
 public:

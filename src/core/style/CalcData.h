@@ -194,9 +194,8 @@ public:
         return m_data.m_lengthData;
     }
 
-    LayoutUnit specifiedValue(LayoutUnit parentContentLength,
-                              LayoutUnit viewportWidth,
-                              LayoutUnit viewportHeight) const;
+    LayoutUnit specifiedValue(LayoutUnit parentContentLength, Node* n) const;
+    LayoutUnit specifiedFontValue(Node* n) const;
 
     CSSAngle angleValue() const
     {
@@ -320,9 +319,7 @@ public:
         return n;
     }
 
-    LayoutUnit specifiedValue(LayoutUnit parentContentLength,
-                              LayoutUnit viewportWidth,
-                              LayoutUnit viewportHeight) const
+    LayoutUnit specifiedValue(LayoutUnit parentContentLength, Node* n) const
     {
         STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
         auto it = m_values.begin();
@@ -332,8 +329,7 @@ public:
         if (lType.isNumber()) {
             num = (*it).numberValue();
         } else {
-            l = (*it).specifiedValue(parentContentLength, viewportWidth,
-                                     viewportHeight);
+            l = (*it).specifiedValue(parentContentLength, n);
         }
         it++;
         auto it2 = m_operators.begin();
@@ -345,8 +341,7 @@ public:
                 if (rType.isNumber()) {
                     num *= (*it).numberValue();
                 } else {
-                    l = (*it).specifiedValue(parentContentLength, viewportWidth,
-                                             viewportHeight);
+                    l = (*it).specifiedValue(parentContentLength, n);
                     l *= num;
                     num = 1;
                 }
@@ -354,8 +349,50 @@ public:
                 if (rType.isNumber()) {
                     num /= (*it).numberValue();
                 } else {
-                    l = (*it).specifiedValue(parentContentLength, viewportWidth,
-                                             viewportHeight);
+                    l = (*it).specifiedValue(parentContentLength, n);
+                    l /= num;
+                    num = 1;
+                }
+            }
+
+            it++;
+            it2++;
+        }
+
+        return num * l;
+    }
+
+    LayoutUnit specifiedFontValue(Node* n) const
+    {
+        STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
+        auto it = m_values.begin();
+        CalcValueType lType = (*it).type();
+        float num = 1;
+        LayoutUnit l;
+        if (lType.isNumber()) {
+            num = (*it).numberValue();
+        } else {
+            l = (*it).specifiedFontValue(n);
+        }
+        it++;
+        auto it2 = m_operators.begin();
+        while (it != m_values.end()) {
+            CalcValueType rType = (*it).type();
+            bool operand = *it2;
+
+            if (operand == MUL) {
+                if (rType.isNumber()) {
+                    num *= (*it).numberValue();
+                } else {
+                    l = (*it).specifiedFontValue(n);
+                    l *= num;
+                    num = 1;
+                }
+            } else {
+                if (rType.isNumber()) {
+                    num /= (*it).numberValue();
+                } else {
+                    l = (*it).specifiedFontValue(n);
                     l /= num;
                     num = 1;
                 }
@@ -542,17 +579,26 @@ public:
         return n;
     }
 
-    LayoutUnit specifiedValue(LayoutUnit parentContentLength,
-                              LayoutUnit viewportWidth,
-                              LayoutUnit viewportHeight) const
+    LayoutUnit specifiedValue(LayoutUnit parentContentLength, Node* n) const
     {
         auto it = m_terms.begin();
-        LayoutUnit l = (*it)->specifiedValue(parentContentLength, viewportWidth,
-                                             viewportHeight);
+        LayoutUnit l = (*it)->specifiedValue(parentContentLength, n);
         it++;
         while (it != m_terms.end()) {
-            l += (*it)->specifiedValue(parentContentLength, viewportWidth,
-                                       viewportHeight);
+            l += (*it)->specifiedValue(parentContentLength, n);
+            it++;
+        }
+
+        return l;
+    }
+
+    LayoutUnit specifiedFontValue(Node* n) const
+    {
+        auto it = m_terms.begin();
+        LayoutUnit l = (*it)->specifiedFontValue(n);
+        it++;
+        while (it != m_terms.end()) {
+            l += (*it)->specifiedFontValue(n);
             it++;
         }
 

@@ -1397,7 +1397,6 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
             g_imgBufferForScreehShot =
                 (Evas_Object*)g_surfaceForScreehShot->unwrap();
             Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
-            c->setViewportWidthAndHeight(width(), height());
             return c;
         }
     }

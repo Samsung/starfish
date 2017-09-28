@@ -479,9 +479,7 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
         return cb->contentHeight() + cb->paddingHeight();
     }
     FrameBlockBox* container = blockContainer(currentFrame);
-    std::vector<std::pair<FrameBox*, Length>> reverse;
-    LayoutUnit viewportWidth = LayoutContext::viewportWidth();
-    LayoutUnit viewportHeight = LayoutContext::viewportHeight();
+    std::vector<std::pair<FrameBlockBox*, Length>> reverse;
     while (container) {
         Length height = container->style()->height();
         if (height.isDefinite(false)) {
@@ -496,17 +494,16 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
                 reverse.emplace_back(
                     container,
                     Length(Length::Fixed,
-                           height.specifiedValue(parentHeight, viewportWidth,
-                                                 viewportHeight)));
+                           height.specifiedValue(parentHeight, container)));
                 break;
             } else if (container->style()->top().isSpecified() &&
                        container->style()->bottom().isSpecified()) {
                 LayoutUnit parentHeight =
                     containingBlock(container)->contentHeight();
                 LayoutUnit t = container->style()->top().specifiedValue(
-                    parentHeight, viewportWidth, viewportHeight);
+                    parentHeight, container);
                 LayoutUnit b = container->style()->bottom().specifiedValue(
-                    parentHeight, viewportWidth, viewportHeight);
+                    parentHeight, container);
                 LayoutUnit height;
                 if (container->style()->boxSizing() ==
                     BorderBoxBoxSizingValue) {
@@ -526,17 +523,20 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
         container = blockContainer(container);
     }
     Length height = reverse.back().second;
+    container = reverse.back().first;
     LayoutUnit result;
     if (height.isDefinite(false)) {
         LayoutUnit unused;
-        result = height.specifiedValue(unused, viewportWidth, viewportHeight);
+        result = height.specifiedValue(unused, container);
     }
 
-    result = reverse.back().first->contentHeightApplyingBoxSizing(result);
+    result = container->contentHeightApplyingBoxSizing(result);
     reverse.pop_back();
     while (reverse.size()) {
-        result = reverse.back().second.percentValue(result);
-        result = reverse.back().first->contentHeightApplyingBoxSizing(result);
+        height = reverse.back().second;
+        container = reverse.back().first;
+        result = height.percentValue(result);
+        result = container->contentHeightApplyingBoxSizing(result);
         reverse.pop_back();
     }
 
@@ -551,8 +551,7 @@ LayoutUnit LayoutContext::specifiedVerticalValue(Frame* f, Length l)
         if (parentHasFixedHeight) {
             parentContentHeight = this->parentFixedHeight(f);
         }
-        return l.specifiedValue(parentContentHeight, viewportWidth(),
-                                viewportHeight());
+        return l.specifiedValue(parentContentHeight, f);
     }
 
     return 0;
@@ -750,16 +749,6 @@ bool LayoutContext::checkIfThisIsFirstLineCandidate(FrameBlockBox* blockBox)
     }
 
     return (*it).second == blockBox;
-}
-
-LayoutUnit LayoutContext::viewportWidth()
-{
-    return frameDocument()->style()->width().fixed();
-}
-
-LayoutUnit LayoutContext::viewportHeight()
-{
-    return frameDocument()->style()->height().fixed();
 }
 
 void LayoutContext::registerContentHeight(FrameBox* box,
@@ -987,12 +976,19 @@ ComputedStyle* Frame::pseudoStyleForFirstLine(
         result->setPseudoType(
             StyleResolver::PseudoElementType::PseudoElementFirstLineInherited);
     }
-
+    Length fontSize = result->fontSize();
+    fontSize.changeToFixedIfNeeded(
+        parentStyle->fontSize(),
+        element->document()->rootElement()->style()->fontSize(),
+        parentStyle->font());
+    result->setFontSize(fontSize);
+    if (result->isFontSizeSpeicifiedByUser()) {
+        result->setFixedFontSize(fontSize.specifiedFontValue(node()));
+    }
     result->setDisplay(DisplayValue::InlineDisplayValue);
     result->setPosition(PositionValue::StaticPositionValue);
-    result->loadResources(element);
-    ComputedStyle* rootStyle = document()->rootElement()->style();
-    result->arrangeStyleValues(parentStyle, rootStyle, element);
+    result->loadResources(element, true);
+    result->arrangeStyleValues(parentStyle, true, element);
 
     return result;
 }
@@ -1077,14 +1073,38 @@ OverflowValue Frame::appliedOverflowY()
     return m_styleWhenNodeIsAnonymous->overflowY();
 }
 
+void Frame::loadFont(StarFish* sf, float parentFontSize)
+{
+    ComputedStyle* style = this->style();
+    float fixedFontSize = parentFontSize;
+    if (style) {
+        fixedFontSize =
+            style->fontSize().specifiedFontValue(nearstNotAnonymousNode());
+        // TODO: -webkit-appearance : check-box's font-size should be done
+        // layout.
+        // Because its font-size is dependent on minimum of width and height.
+        // if (!(node() && node()->isHTMLInputElement() &&
+        //     node()->asHTMLInputElement()->type()->equals("checkbox"))) {
+        // }
+    }
+
+    style->setFixedFontSize(fixedFontSize);
+    style->loadFont(sf, fixedFontSize);
+
+    Frame* child = firstChild();
+    while (child) {
+        child->loadFont(sf, fixedFontSize);
+        child = child->next();
+    }
+}
+
 void Frame::updateComputedStyle(Node* refNode)
 {
     STARFISH_ASSERT(isAnonymous());
     ComputedStyle* newStyle = new ComputedStyle(refNode->style());
     newStyle->setDisplay(m_styleWhenNodeIsAnonymous->display());
-    newStyle->loadResources(refNode, m_styleWhenNodeIsAnonymous);
-    ComputedStyle* rootStyle = document()->rootElement()->style();
-    newStyle->arrangeStyleValues(refNode->style(), rootStyle, refNode);
+    newStyle->loadResources(refNode, true, m_styleWhenNodeIsAnonymous);
+    newStyle->arrangeStyleValues(refNode->style(), true, refNode);
     m_styleWhenNodeIsAnonymous = newStyle;
 }
 

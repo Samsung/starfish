@@ -228,15 +228,14 @@ FrameTableTreeBuilder::createAnonymousFrameTableObjectBoxWithParent(
     STARFISH_ASSERT(current->style());
     DisplayValue parentDisplay = parent->style()->display();
     ComputedStyle* style = new ComputedStyle(parent->style());
-    ComputedStyle* rootStyle = current->document()->rootElement()->style();
 
     if (!parent->isFrameTableObjectBox() ||
         isTableCellDisplayValue(parentDisplay)) {
         DisplayValue currentDisplay = current->style()->display();
         STARFISH_ASSERT(ComputedStyle::isDisplayTableValueType(currentDisplay));
         style->setDisplay(DisplayValue::TableDisplayValue);
-        style->loadResources(current);
-        style->arrangeStyleValues(parent->style(), rootStyle, current);
+        style->loadResources(current, true);
+        style->arrangeStyleValues(parent->style(), true, current);
         return new FrameTableBox(nullptr, style);
     }
 
@@ -244,28 +243,28 @@ FrameTableTreeBuilder::createAnonymousFrameTableObjectBoxWithParent(
         DisplayValue currentDisplay = current->style()->display();
         if (isTableColumnDisplayValue(currentDisplay)) {
             style->setDisplay(DisplayValue::TableColumnGroupDisplayValue);
-            style->loadResources(current);
-            style->arrangeStyleValues(parent->style(), rootStyle, current);
+            style->loadResources(current, true);
+            style->arrangeStyleValues(parent->style(), true, current);
             return new FrameTableColBox(nullptr, style);
         } else {
             style->setDisplay(DisplayValue::TableRowGroupDisplayValue);
-            style->loadResources(current);
-            style->arrangeStyleValues(parent->style(), rootStyle, current);
+            style->loadResources(current, true);
+            style->arrangeStyleValues(parent->style(), true, current);
             return new FrameTableSectionBox(nullptr, style);
         }
     }
 
     if (isTableRowGroupDisplayValue(parentDisplay)) {
         style->setDisplay(DisplayValue::TableRowDisplayValue);
-        style->loadResources(current);
-        style->arrangeStyleValues(parent->style(), rootStyle, current);
+        style->loadResources(current, true);
+        style->arrangeStyleValues(parent->style(), true, current);
         return new FrameTableRowBox(nullptr, style);
     }
 
     if (isTableRowDisplayValue(parentDisplay)) {
         style->setDisplay(DisplayValue::TableCellDisplayValue);
-        style->loadResources(current);
-        style->arrangeStyleValues(parent->style(), rootStyle, current);
+        style->loadResources(current, true);
+        style->arrangeStyleValues(parent->style(), true, current);
         return new FrameTableCellBox(nullptr, style);
     }
 

@@ -58,8 +58,7 @@ void FrameSVGBox::layout(LayoutContext& ctx,
             auto styleWidth = style()->width();
             LayoutUnit width;
             if (!styleWidth.isAuto()) {
-                width = styleWidth.specifiedValue(
-                    cb->width(), ctx.viewportWidth(), ctx.viewportHeight());
+                width = styleWidth.specifiedValue(cb->width(), this);
             }
             setWidth(width);
         }
@@ -68,8 +67,7 @@ void FrameSVGBox::layout(LayoutContext& ctx,
             auto styleHeight = style()->height();
             LayoutUnit height;
             if (!styleHeight.isAuto()) {
-                height = styleHeight.specifiedValue(
-                    cb->height(), ctx.viewportWidth(), ctx.viewportHeight());
+                height = styleHeight.specifiedValue(cb->height(), this);
             }
             setHeight(height);
         }
@@ -105,14 +103,7 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
                                                        &pair)) {
                 auto l = pair.lengthValue();
                 Length ll = l.toLength();
-
-                ComputedStyle* rootStyle =
-                    node()->document()->rootElement()->style();
-                ll.changeToFixedIfNeeded(style()->fontSize(),
-                                         rootStyle->fontSize(),
-                                         style()->font());
-                xResult = ll.specifiedValue(cb->width(), ctx.viewportWidth(),
-                                            ctx.viewportHeight());
+                xResult = ll.specifiedValue(cb->width(), this);
             }
         }
 
@@ -128,14 +119,7 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
                                                        &pair)) {
                 auto l = pair.lengthValue();
                 Length ll = l.toLength();
-
-                ComputedStyle* rootStyle =
-                    node()->document()->rootElement()->style();
-                ll.changeToFixedIfNeeded(style()->fontSize(),
-                                         rootStyle->fontSize(),
-                                         style()->font());
-                yResult = ll.specifiedValue(cb->height(), ctx.viewportWidth(),
-                                            ctx.viewportHeight());
+                yResult = ll.specifiedValue(cb->height(), this);
             }
         }
 
@@ -154,13 +138,9 @@ void FrameSVGBox::paint(PaintingContext& ctx)
     }
 
     if (style()->hasTransforms()) {
-        LayoutUnit viewportWidth =
-            node()->document()->frame()->style()->width().fixed();
-        LayoutUnit viewportHeight =
-            node()->document()->frame()->style()->height().fixed();
         FrameBox* cb = layoutParent()->asFrameBox();
-        auto matrix = style()->transformsToMatrix(
-            cb->width(), cb->height(), viewportWidth, viewportHeight, true);
+        auto matrix =
+            style()->transformsToMatrix(cb->width(), cb->height(), this, true);
         if (!matrix.isIdentity()) {
             ctx.m_canvas->postMatrix(matrix);
         }
@@ -270,18 +250,8 @@ double FrameSVGBox::resolveLengthFromAttribute(QualifiedName attr)
                                                    &pair)) {
             auto l = pair.lengthValue();
             Length ll = l.toLength();
-
-            ComputedStyle* rootStyle =
-                node()->document()->rootElement()->style();
-            ll.changeToFixedIfNeeded(style()->fontSize(), rootStyle->fontSize(),
-                                     style()->font());
             FrameBox* cb = layoutParent()->asFrameBox();
-            LayoutUnit viewportWidth =
-                node()->document()->frame()->style()->width().fixed();
-            LayoutUnit viewportHeight =
-                node()->document()->frame()->style()->height().fixed();
-            result =
-                ll.specifiedValue(cb->width(), viewportWidth, viewportHeight);
+            result = ll.specifiedValue(cb->width(), this);
         }
     }
 

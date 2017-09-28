@@ -541,11 +541,11 @@ public:
         return outerHeight;
     }
 
-    LayoutUnit lineHeight(LayoutUnit viewportWidth, LayoutUnit viewportHeight);
+    LayoutUnit lineHeight();
 
     virtual void paintChildrenWith(PaintingContext& ctx);
 
-    static void paintBackground(Canvas* canvas, ComputedStyle* style,
+    static void paintBackground(Canvas* canvas, Node* n, ComputedStyle* style,
                                 LayoutRect imageRect, LayoutRect colorRect,
                                 bool isRootElement = false,
                                 bool needsToFillBgColorAtBorderBox = false);

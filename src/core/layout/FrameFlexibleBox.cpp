@@ -45,9 +45,7 @@ void FlexFormattingContext::computeAvailableSpace(LayoutUnit availableWidth)
             parentContentHeight =
                 m_layoutContext.parentFixedHeight(m_container);
         }
-        contentHeight = height.specifiedValue(parentContentHeight,
-                                              m_layoutContext.viewportWidth(),
-                                              m_layoutContext.viewportHeight());
+        contentHeight = height.specifiedValue(parentContentHeight, m_container);
         contentHeight =
             m_container->contentHeightApplyingBoxSizing(contentHeight);
     } else {
@@ -1002,15 +1000,13 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
                                        intMaxForLayoutUnit)) {
             } else {
                 if (isMainAxisInInlineAxis) {
-                    basisSize = basisWidth.specifiedValue(availableMainSize,
-                                                          ctx.viewportWidth(),
-                                                          ctx.viewportHeight());
+                    basisSize =
+                        basisWidth.specifiedValue(availableMainSize, this);
                     basisSize =
                         flexItem->contentWidthApplyingBoxSizing(basisSize);
                 } else {
-                    basisSize = basisWidth.specifiedValue(availableMainSize,
-                                                          ctx.viewportWidth(),
-                                                          ctx.viewportHeight());
+                    basisSize =
+                        basisWidth.specifiedValue(availableMainSize, this);
                     basisSize =
                         flexItem->contentHeightApplyingBoxSizing(basisSize);
                 }
@@ -1035,9 +1031,7 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
                 p.computePreferredWidth();
                 basisSize = p.preferredWidth();
             } else {
-                basisSize =
-                    width.specifiedValue(availableMainSize, ctx.viewportWidth(),
-                                         ctx.viewportHeight());
+                basisSize = width.specifiedValue(availableMainSize, this);
                 basisSize = flexItem->contentWidthApplyingBoxSizing(basisSize);
             }
         }
@@ -1049,8 +1043,7 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
             p.computePreferredWidth();
             flexItem->setContentWidth(p.preferredWidth());
         } else {
-            LayoutUnit w = width.specifiedValue(
-                availableCrossSize, ctx.viewportWidth(), ctx.viewportHeight());
+            LayoutUnit w = width.specifiedValue(availableCrossSize, this);
             w = flexItem->contentWidthApplyingBoxSizing(w);
             flexItem->setContentWidth(w);
         }

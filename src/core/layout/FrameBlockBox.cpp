@@ -97,8 +97,6 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
         Length width = style()->width();
         BoxSizingValue boxSizing = style()->boxSizing();
         LayoutUnit contentWidth;
-        LayoutUnit viewportWidth = ctx.viewportWidth();
-        LayoutUnit viewportHeight = ctx.viewportHeight();
 
         if (width.isAuto()) {
             if (isNormalFlow() &&
@@ -112,10 +110,10 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
                                         LayoutUnit(0));
             } else if (isAbsolutePositioned() && left.isSpecified() &&
                        right.isSpecified()) {
-                LayoutUnit l = left.specifiedValue(
-                    containgBlockContentWidth, viewportWidth, viewportHeight);
-                LayoutUnit r = right.specifiedValue(
-                    containgBlockContentWidth, viewportWidth, viewportHeight);
+                LayoutUnit l =
+                    left.specifiedValue(containgBlockContentWidth, this);
+                LayoutUnit r =
+                    right.specifiedValue(containgBlockContentWidth, this);
                 LayoutUnit w =
                     std::max(LayoutUnit(0),
                              containgBlockContentWidth - l - r - mbpWidth());
@@ -127,8 +125,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
                 contentWidth = p.preferredWidth();
             }
         } else {
-            contentWidth = width.specifiedValue(containgBlockContentWidth,
-                                                viewportWidth, viewportHeight);
+            contentWidth =
+                width.specifiedValue(containgBlockContentWidth, this);
             contentWidth = contentWidthApplyingBoxSizing(contentWidth);
         }
 
@@ -147,8 +145,6 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 
         LayoutUnit contentHeight;
         LayoutUnit parentHeight;
-        LayoutUnit viewportWidth = ctx.viewportWidth();
-        LayoutUnit viewportHeight = ctx.viewportHeight();
         Length height = style()->height();
         BoxSizingValue boxSizing = style()->boxSizing();
 
@@ -170,16 +166,13 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                 Length top = style()->top();
                 Length bottom = style()->bottom();
                 if (top.isSpecified() && bottom.isSpecified()) {
-                    LayoutUnit t = top.specifiedValue(
-                        parentHeight, viewportWidth, viewportHeight);
-                    LayoutUnit b = bottom.specifiedValue(
-                        parentHeight, viewportWidth, viewportHeight);
+                    LayoutUnit t = top.specifiedValue(parentHeight, this);
+                    LayoutUnit b = bottom.specifiedValue(parentHeight, this);
                     contentHeight =
                         parentHeight - t - b - paddingHeight() - borderHeight();
                 }
             } else {
-                contentHeight = height.specifiedValue(
-                    parentHeight, viewportWidth, viewportHeight);
+                contentHeight = height.specifiedValue(parentHeight, this);
                 contentHeight = contentHeightApplyingBoxSizing(contentHeight);
             }
 
@@ -207,8 +200,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
 
     Length height = style()->height();
     if (height.isDefinite(parentHasFixedHeight)) {
-        contentHeight = height.specifiedValue(parentHeight, ctx.viewportWidth(),
-                                              ctx.viewportHeight());
+        contentHeight = height.specifiedValue(parentHeight, this);
         contentHeight = contentHeightApplyingBoxSizing(contentHeight);
     }
 
@@ -221,8 +213,6 @@ static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
 {
     LayoutUnit x = 0;
     LayoutUnit y = 0;
-    LayoutUnit viewportWidth = ctx.viewportWidth();
-    LayoutUnit viewportHeight = ctx.viewportHeight();
     Length left = f->style()->left();
     Length right = f->style()->right();
     Length top = f->style()->top();
@@ -231,18 +221,14 @@ static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
     // left, right
     if (!left.isAuto() && !right.isAuto()) {
         if (f->style()->direction() == LtrDirectionValue) {
-            x = left.specifiedValue(parentSize.width(), viewportWidth,
-                                    viewportHeight);
+            x = left.specifiedValue(parentSize.width(), f);
         } else {
-            x = -right.specifiedValue(parentSize.width(), viewportWidth,
-                                      viewportHeight);
+            x = -right.specifiedValue(parentSize.width(), f);
         }
     } else if (!left.isAuto()) {
-        x = left.specifiedValue(parentSize.width(), viewportWidth,
-                                viewportHeight);
+        x = left.specifiedValue(parentSize.width(), f);
     } else if (!right.isAuto()) {
-        x = -right.specifiedValue(parentSize.width(), viewportWidth,
-                                  viewportHeight);
+        x = -right.specifiedValue(parentSize.width(), f);
     }
 
     // NOTE: In latest css spec, relative position is decided after the size of
