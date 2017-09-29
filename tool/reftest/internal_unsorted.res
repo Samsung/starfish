@@ -241,3 +241,4 @@
 285;test/internal-test/css/minmaxwidthheight/min_max_width_height_with_replaced.html
 403;test/internal-test/storage/storage_01.html
 264;test/internal-test/css/length/simple_calc.html
+199;test/internal-test/css/fontSize/font_size_with_viewport_percent.html

@@ -474,10 +474,14 @@ public:
         m_value = time;
     }
 
-    CSSTime(Kind kind, double time)
+    CSSTime(String* str, float f)
     {
-        m_kind = kind;
-        m_value = time;
+        if (str->length() == 0 || str->equals("s")) {
+            m_kind = S;
+        } else if (str->equals("ms")) {
+            m_kind = MS;
+        }
+        m_value = f;
     }
 
     Kind kind() const
@@ -1908,11 +1912,11 @@ public:
 
     String* toString() const;
 
-    void setLengthValue(const char* value)
+    void setInt32Value(int32_t val)
     {
-        setLengthValue(value, strlen(value));
+        m_valueKind = CSSStyleValuePair::ValueKind::Int32;
+        m_value.m_int32Value = val;
     }
-    void setLengthValue(const char* value, size_t len);
 
     void setLengthValue(CSSLength val)
     {
@@ -1926,29 +1930,40 @@ public:
         m_value.m_floatValue = val;
     }
 
+    void setAngleValue(CSSAngle val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::Angle;
+        m_value.m_angle = val;
+    }
+
+    void setTimeValue(CSSTime val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::Time;
+        m_value.m_time = val;
+    }
+
+    void setColorValue(Unit::Color val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
+        m_value.m_color = val;
+    }
+
+    void setNamedColorValue(NamedColor::NamedColorValue val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::NamedColorValueKind;
+        m_value.m_namedColor = val;
+    }
+
+    void setUrlValue(String* val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::UrlValueKind;
+        m_value.m_stringValue = val;
+    }
+
     void setValueList(ValueList* val)
     {
         m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
         m_value.m_multiValue = val;
-    }
-
-    void setValue(KeyKind kKind, const char* value, size_t len)
-    {
-        switch (kKind) {
-        case Color: {
-            setValueKind(StringValueKind);
-            setStringValue(String::fromUTF8(value));
-            break;
-        }
-        case MarginTop:
-        case MarginRight:
-        case MarginBottom:
-        case MarginLeft:
-            setLengthValue(value, len);
-            break;
-        default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \
@@ -1957,18 +1972,20 @@ public:
 #undef NEW_SET_VALUE_DECL
 
     bool updateValueNumber(const CSSTokenVector& tokens);
-    bool updateValueNumber(const CSSTokenValue& token);
-    enum LengthOption {
-        AllowNegative = 1 << 0,
-        AllowPercent = 1 << 1,
-        AllowAuto = 1 << 2,
-        AllowLengthWithoutUnit = 1 << 3,
-        AllowNone = 1 << 4
-    };
+    bool updateValueUnitNumber(const CSSTokenValue& token);
+    enum CalcParserOption { LengthParser = 0, AngleParser = 1, TimeParser = 2 };
+    bool updateValueUnitCalc(const CSSTokenValue& token, uint8_t parserOption,
+                             uint8_t lengthOption);
     bool updateValueLength(const CSSTokenVector& tokens, uint8_t option);
     bool updateValueUnitLength(const CSSTokenValue& token, uint8_t option);
     bool updateValueUnitLengthOrCalc(const CSSTokenValue& token,
                                      uint8_t option);
+    bool updateValueTime(const CSSTokenVector& tokens, uint8_t option);
+    bool updateValueUnitTime(const CSSTokenValue& token, uint8_t option);
+    bool updateValueUnitTimeOrCalc(const CSSTokenValue& token, uint8_t option);
+    bool updateValueAngle(const CSSTokenVector& tokens, uint8_t option);
+    bool updateValueUnitAngle(const CSSTokenValue& token, uint8_t option);
+    bool updateValueUnitAngleOrCalc(const CSSTokenValue& token, uint8_t option);
     bool updateValueBackgroundImage(const CSSTokenVector& tokens,
                                     bool allowComma);
     bool updateValueBackgroundSize(const CSSTokenVector& tokens,
@@ -1990,7 +2007,6 @@ public:
     bool updateValueUnitLineHeight(const CSSTokenValue& token);
     bool updateValueUnitTransitionProperty(const CSSTokenValue& value);
     bool updateValueUnitTransitionTimingFunction(const CSSTokenValue& value);
-    bool updateValueUnitTransitionTime(const CSSTokenValue& value);
     bool updateValueUnitOverflowX(const CSSTokenValue& value);
     bool updateValueUnitOverflowY(const CSSTokenValue& value);
     bool updateValueUnitFlexDirection(const CSSTokenValue& value);

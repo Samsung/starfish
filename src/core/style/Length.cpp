@@ -146,7 +146,6 @@ float Length::specifiedFontValue(Node* n)
 
 float Length::specifiedFontValue(Element* e)
 {
-    STARFISH_ASSERT(e);
     if (isFixed()) {
         return fixed();
     } else if (isPercent()) {

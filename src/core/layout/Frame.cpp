@@ -1078,8 +1078,11 @@ void Frame::loadFont(StarFish* sf, float parentFontSize)
     ComputedStyle* style = this->style();
     float fixedFontSize = parentFontSize;
     if (style) {
-        fixedFontSize =
-            style->fontSize().specifiedFontValue(nearstNotAnonymousNode());
+        if (!isFrameDocument()) {
+            fixedFontSize =
+                style->fontSize().specifiedFontValue(nearstNotAnonymousNode());
+        }
+
         // TODO: -webkit-appearance : check-box's font-size should be done
         // layout.
         // Because its font-size is dependent on minimum of width and height.
