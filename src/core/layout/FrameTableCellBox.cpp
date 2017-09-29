@@ -42,9 +42,8 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     m_updatedRowspan = rowspan();
 }
 
-// We follow the CSS definition of width in the implementation.
-// The width of a cell refers to the content width, which excludes the border
-// and padding, e.g., <td style="width: 100px">
+// In CSS, the width of a cell refers to the content width, which excludes the
+// border and padding, e.g., <td style="width: 100px">
 //
 //  +--------------------------+
 //  |          border          |
