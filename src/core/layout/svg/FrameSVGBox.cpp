@@ -99,8 +99,10 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
         if (x->length()) {
             auto s = x->toUTF8NonGCString();
             CSSStyleValuePair pair;
-            if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
-                                                       &pair)) {
+            if (CSSPropertyParser::parseLength(
+                    s.data(), CSSPropertyParser::AllowPercent |
+                                  CSSPropertyParser::AllowWithoutUnit,
+                    &pair)) {
                 Length ll = pair.lengthValue();
                 xResult = ll.specifiedValue(cb->width(), this);
             }
@@ -114,8 +116,10 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
         if (y->length()) {
             auto s = y->toUTF8NonGCString();
             CSSStyleValuePair pair;
-            if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
-                                                       &pair)) {
+            if (CSSPropertyParser::parseLength(
+                    s.data(), CSSPropertyParser::AllowPercent |
+                                  CSSPropertyParser::AllowWithoutUnit,
+                    &pair)) {
                 Length ll = pair.lengthValue();
                 yResult = ll.specifiedValue(cb->height(), this);
             }
@@ -174,13 +178,14 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
     bool gotMinus = false;
     float x, y;
 
-#define READ_NUMBER(n)                                                       \
-    if (!CSSPropertyParser::parseNumber(token.data(), token.length(), &n)) { \
-        break;                                                               \
-    }                                                                        \
-    if (gotMinus) {                                                          \
-        n = -n;                                                              \
-    }                                                                        \
+#define READ_NUMBER(n)                                             \
+    if (!CSSPropertyParser::parseNumber(                           \
+            token.data(), CSSPropertyParser::AllowNegative, &n)) { \
+        break;                                                     \
+    }                                                              \
+    if (gotMinus) {                                                \
+        n = -n;                                                    \
+    }                                                              \
     gotMinus = false;
 
     for (size_t i = 0; i < tokens.size(); i++) {
@@ -244,9 +249,11 @@ double FrameSVGBox::resolveLengthFromAttribute(QualifiedName attr)
     if (str->length()) {
         auto s = str->toUTF8NonGCString();
         CSSStyleValuePair pair;
-        if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
-                                                   &pair)) {
-            auto ll = pair.lengthValue();
+        if (CSSPropertyParser::parseLength(
+                s.data(), CSSPropertyParser::AllowPercent |
+                              CSSPropertyParser::AllowWithoutUnit,
+                &pair)) {
+            Length ll = pair.lengthValue();
             FrameBox* cb = layoutParent()->asFrameBox();
             result = ll.specifiedValue(cb->width(), this);
         }

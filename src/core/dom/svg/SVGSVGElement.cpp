@@ -55,10 +55,10 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name, String* old,
                                               utf8Str.length(), ",", 1);
         if (tokens.size() == 4) {
             float x, y, w, h;
-            if (CSSPropertyParser::parseNumber(tokens[0].data(), false, &x) &&
-                CSSPropertyParser::parseNumber(tokens[1].data(), false, &y) &&
-                CSSPropertyParser::parseNumber(tokens[2].data(), false, &w) &&
-                CSSPropertyParser::parseNumber(tokens[3].data(), false, &h)) {
+            if (CSSPropertyParser::parseNumber(tokens[0].data(), 0, &x) &&
+                CSSPropertyParser::parseNumber(tokens[1].data(), 0, &y) &&
+                CSSPropertyParser::parseNumber(tokens[2].data(), 0, &w) &&
+                CSSPropertyParser::parseNumber(tokens[3].data(), 0, &h)) {
                 m_viewBox = Unit::Rect(x, y, w, h);
                 m_hasViewBox = true;
             }

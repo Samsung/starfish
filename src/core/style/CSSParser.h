@@ -45,15 +45,6 @@ inline bool isAlpha(CharType c)
 }
 
 template <typename CharType>
-inline bool isNameChar(CharType c)
-{
-    if (isAlpha(c) || isDigit(c) || c == '_' || c == '-') {
-        return true;
-    }
-    return false;
-}
-
-template <typename CharType>
 inline bool isQuote(CharType c)
 {
     if (c == '"' || c == '\'') {
@@ -66,6 +57,17 @@ const char* unitTypeToString(UnitType type);
 
 class CSSPropertyParser {
 public:
+    enum ParserOption {
+        AllowNegative = 1 << 0,
+        AllowPercent = 1 << 1,
+        AllowAuto = 1 << 2,
+        AllowWithoutUnit = 1 << 3,
+        AllowNone = 1 << 4,
+        AllowDot = 1 << 5,
+        AllowUnderline = 1 << 6,
+        AllowPlus = 1 << 7,
+    };
+
     STARFISH_MAKE_STACK_ALLOCATED();
     CSSPropertyParser(char* value)
         : m_startPos(value)
@@ -96,6 +98,23 @@ public:
             str->equals("pt") || str->equals("pc") || str->equals("vw") ||
             str->equals("vh") || str->equals("vmin") || str->equals("vmax") ||
             str->equals("rem")) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool isAngleUnit(String* str)
+    {
+        if (str->equals("deg") || str->equals("grad") || str->equals("rad") ||
+            str->equals("turn")) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool isTimeUnit(String* str)
+    {
+        if (str->equals("s") || str->equals("ms")) {
             return true;
         }
         return false;
@@ -230,11 +249,29 @@ public:
     }
 
     // a-z | 0-9 | - | _ | %
-    bool consumeString()
+    bool consumeString(uint8_t option)
     {
+        bool allowNegative = option & AllowNegative;
+        bool allowPercent = option & AllowPercent;
+        bool allowUnderline = option & AllowUnderline;
+        bool allowDot = option & AllowDot;
+        bool allowPlus = option & AllowPlus;
+
         int len = 0;
         for (char *cur = m_curPos; cur < m_endPos; cur++, len++) {
-            if (!(isNameChar(*cur) || *cur == '%')) {
+            if (isAlpha(*cur) || isDigit(*cur)) {
+                continue;
+            } else if (allowPercent && *cur == '%') {
+                continue;
+            } else if (allowPlus && *cur == '+') {
+                continue;
+            } else if (allowNegative && *cur == '-') {
+                continue;
+            } else if (allowUnderline && *cur == '_') {
+                continue;
+            } else if (allowDot && *cur == '.') {
+                continue;
+            } else {
                 break;
             }
         }
@@ -339,14 +376,14 @@ public:
         return (m_curPos == m_endPos);
     }
 
-    static bool parseUrl(const char* token, String** ret)
+    static bool parseUrl(const char* token, CSSStyleValuePair* pair)
     {
         CSSPropertyParser parser((char*)token);
-        if (parser.consumeString()) {
+        if (parser.consumeString(0)) {
             String* name = parser.parsedString();
             if (name->equals("url") && parser.consumeIfNext('(')) {
                 if (parser.consumeUrl() && parser.isEnd()) {
-                    *ret = parser.parsedUrl();
+                    pair->setUrlValue(parser.parsedUrl());
                     return true;
                 }
             }
@@ -354,8 +391,9 @@ public:
         return false;
     }
 
-    static bool parseNumber(const char* token, bool allowNegative, float* val)
+    static bool parseNumber(const char* token, uint8_t option, float* val)
     {
+        bool allowNegative = option & AllowNegative;
         CSSPropertyParser parser((char*)token);
         if (parser.consumeNumber()) {
             float t = parser.parsedNumber();
@@ -368,23 +406,29 @@ public:
         return false;
     }
 
-    static bool parseInt32(const char* token, bool allowNegative, int32_t* val)
+    static bool parseInt32(const char* token, uint8_t option,
+                           CSSStyleValuePair* pair)
     {
+        bool allowNegative = option & AllowNegative;
         CSSPropertyParser parser((char*)token);
         if (parser.consumeInt32()) {
             int32_t t = parser.parsedInt32();
             if (!allowNegative && t < 0) {
                 return false;
             }
-            *val = t;
+            pair->setInt32Value(t);
             return parser.isEnd();
         }
         return false;
     }
 
-    static bool parseLengthOrNumber(const char* token, bool allowNegative,
-                                    bool allowPercent, CSSStyleValuePair* pair)
+    static bool parseLength(const char* token, uint8_t option,
+                            CSSStyleValuePair* pair)
     {
+        bool allowWithoutUnit = option & AllowWithoutUnit;
+        bool allowNegative = option & AllowNegative;
+        bool allowPercent = option & AllowPercent;
+
         CSSPropertyParser parser((char*)token);
         if (!parser.consumeNumber()) {
             return false;
@@ -393,26 +437,28 @@ public:
         if (!allowNegative && num < 0) {
             return false;
         }
-        parser.consumeString();
+        parser.consumeString(option & AllowPercent);
         String* str = parser.parsedString();
-        if (str->equals("%")) {
-            if (allowPercent) {
-                pair->setPercentageValue(num / 100.f);
-                return parser.isEnd();
-            }
+        if (allowWithoutUnit && str->length() == 0) {
+            pair->setLengthValue(CSSLength(num));
+            return parser.isEnd();
         } else if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
             pair->setLengthValue(CSSLength(str, num));
             return parser.isEnd();
-        } else if (str->length() == 0) {
-            pair->setLengthValue(CSSLength(CSSLength::PX, num));
+        } else if (allowPercent && str->equals("%")) {
+            pair->setPercentageValue(num / 100.f);
             return parser.isEnd();
         }
+
         return false;
     }
 
-    static bool parseLength(const char* token, bool allowNegative,
-                            bool allowPercent, CSSStyleValuePair* pair)
+    static bool parseTime(const char* token, uint8_t option,
+                          CSSStyleValuePair* pair)
     {
+        bool allowWithoutUnit = option & AllowWithoutUnit;
+        bool allowNegative = option & AllowNegative;
+
         CSSPropertyParser parser((char*)token);
         if (!parser.consumeNumber()) {
             return false;
@@ -421,22 +467,26 @@ public:
         if (!allowNegative && num < 0) {
             return false;
         }
-        parser.consumeString();
+        parser.consumeString(0);
         String* str = parser.parsedString();
-        if (str->equals("%")) {
-            if (allowPercent) {
-                pair->setPercentageValue(num / 100.f);
-                return parser.isEnd();
-            }
-        } else if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
-            pair->setLengthValue(CSSLength(str, num));
+
+        if (allowWithoutUnit && str->length() == 0) {
+            pair->setTimeValue(CSSTime(num));
+            return parser.isEnd();
+        } else if ((str->length() == 0 && num == 0) || isTimeUnit(str)) {
+            pair->setTimeValue(CSSTime(str, num));
             return parser.isEnd();
         }
+
         return false;
     }
 
-    static bool parseTime(const char* token, bool allowNegative, CSSTime* ret)
+    static bool parseAngle(const char* token, uint8_t option,
+                           CSSStyleValuePair* pair)
     {
+        bool allowWithoutUnit = option & AllowWithoutUnit;
+        bool allowNegative = option & AllowNegative;
+
         CSSPropertyParser parser((char*)token);
         if (!parser.consumeNumber()) {
             return false;
@@ -445,17 +495,17 @@ public:
         if (!allowNegative && num < 0) {
             return false;
         }
-        parser.consumeString();
+        parser.consumeString(0);
         String* str = parser.parsedString();
 
-        if (str->equalsIgnoreCase("s") ||
-            str->equalsIgnoreCase(String::emptyString)) {
-            *ret = CSSTime(CSSTime::Kind::S, num);
+        if (allowWithoutUnit && str->length() == 0) {
+            pair->setAngleValue(CSSAngle(num));
             return parser.isEnd();
-        } else if (str->equalsIgnoreCase("ms")) {
-            *ret = CSSTime(CSSTime::Kind::MS, num);
+        } else if ((str->length() == 0 && num == 0) || isAngleUnit(str)) {
+            pair->setAngleValue(CSSAngle(str, num));
             return parser.isEnd();
         }
+
         return false;
     }
 
@@ -506,7 +556,8 @@ public:
         return true;
     }
 
-    static bool parseNonNamedColor(const CSSTokenValue& str, Unit::Color* ret)
+    static bool parseNonNamedColor(const CSSTokenValue& str,
+                                   CSSStyleValuePair* pair)
     {
         bool maybeRGBA = str.startsWith("rgba(");
         bool maybeRGB = str.startsWith("rgb(");
@@ -540,8 +591,8 @@ public:
                     return false;
                 }
             }
-            *ret = Unit::Color(parsed[0], parsed[1], parsed[2],
-                               maybeRGBA ? parsed[3] : 255);
+            pair->setColorValue(Unit::Color(parsed[0], parsed[1], parsed[2],
+                                            maybeRGBA ? parsed[3] : 255));
         } else if (maybeCode) {
             const char* s = str.data();
             const unsigned len = str.length();
@@ -558,14 +609,14 @@ public:
             if (len == 7) {
                 unsigned int r, g, b;
                 sscanf(s, "#%02x%02x%02x", &r, &g, &b);
-                *ret = Unit::Color(r, g, b, 255);
+                pair->setColorValue(Unit::Color(r, g, b, 255));
             } else if (len == 4) {
                 unsigned int r, g, b;
                 sscanf(s, "#%01x%01x%01x", &r, &g, &b);
-                *ret = Unit::Color(r * 17, g * 17, b * 17, 255);
+                pair->setColorValue(Unit::Color(r * 17, g * 17, b * 17, 255));
             }
         } else if (str.equals("transparent")) {
-            *ret = Unit::Color(0, 0, 0, 0);
+            pair->setColorValue(Unit::Color(0, 0, 0, 0));
         } else {
             return false;
         }
@@ -573,13 +624,19 @@ public:
     }
 
     static bool parseNamedColor(const CSSTokenValue& str,
-                                NamedColor::NamedColorValue* ret)
+                                CSSStyleValuePair* pair)
     {
         if (str.equals("currentcolor")) {
-            *ret = NamedColor::NamedColorValue::currentColor;
+            pair->setNamedColorValue(NamedColor::NamedColorValue::currentColor);
             return true;
         }
-        return NamedColor::parseNamedColor(str.data(), str.length(), *ret);
+        NamedColor::NamedColorValue ret;
+        if (NamedColor::parseNamedColor(str.data(), str.length(), ret)) {
+            pair->setNamedColorValue(ret);
+            return true;
+        }
+
+        return false;
     }
 
     static bool parseContentString(const char* str, size_t len, String** ret)
@@ -595,7 +652,7 @@ public:
     static bool parseAttr(const char* str, size_t len, String** ret)
     {
         CSSPropertyParser parser((char*)str, len);
-        if (parser.consumeString()) {
+        if (parser.consumeString(0)) {
             String* name = parser.parsedString();
             if (name->equals("attr") && parser.consumeIfNext('(')) {
                 if (parser.consumeAttr() && parser.isEnd()) {

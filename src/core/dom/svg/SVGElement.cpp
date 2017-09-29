@@ -116,8 +116,10 @@ void SVGElement::styleForPresentationAttribute(
         pair.setKeyKind(CSSStyleValuePair::Width);
         pair.setValueKind(CSSStyleValuePair::ValueKind::Length);
         auto s = width->toUTF8NonGCString();
-        if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
-                                                   &pair)) {
+        if (CSSPropertyParser::parseLength(
+                s.data(), CSSPropertyParser::AllowPercent |
+                              CSSPropertyParser::AllowWithoutUnit,
+                &pair)) {
             cssValues.push_back(pair);
         }
     }
@@ -127,8 +129,10 @@ void SVGElement::styleForPresentationAttribute(
         pair.setKeyKind(CSSStyleValuePair::Height);
         pair.setValueKind(CSSStyleValuePair::ValueKind::Length);
         auto s = height->toUTF8NonGCString();
-        if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
-                                                   &pair)) {
+        if (CSSPropertyParser::parseLength(
+                s.data(), CSSPropertyParser::AllowPercent |
+                              CSSPropertyParser::AllowWithoutUnit,
+                &pair)) {
             cssValues.push_back(pair);
         }
     }

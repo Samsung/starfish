@@ -2077,7 +2077,9 @@ String* CSSParser::parseURLString()
     urlSource.peekUTF8Buffer(
         [](const char* str, size_t len, void* data) -> size_t {
             String** ret = (String**)data;
-            CSSPropertyParser::parseUrl(str, ret);
+            CSSStyleValuePair value;
+            CSSPropertyParser::parseUrl(str, &value);
+            *ret = value.value().m_stringValue;
             return 0;
         },
         &ret);
