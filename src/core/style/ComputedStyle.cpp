@@ -205,21 +205,21 @@ void ComputedStyle::loadBackgroundImage(
                 prevComputedStyleValueForReferenceLoadedResources
                     ->background() &&
                 prevComputedStyleValueForReferenceLoadedResources->background()
-                    ->bgImageResource(bgIndex) &&
+                    ->imageResource(bgIndex) &&
                 *(prevComputedStyleValueForReferenceLoadedResources
                       ->background()
-                      ->bgImageResource(bgIndex)
+                      ->imageResource(bgIndex)
                       ->url()) == *u) {
                 consumer->document()
                     ->resourceLoader()
                     .notifyImageResourceActiveState(
                         prevComputedStyleValueForReferenceLoadedResources
                             ->background()
-                            ->bgImageResource());
+                            ->imageResource());
                 setBackgroundImageResource(
                     prevComputedStyleValueForReferenceLoadedResources
                         ->background()
-                        ->bgImageResource(),
+                        ->imageResource(),
                     bgIndex);
             } else {
                 ImageResource* res =
@@ -408,7 +408,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
 
     if (!m_alignSelfSpecifiedByUser) {
         // https://www.w3.org/TR/css-flexbox-1/#propdef-align-self
-        // intial value of  'align-self' is 'auto', 'auto' is computed to
+        // initial value of  'align-self' is 'auto', 'auto' is computed to
         // parent's 'align-items' value; otherwise 'stretch'
         m_alignSelf = parentStyle->m_alignItems;
     }

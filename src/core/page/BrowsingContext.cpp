@@ -304,32 +304,14 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
                              document()->window()->height());
         if (m_hasRootElementBackground) {
             HTMLHtmlElement* root = document()->rootElement();
-            FrameBox* rootRect = root->frame()->asFrameBox();
-            LayoutLocation rootRectPos =
-                rootRect->absolutePoint(document()->frame()->asFrameBox());
-            LayoutRect imgRect(rootRectPos.x() + rootRect->borderLeft(),
-                               rootRectPos.y() + rootRect->borderTop(),
-                               rootRect->width() - rootRect->borderWidth(),
-                               rootRect->height() - rootRect->borderHeight());
-
-            FrameBox::paintBackground(canvas, root, root->style(), imgRect,
-                                      colorRect, true);
+            FrameBox::paintBackground(canvas, nullptr, root);
         } else {
             HTMLBodyElement* body = document()->rootElement()->body();
             if (!body) {
                 return;
             }
 
-            LayoutRect imgRect(0, 0, document()->window()->width(),
-                               document()->window()->height());
-            if (body->frame()) {
-                FrameBox* bodyRect = body->frame()->asFrameBox();
-                imgRect.setHeight(bodyRect->height() +
-                                  bodyRect->marginHeight());
-            }
-
-            FrameBox::paintBackground(canvas, body, body->style(), imgRect,
-                                      colorRect, true);
+            FrameBox::paintBackground(canvas, nullptr, body);
         }
     }
 }

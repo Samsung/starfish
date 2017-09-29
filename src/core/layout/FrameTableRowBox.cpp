@@ -23,6 +23,7 @@
 #include "core/layout/FrameTableRowBox.h"
 #include "core/layout/FrameTableSectionBox.h"
 #include "core/layout/FrameTreeBuilder.h"
+#include "core/modules/canvas/Canvas.h"
 
 namespace StarFish {
 
@@ -226,14 +227,15 @@ void FrameTableRowBox::layout(LayoutContext& ctx,
 void FrameTableRowBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     Frame* child = firstChild();
+    FrameBox fakeRow(node(), style());
     while (child) {
         if (child->isFrameTableCellBox()) {
             FrameTableCellBox* cell = child->asFrameTableCellBox();
-
-            LayoutRect rect(cell->x(), cell->y(), cell->frameRect().width(),
-                            cell->frameRect().height());
-            paintBackground(canvas, nearstNotAnonymousNode(), style(), rect,
-                            rect, false);
+            canvas->save();
+            canvas->translate(cell->x(), cell->y());
+            fakeRow.copyWHMBPFrom(cell);
+            paintBackground(canvas, &fakeRow, nullptr);
+            canvas->restore();
         }
         child = child->next();
     }

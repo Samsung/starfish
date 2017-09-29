@@ -36,7 +36,6 @@ public:
     }
     virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
                           bool force) = 0;
-    bool bgColorFromAttribute(Unit::Color* ret);
 
 protected:
 };

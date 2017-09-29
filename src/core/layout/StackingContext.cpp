@@ -554,9 +554,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     m_owner->paintBackgroundAndBorders(canvas);
 
     if (!hasStackingBuffer && owner()->shouldApplyOverflow()) {
-        canvas->clip(Unit::Rect(owner()->borderLeft(), owner()->borderTop(),
-                                owner()->width() - owner()->borderWidth(),
-                                owner()->height() - owner()->borderHeight()));
+        canvas->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
         if (m_owner->isFrameBlockBox())
             canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
                               -m_owner->asFrameBlockBox()->scrollTop());
@@ -738,7 +736,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
     } else {
         if (owner()->shouldApplyOverflow()) {
-            canvas->clip(Unit::Rect(0, 0, owner()->width(), owner()->height()));
+            canvas->clip(owner()->makeRect(BoxValue::BorderBoxBoxValue));
             if (m_owner->isFrameBlockBox())
                 canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
                                   -m_owner->asFrameBlockBox()->scrollTop());

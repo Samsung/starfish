@@ -129,8 +129,7 @@ public:
                                  double scale, bool fill) = 0;
     virtual void drawRepeatImage(ImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat,
-                                 bool isRootElement) = 0;
+                                 bool xRepeat, bool yRepeat) = 0;
 
     virtual void applyMatrixTo(LayoutLocation& lp) = 0;
     virtual void applyMatrixTo(LayoutRect& lp) = 0;

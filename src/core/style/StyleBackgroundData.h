@@ -26,15 +26,36 @@ class ImageResource;
 
 class BackgroundLayer : public gc {
 public:
+    union BackgroundSize {
+        BackgroundSizeValue m_typeValue;
+        LengthSize* m_lengthValue;
+
+        BackgroundSize()
+            : m_lengthValue(nullptr)
+        {
+        }
+
+        BackgroundSize(BackgroundSizeValue typeValue)
+            : m_typeValue(typeValue)
+        {
+        }
+
+        BackgroundSize(LengthSize* lengthValue)
+            : m_lengthValue(lengthValue)
+        {
+        }
+    };
+
     BackgroundLayer()
         : m_image(String::emptyString)
         , m_imageResource(NULL)
         , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
         , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
-        , m_sizeType(BackgroundSizeType::SizeValue)
         , m_positionX(Length(Length::Percent, 0.0f))
         , m_positionY(Length(Length::Percent, 0.0f))
-        , m_sizeValue(nullptr)
+        , m_sizeIsLength(true)
+        , m_clip(BoxValue::BorderBoxBoxValue)
+        , m_origin(BoxValue::PaddingBoxBoxValue)
     {
     }
 
@@ -42,30 +63,31 @@ public:
     {
     }
 
-    void setSizeType(BackgroundSizeType type)
+    void setSize(LengthSize size)
     {
-        m_sizeType = type;
-    }
-
-    void setSizeValue(LengthSize size)
-    {
-        m_sizeType = BackgroundSizeType::SizeValue;
-        if (!m_sizeValue) {
+        m_sizeIsLength = true;
+        if (!m_size.m_lengthValue) {
             if (size == LengthSize()) {
                 return;
             }
-            m_sizeValue = new LengthSize(size);
+            m_size.m_lengthValue = new LengthSize(size);
         } else {
-            *m_sizeValue = size;
+            *m_size.m_lengthValue = size;
         }
     }
 
-    void setBgImage(String* img)
+    void setSize(BackgroundSizeValue size)
+    {
+        m_sizeIsLength = false;
+        m_size.m_typeValue = size;
+    }
+
+    void setImage(String* img)
     {
         m_image = img;
     }
 
-    void setBgImageResource(ImageResource* data)
+    void setImageResource(ImageResource* data)
     {
         m_imageResource = data;
     }
@@ -90,56 +112,85 @@ public:
         m_positionY = position;
     }
 
-    String* bgImage()
+    void setClip(BoxValue clip)
+    {
+        m_clip = clip;
+    }
+
+    void setOrigin(BoxValue origin)
+    {
+        m_origin = origin;
+    }
+
+    String* bgImage() const
     {
         return m_image;
     }
 
-    ImageData* bgImageData();
+    ImageData* imageData() const;
 
-    ImageResource* bgImageResource()
+    ImageResource* imageResource() const
     {
         return m_imageResource;
     }
 
-    BackgroundSizeType sizeType()
-    {
-        return m_sizeType;
-    }
-
-    BackgroundRepeatValue repeatX()
+    BackgroundRepeatValue repeatX() const
     {
         return m_repeatX;
     }
 
-    BackgroundRepeatValue repeatY()
+    BackgroundRepeatValue repeatY() const
     {
         return m_repeatY;
     }
 
-    Length positionX()
+    Length positionX() const
     {
         return m_positionX;
     }
 
-    Length positionY()
+    Length positionY() const
     {
         return m_positionY;
     }
 
-    LengthSize sizeValue() const
+    bool sizeIsLength() const
     {
-        STARFISH_ASSERT(m_sizeType == BackgroundSizeType::SizeValue);
-        if (m_sizeValue) {
-            return *m_sizeValue;
+        return m_sizeIsLength;
+    }
+
+    BackgroundSizeValue sizeTypeValue() const
+    {
+        STARFISH_ASSERT(!m_sizeIsLength);
+        return m_size.m_typeValue;
+    }
+
+    LengthSize sizeLengthValue() const
+    {
+        STARFISH_ASSERT(m_sizeIsLength);
+        if (m_size.m_lengthValue) {
+            return *m_size.m_lengthValue;
         }
         return LengthSize();
     }
 
+    BoxValue clip() const
+    {
+        return m_clip;
+    }
+
+    BoxValue origin() const
+    {
+        return m_origin;
+    }
+
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
     {
-        if (m_sizeValue) {
-            m_sizeValue->checkComputed(curFontSize, rootFontSize, font);
+        if (m_sizeIsLength && m_size.m_lengthValue) {
+            if (m_size.m_lengthValue) {
+                m_size.m_lengthValue->checkComputed(curFontSize, rootFontSize,
+                                                    font);
+            }
         }
 
         m_positionX.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
@@ -158,14 +209,17 @@ private:
     // background-repeat
     BackgroundRepeatValue m_repeatX : 1;
     BackgroundRepeatValue m_repeatY : 1;
-    // background-size
-    BackgroundSizeType m_sizeType : 2;
 
     // background-position
     Length m_positionX;
     Length m_positionY;
     // background-size
-    LengthSize* m_sizeValue;
+    bool m_sizeIsLength;
+    BackgroundSize m_size;
+    // background-clip
+    BoxValue m_clip;
+    // background-origin
+    BoxValue m_origin;
 };
 
 class StyleBackgroundData : public gc {
@@ -201,22 +255,22 @@ public:
         }
     }
 
-    void setSizeType(BackgroundSizeType type, unsigned int layer)
+    void setSize(BackgroundSizeValue size, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
         if (m_maxLayerSizes < layer + 1) {
             m_maxLayerSizes = layer + 1;
         }
-        m_layers[layer].setSizeType(type);
+        m_layers[layer].setSize(size);
     }
 
-    void setSizeValue(LengthSize size, unsigned int layer)
+    void setSize(LengthSize size, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
         if (m_maxLayerSizes < layer + 1) {
             m_maxLayerSizes = layer + 1;
         }
-        m_layers[layer].setSizeValue(size);
+        m_layers[layer].setSize(size);
     }
 
     void setBgImage(String* img, unsigned int layer)
@@ -225,7 +279,7 @@ public:
         if (m_maxLayerImages < layer + 1) {
             m_maxLayerImages = layer + 1;
         }
-        m_layers[layer].setBgImage(img);
+        m_layers[layer].setImage(img);
     }
 
     void setBgImageResource(ImageResource* data, unsigned int layer)
@@ -234,7 +288,7 @@ public:
         if (m_maxLayerImages < layer + 1) {
             m_maxLayerImages = layer + 1;
         }
-        m_layers[layer].setBgImageResource(data);
+        m_layers[layer].setImageResource(data);
     }
 
     void setRepeatX(BackgroundRepeatValue repeat, unsigned int layer = 0)
@@ -273,12 +327,30 @@ public:
         m_layers[layer].setPositionY(position);
     }
 
+    void setClip(BoxValue clip, unsigned int layer)
+    {
+        resizeLayerIfNeeded(layer);
+        if (m_maxLayerPositions < layer + 1) {
+            m_maxLayerPositions = layer + 1;
+        }
+        m_layers[layer].setClip(clip);
+    }
+
+    void setOrigin(BoxValue origin, unsigned int layer)
+    {
+        resizeLayerIfNeeded(layer);
+        if (m_maxLayerPositions < layer + 1) {
+            m_maxLayerPositions = layer + 1;
+        }
+        m_layers[layer].setOrigin(origin);
+    }
+
     Unit::Color bgColor()
     {
         return m_color;
     }
 
-    String* bgImage(unsigned int layer = 0)
+    String* bgImage(unsigned int layer = 0) const
     {
         if (m_layers.size() <= layer) {
             return String::emptyString;
@@ -286,31 +358,23 @@ public:
         return m_layers[layer].bgImage();
     }
 
-    ImageData* bgImageData(unsigned int layer = 0)
+    ImageData* bgImageData(unsigned int layer = 0) const
     {
         if (m_layers.size() <= layer) {
             return nullptr;
         }
-        return m_layers[layer].bgImageData();
+        return m_layers[layer].imageData();
     }
 
-    ImageResource* bgImageResource(unsigned int layer = 0)
+    ImageResource* imageResource(unsigned int layer = 0) const
     {
         if (m_layers.size() <= layer) {
             return nullptr;
         }
-        return m_layers[layer].bgImageResource();
+        return m_layers[layer].imageResource();
     }
 
-    BackgroundSizeType sizeType(unsigned int layer = 0)
-    {
-        if (m_layers.size() <= layer) {
-            return BackgroundSizeType::SizeValue;
-        }
-        return m_layers[layer].sizeType();
-    }
-
-    BackgroundRepeatValue repeatX(unsigned int layer = 0)
+    BackgroundRepeatValue repeatX(unsigned int layer = 0) const
     {
         if (m_layers.size() <= layer) {
             return BackgroundRepeatValue::RepeatRepeatValue;
@@ -318,7 +382,7 @@ public:
         return m_layers[layer].repeatX();
     }
 
-    BackgroundRepeatValue repeatY(unsigned int layer = 0)
+    BackgroundRepeatValue repeatY(unsigned int layer = 0) const
     {
         if (m_layers.size() <= layer) {
             return BackgroundRepeatValue::RepeatRepeatValue;
@@ -326,12 +390,45 @@ public:
         return m_layers[layer].repeatY();
     }
 
-    LengthSize sizeValue(unsigned int layer = 0) const
+    bool sizeIsLength(unsigned int layer = 0) const
+    {
+        if (m_layers.size() <= layer) {
+            return true;
+        }
+        return m_layers[layer].sizeIsLength();
+    }
+
+    BackgroundSizeValue sizeTypeValue(unsigned int layer = 0) const
+    {
+        if (m_layers.size() <= layer) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            return BackgroundSizeValue::ContainBackgroundSizeValue;
+        }
+        return m_layers[layer].sizeTypeValue();
+    }
+
+    LengthSize sizeLengthValue(unsigned int layer = 0) const
     {
         if (m_layers.size() <= layer) {
             return LengthSize();
         }
-        return m_layers[layer].sizeValue();
+        return m_layers[layer].sizeLengthValue();
+    }
+
+    BoxValue clip(unsigned int layer = 0) const
+    {
+        if (m_layers.size() <= layer) {
+            return BoxValue::BorderBoxBoxValue;
+        }
+        return m_layers[layer].clip();
+    }
+
+    BoxValue origin(unsigned int layer = 0) const
+    {
+        if (m_layers.size() <= layer) {
+            return BoxValue::PaddingBoxBoxValue;
+        }
+        return m_layers[layer].origin();
     }
 
     Length positionX(unsigned int layer = 0)
@@ -373,8 +470,11 @@ public:
             while (i < m_layers.size()) {
                 for (unsigned int p = 0;
                      p < m_maxLayerSizes && i < m_layers.size(); p++, i++) {
-                    m_layers[i].setSizeValue(m_layers[p].sizeValue());
-                    m_layers[i].setSizeType(m_layers[p].sizeType());
+                    if (m_layers[p].sizeIsLength()) {
+                        m_layers[i].setSize(m_layers[p].sizeLengthValue());
+                    } else {
+                        m_layers[i].setSize(m_layers[p].sizeTypeValue());
+                    }
                 }
             }
         }
@@ -431,21 +531,22 @@ private:
 
 bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
 {
-    if (a.m_sizeType != b.m_sizeType) {
-        return false;
-    }
-
     if (!a.m_image->equals(b.m_image)) {
         return false;
     }
 
-    if (a.m_sizeType != b.m_sizeType) {
+    if (a.m_sizeIsLength != b.m_sizeIsLength) {
         return false;
     }
 
-    if (a.m_sizeType == BackgroundSizeType::SizeValue &&
-        a.sizeValue() != b.sizeValue()) {
-        return false;
+    if (a.m_sizeIsLength) {
+        if (a.sizeLengthValue() != b.sizeLengthValue()) {
+            return false;
+        }
+    } else {
+        if (a.sizeTypeValue() != b.sizeTypeValue()) {
+            return false;
+        }
     }
 
     if (a.m_repeatX != b.m_repeatX) {
@@ -461,6 +562,14 @@ bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
     }
 
     if (a.m_positionY != b.m_positionY) {
+        return false;
+    }
+
+    if (a.m_clip != b.m_clip) {
+        return false;
+    }
+
+    if (a.m_origin != b.m_origin) {
         return false;
     }
 

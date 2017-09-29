@@ -1090,6 +1090,12 @@ inline LayoutSize operator-(const LayoutLocation& a, const LayoutLocation& b)
 
 class LayoutRect {
 public:
+    LayoutRect()
+        : m_location(0, 0)
+        , m_size(0, 0)
+    {
+    }
+
     LayoutRect(LayoutUnit x, LayoutUnit y, LayoutUnit w, LayoutUnit h)
         : m_location(x, y)
         , m_size(w, h)

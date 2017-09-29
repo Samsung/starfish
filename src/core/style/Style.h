@@ -708,16 +708,22 @@ enum DirectionValue {
     RtlDirectionValue,
 };
 
-enum BackgroundSizeType {
-    Cover,
-    Contain,
-    SizeValue,
-    SizeNone,
+enum BackgroundSizeValue {
+    CoverBackgroundSizeValue,
+    ContainBackgroundSizeValue,
 };
 
 enum BackgroundRepeatValue {
     RepeatRepeatValue,
     NoRepeatRepeatValue,
+};
+
+// Because padding-box is not supported in box-sizing property, so we make
+// another enum.
+enum BoxValue {
+    BorderBoxBoxValue,
+    PaddingBoxBoxValue,
+    ContentBoxBoxValue,
 };
 
 enum FontSizeValue {
@@ -940,6 +946,8 @@ class CSSStyleDeclaration;
     F(BackgroundColor, backgroundColor, "background-color")                  \
     F(BackgroundImage, backgroundImage, "background-image")                  \
     F(BackgroundSize, backgroundSize, "background-size")                     \
+    F(BackgroundClip, backgroundClip, "background-clip")                     \
+    F(BackgroundOrigin, backgroundOrigin, "background-origin")               \
     F(LineHeight, lineHeight, "line-height")                                 \
     F(WhiteSpace, whiteSpace, "white-space")                                 \
     F(PaddingTop, paddingTop, "padding-top")                                 \
@@ -1214,11 +1222,10 @@ public:
 
         ValueListKind,
 
-        // BackgroundSize
-        Cover,
-        Contain,
-
+        // Background
+        BackgroundSizeValueKind,
         BackgroundRepeatValueKind,
+        BoxValueKind,
 
         FontSizeValueKind,
         FontStyleValueKind,
@@ -1499,6 +1506,12 @@ public:
         m_value.m_stringValue = value;
     }
 
+    BackgroundSizeValue backgroundSizeValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == BackgroundSizeValueKind);
+        return m_value.m_backgroundSize;
+    }
+
     BackgroundRepeatValue backgroundRepeatValue() const
     {
         STARFISH_ASSERT(m_valueKind == BackgroundRepeatValueKind);
@@ -1574,6 +1587,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == TransitionTimingFunctionValueKind);
         return m_value.m_transitionTimingFunction;
+    }
+
+    BoxValue boxValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == BoxValueKind);
+        return m_value.m_box;
     }
 
     BoxSizingValue boxSizingValue() const
@@ -1661,6 +1680,8 @@ public:
         CSSLength m_length;
         CSSAngle m_angle;
         String* m_stringValue;
+        BackgroundSizeValue m_backgroundSize;
+        BoxValue m_box;
         BackgroundRepeatValue m_backgroundRepeat;
         BorderStyleValue m_borderStyle;
         BorderWidthValue m_borderWidth;
@@ -1760,6 +1781,14 @@ public:
         }
         ValueData(String* v)
             : m_stringValue(v)
+        {
+        }
+        ValueData(BackgroundSizeValue v)
+            : m_backgroundSize(v)
+        {
+        }
+        ValueData(BoxValue v)
+            : m_box(v)
         {
         }
         ValueData(BackgroundRepeatValue v)
@@ -1918,6 +1947,12 @@ public:
         m_value.m_int32Value = val;
     }
 
+    void setNumberValue(float val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::Number;
+        m_value.m_floatValue = val;
+    }
+
     void setLengthValue(CSSLength val)
     {
         m_valueKind = CSSStyleValuePair::ValueKind::Length;
@@ -1928,6 +1963,12 @@ public:
     {
         m_valueKind = CSSStyleValuePair::ValueKind::Percentage;
         m_value.m_floatValue = val;
+    }
+
+    void setCalcValue(CalcData* val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::CalcValueKind;
+        m_value.m_calc = val;
     }
 
     void setAngleValue(CSSAngle val)
@@ -1960,6 +2001,24 @@ public:
         m_value.m_stringValue = val;
     }
 
+    void setBackgroundSizeValue(BackgroundSizeValue val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::BackgroundSizeValueKind;
+        m_value.m_backgroundSize = val;
+    }
+
+    void setBackgroundRepeatValue(BackgroundRepeatValue val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
+        m_value.m_backgroundRepeat = val;
+    }
+
+    void setBoxValue(BoxValue value)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::BoxValueKind;
+        m_value.m_box = value;
+    }
+
     void setValueList(ValueList* val)
     {
         m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
@@ -1986,10 +2045,12 @@ public:
     bool updateValueAngle(const CSSTokenVector& tokens, uint8_t option);
     bool updateValueUnitAngle(const CSSTokenValue& token, uint8_t option);
     bool updateValueUnitAngleOrCalc(const CSSTokenValue& token, uint8_t option);
+    bool updateValueUnitBox(const CSSTokenValue& token);
     bool updateValueBackgroundImage(const CSSTokenVector& tokens,
                                     bool allowComma);
     bool updateValueBackgroundSize(const CSSTokenVector& tokens,
                                    bool allowComma);
+    bool updateValueBox(const CSSTokenVector& tokens, bool allowComma);
     bool updateValueUnitBackgroundRepeat(const CSSTokenValue& token);
     bool updateValueUnitBackgroundPositionX(const CSSTokenValue& token);
     bool updateValueUnitBackgroundPositionY(const CSSTokenValue& token);

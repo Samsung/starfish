@@ -588,16 +588,28 @@ public:
         m_background->setPositionY(value, layer);
     }
 
-    void setBackgroundSizeType(BackgroundSizeType type, unsigned int layer = 0)
+    void setBackgroundSize(BackgroundSizeValue size, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
-        m_background->setSizeType(type, layer);
+        m_background->setSize(size, layer);
     }
 
-    void setBackgroundSizeValue(LengthSize size, unsigned int layer = 0)
+    void setBackgroundSize(LengthSize size, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
-        m_background->setSizeValue(size, layer);
+        m_background->setSize(size, layer);
+    }
+
+    void setBackgroundClip(BoxValue clip, unsigned int layer = 0)
+    {
+        setBackgroundIfNeeded();
+        m_background->setClip(clip, layer);
+    }
+
+    void setBackgroundOrigin(BoxValue origin, unsigned int layer = 0)
+    {
+        setBackgroundIfNeeded();
+        m_background->setOrigin(origin, layer);
     }
 
     unsigned int backgroundLayerSize()
@@ -664,24 +676,45 @@ public:
         return m_background->positionY(layer);
     }
 
-    BackgroundSizeType bgSizeType(unsigned int layer = 0)
+    bool backgroundSizeIsLength(unsigned int layer = 0)
     {
         if (m_background == nullptr) {
-            return BackgroundSizeType::SizeValue;
+            return true;
         }
-        return m_background->sizeType(layer);
+        return m_background->sizeIsLength(layer);
     }
 
-    LengthSize bgSizeValue(unsigned int layer = 0)
+    BackgroundSizeValue backgroundSizeTypeValue(unsigned int layer = 0)
+    {
+        if (m_background == nullptr) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            return BackgroundSizeValue::ContainBackgroundSizeValue;
+        }
+        return m_background->sizeTypeValue(layer);
+    }
+
+    LengthSize backgroundSizeLengthValue(unsigned int layer = 0)
     {
         if (m_background == nullptr) {
             return LengthSize();
         }
+        return m_background->sizeLengthValue(layer);
+    }
 
-        STARFISH_ASSERT(m_background &&
-                        m_background->sizeType() ==
-                            BackgroundSizeType::SizeValue);
-        return m_background->sizeValue(layer);
+    BoxValue backgroundClip(unsigned int layer = 0)
+    {
+        if (m_background == nullptr) {
+            return BoxValue::BorderBoxBoxValue;
+        }
+        return m_background->clip(layer);
+    }
+
+    BoxValue backgroundOrigin(unsigned int layer = 0)
+    {
+        if (m_background == nullptr) {
+            return BoxValue::PaddingBoxBoxValue;
+        }
+        return m_background->origin(layer);
     }
 
     void setFont(Font* font)

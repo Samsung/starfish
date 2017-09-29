@@ -51,6 +51,15 @@ void HTMLTableCellElement::styleForPresentationAttribute(
             cssValues.push_back(pair);
         }
     }
+    String* bgColor = this->bgColor();
+    if (!bgColor->equals(String::emptyString)) {
+        CSSStyleValuePair pair;
+        CSSTokenValue token = bgColor->toNullableUTF8String().m_buffer;
+        if (pair.updateValueUnitColor(token)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
+            cssValues.push_back(pair);
+        }
+    }
 }
 
 HTMLTableElement* HTMLTableCellElement::tableElement()

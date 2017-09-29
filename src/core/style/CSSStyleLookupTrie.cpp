@@ -534,6 +534,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Background-Size
         // Border-Collapse
         // Justify-Content
+        // Background-Clip
         switch (data[0]) {
         case 'j':
             if (memcmp(data, "justify-content", 15) == 0) {
@@ -548,6 +549,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "background-size", 15) == 0) {
                 return CSSStyleKind::BackgroundSize;
+            }
+            if (memcmp(data, "background-clip", 15) == 0) {
+                return CSSStyleKind::BackgroundClip;
             }
             if (memcmp(data, "border-collapse", 15) == 0) {
                 return CSSStyleKind::BorderCollapse;
@@ -593,6 +597,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Left-Style
         // Border-Left-Width
         // Background-Repeat
+        // Background-Origin
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left-color", 17) == 0) {
@@ -606,6 +611,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "background-repeat", 17) == 0) {
                 return CSSStyleKind::BackgroundRepeat;
+            }
+            if (memcmp(data, "background-origin", 17) == 0) {
+                return CSSStyleKind::BackgroundOrigin;
             }
             break;
         }
@@ -1173,6 +1181,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "backgroundSize", 14) == 0) {
                 return CSSStyleKind::BackgroundSize;
             }
+            if (memcmp(data, "backgroundClip", 14) == 0) {
+                return CSSStyleKind::BackgroundClip;
+            }
             if (memcmp(data, "borderTopColor", 14) == 0) {
                 return CSSStyleKind::BorderTopColor;
             }
@@ -1218,6 +1229,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "backgroundRepeat", 16) == 0) {
                 return CSSStyleKind::BackgroundRepeat;
+            }
+            if (memcmp(data, "backgroundOrigin", 16) == 0) {
+                return CSSStyleKind::BackgroundOrigin;
             }
             if (memcmp(data, "borderImageSlice", 16) == 0) {
                 return CSSStyleKind::BorderImageSlice;

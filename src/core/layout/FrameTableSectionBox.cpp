@@ -22,6 +22,7 @@
 #include "core/layout/FrameTableRowBox.h"
 #include "core/layout/FrameTableSectionBox.h"
 #include "core/layout/FrameTreeBuilder.h"
+#include "core/modules/canvas/Canvas.h"
 
 namespace StarFish {
 
@@ -103,29 +104,35 @@ void* FrameTableSectionBox::operator new(size_t size)
 
 void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
 {
+    FrameBox fakeSection(node(), style());
+
     for (auto& rowStruct : m_grid) {
         for (auto& cellStruct : rowStruct.cells()) {
-            LayoutRect rect(rowStruct.tableRow()->x() + cellStruct.cell()->x(),
-                            rowStruct.tableRow()->y() + cellStruct.cell()->y(),
-                            cellStruct.cell()->frameRect().width(),
-                            cellStruct.cell()->frameRect().height());
+            canvas->save();
+            canvas->translate(
+                rowStruct.tableRow()->x() + cellStruct.cell()->x(),
+                rowStruct.tableRow()->y() + cellStruct.cell()->y());
 
             FrameTableColBox* col = tableBox()->columnAtAbsoluteColumnIndex(
                 cellStruct.cell()->absoluteColumnIndex());
             if (col) {
                 // Paint background using column-group style
                 if (col->parent()->isFrameTableColBox()) {
-                    paintBackground(canvas,
-                                    col->parent()->nearstNotAnonymousNode(),
-                                    col->parent()->style(), rect, rect, false);
+                    FrameBox fakeColGroup(col->parent()->node(),
+                                          col->parent()->style());
+                    fakeColGroup.copyWHMBPFrom(cellStruct.cell());
+                    paintBackground(canvas, &fakeColGroup, nullptr);
                 }
                 // Paint background using column style
-                paintBackground(canvas, col->nearstNotAnonymousNode(),
-                                col->style(), rect, rect, false);
+                FrameBox fakeCol(col->node(), col->style());
+                fakeCol.copyWHMBPFrom(cellStruct.cell());
+                paintBackground(canvas, &fakeCol, nullptr);
             }
             // Paint background using section style
-            paintBackground(canvas, nearstNotAnonymousNode(), style(), rect,
-                            rect, false);
+            fakeSection.copyWHMBPFrom(cellStruct.cell());
+            paintBackground(canvas, &fakeSection, nullptr);
+
+            canvas->restore();
         }
     }
 

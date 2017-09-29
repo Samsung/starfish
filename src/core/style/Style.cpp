@@ -1667,16 +1667,30 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    case CSSStyleValuePair::ValueKind::Cover:
-        return String::fromUTF8("cover");
-    case CSSStyleValuePair::ValueKind::Contain:
-        return String::fromUTF8("contain");
+    case CSSStyleValuePair::ValueKind::BackgroundSizeValueKind:
+        switch (backgroundSizeValue()) {
+        case CoverBackgroundSizeValue:
+            return String::fromUTF8("cover");
+        case ContainBackgroundSizeValue:
+            return String::fromUTF8("contain");
+        }
     case CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind:
         switch (backgroundRepeatValue()) {
         case RepeatRepeatValue:
             return String::fromUTF8("repeat");
         case NoRepeatRepeatValue:
             return String::fromUTF8("no-repeat");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::BoxValueKind:
+        switch (boxValue()) {
+        case BorderBoxBoxValue:
+            return String::fromUTF8("border-box");
+        case PaddingBoxBoxValue:
+            return String::fromUTF8("padding-box");
+        case ContentBoxBoxValue:
+            return String::fromUTF8("content-box");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -3729,11 +3743,16 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::BackgroundSize:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->setBackgroundSizeType(parentStyle->bgSizeType());
-                style->setBackgroundSizeValue(parentStyle->bgSizeValue());
+                if (style->backgroundSizeIsLength()) {
+                    style->setBackgroundSize(
+                        parentStyle->backgroundSizeLengthValue());
+                } else {
+                    style->setBackgroundSize(
+                        parentStyle->backgroundSizeTypeValue());
+                }
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->setBackgroundSizeValue(LengthSize());
+                style->setBackgroundSize(LengthSize());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ValueListKind) {
                 ValueList* layers = cssValues[k].multiValue();
@@ -3741,18 +3760,15 @@ void StyleResolver::apply(Element* element,
                     const CSSStyleValuePair& layer = (*layers)[l];
                     if (layer.valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) {
-                        style->setBackgroundSizeValue(LengthSize(), l);
+                        style->setBackgroundSize(LengthSize(), l);
                     } else if (layer.valueKind() ==
-                               CSSStyleValuePair::ValueKind::Cover) {
-                        style->setBackgroundSizeType(BackgroundSizeType::Cover,
-                                                     l);
-                    } else if (layer.valueKind() ==
-                               CSSStyleValuePair::ValueKind::Contain) {
-                        style->setBackgroundSizeType(
-                            BackgroundSizeType::Contain, l);
+                               CSSStyleValuePair::ValueKind::
+                                   BackgroundSizeValueKind) {
+                        style->setBackgroundSize(layer.backgroundSizeValue(),
+                                                 l);
                     } else if (layer.valueKind() ==
                                CSSStyleValuePair::ValueKind::Auto) {
-                        style->setBackgroundSizeValue(LengthSize(), l);
+                        style->setBackgroundSize(LengthSize(), l);
                     } else if (layer.valueKind() ==
                                CSSStyleValuePair::ValueListKind) {
                         ValueList* list = layer.multiValue();
@@ -3771,7 +3787,7 @@ void StyleResolver::apply(Element* element,
                                 result.m_height = height.getValue();
                             }
                         }
-                        style->setBackgroundSizeValue(result, l);
+                        style->setBackgroundSize(result, l);
                     } else {
                         STARFISH_RELEASE_ASSERT_NOT_REACHED();
                     }
@@ -3844,11 +3860,58 @@ void StyleResolver::apply(Element* element,
                 }
             }
             break;
+        case CSSStyleValuePair::KeyKind::BackgroundClip:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setBackgroundClip(BoxValue::BorderBoxBoxValue);
+                break;
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setBackgroundClip(parentStyle->backgroundClip());
+                break;
+            case CSSStyleValuePair::ValueKind::ValueListKind: {
+                ValueList* list = cssValues[k].multiValue();
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    const CSSStyleValuePair& item = (*list)[i];
+                    STARFISH_ASSERT(item.valueKind() ==
+                                    CSSStyleValuePair::ValueKind::BoxValueKind);
+                    style->setBackgroundClip(item.boxValue(), i);
+                }
+                break;
+            }
+            default:
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::BackgroundOrigin:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setBackgroundOrigin(BoxValue::PaddingBoxBoxValue);
+                break;
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setBackgroundOrigin(parentStyle->backgroundOrigin());
+                break;
+            case CSSStyleValuePair::ValueKind::ValueListKind: {
+                ValueList* list = cssValues[k].multiValue();
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    const CSSStyleValuePair& item = (*list)[i];
+                    STARFISH_ASSERT(item.valueKind() ==
+                                    CSSStyleValuePair::ValueKind::BoxValueKind);
+                    style->setBackgroundOrigin(item.boxValue(), i);
+                }
+                break;
+            }
+            default:
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
         case CSSStyleValuePair::KeyKind::TransitionProperty:
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Initial:
                 style->setTransitionProperty(
                     TransitionPropertyValue::TransitionPropertyAllValue);
+                break;
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setTransitionProperty(parentStyle->transitionProperty());
                 break;
             default:
                 STARFISH_ASSERT(
@@ -3863,6 +3926,9 @@ void StyleResolver::apply(Element* element,
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Initial:
                 style->setTransitionDuration(CSSTime(0));
+                break;
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setTransitionDuration(parentStyle->transitionDuration());
                 break;
             case CSSStyleValuePair::ValueKind::Time:
                 style->setTransitionDuration(cssValues[k].timeValue());
@@ -6611,6 +6677,67 @@ bool CSSStyleValuePair::updateValueBackgroundPositionY(
     return updateValueUnitBackgroundPositionY(tokens[0]);
 }
 
+bool CSSStyleValuePair::updateValueUnitBox(const CSSTokenValue& value)
+{
+    m_valueKind = CSSStyleValuePair::ValueKind::BoxValueKind;
+    if (STRING_VALUE_IS_STRING("border-box")) {
+        m_value.m_box = BoxValue::BorderBoxBoxValue;
+    } else if (STRING_VALUE_IS_STRING("padding-box")) {
+        m_value.m_box = BoxValue::PaddingBoxBoxValue;
+    } else if (STRING_VALUE_IS_STRING("content-box")) {
+        m_value.m_box = BoxValue::ContentBoxBoxValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueBackgroundClip(const CSSTokenVector& tokens)
+{
+    return updateValueBox(tokens, true);
+}
+
+bool CSSStyleValuePair::updateValueBackgroundOrigin(
+    const CSSTokenVector& tokens)
+{
+    return updateValueBox(tokens, true);
+}
+
+bool CSSStyleValuePair::updateValueBox(const CSSTokenVector& tokens,
+                                       bool allowComma)
+{
+    size_t len = 0;
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (value.equals(",")) {
+            if (!allowComma || i == 0 || i == tokens.size() - 1)
+                return false;
+        } else if (i == tokens.size() - 1) {
+            len++;
+            i++;
+        } else {
+            len++;
+            continue;
+        }
+
+        CSSStyleValuePair ret;
+        if (len == 1) {
+            if (!ret.updateValueUnitBox(tokens[i - 1])) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        len = 0;
+        multiValue()->push_back(ret);
+    }
+
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens)
 {
     return updateValueBackgroundSize(tokens, true);
@@ -6643,9 +6770,11 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
         CSSStyleValuePair ret;
         if (len == 1) {
             if (value.equals("cover")) {
-                ret.setValueKind(CSSStyleValuePair::ValueKind::Cover);
+                ret.setBackgroundSizeValue(
+                    BackgroundSizeValue::CoverBackgroundSizeValue);
             } else if (value.equals("contain")) {
-                ret.setValueKind(CSSStyleValuePair::ValueKind::Contain);
+                ret.setBackgroundSizeValue(
+                    BackgroundSizeValue::ContainBackgroundSizeValue);
             } else {
                 ret.setValueList(
                     new ValueList(ValueList::Separator::SpaceSeparator));
@@ -6668,6 +6797,7 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
         } else {
             return false;
         }
+        len = 0;
         multiValue()->push_back(ret);
     }
 

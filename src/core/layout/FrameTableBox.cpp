@@ -1061,20 +1061,39 @@ size_t FrameTableBox::numOfRowsInTheTable()
 void FrameTableBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     // Fill in the table with background color
-    LayoutRect bgRect(m_tableRect.x() + borderLeft(),
-                      m_tableRect.y() + borderTop(),
-                      m_tableRect.width() - borderWidth(),
-                      m_tableRect.height() - borderHeight());
+    paintBackground(canvas, this, nullptr);
+    paintBorders(canvas, m_tableRect);
+}
 
-    Unit::Color bgColor;
-    if (bgColorFromAttribute(&bgColor)) {
-        style()->setBackgroundColor(bgColor);
+Unit::Rect FrameTableBox::makeRect(BoxValue box)
+{
+    LayoutRect tableRect = asFrameTableBox()->tableRect();
+    float x, y, w, h;
+
+    switch (box) {
+    case BoxValue::BorderBoxBoxValue:
+        x = tableRect.x();
+        y = tableRect.y();
+        w = tableRect.width();
+        h = tableRect.height();
+        break;
+    case BoxValue::PaddingBoxBoxValue:
+        x = tableRect.x() + borderLeft();
+        y = tableRect.y() + borderTop();
+        w = tableRect.width() - borderWidth();
+        h = tableRect.height() - borderHeight();
+        break;
+    case BoxValue::ContentBoxBoxValue:
+        x = tableRect.x() + borderLeft() + paddingLeft();
+        y = tableRect.y() + borderTop() + paddingTop();
+        w = tableRect.width() - borderWidth() - paddingWidth();
+        h = tableRect.height() - borderHeight() - paddingHeight();
+        break;
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    paintBackground(canvas, nearstNotAnonymousNode(), style(), bgRect,
-                    m_tableRect, false);
-
-    paintBorders(canvas, m_tableRect);
+    return Unit::Rect(x, y, w, h);
 }
 
 // The layout result of the table may be different from the document order.
