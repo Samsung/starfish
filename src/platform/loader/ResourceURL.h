@@ -106,7 +106,12 @@ public:
         return m_protocol == ABOUT_PROTOCOL;
     }
 
-    bool isNetworkURL()
+    bool isUnknownURL() const
+    {
+        return m_protocol == UNKNOWN;
+    }
+
+    bool isNetworkURL() const
     {
         return m_protocol == HTTP_PROTOCOL || m_protocol == HTTPS_PROTOCOL;
     }
