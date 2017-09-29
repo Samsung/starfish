@@ -65,7 +65,9 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
         m_httpEquiv = value;
     }
 
-    if (!m_httpEquiv->isEmpty() && !m_content->isEmpty()) {
+    if (!m_httpEquiv->isEmpty() &&
+        m_httpEquiv->equalsIgnoreCase("content-language") &&
+        !m_content->isEmpty()) {
         document()->setContentLanguage(m_content);
     }
 }

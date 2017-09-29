@@ -2603,12 +2603,24 @@ void FrameText::setText(String* text)
     }
 }
 
+bool FrameText::isFrameInlineOrEmptyText(Frame* f)
+{
+    if (f->isFrameInline()) {
+        return true;
+    }
+
+    if (!f->isFrameText()) {
+        return false;
+    }
+
+    return f->asFrameText()->text()->isEmpty();
+}
+
 char32_t FrameText::previousChar()
 {
     Frame* prevText = previousInPreOrder();
     for (; prevText; prevText = prevText->previousInPreOrder()) {
-        if (!prevText->isFrameText() ||
-            !prevText->asFrameText()->text()->isEmpty()) {
+        if (!isFrameInlineOrEmptyText(prevText)) {
             break;
         }
     }
@@ -2692,7 +2704,8 @@ String* FrameText::makeCapitalized(String* txt, char32_t prev)
             next = offset;
         } else {
             int32_t offset;
-            if (prev == ' ') {
+            if (isSeparator(prev) || String::isNBPS(prev) ||
+                String::isPunctuation(prev)) {
                 c = txt->charAt(cur);
                 sb.appendChar((char32_t)u_totitle(c));
                 offset = ++cur;
