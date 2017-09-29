@@ -1368,9 +1368,11 @@ void WebView::setNeedsRendering()
     wnd->m_renderingAnimator = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
             if (!wnd->m_canRendering) {
                 return ECORE_CALLBACK_RENEW;
             }
+#endif
             StarFishEnterer enter(wnd->starFish());
             if (wnd->rendering()) {
                 wnd->m_canRendering = false;
@@ -1455,6 +1457,19 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
     d.h = height();
     return Canvas::createDirect(starFish(), &d);
 #else
+#ifdef STARFISH_ENABLE_TEST
+    {
+        const char* path = getenv("SCREEN_SHOT");
+        if (path && strlen(path) && g_fireOnloadEvent) {
+            g_surfaceForScreehShot =
+                CanvasSurface::create(this, width(), height());
+            g_imgBufferForScreehShot =
+                (Evas_Object*)g_surfaceForScreehShot->unwrap();
+            Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
+            return c;
+        }
+    }
+#endif
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     evas_object_image_size_set(m_canvasAdpater, width(), height());
     int s = evas_object_image_stride_get(m_canvasAdpater);
