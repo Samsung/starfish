@@ -1162,6 +1162,15 @@ String* CSSStyleDeclaration::BorderLeft()
     return BorderString(width, false, style, false, color, false);
 }
 
+String* CSSStyleDeclaration::BorderRadius()
+{
+    String* tl = String::emptyString;
+    String* tr = String::emptyString;
+    String* br = String::emptyString;
+    String* bl = String::emptyString;
+    return String::emptyString;
+}
+
 static bool parseBorderShorthand(const CSSTokenVector& tokens,
                                  CSSStyleValuePair* width,
                                  CSSStyleValuePair* style,
@@ -1295,6 +1304,161 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
 GEN_FOURSIDE(ADD_SET_BORDER)
 #undef ADD_SET_BORDER
 
+#define CLEAR_BORDER_RADIUS()                                       \
+    removeCSSValuePair(CSSStyleValuePair::BorderTopLeftRadius);     \
+    removeCSSValuePair(CSSStyleValuePair::BorderTopRightRadius);    \
+    removeCSSValuePair(CSSStyleValuePair::BorderBottomRightRadius); \
+    removeCSSValuePair(CSSStyleValuePair::BorderBottomLeftRadius);
+
+static bool updateBorderRadiusValue(CSSStyleValuePair* self,
+                                    const CSSTokenVector& tokens)
+{
+    size_t len = tokens.size();
+    if (len < 1 || len > 2) {
+        return false;
+    }
+    ValueList* list = new ValueList(ValueList::SpaceSeparator);
+
+    for (size_t i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& t = tokens[i];
+        const char* value = t.data();
+        CSSStyleValuePair pair;
+        if (VALUE_IS_INHERIT()) {
+            pair.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        } else if (VALUE_IS_INITIAL()) {
+            pair.setValueKind(CSSStyleValuePair::ValueKind::Initial);
+        } else {
+            auto ret = pair.updateValueUnitLengthOrCalc(
+                t, CSSStyleValuePair::AllowPercent);
+            if (!ret) {
+                return false;
+            }
+        }
+        list->push_back(pair);
+    }
+
+    self->setValueList(list);
+    return true;
+}
+
+void CSSStyleDeclaration::setBorderRadius(const char* value, size_t len,
+                                          bool isImportant)
+{
+    CLEAR_BORDER_RADIUS();
+    if (len == 0) {
+        return;
+    }
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len);
+
+    // {1~4} / {1~4}
+    if (tokens.size() < 1 || tokens.size() > 9) {
+        return;
+    }
+
+    bool seenSlash = false;
+    size_t beforeSlash = 0;
+    size_t afterSlash = 0;
+
+    for (size_t i = 0; i < tokens.size(); i++) {
+        const auto& t = tokens[i];
+        if (t.equals("/")) {
+            if (seenSlash) {
+                return;
+            }
+            if (i == 0) {
+                return;
+            }
+            seenSlash = true;
+        } else {
+            if (seenSlash) {
+                afterSlash++;
+            } else {
+                beforeSlash++;
+            }
+            if (beforeSlash > 4 || afterSlash > 4) {
+                return;
+            }
+        }
+    }
+
+    if (seenSlash && afterSlash == 0) {
+        return;
+    }
+
+    CSSTokenVector topLeftV;
+    CSSTokenVector topRightV;
+    CSSTokenVector bottomRightV;
+    CSSTokenVector bottomLeftV;
+
+    if (beforeSlash == 1) {
+        topLeftV.push_back(tokens[0]);
+        topRightV.push_back(tokens[0]);
+        bottomRightV.push_back(tokens[0]);
+        bottomLeftV.push_back(tokens[0]);
+    } else if (beforeSlash == 2) {
+        topLeftV.push_back(tokens[0]);
+        topRightV.push_back(tokens[1]);
+        bottomRightV.push_back(tokens[0]);
+        bottomLeftV.push_back(tokens[1]);
+    } else if (beforeSlash == 3) {
+        topLeftV.push_back(tokens[0]);
+        topRightV.push_back(tokens[1]);
+        bottomRightV.push_back(tokens[2]);
+        bottomLeftV.push_back(tokens[1]);
+    } else {
+        STARFISH_ASSERT(beforeSlash == 4);
+        topLeftV.push_back(tokens[0]);
+        topRightV.push_back(tokens[1]);
+        bottomRightV.push_back(tokens[2]);
+        bottomLeftV.push_back(tokens[3]);
+    }
+
+    size_t base = 1 + beforeSlash;
+    if (afterSlash == 1) {
+        topLeftV.push_back(tokens[base]);
+        topRightV.push_back(tokens[base]);
+        bottomRightV.push_back(tokens[base]);
+        bottomLeftV.push_back(tokens[base]);
+    } else if (afterSlash == 2) {
+        topLeftV.push_back(tokens[base]);
+        topRightV.push_back(tokens[base + 1]);
+        bottomRightV.push_back(tokens[base]);
+        bottomLeftV.push_back(tokens[base + 1]);
+    } else if (afterSlash == 3) {
+        topLeftV.push_back(tokens[base]);
+        topRightV.push_back(tokens[base + 1]);
+        bottomRightV.push_back(tokens[base + 2]);
+        bottomLeftV.push_back(tokens[base + 1]);
+    } else if (afterSlash == 4) {
+        topLeftV.push_back(tokens[base + 0]);
+        topRightV.push_back(tokens[base + 1]);
+        bottomRightV.push_back(tokens[base + 2]);
+        bottomLeftV.push_back(tokens[base + 3]);
+    }
+
+    CSSStyleValuePair topLeft;
+    CSSStyleValuePair topRight;
+    CSSStyleValuePair bottomRight;
+    CSSStyleValuePair bottomLeft;
+
+    if (!updateBorderRadiusValue(&topLeft, topLeftV) ||
+        !updateBorderRadiusValue(&topRight, topRightV) ||
+        !updateBorderRadiusValue(&bottomRight, bottomRightV) ||
+        !updateBorderRadiusValue(&bottomLeft, bottomLeftV)) {
+        return;
+    }
+
+    topLeft.setFlagImportant(isImportant);
+    topRight.setFlagImportant(isImportant);
+    bottomRight.setFlagImportant(isImportant);
+    bottomLeft.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::BorderTopLeftRadius, topLeft);
+    addCSSValuePair(CSSStyleValuePair::BorderTopRightRadius, topRight);
+    addCSSValuePair(CSSStyleValuePair::BorderBottomRightRadius, bottomRight);
+    addCSSValuePair(CSSStyleValuePair::BorderBottomLeftRadius, bottomLeft);
+}
+
 String* CSSStyleValuePair::toString() const
 {
     switch (valueKind()) {
@@ -1303,7 +1467,7 @@ String* CSSStyleValuePair::toString() const
     case CSSStyleValuePair::ValueKind::Inherit:
         return String::inheritString;
     case CSSStyleValuePair::ValueKind::Length:
-        return lengthValue().toString();
+        return cssLengthValue().toString();
     case CSSStyleValuePair::ValueKind::Percentage: {
         StringBuilder builder;
         builder.appendString(String::fromFloat(percentageValue() * 100.f));
@@ -4036,7 +4200,7 @@ void StyleResolver::apply(Element* element,
             style->set##POS(Length());                                    \
         } else if (cssValues[k].valueKind() ==                            \
                    CSSStyleValuePair::ValueKind::Length) {                \
-            style->set##POS(cssValues[k].lengthValue().toLength());       \
+            style->set##POS(cssValues[k].cssLengthValue().toLength());    \
         } else if (cssValues[k].valueKind() ==                            \
                    CSSStyleValuePair::ValueKind::Percentage) {            \
             style->set##POS(                                              \
@@ -4082,7 +4246,7 @@ void StyleResolver::apply(Element* element,
         } else if (cssValues[k].valueKind() ==                               \
                    CSSStyleValuePair::ValueKind::Length) {                   \
             style->setBorder##POS##Width(                                    \
-                cssValues[k].lengthValue().toLength());                      \
+                cssValues[k].cssLengthValue().toLength());                   \
         } else if (cssValues[k].valueKind() ==                               \
                    CSSStyleValuePair::ValueKind::BorderWidthValueKind) {     \
             if (cssValues[k].borderWidthValue() ==                           \
@@ -4655,7 +4819,7 @@ void StyleResolver::apply(Element* element,
                 style->setFlexBasis(FlexBasisData(true));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
-                Length length = cssValues[k].lengthValue().toLength();
+                Length length = cssValues[k].cssLengthValue().toLength();
                 if (length.isAuto()) {
                     style->setFlexBasis(FlexBasisData(true));
                 } else {
@@ -4760,7 +4924,7 @@ void StyleResolver::apply(Element* element,
                 style->setStrokeWidth(parentStyle->strokeWidth());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
-                style->setStrokeWidth(cssValues[k].lengthValue().toLength());
+                style->setStrokeWidth(cssValues[k].lengthValue());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -4774,7 +4938,7 @@ void StyleResolver::apply(Element* element,
                 style->setOutlineWidth(parentStyle->outlineWidth());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
-                style->setOutlineWidth(cssValues[k].lengthValue().toLength());
+                style->setOutlineWidth(cssValues[k].lengthValue());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
                 if (cssValues[k].borderWidthValue() ==
@@ -4845,7 +5009,7 @@ void StyleResolver::apply(Element* element,
                 style->setOutlineOffset(parentStyle->outlineOffset());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Length) {
-                style->setOutlineOffset(cssValues[k].lengthValue().toLength());
+                style->setOutlineOffset(cssValues[k].lengthValue());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -4864,6 +5028,55 @@ void StyleResolver::apply(Element* element,
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
+
+#define BORDER_RADIUS_APPLY(AB, ab, AA, BB)                                   \
+    case CSSStyleValuePair::KeyKind::Border##AB##Radius:                      \
+        if (cssValues[k].valueKind() ==                                       \
+            CSSStyleValuePair::ValueKind::Initial) {                          \
+            style->setBorder##AB##Radius(Length(Length::Fixed, 0),            \
+                                         Length(Length::Fixed, 0));           \
+        } else if (cssValues[k].valueKind() ==                                \
+                   CSSStyleValuePair::ValueKind::Inherit) {                   \
+            auto p = parentStyle->borderRadius();                             \
+            style->setBorder##AB##Radius(p.m_##ab##AA, p.m_##ab##BB);         \
+        } else if (cssValues[k].valueKind() ==                                \
+                   CSSStyleValuePair::ValueKind::ValueListKind) {             \
+            auto vl = cssValues[k].multiValue();                              \
+            STARFISH_ASSERT(vl->size() == 1 || vl->size() == 2);              \
+            Length v1;                                                        \
+            Length v2;                                                        \
+            auto v = vl->at(0);                                               \
+            if (v.valueKind() == CSSStyleValuePair::ValueKind::Initial) {     \
+                v1 = v2 = Length(Length::Fixed, 0);                           \
+            } else if (v.valueKind() ==                                       \
+                       CSSStyleValuePair::ValueKind::Inherit) {               \
+                v1 = parentStyle->borderRadius().m_##ab##AA;                  \
+                v2 = parentStyle->borderRadius().m_##ab##BB;                  \
+            } else {                                                          \
+                v1 = v2 = v.toLengthValue();                                  \
+            }                                                                 \
+            if (vl->size() == 2) {                                            \
+                auto v = vl->at(1);                                           \
+                if (v.valueKind() == CSSStyleValuePair::ValueKind::Initial) { \
+                    v2 = Length(Length::Fixed, 0);                            \
+                } else if (v.valueKind() ==                                   \
+                           CSSStyleValuePair::ValueKind::Inherit) {           \
+                    v2 = parentStyle->borderRadius().m_##ab##BB;              \
+                } else {                                                      \
+                    v2 = v.toLengthValue();                                   \
+                }                                                             \
+            }                                                                 \
+            style->setBorder##AB##Radius(v1, v2);                             \
+        } else {                                                              \
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();                            \
+        }                                                                     \
+        break;
+
+            BORDER_RADIUS_APPLY(TopLeft, topLeft, Horizontal, Vertical)
+            BORDER_RADIUS_APPLY(TopRight, topRight, Horizontal, Vertical)
+            BORDER_RADIUS_APPLY(BottomRight, bottomRight, Horizontal, Vertical)
+            BORDER_RADIUS_APPLY(BottomLeft, bottomLeft, Horizontal, Vertical)
+
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -5721,6 +5934,30 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_STYLE)
 #undef UPDATE_VALUE_BORDER_STYLE
 
+bool CSSStyleValuePair::updateValueBorderTopLeftRadius(
+    const CSSTokenVector& tokens)
+{
+    return updateBorderRadiusValue(this, tokens);
+}
+
+bool CSSStyleValuePair::updateValueBorderTopRightRadius(
+    const CSSTokenVector& tokens)
+{
+    return updateBorderRadiusValue(this, tokens);
+}
+
+bool CSSStyleValuePair::updateValueBorderBottomLeftRadius(
+    const CSSTokenVector& tokens)
+{
+    return updateBorderRadiusValue(this, tokens);
+}
+
+bool CSSStyleValuePair::updateValueBorderBottomRightRadius(
+    const CSSTokenVector& tokens)
+{
+    return updateBorderRadiusValue(this, tokens);
+}
+
 bool CSSStyleValuePair::updateValueDirection(const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
@@ -6139,7 +6376,7 @@ bool CSSStyleValuePair::updateValueUnitLengthOrCalc(const CSSTokenValue& token,
                                 val.setValue(ret.percentageValue());
                             } else {
                                 val.setType(CalcValueType::Length);
-                                val.setValue(ret.lengthValue());
+                                val.setValue(ret.cssLengthValue());
                             }
                         } else {
                             if (ret.valueKind() ==
@@ -6148,7 +6385,7 @@ bool CSSStyleValuePair::updateValueUnitLengthOrCalc(const CSSTokenValue& token,
                                 val.setValue(-1 * ret.percentageValue());
                             } else {
                                 val.setType(CalcValueType::Length);
-                                val.setValue(-1 * ret.lengthValue());
+                                val.setValue(-1 * ret.cssLengthValue());
                             }
                         }
                     } else {

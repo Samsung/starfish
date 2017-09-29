@@ -17,6 +17,7 @@
 #ifndef __StarFishComputedStyle__
 #define __StarFishComputedStyle__
 
+#include "core/style/BorderRadiusData.h"
 #include "core/style/ContentData.h"
 #include "core/style/FlexBasisData.h"
 #include "core/style/DefaultStyle.h"
@@ -57,13 +58,14 @@ public:
         , m_transformOrigin(nullptr)
         , m_transition(nullptr)
         , m_outline(nullptr)
+        , m_borderRadius(nullptr)
     {
     }
 
     BorderValue* ensureOutline()
     {
         if (m_outline == nullptr) {
-            m_outline = new (PointerFreeGC) OutlineData();
+            m_outline = new OutlineData();
         }
         return &m_outline->m_outline;
     }
@@ -71,9 +73,17 @@ public:
     Length* ensureOutlineOffset()
     {
         if (m_outline == nullptr) {
-            m_outline = new (PointerFreeGC) OutlineData();
+            m_outline = new OutlineData();
         }
         return &m_outline->m_outlineOffset;
+    }
+
+    BorderRadiusData* ensureBorderRadius()
+    {
+        if (m_borderRadius == nullptr) {
+            m_borderRadius = new BorderRadiusData();
+        }
+        return m_borderRadius;
     }
 
     void* operator new(size_t size);
@@ -92,6 +102,7 @@ public:
     GCVector<ComputedStyle*> m_cachedPseudoStyles;
 
     OutlineData* m_outline;
+    BorderRadiusData* m_borderRadius;
 };
 
 class ComputedStyle : public gc {
@@ -1144,6 +1155,60 @@ public:
     }
 
     void loadFont(StarFish* sf, float fixedFontSize);
+    bool hasBorderRadius()
+    {
+        if (!m_rareComputedStyleData) {
+            return false;
+        }
+        if (!m_rareComputedStyleData->m_borderRadius) {
+            return false;
+        }
+        return true;
+    }
+
+    BorderRadiusData borderRadius()
+    {
+        if (!m_rareComputedStyleData) {
+            return BorderRadiusData();
+        }
+        if (!m_rareComputedStyleData->m_borderRadius) {
+            return BorderRadiusData();
+        }
+        return *m_rareComputedStyleData->m_borderRadius;
+    }
+
+    void setBorderTopLeftRadius(const Length& v, const Length& v2)
+    {
+        setRareComputedStyleDataIfNeeded();
+        auto s = rareComputedStyleData()->ensureBorderRadius();
+        s->m_topLeftHorizontal = v;
+        s->m_topLeftVertical = v2;
+    }
+
+    void setBorderTopRightRadius(const Length& v, const Length& v2)
+    {
+        setRareComputedStyleDataIfNeeded();
+        auto s = rareComputedStyleData()->ensureBorderRadius();
+        s->m_topRightHorizontal = v;
+        s->m_topRightVertical = v2;
+    }
+
+    void setBorderBottomRightRadius(const Length& v, const Length& v2)
+    {
+        setRareComputedStyleDataIfNeeded();
+        auto s = rareComputedStyleData()->ensureBorderRadius();
+        s->m_bottomRightHorizontal = v;
+        s->m_bottomRightVertical = v2;
+    }
+
+    void setBorderBottomLeftRadius(const Length& v, const Length& v2)
+    {
+        setRareComputedStyleDataIfNeeded();
+        auto s = rareComputedStyleData()->ensureBorderRadius();
+        s->m_bottomLeftHorizontal = v;
+        s->m_bottomLeftVertical = v2;
+    }
+
     void loadBackgroundImage(
         Node* consumer,
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =

@@ -1203,10 +1203,12 @@ void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
                 String* eventType =
                     starFish()->staticStrings()->m_click.localName();
                 Node* t = webView()->focusedNode();
-                t = t->nearestParentElement();
-                t->dispatchEventByUA(
-                    new Event(t->document(), eventType, EventInit(true, true)));
-                e->defaultPrevented();
+                if (t) {
+                    t = t->nearestParentElement();
+                    t->dispatchEventByUA(new Event(t->document(), eventType,
+                                                   EventInit(true, true)));
+                    e->defaultPrevented();
+                }
             } else if (e->keyValue() >= KeyValue::ArrowDownKey &&
                        e->keyValue() <= KeyValue::ArrowRightKey) {
                 double sx = window()->scrollX();

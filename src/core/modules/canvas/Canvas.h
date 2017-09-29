@@ -168,6 +168,11 @@ public:
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
+    virtual void arcNegative(double xc, double yc, double radius, double angle1,
+                             double angle2)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
     virtual void stroke()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -185,6 +190,14 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
     virtual void fillPreserve()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void clipPath()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void clipPathPreserve()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }

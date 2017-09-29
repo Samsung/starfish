@@ -20,6 +20,7 @@
 #include "binding/DocumentHoldable.h"
 #include "core/style/NamedColors.h"
 #include "core/style/MediaQueryEvaluator.h"
+#include "core/style/Length.h"
 #include "core/util/VectorWithInlineStorage.h"
 
 namespace StarFish {
@@ -929,104 +930,110 @@ class CSSStyleDeclaration;
 // The following are for internal use only
 // * border-horizontal-spacing
 // * border-vertical-spacing
-#define FOR_EACH_STYLE_ATTRIBUTE(F)                                      \
-    F(Color, color, "color")                                             \
-    F(Direction, direction, "direction")                                 \
-    F(BackgroundColor, backgroundColor, "background-color")              \
-    F(BackgroundImage, backgroundImage, "background-image")              \
-    F(BackgroundSize, backgroundSize, "background-size")                 \
-    F(LineHeight, lineHeight, "line-height")                             \
-    F(WhiteSpace, whiteSpace, "white-space")                             \
-    F(PaddingTop, paddingTop, "padding-top")                             \
-    F(PaddingRight, paddingRight, "padding-right")                       \
-    F(PaddingBottom, paddingBottom, "padding-bottom")                    \
-    F(PaddingLeft, paddingLeft, "padding-left")                          \
-    F(MarginTop, marginTop, "margin-top")                                \
-    F(MarginRight, marginRight, "margin-right")                          \
-    F(MarginBottom, marginBottom, "margin-bottom")                       \
-    F(MarginLeft, marginLeft, "margin-left")                             \
-    F(Top, top, "top")                                                   \
-    F(Bottom, bottom, "bottom")                                          \
-    F(Left, left, "left")                                                \
-    F(Right, right, "right")                                             \
-    F(Width, width, "width")                                             \
-    F(MaxWidth, maxWidth, "max-width")                                   \
-    F(MinWidth, minWidth, "min-width")                                   \
-    F(Height, height, "height")                                          \
-    F(MaxHeight, maxHeight, "max-height")                                \
-    F(MinHeight, minHeight, "min-height")                                \
-    F(FontSize, fontSize, "font-size")                                   \
-    F(FontStyle, fontStyle, "font-style")                                \
-    F(WordWrap, wordWrap, "word-wrap")                                   \
-    F(OverflowWrap, overflowWrap, "overflow-wrap")                       \
-    F(Position, position, "position")                                    \
-    F(TextDecoration, textDecoration, "text-decoration")                 \
-    F(Display, display, "display")                                       \
-    F(Float, float, "float")                                             \
-    F(Clear, clear, "clear")                                             \
-    F(BorderImageSlice, borderImageSlice, "border-image-slice")          \
-    F(BorderImageSource, borderImageSource, "border-image-source")       \
-    F(BorderImageWidth, borderImageWidth, "border-image-width")          \
-    F(BorderTopColor, borderTopColor, "border-top-color")                \
-    F(BorderRightColor, borderRightColor, "border-right-color")          \
-    F(BorderBottomColor, borderBottomColor, "border-bottom-color")       \
-    F(BorderLeftColor, borderLeftColor, "border-left-color")             \
-    F(BorderTopStyle, borderTopStyle, "border-top-style")                \
-    F(BorderRightStyle, borderRightStyle, "border-right-style")          \
-    F(BorderBottomStyle, borderBottomStyle, "border-bottom-style")       \
-    F(BorderLeftStyle, borderLeftStyle, "border-left-style")             \
-    F(BorderTopWidth, borderTopWidth, "border-top-width")                \
-    F(BorderRightWidth, borderRightWidth, "border-right-width")          \
-    F(BorderBottomWidth, borderBottomWidth, "border-bottom-width")       \
-    F(BorderLeftWidth, borderLeftWidth, "border-left-width")             \
-    F(BorderCollapse, borderCollapse, "border-collapse")                 \
-    F(BorderSpacing, borderSpacing, "border-spacing")                    \
-    F(CaptionSide, CaptionSide, "caption-side")                          \
-    F(EmptyCells, EmptyCells, "empty-cells")                             \
-    F(TextAlign, textAlign, "text-align")                                \
-    F(TextIndent, textIndent, "text-indent")                             \
-    F(TextTransform, textTransform, "text-transform")                    \
-    F(Transform, transform, "transform")                                 \
-    F(TransformOrigin, transformOrigin, "transform-origin")              \
-    F(Visibility, visibility, "visibility")                              \
-    F(OverflowX, overflowX, "overflow-x")                                \
-    F(OverflowY, overflowY, "overflow-y")                                \
-    F(ZIndex, zIndex, "z-index")                                         \
-    F(VerticalAlign, verticalAlign, "vertical-align")                    \
-    F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x")       \
-    F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y")       \
-    F(BackgroundPositionX, backgroundPositionX, "background-position-x") \
-    F(BackgroundPositionY, backgroundPositionY, "background-position-y") \
-    F(Opacity, opacity, "opacity")                                       \
-    F(FontWeight, fontWeight, "font-weight")                             \
-    F(TableLayout, tableLayout, "table-layout")                          \
-    F(UnicodeBidi, unicodeBidi, "unicode-bidi")                          \
-    F(Content, content, "content")                                       \
-    F(TransitionProperty, transitionProperty, "transitionProperty")      \
-    F(TransitionDuration, transitionDuration, "transitionDuration")      \
-    F(TransitionTimingFunction, transitionTimingFunction,                \
-      "transitionTimingFunction")                                        \
-    F(TransitionDelay, transitionDelay, "transitionDelay")               \
-    F(BoxSizing, boxSizing, "box-sizing")                                \
-    F(Fill, fill, "fill")                                                \
-    F(FillOpacity, fillOpacity, "fill-opacity")                          \
-    F(FillRule, fillRule, "fill-rule")                                   \
-    F(Stroke, stroke, "stroke")                                          \
-    F(StrokeWidth, strokeWidth, "stroke-width")                          \
-    F(FlexDirection, flexDirection, "flex-direction")                    \
-    F(FlexWrap, flexWrap, "flex-wrap")                                   \
-    F(Order, order, "order")                                             \
-    F(JustifyContent, justifyContent, "justify-content")                 \
-    F(AlignItems, alignItems, "align-items")                             \
-    F(AlignSelf, alignSelf, "align-self")                                \
-    F(AlignContent, alignContent, "align-content")                       \
-    F(FlexGrow, flexGrow, "flex-grow")                                   \
-    F(FlexShrink, flexShrink, "flex-shrink")                             \
-    F(FlexBasis, flexBasis, "flex-basis")                                \
-    F(OutlineColor, outlineColor, "outline-color")                       \
-    F(OutlineStyle, outlineStyle, "outline-style")                       \
-    F(OutlineWidth, outlineWidth, "outline-width")                       \
-    F(OutlineOffset, outlineOffset, "outline-offset")                    \
+#define FOR_EACH_STYLE_ATTRIBUTE(F)                                          \
+    F(Color, color, "color")                                                 \
+    F(Direction, direction, "direction")                                     \
+    F(BackgroundColor, backgroundColor, "background-color")                  \
+    F(BackgroundImage, backgroundImage, "background-image")                  \
+    F(BackgroundSize, backgroundSize, "background-size")                     \
+    F(LineHeight, lineHeight, "line-height")                                 \
+    F(WhiteSpace, whiteSpace, "white-space")                                 \
+    F(PaddingTop, paddingTop, "padding-top")                                 \
+    F(PaddingRight, paddingRight, "padding-right")                           \
+    F(PaddingBottom, paddingBottom, "padding-bottom")                        \
+    F(PaddingLeft, paddingLeft, "padding-left")                              \
+    F(MarginTop, marginTop, "margin-top")                                    \
+    F(MarginRight, marginRight, "margin-right")                              \
+    F(MarginBottom, marginBottom, "margin-bottom")                           \
+    F(MarginLeft, marginLeft, "margin-left")                                 \
+    F(Top, top, "top")                                                       \
+    F(Bottom, bottom, "bottom")                                              \
+    F(Left, left, "left")                                                    \
+    F(Right, right, "right")                                                 \
+    F(Width, width, "width")                                                 \
+    F(MaxWidth, maxWidth, "max-width")                                       \
+    F(MinWidth, minWidth, "min-width")                                       \
+    F(Height, height, "height")                                              \
+    F(MaxHeight, maxHeight, "max-height")                                    \
+    F(MinHeight, minHeight, "min-height")                                    \
+    F(FontSize, fontSize, "font-size")                                       \
+    F(FontStyle, fontStyle, "font-style")                                    \
+    F(WordWrap, wordWrap, "word-wrap")                                       \
+    F(OverflowWrap, overflowWrap, "overflow-wrap")                           \
+    F(Position, position, "position")                                        \
+    F(TextDecoration, textDecoration, "text-decoration")                     \
+    F(Display, display, "display")                                           \
+    F(Float, float, "float")                                                 \
+    F(Clear, clear, "clear")                                                 \
+    F(BorderImageSlice, borderImageSlice, "border-image-slice")              \
+    F(BorderImageSource, borderImageSource, "border-image-source")           \
+    F(BorderImageWidth, borderImageWidth, "border-image-width")              \
+    F(BorderTopColor, borderTopColor, "border-top-color")                    \
+    F(BorderRightColor, borderRightColor, "border-right-color")              \
+    F(BorderBottomColor, borderBottomColor, "border-bottom-color")           \
+    F(BorderLeftColor, borderLeftColor, "border-left-color")                 \
+    F(BorderTopStyle, borderTopStyle, "border-top-style")                    \
+    F(BorderRightStyle, borderRightStyle, "border-right-style")              \
+    F(BorderBottomStyle, borderBottomStyle, "border-bottom-style")           \
+    F(BorderLeftStyle, borderLeftStyle, "border-left-style")                 \
+    F(BorderTopWidth, borderTopWidth, "border-top-width")                    \
+    F(BorderRightWidth, borderRightWidth, "border-right-width")              \
+    F(BorderBottomWidth, borderBottomWidth, "border-bottom-width")           \
+    F(BorderLeftWidth, borderLeftWidth, "border-left-width")                 \
+    F(BorderCollapse, borderCollapse, "border-collapse")                     \
+    F(BorderSpacing, borderSpacing, "border-spacing")                        \
+    F(CaptionSide, CaptionSide, "caption-side")                              \
+    F(EmptyCells, EmptyCells, "empty-cells")                                 \
+    F(TextAlign, textAlign, "text-align")                                    \
+    F(TextIndent, textIndent, "text-indent")                                 \
+    F(TextTransform, textTransform, "text-transform")                        \
+    F(Transform, transform, "transform")                                     \
+    F(TransformOrigin, transformOrigin, "transform-origin")                  \
+    F(Visibility, visibility, "visibility")                                  \
+    F(OverflowX, overflowX, "overflow-x")                                    \
+    F(OverflowY, overflowY, "overflow-y")                                    \
+    F(ZIndex, zIndex, "z-index")                                             \
+    F(VerticalAlign, verticalAlign, "vertical-align")                        \
+    F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x")           \
+    F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y")           \
+    F(BackgroundPositionX, backgroundPositionX, "background-position-x")     \
+    F(BackgroundPositionY, backgroundPositionY, "background-position-y")     \
+    F(Opacity, opacity, "opacity")                                           \
+    F(FontWeight, fontWeight, "font-weight")                                 \
+    F(TableLayout, tableLayout, "table-layout")                              \
+    F(UnicodeBidi, unicodeBidi, "unicode-bidi")                              \
+    F(Content, content, "content")                                           \
+    F(TransitionProperty, transitionProperty, "transitionProperty")          \
+    F(TransitionDuration, transitionDuration, "transitionDuration")          \
+    F(TransitionTimingFunction, transitionTimingFunction,                    \
+      "transitionTimingFunction")                                            \
+    F(TransitionDelay, transitionDelay, "transitionDelay")                   \
+    F(BoxSizing, boxSizing, "box-sizing")                                    \
+    F(Fill, fill, "fill")                                                    \
+    F(FillOpacity, fillOpacity, "fill-opacity")                              \
+    F(FillRule, fillRule, "fill-rule")                                       \
+    F(Stroke, stroke, "stroke")                                              \
+    F(StrokeWidth, strokeWidth, "stroke-width")                              \
+    F(FlexDirection, flexDirection, "flex-direction")                        \
+    F(FlexWrap, flexWrap, "flex-wrap")                                       \
+    F(Order, order, "order")                                                 \
+    F(JustifyContent, justifyContent, "justify-content")                     \
+    F(AlignItems, alignItems, "align-items")                                 \
+    F(AlignSelf, alignSelf, "align-self")                                    \
+    F(AlignContent, alignContent, "align-content")                           \
+    F(FlexGrow, flexGrow, "flex-grow")                                       \
+    F(FlexShrink, flexShrink, "flex-shrink")                                 \
+    F(FlexBasis, flexBasis, "flex-basis")                                    \
+    F(OutlineColor, outlineColor, "outline-color")                           \
+    F(OutlineStyle, outlineStyle, "outline-style")                           \
+    F(OutlineWidth, outlineWidth, "outline-width")                           \
+    F(OutlineOffset, outlineOffset, "outline-offset")                        \
+    F(BorderTopLeftRadius, borderTopLeftRadius, "border-top-left-radius")    \
+    F(BorderTopRightRadius, borderTopRightRadius, "border-top-right-radius") \
+    F(BorderBottomRightRadius, borderBottomRightRadius,                      \
+      "border-bottom-right-radius")                                          \
+    F(BorderBottomLeftRadius, borderBottomLeftRadius,                        \
+      "border-bottom-left-radius")                                           \
     F(Cursor, cursor, "cursor")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
@@ -1039,6 +1046,7 @@ class CSSStyleDeclaration;
     F(BorderStyle, borderStyle, "border-style")                      \
     F(BorderWidth, borderWidth, "border-width")                      \
     F(BorderColor, borderColor, "border-color")                      \
+    F(BorderRadius, borderRadius, "border-radius")                   \
     F(Background, background, "background")                          \
     F(BackgroundRepeat, backgroundRepeat, "background-repeat")       \
     F(BackgroundPosition, backgroundPosition, "background-position") \
@@ -1401,10 +1409,33 @@ public:
         return m_value.m_borderWidth;
     }
 
-    CSSLength lengthValue() const
+    CSSLength cssLengthValue() const
     {
         STARFISH_ASSERT(m_valueKind == Length);
         return m_value.m_length;
+    }
+
+    ::StarFish::Length lengthValue() const
+    {
+        if (m_valueKind == Length) {
+            return m_value.m_length.toLength();
+        } else {
+            STARFISH_ASSERT(m_valueKind == Calc);
+            return ::StarFish::Length(calcValue());
+        }
+    }
+
+    ::StarFish::Length toLengthValue() const
+    {
+        if (m_valueKind == Length) {
+            return m_value.m_length.toLength();
+        } else if (m_valueKind == Percentage) {
+            return ::StarFish::Length(::StarFish::Length::Percent,
+                                      percentageValue());
+        } else {
+            STARFISH_ASSERT(m_valueKind == Calc);
+            return ::StarFish::Length(calcValue());
+        }
     }
 
     CSSAngle angleValue() const
@@ -1858,6 +1889,8 @@ public:
             return m_value.m_multiValue;
         case TransformFunctions:
             return m_value.m_transforms;
+        case CalcValueKind:
+            return m_value.m_calc;
         default:
             return nullptr;
         }

@@ -49,6 +49,8 @@
                    '<@(cflags_extra)',
                ],
                'ldflags' : [
+#use gold linker if you want fast linking
+#                   '-fuse-ld=gold',
                ],
                'defines': [
                    '<@(defines_default)',

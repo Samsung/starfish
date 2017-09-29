@@ -47,6 +47,16 @@ void* RareComputedStyleData::operator new(size_t size)
                    GC_WORD_OFFSET(RareComputedStyleData, m_cachedPseudoStyles));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(RareComputedStyleData, m_outline));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_maxWidth));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_maxHeight));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_minWidth));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_minHeight));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_borderRadius));
         descr =
             GC_make_descriptor(obj_bitmap, GC_WORD_LEN(RareComputedStyleData));
         typeInited = true;
@@ -65,6 +75,10 @@ void* ComputedStyle::operator new(size_t size)
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_background));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_surround));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_width));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_height));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle, m_verticalAlignLength));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle, m_rareComputedStyleData));
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ComputedStyle));
@@ -506,6 +520,25 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         m_rareComputedStyleData->m_outline->m_outlineOffset
             .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
     }
+
+    if (hasBorderRadius()) {
+        m_rareComputedStyleData->m_borderRadius->m_topLeftHorizontal
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_rareComputedStyleData->m_borderRadius->m_topLeftVertical
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_rareComputedStyleData->m_borderRadius->m_topRightHorizontal
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_rareComputedStyleData->m_borderRadius->m_topRightVertical
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_rareComputedStyleData->m_borderRadius->m_bottomRightHorizontal
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_rareComputedStyleData->m_borderRadius->m_bottomRightVertical
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_rareComputedStyleData->m_borderRadius->m_bottomLeftHorizontal
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_rareComputedStyleData->m_borderRadius->m_bottomLeftVertical
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    }
 }
 
 void applyTransition(Element* element, ComputedStyle* oldStyle,
@@ -856,7 +889,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                           ? newStyle->m_rareComputedStyleData->m_transforms
                                 ->hasComplexTransform()
                           : false;
-    if (oldComplex != newComplex || (!oldComplex && !newComplex)) {
+    if (oldComplex != newComplex) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
@@ -982,6 +1015,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     if (newStyle->outlineOffset() != oldStyle->outlineOffset()) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->hasBorderRadius() || oldStyle->hasBorderRadius()) {
+        if (newStyle->borderRadius() != oldStyle->borderRadius()) {
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
     }
 
     return damage;
