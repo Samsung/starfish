@@ -158,7 +158,7 @@ private:
                                         size_t colId);
 
     void setCandidateCellWidthsAndReturnCellInfo(
-        LayoutContext& ctx, LayoutUnit tableWidth,
+        LayoutContext& ctx, LayoutUnit tableWidth, bool hasTableWidth,
         LayoutUnit* sumOfAutoCellPreferredWidths,
         LayoutUnit* sumOfAdjustedSpecifiedCellWidths,
         std::vector<ColSizeStruct*>* columnsAdjustedToMinWidths,
@@ -197,7 +197,7 @@ private:
 
     FrameTableSectionBox* m_thead;
     FrameTableSectionBox* m_tfoot;
-    LayoutUnit m_candidateWidth;
+    LayoutUnit m_candidateTableContentWidth;
 };
 }
 

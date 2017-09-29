@@ -35,7 +35,7 @@ FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
     , m_tableRect(0, 0, 0, 0)
     , m_thead(nullptr)
     , m_tfoot(nullptr)
-    , m_candidateWidth(0)
+    , m_candidateTableContentWidth(0)
 {
 }
 
@@ -219,33 +219,34 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     } else {
         // The width of table is explicitly given
         hasTableWidth = true;
+
         if (width.isDefinite(false)) {
             LayoutUnit unused;
             tableWidth = width.specifiedValue(unused, this);
-            // For CSS table, width is the table content width EXCLUDING
-            // border and padding.
-            // For HTML table, width is the table width INCLUDNIG border and
+
+            // For CSS table, width refers to the table content width.
+            // For HTML table, width refers to table content width + border +
             // padding.
-            // Internally, tableWidth refers to the CSS table convention
-            if (!isAnonymous() && node()->isHTMLTableElement()) {
-                tableWidth -= borderWidth() + paddingWidth();
+            if (!isAnonymous() && !node()->isHTMLTableElement()) {
+                tableWidth += borderWidth() + paddingWidth();
             }
         } else if (width.isPercent()) {
             tableWidth = width.percentValue(parentContentWidth);
-            tableWidth -= borderWidth() + paddingWidth();
         } else if (width.isCalc()) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
     }
 
+    LayoutUnit tableContentWidth = tableWidth - borderWidth() - paddingWidth();
+
     if (hasTableWidth) {
-        m_candidateWidth = tableWidth;
+        m_candidateTableContentWidth = tableContentWidth;
     }
 
     // 3. If a width of the table is given, we either increase or decrease the
     // cell widths to fit them into the width of table.
     if (hasTableWidth) {
-        LayoutUnit availableWidth = tableWidth;
+        LayoutUnit availableWidth = tableContentWidth;
         availableWidth -=
             (borderSpacing * m_columnWidths.size()) + borderSpacing;
         LayoutUnit sumOfSpecifiedCellWidths = 0;
@@ -257,7 +258,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         LayoutUnit sumOfColWidths = 0;
 
         setCandidateCellWidthsAndReturnCellInfo(
-            ctx, availableWidth, &sumOfAutoCellPreferredWidths,
+            ctx, availableWidth, hasTableWidth, &sumOfAutoCellPreferredWidths,
             &sumOfAdjustedSpecifiedCellWidths, &columnsAdjustedToMinWidths,
             &columnsMayNeedToAdjustWidths, &sumOfColWidths);
 
@@ -313,7 +314,8 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             // * Also, there may be cells with "width: auto" that have no widths
             //   calculated yet
 
-            LayoutUnit remainingWidth = tableWidth - sumOfSpecifiedCellWidths;
+            LayoutUnit remainingWidth = tableContentWidth;
+            remainingWidth -= sumOfSpecifiedCellWidths;
             remainingWidth -=
                 (borderSpacing * m_columnWidths.size()) + borderSpacing;
 
@@ -377,7 +379,8 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                     // greater than the specified table width. In this case,
                     // the size of cells are adjusted once more.
                     if (sumOfAutoCellWidths > remainingWidth) {
-                        remainingWidth = tableWidth - sumOfAutoCellWidths;
+                        remainingWidth = tableContentWidth;
+                        remainingWidth -= sumOfAutoCellWidths;
                         remainingWidth -=
                             (borderSpacing * m_columnWidths.size()) +
                             borderSpacing;
@@ -400,9 +403,10 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         LayoutUnit sumOfColWidths = 0;
 
         setCandidateCellWidthsAndReturnCellInfo(
-            ctx, tableWidth - marginWidth(), &sumOfAutoCellPreferredWidths,
-            &sumOfAdjustedSpecifiedCellWidths, &columnsAdjustedToMinWidths,
-            &columnsMayNeedToAdjustWidths, &sumOfColWidths);
+            ctx, tableContentWidth, hasTableWidth,
+            &sumOfAutoCellPreferredWidths, &sumOfAdjustedSpecifiedCellWidths,
+            &columnsAdjustedToMinWidths, &columnsMayNeedToAdjustWidths,
+            &sumOfColWidths);
 
         LayoutUnit tableWidthByAddingColWidths = sumOfColWidths;
         tableWidthByAddingColWidths += borderWidth() + paddingWidth();
@@ -431,8 +435,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             do {
                 reducedToMinWidth = false;
 
-                LayoutUnit remainingWidth = tableWidth;
-                remainingWidth -= borderWidth() + paddingWidth();
+                LayoutUnit remainingWidth = tableContentWidth;
                 remainingWidth -=
                     (borderSpacing * m_columnWidths.size()) + borderSpacing;
                 remainingWidth -= sumOfAdjustedSpecifiedCellWidths;
@@ -475,8 +478,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             // the columns other than "width: auto" still have rooms to reduce.
             if ((numOfReducedToMinWidths == cellsWithAutoWidths.size()) ||
                 (columnsMayNeedToAdjustWidths.size() > 0)) {
-                LayoutUnit remainingWidth = tableWidth;
-                remainingWidth -= borderWidth() + paddingWidth();
+                LayoutUnit remainingWidth = tableContentWidth;
                 remainingWidth -=
                     (borderSpacing * m_columnWidths.size()) + borderSpacing;
 
@@ -558,8 +560,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             if ((0 < tableWidth) &&
                 (tableWidth < tableWidthByAddingColWidths)) {
                 // Decrease the cell widths
-                LayoutUnit availableWidth = tableWidth;
-                availableWidth -= borderWidth() + paddingWidth();
+                LayoutUnit availableWidth = tableContentWidth;
                 availableWidth -=
                     (borderSpacing * m_columnWidths.size()) + borderSpacing;
 
@@ -619,7 +620,7 @@ bool FrameTableBox::resetColspanIfPossible()
 
 // All input parameters are used as out parameters
 void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
-    LayoutContext& ctx, LayoutUnit remainingWidth,
+    LayoutContext& ctx, LayoutUnit remainingWidth, bool hasTableWidth,
     LayoutUnit* sumOfAutoCellPreferredWidths,
     LayoutUnit* sumOfAdjustedSpecifiedCellWidths,
     std::vector<ColSizeStruct*>* columnsAdjustedToMinWidths,
@@ -683,7 +684,8 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
                 columnsMayNeedToAdjustWidths->push_back(&col);
             }
 
-            if (col.hasSpecifiedWidth() || col.hasPercentageWidth()) {
+            if (col.hasSpecifiedWidth() ||
+                (hasTableWidth && col.hasPercentageWidth())) {
                 *sumOfAdjustedSpecifiedCellWidths += col.cellWidth;
             }
         }
@@ -787,11 +789,12 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
     // FrameTableSection. Hence, captions can only be placed after calculating
     // the width of the table, which has already been done by calContentWidth()
     LayoutUnit minCaptionWidthSoFar = 0;
-    LayoutUnit maxWidthSoFar = 0;
+    LayoutUnit maxRowWidthSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSectionBox()) {
             c->asFrameTableSectionBox()->layoutWidth(ctx);
-            maxWidthSoFar = std::max(maxWidthSoFar, c->asFrameBox()->width());
+            maxRowWidthSoFar =
+                std::max(maxRowWidthSoFar, c->asFrameBox()->width());
         } else if (c->isFrameTableCaptionBox()) {
             c->asFrameTableCaptionBox()->layoutWidth(ctx);
             minCaptionWidthSoFar =
@@ -800,8 +803,8 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
             c->asFrameTableCaptionBox()->setX(
                 c->asFrameTableCaptionBox()->marginLeft());
             if (c->style()->width().isDefinite(false)) {
-                maxWidthSoFar =
-                    std::max(maxWidthSoFar, c->asFrameBox()->width());
+                maxRowWidthSoFar =
+                    std::max(maxRowWidthSoFar, c->asFrameBox()->width());
             } else {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
@@ -815,11 +818,12 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
     // The width of all table sections should be the same,
     // so getting the max width should be the same as the width of
     // any table sections.
-    LayoutUnit tableWidth = maxWidthSoFar;
-    tableWidth = std::max(tableWidth, minCaptionWidthSoFar);
-    tableWidth = std::max(tableWidth, m_candidateWidth);
+    LayoutUnit tableContentWidth = maxRowWidthSoFar;
+    tableContentWidth = std::max(tableContentWidth, minCaptionWidthSoFar);
+    tableContentWidth =
+        std::max(tableContentWidth, m_candidateTableContentWidth);
 
-    setWidth(tableWidth + paddingWidth() + borderWidth());
+    setWidth(tableContentWidth + paddingWidth() + borderWidth());
 }
 
 void FrameTableBox::layoutHeight(LayoutContext& ctx)
