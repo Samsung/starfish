@@ -148,6 +148,17 @@ public:
         }
     }
 
+    void checkError()
+    {
+#ifndef NDEBUG
+        auto status = cairo_status(m_canvas);
+        if (status != CAIRO_STATUS_SUCCESS) {
+            STARFISH_LOG_ERROR("%s\n", cairo_status_to_string(status));
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+#endif
+    }
+
     virtual void clearColor(const Unit::Color& clr)
     {
         cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
@@ -158,6 +169,7 @@ public:
     // state
     virtual void save()
     {
+        checkError();
         CanvasStateCairo state;
         if (m_state.size()) {
             auto& lastState = m_state.back();
@@ -174,6 +186,7 @@ public:
     // pop state stack and restore state
     virtual void restore()
     {
+        checkError();
         m_state.erase(m_state.end() - 1);
         cairo_restore(m_canvas);
     }
@@ -682,11 +695,13 @@ public:
         cairo_matrix_t a_matrix;
         cairo_matrix_t b_matrix;
         cairo_get_matrix(m_canvas, &a_matrix);
+        checkError();
         cairo_matrix_init(&b_matrix, matrix.getScaleX(), matrix.getSkewY(),
                           matrix.getSkewX(), matrix.getScaleY(),
                           matrix.getTranslateX(), matrix.getTranslateY());
         cairo_matrix_multiply(&result_matrix, &b_matrix, &a_matrix);
         cairo_set_matrix(m_canvas, &result_matrix);
+        checkError();
     }
 
     virtual void applyMatrixTo(LayoutLocation& lp)

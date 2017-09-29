@@ -356,11 +356,17 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                     lastX += x;
                     lastY += y;
                     REWIND_IF_NEEDED();
+                    if (mode == Mode::WaitCoordsX) {
+                        paintMode = 'l';
+                    }
                 } else if (paintMode == 'M') {
                     ctx.m_canvas->moveTo(x, y);
                     lastX = x;
                     lastY = y;
                     REWIND_IF_NEEDED();
+                    if (mode == Mode::WaitCoordsX) {
+                        paintMode = 'L';
+                    }
                 } else if (paintMode == 'l') {
                     ctx.m_canvas->lineTo(lastX + x, lastY + y);
                     lastX += x;
