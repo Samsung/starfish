@@ -196,9 +196,7 @@ void FrameInputBox::paint(PaintingContext& ctx)
         x = e->currentCaretLayoutLocation().x();
         y = e->currentCaretLayoutLocation().y();
         ctx.m_canvas->save();
-        ctx.m_canvas->clip(Unit::Rect(paddingLeft() + borderLeft(),
-                                      paddingTop() + borderTop(),
-                                      contentWidth(), contentHeight()));
+        ctx.m_canvas->clip(makeRect(BoxValue::ContentBoxBoxValue));
         ctx.m_canvas->setColor(node()->style()->color());
         ctx.m_canvas->drawRect(
             LayoutRect(x - scrollLeft(), y, caretThickness,

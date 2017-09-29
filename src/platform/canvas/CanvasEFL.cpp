@@ -1300,7 +1300,7 @@ public:
 
     virtual void drawRepeatImage(ImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat, bool isRootElement)
+                                 bool xRepeat, bool yRepeat)
     {
         if (canSkipPainting(Unit::Rect(0, 0, dst.width(), dst.height()))) {
             return;
@@ -1379,18 +1379,12 @@ public:
             if (xRepeat) {
                 x = (dst.x() - floor(dst.x() / imageWidth) * imageWidth) -
                     imageWidth;
-                if (isRootElement) {
-                    x += xx;
-                }
             } else {
                 xx += dst.x();
             }
             if (yRepeat) {
                 y = (dst.y() - floor(dst.y() / imageHeight) * imageHeight) -
                     imageHeight;
-                if (isRootElement) {
-                    y += yy;
-                }
             } else {
                 yy += dst.y();
             }

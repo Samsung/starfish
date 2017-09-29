@@ -122,7 +122,13 @@ public:
         return m_colObjects;
     }
 
+    LayoutRect tableRect()
+    {
+        return m_tableRect;
+    }
+
     virtual void paintBackgroundAndBorders(Canvas* canvas);
+    virtual Unit::Rect makeRect(BoxValue box) override;
 
     void computeTableWidth(LayoutContext& ctx);
     void layoutTable(LayoutContext& ctx);

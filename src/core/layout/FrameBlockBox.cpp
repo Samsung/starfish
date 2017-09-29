@@ -826,9 +826,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
                 ctx.m_canvas->save();
-                ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
-                                              width() - borderWidth(),
-                                              height() - borderHeight()));
+                ctx.m_canvas->clip(makeRect(BoxValue::PaddingBoxBoxValue));
                 ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
@@ -849,9 +847,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
                 ctx.m_canvas->save();
-                ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
-                                              width() - borderWidth(),
-                                              height() - borderHeight()));
+                ctx.m_canvas->clip(makeRect(BoxValue::PaddingBoxBoxValue));
                 ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
@@ -874,9 +870,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             paintBackgroundAndBorders(ctx.m_canvas);
             if (overflowApplied) {
                 ctx.m_canvas->save();
-                ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
-                                              width() - borderWidth(),
-                                              height() - borderHeight()));
+                ctx.m_canvas->clip(makeRect(BoxValue::PaddingBoxBoxValue));
                 ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
             }
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
@@ -899,9 +893,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         }
         if (overflowApplied) {
             ctx.m_canvas->save();
-            ctx.m_canvas->clip(Unit::Rect(borderLeft(), borderTop(),
-                                          width() - borderWidth(),
-                                          height() - borderHeight()));
+            ctx.m_canvas->clip(makeRect(BoxValue::PaddingBoxBoxValue));
             ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
         }
         paintChildrenWith(ctx);

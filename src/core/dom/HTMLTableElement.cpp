@@ -89,8 +89,8 @@ void HTMLTableElement::styleForPresentationAttribute(
             cssValues.push_back(pair);
         }
     }
-    if (!width()->equals(String::emptyString)) {
-        String* w = width();
+    String* w = width();
+    if (!w->equals(String::emptyString)) {
         // Use px as the default unit
         if (!w->contains("px") && !w->contains("%")) {
             w = w->concat(String::createASCIIString("px"));
@@ -102,6 +102,15 @@ void HTMLTableElement::styleForPresentationAttribute(
         tokens.push_back(token);
         if (pair.updateValueWidth(tokens)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
+            cssValues.push_back(pair);
+        }
+    }
+    String* bgColor = this->bgColor();
+    if (!bgColor->equals(String::emptyString)) {
+        CSSStyleValuePair pair;
+        CSSTokenValue token = w->toNullableUTF8String().m_buffer;
+        if (pair.updateValueUnitColor(token)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
             cssValues.push_back(pair);
         }
     }

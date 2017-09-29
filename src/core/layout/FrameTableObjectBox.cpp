@@ -29,43 +29,4 @@ FrameTableObjectBox::FrameTableObjectBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
 }
-
-bool FrameTableObjectBox::bgColorFromAttribute(Unit::Color* ret)
-{
-    if (!(node() && node()->isHTMLElement())) {
-        return false;
-    }
-
-    HTMLElement* elem = node()->asHTMLElement();
-    if (!(elem->isHTMLTableElement() || elem->isHTMLTableCellElement())) {
-        return false;
-    }
-
-    String* color = nullptr;
-    if (elem->isHTMLTableElement()) {
-        color = elem->asHTMLTableElement()->bgColor();
-    } else if (elem->isHTMLTableCellElement()) {
-        color = elem->asHTMLTableCellElement()->bgColor();
-    }
-
-    if (color && (!color->equals(String::emptyString))) {
-        CSSStyleValuePair pair;
-        auto utf8Str = color->toNullableUTF8String();
-        if (pair.updateValueUnitColor(utf8Str.m_buffer)) {
-            switch (pair.valueKind()) {
-            case CSSStyleValuePair::ValueKind::ColorValueKind:
-                *ret = pair.colorValue();
-                break;
-            case CSSStyleValuePair::ValueKind::NamedColorValueKind:
-                *ret = NamedColor::namedColorToColor(pair.namedColorValue());
-                break;
-            default:
-                STARFISH_ASSERT_NOT_REACHED();
-            }
-
-            return true;
-        }
-    }
-    return false;
-}
 }

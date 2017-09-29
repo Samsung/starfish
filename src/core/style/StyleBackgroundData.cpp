@@ -21,7 +21,7 @@
 
 namespace StarFish {
 
-ImageData* BackgroundLayer::bgImageData()
+ImageData* BackgroundLayer::imageData() const
 {
     if (m_imageResource) {
         return m_imageResource->imageData();

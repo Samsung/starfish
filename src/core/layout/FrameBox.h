@@ -23,6 +23,7 @@ namespace StarFish {
 
 class Canvas;
 class LineBox;
+class HTMLElement;
 
 struct HorizontalDataLocToContainingBlock {
     LayoutUnit m_contentWidth;
@@ -207,6 +208,24 @@ public:
         }
 
         return height;
+    }
+
+    void copyWHMBPFrom(FrameBox* box)
+    {
+        setWidth(box->width());
+        setHeight(box->height());
+        setMarginTop(box->marginTop());
+        setMarginBottom(box->marginBottom());
+        setMarginLeft(box->marginLeft());
+        setMarginRight(box->marginRight());
+        setBorderTop(box->borderTop());
+        setBorderBottom(box->borderBottom());
+        setBorderLeft(box->borderLeft());
+        setBorderRight(box->borderRight());
+        setPaddingTop(box->paddingTop());
+        setPaddingBottom(box->paddingBottom());
+        setPaddingLeft(box->paddingLeft());
+        setPaddingRight(box->paddingRight());
     }
 
     void setContentWidth(LayoutUnit width)
@@ -548,13 +567,10 @@ public:
     }
 
     virtual void paintChildrenWith(PaintingContext& ctx);
-
-    static void paintBackground(Canvas* canvas, Node* n, ComputedStyle* style,
-                                LayoutRect imageRect, LayoutRect colorRect,
-                                bool isRootElement = false,
-                                bool needsToFillBgColorAtBorderBox = false);
-
     virtual void paintBackgroundAndBorders(Canvas* canvas);
+    virtual Unit::Rect makeRect(BoxValue box);
+    static void paintBackground(Canvas* canvas, FrameBox* box,
+                                HTMLElement* rootOrBodyelement);
     void paintBorders(Canvas* canvas, const LayoutRect& rect);
     void paintOutline(Canvas* canvas);
 
