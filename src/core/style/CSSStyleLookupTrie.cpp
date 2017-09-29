@@ -675,6 +675,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "transition-duration", 19) == 0) {
                 return CSSStyleKind::TransitionDuration;
             }
+            break;
         }
         break;
     case 21:
@@ -1268,6 +1269,14 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             break;
         }
+    case 't':
+        if (memcmp(data, "transitionProperty", 18) == 0) {
+            return CSSStyleKind::TransitionProperty;
+        }
+        if (memcmp(data, "transitionDuration", 18) == 0) {
+            return CSSStyleKind::TransitionDuration;
+        }
+        break;
         break;
     case 19:
         switch (data[0]) {
