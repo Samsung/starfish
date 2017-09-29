@@ -150,8 +150,7 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
-        cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(),
-                              clr.A() * lastState().m_opacity);
+        cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
         cairo_rectangle(m_canvas, 0, 0, m_width, m_height);
         cairo_fill(m_canvas);
     }
@@ -213,11 +212,14 @@ public:
     virtual void beginOpacityLayer(float c)
     {
         save();
-        lastState().m_opacity = c * lastState().m_opacity;
+        lastState().m_opacity = c;
+        cairo_push_group(m_canvas);
     }
 
     virtual void endOpacityLayer()
     {
+        cairo_pop_group_to_source(m_canvas);
+        cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
         restore();
     }
 
@@ -231,8 +233,7 @@ public:
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_color = clr_;
-        cairo_set_source_rgba(m_canvas, clr_.R(), clr_.G(), clr_.B(),
-                              clr_.A() * lastState().m_opacity);
+        cairo_set_source_rgba(m_canvas, clr_.R(), clr_.G(), clr_.B(), clr_.A());
     }
 
     virtual void setVisible(bool visible)
@@ -533,7 +534,7 @@ public:
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
         cairo_clip(m_canvas);
 
-        cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
+        cairo_paint(m_canvas);
 
         // drawDebugLine(xx,yy,ww,hh);
         cairo_pattern_destroy(resizePattern);
@@ -665,7 +666,7 @@ public:
 
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
         cairo_clip(m_canvas);
-        cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
+        cairo_paint(m_canvas);
 
         cairo_pattern_destroy(pattern);
         cairo_surface_destroy(image);
@@ -742,6 +743,16 @@ public:
                        2.0 / 3.0 * x1 + 1.0 / 3.0 * x2,
                        2.0 / 3.0 * y1 + 1.0 / 3.0 * y2, x2, y2);
     }
+    virtual void arc(double xc, double yc, double radius, double angle1,
+                     double angle2)
+    {
+        cairo_arc(m_canvas, xc, yc, radius, angle1, angle2);
+    }
+    virtual void arcNegative(double xc, double yc, double radius, double angle1,
+                             double angle2)
+    {
+        cairo_arc_negative(m_canvas, xc, yc, radius, angle1, angle2);
+    }
     virtual void stroke()
     {
         cairo_stroke(m_canvas);
@@ -758,6 +769,14 @@ public:
     {
         cairo_fill_preserve(m_canvas);
     }
+    virtual void clipPath()
+    {
+        cairo_clip(m_canvas);
+    }
+    virtual void clipPathPreserve()
+    {
+        cairo_clip_preserve(m_canvas);
+    }
 
     virtual void setFillRule(bool shouldUseNonZeroFillRule)
     {
@@ -773,12 +792,6 @@ public:
     virtual void setStrokeWidth(float width)
     {
         cairo_set_line_width(m_canvas, width);
-    }
-
-    virtual void arc(double xc, double yc, double radius, double angle1,
-                     double angle2)
-    {
-        cairo_arc(m_canvas, xc, yc, radius, angle1, angle2);
     }
 
     virtual void* unwrap()

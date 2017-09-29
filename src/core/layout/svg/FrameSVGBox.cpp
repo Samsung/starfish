@@ -101,8 +101,7 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
             CSSStyleValuePair pair;
             if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
                                                        &pair)) {
-                auto l = pair.lengthValue();
-                Length ll = l.toLength();
+                Length ll = pair.lengthValue();
                 xResult = ll.specifiedValue(cb->width(), this);
             }
         }
@@ -117,8 +116,7 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
             CSSStyleValuePair pair;
             if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
                                                        &pair)) {
-                auto l = pair.lengthValue();
-                Length ll = l.toLength();
+                Length ll = pair.lengthValue();
                 yResult = ll.specifiedValue(cb->height(), this);
             }
         }
@@ -248,8 +246,7 @@ double FrameSVGBox::resolveLengthFromAttribute(QualifiedName attr)
         CSSStyleValuePair pair;
         if (CSSPropertyParser::parseLengthOrNumber(s.data(), false, true,
                                                    &pair)) {
-            auto l = pair.lengthValue();
-            Length ll = l.toLength();
+            auto ll = pair.lengthValue();
             FrameBox* cb = layoutParent()->asFrameBox();
             result = ll.specifiedValue(cb->width(), this);
         }

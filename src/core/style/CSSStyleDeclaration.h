@@ -77,6 +77,7 @@ public:
     String* BorderRight();
     String* BorderBottom();
     String* BorderLeft();
+    String* BorderRadius();
     String* Background();
     String* BackgroundRepeat();
     String* BackgroundPosition();
@@ -102,6 +103,7 @@ public:
     void setBorderRight(const char* value, size_t len, bool isImportant);
     void setBorderBottom(const char* value, size_t len, bool isImportant);
     void setBorderLeft(const char* value, size_t len, bool isImportant);
+    void setBorderRadius(const char* value, size_t len, bool isImportant);
     void setBackground(const char* value, size_t len, bool isImportant);
     void setBackgroundRepeat(const char* value, size_t len, bool isImportant);
     void setBackgroundPosition(const char* value, size_t len, bool isImportant);

@@ -440,6 +440,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 13:
+        // Border-Radius
         // Padding-Right
         // Margin-Bottom
         // Border-Bottom
@@ -462,6 +463,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "border-bottom", 13) == 0) {
                 return CSSStyleKind::BorderBottom;
+            }
+            if (memcmp(data, "border-radius", 13) == 0) {
+                return CSSStyleKind::BorderRadius;
             }
             break;
         case 'a':
@@ -683,6 +687,46 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "background-position-y", 21) == 0) {
                 return CSSStyleKind::BackgroundPositionY;
+            }
+            break;
+        }
+        break;
+    case 22:
+        // border-top-left-radius
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "border-top-left-radius", 22) == 0) {
+                return CSSStyleKind::BorderTopLeftRadius;
+            }
+            break;
+        }
+        break;
+    case 23:
+        // border-top-right-radius
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "border-top-right-radius", 23) == 0) {
+                return CSSStyleKind::BorderTopRightRadius;
+            }
+            break;
+        }
+        break;
+    case 25:
+        // border-bottom-left-radius
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "border-bottom-right-radius", 25) == 0) {
+                return CSSStyleKind::BorderBottomRightRadius;
+            }
+            break;
+        }
+        break;
+    case 26:
+        // border-bottom-right-radius
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "border-bottom-right-radius", 26) == 0) {
+                return CSSStyleKind::BorderBottomRightRadius;
             }
             break;
         }
@@ -1040,7 +1084,7 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
     case 12:
         switch (data[0]) {
         case 'a':
-            if (memcmp(data, "alignContent", 10) == 0) {
+            if (memcmp(data, "alignContent", 12) == 0) {
                 return CSSStyleKind::AlignContent;
             }
             break;
@@ -1057,6 +1101,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "borderBottom", 12) == 0) {
                 return CSSStyleKind::BorderBottom;
+            }
+            if (memcmp(data, "borderRadius", 12) == 0) {
+                return CSSStyleKind::BorderRadius;
             }
             break;
         case 'o':
@@ -1230,6 +1277,36 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "backgroundPositionY", 19) == 0) {
                 return CSSStyleKind::BackgroundPositionY;
+            }
+            if (memcmp(data, "borderTopLeftRadius", 19) == 0) {
+                return CSSStyleKind::BorderTopLeftRadius;
+            }
+            break;
+        }
+        break;
+    case 20:
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "borderTopRightRadius", 20) == 0) {
+                return CSSStyleKind::BorderTopRightRadius;
+            }
+            break;
+        }
+        break;
+    case 22:
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "borderBottomLeftRadius", 22) == 0) {
+                return CSSStyleKind::BorderBottomLeftRadius;
+            }
+            break;
+        }
+        break;
+    case 23:
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "borderBottomRightRadius", 23) == 0) {
+                return CSSStyleKind::BorderBottomRightRadius;
             }
             break;
         }

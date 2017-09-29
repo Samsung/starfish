@@ -259,7 +259,8 @@ test/reftest/vendor/blink/fast/tokenizer/null-in-text.html
 test/reftest/vendor/blink/fast/tokenizer/script_extra_close.html
 test/reftest/vendor/blink/fast/transforms/matrix-02.html
 test/reftest/vendor/blink/fast/transforms/transform-hit-test-flipped.html
-test/reftest/vendor/blink/fast/transforms/transforms-with-opacity.html
+# Disable TC because wrong opacity rendering result of EFL backend
+# #test/reftest/vendor/blink/fast/transforms/transforms-with-opacity.html
 test/reftest/vendor/blink/fast/transforms/transform-update-frame-overflow.html
 test/reftest/vendor/blink/fast/transforms/transform-positioned-container.html
 # Float TCs

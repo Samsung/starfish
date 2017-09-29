@@ -70,7 +70,6 @@ extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 
 const uint32_t REPEAT_DURATION = 1000;
 
-// #define STARFISH_ENABLE_TIMER
 namespace StarFish {
 
 struct IdlerData {

@@ -54,15 +54,15 @@ public:
     STARFISH_MAKE_STACK_ALLOCATED();
 
     Length(Type type = Auto, float data = 0.f)
-        : m_type(type)
-        , m_data(data)
+        : m_data(data)
+        , m_type(type)
     {
         STARFISH_ASSERT(!isCalc());
     }
 
     Length(CalcData* data)
-        : m_type(Calc)
-        , m_data(data)
+        : m_data(data)
+        , m_type(Calc)
     {
     }
 
@@ -257,7 +257,6 @@ public:
     String* dumpString();
 
 protected:
-    Type m_type;
     union ValueData {
         float m_numberData;
         CalcData* m_calcData;
@@ -273,6 +272,7 @@ protected:
         }
     };
     ValueData m_data;
+    Type m_type;
 };
 
 Length operator*(const Length& a, const float b);
