@@ -203,6 +203,7 @@
                     '-lgif',
                 ],
                 'deps_extra': [
+                    './build.dep.gyp:efl_cairo.tizen',
                 ],
             }],
             ['platform=="linux" and backend=="dali"', {
