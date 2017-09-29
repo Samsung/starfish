@@ -2,6 +2,7 @@ test/reftest/vendor/gecko_original/layout/reftests/floats/1236745-1.html
 test/reftest/vendor/gecko_original/layout/reftests/floats/bfc-shrink-1.html
 test/reftest/vendor/gecko_original/layout/reftests/floats/zero-height-float.html
 test/reftest/vendor/gecko/layout/reftests/text-transform/capitalize-1.html
+test/reftest/vendor/gecko/layout/reftests/text-transform/capitalize-2.html
 test/reftest/vendor/gecko/layout/reftests/text-transform/capitalize-3.html
 test/reftest/vendor/gecko_original/layout/reftests/text-transform/capitalize-4.html
 test/reftest/vendor/gecko_original/layout/reftests/text-transform/capitalize-6.html

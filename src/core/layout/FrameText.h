@@ -81,6 +81,7 @@ public:
     void transformText(String* text);
     String* makeCapitalized(String* text, char32_t prev);
     char32_t previousChar();
+    bool isFrameInlineOrEmptyText(Frame* f);
 
     virtual bool isSelfCollapsingBlock(LayoutContext& ctx);
 
