@@ -358,17 +358,17 @@ void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
             unused, tableBox());
 
     LayoutUnit xSoFar = borderSpacing;
-    LayoutUnit maxWidth = 0;
+    LayoutUnit maxRowWidth = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableRowBox());
         c->asFrameTableRowBox()->layoutWidth(ctx);
         c->asFrameBox()->setX(xSoFar);
-        maxWidth = std::max(maxWidth, c->asFrameBox()->width());
+        maxRowWidth = std::max(maxRowWidth, c->asFrameBox()->width());
     }
 
     // The width of all rows should be the same, so ideally, the maxWidth
     // should be the same as the width of any row.
-    setWidth(borderSpacing + maxWidth + borderSpacing);
+    setWidth(borderSpacing + maxRowWidth + borderSpacing);
 }
 
 void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
