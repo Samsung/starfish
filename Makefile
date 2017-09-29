@@ -767,25 +767,25 @@ run_inspector:
 	./inspector/nwjs-v0.17.0-linux-x64/nw ./inspector/ > /dev/null &
 
 csswg_test_css1:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css1.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css1.res -p$(TEST_NPROCS)
 csswg_test_css21:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css21.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css21.res -p$(TEST_NPROCS)
 csswg_test_css21_tables:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css21_tables.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css21_tables.res -p$(TEST_NPROCS)
 csswg_test_css3_color:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_color.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_color.res -p$(TEST_NPROCS)
 csswg_test_css3_backgrounds:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_backgrounds.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_backgrounds.res -p$(TEST_NPROCS)
 csswg_test_css3_transforms:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_transforms.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_transforms.res -p$(TEST_NPROCS)
 csswg_test_css3_selectors:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_css3_selectors.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_selectors.res -p$(TEST_NPROCS)
 csswg_test_mediaqueries3:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_mediaqueries3.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_mediaqueries3.res -p$(TEST_NPROCS)
 csswg_test_manual:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_manual.res --font-dep -p$(TEST_NPROCS)
 csswg_test_rtl:
-	./tool/drivers/run_test.py csswg tool/reftest/tclist/csswg_rtl.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_rtl.res -p$(TEST_NPROCS)
 csswg_test_all:
 	make csswg_test_css1
 	make csswg_test_css21
@@ -798,25 +798,25 @@ csswg_test_all:
 	make csswg_test_manual
 
 internal_test:
-	cat tool/reftest/internal_unsorted.res | sort -nr | cut -d";" -f2 > tool/reftest/internal.res
-	./tool/drivers/run_test.py internal tool/reftest/internal.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py internal tool/reftest/internal_manual.res --font-dep -p$(TEST_NPROCS)
-	rm tool/reftest/internal.res
+	cat tool/reftest/efl/internal_unsorted.res | sort -nr | cut -d";" -f2 > tool/reftest/efl/internal.res
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_manual.res --font-dep -p$(TEST_NPROCS)
+	rm tool/reftest/efl/internal.res
 
 internal_test_gitlab_prerequisite:
-	./tool/reftest/internal.sh $(div)
+	./tool/reftest/efl/internal.sh $(div)
 internal_test_part1:
-	./tool/drivers/run_test.py internal tool/reftest/internal_part1.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part1.res -p$(TEST_NPROCS)
 internal_test_part2:
-	./tool/drivers/run_test.py internal tool/reftest/internal_part2.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part2.res -p$(TEST_NPROCS)
 internal_test_part3:
-	./tool/drivers/run_test.py internal tool/reftest/internal_part3.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part3.res -p$(TEST_NPROCS)
 internal_test_part4:
-	./tool/drivers/run_test.py internal tool/reftest/internal_part4.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part4.res -p$(TEST_NPROCS)
 internal_test_part5:
-	./tool/drivers/run_test.py internal tool/reftest/internal_part5.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part5.res -p$(TEST_NPROCS)
 internal_test_manual:
-	./tool/drivers/run_test.py internal tool/reftest/internal_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_manual.res --font-dep -p$(TEST_NPROCS)
 
 tct:
 	./StarFish test/tct/index.html
@@ -835,53 +835,53 @@ wpt_syntax_checker:
 	@echo "[wpt_syntax_checker] COMPLETE.."
 
 dom_conformance_test:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/dom_conformance_test.res -p$(TEST_NPROCS)
 dom_conformance_test_webkit:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/webkit_dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/webkit_dom_conformance_test.res -p$(TEST_NPROCS)
 dom_conformance_test_blink:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/blink_dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/blink_dom_conformance_test.res -p$(TEST_NPROCS)
 dom_conformance_test_gecko:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/gecko_dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/gecko_dom_conformance_test.res -p$(TEST_NPROCS)
 
 web_platform_test_dom:
-	./tool/drivers/run_test.py web_platform tool/reftest/wpt_dom.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_dom.res -p$(TEST_NPROCS)
 web_platform_test_dom_events:
-	./tool/drivers/run_test.py web_platform tool/reftest/wpt_dom_events.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_dom_events.res -p$(TEST_NPROCS)
 web_platform_test_html:
-	./tool/drivers/run_test.py web_platform tool/reftest/wpt_html.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_html.res -p$(TEST_NPROCS)
 web_platform_test_page_visibility:
-	./tool/drivers/run_test.py web_platform tool/reftest/wpt_page_visibility.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_page_visibility.res -p$(TEST_NPROCS)
 web_platform_test_progress_events:
-	./tool/drivers/run_test.py web_platform tool/reftest/wpt_progress_events.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_progress_events.res -p$(TEST_NPROCS)
 web_platform_test_xhr:
-	./tool/drivers/run_test.py web_platform tool/reftest/wpt_xhr.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_xhr.res -p$(TEST_NPROCS)
 
 vendor_test_blink_fast_dom:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/blink_fast_dom.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/blink_fast_dom.res -p$(TEST_NPROCS)
 vendor_test_blink_fast_html:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/blink_fast_html.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/blink_fast_html.res -p$(TEST_NPROCS)
 vendor_test_blink_fast_css:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_css.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_css_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_css.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_css_manual.res --font-dep -p$(TEST_NPROCS)
 vendor_test_blink_fast_etc:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_etc.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/blink_fast_etc_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_etc.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_etc_manual.res --font-dep -p$(TEST_NPROCS)
 vendor_test_gecko_layout:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/gecko_layout.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/gecko_layout_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/gecko_layout.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/gecko_layout_manual.res --font-dep -p$(TEST_NPROCS)
 vendor_test_webkit_fast_dom:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/webkit_fast_dom.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/webkit_fast_dom.res -p$(TEST_NPROCS)
 vendor_test_webkit_fast_html:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/webkit_fast_html.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/webkit_fast_html.res -p$(TEST_NPROCS)
 vendor_test_webkit_fast_css:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_css.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_css_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_css.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_css_manual.res --font-dep -p$(TEST_NPROCS)
 vendor_test_webkit_fast_etc:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_etc.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/webkit_fast_etc_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_etc.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_etc_manual.res --font-dep -p$(TEST_NPROCS)
 
 bidi_test:
-	./tool/drivers/run_test.py bidi tool/reftest/bidi.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py bidi tool/reftest/efl/bidi.res --font-dep -p$(TEST_NPROCS)
 
 regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp
