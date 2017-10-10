@@ -6,7 +6,7 @@
 	url = git@github.sec.samsung.net:RS7-webtf/binding_generator.git
 [submodule "test"]
 	path = test
-	url = git@github.sec.samsung.net:RS7-webtf/widget-tc.git
+	url = git@github.sec.samsung.net:RS7-webtf/efl-backend-tc.git
 [submodule "tool/gyp"]
 	path = tool/gyp
 	url = git@github.sec.samsung.net:RS7-webtf/gyp.git
@@ -18,4 +18,4 @@
 	url = git@github.sec.samsung.net:RS7-webtf/escargot.git
 [submodule "test-cairo"]
 	path = test-cairo
-	url = git@github.sec.samsung.net:RS7-webtf/cairo-widget-tc.git
+	url = git@github.sec.samsung.net:RS7-webtf/cairo-backend-tc.git
