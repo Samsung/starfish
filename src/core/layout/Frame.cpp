@@ -535,7 +535,7 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
     while (reverse.size()) {
         height = reverse.back().second;
         container = reverse.back().first;
-        result = height.percentValue(result);
+        result = height.specifiedValue(result, container);
         result = container->contentHeightApplyingBoxSizing(result);
         reverse.pop_back();
     }

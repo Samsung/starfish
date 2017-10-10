@@ -497,6 +497,7 @@ public:
         StringBuilder builder;
         auto it = m_values.begin();
         builder.appendString((*it).toString());
+        it++;
         auto it2 = m_operators.begin();
         while (it != m_values.end()) {
             builder.appendString(String::spaceString);
