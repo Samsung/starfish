@@ -19,7 +19,7 @@ test/reftest/csswg-test/css1_converted/c527-font-006.htm
 test/reftest/csswg-test/css1_converted/c527-font-007.htm
 test/reftest/csswg-test/css1_converted/c527-font-008.htm
 test/reftest/csswg-test/css1_converted/c527-font-009.htm
-test/reftest/csswg-test/css1_converted/c527-font-10.htm
+#test/reftest/csswg-test/css1_converted/c527-font-10.htm
 test/reftest/csswg-test/css1_converted/c531-color-000.htm
 test/reftest/csswg-test/css1_converted/c532-bgcolor-000.htm
 test/reftest/csswg-test/css1_converted/c532-bgcolor-001.htm
@@ -38,7 +38,7 @@ test/reftest/csswg-test/css1_converted/c5508-ipadn-b-000.htm
 test/reftest/csswg-test/css1_converted/c5508-ipadn-b-001.htm
 test/reftest/csswg-test/css1_converted/c5508-ipadn-b-002.htm
 test/reftest/csswg-test/css1_converted/c5509-padn-l-000.htm
-test/reftest/csswg-test/css1_converted/c5510-padn-000.htm
+#test/reftest/csswg-test/css1_converted/c5510-padn-000.htm
 test/reftest/csswg-test/css1_converted/c5511-brdr-tw-003.htm
 test/reftest/csswg-test/css1_converted/c5511-ibrdr-tw-000.htm
 test/reftest/csswg-test/css1_converted/c5512-brdr-rw-000.htm
