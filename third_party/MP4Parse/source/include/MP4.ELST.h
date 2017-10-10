@@ -55,6 +55,21 @@ namespace MP4
             {
                 return MP4_PARSER_DEFINE_TYPE_STRING("elst");
             }
+            struct EditEntry {
+                uint64_t segment_duration;
+                int64_t media_time;
+                EditEntry(uint64_t d, int64_t t)
+                    : segment_duration(d)
+                    , media_time(t)
+                {
+                }
+                EditEntry()
+                    : EditEntry(0, 0)
+                {
+                }
+            };
+
+            std::vector<EditEntry> edit_entries;
     };
 }
 

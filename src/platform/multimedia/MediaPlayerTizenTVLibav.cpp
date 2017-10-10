@@ -29,9 +29,7 @@ extern "C" {
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/modules/mediasource/SourceBuffer.h"
-
-#include <media/player.h>
-#include <media/player_internal.h>
+#include "core/modules/threading/Locker.h"
 
 namespace StarFish {
 
@@ -77,163 +75,212 @@ static int64_t FFMpegIOContextSeekCallback(void* opaque, int64_t offset,
     return self->m_readPos;
 }
 
-extern bool g_ffmpegInited;
+#define STARFISH_VIDEO_MAX_WIDTH 1920
+#define STARFISH_VIDEO_MAX_HEIGHT 1080
+#define STARFISH_VIDEO_DEFAULT_FRAMERATE_NUM 2997
+#define STARFISH_VIDEO_DEFAULT_FRAMERATE_DEN 100
 
-void MediaPlayerTizenTV::setVideoStreamInfo(size_t initSegmentIndex)
+#define RETURN_WHEN_PLAYER_ERROR(...) \
+    if (ret != PLAYER_ERROR_NONE) {   \
+        PLAYER_LOGE(__VA_ARGS__);     \
+        printNativePlayerError(ret);  \
+        handlePlayerError();          \
+        return;                       \
+    }
+
+static int getBufferLevel(uint64_t current, uint64_t total)
 {
-    av_register_all();
-    avcodec_register_all();
-    avformat_network_init();
+    return 0;
+}
+
+void MediaPlayerTizenTV::setVideoStreamInfoWithGuard(size_t initSegmentIndex)
+{
+    if (!m_activeMediaSource->activeVideoSourceBuffer()) {
+        return;
+    }
+    Locker<Mutex> locker(*m_mediaFormatMutex);
 
     // set video options
-    player_video_stream_info_s videoInfo;
-    if (m_activeMediaSource->activeVideoSourceBuffer()) {
-        PLAYER_LOGI("MediaPlayerTizenTV::setVideoStreamInfo\n");
-        VideoStreamInfo* info =
-            (VideoStreamInfo*)(m_activeMediaSource->activeVideoSourceBuffer()
-                                   ->streamInfo(
-                                       0, m_activeMediaSource
-                                              ->activeVideoStreamIndex()));
-        memset(&videoInfo, 0, sizeof(player_video_stream_info_s));
+    PLAYER_LOGI("MediaPlayerTizenTV::setVideoStreamInfoWithGuard\n");
 
-        const char* mediaFormat = "";
-        if (strstr(info->m_codecName, "h264")) {
-            videoInfo.mime = "video/x-h264";
-            // TODO find container type
-            mediaFormat = "mp4";
-        } else if (strstr(info->m_codecName, "vp9")) {
-            videoInfo.mime = "video/x-vp9";
-            // TODO find container type
-            mediaFormat = "webm";
-        } else {
-            // TODO
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-        m_videoWidth = videoInfo.width = info->m_width;
-        m_videoHeight = videoInfo.height = info->m_height;
-        videoInfo.framerate_den = info->m_timeBaseDen;
-        videoInfo.framerate_num = info->m_timeBaseNum;
-
-        uint8_t* bufferForIO = (uint8_t*)av_malloc(4096);
-        FFMpegIOContext ctx(
-            m_activeMediaSource->activeVideoSourceBuffer()->bufferHeader(0));
-        AVIOContext* ioContext = avio_alloc_context(
-            bufferForIO, 4096, 0, &ctx, FFMpegIOContextReadCallback, nullptr,
-            FFMpegIOContextSeekCallback);
-        AVFormatContext* fc = avformat_alloc_context();
-        fc->flags = AVFMT_FLAG_CUSTOM_IO;
-        fc->pb = ioContext;
-        fc->iformat = av_find_input_format(mediaFormat);
-        STARFISH_RELEASE_ASSERT(avformat_open_input(&fc, NULL, NULL, NULL) ==
-                                0);
-        videoInfo.codec_extradata =
-            fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
-                ->codec->extradata;
-        videoInfo.extradata_size =
-            fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
-                ->codec->extradata_size;
-        PLAYER_LOGI(
-            "ffmpegVideo Info[%d].. %d %d\n",
-            (int)m_activeMediaSource->activeVideoStreamIndex(),
-            (int)fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
-                ->codec->width,
-            (int)fc->streams[m_activeMediaSource->activeVideoStreamIndex()]
-                ->codec->height);
-        PLAYER_LOGI("Video Info-----------------------------\n");
-        PLAYER_LOGI("> mime      : %s\n", videoInfo.mime);
-        PLAYER_LOGI("> format    : %s\n", mediaFormat);
-        PLAYER_LOGI("> framerate : %d/%d\n", videoInfo.framerate_num,
-                    videoInfo.framerate_den);
-        PLAYER_LOGI("> size      : %dx%d\n", info->m_width, info->m_height);
-        PLAYER_LOGI("---------------------------------------\n");
-
-        int ret = player_set_video_stream_info(m_nativePlayer, &videoInfo);
-        STARFISH_RELEASE_ASSERT(ret == 0);
-
-        avformat_close_input(&fc);
-        av_free(bufferForIO);
-        av_free(ioContext);
-
-        m_videoInitSegmentIndex = initSegmentIndex;
+    STARFISH_RELEASE_ASSERT(m_videoFormat == nullptr);
+    int ret = media_format_create(&m_videoFormat);
+    if (ret != MEDIA_FORMAT_ERROR_NONE) {
+        printMediaFormatError(ret);
+        handlePlayerError();
+        return;
     }
+    if (m_videoFormatExtra.codec_extradata != nullptr) {
+        free(m_videoFormatExtra.codec_extradata);
+    }
+    memset(&m_videoFormatExtra, 0,
+           sizeof(player_media_stream_video_extra_info_s));
+
+    // Get info from demuxer
+    StreamInfo* info =
+        m_activeMediaSource->activeVideoSourceBuffer()->streamInfo(
+            0, m_activeMediaSource->activeVideoStreamIndex());
+    // Get mimetype
+    if (info->isCodec(MediaCodecVideoH264)) {
+        media_format_set_video_mime(m_videoFormat, MEDIA_FORMAT_H264_SP);
+    } else if (info->isCodec(MediaCodecVideoVP9)) {
+        media_format_set_video_mime(m_videoFormat, MEDIA_FORMAT_VP9);
+    } else {
+        // TODO
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    m_videoWidth = info->videoWidth();
+    m_videoHeight = info->videoHeight();
+    media_format_set_video_width(m_videoFormat, m_videoWidth);
+    media_format_set_video_height(m_videoFormat, m_videoHeight);
+    m_videoFormatExtra.max_width = STARFISH_VIDEO_MAX_WIDTH;
+    m_videoFormatExtra.max_height = STARFISH_VIDEO_MAX_HEIGHT;
+    m_videoMaxBufferSize =
+        (m_videoWidth * m_videoHeight * 30 * 2 * 7) / 100 / 8 * 5;
+
+    if (info->videoHasFramerate() && info->videoFramerate().isValid()) {
+        m_videoFormatExtra.framerate_num = info->videoFramerate().m_num;
+        m_videoFormatExtra.framerate_den = info->videoFramerate().m_den;
+    } else {
+        m_videoFormatExtra.framerate_num = STARFISH_VIDEO_DEFAULT_FRAMERATE_NUM;
+        m_videoFormatExtra.framerate_den = STARFISH_VIDEO_DEFAULT_FRAMERATE_DEN;
+    }
+    m_videoFormatExtra.hdr_mode = MEDIA_STREAM_HDR_TYPE_MATROSKA;
+    m_videoFormatExtra.hdr_info = std::string().c_str();
+    m_videoFormatExtra.is_framerate_changed = false;
+    // TODO PLAYER_DRM_TYPE_EME
+    m_videoFormatExtra.drm_type = PLAYER_DRM_TYPE_NONE;
+
+    // Extra data
+    m_videoFormatExtra.extradata_size = info->m_extraData.size();
+    if (m_videoFormatExtra.extradata_size != 0) {
+        m_videoFormatExtra.codec_extradata =
+            (unsigned char*)malloc(m_videoFormatExtra.extradata_size);
+        memcpy(m_videoFormatExtra.codec_extradata, info->m_extraData.data(),
+               m_videoFormatExtra.extradata_size);
+    }
+
+    PLAYER_LOGI("Video Info-----------------------------\n");
+    PLAYER_LOGI("> codec     : %s\n", info->codecString());
+    PLAYER_LOGI("> framerate : %d/%d\n", m_videoFormatExtra.framerate_num,
+                m_videoFormatExtra.framerate_den);
+    PLAYER_LOGI("> size      : %dx%d\n", info->videoWidth(),
+                info->videoHeight());
+    PLAYER_LOGI("> max_buffer: %llu\n", m_videoMaxBufferSize);
+    PLAYER_LOGI("---------------------------------------\n");
+
+    player_set_media_stream_buffer_min_threshold(m_nativePlayer,
+                                                 PLAYER_STREAM_TYPE_VIDEO, 100);
+    ret = player_set_media_stream_buffer_status_cb_ex(
+        m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
+        [](player_media_stream_buffer_status_e status, unsigned long long bytes,
+           void* user_data) {
+            MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
+            self->handlePlayerBuffer(StreamTypeVideo, bytes);
+        },
+        this);
+    RETURN_WHEN_PLAYER_ERROR(
+        "ERROR: player_set_media_stream_buffer_status_cb_ex\n");
+
+    media_format_set_extra(m_videoFormat, &m_videoFormatExtra);
+    ret = player_set_media_stream_info(m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
+                                       m_videoFormat);
+    RETURN_WHEN_PLAYER_ERROR("ERROR: player_set_media_stream_info\n");
+
+    // TODO Replace test value to real estimate value
+    ret = player_set_media_stream_buffer_max_size(
+        m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO, m_videoMaxBufferSize);
+    RETURN_WHEN_PLAYER_ERROR(
+        "ERROR: player_set_media_stream_buffer_max_size\n");
+
+    m_videoInitSegmentIndex = initSegmentIndex;
 }
 
-void MediaPlayerTizenTV::setAudioStreamInfo(size_t initSegmentIndex)
+void MediaPlayerTizenTV::setAudioStreamInfoWithGuard(size_t initSegmentIndex)
 {
-    av_register_all();
-    avcodec_register_all();
-    avformat_network_init();
-
-    // set audio options
-    player_audio_stream_info_s audioInfo;
-    if (m_activeMediaSource->activeAudioSourceBuffer()) {
-        PLAYER_LOGI("MediaPlayerTizenTV::setAudioStreamInfo\n");
-        memset(&audioInfo, 0, sizeof(player_audio_stream_info_s));
-
-        StreamInfo* info =
-            (m_activeMediaSource->activeAudioSourceBuffer()->streamInfo(
-                initSegmentIndex,
-                m_activeMediaSource->activeAudioStreamIndex()));
-
-        const char* mediaFormat = "";
-        if (strstr(info->m_codecName, "aac")) {
-            audioInfo.mime = "audio/mpeg";
-            // TODO find container type
-            mediaFormat = "mp4";
-        } else if (strstr(info->m_codecName, "vorbis")) {
-            audioInfo.mime = "audio/x-vorbis";
-            // TODO find container type
-            mediaFormat = "webm";
-        } else {
-            // TODO
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-        uint8_t* bufferForIO = (uint8_t*)av_malloc(4096);
-        FFMpegIOContext ctx(
-            m_activeMediaSource->activeAudioSourceBuffer()->bufferHeader(
-                initSegmentIndex));
-        AVIOContext* ioContext = avio_alloc_context(
-            bufferForIO, 4096, 0, &ctx, FFMpegIOContextReadCallback, nullptr,
-            FFMpegIOContextSeekCallback);
-        AVFormatContext* fc = avformat_alloc_context();
-        fc->flags = AVFMT_FLAG_CUSTOM_IO;
-        fc->pb = ioContext;
-        fc->iformat = av_find_input_format(mediaFormat);
-        STARFISH_RELEASE_ASSERT(avformat_open_input(&fc, NULL, NULL, NULL) ==
-                                0);
-
-        AVStream* audioStream =
-            fc->streams[m_activeMediaSource->activeAudioStreamIndex()];
-        AVCodecContext* audioCodecCtx =
-            fc->streams[m_activeMediaSource->activeAudioStreamIndex()]->codec;
-        audioInfo.channels = audioCodecCtx->channels;
-        audioInfo.sample_rate = audioCodecCtx->sample_rate;
-        audioInfo.bit_rate = audioCodecCtx->bit_rate;
-        audioInfo.version = 2;
-        audioInfo.user_info = 0;
-        audioInfo.codec_extradata = audioCodecCtx->extradata;
-        audioInfo.extradata_size = audioCodecCtx->extradata_size;
-        PLAYER_LOGI("Audio Info-----------------------------\n");
-        PLAYER_LOGI("> mime      : %s\n", audioInfo.mime);
-        PLAYER_LOGI("> format    : %s\n", mediaFormat);
-        PLAYER_LOGI("> channels  : %d\n", audioInfo.channels);
-        PLAYER_LOGI("> sample_rate : %d\n", audioInfo.sample_rate);
-        PLAYER_LOGI("> bit_rate  : %d\n", audioInfo.bit_rate);
-        PLAYER_LOGI("---------------------------------------\n");
-
-        int ret = player_set_audio_stream_info(m_nativePlayer, &audioInfo);
-        STARFISH_RELEASE_ASSERT(ret == 0);
-
-        avformat_close_input(&fc);
-        av_free(bufferForIO);
-        av_free(ioContext);
-
-        m_audioInitSegmentIndex = initSegmentIndex;
+    if (!m_activeMediaSource->activeAudioSourceBuffer()) {
+        return;
     }
-}
-}
+    Locker<Mutex> locker(*m_mediaFormatMutex);
+    // set audio options
+    PLAYER_LOGI("MediaPlayerTizenTV::setAudioStreamInfoWithGuard\n");
+    STARFISH_RELEASE_ASSERT(m_audioFormat == nullptr);
+    int ret = media_format_create(&m_audioFormat);
+    if (ret != MEDIA_FORMAT_ERROR_NONE) {
+        printMediaFormatError(ret);
+        handlePlayerError();
+        return;
+    }
+    if (m_audioFormatExtra.codec_extradata != nullptr) {
+        free(m_audioFormatExtra.codec_extradata);
+    }
+    memset(&m_audioFormatExtra, 0,
+           sizeof(player_media_stream_audio_extra_info_s));
 
+    // Get info from demuxer
+    StreamInfo* info =
+        m_activeMediaSource->activeAudioSourceBuffer()->streamInfo(
+            initSegmentIndex, m_activeMediaSource->activeAudioStreamIndex());
+
+    if (info->isCodec(MediaCodecAudioAAC)) {
+        media_format_set_audio_mime(m_audioFormat, MEDIA_FORMAT_AAC);
+    } else if (info->isCodec(MediaCodecAudioVorbis)) {
+        media_format_set_audio_mime(m_audioFormat, MEDIA_FORMAT_VORBIS);
+    } else {
+        // TODO
+        media_format_set_audio_mime(m_audioFormat, MEDIA_FORMAT_MP3);
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    media_format_set_audio_channel(m_audioFormat, (int)info->audioChannels());
+    media_format_set_audio_samplerate(m_audioFormat,
+                                      (int)info->audioSampleRate());
+    // media_format_set_audio_avg_bps(m_audioFormat, audioCodecCtx->bit_rate);
+
+    m_audioFormatExtra.extradata_size = info->m_extraData.size();
+    if (m_audioFormatExtra.extradata_size != 0) {
+        m_audioFormatExtra.codec_extradata =
+            (unsigned char*)malloc(m_audioFormatExtra.extradata_size);
+        memcpy(m_audioFormatExtra.codec_extradata, info->m_extraData.data(),
+               m_audioFormatExtra.extradata_size);
+    }
+    // TODO PLAYER_DRM_TYPE_EME
+    m_audioFormatExtra.drm_type = PLAYER_DRM_TYPE_NONE;
+
+    PLAYER_LOGI("Audio Info-----------------------------\n");
+    PLAYER_LOGI("> codec     : %s\n", info->codecString());
+    PLAYER_LOGI("> channels  : %d\n", (int)info->audioChannels());
+    PLAYER_LOGI("> sample_rate : %d\n", (int)info->audioSampleRate());
+    PLAYER_LOGI("> extradata : %d\n", (int)info->m_extraData.size());
+    PLAYER_LOGI("---------------------------------------\n");
+
+    player_set_media_stream_buffer_min_threshold(m_nativePlayer,
+                                                 PLAYER_STREAM_TYPE_AUDIO, 100);
+    ret = player_set_media_stream_buffer_status_cb_ex(
+        m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO,
+        [](player_media_stream_buffer_status_e status, unsigned long long bytes,
+           void* user_data) {
+            MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
+            self->handlePlayerBuffer(StreamTypeAudio, bytes);
+        },
+        this);
+    RETURN_WHEN_PLAYER_ERROR(
+        "ERROR: player_set_media_stream_buffer_status_cb_ex\n");
+
+    media_format_set_extra(m_audioFormat, &m_audioFormatExtra);
+    ret = player_set_media_stream_info(m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO,
+                                       m_audioFormat);
+    RETURN_WHEN_PLAYER_ERROR("ERROR: player_set_media_stream_info\n");
+
+    ret = player_set_media_stream_buffer_max_size(
+        m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO, m_audioMaxBufferSize);
+    RETURN_WHEN_PLAYER_ERROR(
+        "ERROR: player_set_media_stream_buffer_max_size\n");
+
+    m_audioInitSegmentIndex = initSegmentIndex;
+}
+}
+#undef RETURN_WHEN_PLAYER_ERROR
 #endif
 #endif

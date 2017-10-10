@@ -173,6 +173,8 @@ Atom* atomFactory(const uint32_t type)
         return (new MP4::DREF());
     case (MP4_PARSER_DEFINE_TYPE_STRING("elst")):
         return (new MP4::ELST());
+    case (MP4_PARSER_DEFINE_TYPE_STRING("esds")):
+        return (new MP4::ESDS());
     case (MP4_PARSER_DEFINE_TYPE_STRING("free")):
         return (new MP4::FREE());
     case (MP4_PARSER_DEFINE_TYPE_STRING("frma")):
@@ -201,6 +203,8 @@ Atom* atomFactory(const uint32_t type)
         return (new MP4::MFHD());
     case (MP4_PARSER_DEFINE_TYPE_STRING("mfro")):
         return (new MP4::MFRO());
+    case (MP4_PARSER_DEFINE_TYPE_STRING("mp4a")):
+        return (new MP4::MP4A());
     case (MP4_PARSER_DEFINE_TYPE_STRING("mvhd")):
         return (new MP4::MVHD());
     case (MP4_PARSER_DEFINE_TYPE_STRING("padb")):

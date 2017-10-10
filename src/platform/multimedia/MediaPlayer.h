@@ -22,9 +22,9 @@
 
 #include "core/dom/HTMLMediaElement.h"
 
-// #ifndef PLAYER_DEBUG
-// #define PLAYER_DEBUG
-// #endif
+#ifndef PLAYER_DEBUG
+#define PLAYER_DEBUG
+#endif
 
 #ifdef PLAYER_DEBUG
 #include <sys/types.h>
@@ -147,7 +147,7 @@ protected:
     PlaybackState m_playbackState;
     HTMLMediaElement* m_container;
     MediaSource* m_activeMediaSource;
-    unsigned long m_videoWidth, m_videoHeight;
+    volatile unsigned long m_videoWidth, m_videoHeight;
     size_t m_currentTimeUpdateTimer;
 };
 }

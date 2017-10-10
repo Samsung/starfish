@@ -68,7 +68,10 @@ void TFHD::processData( MP4::BinaryStream * stream, size_t length )
 
     if (f & 0x20) {
         // Default Sample Flags
-        stream->readBigEndianUnsignedInteger();
+        default_sample_flags = stream->readBigEndianUnsignedInteger();
+        has_default_sample_flags = true;
+    } else {
+        has_default_sample_flags = false;
     }
     /*
     if (f & 0x10000) {

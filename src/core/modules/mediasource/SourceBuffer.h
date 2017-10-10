@@ -76,18 +76,35 @@ struct MediaPacketGroup {
     {
     }
 
-    void updateMaxDurationIfNeeded(uint64_t newDuration)
+    void refresh()
     {
-        if (m_maxFrameDuration < newDuration) {
-            m_maxFrameDuration = newDuration;
+        m_maxFrameDuration = 0;
+        m_groupTimestampStart = std::numeric_limits<uint64_t>::max();
+        m_groupTimestampEnd = 0;
+        m_dataSize = 0;
+        for (size_t i = 0; i < m_packets.size(); i++) {
+            updateGroupInfo(m_packets[i]);
         }
+    }
+
+    void updateGroupInfo(MediaPacket* packet)
+    {
+        if (m_maxFrameDuration < packet->m_duration) {
+            m_maxFrameDuration = packet->m_duration;
+        }
+        if (packet->m_pts < m_groupTimestampStart) {
+            m_groupTimestampStart = packet->m_pts;
+        }
+        if (packet->m_pts + packet->m_duration > m_groupTimestampEnd) {
+            m_groupTimestampEnd = packet->m_pts + packet->m_duration;
+        }
+        m_dataSize += packet->m_dataSize;
     }
 
     void pushMediaPacket(MediaPacket* packet)
     {
         m_packets.push_back(packet);
-        updateMaxDurationIfNeeded(packet->m_duration);
-        m_dataSize += packet->m_dataSize;
+        updateGroupInfo(packet);
     }
 };
 
@@ -175,7 +192,8 @@ public:
 
     // these methods are thread-safe
     std::pair<MediaPacket*, size_t> findProperMediaPacket(
-        size_t streamIdx, uint64_t startPositionInPTSWantToFind);
+        size_t streamIdx, uint64_t startPositionInDTSWantToFind);
+    void revertLastCacheIfPossible(size_t streamIdx);
     uint64_t lastBufferedTimestamp(size_t streamIdx);
     void clearPacketAccessCache();
 
@@ -230,15 +248,13 @@ public:
 protected:
     // this method needs packet group lock
     void rangeRemoval(uint64_t start, uint64_t end,
-                      StreamInfo::Type type =
-                          (StreamInfo::Type)((int)StreamInfo::Type::Video |
-                                             (int)StreamInfo::Type::Audio |
-                                             (int)StreamInfo::Type::Subtitle));
+                      StreamType type = (StreamType)((int)StreamTypeVideo |
+                                                     (int)StreamTypeAudio |
+                                                     (int)StreamTypeSubtitle));
     void rangeRemovalWithGuard(uint64_t start, uint64_t end,
-                               StreamInfo::Type type = (StreamInfo::Type)(
-                                   (int)StreamInfo::Type::Video |
-                                   (int)StreamInfo::Type::Audio |
-                                   (int)StreamInfo::Type::Subtitle));
+                               StreamType type = (StreamType)(
+                                   (int)StreamTypeVideo | (int)StreamTypeAudio |
+                                   (int)StreamTypeSubtitle));
     void setUpdating(bool flag, UpdateState state);
 
     void attachedToParent(MediaSource* ms)
