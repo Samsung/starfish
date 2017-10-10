@@ -41,6 +41,10 @@ void* FrameBoxRareData::operator new(size_t size)
                    GC_WORD_OFFSET(FrameBoxRareData, m_layoutParent));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(FrameBoxRareData, m_stackingContext));
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameBoxRareData, m_bufferForBorderRadius));
+#endif
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameBoxRareData));
         typeInited = true;
     }
@@ -458,6 +462,11 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
         canvas->clip(Unit::Rect(0, 0, width(), height()));
     }
 
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+    Canvas* orgCanvas = canvas;
+    bool cairoCanvasUsed = false;
+#endif
+
     // apply clip if border-radius exists
     if (style()->hasBorderRadius()) {
         const LayoutRect rect(0, 0, width(), height());
@@ -481,6 +490,23 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             br.m_bottomRightVertical.specifiedValue(height(), this);
         float arcR;
 
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+        cairoCanvasUsed = true;
+        if (!ensureFrameBoxRareData()->m_bufferForBorderRadius ||
+            frameBoxRareData()->m_bufferForBorderRadius->width() !=
+                width().toUnsigned() ||
+            frameBoxRareData()->m_bufferForBorderRadius->height() !=
+                height().toUnsigned()) {
+            frameBoxRareData()->m_bufferForBorderRadius =
+                ImageData::create(width().toUnsigned(), height().toUnsigned());
+        }
+
+        canvas = Canvas::createGenericCanvas(
+            node()->starFish(),
+            frameBoxRareData()->m_bufferForBorderRadius->data(),
+            frameBoxRareData()->m_bufferForBorderRadius->width(),
+            frameBoxRareData()->m_bufferForBorderRadius->height());
+#endif
         // border-left
         {
             if (topLeftHorizontal && topLeftVertical) {
@@ -674,6 +700,16 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
     } while (false);
 
     paintBorders(canvas, LayoutRect(0, 0, width(), height()));
+
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+    if (cairoCanvasUsed) {
+        delete canvas;
+        canvas = orgCanvas;
+        canvas->drawImage(ensureFrameBoxRareData()->m_bufferForBorderRadius,
+                          Unit::Rect(0, 0, width(), height()));
+    }
+#endif
+
     canvas->restore();
 }
 

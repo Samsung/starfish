@@ -62,11 +62,17 @@ struct FrameBoxRareData : public gc {
     Frame* m_layoutParent;
     LayoutBoxSurroundData m_padding, m_border, m_margin;
     StackingContext* m_stackingContext;
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+    ImageData* m_bufferForBorderRadius;
+#endif
 
     FrameBoxRareData(Frame* layoutParent)
         : m_frameBoxRareDataTag(FRAMEBOX_RAREDATA_TAG)
         , m_layoutParent(layoutParent)
         , m_stackingContext(nullptr)
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+        , m_bufferForBorderRadius(nullptr)
+#endif
     {
     }
 
