@@ -84,6 +84,7 @@ void MediaPlayerTizenTV::printNativePlayerError(int errorCode)
 void MediaPlayerTizenTV::setNativePlayerDefaultOptions(ResourceURL* url)
 {
     if (m_container->isHTMLVideoElement()) {
+        player_display_video_at_paused_state(m_nativePlayer, true);
         player_display_h displayHandle = GET_DISPLAY(
             (Evas_Object*)m_container->starFish()->platformWindow()->unwrap());
         player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
@@ -111,7 +112,7 @@ void MediaPlayerTizenTV::mediaEndOperation()
     player_stop(m_nativePlayer);
     if (m_activeMediaSource) {
         Locker<Mutex> locker(*m_bufferMutex);
-        m_lastAudioPts = m_lastVideoPts = 0;
+        m_lastAudioDTS = m_lastVideoDTS = 0;
     }
 }
 
@@ -154,7 +155,7 @@ void MediaPlayerTizenTV::seekOperation(int timeInMS)
     }
     if (m_activeMediaSource) {
         m_bufferMutex->lock();
-        m_lastVideoPts = m_lastAudioPts = timeInMS;
+        m_lastVideoDTS = m_lastAudioDTS = timeInMS;
         m_bufferMutex->unlock();
 
         if (m_activeMediaSource->activeVideoSourceBuffer()) {
@@ -170,43 +171,32 @@ void MediaPlayerTizenTV::prepareMediaSource()
 {
     PLAYER_LOGI("MediaPlayerTizenTV::prepareMediaSource\n");
 
-    player_set_media_stream_buffer_max_size(
-        m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
-        (unsigned long long)2 * 1024 * 1024);
-    player_set_media_stream_buffer_max_size(
-        m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO,
-        (unsigned long long)2 * 1024 * 1024);
-    player_set_uri(m_nativePlayer, "external_demuxer://MSE");
-
-    setVideoStreamInfo();
-    setAudioStreamInfo();
+    setVideoStreamInfoWithGuard();
+    setAudioStreamInfoWithGuard();
+    if (m_foundError) {
+        return;
+    }
 
     m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
         HTMLMediaElement::HAVE_METADATA);
 
+#if 0
+    // Tizen 2.4
     player_set_buffer_need_video_data_cb(
         m_nativePlayer,
         [](unsigned int size, void* user_data) {
             MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
-            self->fillVideoBuffer();
+            self->fillVideoBufferWithGuard();
         },
         this);
-
-    /*
-    player_set_video_frame_decoded_cb(m_nativePlayer, [](unsigned char *data,
-    int width, int height, unsigned int size, void *user_data)
-    {
-        STARFISH_LOG_INFO("player_set_video_frame_decoded_cb called %d %d\n",
-    width, height);
-    }, this); */
-
     player_set_buffer_need_audio_data_cb(
         m_nativePlayer,
         [](unsigned int size, void* user_data) {
             MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
-            self->fillAudioBuffer();
+            self->fillAudioBufferWithGuard();
         },
         this);
+#endif
 
     m_preparedCallback = [](void* user_data) {
         PLAYER_LOGI("MediaPlayerTizenTV:: MSE Prepare ok\n");
@@ -226,195 +216,6 @@ void MediaPlayerTizenTV::prepareMediaSource()
     }
 
     PLAYER_LOGI("MediaPlayerTizenTV::prepareMediaSource end\n");
-}
-
-void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
-{
-    if (!alive()) {
-        return;
-    }
-    if (useLock) {
-        m_bufferMutex->lock();
-    }
-
-    PLAYER_LOGI("MediaPlayerTizenTV::fillVideoBuffer start %dms\n",
-                (int)m_lastVideoPts);
-    uint64_t submitted = 0;
-    uint64_t streamIdx = m_activeMediaSource->activeVideoStreamIndex();
-
-    while (submitted < 500) {
-        std::pair<MediaPacket*, size_t> packet =
-            m_activeMediaSource->activeVideoSourceBuffer()
-                ->findProperMediaPacket(streamIdx, m_lastVideoPts);
-
-        if (!packet.first) {
-            uint64_t endTime = m_activeMediaSource->duration() * 1000;
-            if (std::isinf(m_activeMediaSource->duration())) {
-                endTime = std::numeric_limits<uint64_t>::max();
-            }
-            PLAYER_LOGI(
-                "MediaPlayerTizenTV::fillVideoBuffer try to detect end of "
-                "Video -> %d %d\n",
-                (int)endTime, (int)m_lastVideoPts);
-            uint64_t lastBufferedTime =
-                m_activeMediaSource->activeVideoSourceBuffer()
-                    ->lastBufferedTimestamp(streamIdx);
-            if ((endTime - m_lastVideoPts) < 10 ||
-                ((m_lastVideoPts == lastBufferedTime) &&
-                 (std::abs(endTime - lastBufferedTime) < 1000))) {
-                m_isEnded = true;
-                player_submit_es_packet(m_nativePlayer, 0, 0, 0,
-                                        PLAYER_STREAM_TYPE_VIDEO, nullptr);
-                PLAYER_LOGI(
-                    "MediaPlayerTizenTV::fillVideoBuffer detect end of "
-                    "Video!\n");
-                if (useLock) {
-                    m_bufferMutex->unlock();
-                }
-                return;
-            }
-
-            PLAYER_LOGI(
-                "MediaPlayerTizenTV::fillVideoBuffer runs into video buffer "
-                "under run state[1]\n");
-            m_isVideoBufferUnderrunState = true;
-            if (useLock) {
-                m_bufferMutex->unlock();
-            }
-            return;
-        }
-        if (packet.first->m_pts > m_lastVideoPts &&
-            packet.first->m_pts - m_lastVideoPts > 500) {
-            PLAYER_LOGI(
-                "MediaPlayerTizenTV::fillVideoBuffer runs into video buffer "
-                "under run state[2] - requested(%lld) but returned(%lld)\n",
-                m_lastVideoPts, packet.first->m_pts);
-            m_isVideoBufferUnderrunState = true;
-            break;
-        }
-
-        m_lastVideoPts = packet.first->m_pts + packet.first->m_duration;
-        if (packet.second != m_videoInitSegmentIndex) {
-            if (!packet.first->m_hasIdr) {
-                PLAYER_LOGI(
-                    "MediaPlayerTizenTV::fillVideoBuffer drops non-idr packet "
-                    "when video type changed\n");
-                continue;
-            } else {
-                m_videoInitSegmentIndex = packet.second;
-                PLAYER_LOGI(
-                    "MediaPlayerTizenTV::fillVideoBuffer detect ohter type of "
-                    "Video! (and will submit packet including idr)\n");
-            }
-        }
-        submitted += packet.first->m_duration;
-        int ret = player_submit_es_packet(
-            m_nativePlayer, packet.first->m_data, packet.first->m_dataSize,
-            packet.first->m_pts, PLAYER_STREAM_TYPE_VIDEO, nullptr);
-        // PLAYER_LOGI("> %dms (data: %d ... %d", (int)m_lastVideoPts,
-        // (int)packet.first->m_data[0],
-        // (int)packet.first->m_data[packet.first->m_dataSize - 1]);
-
-        if (ret != PLAYER_ERROR_NONE) {
-            PLAYER_LOGE("**ERROR: player_submit_es_packet\n");
-            printNativePlayerError(ret);
-        }
-        m_isVideoBufferUnderrunState = false;
-    }
-    PLAYER_LOGI("MediaPlayerTizenTV::fillVideoBuffer end %dms\n\n",
-                (int)m_lastVideoPts);
-
-    if (useLock) {
-        m_bufferMutex->unlock();
-    }
-}
-
-void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
-{
-    if (!alive()) {
-        return;
-    }
-    if (useLock) {
-        m_bufferMutex->lock();
-    }
-
-    PLAYER_LOGI("MediaPlayerTizenTV::fillAudioBuffer start %dms\n",
-                (int)m_lastAudioPts);
-    uint64_t ptsStart = m_lastAudioPts;
-    uint64_t streamIdx = m_activeMediaSource->activeAudioStreamIndex();
-
-    while (m_lastAudioPts - ptsStart < 500) {
-        std::pair<MediaPacket*, size_t> packet =
-            m_activeMediaSource->activeAudioSourceBuffer()
-                ->findProperMediaPacket(streamIdx, m_lastAudioPts);
-
-        if (!packet.first) {
-            uint64_t endTime = m_activeMediaSource->duration() * 1000;
-            if (std::isinf(m_activeMediaSource->duration())) {
-                endTime = std::numeric_limits<uint64_t>::max();
-            }
-            PLAYER_LOGI(
-                "MediaPlayerTizenTV::fillAudioBuffer try to detect end of "
-                "Audio -> %d %d\n",
-                (int)endTime, (int)m_lastAudioPts);
-            uint64_t lastBufferedTime =
-                m_activeMediaSource->activeAudioSourceBuffer()
-                    ->lastBufferedTimestamp(streamIdx);
-            if ((endTime - m_lastAudioPts) < 10 ||
-                ((m_lastAudioPts == lastBufferedTime) &&
-                 (std::abs(endTime - lastBufferedTime) < 1000))) {
-                m_isEnded = true;
-                player_submit_es_packet(m_nativePlayer, 0, 0, 0,
-                                        PLAYER_STREAM_TYPE_AUDIO, nullptr);
-                PLAYER_LOGI(
-                    "MediaPlayerTizenTV::fillAudioBuffer detect end of "
-                    "Audio!\n");
-                if (useLock) {
-                    m_bufferMutex->unlock();
-                }
-                return;
-            }
-
-            PLAYER_LOGI(
-                "MediaPlayerTizenTV::fillAudioBuffer runs into audio buffer "
-                "under run state[1]\n");
-            m_isAudioBufferUnderrunState = true;
-            if (useLock) {
-                m_bufferMutex->unlock();
-            }
-            return;
-        }
-        if (packet.first->m_pts > m_lastAudioPts &&
-            packet.first->m_pts - m_lastAudioPts > 500) {
-            PLAYER_LOGI(
-                "MediaPlayerTizenTV::fillAudioBuffer runs into audio buffer "
-                "under run state[2]\n");
-            m_isAudioBufferUnderrunState = true;
-            break;
-        }
-        if (packet.second != m_audioInitSegmentIndex) {
-            m_audioInitSegmentIndex = packet.second;
-            PLAYER_LOGI(
-                "MediaPlayerTizenTV::fillAudioBuffer detect ohter type of "
-                "Audio!\n");
-        }
-        m_lastAudioPts = packet.first->m_pts + packet.first->m_duration;
-        int ret = player_submit_es_packet(
-            m_nativePlayer, packet.first->m_data, packet.first->m_dataSize,
-            packet.first->m_pts, PLAYER_STREAM_TYPE_AUDIO, nullptr);
-        // PLAYER_LOGI("> %dms\n", (int)m_lastAudioPts);
-
-        if (ret != PLAYER_ERROR_NONE) {
-            PLAYER_LOGE("**ERROR: player_submit_es_packet\n");
-            printNativePlayerError(ret);
-        }
-        m_isAudioBufferUnderrunState = false;
-    }
-    PLAYER_LOGI("MediaPlayerTizenTV::fillAudioBuffer end %dms\n\n",
-                (int)m_lastAudioPts);
-    if (useLock) {
-        m_bufferMutex->unlock();
-    }
 }
 
 MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)

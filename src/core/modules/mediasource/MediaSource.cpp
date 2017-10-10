@@ -451,16 +451,16 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                             (*m_sourceBuffers)[i]->m_streamInfo[0];
                         bool thisBufferAdded = false;
                         for (size_t j = 0; j < streamInfo.size(); j++) {
-                            if (streamInfo[j]->m_type == StreamInfo::Video) {
+                            if (streamInfo[j]->isVideo()) {
                                 if (m_activeVideoSourceBuffer == nullptr) {
                                     m_activeVideoSourceBuffer =
                                         (*m_sourceBuffers)[i];
                                     m_activeVideoStreamIndex =
-                                        streamInfo[j]->m_streamIndex;
+                                        streamInfo[j]->streamIndex();
                                     if (newDurationMS <
-                                        streamInfo[j]->m_duration) {
+                                        streamInfo[j]->duration()) {
                                         newDurationMS =
-                                            streamInfo[j]->m_duration;
+                                            streamInfo[j]->duration();
                                     }
                                     if (!thisBufferAdded) {
                                         activeSourceBuffers->addWithoutEvent(
@@ -468,17 +468,16 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                                         thisBufferAdded = true;
                                     }
                                 }
-                            } else if (streamInfo[j]->m_type ==
-                                       StreamInfo::Audio) {
+                            } else if (streamInfo[j]->isAudio()) {
                                 if (m_activeAudioSourceBuffer == nullptr) {
                                     m_activeAudioSourceBuffer =
                                         (*m_sourceBuffers)[i];
                                     m_activeAudioStreamIndex =
-                                        streamInfo[j]->m_streamIndex;
+                                        streamInfo[j]->streamIndex();
                                     if (newDurationMS <
-                                        streamInfo[j]->m_duration) {
+                                        streamInfo[j]->duration()) {
                                         newDurationMS =
-                                            streamInfo[j]->m_duration;
+                                            streamInfo[j]->duration();
                                     }
                                     if (!thisBufferAdded) {
                                         activeSourceBuffers->addWithoutEvent(

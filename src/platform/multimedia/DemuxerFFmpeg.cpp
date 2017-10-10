@@ -17,7 +17,8 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #ifdef STARFISH_ENABLE_FFMPEG_DEMUXER
 #include "StarFishConfig.h"
-#include "Demuxer.h"
+#include "platform/multimedia/Demuxer.h"
+#include "platform/multimedia/DemuxerSource.h"
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -180,35 +181,37 @@ public:
                 (int)m_formatContext->streams[i]->codec->codec_id);
             if (m_formatContext->streams[i]->codec->codec_type ==
                 AVMEDIA_TYPE_VIDEO) {
-                VideoStreamInfo info;
-                info.m_streamIndex = i;
-                info.m_codecName =
-                    m_formatContext->streams[i]->codec->codec_name;
-                info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
-                info.m_timeBaseNum =
-                    m_formatContext->streams[i]->codec->time_base.num;
-                info.m_timeBaseDen =
-                    m_formatContext->streams[i]->codec->time_base.den;
-                info.m_width = info.m_timeBaseDen =
-                    m_formatContext->streams[i]->codec->width;
-                info.m_height = info.m_timeBaseDen =
-                    m_formatContext->streams[i]->codec->height;
+                StreamInfo info;
+                info.setType(StreamTypeVideo);
+                info.setStreamIndex(i);
+                info.setCodec(
+                    suggestVideoCodecFromString(String::createASCIIString(
+                        m_formatContext->streams[i]->codec->codec_name)));
+                // NOTE Getting time base
+                // m_formatContext->streams[i]->codec->time_base
+                // NOTE Getting bit rate
+                // m_formatContext->streams[i]->codec->bit_rate
+                info.setVideoWidth(m_formatContext->streams[i]->codec->width);
+                info.setVideoHeight(m_formatContext->streams[i]->codec->height);
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                     m_demuxerClients[j]->onDetectVideoStream(info);
                 }
             } else if (m_formatContext->streams[i]->codec->codec_type ==
                        AVMEDIA_TYPE_AUDIO) {
-                AudioStreamInfo info;
-                info.m_streamIndex = i;
-                info.m_codecName =
-                    m_formatContext->streams[i]->codec->codec_name;
-                info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
-                info.m_sampleFormat =
-                    (AudioSampleFormat)m_formatContext->streams[i]
-                        ->codec->sample_fmt;
-                info.m_channels = m_formatContext->streams[i]->codec->channels;
-                info.m_sampleRate =
-                    m_formatContext->streams[i]->codec->sample_rate;
+                StreamInfo info;
+                info.setType(StreamTypeAudio);
+                info.setStreamIndex(i);
+                info.setCodec(
+                    suggestAudioCodecFromString(String::createASCIIString(
+                        m_formatContext->streams[i]->codec->codec_name)));
+                // NOTE Does not use sample format information currently
+                // info.m_sampleFormat =
+                //     (AudioSampleFormat)m_formatContext->streams[i]
+                //         ->codec->sample_fmt;
+                info.setAudioChannels(
+                    m_formatContext->streams[i]->codec->channels);
+                info.setAudioSampleRate(
+                    m_formatContext->streams[i]->codec->sample_rate);
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                     m_demuxerClients[j]->onDetectAudioStream(info);
                 }

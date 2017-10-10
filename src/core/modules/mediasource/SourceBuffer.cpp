@@ -26,6 +26,7 @@
 #include "core/modules/mediasource/SourceBuffer.h"
 #include "core/modules/mediasource/SourceBufferList.h"
 #include "core/extra/TimeRanges.h"
+#include "platform/multimedia/DemuxerSource.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
@@ -54,8 +55,7 @@
 #define SOURCEBUFFER_LOG(sourcebuffer, ...)
 #endif
 
-#define STARFISH_FRAME_EVICTION_BACKWARD_DUR 2
-#define STARFISH_FRAME_EVICTION_FORWARD_DUR 10
+#define STARFISH_FRAME_EVICTION_BACKWARD_DUR 1
 
 namespace StarFish {
 
@@ -81,8 +81,6 @@ public:
         if (whence == DemuxerSource::SeekWhenceLookSize) {
             return m_bufferRemain->size() + m_inputBuffer->m_length;
         } else if (whence == DemuxerSource::SeekWhenceSet) {
-            // STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceSet %d\n",
-            // (int)position);
             STARFISH_ASSERT(position >= 0);
             if ((int64_t)position <=
                 (int64_t)(m_bufferRemain->size() + m_inputBuffer->m_length)) {
@@ -93,15 +91,15 @@ public:
                 return m_readPos;
             }
         } else if (whence == DemuxerSource::SeekWhenceCurrent) {
-            m_readPos = m_readPos + position;
-            STARFISH_ASSERT(m_readPos >= 0);
-            if (m_readPos <=
-                (m_bufferRemain->size() + m_inputBuffer->m_length)) {
-                return m_readPos;
-            } else {
+            if (position < 0 && m_readPos < (size_t)std::llabs(position)) {
+                m_readPos = 0;
+            } else if (m_readPos + position >
+                       m_bufferRemain->size() + m_inputBuffer->m_length) {
                 m_readPos = m_bufferRemain->size() + m_inputBuffer->m_length;
-                return m_readPos;
+            } else {
+                m_readPos = m_readPos + position;
             }
+            return m_readPos;
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -126,8 +124,7 @@ public:
             m_readPos += fillAmount;
         }
 
-        if (sizeSuccessToRead < sizeWantToRead &&
-            m_readPos >= m_bufferRemain->size()) {
+        if (sizeSuccessToRead < sizeWantToRead) {
             size_t diff = m_readPos - m_bufferRemain->size();
             size_t fillAmount;
             if (sizeWantToRead - sizeSuccessToRead >
@@ -137,15 +134,14 @@ public:
                 fillAmount = sizeWantToRead - sizeSuccessToRead;
             }
 
-            memcpy(buffer, m_inputBuffer->m_data + diff, fillAmount);
+            memcpy(buffer + sizeSuccessToRead, m_inputBuffer->m_data + diff,
+                   fillAmount);
             sizeSuccessToRead += fillAmount;
             m_readPos += fillAmount;
         }
         if (sizeWantToRead != sizeSuccessToRead) {
             error = -1;
         }
-        // STARFISH_LOG_INFO("onRead pos %d read %d\n", (int)(m_readPos -
-        // sizeSuccessToRead), (int)sizeSuccessToRead);
     }
     SourceBufferData* m_inputBuffer;
     GCVector<uint8_t>* m_bufferRemain;
@@ -170,12 +166,12 @@ public:
     {
     }
 
-    virtual void onDetectVideoStream(const VideoStreamInfo& info)
+    virtual void onDetectVideoStream(StreamInfo& info)
     {
         m_detectedVideoStream.push_back(info);
     }
 
-    virtual void onDetectAudioStream(const AudioStreamInfo& info)
+    virtual void onDetectAudioStream(StreamInfo& info)
     {
         m_detectedAudioStream.push_back(info);
     }
@@ -226,9 +222,8 @@ public:
             // Let decode timestamp be a double precision floating point
             // representation
             // of the coded frame's decode timestamp in seconds.
-            // FIXME? Used pts instead of dts
             uint64_t presentationTimestamp = packet.m_pts;
-            uint64_t decodeTimestamp = packet.m_pts;
+            uint64_t decodeTimestamp = packet.m_dts;
 
             // 2. Let frame duration be a double precision floating point
             // representation of the coded frame's duration in seconds.
@@ -319,6 +314,7 @@ public:
             }
 
             MediaPacket* pkt = new MediaPacket();
+            pkt->m_dts = decodeTimestamp;
             pkt->m_pts = presentationTimestamp;
             pkt->m_duration = frameDuration;
             pkt->m_streamIndex = streamIndex;
@@ -349,10 +345,6 @@ public:
             if (frameEndTimestamp > groupTimestampEnd) {
                 groupTimestampEnd = frameEndTimestamp;
             }
-            group->m_groupTimestampEnd = groupTimestampEnd;
-            if (presentationTimestamp < group->m_groupTimestampStart) {
-                group->m_groupTimestampStart = presentationTimestamp;
-            }
 
             // TODO 21. If generate timestamps flag equals true, then set
             // timestampOffset equal to frame end timestamp.
@@ -369,8 +361,8 @@ public:
     }
 
     bool m_isAborted;
-    std::vector<VideoStreamInfo> m_detectedVideoStream;
-    std::vector<AudioStreamInfo> m_detectedAudioStream;
+    std::vector<StreamInfo> m_detectedVideoStream;
+    std::vector<StreamInfo> m_detectedAudioStream;
     std::vector<MediaPacketGroup*> m_packetGroup;
     std::vector<StreamProcessInfo> m_streamProcessInfo;
     int64_t m_currentGroupLastTimestamp;
@@ -678,6 +670,8 @@ void SourceBuffer::prepareAppend(size_t newDataSize)
 
     // Run the coded frame eviction algorithm.
     if (!codedFrameEviction(newDataSize)) {
+        SOURCEBUFFER_LOG(
+            this, "Faild to make buffer space: throw QUOTA_EXCEEDED_ERR\n");
         throw new DOMException(document(), DOMException::QUOTA_EXCEEDED_ERR,
                                "SourceBuffer is full");
     }
@@ -744,15 +738,14 @@ void SourceBuffer::remove(double start, double end)
 }
 
 void SourceBuffer::rangeRemovalWithGuard(uint64_t startTimestamp,
-                                         uint64_t endTimestamp,
-                                         StreamInfo::Type type)
+                                         uint64_t endTimestamp, StreamType type)
 {
     Locker<Mutex> lock(*m_packetGroupMutex);
     rangeRemoval(startTimestamp, endTimestamp, type);
 }
 
 void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
-                                StreamInfo::Type type)
+                                StreamType type)
 {
     // 3.5.6 Range Removal
     size_t groupIndex = 0;
@@ -761,7 +754,7 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
         MediaPacketGroup* grp = m_packetGroup[groupIndex];
         // Note : Remove Packets
         //        packet.start < endTimestamp && patcket.end > startTimestamp
-        if ((grp->m_streamInfo->m_type & type) &&
+        if ((grp->m_streamInfo->type() & type) &&
             !(startTimestamp >= grp->m_groupTimestampEnd ||
               endTimestamp <= grp->m_groupTimestampStart)) {
             if (startTimestamp <= grp->m_groupTimestampStart &&
@@ -789,7 +782,9 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
 
                 for (size_t i = 0; i < grp->m_packets.size(); i++) {
                     MediaPacket* pkt = grp->m_packets[i];
-                    if (pkt->m_pts < startTimestamp) {
+                    // NOTE pts packets in group are not sorted
+                    //      Instead of pts, use dts here
+                    if (pkt->m_dts < startTimestamp) {
                         holeStart = i;
                     } else {
                         break;
@@ -798,7 +793,9 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
 
                 for (size_t i = grp->m_packets.size(); i > 0; i--) {
                     MediaPacket* pkt = grp->m_packets[i - 1];
-                    if ((pkt->m_pts + pkt->m_duration) > endTimestamp) {
+                    // NOTE pts packets in group are not sorted
+                    //      Instead of pts, use dts here
+                    if ((pkt->m_dts + pkt->m_duration) > endTimestamp) {
                         holeEnd = i;
                     } else {
                         break;
@@ -812,17 +809,12 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
                     grp->m_streamIndex, grp->m_initSegmentIndex,
                     grp->m_streamInfo);
                 for (size_t i = holeEnd; i < grp->m_packets.size(); i++) {
-                    newGroup->m_packets.push_back(grp->m_packets[i]);
+                    newGroup->pushMediaPacket(grp->m_packets[i]);
                 }
 
                 if (newGroup->m_packets.size()) {
                     grp->m_packets.erase(grp->m_packets.begin() + holeEnd,
                                          grp->m_packets.end());
-                    newGroup->m_groupTimestampStart =
-                        (*newGroup->m_packets.begin())->m_pts;
-                    newGroup->m_groupTimestampEnd =
-                        (*(newGroup->m_packets.end() - 1))->m_pts +
-                        (*(newGroup->m_packets.end() - 1))->m_duration;
                     m_packetGroup.insert(m_packetGroup.begin() + groupIndex,
                                          newGroup);
                     groupIndex++;
@@ -838,11 +830,7 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
                                      grp->m_packets.begin() + holeEnd);
 
                 if (grp->m_packets.size()) {
-                    grp->m_groupTimestampStart =
-                        (*grp->m_packets.begin())->m_pts;
-                    grp->m_groupTimestampEnd =
-                        (*(grp->m_packets.end() - 1))->m_pts +
-                        (*(grp->m_packets.end() - 1))->m_duration;
+                    grp->refresh();
                     groupIndex++;
                 } else {
                     delete grp;
@@ -859,9 +847,9 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
                     for (eraseEnd = 0; eraseEnd < grp->m_packets.size();
                          eraseEnd++) {
                         MediaPacket* pkt = grp->m_packets[eraseEnd];
-                        // Note : "packet.start < endTimestamp" && patcket.end >
-                        // startTimestamp
-                        if (pkt->m_pts >= endTimestamp) {
+                        // NOTE pts packets in group are not sorted
+                        //      Instead of pts, use dts here
+                        if (pkt->m_dts >= endTimestamp) {
                             break;
                         }
                     }
@@ -870,9 +858,9 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
                     for (eraseStart = grp->m_packets.size(); eraseStart > 0;
                          eraseStart--) {
                         MediaPacket* pkt = grp->m_packets[eraseStart - 1];
-                        // Note : packet.start < endTimestamp && "patcket.end >
-                        // startTimestamp"
-                        if (pkt->m_pts + pkt->m_duration <= startTimestamp) {
+                        // NOTE pts packets in group are not sorted
+                        //      Instead of pts, use dts here
+                        if (pkt->m_dts + pkt->m_duration <= startTimestamp) {
                             break;
                         }
                     }
@@ -881,21 +869,15 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
                 if (eraseStart < eraseEnd) {
                     // STARFISH_LOG_INFO("SourceBuffer::remove %d %d %d\n",
                     // (int)groupIndex, (int)eraseStart, (int)eraseEnd);
-
                     for (size_t i = eraseStart; i < eraseEnd; i++) {
                         removedSize += grp->m_packets[i]->m_dataSize;
                         delete[] grp->m_packets[i]->m_data;
                         delete grp->m_packets[i];
                     }
-
                     grp->m_packets.erase(grp->m_packets.begin() + eraseStart,
                                          grp->m_packets.begin() + eraseEnd);
                     if (grp->m_packets.size()) {
-                        grp->m_groupTimestampStart =
-                            (*grp->m_packets.begin())->m_pts;
-                        grp->m_groupTimestampEnd =
-                            (*(grp->m_packets.end() - 1))->m_pts +
-                            (*(grp->m_packets.end() - 1))->m_duration;
+                        grp->refresh();
                         groupIndex++;
                     } else {
                         delete grp;
@@ -914,6 +896,7 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
         iter2++;
     }
     decreaseUsedBufferSize(removedSize);
+    m_buffered = nullptr;
 }
 
 bool SourceBuffer::codedFrameEviction(size_t newDataSize)
@@ -922,7 +905,7 @@ bool SourceBuffer::codedFrameEviction(size_t newDataSize)
     STARFISH_ASSERT(m_isAttachedToParent && m_parentMediaSource);
     // NOTE
     // Data size can be increased by adding extra data
-    size_t maxAssume = (newDataSize + m_bufferUnprocessed.size()) * 1.2;
+    size_t maxAssume = (newDataSize + m_bufferUnprocessed.size()) * 1.1;
     SOURCEBUFFER_LOG(
         this, "Run Code Frame Eviction algorithm (new: %d, available: %d)\n",
         (int)maxAssume, (int)m_parentMediaSource->availableBufferSize());
@@ -941,23 +924,14 @@ bool SourceBuffer::codedFrameEviction(size_t newDataSize)
         double playbackPos = element ? element->currentTime() : 0;
         // Try to remove backward packets
         double backwardPos = playbackPos - STARFISH_FRAME_EVICTION_BACKWARD_DUR;
-        if (backwardPos < 0) {
-            backwardPos = 0;
+        if (backwardPos > 0) {
+            m_parentMediaSource->evict(0, backwardPos * 1000);
         }
-        m_parentMediaSource->evict(0, backwardPos * 1000);
         SOURCEBUFFER_LOG(this, "Remove backward data (available: %d)\n",
                          (int)m_parentMediaSource->availableBufferSize());
-        // Try to remove forward packets
+        // TODO Try to remove fragmented forward packets
         if (maxAssume >= m_parentMediaSource->availableBufferSize()) {
-            double forwardPos =
-                playbackPos + STARFISH_FRAME_EVICTION_FORWARD_DUR;
-            m_parentMediaSource->evict(forwardPos,
-                                       std::numeric_limits<uint64_t>::max());
-            SOURCEBUFFER_LOG(this, "Remove forward data (available: %d)\n",
-                             (int)m_parentMediaSource->availableBufferSize());
-            if (maxAssume >= m_parentMediaSource->availableBufferSize()) {
-                return false;
-            }
+            return false;
         }
     }
     return true;
@@ -987,8 +961,10 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                 CREATE_TIMER(timer,
                              "[TRACE_MSE_PROFILE] "
                              "SourceBuffer::bufferAppend::findStreamInfo");
+                SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
+                                 "findStreamInfo\n");
                 if (inputBuffer->m_sourceBuffer->m_demuxer->findStreamInfo(
-                        &src, inputBuffer->m_sourceBuffer->m_type)) {
+                        &src, inputBuffer->m_sourceBuffer->type())) {
                     inputBuffer->m_foundInitSegmentHere = true;
                     int64_t after =
                         src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
@@ -1012,6 +988,8 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                 CREATE_TIMER(timer,
                              "[TRACE_MSE_PROFILE] "
                              "SourceBuffer::bufferAppend::findStreamPacket");
+                SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
+                                 "findStreamPacket\n");
                 double timestampOffset =
                     inputBuffer->m_sourceBuffer->timestampOffset();
                 double appendWindowStart =
@@ -1025,6 +1003,8 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                      appendWindowEnd);
                 inputBuffer->m_sourceBuffer->m_demuxer->findStreamPacket(&src);
             }
+            SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
+                             "Add append task to main\n");
 
             inputBuffer->m_sourceBuffer->m_starFish->messageLoop()
                 ->addIdlerWithNoGCRootingInOtherThread(
@@ -1052,10 +1032,9 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                 std::vector<MediaPacket*>().swap(
                                     grp->m_packets);
                             }
-
-                            std::vector<VideoStreamInfo>().swap(
+                            std::vector<StreamInfo>().swap(
                                 cl->m_detectedVideoStream);
-                            std::vector<AudioStreamInfo>().swap(
+                            std::vector<StreamInfo>().swap(
                                 cl->m_detectedAudioStream);
                             std::vector<MediaPacketGroup*>().swap(
                                 cl->m_packetGroup);
@@ -1135,16 +1114,16 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                 for (size_t i = 0;
                                      i < cl->m_detectedVideoStream.size();
                                      i++) {
-                                    StreamInfo* info = new VideoStreamInfo(
-                                        cl->m_detectedVideoStream[i]);
+                                    StreamInfo* info = new StreamInfo(std::move(
+                                        cl->m_detectedVideoStream[i]));
                                     streamInfo.push_back(info);
                                 }
 
                                 for (size_t i = 0;
                                      i < cl->m_detectedAudioStream.size();
                                      i++) {
-                                    StreamInfo* info = new AudioStreamInfo(
-                                        cl->m_detectedAudioStream[i]);
+                                    StreamInfo* info = new StreamInfo(std::move(
+                                        cl->m_detectedAudioStream[i]));
                                     streamInfo.push_back(info);
                                 }
 
@@ -1174,6 +1153,28 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                                 ->m_initSegmentIndex,
                                             cl->m_packetGroup[i]
                                                 ->m_streamIndex);
+                                    if (cl->m_packetGroup[i]
+                                            ->m_streamInfo->isVideo()) {
+                                        StreamInfo* info =
+                                            cl->m_packetGroup[i]->m_streamInfo;
+                                        if (!info->videoHasFramerate()) {
+                                            int sampleCount =
+                                                cl->m_packetGroup[i]
+                                                    ->m_packets.size();
+                                            uint64_t totalDuration =
+                                                cl->m_packetGroup[i]
+                                                    ->m_groupTimestampEnd -
+                                                cl->m_packetGroup[i]
+                                                    ->m_groupTimestampStart;
+                                            info->setVideoFramerate(
+                                                Framerate::createFromLL(
+                                                    (int64_t)sampleCount * 1000,
+                                                    (int64_t)totalDuration));
+                                            info->setVideoHasFramerate(
+                                                info->videoFramerate()
+                                                    .isValid());
+                                        }
+                                    }
 
                                     inputBuffer->m_sourceBuffer->rangeRemoval(
                                         cl->m_packetGroup[i]
@@ -1181,7 +1182,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                         cl->m_packetGroup[i]
                                             ->m_groupTimestampEnd,
                                         cl->m_packetGroup[i]
-                                            ->m_streamInfo->m_type);
+                                            ->m_streamInfo->type());
 
                                     SOURCEBUFFER_LOG(
                                         inputBuffer->m_sourceBuffer,
@@ -1211,9 +1212,9 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                     ->increaseUsedBufferSize(addedSize);
                             }
 
-                            std::vector<VideoStreamInfo>().swap(
+                            std::vector<StreamInfo>().swap(
                                 cl->m_detectedVideoStream);
-                            std::vector<AudioStreamInfo>().swap(
+                            std::vector<StreamInfo>().swap(
                                 cl->m_detectedAudioStream);
                             std::vector<MediaPacketGroup*>().swap(
                                 cl->m_packetGroup);
@@ -1243,19 +1244,16 @@ void SourceBuffer::clearPacketAccessCache()
 }
 
 std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
-    size_t streamIdx, uint64_t startPositionInPTSWantToFind)
+    size_t streamIdx, uint64_t startPositionInDTSWantToFind)
 {
     Locker<Mutex> packetGroupLocker(*m_packetGroupMutex);
-    // STARFISH_LOG_INFO("SourceBuffer::findProperMediaPacket %d %d\n",
-    // (int)streamIdx, (int)startPositionInPTSWantToFind);
-
     // test cache first
     {
         auto cache = m_packetAccessCachePerStream[streamIdx];
         if (cache.first < m_packetGroup.size()) {
             MediaPacketGroup* grp = m_packetGroup[cache.first];
-            if (grp->m_groupTimestampStart <= startPositionInPTSWantToFind &&
-                startPositionInPTSWantToFind <= grp->m_groupTimestampEnd) {
+            if (grp->m_groupTimestampStart <= startPositionInDTSWantToFind &&
+                startPositionInDTSWantToFind <= grp->m_groupTimestampEnd) {
                 size_t idx = cache.second + 1;
                 if (idx < grp->m_packets.size()) {
                     m_packetAccessCachePerStream[streamIdx] =
@@ -1276,18 +1274,18 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
     for (size_t i = 0; i < m_packetGroup.size(); i++) {
         MediaPacketGroup* grp = m_packetGroup[i];
         if (grp->m_streamIndex == streamIdx) {
-            if (grp->m_groupTimestampStart <= startPositionInPTSWantToFind &&
-                startPositionInPTSWantToFind <= grp->m_groupTimestampEnd) {
+            if (grp->m_groupTimestampStart <= startPositionInDTSWantToFind &&
+                startPositionInDTSWantToFind <= grp->m_groupTimestampEnd) {
                 const std::vector<MediaPacket*>& v = grp->m_packets;
                 for (size_t j = 0; j < v.size(); j++) {
-                    if (v[j]->m_pts >= startPositionInPTSWantToFind) {
+                    if (v[j]->m_dts >= startPositionInDTSWantToFind) {
                         m_packetAccessCachePerStream[streamIdx] =
                             std::make_pair(i, j);
                         return std::make_pair(v[j], grp->m_initSegmentIndex);
                     }
                 }
             } else if (grp->m_groupTimestampStart >
-                       startPositionInPTSWantToFind) {
+                       startPositionInDTSWantToFind) {
                 if (grp->m_groupTimestampStart <
                     nearestPacketGroupInfo.second) {
                     nearestPacketGroupInfo =
@@ -1306,6 +1304,19 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
     }
 
     return std::make_pair(nullptr, SIZE_MAX);
+}
+
+void SourceBuffer::revertLastCacheIfPossible(size_t streamIdx)
+{
+    auto cache = m_packetAccessCachePerStream[streamIdx];
+    if (cache.second > 0) {
+        m_packetAccessCachePerStream[streamIdx] =
+            std::make_pair(cache.first, cache.second - 1);
+    } else {
+        m_packetAccessCachePerStream[streamIdx] =
+            std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
+    }
+    return;
 }
 
 uint64_t SourceBuffer::lastBufferedTimestamp(size_t streamIdx)
@@ -1636,7 +1647,7 @@ StreamInfo* SourceBuffer::streamInfo(size_t initSegmentIndex,
 {
     const GCVector<StreamInfo*>& streamInfo = m_streamInfo[initSegmentIndex];
     for (size_t i = 0; i < streamInfo.size(); i++) {
-        if (streamInfo[i]->m_streamIndex == streamIndex) {
+        if (streamInfo[i]->streamIndex() == streamIndex) {
             return streamInfo[i];
         }
     }
@@ -1646,6 +1657,7 @@ StreamInfo* SourceBuffer::streamInfo(size_t initSegmentIndex,
 void SourceBuffer::increaseUsedBufferSize(size_t amount)
 {
     if (m_parentMediaSource) {
+        SOURCEBUFFER_LOG(this, "Increased packet data (%d)\n", (int)amount);
         m_parentMediaSource->m_usedBufferSize += amount;
     }
 }
@@ -1654,13 +1666,13 @@ void SourceBuffer::decreaseUsedBufferSize(size_t amount)
 {
     if (m_parentMediaSource) {
         STARFISH_ASSERT(m_parentMediaSource->m_usedBufferSize >= amount);
+        SOURCEBUFFER_LOG(this, "Removed packet data (%d)\n", (int)amount);
         m_parentMediaSource->m_usedBufferSize -= amount;
     }
 }
 }
 
 #undef STARFISH_FRAME_EVICTION_BACKWARD_DUR
-#undef STARFISH_FRAME_EVICTION_FORWARD_DUR
 #undef SOURCEBUFFER_LOG
 
 #endif

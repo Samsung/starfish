@@ -22,18 +22,54 @@
 #include "core/util/URL.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLVideoElement.h"
-#include "MediaPlayerTizen.h"
 #include "core/fileapi/Blob.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/mediasource/MediaSource.h"
+#include "core/modules/mediasource/SourceBuffer.h"
 #include "core/modules/threading/Thread.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
+#include "platform/multimedia/MediaPlayerTizen.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
+
+// chromium-efl (media_source_delegate_efl.cc)
+static bool isFramerateChanged(const Framerate& before, const Framerate& after)
+{
+    constexpr const double kDetectedThreshold = 0.01;
+    if (before.toDouble() > 0 &&
+        std::abs(before.toDouble() - after.toDouble()) > kDetectedThreshold) {
+        const double kFramerateDetectionTable[13] = { 23.9, 24,   24.1, 24.9,
+                                                      25.1, 29.9, 30,   30.1,
+                                                      49.9, 50.1, 59.9, 60,
+                                                      60.1 };
+
+        int detectIndex = 0;
+        int previousFrameDetectIndex = 0;
+        int newFrameDetectIndex = 0;
+
+        for (detectIndex = 0; detectIndex < 12; ++detectIndex) {
+            if (!newFrameDetectIndex &&
+                after.toDouble() >= kFramerateDetectionTable[detectIndex] &&
+                after.toDouble() < kFramerateDetectionTable[detectIndex + 1])
+                newFrameDetectIndex = detectIndex;
+            if (!previousFrameDetectIndex &&
+                before.toDouble() >= kFramerateDetectionTable[detectIndex] &&
+                before.toDouble() < kFramerateDetectionTable[detectIndex + 1])
+                previousFrameDetectIndex = detectIndex;
+
+            if (newFrameDetectIndex && previousFrameDetectIndex)
+                break;
+        }
+        if (newFrameDetectIndex != previousFrameDetectIndex) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void MediaPlayerTizen::printNativePlayerError(int errorCode)
 {
@@ -61,6 +97,43 @@ void MediaPlayerTizen::printNativePlayerError(int errorCode)
         GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_NOT_PERMITTED)
         GEN_ERROR_PRINTS(PLAYER_ERROR_RESOURCE_LIMIT)
         GEN_ERROR_PRINTS(PLAYER_ERROR_PERMISSION_DENIED)
+#undef GEN_ERROR_PRINTS
+    default:
+        PLAYER_LOGI("Unknown error\n");
+        return;
+    }
+}
+
+void MediaPlayerTizen::printMediaPacketError(int errorCode)
+{
+    switch (errorCode) {
+#define GEN_ERROR_PRINTS(errorenum)      \
+    case errorenum:                      \
+        PLAYER_LOGI("%s\n", #errorenum); \
+        return;
+        GEN_ERROR_PRINTS(MEDIA_PACKET_ERROR_OUT_OF_MEMORY)
+        GEN_ERROR_PRINTS(MEDIA_PACKET_ERROR_INVALID_PARAMETER)
+        GEN_ERROR_PRINTS(MEDIA_PACKET_ERROR_INVALID_OPERATION)
+        GEN_ERROR_PRINTS(MEDIA_PACKET_ERROR_FILE_NO_SPACE_ON_DEVICE)
+        GEN_ERROR_PRINTS(MEDIA_PACKET_ERROR_NO_AVAILABLE_PACKET)
+#undef GEN_ERROR_PRINTS
+    default:
+        PLAYER_LOGI("Unknown error\n");
+        return;
+    }
+}
+
+void MediaPlayerTizen::printMediaFormatError(int errorCode)
+{
+    switch (errorCode) {
+#define GEN_ERROR_PRINTS(errorenum)      \
+    case errorenum:                      \
+        PLAYER_LOGI("%s\n", #errorenum); \
+        return;
+        GEN_ERROR_PRINTS(MEDIA_FORMAT_ERROR_OUT_OF_MEMORY)
+        GEN_ERROR_PRINTS(MEDIA_FORMAT_ERROR_INVALID_PARAMETER)
+        GEN_ERROR_PRINTS(MEDIA_FORMAT_ERROR_INVALID_OPERATION)
+        GEN_ERROR_PRINTS(MEDIA_FORMAT_ERROR_FILE_NO_SPACE_ON_DEVICE)
 #undef GEN_ERROR_PRINTS
     default:
         PLAYER_LOGI("Unknown error\n");
@@ -117,16 +190,31 @@ public:
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
-    , m_isVideoBufferUnderrunState(false)
-    , m_isAudioBufferUnderrunState(false)
     , m_needsPlayAfterPrepare(false)
     , m_seekingTimer(SIZE_MAX)
     , m_mseClient(nullptr)
     , m_bufferMutex(new Mutex())
+    , m_mediaFormatMutex(new Mutex())
     , m_preparedCallback(nullptr)
     , m_completeCallback(nullptr)
     , m_canvasSurface(nullptr)
+    , m_audioFormat(nullptr)
+    , m_videoFormat(nullptr)
+    , m_isAudioBufferUnderrunState(false)
+    , m_isVideoBufferUnderrunState(false)
+    , m_audioMaxBufferSize(320 * 1000 / 8 * 5)
+    , m_videoMaxBufferSize(0)
+    , m_audioInitSegmentIndex(0)
+    , m_videoInitSegmentIndex(0)
+    , m_audioLastBufferBytes(SIZE_MAX)
+    , m_videoLastBufferBytes(SIZE_MAX)
 {
+    m_lastVideoDTS = m_lastAudioDTS =
+        element->defaultPlaybackStartPosition() * 1000;
+    m_videoFormatExtra.codec_extradata = nullptr;
+    m_videoFormatExtra.extradata_size = 0;
+    m_audioFormatExtra.codec_extradata = nullptr;
+    m_audioFormatExtra.extradata_size = 0;
     player_create(&m_nativePlayer);
     initDisplay();
 
@@ -139,21 +227,20 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
                                    NULL, NULL, NULL);
 }
 
-void MediaPlayerTizen::handlePlayerError(int error)
+void MediaPlayerTizen::handlePlayerError()
 {
     if (!isMainThread()) {
         MessageLoop* msgLoop = m_container->starFish()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->document()->browsingContext(),
-            [](size_t, void* data, void* data1) {
+            [](size_t, void* data) {
                 MediaPlayerTizen* player = (MediaPlayerTizen*)data;
-                int errorCode = (int)data1;
-                player->handlePlayerError(errorCode);
+                player->handlePlayerError();
             },
-            this, (void*)error);
+            this);
         return;
     }
-    printNativePlayerError(error);
+
     m_foundError = true;
     if (m_inPrepare) {
         handlePrepared();
@@ -167,7 +254,7 @@ void MediaPlayerTizen::fillVideoBufferIfNeeded()
 {
     Locker<Mutex> locker(*m_bufferMutex);
     if (m_isVideoBufferUnderrunState) {
-        fillVideoBuffer(false);
+        fillBuffer(StreamTypeVideo);
     }
 }
 
@@ -175,7 +262,7 @@ void MediaPlayerTizen::fillAudioBufferIfNeeded()
 {
     Locker<Mutex> locker(*m_bufferMutex);
     if (m_isAudioBufferUnderrunState) {
-        fillAudioBuffer(false);
+        fillBuffer(StreamTypeAudio);
     }
 }
 
@@ -373,7 +460,31 @@ void MediaPlayerTizen::close()
 
     unprepareOperation();
     if (m_nativePlayer) {
+        player_unset_media_stream_buffer_status_cb_ex(m_nativePlayer,
+                                                      PLAYER_STREAM_TYPE_AUDIO);
+        player_unset_media_stream_buffer_status_cb_ex(m_nativePlayer,
+                                                      PLAYER_STREAM_TYPE_VIDEO);
+        player_unset_completed_cb(m_nativePlayer);
+        player_unset_error_cb(m_nativePlayer);
         player_destroy(m_nativePlayer);
+    }
+    if (m_audioFormat) {
+        media_format_unref(m_audioFormat);
+        m_audioFormat = nullptr;
+    }
+    if (m_videoFormat) {
+        media_format_unref(m_videoFormat);
+        m_videoFormat = nullptr;
+    }
+    if (m_videoFormatExtra.extradata_size > 0) {
+        free(m_videoFormatExtra.codec_extradata);
+        m_videoFormatExtra.codec_extradata = nullptr;
+        m_videoFormatExtra.extradata_size = 0;
+    }
+    if (m_audioFormatExtra.extradata_size > 0) {
+        free(m_audioFormatExtra.codec_extradata);
+        m_audioFormatExtra.codec_extradata = nullptr;
+        m_audioFormatExtra.extradata_size = 0;
     }
 
     m_nativePlayer = nullptr;
@@ -496,7 +607,8 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
         [](int errorCode, void* data) {
             PLAYER_LOGI("MediaPlayerTizen::player_error_cb\n");
             MediaPlayerTizen* player = (MediaPlayerTizen*)data;
-            player->handlePlayerError(errorCode);
+            player->printNativePlayerError(errorCode);
+            player->handlePlayerError();
         },
         this);
     STARFISH_ASSERT(ret == 0);
@@ -715,14 +827,180 @@ void MediaPlayerTizen::prepareMediaSource()
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-void MediaPlayerTizen::fillVideoBuffer(bool useLock)
+void MediaPlayerTizen::fillBufferWithGuard(StreamType type)
 {
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    Locker<Mutex> locker(*m_bufferMutex);
+    fillBuffer(type);
 }
 
-void MediaPlayerTizen::fillAudioBuffer(bool useLock)
+#define DEBUG_STREAMBUFFER_LOG(...)                                    \
+    PLAYER_LOGI("[%s] ", type == StreamTypeAudio ? "AUDIO" : "VIDEO"); \
+    STARFISH_LOG_INFO(__VA_ARGS__);
+
+void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
+                                          uint64_t currentBytes)
 {
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    // Other thread
+    uint64_t lastBytes;
+    uint64_t maxSize;
+    {
+        Locker<Mutex> locker(*m_bufferMutex);
+        lastBytes = lastBufferBytes(type);
+        if (lastBytes != SIZE_MAX && lastBytes == currentBytes) {
+            return;
+        }
+        updateLastBufferBytes(type, currentBytes);
+        maxSize = maxBufferSize(type);
+    }
+    if (!bufferUnderrunState(type) && currentBytes < lastBytes &&
+        currentBytes < (maxSize * 0.1)) {
+        DEBUG_STREAMBUFFER_LOG("Player need data (%llu/%llu)\n", currentBytes,
+                               maxSize);
+        fillBufferWithGuard(type);
+    }
+}
+
+void MediaPlayerTizen::fillBuffer(StreamType type)
+{
+    if (!alive() || !streamFormat(type)) {
+        return;
+    }
+    media_format_h format = streamFormat(type);
+
+#define RETURN_WHEN_MEDIA_PACKET_ERROR(...)  \
+    if (ret != MEDIA_PACKET_ERROR_NONE) {    \
+        DEBUG_STREAMBUFFER_LOG(__VA_ARGS__); \
+        printMediaPacketError(ret);          \
+        handlePlayerError();                 \
+        return;                              \
+    }
+
+    SourceBuffer* sb = activeSourceBuffer(type);
+    if (!sb) {
+        return;
+    }
+    uint64_t streamIdx = activeStreamIndex(type);
+    size_t currentInitIndex = initSegmentIndex(type);
+
+    DEBUG_STREAMBUFFER_LOG("fillBuffer start %llums\n", lastSubmitDTS(type));
+#ifdef PLAYER_DEBUG
+    uint64_t submitMS = 0;
+    size_t submitCount = 0;
+    StreamInfo* info = sb->streamInfo(currentInitIndex, streamIdx);
+#endif
+    size_t submitBytes = 0;
+    uint64_t sizeUpTo = maxBufferSize(type) * 0.3;
+    while (submitBytes < sizeUpTo) {
+        uint64_t lastDTS = lastSubmitDTS(type);
+        std::pair<MediaPacket*, size_t> packet =
+            sb->findProperMediaPacket(streamIdx, lastDTS);
+        media_packet_h mediaPacket = nullptr;
+
+        if (!packet.first) {
+            uint64_t endTime = m_activeMediaSource->duration() * 1000;
+            if (std::isinf(m_activeMediaSource->duration())) {
+                endTime = std::numeric_limits<uint64_t>::max();
+            }
+            DEBUG_STREAMBUFFER_LOG("fillBuffer try to detect end -> %d %d\n",
+                                   (int)endTime, (int)lastDTS);
+            uint64_t lastBufferedTime = sb->lastBufferedTimestamp(streamIdx);
+            if ((endTime - lastDTS) < 10 ||
+                ((lastDTS == lastBufferedTime) &&
+                 (std::abs(endTime - lastBufferedTime) < 1000))) {
+                m_isEnded = true;
+                media_packet_create(format, NULL, NULL, &mediaPacket);
+                media_packet_set_flags(mediaPacket, MEDIA_PACKET_END_OF_STREAM);
+                player_push_media_stream(m_nativePlayer, mediaPacket);
+                DEBUG_STREAMBUFFER_LOG("fillBuffer detect EOS\n");
+                break;
+            }
+            DEBUG_STREAMBUFFER_LOG("fillBuffer runs into under run state[1]\n");
+            updateBufferUnderrunState(type, true);
+            break;
+        }
+        if (packet.first->m_dts > lastDTS &&
+            packet.first->m_dts - lastDTS > 500) {
+            DEBUG_STREAMBUFFER_LOG(
+                "fillBuffer runs into under run state[2] - requested(%lld) but "
+                "returned(%lld)\n",
+                lastDTS, packet.first->m_dts);
+            updateBufferUnderrunState(type, true);
+            break;
+        }
+
+        if (packet.first->m_hasIdr && submitCount != 0) {
+            sb->revertLastCacheIfPossible(streamIdx);
+            DEBUG_STREAMBUFFER_LOG("Meet IDR in middle -> stop\n");
+            break;
+        }
+
+        if (packet.second != currentInitIndex) {
+            if (!packet.first->m_hasIdr) {
+                updateLastSubmitDTS(type, packet.first->m_dts +
+                                              packet.first->m_duration);
+                DEBUG_STREAMBUFFER_LOG(
+                    "fillBuffer drops non-idr packet (config changed)\n");
+                continue;
+            } else {
+                DEBUG_STREAMBUFFER_LOG(
+                    "fillBuffer detect changed config (and will submit packet "
+                    "including idr)\n");
+                updateStreamInfoWithGuard(type, currentInitIndex,
+                                          packet.second);
+                updateInitSegmentIndex(type, packet.second);
+                currentInitIndex = packet.second;
+#ifdef PLAYER_DEBUG
+                info = sb->streamInfo(currentInitIndex, streamIdx);
+#endif
+                sizeUpTo = maxBufferSize(type) * 0.9;
+            }
+        }
+
+        int ret = media_packet_create_from_external_memory(
+            format, packet.first->m_data, packet.first->m_dataSize, nullptr,
+            nullptr, &mediaPacket);
+        RETURN_WHEN_MEDIA_PACKET_ERROR(
+            "ERROR: media_packet_create_from_external_memory\n");
+
+        ret = media_packet_set_pts(mediaPacket, packet.first->m_pts * 1e6);
+        RETURN_WHEN_MEDIA_PACKET_ERROR("ERROR: media_packet_set_pts\n");
+
+        ret = media_packet_set_duration(mediaPacket,
+                                        packet.first->m_duration * 1e6);
+        RETURN_WHEN_MEDIA_PACKET_ERROR("ERROR: media_packet_set_duration\n");
+
+        // DEBUG_STREAMBUFFER_LOG("Submit packet pts:%llu dts:%llu dur:%llu\n",
+        // packet.first->m_pts, packet.first->m_dts, packet.first->m_duration);
+
+        updateBufferUnderrunState(type, false);
+        ret = player_push_media_stream(m_nativePlayer, mediaPacket);
+        // media_format_unref(format);
+        media_packet_destroy(mediaPacket);
+
+        if (ret == PLAYER_ERROR_BUFFER_SPACE) {
+            sb->revertLastCacheIfPossible(streamIdx);
+            DEBUG_STREAMBUFFER_LOG("fillBuffer stop: PLAYER BUFFER FULL\n");
+            break;
+        } else if (ret != PLAYER_ERROR_NONE) {
+            DEBUG_STREAMBUFFER_LOG("ERROR: player_push_media_stream\n");
+            printNativePlayerError(ret);
+            handlePlayerError();
+            return;
+        }
+#ifdef PLAYER_DEBUG
+        submitCount++;
+        submitMS += packet.first->m_duration;
+#endif
+        submitBytes += packet.first->m_dataSize;
+        updateLastSubmitDTS(type,
+                            packet.first->m_dts + packet.first->m_duration);
+    }
+    DEBUG_STREAMBUFFER_LOG("fillBuffer end %llums (count:%d, size:%d)\n\n",
+                           lastSubmitDTS(type), (int)submitCount,
+                           (int)submitBytes);
+
+#undef DEBUG_STREAMBUFFER_LOG
+#undef RETURN_WHEN_MEDIA_PACKET_ERROR
 }
 
 void MediaPlayerTizen::setLoop(bool loop)
@@ -731,6 +1009,179 @@ void MediaPlayerTizen::setLoop(bool loop)
     if (m_nativePlayer) {
         player_set_looping(m_nativePlayer, loop);
     }
+}
+
+media_format_h MediaPlayerTizen::streamFormat(StreamType type)
+{
+    return type == StreamTypeAudio ? m_audioFormat : m_videoFormat;
+}
+
+SourceBuffer* MediaPlayerTizen::activeSourceBuffer(StreamType type)
+{
+    if (m_activeMediaSource) {
+        if (type == StreamTypeAudio) {
+            return m_activeMediaSource->activeAudioSourceBuffer();
+        } else {
+            return m_activeMediaSource->activeVideoSourceBuffer();
+        }
+    }
+    return nullptr;
+}
+
+uint64_t MediaPlayerTizen::activeStreamIndex(StreamType type)
+{
+    STARFISH_ASSERT(m_activeMediaSource);
+    if (type == StreamTypeAudio) {
+        return m_activeMediaSource->activeAudioStreamIndex();
+    }
+    STARFISH_ASSERT(type == StreamTypeVideo);
+    return m_activeMediaSource->activeVideoStreamIndex();
+}
+
+uint64_t MediaPlayerTizen::maxBufferSize(StreamType type)
+{
+    return type == StreamTypeAudio ? m_audioMaxBufferSize
+                                   : m_videoMaxBufferSize;
+}
+
+bool MediaPlayerTizen::bufferUnderrunState(StreamType type)
+{
+    return type == StreamTypeAudio ? m_isAudioBufferUnderrunState
+                                   : m_isVideoBufferUnderrunState;
+}
+
+void MediaPlayerTizen::updateBufferUnderrunState(StreamType type, bool value)
+{
+    if (type == StreamTypeAudio) {
+        m_isAudioBufferUnderrunState = value;
+    } else {
+        STARFISH_ASSERT(type == StreamTypeVideo);
+        m_isVideoBufferUnderrunState = value;
+    }
+}
+
+uint64_t MediaPlayerTizen::lastSubmitDTS(StreamType type)
+{
+    return type == StreamTypeAudio ? m_lastAudioDTS : m_lastVideoDTS;
+}
+
+void MediaPlayerTizen::updateLastSubmitDTS(StreamType type, uint64_t value)
+{
+    if (type == StreamTypeAudio) {
+        m_lastAudioDTS = value;
+    } else {
+        STARFISH_ASSERT(type == StreamTypeVideo);
+        m_lastVideoDTS = value;
+    }
+}
+
+size_t MediaPlayerTizen::initSegmentIndex(StreamType type)
+{
+    return type == StreamTypeAudio ? m_audioInitSegmentIndex
+                                   : m_videoInitSegmentIndex;
+}
+
+void MediaPlayerTizen::updateInitSegmentIndex(StreamType type, size_t value)
+{
+    if (type == StreamTypeAudio) {
+        m_audioInitSegmentIndex = value;
+    } else {
+        STARFISH_ASSERT(type == StreamTypeVideo);
+        m_videoInitSegmentIndex = value;
+    }
+}
+
+uint64_t MediaPlayerTizen::lastBufferBytes(StreamType type)
+{
+    return type == StreamTypeAudio ? m_audioLastBufferBytes
+                                   : m_videoLastBufferBytes;
+}
+
+void MediaPlayerTizen::updateLastBufferBytes(StreamType type, size_t value)
+{
+    if (type == StreamTypeAudio) {
+        m_audioLastBufferBytes = value;
+    } else {
+        STARFISH_ASSERT(type == StreamTypeVideo);
+        m_videoLastBufferBytes = value;
+    }
+}
+
+void MediaPlayerTizen::updateStreamInfoWithGuard(StreamType type,
+                                                 size_t pastInitIndex,
+                                                 size_t newInitIndex)
+{
+    if (type == StreamTypeVideo) {
+        updateVideoStreamInfoWithGuard(pastInitIndex, newInitIndex);
+    }
+}
+
+void MediaPlayerTizen::updateAudioStreamInfoWithGuard(size_t pastInitIndex,
+                                                      size_t newInitIndex)
+{
+    Locker<Mutex> locker(*m_mediaFormatMutex);
+    PLAYER_LOGI("New audio -----------------------------\n");
+    PLAYER_LOGI("> index     : %d\n", (int)newInitIndex);
+    PLAYER_LOGI("---------------------------------------\n");
+}
+
+void MediaPlayerTizen::updateVideoStreamInfoWithGuard(size_t pastInitIndex,
+                                                      size_t newInitIndex)
+{
+    Locker<Mutex> locker(*m_mediaFormatMutex);
+    if (!m_videoFormat) {
+        return;
+    }
+
+    StreamInfo* pastInfo =
+        m_activeMediaSource->activeVideoSourceBuffer()->streamInfo(
+            pastInitIndex, m_activeMediaSource->activeVideoStreamIndex());
+    StreamInfo* newInfo =
+        m_activeMediaSource->activeVideoSourceBuffer()->streamInfo(
+            newInitIndex, m_activeMediaSource->activeVideoStreamIndex());
+    m_videoWidth = newInfo->videoWidth();
+    m_videoHeight = newInfo->videoHeight();
+    // media_format_set_video_width(m_videoFormat, m_videoWidth);
+    // media_format_set_video_height(m_videoFormat, m_videoHeight);
+    m_videoMaxBufferSize =
+        (m_videoWidth * m_videoHeight * 30 * 2 * 7) / 100 / 8 * 5;
+    bool isFrameRateChanged = false;
+    if (newInfo->videoHasFramerate() && newInfo->videoFramerate().isValid()) {
+        if (!pastInfo->videoHasFramerate() ||
+            !pastInfo->videoFramerate().isValid() ||
+            (pastInfo->videoHasFramerate() &&
+             isFramerateChanged(pastInfo->videoFramerate(),
+                                newInfo->videoFramerate()))) {
+            isFrameRateChanged = true;
+        }
+    }
+    if (isFrameRateChanged) {
+        m_videoFormatExtra.is_framerate_changed = isFrameRateChanged;
+        m_videoFormatExtra.framerate_num = newInfo->videoFramerate().m_num;
+        m_videoFormatExtra.framerate_den = newInfo->videoFramerate().m_den;
+        media_format_set_extra(m_videoFormat, &m_videoFormatExtra);
+        int ret = player_set_media_stream_info(
+            m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO, m_videoFormat);
+        if (ret != PLAYER_ERROR_NONE) {
+            PLAYER_LOGI("ERROR: player_set_media_stream_info\n");
+            printNativePlayerError(ret);
+        }
+    }
+    int ret = player_set_media_stream_buffer_max_size(
+        m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO, m_videoMaxBufferSize);
+    if (ret != PLAYER_ERROR_NONE) {
+        PLAYER_LOGI("ERROR: player_set_media_stream_buffer_max_size\n");
+        printNativePlayerError(ret);
+    }
+    PLAYER_LOGI("New video -----------------------------\n");
+    PLAYER_LOGI("> index     : %d\n", (int)newInitIndex);
+    PLAYER_LOGI("> size      : %lu x %lu\n", m_videoWidth, m_videoHeight);
+    PLAYER_LOGI("> max_buffer: %llu\n", m_videoMaxBufferSize);
+    PLAYER_LOGI("> framerate_changed: %s\n",
+                isFrameRateChanged ? "true" : "false");
+    PLAYER_LOGI("> avg_frame_rate: %d/%d\n", newInfo->videoFramerate().m_num,
+                newInfo->videoFramerate().m_den);
+    PLAYER_LOGI("---------------------------------------\n");
 }
 
 #if !defined(STARFISH_TIZEN_TV)

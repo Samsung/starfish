@@ -17,76 +17,21 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishDemuxer__)
 #define __StarFishDemuxer__
 
+#include "platform/multimedia/StreamInfo.h"
+
 namespace StarFish {
+
+class DemuxerSource;
+class PacketGenerator;
 
 struct MediaPacket {
     size_t m_streamIndex;
     uint8_t* m_data;
     size_t m_dataSize;
     uint64_t m_pts;
+    uint64_t m_dts;
     uint64_t m_duration;
     bool m_hasIdr : 1;
-};
-
-class DemuxerSource : public gc {
-public:
-    enum SeekWhence {
-        SeekWhenceSet,
-        SeekWhenceCurrent,
-        SeekWhenceEnd,
-        SeekWhenceLookSize,
-    };
-    virtual ~DemuxerSource()
-    {
-    }
-    virtual int64_t onSeek(int64_t position, SeekWhence whence) = 0;
-    virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead,
-                        int& errorCode, uint8_t* buffer) = 0;
-};
-
-struct StreamInfo : public gc {
-    enum Type { Video = 1, Audio = 1 << 1, Subtitle = 1 << 2 };
-    Type m_type;
-    size_t m_streamIndex;
-    const char* m_codecName;
-    int m_bitRate;
-    uint64_t m_duration; // ms
-};
-
-struct VideoStreamInfo : public StreamInfo {
-    VideoStreamInfo()
-    {
-        m_type = Video;
-    }
-    int m_timeBaseNum;
-    int m_timeBaseDen;
-    int m_width;
-    int m_height;
-    // TODO add pixel format
-};
-
-enum AudioSampleFormat {
-    AudioSampleFormatNone = -1,
-    AudioSampleFormatU8,   // unsigned 8 bits
-    AudioSampleFormatS16,  // signed 16 bits
-    AudioSampleFormatS32,  // signed 32 bits
-    AudioSampleFormatFLT,  // float
-    AudioSampleFormatDBL,  // double
-    AudioSampleFormatU8P,  // unsigned 8 bits, planar
-    AudioSampleFormatS16P, // signed 16 bits, planar
-    AudioSampleFormatS32P, // signed 32 bits, planar
-    AudioSampleFormatFLTP, // float, planar
-    AudioSampleFormatDBLP, // double, planar
-};
-
-struct AudioStreamInfo : public StreamInfo {
-    AudioStreamInfo()
-    {
-        m_type = Audio;
-    }
-    AudioSampleFormat m_sampleFormat;
-    int m_channels;
-    int m_sampleRate;
 };
 
 class DemuxerClient : public gc {
@@ -94,10 +39,10 @@ public:
     virtual ~DemuxerClient()
     {
     }
-    virtual void onDetectVideoStream(const VideoStreamInfo& info)
+    virtual void onDetectVideoStream(StreamInfo& info)
     {
     }
-    virtual void onDetectAudioStream(const AudioStreamInfo& info)
+    virtual void onDetectAudioStream(StreamInfo& info)
     {
     }
     // return true means client consume packet data

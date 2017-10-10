@@ -18,9 +18,12 @@
     !defined(__StarFishMediaPlayerTizen__)
 #define __StarFishMediaPlayerTizen__
 
-#include "MediaPlayer.h"
+#include "platform/multimedia/MediaPlayer.h"
+#include "platform/multimedia/StreamInfo.h"
 
 #include <media/player.h>
+#include <media/player_internal.h>
+#include <media/player_product.h>
 
 #ifndef MAX_WAITING_SECONDS_FOR_SEEK_OPERATION
 #define MAX_WAITING_SECONDS_FOR_SEEK_OPERATION 30000
@@ -50,8 +53,12 @@ public:
     virtual void initDisplay();
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);
     virtual void printNativePlayerError(int errorCode);
-    virtual void fillVideoBuffer(bool useLock = true);
-    virtual void fillAudioBuffer(bool useLock = true);
+    virtual void printMediaPacketError(int errorCode);
+    virtual void printMediaFormatError(int errorCode);
+
+    void handlePlayerBuffer(StreamType type, uint64_t currentBytes);
+    virtual void fillBuffer(StreamType type);
+    virtual void fillBufferWithGuard(StreamType type);
     virtual void mediaEndOperation()
     {
         if (m_nativePlayer) {
@@ -71,7 +78,7 @@ public:
     void stopPlaying();
 
     void handleEnded();
-    void handlePlayerError(int error);
+    void handlePlayerError();
 
     void seek(double time);
     virtual void seekOperation(int timeInMS);
@@ -110,19 +117,59 @@ public:
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect);
     virtual void prepareMediaSource();
+    void updateAudioStreamInfoWithGuard(size_t pastInitIndex,
+                                        size_t newInitIndex);
+    void updateVideoStreamInfoWithGuard(size_t pastInitIndex,
+                                        size_t newInitIndex);
 
     bool m_inPrepare;
-    bool m_isVideoBufferUnderrunState;
-    bool m_isAudioBufferUnderrunState;
     bool m_needsPlayAfterPrepare;
     size_t m_seekingTimer;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_bufferMutex;
+    Mutex* m_mediaFormatMutex;
     ResourceURL* m_currentURL;
     void (*m_preparedCallback)(void*);
     void (*m_completeCallback)(void*);
     CanvasSurface* m_canvasSurface;
+
     player_h m_nativePlayer;
+    media_format_h m_audioFormat;
+    media_format_h m_videoFormat;
+    player_media_stream_audio_extra_info_s m_audioFormatExtra;
+    player_media_stream_video_extra_info_s m_videoFormatExtra;
+
+    volatile bool m_isAudioBufferUnderrunState;
+    volatile bool m_isVideoBufferUnderrunState;
+    volatile uint64_t m_audioMaxBufferSize;
+    volatile uint64_t m_videoMaxBufferSize;
+    volatile uint64_t m_lastAudioDTS;
+    volatile uint64_t m_lastVideoDTS;
+    volatile size_t m_audioInitSegmentIndex;
+    volatile size_t m_videoInitSegmentIndex;
+    volatile size_t m_audioLastBufferBytes;
+    volatile size_t m_videoLastBufferBytes;
+
+    // Helpers
+    media_format_h streamFormat(StreamType type);
+    SourceBuffer* activeSourceBuffer(StreamType type);
+    uint64_t activeStreamIndex(StreamType type);
+    uint64_t maxBufferSize(StreamType type);
+
+    bool bufferUnderrunState(StreamType type);
+    void updateBufferUnderrunState(StreamType type, bool value);
+
+    uint64_t lastSubmitDTS(StreamType type);
+    void updateLastSubmitDTS(StreamType type, uint64_t value);
+
+    size_t initSegmentIndex(StreamType type);
+    void updateInitSegmentIndex(StreamType type, size_t value);
+
+    uint64_t lastBufferBytes(StreamType type);
+    void updateLastBufferBytes(StreamType type, size_t value);
+
+    void updateStreamInfoWithGuard(StreamType type, size_t pastInitIndex,
+                                   size_t newInitIndex);
 };
 }
 

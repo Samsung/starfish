@@ -16,7 +16,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "StarFishConfig.h"
-#include "Demuxer.h"
+#include "platform/multimedia/Demuxer.h"
+#include "platform/multimedia/DemuxerSource.h"
 
 #include "../third_party/webm/mkvparser.hpp"
 
@@ -134,16 +135,13 @@ public:
                 const long long height = pVideoTrack->GetHeight();
                 const double rate = pVideoTrack->GetFrameRate();
 
-                VideoStreamInfo info;
-                info.m_streamIndex = trackNum - 1;
+                StreamInfo info;
+                info.setType(StreamTypeVideo);
+                info.setStreamIndex(trackNum - 1);
                 // TODO read codec
-                info.m_codecName = "vp9";
-                // info.m_bitRate =
-                // m_formatContext->streams[i]->codec->bit_rate;
-                info.m_timeBaseNum = rate * 1000;
-                info.m_timeBaseDen = 1000;
-                info.m_width = width;
-                info.m_height = height;
+                info.setCodec(MediaCodecVideoVP9);
+                info.setVideoWidth(width);
+                info.setVideoHeight(height);
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                     m_demuxerClients[j]->onDetectVideoStream(info);
                 }
@@ -156,18 +154,11 @@ public:
                 const double sampleRate = pAudioTrack->GetSamplingRate();
                 const long long codecDelay = pAudioTrack->GetCodecDelay();
                 const long long seekPreRoll = pAudioTrack->GetSeekPreRoll();
-                AudioStreamInfo info;
-                info.m_streamIndex = trackNum - 1;
+                StreamInfo info;
+                info.setType(StreamTypeAudio);
+                info.setStreamIndex(trackNum - 1);
                 // TODO read codec
-                info.m_codecName = "vorbis";
-                // info.m_bitRate =
-                // m_formatContext->streams[i]->codec->bit_rate;
-                // info.m_sampleFormat =
-                // (AudioSampleFormat)m_formatContext->streams[i]->codec->sample_fmt;
-                // info.m_channels =
-                // m_formatContext->streams[i]->codec->channels;
-                // info.m_sampleRate =
-                // m_formatContext->streams[i]->codec->sample_rate;
+                info.setCodec(MediaCodecAudioVorbis);
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                     m_demuxerClients[j]->onDetectAudioStream(info);
                 }

@@ -20,7 +20,7 @@
 #include "core/dom/EventTarget.h"
 
 #ifndef STARFISH_MAX_MEDIASOURCE_BUFFERSPACE
-#define STARFISH_MAX_MEDIASOURCE_BUFFERSPACE 24 * 1024 * 1024
+#define STARFISH_MAX_MEDIASOURCE_BUFFERSPACE 16 * 1024 * 1024
 #endif
 
 namespace StarFish {

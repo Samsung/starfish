@@ -58,9 +58,11 @@ namespace MP4
 
             bool has_default_sample_duration;
             bool has_default_sample_size;
+            bool has_default_sample_flags;
             uint32_t track_id;
             uint32_t default_sample_duration;
             uint32_t default_sample_size;
+            uint32_t default_sample_flags;
     };
 }
 

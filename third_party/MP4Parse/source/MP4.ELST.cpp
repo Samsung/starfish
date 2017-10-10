@@ -39,5 +39,30 @@ ELST::ELST( void )
 
 void ELST::processData( MP4::BinaryStream * stream, size_t length )
 {
-    stream->ignore( length );
+	// Version (+8)
+	uint8_t v = stream->readUnsignedChar();
+	// Flags (+24)
+	uint32_t f = (stream->readUnsignedChar() << 16) + (stream->readUnsignedChar() << 8) + (stream->readUnsignedChar() << 0);
+	// Size (+32)
+	uint32_t entry_count = stream->readBigEndianUnsignedInteger();
+    if (v == 1) {
+    	for (size_t i = 0; i < entry_count; i++) {
+    		// Segment duration (+64)
+    		uint64_t segment_duration = stream->readBigEndianUnsignedLong();
+    		// Media time (+64)
+    		int64_t media_time = stream->readBigEndianUnsignedLong();
+    		edit_entries.emplace_back(segment_duration, media_time);
+    	}
+    } else {
+    	// version 0
+    	// Segment duration (+32)
+    	uint64_t segment_duration = (uint64_t) stream->readBigEndianUnsignedInteger();
+    	// Media time (+32)
+		int64_t media_time = (int64_t) stream->readBigEndianUnsignedInteger();
+		edit_entries.emplace_back(segment_duration, media_time);
+    }
+    // media_rate_integer (+16)
+    stream->readSignedShort();
+    // media_rate_fraction (+16)
+    stream->readSignedShort();
 }

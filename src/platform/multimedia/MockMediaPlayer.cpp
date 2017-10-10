@@ -83,12 +83,10 @@ void MockMediaPlayer::prepareMediaSource()
     if (activeMediaSource()->activeVideoSourceBuffer()) {
         m_hasVideo = true;
     }
-    VideoStreamInfo* v =
-        (VideoStreamInfo*)activeMediaSource()
-            ->activeVideoSourceBuffer()
-            ->streamInfo(0, activeMediaSource()->activeVideoStreamIndex());
-    m_videoWidth = v->m_width;
-    m_videoHeight = v->m_height;
+    StreamInfo* v = activeMediaSource()->activeVideoSourceBuffer()->streamInfo(
+        0, activeMediaSource()->activeVideoStreamIndex());
+    m_videoWidth = v->videoWidth();
+    m_videoHeight = v->videoHeight();
 
     if (container()->isHTMLVideoElement() && container()->frame()) {
         container()->setNeedsLayout();

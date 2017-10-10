@@ -33,10 +33,6 @@ public:
     MediaPlayerTizenTV(HTMLMediaElement* element)
         : MediaPlayerTizen(element)
     {
-        m_lastVideoPts = m_lastAudioPts =
-            element->defaultPlaybackStartPosition() * 1000;
-        m_videoInitSegmentIndex = 0;
-        m_audioInitSegmentIndex = 0;
 #ifndef NDEBUG
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
@@ -58,19 +54,12 @@ public:
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect);
 
-    virtual void fillVideoBuffer(bool useLock = true);
-    virtual void fillAudioBuffer(bool useLock = true);
     virtual void prepareMediaSource();
-    void setVideoStreamInfo(size_t initSegmentIndex = 0);
-    void setAudioStreamInfo(size_t initSegmentIndex = 0);
+    void setVideoStreamInfoWithGuard(size_t initSegmentIndex = 0);
+    void setAudioStreamInfoWithGuard(size_t initSegmentIndex = 0);
     virtual void printNativePlayerError(int errorCode);
     virtual void mediaEndOperation();
     virtual void seekOperation(int timeInMS);
-
-    uint64_t m_lastVideoPts;
-    uint64_t m_lastAudioPts;
-    size_t m_videoInitSegmentIndex;
-    size_t m_audioInitSegmentIndex;
 };
 }
 
