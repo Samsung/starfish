@@ -25,7 +25,7 @@ test/reftest/vendor/webkit/fast/css/style-parsed-outside-head.html
 test/reftest/vendor/webkit/fast/css/transform-function-lowercase-assert.html
 test/reftest/vendor/webkit/fast/css/unset-keyword.html
 test/reftest/vendor/webkit/fast/css/url-format-non-string.html
-test/reftest/vendor/webkit/fast/css/will-change/will-change-creates-stacking-context.html
+#test/reftest/vendor/webkit/fast/css/will-change/will-change-creates-stacking-context.html
 test/reftest/vendor/webkit/fast/css/will-change/will-change-creates-stacking-context-inline.html
 test/reftest/vendor/webkit/fast/css/ZeroOpacityLayers2.html
 test/reftest/vendor/webkit/fast/css/ZeroOpacityLayers.html

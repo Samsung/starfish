@@ -1,4 +1,4 @@
-test/reftest/vendor/gecko_original/layout/reftests/floats/1114329.html
+#test/reftest/vendor/gecko_original/layout/reftests/floats/1114329.html
 #test/reftest/vendor/gecko_original/layout/reftests/floats/1236745-1.html
 test/reftest/vendor/gecko_original/layout/reftests/floats/345369-1.html
 test/reftest/vendor/gecko_original/layout/reftests/floats/345369-2.html
@@ -58,7 +58,7 @@ test/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1l.html
 test/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1h.html
 test/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1j.html
 #test/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1f.html
-test/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1b.html
+#test/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1b.html
 test/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1c.html
 test/reftest/vendor/gecko_original/layout/reftests/text-indent/text-indent-intrinsic-min.html
 test/reftest/vendor/gecko_original/layout/reftests/text-indent/text-indent-intrinsic-pref.html
