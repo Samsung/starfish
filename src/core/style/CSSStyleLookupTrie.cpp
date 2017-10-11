@@ -323,6 +323,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Padding-Top
         // Margin-Left
         // Text-Indent
+        // Text-Shadow
         // Empty-Cells
         // Align-Items
         switch (data[0]) {
@@ -367,6 +368,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 't':
             if (memcmp(data, "text-indent", 11) == 0) {
                 return CSSStyleKind::TextIndent;
+            }
+            if (memcmp(data, "text-shadow", 11) == 0) {
+                return CSSStyleKind::TextShadow;
             }
             break;
         case 'a':

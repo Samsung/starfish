@@ -46,6 +46,7 @@
 #include "core/style/Style.h"
 #include "core/style/StyleRule.h"
 #include "platform/window/PlatformWindow.h"
+#include "core/style/ShadowData.h"
 
 namespace StarFish {
 
@@ -3628,6 +3629,75 @@ void StyleResolver::apply(Element* element,
                 style->setTextDecoration(cssValues[k].textDecorationValue());
             }
             break;
+        case CSSStyleValuePair::KeyKind::TextShadow: {
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->textShadow() = parentStyle->textShadow();
+            } else if ((cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Initial) ||
+                       (cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::None)) {
+                style->textShadow().clear();
+            } else {
+                STARFISH_ASSERT(cssValues[k].valueKind() ==
+                                CSSStyleValuePair::ValueKind::ValueListKind);
+                ValueList* list = cssValues[k].multiValue();
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    const CSSStyleValuePair& item = (*list)[i];
+                    STARFISH_ASSERT(
+                        item.valueKind() ==
+                        CSSStyleValuePair::ValueKind::ValueListKind);
+                    ValueList* vl = item.multiValue();
+                    Length offsetX, offsetY, radius;
+                    Unit::Color color;
+                    bool hasColor = true;
+                    // offsetX, offsetY
+                    offsetX = vl->at(0).lengthValue();
+                    offsetY = vl->at(1).lengthValue();
+                    if (vl->size() == 2) {
+                        hasColor = false;
+                    } else if (vl->size() == 3) {
+                        //  + radius or color
+                        if (vl->at(2).valueKind() ==
+                            CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                            color = NamedColor::namedColorToColor(
+                                vl->at(2).namedColorValue());
+                        } else if (vl->at(2).valueKind() ==
+                                   CSSStyleValuePair::ValueKind::
+                                       ColorValueKind) {
+                            color = vl->at(2).colorValue();
+                        } else {
+                            radius = vl->at(2).lengthValue();
+                            hasColor = false;
+                        }
+                    } else if (vl->size() == 4) {
+                        // + raidus and color
+                        radius = vl->at(2).lengthValue();
+                        if (vl->at(3).valueKind() ==
+                            CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                            color = NamedColor::namedColorToColor(
+                                vl->at(3).namedColorValue());
+                        } else if (vl->at(3).valueKind() ==
+                                   CSSStyleValuePair::ValueKind::
+                                       ColorValueKind) {
+                            color = vl->at(3).colorValue();
+                        } else {
+                            STARFISH_ASSERT_NOT_REACHED();
+                        }
+                    } else {
+                        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                    }
+                    ShadowData sd;
+                    sd.setOffsetX(offsetX);
+                    sd.setOffsetY(offsetY);
+                    sd.setRadius(radius);
+                    if (hasColor) {
+                        sd.setColor(color);
+                    }
+                    style->textShadow().push_back(sd);
+                }
+            }
+        } break;
         case CSSStyleValuePair::KeyKind::Direction:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
@@ -7340,6 +7410,109 @@ bool CSSStyleValuePair::updateValuePosition(const CSSTokenVector& tokens)
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueTextShadow(const CSSTokenVector& tokens)
+{
+    // none | [ <length>{2,3} && <color>? ]#
+    // initial : none
+    if (tokens.size() < 1) {
+        return false;
+    }
+    if (tokens.size() == 1) {
+        const CSSTokenValue& t = tokens[0];
+        const char* value = t.data();
+        if (VALUE_IS_INHERIT()) {
+            m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
+        } else if (VALUE_IS_INITIAL()) {
+            m_valueKind = CSSStyleValuePair::ValueKind::Initial;
+        } else if (VALUE_IS_NONE()) {
+            m_valueKind = CSSStyleValuePair::ValueKind::None;
+        } else {
+            return false;
+        }
+        return true;
+    } else {
+        m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+        setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+        uint8_t option = CSSPropertyParser::AllowNegative |
+                         CSSPropertyParser::AllowWithoutUnit;
+        for (size_t i = 0, len = 1; i < tokens.size(); i++, len++) {
+            if (len >= 1 &&
+                (i == (tokens.size() - 1) || tokens[i].equals(","))) {
+                // shadow has offsetX, offsetY, blur radius, color
+                size_t j = i;
+                if (tokens[j].equals(",")) {
+                    j -= 1;
+                    len -= 1;
+                }
+                if (len <= 1) {
+                    return false;
+                }
+
+                CSSStyleValuePair shadow;
+                shadow.setValueList(
+                    new ValueList(ValueList::Separator::SpaceSeparator));
+
+                const CSSTokenValue& v1 = tokens[j];
+                const CSSTokenValue& v2 = tokens[j - 1];
+                const CSSTokenValue& v3 = tokens[j - 2];
+
+                if (len == 2) {
+                    CSSStyleValuePair offsetX, offsetY;
+                    if (offsetX.updateValueUnitLengthOrCalc(v2, option) &&
+                        offsetY.updateValueUnitLengthOrCalc(v1, option)) {
+                        shadow.multiValue()->push_back(offsetX);
+                        shadow.multiValue()->push_back(offsetY);
+                    } else {
+                        return false;
+                    }
+                } else if (len == 3) {
+                    CSSStyleValuePair colorOrRadius, offsetX, offsetY;
+                    if ((offsetX.updateValueUnitLengthOrCalc(v3, option) &&
+                         offsetY.updateValueUnitLengthOrCalc(v2, option) &&
+                         colorOrRadius.updateValueUnitColor(v1)) ||
+                        (colorOrRadius.updateValueUnitColor(v3) &&
+                         offsetX.updateValueUnitLengthOrCalc(v2, option) &&
+                         offsetY.updateValueUnitLengthOrCalc(v1, option)) ||
+                        (offsetX.updateValueUnitLengthOrCalc(v3, option) &&
+                         offsetY.updateValueUnitLengthOrCalc(v2, option) &&
+                         colorOrRadius.updateValueUnitLengthOrCalc(v1,
+                                                                   option))) {
+                        shadow.multiValue()->push_back(offsetX);
+                        shadow.multiValue()->push_back(offsetY);
+                        shadow.multiValue()->push_back(colorOrRadius);
+                    } else {
+                        return false;
+                    }
+                } else if (len == 4) {
+                    const CSSTokenValue& v4 = tokens[j - 3];
+                    CSSStyleValuePair color, offsetX, offsetY, radius;
+                    if ((offsetX.updateValueUnitLengthOrCalc(v4, option) &&
+                         offsetY.updateValueUnitLengthOrCalc(v3, option) &&
+                         radius.updateValueUnitLengthOrCalc(v2, option) &&
+                         color.updateValueUnitColor(v1)) ||
+                        (color.updateValueUnitColor(v4) &&
+                         offsetX.updateValueUnitLengthOrCalc(v3, option) &&
+                         offsetY.updateValueUnitLengthOrCalc(v2, option) &&
+                         radius.updateValueUnitLengthOrCalc(v1, option))) {
+                        shadow.multiValue()->push_back(offsetX);
+                        shadow.multiValue()->push_back(offsetY);
+                        shadow.multiValue()->push_back(radius);
+                        shadow.multiValue()->push_back(color);
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+                multiValue()->push_back(shadow);
+                len = 0;
+            }
+        }
+        return true;
+    }
+    return false;
 }
 
 bool CSSStyleValuePair::updateValueTextDecoration(const CSSTokenVector& tokens)

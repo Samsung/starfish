@@ -998,6 +998,7 @@ class CSSStyleDeclaration;
     F(EmptyCells, EmptyCells, "empty-cells")                                 \
     F(TextAlign, textAlign, "text-align")                                    \
     F(TextIndent, textIndent, "text-indent")                                 \
+    F(TextShadow, textShadow, "text-shadow")                                 \
     F(TextTransform, textTransform, "text-transform")                        \
     F(Transform, transform, "transform")                                     \
     F(TransformOrigin, transformOrigin, "transform-origin")                  \
