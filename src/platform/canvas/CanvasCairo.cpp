@@ -645,7 +645,7 @@ public:
         cairo_matrix_t matrix;
         cairo_surface_t* image = nullptr;
 
-        void* imgData = data->unwrap();
+        void* imgData = data->data();
         double surfaceWidth = 0, surfaceHeight = 0;
 
         if (imgData) {
