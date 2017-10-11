@@ -303,8 +303,12 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         FrameBox* cb = containingBlock(this);
         LayoutUnit parentContentWidth = cb->contentWidth();
-        DirectionValue parentDirection =
-            blockContainer(this)->style()->direction();
+        DirectionValue parentDirection;
+        if (isAbsolutePositioned()) {
+            parentDirection = blockContainer(this)->style()->direction();
+        } else {
+            parentDirection = cb->style()->direction();
+        }
         computeBorderMarginPadding(ctx, parentContentWidth);
 
         if (isAbsolutePositioned()) {

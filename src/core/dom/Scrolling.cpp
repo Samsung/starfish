@@ -155,55 +155,63 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
     }
 #endif
     canvas->save();
-    if (frame->hasBiggerContentThanFrameHeight() &&
-        oy >= OverflowValue::AutoOverflow && frame->height()) {
-        canvas->setColor(Unit::Color(64, 64, 64, 192));
+    bool hasVerticalScroll = frame->hasBiggerContentThanFrameHeight() &&
+                             oy >= OverflowValue::AutoOverflow &&
+                             frame->height();
+    bool hasHorizontalScroll = frame->hasBiggerContentThanFrameWidth() &&
+                               ox >= OverflowValue::AutoOverflow &&
+                               frame->width();
 
+    if (hasVerticalScroll) {
+        canvas->setColor(Unit::Color(64, 64, 64, 192));
         float scrollMoveRatio = ((float)frame->scrollTop() /
                                  (frame->scrollHeight() - frame->height()));
+        LayoutUnit scrollMovableArea = frame->height() - frame->borderHeight();
         LayoutUnit scrollBarHeight =
-            frame->contentHeight() * (frame->height() / frame->scrollHeight());
+            scrollMovableArea * (frame->height() / frame->scrollHeight());
         LayoutUnit scrollBarWidth = STARFISH_SCROLLBAR_THICKNESS *
                                     frame->node()->window()->devicePixelRatio();
-
+        if (hasHorizontalScroll) {
+            scrollMovableArea -= scrollBarWidth;
+        }
         LayoutRect rr(0, 0, 0, 0);
 
         rr.setWidth(scrollBarWidth);
         rr.setHeight(scrollBarHeight);
 
         if (frame->style()->direction() == DirectionValue::LtrDirectionValue) {
-            rr.setX(frame->width() - scrollBarWidth - frame->leftMBPWidth() +
-                    frame->scrollLeft());
+            rr.setX(frame->width() - scrollBarWidth - frame->borderRight());
         } else {
-            rr.setX(frame->rightMBPWidth() + frame->scrollLeft());
+            rr.setX(frame->borderLeft());
         }
 
-        rr.setY(scrollMoveRatio * (frame->height() - scrollBarHeight) +
-                frame->scrollTop());
+        rr.setY(frame->borderTop() +
+                scrollMoveRatio * (scrollMovableArea - scrollBarHeight));
 
         canvas->drawRect(rr);
     }
-    if (frame->hasBiggerContentThanFrameWidth() &&
-        ox >= OverflowValue::AutoOverflow && frame->width()) {
+    if (hasHorizontalScroll) {
         canvas->setColor(Unit::Color(64, 64, 64, 192));
-
         float scrollMoveRatio = ((float)frame->scrollLeft() /
                                  (frame->scrollWidth() - frame->width()));
+        LayoutUnit scrollMovableArea = frame->width() - frame->borderWidth();
         LayoutUnit scrollBarHeight =
             STARFISH_SCROLLBAR_THICKNESS *
             frame->node()->window()->devicePixelRatio();
-        LayoutUnit scrollBarWidth =
-            frame->contentWidth() * (frame->width() / frame->scrollWidth());
+        LayoutUnit scrollBarWidth = (frame->width() - frame->borderWidth()) *
+                                    (frame->width() / frame->scrollWidth());
+        if (hasVerticalScroll) {
+            scrollMovableArea -= scrollBarHeight;
+        }
 
         LayoutRect rr(0, 0, 0, 0);
 
         rr.setWidth(scrollBarWidth);
         rr.setHeight(scrollBarHeight);
 
-        rr.setY(frame->height() - frame->borderBottom() -
-                frame->paddingBottom() - scrollBarHeight + frame->scrollTop());
-        rr.setX(scrollMoveRatio * (frame->width() - scrollBarWidth) +
-                frame->scrollLeft());
+        rr.setY(frame->height() - frame->borderBottom() - scrollBarHeight);
+        rr.setX(frame->borderLeft() +
+                scrollMoveRatio * (scrollMovableArea - scrollBarWidth));
 
         canvas->drawRect(rr);
     }
