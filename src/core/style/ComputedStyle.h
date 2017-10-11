@@ -28,6 +28,7 @@
 #include "core/style/StyleTransformOrigin.h"
 #include "core/style/StyleTransitionData.h"
 #include "core/style/StylePaintData.h"
+#include "core/style/ShadowData.h"
 
 namespace StarFish {
 
@@ -100,6 +101,7 @@ public:
 
     ContentDataGroup m_content;
     GCVector<ComputedStyle*> m_cachedPseudoStyles;
+    GCVector<ShadowData> m_textShadowDataList;
 
     OutlineData* m_outline;
     BorderRadiusData* m_borderRadius;
@@ -383,6 +385,12 @@ public:
     void setTextDecoration(TextDecorationValue decoration)
     {
         m_textDecoration = decoration;
+    }
+
+    GCVector<ShadowData>& textShadow()
+    {
+        setRareComputedStyleDataIfNeeded();
+        return m_rareComputedStyleData->m_textShadowDataList;
     }
 
     DirectionValue direction()

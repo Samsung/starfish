@@ -57,6 +57,8 @@ void* RareComputedStyleData::operator new(size_t size)
                    GC_WORD_OFFSET(RareComputedStyleData, m_minHeight));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(RareComputedStyleData, m_borderRadius));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_textShadowDataList));
         descr =
             GC_make_descriptor(obj_bitmap, GC_WORD_LEN(RareComputedStyleData));
         typeInited = true;
@@ -1021,6 +1023,19 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         if (newStyle->borderRadius() != oldStyle->borderRadius()) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
+    }
+
+    if (newStyle->textShadow().size() != oldStyle->textShadow().size()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    } else {
+        for (size_t i = 0; i < newStyle->textShadow().size(); i++) {
+            if (newStyle->textShadow().at(i) != oldStyle->textShadow().at(i)) {
+                damage = (ComputedStyleDamage)(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+                break;
+            }
         }
     }
 
