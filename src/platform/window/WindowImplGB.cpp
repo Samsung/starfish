@@ -352,7 +352,6 @@ Canvas* WindowImplGB::preparePainting(bool forPainting)
             g_imgBufferForScreehShot =
                 (unsigned char*)g_surfaceForScreehShot->unwrap();
             Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
-            c->setViewportWidthAndHeight(width(), height());
             return c;
         }
     }
