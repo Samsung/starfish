@@ -155,7 +155,7 @@ test/reftest/vendor/webkit/fast/layers/visible-layer-with-hidden-parent.html
 test/reftest/vendor/webkit/fast/layers/zindex-inherit.html
 test/reftest/vendor/webkit/fast/layers/zindex-ridonkulous.html
 test/reftest/vendor/webkit/fast/loader/start-load-in-unload.html
-test/reftest/vendor/webkit/fast/loader/location-port.html
+#test/reftest/vendor/webkit/fast/loader/location-port.html
 test/reftest/vendor/webkit/fast/parser/broken-comment-in-head-1.html
 test/reftest/vendor/webkit/fast/parser/broken-comment-in-head-2.html
 test/reftest/vendor/webkit/fast/parser/broken-comment-in-head-3.html
@@ -263,7 +263,7 @@ test/reftest/vendor/webkit_original/fast/block/float/floats-wrap-inside-inline-0
 test/reftest/vendor/webkit_original/fast/block/float/floats-wrap-inside-inline-004.htm
 test/reftest/vendor/webkit_original/fast/block/float/floats-wrap-inside-inline-006.html
 #test/reftest/vendor/webkit_original/fast/block/float/floats-wrap-inside-inline-007.html
-test/reftest/vendor/webkit_original/fast/block/float/float-with-anonymous-previous-sibling.html
+#test/reftest/vendor/webkit_original/fast/block/float/float-with-anonymous-previous-sibling.html
 test/reftest/vendor/webkit_original/fast/block/float/intruding-float-add-in-sibling-block-on-static-position2.html
 test/reftest/vendor/webkit_original/fast/block/float/intruding-float-add-in-sibling-block-on-static-position.html
 test/reftest/vendor/webkit_original/fast/block/float/intruding-float-remove-from-sibling-block-on-absolute-position2.html
