@@ -40,6 +40,10 @@ void* FrameBlockBoxRareData::operator new(size_t size)
                    GC_WORD_OFFSET(FrameBlockBoxRareData, m_layoutParent));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(FrameBlockBoxRareData, m_stackingContext));
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameBlockBoxRareData,
+                                              m_bufferForBorderRadius));
+#endif
         descr =
             GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameBlockBoxRareData));
         typeInited = true;
