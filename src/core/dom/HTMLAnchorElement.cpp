@@ -21,6 +21,7 @@
 #include "StarFish.h"
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
 #include "core/page/Location.h"
 #include "core/page/Window.h"
@@ -63,6 +64,23 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
             if (hrefStr->length()) {
                 if (hrefStr->startsWith("#")) {
                     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                } else if (hrefStr->startsWith("javascript:", false)) {
+                    String* ret2 = toBrowserString(
+                        window()->scriptBindingInstance(),
+                        evaluateString(
+                            window()->scriptBindingInstance(),
+                            hrefStr->substring(11, hrefStr->length() - 11)));
+                    if (!ret2->equalsIgnoreCase("undefined")) {
+                        try {
+                            GCVector<String*> value0;
+                            value0.push_back(ret2);
+                            document()->write(value0);
+                        } catch (DOMException* e) {
+                            // TODO: should throw the exception into onError
+                            // event handler
+                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        }
+                    }
                 } else {
                     window()->location()->setHref(hrefStr);
                 }

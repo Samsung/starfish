@@ -348,7 +348,8 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
     bool isAbsolute = false;
 
     if (url->startsWith("data:", false) || url->startsWith("blob:", false) ||
-        url->startsWith("about:", false) || url->contains("://")) {
+        url->startsWith("about:", false) ||
+        url->startsWith("javascript:", false) || url->contains("://")) {
         isAbsolute = true;
     }
 
@@ -420,6 +421,8 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         m_protocol = DATA_PROTOCOL;
     } else if (m_urlString->startsWith("about", false)) {
         m_protocol = ABOUT_PROTOCOL;
+    } else if (m_urlString->startsWith("javascript", false)) {
+        m_protocol = JAVASCRIPT_PROTOCOL;
     } else {
         m_protocol = UNKNOWN;
     }
