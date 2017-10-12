@@ -37,6 +37,7 @@ public:
         // (there's code which assumes this)
         HTTP_PROTOCOL,
         HTTPS_PROTOCOL,
+        JAVASCRIPT_PROTOCOL,
         UNKNOWN,
     };
 
@@ -104,6 +105,11 @@ public:
     bool isAboutURL() const
     {
         return m_protocol == ABOUT_PROTOCOL;
+    }
+
+    bool isJavascriptURL() const
+    {
+        return m_protocol == JAVASCRIPT_PROTOCOL;
     }
 
     bool isUnknownURL() const
