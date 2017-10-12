@@ -81,17 +81,19 @@ public:
 
     String* evaluate(String* s);
 
-    Font* fetchFont(String* familyName, float size,
-                    char style = FontStyle::FontStyleNormal,
+    Font* fetchFont(String* familyNameArray[], size_t familyNameArraySize,
+                    float size, char style = FontStyle::FontStyleNormal,
                     char weight = FontWeight::FontWeightNormal)
     {
         Font* f = nullptr;
-        f = m_fontSelector->loadFont(familyName, size, style, weight);
+        f = m_fontSelector->loadFont(familyNameArray, familyNameArraySize, size,
+                                     style, weight);
         return f;
     }
 
 #if defined(PORT_CANVAS_BACKEND_EFL)
-    Font* fetchGenericFont(String* familyName, float size,
+    Font* fetchGenericFont(String* familyNameArray[],
+                           size_t familyNameArraySize, float size,
                            char style = FontStyle::FontStyleNormal,
                            char weight = FontWeight::FontWeightNormal)
     {
@@ -99,7 +101,8 @@ public:
             m_fontSelectorGeneric = FontSelector::createGenericFontSelector();
         }
         Font* f = nullptr;
-        f = m_fontSelectorGeneric->loadFont(familyName, size, style, weight);
+        f = m_fontSelectorGeneric->loadFont(
+            familyNameArray, familyNameArraySize, size, style, weight);
         return f;
     }
 #endif

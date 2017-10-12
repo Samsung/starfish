@@ -1022,8 +1022,10 @@ public:
             evas_object_text_font_get(
                 (Evas_Object*)lastState().m_font->unwrap(), NULL, &siz);
             float ptSize = siz;
-            auto utf8Data =
-                lastState().m_font->familyName()->toUTF8NonGCString();
+            auto utf8Data = lastState()
+                                .m_font->fontFaceList()[0]
+                                ->familyName()
+                                ->toUTF8NonGCString();
             evas_object_text_font_set(eo, utf8Data.data(), ptSize);
             Unit::Color c = computedAlphaColor();
             evas_object_color_set(eo, c.r(), c.g(), c.b(), c.a());
@@ -1159,8 +1161,10 @@ public:
                 (int)lastState().m_textDecorationData.lineThroughColor().b(),
                 (int)lastState().m_textDecorationData.lineThroughColor().a());
 
-            auto utf8Data =
-                lastState().m_font->familyName()->toUTF8NonGCString();
+            auto utf8Data = lastState()
+                                .m_font->fontFaceList()[0]
+                                ->familyName()
+                                ->toUTF8NonGCString();
             snprintf(buf, sizeof(buf),
                      "DEFAULT='font=%s font_size=%f color=#%02x%02x%02x%02x "
                      "valign=middle font_weight=%s font_style=%s "

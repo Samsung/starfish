@@ -307,7 +307,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         if (height.isDefinite(parentHasFixedHeight)) {
             h = height.specifiedValue(parentContentHeight, this);
             h = contentHeightApplyingBoxSizing(h);
-            if (hasAspectRatio) {
+            if (hasAspectRatio && intrinsicHeight) {
                 w = h * (intrinsicWidth / intrinsicHeight);
             } else {
                 w = intrinsicWidth;
@@ -324,7 +324,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
             h = height.specifiedValue(parentContentHeight, this);
             h = contentHeightApplyingBoxSizing(h);
         } else {
-            if (hasAspectRatio) {
+            if (hasAspectRatio && intrinsicWidth) {
                 h = w * (intrinsicHeight / intrinsicWidth);
             } else {
                 h = intrinsicHeight;

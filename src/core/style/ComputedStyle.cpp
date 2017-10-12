@@ -174,20 +174,19 @@ void ComputedStyle::loadFont(StarFish* sf, float fixedFontSize)
 
 #ifdef STARFISH_ENABLE_TEST
     if (g_enablePixelTest) {
-        m_font = sf->fetchFont(String::fromUTF8("Ahem"), fixedFontSize, style,
-                               fontWeight);
+        String* str = String::fromUTF8("Ahem");
+        m_font = sf->fetchFont(&str, 1, fixedFontSize, style, fontWeight);
     } else {
         if (sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest) {
-            m_font = sf->fetchFont(String::fromUTF8("SamsungOne"),
-                                   fixedFontSize, style, fontWeight);
+            String* str = String::fromUTF8("SamsungOne");
+            m_font = sf->fetchFont(&str, 1, fixedFontSize, style, fontWeight);
         } else {
-            m_font = sf->fetchFont(String::emptyString, fixedFontSize, style,
-                                   fontWeight);
+            m_font =
+                sf->fetchFont(nullptr, 0, fixedFontSize, style, fontWeight);
         }
     }
 #else
-    m_font =
-        sf->fetchFont(String::emptyString, fixedFontSize, style, fontWeight);
+    m_font = sf->fetchFont(nullptr, 0, fixedFontSize, style, fontWeight);
 #endif
 }
 
