@@ -17,12 +17,20 @@
 #ifndef __Font__
 #define __Font__
 
+#ifndef STARFISH_DEFAULT_FONT_FAMILY
+#define STARFISH_DEFAULT_FONT_FAMILY ""
+#endif
+
 #ifdef PORT_CANVAS_BACKEND_CAIRO
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #endif
 
 namespace StarFish {
+
+class FontFace;
+class Font;
+class FontSelector;
 
 enum FontStyle {
     FontStyleNormal,
@@ -36,8 +44,37 @@ enum FontWeight {
     FontWeightEnd = 9,
 };
 
+struct FontMetrics {
+    LayoutUnit m_ascender;
+    LayoutUnit m_descender;
+    LayoutUnit m_fontHeight;
+    float m_xheightRate;
+};
+
+class FontFace : public gc {
+    friend class Font;
+
+public:
+    virtual ~FontFace()
+    {
+    }
+
+    String* familyName()
+    {
+        return m_familyName;
+    }
+
+protected:
+    String* m_familyName;
+    FontMetrics m_metrics;
+    float m_size;
+    char m_weight;
+    char m_style;
+};
+
 class Font : public gc {
     friend class FontSelector;
+    friend class FontSelectorImplCairo;
 
 protected:
     Font()
@@ -59,45 +96,29 @@ public:
 
     char weight()
     {
-        return m_weight;
+        return m_fontFaceList.front()->m_weight;
     }
 
     float size()
     {
-        return m_size;
+        return m_fontFaceList.front()->m_size;
     }
 
     char style()
     {
-        return m_style;
+        return m_fontFaceList.front()->m_style;
     }
-
-    String* familyName()
-    {
-        return m_fontFamily;
-    }
-
-    struct FontMetrics {
-        LayoutUnit m_ascender;
-        LayoutUnit m_descender;
-        LayoutUnit m_fontHeight;
-        float m_xheightRate;
-    };
 
     const FontMetrics& metrics()
     {
-        return m_metrics;
+        return m_fontFaceList.front()->m_metrics;
     }
-#ifdef PORT_CANVAS_BACKEND_CAIRO
-    virtual int getGlaphAdvanceX(char32_t uniCode)
+
+    const GCVector<FontFace*>& fontFaceList()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        return m_fontFaceList;
     }
-    virtual FT_Face findFCChar(char32_t uniCode, uint* glyphIdx)
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-#endif
+
 #if defined(PORT_CANVAS_BACKEND_EFL)
     virtual bool isGenericFont() const
     {
@@ -132,44 +153,62 @@ public:
 #endif
 
 protected:
-    FontMetrics m_metrics;
-    float m_size;
+    static Font* createEmptyFont(FontSelector* s);
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    static Font* createGenericEmptyFont(FontSelector* s);
+#endif
+
+    GCVector<FontFace*> m_fontFaceList;
     float m_spaceWidth;
-    char m_weight;
-    char m_style;
-    String* m_fontFamily;
 };
 
 class FontSelector : public gc {
-protected:
     friend class StarFish;
+    friend class Font;
+
+protected:
     FontSelector()
     {
     }
     virtual ~FontSelector()
     {
     }
-    virtual Font* loadFont(String* familyName, float size, char style = 0,
-                           char weight = 4) = 0;
+    virtual FontFace* loadFontImpl(String* familyName, float size,
+                                   char style = 0, char weight = 4) = 0;
+
+    Font* loadFont(String* familyNameArray[], size_t familyNameArraySize,
+                   float size, char style = 0, char weight = 4);
     void clearCache()
     {
         m_fontCache.clear();
         m_fontCache.shrink_to_fit();
     }
 
-    GCVector<std::tuple<Font*, String*, float, char, char>> m_fontCache;
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    virtual bool isGenericFontSelector() const
+    {
+        return true;
+    }
+#endif
 
-public:
+    GCVector<std::tuple<FontFace*, String*, float, char, char>> m_fontCache;
+    FontFace* lookupCache(String* familyName, float size, char style,
+                          char weight)
+    {
+        for (unsigned i = 0; i < m_fontCache.size(); i++) {
+            if (std::get<1>(m_fontCache[i])->equals(familyName)) {
+                if (std::get<2>(m_fontCache[i]) == size &&
+                    std::get<3>(m_fontCache[i]) == style &&
+                    std::get<4>(m_fontCache[i]) == weight) {
+                    return std::get<0>(m_fontCache[i]);
+                }
+            }
+        }
+        return nullptr;
+    }
     static FontSelector* createFontSelector();
 #ifdef PORT_CANVAS_BACKEND_EFL
     static FontSelector* createGenericFontSelector();
-#endif
-
-#ifdef PORT_CANVAS_BACKEND_CAIRO
-    FT_Library m_FTFaceLib;
-    std::vector<std::pair<std::string, FT_Face>> m_systemFonts;
-    std::unordered_map<char32_t, std::tuple<FT_Face, unsigned int>>
-        m_FTFaceCaches;
 #endif
 };
 };

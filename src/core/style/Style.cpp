@@ -1165,6 +1165,7 @@ String* CSSStyleDeclaration::BorderLeft()
 
 String* CSSStyleDeclaration::BorderRadius()
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     String* tl = String::emptyString;
     String* tr = String::emptyString;
     String* br = String::emptyString;

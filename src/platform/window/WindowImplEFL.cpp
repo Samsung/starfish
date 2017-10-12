@@ -333,7 +333,7 @@ public:
         if (m_width != w || m_height != h) {
             m_pixelRatio = 1;
 
-            while ((w / m_pixelRatio > 10000) || (h / m_pixelRatio > 10000)) {
+            while ((w / m_pixelRatio > 20000) || (h / m_pixelRatio > 20000)) {
                 m_pixelRatio++;
             }
 
@@ -437,7 +437,7 @@ public:
         if (m_width != w || m_height != h) {
             m_pixelRatio = 1;
 
-            while ((w / m_pixelRatio > 10000) || (h / m_pixelRatio > 10000)) {
+            while ((w / m_pixelRatio > 20000) || (h / m_pixelRatio > 20000)) {
                 m_pixelRatio++;
             }
 

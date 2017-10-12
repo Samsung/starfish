@@ -37,6 +37,8 @@
 namespace StarFish {
 
 extern bool g_enablePixelTest;
+std::pair<FT_Face, std::pair<unsigned, LayoutUnit>>
+cairoBackendInternalloadGlyph(Font* f, char32_t ch);
 
 class CanvasStateCairo : public CanvasState {
 public:
@@ -360,12 +362,10 @@ public:
         if (!lastState().m_font->isGenericFont()) {
             Font* nonGenericFont = lastState().m_font;
             Font* font = m_starfish->fetchGenericFont(
-                nonGenericFont->familyName(), nonGenericFont->size(),
-                nonGenericFont->style(), nonGenericFont->weight());
+                nullptr, 0, nonGenericFont->size(), nonGenericFont->style(),
+                nonGenericFont->weight());
             setFont(font);
         }
-        // force measure text for fill internal glyph cache
-        lastState().m_font->measureText(sv);
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
@@ -445,47 +445,49 @@ public:
         cairo_save(m_canvas);
         cairo_translate(m_canvas, xx, yy);
 
-        FT_Int x_bias = 0;
-        FT_Int y_bias = 0;
+        LayoutUnit xBias = 0;
         FT_UInt glyph_index = 0;
 
-        FT_Face face =
-            lastState().m_font->findFCChar(sv.charAt(0), &glyph_index);
-        ;
-        cairo_font_face_t* fontFace;
+        FT_Face lastFontFace = nullptr;
+        cairo_font_face_t* fontFace = nullptr;
+        /*
         int glyph_count = sv.length();
-
         fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
         cairo_set_font_face(m_canvas, fontFace);
         cairo_set_font_size(m_canvas, size);
+        */
         cairo_translate(m_canvas, 0, size);
-
-        for (int i = 0; i < glyph_count; i++) {
-            cairo_glyph_t glyph;
-            glyph_index = FT_Get_Char_Index(face, sv.charAt(i));
-            if (glyph_index != 0) {
-                glyph.x = x_bias;
-                glyph.y = 0;
-                x_bias += lastState().m_font->getGlaphAdvanceX(sv.charAt(i));
-            } else {
-                face =
-                    lastState().m_font->findFCChar(sv.charAt(i), &glyph_index);
-                if (glyph_index != 0) {
-                    cairo_font_face_destroy(fontFace);
-                    fontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
+        Font* f = lastState().m_font;
+        for (size_t i = 0; i < sv.length(); i++) {
+            auto g = cairoBackendInternalloadGlyph(f, sv.charAt(i));
+            if (g.second.first) {
+                if (lastFontFace != g.first) {
+                    if (fontFace) {
+                        cairo_font_face_destroy(fontFace);
+                    }
+                    lastFontFace = g.first;
+                    fontFace =
+                        cairo_ft_font_face_create_for_ft_face(lastFontFace, 0);
                     cairo_set_font_face(m_canvas, fontFace);
                     cairo_set_font_size(m_canvas, size);
-                    glyph.x = x_bias;
-                    glyph.y = 0;
-                    x_bias +=
-                        lastState().m_font->getGlaphAdvanceX(sv.charAt(i));
-                } else {
-                    glyph.x = 0;
-                    glyph.y = 0;
                 }
+                cairo_glyph_t glyph;
+                glyph.index = g.second.first;
+                glyph.x = xBias;
+                glyph.y = 0;
+                xBias += g.second.second;
+                cairo_glyph_path(m_canvas, &glyph, 1);
+            } else {
+                cairo_save(m_canvas);
+                cairo_set_line_width(m_canvas, 1);
+                cairo_new_path(m_canvas);
+                cairo_rectangle(m_canvas, xBias, 0,
+                                lastState().m_font->spaceWidth(),
+                                lastState().m_font->metrics().m_fontHeight);
+                cairo_stroke(m_canvas);
+                cairo_restore(m_canvas);
+                xBias += lastState().m_font->spaceWidth();
             }
-            glyph.index = glyph_index;
-            cairo_glyph_path(m_canvas, &glyph, 1);
         }
         cairo_fill(m_canvas);
 

@@ -90,17 +90,17 @@ static String* convertStyleParamStr(String* familyName, unsigned char style,
     return familyName;
 }
 
-class FontImplEFL : public Font {
+class FontFaceImplEFL : public FontFace {
 public:
-    FontImplEFL(String* familyName, float size, char style, char weight,
-                FontMetrics met)
+    FontFaceImplEFL(String* familyName, FontMetrics met, float size, char style,
+                    char weight)
     {
         m_text = nullptr;
+        m_familyName = convertStyleParamStr(familyName, style, weight);
         m_metrics = met;
         m_size = size;
         m_weight = weight;
         m_style = style;
-        m_fontFamily = convertStyleParamStr(familyName, style, weight);
 
         loadFont(m_size);
 
@@ -126,26 +126,16 @@ public:
         m_metrics.m_xheightRate = met.m_xheightRate;
 #endif
 
-        m_spaceWidth = measureText(StringView(String::spaceString, 0, 1));
-
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
-                                           // STARFISH_LOG_INFO("FontImplEFL::~FontImplEFL\n");
-                                           FontImplEFL* m = (FontImplEFL*)obj;
+                                           FontFaceImplEFL* m =
+                                               (FontFaceImplEFL*)obj;
                                            if (m->m_text) {
                                                evas_object_hide(m->m_text);
                                                evas_object_del(m->m_text);
                                            }
                                        },
                                        NULL, NULL, NULL);
-    }
-    ~FontImplEFL()
-    {
-    }
-
-    virtual bool isGenericFont() const
-    {
-        return false;
     }
 
     void loadFont(int size)
@@ -154,7 +144,7 @@ public:
             unloadFont();
         }
         m_text = evas_object_text_add(internalCanvas());
-        auto utf8Data = m_fontFamily->toUTF8NonGCString();
+        auto utf8Data = m_familyName->toUTF8NonGCString();
         evas_object_text_font_set(m_text, utf8Data.data(), size);
     }
 
@@ -162,6 +152,20 @@ public:
     {
         evas_object_del(m_text);
         m_text = nullptr;
+    }
+
+    Evas_Object* m_text;
+};
+
+class FontImplEFL : public Font {
+public:
+    FontImplEFL()
+    {
+    }
+
+    virtual bool isGenericFont() const
+    {
+        return false;
     }
 
     virtual LayoutUnit measureText(const StringView& str)
@@ -175,9 +179,10 @@ public:
             for (size_t i = str.start(); i < str.end(); i++) {
                 count += Font::spaceSizeNumerator((*str.originalString())[i]);
             }
-            return m_size * ((float)count / SPACE_SIZE_DENOMINATOR);
+            return size() * ((float)count / SPACE_SIZE_DENOMINATOR);
         }
 #endif
+        auto textObject = ((FontFaceImplEFL*)m_fontFaceList[0])->m_text;
         if (str.originalString()->bufferAccessData().hasASCIIContent) {
             bool isShort = str.length() < 128;
             auto data = str.bufferAccessData();
@@ -185,27 +190,26 @@ public:
                 isShort ? (char*)alloca(128) : (char*)malloc(str.length() + 1);
             strncpy(buf, data.asciiData(), data.length);
             buf[str.length()] = 0;
-            evas_object_text_text_set(m_text, buf);
+            evas_object_text_text_set(textObject, buf);
             if (!isShort) {
                 free(buf);
             }
         } else {
             UTF8StringDataNonGCStd s =
                 str.originalString()->toUTF8NonGCString(str.start(), str.end());
-            evas_object_text_text_set(m_text, s.c_str());
+            evas_object_text_text_set(textObject, s.c_str());
         }
 
         Evas_Coord minw, minh;
-        evas_object_geometry_get(m_text, 0, 0, &minw, &minh);
+        evas_object_geometry_get(textObject, 0, 0, &minw, &minh);
         return minw;
     }
     virtual void* unwrap()
     {
-        return m_text;
+        return ((FontFaceImplEFL*)m_fontFaceList[0])->m_text;
     }
 
 protected:
-    Evas_Object* m_text;
 };
 
 #define CHECK_ERROR                            \
@@ -213,10 +217,9 @@ protected:
         STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
     }
 
-static Font::FontMetrics loadFontMetrics(String* familyName, double size)
+static FontMetrics loadFontMetrics(String* familyName, double size)
 {
-    typedef std::unordered_map<std::string,
-                               std::pair<double, Font::FontMetrics>>
+    typedef std::unordered_map<std::string, std::pair<double, FontMetrics>>
         MetricsMap;
     static MetricsMap metricsMap;
     static FcConfig* config = FcInitLoadConfigAndFonts();
@@ -227,7 +230,7 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
     if (iter != metricsMap.end()) {
         double factor = size / iter->second.first;
 
-        Font::FontMetrics met;
+        FontMetrics met;
         met.m_ascender = iter->second.second.m_ascender * factor;
         met.m_descender = iter->second.second.m_descender * factor;
         met.m_fontHeight = iter->second.second.m_fontHeight * factor;
@@ -276,7 +279,7 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
     CHECK_ERROR;
     FT_Int xheight = face->glyph->bitmap_top;
 
-    Font::FontMetrics met;
+    FontMetrics met;
     met.m_fontHeight =
         ((face->ascender - face->descender) * size) / face->units_per_EM;
     met.m_ascender = ((face->ascender * size) / (face->units_per_EM));
@@ -292,30 +295,27 @@ static Font::FontMetrics loadFontMetrics(String* familyName, double size)
 
 class FontSelectorImplEFL : public FontSelector {
 public:
-    virtual Font* loadFont(String* familyName, float size, char style,
-                           char weight) override
+    virtual FontFace* loadFontImpl(String* familyName, float size, char style,
+                                   char weight) override
     {
-        FontImplEFL* f = nullptr;
-
-        for (unsigned i = 0; i < m_fontCache.size(); i++) {
-            if (std::get<1>(m_fontCache[i])->equals(familyName)) {
-                if (std::get<2>(m_fontCache[i]) == size &&
-                    std::get<3>(m_fontCache[i]) == style &&
-                    std::get<4>(m_fontCache[i]) == weight) {
-                    return std::get<0>(m_fontCache[i]);
-                }
-            }
-        }
-
-        f = new FontImplEFL(
-            familyName, size, style, weight,
+        FontFaceImplEFL* f = new FontFaceImplEFL(
+            familyName,
             loadFontMetrics(convertStyleParamStr(familyName, style, weight),
-                            size));
-        m_fontCache.push_back(
-            std::make_tuple(f, familyName, size, style, weight));
+                            size),
+            size, style, weight);
         return f;
     }
+
+    virtual bool isGenericFontSelector() const
+    {
+        return false;
+    }
 };
+
+Font* Font::createEmptyFont(FontSelector* s)
+{
+    return new FontImplEFL();
+}
 
 FontSelector* FontSelector::createFontSelector()
 {
