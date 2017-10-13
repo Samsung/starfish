@@ -101,7 +101,6 @@ public:
 
     ContentDataGroup m_content;
     GCVector<ComputedStyle*> m_cachedPseudoStyles;
-    GCVector<ShadowData> m_textShadowDataList;
 
     OutlineData* m_outline;
     BorderRadiusData* m_borderRadius;
@@ -128,6 +127,7 @@ class ComputedStyle : public gc {
         Length m_strokeWidth;     // svg
 
         TextTransformValue m_textTransform;
+        ShadowDataList m_textShadowDataList;
 
         InheritedStylesRareData()
         {
@@ -147,10 +147,7 @@ class ComputedStyle : public gc {
             m_textTransform = NoneTextTransformValue;
         }
 
-        void* operator new(size_t size)
-        {
-            return GC_MALLOC_ATOMIC(size);
-        }
+        void* operator new(size_t size);
     };
 
 public:
@@ -377,6 +374,26 @@ public:
         }
     }
 
+    void addTextShadow(ShadowData& shadow)
+    {
+        ensureRareData()->m_textShadowDataList.push_back(shadow);
+    }
+
+    void setTextShadow(ShadowDataList val)
+    {
+        if (val != textShadow()) {
+            ensureRareData()->m_textShadowDataList = val;
+        }
+    }
+
+    ShadowDataList textShadow()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_textShadowDataList;
+        }
+        return InheritedStylesRareData().m_textShadowDataList;
+    }
+
     TextDecorationValue textDecoration()
     {
         return m_textDecoration;
@@ -385,12 +402,6 @@ public:
     void setTextDecoration(TextDecorationValue decoration)
     {
         m_textDecoration = decoration;
-    }
-
-    GCVector<ShadowData>& textShadow()
-    {
-        setRareComputedStyleDataIfNeeded();
-        return m_rareComputedStyleData->m_textShadowDataList;
     }
 
     DirectionValue direction()

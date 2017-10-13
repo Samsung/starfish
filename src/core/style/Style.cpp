@@ -3767,16 +3767,17 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::TextShadow: {
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->textShadow() = parentStyle->textShadow();
+                style->setTextShadow(parentStyle->textShadow());
             } else if ((cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) ||
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::None)) {
-                style->textShadow().clear();
+                style->setTextShadow(ShadowDataList());
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* list = cssValues[k].multiValue();
+                style->setTextShadow(ShadowDataList());
                 for (unsigned int i = 0; i < list->size(); i++) {
                     const CSSStyleValuePair& item = (*list)[i];
                     STARFISH_ASSERT(
@@ -3829,7 +3830,7 @@ void StyleResolver::apply(Element* element,
                     if (hasColor) {
                         sd.setColor(color);
                     }
-                    style->textShadow().push_back(sd);
+                    style->addTextShadow(sd);
                 }
             }
         } break;
@@ -7698,7 +7699,6 @@ bool CSSStyleValuePair::updateValueTextShadow(const CSSTokenVector& tokens)
 
                 const CSSTokenValue& v1 = tokens[j];
                 const CSSTokenValue& v2 = tokens[j - 1];
-                const CSSTokenValue& v3 = tokens[j - 2];
 
                 if (len == 2) {
                     CSSStyleValuePair offsetX, offsetY;
@@ -7710,6 +7710,7 @@ bool CSSStyleValuePair::updateValueTextShadow(const CSSTokenVector& tokens)
                         return false;
                     }
                 } else if (len == 3) {
+                    const CSSTokenValue& v3 = tokens[j - 2];
                     CSSStyleValuePair colorOrRadius, offsetX, offsetY;
                     if ((offsetX.updateValueUnitLengthOrCalc(v3, option) &&
                          offsetY.updateValueUnitLengthOrCalc(v2, option) &&
@@ -7728,6 +7729,7 @@ bool CSSStyleValuePair::updateValueTextShadow(const CSSTokenVector& tokens)
                         return false;
                     }
                 } else if (len == 4) {
+                    const CSSTokenValue& v3 = tokens[j - 2];
                     const CSSTokenValue& v4 = tokens[j - 3];
                     CSSStyleValuePair color, offsetX, offsetY, radius;
                     if ((offsetX.updateValueUnitLengthOrCalc(v4, option) &&

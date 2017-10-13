@@ -57,10 +57,25 @@ void* RareComputedStyleData::operator new(size_t size)
                    GC_WORD_OFFSET(RareComputedStyleData, m_minHeight));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(RareComputedStyleData, m_borderRadius));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(RareComputedStyleData, m_textShadowDataList));
         descr =
             GC_make_descriptor(obj_bitmap, GC_WORD_LEN(RareComputedStyleData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(
+            ComputedStyle::InheritedStylesRareData)] = { 0 };
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
+                                  m_textShadowDataList));
+        descr = GC_make_descriptor(
+            obj_bitmap, GC_WORD_LEN(ComputedStyle::InheritedStylesRareData));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
@@ -1025,17 +1040,9 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
-    if (newStyle->textShadow().size() != oldStyle->textShadow().size()) {
+    if (newStyle->textShadow() != oldStyle->textShadow()) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
-    } else {
-        for (size_t i = 0; i < newStyle->textShadow().size(); i++) {
-            if (newStyle->textShadow().at(i) != oldStyle->textShadow().at(i)) {
-                damage = (ComputedStyleDamage)(
-                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
-                break;
-            }
-        }
     }
 
     return damage;

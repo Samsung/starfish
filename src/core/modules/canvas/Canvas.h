@@ -25,6 +25,7 @@ namespace StarFish {
 class Frame;
 class ImageData;
 class PlatformWindow;
+class ShadowData;
 
 class CanvasState {
 public:
@@ -111,6 +112,7 @@ public:
     virtual void mergeTextDecorationData(ComputedStyle* style) = 0;
     virtual TextDecorationData textDecorationData() = 0;
     virtual void setTextDecorationData(TextDecorationData d) = 0;
+    virtual void setTextShadowData(ShadowDataList shadowDataList) = 0;
     virtual void drawRect(const Unit::Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,

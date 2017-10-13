@@ -716,6 +716,11 @@ public:
         lastState().m_textDecorationData = d;
     }
 
+    virtual void setTextShadowData(ShadowDataList shadowDataList)
+    {
+        m_textShadowDataList = shadowDataList;
+    }
+
     void drawEvasRect(int xx, int yy, int ww, int hh, const Unit::Rect& rt,
                       bool isHole = false)
     {
@@ -1751,6 +1756,7 @@ protected:
     GCUnorderedMap<ImageData*, std::vector<std::pair<Evas_Object*, bool>>,
                    std::hash<ImageData*>,
                    std::equal_to<ImageData*>>* m_prevDrawnImageMap;
+    ShadowDataList m_textShadowDataList;
 };
 
 Canvas* Canvas::createDirect(StarFish* starfish, void* data)
