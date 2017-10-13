@@ -99,7 +99,8 @@ public:
         m_offsetYDueToSoftwareKeyboard = 0;
         m_softKeyboardOrigin = nullptr;
 
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
+    defined(STARFISH_TIZEN_EVASGL_CAIRO)
         m_surface = nullptr;
         m_cairo = nullptr;
         m_cairoDevice = nullptr;
@@ -215,7 +216,8 @@ public:
     Evas_Object* m_dummyBox;
     Evas_Object* m_dummyBoxClipper;
 
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
+    defined(STARFISH_TIZEN_EVASGL_CAIRO)
     cairo_surface_t* m_surface;
     cairo_t* m_cairo;
     cairo_device_t* m_cairoDevice;
@@ -753,7 +755,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     evas_object_image_alpha_set(wnd->m_canvasAdpater, EINA_TRUE);
     evas_object_show(wnd->m_canvasAdpater);
 #endif
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
+    defined(STARFISH_TIZEN_EVASGL_CAIRO)
     Evas_Native_Surface ns;
     wnd->m_evasGL = evas_gl_new(evas_object_evas_get(wnd->m_canvasAdpater));
     wnd->m_evasGLConfig = evas_gl_config_new();
@@ -1357,7 +1360,8 @@ void WebView::setNeedsRendering()
     m_needsRendering = true;
     WindowImplEFL* wnd = (WindowImplEFL*)starFish()->platformWindow();
 
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
+    defined(STARFISH_TIZEN_EVASGL_CAIRO)
     evas_object_image_pixels_dirty_set(wnd->m_canvasAdpater, EINA_TRUE);
 #else
     // refresh rendering animator
@@ -1444,7 +1448,8 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
 
     return canvas;
 #else
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
+    defined(STARFISH_TIZEN_EVASGL_CAIRO)
     struct dummy {
         cairo_t* cairo;
         cairo_surface_t* surface;
@@ -1475,6 +1480,7 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
     int s = evas_object_image_stride_get(m_canvasAdpater);
     void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
     evas_object_image_data_update_add(m_canvasAdpater, 0, 0, width(), height());
+    evas_object_image_data_set(m_canvasAdpater, addr);
 #endif
     struct dummy {
         void* image;

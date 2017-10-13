@@ -82,7 +82,8 @@ public:
 
     CanvasCairo(StarFish* starfish, void* data)
     {
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
+    defined(STARFISH_TIZEN_EVASGL_CAIRO)
         struct dummy {
             cairo_t* cairo;
             cairo_surface_t* surface;
