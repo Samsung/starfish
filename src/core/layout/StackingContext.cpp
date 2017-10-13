@@ -379,7 +379,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     }
 
     if (m_rareData) {
-        m_rareData->m_matrix.reset();
+        m_rareData->m_matrix = SkMatrix::I();
     }
     if (forceNeedsBuffer || childNeedsBuffer ||
         m_owner->needsGraphicsBuffer()) {

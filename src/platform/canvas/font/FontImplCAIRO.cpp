@@ -110,19 +110,23 @@ public:
         auto u8FamilyName = familyName->toUTF8NonGCString();
         if (!FcPatternAddString(pattern, FC_FAMILY,
                                 (const FcChar8*)u8FamilyName.data())) {
+            FcPatternDestroy(pattern);
             return nullptr;
         }
 
         if (style == FontStyleItalic) {
             if (!FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ITALIC)) {
+                FcPatternDestroy(pattern);
                 return nullptr;
             }
         } else if (style == FontStyleOblique) {
             if (!FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_OBLIQUE)) {
+                FcPatternDestroy(pattern);
                 return nullptr;
             }
         } else {
             if (!FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ROMAN)) {
+                FcPatternDestroy(pattern);
                 return nullptr;
             }
         }
@@ -160,9 +164,11 @@ public:
             STARFISH_ASSERT_NOT_REACHED();
         }
         if (!FcPatternAddInteger(pattern, FC_WEIGHT, fontWeight)) {
+            FcPatternDestroy(pattern);
             return nullptr;
         }
         if (!FcPatternAddDouble(pattern, FC_PIXEL_SIZE, int(size + 0.5f))) {
+            FcPatternDestroy(pattern);
             return nullptr;
         }
 
@@ -187,6 +193,7 @@ public:
         FcPattern* resultPattern =
             FcFontMatch(m_fcconfig, pattern, &fontConfigResult);
         if (!resultPattern) {
+            FcPatternDestroy(pattern);
             return nullptr;
         }
 
