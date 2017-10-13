@@ -210,22 +210,53 @@ public:
         return height;
     }
 
-    void copyWHMBPFrom(FrameBox* box)
+    enum CopyFlag {
+        PositionCopy = 1 << 0,
+        WidthAndHeightCopy = 1 << 1,
+        MarginCopy = 1 << 2,
+        BorderCopy = 1 << 3,
+        PaddingCopy = 1 << 4,
+        BorderBoxCopy = WidthAndHeightCopy | BorderCopy | PaddingCopy
+    };
+
+    void copyFrom(FrameBox* box, uint8_t flag)
     {
-        setWidth(box->width());
-        setHeight(box->height());
-        setMarginTop(box->marginTop());
-        setMarginBottom(box->marginBottom());
-        setMarginLeft(box->marginLeft());
-        setMarginRight(box->marginRight());
-        setBorderTop(box->borderTop());
-        setBorderBottom(box->borderBottom());
-        setBorderLeft(box->borderLeft());
-        setBorderRight(box->borderRight());
-        setPaddingTop(box->paddingTop());
-        setPaddingBottom(box->paddingBottom());
-        setPaddingLeft(box->paddingLeft());
-        setPaddingRight(box->paddingRight());
+        bool copyPosition = flag & CopyFlag::PositionCopy;
+        bool copyWidthAndHeight = flag & CopyFlag::WidthAndHeightCopy;
+        bool copyMargin = flag & CopyFlag::MarginCopy;
+        bool copyBorder = flag & CopyFlag::BorderCopy;
+        bool copyPadding = flag & CopyFlag::PaddingCopy;
+
+        if (copyPosition) {
+            setX(box->x());
+            setY(box->y());
+        }
+
+        if (copyWidthAndHeight) {
+            setWidth(box->width());
+            setHeight(box->height());
+        }
+
+        if (copyMargin) {
+            setMarginTop(box->marginTop());
+            setMarginBottom(box->marginBottom());
+            setMarginLeft(box->marginLeft());
+            setMarginRight(box->marginRight());
+        }
+
+        if (copyBorder) {
+            setBorderTop(box->borderTop());
+            setBorderBottom(box->borderBottom());
+            setBorderLeft(box->borderLeft());
+            setBorderRight(box->borderRight());
+        }
+
+        if (copyPadding) {
+            setPaddingTop(box->paddingTop());
+            setPaddingBottom(box->paddingBottom());
+            setPaddingLeft(box->paddingLeft());
+            setPaddingRight(box->paddingRight());
+        }
     }
 
     void setContentWidth(LayoutUnit width)

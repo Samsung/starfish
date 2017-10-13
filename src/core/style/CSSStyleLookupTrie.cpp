@@ -693,6 +693,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     case 21:
         // background-position-x
         // background-position-y
+        // background-attachment
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background-position-x", 21) == 0) {
@@ -700,6 +701,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "background-position-y", 21) == 0) {
                 return CSSStyleKind::BackgroundPositionY;
+            }
+            if (memcmp(data, "background-attachment", 21) == 0) {
+                return CSSStyleKind::BackgroundAttachment;
             }
             break;
         }
@@ -1316,6 +1320,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "borderTopRightRadius", 20) == 0) {
                 return CSSStyleKind::BorderTopRightRadius;
+            }
+            if (memcmp(data, "backgroundAttachment", 20) == 0) {
+                return CSSStyleKind::BackgroundAttachment;
             }
             break;
         }

@@ -414,8 +414,8 @@ static bool parseBackgroundPositionShorhand(const CSSTokenVector& tokens,
     size_t len = 0;
     retx->setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
     rety->setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-    retx->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
-    rety->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+    retx->setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
+    rety->setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
 
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
@@ -487,16 +487,16 @@ static bool parseBackgroundShorthand(
     const CSSTokenVector& tokens, CSSStyleValuePair* _Color,
     CSSStyleValuePair* _Image, CSSStyleValuePair* _RepeatX,
     CSSStyleValuePair* _RepeatY, CSSStyleValuePair* _PositionX,
-    CSSStyleValuePair* _PositionY, CSSStyleValuePair* _Size, bool allowColor)
+    CSSStyleValuePair* _PositionY, CSSStyleValuePair* _Size,
+    CSSStyleValuePair* _Attachment, CSSStyleValuePair* _Origin,
+    CSSStyleValuePair* _Clip, bool allowColor)
 {
-    // - SUPPORT__ : bg-color, bg-image, position/bg-size, bg-repeat
-    // - UNSUPPORT : bg-origin, bg-clip, bg-attachment
-    //
-    // - ACCEPT only 1-word_ : bg-color, bg-image
+    // - ACCEPT only 1-word_ : bg-color, bg-image, bg-attachment, bg-origin,
+    // bg-clip
     // - ACCEPT 1 to 2 words : bg-repeat, position, bg-size
 
     size_t len = tokens.size();
-    if (len < 1 || len > 9) {
+    if (len < 1 || len > 11) {
         return false;
     }
 
@@ -507,9 +507,13 @@ static bool parseBackgroundShorthand(
     _PositionX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     _PositionY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     _Size->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Attachment->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Origin->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Clip->setValueKind(CSSStyleValuePair::ValueKind::Initial);
 
-    bool hasColor = false, hasImage = false, hasRepeat = false;
-    bool hasPosition = false, hasSize = false;
+    bool hasColor = false, hasImage = false, hasRepeat = false,
+         hasPosition = false, hasSize = false, hasAttachment = false,
+         hasOrigin = false, hasClip = false;
     bool hasPositionPrev = false, shouldSize = false;
     CSSStyleValuePair temp, tempX, tempY;
     CSSTokenValue* tok;
@@ -543,7 +547,7 @@ static bool parseBackgroundShorthand(
             toks.push_back(tokens[i]);
             toks.push_back(tokens[i + 1]);
             // 1-1. BackgroundSize
-            // 1-2. BackgroundRepeat, BackgroundPosition
+            // 1-2. BackgroundPosition, BackgroundRepeat
             if (shouldSize) {
                 STARFISH_ASSERT(!hasSize);
                 if (temp.updateValueBackgroundSize(toks, false)) {
@@ -551,14 +555,14 @@ static bool parseBackgroundShorthand(
                     SET_SINGLE_PROP(Size)
                     DOUBLE_CONTINUE()
                 }
-            } else if (!hasRepeat && parseBackgroundRepeatShorhand(
-                                         toks, &tempX, &tempY, false)) {
-                SET_DOUBLE_PROP(Repeat)
-                DOUBLE_CONTINUE()
             } else if (!hasPosition && parseBackgroundPositionShorhand(
                                            toks, &tempX, &tempY, false)) {
                 hasPositionPrev = true;
                 SET_DOUBLE_PROP(Position)
+                DOUBLE_CONTINUE()
+            } else if (!hasRepeat && parseBackgroundRepeatShorhand(
+                                         toks, &tempX, &tempY, false)) {
+                SET_DOUBLE_PROP(Repeat)
                 DOUBLE_CONTINUE()
             }
         }
@@ -567,8 +571,9 @@ static bool parseBackgroundShorthand(
         toks.clear();
         toks.push_back(*tok);
         // 2-1. BackgroundSize
-        // 2-2. BackgroundColor, BackgroundImage, BackgroundRepeat,
-        // BackgroundPosition
+        // 2-2. BackgroundImage, BackgroundPosition,
+        // BackgroundRepeat, BackgroundAttachment,
+        // BackgroundOrigin, BackgroundClip, BackgroundColor
         if (shouldSize) {
             STARFISH_ASSERT(!hasSize);
             if (temp.updateValueBackgroundSize(toks, false)) {
@@ -576,25 +581,36 @@ static bool parseBackgroundShorthand(
                 SET_SINGLE_PROP(Size)
                 SINGLE_CONTINUE()
             }
-        } else if (!hasColor && temp.updateValueUnitColor(*tok)) {
-            if (!allowColor) {
-                return false;
-            }
-            SET_SINGLE_PROP(Color)
-            SINGLE_CONTINUE()
         } else if (!hasImage && temp.updateValueBackgroundImage(toks, false)) {
             SET_SINGLE_PROP(Image)
-            SINGLE_CONTINUE()
-        } else if (!hasRepeat &&
-                   parseBackgroundRepeatShorhand(toks, &tempX, &tempY, false)) {
-            SET_DOUBLE_PROP(Repeat)
             SINGLE_CONTINUE()
         } else if (!hasPosition && parseBackgroundPositionShorhand(
                                        toks, &tempX, &tempY, false)) {
             hasPositionPrev = true;
             SET_DOUBLE_PROP(Position)
             SINGLE_CONTINUE()
+        } else if (!hasRepeat &&
+                   parseBackgroundRepeatShorhand(toks, &tempX, &tempY, false)) {
+            SET_DOUBLE_PROP(Repeat)
+            SINGLE_CONTINUE()
+        } else if (!hasAttachment &&
+                   temp.updateValueBackgroundAttachment(toks, false)) {
+            SET_SINGLE_PROP(Attachment)
+            SINGLE_CONTINUE()
+        } else if (!hasOrigin && temp.updateValueBox(toks, false)) {
+            SET_SINGLE_PROP(Origin)
+            SINGLE_CONTINUE()
+        } else if (!hasClip && temp.updateValueBox(toks, false)) {
+            SET_SINGLE_PROP(Clip)
+            SINGLE_CONTINUE()
+        } else if (!hasColor && temp.updateValueUnitColor(*tok)) {
+            if (!allowColor) {
+                return false;
+            }
+            SET_SINGLE_PROP(Color)
+            SINGLE_CONTINUE()
         }
+
         return false;
     }
 #undef SINGLE_CONTINUE
@@ -1685,6 +1701,17 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::BackgroundAttachmentValueKind:
+        switch (backgroundAttachmentValue()) {
+        case ScrollBackgroundAttachmentValue:
+            return String::fromUTF8("scroll");
+        case FixedBackgroundAttachmentValue:
+            return String::fromUTF8("fixed");
+        case LocalBackgroundAttachmentValue:
+            return String::fromUTF8("local");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     case CSSStyleValuePair::ValueKind::BoxValueKind:
         switch (boxValue()) {
         case BorderBoxBoxValue:
@@ -2080,22 +2107,37 @@ String* CSSStyleDeclaration::BackgroundRepeat()
 {
     String* repeatX = BackgroundRepeatX();
     String* repeatY = BackgroundRepeatY();
+    GCVector<String *> vRepeatX, vRepeatY;
+    repeatX->split(',', vRepeatX);
+    repeatY->split(',', vRepeatY);
 
-    if (repeatX->equals("repeat") && repeatY->equals("repeat")) {
-        return String::fromUTF8("repeat");
-    } else if (repeatX->equals("repeat") && repeatY->equals("no-repeat")) {
-        return String::fromUTF8("repeat-x");
-    } else if (repeatX->equals("no-repeat") && repeatY->equals("repeat")) {
-        return String::fromUTF8("repeat-y");
-    } else if (repeatX->equals("no-repeat") && repeatY->equals("no-repeat")) {
-        return String::fromUTF8("no-repeat");
-    } else if (repeatX->equals("initial") && repeatY->equals("initial")) {
-        return String::initialString;
-    } else if (repeatX->equals("inherit") && repeatY->equals("inherit")) {
-        return String::inheritString;
+    StringBuilder builder;
+    for (size_t i = 0; i < vRepeatX.size(); i++) {
+        String* rX = vRepeatX[i]->trim();
+        String* rY = vRepeatY[i]->trim();
+        if (rX->equals("repeat") && rY->equals("repeat")) {
+            builder.appendString("repeat");
+        } else if (rX->equals("repeat") && rY->equals("no-repeat")) {
+            builder.appendString("repeat-x");
+        } else if (rX->equals("no-repeat") && rY->equals("repeat")) {
+            builder.appendString("repeat-y");
+        } else if (rX->equals("no-repeat") && rY->equals("no-repeat")) {
+            builder.appendString("no-repeat");
+        } else if (rX->equals(String::initialString) &&
+                   rY->equals(String::initialString)) {
+            builder.appendString(String::initialString);
+        } else if (rX->equals(String::inheritString) &&
+                   rY->equals(String::inheritString)) {
+            builder.appendString(String::inheritString);
+        } else {
+            builder.appendString(String::emptyString);
+        }
+        if (i != vRepeatX.size() - 1) {
+            builder.appendChar(',');
+            builder.appendString(String::spaceString);
+        }
     }
-
-    return String::emptyString;
+    return builder.finalize();
 }
 
 void CSSStyleDeclaration::setBackgroundRepeat(const char* value, size_t length,
@@ -2127,22 +2169,36 @@ String* CSSStyleDeclaration::BackgroundPosition()
 {
     String* positionX = BackgroundPositionX();
     String* positionY = BackgroundPositionY();
-
-    if (positionX->equals(String::emptyString) ||
-        positionY->equals(String::emptyString)) {
-        return String::emptyString;
-    } else if (positionX->equals("initial") && positionY->equals("initial")) {
-        return String::initialString;
-    } else if (positionX->equals("inherit") && positionY->equals("inherit")) {
-        return String::inheritString;
-    } else if (positionX->equals("center") && positionY->equals("center")) {
-        return String::fromUTF8("center");
-    }
+    GCVector<String *> vPositionX, vPositionY;
+    positionX->split(',', vPositionX);
+    positionY->split(',', vPositionY);
 
     StringBuilder builder;
-    builder.appendString(positionX);
-    builder.appendString(String::spaceString);
-    builder.appendString(positionY);
+    for (size_t i = 0; i < vPositionX.size(); i++) {
+        String* pX = vPositionX[i]->trim();
+        String* pY = vPositionY[i]->trim();
+        if (pX->equals(String::initialString)) {
+            if (pY->equals(String::initialString)) {
+                builder.appendString(String::initialString);
+            } else {
+                builder.appendString(String::emptyString);
+            }
+        } else if (pX->equals(String::inheritString)) {
+            if (pY->equals(String::inheritString)) {
+                builder.appendString(String::inheritString);
+            } else {
+                builder.appendString(String::emptyString);
+            }
+        } else {
+            builder.appendString(pX);
+            builder.appendString(String::spaceString);
+            builder.appendString(pY);
+        }
+        if (i != vPositionX.size() - 1) {
+            builder.appendChar(',');
+            builder.appendString(String::spaceString);
+        }
+    }
     return builder.finalize();
 }
 
@@ -2171,10 +2227,23 @@ void CSSStyleDeclaration::setBackgroundPosition(const char* value,
     }
 }
 
-static String* printBackground(String* image, String* repeat, String* color,
-                               String* position, String* size)
+static String* printBackground(String* image, String* position, String* size,
+                               String* repeat, String* attachment,
+                               String* origin, String* clip, String* color)
 {
+    if (image->equals(String::inheritString) ||
+        position->equals(String::inheritString) ||
+        size->equals(String::inheritString) ||
+        repeat->equals(String::inheritString) ||
+        attachment->equals(String::inheritString) ||
+        origin->equals(String::inheritString) ||
+        clip->equals(String::inheritString) ||
+        color->equals(String::inheritString)) {
+        return String::emptyString;
+    }
+
     StringBuilder builder;
+
     if (image->length() != 0 && !image->equals(String::initialString)) {
         builder.appendString(image);
     }
@@ -2200,51 +2269,94 @@ static String* printBackground(String* image, String* repeat, String* color,
         }
         builder.appendString(repeat);
     }
+    if (attachment->length() != 0 &&
+        !attachment->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(attachment);
+    }
+    if (origin->length() != 0 && !origin->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(origin);
+    }
+    if (clip->length() != 0 && !clip->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(clip);
+    }
     if (color->length() != 0 && !color->equals(String::initialString)) {
         if (builder.contentLength() > 0) {
             builder.appendString(String::spaceString);
         }
         builder.appendString(color);
     }
+
     return builder.finalize();
 }
 
 String* CSSStyleDeclaration::Background()
 {
     StringBuilder builder;
-    String* color = BackgroundColor();
     String* images = BackgroundImage();
-    String* repeats = BackgroundRepeat();
     String* positions = BackgroundPosition();
     String* sizes = BackgroundSize();
-    GCVector<String *> vImages, vRepeats, vPositions, vSizes;
+    String* repeats = BackgroundRepeat();
+    String* attachments = BackgroundAttachment();
+    String* origins = BackgroundOrigin();
+    String* clips = BackgroundClip();
+    String* color = BackgroundColor();
+    GCVector<String *> vImages, vPositions, vSizes, vRepeats, vAttachments,
+        vOrigins, vClips;
     images->split(',', vImages);
-    repeats->split(',', vRepeats);
     positions->split(',', vPositions);
     sizes->split(',', vSizes);
+    repeats->split(',', vRepeats);
+    attachments->split(',', vAttachments);
+    origins->split(',', vOrigins);
+    clips->split(',', vClips);
 
     size_t max = vImages.size();
-    if (max < vRepeats.size()) {
-        max = vRepeats.size();
-    }
     if (max < vPositions.size()) {
         max = vPositions.size();
     }
     if (max < vSizes.size()) {
         max = vSizes.size();
     }
+    if (max < vRepeats.size()) {
+        max = vRepeats.size();
+    }
+    if (max < vAttachments.size()) {
+        max = vAttachments.size();
+    }
+    if (max < vOrigins.size()) {
+        max = vOrigins.size();
+    }
+    if (max < vClips.size()) {
+        max = vClips.size();
+    }
 
     for (unsigned int i = 0; i < max; i++) {
-        String* img =
+        String* image =
             (i < vImages.size()) ? vImages[i]->trim() : String::emptyString;
-        String* rep =
-            (i < vRepeats.size()) ? vRepeats[i]->trim() : String::emptyString;
-        String* pos = (i < vPositions.size()) ? vPositions[i]->trim()
-                                              : String::emptyString;
+        String* position = (i < vPositions.size()) ? vPositions[i]->trim()
+                                                   : String::emptyString;
         String* size =
             (i < vSizes.size()) ? vSizes[i]->trim() : String::emptyString;
-        String* col = (i == max - 1) ? color : String::emptyString;
-        builder.appendString(printBackground(img, rep, col, pos, size));
+        String* repeat =
+            (i < vRepeats.size()) ? vRepeats[i]->trim() : String::emptyString;
+        String* attachment = (i < vAttachments.size()) ? vAttachments[i]->trim()
+                                                       : String::emptyString;
+        String* origin =
+            (i < vOrigins.size()) ? vOrigins[i]->trim() : String::emptyString;
+        String* clip =
+            (i < vClips.size()) ? vClips[i]->trim() : String::emptyString;
+        builder.appendString(
+            printBackground(image, position, size, repeat, attachment, origin,
+                            clip, i == max - 1 ? color : String::emptyString));
         if (i != max - 1) {
             builder.appendString(", ");
         }
@@ -2261,17 +2373,22 @@ static void removeBackgroundCSSValuePairs(CSSStyleDeclaration* target)
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX);
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY);
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize);
+    target->removeCSSValuePair(
+        CSSStyleValuePair::KeyKind::BackgroundAttachment);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundOrigin);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundClip);
 }
 
 static void addBackgroundCSSValuePairs(
     CSSStyleDeclaration* target, CSSStyleValuePair color,
-    CSSStyleValuePair images, CSSStyleValuePair repeatX,
+    CSSStyleValuePair image, CSSStyleValuePair repeatX,
     CSSStyleValuePair repeatY, CSSStyleValuePair positionX,
-    CSSStyleValuePair positionY, CSSStyleValuePair size)
+    CSSStyleValuePair positionY, CSSStyleValuePair size,
+    CSSStyleValuePair attachment, CSSStyleValuePair origin,
+    CSSStyleValuePair clip)
 {
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor, color);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage,
-                            images);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage, image);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX,
                             repeatX);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY,
@@ -2281,6 +2398,11 @@ static void addBackgroundCSSValuePairs(
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY,
                             positionY);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, size);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundAttachment,
+                            attachment);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundOrigin,
+                            origin);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundClip, clip);
 }
 
 static bool attributeValueMatches(
@@ -2791,10 +2913,10 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
 
     // TODO: should check comma-separated input
     CSSStyleValuePair v, color, image, repeatX, repeatY, positionX, positionY,
-        size;
+        size, attachment, origin, clip;
     if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
-        addBackgroundCSSValuePairs(this, v, v, v, v, v, v, v);
+        addBackgroundCSSValuePairs(this, v, v, v, v, v, v, v, v, v, v);
     } else {
 #define APPEND_NEW_LAYER(PROP, NEWPROP)                                     \
     if (PROP.valueKind() != CSSStyleValuePair::ValueKind::ValueListKind) {  \
@@ -2827,13 +2949,15 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
                 return;
             }
             CSSStyleValuePair layerImage, layerRepeatX, layerRepeatY,
-                layerPositionX, layerPositionY, layerSize;
+                layerPositionX, layerPositionY, layerSize, layerAttachment,
+                layerOrigin, layerClip;
             // NOTE: Color is allowed only for the last background layer (t ==
             // tokens->size() - 1)
-            if (!parseBackgroundShorthand(layer, &color, &layerImage,
-                                          &layerRepeatX, &layerRepeatY,
-                                          &layerPositionX, &layerPositionY,
-                                          &layerSize, t == tokens.size() - 1)) {
+            if (!parseBackgroundShorthand(
+                    layer, &color, &layerImage, &layerRepeatX, &layerRepeatY,
+                    &layerPositionX, &layerPositionY, &layerSize,
+                    &layerAttachment, &layerOrigin, &layerClip,
+                    t == tokens.size() - 1)) {
                 return;
             }
             if (cntLayer == 0) {
@@ -2843,6 +2967,9 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
                 positionX = layerPositionX;
                 positionY = layerPositionY;
                 size = layerSize;
+                attachment = layerAttachment;
+                origin = layerOrigin;
+                clip = layerClip;
             } else {
                 APPEND_NEW_LAYER(image, layerImage);
                 APPEND_NEW_LAYER(repeatX, layerRepeatX);
@@ -2850,6 +2977,9 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
                 APPEND_NEW_LAYER(positionX, layerPositionX);
                 APPEND_NEW_LAYER(positionY, layerPositionY);
                 APPEND_NEW_LAYER(size, layerSize);
+                APPEND_NEW_LAYER(attachment, layerAttachment);
+                APPEND_NEW_LAYER(origin, layerOrigin);
+                APPEND_NEW_LAYER(clip, layerClip);
             }
             cntLayer++;
             layer.clear();
@@ -2861,8 +2991,12 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
         positionX.setFlagImportant(isImportant);
         positionY.setFlagImportant(isImportant);
         size.setFlagImportant(isImportant);
+        attachment.setFlagImportant(isImportant);
+        origin.setFlagImportant(isImportant);
+        clip.setFlagImportant(isImportant);
         addBackgroundCSSValuePairs(this, color, image, repeatX, repeatY,
-                                   positionX, positionY, size);
+                                   positionX, positionY, size, attachment,
+                                   origin, clip);
     }
 #undef APPEND_NEW_LAYER
 }
@@ -3931,6 +4065,39 @@ void StyleResolver::apply(Element* element,
                 }
             }
             break;
+        case CSSStyleValuePair::KeyKind::BackgroundAttachment:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setBackgroundAttachment(
+                    BackgroundAttachmentValue::ScrollBackgroundAttachmentValue);
+                break;
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setBackgroundAttachment(
+                    parentStyle->backgroundAttachment());
+                break;
+            case CSSStyleValuePair::ValueKind::ValueListKind: {
+                ValueList* list = cssValues[k].multiValue();
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    const CSSStyleValuePair& item = (*list)[i];
+                    if (item.valueKind() ==
+                        CSSStyleValuePair::ValueKind::Initial) {
+                        style->setBackgroundAttachment(
+                            BackgroundAttachmentValue::
+                                ScrollBackgroundAttachmentValue);
+                    } else {
+                        STARFISH_ASSERT(item.valueKind() ==
+                                        CSSStyleValuePair::ValueKind::
+                                            BackgroundAttachmentValueKind);
+                        style->setBackgroundAttachment(
+                            item.backgroundAttachmentValue(), i);
+                    }
+                }
+                break;
+            }
+            default:
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
         case CSSStyleValuePair::KeyKind::BackgroundClip:
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Initial:
@@ -3943,9 +4110,16 @@ void StyleResolver::apply(Element* element,
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
                     const CSSStyleValuePair& item = (*list)[i];
-                    STARFISH_ASSERT(item.valueKind() ==
-                                    CSSStyleValuePair::ValueKind::BoxValueKind);
-                    style->setBackgroundClip(item.boxValue(), i);
+                    if (item.valueKind() ==
+                        CSSStyleValuePair::ValueKind::Initial) {
+                        style->setBackgroundClip(BoxValue::BorderBoxBoxValue,
+                                                 i);
+                    } else {
+                        STARFISH_ASSERT(
+                            item.valueKind() ==
+                            CSSStyleValuePair::ValueKind::BoxValueKind);
+                        style->setBackgroundClip(item.boxValue(), i);
+                    }
                 }
                 break;
             }
@@ -3965,9 +4139,16 @@ void StyleResolver::apply(Element* element,
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
                     const CSSStyleValuePair& item = (*list)[i];
-                    STARFISH_ASSERT(item.valueKind() ==
-                                    CSSStyleValuePair::ValueKind::BoxValueKind);
-                    style->setBackgroundOrigin(item.boxValue(), i);
+                    if (item.valueKind() ==
+                        CSSStyleValuePair::ValueKind::Initial) {
+                        style->setBackgroundOrigin(BoxValue::PaddingBoxBoxValue,
+                                                   i);
+                    } else {
+                        STARFISH_ASSERT(
+                            item.valueKind() ==
+                            CSSStyleValuePair::ValueKind::BoxValueKind);
+                        style->setBackgroundOrigin(item.boxValue(), i);
+                    }
                 }
                 break;
             }
@@ -6746,6 +6927,66 @@ bool CSSStyleValuePair::updateValueBackgroundPositionY(
         return false;
     }
     return updateValueUnitBackgroundPositionY(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueUnitBackgroundAttachment(
+    const CSSTokenValue& value)
+{
+    m_valueKind = CSSStyleValuePair::ValueKind::BackgroundAttachmentValueKind;
+    if (STRING_VALUE_IS_STRING("scroll")) {
+        m_value.m_backgroundAttachment =
+            BackgroundAttachmentValue::ScrollBackgroundAttachmentValue;
+    } else if (STRING_VALUE_IS_STRING("fixed")) {
+        m_value.m_backgroundAttachment =
+            BackgroundAttachmentValue::FixedBackgroundAttachmentValue;
+    } else if (STRING_VALUE_IS_STRING("local")) {
+        m_value.m_backgroundAttachment =
+            BackgroundAttachmentValue::LocalBackgroundAttachmentValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueBackgroundAttachment(
+    const CSSTokenVector& tokens)
+{
+    return updateValueBackgroundAttachment(tokens, true);
+}
+
+bool CSSStyleValuePair::updateValueBackgroundAttachment(
+    const CSSTokenVector& tokens, bool allowComma)
+{
+    size_t len = 0;
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (value.equals(",")) {
+            if (!allowComma || i == 0 || i == tokens.size() - 1)
+                return false;
+        } else if (i == tokens.size() - 1) {
+            len++;
+            i++;
+        } else {
+            len++;
+            continue;
+        }
+
+        CSSStyleValuePair ret;
+        if (len == 1) {
+            if (!ret.updateValueUnitBackgroundAttachment(tokens[i - 1])) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        len = 0;
+        multiValue()->push_back(ret);
+    }
+
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueUnitBox(const CSSTokenValue& value)

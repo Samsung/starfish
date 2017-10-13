@@ -546,11 +546,6 @@ bool WebView::rendering(bool force)
             m_needsComposite = false;
         }
 
-        if (!m_needsComposite) {
-            starFish()->platformWindow()->paintWindowBackground(canvas);
-            m_didCompositeBefore = false;
-        }
-
         {
             PaintingContext ctx(canvas);
             ctx.m_paintingStage = PaintingStageEnd;
@@ -560,6 +555,8 @@ bool WebView::rendering(bool force)
                 canvas->save();
                 canvas->translate(-mainFrame->scrollLeft(),
                                   -mainFrame->scrollTop());
+                starFish()->platformWindow()->paintWindowBackground(canvas);
+                m_didCompositeBefore = false;
             }
             mainFrame->paint(ctx);
         }
@@ -679,13 +676,12 @@ bool WebView::rendering(bool force)
             m_rootStackingContext->needsOwnBuffer()) {
             Canvas* canvas =
                 starFish()->platformWindow()->preparePainting(false);
-            starFish()->platformWindow()->paintWindowBackground(canvas);
-            canvas->save();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
             canvas->save();
             canvas->translate(-mainFrame->scrollLeft(),
                               -mainFrame->scrollTop());
+            starFish()->platformWindow()->paintWindowBackground(canvas);
             mainBrowsingContext()
                 ->document()
                 ->frame()
@@ -699,7 +695,6 @@ bool WebView::rendering(bool force)
                 canvas, mainFrame, mainFrame->appliedOverflowX(),
                 mainFrame->appliedOverflowY());
 
-            canvas->restore();
             m_didCompositeBefore = true;
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
             starFish()->platformWindow()->paintVirtualCursor(canvas);

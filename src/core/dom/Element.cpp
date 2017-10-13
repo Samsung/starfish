@@ -1596,7 +1596,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
     // background
     {
         CSSStyleValuePair bgImage, bgSize, bgRepeatX, bgRepeatY, bgPositionX,
-            bgPositionY, bgClip, bgOrigin;
+            bgPositionY, bgAttachment, bgClip, bgOrigin;
         bgImage.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundImage);
         bgImage.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         bgSize.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundSize);
@@ -1609,6 +1609,9 @@ CSSStyleDeclaration* Element::getComputedStyle()
         bgPositionX.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         bgPositionY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionY);
         bgPositionY.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        bgAttachment.setKeyKind(
+            CSSStyleValuePair::KeyKind::BackgroundAttachment);
+        bgAttachment.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         bgClip.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundClip);
         bgClip.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         bgOrigin.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundOrigin);
@@ -1616,13 +1619,15 @@ CSSStyleDeclaration* Element::getComputedStyle()
 
         ValueList *bgImageValues, *bgSizeValues, *bgRepeatXValues,
             *bgRepeatYValues, *bgPositionXValues, *bgPositionYValues,
-            *bgClipValues, *bgOriginValues;
+            *bgAttachmentValues, *bgClipValues, *bgOriginValues;
         bgImageValues = new ValueList(ValueList::Separator::CommaSeparator);
         bgSizeValues = new ValueList(ValueList::Separator::CommaSeparator);
         bgRepeatXValues = new ValueList(ValueList::Separator::CommaSeparator);
         bgRepeatYValues = new ValueList(ValueList::Separator::CommaSeparator);
         bgPositionXValues = new ValueList(ValueList::Separator::CommaSeparator);
         bgPositionYValues = new ValueList(ValueList::Separator::CommaSeparator);
+        bgAttachmentValues =
+            new ValueList(ValueList::Separator::CommaSeparator);
         bgClipValues = new ValueList(ValueList::Separator::CommaSeparator);
         bgOriginValues = new ValueList(ValueList::Separator::CommaSeparator);
 
@@ -1669,6 +1674,9 @@ CSSStyleDeclaration* Element::getComputedStyle()
             item = lengthToCSSStyleValue(style->backgroundPositionY(i));
             bgPositionYValues->push_back(item);
 
+            item.setBackgroundAttachmentValue(style->backgroundAttachment(i));
+            bgAttachmentValues->push_back(item);
+
             item.setBoxValue(style->backgroundClip(i));
             bgClipValues->push_back(item);
 
@@ -1682,6 +1690,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
         bgRepeatY.setValueList(bgRepeatYValues);
         bgPositionX.setValueList(bgPositionXValues);
         bgPositionY.setValueList(bgPositionYValues);
+        bgAttachment.setValueList(bgAttachmentValues);
         bgClip.setValueList(bgClipValues);
         bgOrigin.setValueList(bgOriginValues);
 
@@ -1691,6 +1700,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
         d->addValuePair(bgRepeatY);
         d->addValuePair(bgPositionX);
         d->addValuePair(bgPositionY);
+        d->addValuePair(bgAttachment);
         d->addValuePair(bgClip);
         d->addValuePair(bgOrigin);
     }

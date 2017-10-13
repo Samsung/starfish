@@ -54,6 +54,8 @@ public:
         , m_positionX(Length(Length::Percent, 0.0f))
         , m_positionY(Length(Length::Percent, 0.0f))
         , m_sizeIsLength(true)
+        , m_attachment(
+              BackgroundAttachmentValue::ScrollBackgroundAttachmentValue)
         , m_clip(BoxValue::BorderBoxBoxValue)
         , m_origin(BoxValue::PaddingBoxBoxValue)
     {
@@ -110,6 +112,11 @@ public:
     void setPositionY(Length position)
     {
         m_positionY = position;
+    }
+
+    void setAttachment(BackgroundAttachmentValue attachment)
+    {
+        m_attachment = attachment;
     }
 
     void setClip(BoxValue clip)
@@ -174,6 +181,11 @@ public:
         return LengthSize();
     }
 
+    BackgroundAttachmentValue attachment() const
+    {
+        return m_attachment;
+    }
+
     BoxValue clip() const
     {
         return m_clip;
@@ -216,6 +228,8 @@ private:
     // background-size
     bool m_sizeIsLength;
     BackgroundSize m_size;
+    // background-attachment
+    BackgroundAttachmentValue m_attachment;
     // background-clip
     BoxValue m_clip;
     // background-origin
@@ -327,6 +341,15 @@ public:
         m_layers[layer].setPositionY(position);
     }
 
+    void setAttachment(BackgroundAttachmentValue attachment, unsigned int layer)
+    {
+        resizeLayerIfNeeded(layer);
+        if (m_maxLayerPositions < layer + 1) {
+            m_maxLayerPositions = layer + 1;
+        }
+        m_layers[layer].setAttachment(attachment);
+    }
+
     void setClip(BoxValue clip, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
@@ -413,6 +436,14 @@ public:
             return LengthSize();
         }
         return m_layers[layer].sizeLengthValue();
+    }
+
+    BackgroundAttachmentValue attachment(unsigned int layer = 0) const
+    {
+        if (m_layers.size() <= layer) {
+            return BackgroundAttachmentValue::ScrollBackgroundAttachmentValue;
+        }
+        return m_layers[layer].attachment();
     }
 
     BoxValue clip(unsigned int layer = 0) const
@@ -562,6 +593,10 @@ bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
     }
 
     if (a.m_positionY != b.m_positionY) {
+        return false;
+    }
+
+    if (a.m_attachment != b.m_attachment) {
         return false;
     }
 

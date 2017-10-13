@@ -120,16 +120,17 @@ void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
                 if (col->parent()->isFrameTableColBox()) {
                     FrameBox fakeColGroup(col->parent()->node(),
                                           col->parent()->style());
-                    fakeColGroup.copyWHMBPFrom(cellStruct.cell());
+                    fakeColGroup.copyFrom(cellStruct.cell(),
+                                          FrameBox::BorderBoxCopy);
                     paintBackground(canvas, &fakeColGroup, nullptr);
                 }
                 // Paint background using column style
                 FrameBox fakeCol(col->node(), col->style());
-                fakeCol.copyWHMBPFrom(cellStruct.cell());
+                fakeCol.copyFrom(cellStruct.cell(), FrameBox::BorderBoxCopy);
                 paintBackground(canvas, &fakeCol, nullptr);
             }
             // Paint background using section style
-            fakeSection.copyWHMBPFrom(cellStruct.cell());
+            fakeSection.copyFrom(cellStruct.cell(), FrameBox::BorderBoxCopy);
             paintBackground(canvas, &fakeSection, nullptr);
 
             canvas->restore();
