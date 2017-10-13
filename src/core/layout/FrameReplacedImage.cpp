@@ -24,6 +24,8 @@
 namespace StarFish {
 void FrameReplacedImage::paintReplaced(Canvas* canvas)
 {
+    FrameReplaced::paintReplaced(canvas);
+
     ImageData* id = node()->asHTMLImageElement()->imageData();
     if (id) {
         if (id->preserveAspectRatioValue() == ImageData::None) {

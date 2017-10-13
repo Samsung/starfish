@@ -84,7 +84,7 @@ public:
     bool isFrameInlineOrEmptyText(Frame* f);
 
     virtual bool isSelfCollapsingBlock(LayoutContext& ctx);
-
+#ifndef NDEBUG
     static std::string replaceAll(const std::string& str,
                                   const std::string& pattern,
                                   const std::string& replace)
@@ -101,17 +101,19 @@ public:
 
         return result;
     }
-
+#endif
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void layoutInline(LineFormattingContext& ctx);
 
 #ifdef STARFISH_ENABLE_TEST
+#ifndef NDEBUG
     virtual void dump(int depth)
     {
         UTF8StringDataNonGCStd str = text()->toUTF8NonGCString();
         str = replaceAll(str, "\n", "\\n");
         printf("text-> %s", str.data());
     }
+#endif
 #endif
 
     void* operator new(size_t size)

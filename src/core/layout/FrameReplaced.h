@@ -127,6 +127,7 @@ public:
 
     virtual void paintReplaced(Canvas* canvas)
     {
+        applyBorderRadiusClippingIfNeeds(canvas);
         if (!isFrameReplaced()) {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
