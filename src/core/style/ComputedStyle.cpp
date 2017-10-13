@@ -216,11 +216,11 @@ void ComputedStyle::loadBackgroundImage(
                     .notifyImageResourceActiveState(
                         prevComputedStyleValueForReferenceLoadedResources
                             ->background()
-                            ->imageResource());
+                            ->imageResource(bgIndex));
                 setBackgroundImageResource(
                     prevComputedStyleValueForReferenceLoadedResources
                         ->background()
-                        ->imageResource(),
+                        ->imageResource(bgIndex),
                     bgIndex);
             } else {
                 ImageResource* res =

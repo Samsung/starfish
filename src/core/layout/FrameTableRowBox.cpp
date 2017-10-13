@@ -233,7 +233,7 @@ void FrameTableRowBox::paintBackgroundAndBorders(Canvas* canvas)
             FrameTableCellBox* cell = child->asFrameTableCellBox();
             canvas->save();
             canvas->translate(cell->x(), cell->y());
-            fakeRow.copyWHMBPFrom(cell);
+            fakeRow.copyFrom(cell, FrameBox::BorderBoxCopy);
             paintBackground(canvas, &fakeRow, nullptr);
             canvas->restore();
         }

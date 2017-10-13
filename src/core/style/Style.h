@@ -726,6 +726,12 @@ enum BoxValue {
     ContentBoxBoxValue,
 };
 
+enum BackgroundAttachmentValue {
+    ScrollBackgroundAttachmentValue,
+    FixedBackgroundAttachmentValue,
+    LocalBackgroundAttachmentValue,
+};
+
 enum FontSizeValue {
     XXSmallFontSizeValue,
     XSmallFontSizeValue,
@@ -946,6 +952,7 @@ class CSSStyleDeclaration;
     F(BackgroundColor, backgroundColor, "background-color")                  \
     F(BackgroundImage, backgroundImage, "background-image")                  \
     F(BackgroundSize, backgroundSize, "background-size")                     \
+    F(BackgroundAttachment, backgroundAttachment, "background-attachment")   \
     F(BackgroundClip, backgroundClip, "background-clip")                     \
     F(BackgroundOrigin, backgroundOrigin, "background-origin")               \
     F(LineHeight, lineHeight, "line-height")                                 \
@@ -1226,6 +1233,7 @@ public:
         // Background
         BackgroundSizeValueKind,
         BackgroundRepeatValueKind,
+        BackgroundAttachmentValueKind,
         BoxValueKind,
 
         FontSizeValueKind,
@@ -1519,6 +1527,12 @@ public:
         return m_value.m_backgroundRepeat;
     }
 
+    BackgroundAttachmentValue backgroundAttachmentValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == BackgroundAttachmentValueKind);
+        return m_value.m_backgroundAttachment;
+    }
+
     ValueList* multiValue() const
     {
         STARFISH_ASSERT(m_valueKind == ValueListKind);
@@ -1684,6 +1698,7 @@ public:
         BackgroundSizeValue m_backgroundSize;
         BoxValue m_box;
         BackgroundRepeatValue m_backgroundRepeat;
+        BackgroundAttachmentValue m_backgroundAttachment;
         BorderStyleValue m_borderStyle;
         BorderWidthValue m_borderWidth;
         ValueList* m_multiValue;
@@ -1794,6 +1809,10 @@ public:
         }
         ValueData(BackgroundRepeatValue v)
             : m_backgroundRepeat(v)
+        {
+        }
+        ValueData(BackgroundAttachmentValue v)
+            : m_backgroundAttachment(v)
         {
         }
         ValueData(BorderStyleValue v)
@@ -2014,6 +2033,13 @@ public:
         m_value.m_backgroundRepeat = val;
     }
 
+    void setBackgroundAttachmentValue(BackgroundAttachmentValue val)
+    {
+        m_valueKind =
+            CSSStyleValuePair::ValueKind::BackgroundAttachmentValueKind;
+        m_value.m_backgroundAttachment = val;
+    }
+
     void setBoxValue(BoxValue value)
     {
         m_valueKind = CSSStyleValuePair::ValueKind::BoxValueKind;
@@ -2051,10 +2077,13 @@ public:
                                     bool allowComma);
     bool updateValueBackgroundSize(const CSSTokenVector& tokens,
                                    bool allowComma);
+    bool updateValueBackgroundAttachment(const CSSTokenVector& tokens,
+                                         bool allowComma);
     bool updateValueBox(const CSSTokenVector& tokens, bool allowComma);
     bool updateValueUnitBackgroundRepeat(const CSSTokenValue& token);
     bool updateValueUnitBackgroundPositionX(const CSSTokenValue& token);
     bool updateValueUnitBackgroundPositionY(const CSSTokenValue& token);
+    bool updateValueUnitBackgroundAttachment(const CSSTokenValue& token);
     bool updateValueUnitBorderStyle(const CSSTokenValue& token);
     bool updateValueUnitBorderWidth(const CSSTokenValue& token);
     bool updateValueUnitBorderColor(const CSSTokenValue& token);

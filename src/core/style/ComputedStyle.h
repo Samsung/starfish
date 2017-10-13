@@ -608,6 +608,13 @@ public:
         m_background->setSize(size, layer);
     }
 
+    void setBackgroundAttachment(BackgroundAttachmentValue attachment,
+                                 unsigned int layer = 0)
+    {
+        setBackgroundIfNeeded();
+        m_background->setAttachment(attachment, layer);
+    }
+
     void setBackgroundClip(BoxValue clip, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
@@ -707,6 +714,14 @@ public:
             return LengthSize();
         }
         return m_background->sizeLengthValue(layer);
+    }
+
+    BackgroundAttachmentValue backgroundAttachment(unsigned int layer = 0)
+    {
+        if (m_background == nullptr) {
+            return BackgroundAttachmentValue::ScrollBackgroundAttachmentValue;
+        }
+        return m_background->attachment(layer);
     }
 
     BoxValue backgroundClip(unsigned int layer = 0)

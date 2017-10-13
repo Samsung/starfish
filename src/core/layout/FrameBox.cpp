@@ -19,6 +19,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
@@ -644,24 +645,39 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                          rootOrBodyelement->isHTMLBodyElement()));
     }
 #endif
-
     ComputedStyle* style;
     if (box) {
         style = box->style();
     } else {
         style = rootOrBodyelement->style();
     }
+    FrameBox fakeBody(rootOrBodyelement, style);
+
+    if (rootOrBodyelement) {
+        if (rootOrBodyelement->frame()) {
+            box = rootOrBodyelement->frame()->asFrameBox();
+        } else {
+            fakeBody.copyFrom(rootOrBodyelement->document()
+                                  ->rootElement()
+                                  ->frame()
+                                  ->asFrameBox(),
+                              FrameBox::PositionCopy | FrameBox::BorderBoxCopy);
+            box = &fakeBody;
+        }
+    }
 
     if (!style->backgroundColor().isTransparent() &&
         style->visibility() == VisibilityValue::VisibleVisibilityValue) {
         canvas->save();
         Unit::Rect paintingRect;
-        if (box) {
+        if (rootOrBodyelement) {
+            Window* window = rootOrBodyelement->window();
+            FrameDocument* doc = window->document()->frame()->asFrameDocument();
+            paintingRect = Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
+                                      window->width(), window->height());
+        } else {
             unsigned int idx = style->backgroundLayerSize() - 1;
             paintingRect = box->makeRect(style->backgroundClip(idx));
-        } else {
-            Window* window = rootOrBodyelement->window();
-            paintingRect = Unit::Rect(0, 0, window->width(), window->height());
         }
         canvas->setColor(style->backgroundColor());
         // FIXME: the results of drawRect(LayoutRect) and drawRect(Unit::Rect)
@@ -675,18 +691,66 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
 
     for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
         unsigned int idx = style->backgroundLayerSize() - i - 1;
-
         ImageData* id = style->backgroundImageData(idx);
         if (id && id->width() && id->height()) {
             Unit::Rect paintingRect;
             Unit::Rect positioningRect;
-            if (box) {
-                paintingRect = box->makeRect(style->backgroundClip(idx));
-                positioningRect = box->makeRect(style->backgroundOrigin(idx));
-            } else {
+            BackgroundAttachmentValue attachment =
+                style->backgroundAttachment(idx);
+            if (rootOrBodyelement) {
                 Window* window = rootOrBodyelement->window();
-                paintingRect = positioningRect =
-                    Unit::Rect(0, 0, window->width(), window->height());
+                FrameDocument* doc =
+                    window->document()->frame()->asFrameDocument();
+                paintingRect = Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
+                                          window->width(), window->height());
+            }
+
+            if (attachment == FixedBackgroundAttachmentValue) {
+                FrameDocument* doc =
+                    box->document()->frame()->asFrameDocument();
+                LayoutLocation loc;
+                if (!rootOrBodyelement) {
+                    loc = box->absolutePoint(doc);
+                }
+                positioningRect = doc->makeRect(style->backgroundOrigin(idx));
+                positioningRect.setX(-loc.x().toFloat() + doc->scrollLeft());
+                positioningRect.setY(-loc.y().toFloat() + doc->scrollTop());
+                if (!rootOrBodyelement) {
+                    paintingRect = box->makeRect(style->backgroundClip(idx));
+                }
+            } else if (attachment == LocalBackgroundAttachmentValue &&
+                       box->isFrameBlockBox()) {
+                FrameBox scrollBox(box->node(), style);
+                scrollBox.copyFrom(box, FrameBox::BorderCopy |
+                                            FrameBox::PaddingCopy);
+                scrollBox.setWidth(box->asFrameBlockBox()->scrollWidth());
+                scrollBox.setHeight(box->asFrameBlockBox()->scrollHeight());
+                positioningRect =
+                    scrollBox.makeRect(style->backgroundOrigin(idx));
+                positioningRect.setX(positioningRect.x() -
+                                     box->asFrameBlockBox()->scrollLeft());
+                positioningRect.setY(positioningRect.x() -
+                                     box->asFrameBlockBox()->scrollTop());
+                if (rootOrBodyelement) {
+                    if (rootOrBodyelement->isHTMLHtmlElement()) {
+                        positioningRect.setX(positioningRect.x() + box->x());
+                        positioningRect.setY(positioningRect.y() + box->y());
+                    }
+                } else {
+                    paintingRect =
+                        scrollBox.makeRect(style->backgroundClip(idx));
+                }
+            } else {
+                positioningRect = box->makeRect(style->backgroundOrigin(idx));
+
+                if (rootOrBodyelement) {
+                    if (rootOrBodyelement->isHTMLHtmlElement()) {
+                        positioningRect.setX(positioningRect.x() + box->x());
+                        positioningRect.setY(positioningRect.y() + box->y());
+                    }
+                } else {
+                    paintingRect = box->makeRect(style->backgroundClip(idx));
+                }
             }
             canvas->save();
             canvas->translate(paintingRect.x(), paintingRect.y());
@@ -709,32 +773,15 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                     imgH = id->height();
                 } else if (bgSize.width().isAuto() &&
                            !bgSize.height().isAuto()) {
-                    if (box) {
-                        imgH = bgSize.height().specifiedValue(positionH, box);
-                    } else {
-                        imgH = bgSize.height().specifiedValue(
-                            positionH, rootOrBodyelement);
-                    }
+                    imgH = bgSize.height().specifiedValue(positionH, box);
                     imgW = imgH * id->width() / id->height();
                 } else if (!bgSize.width().isAuto() &&
                            bgSize.height().isAuto()) {
-                    if (box) {
-                        imgW = bgSize.width().specifiedValue(positionW, box);
-                    } else {
-                        imgW = bgSize.width().specifiedValue(positionW,
-                                                             rootOrBodyelement);
-                    }
+                    imgW = bgSize.width().specifiedValue(positionW, box);
                     imgH = imgW * id->height() / id->width();
                 } else {
-                    if (box) {
-                        imgW = bgSize.width().specifiedValue(positionW, box);
-                        imgH = bgSize.height().specifiedValue(positionH, box);
-                    } else {
-                        imgW = bgSize.width().specifiedValue(positionW,
-                                                             rootOrBodyelement);
-                        imgH = bgSize.height().specifiedValue(
-                            positionH, rootOrBodyelement);
-                    }
+                    imgW = bgSize.width().specifiedValue(positionW, box);
+                    imgH = bgSize.height().specifiedValue(positionH, box);
                 }
             } else {
                 BackgroundSizeValue bgSize =
@@ -757,26 +804,12 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                 }
             }
 
-            LayoutUnit x, y;
             Length positionX = style->backgroundPositionX(idx);
             Length positionY = style->backgroundPositionY(idx);
-            if (box) {
-                x = positionX.specifiedValue(positionW - imgW, box);
-                y = positionY.specifiedValue(positionH - imgH, box);
-                x += (positioningRect.x() - paintingRect.x());
-                y += (positioningRect.y() - paintingRect.y());
-            } else {
-                x = positionX.specifiedValue(positionW - imgW,
-                                             rootOrBodyelement);
-                y = positionY.specifiedValue(positionH - imgH,
-                                             rootOrBodyelement);
-                if (rootOrBodyelement->isHTMLHtmlElement()) {
-                    if (rootOrBodyelement->frame()) {
-                        x += rootOrBodyelement->frame()->asFrameBox()->x();
-                        y += rootOrBodyelement->frame()->asFrameBox()->y();
-                    }
-                }
-            }
+            LayoutUnit x = positionX.specifiedValue(positionW - imgW, box) +
+                           positioningRect.x() - paintingRect.x();
+            LayoutUnit y = positionY.specifiedValue(positionH - imgH, box) +
+                           positioningRect.y() - paintingRect.y();
 
             auto repeatX = style->backgroundRepeatX(idx);
             auto repeatY = style->backgroundRepeatY(idx);
