@@ -4059,6 +4059,7 @@ void InlineTextBox::paint(PaintingContext& ctx)
 
             ctx.m_canvas->setFont(style()->font());
             ctx.m_canvas->setColor(style()->color());
+            ctx.m_canvas->setTextShadowData(style()->textShadow());
             ctx.m_canvas->drawText(0, 0, contentWidth(), text());
         }
     }

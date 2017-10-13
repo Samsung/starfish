@@ -86,5 +86,25 @@ private:
     Unit::Color m_color;
     bool m_hasColor;
 };
+
+class ShadowDataList : public GCVector<ShadowData> {
+public:
+    bool operator==(const ShadowDataList& o)
+    {
+        if (this->size() != o.size()) {
+            return false;
+        }
+        for (size_t i = 0; i < this->size(); i++) {
+            if (this->at(i) != o.at(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    bool operator!=(const ShadowDataList& o)
+    {
+        return !operator==(o);
+    }
+};
 }
 #endif
