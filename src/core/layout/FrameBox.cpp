@@ -351,19 +351,8 @@ void FrameBox::paintOutline(Canvas* canvas)
     }
 }
 
-void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
+void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas)
 {
-    canvas->save();
-    bool overflowApplied = shouldApplyOverflow();
-    if (overflowApplied) {
-        canvas->clip(Unit::Rect(0, 0, width(), height()));
-    }
-
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-    Canvas* orgCanvas = canvas;
-    bool cairoCanvasUsed = false;
-#endif
-
     // apply clip if border-radius exists
     if (style()->hasBorderRadius()) {
         const LayoutRect rect(0, 0, width(), height());
@@ -387,23 +376,6 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             br.m_bottomRightVertical.specifiedValue(height(), this);
         float arcR;
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-        cairoCanvasUsed = true;
-        if (!ensureFrameBoxRareData()->m_bufferForBorderRadius ||
-            frameBoxRareData()->m_bufferForBorderRadius->width() !=
-                width().toUnsigned() ||
-            frameBoxRareData()->m_bufferForBorderRadius->height() !=
-                height().toUnsigned()) {
-            frameBoxRareData()->m_bufferForBorderRadius =
-                ImageData::create(width().toUnsigned(), height().toUnsigned());
-        }
-
-        canvas = Canvas::createGenericCanvas(
-            node()->starFish(),
-            frameBoxRareData()->m_bufferForBorderRadius->data(),
-            frameBoxRareData()->m_bufferForBorderRadius->width(),
-            frameBoxRareData()->m_bufferForBorderRadius->height());
-#endif
         // border-left
         {
             if (topLeftHorizontal && topLeftVertical) {
@@ -573,6 +545,63 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
         }
         canvas->clipPath();
     }
+}
+
+void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
+{
+    canvas->save();
+    bool overflowApplied = shouldApplyOverflow();
+    if (overflowApplied) {
+        canvas->clip(Unit::Rect(0, 0, width(), height()));
+    }
+
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+    Canvas* orgCanvas = canvas;
+    bool cairoCanvasUsed = false;
+#endif
+
+// apply clip if border-radius exists
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+    if (style()->hasBorderRadius()) {
+        const LayoutRect rect(0, 0, width(), height());
+        auto br = style()->borderRadius();
+        float arcR;
+        float topLeftHorizontal =
+            br.m_topLeftHorizontal.specifiedValue(width(), this);
+        float topLeftVertical =
+            br.m_topLeftVertical.specifiedValue(height(), this);
+        float topRightHorizontal =
+            br.m_topRightHorizontal.specifiedValue(width(), this);
+        float topRightVertical =
+            br.m_topRightVertical.specifiedValue(height(), this);
+        float bottomLeftHorizontal =
+            br.m_bottomLeftHorizontal.specifiedValue(width(), this);
+        float bottomLeftVertical =
+            br.m_bottomLeftVertical.specifiedValue(height(), this);
+        float bottomRightHorizontal =
+            br.m_bottomRightHorizontal.specifiedValue(width(), this);
+        float bottomRightVertical =
+            br.m_bottomRightVertical.specifiedValue(height(), this);
+
+        cairoCanvasUsed = true;
+        if (!ensureFrameBoxRareData()->m_bufferForBorderRadius ||
+            frameBoxRareData()->m_bufferForBorderRadius->width() !=
+                width().toUnsigned() ||
+            frameBoxRareData()->m_bufferForBorderRadius->height() !=
+                height().toUnsigned()) {
+            frameBoxRareData()->m_bufferForBorderRadius =
+                ImageData::create(width().toUnsigned(), height().toUnsigned());
+        }
+
+        canvas = Canvas::createGenericCanvas(
+            node()->starFish(),
+            frameBoxRareData()->m_bufferForBorderRadius->data(),
+            frameBoxRareData()->m_bufferForBorderRadius->width(),
+            frameBoxRareData()->m_bufferForBorderRadius->height());
+    }
+#endif
+
+    applyBorderRadiusClippingIfNeeds(canvas);
 
     do {
         if (node() && node()->isHTMLHtmlElement()) {

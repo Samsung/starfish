@@ -29,33 +29,6 @@ namespace StarFish {
 class FrameBlockBox;
 class LineFormattingContext;
 
-struct TextRun {
-    StringView m_stringView;
-    CharDirection m_direction;
-
-    TextRun(String* str, size_t startPosition, size_t endPosition,
-            CharDirection dir)
-        : m_stringView(StringView(str, startPosition, endPosition))
-    {
-        m_direction = dir;
-    }
-#ifndef NDEBUG
-    void dump() const
-    {
-        UTF8StringDataNonGCStd str =
-            m_stringView.substring()->toUTF8NonGCString();
-        str = FrameText::replaceAll(str, "\n", "\\n");
-        printf("%s", m_direction == Ltr
-                         ? "L"
-                         : (m_direction == Rtl
-                                ? "R"
-                                : (m_direction == Neutral ? "N" : "M")));
-        printf("[%s]", str.data());
-        printf(":%zu\n", m_stringView.length());
-    }
-#endif
-};
-
 class InlineTextBox : public FrameBox {
 public:
     InlineTextBox(InlineTextBox* box)

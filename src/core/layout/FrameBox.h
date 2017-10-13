@@ -599,6 +599,7 @@ public:
 
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual void paintBackgroundAndBorders(Canvas* canvas);
+
     virtual Unit::Rect makeRect(BoxValue box);
     static void paintBackground(Canvas* canvas, FrameBox* box,
                                 HTMLElement* rootOrBodyelement);
@@ -738,6 +739,8 @@ protected:
     LayoutUnit minMaxHeightAppliedIfNeeds(LayoutContext& ctx, LayoutUnit height,
                                           LayoutUnit parentHeight,
                                           bool parentHasFixedValue);
+
+    void applyBorderRadiusClippingIfNeeds(Canvas* canvas);
 
     bool hasRareData() const
     {
