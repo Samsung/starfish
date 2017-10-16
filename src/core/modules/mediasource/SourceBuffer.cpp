@@ -166,12 +166,12 @@ public:
     {
     }
 
-    virtual void onDetectVideoStream(StreamInfo& info)
+    virtual void onDetectVideoStream(const StreamInfo& info)
     {
         m_detectedVideoStream.push_back(info);
     }
 
-    virtual void onDetectAudioStream(StreamInfo& info)
+    virtual void onDetectAudioStream(const StreamInfo& info)
     {
         m_detectedAudioStream.push_back(info);
     }
@@ -456,6 +456,7 @@ SourceBuffer::SourceBuffer(Document* document, String* type)
 
 void SourceBuffer::clearAll()
 {
+    m_packetGroupMutex->lock();
     size_t removedSize = 0;
     for (size_t i = 0; i < m_packetGroup.size(); i++) {
         removedSize += m_packetGroup[i]->m_dataSize;
@@ -469,6 +470,9 @@ void SourceBuffer::clearAll()
     }
     std::vector<MediaPacketGroup*>().swap(m_packetGroup);
     decreaseUsedBufferSize(removedSize);
+    m_buffered = nullptr;
+    m_packetGroupMutex->unlock();
+    clearPacketAccessCache();
 }
 
 void SourceBuffer::setUpdating(bool flag, UpdateState state)
@@ -671,7 +675,7 @@ void SourceBuffer::prepareAppend(size_t newDataSize)
     // Run the coded frame eviction algorithm.
     if (!codedFrameEviction(newDataSize)) {
         SOURCEBUFFER_LOG(
-            this, "Faild to make buffer space: throw QUOTA_EXCEEDED_ERR\n");
+            this, "Failed to make buffer space: throw QUOTA_EXCEEDED_ERR\n");
         throw new DOMException(document(), DOMException::QUOTA_EXCEEDED_ERR,
                                "SourceBuffer is full");
     }
@@ -733,19 +737,20 @@ void SourceBuffer::remove(double start, double end)
     SOURCEBUFFER_LOG(this, "Remove range (%dms->%dms)\n", (int)(start * 1000),
                      (int)(end * 1000));
     setUpdating(true, UpdateState::Success);
-    rangeRemovalWithGuard(start * 1000, end * 1000);
+    rangeRemoval(start * 1000, end * 1000);
     setUpdating(false, UpdateState::Success);
-}
-
-void SourceBuffer::rangeRemovalWithGuard(uint64_t startTimestamp,
-                                         uint64_t endTimestamp, StreamType type)
-{
-    Locker<Mutex> lock(*m_packetGroupMutex);
-    rangeRemoval(startTimestamp, endTimestamp, type);
 }
 
 void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp,
                                 StreamType type)
+{
+    Locker<Mutex> lock(*m_packetGroupMutex);
+    rangeRemovalWithoutGuard(startTimestamp, endTimestamp, type);
+}
+
+void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
+                                            uint64_t endTimestamp,
+                                            StreamType type)
 {
     // 3.5.6 Range Removal
     size_t groupIndex = 0;
@@ -1003,8 +1008,6 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                      appendWindowEnd);
                 inputBuffer->m_sourceBuffer->m_demuxer->findStreamPacket(&src);
             }
-            SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
-                             "Add append task to main\n");
 
             inputBuffer->m_sourceBuffer->m_starFish->messageLoop()
                 ->addIdlerWithNoGCRootingInOtherThread(
@@ -1176,13 +1179,14 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                                         }
                                     }
 
-                                    inputBuffer->m_sourceBuffer->rangeRemoval(
-                                        cl->m_packetGroup[i]
-                                            ->m_groupTimestampStart,
-                                        cl->m_packetGroup[i]
-                                            ->m_groupTimestampEnd,
-                                        cl->m_packetGroup[i]
-                                            ->m_streamInfo->type());
+                                    inputBuffer->m_sourceBuffer
+                                        ->rangeRemovalWithoutGuard(
+                                            cl->m_packetGroup[i]
+                                                ->m_groupTimestampStart,
+                                            cl->m_packetGroup[i]
+                                                ->m_groupTimestampEnd,
+                                            cl->m_packetGroup[i]
+                                                ->m_streamInfo->type());
 
                                     SOURCEBUFFER_LOG(
                                         inputBuffer->m_sourceBuffer,

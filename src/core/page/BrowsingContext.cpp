@@ -29,6 +29,7 @@
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLInputElement.h"
+#include "core/dom/HTMLMediaElement.h"
 #include "core/dom/EventTarget.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
@@ -351,6 +352,11 @@ void BrowsingContext::iterateChildContext(
     }
 }
 
+void BrowsingContext::registerMediaElement(HTMLMediaElement* element)
+{
+    m_existingMediaElements.push_back(element);
+}
+
 void BrowsingContext::dispose()
 {
     if (m_window) {
@@ -364,6 +370,11 @@ void BrowsingContext::dispose()
             iframeCollection[i]->asHTMLIFrameElement()->unloadSrc();
         }
     }
+
+    for (size_t i = 0; i < m_existingMediaElements.size(); i++) {
+        m_existingMediaElements[i]->dispose();
+    }
+    m_existingMediaElements.clear();
 
     m_focusedNode = nullptr;
     m_activeElement = nullptr;

@@ -244,17 +244,19 @@ public:
 
     void increaseUsedBufferSize(size_t amount);
     void decreaseUsedBufferSize(size_t amount);
+    void clearAll();
 
 protected:
     // this method needs packet group lock
+    void rangeRemovalWithoutGuard(
+        uint64_t start, uint64_t end,
+        StreamType type = (StreamType)((int)StreamTypeVideo |
+                                       (int)StreamTypeAudio |
+                                       (int)StreamTypeSubtitle));
     void rangeRemoval(uint64_t start, uint64_t end,
                       StreamType type = (StreamType)((int)StreamTypeVideo |
                                                      (int)StreamTypeAudio |
                                                      (int)StreamTypeSubtitle));
-    void rangeRemovalWithGuard(uint64_t start, uint64_t end,
-                               StreamType type = (StreamType)(
-                                   (int)StreamTypeVideo | (int)StreamTypeAudio |
-                                   (int)StreamTypeSubtitle));
     void setUpdating(bool flag, UpdateState state);
 
     void attachedToParent(MediaSource* ms)
@@ -271,7 +273,6 @@ protected:
         m_isAttachedToParent = false;
     }
 
-    void clearAll();
     void prepareAppend(size_t newDataSize);
     bool codedFrameEviction(size_t newDataSize);
     void bufferAppend(SourceBufferData* data);

@@ -39,10 +39,10 @@ public:
     virtual ~DemuxerClient()
     {
     }
-    virtual void onDetectVideoStream(StreamInfo& info)
+    virtual void onDetectVideoStream(const StreamInfo& info)
     {
     }
-    virtual void onDetectAudioStream(StreamInfo& info)
+    virtual void onDetectAudioStream(const StreamInfo& info)
     {
     }
     // return true means client consume packet data

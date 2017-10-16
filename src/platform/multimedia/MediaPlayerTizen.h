@@ -36,9 +36,98 @@ class MediaSource;
 class MediaPlayerTizenMediaSourceClient;
 class Mutex;
 
+class MediaStream : public gc {
+public:
+    enum BufferState {
+        BUFFERSTATE_INITIAL,
+        BUFFERSTATE_UNDER_RUN,   // < 1%
+        BUFFERSTATE_NEED_PACKET, // < 30%
+        BUFFERSTATE_NORMAL,
+        BUFFERSTATE_EOS,
+    };
+
+    MediaStream(StreamType type);
+    StreamType type()
+    {
+        return m_type;
+    }
+    bool isAudio()
+    {
+        return m_type == StreamTypeAudio;
+    }
+    bool isVideo()
+    {
+        return m_type == StreamTypeVideo;
+    }
+    media_format_h mediaFormat()
+    {
+        return m_mediaFormat;
+    }
+    bool createMediaFormat();
+    void releaseMediaFormat();
+    uint64_t maxBufferSize();
+    void setMaxBufferSize(uint64_t value);
+    uint64_t lastSubmittedDTS()
+    {
+        return m_lastSubmittedDTS;
+    }
+    void setLastSubmittedDTS(uint64_t value)
+    {
+        m_lastSubmittedDTS = value;
+    }
+    bool needPacket();
+    bool isBufferState(BufferState state);
+    BufferState bufferState();
+    void setBufferState(BufferState value);
+    bool waitingDemuxer();
+    void setWaitingDemuxer(bool value);
+    size_t initSegmentIndex()
+    {
+        return m_initSegmentIndex;
+    }
+    void setInitSegmentIndex(size_t value)
+    {
+        m_initSegmentIndex = value;
+    }
+    uint64_t lastBufferBytes();
+    void setLastBufferBytes(size_t value);
+    player_media_stream_audio_extra_info_s* audioFormatExtra()
+    {
+        STARFISH_ASSERT(m_type == StreamTypeAudio);
+        return &(m_formatExtra.m_audioFormatExtra);
+    }
+    player_media_stream_video_extra_info_s* videoFormatExtra()
+    {
+        STARFISH_ASSERT(m_type == StreamTypeVideo);
+        return &(m_formatExtra.m_videoFormatExtra);
+    }
+
+protected:
+    StreamType m_type;
+    volatile BufferState m_bufferState;
+    Mutex* m_bufferStateMutex;
+
+    media_format_h m_mediaFormat;
+    union MediaFormatExtra {
+        MediaFormatExtra()
+            : m_audioFormatExtra()
+        {
+        }
+        player_media_stream_audio_extra_info_s m_audioFormatExtra;
+        player_media_stream_video_extra_info_s m_videoFormatExtra;
+    } m_formatExtra;
+
+    volatile uint64_t m_maxBufferSize;
+    volatile uint64_t m_lastSubmittedDTS;
+    volatile size_t m_initSegmentIndex;
+    volatile size_t m_lastBufferBytes;
+    volatile bool m_waitingDemuxer;
+};
+
 class MediaPlayerTizen : public MediaPlayer {
 public:
     friend class MediaPlayerTizenMediaSourceClient;
+
     MediaPlayerTizen(HTMLMediaElement* element);
 
     virtual void close();
@@ -53,29 +142,18 @@ public:
     virtual void initDisplay();
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);
     virtual void printNativePlayerError(int errorCode);
-    virtual void printMediaPacketError(int errorCode);
-    virtual void printMediaFormatError(int errorCode);
 
     void handlePlayerBuffer(StreamType type, uint64_t currentBytes);
-    virtual void fillBuffer(StreamType type);
-    virtual void fillBufferWithGuard(StreamType type);
-    virtual void mediaEndOperation()
-    {
-        if (m_nativePlayer) {
-            player_stop(m_nativePlayer);
-        }
-    }
-    void fillVideoBufferIfNeeded();
-    void fillAudioBufferIfNeeded();
+    void fillBufferWithoutGuard(MediaStream* stream);
+    void fillBuffer(MediaStream* stream);
+    void fillBufferIfNeeded(StreamType type);
     void unprepareOperation();
 
     void openPreparingMode();
     void closePreparingMode();
     void handlePrepared();
-    void endOfStream();
 
     void startPlaying();
-    void stopPlaying();
 
     void handleEnded();
     void handlePlayerError();
@@ -117,59 +195,34 @@ public:
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect);
     virtual void prepareMediaSource();
-    void updateAudioStreamInfoWithGuard(size_t pastInitIndex,
-                                        size_t newInitIndex);
-    void updateVideoStreamInfoWithGuard(size_t pastInitIndex,
-                                        size_t newInitIndex);
+    void updateStreamInfo(MediaStream* stream, size_t pastInitIndex,
+                          size_t newInitIndex);
+    void updateAudioStreamInfo(MediaStream* audio, size_t pastInitIndex,
+                               size_t newInitIndex);
+    void updateVideoStreamInfo(MediaStream* video, size_t pastInitIndex,
+                               size_t newInitIndex);
 
     bool m_inPrepare;
-    bool m_needsPlayAfterPrepare;
     size_t m_seekingTimer;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
-    Mutex* m_bufferMutex;
-    Mutex* m_mediaFormatMutex;
+    Mutex* m_fillBufferMutex;
     ResourceURL* m_currentURL;
-    void (*m_preparedCallback)(void*);
-    void (*m_completeCallback)(void*);
     CanvasSurface* m_canvasSurface;
 
     player_h m_nativePlayer;
-    media_format_h m_audioFormat;
-    media_format_h m_videoFormat;
-    player_media_stream_audio_extra_info_s m_audioFormatExtra;
-    player_media_stream_video_extra_info_s m_videoFormatExtra;
-
-    volatile bool m_isAudioBufferUnderrunState;
-    volatile bool m_isVideoBufferUnderrunState;
-    volatile uint64_t m_audioMaxBufferSize;
-    volatile uint64_t m_videoMaxBufferSize;
-    volatile uint64_t m_lastAudioDTS;
-    volatile uint64_t m_lastVideoDTS;
-    volatile size_t m_audioInitSegmentIndex;
-    volatile size_t m_videoInitSegmentIndex;
-    volatile size_t m_audioLastBufferBytes;
-    volatile size_t m_videoLastBufferBytes;
+    bool* m_playerDeadFlag;
+    MediaStream* m_audioStream;
+    MediaStream* m_videoStream;
 
     // Helpers
-    media_format_h streamFormat(StreamType type);
+    MediaStream* currentStream(StreamType type)
+    {
+        return type == StreamTypeAudio ? m_audioStream : m_videoStream;
+    }
     SourceBuffer* activeSourceBuffer(StreamType type);
     uint64_t activeStreamIndex(StreamType type);
-    uint64_t maxBufferSize(StreamType type);
-
-    bool bufferUnderrunState(StreamType type);
-    void updateBufferUnderrunState(StreamType type, bool value);
-
-    uint64_t lastSubmitDTS(StreamType type);
-    void updateLastSubmitDTS(StreamType type, uint64_t value);
-
-    size_t initSegmentIndex(StreamType type);
-    void updateInitSegmentIndex(StreamType type, size_t value);
-
-    uint64_t lastBufferBytes(StreamType type);
-    void updateLastBufferBytes(StreamType type, size_t value);
-
-    void updateStreamInfoWithGuard(StreamType type, size_t pastInitIndex,
-                                   size_t newInitIndex);
+    bool isMSE();
+    bool isMSEBufferEOS();
 };
 }
 

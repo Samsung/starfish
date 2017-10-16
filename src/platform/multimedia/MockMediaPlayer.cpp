@@ -100,8 +100,8 @@ void MockMediaPlayer::prepareMediaSource()
 
 void MockMediaPlayer::play()
 {
-    if (!m_inPlaying) {
-        m_inPlaying = true;
+    if (m_playbackState != PLAYBACK_STATE_PLAYING) {
+        m_playbackState = PLAYBACK_STATE_PLAYING;
         m_container->document()->browsingContext()->addPointerInRootSet(this);
         m_currentTimeUpdateTimer = window()->setInterval(
             [](Window* window, void* data) {
@@ -166,8 +166,8 @@ void MockMediaPlayer::play()
 
 void MockMediaPlayer::pause()
 {
-    if (m_inPlaying) {
-        m_inPlaying = false;
+    if (m_playbackState == PLAYBACK_STATE_PLAYING) {
+        m_playbackState = PLAYBACK_STATE_PAUSED;
         m_container->document()->browsingContext()->removePointerFromRootSet(
             this);
         window()->clearInterval(m_currentTimeUpdateTimer);
