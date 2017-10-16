@@ -702,14 +702,9 @@ public:
         }
 
         if (isWhiteSpace(c)) {
-            bool solo = eatWhiteSpace(c);
-            if (solo) {
-                return CSSToken::createCharValueToken(
-                    m_parser, CSSToken::WHITESPACE_TYPE, ' ');
-            } else {
-                return CSSToken::createToken(m_parser,
-                                             CSSToken::WHITESPACE_TYPE);
-            }
+            eatWhiteSpace(c);
+            return CSSToken::createCharValueToken(
+                m_parser, CSSToken::WHITESPACE_TYPE, ' ');
         }
 
         if (c == '|' || c == '~' || c == '^' || c == '$' || c == '*') {
