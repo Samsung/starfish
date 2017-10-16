@@ -176,7 +176,9 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url)
 void Location::assign(ResourceURL* url)
 {
     if (!url->isJavascriptURL()) {
-        navigateImpl(document()->browsingContext(), url);
+        if (!this->url()->urlString()->equals(url->urlString())) {
+            navigateImpl(document()->browsingContext(), url);
+        }
     }
 }
 

@@ -3,5 +3,5 @@
 [PartialInterface,
  NoInterfaceObject]
 interface LinkStyle {
-  [Unimplemented] readonly attribute StyleSheet? sheet;
+  readonly attribute StyleSheet? sheet;
 };

@@ -488,6 +488,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | height | Returns the dimensions of the visual content of the video. |
 |  | attribute | videoWidth | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
 |  | attribute | videoHeight | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
+| [LinkStyle](https://drafts.csswg.org/cssom/#the-linkstyle-interface) | interface | LinkStyle | The associated CSS style sheet of a node is the CSS style sheet in the list of document CSS style sheets of which the owner node implements the LinkStyle interface. |
+|  | attribute | sheet | Returns the associated CSS style sheet for the node or null if there is no associated CSS style sheet. |
 | [MediaList](https://drafts.csswg.org/cssom/#the-medialist-interface) | interface | MediaList | MediaList interface has an associated collection of media queries. |
 |  | attribute | mediaText | Returns a serialization of the collection of media queries. |
 |  | attribute | length | Returns the number of media queries in the collection of media queries. |

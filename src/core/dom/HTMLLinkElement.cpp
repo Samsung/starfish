@@ -98,6 +98,11 @@ void HTMLLinkElement::setType(String* type)
     setAttribute(starFish()->staticStrings()->m_type, type);
 }
 
+StyleSheet* HTMLLinkElement::sheet()
+{
+    return m_generatedSheet;
+}
+
 ResourceURL* HTMLLinkElement::url()
 {
     Nullable<String*> url = getAttribute(starFish()->staticStrings()->m_href);
