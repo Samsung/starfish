@@ -314,6 +314,24 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #ifdef STARFISH_ENABLE_TTS
     m_tts = new TTS(this);
 #endif
+
+    int width;
+    int height;
+
+#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+    width = m_width;
+    height = m_height;
+#elif defined(PORT_GRAPHIC_BACKEND_EFL) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+    evas_object_geometry_get((Evas_Object*)nativeHandle(), NULL, NULL, &width,
+                             &height);
+#endif
+
+    m_platformWindow =
+        PlatformWindow::create(this, nativeHandle(), width, height);
+
+    WebView* webView = WebView::create(this);
+    m_platformWindow->setWebView(webView);
 }
 
 StarFish::~StarFish()
@@ -400,25 +418,9 @@ void StarFish::loadHTMLDocument(String* filePath)
         }
     }
 
-    int width;
-    int height;
-
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-    width = m_width;
-    height = m_height;
-#elif defined(PORT_GRAPHIC_BACKEND_EFL) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-    evas_object_geometry_get((Evas_Object*)nativeHandle(), NULL, NULL, &width,
-                             &height);
-#endif
-
-    m_platformWindow =
-        PlatformWindow::create(this, nativeHandle(), width, height);
-
-    WebView* webView = WebView::create(this);
-    m_platformWindow->setWebView(webView);
     ResourceURL* url = new ResourceURL(String::fromUTF8(path.c_str()));
-    webView->navigate(url, HistoryManager::Action::Add, nullptr);
+    m_platformWindow->webView()->navigate(url, HistoryManager::Action::Add,
+                                          nullptr);
 }
 
 void StarFish::resume()
