@@ -55,6 +55,9 @@ ScriptBindingInstance::ScriptBindingInstance(
     m_scriptContext = ContextRef::create(engineInstance->engineInstance());
     m_ownerWindow = ownerWindow;
     m_ownerDocument = nullptr;
+#ifdef TIZEN_DEVICE_API
+    m_deviceAPI = nullptr;
+#endif
 
 #define FOR_EACH_SCRIPTVALUE_FN(exportName) m_value##exportName = nullptr;
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_SCRIPTVALUE_FN)
@@ -72,6 +75,7 @@ void ScriptBindingInstance::close()
         m_scriptContext->vmInstance()->clearCachesRelatedWithContext();
     }
 #ifdef TIZEN_DEVICE_API
+    m_deviceAPI = nullptr;
     DeviceAPI::close(m_scriptContext);
 #endif
 }
@@ -330,7 +334,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
         ValueRef::create(console), true, true, true);
 
 #ifdef TIZEN_DEVICE_API
-    DeviceAPI::initialize(m_scriptContext);
+    m_deviceAPI = DeviceAPI::initialize(m_scriptContext);
 #endif
 
     context->setVirtualIdentifierCallback(virtualIdentifierCallback);

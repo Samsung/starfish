@@ -40,6 +40,12 @@ typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
 #include "binding/ScriptEngineInstance.h"
 #include "binding/Interfaces.h"
 
+#ifdef TIZEN_DEVICE_API
+namespace DeviceAPI {
+class ExtensionManagerInstance;
+}
+#endif
+
 namespace StarFish {
 
 class StarFish;
@@ -126,6 +132,9 @@ protected:
     Escargot::ContextRef* m_scriptContext;
     Window* m_ownerWindow;
     Document* m_ownerDocument;
+#ifdef TIZEN_DEVICE_API
+    ::DeviceAPI::ExtensionManagerInstance* m_deviceAPI;
+#endif
 };
 }
 
