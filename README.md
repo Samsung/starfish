@@ -15,7 +15,7 @@ sudo apt-get install python-pip
 pip install Jinja2
 ```
 
-### Download and compile StarFish
+### Download StarFish and compile third party libraries
 
 ```sh
 git clone git@github.sec.samsung.net:RS7-webtf/starfish.git
@@ -23,33 +23,40 @@ cd starfish
 git submodule init
 git submodule update
 ./build_third_party.sh
+```
+
+### Compile StarFish
+
+```sh
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
 ninja -C out/debug starfish.x64.debug
 ```
 
-### Build options
-
-The following build targets are available when running ninja script.
-
-* starfish.x64.debug
-* starfish.x64.release
-* starfish.tizen.release
-
-```sh
-ninja -C out/[ debug | release ] starfish.x64.[ debug | release ]
-```
+#### Build options
 
 The following build options are supported when generating ninja script using gyp.
-Default values are written in **bold**.
+Default values are in **bold**.
 
 * -Dcomponent=[ executable | **static_library** | shared_library ]<br>
   Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
 * -Ddeplib=[ **shared_library** | static_library ]<br>
   Generate third-party libraries as shared libraries or obj files
-* -Dbackend=[ **efl** | dali ]<br>
-  Use either efl or dali as the backend graphics library
+* -Dbackend=[ **efl** | dali | efl_cairo ]<br>
+  Use either efl, dali, or efl_cairo as the backend graphics library
 * -Dplatform=[ **linux** | tizen ]<br>
-  Use tizen when building for Tizen platform
+  Compile Starfish for either linux or tizen platform
+
+The following build targets are available when running the ninja script.
+
+```sh
+ninja -C out/[ debug | release ] target
+```
+
+where target is either:
+
+* ``starfish.x64.debug``
+* ``starfish.x64.release``
+* ``starfish.tizen.release``
 
 ### GBS Build
 ```sh

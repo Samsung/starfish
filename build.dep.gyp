@@ -1,4 +1,7 @@
 {
+    # build.dep.gyp defines third party libraries.
+    # Update build.dep.gyp if third party libraries are to be added
+
     'includes': [
         'build.gypi',
     ],
@@ -550,7 +553,7 @@
                     'files': [
                         'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                    'destination': '<(PRODUCT_DIR)/lib/release',
                 },
             ],
         },

@@ -1,4 +1,7 @@
 {
+    # build.gypi defines build options.
+    # Update build.gypi if build options need to be modified
+
     'variables' : {
         'starfish_root': '.',
         'escargot_root': '<(starfish_root)/third_party/escargot',
@@ -22,7 +25,7 @@
             'STARFISH_ENABLE_TTS',
             'STARFISH_ENABLE_TEST',
             'STARFISH_ENABLE_BODY_FOCUS_RING',
-#            'STARFISH_ENABLE_VIRTUAL_CURSOR',
+            #'STARFISH_ENABLE_VIRTUAL_CURSOR',
             'STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER=false',
             'TIZEN_DEVICE_API',
             'USE_PRODUCT_FEATURE',
@@ -60,6 +63,7 @@
             '-fno-omit-frame-pointer',
             '-fstack-protector',
             '-fPIC',
+            #'-fuse-ld=gold', # for fast linking
         ],
         'cflags_debug': [
             '-O0',

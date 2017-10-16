@@ -1,4 +1,7 @@
 {
+    # build.gyp defines building rules
+    # Update build.gypi if build targets needs to be modified
+
     'includes': [
         'build.gypi',
     ],
@@ -49,8 +52,6 @@
                    '<@(cflags_extra)',
                ],
                'ldflags' : [
-#use gold linker if you want fast linking
-#                   '-fuse-ld=gold',
                ],
                'defines': [
                    '<@(defines_default)',
