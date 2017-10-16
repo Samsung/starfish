@@ -48,6 +48,8 @@ public:
     String* media();
     void setMedia(String* media);
 
+    StyleSheet* sheet();
+
     virtual void didCharacterDataModified(String* before, String* after);
     virtual void didNodeInsertedToDocumentTree();
     virtual void didNodeRemovedFromDocumentTree();

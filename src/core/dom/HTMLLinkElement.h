@@ -60,6 +60,8 @@ public:
     String* type();
     void setType(String* type);
 
+    StyleSheet* sheet();
+
     ResourceURL* url();
 
     virtual void didAttributeChanged(QualifiedName name, String* old,

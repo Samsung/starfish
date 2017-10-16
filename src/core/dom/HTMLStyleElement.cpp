@@ -80,6 +80,11 @@ void HTMLStyleElement::setMedia(String* media)
     setAttribute(starFish()->staticStrings()->m_media, media);
 }
 
+StyleSheet* HTMLStyleElement::sheet()
+{
+    return m_generatedSheet;
+}
+
 void HTMLStyleElement::didCharacterDataModified(String* before, String* after)
 {
     HTMLElement::didCharacterDataModified(before, after);
