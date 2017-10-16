@@ -2469,15 +2469,14 @@ void LineFormattingContext::handleTextToken(TextToken& token)
 static void nextToken(std::vector<int32_t>::iterator& iter, int32_t& cur,
                       int32_t next)
 {
-    if (next == *iter) {
+    if (next >= *iter) {
         iter++;
     }
     cur = next;
 }
 
-int utf32ToUtf16(char32_t i, char16_t* u);
-size_t utf16ToUtf32(const char16_t* UTF16, const char16_t* bufferEnd,
-                    char32_t& uc);
+template <typename T>
+size_t utf16ToUtf32(const T* UTF16, const T* bufferEnd, char32_t& uc);
 
 template <typename Context>
 static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
@@ -2505,11 +2504,25 @@ static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
         }
     } else {
         int32_t len = str.length();
+        int32_t prev = 0;
+        int32_t offset = 0;
+        const UChar* buffer = str.getBuffer();
+        // printf("diff : %d\n", (int)(txt->length() - len));
+
         while ((next = breaker->next()) != icu::BreakIterator::DONE) {
             if (next == len) {
                 locs.push_back(txt->length());
             } else {
-                locs.push_back(str.getChar32Start(next));
+                while (prev < next) {
+                    char32_t t;
+                    size_t required =
+                        utf16ToUtf32(buffer + prev, buffer + len, t);
+                    offset -= (required - 1);
+                    prev += required;
+                }
+                locs.push_back(next + offset);
+                // printf("loc : %d\n", (int)locs.back());
+                STARFISH_ASSERT(prev == next);
             }
         }
     }
@@ -2671,11 +2684,25 @@ String* FrameText::makeCapitalized(String* txt, char32_t prev)
         }
     } else {
         int32_t len = str.length();
+        int32_t prev = 0;
+        int32_t offset = 0;
+        const UChar* buffer = str.getBuffer();
+        // printf("diff : %d\n", (int)(txt->length() - len));
+
         while ((next = breaker->next()) != icu::BreakIterator::DONE) {
             if (next == len) {
                 locs.push_back(txt->length());
             } else {
-                locs.push_back(str.getChar32Start(next));
+                while (prev < next) {
+                    char32_t t;
+                    size_t required =
+                        utf16ToUtf32(buffer + prev, buffer + len, t);
+                    offset -= (required - 1);
+                    prev += required;
+                }
+                locs.push_back(next + offset);
+                // printf("loc : %d\n", (int)locs.back());
+                STARFISH_ASSERT(prev == next);
             }
         }
     }
