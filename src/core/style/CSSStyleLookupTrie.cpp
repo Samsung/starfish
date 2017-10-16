@@ -732,8 +732,8 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // border-bottom-left-radius
         switch (data[0]) {
         case 'b':
-            if (memcmp(data, "border-bottom-right-radius", 25) == 0) {
-                return CSSStyleKind::BorderBottomRightRadius;
+            if (memcmp(data, "border-bottom-left-radius", 25) == 0) {
+                return CSSStyleKind::BorderBottomLeftRadius;
             }
             break;
         }
