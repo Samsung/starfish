@@ -36,6 +36,7 @@ class CanvasSurface;
 class PlatformWindow;
 class Window;
 class HTMLIFrameElement;
+class HTMLMediaElement;
 class MouseData;
 class TouchData;
 class KeyboardData;
@@ -208,6 +209,8 @@ public:
     // return did layout
     bool layoutIfNeeds(bool fromWebView = true);
 
+    void registerMediaElement(HTMLMediaElement* element);
+
 private:
     void didFocusEvent();
     void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
@@ -256,6 +259,7 @@ private:
 
     GCVector<EventTarget*> m_globalPointingEventListener;
     GCUnorderedMap<void*, size_t> m_rootMap;
+    GCVector<HTMLMediaElement*> m_existingMediaElements;
 };
 }
 

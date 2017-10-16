@@ -316,6 +316,7 @@ public:
     void mediaPlayerNotifySeekedItsContainer(double currentTime);
     void mediaPlayerNotifySeekFailureItsContainer();
     void mediaPlayerNotifyEndedItsContainer();
+    void mediaPlayerRequestRestartItsContainer();
     void addEventToOperationQueue(EventTarget* t, Event* e);
     void processNextOperationQueue();
 
@@ -348,6 +349,10 @@ public:
 
     void giveupFetchingResource(bool shouldSetError = true);
     void setNetworkStateAsHaveNothing();
+    void dispose()
+    {
+        closeMediaPlayer();
+    }
 
 protected:
     bool m_autoplayingFlag;

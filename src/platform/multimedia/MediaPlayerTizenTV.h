@@ -55,10 +55,9 @@ public:
                            const LayoutRect& absVideoRect);
 
     virtual void prepareMediaSource();
-    void setVideoStreamInfoWithGuard(size_t initSegmentIndex = 0);
-    void setAudioStreamInfoWithGuard(size_t initSegmentIndex = 0);
+    void initVideoStreamInfo(size_t initSegmentIndex = 0);
+    void initAudioStreamInfo(size_t initSegmentIndex = 0);
     virtual void printNativePlayerError(int errorCode);
-    virtual void mediaEndOperation();
     virtual void seekOperation(int timeInMS);
 };
 }

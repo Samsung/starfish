@@ -51,8 +51,6 @@ public:
         size_t sizeWantToRead = n;
         size_t out;
         int error = 0;
-        // virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead,
-        // int& errorCode, uint8_t* buffer) = 0;
         m_source->onRead(n, out, error, (uint8_t*)s);
         STARFISH_ASSERT(error == 0);
     }
@@ -273,10 +271,9 @@ static StreamInfo* handleTKHD(MP4::TKHD* tkhd,
 
 static bool handleMDHD(MP4::MDHD* mdhd, StreamInfo* stream)
 {
-    if (!stream || stream->timescale() != 1) {
+    if (!stream) {
         DEMUXERMP4_LOG("Unexpected structure of MP4\n");
-        DEMUXERMP4_LOG("> Current stream have met MDHD before\n");
-        DEMUXERMP4_LOG("> Or no TKHD found before MDHD\n");
+        DEMUXERMP4_LOG("> no TKHD found before MDHD\n");
         return false;
     }
     stream->setTimescale(mdhd->_timeScale);
@@ -446,9 +443,6 @@ bool DemuxerMP4::findStreamInfo(DemuxerSource* source, String* formatHint)
             break;
         }
     });
-#ifdef DEMUXERMP4_DEBUG
-    DEMUXERMP4_LOG("FOUND INDICE %d\n", (int)detectedStreamIndice.size());
-#endif
     if (detectedStreamIndice.size() == 0) {
         source->onSeek(before, DemuxerSource::SeekWhenceSet);
         return false;

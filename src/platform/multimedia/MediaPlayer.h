@@ -139,10 +139,8 @@ protected:
     void appendToOperationQueueInContainer(MediaOperationQueueData* data);
     bool m_alive;
     bool m_foundError;
-    bool m_isEnded;
     bool m_isLooping;
     bool m_hasVideo;
-    bool m_inPlaying;
     SeekState m_seekState;
     PlaybackState m_playbackState;
     HTMLMediaElement* m_container;

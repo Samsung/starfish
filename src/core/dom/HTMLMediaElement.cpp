@@ -26,15 +26,16 @@
 #include "core/dom/HTMLTrackElement.h"
 #include "core/dom/TextTrack.h"
 #include "core/dom/TextTrackList.h"
-#include "core/modules/mediasource/MediaSource.h"
 #include "core/extra/MimeType.h"
+#include "core/extra/TimeRanges.h"
+#include "core/modules/mediasource/MediaSource.h"
 #include "core/modules/mediasource/SourceBuffer.h"
 #include "core/modules/mediasource/SourceBufferList.h"
-#include "core/extra/TimeRanges.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 #include "core/util/URL.h"
 #include "platform/multimedia/MediaPlayer.h"
-#include "core/modules/message_loop/MessageLoop.h"
-#include "core/page/Window.h"
 
 namespace StarFish {
 
@@ -61,6 +62,15 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     , m_resourceSelectionContext(nullptr)
     , m_currentPlayStart(std::numeric_limits<double>::quiet_NaN())
 {
+    document->browsingContext()->registerMediaElement(this);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            STARFISH_LOG_INFO("HTMLMediaElement::~HTMLMediaElement\n");
+            HTMLMediaElement* element = (HTMLMediaElement*)obj;
+            element->closeMediaPlayer();
+        },
+        NULL, NULL, NULL);
 }
 
 void* HTMLMediaElement::operator new(size_t size)
@@ -1010,6 +1020,14 @@ void HTMLMediaElement::mediaPlayerNotifyEndedItsContainer()
     setPlayEndPos(m_officialPlaybackPosition);
     dispatchTimeupdateEvent();
     dispatchEndedEvent();
+}
+
+void HTMLMediaElement::mediaPlayerRequestRestartItsContainer()
+{
+    m_isPaused = true;
+    m_isEnded = true;
+    m_officialPlaybackPosition = duration();
+    play();
 }
 
 HTMLMediaElement::NetworkState HTMLMediaElement::networkState()

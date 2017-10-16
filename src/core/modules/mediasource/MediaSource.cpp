@@ -532,7 +532,7 @@ void MediaSource::evict(uint64_t start, uint64_t end)
 {
     if (m_sourceBuffers) {
         for (unsigned i = 0; i < m_sourceBuffers->length(); i++) {
-            (*m_sourceBuffers)[i]->rangeRemovalWithGuard(start, end);
+            (*m_sourceBuffers)[i]->rangeRemoval(start, end);
         }
     }
 }
