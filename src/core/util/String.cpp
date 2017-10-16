@@ -1077,38 +1077,6 @@ int utf32ToUtf16(char32_t i, char16_t* u)
     }
 }
 
-size_t utf16ToUtf32(const char16_t* UTF16, const char16_t* bufferEnd,
-                    char32_t& uc)
-{
-    size_t tRequiredSize = 0;
-
-    uc = 0x00000000;
-
-    if (UTF16[0] >= 0xd800 && UTF16[0] <= 0xdbff) {
-        if (UTF16 + 1 < bufferEnd) {
-            if (UTF16[1] >= 0xdc00 && UTF16[1] <= 0xdfff) {
-                uc += (UTF16[0] - 0xdb800) << 10;
-                uc += (UTF16[1] - 0xdc00) + 0x10000UL;
-                tRequiredSize = 2;
-            } else {
-                uc = 0xFFFD;
-                tRequiredSize = 1;
-            }
-        } else {
-            uc = 0xFFFD;
-            tRequiredSize = 1;
-        }
-    } else if (UTF16[0] >= 0xdc00 && UTF16[0] <= 0xdfff) {
-        uc = 0xFFFD;
-        tRequiredSize = 1;
-    } else {
-        uc = UTF16[0];
-        tRequiredSize = 1;
-    }
-
-    return tRequiredSize;
-}
-
 UTF8String String::toUTF8String()
 {
     UTF8String result;
