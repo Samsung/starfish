@@ -242,6 +242,7 @@ void NetworkSharedResourceManager::close()
 {
     STARFISH_ASSERT(instance);
     delete instance;
+    instance = nullptr;
 }
 
 NetworkSharedResourceManager::NetworkSharedResourceManager()
