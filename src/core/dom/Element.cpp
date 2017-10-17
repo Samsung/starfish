@@ -775,8 +775,7 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
 
         applyTransform(q, frameObject->asFrameBox());
         quads.push_back(q);
-    } else {
-        STARFISH_ASSERT(frameObject->isFrameInline());
+    } else if (frameObject->isFrameInline()) {
         Frame* nearestFrameBox = frameObject->parent();
         while (!nearestFrameBox->isFrameBox()) {
             nearestFrameBox = nearestFrameBox->parent();
