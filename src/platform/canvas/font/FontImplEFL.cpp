@@ -101,6 +101,7 @@ public:
         m_size = size;
         m_weight = weight;
         m_style = style;
+        m_supportsKerning = false;
 
         loadFont(m_size);
 

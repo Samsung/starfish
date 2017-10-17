@@ -5,7 +5,7 @@
     'variables' : {
         'starfish_root': '.',
         'escargot_root': '<(starfish_root)/third_party/escargot',
-        'third_party_libs': 'libpng cairo freetype2 fontconfig icu-uc icu-i18n',
+        'third_party_libs': 'libpng cairo freetype2 fontconfig icu-uc icu-i18n harfbuzz harfbuzz-icu',
         'defines_default': [
             'ESCARGOT_ENABLE_TYPEDARRAY=1',
             'ESCARGOT_ENABLE_PROMISE=1',

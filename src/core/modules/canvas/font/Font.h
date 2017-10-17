@@ -64,12 +64,18 @@ public:
         return m_familyName;
     }
 
+    bool supportsKerning()
+    {
+        return m_supportsKerning;
+    }
+
 protected:
+    bool m_supportsKerning;
+    char m_weight;
+    char m_style;
     String* m_familyName;
     FontMetrics m_metrics;
     float m_size;
-    char m_weight;
-    char m_style;
 };
 
 class Font : public gc {
