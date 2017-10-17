@@ -68,7 +68,9 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
     err = U_ZERO_ERROR;
     det = ucsdet_open(&err);
     STARFISH_ASSERT(!U_FAILURE(err));
-    ucsdet_setText(det, bytes, 1024 * 16 < len ? 1024 * 16 : len, &err);
+    const int maxDetectBytes = 1024;
+    ucsdet_setText(det, bytes, maxDetectBytes < len ? maxDetectBytes : len,
+                   &err);
     STARFISH_ASSERT(!U_FAILURE(err));
 
     int confidence, num;

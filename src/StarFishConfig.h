@@ -75,6 +75,7 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #include <unicode/uchar.h>
 #include <unicode/ucnv.h>
 #include <unicode/ucsdet.h>
+#include <unicode/uscript.h>
 #include <unicode/rbbi.h>
 
 #include <pthread.h>
