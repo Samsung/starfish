@@ -258,6 +258,8 @@ public:
     int m_offsetYDueToSoftwareKeyboard;
 };
 
+static WindowImplEFL* g_currentWnd = nullptr;
+
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
 
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -742,6 +744,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                        int height)
 {
     auto wnd = new WindowImplEFL(sf);
+    g_currentWnd = wnd;
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
@@ -1372,6 +1375,9 @@ void WebView::setNeedsRendering()
     wnd->m_renderingAnimator = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
+            if (g_currentWnd != wnd) {
+                return ECORE_CALLBACK_CANCEL;
+            }
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
             if (!wnd->m_canRendering) {
                 return ECORE_CALLBACK_RENEW;
