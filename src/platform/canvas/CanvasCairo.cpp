@@ -561,7 +561,7 @@ public:
         cairo_surface_t* image;
         image = cairo_image_surface_create_for_data(
             (unsigned char*)data->unwrap(), CAIRO_FORMAT_ARGB32,
-            data->bufferWidth(), data->height(),
+            data->bufferWidth(), data->bufferHeight(),
             cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
                                           data->bufferWidth()));
 
