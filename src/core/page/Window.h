@@ -204,6 +204,7 @@ public:
     // WindowProxy == Window are same in StarFish
     Window* parent();
     Window* top();
+    Element* frameElement();
 
     History* history()
     {

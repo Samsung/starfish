@@ -15,6 +15,7 @@
             'STARFISH_ENABLE_INSPECTOR',
             'STARFISH_ENABLE_DOMPARSER',
             'STARFISH_ENABLE_TTS',
+            'STARFISH_IGNORE_CROSS_ORIGIN',
         ],
         'defines_tizen': [
             'STARFISH_TIZEN',
@@ -26,6 +27,7 @@
             'STARFISH_ENABLE_TEST',
             'STARFISH_ENABLE_BODY_FOCUS_RING',
             #'STARFISH_ENABLE_VIRTUAL_CURSOR',
+            'STARFISH_IGNORE_CROSS_ORIGIN',
             'STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER=false',
             'TIZEN_DEVICE_API',
             'USE_PRODUCT_FEATURE',

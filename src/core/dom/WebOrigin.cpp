@@ -63,4 +63,53 @@ Nullable<String*> WebOrigin::domain()
 
     return m_originalURL->host();
 }
+
+// https://w3c.github.io/html/browsers.html#same-origin
+bool WebOrigin::isSameOrigin(WebOrigin* otherWebOrigin)
+{
+    // If A and B are the same opaque origin, then return true.
+    // TODO: comparing for the same opaque origin is not supported yet
+    if (isOpaque() || otherWebOrigin->isOpaque()) {
+        return false;
+    }
+
+    // m_originalURL should not be null unless isOpaque is true
+    STARFISH_ASSERT(m_originalURL);
+    STARFISH_ASSERT(otherWebOrigin->m_originalURL);
+
+    if (m_originalURL->protocol()->equals(
+            otherWebOrigin->m_originalURL->protocol()) &&
+        m_originalURL->host()->equals(otherWebOrigin->m_originalURL->host()) &&
+        m_originalURL->port()->equals(otherWebOrigin->m_originalURL->port())) {
+        return true;
+    }
+
+    return false;
+}
+
+// https://w3c.github.io/html/browsers.html#same-origin-domain
+bool WebOrigin::isSameOriginDomain(WebOrigin* otherWebOrigin)
+{
+    // If A and B are the same opaque origin, then return true.
+    // TODO: comparing for the same opaque origin is not supported yet
+    if (isOpaque() || otherWebOrigin->isOpaque()) {
+        return false;
+    }
+
+    // m_originalURL should not be null unless isOpaque is true
+    STARFISH_ASSERT(m_originalURL);
+    STARFISH_ASSERT(otherWebOrigin->m_originalURL);
+
+    if (m_originalURL->protocol()->equals(
+            otherWebOrigin->m_originalURL->protocol()) &&
+        domain().hasValue() && otherWebOrigin->domain().hasValue() &&
+        domain().getValue()->equals(otherWebOrigin->domain().getValue())) {
+        return true;
+    } else if (isSameOrigin(otherWebOrigin) && !domain().hasValue() &&
+               !otherWebOrigin->domain().hasValue()) {
+        return true;
+    }
+
+    return false;
+}
 }

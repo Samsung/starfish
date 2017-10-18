@@ -74,7 +74,7 @@ public:
 
     HTMLIFrameElement* sourceElement()
     {
-        STARFISH_ASSERT(!isMainBrowsingContext());
+        STARFISH_ASSERT(!isTopLevelBrowsingContext());
         return m_sourceElement;
     }
 
@@ -186,7 +186,7 @@ public:
 
     void paintWindowBackground(Canvas* canvas);
 
-    bool isMainBrowsingContext()
+    bool isTopLevelBrowsingContext()
     {
         return m_parentBrowsingContext == nullptr;
     }

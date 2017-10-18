@@ -75,11 +75,11 @@ WebView* WebView::create(StarFish* starFish)
 
 WebView::WebView(StarFish* starFish)
     : StarFishHoldable(starFish)
-    , m_mainBrowsingContext(nullptr)
+    , m_topLevelBrowsingContext(nullptr)
     , m_storageNamespaceProvider(nullptr)
     , m_localStorageNamespace(nullptr)
     , m_sessionStorageNamespace(nullptr)
-    , m_historyManager(HistoryManager::create(this))
+    , m_historyManager(nullptr)
     , m_seed((unsigned int)time(NULL))
     , m_inRendering(false)
     , m_needsRendering(false)
@@ -88,6 +88,7 @@ WebView::WebView(StarFish* starFish)
     , m_didCompositeBefore(false)
 {
     m_scriptEngineInstance = new ScriptEngineInstance(starFish);
+    m_historyManager = HistoryManager::create(this);
     initRenderingFlags();
     initStorage();
 }
@@ -116,11 +117,11 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
     initRenderingFlags();
 
     clearStack<1024 * 20>();
-    if (m_mainBrowsingContext) {
-        m_mainBrowsingContext->dispose();
+    if (m_topLevelBrowsingContext) {
+        m_topLevelBrowsingContext->dispose();
     }
-    m_mainBrowsingContext = BrowsingContext::create(starFish(), this);
-    m_mainBrowsingContext->navigate(url, type, referrerURL);
+    m_topLevelBrowsingContext = BrowsingContext::create(starFish(), this);
+    m_topLevelBrowsingContext->navigate(url, type, referrerURL);
 }
 
 bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
@@ -439,7 +440,7 @@ void WebView::clearBlobURLStore()
 
 void WebView::layoutIfNeeds()
 {
-    bool didLayout = m_mainBrowsingContext->layoutIfNeeds();
+    bool didLayout = m_topLevelBrowsingContext->layoutIfNeeds();
 
     for (size_t i = 0; i < m_browsingContextsNeedsLayout.size(); i++) {
         didLayout =
@@ -452,11 +453,11 @@ void WebView::layoutIfNeeds()
 #ifdef STARFISH_ENABLE_TIMER
             ProfilerTimer t("computeStackingContextProperties");
 #endif
-            m_mainBrowsingContext->document()
+            m_topLevelBrowsingContext->document()
                 ->frame()
                 ->establishesStackingContextIfNeeds();
-            if (m_mainBrowsingContext->document()->frame()->firstChild()) {
-                m_rootStackingContext = m_mainBrowsingContext->document()
+            if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
+                m_rootStackingContext = m_topLevelBrowsingContext->document()
                                             ->frame()
                                             ->firstChild()
                                             ->asFrameBox()
@@ -471,13 +472,13 @@ void WebView::layoutIfNeeds()
         if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableComputedStyleDump) {
             // dump style
-            m_mainBrowsingContext->document()->styleResolver().dumpDOMStyle(
-                m_mainBrowsingContext->document());
+            m_topLevelBrowsingContext->document()->styleResolver().dumpDOMStyle(
+                m_topLevelBrowsingContext->document());
         }
         if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableFrameTreeDump) {
-            FrameTreeBuilder::dumpFrameTree(m_mainBrowsingContext->document(),
-                                            0);
+            FrameTreeBuilder::dumpFrameTree(
+                m_topLevelBrowsingContext->document(), 0);
         }
 #endif
         m_needsPainting = true;
@@ -798,7 +799,7 @@ void WebView::initRenderingFlags()
 
 Node* WebView::focusedNode()
 {
-    if (!m_mainBrowsingContext) {
+    if (!m_topLevelBrowsingContext) {
         return nullptr;
     }
     Node* node = mainBrowsingContext()->focusedNode();
@@ -819,15 +820,15 @@ Node* WebView::focusedNode()
 
 BrowsingContext* WebView::focusedBrowsingContext()
 {
-    if (!m_mainBrowsingContext) {
+    if (!m_topLevelBrowsingContext) {
         return nullptr;
     }
     Node* node = mainBrowsingContext()->focusedNode();
     if (!node) {
-        return m_mainBrowsingContext;
+        return m_topLevelBrowsingContext;
     }
 
-    BrowsingContext* ctx = m_mainBrowsingContext;
+    BrowsingContext* ctx = m_topLevelBrowsingContext;
     while (node->isHTMLIFrameElement()) {
         if (node->asHTMLIFrameElement()->browsingContext()) {
             ctx = node->asHTMLIFrameElement()->browsingContext();
@@ -852,7 +853,7 @@ bool WebView::hasFocus()
 
 void WebView::blur()
 {
-    if (!m_mainBrowsingContext) {
+    if (!m_topLevelBrowsingContext) {
         return;
     }
     mainBrowsingContext()->releaseFocusedNode(nullptr);

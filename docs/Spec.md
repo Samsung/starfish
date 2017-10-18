@@ -687,6 +687,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | self | Returns window. |
 |  | attribute | top | Returns window for the top-level browsing context. |
 |  | attribute | parent | Returns parent window. |
+|  | attribute | frameElement | Returns the Element for the browsing context container. Returns null if there isn’t one, and in cross-origin situations. |
 |  | attribute | document | Returns the document associated with window. |
 |  | attribute | location | Return this Window object's Location object. |
 |  | attribute | history | Return the object implementing the History interface for this Window object's associated Document. |
