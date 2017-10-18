@@ -19,25 +19,26 @@
 
 namespace StarFish {
 
-uint64_t tickCount(); // increase 1000 by 1 second
-uint64_t timestamp(); // increase 1000 by 1 second
+uint64_t tickCount();     // increase 1000 by 1 second
+uint64_t longTickCount(); // increase 1000000 by 1 second
+uint64_t timestamp();     // increase 1000 by 1 second
 
 class ProfilerTimer {
 public:
     ProfilerTimer(const char* msg)
     {
-        m_start = tickCount();
+        m_start = longTickCount();
         m_msg = msg;
     }
     ~ProfilerTimer()
     {
-        unsigned long end = tickCount();
-        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (float)(end - m_start));
-        fflush(stdout);
+        uint64_t end = longTickCount();
+        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg,
+                          (float)((end - m_start) / 1000.f));
     }
 
 protected:
-    unsigned long m_start;
+    uint64_t m_start;
     const char* m_msg;
 };
 }

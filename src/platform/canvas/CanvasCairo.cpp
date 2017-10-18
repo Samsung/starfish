@@ -37,7 +37,16 @@
 
 #include <hb.h>
 
+#include "core/modules/profiling/Profiling.h"
+
 #define CAIRO_FORMAT CAIRO_FORMAT_ARGB32
+// #define STARFISH_ENABLE_TIMER
+
+#ifdef STARFISH_ENABLE_TIMER
+#define INSTALL_PROFILE_TIMER(s) ProfilerTimer _p(s);
+#else
+#define INSTALL_PROFILE_TIMER(s)
+#endif
 
 namespace StarFish {
 
@@ -85,8 +94,6 @@ public:
 
     CanvasCairo(StarFish* starfish, void* data)
     {
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
-    defined(STARFISH_TIZEN_EVASGL_CAIRO)
         struct dummy {
             cairo_t* cairo;
             cairo_surface_t* surface;
@@ -101,25 +108,6 @@ public:
         m_height = d->h;
         m_shouldDestroyCairo = false;
         m_shouldDestroySurface = false;
-#else
-        m_shouldDestroyCairo = true;
-        m_shouldDestroySurface = true;
-        m_starfish = starfish;
-        m_canvas = nullptr;
-        m_surface = nullptr;
-        struct dummy {
-            void* image;
-            int w;
-            int h;
-            int stride;
-        };
-        dummy* d = (dummy*)data;
-        m_width = d->w;
-        m_height = d->h;
-        {
-            initFromBuffer(d->image, m_width, m_height, d->stride);
-        }
-#endif
         init();
         save();
     }
@@ -167,6 +155,7 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::clearColor");
         cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
         cairo_rectangle(m_canvas, 0, 0, m_width, m_height);
         cairo_fill(m_canvas);
@@ -230,6 +219,7 @@ public:
 
     virtual void beginOpacityLayer(float c)
     {
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::beginOpacityLayer");
         save();
         lastState().m_opacity = c;
         cairo_push_group(m_canvas);
@@ -237,6 +227,7 @@ public:
 
     virtual void endOpacityLayer()
     {
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::endOpacityLayer");
         cairo_pop_group_to_source(m_canvas);
         cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
         restore();
@@ -303,6 +294,7 @@ public:
     void drawCairoRect(float xx, float yy, float ww, float hh,
                        bool isHole = false)
     {
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawCairoRect");
         cairo_save(m_canvas);
         if (isHole) {
             cairo_set_source_rgba(m_canvas, 0, 0, 0, 0);
@@ -377,6 +369,8 @@ public:
             setFont(font);
         }
 #endif
+
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawText");
 
         LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
@@ -501,6 +495,8 @@ public:
                         double surfaceWidth, double surfaceHeight,
                         bool isFromSurface = false)
     {
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawImageCairo");
+
         cairo_save(m_canvas);
 
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
@@ -599,6 +595,8 @@ public:
         if (!lastState().m_visible) {
             return;
         }
+
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawRepeatImage");
 
         cairo_save(m_canvas);
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;

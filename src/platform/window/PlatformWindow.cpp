@@ -254,6 +254,12 @@ void PlatformWindow::paintWindowBackground(Canvas* canvas)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
 void PlatformWindow::paintVirtualCursor(Canvas* canvas)
 {
+    if (m_virtualCursorX == -1) {
+        m_virtualCursorX = width() / 2;
+    }
+    if (m_virtualCursorY == -1) {
+        m_virtualCursorY = height() / 2;
+    }
     if (!m_virtualCursorImageData) {
         m_virtualCursorImageData = ImageData::create(
             (const char*)g_virtualCursorPNGData, g_virtualCursorPNGDataSize);
@@ -269,13 +275,9 @@ void PlatformWindow::onResize()
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     if (m_virtualCursorX > width()) {
         m_virtualCursorX = width() - 10;
-    } else if (m_virtualCursorX == -1) {
-        m_virtualCursorX = width() / 2;
     }
     if (m_virtualCursorY > height()) {
         m_virtualCursorY = height() - 10;
-    } else if (m_virtualCursorY == -1) {
-        m_virtualCursorY = height() / 2;
     }
 #endif
     webView()->mainBrowsingContext()->window()->resize(width(), height());

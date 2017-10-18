@@ -224,8 +224,6 @@ public:
         FT_Face face = ff.first;
 
         int intSize = int(size + 0.5f);
-        error = FT_Set_Pixel_Sizes(face, 0, intSize);
-        CHECK_ERROR;
         FT_UInt glyph_index = FT_Get_Char_Index(face, 'x');
         error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_SCALE);
         CHECK_ERROR;
