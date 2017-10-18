@@ -680,19 +680,25 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
     } else {
         style = rootOrBodyelement->style();
     }
-    FrameBox fakeBody(rootOrBodyelement, style);
+    FrameBox rootBox(rootOrBodyelement, style);
 
     if (rootOrBodyelement) {
-        if (rootOrBodyelement->frame()) {
-            box = rootOrBodyelement->frame()->asFrameBox();
+        HTMLHtmlElement* root;
+        if (rootOrBodyelement->isHTMLHtmlElement()) {
+            root = rootOrBodyelement->asHTMLHtmlElement();
         } else {
-            fakeBody.copyFrom(rootOrBodyelement->document()
-                                  ->rootElement()
-                                  ->frame()
-                                  ->asFrameBox(),
-                              FrameBox::PositionCopy | FrameBox::BorderBoxCopy);
-            box = &fakeBody;
+            root = rootOrBodyelement->document()->rootElement();
         }
+
+        rootBox.copyFrom(root->frame()->asFrameBox(), FrameBox::BorderBoxCopy);
+        box = &rootBox;
+
+        FrameDocument* document =
+            rootOrBodyelement->document()->frame()->asFrameDocument();
+        LayoutLocation loc =
+            root->frame()->asFrameBox()->absolutePoint(document);
+        box->setX(loc.x());
+        box->setY(loc.y());
     }
 
     if (!style->backgroundColor().isTransparent() &&
@@ -761,10 +767,8 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                 positioningRect.setY(positioningRect.x() -
                                      box->asFrameBlockBox()->scrollTop());
                 if (rootOrBodyelement) {
-                    if (rootOrBodyelement->isHTMLHtmlElement()) {
-                        positioningRect.setX(positioningRect.x() + box->x());
-                        positioningRect.setY(positioningRect.y() + box->y());
-                    }
+                    positioningRect.setX(positioningRect.x() + box->x());
+                    positioningRect.setY(positioningRect.y() + box->y());
                 } else {
                     paintingRect =
                         scrollBox.makeRect(style->backgroundClip(idx));
@@ -773,10 +777,8 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                 positioningRect = box->makeRect(style->backgroundOrigin(idx));
 
                 if (rootOrBodyelement) {
-                    if (rootOrBodyelement->isHTMLHtmlElement()) {
-                        positioningRect.setX(positioningRect.x() + box->x());
-                        positioningRect.setY(positioningRect.y() + box->y());
-                    }
+                    positioningRect.setX(positioningRect.x() + box->x());
+                    positioningRect.setY(positioningRect.y() + box->y());
                 } else {
                     paintingRect = box->makeRect(style->backgroundClip(idx));
                 }
