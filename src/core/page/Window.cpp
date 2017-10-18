@@ -32,6 +32,7 @@
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/message_loop/Timer.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/History.h"
 #include "core/page/Navigator.h"
@@ -45,13 +46,7 @@
 #include "core/storage/StorageNamespace.h"
 #include "core/style/CSSParser.h"
 #include "core/style/MediaQueryList.h"
-
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-#include "core/extra/WebApis.h"
-#endif
 #include "platform/window/PlatformWindow.h"
-
-#include "core/modules/message_loop/Timer.h"
 
 #ifdef STARFISH_ENABLE_TEST
 #include <sys/ioctl.h>
@@ -78,9 +73,6 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
     , m_location(nullptr)
     , m_screen(nullptr)
     , m_scrolling(new Scrolling(this))
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    , m_webapis(nullptr)
-#endif
     , m_width(initialWidth)
     , m_height(initialHeight)
 {

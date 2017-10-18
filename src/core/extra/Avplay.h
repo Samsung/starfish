@@ -26,7 +26,25 @@ namespace StarFish {
 
 class StarFish;
 
-class Avplay : public ScriptWrappable, public StarFishHoldable {
+#define AVPLAY_APIS(F)      \
+    F(open)                 \
+    F(prepare)              \
+    F(setDisplayRect)       \
+    F(play)                 \
+    F(close)                \
+    F(pause)                \
+    F(stop)                 \
+    F(suspend)              \
+    F(restore)              \
+    F(getState)             \
+    F(getCurrentTime)       \
+    F(getDuration)          \
+    F(setStreamingProperty) \
+    F(prepareAsync)         \
+    F(setListener)          \
+    F(seekTo)
+
+class Avplay : public gc, public StarFishHoldable {
 public:
     enum AVPLAY_CALLBACK_TYPE {
         prepare_async_CALLBACK,
@@ -43,18 +61,6 @@ public:
 
     Avplay(StarFish* starFish);
     ~Avplay();
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override
-    {
-        scriptObject()->set__proto__(
-            fetchData(instance)->fnAvplay()->protoType());
-    }
-
-    virtual bool isAvplay() const override
-    {
-        return true;
-    }
 
     void open(String* url);
     void prepare();

@@ -38,6 +38,9 @@
 #include "core/util/LineBreakerIteratorPool.h"
 #include "platform/network/NetworkSharedResourceManager.h"
 #include "platform/window/PlatformWindow.h"
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+#include "core/extra/Avplay.h"
+#endif
 
 #include <malloc.h>
 #if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
@@ -182,6 +185,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_fontSelectorGeneric(nullptr)
 #endif
     , m_console(new Console(this))
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+    , m_avplay(new Avplay(this))
+#endif
 #if defined(STARFISH_ENABLE_INSPECTOR)
     , m_inspector(nullptr)
 #endif

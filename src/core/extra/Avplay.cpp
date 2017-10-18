@@ -18,18 +18,32 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+#include "core/dom/Document.h"
 #include "core/extra/Avplay.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
+#include "core/page/Window.h"
+#include "platform/window/PlatformWindow.h"
 #include <Elementary.h>
-#include <Ecore_X.h>
+#include <EscargotPublic.h>
 
 namespace StarFish {
+
+using namespace Escargot;
+
+static BrowsingContext* browsingContext(void* user_data)
+{
+    Avplay* self = (Avplay*)user_data;
+    return self->starFish()->platformWindow()->webView()->mainBrowsingContext();
+}
 
 static void _videoPlayerPrepareCB(void* user_data)
 {
     STARFISH_LOG_INFO("avplay::_videoPlayerPrepareCB()\n");
     Avplay* self = (Avplay*)user_data;
     self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        browsingContext(self),
         [](size_t, void* data) {
             Avplay* self = (Avplay*)data;
             self->callJSCallback(Avplay::prepare_async_CALLBACK);
@@ -42,6 +56,7 @@ static void _videoPlayerCompletedCB(void* user_data)
     STARFISH_LOG_INFO("avplay::_videoPlayerCompletedCB()\n");
     Avplay* self = (Avplay*)user_data;
     self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        browsingContext(self),
         [](size_t, void* data) {
             Avplay* self = (Avplay*)data;
             self->callJSCallback(Avplay::onstreamcompleted_CALLBACK);
@@ -56,6 +71,7 @@ static void _videoPlayerbufferingCBNative(int percent, void* user_data)
     if (percent < 100) {
         self->setBufferingPercent(percent);
         self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            browsingContext(self),
             [](size_t, void* data) {
                 Avplay* self = (Avplay*)data;
                 self->callJSCallback(Avplay::onbufferingprogress_CALLBACK);
@@ -64,6 +80,7 @@ static void _videoPlayerbufferingCBNative(int percent, void* user_data)
     } else if (percent == 100) {
         self->setBufferingPercent(percent);
         self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            browsingContext(self),
             [](size_t, void* data) {
                 Avplay* self = (Avplay*)data;
                 self->callJSCallback(Avplay::onbufferingcomplete_CALLBACK);
@@ -82,6 +99,7 @@ static void _videoPlayerErrorEventCBNative(int error_code, void* user_data)
     STARFISH_LOG_INFO("avplay::_videoPlayerErrorEventCBNative()\n");
     Avplay* self = (Avplay*)user_data;
     self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        browsingContext(self),
         [](size_t, void* data) {
             Avplay* self = (Avplay*)data;
             self->callJSCallback(Avplay::onerror_CALLBACK);
@@ -122,17 +140,16 @@ void printNativePlayerError(int errorCode)
     }
 }
 
-Avplay::Avplay(Document* document)
-    : ScriptWrappable(this)
-    , DocumentHoldable(document)
+Avplay::Avplay(StarFish* starFish)
+    : StarFishHoldable(starFish)
     , m_offsetLeft(0)
     , m_offsetTop(0)
     , m_offsetWidth(0)
     , m_offsetHeight(0)
     , m_bufferingPercent(0)
     , m_nativePlayer(nullptr)
-    , m_prepare_async(ESValue(ESValue::ESNull))
-    , m_listener(ESValue(ESValue::ESNull))
+    , m_prepare_async(scriptNull())
+    , m_listener(scriptNull())
 {
 }
 
@@ -178,17 +195,15 @@ void Avplay::open(String* url)
         printNativePlayerError(ret);
     }
 
-    player_display_h display_handle = GET_DISPLAY(
-        elm_win_xwindow_get((Evas_Object*)starFish()->window()->unwrap()));
-    player_display_type_e display_type = PLAYER_DISPLAY_TYPE_X11;
+    player_display_h display_handle =
+        GET_DISPLAY(((Evas_Object*)starFish()->platformWindow()->unwrap()));
+    player_display_type_e display_type = PLAYER_DISPLAY_TYPE_OVERLAY;
     player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_DST_ROI;
-    player_display_roi_mode_e roi_mode = PLAYER_DISPLAY_ROI_MODE_LETTER_BOX;
     player_set_display(m_nativePlayer, (player_display_type_e)display_type,
                        display_handle);
     player_set_display_mode(m_nativePlayer, display_mode);
-    player_set_x11_display_roi_mode(m_nativePlayer, roi_mode);
+    player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
 
-    auto s = url->urlString()->toUTF8NonGCString();
     ret = player_set_uri(m_nativePlayer, s.data());
     if (ret != PLAYER_ERROR_NONE) {
         printNativePlayerError(ret);
@@ -226,8 +241,8 @@ void Avplay::setDisplayRect(double offsetLeft, double offsetTop,
 void Avplay::play()
 {
     STARFISH_LOG_INFO("avplay::play() \n");
-    player_set_x11_display_dst_roi(m_nativePlayer, m_offsetLeft, m_offsetTop,
-                                   m_offsetWidth, m_offsetHeight);
+    player_set_display_roi_area(m_nativePlayer, m_offsetLeft, m_offsetTop,
+                                m_offsetWidth, m_offsetHeight);
     int ret = player_start(m_nativePlayer);
     if (ret != PLAYER_ERROR_NONE) {
         printNativePlayerError(ret);
@@ -297,7 +312,7 @@ double Avplay::getCurrentTime()
 {
     STARFISH_LOG_INFO("avplay::getCurrentTime()\n");
     int position = 0;
-    player_get_position(m_nativePlayer, &position);
+    player_get_play_position(m_nativePlayer, &position);
     return (double)position;
 }
 
@@ -321,7 +336,8 @@ void Avplay::seekTo(double seekTime)
     player_get_state(m_nativePlayer, &state);
 
     if (state >= PLAYER_STATE_READY) {
-        int ret = player_set_position(m_nativePlayer, seekTime, NULL, NULL);
+        int ret = player_set_play_position(m_nativePlayer, seekTime, false,
+                                           NULL, NULL);
         if (ret != PLAYER_ERROR_NONE) {
             printNativePlayerError(ret);
         }
@@ -379,68 +395,73 @@ void Avplay::setStreamingProperty(String* arg1, String* arg2)
 
 void Avplay::callJSCallback(AVPLAY_CALLBACK_TYPE type)
 {
-    ScriptValue thisValue =
-        escargot::ESVMInstance::currentInstance()->globalObject();
-    ScriptValue fn = ESValue(ESValue::ESNull);
-    ScriptValue* argv = {};
+    ScriptBindingInstance* instance =
+        browsingContext(this)->document()->scriptBindingInstance();
+    Escargot::ExecutionStateRef* state =
+        Escargot::ExecutionStateRef::create(instance->scriptContext());
+    ScriptValue thisValue = ValueRef::create(state->context()->globalObject());
+    ScriptValue fn = scriptNull();
+    ScriptValue argv[1] = {};
     size_t argc = 0;
+
     switch (type) {
     case prepare_async_CALLBACK:
         fn = m_prepare_async;
         break;
 
     case onbufferingstart_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(
-            escargot::ESString::create("onbufferingstart"));
+        fn = m_listener->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("onbufferingstart")));
         break;
 
     case onbufferingprogress_CALLBACK:
-        argv = new ScriptValue(m_bufferingPercent);
+        argv[0] = { ValueRef::create(m_bufferingPercent) };
         argc = 1;
-        fn = m_listener.asESPointer()->asESObject()->get(
-            escargot::ESString::create("onbufferingprogress"));
+        fn = m_listener->asObject()->get(
+            state,
+            ValueRef::create(StringRef::fromASCII("onbufferingprogress")));
         break;
 
     case onbufferingcomplete_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(
-            escargot::ESString::create("onbufferingcomplete"));
+        fn = m_listener->asObject()->get(
+            state,
+            ValueRef::create(StringRef::fromASCII("onbufferingcomplete")));
         break;
 
     case oncurrentplaytime_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(
-            escargot::ESString::create("oncurrentplaytime"));
+        fn = m_listener->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("oncurrentplaytime")));
         break;
 
     case onevent_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(
-            escargot::ESString::create("onevent"));
+        fn = m_listener->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("onevent")));
         break;
 
     case onerror_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(
-            escargot::ESString::create("onerror"));
+        fn = m_listener->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("onerror")));
         break;
 
     case onsubtitlechange_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(
-            escargot::ESString::create("onsubtitlechange"));
+        fn = m_listener->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("onsubtitlechange")));
         break;
 
     case ondrmevent_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(
-            escargot::ESString::create("ondrmevent"));
+        fn = m_listener->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("ondrmevent")));
         break;
 
     case onstreamcompleted_CALLBACK:
-        fn = m_listener.asESPointer()->asESObject()->get(
-            escargot::ESString::create("onstreamcompleted"));
+        fn = m_listener->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("onstreamcompleted")));
         break;
 
     default:
         STARFISH_LOG_INFO("avplay::callJSCallback() ERROR!\n");
     }
-    callScriptFunction(fn, argv, argc, thisValue);
-    delete argv;
+    callScriptFunction(instance, fn, argv, argc, thisValue);
 }
 }
 #endif

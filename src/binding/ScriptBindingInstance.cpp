@@ -30,6 +30,10 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Window.h"
 
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+#include "core/extra/Avplay.h"
+#endif
+
 #include <EscargotPublic.h>
 
 #ifdef TIZEN_DEVICE_API
@@ -94,8 +98,9 @@ static String* toBrowserStringForConsole(ExecutionStateRef* state,
     return toBrowserString(state, value);
 }
 
-static ValueRef* logFunction(ExecutionStateRef* state, ValueRef* thisValue,
-                             size_t argc, ValueRef** argv, bool isNewExpression)
+static ValueRef* _logConsoleFunction(ExecutionStateRef* state,
+                                     ValueRef* thisValue, size_t argc,
+                                     ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
     fetchStarFish(state->context())
@@ -112,9 +117,9 @@ static ValueRef* logFunction(ExecutionStateRef* state, ValueRef* thisValue,
     return ValueRef::createUndefined();
 }
 
-static ValueRef* infoFunction(ExecutionStateRef* state, ValueRef* thisValue,
-                              size_t argc, ValueRef** argv,
-                              bool isNewExpression)
+static ValueRef* _infoConsoleFunction(ExecutionStateRef* state,
+                                      ValueRef* thisValue, size_t argc,
+                                      ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
     fetchStarFish(state->context())
@@ -130,9 +135,9 @@ static ValueRef* infoFunction(ExecutionStateRef* state, ValueRef* thisValue,
     return ValueRef::createUndefined();
 }
 
-static ValueRef* errorFunction(ExecutionStateRef* state, ValueRef* thisValue,
-                               size_t argc, ValueRef** argv,
-                               bool isNewExpression)
+static ValueRef* _errorConsoleFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
     fetchStarFish(state->context())
@@ -148,9 +153,9 @@ static ValueRef* errorFunction(ExecutionStateRef* state, ValueRef* thisValue,
     return ValueRef::createUndefined();
 }
 
-static ValueRef* warnFunction(ExecutionStateRef* state, ValueRef* thisValue,
-                              size_t argc, ValueRef** argv,
-                              bool isNewExpression)
+static ValueRef* _warnConsoleFunction(ExecutionStateRef* state,
+                                      ValueRef* thisValue, size_t argc,
+                                      ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
     fetchStarFish(state->context())
@@ -166,9 +171,9 @@ static ValueRef* warnFunction(ExecutionStateRef* state, ValueRef* thisValue,
     return ValueRef::createUndefined();
 }
 
-static ValueRef* debugFunction(ExecutionStateRef* state, ValueRef* thisValue,
-                               size_t argc, ValueRef** argv,
-                               bool isNewExpression)
+static ValueRef* _debugConsoleFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
     fetchStarFish(state->context())
@@ -222,6 +227,153 @@ static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
 
     return ValueRef::createEmpty();
 }
+
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+static ValueRef* _openAvplayFunction(ExecutionStateRef* state,
+                                     ValueRef* thisValue, size_t argc,
+                                     ValueRef** argv, bool isNewExpression)
+{
+    fetchStarFish(state->context())
+        ->avplay()
+        ->open(toBrowserString(state, argv[0]));
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _prepareAvplayFunction(ExecutionStateRef* state,
+                                        ValueRef* thisValue, size_t argc,
+                                        ValueRef** argv, bool isNewExpression)
+{
+    fetchStarFish(state->context())->avplay()->prepare();
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _setDisplayRectAvplayFunction(ExecutionStateRef* state,
+                                               ValueRef* thisValue, size_t argc,
+                                               ValueRef** argv,
+                                               bool isNewExpression)
+{
+    double arg1 = argv[0]->toNumber(state);
+    double arg2 = argv[1]->toNumber(state);
+    double arg3 = argv[2]->toNumber(state);
+    double arg4 = argv[3]->toNumber(state);
+    fetchStarFish(state->context())
+        ->avplay()
+        ->setDisplayRect(arg1, arg2, arg3, arg4);
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _playAvplayFunction(ExecutionStateRef* state,
+                                     ValueRef* thisValue, size_t argc,
+                                     ValueRef** argv, bool isNewExpression)
+{
+    fetchStarFish(state->context())->avplay()->play();
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _closeAvplayFunction(ExecutionStateRef* state,
+                                      ValueRef* thisValue, size_t argc,
+                                      ValueRef** argv, bool isNewExpression)
+{
+    fetchStarFish(state->context())->avplay()->close();
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _pauseAvplayFunction(ExecutionStateRef* state,
+                                      ValueRef* thisValue, size_t argc,
+                                      ValueRef** argv, bool isNewExpression)
+{
+    fetchStarFish(state->context())->avplay()->pause();
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _stopAvplayFunction(ExecutionStateRef* state,
+                                     ValueRef* thisValue, size_t argc,
+                                     ValueRef** argv, bool isNewExpression)
+{
+    fetchStarFish(state->context())->avplay()->stop();
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _suspendAvplayFunction(ExecutionStateRef* state,
+                                        ValueRef* thisValue, size_t argc,
+                                        ValueRef** argv, bool isNewExpression)
+{
+    fetchStarFish(state->context())->avplay()->suspend();
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _restoreAvplayFunction(ExecutionStateRef* state,
+                                        ValueRef* thisValue, size_t argc,
+                                        ValueRef** argv, bool isNewExpression)
+{
+    fetchStarFish(state->context())->avplay()->restore();
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _getStateAvplayFunction(ExecutionStateRef* state,
+                                         ValueRef* thisValue, size_t argc,
+                                         ValueRef** argv, bool isNewExpression)
+{
+    String* ret = fetchStarFish(state->context())->avplay()->getState();
+    return ValueRef::create(toJSString(ret));
+}
+
+static ValueRef* _getCurrentTimeAvplayFunction(ExecutionStateRef* state,
+                                               ValueRef* thisValue, size_t argc,
+                                               ValueRef** argv,
+                                               bool isNewExpression)
+{
+    return ValueRef::create(
+        fetchStarFish(state->context())->avplay()->getCurrentTime());
+}
+
+static ValueRef* _getDurationAvplayFunction(ExecutionStateRef* state,
+                                            ValueRef* thisValue, size_t argc,
+                                            ValueRef** argv,
+                                            bool isNewExpression)
+{
+    return ValueRef::create(
+        fetchStarFish(state->context())->avplay()->getDuration());
+}
+
+static ValueRef* _setStreamingPropertyAvplayFunction(ExecutionStateRef* state,
+                                                     ValueRef* thisValue,
+                                                     size_t argc,
+                                                     ValueRef** argv,
+                                                     bool isNewExpression)
+{
+    String* arg1 = toBrowserString(state, argv[0]);
+    String* arg2 = toBrowserString(state, argv[1]);
+    fetchStarFish(state->context())->avplay()->setStreamingProperty(arg1, arg2);
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _prepareAsyncAvplayFunction(ExecutionStateRef* state,
+                                             ValueRef* thisValue, size_t argc,
+                                             ValueRef** argv,
+                                             bool isNewExpression)
+{
+    fetchStarFish(state->context())->avplay()->prepareAsync(argv[0]);
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _setListenerAvplayFunction(ExecutionStateRef* state,
+                                            ValueRef* thisValue, size_t argc,
+                                            ValueRef** argv,
+                                            bool isNewExpression)
+{
+    fetchStarFish(state->context())->avplay()->setListener(argv[0]);
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _seekToAvplayFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
+{
+    fetchStarFish(state->context())->avplay()->seekTo(argv[0]->toNumber(state));
+    return ValueRef::createUndefined();
+}
+#endif
 
 void ScriptBindingInstance::initBinding(Document* ownerDocument)
 {
@@ -289,49 +441,44 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
 
     ObjectRef* console = ObjectRef::create(state);
 
-    console->defineDataProperty(
-        state, ValueRef::create(StringRef::fromASCII("log")),
-        ValueRef::create(FunctionObjectRef::createBuiltinFunction(
-            state, FunctionObjectRef::NativeFunctionInfo(
-                       AtomicStringRef::create(context, "log"), logFunction, 1,
-                       nullptr, true, false))),
+#define DECLARE_CONSOLE_APIS(name)                                           \
+    console->defineDataProperty(                                             \
+        state, ValueRef::create(StringRef::fromASCII(#name)),                \
+        ValueRef::create(FunctionObjectRef::createBuiltinFunction(           \
+            state, FunctionObjectRef::NativeFunctionInfo(                    \
+                       AtomicStringRef::create(context, #name),              \
+                       _##name##ConsoleFunction, 1, nullptr, true, false))), \
         true, true, true);
-
-    console->defineDataProperty(
-        state, ValueRef::create(StringRef::fromASCII("info")),
-        ValueRef::create(FunctionObjectRef::createBuiltinFunction(
-            state, FunctionObjectRef::NativeFunctionInfo(
-                       AtomicStringRef::create(context, "info"), infoFunction,
-                       1, nullptr, true, false))),
-        true, true, true);
-
-    console->defineDataProperty(
-        state, ValueRef::create(StringRef::fromASCII("error")),
-        ValueRef::create(FunctionObjectRef::createBuiltinFunction(
-            state, FunctionObjectRef::NativeFunctionInfo(
-                       AtomicStringRef::create(context, "error"), errorFunction,
-                       1, nullptr, true, false))),
-        true, true, true);
-
-    console->defineDataProperty(
-        state, ValueRef::create(StringRef::fromASCII("warn")),
-        ValueRef::create(FunctionObjectRef::createBuiltinFunction(
-            state, FunctionObjectRef::NativeFunctionInfo(
-                       AtomicStringRef::create(context, "warn"), warnFunction,
-                       1, nullptr, true, false))),
-        true, true, true);
-
-    console->defineDataProperty(
-        state, ValueRef::create(StringRef::fromASCII("debug")),
-        ValueRef::create(FunctionObjectRef::createBuiltinFunction(
-            state, FunctionObjectRef::NativeFunctionInfo(
-                       AtomicStringRef::create(context, "debug"), debugFunction,
-                       1, nullptr, true, false))),
-        true, true, true);
+    CONSOLE_APIS(DECLARE_CONSOLE_APIS)
+#undef DECLARE_CONSOLE_APIS
 
     globalObject->defineDataProperty(
         state, ValueRef::create(StringRef::fromASCII("console")),
         ValueRef::create(console), true, true, true);
+
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+    ObjectRef* avplay = ObjectRef::create(state);
+
+#define DECLARE_AVPLAY_APIS(name)                                           \
+    avplay->defineDataProperty(                                             \
+        state, ValueRef::create(StringRef::fromASCII(#name)),               \
+        ValueRef::create(FunctionObjectRef::createBuiltinFunction(          \
+            state, FunctionObjectRef::NativeFunctionInfo(                   \
+                       AtomicStringRef::create(context, #name),             \
+                       _##name##AvplayFunction, 1, nullptr, true, false))), \
+        true, true, true);
+    AVPLAY_APIS(DECLARE_AVPLAY_APIS)
+#undef DECLARE_AVPLAY_APIS
+
+    ObjectRef* webapis = ObjectRef::create(state);
+    globalObject->defineDataProperty(
+        state, ValueRef::create(StringRef::fromASCII("webapis")),
+        ValueRef::create(webapis), true, true, true);
+
+    webapis->defineDataProperty(
+        state, ValueRef::create(StringRef::fromASCII("avplay")),
+        ValueRef::create(avplay), true, true, true);
+#endif
 
 #ifdef TIZEN_DEVICE_API
     m_deviceAPI = DeviceAPI::initialize(m_scriptContext);

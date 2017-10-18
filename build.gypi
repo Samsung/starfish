@@ -21,6 +21,7 @@
             'STARFISH_TIZEN',
             'STARFISH_TIZEN_OBS',
             'STARFISH_TIZEN_TV',
+            #'STARFISH_ENABLE_AVPLAY',
             'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_ENABLE_DOMPARSER',
             'STARFISH_ENABLE_TTS',
