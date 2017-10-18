@@ -32,6 +32,17 @@ uint64_t tickCount()
     return tick;
 }
 
+uint64_t longTickCount()
+{
+    struct timeval gettick;
+    unsigned int tick;
+    int ret;
+    gettimeofday(&gettick, NULL);
+
+    tick = gettick.tv_sec * 1000000 + gettick.tv_usec;
+    return tick;
+}
+
 uint64_t timestamp()
 {
     struct timeb timer_msec;
