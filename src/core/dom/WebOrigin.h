@@ -35,6 +35,9 @@ public:
         return m_isOpaque;
     }
 
+    bool isSameOrigin(WebOrigin* otherWebOrigin);
+    bool isSameOriginDomain(WebOrigin* otherWebOrigin);
+
 protected:
     ResourceURL* m_originalURL;
     bool m_isOpaque;

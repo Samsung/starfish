@@ -117,7 +117,7 @@ void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type,
     StarFishEnterer enter(m_starFish);
 
     // TODO: Use location to open a new document
-    if (isMainBrowsingContext()) {
+    if (isTopLevelBrowsingContext()) {
         m_window = Window::create(m_starFish, this, url,
                                   starFish()->platformWindow()->width(),
                                   starFish()->platformWindow()->height());
@@ -154,7 +154,7 @@ void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type,
 
 HistoryManager* BrowsingContext::historyManager()
 {
-    if (isMainBrowsingContext()) {
+    if (isTopLevelBrowsingContext()) {
         return webView()->historyManager();
     } else {
         return m_sourceElement->m_historyManager;
@@ -288,11 +288,11 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
 {
 #ifdef STARFISH_TIZEN
     if (!document()->tizenWidgetTransparentBackground()) {
-        if (document()->browsingContext()->isMainBrowsingContext())
+        if (document()->browsingContext()->isTopLevelBrowsingContext())
             canvas->clearColor(Unit::Color(255, 255, 255, 255));
     }
 #else
-    if (document()->browsingContext()->isMainBrowsingContext())
+    if (document()->browsingContext()->isTopLevelBrowsingContext())
         canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
 
@@ -414,7 +414,7 @@ void BrowsingContext::dispose()
 
     m_isActive = false;
 
-    if (isMainBrowsingContext()) {
+    if (isTopLevelBrowsingContext()) {
         m_starFish->timer()->clear(nullptr);
         m_starFish->platformWindow()->clearResources();
         m_starFish->messageLoop()->clearPendingIdlers(nullptr);
@@ -1250,7 +1250,7 @@ void BrowsingContext::focusNavigation(bool forward)
     }
 
     if (current == SIZE_MAX) {
-        if (isMainBrowsingContext()) {
+        if (isTopLevelBrowsingContext()) {
             current = focusRing.size() - 1;
         } else {
             parentBrowsingContext()->focusNavigation(false);
@@ -1259,7 +1259,7 @@ void BrowsingContext::focusNavigation(bool forward)
     }
 
     if (current == focusRing.size()) {
-        if (isMainBrowsingContext()) {
+        if (isTopLevelBrowsingContext()) {
             current = 0;
         } else {
             parentBrowsingContext()->focusNavigation(true);
@@ -1380,7 +1380,7 @@ void BrowsingContext::setNeedsRendering()
 
 void BrowsingContext::registerNeedsLayoutInWebView()
 {
-    if (isMainBrowsingContext()) {
+    if (isTopLevelBrowsingContext()) {
         return;
     }
 
@@ -1392,7 +1392,7 @@ void BrowsingContext::registerNeedsLayoutInWebView()
 
 void BrowsingContext::unRegisterNeedsLayoutInWebView()
 {
-    if (isMainBrowsingContext()) {
+    if (isTopLevelBrowsingContext()) {
         return;
     }
     auto& v = m_webView->m_browsingContextsNeedsLayout;

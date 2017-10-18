@@ -540,7 +540,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         if (!m_owner->node()
                  ->document()
                  ->browsingContext()
-                 ->isMainBrowsingContext()) {
+                 ->isTopLevelBrowsingContext()) {
             FrameBlockBox* document =
                 m_owner->layoutParent()->asFrameBlockBox();
             canvas->translate(document->scrollLeft(), document->scrollTop());
@@ -624,7 +624,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         if (!m_owner->node()
                  ->document()
                  ->browsingContext()
-                 ->isMainBrowsingContext()) {
+                 ->isTopLevelBrowsingContext()) {
             HTMLIFrameElement* iframe =
                 m_owner->node()->document()->browsingContext()->sourceElement();
             if (!iframe->scrolling()->toASCIILower()->equals("no")) {

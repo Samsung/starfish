@@ -77,7 +77,7 @@ public:
 
     BrowsingContext* mainBrowsingContext()
     {
-        return m_mainBrowsingContext;
+        return m_topLevelBrowsingContext;
     }
 
     StorageNamespace* localStorageNamespace()
@@ -164,7 +164,7 @@ private:
 
     void initStorage();
 
-    BrowsingContext* m_mainBrowsingContext;
+    BrowsingContext* m_topLevelBrowsingContext;
 
     ScriptEngineInstance* m_scriptEngineInstance;
 

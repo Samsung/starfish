@@ -1577,9 +1577,11 @@ void FrameBox::establishesStackingContextIfNeeds()
 {
     if (isEstablishesStackingContext()) {
         STARFISH_ASSERT(isRootElement() || stackingContext() == nullptr);
-        if (!isRootElement() ||
-            (isRootElement() &&
-             !node()->document()->browsingContext()->isMainBrowsingContext())) {
+        if (!isRootElement() || (isRootElement() &&
+                                 !node()
+                                      ->document()
+                                      ->browsingContext()
+                                      ->isTopLevelBrowsingContext())) {
             FrameBox* p;
             if (!isRootElement()) {
                 p = layoutParent()->asFrameBox();

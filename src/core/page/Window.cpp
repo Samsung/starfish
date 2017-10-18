@@ -28,6 +28,7 @@
 #include "core/dom/MessageEvent.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/TouchEvent.h"
+#include "core/dom/WebOrigin.h"
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -123,30 +124,65 @@ void Window::dispose()
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
 Window* Window::parent()
 {
-    if (browsingContext()->isMainBrowsingContext()) {
+    if (browsingContext()->isTopLevelBrowsingContext()) {
         return this;
-    } else {
-        if (browsingContext()->sourceElement()->isInDocumentScope() &&
-            browsingContext()->sourceElement()->document() ==
-                browsingContext()->parentBrowsingContext()->document()) {
-            return browsingContext()->parentBrowsingContext()->window();
-        } else {
-            return nullptr;
-        }
     }
+
+    bool ignoreCrossOrigin = false;
+#ifdef STARFISH_IGNORE_CROSS_ORIGIN
+    ignoreCrossOrigin = true;
+#endif
+
+    if (ignoreCrossOrigin ||
+        (browsingContext()->sourceElement()->isInDocumentScope() &&
+         browsingContext()->document()->webOrigin()->isSameOriginDomain(
+             browsingContext()
+                 ->parentBrowsingContext()
+                 ->document()
+                 ->webOrigin()))) {
+        return browsingContext()->parentBrowsingContext()->window();
+    }
+
+    return nullptr;
 }
 
 Window* Window::top()
 {
-    if (browsingContext()->isMainBrowsingContext()) {
+    if (browsingContext()->isTopLevelBrowsingContext()) {
         return this;
     }
+
     Window* current = this;
     while (current != nullptr &&
-           !current->browsingContext()->isMainBrowsingContext()) {
+           !current->browsingContext()->isTopLevelBrowsingContext()) {
         current = current->parent();
     }
     return current;
+}
+
+// https://w3c.github.io/html/browsers.html#dom-window-frameelement
+Element* Window::frameElement()
+{
+    if (browsingContext()->isTopLevelBrowsingContext()) {
+        return nullptr;
+    }
+
+    bool ignoreCrossOrigin = false;
+#ifdef STARFISH_IGNORE_CROSS_ORIGIN
+    ignoreCrossOrigin = true;
+#endif
+
+    if (ignoreCrossOrigin ||
+        (browsingContext()->document()->webOrigin()->isSameOriginDomain(
+            browsingContext()
+                ->parentBrowsingContext()
+                ->document()
+                ->webOrigin()))) {
+        HTMLIFrameElement* frameElement = browsingContext()->sourceElement();
+        return frameElement;
+    }
+
+    return nullptr;
 }
 
 Storage* Window::localStorage()
@@ -171,7 +207,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
                          std::vector<ScriptObject>& transfer)
 {
     Window* source = parent();
-    while (!source->browsingContext()->isMainBrowsingContext()) {
+    while (!source->browsingContext()->isTopLevelBrowsingContext()) {
         source = source->parent();
     }
     String* origin = source->location()->origin();
@@ -241,7 +277,8 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
                     e = new MessageEvent(window->document(), eventType);
                 }
                 Window* source = window->parent();
-                while (!source->browsingContext()->isMainBrowsingContext()) {
+                while (
+                    !source->browsingContext()->isTopLevelBrowsingContext()) {
                     source = source->parent();
                 }
                 e->setSource(source);

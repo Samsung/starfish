@@ -157,7 +157,7 @@ void Location::assign(String* url)
 
 static void navigateImpl(BrowsingContext* ctx, ResourceURL* url)
 {
-    if (ctx->isMainBrowsingContext()) {
+    if (ctx->isTopLevelBrowsingContext()) {
         ctx->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
             ctx,
             [](size_t id, void* data, void* data2) {
@@ -185,7 +185,7 @@ void Location::assign(ResourceURL* url)
 void Location::replace(String* url)
 {
     if (ResourceURL::isValidURL(url)) {
-        if (document()->browsingContext()->isMainBrowsingContext()) {
+        if (document()->browsingContext()->isTopLevelBrowsingContext()) {
             document()->browsingContext()->webView()->navigate(
                 new ResourceURL(url), HistoryManager::Action::Replace,
                 document()->documentURI());

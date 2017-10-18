@@ -324,7 +324,7 @@ void ResourceLoader::increasePendingResourceCountWhileDocumentOpening()
 {
     m_pendingResourceCountWhileDocumentOpening++;
 
-    if (!window()->browsingContext()->isMainBrowsingContext()) {
+    if (!window()->browsingContext()->isTopLevelBrowsingContext()) {
         BrowsingContext* ctx = window()->browsingContext();
         while (ctx->parentBrowsingContext()) {
             ctx = ctx->parentBrowsingContext();
@@ -342,7 +342,7 @@ void ResourceLoader::decreasePendingResourceCountWhileDocumentOpening()
         fireDocumentOnLoadEventIfNeeded();
     }
 
-    if (!window()->browsingContext()->isMainBrowsingContext()) {
+    if (!window()->browsingContext()->isTopLevelBrowsingContext()) {
         BrowsingContext* ctx = window()->browsingContext();
         while (ctx->parentBrowsingContext()) {
             ctx = ctx->parentBrowsingContext();
@@ -453,7 +453,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                     doc->starFish()->staticStrings()->m_load.localName();
                 Event* e = new Event(doc, eventType, EventInit(false, false));
                 doc->window()->dispatchEventByUA(e);
-                if (!doc->browsingContext()->isMainBrowsingContext()) {
+                if (!doc->browsingContext()->isTopLevelBrowsingContext()) {
                     doc->browsingContext()
                         ->sourceElement()
                         ->childBrowsingContextLoaded();

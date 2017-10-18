@@ -71,7 +71,7 @@ ScriptBindingInstance::ScriptBindingInstance(
 }
 void ScriptBindingInstance::close()
 {
-    if (m_ownerWindow->browsingContext()->isMainBrowsingContext()) {
+    if (m_ownerWindow->browsingContext()->isTopLevelBrowsingContext()) {
         m_scriptContext->vmInstance()->clearCachesRelatedWithContext();
     }
 #ifdef TIZEN_DEVICE_API
