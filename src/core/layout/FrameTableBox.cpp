@@ -1225,4 +1225,23 @@ FrameTableColBox* FrameTableBox::columnAtAbsoluteColumnIndex(unsigned index)
     }
     return nullptr;
 }
+
+void FrameTableBox::initFrameTableObjectBoxStateIfNeeds(bool force)
+{
+    STARFISH_ASSERT(node());
+    for (Node* c = node()->firstChild(); c && !force; c = c->nextSibling()) {
+        if (c->needsFrameTreeBuild()) {
+            force = true;
+            break;
+        }
+    }
+
+    if (force) {
+        m_tableRect = LayoutRect(0, 0, 0, 0);
+        m_thead = nullptr;
+        m_tfoot = nullptr;
+        m_candidateTableContentWidth = 0;
+    }
+    return;
+}
 }

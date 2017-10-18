@@ -52,6 +52,7 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
         } else {
             STARFISH_ASSERT(current->frame());
             currentFrame = current->frame()->asFrameTableObjectBox();
+            currentFrame->initFrameTableObjectBoxStateIfNeeds(force);
         }
 
         ctx.setCurrentBlockContainer(currentFrame);

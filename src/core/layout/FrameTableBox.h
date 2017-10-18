@@ -154,6 +154,9 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
+protected:
+    virtual void initFrameTableObjectBoxStateIfNeeds(bool force) override;
+
 private:
     void calCellWidth(LayoutContext& ctx);
     void calCellWidthsWithColspans();
