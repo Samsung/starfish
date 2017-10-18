@@ -381,7 +381,8 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         }
     }
 
-    if (!isAbsolute) {
+    if (!isAbsolute &&
+        !baseURL->equals(String::createASCIIString("about:blank"))) {
         STARFISH_ASSERT(baseURL->contains("://"));
         bool baseEndsWithSlash = baseURL->charAt(baseURL->length() - 1) == '/';
 
@@ -427,18 +428,21 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         m_protocol = UNKNOWN;
     }
 
-    resolvePositions();
+    if (m_protocol != UNKNOWN) {
+        resolvePositions();
 
-    if (m_urlString->charAt(m_protocolEnd) == '/') {
-        String* origPath = pathname();
-        String* newPath = removingDots(origPath);
-        if (newPath != origPath) {
-            setPathname(newPath, false);
+        if (m_urlString->charAt(m_protocolEnd) == '/') {
+            String* origPath = pathname();
+            String* newPath = removingDots(origPath);
+            if (newPath != origPath) {
+                setPathname(newPath, false);
+            }
         }
-    }
 
-    // TODO: need to check validity for other components (protocol, host, etc)
-    m_isValid = isValidPort();
+        // TODO: need to check validity for other components (protocol, host,
+        // etc)
+        m_isValid = isValidPort();
+    }
 }
 
 bool ResourceURL::isValidPort()
