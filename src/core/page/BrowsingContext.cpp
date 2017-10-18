@@ -79,9 +79,6 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView,
     , m_parentBrowsingContext(source ? source->document()->browsingContext()
                                      : nullptr)
     , m_sourceElement(source)
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    , m_webapis(nullptr)
-#endif
     , m_touchDownPoint(0, 0)
     , m_activeNodeTarget(nullptr)
     , m_documentVersionWhenComputingActiveNodeSet(0)

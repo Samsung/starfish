@@ -33,7 +33,6 @@ class ResourceURL;
 class Screen;
 class ScriptBindingInstance;
 class StorageNamespace;
-class WebApis;
 class WebView;
 
 struct ScrollOptions {
@@ -242,13 +241,6 @@ public:
         return m_browsingContext;
     }
 
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    WebApis* Webapis()
-    {
-        return m_webapis;
-    }
-#endif
-
     StarFish* starFish() const
     {
         return m_starFish;
@@ -439,10 +431,6 @@ private:
 
     uint32_t m_width;
     uint32_t m_height;
-
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    WebApis* m_webapis;
-#endif
 
     Node* m_cssTarget;
 };

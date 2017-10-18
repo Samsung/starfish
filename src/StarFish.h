@@ -33,6 +33,9 @@ class ThreadPool;
 class Console;
 class Inspector;
 class Mutex;
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+class Avplay;
+#endif
 #ifdef STARFISH_ENABLE_TTS
 class TTS;
 #endif
@@ -177,6 +180,13 @@ public:
         return m_console;
     }
 
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+    Avplay* avplay()
+    {
+        return m_avplay;
+    }
+#endif
+
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* inspector()
     {
@@ -232,6 +242,9 @@ protected:
 #endif
     ThreadPool* m_threadPool;
     Console* m_console;
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+    Avplay* m_avplay;
+#endif
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* m_inspector;
 #endif

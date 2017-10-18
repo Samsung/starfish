@@ -21,6 +21,13 @@ namespace StarFish {
 
 class StarFish;
 
+#define CONSOLE_APIS(F) \
+    F(log)              \
+    F(info)             \
+    F(error)            \
+    F(warn)             \
+    F(debug)
+
 class Console : public gc {
 public:
     Console(StarFish* starFish);
