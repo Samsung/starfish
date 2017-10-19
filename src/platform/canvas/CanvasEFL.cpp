@@ -229,6 +229,7 @@ public:
         evas_object_color_set(eo, c.r(), c.g(), c.b(), c.a());
         evas_object_move(eo, 0, 0);
         evas_object_resize(eo, m_width, m_height);
+        evas_object_render_op_set(eo, EVAS_RENDER_COPY);
         applyClippers(eo);
         evas_object_show(eo);
         restore();

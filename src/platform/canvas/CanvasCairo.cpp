@@ -156,9 +156,12 @@ public:
     virtual void clearColor(const Unit::Color& clr)
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::clearColor");
+        cairo_save(m_canvas);
         cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
+        cairo_set_operator(m_canvas, CAIRO_OPERATOR_SOURCE);
         cairo_rectangle(m_canvas, 0, 0, m_width, m_height);
         cairo_fill(m_canvas);
+        cairo_restore(m_canvas);
     }
 
     // state
@@ -843,6 +846,10 @@ private:
 
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
 
+        cairo_glyph_t* glyphs =
+            ALLOCA(sv.length() * sizeof(cairo_glyph_t), cairo_glyph_t);
+        size_t glyphCount = 0;
+
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
             for (size_t i = 0; i < sv.length(); i++) {
                 std::pair<std::pair<FT_Face, hb_font_t*>,
@@ -851,6 +858,8 @@ private:
                 if (g.second.first) {
                     if (lastFontFace != g.first.first) {
                         if (fontFace) {
+                            cairo_show_glyphs(m_canvas, glyphs, glyphCount);
+                            glyphCount = 0;
                             cairo_font_face_destroy(fontFace);
                         }
                         lastFontFace = g.first.first;
@@ -859,12 +868,12 @@ private:
                         cairo_set_font_face(canvas, fontFace);
                         cairo_set_font_size(canvas, size);
                     }
-                    cairo_glyph_t glyph;
-                    glyph.index = g.second.first;
-                    glyph.x = xBias;
-                    glyph.y = 0;
+                    glyphs[glyphCount].index = g.second.first;
+                    glyphs[glyphCount].x = xBias;
+                    glyphs[glyphCount].y = 0;
+                    glyphCount++;
+                    STARFISH_ASSERT(glyphCount <= sv.length());
                     xBias += g.second.second;
-                    cairo_glyph_path(canvas, &glyph, 1);
                 } else {
                     cairo_save(canvas);
                     cairo_set_line_width(canvas, 1);
@@ -901,6 +910,8 @@ private:
                 } else {
                     if (run.m_ftFace != lastFontFace) {
                         if (lastFontFace) {
+                            cairo_show_glyphs(m_canvas, glyphs, glyphCount);
+                            glyphCount = 0;
                             cairo_font_face_destroy(fontFace);
                         }
                         lastFontFace = run.m_ftFace;
@@ -911,11 +922,12 @@ private:
                     }
 
                     for (size_t j = 0; j < run.m_glyphs.size(); j++) {
-                        cairo_glyph_t glyph;
-                        glyph.index = run.m_glyphs[j];
-                        glyph.x = run.m_glyphPositions[j].x() + xBias;
-                        glyph.y = run.m_glyphPositions[j].y();
-                        cairo_glyph_path(canvas, &glyph, 1);
+                        glyphs[glyphCount].index = run.m_glyphs[j];
+                        glyphs[glyphCount].x =
+                            run.m_glyphPositions[j].x() + xBias;
+                        glyphs[glyphCount].y = run.m_glyphPositions[j].y();
+                        glyphCount++;
+                        STARFISH_ASSERT(glyphCount <= sv.length());
                     }
                 }
 
@@ -923,7 +935,7 @@ private:
             }
         }
 
-        cairo_fill(canvas);
+        cairo_show_glyphs(m_canvas, glyphs, glyphCount);
         cairo_font_face_destroy(fontFace);
 
         if (surfaceForBlur) {

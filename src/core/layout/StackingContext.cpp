@@ -432,7 +432,6 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                 bufferWidth, bufferHeight);
         }
 
-        m_rareData->m_buffer->clear();
         oldCanvas = canvas;
         if (m_rareData->m_buffer->pixelRatio() != 1) {
             canvas = Canvas::createGenericCanvas(
@@ -443,6 +442,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
             canvas = Canvas::create(m_owner->node()->starFish(),
                                     m_rareData->m_buffer);
         }
+        canvas->clearColor(Unit::Color(0, 0, 0, 0));
         canvas->setTextDecorationData(oldCanvas->textDecorationData());
         if (m_rareData->m_buffer->pixelRatio() != 1) {
             canvas->scale(1.0 / m_rareData->m_buffer->pixelRatio(),
