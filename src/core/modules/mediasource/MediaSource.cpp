@@ -430,7 +430,7 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                 // check every source buffer has stream info
                 bool allHaveInfo = true;
                 for (size_t i = 0; i < m_sourceBuffers->length(); i++) {
-                    if ((*m_sourceBuffers)[i]->m_indexPerInitSegment == 0) {
+                    if ((*m_sourceBuffers)[i]->m_initSegmentCount == 0) {
                         allHaveInfo = false;
                         break;
                     }

@@ -194,7 +194,7 @@ public:
                 info.setVideoWidth(m_formatContext->streams[i]->codec->width);
                 info.setVideoHeight(m_formatContext->streams[i]->codec->height);
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
-                    m_demuxerClients[j]->onDetectVideoStream(info);
+                    m_demuxerClients[j]->onDetectStream(info);
                 }
             } else if (m_formatContext->streams[i]->codec->codec_type ==
                        AVMEDIA_TYPE_AUDIO) {
@@ -213,7 +213,7 @@ public:
                 info.setAudioSampleRate(
                     m_formatContext->streams[i]->codec->sample_rate);
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
-                    m_demuxerClients[j]->onDetectAudioStream(info);
+                    m_demuxerClients[j]->onDetectStream(info);
                 }
             } else if (m_formatContext->streams[i]->codec->codec_type ==
                        AVMEDIA_TYPE_SUBTITLE) {

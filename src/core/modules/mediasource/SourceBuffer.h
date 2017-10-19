@@ -32,25 +32,17 @@ class TimeRanges;
 class MediaSource;
 class Mutex;
 class VideoTrackList;
+class DemuxerClientSourceBuffer;
 
 struct SourceBufferData : public gc {
     SourceBuffer* m_sourceBuffer;
-    bool m_isProcessed;
-    bool m_foundInitSegmentHere;
+    Demuxer* m_currentDemuxer;
     const uint8_t* m_data;
     unsigned long m_length;
-    std::vector<uint8_t> m_headerBuffer;
     ScriptValue m_originScript;
     SourceBufferData(SourceBuffer* buf, const uint8_t* data,
-                     unsigned long length, ScriptValue origin)
-        : m_sourceBuffer(buf)
-        , m_isProcessed(false)
-        , m_foundInitSegmentHere(false)
-        , m_data(data)
-        , m_length(length)
-        , m_originScript(origin)
-    {
-    }
+                     unsigned long length, ScriptValue origin);
+    DemuxerClientSourceBuffer* currentDemuxerClient();
 };
 
 struct MediaPacketGroup {
@@ -185,17 +177,13 @@ public:
         return m_updating;
     }
 
-    const SourceBufferDataVector& bufferHeader(size_t initSegmentIndex)
-    {
-        return m_bufferHeader[initSegmentIndex];
-    }
-
     // these methods are thread-safe
     std::pair<MediaPacket*, size_t> findProperMediaPacket(
         size_t streamIdx, uint64_t startPositionInDTSWantToFind);
     void revertLastCacheIfPossible(size_t streamIdx);
     uint64_t lastBufferedTimestamp(size_t streamIdx);
     void clearPacketAccessCache();
+    void initializePacketAccessCache(size_t streamCount);
 
     TimeRanges* buffered();
 
@@ -246,6 +234,14 @@ public:
     void decreaseUsedBufferSize(size_t amount);
     void clearAll();
 
+    Demuxer* demuxer()
+    {
+        return m_demuxer;
+    }
+    DemuxerClientSourceBuffer* demuxerClient();
+    void resetParserState();
+    void appendError();
+
 protected:
     // this method needs packet group lock
     void rangeRemovalWithoutGuard(
@@ -276,11 +272,16 @@ protected:
     void prepareAppend(size_t newDataSize);
     bool codedFrameEviction(size_t newDataSize);
     void bufferAppend(SourceBufferData* data);
+    void postBufferAppend(SourceBufferData* data);
+    void setBufferedRangeNeedsUpdate()
+    {
+        m_buffered = nullptr;
+    }
 
     AppendMode m_mode;
     bool m_isAttachedToParent;
     bool m_updating;
-    size_t m_indexPerInitSegment;
+    size_t m_initSegmentCount;
     StarFish* m_starFish;
     Demuxer* m_demuxer;
     TimeRanges* m_buffered;
@@ -294,12 +295,10 @@ protected:
     double m_groupEndTimestamp;
     String* m_type;
     MediaSource* m_parentMediaSource;
-    SourceBufferDataVector m_bufferUnprocessed;
-    GCVector<SourceBufferDataVector> m_bufferHeader;
     GCVector<GCVector<StreamInfo*>> m_streamInfo;
-    std::vector<MediaPacketGroup*> m_packetGroup;
+    std::vector<MediaPacketGroup*> m_packetGroups;
     GCVector<std::pair<size_t, size_t>> m_packetAccessCachePerStream;
-    Mutex* m_packetGroupMutex;
+    Mutex* m_packetGroupsMutex;
 };
 }
 
