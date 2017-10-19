@@ -1635,6 +1635,10 @@ bool FrameBox::tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
         return false;
     }
 
+    if (style()->visibility() == HiddenVisibilityValue) {
+        return true;
+    }
+
     LayoutRect r = frameRect();
     r.setX(r.x() + loc.x());
     r.setY(r.y() + loc.y());

@@ -430,7 +430,9 @@ protected:
 
         size_t c = end - start;
         size_t newLen = m_size - c;
-        if (newLen) {
+        if (newLen == 0) {
+            clear();
+        } else if (newLen < (m_capacity / 2)) {
             VectorAllocInfo<T> newBuffer = allocate(newLen);
             for (size_t i = 0; i < start; i++) {
                 new (&newBuffer.m_buffer[i]) T(m_buffer[i]);
@@ -448,7 +450,29 @@ protected:
             m_capacity = newBuffer.m_capacity;
             m_size = newLen;
         } else {
-            clear();
+            for (size_t i = 0; i < sizeToErase; i++) {
+                size_t idx = i + start;
+                size_t nextIdx = i + start + sizeToErase;
+                if (nextIdx < m_size) {
+                    m_buffer[idx] = std::move(m_buffer[nextIdx]);
+                    m_buffer[nextIdx].~T();
+                } else {
+                    m_buffer[idx].~T();
+                }
+            }
+
+            for (size_t i = end; i < m_size; i++) {
+                size_t idx = i;
+                size_t nextIdx = i + sizeToErase;
+                if (nextIdx < m_size) {
+                    m_buffer[idx] = std::move(m_buffer[nextIdx]);
+                    m_buffer[nextIdx].~T();
+                } else {
+                    m_buffer[idx].~T();
+                }
+            }
+
+            m_size = newLen;
         }
     }
 
