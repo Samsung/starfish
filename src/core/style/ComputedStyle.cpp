@@ -555,6 +555,22 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         m_rareComputedStyleData->m_borderRadius->m_bottomLeftVertical
             .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
     }
+
+    if (textShadow().size()) {
+        for (auto& shadow :
+             m_inheritedStyles.m_rareData->m_textShadowDataList) {
+            if (!shadow.offsetX().isComputed()) {
+                auto v = shadow.offsetX();
+                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+                shadow.setOffsetX(v);
+            }
+            if (!shadow.offsetY().isComputed()) {
+                auto v = shadow.offsetY();
+                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+                shadow.setOffsetY(v);
+            }
+        }
+    }
 }
 
 void applyTransition(Element* element, ComputedStyle* oldStyle,
