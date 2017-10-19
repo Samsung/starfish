@@ -92,7 +92,7 @@ public:
         m_extraData = std::move(info.m_extraData);
         m_streamIndex = info.m_streamIndex;
         m_timescale = info.m_timescale;
-        m_duration = info.m_duration;
+        m_rawDuration = info.m_rawDuration;
         m_mediaTime = info.m_mediaTime;
         m_codec = info.m_codec;
         m_type = info.m_type;
@@ -104,7 +104,7 @@ public:
         m_extraData = info.m_extraData;
         m_streamIndex = info.m_streamIndex;
         m_timescale = info.m_timescale;
-        m_duration = info.m_duration;
+        m_rawDuration = info.m_rawDuration;
         m_mediaTime = info.m_mediaTime;
         m_codec = info.m_codec;
         m_type = info.m_type;
@@ -137,11 +137,15 @@ public:
     }
     uint64_t duration()
     {
-        return m_duration;
+        return m_rawDuration / m_timescale;
     }
-    void setDuration(uint64_t duration)
+    uint64_t rawDuration()
     {
-        m_duration = duration;
+        return m_rawDuration;
+    }
+    void setRawDuration(uint64_t rawDuration)
+    {
+        m_rawDuration = rawDuration;
     }
     uint64_t mediaTime()
     {
@@ -232,7 +236,7 @@ public:
 protected:
     size_t m_streamIndex;
     size_t m_timescale;
-    uint64_t m_duration;
+    uint64_t m_rawDuration;
     uint64_t m_mediaTime;
     MediaCodec m_codec;
     StreamType m_type;

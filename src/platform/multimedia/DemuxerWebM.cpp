@@ -143,7 +143,7 @@ public:
                 info.setVideoWidth(width);
                 info.setVideoHeight(height);
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
-                    m_demuxerClients[j]->onDetectVideoStream(info);
+                    m_demuxerClients[j]->onDetectStream(info);
                 }
             } else if (trackType == mkvparser::Track::kAudio) {
                 const mkvparser::AudioTrack* const pAudioTrack =
@@ -160,7 +160,7 @@ public:
                 // TODO read codec
                 info.setCodec(MediaCodecAudioVorbis);
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
-                    m_demuxerClients[j]->onDetectAudioStream(info);
+                    m_demuxerClients[j]->onDetectStream(info);
                 }
             }
 

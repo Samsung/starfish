@@ -214,13 +214,17 @@ void MediaPlayerTizenTV::prepareMediaSource()
         printNativePlayerError(ret);
         m_foundError = true;
         handlePrepared();
-    } else {
+    }
+#if 0
+    // Disable code temporarily
+    else {
         m_playerDeadFlag = (bool*)malloc(sizeof(bool));
         *m_playerDeadFlag = false;
         Thread* t = new Thread(m_container->starFish());
         t->run(m_container->starFish()->messageLoop(), threadFillingBuffer,
                this);
     }
+#endif
     PLAYER_LOGI("MediaPlayerTizenTV::prepareMediaSource end\n");
 }
 
@@ -254,8 +258,8 @@ void MediaPlayerTizenTV::initVideoStreamInfo(size_t initSegmentIndex)
     media_format_h mediaFormat = m_videoStream->mediaFormat();
     auto mediaFormatExtra = m_videoStream->videoFormatExtra();
     // Get info from demuxer
-    StreamInfo* info =
-        sb->streamInfo(0, m_activeMediaSource->activeVideoStreamIndex());
+    StreamInfo* info = sb->streamInfo(
+        initSegmentIndex, m_activeMediaSource->activeVideoStreamIndex());
     // Get mimetype
     if (info->isCodec(MediaCodecVideoH264)) {
         media_format_set_video_mime(mediaFormat, MEDIA_FORMAT_H264_SP);
@@ -352,7 +356,7 @@ void MediaPlayerTizenTV::initAudioStreamInfo(size_t initSegmentIndex)
         return;
     }
     media_format_h mediaFormat = m_audioStream->mediaFormat();
-    auto mediaFormatExtra = m_audioStream->videoFormatExtra();
+    auto mediaFormatExtra = m_audioStream->audioFormatExtra();
 
     // Get info from demuxer
     StreamInfo* info = sb->streamInfo(

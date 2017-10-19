@@ -39,10 +39,7 @@ public:
     virtual ~DemuxerClient()
     {
     }
-    virtual void onDetectVideoStream(const StreamInfo& info)
-    {
-    }
-    virtual void onDetectAudioStream(const StreamInfo& info)
+    virtual void onDetectStream(const StreamInfo& info)
     {
     }
     // return true means client consume packet data
@@ -75,6 +72,11 @@ public:
     DemuxerClient* client(size_t idx)
     {
         return m_demuxerClients[idx];
+    }
+
+    size_t clientSize()
+    {
+        return m_demuxerClients.size();
     }
 
     virtual bool isFindedStreamInfo()

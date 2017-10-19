@@ -208,7 +208,7 @@ MediaStream::MediaStream(StreamType type)
     , m_maxBufferSize(0)
     , m_lastSubmittedDTS(0)
     , m_initSegmentIndex(0)
-    , m_lastBufferBytes(SIZE_MAX)
+    , m_lastBufferBytes(0)
     , m_waitingDemuxer(false)
 {
     if (m_type == StreamTypeAudio) {
@@ -385,10 +385,9 @@ void MediaPlayerTizen::handlePlayerError()
 
 void MediaPlayerTizen::fillBufferIfNeeded(StreamType type)
 {
-    Locker<Mutex> locker(*m_fillBufferMutex);
     MediaStream* stream = currentStream(type);
     if (stream && stream->waitingDemuxer()) {
-        fillBufferWithoutGuard(stream);
+        fillBuffer(stream);
     }
 }
 
@@ -927,6 +926,8 @@ void MediaPlayerTizen::fillBuffer(MediaStream* stream)
     PLAYER_LOGI("[%s] ", stream->isAudio() ? "AUDIO" : "VIDEO"); \
     STARFISH_LOG_INFO(__VA_ARGS__);
 
+#if 0
+// Disable code temporarily
 void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
                                           uint64_t currentBytes)
 {
@@ -944,6 +945,31 @@ void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
         state = MediaStream::BUFFERSTATE_NEED_PACKET;
     }
     stream->setBufferState(state);
+}
+#endif
+
+void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
+                                          uint64_t currentBytes)
+{
+    // Other thread
+    MediaStream* stream = currentStream(type);
+    uint64_t lastBytes;
+    uint64_t maxSize;
+    {
+        Locker<Mutex> locker(*m_fillBufferMutex);
+        lastBytes = stream->lastBufferBytes();
+        if (lastBytes != 0 && lastBytes == currentBytes) {
+            return;
+        }
+        stream->setLastBufferBytes(currentBytes);
+        maxSize = stream->maxBufferSize();
+    }
+    if (!stream->waitingDemuxer() && currentBytes <= lastBytes &&
+        currentBytes < (maxSize * 0.1)) {
+        DEBUG_STREAMBUFFER_LOG("Player need data (%llu/%llu)\n", currentBytes,
+                               maxSize);
+        fillBuffer(stream);
+    }
 }
 
 void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
