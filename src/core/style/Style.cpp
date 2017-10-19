@@ -7720,8 +7720,7 @@ bool CSSStyleValuePair::updateValueTextShadow(const CSSTokenVector& tokens)
                          offsetY.updateValueUnitLengthOrCalc(v1, option)) ||
                         (offsetX.updateValueUnitLengthOrCalc(v3, option) &&
                          offsetY.updateValueUnitLengthOrCalc(v2, option) &&
-                         colorOrRadius.updateValueUnitLengthOrCalc(v1,
-                                                                   option))) {
+                         colorOrRadius.updateValueUnitLengthOrCalc(v1, 0))) {
                         shadow.multiValue()->push_back(offsetX);
                         shadow.multiValue()->push_back(offsetY);
                         shadow.multiValue()->push_back(colorOrRadius);
@@ -7734,12 +7733,12 @@ bool CSSStyleValuePair::updateValueTextShadow(const CSSTokenVector& tokens)
                     CSSStyleValuePair color, offsetX, offsetY, radius;
                     if ((offsetX.updateValueUnitLengthOrCalc(v4, option) &&
                          offsetY.updateValueUnitLengthOrCalc(v3, option) &&
-                         radius.updateValueUnitLengthOrCalc(v2, option) &&
+                         radius.updateValueUnitLengthOrCalc(v2, 0) &&
                          color.updateValueUnitColor(v1)) ||
                         (color.updateValueUnitColor(v4) &&
                          offsetX.updateValueUnitLengthOrCalc(v3, option) &&
                          offsetY.updateValueUnitLengthOrCalc(v2, option) &&
-                         radius.updateValueUnitLengthOrCalc(v1, option))) {
+                         radius.updateValueUnitLengthOrCalc(v1, 0))) {
                         shadow.multiValue()->push_back(offsetX);
                         shadow.multiValue()->push_back(offsetY);
                         shadow.multiValue()->push_back(radius);

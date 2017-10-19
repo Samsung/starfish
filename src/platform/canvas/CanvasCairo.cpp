@@ -448,7 +448,6 @@ public:
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
         FT_Face face = ((FontFaceImplCairo*)f->fontFaceList()[0])->m_face;
         int intSize(f->size() + 0.5f);
-        cairo_translate(m_canvas, 0, f->metrics().m_ascender);
 
         if (m_textShadowDataList.size()) {
             for (auto& sd : m_textShadowDataList) {
@@ -456,7 +455,6 @@ public:
             }
         }
         drawTextInner(rt, sv, size);
-        cairo_translate(m_canvas, 0, -f->metrics().m_ascender);
 
         float lineWidth =
             face->underline_thickness / (float)face->units_per_EM * intSize;
@@ -815,25 +813,37 @@ private:
 
         cairo_t* canvas = nullptr;
         cairo_surface_t* surfaceForBlur = nullptr;
+        float radiusOffset = 0.0f;
+
         if (shadow) {
+            Unit::Color color;
+
             if (shadow->radius().isFixed()) {
-                surfaceForBlur = cairo_surface_create_similar(
-                    cairo_get_target(m_canvas), CAIRO_CONTENT_COLOR_ALPHA,
-                    ceil(rect.width().toDouble() + 5),
-                    ceil(rect.height().toDouble() + 5));
-                canvas = cairo_create(surfaceForBlur);
-            } else {
-                canvas = m_canvas;
-                xx += shadow->offsetX().fixed();
-                yy += shadow->offsetY().fixed();
+                radiusOffset = shadow->radius().fixed();
             }
             if (shadow->hasColor()) {
-                cairo_set_source_rgba(canvas, shadow->color().R(),
-                                      shadow->color().G(), shadow->color().B(),
-                                      shadow->color().A());
+                color = shadow->color();
+            } else {
+                color = lastState().m_color;
             }
+
+            surfaceForBlur = cairo_surface_create_similar(
+                cairo_get_target(m_canvas), CAIRO_CONTENT_COLOR_ALPHA,
+                ceil(rect.width().toFloat() + radiusOffset),
+                ceil(rect.height().toFloat() + radiusOffset));
+
+            canvas = cairo_create(surfaceForBlur);
+
+            cairo_set_source_rgba(canvas, color.R(), color.G(), color.B(),
+                                  color.A());
+
         } else {
             canvas = m_canvas;
+        }
+
+        if (radiusOffset > 0.0f) {
+            xx = xx + ceil(radiusOffset / 2);
+            yy = yy + ceil(radiusOffset / 2);
         }
 
         cairo_translate(canvas, xx.toDouble(), yy.toDouble());
@@ -850,6 +860,8 @@ private:
             ALLOCA(sv.length() * sizeof(cairo_glyph_t), cairo_glyph_t);
         size_t glyphCount = 0;
 
+        cairo_translate(canvas, 0, size);
+
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
             for (size_t i = 0; i < sv.length(); i++) {
                 std::pair<std::pair<FT_Face, hb_font_t*>,
@@ -858,7 +870,7 @@ private:
                 if (g.second.first) {
                     if (lastFontFace != g.first.first) {
                         if (fontFace) {
-                            cairo_show_glyphs(m_canvas, glyphs, glyphCount);
+                            cairo_show_glyphs(canvas, glyphs, glyphCount);
                             glyphCount = 0;
                             cairo_font_face_destroy(fontFace);
                         }
@@ -910,7 +922,7 @@ private:
                 } else {
                     if (run.m_ftFace != lastFontFace) {
                         if (lastFontFace) {
-                            cairo_show_glyphs(m_canvas, glyphs, glyphCount);
+                            cairo_show_glyphs(canvas, glyphs, glyphCount);
                             glyphCount = 0;
                             cairo_font_face_destroy(fontFace);
                         }
@@ -935,14 +947,15 @@ private:
             }
         }
 
-        cairo_show_glyphs(m_canvas, glyphs, glyphCount);
+        cairo_show_glyphs(canvas, glyphs, glyphCount);
         cairo_font_face_destroy(fontFace);
 
-        if (surfaceForBlur) {
+        if (shadow) {
             // TODO : Blur processing
-            cairo_set_source_surface(m_canvas, surfaceForBlur,
-                                     shadow->offsetX().fixed(),
-                                     shadow->offsetY().fixed());
+            cairo_set_source_surface(
+                m_canvas, surfaceForBlur,
+                shadow->offsetX().fixed() - ceil(radiusOffset / 2),
+                shadow->offsetY().fixed() - ceil(radiusOffset / 2));
             cairo_paint(m_canvas);
 
             cairo_surface_destroy(surfaceForBlur);
