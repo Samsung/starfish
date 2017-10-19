@@ -891,6 +891,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | | border-image-source | &lt;image&gt; &#124; none | The path to the image is to be used as a border. | |
 | | border-image-slice | &lt;number&gt; fill | How to slice the border image. &lt;number&gt; value can take only one value and initial value is 0 (not 100%). | |
 | | border-image-width | &lt;length&gt; &#124; &lt;number&gt;	| Width of the border image. &lt;number&gt; value represents multiples of the corresponding border-top-width. | |
+| | border-radius | &lt;length-percentage&gt;{1,4} [ / &lt;length-percentage&gt;{1,4} ]?	| define the radii of a quarter ellipse that defines the shape of the corner of the outer border edge | |
+| | border-top-left-radius, border-top-right-radius, border-bottom-right-radius, border-bottom-left-radius | &lt;length-percentage&gt;{1,2} | define the radii of a quarter ellipse that defines the shape of the corner of the outer border edge | |
 | [Outline](https://www.w3.org/TR/css-ui-3/) | outline | &lt;border-width&gt; &lt;border-style&gt; &lt;border-color&gt; | Sets all the border properties (shorthand). | In the former case, various properties define the style (&lt;border-style&gt;), color (&lt;border-color&gt;), and thickness (&lt;border-width&gt;) of the border. &lt;border-width&gt; may take one of the following values: thin, medium, thick, and &lt;length&gt;. &lt;border-color&gt; may take one of the following values: &lt;color&gt;, and transparent. &lt;border-style&gt; may take one of the following values: none, solid, inset, and outset. (Also check Border Properties) |
 | | outline-color | &lt;border-color&gt; | Sets the color of the outline |
 | | outline-style | &lt;border-style&gt; | Sets the style of the outline | |
