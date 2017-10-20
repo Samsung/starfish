@@ -16,8 +16,33 @@
 
 #include "StarFishConfig.h"
 #include "Font.h"
+#include "core/style/ComputedStyle.h"
 
 namespace StarFish {
+
+static String* removeQuoteFromName(String* name)
+{
+    auto bad = name->bufferAccessData();
+    char32_t c = bad.charAt(0);
+    if (c == '"') {
+        if (bad.charAt(bad.length - 1) != '"') {
+            return name;
+        }
+        if (bad.length > 2) {
+            return name->substring(0, bad.length - 2);
+        }
+        return name;
+    } else if (c == '\'') {
+        if (bad.charAt(bad.length - 1) != '\'') {
+            return name;
+        }
+        if (bad.length > 2) {
+            return name->substring(0, bad.length - 2);
+        }
+        return name;
+    }
+    return name;
+}
 
 Font* FontSelector::loadFont(String* familyNameArray[],
                              size_t familyNameArraySize, float size, char style,
@@ -35,13 +60,13 @@ Font* FontSelector::loadFont(String* familyNameArray[],
 #endif
 
     for (size_t i = 0; i < familyNameArraySize; i++) {
-        FontFace* face = lookupCache(familyNameArray[i], size, style, weight);
-        if (!face) {
-            face = loadFontImpl(familyNameArray[i], size, style, weight);
-            if (face) {
-                m_fontCache.push_back(std::make_tuple(face, familyNameArray[i],
-                                                      size, style, weight));
-            }
+        String* fm = removeQuoteFromName(familyNameArray[i]);
+        bool exist;
+        FontFace* face = lookupCache(fm, size, style, weight, exist);
+        if (!exist) {
+            face = loadFontImpl(fm, size, style, weight);
+            m_fontCache.push_back(
+                std::make_tuple(face, fm, size, style, weight));
         }
 
         if (face) {
@@ -49,20 +74,21 @@ Font* FontSelector::loadFont(String* familyNameArray[],
         }
     }
 
-    String* familyName = String::fromUTF8("" STARFISH_DEFAULT_FONT_FAMILY);
-    FontFace* face = lookupCache(familyName, size, style, weight);
+    String* familyName = g_initialFontFamilyDatas[1].m_familyName;
+    bool exist;
+    FontFace* face = lookupCache(familyName, size, style, weight, exist);
 
-    if (!face) {
+    if (!exist) {
         face = loadFontImpl(familyName, size, style, weight);
-        if (face) {
-            m_fontCache.push_back(
-                std::make_tuple(face, familyName, size, style, weight));
-        }
+        m_fontCache.push_back(
+            std::make_tuple(face, familyName, size, style, weight));
     }
 
     if (face) {
         result->m_fontFaceList.push_back(face);
     }
+
+    STARFISH_RELEASE_ASSERT(result->m_fontFaceList.size() >= 1);
 
     result->m_spaceWidth = result->measureText(String::spaceString);
     return result;

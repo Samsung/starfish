@@ -627,9 +627,8 @@ static bool parseFontShorthand(const CSSTokenVector& tokens,
                                CSSStyleValuePair* _Weight,
                                // UNSUPPORTED CSSStyleValuePair* _Stretch,
                                CSSStyleValuePair* _Size,
-                               CSSStyleValuePair* _LineHeight
-                               // UNSUPPORTED CSSStyleValuePair* _Family
-                               )
+                               CSSStyleValuePair* _LineHeight,
+                               CSSStyleValuePair* _Family)
 {
     // [font-style|font-weight] font-size[/line-height] font-family
     size_t len = tokens.size();
@@ -644,10 +643,11 @@ static bool parseFontShorthand(const CSSTokenVector& tokens,
     _LineHeight->setValueKind(CSSStyleValuePair::ValueKind::Normal);
 
     bool hasStyle = false, hasWeight = false, hasSize = false,
-         hasLineHeight = false;
+         hasLineHeight = false, hasFamily = false;
     CSSStyleValuePair temp;
     bool hasSizePrev = false, shouldLineHeight = false;
     size_t pos = 0;
+    CSSTokenVector fontFamilyCandidate;
 
     while (pos < len) {
         const CSSTokenValue& token = tokens[pos++];
@@ -680,17 +680,28 @@ static bool parseFontShorthand(const CSSTokenVector& tokens,
             hasSize = true;
             *_Size = temp;
             continue;
-        } else if (hasSize /* for font-family */) {
-            // NOTE
-            // Code for the time we support font-family
-            //
-            // fontFamilyCandidate.push_back(token);
+        } else if (hasSize) {
+            fontFamilyCandidate.push_back(token);
+            hasFamily = true;
             continue;
         }
         return false;
     }
-    if (!hasSize /* || !hasFamily */) {
+    if (!hasSize || !hasFamily) {
         return false;
+    }
+    if (fontFamilyCandidate.size() == 1) {
+        _Family->setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        _Family->setStringValue(String::fromUTF8(
+            fontFamilyCandidate[0].data(), fontFamilyCandidate[0].length()));
+    } else {
+        ValueList* val = new ValueList(ValueList::Separator::CommaSeparator);
+        for (size_t i = 0; i < fontFamilyCandidate.size(); i++) {
+            auto str = fontFamilyCandidate[i];
+            val->emplace_back(CSSStyleValuePair::ValueKind::StringValueKind,
+                              String::fromUTF8(str.data(), str.length()));
+        }
+        _Family->setValueList(val);
     }
     return true;
 }
@@ -3001,6 +3012,15 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
 #undef APPEND_NEW_LAYER
 }
 
+String* CSSStyleDeclaration::FontFamily()
+{
+    for (unsigned i = 0; i < m_cssValues.size(); i++) {
+        if (m_cssValues[i].keyKind() == CSSStyleValuePair::KeyKind::FontFamily)
+            return m_cssValues[i].toString();
+    }
+    return String::emptyString;
+}
+
 String* CSSStyleDeclaration::Font()
 {
     String* style = FontStyle();
@@ -3059,10 +3079,27 @@ String* CSSStyleDeclaration::Font()
     return builder.finalize();
 }
 
+void CSSStyleDeclaration::setFontFamily(const char* value, size_t len,
+                                        bool isImportant)
+{
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily);
+        return;
+    }
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, ",", 1, true);
+    CSSStyleValuePair ret;
+    if (ret.updateValueCommon(tokens) || ret.updateValueFontFamily(tokens)) {
+        ret.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, ret);
+    }
+}
+
 void CSSStyleDeclaration::setFont(const char* value, size_t length,
                                   bool isImportant)
 {
     if (length == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily);
         removeCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle);
         removeCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight);
         removeCSSValuePair(CSSStyleValuePair::KeyKind::FontSize);
@@ -3077,19 +3114,22 @@ void CSSStyleDeclaration::setFont(const char* value, size_t length,
     }
 
     CSSStyleValuePair v, style /*, variant*/, weight /*, stretch*/, size,
-        lineHeight /*, fontFamily*/;
+        lineHeight, fontFamily;
     if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontSize, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight, v);
-    } else if (parseFontShorthand(tokens, &style, &weight, &size,
-                                  &lineHeight)) {
+    } else if (parseFontShorthand(tokens, &style, &weight, &size, &lineHeight,
+                                  &fontFamily)) {
+        fontFamily.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         weight.setFlagImportant(isImportant);
         size.setFlagImportant(isImportant);
         lineHeight.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, fontFamily);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle, style);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight, weight);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontSize, size);
@@ -3231,7 +3271,7 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                                ::tolower);
                 tokens.push_back(std::move(str));
             } else if (str.length() != 0) {
-                if (!isCaseSensitive) {
+                if (!isCaseSensitive && !inQuotes) {
                     std::transform(str.begin(), str.end(), str.begin(),
                                    ::tolower);
                 }
@@ -3611,6 +3651,35 @@ void StyleResolver::apply(Element* element,
                     CSSStyleValuePair::ValueKind::FontStyleValueKind);
                 style->m_inheritedStyles.m_fontStyle =
                     cssValues[k].fontStyleValue();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::FontFamily:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_inheritedStyles.m_fontFamilyDatas =
+                    parentStyle->m_inheritedStyles.m_fontFamilyDatas;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->m_inheritedStyles.m_fontFamilyDatas =
+                    g_initialFontFamilyDatas;
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::StringValueKind) {
+                FontFamilyData* data =
+                    (FontFamilyData*)GC_MALLOC(sizeof(FontFamilyData) * 2);
+                data[0].m_length = 1;
+                data[1].m_familyName = cssValues[k].stringValue();
+                style->m_inheritedStyles.m_fontFamilyDatas = data;
+            } else {
+                STARFISH_ASSERT(cssValues[k].valueKind() ==
+                                CSSStyleValuePair::ValueKind::ValueListKind);
+                ValueList* val = cssValues[k].multiValue();
+                FontFamilyData* data = (FontFamilyData*)GC_MALLOC(
+                    sizeof(FontFamilyData) * (val->size() + 1));
+                data[0].m_length = val->size();
+                for (size_t i = 0; i < val->size(); i++) {
+                    data[i + 1].m_familyName = val->at(i).stringValue();
+                }
+                style->m_inheritedStyles.m_fontFamilyDatas = data;
             }
             break;
         case CSSStyleValuePair::KeyKind::FontWeight:
@@ -7467,6 +7536,35 @@ bool CSSStyleValuePair::updateValueUnitFontWeight(const CSSTokenValue& value)
     } else {
         return false;
     }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueFontFamily(const CSSTokenVector& tokens)
+{
+    if (tokens.size() == 1) {
+        setValueKind(ValueKind::StringValueKind);
+        setStringValue(String::fromUTF8(tokens[0].data(), tokens[0].length()));
+        return true;
+    }
+    ValueList* val = new ValueList(ValueList::Separator::CommaSeparator);
+    bool seenComma = false;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        if (tokens[i] == ".") {
+            if (seenComma) {
+                return false;
+            }
+            seenComma = true;
+        } else {
+            const std::string& str = tokens[i];
+            val->emplace_back(ValueKind::StringValueKind,
+                              String::fromUTF8(str.data(), str.length()));
+        }
+    }
+    if (seenComma)
+        return false;
+
+    setValueKind(ValueKind::ValueListKind);
+    setValueList(val);
     return true;
 }
 

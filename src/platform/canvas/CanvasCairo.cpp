@@ -860,7 +860,7 @@ private:
             ALLOCA(sv.length() * sizeof(cairo_glyph_t), cairo_glyph_t);
         size_t glyphCount = 0;
 
-        cairo_translate(canvas, 0, size);
+        cairo_translate(canvas, 0, f->metrics().m_ascender);
 
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
             for (size_t i = 0; i < sv.length(); i++) {

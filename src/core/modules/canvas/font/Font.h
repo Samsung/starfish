@@ -18,7 +18,7 @@
 #define __Font__
 
 #ifndef STARFISH_DEFAULT_FONT_FAMILY
-#define STARFISH_DEFAULT_FONT_FAMILY ""
+#define STARFISH_DEFAULT_FONT_FAMILY "sans-serif"
 #endif
 
 #ifdef PORT_CANVAS_BACKEND_CAIRO
@@ -199,17 +199,18 @@ protected:
 
     GCVector<std::tuple<FontFace*, String*, float, char, char>> m_fontCache;
     FontFace* lookupCache(String* familyName, float size, char style,
-                          char weight)
+                          char weight, bool& exist)
     {
         for (unsigned i = 0; i < m_fontCache.size(); i++) {
-            if (std::get<1>(m_fontCache[i])->equals(familyName)) {
-                if (std::get<2>(m_fontCache[i]) == size &&
-                    std::get<3>(m_fontCache[i]) == style &&
-                    std::get<4>(m_fontCache[i]) == weight) {
-                    return std::get<0>(m_fontCache[i]);
-                }
+            if (std::get<2>(m_fontCache[i]) == size &&
+                std::get<3>(m_fontCache[i]) == style &&
+                std::get<4>(m_fontCache[i]) == weight &&
+                std::get<1>(m_fontCache[i])->equals(familyName)) {
+                exist = true;
+                return std::get<0>(m_fontCache[i]);
             }
         }
+        exist = false;
         return nullptr;
     }
     static FontSelector* createFontSelector();

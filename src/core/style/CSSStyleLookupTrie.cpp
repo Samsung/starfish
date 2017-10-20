@@ -317,6 +317,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     case 11:
         // Border-Left
         // Font-Weight
+        // Font-Family
         // Flex-Shrink
         // Line-Height
         // White-Space
@@ -340,6 +341,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'f':
             if (memcmp(data, "font-weight", 11) == 0) {
                 return CSSStyleKind::FontWeight;
+            }
+            if (memcmp(data, "font-family", 11) == 0) {
+                return CSSStyleKind::FontFamily;
             }
             if (memcmp(data, "flex-shrink", 11) == 0) {
                 return CSSStyleKind::FlexShrink;
@@ -1005,6 +1009,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'f':
             if (memcmp(data, "fontWeight", 10) == 0) {
                 return CSSStyleKind::FontWeight;
+            }
+            if (memcmp(data, "fontFamily", 10) == 0) {
+                return CSSStyleKind::FontFamily;
             }
             if (memcmp(data, "flexShrink", 10) == 0) {
                 return CSSStyleKind::FlexShrink;

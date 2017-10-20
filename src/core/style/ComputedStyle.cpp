@@ -29,6 +29,10 @@
 
 namespace StarFish {
 
+FontFamilyData g_initialFontFamilyDatas[2] = {
+    1, String::createASCIIStringWithNoGC(STARFISH_DEFAULT_FONT_FAMILY)
+};
+
 void* RareComputedStyleData::operator new(size_t size)
 {
     static bool typeInited = false;
@@ -89,6 +93,9 @@ void* ComputedStyle::operator new(size_t size)
         GC_word obj_bitmap[GC_BITMAP_SIZE(ComputedStyle)] = { 0 };
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle, m_inheritedStyles.m_rareData));
+        GC_set_bit(
+            obj_bitmap,
+            GC_WORD_OFFSET(ComputedStyle, m_inheritedStyles.m_fontFamilyDatas));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_background));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_surround));
@@ -197,11 +204,15 @@ void ComputedStyle::loadFont(StarFish* sf, float fixedFontSize)
             m_font = sf->fetchFont(&str, 1, fixedFontSize, style, fontWeight);
         } else {
             m_font =
-                sf->fetchFont(nullptr, 0, fixedFontSize, style, fontWeight);
+                sf->fetchFont((String**)&m_inheritedStyles.m_fontFamilyDatas[1],
+                              m_inheritedStyles.m_fontFamilyDatas[0].m_length,
+                              fixedFontSize, style, fontWeight);
         }
     }
 #else
-    m_font = sf->fetchFont(nullptr, 0, fixedFontSize, style, fontWeight);
+    m_font = sf->fetchFont((String**)&m_inheritedStyles.m_fontFamilyDatas[1],
+                           m_inheritedStyles.m_fontFamilyDatas[0].m_length,
+                           fixedFontSize, style, fontWeight);
 #endif
 }
 
@@ -647,6 +658,26 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_inheritedStyles.m_fontFamilyDatas[0].m_length !=
+        oldStyle->m_inheritedStyles.m_fontFamilyDatas[0].m_length) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    } else {
+        size_t len = newStyle->m_inheritedStyles.m_fontFamilyDatas[0].m_length;
+        for (size_t i = 0; i < len; i++) {
+            if (!newStyle->m_inheritedStyles.m_fontFamilyDatas[i + 1]
+                     .m_familyName->equals(
+                         oldStyle->m_inheritedStyles.m_fontFamilyDatas[i + 1]
+                             .m_familyName)) {
+                damage = (ComputedStyleDamage)(
+                    ComputedStyleDamage::ComputedStyleDamageInherited |
+                    ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+                break;
+            }
+        }
     }
 
     if (newStyle->m_inheritedStyles.m_fontWeight !=
