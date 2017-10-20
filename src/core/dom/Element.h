@@ -308,6 +308,7 @@ public:
     virtual int tabIndex() const;
     void setTabIndex(int32_t t)
     {
+        m_tabIndexWasSetExplicitly = true;
         m_tabIndex = t;
     }
     bool tabIndexSetExplicitly() const;
