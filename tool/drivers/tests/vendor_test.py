@@ -32,11 +32,15 @@ def tc_handler(tc_file, output, show_progress=True):
     return is_pass
 
 
-def exp_img_namer(tc_file):
+def exp_img_namer(tc_file, backend):
     if tc_file.startswith("http"):
-        pre = "test/reftest/vendor/webkit/fast/xmlhttprequest_result/"
+        if backend == "efl":
+            backend = "test/efl/reftest/vendor/"
+        elif backend == "cairo":
+            backend = "test/cairo/reftest/vendor/"
+        pre = "webkit/fast/xmlhttprequest_result/"
         post = os.path.splitext(os.path.basename(tc_file))[0] + "_expected.png"
-        return pre + post
+        return backend + pre + post
     else:
         file = os.path.splitext(tc_file)[0] + "_expected.png"
         if not "_original/" in file and "fast/" in file:

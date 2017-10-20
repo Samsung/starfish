@@ -30,6 +30,9 @@ def is_int(val):
 def is_bool(val):
     return type(val) is types.BooleanType
 
+def is_string(val):
+    return type(val) is types.StringType
+
 def is_function(val):
     return type(val) is types.FunctionType
 

@@ -16,6 +16,3 @@
 [submodule "third_party/escargot"]
 	path = third_party/escargot
 	url = git@github.sec.samsung.net:RS7-webtf/escargot.git
-[submodule "test-cairo"]
-	path = test-cairo
-	url = git@github.sec.samsung.net:RS7-webtf/cairo-backend-tc.git
