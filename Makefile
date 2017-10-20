@@ -754,9 +754,9 @@ install_git_prepush:
 install_pixel_test_dep:
 	$(CXX) -O3 -g3 --std=c++11 -o tool/imgdiff/imgdiff tool/imgdiff/imgdiff.cpp $(shell pkg-config --cflags libpng) $(shell pkg-config --libs libpng)
 	mkdir -p ~/.fonts
-	cp test/tool/fonts/AHEM____.TTF ~/.fonts/
-	cp test/tool/fonts/SamsungOne-300C_v1.0.ttf ~/.fonts/
-	cp test/tool/fonts/SamsungOne-600C_v1.0.ttf ~/.fonts/
+	cp tool/fonts/AHEM____.TTF ~/.fonts/
+	cp tool/fonts/SamsungOne-300C_v1.0.ttf ~/.fonts/
+	cp tool/fonts/SamsungOne-600C_v1.0.ttf ~/.fonts/
 	fc-cache -fv
 	fc-match SamsungOne
 
@@ -767,25 +767,25 @@ run_inspector:
 	./inspector/nwjs-v0.17.0-linux-x64/nw ./inspector/ > /dev/null &
 
 csswg_test_css1:
-	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css1.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css1.res efl -p$(TEST_NPROCS)
 csswg_test_css21:
-	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css21.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css21.res efl -p$(TEST_NPROCS)
 csswg_test_css21_tables:
-	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css21_tables.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css21_tables.res efl -p$(TEST_NPROCS)
 csswg_test_css3_color:
-	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_color.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_color.res efl -p$(TEST_NPROCS)
 csswg_test_css3_backgrounds:
-	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_backgrounds.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_backgrounds.res efl -p$(TEST_NPROCS)
 csswg_test_css3_transforms:
-	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_transforms.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_transforms.res efl -p$(TEST_NPROCS)
 csswg_test_css3_selectors:
-	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_selectors.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_css3_selectors.res efl -p$(TEST_NPROCS)
 csswg_test_mediaqueries3:
-	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_mediaqueries3.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_mediaqueries3.res efl -p$(TEST_NPROCS)
 csswg_test_manual:
-	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_manual.res efl --font-dep -p$(TEST_NPROCS)
 csswg_test_rtl:
-	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_rtl.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/efl/tclist/csswg_rtl.res efl -p$(TEST_NPROCS)
 csswg_test_all:
 	make csswg_test_css1
 	make csswg_test_css21
@@ -799,24 +799,24 @@ csswg_test_all:
 
 internal_test:
 	cat tool/reftest/efl/internal_unsorted.res | sort -nr | cut -d";" -f2 > tool/reftest/efl/internal.res
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_manual.res efl --font-dep -p$(TEST_NPROCS)
 	rm tool/reftest/efl/internal.res
 
 internal_test_gitlab_prerequisite:
 	./tool/reftest/efl/internal.sh $(div)
 internal_test_part1:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part1.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part1.res efl -p$(TEST_NPROCS)
 internal_test_part2:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part2.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part2.res efl -p$(TEST_NPROCS)
 internal_test_part3:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part3.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part3.res efl -p$(TEST_NPROCS)
 internal_test_part4:
 	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part4.res -p$(TEST_NPROCS)
 internal_test_part5:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part5.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part5.res efl -p$(TEST_NPROCS)
 internal_test_manual:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/efl/internal_manual.res efl --font-dep -p$(TEST_NPROCS)
 
 tct:
 	./StarFish test/tct/index.html
@@ -835,53 +835,53 @@ wpt_syntax_checker:
 	@echo "[wpt_syntax_checker] COMPLETE.."
 
 dom_conformance_test:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/dom_conformance_test.res efl -p$(TEST_NPROCS)
 dom_conformance_test_webkit:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/webkit_dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/webkit_dom_conformance_test.res efl -p$(TEST_NPROCS)
 dom_conformance_test_blink:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/blink_dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/blink_dom_conformance_test.res efl -p$(TEST_NPROCS)
 dom_conformance_test_gecko:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/gecko_dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/gecko_dom_conformance_test.res efl -p$(TEST_NPROCS)
 
 web_platform_test_dom:
-	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_dom.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_dom.res efl -p$(TEST_NPROCS)
 web_platform_test_dom_events:
-	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_dom_events.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_dom_events.res efl -p$(TEST_NPROCS)
 web_platform_test_html:
-	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_html.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_html.res efl -p$(TEST_NPROCS)
 web_platform_test_page_visibility:
-	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_page_visibility.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_page_visibility.res efl -p$(TEST_NPROCS)
 web_platform_test_progress_events:
-	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_progress_events.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_progress_events.res efl -p$(TEST_NPROCS)
 web_platform_test_xhr:
-	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_xhr.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/efl/wpt_xhr.res efl -p$(TEST_NPROCS)
 
 vendor_test_blink_fast_dom:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/blink_fast_dom.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/blink_fast_dom.res efl -p$(TEST_NPROCS)
 vendor_test_blink_fast_html:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/blink_fast_html.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/blink_fast_html.res efl -p$(TEST_NPROCS)
 vendor_test_blink_fast_css:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_css.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_css_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_css.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_css_manual.res efl --font-dep -p$(TEST_NPROCS)
 vendor_test_blink_fast_etc:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_etc.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_etc_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_etc.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/blink_fast_etc_manual.res efl --font-dep -p$(TEST_NPROCS)
 vendor_test_gecko_layout:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/gecko_layout.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/gecko_layout_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/gecko_layout.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/gecko_layout_manual.res efl --font-dep -p$(TEST_NPROCS)
 vendor_test_webkit_fast_dom:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/webkit_fast_dom.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/webkit_fast_dom.res efl -p$(TEST_NPROCS)
 vendor_test_webkit_fast_html:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/webkit_fast_html.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/webkit_fast_html.res efl -p$(TEST_NPROCS)
 vendor_test_webkit_fast_css:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_css.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_css_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_css.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_css_manual.res efl --font-dep -p$(TEST_NPROCS)
 vendor_test_webkit_fast_etc:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_etc.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_etc_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_etc.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_etc_manual.res efl --font-dep -p$(TEST_NPROCS)
 
 bidi_test:
-	./tool/drivers/run_test.py bidi tool/reftest/efl/bidi.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py bidi tool/reftest/efl/bidi.res efl --font-dep -p$(TEST_NPROCS)
 
 regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp
@@ -891,27 +891,26 @@ regression_test_bidi.tizen_wearable_arm.debug:
 # Test Cairo backend
 ################################################################################
 
-
 csswg_test_css1_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css1.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css1.res cairo -p$(TEST_NPROCS)
 csswg_test_css21_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css21.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css21.res cairo -p$(TEST_NPROCS)
 csswg_test_css21_tables_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css21_tables.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css21_tables.res cairo -p$(TEST_NPROCS)
 csswg_test_css3_color_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_color.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_color.res cairo -p$(TEST_NPROCS)
 csswg_test_css3_backgrounds_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_backgrounds.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_backgrounds.res cairo -p$(TEST_NPROCS)
 csswg_test_css3_transforms_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_transforms.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_transforms.res cairo -p$(TEST_NPROCS)
 csswg_test_css3_selectors_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_selectors.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_selectors.res cairo -p$(TEST_NPROCS)
 csswg_test_mediaqueries3_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_mediaqueries3.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_mediaqueries3.res cairo -p$(TEST_NPROCS)
 csswg_test_manual_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_manual.res cairo --font-dep -p$(TEST_NPROCS)
 csswg_test_rtl_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_rtl.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_rtl.res cairo -p$(TEST_NPROCS)
 csswg_test_all_cairo:
 	make csswg_test_css1_cairo
 	make csswg_test_css21_cairo
@@ -925,73 +924,73 @@ csswg_test_all_cairo:
 
 internal_test_cairo:
 	cat tool/reftest/cairo/internal_unsorted.res | sort -nr | cut -d";" -f2 > tool/reftest/cairo/internal.res
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/cairo/internal.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_manual.res cairo --font-dep -p$(TEST_NPROCS)
 	rm tool/reftest/cairo/internal.res
 
 internal_test_gitlab_prerequisite_cairo:
 	./tool/reftest/cairo/internal.sh $(div)
 internal_test_part1_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part1.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part1.res cairo -p$(TEST_NPROCS)
 internal_test_part2_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part2.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part2.res cairo -p$(TEST_NPROCS)
 internal_test_part3_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part3.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part3.res cairo -p$(TEST_NPROCS)
 internal_test_part4_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part4.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part4.res cairo -p$(TEST_NPROCS)
 internal_test_part5_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part5.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part5.res cairo -p$(TEST_NPROCS)
 internal_test_manual_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_manual.res cairo --font-dep -p$(TEST_NPROCS)
 
 dom_conformance_test_cairo:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/dom_conformance_test.res cairo -p$(TEST_NPROCS)
 dom_conformance_test_webkit_cairo:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/webkit_dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/webkit_dom_conformance_test.res cairo -p$(TEST_NPROCS)
 dom_conformance_test_blink_cairo:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/blink_dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/blink_dom_conformance_test.res cairo -p$(TEST_NPROCS)
 dom_conformance_test_gecko_cairo:
-	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/gecko_dom_conformance_test.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/gecko_dom_conformance_test.res cairo -p$(TEST_NPROCS)
 
 web_platform_test_dom_cairo:
-	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_dom.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_dom.res cairo -p$(TEST_NPROCS)
 web_platform_test_dom_events_cairo:
-	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_dom_events.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_dom_events.res cairo -p$(TEST_NPROCS)
 web_platform_test_html_cairo:
-	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_html.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_html.res cairo -p$(TEST_NPROCS)
 web_platform_test_page_visibility_cairo:
-	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_page_visibility.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_page_visibility.res cairo -p$(TEST_NPROCS)
 web_platform_test_progress_events_cairo:
-	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_progress_events.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_progress_events.res cairo -p$(TEST_NPROCS)
 web_platform_test_xhr_cairo:
-	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_xhr.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py web_platform tool/reftest/cairo/wpt_xhr.res cairo -p$(TEST_NPROCS)
 
 vendor_test_blink_fast_dom_cairo:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/blink_fast_dom.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/blink_fast_dom.res cairo -p$(TEST_NPROCS)
 vendor_test_blink_fast_html_cairo:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/blink_fast_html.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/blink_fast_html.res cairo -p$(TEST_NPROCS)
 vendor_test_blink_fast_css_cairo:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_css.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_css_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_css.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_css_manual.res cairo --font-dep -p$(TEST_NPROCS)
 vendor_test_blink_fast_etc_cairo:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc_manual.res cairo --font-dep -p$(TEST_NPROCS)
 vendor_test_gecko_layout_cairo:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/gecko_layout.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/gecko_layout_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/gecko_layout.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/gecko_layout_manual.res cairo --font-dep -p$(TEST_NPROCS)
 vendor_test_webkit_fast_dom_cairo:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/webkit_fast_dom.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/webkit_fast_dom.res cairo -p$(TEST_NPROCS)
 vendor_test_webkit_fast_html_cairo:
-	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/webkit_fast_html.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/webkit_fast_html.res cairo -p$(TEST_NPROCS)
 vendor_test_webkit_fast_css_cairo:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_css.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_css_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_css.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_css_manual.res cairo --font-dep -p$(TEST_NPROCS)
 vendor_test_webkit_fast_etc_cairo:
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_etc.res -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_etc_manual.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_etc.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_etc_manual.res cairo --font-dep -p$(TEST_NPROCS)
 
 bidi_test_cairo:
-	./tool/drivers/run_test.py bidi tool/reftest/cairo/bidi.res --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py bidi tool/reftest/cairo/bidi.res cairo --font-dep -p$(TEST_NPROCS)
 
 ################################################################################
 

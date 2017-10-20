@@ -21,7 +21,8 @@ HIDE_WINDOW_OPT = "--hide-window"
 DEFAULT_WIDTH_OPT = WIDTH_OPT_PREFIX + "800"
 DEFAULT_HEIGHT_OPT = HEIGHT_OPT_PREFIX + "600"
 DEFAULT_FONT_OPT = AHEM_OPT
-REMOTE_EXP_DIR = "test/remote-test"
+DEFAULT_BACKEND = "efl"
+REMOTE_EXP_DIR = "remote-test"
 OUT_DIR = "out"
 
 class __PixelTestOpts():
@@ -32,6 +33,7 @@ class __PixelTestOpts():
         self.show_progress = True
         self.expected_namer = default_expected_namer
         self.tc_handler = default_tc_handler
+        self.backend = DEFAULT_BACKEND
 
     def set_width(self, v):
         if utils.is_int(v):
@@ -57,9 +59,13 @@ class __PixelTestOpts():
         if utils.is_function(v):
             self.tc_handler = v
 
+    def set_backend(self, v):
+        if utils.is_string(v):
+            self.backend = v
+
 def case_runner(tc):
     tc_idx, tc_file = tc
-    tc_expected_png = __opts.expected_namer(tc_file)
+    tc_expected_png = __opts.expected_namer(tc_file, __opts.backend)
     tc_result_png = str(tc_idx) + "__starfish_result.png"
 
     # Assure TC exist
@@ -116,13 +122,14 @@ def case_runner(tc):
 
 
 
-def run_parallel(list_file, nproc=None, width=None, height=None,
+def run_parallel(list_file, backend, nproc=None, width=None, height=None,
                  ahem_font=None, show_progress=None,
                  expected_namer=None, tc_handler=None, result_handler=None):
     import parallel
     global __opts
     if __opts is None:
         __opts = __PixelTestOpts()
+    __opts.set_backend(backend)
     __opts.set_width(width)
     __opts.set_height(height)
     __opts.set_ahem_font(ahem_font)
@@ -147,17 +154,21 @@ def default_tc_handler(tc_file, diff_result, show_progress=True):
         print result
     return is_passed
 
-def default_http_expected_namer(tc_file):
+def default_http_expected_namer(tc_file, backend):
     # Remote test
     # Ex) http://52.79.162.207/some/directory/tc_some_name.html
     #  => test/remote-test/some/directory/tc_some_name_expected.png
     expected = os.path.splitext(tc_file)[0] + "_expected.png"
     path = urlparse(expected).path
-    return REMOTE_EXP_DIR + path
+    if backend == "efl":
+        backend = "test/efl/"
+    elif backend == "cairo":
+        backend = "test/cairo/"
+    return backend + REMOTE_EXP_DIR + path
 
-def default_expected_namer(tc_file):
+def default_expected_namer(tc_file, backend):
     if tc_file.startswith("http"):
-        return default_http_expected_namer(tc_file)
+        return default_http_expected_namer(tc_file, backend)
     return os.path.splitext(tc_file)[0] + "_expected.png"
 
 # standalone version
