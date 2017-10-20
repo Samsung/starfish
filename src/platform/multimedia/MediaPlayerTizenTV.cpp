@@ -169,6 +169,7 @@ static void preparedCallback(void* data)
     self->handlePrepared();
 }
 
+#ifdef STARFISH_RUN_MSE_THREAD
 static void* threadFillingBuffer(void* data)
 {
     MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)data;
@@ -186,11 +187,12 @@ static void* threadFillingBuffer(void* data)
                 self->fillBuffer(videoStream);
             }
         }
-        sleep(3);
+        sleep(1);
     }
     free(playerDeadFlag);
     return nullptr;
 }
+#endif
 
 void MediaPlayerTizenTV::prepareMediaSource()
 {
@@ -215,8 +217,7 @@ void MediaPlayerTizenTV::prepareMediaSource()
         m_foundError = true;
         handlePrepared();
     }
-#if 0
-    // Disable code temporarily
+#ifdef STARFISH_RUN_MSE_THREAD
     else {
         m_playerDeadFlag = (bool*)malloc(sizeof(bool));
         *m_playerDeadFlag = false;

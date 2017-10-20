@@ -29,6 +29,8 @@
 #define MAX_WAITING_SECONDS_FOR_SEEK_OPERATION 30000
 #endif
 
+#define STARFISH_RUN_MSE_THREAD
+
 namespace StarFish {
 
 class CanvasSurface;
@@ -76,9 +78,9 @@ public:
         m_lastSubmittedDTS = value;
     }
     bool needPacket();
-    bool isBufferState(BufferState state);
     BufferState bufferState();
     void setBufferState(BufferState value);
+    bool isBufferState(BufferState value);
     bool waitingDemuxer();
     void setWaitingDemuxer(bool value);
     size_t initSegmentIndex()
@@ -105,7 +107,7 @@ public:
 protected:
     StreamType m_type;
     volatile BufferState m_bufferState;
-    Mutex* m_bufferStateMutex;
+    Mutex* m_mediaStreamMutex;
 
     media_format_h m_mediaFormat;
     union MediaFormatExtra {
@@ -202,7 +204,12 @@ public:
     void updateVideoStreamInfo(MediaStream* video, size_t pastInitIndex,
                                size_t newInitIndex);
 
-    bool m_inPrepare;
+    void goUnderrunState();
+    void outUnderrunState();
+
+    bool m_inPrepare : 1;
+    bool m_pendingPlay : 1;
+    bool m_underrunMode : 1;
     size_t m_seekingTimer;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_fillBufferMutex;
