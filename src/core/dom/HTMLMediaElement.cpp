@@ -910,9 +910,7 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(
         // ready state is HAVE_CURRENT_DATA or less
         if (prevState >= HTMLMediaElement::HAVE_FUTURE_DATA &&
             state <= HTMLMediaElement::HAVE_CURRENT_DATA) {
-            if (activeMediaPlayer() &&
-                m_mediaPlayer->playbackState() ==
-                    MediaPlayer::PLAYBACK_STATE_PLAYING) {
+            if (activeMediaPlayer() && !m_isPaused && !m_isEnded) {
                 dispatchTimeupdateEvent();
                 dispatchWaitingEvent();
             }
@@ -933,7 +931,7 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(
         }
         // If the new ready state is HAVE_ENOUGH_DATA,
         if (state == HTMLMediaElement::HAVE_ENOUGH_DATA) {
-            // If the previous ready state was HAVE_CURRENT_DATA or lesss,
+            // If the previous ready state was HAVE_CURRENT_DATA or less,
             // the user agent must queue a task to fire an event named canplay
             // at the element, and,
             // if the element's paused attribute is false, notify about playing
