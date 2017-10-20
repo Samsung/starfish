@@ -82,6 +82,7 @@ public:
     String* BackgroundRepeat();
     String* BackgroundPosition();
     String* Font();
+    String* FontFamily();
     String* Transition();
     String* TransitionTransitionProperty();
     String* TransitionTransitionDuration();
@@ -113,6 +114,7 @@ public:
     void setBorderStyle(const char* value, size_t len, bool isImportant);
     void setBorderColor(const char* value, size_t len, bool isImportant);
     void setFont(const char* value, size_t len, bool isImportant);
+    void setFontFamily(const char* value, size_t len, bool isImportant);
     void setTransition(const char* value, size_t len, bool isImportant);
     void setTransitionTransitionProperty(const char* value, size_t len,
                                          bool isImportant);

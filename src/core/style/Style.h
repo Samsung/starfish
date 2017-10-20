@@ -1073,6 +1073,7 @@ class CSSStyleDeclaration;
     F(Margin, margin, "margin")                                      \
     F(Padding, padding, "padding")                                   \
     F(Font, font, "font")                                            \
+    F(FontFamily, fontFamily, "font-family")                         \
     F(Outline, outline, "outline")                                   \
     F(Overflow, overflow, "overflow")                                \
     F(Transition, transition, "transition")                          \
@@ -1196,6 +1197,7 @@ public:
 #define ADD_CSS_KEYKIND(Name, name, cssname) Name,
         FOR_EACH_STYLE_ATTRIBUTE(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
+            FontFamily
     };
 
     enum ValueKind {
@@ -1937,6 +1939,7 @@ public:
         switch (m_valueKind) {
         case UrlValueKind:
         case StringValueKind:
+        case Attr:
             return m_value.m_stringValue;
         case ValueListKind:
             return m_value.m_multiValue;
@@ -2108,6 +2111,7 @@ public:
     bool updateValueUnitFlexBasis(const CSSTokenValue& value);
 
     bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit);
+    bool updateValueFontFamily(const CSSTokenVector& tokens);
 
 protected:
     KeyKind m_keyKind : 8;
@@ -2149,20 +2153,64 @@ protected:
     GCUnorderedSet<void*> m_pointerRooter;
 };
 
-class ValueList : public GCVector<CSSStyleValuePair>, public gc {
+class ValueList : protected GCAtomicVector<CSSStyleValuePair>, public gc {
 public:
     enum Separator { None, SpaceSeparator, CommaSeparator, SlashSeparator };
 
     ValueList()
-        : GCVector<CSSStyleValuePair>()
+        : GCAtomicVector<CSSStyleValuePair>()
         , m_separator(None)
     {
     }
 
     ValueList(Separator sep)
-        : GCVector<CSSStyleValuePair>()
+        : GCAtomicVector<CSSStyleValuePair>()
         , m_separator(sep)
     {
+    }
+
+    void push_back(CSSStyleValuePair p)
+    {
+        GCAtomicVector<CSSStyleValuePair>::push_back(p);
+        rootPointer(p);
+    }
+
+    void pushBack(CSSStyleValuePair p)
+    {
+        GCAtomicVector<CSSStyleValuePair>::pushBack(p);
+        rootPointer(p);
+    }
+
+    template <class... Args>
+    void emplace_back(Args&&... args)
+    {
+        pushBack(CSSStyleValuePair(args...));
+        rootPointer(back());
+    }
+
+    size_t size() const
+    {
+        return GCAtomicVector<CSSStyleValuePair>::size();
+    }
+
+    CSSStyleValuePair& at(const size_t& idx)
+    {
+        return GCAtomicVector<CSSStyleValuePair>::at(idx);
+    }
+
+    const CSSStyleValuePair& at(const size_t& idx) const
+    {
+        return GCAtomicVector<CSSStyleValuePair>::at(idx);
+    }
+
+    CSSStyleValuePair& operator[](const size_t& idx)
+    {
+        return at(idx);
+    }
+
+    const CSSStyleValuePair& operator[](const size_t& idx) const
+    {
+        return at(idx);
     }
 
     String* separatorString()
@@ -2179,7 +2227,16 @@ public:
     }
 
 protected:
+    void rootPointer(CSSStyleValuePair v)
+    {
+        auto p = v.pointerValue();
+        if (p) {
+            m_pointerRooter.insert(p);
+        }
+    }
+
     Separator m_separator;
+    GCUnorderedSet<void*> m_pointerRooter;
 };
 
 class CSSSelector;

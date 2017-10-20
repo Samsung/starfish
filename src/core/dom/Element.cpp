@@ -1320,6 +1320,26 @@ CSSStyleDeclaration* Element::getComputedStyle()
 
     {
         CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::FontFamily);
+        if (style->fontFamily()[0].m_length == 1) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            p.setValue(style->fontFamily()[1].m_familyName);
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* val =
+                new ValueList(ValueList::Separator::CommaSeparator);
+            size_t len = style->fontFamily()[0].m_length;
+            for (size_t i = 0; i < len; i++) {
+                val->emplace_back(CSSStyleValuePair::ValueKind::StringValueKind,
+                                  style->fontFamily()[i + 1].m_familyName);
+            }
+            p.setValueList(val);
+        }
+        d->addValuePair(p);
+    }
+
+    {
+        CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ZIndex);
         if (style->isSpecifiedZIndex()) {
             p.setValueKind(CSSStyleValuePair::ValueKind::Int32);

@@ -43,6 +43,23 @@ enum ComputedStyleDamage {
     ComputedStyleDamageComposite = 1 << 4,
 };
 
+union FontFamilyData {
+    size_t m_length;
+    String* m_familyName;
+
+    FontFamilyData(size_t len)
+        : m_length(len)
+    {
+    }
+
+    FontFamilyData(String* familyName)
+        : m_familyName(familyName)
+    {
+    }
+};
+
+extern FontFamilyData g_initialFontFamilyDatas[2];
+
 class RareComputedStyleData : public gc {
     struct OutlineData : public gc {
         BorderValue m_outline;
@@ -172,6 +189,7 @@ public:
         m_inheritedStyles.m_rareData = nullptr;
         m_inheritedStyles.m_isRareDataAllocated = false;
         m_inheritedStyles.m_isFontSizeSpecifiedByUser = false;
+        m_inheritedStyles.m_fontFamilyDatas = g_initialFontFamilyDatas;
 
         initNonInheritedStyles();
     }
@@ -1132,6 +1150,16 @@ public:
         m_inheritedStyles.m_fixedFontSize = fixedFontSize;
     }
 
+    void setFontFamily(FontFamilyData* datas)
+    {
+        m_inheritedStyles.m_fontFamilyDatas = datas;
+    }
+
+    FontFamilyData* fontFamily()
+    {
+        return m_inheritedStyles.m_fontFamilyDatas;
+    }
+
     void setLetterSpacing(Length len)
     {
         if (!len.isFixed() || letterSpacing() != len)
@@ -1769,6 +1797,7 @@ protected:
         bool m_isRareDataAllocated : 1;
         bool m_isFontSizeSpecifiedByUser : 1;
 
+        FontFamilyData* m_fontFamilyDatas; // [size_t, String, String...]
         Unit::Color m_color;
         Length m_fontSize;
         float m_fixedFontSize;

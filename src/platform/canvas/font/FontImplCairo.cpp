@@ -44,6 +44,7 @@ public:
     FT_Library m_FTFaceLib;
     std::unordered_map<std::string, std::pair<FT_Face, hb_font_t*>>
         m_loadedFonts;
+    std::unordered_set<std::string> m_absenceFontNames;
 
     typedef std::unordered_map<char32_t, std::pair<unsigned, unsigned>>
         GlyphIndexCachePerFace;
@@ -78,7 +79,30 @@ public:
         // http://www.w3.org/TR/css3-fonts/#font-matching-algorithm
         FcPattern* pattern = FcPatternCreate();
 
+        bool isGenericName = false;
+        if (familyName->equalsIgnoreCase("sans")) {
+            isGenericName = true;
+        } else if (familyName->equalsIgnoreCase("sans-serif")) {
+            isGenericName = true;
+        } else if (familyName->equalsIgnoreCase("serif")) {
+            isGenericName = true;
+        } else if (familyName->equalsIgnoreCase("monospace")) {
+            isGenericName = true;
+        } else if (familyName->equalsIgnoreCase("fantasy")) {
+            isGenericName = true;
+        } else if (familyName->equalsIgnoreCase("cursive")) {
+            isGenericName = true;
+        }
+
+        if (!isGenericName) {
+            auto lowerU8FamilyName = familyName->toLower()->toUTF8NonGCString();
+            if (m_absenceFontNames.find(lowerU8FamilyName) !=
+                m_absenceFontNames.end()) {
+                return nullptr;
+            }
+        }
         auto u8FamilyName = familyName->toUTF8NonGCString();
+
         if (!FcPatternAddString(pattern, FC_FAMILY,
                                 (const FcChar8*)u8FamilyName.data())) {
             FcPatternDestroy(pattern);
@@ -165,20 +189,19 @@ public:
             FcFontMatch(m_fcconfig, pattern, &fontConfigResult);
         if (!resultPattern) {
             FcPatternDestroy(pattern);
+
+            auto lowerU8FamilyName = familyName->toLower()->toUTF8NonGCString();
+            m_absenceFontNames.insert(lowerU8FamilyName);
+
             return nullptr;
         }
 
         if (!familyName->equalsIgnoreCase(STARFISH_DEFAULT_FONT_FAMILY)) {
             if (!after->equalsIgnoreCase(familyName)) {
-                // if we got generic name, we can use this result although after
-                // != familyName
-                if (familyName->equalsIgnoreCase("sans")) {
-                } else if (familyName->equalsIgnoreCase("sans-serif")) {
-                } else if (familyName->equalsIgnoreCase("serif")) {
-                } else if (familyName->equalsIgnoreCase("monospace")) {
-                } else if (familyName->equalsIgnoreCase("fantasy")) {
-                } else if (familyName->equalsIgnoreCase("cursive")) {
-                } else {
+                if (!isGenericName) {
+                    auto lowerU8FamilyName =
+                        familyName->toLower()->toUTF8NonGCString();
+                    m_absenceFontNames.insert(lowerU8FamilyName);
                     return nullptr;
                 }
             }
