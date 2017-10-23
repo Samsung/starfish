@@ -175,7 +175,7 @@
                     'files': [
                         'third_party/escargot/out/linux/x64/interpreter/release/libescargot.a',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/release',
+                    'destination': '<(PRODUCT_DIR)/../release/lib',
                 },
             ],
             'direct_dependent_settings': {
@@ -183,7 +183,7 @@
                     'third_party/escargot/include',
                 ],
                 'libraries': [
-                    'lib/release/libescargot.a',
+                    'lib/libescargot.a',
                 ],
             },
         },
@@ -195,7 +195,7 @@
                     'files': [
                         'third_party/escargot/out/linux/x64/interpreter/debug/libescargot.a',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                    'destination': '<(PRODUCT_DIR)/../debug/lib',
                 },
             ],
             'direct_dependent_settings': {
@@ -203,7 +203,7 @@
                     'third_party/escargot/include',
                 ],
                 'libraries': [
-                    'lib/debug/libescargot.a',
+                    'lib/libescargot.a',
                 ],
             },
         },
@@ -215,7 +215,7 @@
                     'files': [
                         '/usr/lib/web-widget-js/release/libescargot.a',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/tizen/release',
+                    'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
                 },
             ],
             'direct_dependent_settings': {
@@ -223,7 +223,7 @@
                     'third_party/escargot/include',
                 ],
                 'libraries': [
-                    'lib/tizen/release/libescargot.a',
+                    'lib/tizen/libescargot.a',
                 ],
             },
         },
@@ -240,7 +240,7 @@
                         'third_party/libav/out/linux/x64/release/libavutil/libavutil.so',
                         'third_party/libav/out/linux/x64/release/libavutil/libavutil.so.54',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/release',
+                    'destination': '<(PRODUCT_DIR)/../release/lib',
                 },
             ],
             'direct_dependent_settings': {
@@ -249,7 +249,7 @@
                     'third_party/libav',
                 ],
                 'libraries': [
-                    'lib/release/libavcodec.so lib/release/libavformat.so lib/release/libavutil.so',
+                    'lib/libavcodec.so lib/libavformat.so lib/libavutil.so',
                 ],
             },
         },
@@ -266,7 +266,7 @@
                         'third_party/libav/out/linux/x64/debug/libavutil/libavutil.so',
                         'third_party/libav/out/linux/x64/debug/libavutil/libavutil.so.54',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                    'destination': '<(PRODUCT_DIR)/../debug/lib',
                 },
             ],
             'direct_dependent_settings': {
@@ -275,7 +275,7 @@
                     'third_party/libav',
                 ],
                 'libraries': [
-                    'lib/debug/libavcodec.so lib/debug/libavformat.so lib/debug/libavutil.so',
+                    'lib/libavcodec.so lib/libavformat.so lib/libavutil.so',
                 ],
             },
         },
@@ -289,7 +289,7 @@
                         'third_party/zeromq/out/linux/x64/debug.shared/.libs/libzmq.so.5',
                         'third_party/zeromq/out/linux/x64/debug.shared/.libs/libzmq.so.5.0.1',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                    'destination': '<(PRODUCT_DIR)/../debug/lib',
                 },
             ],
             'direct_dependent_settings': {
@@ -297,7 +297,7 @@
                     'third_party/zeromq/include',
                 ],
                 'libraries': [
-                    'lib/debug/libzmq.so',
+                    'lib/libzmq.so',
                 ],
             },
         },
@@ -311,7 +311,7 @@
                         'third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.so.5',
                         'third_party/zeromq/out/linux/x64/release.shared/.libs/libzmq.so.5.0.1',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/release',
+                    'destination': '<(PRODUCT_DIR)/../release/lib',
                 },
             ],
             'direct_dependent_settings': {
@@ -319,13 +319,13 @@
                     'third_party/zeromq/include',
                 ],
                 'libraries': [
-                    'lib/release/libzmq.so',
+                    'lib/libzmq.so',
                 ],
             },
         },
         {
             'target_name': 'gc.x64.release',
-            'type': '<(deplib)',
+            'type': 'none',
             'copies': [
                 {
                     'files': [
@@ -333,7 +333,7 @@
                         'third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1',
                         'third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1.0.3',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/release',
+                    'destination': '<(PRODUCT_DIR)/../release/lib',
                 },
             ],
             'include_dirs': [
@@ -348,13 +348,13 @@
                     'third_party/GCutil',
                 ],
                 'libraries': [
-                    'lib/release/libgc.so',
+                    'lib/libgc.so',
                 ],
             },
         },
         {
             'target_name': 'gc.x64.debug',
-            'type': '<(deplib)',
+            'type': 'none',
             'copies': [
                 {
                     'files': [
@@ -362,7 +362,7 @@
                         'third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1',
                         'third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1.0.3',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                    'destination': '<(PRODUCT_DIR)/../debug/lib',
                 },
             ],
             'include_dirs': [
@@ -377,19 +377,19 @@
                     'third_party/GCutil',
                 ],
                 'libraries': [
-                    'lib/debug/libgc.so',
+                    'lib/libgc.so',
                 ],
             },
         },
         {
             'target_name': 'gc.tizen.release',
-            'type': '<(deplib)',
+            'type': 'none',
             'copies': [
                 {
                     'files': [
                         '/usr/lib/web-widget-js/release/libgc.a'
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/tizen/release',
+                    'destination': '<(PRODUCT_DIR)/../release/lib',
                 },
             ],
             'include_dirs': [
@@ -404,7 +404,7 @@
                     'third_party/GCutil',
                 ],
                 'libraries': [
-                    'lib/tizen/release/libgc.a',
+                    'lib/libgc.a',
                 ],
             },
         },
@@ -535,49 +535,49 @@
         },
         {
             'target_name': 'libtuv.x64.debug',
-            'type': '<(deplib)',
+            'type': 'none',
             'copies': [
                 {
                     'files': [
                         'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/debug',
+                    'destination': '<(PRODUCT_DIR)/../debug/lib',
                 },
             ],
         },
         {
             'target_name': 'libtuv.x64.release',
-            'type': '<(deplib)',
+            'type': 'none',
             'copies': [
                 {
                     'files': [
                         'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/release',
+                    'destination': '<(PRODUCT_DIR)/../release/lib',
                 },
             ],
         },
         {
             'target_name': 'libtuv.tizen.debug',
-            'type': '<(deplib)',
+            'type': 'none',
             'copies': [
                 {
                     'files': [
                         'third_party/libtuv/build/arm-tizen/debug/lib/libtuv.a',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/tizen/debug',
+                    'destination': '<(PRODUCT_DIR)/../debug/lib/tizen',
                 },
             ],
         },
         {
             'target_name': 'libtuv.tizen.release',
-            'type': '<(deplib)',
+            'type': 'none',
             'copies': [
                 {
                     'files': [
                         'third_party/libtuv/build/arm-tizen/debug/lib/libtuv.a',
                     ],
-                    'destination': '<(PRODUCT_DIR)/lib/tizen/release',
+                    'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
                 },
             ],
         },
