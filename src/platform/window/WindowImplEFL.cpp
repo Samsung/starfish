@@ -889,8 +889,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
 #ifdef STARFISH_TIZEN_TV
-            if ((strcmp(d->key, "XF86Red") == 0)) {
+            if ((strncmp(d->key, "XF86Red", 7) == 0)) {
                 d->key = "Tab";
+            } else if ((strncmp(d->key, "XF86Back", 8) == 0)) {
+                d->key = "Escape";
             }
 #endif
             auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
@@ -903,8 +905,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             sf->m_isKeyDown = true;
 
 #ifdef STARFISH_TIZEN_TV
-            if ((strcmp(d->key, "XF86Exit") == 0) ||
-                (strcmp(d->key, "XF86Back") == 0)) {
+            if ((strncmp(d->key, "XF86Exit", 8) == 0)) {
                 evas_object_del(sf->m_window);
                 return EINA_FALSE;
             }
@@ -923,8 +924,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
             Ecore_Event_Key* d = (Ecore_Event_Key*)event;
 #ifdef STARFISH_TIZEN_TV
-            if ((strcmp(d->key, "XF86Red") == 0)) {
+            if ((strncmp(d->key, "XF86Red", 7) == 0)) {
                 d->key = "Tab";
+            } else if ((strncmp(d->key, "XF86Back", 8) == 0)) {
+                d->key = "Escape";
             }
 #endif
             auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);

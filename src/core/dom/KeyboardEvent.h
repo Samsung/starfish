@@ -406,7 +406,8 @@ public:
     bool repeat()
     {
 #ifndef NDEBUG
-#ifndef PORT_GRAPHIC_BACKEND_EFL
+#if !defined(PORT_GRAPHIC_BACKEND_EFL) && \
+    !defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 #endif
 #endif
