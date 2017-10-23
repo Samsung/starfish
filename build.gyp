@@ -136,7 +136,7 @@
         {
             'target_name': 'starfish.tizen.release',
             'type': '<(component)',
-            'product_name': 'StarFish.tizen.release',
+            'product_name': 'lightweight-web-engine',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',

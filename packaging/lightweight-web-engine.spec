@@ -81,9 +81,9 @@ ninja -C out/release starfish.tizen.release
 
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}
-cp -r out/release/lib/libStarFish.tizen.release.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+cp -r out/release/lib/liblightweight-web-engine.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
 mkdir -p %{buildroot}%{_bindir}
-cp -r out/release/StarFish.tizen.release %{buildroot}%{_bindir}/%{bin}
+cp -r out/release/lightweight-web-engine %{buildroot}%{_bindir}/%{bin}
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishPublic.h %{buildroot}%{_includedir}/%{name}/
