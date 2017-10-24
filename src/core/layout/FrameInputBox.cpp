@@ -120,7 +120,7 @@ void FrameInputBox::layout(LayoutContext& ctx,
         }
 
         style()->setFontSize(fontSize);
-        style()->loadFont(node()->starFish(), fontSize.fixed());
+        style()->loadFont(node(), fontSize.fixed());
         // TODO: propagate fontsize
     }
 

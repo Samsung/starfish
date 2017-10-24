@@ -20,77 +20,184 @@
 
 namespace StarFish {
 
-static String* removeQuoteFromName(String* name)
+static UTF8StringDataNonGCStd mergeStyleWeightWithString(
+    const UTF8StringDataNonGCStd& name, char style, char weight)
 {
-    auto bad = name->bufferAccessData();
-    char32_t c = bad.charAt(0);
-    if (c == '"') {
-        if (bad.charAt(bad.length - 1) != '"') {
-            return name;
+    UTF8StringDataNonGCStd result = name;
+    result += " s:" + (style + 'a');
+    result += " w:" + (weight + 'a');
+    return result;
+}
+
+static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
+                                               size_t len, float size,
+                                               char style, char weight)
+{
+    UTF8StringDataNonGCStd result;
+    result.reserve(128);
+
+    for (size_t i = 0; i < len; i++) {
+        auto bad = familyNameArray[i]->bufferAccessData();
+        for (size_t j = 0; j < bad.length; j++) {
+            char32_t c = bad.charAt(j);
+            if (c >= 'A' && c <= 'Z') {
+                c -= ('A' - 'a');
+            }
+
+            if (LIKELY(c < 128)) {
+                result += (char)c;
+            } else {
+                char buf[16];
+                size_t l = utf32ToUtf8(c, buf);
+                result.append(buf, l);
+            }
         }
-        if (bad.length > 2) {
-            return name->substring(0, bad.length - 2);
-        }
-        return name;
-    } else if (c == '\'') {
-        if (bad.charAt(bad.length - 1) != '\'') {
-            return name;
-        }
-        if (bad.length > 2) {
-            return name->substring(0, bad.length - 2);
-        }
-        return name;
     }
-    return name;
+
+    result += " s:" + std::to_string(int(size + 0.5f));
+    result += " s:" + (style + 'a');
+    result += " w:" + (weight + 'a');
+    return result;
+}
+
+static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
+                                               size_t len, char style,
+                                               char weight)
+{
+    UTF8StringDataNonGCStd result;
+    result.reserve(128);
+
+    for (size_t i = 0; i < len; i++) {
+        auto bad = familyNameArray[i]->bufferAccessData();
+        for (size_t j = 0; j < bad.length; j++) {
+            char32_t c = bad.charAt(j);
+            if (c >= 'A' && c <= 'Z') {
+                c -= ('A' - 'a');
+            }
+
+            if (LIKELY(c < 128)) {
+                result += (char)c;
+            } else {
+                char buf[16];
+                size_t l = utf32ToUtf8(c, buf);
+                result.append(buf, l);
+            }
+        }
+    }
+
+    result += " s:" + (style + 'a');
+    result += " w:" + (weight + 'a');
+    return result;
+}
+
+FontFace* FontSelector::lookupFaceCache(
+    const UTF8StringDataNonGCStd& familyName, char style, char weight,
+    bool& exist)
+{
+    auto iter = m_fontFaceCache.find(familyName);
+    if (iter == m_fontFaceCache.end()) {
+        exist = false;
+        return nullptr;
+    } else {
+        exist = true;
+        return iter->second;
+    }
+}
+
+void FontSelector::insertFaceCache(const UTF8StringDataNonGCStd& familyName,
+                                   char style, char weight, FontFace* face)
+{
+    STARFISH_ASSERT(m_fontFaceCache.find(familyName) == m_fontFaceCache.end());
+    m_fontFaceCache.insert(std::make_pair(familyName, face));
+}
+
+static bool isGenericFontName(const UTF8StringDataNonGCStd& familyName)
+{
+    bool isGenericName = false;
+    if (familyName == "sans") {
+        isGenericName = true;
+    } else if (familyName == "sans-serif") {
+        isGenericName = true;
+    } else if (familyName == "serif") {
+        isGenericName = true;
+    } else if (familyName == "monospace") {
+        isGenericName = true;
+    } else if (familyName == "fantasy") {
+        isGenericName = true;
+    } else if (familyName == "cursive") {
+        isGenericName = true;
+    }
+
+    return isGenericName;
 }
 
 Font* FontSelector::loadFont(String* familyNameArray[],
                              size_t familyNameArraySize, float size, char style,
                              char weight)
 {
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    Font* result;
-    if (isGenericFontSelector()) {
-        result = Font::createGenericEmptyFont(this);
-    } else {
-        result = Font::createEmptyFont(this);
+    auto cacheFontName = mergeFamilyNames(familyNameArray, familyNameArraySize,
+                                          size, style, weight);
+    auto iter = m_fontCache.find(cacheFontName);
+    if (iter != m_fontCache.end()) {
+        return iter->second;
     }
-#else
+
     Font* result = Font::createEmptyFont(this);
-#endif
+
+    auto cacheFontListName =
+        mergeFamilyNames(familyNameArray, familyNameArraySize, style, weight);
+    auto iter2 = m_fontFaceListCache.find(cacheFontListName);
+    if (iter2 != m_fontFaceListCache.end()) {
+        result->m_fontFaceList = iter2->second;
+        result->m_size = size;
+        result->m_spaceWidth = result->measureText(String::spaceString);
+        return result;
+    }
+
+    result->m_fontFaceList = new FontFaceList;
 
     for (size_t i = 0; i < familyNameArraySize; i++) {
-        String* fm = removeQuoteFromName(familyNameArray[i]);
+        auto fm = familyNameArray[i]->toUTF8NonGCString();
+        std::transform(fm.begin(), fm.end(), fm.begin(), ::tolower);
+        UTF8StringDataNonGCStd cacheStr =
+            mergeStyleWeightWithString(fm, style, weight);
+
         bool exist;
-        FontFace* face = lookupCache(fm, size, style, weight, exist);
+        FontFace* face = lookupFaceCache(cacheStr, style, weight, exist);
         if (!exist) {
-            face = loadFontImpl(fm, size, style, weight);
-            m_fontCache.push_back(
-                std::make_tuple(face, fm, size, style, weight));
+            bool g = isGenericFontName(fm);
+            face = loadFontFaceImpl(fm, g, style, weight);
+            insertFaceCache(cacheStr, style, weight, face);
         }
 
         if (face) {
-            result->m_fontFaceList.push_back(face);
+            result->m_fontFaceList->push_back(face);
         }
     }
 
-    String* familyName = g_initialFontFamilyDatas[1].m_familyName;
+    UTF8StringDataNonGCStd familyName =
+        g_initialFontFamilyDatas[1].m_familyName->toUTF8NonGCString();
+    UTF8StringDataNonGCStd cacheStr =
+        mergeStyleWeightWithString(familyName, style, weight);
     bool exist;
-    FontFace* face = lookupCache(familyName, size, style, weight, exist);
+    FontFace* face = lookupFaceCache(cacheStr, style, weight, exist);
 
     if (!exist) {
-        face = loadFontImpl(familyName, size, style, weight);
-        m_fontCache.push_back(
-            std::make_tuple(face, familyName, size, style, weight));
+        bool g = isGenericFontName(familyName);
+        face = loadFontFaceImpl(familyName, g, style, weight);
+        insertFaceCache(cacheStr, style, weight, face);
     }
 
-    if (face) {
-        result->m_fontFaceList.push_back(face);
-    }
+    STARFISH_RELEASE_ASSERT(face);
 
-    STARFISH_RELEASE_ASSERT(result->m_fontFaceList.size() >= 1);
-
+    result->m_fontFaceList->push_back(face);
+    result->m_size = size;
     result->m_spaceWidth = result->measureText(String::spaceString);
+
+    m_fontFaceListCache.insert(
+        std::make_pair(cacheFontListName, result->m_fontFaceList));
+    m_fontCache.insert(std::make_pair(cacheFontName, result));
+
     return result;
 }
 };

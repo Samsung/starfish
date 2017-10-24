@@ -728,14 +728,23 @@ String* String::toUpper()
 {
     auto data = bufferAccessData();
     if (data.hasASCIIContent) {
-        ASCIIString str(data.asciiData(), data.length);
-        std::transform(str.begin(), str.end(), str.begin(), u_toupper);
-        return new StringDataASCII(std::move(str));
+        for (size_t i = 0; i < data.length; i++) {
+            if (::islower(data.asciiData()[i])) {
+                ASCIIString str(data.asciiData(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+                return new StringDataASCII(std::move(str));
+            }
+        }
+        return this;
     } else {
-        UTF32String str(data.utf32Data(), data.length);
-        // TODO use icu to transform utf-32 string
-        std::transform(str.begin(), str.end(), str.begin(), u_toupper);
-        return new StringDataUTF32(std::move(str));
+        for (size_t i = 0; i < data.length; i++) {
+            if (u_islower(data.utf32Data()[i])) {
+                UTF32String str(data.utf32Data(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), u_toupper);
+                return new StringDataUTF32(std::move(str));
+            }
+        }
+        return this;
     }
 }
 
@@ -743,14 +752,23 @@ String* String::toASCIIUpper()
 {
     auto data = bufferAccessData();
     if (data.hasASCIIContent) {
-        ASCIIString str(data.asciiData(), data.length);
-        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-        return new StringDataASCII(std::move(str));
+        for (size_t i = 0; i < data.length; i++) {
+            if (::islower(data.asciiData()[i])) {
+                ASCIIString str(data.asciiData(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+                return new StringDataASCII(std::move(str));
+            }
+        }
+        return this;
     } else {
-        UTF32String str(data.utf32Data(), data.length);
-        // TODO use icu to transform utf-32 string
-        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-        return new StringDataUTF32(std::move(str));
+        for (size_t i = 0; i < data.length; i++) {
+            if (::islower(data.utf32Data()[i])) {
+                UTF32String str(data.utf32Data(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+                return new StringDataUTF32(std::move(str));
+            }
+        }
+        return this;
     }
 }
 
@@ -758,14 +776,23 @@ String* String::toLower()
 {
     auto data = bufferAccessData();
     if (data.hasASCIIContent) {
-        ASCIIString str(data.asciiData(), data.length);
-        std::transform(str.begin(), str.end(), str.begin(), u_tolower);
-        return new StringDataASCII(std::move(str));
+        for (size_t i = 0; i < data.length; i++) {
+            if (::isupper(data.asciiData()[i])) {
+                ASCIIString str(data.asciiData(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+                return new StringDataASCII(std::move(str));
+            }
+        }
+        return this;
     } else {
-        UTF32String str(data.utf32Data(), data.length);
-        // TODO use icu to transform utf-32 string
-        std::transform(str.begin(), str.end(), str.begin(), u_tolower);
-        return new StringDataUTF32(std::move(str));
+        for (size_t i = 0; i < data.length; i++) {
+            if (u_isupper(data.utf32Data()[i])) {
+                UTF32String str(data.utf32Data(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), u_tolower);
+                return new StringDataUTF32(std::move(str));
+            }
+        }
+        return this;
     }
 }
 
@@ -773,14 +800,23 @@ String* String::toASCIILower()
 {
     auto data = bufferAccessData();
     if (data.hasASCIIContent) {
-        ASCIIString str(data.asciiData(), data.length);
-        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-        return new StringDataASCII(std::move(str));
+        for (size_t i = 0; i < data.length; i++) {
+            if (::isupper(data.asciiData()[i])) {
+                ASCIIString str(data.asciiData(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+                return new StringDataASCII(std::move(str));
+            }
+        }
+        return this;
     } else {
-        UTF32String str(data.utf32Data(), data.length);
-        // TODO use icu to transform utf-32 string
-        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-        return new StringDataUTF32(std::move(str));
+        for (size_t i = 0; i < data.length; i++) {
+            if (::isupper(data.utf32Data()[i])) {
+                UTF32String str(data.utf32Data(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+                return new StringDataUTF32(std::move(str));
+            }
+        }
+        return this;
     }
 }
 

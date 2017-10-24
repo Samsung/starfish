@@ -1249,7 +1249,7 @@ public:
                display == DisplayValue::TableCaptionDisplayValue;
     }
 
-    void loadFont(StarFish* sf, float fixedFontSize);
+    void loadFont(Node* consumer, float fixedFontSize);
     bool hasBorderRadius()
     {
         if (!m_rareComputedStyleData) {

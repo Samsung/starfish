@@ -375,7 +375,7 @@ void Node::loadFontAndChangeFontPercentToFixedIfNeeded(
         //     asHTMLInputElement()->type()->equals("checkbox"))) {
         // }
         style->setFixedFontSize(fixedFontSize);
-        style->loadFont(sf, fixedFontSize);
+        style->loadFont(this, fixedFontSize);
         font = style->font();
         style->changeFontPercentToFixedIfNeeded(fontSize, rootFontSize, font);
 

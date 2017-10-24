@@ -33,20 +33,65 @@ class FontSelectorImplCairo;
 class FontFaceImplCairo : public FontFace {
 public:
     FontFaceImplCairo(String* familyName, FT_Face face, hb_font_t* hbFace,
-                      FontMetrics met, float size, char style, char weight)
+                      char style, char weight)
     {
         m_familyName = familyName;
         m_face = face;
         m_hbFace = hbFace;
-        m_metrics = met;
-        m_size = size;
         m_weight = weight;
         m_style = style;
         m_supportsKerning = m_face->face_flags & FT_FACE_FLAG_KERNING;
+
+        FT_Error error;
+        FT_UInt glyph_index = FT_Get_Char_Index(m_face, 'x');
+        if (glyph_index) {
+            error = FT_Load_Glyph(m_face, glyph_index, FT_LOAD_NO_SCALE);
+            m_xHeight = m_face->glyph->metrics.height;
+        } else {
+            m_xHeight = 0;
+        }
+
+        m_unitsPerEM = m_face->units_per_EM;
+        if (m_unitsPerEM == 0) {
+            m_unitsPerEM = 2048; // fallback
+        }
+        m_ascender = m_face->ascender;
+        m_descender = m_face->descender;
+        if (m_ascender == 0 || m_descender == 0) {
+            m_ascender = m_unitsPerEM; // fallback
+            m_descender = 0;
+        }
+    }
+
+    virtual FontMetrics metrics(float size)
+    {
+        int intSize = int(size + 0.5f);
+
+        FontMetrics met;
+        met.m_fontHeight =
+            ((m_ascender - m_descender) * intSize) / m_unitsPerEM;
+        met.m_ascender = ((m_ascender * intSize) / (m_unitsPerEM));
+        met.m_descender = met.m_ascender - met.m_fontHeight;
+        met.m_xheightRate = m_xHeight / m_unitsPerEM / (float)intSize;
+
+#ifdef STARFISH_ENABLE_TEST
+        if (g_enablePixelTest) {
+            // Set the FontMetrics as if font is Ahem.
+            met.m_ascender = size * 0.8;
+            met.m_descender = met.m_ascender - size;
+            met.m_fontHeight = met.m_ascender - met.m_descender;
+            met.m_xheightRate = 0.8f;
+        }
+#endif
+        return met;
     }
 
     FT_Face m_face;
     hb_font_t* m_hbFace;
+    unsigned m_xHeight;
+    unsigned m_unitsPerEM;
+    unsigned m_ascender;
+    unsigned m_descender;
 };
 
 class FontCairoTextRun {

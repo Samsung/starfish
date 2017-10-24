@@ -4035,17 +4035,20 @@ void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
             PaintingInlineStage s = PaintingInlineBox;
             while (s != PaintingInlineStageEnd) {
                 ctx.m_paintingInlineStage = s;
-                ctx.m_canvas->save();
                 LineBox& b = *m_lineBoxes[i];
-                ctx.m_canvas->translate(b.frameRect().x(), b.frameRect().y());
+                LayoutUnit ldx = b.frameRect().x();
+                LayoutUnit ldy = b.frameRect().y();
+                ctx.m_canvas->translate(ldx, ldy);
                 for (size_t k = 0; k < b.m_boxes.size(); k++) {
                     FrameBox* childBox = b.m_boxes[k];
-                    ctx.m_canvas->save();
-                    ctx.m_canvas->translate(childBox->x(), childBox->y());
+
+                    LayoutUnit dx = childBox->x();
+                    LayoutUnit dy = childBox->y();
+                    ctx.m_canvas->translate(dx, dy);
                     childBox->paint(ctx);
-                    ctx.m_canvas->restore();
+                    ctx.m_canvas->translate(-dx, -dy);
                 }
-                ctx.m_canvas->restore();
+                ctx.m_canvas->translate(-ldx, -ldy);
                 s = (PaintingInlineStage)(s + 1);
             }
             ctx.m_paintingInlineStage = old;
@@ -4077,16 +4080,16 @@ void InlineTextBox::paint(PaintingContext& ctx)
 {
     if (ctx.m_paintingInlineStage == PaintingInlineBox) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline) {
-            if (style()->visibility() ==
-                VisibilityValue::HiddenVisibilityValue) {
-                ctx.m_canvas->setVisible(false);
+            ComputedStyle* s = style();
+            if (s->visibility() == VisibilityValue::HiddenVisibilityValue) {
+                return;
             } else {
                 ctx.m_canvas->setVisible(true);
             }
 
-            ctx.m_canvas->setFont(style()->font());
-            ctx.m_canvas->setColor(style()->color());
-            ctx.m_canvas->setTextShadowData(style()->textShadow());
+            ctx.m_canvas->setFont(s->font());
+            ctx.m_canvas->setColor(s->color());
+            ctx.m_canvas->setTextShadowData(s->textShadow());
             ctx.m_canvas->drawText(0, 0, contentWidth(), text());
         }
     }
@@ -4145,6 +4148,7 @@ void InlineNonReplacedBox::paint(PaintingContext& ctx)
         return;
     }
 
+    auto savedTextDecorationData = ctx.m_canvas->textDecorationData();
     if (shouldResetTextDecoration()) {
         ctx.m_canvas->resetTextDecorationData();
     } else {
@@ -4187,6 +4191,8 @@ void InlineNonReplacedBox::paint(PaintingContext& ctx)
     } else {
         paintChildrenWith(ctx);
     }
+
+    ctx.m_canvas->setTextDecorationData(savedTextDecorationData);
 }
 
 void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
@@ -4194,11 +4200,11 @@ void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
     auto iter = boxes().begin();
     while (iter != boxes().end()) {
         FrameBox* child = *iter;
-        ctx.m_canvas->save();
-        ctx.m_canvas->translate(child->asFrameBox()->x(),
-                                child->asFrameBox()->y());
+        LayoutUnit dx = child->asFrameBox()->x();
+        LayoutUnit dy = child->asFrameBox()->y();
+        ctx.m_canvas->translate(dx, dy);
         child->paint(ctx);
-        ctx.m_canvas->restore();
+        ctx.m_canvas->translate(-dx, -dy);
         iter++;
     }
 }

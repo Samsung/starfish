@@ -1073,7 +1073,7 @@ OverflowValue Frame::appliedOverflowY()
     return m_styleWhenNodeIsAnonymous->overflowY();
 }
 
-void Frame::loadFont(StarFish* sf, float parentFontSize)
+void Frame::loadFont(float parentFontSize)
 {
     ComputedStyle* style = this->style();
     float fixedFontSize = parentFontSize;
@@ -1092,11 +1092,11 @@ void Frame::loadFont(StarFish* sf, float parentFontSize)
     }
 
     style->setFixedFontSize(fixedFontSize);
-    style->loadFont(sf, fixedFontSize);
+    style->loadFont(nearstNotAnonymousNode(), fixedFontSize);
 
     Frame* child = firstChild();
     while (child) {
-        child->loadFont(sf, fixedFontSize);
+        child->loadFont(fixedFontSize);
         child = child->next();
     }
 }

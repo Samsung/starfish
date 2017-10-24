@@ -50,7 +50,7 @@ public:
         GlyphIndexCachePerFace;
     std::unordered_map<FT_Face, std::unique_ptr<GlyphIndexCachePerFace>>
         m_glyphIndexCache;
-    std::vector<std::tuple<int, FT_Face, hb_font_t*, char, char>>
+    GCVector<std::tuple<int, FontFaceImplCairo*, char, char>>
         m_fallbackFontCachePerCodeBlock;
 
     hb_buffer_t* m_hbBuffer;
@@ -73,35 +73,20 @@ public:
         hb_buffer_destroy(m_hbBuffer);
     }
 
-    FontFace* loadFontImpl(String* familyName, float size, char style,
-                           char weight)
+    virtual FontFace* loadFontFaceImpl(const UTF8StringDataNonGCStd& familyName,
+                                       bool isGenericName, char style,
+                                       char weight)
     {
         // http://www.w3.org/TR/css3-fonts/#font-matching-algorithm
-        FcPattern* pattern = FcPatternCreate();
-
-        bool isGenericName = false;
-        if (familyName->equalsIgnoreCase("sans")) {
-            isGenericName = true;
-        } else if (familyName->equalsIgnoreCase("sans-serif")) {
-            isGenericName = true;
-        } else if (familyName->equalsIgnoreCase("serif")) {
-            isGenericName = true;
-        } else if (familyName->equalsIgnoreCase("monospace")) {
-            isGenericName = true;
-        } else if (familyName->equalsIgnoreCase("fantasy")) {
-            isGenericName = true;
-        } else if (familyName->equalsIgnoreCase("cursive")) {
-            isGenericName = true;
-        }
-
         if (!isGenericName) {
-            auto lowerU8FamilyName = familyName->toLower()->toUTF8NonGCString();
-            if (m_absenceFontNames.find(lowerU8FamilyName) !=
+            if (m_absenceFontNames.find(familyName) !=
                 m_absenceFontNames.end()) {
                 return nullptr;
             }
         }
-        auto u8FamilyName = familyName->toUTF8NonGCString();
+
+        FcPattern* pattern = FcPatternCreate();
+        auto u8FamilyName = familyName;
 
         if (!FcPatternAddString(pattern, FC_FAMILY,
                                 (const FcChar8*)u8FamilyName.data())) {
@@ -158,11 +143,8 @@ public:
         default:
             STARFISH_ASSERT_NOT_REACHED();
         }
+
         if (!FcPatternAddInteger(pattern, FC_WEIGHT, fontWeight)) {
-            FcPatternDestroy(pattern);
-            return nullptr;
-        }
-        if (!FcPatternAddDouble(pattern, FC_PIXEL_SIZE, int(size + 0.5f))) {
             FcPatternDestroy(pattern);
             return nullptr;
         }
@@ -182,26 +164,22 @@ public:
 
         FcChar8* fontNameAfterMatch;
         FcPatternGetString(pattern, FC_FAMILY, 0, &fontNameAfterMatch);
-        String* after = String::fromUTF8((char*)fontNameAfterMatch);
+        UTF8StringDataNonGCStd after = (char*)fontNameAfterMatch;
+        std::transform(after.begin(), after.end(), after.begin(), ::tolower);
 
         FcResult fontConfigResult;
         FcPattern* resultPattern =
             FcFontMatch(m_fcconfig, pattern, &fontConfigResult);
         if (!resultPattern) {
             FcPatternDestroy(pattern);
-
-            auto lowerU8FamilyName = familyName->toLower()->toUTF8NonGCString();
-            m_absenceFontNames.insert(lowerU8FamilyName);
-
+            m_absenceFontNames.insert(familyName);
             return nullptr;
         }
 
-        if (!familyName->equalsIgnoreCase(STARFISH_DEFAULT_FONT_FAMILY)) {
-            if (!after->equalsIgnoreCase(familyName)) {
+        if (familyName != STARFISH_DEFAULT_FONT_FAMILY) {
+            if (after != familyName) {
                 if (!isGenericName) {
-                    auto lowerU8FamilyName =
-                        familyName->toLower()->toUTF8NonGCString();
-                    m_absenceFontNames.insert(lowerU8FamilyName);
+                    m_absenceFontNames.insert(familyName);
                     return nullptr;
                 }
             }
@@ -216,7 +194,8 @@ public:
 
         FcPatternDestroy(resultPattern);
         FcPatternDestroy(pattern);
-        return loadFont(u8FilePath, size, style, weight);
+
+        return loadFontFace(u8FilePath, style, weight);
     }
 
     std::pair<FT_Face, hb_font_t*> loadFontFace(const std::string& u8FilePath)
@@ -239,55 +218,30 @@ public:
         }
     }
 
-    FontFaceImplCairo* loadFont(const std::string& u8FilePath, float size,
-                                char style, char weight)
+    FontFaceImplCairo* loadFontFace(const std::string& u8FilePath, char style,
+                                    char weight)
     {
-        FT_Error error;
         auto ff = loadFontFace(u8FilePath);
-        FT_Face face = ff.first;
-
-        int intSize = int(size + 0.5f);
-        FT_UInt glyph_index = FT_Get_Char_Index(face, 'x');
-        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_SCALE);
-        CHECK_ERROR;
-        FT_Int xheight =
-            intSize * face->glyph->metrics.height / face->units_per_EM;
-
-        FontMetrics met;
-        met.m_fontHeight =
-            ((face->ascender - face->descender) * intSize) / face->units_per_EM;
-        met.m_ascender = ((face->ascender * intSize) / (face->units_per_EM));
-        met.m_descender = met.m_ascender - met.m_fontHeight;
-        met.m_xheightRate = xheight / (float)intSize;
-
-#ifdef STARFISH_ENABLE_TEST
-        if (g_enablePixelTest) {
-            // Set the FontMetrics as if font is Ahem.
-            met.m_ascender = size * 0.8;
-            met.m_descender = met.m_ascender - size;
-            met.m_fontHeight = met.m_ascender - met.m_descender;
-            met.m_xheightRate = 0.8f;
-        }
-#endif
-
-        FontFaceImplCairo* f =
-            new FontFaceImplCairo(String::fromUTF8((char*)face->family_name),
-                                  face, ff.second, met, size, style, weight);
+        FontFaceImplCairo* f = new FontFaceImplCairo(
+            String::fromUTF8((char*)ff.first->family_name), ff.first, ff.second,
+            style, weight);
         return f;
     }
 
     bool loadGlyphFromGlyphIndexCachePerFace(
-        FT_Face face, hb_font_t* hbFace, int intSize, char32_t ch,
+        FontFaceImplCairo* faceImpl, int intSize, char32_t ch,
         GlyphIndexCachePerFace* indexCache,
         std::pair<std::pair<FT_Face, hb_font_t*>,
                   std::pair<unsigned, LayoutUnit>>& result)
     {
+        FT_Face face = faceImpl->m_face;
+        hb_font_t* hbFace = faceImpl->m_hbFace;
         auto iter = indexCache->find(ch);
         if (iter != indexCache->end()) {
             if (iter->second.first) {
                 LayoutUnit width =
                     LayoutUnit((int)(iter->second.second * intSize)) /
-                    LayoutUnit((int)(face->units_per_EM));
+                    LayoutUnit((int)(faceImpl->m_unitsPerEM));
                 result =
                     std::make_pair(std::make_pair(face, hbFace),
                                    std::make_pair(iter->second.first, width));
@@ -305,7 +259,7 @@ public:
                 LayoutUnit width =
                     LayoutUnit(
                         (int)(face->glyph->metrics.horiAdvance * intSize)) /
-                    LayoutUnit((int)(face->units_per_EM));
+                    LayoutUnit((int)(faceImpl->m_unitsPerEM));
                 result = std::make_pair(std::make_pair(face, hbFace),
                                         std::make_pair(glyphIndex, width));
                 return true;
@@ -318,8 +272,8 @@ public:
     {
         for (size_t i = 0; i < m_fallbackFontCachePerCodeBlock.size(); i++) {
             auto a = m_fallbackFontCachePerCodeBlock[i];
-            if (std::get<0>(a) == blockCode && std::get<3>(a) == style &&
-                std::get<4>(a) == weight) {
+            if (std::get<0>(a) == blockCode && std::get<2>(a) == style &&
+                std::get<3>(a) == weight) {
                 return i;
             }
         }
@@ -336,13 +290,12 @@ public:
 
         int intSize = int(f->size() + .5f);
 
-        auto& fontFaceList = f->m_fontFaceList;
+        const auto& fontFaceList = f->fontFaceList();
         for (size_t i = 0; i < fontFaceList.size(); i++) {
-            FontFaceImplCairo* impl = (FontFaceImplCairo*)fontFaceList[i];
+            FontFaceImplCairo* impl = ((FontFaceImplCairo*)fontFaceList[i]);
             GlyphIndexCachePerFace* indexCache =
                 m_glyphIndexCache[impl->m_face].get();
-            if (loadGlyphFromGlyphIndexCachePerFace(impl->m_face,
-                                                    impl->m_hbFace, intSize, ch,
+            if (loadGlyphFromGlyphIndexCachePerFace(impl, intSize, ch,
                                                     indexCache, result)) {
                 return result;
             }
@@ -354,10 +307,11 @@ public:
 
         size_t c = lookFallbackFontCache(blockCode, f->style(), f->weight());
         if (c != SIZE_MAX) {
-            FT_Face face = std::get<1>(m_fallbackFontCachePerCodeBlock[c]);
-            auto hbFace = std::get<2>(m_fallbackFontCachePerCodeBlock[c]);
+            auto faceImpl = std::get<1>(m_fallbackFontCachePerCodeBlock[c]);
+            FT_Face face = faceImpl->m_face;
+            auto hbFace = faceImpl->m_hbFace;
             GlyphIndexCachePerFace* indexCache = m_glyphIndexCache[face].get();
-            if (loadGlyphFromGlyphIndexCachePerFace(face, hbFace, intSize, ch,
+            if (loadGlyphFromGlyphIndexCachePerFace(faceImpl, intSize, ch,
                                                     indexCache, result)) {
                 return result;
             }
@@ -446,18 +400,28 @@ public:
 
         auto fallbackFace = loadFontFace(u8FilePath);
 
+        // FontFaceImplCairo(String* familyName, FT_Face face, hb_font_t*
+        // hbFace,
+        //                   char style, char weight)
+
+        String* familyName = String::emptyString;
+        if (fallbackFace.first->family_name) {
+            familyName = String::fromUTF8(fallbackFace.first->family_name);
+        }
+        auto faceImpl =
+            new FontFaceImplCairo(familyName, fallbackFace.first,
+                                  fallbackFace.second, f->style(), f->weight());
+
         if (c == SIZE_MAX) {
             m_fallbackFontCachePerCodeBlock.push_back(
-                std::make_tuple(blockCode, fallbackFace.first,
-                                fallbackFace.second, f->style(), f->weight()));
+                std::make_tuple(blockCode, faceImpl, f->style(), f->weight()));
         }
 
         GlyphIndexCachePerFace* indexCache =
             m_glyphIndexCache[fallbackFace.first].get();
 
-        loadGlyphFromGlyphIndexCachePerFace(fallbackFace.first,
-                                            fallbackFace.second, intSize, ch,
-                                            indexCache, result);
+        loadGlyphFromGlyphIndexCachePerFace(faceImpl, intSize, ch, indexCache,
+                                            result);
         return result;
     }
 };

@@ -157,7 +157,7 @@ public:
     Document* m_document;
 };
 
-void ComputedStyle::loadFont(StarFish* sf, float fixedFontSize)
+void ComputedStyle::loadFont(Node* consumer, float fixedFontSize)
 {
     char style = m_inheritedStyles.m_fontStyle;
     char fontWeight = 4;
@@ -194,6 +194,34 @@ void ComputedStyle::loadFont(StarFish* sf, float fixedFontSize)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
+    StarFish* sf = consumer->starFish();
+    Font* parentNodeFont = nullptr;
+    if (consumer->parentNode() && consumer->parentNode()->style() &&
+        consumer->parentNode()->style()->font()) {
+        parentNodeFont = consumer->parentNode()->style()->font();
+    }
+    bool canUseParentFont = false;
+    if (parentNodeFont) {
+        ComputedStyle* parentStyle = consumer->parentNode()->style();
+        if (parentStyle->fontSize() == fontSize() &&
+            parentStyle->fontStyle() == fontStyle() &&
+            parentStyle->fontWeight() == this->fontWeight()) {
+            if (parentStyle->fontFamily()[0].m_length ==
+                fontFamily()[0].m_length) {
+                size_t len = fontFamily()[0].m_length;
+                canUseParentFont = true;
+                for (size_t i = 0; i < len; i++) {
+                    auto a = parentStyle->fontFamily()[i + 1].m_familyName;
+                    auto b = fontFamily()[i + 1].m_familyName;
+                    if (a != b && !a->equals(b)) {
+                        canUseParentFont = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
 #ifdef STARFISH_ENABLE_TEST
     if (g_enablePixelTest) {
         String* str = String::fromUTF8("Ahem");
@@ -203,16 +231,25 @@ void ComputedStyle::loadFont(StarFish* sf, float fixedFontSize)
             String* str = String::fromUTF8("SamsungOne");
             m_font = sf->fetchFont(&str, 1, fixedFontSize, style, fontWeight);
         } else {
-            m_font =
-                sf->fetchFont((String**)&m_inheritedStyles.m_fontFamilyDatas[1],
-                              m_inheritedStyles.m_fontFamilyDatas[0].m_length,
-                              fixedFontSize, style, fontWeight);
+            if (canUseParentFont) {
+                m_font = parentNodeFont;
+            } else {
+                m_font = sf->fetchFont(
+                    (String**)&m_inheritedStyles.m_fontFamilyDatas[1],
+                    m_inheritedStyles.m_fontFamilyDatas[0].m_length,
+                    fixedFontSize, style, fontWeight);
+            }
         }
     }
 #else
-    m_font = sf->fetchFont((String**)&m_inheritedStyles.m_fontFamilyDatas[1],
-                           m_inheritedStyles.m_fontFamilyDatas[0].m_length,
-                           fixedFontSize, style, fontWeight);
+    if (canUseParentFont) {
+        m_font = parentNodeFont;
+    } else {
+        m_font =
+            sf->fetchFont((String**)&m_inheritedStyles.m_fontFamilyDatas[1],
+                          m_inheritedStyles.m_fontFamilyDatas[0].m_length,
+                          fixedFontSize, style, fontWeight);
+    }
 #endif
 }
 
@@ -348,7 +385,7 @@ void ComputedStyle::loadResources(
     loadBorderImage(consumer,
                     prevComputedStyleValueForReferenceLoadedResources);
     if (allowFont) {
-        loadFont(consumer->starFish(), m_inheritedStyles.m_fixedFontSize);
+        loadFont(consumer, m_inheritedStyles.m_fixedFontSize);
     }
 }
 

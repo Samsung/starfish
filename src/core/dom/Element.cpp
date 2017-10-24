@@ -1327,7 +1327,8 @@ CSSStyleDeclaration* Element::getComputedStyle()
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
             ValueList* val =
-                new ValueList(ValueList::Separator::CommaSeparator);
+                new ValueList(ValueList::Separator::
+                                  CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
             size_t len = style->fontFamily()[0].m_length;
             for (size_t i = 0; i < len; i++) {
                 val->emplace_back(CSSStyleValuePair::ValueKind::StringValueKind,

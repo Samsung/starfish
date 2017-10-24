@@ -1322,7 +1322,7 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    void loadFont(StarFish* sf, float parentFontSize);
+    void loadFont(float parentFontSize);
 
     virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
     {

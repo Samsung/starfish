@@ -650,7 +650,10 @@ static bool parseFontShorthand(const CSSTokenVector& tokens,
     CSSTokenVector fontFamilyCandidate;
 
     while (pos < len) {
-        const CSSTokenValue& token = tokens[pos++];
+        const CSSTokenValue& orgToken = tokens[pos];
+        CSSTokenValue token = tokens[pos++];
+        std::transform(token.begin(), token.end(), token.begin(), ::tolower);
+
         if (hasSizePrev) {
             hasSizePrev = false;
             if (token.equals("/")) {
@@ -681,7 +684,20 @@ static bool parseFontShorthand(const CSSTokenVector& tokens,
             *_Size = temp;
             continue;
         } else if (hasSize) {
-            fontFamilyCandidate.push_back(token);
+            if (hasFamily && token == ",") {
+                continue;
+            }
+            if (token[0] == '\'' && token.length() > 2 &&
+                token.back() == '\'') {
+                fontFamilyCandidate.push_back(
+                    orgToken.substr(1, orgToken.length() - 2));
+            } else if (token[0] == '"' && token.length() > 2 &&
+                       token.back() == '"') {
+                fontFamilyCandidate.push_back(
+                    orgToken.substr(1, orgToken.length() - 2));
+            } else {
+                fontFamilyCandidate.push_back(orgToken);
+            }
             hasFamily = true;
             continue;
         }
@@ -695,7 +711,8 @@ static bool parseFontShorthand(const CSSTokenVector& tokens,
         _Family->setStringValue(String::fromUTF8(
             fontFamilyCandidate[0].data(), fontFamilyCandidate[0].length()));
     } else {
-        ValueList* val = new ValueList(ValueList::Separator::CommaSeparator);
+        ValueList* val = new ValueList(
+            ValueList::Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
         for (size_t i = 0; i < fontFamilyCandidate.size(); i++) {
             auto str = fontFamilyCandidate[i];
             val->emplace_back(CSSStyleValuePair::ValueKind::StringValueKind,
@@ -1883,16 +1900,8 @@ String* CSSStyleValuePair::toString() const
     case CSSStyleValuePair::ValueKind::TransformFunctions:
         return transformValue()->toString();
     case CSSStyleValuePair::ValueKind::ValueListKind: {
-        StringBuilder builder;
         ValueList* list = multiValue();
-        size_t len = list->size();
-        for (size_t i = 0; i < len; i++) {
-            builder.appendString((*list)[i].toString());
-            if (i != len - 1) {
-                builder.appendString(list->separatorString());
-            }
-        }
-        return builder.finalize();
+        return list->toString();
     }
     case CSSStyleValuePair::ValueKind::TransitionPropertyValueKind:
         switch (transitionPropertyValue()) {
@@ -3108,7 +3117,7 @@ void CSSStyleDeclaration::setFont(const char* value, size_t length,
     }
 
     CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, length, "/", 1);
+    tokenizeCSSValue(tokens, value, length, "/,", 2);
     if (tokens.size() == 0) {
         return;
     }
@@ -3122,8 +3131,13 @@ void CSSStyleDeclaration::setFont(const char* value, size_t length,
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontSize, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight, v);
-    } else if (parseFontShorthand(tokens, &style, &weight, &size, &lineHeight,
-                                  &fontFamily)) {
+        return;
+    }
+
+    tokens.clear();
+    tokenizeCSSValue(tokens, value, length, "/,", 2, true);
+    if (parseFontShorthand(tokens, &style, &weight, &size, &lineHeight,
+                           &fontFamily)) {
         fontFamily.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         weight.setFlagImportant(isImportant);
@@ -3250,7 +3264,8 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
             str.pop_back();
             bool onlyWhiteSpace = true;
             for (size_t i = 0; i < str.length(); i++) {
-                str[i] = ::tolower(str[i]);
+                if (!isCaseSensitive)
+                    str[i] = ::tolower(str[i]);
                 if (!String::isASCIISpace(str[i])) {
                     onlyWhiteSpace = false;
                 }
@@ -7546,18 +7561,30 @@ bool CSSStyleValuePair::updateValueFontFamily(const CSSTokenVector& tokens)
         setStringValue(String::fromUTF8(tokens[0].data(), tokens[0].length()));
         return true;
     }
-    ValueList* val = new ValueList(ValueList::Separator::CommaSeparator);
+    ValueList* val = new ValueList(
+        ValueList::Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
     bool seenComma = false;
     for (size_t i = 0; i < tokens.size(); i++) {
-        if (tokens[i] == ".") {
+        if (tokens[i] == ",") {
             if (seenComma) {
                 return false;
             }
             seenComma = true;
         } else {
             const std::string& str = tokens[i];
-            val->emplace_back(ValueKind::StringValueKind,
-                              String::fromUTF8(str.data(), str.length()));
+            if (str[0] == '\'' && str.length() > 2 && str.back() == '\'') {
+                val->emplace_back(
+                    ValueKind::StringValueKind,
+                    String::fromUTF8(str.data() + 1, str.length() - 2));
+            } else if (str[0] == '"' && str.length() > 2 && str.back() == '"') {
+                val->emplace_back(
+                    ValueKind::StringValueKind,
+                    String::fromUTF8(str.data() + 1, str.length() - 2));
+            } else {
+                val->emplace_back(ValueKind::StringValueKind,
+                                  String::fromUTF8(str.data(), str.length()));
+            }
+            seenComma = false;
         }
     }
     if (seenComma)

@@ -96,8 +96,8 @@ public:
                     char weight)
     {
         m_text = nullptr;
-        m_familyName = convertStyleParamStr(familyName, style, weight);
         m_metrics = met;
+        m_familyName = convertStyleParamStr(familyName, style, weight);
         m_size = size;
         m_weight = weight;
         m_style = style;
@@ -155,6 +155,13 @@ public:
         m_text = nullptr;
     }
 
+    virtual FontMetrics metrics(float size)
+    {
+        return m_metrics;
+    }
+
+    float m_size;
+    FontMetrics m_metrics;
     Evas_Object* m_text;
 };
 
@@ -183,7 +190,7 @@ public:
             return size() * ((float)count / SPACE_SIZE_DENOMINATOR);
         }
 #endif
-        auto textObject = ((FontFaceImplEFL*)m_fontFaceList[0])->m_text;
+        auto textObject = ((FontFaceImplEFL*)m_fontFaceList->at(0))->m_text;
         if (str.originalString()->bufferAccessData().hasASCIIContent) {
             bool isShort = str.length() < 128;
             auto data = str.bufferAccessData();
@@ -207,7 +214,7 @@ public:
     }
     virtual void* unwrap()
     {
-        return ((FontFaceImplEFL*)m_fontFaceList[0])->m_text;
+        return ((FontFaceImplEFL*)m_fontFaceList->at(0))->m_text;
     }
 
 protected:
@@ -296,8 +303,8 @@ static FontMetrics loadFontMetrics(String* familyName, double size)
 
 class FontSelectorImplEFL : public FontSelector {
 public:
-    virtual FontFace* loadFontImpl(String* familyName, float size, char style,
-                                   char weight) override
+    FontFace* loadFontFaceImpl(String* familyName, float size, char style,
+                               char weight)
     {
         FontFaceImplEFL* f = new FontFaceImplEFL(
             familyName,
@@ -310,6 +317,59 @@ public:
     virtual bool isGenericFontSelector() const
     {
         return false;
+    }
+
+    static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
+                                                   size_t len, float size,
+                                                   char style, char weight)
+    {
+        UTF8StringDataNonGCStd result;
+        result.reserve(128);
+
+        for (size_t i = 0; i < len; i++) {
+            auto bad = familyNameArray[i]->bufferAccessData();
+            for (size_t j = 0; j < bad.length; j++) {
+                char32_t c = bad.charAt(j);
+                if (c >= 'A' && c <= 'Z') {
+                    c -= ('A' - 'a');
+                }
+
+                if (LIKELY(c < 128)) {
+                    result += (char)c;
+                } else {
+                    char buf[16];
+                    size_t l = utf32ToUtf8(c, buf);
+                    result.append(buf, l);
+                }
+            }
+        }
+
+        result += " s:" + std::to_string(size);
+        result += " s:" + (style + 'a');
+        result += " w:" + (weight + 'a');
+        return result;
+    }
+
+    Font* loadFont(String* familyNameArray[], size_t familyNameArraySize,
+                   float size, char style, char weight)
+    {
+        auto cacheFontName = mergeFamilyNames(
+            familyNameArray, familyNameArraySize, size, style, weight);
+        auto iter = m_fontCache.find(cacheFontName);
+        if (iter != m_fontCache.end()) {
+            return iter->second;
+        }
+
+        Font* result = Font::createEmptyFont(this);
+
+        result->m_fontFaceList = new FontFaceList;
+        result->m_fontFaceList->push_back(
+            loadFontFaceImpl(familyNameArray[0], size, style, weight));
+        result->m_size = size;
+        result->m_spaceWidth = result->measureText(String::spaceString);
+        m_fontCache.insert(std::make_pair(cacheFontName, result));
+
+        return result;
     }
 };
 
