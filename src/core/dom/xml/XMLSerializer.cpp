@@ -27,13 +27,57 @@
 
 namespace StarFish {
 
+static bool isSelfClosingTag(char* str)
+{
+    // https://www.w3.org/TR/html5/syntax.html#void-elements
+    // area, base, br, col, embed, hr, img, input, keygen, link, meta, param,
+    // source, track, wbr
+
+    if (strncmp(str, "area", 4) == 0) {
+        return true;
+    } else if (strncmp(str, "base", 4) == 0) {
+        return true;
+    } else if (strncmp(str, "br", 2) == 0) {
+        return true;
+    } else if (strncmp(str, "col", 3) == 0) {
+        return true;
+    } else if (strncmp(str, "embed", 5) == 0) {
+        return true;
+    } else if (strncmp(str, "hr", 2) == 0) {
+        return true;
+    } else if (strncmp(str, "img", 3) == 0) {
+        return true;
+    } else if (strncmp(str, "input", 5) == 0) {
+        return true;
+    } else if (strncmp(str, "keygen", 6) == 0) {
+        return true;
+    } else if (strncmp(str, "link", 4) == 0) {
+        return true;
+    } else if (strncmp(str, "meta", 4) == 0) {
+        return true;
+    } else if (strncmp(str, "param", 5) == 0) {
+        return true;
+    } else if (strncmp(str, "source", 6) == 0) {
+        return true;
+    } else if (strncmp(str, "track", 5) == 0) {
+        return true;
+    } else if (strncmp(str, "wbr", 3) == 0) {
+        return true;
+    }
+    return false;
+}
+
 static rapidxml::xml_node<char>* createXMLNodeFromElement(
     Element* e, rapidxml::xml_document<char>& xmlDocument)
 {
     auto utf8Data = e->localName()->toUTF8NonGCString();
     char* allocateName = xmlDocument.allocate_string(utf8Data.data());
-    rapidxml::xml_node<char>* xmlNode = xmlDocument.allocate_node(
-        rapidxml::node_type::node_element, allocateName);
+    rapidxml::node_type nodeType = rapidxml::node_type::node_element;
+    if (isSelfClosingTag(allocateName)) {
+        nodeType = rapidxml::node_type::node_element_self_close;
+    }
+    rapidxml::xml_node<char>* xmlNode =
+        xmlDocument.allocate_node(nodeType, allocateName);
 
     size_t attributeCount = e->attributeCount();
     for (size_t i = 0; i < attributeCount; i++) {
