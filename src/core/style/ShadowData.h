@@ -18,7 +18,8 @@
 #define __StarFishShadowData__
 
 namespace StarFish {
-
+class CanvasShadowData;
+class CanvasShadowDataList;
 class ShadowData {
 public:
     ShadowData()
@@ -67,6 +68,8 @@ public:
         return m_hasColor;
     }
 
+    CanvasShadowData toCanvasShadowData(Frame* owner);
+
     bool operator==(const ShadowData& o)
     {
         return ((this->m_offsetX == o.m_offsetX) &&
@@ -89,6 +92,8 @@ private:
 
 class ShadowDataList : public GCVector<ShadowData> {
 public:
+    CanvasShadowDataList toCanvasShadowDataList(Frame* owner);
+
     bool operator==(const ShadowDataList& o)
     {
         if (this->size() != o.size()) {

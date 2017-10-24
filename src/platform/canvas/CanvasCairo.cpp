@@ -22,7 +22,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/image/ImageData.h"
-#include "core/style/ShadowData.h"
+#include "core/modules/canvas/ShadowBlur.h"
 #include "core/style/UnitHelper.h"
 #include "platform/window/PlatformWindow.h"
 
@@ -278,9 +278,14 @@ public:
         lastState().m_textDecorationData = d;
     }
 
-    virtual void setTextShadowData(ShadowDataList shadowDataList)
+    virtual void setTextShadowData(CanvasShadowDataList& list)
     {
-        m_textShadowDataList = shadowDataList;
+        m_textShadowDataList = list;
+    }
+
+    virtual void clearTextShadowData()
+    {
+        m_textShadowDataList.clear();
     }
 
     virtual void punchHole(const Unit::Rect& rt)
@@ -390,106 +395,14 @@ public:
             }
         }
 
-#ifdef STARFISH_ENABLE_TEST
-        if (g_enablePixelTest) {
-            if (sv.originalString() != String::emptyString &&
-                sv.originalString()->charAt(sv.start()) != ' ') {
-                float h = lastState().m_font->size();
-                float xx = x;
-                for (size_t i = sv.start(); i < sv.end(); i++) {
-                    char32_t ch = sv.originalString()->charAt(i);
-                    if (ch == 160) { // nbsp
-                    } else if (String::isFixedWidthChar(ch) ||
-                               String::isZeroWidthChar(ch)) {
-                        // Fixed-width spaces
-                        size_t num = Font::spaceSizeNumerator(ch);
-                        xx += h * ((float)num / SPACE_SIZE_DENOMINATOR);
-                        continue;
-                    } else {
-                        if (ch != 'p') {
-                            Font* fnt = lastState().m_font;
-                            if (fnt->style() == FontStyleItalic) {
-                                float offset = h * 0.3;
-                                float littleLeft = offset * 0.167;
-                                drawRect(
-                                    LayoutLocation(xx + offset - littleLeft, y),
-                                    LayoutLocation(xx + h + offset - littleLeft,
-                                                   y),
-                                    LayoutLocation(xx + h - littleLeft, y + h),
-                                    LayoutLocation(xx - littleLeft, y + h));
-                            } else {
-                                // left, top, w, h
-                                Unit::Rect rt(xx, y, h, h);
-                                drawRect(rt);
-                            }
-                        } else {
-                            // To sync with phantom-webkit
-                            int ph = h * 0.2;
-                            drawRect(Unit::Rect(xx, y + h - ph, h, ph));
-                            /*
-                            save();
-                            clip(Rect(xx, y, h, h));
-                            g_enablePixelTest = false;
-                            drawText(xx, y, String::createASCIIString("p"));
-                            g_enablePixelTest = true;
-                            restore();
-                            */
-                        }
-                    }
-                    xx += h;
-                }
-            }
-            return;
-        }
-#endif
-
         cairo_save(m_canvas);
-        FontImplCairo* f = (FontImplCairo*)lastState().m_font;
-        FontFaceImplCairo* faceImpl =
-            ((FontFaceImplCairo*)f->fontFaceList()[0]);
-        FT_Face face = faceImpl->m_face;
-        int intSize(f->size() + 0.5f);
-
         if (m_textShadowDataList.size()) {
             for (auto& sd : m_textShadowDataList) {
-                drawTextInner(rt, sv, size, &sd);
+                drawTextInner(rt, sv, &sd);
             }
         }
-        drawTextInner(rt, sv, size);
 
-        float lineWidth =
-            face->underline_thickness / (float)faceImpl->m_unitsPerEM * intSize;
-        if (lastState().m_textDecorationData.hasUnderLine()) {
-            cairo_set_line_width(m_canvas, lineWidth);
-            cairo_set_source_rgba(
-                m_canvas,
-                lastState().m_textDecorationData.underLineColor().r() / 255.f,
-                lastState().m_textDecorationData.underLineColor().g() / 255.f,
-                lastState().m_textDecorationData.underLineColor().b() / 255.f,
-                lastState().m_textDecorationData.underLineColor().a() / 255.f);
-            float y = face->underline_position / (float)faceImpl->m_unitsPerEM *
-                          intSize / 72 +
-                      size;
-            cairo_move_to(m_canvas, 0, y);
-            cairo_line_to(m_canvas, rt.width(), y);
-            cairo_stroke(m_canvas);
-        }
-
-        if (lastState().m_textDecorationData.hasLineThrough()) {
-            cairo_set_line_width(m_canvas, lineWidth);
-            cairo_set_source_rgba(
-                m_canvas,
-                lastState().m_textDecorationData.lineThroughColor().r() / 255.f,
-                lastState().m_textDecorationData.lineThroughColor().g() / 255.f,
-                lastState().m_textDecorationData.lineThroughColor().b() / 255.f,
-                lastState().m_textDecorationData.lineThroughColor().a() /
-                    255.f);
-            cairo_move_to(m_canvas, 0,
-                          -(lastState().m_font->metrics().m_ascender / 2));
-            cairo_line_to(m_canvas, rt.width(),
-                          -(lastState().m_font->metrics().m_ascender / 2));
-            cairo_stroke(m_canvas);
-        }
+        drawTextInner(rt, sv);
         cairo_restore(m_canvas);
     }
 
@@ -805,63 +718,78 @@ public:
     }
 
 private:
-    void drawTextInner(LayoutRect rect, const StringView& sv, int size,
-                       ShadowData* shadow = nullptr)
+#ifdef STARFISH_ENABLE_TEST
+    void drawAhemBoxCairo(cairo_t* canvas, LayoutRect rect,
+                          const StringView& sv)
     {
-        LayoutUnit xx = rect.x(), yy = rect.y();
+        if (g_enablePixelTest) {
+            LayoutUnit x = rect.x();
+            LayoutUnit y = rect.y();
 
-        cairo_save(m_canvas);
-
-        cairo_t* canvas = nullptr;
-        cairo_surface_t* surfaceForBlur = nullptr;
-        float radiusOffset = 0.0f;
-
-        if (shadow) {
-            Unit::Color color;
-
-            if (shadow->radius().isFixed()) {
-                radiusOffset = shadow->radius().fixed();
+            if (sv.originalString() != String::emptyString &&
+                sv.originalString()->charAt(sv.start()) != ' ') {
+                float h = lastState().m_font->size();
+                float xx = x;
+                for (size_t i = sv.start(); i < sv.end(); i++) {
+                    char32_t ch = sv.originalString()->charAt(i);
+                    if (ch == 160) { // nbsp
+                    } else if (String::isFixedWidthChar(ch) ||
+                               String::isZeroWidthChar(ch)) {
+                        // Fixed-width spaces
+                        size_t num = Font::spaceSizeNumerator(ch);
+                        xx += h * ((float)num / SPACE_SIZE_DENOMINATOR);
+                        continue;
+                    } else {
+                        if (ch != 'p') {
+                            Font* fnt = lastState().m_font;
+                            if (fnt->style() == FontStyleItalic) {
+                                float offset = h * 0.3;
+                                float littleLeft = offset * 0.167;
+                                LayoutLocation p1(xx + offset - littleLeft, y);
+                                LayoutLocation p2(xx + h + offset - littleLeft,
+                                                  y);
+                                LayoutLocation p3(xx + h - littleLeft, y + h);
+                                LayoutLocation p4(xx - littleLeft, y + h);
+                                cairo_save(canvas);
+                                cairo_move_to(canvas, p1.x(), p1.y());
+                                cairo_line_to(canvas, p2.x(), p2.y());
+                                cairo_line_to(canvas, p3.x(), p3.y());
+                                cairo_line_to(canvas, p4.x(), p4.y());
+                                cairo_line_to(canvas, p1.x(), p1.y());
+                                cairo_close_path(canvas);
+                                cairo_fill(canvas);
+                                cairo_restore(canvas);
+                            } else {
+                                // left, top, w, h
+                                Unit::Rect rt(xx, y, h, h);
+                                cairo_rectangle(canvas, xx, y, h, h);
+                                cairo_fill(canvas);
+                            }
+                        } else {
+                            int ph = h * 0.2;
+                            cairo_rectangle(canvas, xx, y + h - ph, h, ph);
+                            cairo_fill(canvas);
+                        }
+                    }
+                    xx += h;
+                }
             }
-            if (shadow->hasColor()) {
-                color = shadow->color();
-            } else {
-                color = lastState().m_color;
-            }
-
-            surfaceForBlur = cairo_surface_create_similar(
-                cairo_get_target(m_canvas), CAIRO_CONTENT_COLOR_ALPHA,
-                ceil(rect.width().toFloat() + radiusOffset),
-                ceil(rect.height().toFloat() + radiusOffset));
-
-            canvas = cairo_create(surfaceForBlur);
-
-            cairo_set_source_rgba(canvas, color.R(), color.G(), color.B(),
-                                  color.A());
-
-        } else {
-            canvas = m_canvas;
         }
-
-        if (radiusOffset > 0.0f) {
-            xx = xx + ceil(radiusOffset / 2);
-            yy = yy + ceil(radiusOffset / 2);
-        }
-
-        cairo_translate(canvas, xx.toDouble(), yy.toDouble());
-
+    }
+#endif
+    void drawGlyphsCairo(cairo_t* canvas, LayoutRect rect, const StringView& sv)
+    {
         LayoutUnit xBias = 0;
         FT_UInt glyph_index = 0;
-
         FT_Face lastFontFace = nullptr;
         cairo_font_face_t* fontFace = nullptr;
-
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
-
+        int size = lastState().m_font->size();
         cairo_glyph_t* glyphs =
             ALLOCA(sv.length() * sizeof(cairo_glyph_t), cairo_glyph_t);
         size_t glyphCount = 0;
 
-        cairo_translate(canvas, 0, f->metrics().m_ascender);
+        cairo_translate(canvas, 0, lastState().m_font->metrics().m_ascender);
 
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
             for (size_t i = 0; i < sv.length(); i++) {
@@ -947,18 +875,133 @@ private:
                 xBias += run.m_runWidth;
             }
         }
-
         cairo_show_glyphs(canvas, glyphs, glyphCount);
         cairo_font_face_destroy(fontFace);
+        cairo_translate(canvas, 0, -lastState().m_font->metrics().m_ascender);
+    }
+    void drawTextDecorationCairo(cairo_t* canvas, LayoutRect rect,
+                                 const StringView& sv,
+                                 CanvasShadowData* shadow = nullptr)
+    {
+        FontImplCairo* f = (FontImplCairo*)lastState().m_font;
+        FT_Face face = ((FontFaceImplCairo*)f->fontFaceList()[0])->m_face;
+        int intSize(f->size() + 0.5f);
+
+        float lineWidth =
+            face->underline_thickness / (float)face->units_per_EM * intSize;
+        if (lastState().m_textDecorationData.hasUnderLine()) {
+            cairo_set_line_width(canvas, lineWidth);
+            if (!shadow) {
+                cairo_set_source_rgba(
+                    canvas,
+                    lastState().m_textDecorationData.underLineColor().R(),
+                    lastState().m_textDecorationData.underLineColor().G(),
+                    lastState().m_textDecorationData.underLineColor().B(),
+                    lastState().m_textDecorationData.underLineColor().A());
+            }
+            float y = face->underline_position / (float)face->units_per_EM *
+                          intSize / 72 +
+                      intSize;
+            cairo_move_to(canvas, 0, y + lineWidth / 2);
+            cairo_line_to(canvas, rect.width(), y + lineWidth / 2);
+            cairo_stroke(canvas);
+        }
+
+        if (lastState().m_textDecorationData.hasLineThrough()) {
+            cairo_set_line_width(canvas, lineWidth);
+            if (!shadow) {
+                cairo_set_source_rgba(
+                    canvas,
+                    lastState().m_textDecorationData.lineThroughColor().R(),
+                    lastState().m_textDecorationData.lineThroughColor().G(),
+                    lastState().m_textDecorationData.lineThroughColor().B(),
+                    lastState().m_textDecorationData.lineThroughColor().A());
+            }
+            float y =
+                (lastState().m_font->metrics().m_ascender) -
+                intSize * (lastState().m_font->metrics().m_xheightRate) / 2;
+
+            cairo_move_to(canvas, 0, y);
+            cairo_line_to(canvas, rect.width(), y);
+            cairo_stroke(canvas);
+        }
+    }
+    void drawTextInner(LayoutRect rect, const StringView& sv,
+                       CanvasShadowData* shadow = nullptr)
+    {
+        cairo_save(m_canvas);
+        LayoutUnit xx = rect.x(), yy = rect.y();
+        cairo_t* canvas = nullptr;
+        cairo_surface_t* surfaceForBlur = nullptr;
+        float radiusOffset = 0.0f;
 
         if (shadow) {
-            // TODO : Blur processing
-            cairo_set_source_surface(
-                m_canvas, surfaceForBlur,
-                shadow->offsetX().fixed() - ceil(radiusOffset / 2),
-                shadow->offsetY().fixed() - ceil(radiusOffset / 2));
-            cairo_paint(m_canvas);
+            Unit::Color color;
+            if (shadow->radius()) {
+                radiusOffset = shadow->radius();
+                radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
+                radiusOffset *= 2;
+            }
+            if (shadow->hasColor()) {
+                color = shadow->color();
+            } else {
+                color = lastState().m_color;
+            }
 
+            surfaceForBlur = cairo_surface_create_similar(
+                cairo_get_target(m_canvas), CAIRO_CONTENT_COLOR_ALPHA,
+                ceil(rect.width().toFloat() + radiusOffset),
+                ceil(rect.height().toFloat() + radiusOffset));
+
+            canvas = cairo_create(surfaceForBlur);
+
+            cairo_set_source_rgba(canvas, color.R(), color.G(), color.B(),
+                                  color.A());
+        } else {
+            canvas = m_canvas;
+        }
+
+        if (radiusOffset > 0.0f) {
+            xx = xx + ceil(radiusOffset / 2);
+            yy = yy + ceil(radiusOffset / 2);
+        }
+        cairo_translate(canvas, xx.toDouble(), yy.toDouble());
+
+#ifdef STARFISH_ENABLE_TEST
+        if (g_enablePixelTest) {
+            drawAhemBoxCairo(canvas, rect, sv);
+        } else {
+            drawGlyphsCairo(canvas, rect, sv);
+            drawTextDecorationCairo(canvas, rect, sv, shadow);
+        }
+#else
+        drawGlyphsCairo(canvas, rect, sv);
+        drawTextDecorationCairo(canvas, rect, sv, shadow);
+#endif
+        if (shadow) {
+            // TODO : Blur processing
+            if (shadow->radius()) {
+                int width = cairo_image_surface_get_width(surfaceForBlur);
+                int height = cairo_image_surface_get_height(surfaceForBlur);
+                int stride = cairo_image_surface_get_stride(surfaceForBlur);
+                cairo_format_t format =
+                    cairo_image_surface_get_format(surfaceForBlur);
+                unsigned char* data =
+                    cairo_image_surface_get_data(surfaceForBlur);
+
+                if (data && format == CAIRO_FORMAT) {
+                    ShadowBlur sb(data, width, height, stride, 4);
+                    if (sb.process(shadow->radius())) {
+                        cairo_surface_mark_dirty(surfaceForBlur);
+                    }
+                }
+            }
+
+            cairo_set_source_surface(m_canvas, surfaceForBlur,
+                                     shadow->offsetX() - ceil(radiusOffset / 2),
+                                     shadow->offsetY() -
+                                         ceil(radiusOffset / 2));
+            cairo_paint(m_canvas);
             cairo_surface_destroy(surfaceForBlur);
             cairo_destroy(canvas);
         }
@@ -972,7 +1015,7 @@ protected:
     cairo_t* m_canvas;
     unsigned m_width;
     unsigned m_height;
-    ShadowDataList m_textShadowDataList;
+    CanvasShadowDataList m_textShadowDataList;
 
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;

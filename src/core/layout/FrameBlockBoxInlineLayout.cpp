@@ -4089,8 +4089,17 @@ void InlineTextBox::paint(PaintingContext& ctx)
 
             ctx.m_canvas->setFont(s->font());
             ctx.m_canvas->setColor(s->color());
-            ctx.m_canvas->setTextShadowData(s->textShadow());
+
+            CanvasShadowDataList list =
+                s->textShadow().toCanvasShadowDataList(this);
+            bool hasShadow = list.size() ? true : false;
+            if (hasShadow) {
+                ctx.m_canvas->setTextShadowData(list);
+            }
             ctx.m_canvas->drawText(0, 0, contentWidth(), text());
+            if (hasShadow) {
+                ctx.m_canvas->clearTextShadowData();
+            }
         }
     }
 }
