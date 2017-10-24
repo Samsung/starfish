@@ -93,7 +93,6 @@ public:
         m_streamIndex = info.m_streamIndex;
         m_timescale = info.m_timescale;
         m_rawDuration = info.m_rawDuration;
-        m_mediaTime = info.m_mediaTime;
         m_codec = info.m_codec;
         m_type = info.m_type;
         m_data = info.m_data;
@@ -105,7 +104,6 @@ public:
         m_streamIndex = info.m_streamIndex;
         m_timescale = info.m_timescale;
         m_rawDuration = info.m_rawDuration;
-        m_mediaTime = info.m_mediaTime;
         m_codec = info.m_codec;
         m_type = info.m_type;
         m_data = info.m_data;
@@ -137,7 +135,7 @@ public:
     }
     uint64_t duration()
     {
-        return m_rawDuration / m_timescale;
+        return codedTimeToMilliseconds(m_rawDuration);
     }
     uint64_t rawDuration()
     {
@@ -146,14 +144,6 @@ public:
     void setRawDuration(uint64_t rawDuration)
     {
         m_rawDuration = rawDuration;
-    }
-    uint64_t mediaTime()
-    {
-        return m_mediaTime;
-    }
-    void setMediaTime(uint64_t mediaTime)
-    {
-        m_mediaTime = mediaTime;
     }
     const char* codecString()
     {
@@ -229,6 +219,10 @@ public:
     {
         m_data.m_videoData.m_hasFramerate = flag;
     }
+    size_t codedTimeToMilliseconds(size_t raw)
+    {
+        return (raw * 1000LL) / (m_timescale == 0 ? 1 : m_timescale);
+    }
 
 public:
     std::vector<uint8_t> m_extraData;
@@ -237,7 +231,6 @@ protected:
     size_t m_streamIndex;
     size_t m_timescale;
     uint64_t m_rawDuration;
-    uint64_t m_mediaTime;
     MediaCodec m_codec;
     StreamType m_type;
     union Data {

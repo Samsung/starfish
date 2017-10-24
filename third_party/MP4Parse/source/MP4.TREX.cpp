@@ -32,12 +32,25 @@
 #include "MP4.TREX.h"
 
 using namespace MP4;
-          
+
 TREX::TREX( void )
 {
 }
 
 void TREX::processData( MP4::BinaryStream * stream, size_t length )
 {
-    stream->ignore( length );
+    // Version (+8)
+    uint8_t v = stream->readUnsignedChar();
+    // Flags (+24)
+    uint32_t f = (stream->readUnsignedChar() << 16) + (stream->readUnsignedChar() << 8) + (stream->readUnsignedChar() << 0);
+    // Track id (+32)
+    stream->readBigEndianUnsignedInteger();
+    // Sample decription index (+32)
+    stream->readBigEndianUnsignedInteger();
+    // Sample duration (+32)
+    sample_duration = stream->readBigEndianUnsignedInteger();
+    // Sample size (+32)
+    sample_size = stream->readBigEndianUnsignedInteger();
+    // Sample flags (+32)
+    stream->readBigEndianUnsignedInteger();
 }

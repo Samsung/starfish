@@ -74,7 +74,6 @@ StreamInfo::StreamInfo()
     : m_streamIndex(SIZE_MAX)
     , m_timescale(1)
     , m_rawDuration(0)
-    , m_mediaTime(0)
     , m_codec(MediaCodecUnknown)
     , m_type(StreamTypeUnknown)
 {

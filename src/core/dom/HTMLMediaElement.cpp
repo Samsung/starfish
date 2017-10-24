@@ -213,7 +213,7 @@ void HTMLMediaElement::load()
                     "play request is aborted by load operation");
                 ((MediaOperationQueueDataRequestPlay*)(*iter))
                     ->m_promise->reject(exception->scriptValue());
-                m_playOperationQueue.erase(iter++);
+                iter = m_playOperationQueue.erase(iter);
             }
         }
 
@@ -1412,7 +1412,7 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
             "play request is aborted by pause()");
         ((MediaOperationQueueDataRequestPlay*)(*iter))
             ->m_promise->reject(exception->scriptValue());
-        m_mediaElement->m_playOperationQueue.erase(iter++);
+        iter = m_mediaElement->m_playOperationQueue.erase(iter);
     }
     double time = player->currentTime();
     m_mediaElement->setPlayEndPos(time);

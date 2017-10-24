@@ -18,7 +18,7 @@ interface MediaSource : EventTarget {
   readonly attribute SourceBufferList sourceBuffers;
   readonly attribute SourceBufferList activeSourceBuffers;
   readonly attribute ReadyState readyState;
-  attribute unrestricted double duration;
+  [RaisesException=Setter] attribute unrestricted double duration;
   [Unimplemented] attribute EventHandler onsourceopen;
   [Unimplemented] attribute EventHandler onsourceended;
   [Unimplemented] attribute EventHandler onsourceclose;

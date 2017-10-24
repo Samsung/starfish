@@ -966,7 +966,7 @@ void MediaPlayerTizen::fillBuffer(MediaStream* stream)
     PLAYER_LOGI("[%s] ", stream->isAudio() ? "AUDIO" : "VIDEO"); \
     STARFISH_LOG_INFO(__VA_ARGS__);
 
-void MediaPlayerTizen::goUnderrunState()
+void MediaPlayerTizen::enterUnderrunState()
 {
     if (!isMainThread()) {
         MessageLoop* msgLoop = m_container->starFish()->messageLoop();
@@ -974,14 +974,14 @@ void MediaPlayerTizen::goUnderrunState()
             m_container->document()->browsingContext(),
             [](size_t, void* data) {
                 MediaPlayerTizen* player = (MediaPlayerTizen*)data;
-                player->goUnderrunState();
+                player->enterUnderrunState();
             },
             this);
     } else {
         if (!alive() || m_underrunMode) {
             return;
         }
-        PLAYER_LOGI("MediaPlayerTizen::goUnderrunState\n");
+        PLAYER_LOGI("MediaPlayerTizen::enterUnderrunState\n");
         m_underrunMode = true;
         m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
             HTMLMediaElement::HAVE_CURRENT_DATA);
@@ -992,7 +992,7 @@ void MediaPlayerTizen::goUnderrunState()
     }
 }
 
-void MediaPlayerTizen::outUnderrunState()
+void MediaPlayerTizen::exitUnderrunState()
 {
     if (!isMainThread()) {
         MessageLoop* msgLoop = m_container->starFish()->messageLoop();
@@ -1000,7 +1000,7 @@ void MediaPlayerTizen::outUnderrunState()
             m_container->document()->browsingContext(),
             [](size_t, void* data) {
                 MediaPlayerTizen* player = (MediaPlayerTizen*)data;
-                player->outUnderrunState();
+                player->exitUnderrunState();
             },
             this);
     } else {
@@ -1019,7 +1019,7 @@ void MediaPlayerTizen::outUnderrunState()
         if (!allOut) {
             return;
         }
-        PLAYER_LOGI("MediaPlayerTizen::outUnderrunState\n");
+        PLAYER_LOGI("MediaPlayerTizen::exitUnderrunState\n");
         m_underrunMode = false;
         m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
             HTMLMediaElement::HAVE_ENOUGH_DATA);
@@ -1053,10 +1053,10 @@ void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
                                bufferStateString(state));
         stream->setBufferState(state);
         if (prevState == MediaStream::BUFFERSTATE_UNDER_RUN) {
-            outUnderrunState();
+            exitUnderrunState();
         } else if (prevState > MediaStream::BUFFERSTATE_UNDER_RUN &&
                    state == MediaStream::BUFFERSTATE_UNDER_RUN) {
-            goUnderrunState();
+            enterUnderrunState();
         }
     }
 #else
