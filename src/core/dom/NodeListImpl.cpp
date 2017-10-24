@@ -110,6 +110,10 @@ bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection)
     if (node->isElement()) {
         // a, applet, area, embed, form, frameset, img, or object elements
         // that have a name content attribute whose value is name, or
+
+        // https://html.spec.whatwg.org/multipage/forms.html#form-associated-element
+        // form-associated elements : button, fieldset, input, object, output,
+        // select, textarea, img
         Element* element = node->asElement();
         QualifiedName name = element->name();
         StaticStrings* ss = node->starFish()->staticStrings();
@@ -127,6 +131,16 @@ bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection)
         } else if (name == ss->m_imgTagName) {
             shouldConsiderNameAttribute = true;
         } else if (name == ss->m_objectTagName) {
+            shouldConsiderNameAttribute = true;
+        } else if (name == ss->m_buttonTagName) {
+            shouldConsiderNameAttribute = true;
+        } else if (name == ss->m_inputTagName) {
+            shouldConsiderNameAttribute = true;
+        } else if (name == ss->m_outputTagName) {
+            shouldConsiderNameAttribute = true;
+        } else if (name == ss->m_selectTagName) {
+            shouldConsiderNameAttribute = true;
+        } else if (name == ss->m_textareaTagName) {
             shouldConsiderNameAttribute = true;
         }
 
