@@ -41,6 +41,8 @@ namespace rapidxml
         template<class OutIt, class Ch>
             inline OutIt print_element_node(OutIt out, const xml_node<Ch> *node, int flags, int indent);
         template<class OutIt, class Ch>
+            inline OutIt print_element_self_close_node(OutIt out, const xml_node<Ch> *node, int flags, int indent);
+        template<class OutIt, class Ch>
             inline OutIt print_data_node(OutIt out, const xml_node<Ch> *node, int flags, int indent);
         template<class OutIt, class Ch>
             inline OutIt print_cdata_node(OutIt out, const xml_node<Ch> *node, int flags, int indent);
@@ -159,6 +161,11 @@ namespace rapidxml
             // Element
             case node_element:
                 out = print_element_node<OutIt, Ch>(out, node, flags, indent);
+                break;
+
+            // Self Close Element
+            case node_element_self_close:
+                out = print_element_self_close_node<OutIt, Ch>(out, node, flags, indent);
                 break;
             
             // Data
@@ -294,9 +301,77 @@ namespace rapidxml
             // If node is childless
             if (node->value_size() == 0 && !node->first_node())
             {
-                // Print childless node tag ending
-                *out = Ch('/'), ++out;
                 *out = Ch('>'), ++out;
+
+                // Print node end
+                *out = Ch('<'), ++out;
+                *out = Ch('/'), ++out;
+                out = copy_chars(node->name(), node->name() + node->name_size(), out);
+                *out = Ch('>'), ++out;
+            }
+            else
+            {
+                bool is_style_script = false;
+                if (flags & rapidxml::print_care_script_style) {
+                    if (node->name_size() == 6 && strncmp(node->name(), "script", 6) == 0) {
+                        flags |= print_no_expand_amp | print_no_expand_quot | print_no_expand_lt_gt;
+                    } else if (node->name_size() == 5 && strncmp(node->name(), "style", 5) == 0) {
+                        flags |= print_no_expand_amp | print_no_expand_quot | print_no_expand_lt_gt;
+                    }
+                }
+                // Print normal node tag ending
+                *out = Ch('>'), ++out;
+
+                // Test if node contains a single data node only (and no other nodes)
+                xml_node<Ch> *child = node->first_node();
+                if (!child)
+                {
+                    // If node has no children, only print its value without indenting
+                    out = copy_and_expand_chars(node->value(), node->value() + node->value_size(), Ch(0), out, flags);
+                }
+                else if (child->next_sibling() == 0 && child->type() == node_data)
+                {
+                    // If node has a sole data child, only print its value without indenting
+                    out = copy_and_expand_chars(child->value(), child->value() + child->value_size(), Ch(0), out, flags);
+                }
+                else
+                {
+                    // Print all children with full indenting
+                    if (!(flags & print_no_indenting))
+                        *out = Ch('\n'), ++out;
+                    out = print_children(out, node, flags, indent + 1);
+                    if (!(flags & print_no_indenting))
+                        out = fill_chars(out, indent, Ch('\t'));
+                }
+
+                // Print node end
+                *out = Ch('<'), ++out;
+                *out = Ch('/'), ++out;
+                out = copy_chars(node->name(), node->name() + node->name_size(), out);
+                *out = Ch('>'), ++out;
+            }
+            return out;
+        }
+
+        // Print element node
+        template<class OutIt, class Ch>
+        inline OutIt print_element_self_close_node(OutIt out, const xml_node<Ch> *node, int flags, int indent)
+        {
+            assert(node->type() == node_element_self_close);
+
+            // Print element name and attributes, if any
+            if (!(flags & print_no_indenting))
+                out = fill_chars(out, indent, Ch('\t'));
+            *out = Ch('<'), ++out;
+            out = copy_chars(node->name(), node->name() + node->name_size(), out);
+            out = print_attributes(out, node, flags);
+            
+            // If node is childless
+            if (node->value_size() == 0 && !node->first_node())
+            {
+                // Print childless node tag ending
+               *out = Ch('/'), ++out;
+               *out = Ch('>'), ++out;
             }
             else
             {
