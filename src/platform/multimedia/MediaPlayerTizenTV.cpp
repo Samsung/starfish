@@ -189,6 +189,7 @@ static void* threadFillingBuffer(void* data)
         }
         sleep(1);
     }
+    PLAYER_LOGI("Close fillingBuffer thread\n");
     free(playerDeadFlag);
     return nullptr;
 }

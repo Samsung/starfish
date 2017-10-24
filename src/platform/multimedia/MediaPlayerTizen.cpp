@@ -596,13 +596,16 @@ void MediaPlayerTizen::close()
     }
     PLAYER_LOGI("MediaPlayerTizen::close()\n");
     if (m_inPrepare) {
-        // Wait prepare
         m_foundError = true;
+        handlePrepared();
+        STARFISH_ASSERT(!m_alive);
         return;
     }
     if (m_seekState != SEEKSTATE_NO_SEEK) {
         m_foundError = true;
         handleSeeked();
+        STARFISH_ASSERT(!m_alive);
+        return;
     }
 
     m_alive = false;

@@ -103,11 +103,13 @@ MediaPlayer* HTMLMediaElement::activeMediaPlayer()
 
 void HTMLMediaElement::onDOMContentLoaded()
 {
-    if (!document()->inParsing() &&
+    if (!document()->inParsing() && networkState() == NETWORK_EMPTY &&
         (autoplay() || preloadValue() != HTMLMediaElement::PRELOAD_NONE)) {
-        // STARFISH_LOG_INFO("HTMLMediaElement::onDOMContentLoaded() causes
-        // content load (autoplay:%s, preload:%s)\n", autoplay() ? "true" :
-        // "false", preload()->toUTF8NonGCString().data());
+        STARFISH_LOG_INFO(
+            "HTMLMediaElement::onDOMContentLoaded() causes content load "
+            "(autoplay:%s, preload:%s)\n",
+            autoplay() ? "true" : "false",
+            preload()->toUTF8NonGCString().data());
         load();
         if (autoplay()) {
             appendToPlayOperationQueue(
@@ -126,9 +128,11 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
     if (name == starFish()->staticStrings()->m_src) {
         if (!document()->inParsing() &&
             (autoplay() || preloadValue() != HTMLMediaElement::PRELOAD_NONE)) {
-            // STARFISH_LOG_INFO("HTMLMediaElement::Changing src attribute
-            // causes content load (autoplay:%s, preload:%s)\n", autoplay() ?
-            // "true" : "false", preload()->toUTF8NonGCString().data());
+            STARFISH_LOG_INFO(
+                "HTMLMediaElement::Changing src attribute causes content load "
+                "(autoplay:%s, preload:%s)\n",
+                autoplay() ? "true" : "false",
+                preload()->toUTF8NonGCString().data());
             load();
             if (autoplay()) {
                 appendToPlayOperationQueue(
