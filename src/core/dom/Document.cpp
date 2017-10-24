@@ -1335,18 +1335,22 @@ Event* Document::createEvent(String* type)
         if (type->equals("event")) {
             e = new Event(this);
         }
+        break;
     case 6:
         if (type->equals("events")) {
             e = new Event(this);
         }
+        break;
     case 7:
         if (type->equals("uievent")) {
             e = new UIEvent(this);
         }
+        break;
     case 8:
         if (type->equals("uievents")) {
             e = new UIEvent(this);
         }
+        break;
     case 9:
         if (type->equals("dragevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -1358,6 +1362,7 @@ Event* Document::createEvent(String* type)
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             e = new Event(this);
         }
+        break;
     case 10:
         switch (type->charAt(0)) {
         case 'c':
@@ -1406,6 +1411,7 @@ Event* Document::createEvent(String* type)
         } else if (type->equals("mouseevents")) {
             e = new MouseEvent(this);
         }
+        break;
     case 12:
         if (type->equals("messageevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -1414,6 +1420,7 @@ Event* Document::createEvent(String* type)
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             e = new Event(this);
         }
+        break;
     case 13:
         if (type->equals("keyboardevent")) {
             e = new KeyboardEvent(this);
@@ -1424,6 +1431,7 @@ Event* Document::createEvent(String* type)
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             e = new Event(this);
         }
+        break;
     case 14:
         if (type->equals("animationevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -1432,6 +1440,7 @@ Event* Document::createEvent(String* type)
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             e = new Event(this);
         }
+        break;
     case 15:
         if (type->equals("hashchangeevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -1440,6 +1449,7 @@ Event* Document::createEvent(String* type)
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             e = new Event(this);
         }
+        break;
     case 17:
         if (type->equals("beforeunloadevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -1451,21 +1461,25 @@ Event* Document::createEvent(String* type)
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             e = new Event(this);
         }
+        break;
     case 19:
         if (type->equals("pagetransitionevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             e = new Event(this);
         }
+        break;
     case 21:
         if (type->equals("idbversionchangeevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             e = new Event(this);
         }
+        break;
     case 22:
         if (type->equals("deviceorientationevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             e = new Event(this);
         }
+        break;
     default:
         break;
     }
