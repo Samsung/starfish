@@ -21,6 +21,7 @@
 #include "core/dom/Attribute.h"
 #include "core/dom/CDATASection.h"
 #include "core/dom/Comment.h"
+#include "core/dom/CustomEvent.h"
 #include "core/dom/ProcessingInstruction.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentFragment.h"
@@ -1406,8 +1407,7 @@ Event* Document::createEvent(String* type)
         break;
     case 11:
         if (type->equals("customevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new CustomEvent(this);
         } else if (type->equals("mouseevents")) {
             e = new MouseEvent(this);
         }
