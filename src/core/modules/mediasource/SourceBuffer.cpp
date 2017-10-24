@@ -579,6 +579,11 @@ void SourceBuffer::abort()
     // InvalidStateError exception and abort these steps.
     // we are running removal algorithm in main thread now.
 
+    abortInternal();
+}
+
+void SourceBuffer::abortInternal()
+{
     // If the updating attribute equals true, then run the following steps:
     if (m_updating) {
         // Queue a task to fire a simple event named abort at this SourceBuffer

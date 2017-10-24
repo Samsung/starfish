@@ -144,6 +144,7 @@ public:
                       ScriptValue origin);
     void appendBuffer(ArrayBufferViewOrArrayBuffer buffer);
     void abort();
+    void abortInternal();
     void remove(double start, double end);
 
     MediaSource* parentMediaSource()
@@ -264,7 +265,6 @@ protected:
 
     void detachFromParent()
     {
-        clearAll();
         m_parentMediaSource = nullptr;
         m_isAttachedToParent = false;
     }

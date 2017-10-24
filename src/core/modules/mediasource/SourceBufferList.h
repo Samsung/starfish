@@ -68,7 +68,6 @@ public:
 
 protected:
     GCVector<SourceBuffer*> m_list;
-    StarFish* m_starFish;
     MediaSource* m_parentMediaSource;
 };
 }

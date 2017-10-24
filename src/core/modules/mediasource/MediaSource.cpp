@@ -130,7 +130,52 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 
 void MediaSource::removeSourceBuffer(SourceBuffer* buffer)
 {
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::removeSourceBuffer()\n");
+    size_t index = SIZE_MAX;
+    if (m_sourceBuffers) {
+        for (size_t i = 0; i < m_sourceBuffers->length(); i++) {
+            if ((*m_sourceBuffers)[i] == buffer) {
+                index = i;
+                break;
+            }
+        }
+    }
+    // If sourceBuffer specifies an object that is not in sourceBuffers
+    // then throw a NotFoundError exception and abort these steps.
+    if (index == SIZE_MAX) {
+        throw new DOMException(document(), DOMException::NOT_FOUND_ERR,
+                               "Not found provided sourceBuffer");
+    }
+    // If the sourceBuffer.updating attribute equals true, then run the
+    // following steps:
+    if (buffer->updating()) {
+        // Abort the buffer append algorithm if it is running.
+        // Set the sourceBuffer.updating attribute to false.
+        // Queue a task to fire a simple event named abort at sourceBuffer.
+        // Queue a task to fire a simple event named updateend at sourceBuffer.
+        buffer->abortInternal();
+    }
+
+    // TODO If the SourceBuffer audioTracks list is not empty,
+    //      then run the following steps: ...
+    // TODO If the SourceBuffer videoTracks list is not empty,
+    //      then run the following steps: ...
+    // TODO If the SourceBuffer textTracks list is not empty,
+    //      then run the following steps: ...
+
+    // If sourceBuffer is in activeSourceBuffers, then remove sourceBuffer
+    // from activeSourceBuffers and queue a task to fire a simple event named
+    // removesourcebuffer at the SourceBufferList returned by
+    // activeSourceBuffers.
+    m_activeSourceBuffers->remove(buffer);
+
+    // Remove sourceBuffer from sourceBuffers and queue a task to fire a
+    // simple event named removesourcebuffer at the SourceBufferList returned
+    // by sourceBuffers.
+    m_sourceBuffers->remove(buffer);
+
+    // Destroy all resources for sourceBuffer.
+    buffer->clearAll();
 }
 
 void MediaSource::endOfStream()
@@ -335,6 +380,7 @@ void MediaSource::setReadyState(MediaSource::ReadyState state)
 // 2.4.1 Attaching to a media element
 bool MediaSource::attach(HTMLMediaElement* e)
 {
+    STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::attach()\n");
     if (m_readyState != Closed) {
         return false;
     }
