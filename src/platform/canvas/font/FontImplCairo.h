@@ -72,7 +72,7 @@ public:
             ((m_ascender - m_descender) * intSize) / m_unitsPerEM;
         met.m_ascender = ((m_ascender * intSize) / (m_unitsPerEM));
         met.m_descender = met.m_ascender - met.m_fontHeight;
-        met.m_xheightRate = m_xHeight / m_unitsPerEM / (float)intSize;
+        met.m_xheightRate = (float)m_xHeight / (float)m_unitsPerEM;
 
 #ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
