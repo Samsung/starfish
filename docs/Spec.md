@@ -763,6 +763,9 @@ This section describes the complete list of supported HTML tags and attributes b
 | | method | void preventDefault() | If invoked when the cancelable attribute value is true, and while executing a listener for the event with passive set to false, signals to the operation that caused event to be dispatched that it needs to be canceled. |
 | | dictionary | EventInit::bubles = false | Initializes an Event object with bubbles. |
 | | dictionary | EventInit::cancelable = false | Initializes an Event object with cancelable. |
+| [CustomEvent](https://www.w3.org/TR/dom/#interface-customevent) | interface | CustomEvent | Events using the CustomEvent interface can be used to carry custom data. |
+| | constructor | CustomEvent(DOMString type, optional CustomEventInit eventInitDict) | Create a new CustomEvent. |
+| | attribute | detail | Returns any custom data event was created with. Typically used for synthetic events. |
 | [FocusEvent](https://w3c.github.io/uievents/#interface-focusevent) | interface | FocusEvent | The FocusEvent interface represents focus-related events like focus, blur, focusin, or focusout. |
 | | constructor | FocusEvent(DOMString type, optional FocusEventInit eventInitDict) | Create a new FocusEvent |
 | | attribute | relatedTarget | Used to identify a secondary EventTarget related to a Focus event, depending on the type of event. |

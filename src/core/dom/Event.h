@@ -68,7 +68,7 @@ public:
     {
         return m_type.hasValue();
     }
-    void unintializeType()
+    void uninitializeType()
     {
         m_type = Nullable<String*>();
     }
@@ -187,14 +187,6 @@ public:
         return m_timeStamp;
     }
 
-    bool isInitialized() const
-    {
-        return m_isInitialized;
-    }
-    void setIsInitialized(bool isInitialized)
-    {
-        m_isInitialized = isInitialized;
-    }
     bool isDispatched() const
     {
         return m_isDispatched;
@@ -213,8 +205,6 @@ public:
     }
 
 private:
-    bool m_isInitialized; // initialized flag
-
     ScriptBindingInstance* m_scriptBindingInstance;
     Nullable<String*> m_type;
     EventTarget* m_target;

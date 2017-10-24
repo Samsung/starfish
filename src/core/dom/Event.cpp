@@ -70,7 +70,6 @@ void EventInit::setComposed(bool composed)
 
 Event::Event(Document* document)
     : ScriptWrappable(this)
-    , m_isInitialized(true)
     , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_target(nullptr)
     , m_currentTarget(nullptr)
@@ -85,7 +84,7 @@ Event::Event(Document* document)
     , m_timeStamp(timestamp())
     , m_isDispatched(false)
 {
-    unintializeType();
+    uninitializeType();
 }
 
 Event::Event(Document* document, String* eventType)
