@@ -53,10 +53,6 @@ public:
     virtual void paintReplaced(Canvas* canvas)
     {
         FrameReplaced::paintReplaced(canvas);
-
-        if (!m_flags.m_needsGraphicsBuffer) {
-            didCompsiteStackingContext(canvas);
-        }
     }
 
     virtual IntrinsicSize intrinsicSize();
