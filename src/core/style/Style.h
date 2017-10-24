@@ -2155,7 +2155,13 @@ protected:
 
 class ValueList : protected GCAtomicVector<CSSStyleValuePair>, public gc {
 public:
-    enum Separator { None, SpaceSeparator, CommaSeparator, SlashSeparator };
+    enum Separator {
+        None,
+        SpaceSeparator,
+        CommaSeparator,
+        CommaSeparatorAppendQuoteWhenMeetWhiteSpace,
+        SlashSeparator
+    };
 
     ValueList()
         : GCAtomicVector<CSSStyleValuePair>()
@@ -2213,6 +2219,28 @@ public:
         return at(idx);
     }
 
+    String* toString()
+    {
+        StringBuilder builder;
+        size_t len = size();
+        for (size_t i = 0; i < len; i++) {
+            String* src = at(i).toString();
+            if (m_separator == CommaSeparatorAppendQuoteWhenMeetWhiteSpace &&
+                src->containsWhitespace()) {
+                builder.appendChar('"');
+                builder.appendString(src);
+                builder.appendChar('"');
+            } else {
+                builder.appendString(src);
+            }
+            if (i != len - 1) {
+                builder.appendString(separatorString());
+            }
+        }
+        return builder.finalize();
+    }
+
+protected:
     String* separatorString()
     {
         if (m_separator == None) {
@@ -2220,13 +2248,14 @@ public:
         } else if (m_separator == SpaceSeparator) {
             return String::spaceString;
         } else if (m_separator == CommaSeparator) {
-            return String::fromUTF8(", ");
+            return String::createASCIIString(", ");
+        } else if (m_separator == CommaSeparatorAppendQuoteWhenMeetWhiteSpace) {
+            return String::createASCIIString(", ");
         } else {
-            return String::fromUTF8("/ ");
+            return String::createASCIIString("/ ");
         }
     }
 
-protected:
     void rootPointer(CSSStyleValuePair v)
     {
         auto p = v.pointerValue();

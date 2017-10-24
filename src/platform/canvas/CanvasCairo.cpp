@@ -159,8 +159,7 @@ public:
         cairo_save(m_canvas);
         cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
         cairo_set_operator(m_canvas, CAIRO_OPERATOR_SOURCE);
-        cairo_rectangle(m_canvas, 0, 0, m_width, m_height);
-        cairo_fill(m_canvas);
+        cairo_paint(m_canvas);
         cairo_restore(m_canvas);
     }
 
@@ -446,7 +445,9 @@ public:
 
         cairo_save(m_canvas);
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
-        FT_Face face = ((FontFaceImplCairo*)f->fontFaceList()[0])->m_face;
+        FontFaceImplCairo* faceImpl =
+            ((FontFaceImplCairo*)f->fontFaceList()[0]);
+        FT_Face face = faceImpl->m_face;
         int intSize(f->size() + 0.5f);
 
         if (m_textShadowDataList.size()) {
@@ -457,7 +458,7 @@ public:
         drawTextInner(rt, sv, size);
 
         float lineWidth =
-            face->underline_thickness / (float)face->units_per_EM * intSize;
+            face->underline_thickness / (float)faceImpl->m_unitsPerEM * intSize;
         if (lastState().m_textDecorationData.hasUnderLine()) {
             cairo_set_line_width(m_canvas, lineWidth);
             cairo_set_source_rgba(
@@ -466,7 +467,7 @@ public:
                 lastState().m_textDecorationData.underLineColor().g() / 255.f,
                 lastState().m_textDecorationData.underLineColor().b() / 255.f,
                 lastState().m_textDecorationData.underLineColor().a() / 255.f);
-            float y = face->underline_position / (float)face->units_per_EM *
+            float y = face->underline_position / (float)faceImpl->m_unitsPerEM *
                           intSize / 72 +
                       size;
             cairo_move_to(m_canvas, 0, y);

@@ -257,7 +257,7 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 
     if (m_needsLayout) {
         if (m_needsFontSizeRecalc) {
-            document()->frame()->loadFont(starFish(), DEFAULT_FONT_SIZE);
+            document()->frame()->loadFont(DEFAULT_FONT_SIZE);
         }
 
         if (fromWebView) {

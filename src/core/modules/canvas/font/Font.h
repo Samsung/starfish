@@ -69,22 +69,40 @@ public:
         return m_supportsKerning;
     }
 
+    char style()
+    {
+        return m_style;
+    }
+
+    char weight()
+    {
+        return m_weight;
+    }
+
+    virtual FontMetrics metrics(float size) = 0;
+
 protected:
     bool m_supportsKerning;
     char m_weight;
     char m_style;
     String* m_familyName;
-    FontMetrics m_metrics;
-    float m_size;
+};
+
+class FontFaceList : public GCVector<FontFace*>, public gc {
 };
 
 class Font : public gc {
     friend class FontSelector;
-    friend class FontSelectorImplCairo;
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    friend class FontSelectorImplEFL;
+#endif
 
 protected:
     Font()
     {
+        m_size = 0;
+        m_spaceWidth = 0;
+        m_fontFaceList = nullptr;
     }
 
 public:
@@ -93,7 +111,13 @@ public:
     }
 
     virtual LayoutUnit measureText(const StringView& sv) = 0;
-    virtual void* unwrap() = 0;
+
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    virtual void* unwrap()
+    {
+        return nullptr;
+    }
+#endif
 
     float spaceWidth()
     {
@@ -102,27 +126,32 @@ public:
 
     char weight()
     {
-        return m_fontFaceList.front()->m_weight;
+        return m_fontFaceList->front()->weight();
     }
 
     float size()
     {
-        return m_fontFaceList.front()->m_size;
+        return m_size;
+    }
+
+    int intSize()
+    {
+        return int(size() + 0.5f);
     }
 
     char style()
     {
-        return m_fontFaceList.front()->m_style;
+        return m_fontFaceList->front()->style();
     }
 
-    const FontMetrics& metrics()
+    FontMetrics metrics()
     {
-        return m_fontFaceList.front()->m_metrics;
+        return m_fontFaceList->front()->metrics(m_size);
     }
 
-    const GCVector<FontFace*>& fontFaceList()
+    const FontFaceList& fontFaceList()
     {
-        return m_fontFaceList;
+        return *m_fontFaceList;
     }
 
 #if defined(PORT_CANVAS_BACKEND_EFL)
@@ -164,7 +193,8 @@ protected:
     static Font* createGenericEmptyFont(FontSelector* s);
 #endif
 
-    GCVector<FontFace*> m_fontFaceList;
+    FontFaceList* m_fontFaceList;
+    float m_size;
     float m_spaceWidth;
 };
 
@@ -173,49 +203,47 @@ class FontSelector : public gc {
     friend class Font;
 
 protected:
+    GCUnorderedMap<UTF8StringDataNonGCStd, FontFace*> m_fontFaceCache;
+    GCUnorderedMap<UTF8StringDataNonGCStd, FontFaceList*> m_fontFaceListCache;
+    GCUnorderedMap<UTF8StringDataNonGCStd, Font*> m_fontCache;
+
     FontSelector()
     {
     }
     virtual ~FontSelector()
     {
     }
-    virtual FontFace* loadFontImpl(String* familyName, float size,
-                                   char style = 0, char weight = 4) = 0;
-
-    Font* loadFont(String* familyNameArray[], size_t familyNameArraySize,
-                   float size, char style = 0, char weight = 4);
-    void clearCache()
+    virtual FontFace* loadFontFaceImpl(const UTF8StringDataNonGCStd& familyName,
+                                       bool isGenericName, char style = 0,
+                                       char weight = 4)
     {
-        m_fontCache.clear();
-        m_fontCache.shrink_to_fit();
+        return nullptr;
     }
 
+#if !defined(PORT_CANVAS_BACKEND_EFL)
+    Font* loadFont(String* familyNameArray[], size_t familyNameArraySize,
+                   float size, char style = 0, char weight = 4);
+#else
+    virtual Font* loadFont(String* familyNameArray[],
+                           size_t familyNameArraySize, float size,
+                           char style = 0, char weight = 4);
+#endif
+    void clearCache()
+    {
+        m_fontFaceCache.clear();
+    }
+
+    FontFace* lookupFaceCache(const UTF8StringDataNonGCStd& familyName,
+                              char style, char weight, bool& exist);
+    void insertFaceCache(const UTF8StringDataNonGCStd& familyName, char style,
+                         char weight, FontFace* face);
+    static FontSelector* createFontSelector();
 #if defined(PORT_CANVAS_BACKEND_EFL)
+    static FontSelector* createGenericFontSelector();
     virtual bool isGenericFontSelector() const
     {
         return true;
     }
-#endif
-
-    GCVector<std::tuple<FontFace*, String*, float, char, char>> m_fontCache;
-    FontFace* lookupCache(String* familyName, float size, char style,
-                          char weight, bool& exist)
-    {
-        for (unsigned i = 0; i < m_fontCache.size(); i++) {
-            if (std::get<2>(m_fontCache[i]) == size &&
-                std::get<3>(m_fontCache[i]) == style &&
-                std::get<4>(m_fontCache[i]) == weight &&
-                std::get<1>(m_fontCache[i])->equals(familyName)) {
-                exist = true;
-                return std::get<0>(m_fontCache[i]);
-            }
-        }
-        exist = false;
-        return nullptr;
-    }
-    static FontSelector* createFontSelector();
-#ifdef PORT_CANVAS_BACKEND_EFL
-    static FontSelector* createGenericFontSelector();
 #endif
 };
 };
