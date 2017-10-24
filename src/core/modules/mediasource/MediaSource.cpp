@@ -155,6 +155,12 @@ void MediaSource::endOfStream(EndOfStreamError error)
                                "When execute endOfStream, updating state of "
                                "child SourceBuffer must be false");
     }
+
+    endOfStreamInternal(error);
+}
+
+void MediaSource::endOfStreamInternal(EndOfStreamError error)
+{
     // Run the end of stream algorithm with the error parameter set to error.
     if (error == None) {
         // Run the duration change algorithm with new duration set to the

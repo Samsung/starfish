@@ -55,6 +55,8 @@ namespace MP4
             {
                 return MP4_PARSER_DEFINE_TYPE_STRING("trex");
             }
+            uint32_t sample_duration;
+            uint32_t sample_size;
     };
 }
 

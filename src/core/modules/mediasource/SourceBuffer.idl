@@ -5,12 +5,12 @@ interface SourceBuffer : EventTarget {
   attribute AppendMode mode;
   readonly attribute boolean updating;
   [RaisesException] readonly attribute TimeRanges buffered;
-  attribute double timestampOffset;
+  [RaisesException=Setter] attribute double timestampOffset;
   [Unimplemented] readonly attribute AudioTrackList audioTracks;
   [Unimplemented] readonly attribute VideoTrackList videoTracks;
   readonly attribute TextTrackList textTracks;
-  attribute double appendWindowStart;
-  attribute unrestricted double appendWindowEnd;
+  [RaisesException=Setter] attribute double appendWindowStart;
+  [RaisesException=Setter] attribute unrestricted double appendWindowEnd;
   attribute EventHandler onupdatestart;
   attribute EventHandler onupdate;
   attribute EventHandler onupdateend;

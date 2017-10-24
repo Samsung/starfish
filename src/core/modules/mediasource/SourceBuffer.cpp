@@ -974,7 +974,7 @@ void SourceBuffer::appendError()
     setUpdating(false, UpdateState::Error);
     // Run the end of stream algorithm with the error parameter set to "decode".
     if (m_parentMediaSource) {
-        m_parentMediaSource->endOfStream(MediaSource::Decode);
+        m_parentMediaSource->endOfStreamInternal(MediaSource::Decode);
     }
 }
 

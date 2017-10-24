@@ -204,8 +204,8 @@ public:
     void updateVideoStreamInfo(MediaStream* video, size_t pastInitIndex,
                                size_t newInitIndex);
 
-    void goUnderrunState();
-    void outUnderrunState();
+    void enterUnderrunState();
+    void exitUnderrunState();
 
     bool m_inPrepare : 1;
     bool m_pendingPlay : 1;

@@ -61,7 +61,6 @@ public:
     SourceBuffer* addSourceBuffer(String* type);
     void removeSourceBuffer(SourceBuffer* sourceBuffer);
     void endOfStream();
-    void endOfStream(EndOfStreamError error);
     bool endOfStream(String* error)
     {
         if (error == String::emptyString) {
@@ -75,6 +74,8 @@ public:
         }
         return true;
     }
+    void endOfStream(EndOfStreamError error);
+    void endOfStreamInternal(EndOfStreamError error);
 
     static bool isTypeSupported(String* type)
     {
