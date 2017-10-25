@@ -18,6 +18,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/HTMLVideoElement.h"
 #include "core/layout/FrameReplacedVideo.h"
+#include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 #include "platform/multimedia/MediaPlayer.h"
 
@@ -46,6 +47,20 @@ void FrameReplacedVideo::didCompsiteStackingContext(Canvas* c)
     c->applyMatrixTo(absVideoRect);
     if (v->activeMediaPlayer()) {
         v->activeMediaPlayer()->drawVideo(c, videoRect, absVideoRect);
+    }
+}
+
+void FrameReplacedVideo::paintReplaced(Canvas* canvas)
+{
+    FrameReplaced::paintReplaced(canvas);
+    StackingContext* sc = stackingContext()->parent();
+    while (sc->parent()) {
+        sc = sc->parent();
+    }
+
+    bool needsComposite = sc->needsOwnBuffer();
+    if (!needsComposite && !m_flags.m_needsGraphicsBuffer) {
+        didCompsiteStackingContext(canvas);
     }
 }
 }

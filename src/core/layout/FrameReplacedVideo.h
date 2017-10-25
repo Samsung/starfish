@@ -50,10 +50,7 @@ public:
         return "FrameReplacedVideo";
     }
 
-    virtual void paintReplaced(Canvas* canvas)
-    {
-        FrameReplaced::paintReplaced(canvas);
-    }
+    virtual void paintReplaced(Canvas* canvas);
 
     virtual IntrinsicSize intrinsicSize();
 
