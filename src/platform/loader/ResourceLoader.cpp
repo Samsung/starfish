@@ -470,6 +470,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
 
 void ResourceLoader::cancelAllOfPendingRequests()
 {
+    m_pendingResourceCountWhileDocumentOpening = 0;
     auto& v = m_currentLoadingResources;
     while (v.size()) {
         v[0]->cancel();
