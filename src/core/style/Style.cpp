@@ -5566,8 +5566,8 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     CSSStyleSheet* sheet = m_sheets[0];
     if (pseudoElementType == PseudoElementType::PseudoElementNone) {
         collectMatchingRulesFromUASheet(
-            sheet->rules().data(), sheet->rules().size(), element, elementName,
-            elementId, elementClasses, userAgentRules);
+            sheet->styleRules().data(), sheet->styleRules().size(), element,
+            elementName, elementId, elementClasses, userAgentRules);
     }
 
     MatchedStyleRules<16> authorRules;

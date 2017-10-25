@@ -48,42 +48,6 @@ protected:
     }
 };
 
-class StaticCSSRuleList : public CSSRuleList {
-public:
-    StaticCSSRuleList()
-    {
-    }
-
-    ScriptBindingInstance* scriptBindingInstance() override
-    {
-        // TODO: Implement
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    GCVector<CSSRule*>& rules()
-    {
-        return m_rules;
-    }
-
-    CSSStyleSheet* styleSheet() const override
-    {
-        return 0;
-    }
-
-    unsigned length() const override
-    {
-        return m_rules.size();
-    }
-
-    CSSRule* item(unsigned index) const override
-    {
-        return index < m_rules.size() ? m_rules[index] : nullptr;
-    }
-
-private:
-    GCVector<CSSRule*> m_rules;
-};
-
 template <class Rule>
 class LiveCSSRuleList : public CSSRuleList {
 public:

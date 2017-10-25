@@ -134,8 +134,16 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         float sx = contentWidth() / rt.width();
         float sy = contentHeight() / rt.height();
         float s = std::min(sx, sy);
+        if (s == 0 || std::isnan(s)) {
+            canvas->restore();
+            return;
+        }
         float tx = rt.x();
         float ty = rt.y();
+        if (std::isnan(tx) || std::isnan(ty)) {
+            canvas->restore();
+            return;
+        }
         canvas->scale(s, s);
         canvas->translate(-tx, -ty);
     }

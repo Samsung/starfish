@@ -2040,6 +2040,53 @@ StyleRuleImport* CSSParser::parseImportRule()
     return new StyleRuleImport(url, mediaQuery);
 }
 
+StyleRuleFontFace* CSSParser::parseFontFaceRule()
+{
+    preserveState();
+
+    CSSStyleDeclaration* decl = new CSSStyleDeclaration();
+
+    RefPtr<CSSToken> token = getToken(true, false);
+    bool valid = false;
+    if (token->isSymbol('{')) {
+        RefPtr<CSSToken> token = getToken(true, false);
+        while (true) {
+            if (!token->isNotNull()) {
+                valid = true;
+                break;
+            }
+            if (token->isSymbol('}')) {
+                valid = true;
+                break;
+            } else {
+                parseDeclaration(token, decl);
+            }
+            token = getToken(true, false);
+        }
+    }
+
+    if (valid) {
+        forgetState();
+
+        for (size_t i = 0; i < decl->cssValues().size(); i++) {
+            auto keyKind = decl->cssValues()[i].keyKind();
+            if (keyKind >= CSSStyleValuePair::KeyKind::FontKeyKindStart &&
+                keyKind <= CSSStyleValuePair::KeyKind::FontKeyKindEnd) {
+            } else {
+                decl->removeCSSValuePair(keyKind);
+                i--;
+            }
+        }
+
+        return new StyleRuleFontFace(decl);
+    }
+
+    restoreState();
+    addUnknownAtRule();
+
+    return nullptr;
+}
+
 String* CSSParser::parseURLString()
 {
     RefPtr<CSSToken> token = getToken(true, false);
@@ -2149,11 +2196,12 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
                 if (lookAhead(true, false)->isSymbol(';')) {
                     rule = nullptr;
                 }
+            } else if (token->isAtRule("@font-face")) {
+                rule = parseFontFaceRule();
             }
             /*
              else if (token.isAtRule("@variables")) {
             } else if (token.isAtRule("@namespace")) {
-            } else if (token.isAtRule("@font-face")) {
             } else if (token.isAtRule("@page")) {
             } else if (token.isAtRule("@keyframes")) {
             } else if (token.isAtRule("@charset")) {

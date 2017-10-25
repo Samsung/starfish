@@ -29,6 +29,7 @@ class TextResource;
 class StyleRule;
 class StyleRuleMedia;
 class StyleRuleImport;
+class StyleRuleFontFace;
 
 class StyleRuleBase : public gc {
 public:
@@ -87,9 +88,15 @@ public:
         return type() == RuleType::NAMESPACE_RULE;
     }
 
-    StyleRule* asStyleRule();
-    StyleRuleMedia* asStyleRuleMedia();
-    StyleRuleImport* asStyleRuleImport();
+    bool isFontFaceRule()
+    {
+        return type() == RuleType::FONT_FACE_RULE;
+    }
+
+    inline StyleRule* asStyleRule();
+    inline StyleRuleMedia* asStyleRuleMedia();
+    inline StyleRuleImport* asStyleRuleImport();
+    inline StyleRuleFontFace* asStyleRuleFontFace();
 
     CSSRule* createCSSOMWrapper(CSSStyleSheet* parent_sheet = 0) const;
     CSSRule* createCSSOMWrapper(CSSRule* parent_rule) const;
@@ -243,6 +250,44 @@ protected:
     CSSStyleSheet* m_parentStyleSheet;
     bool m_loading;
 };
+
+class StyleRuleFontFace : public StyleRuleBase {
+    friend class StyleResolver;
+
+public:
+    StyleRuleFontFace(CSSStyleDeclaration* decl);
+    CSSStyleDeclaration* styleDeclaration()
+    {
+        return m_styleDeclaration;
+    }
+
+protected:
+    CSSStyleDeclaration* m_styleDeclaration;
+};
+
+inline StyleRule* StyleRuleBase::asStyleRule()
+{
+    STARFISH_ASSERT(isStyleRule());
+    return (StyleRule*)this;
+}
+
+inline StyleRuleMedia* StyleRuleBase::asStyleRuleMedia()
+{
+    STARFISH_ASSERT(isMediaRule());
+    return (StyleRuleMedia*)this;
+}
+
+inline StyleRuleImport* StyleRuleBase::asStyleRuleImport()
+{
+    STARFISH_ASSERT(isImportRule());
+    return (StyleRuleImport*)this;
+}
+
+inline StyleRuleFontFace* StyleRuleBase::asStyleRuleFontFace()
+{
+    STARFISH_ASSERT(isFontFaceRule());
+    return (StyleRuleFontFace*)this;
+}
 }
 
 #endif

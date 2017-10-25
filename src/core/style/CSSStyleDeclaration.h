@@ -91,7 +91,7 @@ public:
     String* Flex();
     String* Outline();
 #define DECLARE_ATTRIBUTE_GETTER(name, ...) String* name();
-    FOR_EACH_STYLE_ATTRIBUTE(DECLARE_ATTRIBUTE_GETTER)
+    FOR_EACH_STYLE_ATTRIBUTE_BASIC(DECLARE_ATTRIBUTE_GETTER)
 #undef DECLARE_ATTRIBUTE_GETTER
 
     void addCSSValuePair(CSSStyleValuePair::KeyKind name,
@@ -127,7 +127,7 @@ public:
 
 #define DECLARE_ATTRIBUTE_SETTER(name, ...) \
     void set##name(const char* value, size_t len, bool isImportant);
-    FOR_EACH_STYLE_ATTRIBUTE(DECLARE_ATTRIBUTE_SETTER)
+    FOR_EACH_STYLE_ATTRIBUTE_BASIC(DECLARE_ATTRIBUTE_SETTER)
 #undef DECLARE_ATTRIBUTE_SETTER
 
 #define DECLARE_ATTRIBUTE_GETTER_FOURSIDE(PRE, ...) \

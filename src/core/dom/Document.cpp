@@ -448,7 +448,8 @@ void Document::write(const GCVector<String*>& str)
     // return.
 
     // If the insertion point is undefined, then:
-    if (!m_documentBuilder) {
+    if (!m_documentBuilder ||
+        !m_documentBuilder->asHTMLDocumentBuilder()->parser()) {
         // If document's ignore-opens-during-unload counter is greater than 0 or
         // document's
         // TODO ignore-destructive-writes counter is greater than 0, then

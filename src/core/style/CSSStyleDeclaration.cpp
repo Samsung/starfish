@@ -81,7 +81,7 @@ CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
         }                                                                     \
         return String::emptyString;                                           \
     }
-FOR_EACH_STYLE_ATTRIBUTE(DEFINE_ATTRIBUTE_GETTER)
+FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_GETTER)
 #undef DEFINE_ATTRIBUTE_GETTER
 
 #define DEFINE_ATTRIBUTE_SETTER(name, ...)                                    \
@@ -106,7 +106,7 @@ FOR_EACH_STYLE_ATTRIBUTE(DEFINE_ATTRIBUTE_GETTER)
         }                                                                     \
     }
 
-FOR_EACH_STYLE_ATTRIBUTE(DEFINE_ATTRIBUTE_SETTER)
+FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_SETTER)
 #undef DEFINE_ATTRIBUTE_SETTER
 
 #define DEFINE_ATTRIBUTE_GETTER_FOURSIDE(PRE, ...)                        \
