@@ -119,6 +119,7 @@ public:
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
                           LayoutLocation p3,
                           LayoutLocation p4) = 0; // left, top, right, bottom
+    virtual void setDash(double* dashes, int dashCnt, double offset) = 0;
 
     virtual void punchHole(const Unit::Rect& rt) = 0;
 

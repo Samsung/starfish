@@ -98,7 +98,7 @@ public:
     }
 
 protected:
-    BorderStyleValue m_style : 2;
+    BorderStyleValue m_style : 3;
     bool m_hasBorderColor : 1;
 
     Length m_width;
