@@ -708,9 +708,9 @@ bool DemuxerMP4::findStreamPacket(DemuxerSource* source)
                         delete[] packet.m_data;
                         DEMUXERMP4_LOG("Unexpected structure of MP4\n");
                         DEMUXERMP4_LOG("> Failed to append packet to groups\n");
-                        DEMUXERMP4_LOG("> packet(pts: %lu, dts:%lu, dur:%lu)\n",
-                                       packet.m_pts, packet.m_dts,
-                                       packet.m_duration);
+                        DEMUXERMP4_LOG("> packet(pts: %d, dts:%d, dur:%d)\n",
+                                       (int)packet.m_pts, (int)packet.m_dts,
+                                       (int)packet.m_duration);
                         return false;
                     }
                 }
