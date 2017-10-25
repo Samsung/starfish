@@ -554,6 +554,10 @@ void MediaPlayerTizen::handleEnded()
         player_stop(m_nativePlayer);
         player_unset_completed_cb(m_nativePlayer);
         m_playbackState = MediaPlayer::PLAYBACK_STATE_END;
+        if (isMSE() && m_container->isHTMLVideoElement() &&
+            m_container->frame()) {
+            m_container->setNeedsComposite();
+        }
         if (m_audioStream) {
             Locker<Mutex> locker(*m_fillBufferMutex);
             m_audioStream->setLastSubmittedDTS(0);

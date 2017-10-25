@@ -113,6 +113,9 @@ void MediaPlayerTizenTV::drawVideo(Canvas* canvas, const LayoutRect& videoRect,
     if (state < PLAYER_STATE_READY) {
         return;
     }
+    if (isMSE() && m_playbackState == MediaPlayer::PLAYBACK_STATE_END) {
+        return;
+    }
     canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
                                  videoRect.width(), videoRect.height()));
     player_set_display_roi_area(
