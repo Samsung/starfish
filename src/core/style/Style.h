@@ -777,6 +777,7 @@ enum BorderShorthandValueType {
 enum BorderStyleValue {
     NoneBorderStyleValue,
     SolidBorderStyleValue,
+    DashedBorderStyleValue,
     InsetBorderStyleValue,
     OutsetBorderStyleValue,
 };

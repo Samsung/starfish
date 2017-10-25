@@ -694,6 +694,11 @@ public:
         cairo_set_line_width(m_canvas, width);
     }
 
+    virtual void setDash(double* dashes, int dashCnt, double offset)
+    {
+        cairo_set_dash(m_canvas, dashes, dashCnt, offset);
+    }
+
     virtual void* unwrap()
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();

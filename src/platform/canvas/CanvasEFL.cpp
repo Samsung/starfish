@@ -914,6 +914,11 @@ public:
         evas_object_show(eo);
     }
 
+    virtual void setDash(double* dashes, int dashCnt, double offset)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
                           const StringView& sv)
     {

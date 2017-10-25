@@ -1831,6 +1831,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("none");
         case BorderStyleValue::SolidBorderStyleValue:
             return String::fromUTF8("solid");
+        case BorderStyleValue::DashedBorderStyleValue:
+            return String::fromUTF8("dashed");
         case BorderStyleValue::InsetBorderStyleValue:
             return String::fromUTF8("inset");
         case BorderStyleValue::OutsetBorderStyleValue:
@@ -6316,6 +6318,8 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
         m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
     } else if (STRING_VALUE_IS_STRING("solid")) {
         m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
+    } else if (STRING_VALUE_IS_STRING("dashed")) {
+        m_value.m_borderStyle = BorderStyleValue::DashedBorderStyleValue;
     } else if (STRING_VALUE_IS_STRING("inset")) {
         m_value.m_borderStyle = BorderStyleValue::InsetBorderStyleValue;
     } else if (STRING_VALUE_IS_STRING("outset")) {

@@ -598,6 +598,29 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             frameBoxRareData()->m_bufferForBorderRadius->data(),
             frameBoxRareData()->m_bufferForBorderRadius->width(),
             frameBoxRareData()->m_bufferForBorderRadius->height());
+    } else if (style()->borderTopStyle() ==
+                   BorderStyleValue::DashedBorderStyleValue ||
+               style()->borderRightStyle() ==
+                   BorderStyleValue::DashedBorderStyleValue ||
+               style()->borderBottomStyle() ==
+                   BorderStyleValue::DashedBorderStyleValue ||
+               style()->borderLeftStyle() ==
+                   BorderStyleValue::DashedBorderStyleValue) {
+        cairoCanvasUsed = true;
+        if (!ensureFrameBoxRareData()->m_bufferForBorderRadius ||
+            frameBoxRareData()->m_bufferForBorderRadius->width() !=
+                width().toUnsigned() ||
+            frameBoxRareData()->m_bufferForBorderRadius->height() !=
+                height().toUnsigned()) {
+            frameBoxRareData()->m_bufferForBorderRadius =
+                ImageData::create(width().toUnsigned(), height().toUnsigned());
+        }
+
+        canvas = Canvas::createGenericCanvas(
+            node()->starFish(),
+            frameBoxRareData()->m_bufferForBorderRadius->data(),
+            frameBoxRareData()->m_bufferForBorderRadius->width(),
+            frameBoxRareData()->m_bufferForBorderRadius->height());
     }
 #endif
 
@@ -864,6 +887,59 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
             canvas->restore();
         }
     }
+}
+
+void FrameBox::paintDashedLine(Canvas* canvas, const LayoutLocation& p1,
+                               const LayoutLocation& p2,
+                               const LayoutLocation& p3,
+                               const LayoutLocation& p4,
+                               const LayoutLocation& p5,
+                               const LayoutLocation& p6, BoxSide side)
+{
+    double dashes[] = { 2.0, 1.0 };
+    int ndash = sizeof(dashes) / sizeof(dashes[0]);
+    double offset = 0.0;
+
+    LayoutUnit x1, x2, y1, y2;
+    LayoutUnit width;
+    if (side == TopSide) {
+        width = borderTop();
+        x1 = p2.x();
+        y1 = p2.y() + width / 2;
+        x2 = p4.x();
+        y2 = p4.y() + width / 2;
+    } else if (side == RightSide) {
+        width = borderRight();
+        x1 = p2.x() - width / 2;
+        y1 = p2.y();
+        x2 = p4.x() - width / 2;
+        y2 = p4.y();
+    } else if (side == BottomSide) {
+        width = borderBottom();
+        x1 = p2.x();
+        y1 = p2.y() - width / 2;
+        x2 = p4.x();
+        y2 = p4.y() - width / 2;
+    } else {
+        width = borderLeft();
+        x1 = p2.x() + width / 2;
+        y1 = p2.y();
+        x2 = p4.x() + width / 2;
+        y2 = p4.y();
+    }
+
+    dashes[0] *= width.toDouble();
+    dashes[1] *= width.toDouble();
+
+    canvas->drawRect(p1, p2, p3, p3);
+    canvas->save();
+    canvas->setDash(dashes, ndash, offset);
+    canvas->setStrokeWidth(width.toFloat());
+    canvas->moveTo(x1.toDouble(), y1.toDouble());
+    canvas->lineTo(x2.toDouble(), y2.toDouble());
+    canvas->stroke();
+    canvas->restore();
+    canvas->drawRect(p4, p5, p6, p6);
 }
 
 // Draws the border around the area defined by "rect"
@@ -1471,13 +1547,29 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 } else {
                     canvas->setColor(style()->borderTopColor());
                 }
-                canvas->drawRect(
-                    LayoutLocation(rect.x(), rect.y()),
-                    LayoutLocation(rect.x() + rect.width(), rect.y()),
-                    LayoutLocation(rect.x() + rect.width() - borderRight(),
-                                   rect.y() + borderTop()),
-                    LayoutLocation(rect.x() + borderLeft(),
-                                   rect.y() + borderTop()));
+
+                if ((style()->borderTopStyle() ==
+                     BorderStyleValue::DashedBorderStyleValue)) {
+                    paintDashedLine(
+                        canvas, LayoutLocation(rect.x(), rect.y()),
+                        LayoutLocation(rect.x() + borderLeft(), rect.y()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y()),
+                        LayoutLocation(rect.x() + rect.width(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + borderTop()),
+                        TopSide);
+                } else {
+                    canvas->drawRect(
+                        LayoutLocation(rect.x(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + borderTop()));
+                }
 
                 // right
                 if ((style()->borderRightStyle() ==
@@ -1492,14 +1584,36 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 } else {
                     canvas->setColor(style()->borderRightColor());
                 }
-                canvas->drawRect(
-                    LayoutLocation(rect.x() + rect.width() - borderRight(),
-                                   rect.y() + borderTop()),
-                    LayoutLocation(rect.x() + rect.width(), rect.y()),
-                    LayoutLocation(rect.x() + rect.width(),
-                                   rect.y() + rect.height()),
-                    LayoutLocation(rect.x() + rect.width() - borderRight(),
-                                   rect.y() + rect.height() - borderBottom()));
+
+                if ((style()->borderRightStyle() ==
+                     BorderStyleValue::DashedBorderStyleValue)) {
+                    paintDashedLine(
+                        canvas,
+                        LayoutLocation(rect.x() + rect.width(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        RightSide);
+                } else {
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + rect.width(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()));
+                }
 
                 // bottom
                 if ((style()->borderBottomStyle() ==
@@ -1514,14 +1628,36 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 } else {
                     canvas->setColor(style()->borderBottomColor());
                 }
-                canvas->drawRect(
-                    LayoutLocation(rect.x() + borderLeft(),
-                                   rect.y() + rect.height() - borderBottom()),
-                    LayoutLocation(rect.x() + rect.width() - borderRight(),
-                                   rect.y() + rect.height() - borderBottom()),
-                    LayoutLocation(rect.x() + rect.width(),
-                                   rect.y() + rect.height()),
-                    LayoutLocation(rect.x(), rect.y() + rect.height()));
+                if ((style()->borderBottomStyle() ==
+                     BorderStyleValue::DashedBorderStyleValue)) {
+                    paintDashedLine(
+                        canvas,
+                        LayoutLocation(rect.x(), rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        BottomSide);
+                } else {
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x(), rect.y() + rect.height()));
+                }
 
                 // left
                 if (style()->borderLeftStyle() ==
@@ -1536,13 +1672,31 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 } else {
                     canvas->setColor(style()->borderLeftColor());
                 }
-                canvas->drawRect(
-                    LayoutLocation(rect.x(), rect.y()),
-                    LayoutLocation(rect.x() + borderLeft(),
-                                   rect.y() + borderTop()),
-                    LayoutLocation(rect.x() + borderLeft(),
-                                   rect.y() + rect.height() - borderBottom()),
-                    LayoutLocation(rect.x(), rect.y() + rect.height()));
+
+                if ((style()->borderLeftStyle() ==
+                     BorderStyleValue::DashedBorderStyleValue)) {
+                    paintDashedLine(
+                        canvas, LayoutLocation(rect.x(), rect.y()),
+                        LayoutLocation(rect.x(), rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x(), rect.y() + rect.height() -
+                                                     borderBottom()),
+                        LayoutLocation(rect.x(), rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LeftSide);
+                } else {
+                    canvas->drawRect(
+                        LayoutLocation(rect.x(), rect.y()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(rect.x(), rect.y() + rect.height()));
+                }
             }
         }
     }
