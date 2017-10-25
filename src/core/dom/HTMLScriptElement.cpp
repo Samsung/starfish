@@ -226,6 +226,9 @@ QualifiedName HTMLScriptElement::name()
 String* HTMLScriptElement::src()
 {
     String* url = getAttributeOrEmpty(starFish()->staticStrings()->m_src);
+    if (url->equals(String::emptyString)) {
+        return String::emptyString;
+    }
 
     return ResourceURL::mergeDocumentURIWithURIString(
         document()->documentURI()->baseURI(), url);
