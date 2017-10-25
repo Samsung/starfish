@@ -222,3 +222,7 @@ test/cairo/reftest/csswg-test/css-backgrounds-3_converted/css3-border-image-sour
 test/cairo/reftest/csswg-test/css-backgrounds-3_converted/justfortest.html
 test/cairo/reftest/csswg-test/css-backgrounds-3_converted/ttwf-css3background-border-color.htm
 test/cairo/reftest/csswg-test/css-backgrounds-3_converted/ttwf-css3background-border-color-shorthand.htm
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-border-box.html
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-content-box.html
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-padding-box.html
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-background-size-contain.html

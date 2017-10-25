@@ -222,3 +222,8 @@ test/efl/reftest/csswg-test/css-backgrounds-3_converted/css3-border-image-source
 test/efl/reftest/csswg-test/css-backgrounds-3_converted/justfortest.html
 test/efl/reftest/csswg-test/css-backgrounds-3_converted/ttwf-css3background-border-color.htm
 test/efl/reftest/csswg-test/css-backgrounds-3_converted/ttwf-css3background-border-color-shorthand.htm
+test/efl/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-border-box.html
+test/efl/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-content-box.html
+test/efl/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-padding-box.html
+test/efl/reftest/csswg-test/css-backgrounds-3_original/css3-background-size-contain.html
+

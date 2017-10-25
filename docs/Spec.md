@@ -871,24 +871,24 @@ This section describes the complete list of supported HTML tags and attributes b
 | | padding-left | &lt;length&gt; &#124; &lt;percentage&gt;	| Sets the left padding for an element | |
 | | padding-right | &lt;length&gt; &#124; &lt;percentage&gt; | Sets the right padding for an element | |
 | | padding-top | &lt;length&gt; &#124; &lt;percentage&gt; | Sets the top padding for an element | |
-| [Border](https://www.w3.org/TR/css3-border/) | border | &lt;border-width&gt; &lt;border-style&gt; &lt;border-color&gt; | Sets all the border properties (shorthand). | The border can either be a predefined style (solid line) or it can be an image. In the former case, various properties define the style (&lt;border-style&gt;), color (&lt;border-color&gt;), and thickness (&lt;border-width&gt;) of the border. &lt;border-width&gt; may take one of the following values: thin, medium, thick, and &lt;length&gt;. &lt;border-color&gt; may take one of the following values: &lt;color&gt;, and transparent. &lt;border-style&gt; may take one of the following values: none, solid, inset, and outset. (Also check Border Properties) |
+| [Border](https://www.w3.org/TR/css3-border/) | border | &lt;border-width&gt; &lt;border-style&gt; &lt;border-color&gt; | Sets all the border properties (shorthand). | The border can either be a predefined style (solid line) or it can be an image. In the former case, various properties define the style (&lt;border-style&gt;), color (&lt;border-color&gt;), and thickness (&lt;border-width&gt;) of the border. &lt;border-width&gt; may take one of the following values: thin, medium, thick, and &lt;length&gt;. &lt;border-color&gt; may take one of the following values: &lt;color&gt;, and transparent. &lt;border-style&gt; may take one of the following values: none, solid, dashed, inset, and outset. (Also check Border Properties) |
 | | border-bottom | &lt;border-width&gt;   &lt;border-style&gt;   &lt;border-color&gt; | Sets all the bottom border properties (shorthand). | |
 | | border-bottom-color | &lt;color&gt; &#124; transparent | Sets the color of the bottom border. | |
-| | border-bottom-style | none &#124; solid | Sets the style of the bottom border. | |
+| | border-bottom-style | none &#124; solid &#124; dashed &#124; inset &#124; outset | Sets the style of the bottom border. | |
 | | border-bottom-width | medium &#124; thin &#124; thick &#124; &lt;length&gt; | Sets the width of the bottom border. | |
 | | border-color | &lt;border-color&gt;{1,4} | Sets the color of the four borders (shorthand). | |
 | | border-left | &lt;border-width&gt;   &lt;border-style&gt;   &lt;border-color&gt; | Sets all the left border properties (shorthand). | |
 | | border-left-color | &lt;color&gt; &#124; transparent | Sets the color of the left border. | |
-| | border-left-style | none &#124; solid | Sets the style of the left border. | |
+| | border-left-style | none &#124; solid &#124; dashed &#124; inset &#124; outset | Sets the style of the left border. | |
 | | border-left-width | medium &#124; thin &#124; thick &#124; &lt;length&gt; | Sets the width of the left border. | |
 | | border-right | &lt;border-width&gt;   &lt;border-style&gt;   &lt;border-color&gt;	| Sets all the right border properties (shorthand). | |
 | | border-right-color | &lt;color&gt; &#124; transparent | Sets the color of the right border. | |
-| | border-right-style | none &#124; solid | Sets the style of the right border. | |
+| | border-right-style | none &#124; solid &#124; dashed &#124; inset &#124; outset | Sets the style of the right border. | |
 | | border-right-width | medium &#124; thin &#124; thick &#124; &lt;length&gt;	| Sets the width of the left border. | |
 | | border-style | &lt;border-style&gt;{1,4} | Sets the style of the four borders (shorthand). | |
 | | border-top | &lt;border-width&gt; &lt;border-style&gt; &lt;border-color&gt;	| Sets all the top border properties (shorthand). | |
 | | border-top-color | &lt;color&gt; &#124; transparent | Sets the color of the top border. | |
-| | border-top-style | none &#124; solid | Sets the style of the top border. | |
+| | border-top-style | none &#124; solid &#124; dashed &#124; inset &#124; outset | Sets the style of the top border. | |
 | | border-top-width | medium &#124; thin &#124; thick &#124; &lt;length&gt;	| Sets the width of the top border. | |
 | | border-width | &lt;border-width&gt; | Sets the width of the four borders (shorthand). | |
 | | border-image-source | &lt;image&gt; &#124; none | The path to the image is to be used as a border. | |
