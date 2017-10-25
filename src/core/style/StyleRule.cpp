@@ -27,24 +27,6 @@
 
 namespace StarFish {
 
-StyleRule* StyleRuleBase::asStyleRule()
-{
-    STARFISH_ASSERT(isStyleRule());
-    return (StyleRule*)this;
-}
-
-StyleRuleMedia* StyleRuleBase::asStyleRuleMedia()
-{
-    STARFISH_ASSERT(isMediaRule());
-    return (StyleRuleMedia*)this;
-}
-
-StyleRuleImport* StyleRuleBase::asStyleRuleImport()
-{
-    STARFISH_ASSERT(isImportRule());
-    return (StyleRuleImport*)this;
-}
-
 CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet) const
 {
     return createCSSOMWrapper(parentSheet, 0);
@@ -70,6 +52,9 @@ CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
         break;
     case IMPORT_RULE:
         rule = new CSSImportRule(self->asStyleRuleImport(), parentSheet);
+        break;
+    case FONT_FACE_RULE:
+        rule = new CSSFontFaceRule(self->asStyleRuleFontFace(), parentSheet);
         break;
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -296,5 +281,11 @@ void StyleRuleImport::requestStyleSheet()
         Resource::ResourceRequestSyncLevel::NeverSync,
         document()->documentURI());
     m_loading = true;
+}
+
+StyleRuleFontFace::StyleRuleFontFace(CSSStyleDeclaration* decl)
+    : StyleRuleBase(StyleRuleBase::FONT_FACE_RULE)
+    , m_styleDeclaration(decl)
+{
 }
 }

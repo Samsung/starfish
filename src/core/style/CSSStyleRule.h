@@ -29,6 +29,7 @@ class StyleRuleGroup;
 class StyleRuleCondition;
 class StyleRuleMedia;
 class StyleRuleImport;
+class StyleRuleFontFace;
 class MediaQuerySet;
 class MediaList;
 
@@ -141,6 +142,31 @@ private:
     StyleRuleImport* m_importRule;
     CSSStyleSheet* m_styleSheetWrapper;
     MediaList* m_mediaWrapper;
+};
+
+class CSSFontFaceRule : public CSSRule {
+public:
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isCSSFontFaceRule() const override;
+
+    CSSFontFaceRule(StyleRuleFontFace* styleRule, CSSStyleSheet* parent);
+    String* cssText() override;
+    StyleRuleFontFace* styleRule() const
+    {
+        return m_styleRule;
+    }
+
+    CSSStyleDeclaration* style();
+
+private:
+    CSSRule::Type type() const override
+    {
+        return CSSRule::Type::FONT_FACE_RULE;
+    }
+
+    StyleRuleFontFace* m_styleRule;
+    CSSStyleDeclaration* m_propertiesWrapper;
 };
 }
 

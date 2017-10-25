@@ -947,7 +947,7 @@ class CSSStyleDeclaration;
 // The following are for internal use only
 // * border-horizontal-spacing
 // * border-vertical-spacing
-#define FOR_EACH_STYLE_ATTRIBUTE(F)                                          \
+#define FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)                                    \
     F(Color, color, "color")                                                 \
     F(Direction, direction, "direction")                                     \
     F(BackgroundColor, backgroundColor, "background-color")                  \
@@ -976,8 +976,6 @@ class CSSStyleDeclaration;
     F(Height, height, "height")                                              \
     F(MaxHeight, maxHeight, "max-height")                                    \
     F(MinHeight, minHeight, "min-height")                                    \
-    F(FontSize, fontSize, "font-size")                                       \
-    F(FontStyle, fontStyle, "font-style")                                    \
     F(WordWrap, wordWrap, "word-wrap")                                       \
     F(OverflowWrap, overflowWrap, "overflow-wrap")                           \
     F(Position, position, "position")                                        \
@@ -1020,7 +1018,6 @@ class CSSStyleDeclaration;
     F(BackgroundPositionX, backgroundPositionX, "background-position-x")     \
     F(BackgroundPositionY, backgroundPositionY, "background-position-y")     \
     F(Opacity, opacity, "opacity")                                           \
-    F(FontWeight, fontWeight, "font-weight")                                 \
     F(TableLayout, tableLayout, "table-layout")                              \
     F(UnicodeBidi, unicodeBidi, "unicode-bidi")                              \
     F(Content, content, "content")                                           \
@@ -1055,7 +1052,18 @@ class CSSStyleDeclaration;
       "border-bottom-right-radius")                                          \
     F(BorderBottomLeftRadius, borderBottomLeftRadius,                        \
       "border-bottom-left-radius")                                           \
-    F(Cursor, cursor, "cursor")
+    F(Cursor, cursor, "cursor")                                              \
+    F(FontSize, fontSize, "font-size")                                       \
+    F(FontWeight, fontWeight, "font-weight")                                 \
+    F(FontStyle, fontStyle, "font-style")
+// font related properties must be followed end of this
+// define(FOR_EACH_STYLE_ATTRIBUTE)
+// This order is used by CSSParser::parseFontFaceRule
+
+// sticky properties
+#define FOR_EACH_STYLE_ATTRIBUTE(F)   \
+    FOR_EACH_STYLE_ATTRIBUTE_BASIC(F) \
+    F(FontFamily, fontFamily, "font-family")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
     FOR_EACH_STYLE_ATTRIBUTE(F)                                      \
@@ -1074,7 +1082,6 @@ class CSSStyleDeclaration;
     F(Margin, margin, "margin")                                      \
     F(Padding, padding, "padding")                                   \
     F(Font, font, "font")                                            \
-    F(FontFamily, fontFamily, "font-family")                         \
     F(Outline, outline, "outline")                                   \
     F(Overflow, overflow, "overflow")                                \
     F(Transition, transition, "transition")                          \
@@ -1198,8 +1205,11 @@ public:
 #define ADD_CSS_KEYKIND(Name, name, cssname) Name,
         FOR_EACH_STYLE_ATTRIBUTE(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
-            FontFamily
+            FontKeyKindStart = FontSize,
+        FontKeyKindEnd = FontFamily
     };
+    // font related properties must be followed end of this enum(KeyKind)
+    // This order is used by CSSParser::parseFontFaceRule
 
     enum ValueKind {
         Initial,
@@ -2058,8 +2068,9 @@ public:
 
 #define NEW_SET_VALUE_DECL(name, ...) \
     bool updateValue##name(const CSSTokenVector& tokens);
-    FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
+    FOR_EACH_STYLE_ATTRIBUTE_BASIC(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
+    bool updateValueFontFamily(const CSSTokenVector& tokens);
 
     bool updateValueNumber(const CSSTokenVector& tokens);
     bool updateValueUnitNumber(const CSSTokenValue& token);
@@ -2112,7 +2123,6 @@ public:
     bool updateValueUnitFlexBasis(const CSSTokenValue& value);
 
     bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit);
-    bool updateValueFontFamily(const CSSTokenVector& tokens);
 
 protected:
     KeyKind m_keyKind : 8;

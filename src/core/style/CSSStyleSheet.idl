@@ -3,6 +3,7 @@
 interface CSSStyleSheet : StyleSheet {
     readonly attribute CSSRule? ownerRule;
     [SameObject] readonly attribute CSSRuleList cssRules;
+    [SameObject] readonly attribute CSSRuleList rules;
     [RaisesException] unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
     [RaisesException] void deleteRule(unsigned long index);
 };

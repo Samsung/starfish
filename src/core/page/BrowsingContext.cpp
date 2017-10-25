@@ -213,13 +213,13 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
                     authorSheet->childRules(), authorSheet->url(),
                     viewportDependentResult, deviceDependentResult);
 
-                size_t rules = authorSheet->rules().size();
+                size_t rules = authorSheet->styleRules().size();
                 for (size_t j = 0; j < rules; j++) {
-                    authorSheet->rules()[j].first->setOrder(j + offset);
+                    authorSheet->styleRules()[j].first->setOrder(j + offset);
                     document()
                         ->styleResolver()
                         .styleSheetWithStyleRules()
-                        ->addToRuleSet(authorSheet->rules()[j]);
+                        ->addToRuleSet(authorSheet->styleRules()[j]);
                 }
                 offset += rules;
             }

@@ -28,3 +28,8 @@ interface CSSConditionRule : CSSGroupingRule {
 interface CSSMediaRule : CSSConditionRule {
     [SameObject, PutForwards=mediaText] readonly attribute MediaList media;
 };
+
+// https://drafts.csswg.org/css-fonts-4/#om-fontface
+interface CSSFontFaceRule : CSSRule {
+    [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
+};

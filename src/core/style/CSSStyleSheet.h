@@ -98,7 +98,7 @@ public:
 
     void parseSheetIfneeds();
 
-    GCVector<std::pair<StyleRule*, ResourceURL*>>& rules()
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& styleRules()
     {
         return m_styleRules;
     }
@@ -186,6 +186,10 @@ public:
     MediaList* media();
 
     CSSRuleList* cssRules();
+    CSSRuleList* rules()
+    {
+        return cssRules();
+    }
     unsigned insertRule(String* ruleString, unsigned index);
     void deleteRule(unsigned index);
 

@@ -356,4 +356,36 @@ CSSStyleSheet* CSSImportRule::styleSheet()
 
     return m_styleSheetWrapper;
 }
+
+CSSFontFaceRule::CSSFontFaceRule(StyleRuleFontFace* styleRule,
+                                 CSSStyleSheet* parent)
+    : CSSRule(parent)
+    , m_styleRule(styleRule)
+    , m_propertiesWrapper(nullptr)
+{
+}
+
+CSSStyleDeclaration* CSSFontFaceRule::style()
+{
+    if (!m_propertiesWrapper) {
+        m_propertiesWrapper = new StyleRuleCSSStyleDeclaration(
+            m_styleRule->styleDeclaration(), this->asCSSStyleRule());
+    }
+
+    return m_propertiesWrapper;
+}
+
+String* CSSFontFaceRule::cssText()
+{
+    StringBuilder result;
+    result.appendString("@font-face { ");
+
+    String* decls = m_styleRule->styleDeclaration()->generateCSSText();
+    result.appendString(decls);
+    if (!decls->isEmpty()) {
+        result.appendChar(' ');
+    }
+    result.appendChar('}');
+    return result.finalize();
+}
 }
