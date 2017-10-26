@@ -259,6 +259,7 @@ public:
     QualifiedName m_disabled;
     QualifiedName m_media;
     QualifiedName m_value;
+    QualifiedName m_defaultValue;
     QualifiedName m_title;
     QualifiedName m_align;
     QualifiedName m_tabindex;

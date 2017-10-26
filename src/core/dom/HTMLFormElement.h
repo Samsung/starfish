@@ -34,6 +34,7 @@ public:
 
     String* m_name;
     String* m_value;
+    String* m_defaultValue;
     String* m_type;
 };
 
@@ -70,6 +71,9 @@ public:
 
     String* value();
     void setValue(String* value);
+
+    String* defaultValue();
+    void setDefaultValue(String* defaultValue);
 
     bool disabled();
     void setDisabled(bool disabled);
