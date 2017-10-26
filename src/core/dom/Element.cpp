@@ -1449,33 +1449,75 @@ CSSStyleDeclaration* Element::getComputedStyle()
 
         LayoutContext ctx(starFish(), document()->frame()->asFrameDocument());
         FrameBox* cb = containingBlock(frame());
-        FrameBox* parent = frame()->layoutParent()->asFrameBox();
         FrameBox* self = frame()->asFrameBox();
-
-        LayoutLocation l1, l2;
-        if (cb->isAncestorOf(parent)) {
-            l2 = parent->absolutePoint(cb);
-        } else {
-            l1 = cb->absolutePoint(ctx.frameDocument());
-            l2 = parent->absolutePoint(ctx.frameDocument());
-        }
-        LayoutUnit absX = self->x() + l2.x() - l1.x() - cb->borderLeft();
-        LayoutUnit absY = self->y() + l2.y() - l1.y() - cb->borderTop();
-        LayoutUnit left = absX - self->marginLeft();
-        LayoutUnit top = absY - self->marginTop();
         LayoutUnit parentContentWidth = cb->contentWidth();
         LayoutUnit parentContentHeight = cb->contentHeight();
         if (frame()->isAbsolutePositioned()) {
+            FrameBox* parent = frame()->layoutParent()->asFrameBox();
+
+            LayoutLocation l1, l2;
+            if (cb->isAncestorOf(parent)) {
+                l2 = parent->absolutePoint(cb);
+            } else {
+                l1 = cb->absolutePoint(ctx.frameDocument());
+                l2 = parent->absolutePoint(ctx.frameDocument());
+            }
+            LayoutUnit absX = self->x() + l2.x() - l1.x() - cb->borderLeft();
+            LayoutUnit absY = self->y() + l2.y() - l1.y() - cb->borderTop();
+            LayoutUnit left = absX - self->marginLeft();
+            LayoutUnit top = absY - self->marginTop();
             parentContentWidth += cb->paddingWidth();
             parentContentHeight += cb->paddingHeight();
-        }
 
-        t.setLengthValue(CSSLength(top));
-        b.setLengthValue(
-            CSSLength(parentContentHeight - top - self->outerHeight()));
-        l.setLengthValue(CSSLength(left));
-        r.setLengthValue(
-            CSSLength(parentContentWidth - left - self->outerWidth()));
+            t.setLengthValue(CSSLength(top));
+            b.setLengthValue(
+                CSSLength(parentContentHeight - top - self->outerHeight()));
+            l.setLengthValue(CSSLength(left));
+            r.setLengthValue(
+                CSSLength(parentContentWidth - left - self->outerWidth()));
+        } else {
+            STARFISH_ASSERT(style->position() == RelativePositionValue);
+            Length left = style->left();
+            Length right = style->right();
+            Length top = style->top();
+            Length bottom = style->bottom();
+
+            if (!left.isAuto() && !right.isAuto()) {
+                l.setLengthValue(
+                    CSSLength(left.specifiedValue(parentContentWidth, self)));
+                r.setLengthValue(
+                    CSSLength(right.specifiedValue(parentContentWidth, self)));
+            } else if (!left.isAuto()) {
+                l.setLengthValue(
+                    CSSLength(left.specifiedValue(parentContentWidth, self)));
+                r.setLengthValue(-1 * l.cssLengthValue());
+            } else if (!right.isAuto()) {
+                r.setLengthValue(
+                    CSSLength(right.specifiedValue(parentContentWidth, self)));
+                l.setLengthValue(-1 * r.cssLengthValue());
+            } else {
+                l.setLengthValue(CSSLength(0));
+                r.setLengthValue(CSSLength(0));
+            }
+
+            if (!top.isAuto() && !bottom.isAuto()) {
+                t.setLengthValue(
+                    CSSLength(top.specifiedValue(parentContentHeight, self)));
+                b.setLengthValue(CSSLength(
+                    bottom.specifiedValue(parentContentHeight, self)));
+            } else if (!top.isAuto()) {
+                t.setLengthValue(
+                    CSSLength(top.specifiedValue(parentContentHeight, self)));
+                b.setLengthValue(-1 * t.cssLengthValue());
+            } else if (!bottom.isAuto()) {
+                b.setLengthValue(CSSLength(
+                    bottom.specifiedValue(parentContentHeight, self)));
+                t.setLengthValue(-1 * b.cssLengthValue());
+            } else {
+                t.setLengthValue(CSSLength(0));
+                b.setLengthValue(CSSLength(0));
+            }
+        }
 
         d->addValuePair(t);
         d->addValuePair(b);
