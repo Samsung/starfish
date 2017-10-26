@@ -42,13 +42,11 @@ MediaSource::MediaSource(Document* document)
     , m_shortestMediaDuration(std::numeric_limits<uint64_t>::max())
     , m_usedBufferSize(0)
 {
-#ifndef NDEBUG
-    STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::MediaSource (%p)\n", this);
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::~MediaSource (%p)\n",
-                              obj);
+            STARFISH_LOG_INFO("MediaSource::~MediaSource (%p)\n", obj);
         },
         NULL, NULL, NULL);
 #endif
@@ -130,7 +128,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 
 void MediaSource::removeSourceBuffer(SourceBuffer* buffer)
 {
-    STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::removeSourceBuffer()\n");
+    STARFISH_LOG_INFO("MediaSource::removeSourceBuffer()\n");
     size_t index = SIZE_MAX;
     if (m_sourceBuffers) {
         for (size_t i = 0; i < m_sourceBuffers->length(); i++) {
@@ -371,16 +369,16 @@ void MediaSource::setReadyState(MediaSource::ReadyState state)
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-
-    m_attachedMediaElement->addEventToOperationQueue(
-        this, new Event(document(), eventName));
+    if (m_attachedMediaElement) {
+        m_attachedMediaElement->addEventToOperationQueue(
+            this, new Event(document(), eventName));
+    }
 }
 
 // https://www.w3.org/TR/media-source/
 // 2.4.1 Attaching to a media element
 bool MediaSource::attach(HTMLMediaElement* e)
 {
-    STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::attach()\n");
     if (m_readyState != Closed) {
         return false;
     }
@@ -399,7 +397,7 @@ bool MediaSource::attach(HTMLMediaElement* e)
 // 2.4.2 Detaching from a media element
 void MediaSource::detach()
 {
-    STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::detach()\n");
+    STARFISH_LOG_INFO("MediaSource::detach()\n");
     // Update duration to NaN.
     m_duration = std::numeric_limits<
         double>::quiet_NaN(); // update duration directly for avoiding exception

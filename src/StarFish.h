@@ -216,6 +216,11 @@ public:
         return m_tts;
     }
 #endif
+    void addPointerInRootSet(void* ptr);
+    void removePointerFromRootSet(void* ptr);
+#ifndef NDEBUG
+    size_t countPointersInRootSet(void* ptr);
+#endif
 protected:
     void enter();
     void exit();

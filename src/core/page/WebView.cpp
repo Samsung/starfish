@@ -115,7 +115,6 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
 {
     clearBlobURLStore();
     initRenderingFlags();
-
     clearStack<1024 * 20>();
     if (m_topLevelBrowsingContext) {
         m_topLevelBrowsingContext->dispose();
@@ -436,6 +435,8 @@ void WebView::clearBlobURLStore()
 {
     m_urlMediaSourceBlobStore.clear();
     m_urlBlobStore.clear();
+    GCUnorderedSet<BlobURLStore>().swap(m_urlMediaSourceBlobStore);
+    GCUnorderedSet<BlobURLStore>().swap(m_urlBlobStore);
 }
 
 void WebView::layoutIfNeeds()

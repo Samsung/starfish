@@ -265,6 +265,7 @@ protected:
 
     void detachFromParent()
     {
+        clearAll();
         m_parentMediaSource = nullptr;
         m_isAttachedToParent = false;
     }
