@@ -42,6 +42,7 @@ namespace StarFish {
 FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
     : m_name(name)
     , m_value(value)
+    , m_defaultValue(value)
     , m_type(type)
 {
 }
@@ -131,6 +132,16 @@ String* HTMLFormObject::value()
 void HTMLFormObject::setValue(String* value)
 {
     setAttribute(starFish()->staticStrings()->m_value, value);
+}
+
+String* HTMLFormObject::defaultValue()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_defaultValue);
+}
+
+void HTMLFormObject::setDefaultValue(String* defaultValue)
+{
+    setAttribute(starFish()->staticStrings()->m_defaultValue, defaultValue);
 }
 
 String* HTMLFormObject::formEnctype()

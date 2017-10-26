@@ -73,6 +73,9 @@ public:
     String* visibleValue();
     bool isEditableType() const;
 
+    bool firstDefaultValue();
+    void setFirstDefaultValue(bool firstDefaultValue);
+
 protected:
 private:
     void toggleChecked();
@@ -87,6 +90,7 @@ private:
     size_t m_currentCaretPosition;
     LayoutLocation m_currentCaretLayoutLocation;
     String* m_currentEditingText;
+    bool m_firstDefaultValue;
 };
 }
 

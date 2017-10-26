@@ -36,7 +36,7 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented, CEReactions] attribute USVString src;
     [Unimplemented, CEReactions] attribute DOMString step;
     [CEReactions] attribute DOMString type;
-    [Unimplemented, CEReactions] attribute DOMString defaultValue;
+    [TreatNullAs=EmptyString, CEReactions] attribute DOMString defaultValue;
     [TreatNullAs=EmptyString, CEReactions] attribute DOMString value;
     [Unimplemented] attribute object? valueAsDate;
     [Unimplemented] attribute unrestricted double valueAsNumber;
