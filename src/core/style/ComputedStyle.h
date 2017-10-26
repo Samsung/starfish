@@ -29,6 +29,7 @@
 #include "core/style/StyleTransitionData.h"
 #include "core/style/StylePaintData.h"
 #include "core/style/ShadowData.h"
+#include "core/style/PositionedMaskData.h"
 
 namespace StarFish {
 
@@ -77,6 +78,7 @@ public:
         , m_transition(nullptr)
         , m_outline(nullptr)
         , m_borderRadius(nullptr)
+        , m_positionedMask(nullptr)
     {
     }
 
@@ -104,6 +106,14 @@ public:
         return m_borderRadius;
     }
 
+    PositionedMaskData* ensurePositionedMask()
+    {
+        if (m_positionedMask == nullptr) {
+            m_positionedMask = new PositionedMaskData();
+        }
+        return m_positionedMask;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
@@ -121,6 +131,7 @@ public:
 
     OutlineData* m_outline;
     BorderRadiusData* m_borderRadius;
+    PositionedMaskData* m_positionedMask;
 };
 
 class ComputedStyle : public gc {
@@ -1713,6 +1724,52 @@ public:
         *rareComputedStyleData()->ensureOutlineOffset() = v;
     }
 
+    String* maskImage()
+    {
+        if (hasPositionedMask()) {
+            return rareComputedStyleData()->m_positionedMask->image();
+        }
+        return String::emptyString;
+    }
+
+    void setMaskImage(String* url)
+    {
+        setRareComputedStyleDataIfNeeded();
+        rareComputedStyleData()->ensurePositionedMask()->setImage(url);
+    }
+
+    void setMaskSize(MaskSizeValue size, unsigned int layer = 0)
+    {
+        setRareComputedStyleDataIfNeeded();
+        rareComputedStyleData()->ensurePositionedMask()->setSize(size, layer);
+    }
+
+    void setMaskSize(LengthSize size, unsigned int layer = 0)
+    {
+        setRareComputedStyleDataIfNeeded();
+        rareComputedStyleData()->ensurePositionedMask()->setSize(size, layer);
+    }
+
+    LengthSize maskSizeLengthValue(unsigned int layer = 0)
+    {
+        if (hasPositionedMask()) {
+            return rareComputedStyleData()
+                ->m_positionedMask->maskSizeLengthValue(layer);
+        }
+        return LengthSize();
+    }
+
+    MaskSizeValue maskSizeTypeValue(unsigned int layer = 0)
+    {
+        if (hasPositionedMask()) {
+            return rareComputedStyleData()->m_positionedMask->maskSizeTypeValue(
+                layer);
+        }
+
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        return MaskSizeValue::ContainMaskSizeValue;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
@@ -1721,6 +1778,15 @@ protected:
     {
         if (m_rareComputedStyleData == nullptr ||
             rareComputedStyleData()->m_outline == nullptr) {
+            return false;
+        }
+        return true;
+    }
+
+    bool hasPositionedMask()
+    {
+        if (m_rareComputedStyleData == nullptr ||
+            rareComputedStyleData()->m_positionedMask == nullptr) {
             return false;
         }
         return true;
