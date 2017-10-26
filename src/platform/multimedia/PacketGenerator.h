@@ -42,6 +42,10 @@ public:
     {
         m_codec = codec;
     }
+    MediaCodec codec()
+    {
+        return m_codec;
+    }
 
 protected:
     MediaCodec m_codec;
@@ -49,11 +53,6 @@ protected:
 
 typedef std::vector<std::vector<uint8_t>> H264SPSVector;
 typedef std::vector<std::vector<uint8_t>> H264PPSVector;
-struct MP4SampleInfo {
-    uint32_t m_duration;
-    uint32_t m_size;
-    uint32_t m_ctsOffset;
-};
 
 class MP4PacketGenerator : public PacketGenerator {
 public:
@@ -61,10 +60,6 @@ public:
     bool generate(DemuxerSource* from, size_t validLength,
                   MediaPacket& packet) override;
 
-    void setSampleInfo(std::vector<MP4SampleInfo>&& sampleInfo)
-    {
-        m_sampleInfo = std::move(sampleInfo);
-    }
     // AVC(H264)
     void setAVCExtraData(H264SPSVector& spsVector, H264PPSVector& ppsVector);
     void setAVCNALSizeLength(unsigned char length)
@@ -85,7 +80,6 @@ protected:
 
 protected:
     std::vector<uint8_t> m_extraData;
-    std::vector<MP4SampleInfo> m_sampleInfo;
     unsigned char m_H264NalSizeLength;
 };
 }

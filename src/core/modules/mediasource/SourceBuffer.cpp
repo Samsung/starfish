@@ -35,11 +35,9 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/page/Window.h"
 
-#define TRACE_MSE_GC
-#define SOURCEBUFFER_DEBUG
 #define STARFISH_FRAME_EVICTION_BACKWARD_DUR 1
 
-#ifdef SOURCEBUFFER_DEBUG
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
 #define SOURCEBUFFER_LOG(sb, ...)                                            \
     STARFISH_LOG_INFO("[SourceBuffer|%p|%s] ", sb,                           \
                       sb->type()->charAt(0) == 'v'                           \
@@ -47,15 +45,10 @@
                           : sb->type()->charAt(0) == 'a' ? "audio" : "etc"); \
     STARFISH_LOG_INFO(__VA_ARGS__);
 #else
-#define SOURCEBUFFER_LOG(sourcebuffer, ...)
+#define SOURCEBUFFER_LOG(sb, ...)
 #endif
 
 namespace StarFish {
-
-#ifdef TRACE_MSE_GC
-static std::list<SourceBuffer*> g_sourceBufferList;
-static bool g_traceMSEGCInited = false;
-#endif
 
 class DemuxerSourceForSourceBuffer : public DemuxerSource {
 public:
@@ -65,8 +58,6 @@ public:
         , m_bufferRemain(bufferRemain)
         , m_readPos(0)
     {
-        // STARFISH_LOG_INFO("start demux %d %d\n", (int)m_bufferRemain->size(),
-        // (int)m_inputBuffer->m_length);
     }
 
     virtual int64_t onSeek(int64_t position, SeekWhence whence)
@@ -160,12 +151,13 @@ public:
     {
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
                                            STARFISH_LOG_INFO(
-                                               "[TRACE_MSE_GC] "
                                                "DemuxerClientSourceBuffer::~"
                                                "DemuxerClientSourceBuffer "
                                                "(%p)\n",
                                                obj);
+#endif
                                            DemuxerClientSourceBuffer* self =
                                                (DemuxerClientSourceBuffer*)obj;
                                            self->clearAll();
@@ -252,10 +244,6 @@ public:
             if (trackbufferInfo.m_lastDecodeTimestamp != -1) {
                 int64_t decodedDiff =
                     decodeTimestamp - trackbufferInfo.m_lastDecodeTimestamp;
-                // STARFISH_LOG_INFO("[%d] diff: %d - %d = %d duration: %d\n",
-                // streamIndex, (int)decodeTimestamp,
-                // (int)trackbufferInfo.m_lastDecodeTimestamp, (int)decodedDiff,
-                // (int)trackbufferInfo.m_lastFrameDuration);
                 if (decodedDiff < 0 ||
                     decodedDiff > 2 * trackbufferInfo.m_lastFrameDuration) {
                     // If mode equals "segments": Set group end timestamp to
@@ -431,68 +419,20 @@ SourceBuffer::SourceBuffer(Document* document, String* type)
     m_demuxer = Demuxer::createDemuxer(m_type);
     m_demuxer->addClient(new DemuxerClientSourceBuffer());
 
-    STARFISH_LOG_INFO("[TRACE_MSE_GC] SourceBuffer::SourceBuffer (%p)\n", this);
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            STARFISH_LOG_INFO(
-                "[TRACE_MSE_GC] SourceBuffer::~SourceBuffer (%p)\n", obj);
-            SourceBuffer* nr = (SourceBuffer*)obj;
-            nr->clearAll();
-#ifdef TRACE_MSE_GC
-            g_sourceBufferList.remove(nr);
-#endif
-        },
-        NULL, NULL, NULL);
-#ifdef TRACE_MSE_GC
-
-    // #define TRACE_MSE_GC_DETAIL
-    g_sourceBufferList.push_back(this);
-    if (!g_traceMSEGCInited) {
-        g_traceMSEGCInited = true;
-        addGCCollectionListener([](GC_EventType e) {
-            if (GC_EVENT_PRE_START_WORLD != e) {
-                return;
-            }
-            size_t totalDataSize = 0;
-
-            auto iter = g_sourceBufferList.begin();
-
-            while (iter != g_sourceBufferList.end()) {
-                SourceBuffer* sb = *iter;
-#ifdef TRACE_MSE_GC_DETAIL
-                STARFISH_LOG_INFO(
-                    "[TRACE_MSE_GC] SourceBuffer %p-----------------\n", sb);
-#endif
-                for (size_t i = 0; i < sb->m_packetGroups.size(); i++) {
-                    std::vector<MediaPacket*>& p =
-                        sb->m_packetGroups[i]->m_packets;
-                    size_t dataSize = 0;
-                    for (size_t j = 0; j < p.size(); j++) {
-                        dataSize += p[j]->m_dataSize;
-                    }
-#ifdef TRACE_MSE_GC_DETAIL
-                    STARFISH_LOG_INFO(
-                        "[TRACE_MSE_GC] packetGroupInfo %p %d->%d %fMB\n",
-                        sb->m_packetGroups[i],
-                        (int)sb->m_packetGroups[i]->m_groupTimestampStart,
-                        (int)sb->m_packetGroups[i]->m_groupTimestampEnd,
-                        dataSize / 1024.f / 1024.f);
-#endif
-                    totalDataSize += dataSize;
-                }
-                iter++;
-            }
-            STARFISH_LOG_INFO("[TRACE_MSE_GC] totalDataSize %fMB\n",
-                              totalDataSize / 1024.f / 1024.f);
-        });
-    }
-
-#endif
+    SOURCEBUFFER_LOG(this, "SourceBuffer::SourceBuffer\n");
+    GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                   [](void* obj, void* cd) {
+                                       SourceBuffer* nr = (SourceBuffer*)obj;
+                                       SOURCEBUFFER_LOG(
+                                           nr, "SourceBuffer::~SourceBuffer\n");
+                                       nr->clearAll();
+                                   },
+                                   NULL, NULL, NULL);
 }
 
 void SourceBuffer::clearAll()
 {
+    SOURCEBUFFER_LOG(this, "clearAll\n");
     {
         Locker<Mutex> locker(*m_packetGroupsMutex);
         size_t removedSize = 0;
@@ -511,6 +451,7 @@ void SourceBuffer::clearAll()
         setBufferedRangeNeedsUpdate();
     }
     clearPacketAccessCache();
+    abortInternal();
 }
 
 void SourceBuffer::setUpdating(bool flag, UpdateState state)
@@ -769,11 +710,6 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
               endTimestamp <= grp->m_groupTimestampStart)) {
             if (startTimestamp <= grp->m_groupTimestampStart &&
                 grp->m_groupTimestampEnd <= endTimestamp) {
-                // STARFISH_LOG_INFO("SourceBuffer::remove all %d
-                // was(%d->%d)\n", (int)groupIndex,
-                // (int)grp->m_groupTimestampStart,
-                // (int)grp->m_groupTimestampEnd);
-
                 for (size_t i = 0; i < grp->m_packets.size(); i++) {
                     removedSize += grp->m_packets[i]->m_dataSize;
                     delete[] grp->m_packets[i]->m_data;
@@ -811,9 +747,6 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
                         break;
                     }
                 }
-
-                // STARFISH_LOG_INFO("SourceBuffer::remove hole %d %d %d\n",
-                // (int)groupIndex, (int)holeStart, (int)holeEnd);
 
                 MediaPacketGroup* newGroup = new MediaPacketGroup(
                     grp->m_streamIndex, grp->m_initSegmentIndex,
@@ -877,8 +810,6 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
                 }
 
                 if (eraseStart < eraseEnd) {
-                    // STARFISH_LOG_INFO("SourceBuffer::remove %d %d %d\n",
-                    // (int)groupIndex, (int)eraseStart, (int)eraseEnd);
                     for (size_t i = eraseStart; i < eraseEnd; i++) {
                         removedSize += grp->m_packets[i]->m_dataSize;
                         delete[] grp->m_packets[i]->m_data;
@@ -1151,6 +1082,8 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                     [](size_t, void* data, void* data1) {
                         SourceBufferData* inputBuffer = (SourceBufferData*)data;
                         size_t processedSize = (size_t)data1;
+                        SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
+                                         "postBufferAppend\n");
                         // Save unprocessed data
                         updateBufferUnprocessed(inputBuffer, processedSize);
                         // Move results to sourceBuffer from demuxerClient
@@ -1159,7 +1092,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                         // Delete SourceBufferData manually (NOGC)
                         delete inputBuffer;
                     },
-                    inputBuffer, (void*)processedSize);
+                    inputBuffer, (void*)processedSize, false);
             return nullptr;
         },
         inputBuffer);
@@ -1204,9 +1137,6 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
             }
         }
     }
-
-    // STARFISH_LOG_INFO("SourceBuffer::findProperMediaPacket cache miss!
-    // streamIdx(%d)\n", (int)streamIdx);
 
     std::pair<size_t, uint64_t> nearestPacketGroupInfo =
         std::make_pair(SIZE_MAX, std::numeric_limits<uint64_t>::max());
@@ -1613,9 +1543,6 @@ void SourceBuffer::decreaseUsedBufferSize(size_t amount)
 }
 
 #undef STARFISH_FRAME_EVICTION_BACKWARD_DUR
-#ifdef SOURCEBUFFER_DEBUG
-#undef SOURCEBUFFER_DEBUG
-#endif
 #undef SOURCEBUFFER_LOG
 
 #endif

@@ -414,12 +414,12 @@ void BrowsingContext::dispose()
     if (isTopLevelBrowsingContext()) {
         m_starFish->timer()->clear(nullptr);
         m_starFish->platformWindow()->clearResources();
-        m_starFish->messageLoop()->clearPendingIdlers(nullptr);
+        m_starFish->messageLoop()->clearOrInvokePendingIdlers(nullptr);
 
         m_webView->initRenderingFlags();
     } else {
         m_starFish->timer()->clear(this);
-        m_starFish->messageLoop()->clearPendingIdlers(this);
+        m_starFish->messageLoop()->clearOrInvokePendingIdlers(this);
     }
     unRegisterNeedsLayoutInWebView();
 }

@@ -22,11 +22,7 @@
 
 #include "core/dom/HTMLMediaElement.h"
 
-#ifndef PLAYER_DEBUG
-#define PLAYER_DEBUG
-#endif
-
-#ifdef PLAYER_DEBUG
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <pthread.h>
@@ -44,7 +40,6 @@ namespace StarFish {
 
 class Canvas;
 class MediaSource;
-class StarFish;
 class URL;
 class Window;
 

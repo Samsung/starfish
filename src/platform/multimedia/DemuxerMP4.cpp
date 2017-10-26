@@ -27,8 +27,7 @@
 #include "MP4.BinaryStream.h"
 #include "MP4.Parser.h"
 
-#define DEMUXERMP4_DEBUG
-#ifdef DEMUXERMP4_DEBUG
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
 #define DEMUXERMP4_LOG(...)             \
     STARFISH_LOG_INFO("[DemuxerMP4] "); \
     STARFISH_LOG_INFO(__VA_ARGS__);
@@ -111,13 +110,12 @@ static bool parseMP4(DemuxerSource* source, bool findPacket,
     MP4BinaryStreamAdapter src(source);
     memset(type, 0, 5);
 
-#ifdef DEMUXERMP4_DEBUG
-#define PRINT_STOP_REASON(...)                                                 \
-    STARFISH_LOG_INFO(                                                         \
-        "[DemuxerMP4] Stop parsing at %d and rewind to %d (end:%d)\n",         \
-        (int)source->onSeek(0, DemuxerSource::SeekWhenceCurrent), (int)orgPos, \
-        (int)maxPos);                                                          \
-    STARFISH_LOG_INFO("[DemuxerMP4] Reason: ");                                \
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
+#define PRINT_STOP_REASON(...)                                               \
+    DEMUXERMP4_LOG("Stop parsing at %d and rewind to %d (end:%d)\n",         \
+                   (int)source->onSeek(0, DemuxerSource::SeekWhenceCurrent), \
+                   (int)orgPos, (int)maxPos);                                \
+    DEMUXERMP4_LOG("> Reason: ");                                            \
     STARFISH_LOG_INFO(__VA_ARGS__);
 #else
 #define PRINT_STOP_REASON(...)
@@ -164,7 +162,6 @@ static bool parseMP4(DemuxerSource* source, bool findPacket,
             break;
         }
 
-        // STARFISH_LOG_INFO("found %x %s\n", (int)orgPos, type);
         uint32_t typeInt = MP4_PARSER_DEFINE_TYPE_STRING(type);
         if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("meta")) {
             source->onSeek(orgLength, DemuxerSource::SeekWhenceCurrent);
@@ -259,7 +256,7 @@ public:
     {
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
-                                           STARFISH_LOG_INFO(
+                                           DEMUXERMP4_LOG(
                                                "DemuxerMP4::~DemuxerMP4\n");
                                            DemuxerMP4* self = (DemuxerMP4*)obj;
                                            self->m_streamInfo.clear();
@@ -284,7 +281,7 @@ static StreamInfoMP4* handleTKHD(MP4::TKHD* tkhd,
         return nullptr;
     }
     size_t streamIndex = tkhd->track_id - 1;
-#ifdef DEMUXERMP4_DEBUG
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
     auto exist = map.find(streamIndex);
     if (exist != map.end()) {
         DEMUXERMP4_LOG("TRAK(TKHD): Replace previous stream at index %d\n",
@@ -580,7 +577,7 @@ static bool handleTRUN(MP4::TRUN* trun, SegmentParsingInfo& parsingInfo)
     return true;
 }
 
-#ifdef DEMUXERMP4_DEBUG
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
 static bool handleMFHD(MP4::MFHD* mfhd)
 {
     DEMUXERMP4_LOG("Sequence %d data will follow\n", (int)mfhd->sequence_no);
@@ -647,7 +644,7 @@ bool DemuxerMP4::findStreamPacket(DemuxerSource* source)
         case MP4_PARSER_DEFINE_TYPE_STRING("trun"): {
             return handleTRUN((MP4::TRUN*)atom, parsingInfo);
         }
-#ifdef DEMUXERMP4_DEBUG
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
         case MP4_PARSER_DEFINE_TYPE_STRING("mfhd"): {
             return handleMFHD((MP4::MFHD*)atom);
         }

@@ -44,6 +44,8 @@ struct IdlerData {
     BrowsingContext* m_ctx;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
+    bool m_clearable;
+    size_t m_dataCount;
 };
 
 MessageLoop::MessageLoop(StarFish* sf)
@@ -106,15 +108,17 @@ void MessageLoop::run()
 }
 
 size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
-                             void* data)
+                             void* data, bool clearable)
 {
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
     id->m_fn = fn;
     id->m_data = data;
+    id->m_dataCount = 1;
     id->m_ml = this;
     id->m_ctx = ctx;
+    id->m_clearable = clearable;
     id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
     uv_idle_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
@@ -133,7 +137,7 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
 
 size_t MessageLoop::addIdler(BrowsingContext* ctx,
                              void (*fn)(size_t, void*, void*), void* data,
-                             void* data1)
+                             void* data1, bool clearable)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (NoGC) IdlerData;
@@ -141,8 +145,10 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
     id->m_data1 = data1;
+    id->m_dataCount = 2;
     id->m_ml = this;
     id->m_ctx = ctx;
+    id->m_clearable = clearable;
     id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
     uv_idle_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
@@ -162,7 +168,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
 
 size_t MessageLoop::addIdler(BrowsingContext* ctx,
                              void (*fn)(size_t, void*, void*, void*),
-                             void* data, void* data1, void* data2)
+                             void* data, void* data1, void* data2,
+                             bool clearable)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (NoGC) IdlerData;
@@ -172,8 +179,10 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data = data;
     id->m_data1 = data1;
     id->m_data2 = data2;
+    id->m_dataCount = 3;
     id->m_ml = this;
     id->m_ctx = ctx;
+    id->m_clearable = clearable;
     id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
     uv_idle_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
@@ -198,15 +207,17 @@ void uv_close_cb(uv_handle_t* handle)
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    BrowsingContext* ctx, void (*fn)(size_t, void*), void* data)
+    BrowsingContext* ctx, void (*fn)(size_t, void*), void* data, bool clearable)
 {
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
     id->m_shouldExecute = true;
     id->m_fn = fn;
     id->m_data = data;
+    id->m_dataCount = 1;
     id->m_ml = this;
     id->m_ctx = ctx;
+    id->m_clearable = clearable;
 
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
@@ -220,7 +231,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     BrowsingContext* ctx, void (*fn)(size_t, void*, void*), void* data,
-    void* data1)
+    void* data1, bool clearable)
 {
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
@@ -228,8 +239,10 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
     id->m_data1 = data1;
+    id->m_dataCount = 2;
     id->m_ml = this;
     id->m_ctx = ctx;
+    id->m_clearable = clearable;
 
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
@@ -243,7 +256,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
 size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(
     BrowsingContext* ctx, void (*fn)(size_t handle, void*, void*), void* data,
-    void* data1)
+    void* data1, bool clearable)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (NoGC) IdlerData;
@@ -252,8 +265,10 @@ size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
     id->m_data1 = data1;
+    id->m_dataCount = 2;
     id->m_ml = this;
     id->m_ctx = ctx;
+    id->m_clearable = clearable;
     id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
     uv_idle_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
@@ -285,7 +300,20 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
     id->m_shouldExecute = false;
 }
 
-void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
+static void invokeFnNow(IdlerData* id)
+{
+    if (id->m_dataCount == 1) {
+        ((void (*)(size_t, void*))id->m_fn)((size_t)id, id->m_data);
+    } else if (id->m_dataCount == 2) {
+        ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
+                                                   id->m_data1);
+    } else if (id->m_dataCount == 3) {
+        ((void (*)(size_t, void*, void*, void*))id->m_fn)(
+            (size_t)id, id->m_data, id->m_data1, id->m_data2);
+    }
+}
+
+void MessageLoop::clearOrInvokePendingIdlers(BrowsingContext* ctx)
 {
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {
@@ -293,8 +321,11 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
         if (id->m_ctx == ctx || ctx == nullptr) {
             uv_idle_stop(id->m_idler_uv);
             uv_close((uv_handle_t*)id->m_idler_uv, on_close_handle);
+            if (!id->m_clearable) {
+                invokeFnNow(id);
+            }
             GC_FREE(id);
-            m_idlers.erase(iter++);
+            iter = m_idlers.erase(iter);
         } else {
             iter++;
         }
@@ -305,6 +336,9 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
     while (iter2 != m_idlersFromOtherThread.end()) {
         IdlerData* id = (IdlerData*)*iter2;
         if (id->m_ctx == ctx || ctx == nullptr) {
+            if (!id->m_clearable) {
+                invokeFnNow(id);
+            }
             id->m_shouldExecute = false;
         }
         iter2++;

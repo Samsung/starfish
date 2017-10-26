@@ -66,8 +66,15 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            STARFISH_LOG_INFO("HTMLMediaElement::~HTMLMediaElement\n");
             HTMLMediaElement* element = (HTMLMediaElement*)obj;
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
+            STARFISH_LOG_INFO("HTMLMediaElement::~HTMLMediaElement (%s|%p)\n",
+                              element->isHTMLVideoElement()
+                                  ? "VIDEO"
+                                  : element->isHTMLAudioElement() ? "AUDIO"
+                                                                  : "ETC",
+                              element);
+#endif
             element->closeMediaPlayer();
         },
         NULL, NULL, NULL);

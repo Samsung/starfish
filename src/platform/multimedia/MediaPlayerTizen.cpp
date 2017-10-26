@@ -308,7 +308,7 @@ MediaStream::BufferState MediaStream::bufferState()
     return m_bufferState;
 }
 
-#ifdef PLAYER_DEBUG
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
 static const char* bufferStateString(MediaStream::BufferState value)
 {
     if (value == MediaStream::BUFFERSTATE_INITIAL) {
@@ -618,26 +618,30 @@ void MediaPlayerTizen::close()
         m_container->dispatchErrorEvent();
     }
 
-    unprepareOperation();
-    if (m_nativePlayer) {
-        player_unset_completed_cb(m_nativePlayer);
-        player_unset_error_cb(m_nativePlayer);
-        player_unset_buffering_cb(m_nativePlayer);
-        player_destroy(m_nativePlayer);
-    }
-    if (m_playerDeadFlag) {
-        *m_playerDeadFlag = true;
-    }
+    pause();
 
-    m_nativePlayer = nullptr;
-    m_container = nullptr;
-
-#ifndef NDEBUG
-    PLAYER_LOGI(
-        "[TRACE_MSE_GC] MediaPlayerTizen::close() : Rooting count of "
-        "player(%p) is %d\n",
-        this, (int)m_container->starFish()->countPointersInRootSet(this));
-#endif
+    if (m_container->isHTMLVideoElement() && m_container->frame()) {
+        m_container->setNeedsComposite();
+        // NOTE Deplay dispose()
+        //      Transparent hole can be exposed by disposal of player.
+        m_container->starFish()->platformWindow()->rendering();
+        m_container->starFish()->addPointerInRootSet(this);
+        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        PLAYER_LOGI(
+            "MediaPlayerTizen::close() - dispose player next idle time\n");
+        msgLoop->addIdlerWithNoGCRootingInOtherThread(
+            m_container->document()->browsingContext(),
+            [](size_t, void* data0, void* data1) {
+                StarFish* starfish = (StarFish*)data0;
+                MediaPlayerTizen* player = (MediaPlayerTizen*)data1;
+                starfish->removePointerFromRootSet(player);
+                player->dispose();
+            },
+            m_container->starFish(), this, false);
+    } else {
+        PLAYER_LOGI("MediaPlayerTizen::close() - instant disposal \n");
+        dispose();
+    }
 }
 
 double MediaPlayerTizen::duration()
@@ -692,8 +696,11 @@ void MediaPlayerTizen::pause()
         return;
     }
     m_playbackState = PLAYBACK_STATE_PAUSED;
-    m_container->document()->browsingContext()->removePointerFromRootSet(this);
-    m_container->window()->clearInterval(m_currentTimeUpdateTimer);
+    if (m_container) {
+        m_container->document()->browsingContext()->removePointerFromRootSet(
+            this);
+        m_container->window()->clearInterval(m_currentTimeUpdateTimer);
+    }
     player_pause(m_nativePlayer);
     m_currentTimeUpdateTimer = SIZE_MAX;
 }
@@ -874,40 +881,46 @@ void MediaPlayerTizen::handlePrepared()
     }
 }
 
-void MediaPlayerTizen::unprepareOperation()
+void MediaPlayerTizen::dispose()
 {
+    PLAYER_LOGI("MediaPlayerTizen::dispose (%p)\n", this);
     if (m_nativePlayer) {
-        PLAYER_LOGI("MediaPlayerTizen::unprepareOperation (%p)\n", this);
         pause();
         player_unprepare(m_nativePlayer);
         player_unset_media_stream_buffer_status_cb_ex(m_nativePlayer,
                                                       PLAYER_STREAM_TYPE_AUDIO);
         player_unset_media_stream_buffer_status_cb_ex(m_nativePlayer,
                                                       PLAYER_STREAM_TYPE_VIDEO);
-        if (m_activeMediaSource) {
-            m_activeMediaSource->removeClient(m_mseClient);
-            m_activeMediaSource->detach();
-            m_activeMediaSource = nullptr;
-        }
-        if (m_mseClient) {
-            m_mseClient = nullptr;
-        }
-        if (m_audioStream) {
-            m_audioStream->releaseMediaFormat();
-            m_audioStream = nullptr;
-        }
-        if (m_videoStream) {
-            m_videoStream->releaseMediaFormat();
-            m_videoStream = nullptr;
-        }
-        if (m_container) {
-            if (m_container->isHTMLVideoElement() && m_container->frame()) {
-                m_container->setNeedsComposite();
-            }
-            m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
-                HTMLMediaElement::HAVE_NOTHING);
-        }
+        player_unset_completed_cb(m_nativePlayer);
+        player_unset_error_cb(m_nativePlayer);
+        player_unset_buffering_cb(m_nativePlayer);
+        player_destroy(m_nativePlayer);
+        m_nativePlayer = nullptr;
     }
+    if (m_activeMediaSource) {
+        m_activeMediaSource->removeClient(m_mseClient);
+        m_activeMediaSource->detach();
+        m_activeMediaSource = nullptr;
+    }
+    if (m_mseClient) {
+        m_mseClient = nullptr;
+    }
+    if (m_audioStream) {
+        m_audioStream->releaseMediaFormat();
+        m_audioStream = nullptr;
+    }
+    if (m_videoStream) {
+        m_videoStream->releaseMediaFormat();
+        m_videoStream = nullptr;
+    }
+    if (m_container) {
+        m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
+            HTMLMediaElement::HAVE_NOTHING);
+    }
+    if (m_playerDeadFlag) {
+        *m_playerDeadFlag = true;
+    }
+    m_container = nullptr;
 }
 
 void MediaPlayerTizen::setVolume(double volume)
@@ -969,9 +982,13 @@ void MediaPlayerTizen::fillBuffer(MediaStream* stream)
     fillBufferWithoutGuard(stream);
 }
 
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
 #define DEBUG_STREAMBUFFER_LOG(...)                              \
     PLAYER_LOGI("[%s] ", stream->isAudio() ? "AUDIO" : "VIDEO"); \
     STARFISH_LOG_INFO(__VA_ARGS__);
+#else
+#define DEBUG_STREAMBUFFER_LOG(...)
+#endif
 
 void MediaPlayerTizen::enterUnderrunState()
 {
@@ -1113,7 +1130,7 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
     uint64_t lastDTS = stream->lastSubmittedDTS();
     DEBUG_STREAMBUFFER_LOG("fillBuffer start %llums\n", lastDTS);
 
-#ifdef PLAYER_DEBUG
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
     uint64_t submitMS = 0;
     size_t submitCount = 0;
 #endif
@@ -1204,7 +1221,7 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
             handlePlayerError();
             return;
         }
-#ifdef PLAYER_DEBUG
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
         submitCount++;
         submitMS += packet.first->m_duration;
 #endif

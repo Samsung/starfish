@@ -20,6 +20,15 @@
 #include "platform/multimedia/DemuxerSource.h"
 #include "platform/multimedia/PacketGenerator.h"
 
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
+#define MP4PACKET_GENERATOR_LOG(pg, ...)                \
+    STARFISH_LOG_INFO("[PacketGenerator|%s] ",          \
+                      mediaCodecToString(pg->codec())); \
+    STARFISH_LOG_INFO(__VA_ARGS__);
+#else
+#define MP4PACKET_GENERATOR_LOG(pg, ...)
+#endif
+
 namespace StarFish {
 
 static const uint8_t NALUTypeUnknown = 0;
@@ -107,8 +116,9 @@ MP4PacketGenerator::MP4PacketGenerator()
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            STARFISH_LOG_INFO("MP4PacketGenerator::~MP4PacketGenerator\n");
             MP4PacketGenerator* self = (MP4PacketGenerator*)obj;
+            MP4PACKET_GENERATOR_LOG(
+                self, "MP4PacketGenerator::~MP4PacketGenerator\n");
             std::vector<uint8_t>().swap(self->m_extraData);
         },
         NULL, NULL, NULL);
@@ -135,7 +145,7 @@ bool MP4PacketGenerator::generateForAVC(DemuxerSource* from, size_t validLength,
     if (!(m_H264NalSizeLength == 1 || m_H264NalSizeLength == 2 ||
           m_H264NalSizeLength == 4)) {
         // Invalid lengthSize value
-        STARFISH_LOG_INFO("Invalid length size\n");
+        MP4PACKET_GENERATOR_LOG(this, "Invalid length size\n");
         return false;
     }
     // Check AnnexB type
@@ -150,7 +160,8 @@ bool MP4PacketGenerator::generateForAVC(DemuxerSource* from, size_t validLength,
     while (readSoFar < validLength) {
         MP4AVCParser::NALUnit nalu;
         if (!MP4AVCParser::parseNext(from, m_H264NalSizeLength, nalu)) {
-            STARFISH_LOG_INFO("Fail to parse to NALU by MP4AVCParser (1)\n");
+            MP4PACKET_GENERATOR_LOG(
+                this, "Fail to parse to NALU by MP4AVCParser (1)\n");
             return false;
         }
         readSoFar += nalu.m_size;
@@ -175,7 +186,8 @@ bool MP4PacketGenerator::generateForAVC(DemuxerSource* from, size_t validLength,
     // TODO Validate AnnexB type (DEBUG)
     from->onSeek(start, DemuxerSource::SeekWhenceSet);
     if (readSoFar != validLength) {
-        STARFISH_LOG_INFO("Fail to parse to NALU by MP4AVCParser (2)\n");
+        MP4PACKET_GENERATOR_LOG(this,
+                                "Fail to parse to NALU by MP4AVCParser (2)\n");
         return false;
     }
     // Generate data from source
@@ -192,7 +204,8 @@ bool MP4PacketGenerator::generateForAVC(DemuxerSource* from, size_t validLength,
         MP4AVCParser::NALUnit nalu;
         // TODO remove debug code
         if (!MP4AVCParser::parseNext(from, m_H264NalSizeLength, nalu)) {
-            STARFISH_LOG_INFO("Fail to parse to NALU by MP4AVCParser (3)\n");
+            MP4PACKET_GENERATOR_LOG(
+                this, "Fail to parse to NALU by MP4AVCParser (3)\n");
             delete[] result;
             return false;
         }
@@ -269,4 +282,5 @@ void MP4PacketGenerator::setHEVCExtraData(std::vector<uint8_t>& extraData)
     return;
 }
 }
+#undef MP4PACKET_GENERATOR_LOG
 #endif

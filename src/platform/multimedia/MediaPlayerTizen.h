@@ -149,7 +149,7 @@ public:
     void fillBufferWithoutGuard(MediaStream* stream);
     void fillBuffer(MediaStream* stream);
     void fillBufferIfNeeded(StreamType type);
-    void unprepareOperation();
+    void dispose();
 
     void openPreparingMode();
     void closePreparingMode();
