@@ -61,6 +61,8 @@ void* RareComputedStyleData::operator new(size_t size)
                    GC_WORD_OFFSET(RareComputedStyleData, m_minHeight));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(RareComputedStyleData, m_borderRadius));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(RareComputedStyleData, m_positionedMask));
         descr =
             GC_make_descriptor(obj_bitmap, GC_WORD_LEN(RareComputedStyleData));
         typeInited = true;

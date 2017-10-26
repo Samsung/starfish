@@ -718,6 +718,11 @@ enum BackgroundRepeatValue {
     NoRepeatRepeatValue,
 };
 
+enum MaskSizeValue {
+    CoverMaskSizeValue,
+    ContainMaskSizeValue,
+};
+
 // Because padding-box is not supported in box-sizing property, so we make
 // another enum.
 enum BoxValue {
@@ -1054,6 +1059,8 @@ class CSSStyleDeclaration;
     F(BorderBottomLeftRadius, borderBottomLeftRadius,                        \
       "border-bottom-left-radius")                                           \
     F(Cursor, cursor, "cursor")                                              \
+    F(MaskImage, maskImage, "mask-image")                                    \
+    F(MaskSize, maskSize, "mask-size")                                       \
     F(FontSize, fontSize, "font-size")                                       \
     F(FontWeight, fontWeight, "font-weight")                                 \
     F(FontStyle, fontStyle, "font-style")
@@ -1252,6 +1259,8 @@ public:
         BackgroundRepeatValueKind,
         BackgroundAttachmentValueKind,
         BoxValueKind,
+
+        MaskSizeValueKind,
 
         FontSizeValueKind,
         FontStyleValueKind,
@@ -1699,6 +1708,12 @@ public:
         return m_value.m_fontFaceSrcData;
     }
 
+    MaskSizeValue maskSizeValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == MaskSizeValueKind);
+        return m_value.m_maskSize;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1750,6 +1765,7 @@ public:
         FillRuleValue m_fillRule;
         CalcData* m_calc;
         TextTransformValue m_textTransform;
+        MaskSizeValue m_maskSize;
 
         ValueData(int v)
             : m_floatValue(v)
@@ -1949,6 +1965,10 @@ public:
         }
         ValueData(TextTransformValue v)
             : m_textTransform(v)
+        {
+        }
+        ValueData(MaskSizeValue v)
+            : m_maskSize(v)
         {
         }
     };

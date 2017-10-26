@@ -2131,6 +2131,15 @@ String* CSSStyleValuePair::toString() const
         }
     case CSSStyleValuePair::ValueKind::FontFaceSrcDataValueKind:
         return fontFaceSrcDataValue()->toString();
+    case CSSStyleValuePair::ValueKind::MaskSizeValueKind:
+        switch (MaskSizeValue()) {
+        case CoverMaskSizeValue:
+            return String::fromUTF8("cover");
+        case ContainMaskSizeValue:
+            return String::fromUTF8("contain");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -4294,6 +4303,78 @@ void StyleResolver::apply(Element* element,
                 break;
             }
             default:
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::MaskImage:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setMaskImage(String::emptyString);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setMaskImage(parentStyle->maskImage());
+            } else {
+                if (cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::None) {
+                    style->setMaskImage(String::emptyString);
+                } else if (cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::UrlValueKind) {
+                    style->setMaskImage(cssValues[k].urlValue(origin));
+                } else {
+                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::MaskSize:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setMaskSize(LengthSize());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                if (style->backgroundSizeIsLength()) {
+                    style->setMaskSize(parentStyle->maskSizeLengthValue());
+                } else {
+                    style->setMaskSize(parentStyle->maskSizeTypeValue());
+                }
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::ValueListKind) {
+                ValueList* layers = cssValues[k].multiValue();
+                for (unsigned int l = 0; l < layers->size(); l++) {
+                    const CSSStyleValuePair& layer = (*layers)[l];
+                    if (layer.valueKind() ==
+                        CSSStyleValuePair::ValueKind::Initial) {
+                        style->setMaskSize(LengthSize(), l);
+                    } else if (layer.valueKind() ==
+                               CSSStyleValuePair::ValueKind::
+                                   MaskSizeValueKind) {
+                        style->setMaskSize(layer.maskSizeValue(), l);
+                    } else if (layer.valueKind() ==
+                               CSSStyleValuePair::ValueKind::Auto) {
+                        style->setMaskSize(LengthSize(), l);
+                    } else if (layer.valueKind() ==
+                               CSSStyleValuePair::ValueListKind) {
+                        ValueList* list = layer.multiValue();
+                        LengthSize result;
+                        if (list->size() >= 1) {
+                            Nullable<Length> width = convertValueToLength(
+                                (*list)[0].valueKind(), (*list)[0].value());
+                            if (width.hasValue()) {
+                                result.m_width = width.getValue();
+                            }
+                        }
+                        if (list->size() >= 2) {
+                            Nullable<Length> height = convertValueToLength(
+                                (*list)[1].valueKind(), (*list)[1].value());
+                            if (height.hasValue()) {
+                                result.m_height = height.getValue();
+                            }
+                        }
+                        style->setMaskSize(result, l);
+                    } else {
+                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    }
+                }
+            } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
@@ -9040,6 +9121,27 @@ String* CSSStyleDeclaration::Flex()
     builder.appendString(flexBasis);
 
     return builder.finalize();
+}
+
+bool CSSStyleValuePair::updateValueMaskImage(const CSSTokenVector& tokens)
+{
+    // none | <image> | <url>
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (updateValueUnitUrlOrNone(value)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueMaskSize(const CSSTokenVector& tokens)
+{
+    // TODO:
+    return false;
 }
 
 #ifdef STARFISH_ENABLE_TEST

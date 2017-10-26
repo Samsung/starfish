@@ -201,6 +201,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Min-Width
         // Fill-Rule
         // Word-Wrap
+        // Mask-Size
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font-size", 9) == 0) {
@@ -236,6 +237,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "min-width", 9) == 0) {
                 return CSSStyleKind::MinWidth;
             }
+            if (memcmp(data, "mask-size", 9) == 0) {
+                return CSSStyleKind::MaskSize;
+            }
             break;
         case 'w':
             if (memcmp(data, "word-wrap", 9) == 0) {
@@ -253,6 +257,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Text-Align
         // Transition
         // Margin-Top
+        // Mask-Image
         // Max-Height
         // Min-Height
         // Overflow-X
@@ -290,6 +295,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "margin-top", 10) == 0) {
                 return CSSStyleKind::MarginTop;
+            }
+            if (memcmp(data, "mask-image", 10) == 0) {
+                return CSSStyleKind::MaskImage;
             }
             if (memcmp(data, "max-height", 10) == 0) {
                 return CSSStyleKind::MaxHeight;
@@ -918,6 +926,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "minWidth", 8) == 0) {
                 return CSSStyleKind::MinWidth;
             }
+            if (memcmp(data, "masksize", 8) == 0) {
+                return CSSStyleKind::MaskSize;
+            }
             break;
         case 'p':
             if (memcmp(data, "position", 8) == 0) {
@@ -975,6 +986,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "marginTop", 9) == 0) {
                 return CSSStyleKind::MarginTop;
+            }
+            if (memcmp(data, "maskImage", 9) == 0) {
+                return CSSStyleKind::MaskImage;
             }
             if (memcmp(data, "maxHeight", 9) == 0) {
                 return CSSStyleKind::MaxHeight;
