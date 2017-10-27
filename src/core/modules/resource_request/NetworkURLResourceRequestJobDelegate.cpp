@@ -273,8 +273,9 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     headers.setHeader(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
     headers.setHeader(HTTPHeaderMap::kPragma, "no-cache");
     headers.setHeader(HTTPHeaderMap::kCacheControl, "no-cache");
-    headers.setHeader(HTTPHeaderMap::kUserAgent,
-                      USER_AGENT(APP_CODE_NAME, VERSION));
+    headers.setHeader(
+        HTTPHeaderMap::kUserAgent,
+        m_orgProxy->starFish()->userAgent()->toUTF8NonGCString().data());
 
     headers.setHeader(HTTPHeaderMap::kUpgradeInsecureRequests, "1");
 

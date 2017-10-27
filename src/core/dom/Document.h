@@ -20,6 +20,7 @@
 #include "core/dom/Node.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/style/Style.h"
+#include "core/style/WebFont.h"
 #include "binding/HTMLScriptElementOrSVGScriptElementUnion.h"
 
 namespace StarFish {
@@ -77,6 +78,8 @@ class Document : public Node {
     friend class HTMLMetaElement;
     friend class DOMParser;
     friend class ResourceLoader;
+    friend class BrowsingContext;
+    friend class FontSelector;
 
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
@@ -345,6 +348,18 @@ public:
         return m_animationExecutor;
     }
 
+    FontSelector* fontSelector()
+    {
+        return m_fontSelector;
+    }
+
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    FontSelector* fontSelectorGeneric()
+    {
+        return m_fontSelectorGeneric;
+    }
+#endif
+
     String* characterSet()
     {
         return m_characterSet;
@@ -484,12 +499,18 @@ protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         Node::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_window));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentURI));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_referrer));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webOrigin));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_characterSet));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentType));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resourceLoader));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fontSelector));
+#if defined(PORT_CANVAS_BACKEND_EFL)
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fontSelectorGeneric));
+#endif
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webFontList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleResolver));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentBuilder));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleSheetList));
@@ -501,6 +522,7 @@ protected:
                                         m_namedAccessActiveHTMLCollectionList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_implementation));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_currentScripts));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_focusRingCache));
     }
 
     // only used in html document builder
@@ -534,6 +556,11 @@ protected:
     String* m_characterSet;
     String* m_contentType;
     ResourceLoader* m_resourceLoader;
+    FontSelector* m_fontSelector;
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    FontSelector* m_fontSelectorGeneric;
+#endif
+    GCVector<WebFont> m_webFontList;
     StyleResolver* m_styleResolver;
     DocumentBuilder* m_documentBuilder;
     StyleSheetList* m_styleSheetList;

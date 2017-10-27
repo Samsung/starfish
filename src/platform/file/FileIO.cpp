@@ -80,14 +80,19 @@ public:
     }
     String* readAll()
     {
-        StringBuilder builder;
+        rewind(m_fp);
+
+        std::string buf;
+        buf.reserve(length());
+
         char buffer[256];
         const size_t bufferSize = 255;
         while (!feof(m_fp)) {
             size_t readCount = read(buffer, 1, bufferSize);
-            builder.appendString(String::fromUTF8(buffer, readCount));
+            buf.append(buffer, readCount);
+            buf[readCount] = 0;
         }
-        return builder.finalize();
+        return String::fromUTF8(buf.data(), buf.length());
     }
     size_t writeLine(String* buf)
     {

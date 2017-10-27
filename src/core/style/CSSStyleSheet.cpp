@@ -264,6 +264,7 @@ bool CSSStyleSheet::matchesMediaQueries(
 
 void CSSStyleSheet::collectRulesFromImportedSheet(
     GCVector<StyleRuleImport*>& rules,
+    std::vector<CSSStyleDeclaration*>& webFonts,
     MediaQueryResultList* viewportDependentResult,
     MediaQueryResultList* deviceDependentResult)
 {
@@ -277,15 +278,15 @@ void CSSStyleSheet::collectRulesFromImportedSheet(
                 deviceDependentResult)) {
             if (rules[i]->styleSheet()->importRules().size() > 0) {
                 collectRulesFromImportedSheet(
-                    rules[i]->styleSheet()->importRules(),
+                    rules[i]->styleSheet()->importRules(), webFonts,
                     viewportDependentResult, deviceDependentResult);
             }
             if (rules[i]->styleSheet()->childRules().size() > 0) {
                 ResourceURL* url = new ResourceURL(
                     rules[i]->href(),
                     rules[i]->parentStyleSheet()->url()->urlString());
-                collectStyleRules(rules[i]->styleSheet()->childRules(), url,
-                                  viewportDependentResult,
+                collectStyleRules(rules[i]->styleSheet()->childRules(),
+                                  webFonts, url, viewportDependentResult,
                                   deviceDependentResult);
             }
         }
@@ -293,15 +294,17 @@ void CSSStyleSheet::collectRulesFromImportedSheet(
 }
 
 void CSSStyleSheet::collectStyleRules(
-    GCVector<StyleRuleBase*>& rules, ResourceURL* url,
+    GCVector<StyleRuleBase*>& rules,
+    std::vector<CSSStyleDeclaration*>& webFonts, ResourceURL* url,
     MediaQueryResultList* viewportDependentResult,
     MediaQueryResultList* deviceDependentResult)
 {
     auto iter = rules.begin();
     while (iter != rules.end()) {
-        if ((*iter)->isStyleRule()) {
+        auto rule = (*iter);
+        if (rule->isStyleRule()) {
             m_styleRules.push_back(std::make_pair((StyleRule*)(*iter), url));
-        } else if ((*iter)->isMediaRule()) {
+        } else if (rule->isMediaRule()) {
             StyleRuleMedia* media = (StyleRuleMedia*)(*iter);
             auto resolver = origin()->document()->styleResolver();
             const MediaQueryEvaluator& evaluator =
@@ -309,10 +312,12 @@ void CSSStyleSheet::collectStyleRules(
             if (matchesMediaQueries(evaluator, media->mediaQuerySet(),
                                     viewportDependentResult,
                                     deviceDependentResult)) {
-                collectStyleRules(media->childRules(), url,
+                collectStyleRules(media->childRules(), webFonts, url,
                                   viewportDependentResult,
                                   deviceDependentResult);
             }
+        } else if (rule->isFontFaceRule()) {
+            webFonts.push_back(rule->asStyleRuleFontFace()->styleDeclaration());
         }
         iter++;
     }

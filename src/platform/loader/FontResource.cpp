@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,42 +15,26 @@
  */
 
 #include "StarFishConfig.h"
-#include "Navigator.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
-#include "core/modules/location/Geolocation.h"
+#include "platform/loader/FontResource.h"
+#include "platform/loader/ResourceLoader.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/resource_request/ResourceRequest.h"
+#include "core/page/Window.h"
+#include "core/page/BrowsingContext.h"
 
 namespace StarFish {
 
-Navigator::Navigator(Document* document)
-    : ScriptWrappable(this)
-    , DocumentHoldable(document)
-    , m_geolocation(nullptr)
+void FontResource::didLoadFinished()
 {
-}
-
-Geolocation* Navigator::geolocation()
-{
-    if (m_geolocation == nullptr) {
-        m_geolocation = Geolocation::create(document());
+    m_fontFace =
+        FontFace::create((const uint8_t*)m_resourceRequest->response().data(),
+                         m_resourceRequest->response().size());
+    if (!m_fontFace) {
+        Resource::didLoadFailed();
+        return;
     }
-    return m_geolocation;
-}
-
-void Navigator::dispose()
-{
-    if (m_geolocation) {
-        m_geolocation->dispose();
-    }
-}
-
-ScriptBindingInstance* Navigator::scriptBindingInstance()
-{
-    return document()->scriptBindingInstance();
-}
-
-String* Navigator::userAgent()
-{
-    return starFish()->userAgent();
+    Resource::didLoadFinished();
 }
 }

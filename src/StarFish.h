@@ -67,7 +67,8 @@ public:
              const char* timezoneID, void* platformHandle, int w, int h, int x,
              int y, float defaultFontSizeMultiplier, ScreenInfo& info,
              const char* localStorageFilePath,
-             const char* m_cookieStoreFilePath);
+             const char* m_cookieStoreFilePath,
+             String* extraUserAgentString = String::emptyString);
     ~StarFish();
     void run();
 
@@ -83,32 +84,6 @@ public:
     void close();
 
     String* evaluate(String* s);
-
-    Font* fetchFont(String* familyNameArray[], size_t familyNameArraySize,
-                    float size, char style = FontStyle::FontStyleNormal,
-                    char weight = FontWeight::FontWeightNormal)
-    {
-        Font* f = nullptr;
-        f = m_fontSelector->loadFont(familyNameArray, familyNameArraySize, size,
-                                     style, weight);
-        return f;
-    }
-
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    Font* fetchGenericFont(String* familyNameArray[],
-                           size_t familyNameArraySize, float size,
-                           char style = FontStyle::FontStyleNormal,
-                           char weight = FontWeight::FontWeightNormal)
-    {
-        if (m_fontSelectorGeneric == nullptr) {
-            m_fontSelectorGeneric = FontSelector::createGenericFontSelector();
-        }
-        Font* f = nullptr;
-        f = m_fontSelectorGeneric->loadFont(
-            familyNameArray, familyNameArraySize, size, style, weight);
-        return f;
-    }
-#endif
 
     StaticStrings* staticStrings()
     {
@@ -170,10 +145,27 @@ public:
         return m_screenInfo;
     }
 
+    PlatformFontSelector* platformFontSelector()
+    {
+        return m_platformFontSelector;
+    }
+
+    PlatformFontCache* platformFontCache()
+    {
+        return m_platformFontCache;
+    }
+
     String* localStorageFilePath()
     {
         return m_localStorageFilePath;
     }
+
+    String* extraUserAgentString()
+    {
+        return m_extraUserAgentString;
+    }
+
+    String* userAgent();
 
     Console* console()
     {
@@ -241,10 +233,8 @@ protected:
     Timer* m_timer;
     void* m_nativeHandle;
     PlatformWindow* m_platformWindow;
-    FontSelector* m_fontSelector;
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    FontSelector* m_fontSelectorGeneric;
-#endif
+    PlatformFontSelector* m_platformFontSelector;
+    PlatformFontCache* m_platformFontCache;
     ThreadPool* m_threadPool;
     Console* m_console;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
@@ -257,6 +247,7 @@ protected:
     ScreenInfo m_screenInfo;
     String* m_localStorageFilePath;
     String* m_cookieStoreFilePath;
+    String* m_extraUserAgentString;
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     int m_width;
     int m_height;

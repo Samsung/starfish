@@ -20,6 +20,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/page/Window.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameBox.h"
@@ -980,15 +981,13 @@ ComputedStyle* Frame::pseudoStyleForFirstLine(
     fontSize.changeToFixedIfNeeded(
         parentStyle->fontSize(),
         element->document()->rootElement()->style()->fontSize(),
-        parentStyle->font());
+        parentStyle->font(), element->window()->innerWidth(),
+        element->window()->innerHeight(), result);
     result->setFontSize(fontSize);
-    if (result->isFontSizeSpeicifiedByUser()) {
-        result->setFixedFontSize(fontSize.specifiedFontValue(node()));
-    }
     result->setDisplay(DisplayValue::InlineDisplayValue);
     result->setPosition(PositionValue::StaticPositionValue);
-    result->loadResources(element, true);
-    result->arrangeStyleValues(parentStyle, true, element);
+    result->loadResources(element);
+    result->arrangeStyleValues(parentStyle, element);
 
     return result;
 }
@@ -1073,41 +1072,13 @@ OverflowValue Frame::appliedOverflowY()
     return m_styleWhenNodeIsAnonymous->overflowY();
 }
 
-void Frame::loadFont(float parentFontSize)
-{
-    ComputedStyle* style = this->style();
-    float fixedFontSize = parentFontSize;
-    if (style) {
-        if (!isFrameDocument()) {
-            fixedFontSize =
-                style->fontSize().specifiedFontValue(nearstNotAnonymousNode());
-        }
-
-        // TODO: -webkit-appearance : check-box's font-size should be done
-        // layout.
-        // Because its font-size is dependent on minimum of width and height.
-        // if (!(node() && node()->isHTMLInputElement() &&
-        //     node()->asHTMLInputElement()->type()->equals("checkbox"))) {
-        // }
-    }
-
-    style->setFixedFontSize(fixedFontSize);
-    style->loadFont(nearstNotAnonymousNode(), fixedFontSize);
-
-    Frame* child = firstChild();
-    while (child) {
-        child->loadFont(fixedFontSize);
-        child = child->next();
-    }
-}
-
 void Frame::updateComputedStyle(Node* refNode)
 {
     STARFISH_ASSERT(isAnonymous());
     ComputedStyle* newStyle = new ComputedStyle(refNode->style());
     newStyle->setDisplay(m_styleWhenNodeIsAnonymous->display());
-    newStyle->loadResources(refNode, true, m_styleWhenNodeIsAnonymous);
-    newStyle->arrangeStyleValues(refNode->style(), true, refNode);
+    newStyle->loadResources(refNode, m_styleWhenNodeIsAnonymous);
+    newStyle->arrangeStyleValues(refNode->style(), refNode);
     m_styleWhenNodeIsAnonymous = newStyle;
 }
 

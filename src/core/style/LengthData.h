@@ -19,6 +19,8 @@
 
 namespace StarFish {
 
+class ComputedStyle;
+
 class LengthData {
 public:
     LengthData()
@@ -77,12 +79,21 @@ public:
         m_left = left;
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs)
     {
-        m_left.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-        m_right.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-        m_top.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-        m_bottom.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_left.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                     windowSize.width(), windowSize.height(),
+                                     cs);
+        m_right.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                      windowSize.width(), windowSize.height(),
+                                      cs);
+        m_top.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                    windowSize.width(), windowSize.height(),
+                                    cs);
+        m_bottom.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                       windowSize.width(), windowSize.height(),
+                                       cs);
     }
 
     bool operator==(const LengthData& o)

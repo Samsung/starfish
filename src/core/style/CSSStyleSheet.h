@@ -142,10 +142,12 @@ public:
                              MediaQueryResultList* deviceDependentResult);
     void collectRulesFromImportedSheet(
         GCVector<StyleRuleImport*>& rules,
+        std::vector<CSSStyleDeclaration*>& webFonts,
         MediaQueryResultList* viewportDependentResult,
         MediaQueryResultList* deviceDependentResult);
     void collectStyleRules(
-        GCVector<StyleRuleBase*>& rules, ResourceURL* url,
+        GCVector<StyleRuleBase*>& rules,
+        std::vector<CSSStyleDeclaration*>& webFonts, ResourceURL* url,
         MediaQueryResultList* viewportDependentResult = nullptr,
         MediaQueryResultList* deviceDependentResult = nullptr);
 

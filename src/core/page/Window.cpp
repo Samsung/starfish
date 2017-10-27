@@ -311,6 +311,19 @@ int32_t Window::height()
 
 void Window::resize(uint32_t w, uint32_t h)
 {
+    if (document()->styleResolver().mediaQueryAffectedByViewportChange()) {
+        browsingContext()->setWholeDocumentNeedsStyleRecalc();
+    } else {
+        if (document()->frame()) {
+            document()->frame()->asFrameBox()->iterateChildFrameBox([](
+                FrameBox* box) {
+                if (box->style() && box->style()->seenViewPortUnitInStyle()) {
+                    box->nearstNotAnonymousNode()->setNeedsStyleRecalc();
+                }
+            });
+        }
+    }
+
     if (m_width != w || m_height != h) {
         m_width = w;
         m_height = h;
@@ -319,9 +332,6 @@ void Window::resize(uint32_t w, uint32_t h)
         e->setView(this);
         dispatchEventByUA(this, e);
         browsingContext()->setNeedsLayout();
-    }
-    if (document()->styleResolver().mediaQueryAffectedByViewportChange()) {
-        browsingContext()->setWholeDocumentNeedsStyleRecalc();
     }
 }
 

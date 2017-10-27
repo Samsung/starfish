@@ -27,6 +27,7 @@
 namespace StarFish {
 
 class ImageData;
+class ComputedStyle;
 
 class StyleTransformData : public gc {
 public:
@@ -168,13 +169,16 @@ public:
     }
 
     void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
-                               Font* font)
+                               Font* font, LayoutSize windowSize,
+                               ComputedStyle* cs)
     {
         STARFISH_ASSERT(type() == OperationType::Translate);
         Length x = translate()->tx();
         Length y = translate()->ty();
-        x.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-        y.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        x.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), cs);
+        y.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), cs);
         translate()->setData(x, y);
     }
 
@@ -263,6 +267,11 @@ public:
     }
 
     StyleTransformData at(int i) const
+    {
+        return m_group[i];
+    }
+
+    StyleTransformData& at(int i)
     {
         return m_group[i];
     }

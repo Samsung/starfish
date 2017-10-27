@@ -38,6 +38,7 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
+#include "core/style/FontFaceSrcData.h"
 #include "core/style/FlexBasisData.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/MediaQueryResult.h"
@@ -2110,6 +2111,15 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::TableLayoutValueKind:
+        switch (tableLayoutValue()) {
+        case TableLayoutValue::AutoTableLayoutValue:
+            return String::fromUTF8("auto");
+        case TableLayoutValue::FixedTableLayoutValue:
+            return String::fromUTF8("fixed");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     case CSSStyleValuePair::ValueKind::FillRuleValueKind:
         switch (fillRuleValue()) {
         case FillRuleNonZero:
@@ -2119,6 +2129,8 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::FontFaceSrcDataValueKind:
+        return fontFaceSrcDataValue()->toString();
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -3032,6 +3044,15 @@ String* CSSStyleDeclaration::FontFamily()
     return String::emptyString;
 }
 
+String* CSSStyleDeclaration::Src()
+{
+    for (unsigned i = 0; i < m_cssValues.size(); i++) {
+        if (m_cssValues[i].keyKind() == CSSStyleValuePair::KeyKind::Src)
+            return m_cssValues[i].toString();
+    }
+    return String::emptyString;
+}
+
 String* CSSStyleDeclaration::Font()
 {
     String* style = FontStyle();
@@ -3103,6 +3124,22 @@ void CSSStyleDeclaration::setFontFamily(const char* value, size_t len,
     if (ret.updateValueCommon(tokens) || ret.updateValueFontFamily(tokens)) {
         ret.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, ret);
+    }
+}
+
+void CSSStyleDeclaration::setSrc(const char* value, size_t len,
+                                 bool isImportant)
+{
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::Src);
+        return;
+    }
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, ",", 1, true);
+    CSSStyleValuePair ret;
+    if (ret.updateValueSrc(tokens)) {
+        ret.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Src, ret);
     }
 }
 
@@ -3337,6 +3374,30 @@ void CSSStyleDeclaration::removeCSSValuePair(CSSStyleValuePair::KeyKind name)
     }
 }
 
+bool CSSStyleDeclaration::hasCSSValuePair(CSSStyleValuePair::KeyKind name)
+{
+    unsigned len = m_cssValues.size();
+    for (unsigned i = 0; i < len; i++) {
+        if (m_cssValues[i].keyKind() == name) {
+            return true;
+        }
+    }
+    return false;
+}
+
+CSSStyleValuePair CSSStyleDeclaration::getCSSValuePair(
+    CSSStyleValuePair::KeyKind name)
+{
+    unsigned len = m_cssValues.size();
+    for (unsigned i = 0; i < len; i++) {
+        if (m_cssValues[i].keyKind() == name) {
+            return m_cssValues[i];
+        }
+    }
+
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()
 {
     if (m_element) {
@@ -3371,7 +3432,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
     ret->m_inheritedStyles.m_whiteSpace =
         WhiteSpaceValue::NormalWhiteSpaceValue;
-    ret->loadResources(doc, false);
+    ret->loadResources(doc);
     return ret;
 }
 
@@ -3380,8 +3441,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element,
 {
     ComputedStyle* style = new ComputedStyle(parent);
     matchAllRules(element, style, parent);
-    style->loadResources(element, false, element->style());
-    style->arrangeStyleValues(parent, false, element);
+    style->loadResources(element, element->style());
+    style->arrangeStyleValues(parent, element);
     return style;
 }
 
@@ -3592,7 +3653,6 @@ void StyleResolver::apply(Element* element,
                     parseAbsoluteFontSize(3, this->m_mediumFontSize));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::FontSizeValueKind) {
-                style->m_inheritedStyles.m_isFontSizeSpecifiedByUser = true;
                 if (cssValues[k].fontSizeValue() ==
                     FontSizeValue::XXSmallFontSizeValue) {
                     style->setFontSize(
@@ -3636,17 +3696,11 @@ void StyleResolver::apply(Element* element,
                     style->setFontSize(parentStyle->fontSize() / 1.2f);
                 }
             } else {
-                style->m_inheritedStyles.m_isFontSizeSpecifiedByUser = true;
                 Nullable<Length> length = convertValueToLength(
                     cssValues[k].valueKind(), cssValues[k].value());
                 if (length.hasValue()) {
                     Length l = length.getValue();
                     style->setFontSize(l);
-                    if (l.hasViewportPercent()) {
-                        element->document()
-                            ->browsingContext()
-                            ->setNeedsFontSizeRecalc();
-                    }
                 } else {
                     style->setFontSize(
                         parseAbsoluteFontSize(3, this->m_mediumFontSize));
@@ -6150,8 +6204,8 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
                 if (inheritedStyleChanged || child->needsStyleRecalc()) {
                     if (childStyle == nullptr) {
                         childStyle = new ComputedStyle(element->style());
-                        childStyle->loadResources(element, false);
-                        childStyle->arrangeStyleValues(element->style(), false);
+                        childStyle->loadResources(element);
+                        childStyle->arrangeStyleValues(element->style(), child);
                     }
 
                     child->setStyle(childStyle);
@@ -7562,7 +7616,14 @@ bool CSSStyleValuePair::updateValueFontFamily(const CSSTokenVector& tokens)
 {
     if (tokens.size() == 1) {
         setValueKind(ValueKind::StringValueKind);
-        setStringValue(String::fromUTF8(tokens[0].data(), tokens[0].length()));
+        const std::string& str = tokens[0];
+        if (str[0] == '\'' && str.length() > 2 && str.back() == '\'') {
+            setStringValue(String::fromUTF8(str.data() + 1, str.length() - 2));
+        } else if (str[0] == '"' && str.length() > 2 && str.back() == '"') {
+            setStringValue(String::fromUTF8(str.data() + 1, str.length() - 2));
+        } else {
+            setStringValue(String::fromUTF8(str.data(), str.length()));
+        }
         return true;
     }
     ValueList* val = new ValueList(
@@ -8755,6 +8816,99 @@ void CSSStyleDeclaration::setOutline(const char* value, size_t length,
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle, style);
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor, color);
     }
+}
+
+bool CSSStyleValuePair::updateValueSrc(const CSSTokenVector& tokens)
+{
+    FontFaceSrcData* src = new FontFaceSrcData;
+    int mode = 0;
+    // 0 -> expect url,local function
+    // 1 -> expect format or comma
+    // 2 -> expect comma
+
+    FontFaceSrcData::LoadFrom loadFrom;
+    FontFaceSrcData::Format format;
+    String* srcStr;
+
+    for (size_t i = 0; i < tokens.size(); i++) {
+        const auto& token = tokens[i];
+        if (mode == 0) {
+            CSSTokenValue s;
+            if (token.startsWith("url(")) {
+                loadFrom = FontFaceSrcData::URL;
+                s = token.substring(4, token.size() - 5);
+                mode = 1;
+            } else if (token.startsWith("local(")) {
+                loadFrom = FontFaceSrcData::Local;
+                s = token.substring(6, token.size() - 7);
+                mode = 1;
+            } else {
+                return false;
+            }
+            if (s.length() > 2 && s.startsWith("\"")) {
+                s = s.substring(1, s.length() - 2);
+            } else if (s.length() > 2 && s.startsWith("'")) {
+                s = s.substring(1, s.length() - 2);
+            }
+
+            srcStr = String::fromUTF8(s.data(), s.length());
+
+            if (i == tokens.size() - 1) {
+                src->m_data.push_back(std::make_tuple(
+                    srcStr, loadFrom, FontFaceSrcData::NotSpecified));
+            }
+        } else if (mode == 1) {
+            if (token == ",") {
+                src->m_data.push_back(std::make_tuple(
+                    srcStr, loadFrom, FontFaceSrcData::NotSpecified));
+                mode = 0;
+                continue;
+            } else if (!token.startsWith("format(")) {
+                return false;
+            }
+            CSSTokenValue s = token;
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+            if (s.find("truetype") != std::string::npos) {
+                format = FontFaceSrcData::Format::TrueType;
+            } else if (s.find("woff2") != std::string::npos) {
+                format = FontFaceSrcData::Format::WOFF2;
+            } else if (s.find("woff") != std::string::npos) {
+                format = FontFaceSrcData::Format::WOFF;
+            } else if (s.find("opentype") != std::string::npos) {
+                format = FontFaceSrcData::Format::OpenType;
+            } else if (s.find("embedded-opentype") != std::string::npos) {
+                format = FontFaceSrcData::Format::EmbeddedOpenType;
+            } else if (s.find("svg") != std::string::npos) {
+                format = FontFaceSrcData::Format::SVG;
+            } else {
+                format = FontFaceSrcData::Format::Unknown;
+            }
+
+            if (i == tokens.size() - 1) {
+                src->m_data.push_back(
+                    std::make_tuple(srcStr, loadFrom, format));
+            }
+            mode = 2;
+        } else if (mode == 2) {
+            if (token == ",") {
+                src->m_data.push_back(
+                    std::make_tuple(srcStr, loadFrom, format));
+                mode = 0;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    if (!src->data().size()) {
+        return false;
+    }
+
+    setKeyKind(KeyKind::Src);
+    setFontFaceSrcData(src);
+
+    return true;
 }
 
 static void removeFlexCSSValuePairs(CSSStyleDeclaration* target)

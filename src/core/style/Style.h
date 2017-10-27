@@ -930,6 +930,7 @@ enum TextTransformValue {
 };
 
 class ValueList;
+class FontFaceSrcData;
 class CSSStyleDeclaration;
 
 // https://www.w3.org/TR/CSS2/visufx.html
@@ -1061,9 +1062,10 @@ class CSSStyleDeclaration;
 // This order is used by CSSParser::parseFontFaceRule
 
 // sticky properties
-#define FOR_EACH_STYLE_ATTRIBUTE(F)   \
-    FOR_EACH_STYLE_ATTRIBUTE_BASIC(F) \
-    F(FontFamily, fontFamily, "font-family")
+#define FOR_EACH_STYLE_ATTRIBUTE(F)          \
+    FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)        \
+    F(FontFamily, fontFamily, "font-family") \
+    F(Src, src, "src")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
     FOR_EACH_STYLE_ATTRIBUTE(F)                                      \
@@ -1230,6 +1232,8 @@ public:
         UrlValueKind,
 
         CalcValueKind,
+
+        FontFaceSrcDataValueKind,
 
         DisplayValueKind,
         PositionValueKind,
@@ -1689,6 +1693,12 @@ public:
         return m_value.m_textTransform;
     }
 
+    FontFaceSrcData* fontFaceSrcDataValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == FontFaceSrcDataValueKind);
+        return m_value.m_fontFaceSrcData;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1715,6 +1725,7 @@ public:
         BorderStyleValue m_borderStyle;
         BorderWidthValue m_borderWidth;
         ValueList* m_multiValue;
+        FontFaceSrcData* m_fontFaceSrcData;
         OverflowValue m_overflow;
         VisibilityValue m_visibility;
         UnicodeBidiValue m_unicodeBidi;
@@ -1840,6 +1851,10 @@ public:
             : m_multiValue(v)
         {
         }
+        ValueData(FontFaceSrcData* v)
+            : m_fontFaceSrcData(v)
+        {
+        }
         ValueData(OverflowValue v)
             : m_overflow(v)
         {
@@ -1958,6 +1973,8 @@ public:
             return m_value.m_transforms;
         case CalcValueKind:
             return m_value.m_calc;
+        case FontFaceSrcDataValueKind:
+            return m_value.m_fontFaceSrcData;
         default:
             return nullptr;
         }
@@ -2066,11 +2083,18 @@ public:
         m_value.m_multiValue = val;
     }
 
+    void setFontFaceSrcData(FontFaceSrcData* val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::FontFaceSrcDataValueKind;
+        m_value.m_fontFaceSrcData = val;
+    }
+
 #define NEW_SET_VALUE_DECL(name, ...) \
     bool updateValue##name(const CSSTokenVector& tokens);
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
     bool updateValueFontFamily(const CSSTokenVector& tokens);
+    bool updateValueSrc(const CSSTokenVector& tokens);
 
     bool updateValueNumber(const CSSTokenVector& tokens);
     bool updateValueUnitNumber(const CSSTokenValue& token);

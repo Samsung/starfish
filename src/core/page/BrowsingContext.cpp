@@ -38,6 +38,8 @@
 #include "core/page/Location.h"
 #include "core/page/Window.h"
 #include "core/style/CSSStyleSheet.h"
+#include "core/style/CSSStyleDeclaration.h"
+#include "core/style/FontFaceSrcData.h"
 #include "core/style/StyleRule.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
@@ -168,11 +170,39 @@ ScriptBindingInstance* BrowsingContext::scriptBindingInstance()
     return window()->scriptBindingInstance();
 }
 
+class WebFontLoadChecker : public ResourceClient {
+public:
+    WebFontLoadChecker(Resource* res)
+        : ResourceClient(res)
+    {
+    }
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        resource()
+            ->loader()
+            ->document()
+            ->browsingContext()
+            ->setWholeDocumentNeedsStyleRecalc();
+        resource()->loader()->document()->setNeedsLayout();
+        resource()->loader()->document()->fontSelector()->clearCache();
+    }
+
+    virtual void didLoadCanceled()
+    {
+        ResourceClient::didLoadCanceled();
+    }
+};
+
 bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleRecalcForWholeDocument) {
-            m_needsFontSizeRecalc = false;
 #ifdef STARFISH_ENABLE_TIMER
             ProfilerTimer t("parse sheet & collect rules");
 #endif
@@ -190,6 +220,13 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 
             size_t sheets = document()->styleResolver().sheets().size();
             size_t offset = 0;
+
+            document()->m_webFontList.clear();
+
+            // We can use non gc vector
+            // because CSSStyleSheets has string reference to each
+            // CSSStyleDeclaration
+            std::vector<CSSStyleDeclaration*> webFonts;
             for (size_t i = 1; i < sheets; i++) {
                 CSSStyleSheet* authorSheet =
                     document()->styleResolver().sheets()[i];
@@ -207,10 +244,10 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 
                 authorSheet->clearStyleRules();
                 authorSheet->collectRulesFromImportedSheet(
-                    authorSheet->importRules(), viewportDependentResult,
-                    deviceDependentResult);
+                    authorSheet->importRules(), webFonts,
+                    viewportDependentResult, deviceDependentResult);
                 authorSheet->collectStyleRules(
-                    authorSheet->childRules(), authorSheet->url(),
+                    authorSheet->childRules(), webFonts, authorSheet->url(),
                     viewportDependentResult, deviceDependentResult);
 
                 size_t rules = authorSheet->styleRules().size();
@@ -223,6 +260,103 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
                 }
                 offset += rules;
             }
+
+#if !defined(PORT_CANVAS_BACKEND_EFL)
+            for (size_t i = 0; i < webFonts.size(); i++) {
+                CSSStyleDeclaration* decl = webFonts[i];
+                if (decl->getCSSValuePair(
+                            CSSStyleValuePair::KeyKind::FontFamily)
+                        .valueKind() !=
+                    CSSStyleValuePair::ValueKind::StringValueKind) {
+                    continue;
+                }
+                String* fontFamily =
+                    decl->getCSSValuePair(
+                            CSSStyleValuePair::KeyKind::FontFamily)
+                        .stringValue();
+                FontFaceSrcData* src =
+                    decl->getCSSValuePair(CSSStyleValuePair::KeyKind::Src)
+                        .fontFaceSrcDataValue();
+                bool isFontWeightSpecified = decl->hasCSSValuePair(
+                    CSSStyleValuePair::KeyKind::FontWeight);
+                bool isFontStyleSpecified = decl->hasCSSValuePair(
+                    CSSStyleValuePair::KeyKind::FontStyle);
+                FontStyleValue style = FontStyleValue::NormalFontStyleValue;
+                FontWeightValue weight = FontWeightValue::NormalFontWeightValue;
+                if (isFontWeightSpecified) {
+                    auto w = decl->getCSSValuePair(
+                        CSSStyleValuePair::KeyKind::FontWeight);
+                    if (w.valueKind() !=
+                        CSSStyleValuePair::ValueKind::FontWeightValueKind) {
+                        isFontWeightSpecified = false;
+                    } else {
+                        weight = w.fontWeightValue();
+                    }
+                }
+
+                if (isFontStyleSpecified) {
+                    auto w = decl->getCSSValuePair(
+                        CSSStyleValuePair::KeyKind::FontStyle);
+                    if (w.valueKind() !=
+                        CSSStyleValuePair::ValueKind::FontStyleValueKind) {
+                        isFontStyleSpecified = false;
+                    } else {
+                        style = w.fontStyleValue();
+                    }
+                }
+
+                // finding suitable font
+                std::vector<size_t> indexes;
+                for (size_t k = 0; k < src->data().size(); k++) {
+                    indexes.push_back(k);
+                }
+
+                std::sort(indexes.begin(), indexes.end(),
+                          [&](const size_t& a, const size_t& b) -> bool {
+                              auto sa = src->data()[a];
+                              auto sb = src->data()[b];
+
+                              auto loadFromA = std::get<1>(sa);
+                              auto loadFromB = std::get<1>(sb);
+
+                              // a < b -> true;
+                              if (loadFromA == FontFaceSrcData::Local &&
+                                  loadFromB == FontFaceSrcData::Local) {
+                                  return a < b;
+                              } else if (loadFromA == FontFaceSrcData::Local &&
+                                         loadFromB == FontFaceSrcData::URL) {
+                                  return false;
+                              } else if (loadFromA == FontFaceSrcData::URL &&
+                                         loadFromB == FontFaceSrcData::Local) {
+                                  return true;
+                              } else {
+                                  auto formatA = std::get<1>(sa);
+                                  auto formatB = std::get<1>(sb);
+                                  return formatA > formatB;
+                              }
+                          });
+
+                auto fontFaceData = src->data()[indexes[0]];
+
+                if (std::get<1>(fontFaceData) != FontFaceSrcData::Local) {
+                    FontResource* res =
+                        document()->resourceLoader().fetchFont(new ResourceURL(
+                            std::get<0>(fontFaceData),
+                            document()->documentURI()->urlString()));
+                    res->request(Resource::SyncIfAlreadyLoaded,
+                                 document()->documentURI());
+                    res->addResourceClient(new WebFontLoadChecker(res));
+                    WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
+                                    fontFamily, style, weight, res);
+                    document()->m_webFontList.push_back(webFont);
+                } else {
+                    WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
+                                    fontFamily, style, weight,
+                                    std::get<0>(fontFaceData));
+                    document()->m_webFontList.push_back(webFont);
+                }
+            }
+#endif
         }
 
 // resolve style
@@ -233,11 +367,6 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
             document(), m_needsStyleRecalcForWholeDocument);
         m_needsStyleRecalc = false;
         m_needsStyleRecalcForWholeDocument = false;
-
-        Length rootFontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
-        document()->loadFontAndChangeFontPercentToFixedIfNeeded(
-            starFish(), DEFAULT_FONT_SIZE, rootFontSize, rootFontSize,
-            document()->style()->font());
     }
 
     if (m_needsFrameTreeBuild) {
@@ -256,10 +385,6 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
     }
 
     if (m_needsLayout) {
-        if (m_needsFontSizeRecalc) {
-            document()->frame()->loadFont(DEFAULT_FONT_SIZE);
-        }
-
         if (fromWebView) {
             webView()->clearStackingContext(true);
         }
@@ -1363,11 +1488,6 @@ void BrowsingContext::setNeedsPainting()
 void BrowsingContext::setNeedsComposite()
 {
     m_webView->setNeedsComposite();
-}
-
-void BrowsingContext::setNeedsFontSizeRecalc()
-{
-    m_needsFontSizeRecalc = true;
 }
 
 void BrowsingContext::setNeedsRendering()

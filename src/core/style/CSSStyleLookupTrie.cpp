@@ -24,8 +24,12 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     switch (length) {
     case 3:
         // Top
+        // Src
         if (memcmp(data, "top", 3) == 0) {
             return CSSStyleKind::Top;
+        }
+        if (memcmp(data, "src", 3) == 0) {
+            return CSSStyleKind::Src;
         }
         break;
     case 4:
@@ -763,6 +767,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
     case 3:
         if (memcmp(data, "top", 3) == 0) {
             return CSSStyleKind::Top;
+        }
+        if (memcmp(data, "src", 3) == 0) {
+            return CSSStyleKind::Src;
         }
         break;
     case 4:

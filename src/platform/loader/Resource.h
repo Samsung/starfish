@@ -25,6 +25,7 @@ namespace StarFish {
 
 class TextResource;
 class ImageResource;
+class FontResource;
 class ResourceLoader;
 class ResourceRequest;
 
@@ -46,6 +47,7 @@ public:
         ResourceType,
         ImageResourceType,
         TextResourceType,
+        FontResourceType,
     };
 
     Resource(ResourceURL* url, ResourceLoader* loader)
@@ -73,6 +75,11 @@ public:
         return false;
     }
 
+    virtual bool isFontResource()
+    {
+        return false;
+    }
+
     TextResource* asTextResource()
     {
         STARFISH_ASSERT(isTextResource());
@@ -83,6 +90,12 @@ public:
     {
         STARFISH_ASSERT(isImageResource());
         return (ImageResource*)this;
+    }
+
+    FontResource* asFontResource()
+    {
+        STARFISH_ASSERT(isFontResource());
+        return (FontResource*)this;
     }
 
     void addResourceClient(ResourceClient* rc)

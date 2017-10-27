@@ -177,13 +177,11 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    const char* timezoneID, void* platformHandle, int w, int h,
                    int x, int y, float defaultFontSizeMultiplier,
                    ScreenInfo& info, const char* localStorageFilePath,
-                   const char* cookieStoreFilePath)
+                   const char* cookieStoreFilePath,
+                   String* extraUserAgentString)
     : m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    , m_fontSelectorGeneric(nullptr)
-#endif
     , m_console(new Console(this))
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_avplay(new Avplay(this))
@@ -195,6 +193,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_screenInfo(info)
     , m_localStorageFilePath(String::fromUTF8(localStorageFilePath))
     , m_cookieStoreFilePath(String::fromUTF8(cookieStoreFilePath))
+    , m_extraUserAgentString(extraUserAgentString)
 #ifdef STARFISH_ENABLE_TTS
     , m_tts(nullptr)
 #endif
@@ -310,7 +309,10 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_staticStrings = new StaticStrings(this);
     m_messageLoop = new MessageLoop(this);
     m_timer = new Timer(this);
-    m_fontSelector = FontSelector::createFontSelector();
+
+    m_platformFontSelector = PlatformFontSelector::create(this);
+    m_platformFontCache = PlatformFontCache::create(this);
+
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif
@@ -355,6 +357,10 @@ StarFish::~StarFish()
         close();
         delete m_platformWindow;
     }
+
+    delete m_platformFontCache;
+    delete m_platformFontSelector;
+
     joinAllActiveThread();
     NetworkSharedResourceManager::close();
 }
@@ -578,6 +584,16 @@ void StarFish::removePointerFromRootSet(void* ptr)
             iter->second--;
         }
     }
+}
+
+String* StarFish::userAgent()
+{
+    String* str = String::createASCIIString(USER_AGENT(APP_CODE_NAME, VERSION));
+    if (extraUserAgentString()->length()) {
+        str = str->concat(" ");
+        str = str->concat(extraUserAgentString());
+    }
+    return str;
 }
 
 #ifndef NDEBUG

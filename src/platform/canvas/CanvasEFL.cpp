@@ -1038,11 +1038,9 @@ public:
             evas_object_text_font_get(
                 (Evas_Object*)lastState().m_font->unwrap(), NULL, &siz);
             float ptSize = siz;
-            auto utf8Data = lastState()
-                                .m_font->fontFaceList()[0]
-                                ->familyName()
-                                ->toUTF8NonGCString();
-            evas_object_text_font_set(eo, utf8Data.data(), ptSize);
+            const char* utf8Data = (const char*)evas_object_data_get(
+                (Evas_Object*)lastState().m_font->unwrap(), "font");
+            evas_object_text_font_set(eo, utf8Data, ptSize);
             Unit::Color c = computedAlphaColor();
             evas_object_color_set(eo, c.r(), c.g(), c.b(), c.a());
             UTF8StringDataNonGCStd us = sv.originalString()->toUTF8NonGCString(
@@ -1177,16 +1175,14 @@ public:
                 (int)lastState().m_textDecorationData.lineThroughColor().b(),
                 (int)lastState().m_textDecorationData.lineThroughColor().a());
 
-            auto utf8Data = lastState()
-                                .m_font->fontFaceList()[0]
-                                ->familyName()
-                                ->toUTF8NonGCString();
+            const char* utf8Data = (const char*)evas_object_data_get(
+                (Evas_Object*)lastState().m_font->unwrap(), "font");
             snprintf(buf, sizeof(buf),
                      "DEFAULT='font=%s font_size=%f color=#%02x%02x%02x%02x "
                      "valign=middle font_weight=%s font_style=%s "
                      "strikethrough=%s strikethrough_color=%s underline=%s "
                      "underline_color=%s '",
-                     utf8Data.data(), ptSize, (int)lastState().m_color.r(),
+                     utf8Data, ptSize, (int)lastState().m_color.r(),
                      (int)lastState().m_color.g(), (int)lastState().m_color.b(),
                      (int)lastState().m_color.a(), weight, fontStyle,
                      lineThroughMode, lineThroughColor, underlineMode,

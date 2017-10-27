@@ -1598,7 +1598,8 @@ CSSTokenString CSSParser::combineAndTrimTokenValues(
 }
 
 void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
-                                 CSSStyleDeclaration* declaration)
+                                 CSSStyleDeclaration* declaration,
+                                 bool allowSrcProperty)
 {
     preserveState();
     GCVector<RefPtr<CSSToken>> blocks;
@@ -1638,11 +1639,13 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
                 } else {
                     struct Sender {
                         bool priority;
+                        bool allowSrcProperty;
                         CSSStyleKind kind;
                         CSSTokenString* value;
                         CSSStyleDeclaration* declaration;
                     } sender;
                     sender.value = &value;
+                    sender.allowSrcProperty = allowSrcProperty;
                     sender.priority = priority;
                     sender.declaration = declaration;
                     aToken->value()->peekASCIIBuffer(
@@ -1664,6 +1667,11 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
                                     name);
                             }
 #endif
+                            if (((Sender*)data)->kind == CSSStyleKind::Src &&
+                                !((Sender*)data)->allowSrcProperty) {
+                                return 0;
+                            }
+
                             ((Sender*)data)
                                 ->value->peekUTF8Buffer(
                                     [](const char* value, size_t len,
@@ -2059,7 +2067,7 @@ StyleRuleFontFace* CSSParser::parseFontFaceRule()
                 valid = true;
                 break;
             } else {
-                parseDeclaration(token, decl);
+                parseDeclaration(token, decl, true);
             }
             token = getToken(true, false);
         }
@@ -2072,13 +2080,19 @@ StyleRuleFontFace* CSSParser::parseFontFaceRule()
             auto keyKind = decl->cssValues()[i].keyKind();
             if (keyKind >= CSSStyleValuePair::KeyKind::FontKeyKindStart &&
                 keyKind <= CSSStyleValuePair::KeyKind::FontKeyKindEnd) {
+            } else if (keyKind == CSSStyleValuePair::KeyKind::Src) {
             } else {
                 decl->removeCSSValuePair(keyKind);
                 i--;
             }
         }
 
-        return new StyleRuleFontFace(decl);
+        if (decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily) &&
+            decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::Src)) {
+            return new StyleRuleFontFace(decl);
+        } else {
+            return nullptr;
+        }
     }
 
     restoreState();

@@ -46,7 +46,7 @@ public:
 
     String* appVersion()
     {
-        return String::createASCIIString(USER_AGENT(APP_NAME, VERSION));
+        return userAgent();
     }
 
     String* vendor()
@@ -54,11 +54,7 @@ public:
         return String::createASCIIString(VENDOR_NAME);
     }
 
-    String* userAgent()
-    {
-        return String::createASCIIString(USER_AGENT(APP_CODE_NAME, VERSION));
-    }
-
+    String* userAgent();
     Geolocation* geolocation();
 
     void dispose();
