@@ -123,7 +123,6 @@
                         '-lrt',
                         '-ldl',
                         '-lavformat -lavcodec -lavutil',
-                        '-ldivxdrm',
                         '-lcapi-location-manager',
                     ],
                 }],
@@ -172,6 +171,7 @@
                 'cflags_extra': [
                     '<@(cflags_extra)',
                     '-fno-rtti',
+                    '-Wno-format-nonliteral',
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
@@ -204,6 +204,7 @@
                 'cflags_extra': [
                     '<@(cflags_extra)',
                     '-fno-rtti',
+                    '-Wno-format-nonliteral',
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
@@ -236,6 +237,10 @@
             ['platform=="tizen" and backend=="dali"', {
                 'defines_extra': [
                     'STARFISH_DALI','GC_THREADS'
+                ],
+                'cflags_extra': [
+                    '-fno-rtti',
+                    '-Wno-format-nonliteral',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:dali.tizen',
