@@ -676,55 +676,54 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             m_owner->width(), m_owner->height(), m_owner,
             ownerStyle->hasTransforms(m_owner));
 
+        if (!m_rareData->m_matrix.isIdentity()) {
+            /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
+                               m_rareData->m_matrix.getScaleX(),
+                               m_rareData->m_matrix.getSkewX(),
+                               m_rareData->m_matrix.getTranslateX(),
+                               m_rareData->m_matrix.getSkewY(),
+                               m_rareData->m_matrix.getScaleY(),
+                               m_rareData->m_matrix.getTranslateY(),
+                               m_rareData->m_matrix.getPerspX(),
+                               m_rareData->m_matrix.getPerspY(),
+                               m_rareData->m_matrix.get(8));*/
+            LayoutUnit ox = m_owner->width() / 2;
+            LayoutUnit oy = m_owner->height() / 2;
+            if (m_owner->style()->hasTransformOrigin()) {
+                ox = m_owner->style()
+                         ->transformOrigin()
+                         ->originValue()
+                         ->getXAxis()
+                         .specifiedValue(m_owner->width(), m_owner);
+                oy = m_owner->style()
+                         ->transformOrigin()
+                         ->originValue()
+                         ->getYAxis()
+                         .specifiedValue(m_owner->height(), m_owner);
+            }
+            SkMatrix test;
+            bool testResult = m_rareData->m_matrix.invert(&test);
+            if (!testResult) {
+                // ignorePaintingDueToInvalidMatrix
+                if (ownerStyle->opacity() != 1) {
+                    canvas->endOpacityLayer();
+                }
+                canvas->restore();
+                return;
+            }
+            canvas->translate(ox, oy);
+            canvas->postMatrix(m_rareData->m_matrix);
+            canvas->translate(-ox, -oy);
+        }
+
+        if (owner()->shouldApplyOverflow()) {
+            canvas->clip(Unit::Rect(0, 0, owner()->width(), owner()->height()));
+            if (m_owner->isFrameBlockBox())
+                canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
+                                  -m_owner->asFrameBlockBox()->scrollTop());
+        }
+
         if (bufferWidth && bufferHeight) {
-            if (!m_rareData->m_matrix.isIdentity()) {
-                /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
-                                   m_rareData->m_matrix.getScaleX(),
-                                   m_rareData->m_matrix.getSkewX(),
-                                   m_rareData->m_matrix.getTranslateX(),
-                                   m_rareData->m_matrix.getSkewY(),
-                                   m_rareData->m_matrix.getScaleY(),
-                                   m_rareData->m_matrix.getTranslateY(),
-                                   m_rareData->m_matrix.getPerspX(),
-                                   m_rareData->m_matrix.getPerspY(),
-                                   m_rareData->m_matrix.get(8));*/
-                LayoutUnit ox = m_owner->width() / 2;
-                LayoutUnit oy = m_owner->height() / 2;
-                if (m_owner->style()->hasTransformOrigin()) {
-                    ox = m_owner->style()
-                             ->transformOrigin()
-                             ->originValue()
-                             ->getXAxis()
-                             .specifiedValue(m_owner->width(), m_owner);
-                    oy = m_owner->style()
-                             ->transformOrigin()
-                             ->originValue()
-                             ->getYAxis()
-                             .specifiedValue(m_owner->height(), m_owner);
-                }
-                SkMatrix test;
-                bool testResult = m_rareData->m_matrix.invert(&test);
-                if (!testResult) {
-                    // ignorePaintingDueToInvalidMatrix
-                    if (ownerStyle->opacity() != 1) {
-                        canvas->endOpacityLayer();
-                    }
-                    canvas->restore();
-                    return;
-                }
-                canvas->translate(ox, oy);
-                canvas->postMatrix(m_rareData->m_matrix);
-                canvas->translate(-ox, -oy);
-            }
-
-            if (owner()->shouldApplyOverflow()) {
-                canvas->clip(
-                    Unit::Rect(0, 0, owner()->width(), owner()->height()));
-                if (m_owner->isFrameBlockBox())
-                    canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
-                                      -m_owner->asFrameBlockBox()->scrollTop());
-            }
-
             owner()->willCompsiteStackingContext(canvas);
             canvas->drawImage(
                 m_rareData->m_buffer,
