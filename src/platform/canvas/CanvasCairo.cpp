@@ -889,11 +889,12 @@ private:
                                  CanvasShadowData* shadow = nullptr)
     {
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
-        FT_Face face = ((FontFaceImplCairo*)f->fontFaceList()[0])->m_face;
+        FontFaceImplCairo* fc = (FontFaceImplCairo*)f->fontFaceList()[0];
+        FT_Face face = fc->m_face;
         int intSize(f->size() + 0.5f);
 
         float lineWidth =
-            face->underline_thickness / (float)face->units_per_EM * intSize;
+            face->underline_thickness / (float)fc->m_unitsPerEM * intSize;
         if (lastState().m_textDecorationData.hasUnderLine()) {
             cairo_set_line_width(canvas, lineWidth);
             if (!shadow) {
@@ -904,7 +905,7 @@ private:
                     lastState().m_textDecorationData.underLineColor().B(),
                     lastState().m_textDecorationData.underLineColor().A());
             }
-            float y = face->underline_position / (float)face->units_per_EM *
+            float y = face->underline_position / (float)fc->m_unitsPerEM *
                           intSize / 72 +
                       intSize;
             cairo_move_to(canvas, 0, y + lineWidth / 2);
