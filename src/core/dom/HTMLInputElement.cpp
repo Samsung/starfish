@@ -214,6 +214,9 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLFormObject::didAttributeChanged(name, old, val, attributeCreated,
                                         attributeRemoved);
 
+    if (name == starFish()->staticStrings()->m_maxlength) {
+        setMaxlength(String::parseInt(val));
+    }
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
         if (name == starFish()->staticStrings()->m_type || !old->equals(val)) {
@@ -240,6 +243,7 @@ String* HTMLInputElement::visibleValue()
 {
     String* val = value();
     String* typeVal = type();
+
     if (typeVal->equals("submit") && val->equals(String::emptyString)) {
         val = String::createASCIIString("submit");
     } else if (typeVal->equals("password") &&
@@ -338,7 +342,8 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                         isUseful = true;
                     }
                 } else {
-                    if (event->asKeyboardEvent()->isASCIIVisibleChar()) {
+                    if (event->asKeyboardEvent()->isASCIIVisibleChar() &&
+                        m_currentCaretPosition < (size_t)maxlength()) {
                         char key = (char)event->asKeyboardEvent()->keyValue();
                         value = value->concat(key);
                         m_currentCaretPosition++;
@@ -363,7 +368,8 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                     value = value->insert(m_currentEditingText,
                                           m_currentCaretPosition);
                     m_shouldDrawCaret = true;
-                } else if (event->type()->equalsIgnoreCase("compositionend")) {
+                } else if (event->type()->equalsIgnoreCase("compositionend") &&
+                           m_currentCaretPosition < (size_t)maxlength()) {
                     value = value->remove(m_currentCaretPosition,
                                           m_currentEditingText->length());
                     value = value->insert(event->asCompositionEvent()->data(),
