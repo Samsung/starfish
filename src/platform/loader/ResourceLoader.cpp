@@ -36,7 +36,7 @@ extern bool g_fireOnloadEvent;
 #endif
 
 #ifndef STARFISH_RESOURCE_CACHE_SIZE
-#define STARFISH_RESOURCE_CACHE_SIZE 1024 * 1024 * 2
+#define STARFISH_RESOURCE_CACHE_SIZE 1024 * 1024 * 4
 #endif
 
 #ifndef STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL
@@ -70,6 +70,12 @@ TextResource* ResourceLoader::fetchText(ResourceURL* url,
 ImageResource* ResourceLoader::fetchImage(ResourceURL* url)
 {
     ImageResource* res = new ImageResource(url, this);
+    return res;
+}
+
+FontResource* ResourceLoader::fetchFont(ResourceURL* url)
+{
+    FontResource* res = new FontResource(url, this);
     return res;
 }
 
@@ -170,19 +176,32 @@ public:
     {
         ResourceClient::didLoadCanceled();
         if (!m_resource->m_isReferencedByAnoterResource) {
-            auto& l = m_resource->loader()->m_imageResourceCacheLRUList;
-            auto iter = std::find(l.begin(), l.end(), m_resource);
-            if (iter != l.end()) {
-                l.erase(iter);
-            }
+            if (m_resource->isImageResource()) {
+                auto& l = m_resource->loader()->m_imageResourceCacheLRUList;
+                auto iter = std::find(l.begin(), l.end(), m_resource);
+                if (iter != l.end()) {
+                    l.erase(iter);
+                }
 
-            auto& cache = m_resource->loader()->m_imageResourceCache;
-            auto u8Str = resource()->url()->urlString()->toUTF8NonGCString();
-            ASCIIString url(u8Str.data(), u8Str.length());
-            auto iter2 = cache.find(url);
-            if (iter2 != cache.end() &&
-                iter2->second.m_resource == resource()) {
-                cache.erase(iter2);
+                auto& cache = m_resource->loader()->m_imageResourceCache;
+                auto u8Str =
+                    resource()->url()->urlString()->toUTF8NonGCString();
+                ASCIIString url(u8Str.data(), u8Str.length());
+                auto iter2 = cache.find(url);
+                if (iter2 != cache.end() &&
+                    iter2->second.m_resource == resource()) {
+                    cache.erase(iter2);
+                }
+            } else if (m_resource->isFontResource()) {
+                auto& cache = m_resource->loader()->m_fontResourceCache;
+                auto u8Str =
+                    resource()->url()->urlString()->toUTF8NonGCString();
+                ASCIIString url(u8Str.data(), u8Str.length());
+                auto iter2 = cache.find(url);
+                if (iter2 != cache.end() &&
+                    iter2->second.m_resource == resource()) {
+                    cache.erase(iter2);
+                }
             }
         }
     }
@@ -286,7 +305,7 @@ void ResourceLoader::cachePruning()
             auto iter = m_imageResourceCacheLRUList.begin();
             size_t currentTick = tickCount();
             while (m_imageResourceCacheLRUList.size() &&
-                   removedSize < STARFISH_RESOURCE_CACHE_SIZE * 0.25) {
+                   removedSize < STARFISH_RESOURCE_CACHE_SIZE * 0.5) {
                 Resource* res = (*iter);
                 auto utf8Data = res->url()->urlString()->toUTF8NonGCString();
                 auto iter2 = m_imageResourceCache.find(utf8Data.data());
@@ -366,36 +385,58 @@ bool ResourceLoader::requestResourcePreprocess(
         res->m_resourceClients.insert(it, new ResourceAliveChecker(res));
     }
 
-    // TODO cache every resource
-    if (res->isImageResource() &&
-        syncLevel != Resource::ResourceRequestSyncLevel::AlwaysSync) {
-        auto u8Str = res->url()->urlString()->toUTF8NonGCString();
-        ASCIIString url(u8Str.data(), u8Str.length());
-        auto iter = m_imageResourceCache.find(url);
-        if (iter == m_imageResourceCache.end()) {
-            ResourceCacheData data;
-            data.m_lastUsedTime = 0;
-            data.m_resource = res;
-            m_imageResourceCache.insert(std::make_pair(std::move(url), data));
-        } else {
-            ResourceCacheData& data = iter->second;
-            Resource* resourceInCache = data.m_resource;
-            data.m_lastUsedTime = tickCount();
+    // TODO cache text resource
+    if (syncLevel != Resource::ResourceRequestSyncLevel::AlwaysSync) {
+        if (res->isImageResource()) {
+            auto u8Str = res->url()->urlString()->toUTF8NonGCString();
+            ASCIIString url(u8Str.data(), u8Str.length());
+            auto iter = m_imageResourceCache.find(url);
+            if (iter == m_imageResourceCache.end()) {
+                ResourceCacheData data;
+                data.m_lastUsedTime = 0;
+                data.m_resource = res;
+                m_imageResourceCache.insert(
+                    std::make_pair(std::move(url), data));
+            } else {
+                ResourceCacheData& data = iter->second;
+                Resource* resourceInCache = data.m_resource;
+                data.m_lastUsedTime = tickCount();
 
-            auto iter =
-                std::find(m_imageResourceCacheLRUList.begin(),
-                          m_imageResourceCacheLRUList.end(), resourceInCache);
-            if (m_imageResourceCacheLRUList.end() != iter) {
-                m_imageResourceCacheLRUList.erase(iter);
+                auto iter = std::find(m_imageResourceCacheLRUList.begin(),
+                                      m_imageResourceCacheLRUList.end(),
+                                      resourceInCache);
+                if (m_imageResourceCacheLRUList.end() != iter) {
+                    m_imageResourceCacheLRUList.erase(iter);
+                }
+
+                m_imageResourceCacheLRUList.push_back(res);
+                cacheHit(resourceInCache, res, syncLevel);
+                return true;
             }
 
-            m_imageResourceCacheLRUList.push_back(res);
-            cacheHit(resourceInCache, res, syncLevel);
-            return true;
-        }
+            STARFISH_ASSERT(res->state() == Resource::BeforeSend);
+            res->addResourceClient(new ResourceLoaderTracer(res));
+        } else if (res->isFontResource()) {
+            auto u8Str = res->url()->urlString()->toUTF8NonGCString();
+            ASCIIString url(u8Str.data(), u8Str.length());
+            auto iter = m_fontResourceCache.find(url);
+            if (iter == m_fontResourceCache.end()) {
+                ResourceCacheData data;
+                data.m_lastUsedTime = 0;
+                data.m_resource = res;
+                m_fontResourceCache.insert(
+                    std::make_pair(std::move(url), data));
+            } else {
+                ResourceCacheData& data = iter->second;
+                Resource* resourceInCache = data.m_resource;
+                data.m_lastUsedTime = tickCount();
+                cacheHit(resourceInCache, res, syncLevel);
+                return true;
+            }
 
-        STARFISH_ASSERT(res->state() == Resource::BeforeSend);
-        res->addResourceClient(new ResourceLoaderTracer(res));
+            STARFISH_ASSERT(res->state() == Resource::BeforeSend);
+            res->addResourceClient(new ResourceLoaderTracer(res));
+        }
     }
 
     cachePruning();

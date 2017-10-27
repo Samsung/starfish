@@ -21,10 +21,7 @@
 #define STARFISH_DEFAULT_FONT_FAMILY "sans-serif"
 #endif
 
-#ifdef PORT_CANVAS_BACKEND_CAIRO
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#endif
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
@@ -58,34 +55,15 @@ public:
     virtual ~FontFace()
     {
     }
-
-    String* familyName()
-    {
-        return m_familyName;
-    }
-
-    bool supportsKerning()
-    {
-        return m_supportsKerning;
-    }
-
-    char style()
-    {
-        return m_style;
-    }
-
-    char weight()
-    {
-        return m_weight;
-    }
-
     virtual FontMetrics metrics(float size) = 0;
+    virtual size_t dataSize()
+    {
+        return 0;
+    }
+
+    static FontFace* create(const uint8_t* data, size_t dataLen);
 
 protected:
-    bool m_supportsKerning;
-    char m_weight;
-    char m_style;
-    String* m_familyName;
 };
 
 class FontFaceList : public GCVector<FontFace*>, public gc {
@@ -100,9 +78,11 @@ class Font : public gc {
 protected:
     Font()
     {
+        m_weight = m_style = 0;
         m_size = 0;
         m_spaceWidth = 0;
         m_fontFaceList = nullptr;
+        m_seenUnresolvedWebFontIndex = SIZE_MAX;
     }
 
 public:
@@ -126,7 +106,7 @@ public:
 
     char weight()
     {
-        return m_fontFaceList->front()->weight();
+        return m_weight;
     }
 
     float size()
@@ -141,7 +121,7 @@ public:
 
     char style()
     {
-        return m_fontFaceList->front()->style();
+        return m_style;
     }
 
     FontMetrics metrics()
@@ -152,6 +132,11 @@ public:
     const FontFaceList& fontFaceList()
     {
         return *m_fontFaceList;
+    }
+
+    FontSelector* fontSelector()
+    {
+        return m_fontSelector;
     }
 
 #if defined(PORT_CANVAS_BACKEND_EFL)
@@ -194,32 +179,59 @@ protected:
 #endif
 
     FontFaceList* m_fontFaceList;
+    FontSelector* m_fontSelector;
+    size_t m_seenUnresolvedWebFontIndex;
+    char m_weight;
+    char m_style;
     float m_size;
     float m_spaceWidth;
 };
 
-class FontSelector : public gc {
-    friend class StarFish;
-    friend class Font;
-
-protected:
-    GCUnorderedMap<UTF8StringDataNonGCStd, FontFace*> m_fontFaceCache;
-    GCUnorderedMap<UTF8StringDataNonGCStd, FontFaceList*> m_fontFaceListCache;
-    GCUnorderedMap<UTF8StringDataNonGCStd, Font*> m_fontCache;
-
-    FontSelector()
+class PlatformFontSelector : public gc {
+public:
+    virtual ~PlatformFontSelector()
     {
     }
-    virtual ~FontSelector()
+    static PlatformFontSelector* create(StarFish* sf);
+    virtual UTF8StringDataNonGCStd findFont(
+        const UTF8StringDataNonGCStd& familyName, bool isGenericName,
+        char style = 0, char weight = 4)
     {
+        return UTF8StringDataNonGCStd();
     }
-    virtual FontFace* loadFontFaceImpl(const UTF8StringDataNonGCStd& familyName,
-                                       bool isGenericName, char style = 0,
-                                       char weight = 4)
+
+    virtual FontFace* loadFontFace(const UTF8StringDataNonGCStd& path)
     {
         return nullptr;
     }
 
+protected:
+};
+
+class PlatformFontCache : public gc {
+    friend class FontSelector;
+
+public:
+    static PlatformFontCache* create(StarFish* sf);
+    virtual ~PlatformFontCache()
+    {
+    }
+
+    FontFace* lookupFaceCache(const UTF8StringDataNonGCStd& mergredFamilyName,
+                              bool& exist);
+    void insertFaceCache(const UTF8StringDataNonGCStd& mergredFamilyName,
+                         FontFace* face);
+
+protected:
+    std::unordered_set<UTF8StringDataNonGCStd> m_absencePlatformFontNames;
+    std::unordered_map<UTF8StringDataNonGCStd, FontFace*> m_loadedPlatformFonts;
+};
+
+class FontSelector : public DocumentHoldable, public gc {
+    friend class StarFish;
+    friend class Font;
+
+public:
 #if !defined(PORT_CANVAS_BACKEND_EFL)
     Font* loadFont(String* familyNameArray[], size_t familyNameArraySize,
                    float size, char style = 0, char weight = 4);
@@ -228,23 +240,59 @@ protected:
                            size_t familyNameArraySize, float size,
                            char style = 0, char weight = 4);
 #endif
-    void clearCache()
+
+    PlatformFontSelector* platformFontSelector()
     {
-        m_fontFaceCache.clear();
+        return m_platformFontSelector;
     }
 
-    FontFace* lookupFaceCache(const UTF8StringDataNonGCStd& familyName,
-                              char style, char weight, bool& exist);
-    void insertFaceCache(const UTF8StringDataNonGCStd& familyName, char style,
-                         char weight, FontFace* face);
-    static FontSelector* createFontSelector();
+    PlatformFontCache* platformFontCache()
+    {
+        return m_platformFontCache;
+    }
+
+    void clearCache()
+    {
+        m_fontFaceListCache.clear();
+        m_fontCache.clear();
+        m_webFontLocalSrcCache.clear();
+    }
+
+    static FontSelector* create(Document* document,
+                                PlatformFontSelector* platformFontSelector,
+                                PlatformFontCache* platformFontCache);
+
 #if defined(PORT_CANVAS_BACKEND_EFL)
-    static FontSelector* createGenericFontSelector();
+    static FontSelector* createGenericFontSelector(
+        Document* document, PlatformFontSelector* platformFontSelector,
+        PlatformFontCache* platformFontCache);
     virtual bool isGenericFontSelector() const
     {
         return true;
     }
 #endif
+
+protected:
+    PlatformFontSelector* m_platformFontSelector;
+    PlatformFontCache* m_platformFontCache;
+
+    GCUnorderedMap<UTF8StringDataNonGCStd, FontFaceList*> m_fontFaceListCache;
+    GCUnorderedMap<UTF8StringDataNonGCStd, Font*> m_fontCache;
+    GCUnorderedMap<UTF8StringDataNonGCStd, FontFace*> m_webFontLocalSrcCache;
+
+    FontSelector(Document* document, PlatformFontSelector* platformFontSelector,
+                 PlatformFontCache* platformFontCache)
+        : DocumentHoldable(document)
+    {
+        m_platformFontSelector = platformFontSelector;
+        m_platformFontCache = platformFontCache;
+    }
+    virtual ~FontSelector()
+    {
+    }
+
+    FontFace* loadFromPlatform(const UTF8StringDataNonGCStd& fm,
+                               bool isGenericName, char style, char weight);
 };
 };
 #endif

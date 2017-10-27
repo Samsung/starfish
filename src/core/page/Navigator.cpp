@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "Navigator.h"
+#include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/modules/location/Geolocation.h"
 
@@ -46,5 +47,10 @@ void Navigator::dispose()
 ScriptBindingInstance* Navigator::scriptBindingInstance()
 {
     return document()->scriptBindingInstance();
+}
+
+String* Navigator::userAgent()
+{
+    return starFish()->userAgent();
 }
 }

@@ -157,8 +157,13 @@ public:
     Document* m_document;
 };
 
-void ComputedStyle::loadFont(Node* consumer, float fixedFontSize)
+void ComputedStyle::loadFont(Node* consumer)
 {
+    m_inheritedStyles.m_fontSize =
+        Length(Length::Fixed,
+               m_inheritedStyles.m_fontSize.specifiedFontValue(consumer));
+    float fixedFontSize = this->fixedFontSize();
+
     char style = m_inheritedStyles.m_fontStyle;
     char fontWeight = 4;
 
@@ -194,7 +199,7 @@ void ComputedStyle::loadFont(Node* consumer, float fixedFontSize)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    StarFish* sf = consumer->starFish();
+    FontSelector* fs = consumer->document()->fontSelector();
     Font* parentNodeFont = nullptr;
     if (consumer->parentNode() && consumer->parentNode()->style() &&
         consumer->parentNode()->style()->font()) {
@@ -203,7 +208,7 @@ void ComputedStyle::loadFont(Node* consumer, float fixedFontSize)
     bool canUseParentFont = false;
     if (parentNodeFont) {
         ComputedStyle* parentStyle = consumer->parentNode()->style();
-        if (parentStyle->fontSize() == fontSize() &&
+        if (parentStyle->fixedFontSize() == fixedFontSize &&
             parentStyle->fontStyle() == fontStyle() &&
             parentStyle->fontWeight() == this->fontWeight()) {
             if (parentStyle->fontFamily()[0].m_length ==
@@ -223,18 +228,19 @@ void ComputedStyle::loadFont(Node* consumer, float fixedFontSize)
     }
 
 #ifdef STARFISH_ENABLE_TEST
+    StarFish* sf = consumer->starFish();
     if (g_enablePixelTest) {
         String* str = String::fromUTF8("Ahem");
-        m_font = sf->fetchFont(&str, 1, fixedFontSize, style, fontWeight);
+        m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight);
     } else {
         if (sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest) {
             String* str = String::fromUTF8("SamsungOne");
-            m_font = sf->fetchFont(&str, 1, fixedFontSize, style, fontWeight);
+            m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight);
         } else {
             if (canUseParentFont) {
                 m_font = parentNodeFont;
             } else {
-                m_font = sf->fetchFont(
+                m_font = fs->loadFont(
                     (String**)&m_inheritedStyles.m_fontFamilyDatas[1],
                     m_inheritedStyles.m_fontFamilyDatas[0].m_length,
                     fixedFontSize, style, fontWeight);
@@ -245,10 +251,9 @@ void ComputedStyle::loadFont(Node* consumer, float fixedFontSize)
     if (canUseParentFont) {
         m_font = parentNodeFont;
     } else {
-        m_font =
-            sf->fetchFont((String**)&m_inheritedStyles.m_fontFamilyDatas[1],
-                          m_inheritedStyles.m_fontFamilyDatas[0].m_length,
-                          fixedFontSize, style, fontWeight);
+        m_font = fs->loadFont((String**)&m_inheritedStyles.m_fontFamilyDatas[1],
+                              m_inheritedStyles.m_fontFamilyDatas[0].m_length,
+                              fixedFontSize, style, fontWeight);
     }
 #endif
 }
@@ -377,16 +382,14 @@ void ComputedStyle::loadBorderImage(
 }
 
 void ComputedStyle::loadResources(
-    Node* consumer, bool allowFont,
+    Node* consumer,
     ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
 {
     loadBackgroundImage(consumer,
                         prevComputedStyleValueForReferenceLoadedResources);
     loadBorderImage(consumer,
                     prevComputedStyleValueForReferenceLoadedResources);
-    if (allowFont) {
-        loadFont(consumer, m_inheritedStyles.m_fixedFontSize);
-    }
+    loadFont(consumer);
 }
 
 void ComputedStyle::blockify(Node* current, bool force)
@@ -431,7 +434,6 @@ void ComputedStyle::blockify(Node* current, bool force)
 }
 
 void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
-                                       bool allowChangeFontPercentToFixed,
                                        Node* current)
 {
     m_originalDisplay = m_display;
@@ -477,131 +479,168 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         m_alignSelf = parentStyle->m_alignItems;
     }
 
-    if (!allowChangeFontPercentToFixed) {
-        return;
-    }
-
     Length curFontSize = fontSize();
     Length rootFontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
-    if (current) {
-        HTMLHtmlElement* root = current->document()->rootElement();
-        if (root->style()) {
-            rootFontSize = root->style()->fontSize();
-        }
+    HTMLHtmlElement* root = current->document()->rootElement();
+    if (root->style()) {
+        rootFontSize = root->style()->fontSize();
     }
 
-    changeFontPercentToFixedIfNeeded(curFontSize, rootFontSize, font());
+    changeFontPercentToFixedIfNeeded(curFontSize, rootFontSize, font(),
+                                     current);
 }
 
 void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
                                                      Length rootFontSize,
-                                                     Font* font)
+                                                     Font* font, Node* current)
 {
+    Window* w = current->window();
+    LayoutSize windowSize(w->innerWidth(), w->innerHeight());
     if (!letterSpacing().isComputed()) {
         auto v = letterSpacing();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), this);
         setLetterSpacing(v);
     }
 
     if (!lineHeight().isComputed()) {
         auto v = lineHeight();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), this);
         setLineHeight(v);
     }
 
     if (!textIndent().isComputed()) {
         auto v = textIndent();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), this);
         setTextIndent(v);
     }
 
     if (!textIndent().isComputed()) {
         auto v = textIndent();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), this);
         setTextIndent(v);
     }
 
     if (!horizontalBorderSpacing().isComputed()) {
         auto v = horizontalBorderSpacing();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), this);
         setHorizontalBorderSpacing(v);
     }
 
     if (!verticalBorderSpacing().isComputed()) {
         auto v = verticalBorderSpacing();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), this);
         setVerticalBorderSpacing(v);
     }
 
     if (!strokeWidth().isComputed()) {
         auto v = strokeWidth();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), this);
         setStrokeWidth(v);
     }
 
-    m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-    m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                  windowSize.width(), windowSize.height(),
+                                  this);
+    m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(),
+                                   this);
     if (hasRareComputeStyleData()) {
         m_rareComputedStyleData->m_minWidth.changeToFixedIfNeeded(
-            curFontSize, rootFontSize, font);
+            curFontSize, rootFontSize, font, windowSize.width(),
+            windowSize.height(), this);
         m_rareComputedStyleData->m_maxWidth.changeToFixedIfNeeded(
-            curFontSize, rootFontSize, font);
+            curFontSize, rootFontSize, font, windowSize.width(),
+            windowSize.height(), this);
         m_rareComputedStyleData->m_minHeight.changeToFixedIfNeeded(
-            curFontSize, rootFontSize, font);
+            curFontSize, rootFontSize, font, windowSize.width(),
+            windowSize.height(), this);
         m_rareComputedStyleData->m_maxHeight.changeToFixedIfNeeded(
-            curFontSize, rootFontSize, font);
+            curFontSize, rootFontSize, font, windowSize.width(),
+            windowSize.height(), this);
     }
 
     if (m_surround) {
-        m_surround->margin.checkComputed(curFontSize, rootFontSize, font);
-        m_surround->padding.checkComputed(curFontSize, rootFontSize, font);
-        m_surround->offset.checkComputed(curFontSize, rootFontSize, font);
-        m_surround->border.checkComputed(curFontSize, rootFontSize, font);
+        m_surround->margin.checkComputed(curFontSize, rootFontSize, font,
+                                         windowSize, this);
+        m_surround->padding.checkComputed(curFontSize, rootFontSize, font,
+                                          windowSize, this);
+        m_surround->offset.checkComputed(curFontSize, rootFontSize, font,
+                                         windowSize, this);
+        m_surround->border.checkComputed(curFontSize, rootFontSize, font,
+                                         windowSize, this);
     }
 
-    m_verticalAlignLength.changeToFixedIfNeeded(curFontSize, rootFontSize,
-                                                font);
+    m_verticalAlignLength.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                                windowSize.width(),
+                                                windowSize.height(), this);
 
     if (hasTransforms()) {
         size_t sz = m_rareComputedStyleData->m_transforms->size();
         for (size_t i = 0; i < sz; i++) {
-            StyleTransformData std =
+            StyleTransformData& std =
                 m_rareComputedStyleData->m_transforms->at(i);
             if (std.type() != StyleTransformData::OperationType::Translate) {
                 continue;
             }
-            std.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            std.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                      windowSize, this);
         }
     }
 
     if (m_background) {
-        m_background->checkComputed(curFontSize, rootFontSize, font);
+        m_background->checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                    this);
     }
 
     if (hasOutline()) {
         m_rareComputedStyleData->m_outline->m_outline.checkComputed(
-            curFontSize, rootFontSize, font);
+            curFontSize, rootFontSize, font, windowSize, this);
         m_rareComputedStyleData->m_outline->m_outlineOffset
-            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(),
+                                   this);
     }
 
     if (hasBorderRadius()) {
         m_rareComputedStyleData->m_borderRadius->m_topLeftHorizontal
-            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(),
+                                   this);
         m_rareComputedStyleData->m_borderRadius->m_topLeftVertical
-            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(),
+                                   this);
         m_rareComputedStyleData->m_borderRadius->m_topRightHorizontal
-            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(),
+                                   this);
         m_rareComputedStyleData->m_borderRadius->m_topRightVertical
-            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(),
+                                   this);
         m_rareComputedStyleData->m_borderRadius->m_bottomRightHorizontal
-            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(),
+                                   this);
         m_rareComputedStyleData->m_borderRadius->m_bottomRightVertical
-            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(),
+                                   this);
         m_rareComputedStyleData->m_borderRadius->m_bottomLeftHorizontal
-            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(),
+                                   this);
         m_rareComputedStyleData->m_borderRadius->m_bottomLeftVertical
-            .changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            .changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(),
+                                   this);
     }
 
     if (textShadow().size()) {
@@ -609,12 +648,16 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
              m_inheritedStyles.m_rareData->m_textShadowDataList) {
             if (!shadow.offsetX().isComputed()) {
                 auto v = shadow.offsetX();
-                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                        windowSize.width(), windowSize.height(),
+                                        this);
                 shadow.setOffsetX(v);
             }
             if (!shadow.offsetY().isComputed()) {
                 auto v = shadow.offsetY();
-                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                        windowSize.width(), windowSize.height(),
+                                        this);
                 shadow.setOffsetY(v);
             }
         }

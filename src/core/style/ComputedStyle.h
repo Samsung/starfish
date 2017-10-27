@@ -125,6 +125,7 @@ public:
 
 class ComputedStyle : public gc {
     friend class StyleResolver;
+    friend class Length;
     friend void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
                                      ComputedStyle* parentStyle, bool force);
     friend ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
@@ -174,7 +175,6 @@ public:
 
         m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
         m_inheritedStyles.m_fontSize = Length(Length::Fixed, mediumFontSize);
-        m_inheritedStyles.m_fixedFontSize = mediumFontSize;
         m_inheritedStyles.m_fontWeight = FontWeightValue::NormalFontWeightValue;
         m_inheritedStyles.m_wordWrap = WordWrapValue::NormalWordWrapValue;
         m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
@@ -188,8 +188,8 @@ public:
         m_inheritedStyles.m_emptyCells = EmptyCellsValue::ShowEmptyCellsValue;
         m_inheritedStyles.m_rareData = nullptr;
         m_inheritedStyles.m_isRareDataAllocated = false;
-        m_inheritedStyles.m_isFontSizeSpecifiedByUser = false;
         m_inheritedStyles.m_fontFamilyDatas = g_initialFontFamilyDatas;
+        m_seenViewPortUnitInStyle = false;
 
         initNonInheritedStyles();
     }
@@ -200,9 +200,14 @@ public:
 
         m_inheritedStyles = from->m_inheritedStyles;
         m_inheritedStyles.m_isRareDataAllocated = false;
-        m_inheritedStyles.m_isFontSizeSpecifiedByUser = false;
+        m_seenViewPortUnitInStyle = false;
 
         initNonInheritedStyles();
+    }
+
+    bool seenViewPortUnitInStyle()
+    {
+        return m_seenViewPortUnitInStyle;
     }
 
     DisplayValue originalDisplay()
@@ -1125,11 +1130,6 @@ public:
     GEN_FOURSIDE(GET_PADDING)
 #undef GET_PADDING
 
-    bool isFontSizeSpeicifiedByUser() const
-    {
-        return m_inheritedStyles.m_isFontSizeSpecifiedByUser;
-    }
-
     Length fontSize()
     {
         return m_inheritedStyles.m_fontSize;
@@ -1142,12 +1142,7 @@ public:
 
     float fixedFontSize()
     {
-        return m_inheritedStyles.m_fixedFontSize;
-    }
-
-    void setFixedFontSize(float fixedFontSize)
-    {
-        m_inheritedStyles.m_fixedFontSize = fixedFontSize;
+        return m_inheritedStyles.m_fontSize.fixed();
     }
 
     void setFontFamily(FontFamilyData* datas)
@@ -1249,7 +1244,7 @@ public:
                display == DisplayValue::TableCaptionDisplayValue;
     }
 
-    void loadFont(Node* consumer, float fixedFontSize);
+    void loadFont(Node* consumer);
     bool hasBorderRadius()
     {
         if (!m_rareComputedStyleData) {
@@ -1313,14 +1308,13 @@ public:
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
             nullptr);
     void loadResources(
-        Node* consumer, bool allowFont,
+        Node* consumer,
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
             nullptr);
-    void arrangeStyleValues(ComputedStyle* parentStyle,
-                            bool allowChangeFontPercentToFixed,
-                            Node* current = nullptr);
+    void arrangeStyleValues(ComputedStyle* parentStyle, Node* current);
     void changeFontPercentToFixedIfNeeded(Length parentFontSize,
-                                          Length rootFontSize, Font* font);
+                                          Length rootFontSize, Font* font,
+                                          Node* current);
     void blockify(Node* current, bool force);
 
     void clearTransforms()
@@ -1795,15 +1789,14 @@ protected:
         CaptionSideValue m_captionSide : 1;       // table
         EmptyCellsValue m_emptyCells : 1;         // table
         bool m_isRareDataAllocated : 1;
-        bool m_isFontSizeSpecifiedByUser : 1;
 
         FontFamilyData* m_fontFamilyDatas; // [size_t, String, String...]
         Unit::Color m_color;
         Length m_fontSize;
-        float m_fixedFontSize;
         InheritedStylesRareData* m_rareData;
     } m_inheritedStyles;
 
+    bool m_seenViewPortUnitInStyle : 1;
     FloatValue m_float : 2;
     ClearValue m_clear : 2;
     DisplayValue m_display : 4;

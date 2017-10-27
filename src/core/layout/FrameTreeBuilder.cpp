@@ -23,6 +23,7 @@
 #include "core/dom/PseudoElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/svg/SVGSVGElement.h"
+#include "core/page/Window.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameText.h"
 #include "core/layout/FrameInline.h"
@@ -115,8 +116,8 @@ static FrameBlockBox* createAnonymouseBlockBox(FrameBlockBox* blockContainer,
 {
     ComputedStyle* style = new ComputedStyle(blockContainer->style());
     style->setDisplay(DisplayValue::BlockDisplayValue);
-    style->loadResources(node, true);
-    style->arrangeStyleValues(blockContainer->style(), true, node);
+    style->loadResources(node);
+    style->arrangeStyleValues(blockContainer->style(), node);
 
     return new FrameBlockBox(nullptr, style);
 }
@@ -215,12 +216,9 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
     fontSize.changeToFixedIfNeeded(
         parentStyle->fontSize(),
         element->document()->rootElement()->style()->fontSize(),
-        parentStyle->font());
+        parentStyle->font(), element->window()->innerWidth(),
+        element->window()->innerHeight(), style);
     style->setFontSize(fontSize);
-    if (style->isFontSizeSpeicifiedByUser() &&
-        !style->fontSize().hasViewportPercent()) {
-        style->setFixedFontSize(fontSize.specifiedFontValue(element));
-    }
 
     // TODO: Set the proper style according to the type of pseudo-elements
     if (pseudoId ==
@@ -228,8 +226,8 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
         style->setDisplay(DisplayValue::InlineDisplayValue);
         style->setPosition(PositionValue::StaticPositionValue);
     }
-    style->loadResources(parent, true);
-    style->arrangeStyleValues(parentStyle, true, parent);
+    style->loadResources(parent);
+    style->arrangeStyleValues(parentStyle, parent);
 
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
     damage = compareStyle(parentStyle, style);
@@ -319,8 +317,8 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
         Text* letter = new Text(originalFrameText->node()->document(),
                                 originalText->substring(0, length));
         ComputedStyle* letterStyle = new ComputedStyle(pseudoStyle);
-        letterStyle->loadResources(pseudoElement, true);
-        letterStyle->arrangeStyleValues(pseudoStyle, true);
+        letterStyle->loadResources(pseudoElement);
+        letterStyle->arrangeStyleValues(pseudoStyle, pseudoElement);
         letter->setStyle(letterStyle);
         letter->setParentNode(pseudoElement);
         letter->clearNeedsStyleRecalc();
@@ -408,8 +406,9 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
                 ComputedStyle* contentTextStyle =
                     new ComputedStyle(pseudoStyle);
                 contentTextStyle->setDisplay(DisplayValue::InlineDisplayValue);
-                contentTextStyle->loadResources(pseudoElement, true);
-                contentTextStyle->arrangeStyleValues(contentTextStyle, true);
+                contentTextStyle->loadResources(pseudoElement);
+                contentTextStyle->arrangeStyleValues(contentTextStyle,
+                                                     pseudoElement);
 
                 Text* contentText =
                     new Text(parent->document(), iter->text()->text());

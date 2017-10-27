@@ -370,7 +370,7 @@ public:
 #if defined(PORT_CANVAS_BACKEND_EFL)
         if (!lastState().m_font->isGenericFont()) {
             Font* nonGenericFont = lastState().m_font;
-            Font* font = m_starfish->fetchGenericFont(
+            auto font = nonGenericFont->fontSelector()->loadFont(
                 nullptr, 0, nonGenericFont->size(), nonGenericFont->style(),
                 nonGenericFont->weight());
             setFont(font);
@@ -798,17 +798,16 @@ private:
 
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
             for (size_t i = 0; i < sv.length(); i++) {
-                std::pair<std::pair<FT_Face, hb_font_t*>,
-                          std::pair<unsigned, LayoutUnit>>
+                std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>>
                     g = cairoBackendInternalLoadGlyph(f, sv.charAt(i));
                 if (g.second.first) {
-                    if (lastFontFace != g.first.first) {
+                    if (lastFontFace != g.first->m_face) {
                         if (fontFace) {
                             cairo_show_glyphs(canvas, glyphs, glyphCount);
                             glyphCount = 0;
                             cairo_font_face_destroy(fontFace);
                         }
-                        lastFontFace = g.first.first;
+                        lastFontFace = g.first->m_face;
                         fontFace = cairo_ft_font_face_create_for_ft_face(
                             lastFontFace, 0);
                         cairo_set_font_face(canvas, fontFace);

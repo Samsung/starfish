@@ -1150,7 +1150,8 @@ protected:
 
     CSSTokenString parseDefaultPropertyValue(RefPtr<CSSToken> token);
     void parseDeclaration(RefPtr<CSSToken> aToken,
-                          CSSStyleDeclaration* declaration);
+                          CSSStyleDeclaration* declaration,
+                          bool allowSrcProperty = false);
     void addUnknownAtRule();
     void reportError(const char* aMsg);
     bool parseCharsetRule(GCVector<StyleRuleBase*>& rules);

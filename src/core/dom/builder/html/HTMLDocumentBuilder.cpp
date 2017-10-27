@@ -258,6 +258,7 @@ public:
             m_builder.document()->m_referrer =
                 m_resource->resourceRequest()->referrer();
         }
+        m_builder.document()->resourceLoader().updateDocumentOpenTime();
         load();
     }
 

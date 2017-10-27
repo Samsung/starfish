@@ -98,10 +98,10 @@ public:
         m_text = nullptr;
         m_metrics = met;
         m_familyName = convertStyleParamStr(familyName, style, weight);
+        m_familyNameU8 = m_familyName->toUTF8String();
         m_size = size;
         m_weight = weight;
         m_style = style;
-        m_supportsKerning = false;
 
         loadFont(m_size);
 
@@ -145,8 +145,9 @@ public:
             unloadFont();
         }
         m_text = evas_object_text_add(internalCanvas());
-        auto utf8Data = m_familyName->toUTF8NonGCString();
+        auto& utf8Data = m_familyNameU8;
         evas_object_text_font_set(m_text, utf8Data.data(), size);
+        evas_object_data_set(m_text, "font", utf8Data.data());
     }
 
     void unloadFont()
@@ -160,6 +161,9 @@ public:
         return m_metrics;
     }
 
+    String* m_familyName;
+    UTF8String m_familyNameU8;
+    char m_weight, m_style;
     float m_size;
     FontMetrics m_metrics;
     Evas_Object* m_text;
@@ -167,8 +171,9 @@ public:
 
 class FontImplEFL : public Font {
 public:
-    FontImplEFL()
+    FontImplEFL(FontSelector* fs)
     {
+        m_fontSelector = fs;
     }
 
     virtual bool isGenericFont() const
@@ -303,6 +308,13 @@ static FontMetrics loadFontMetrics(String* familyName, double size)
 
 class FontSelectorImplEFL : public FontSelector {
 public:
+    FontSelectorImplEFL(Document* document,
+                        PlatformFontSelector* platformFontData,
+                        PlatformFontCache* platformFontCache)
+        : FontSelector(document, platformFontData, platformFontCache)
+    {
+    }
+
     FontFace* loadFontFaceImpl(String* familyName, float size, char style,
                                char weight)
     {
@@ -366,6 +378,8 @@ public:
         result->m_fontFaceList->push_back(
             loadFontFaceImpl(familyNameArray[0], size, style, weight));
         result->m_size = size;
+        result->m_weight = weight;
+        result->m_style = style;
         result->m_spaceWidth = result->measureText(String::spaceString);
         m_fontCache.insert(std::make_pair(cacheFontName, result));
 
@@ -375,12 +389,15 @@ public:
 
 Font* Font::createEmptyFont(FontSelector* s)
 {
-    return new FontImplEFL();
+    return new FontImplEFL(s);
 }
 
-FontSelector* FontSelector::createFontSelector()
+FontSelector* FontSelector::create(Document* document,
+                                   PlatformFontSelector* platformFontSelector,
+                                   PlatformFontCache* platformFontCache)
 {
-    return new FontSelectorImplEFL();
+    return new FontSelectorImplEFL(document, platformFontSelector,
+                                   platformFontCache);
 }
 }
 #endif

@@ -21,6 +21,8 @@
 
 namespace StarFish {
 
+class ComputedStyle;
+
 class BorderValue {
 public:
     BorderValue()
@@ -79,9 +81,12 @@ public:
         return style() != BorderStyleValue::NoneBorderStyleValue;
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs)
     {
-        m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                      windowSize.width(), windowSize.height(),
+                                      cs);
         m_width.roundBorderWidth();
     }
 

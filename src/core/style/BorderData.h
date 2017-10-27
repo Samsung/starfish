@@ -22,6 +22,8 @@
 
 namespace StarFish {
 
+class ComputedStyle;
+
 class BorderData {
 public:
     BorderData()
@@ -70,13 +72,14 @@ public:
         return m_image;
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs)
     {
-        m_left.checkComputed(curFontSize, rootFontSize, font);
-        m_right.checkComputed(curFontSize, rootFontSize, font);
-        m_top.checkComputed(curFontSize, rootFontSize, font);
-        m_bottom.checkComputed(curFontSize, rootFontSize, font);
-        m_image.checkComputed(curFontSize, rootFontSize, font);
+        m_left.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+        m_right.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+        m_top.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+        m_bottom.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+        m_image.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
     }
 
     bool operator==(const BorderData& o)

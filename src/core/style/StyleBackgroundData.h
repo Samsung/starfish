@@ -23,6 +23,7 @@ namespace StarFish {
 
 class ImageData;
 class ImageResource;
+class ComputedStyle;
 
 class BackgroundLayer : public gc {
 public:
@@ -196,17 +197,22 @@ public:
         return m_origin;
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs)
     {
         if (m_sizeIsLength && m_size.m_lengthValue) {
             if (m_size.m_lengthValue) {
                 m_size.m_lengthValue->checkComputed(curFontSize, rootFontSize,
-                                                    font);
+                                                    font, windowSize, cs);
             }
         }
 
-        m_positionX.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-        m_positionY.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+        m_positionX.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                          windowSize.width(),
+                                          windowSize.height(), cs);
+        m_positionY.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                          windowSize.width(),
+                                          windowSize.height(), cs);
     }
 
 private:
@@ -529,11 +535,13 @@ public:
         }
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs)
     {
         if (m_layers.size()) {
             for (unsigned int i = 0; i < m_layers.size(); i++) {
-                m_layers[i].checkComputed(curFontSize, rootFontSize, font);
+                m_layers[i].checkComputed(curFontSize, rootFontSize, font,
+                                          windowSize, cs);
             }
         }
     }

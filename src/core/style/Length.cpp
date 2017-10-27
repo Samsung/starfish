@@ -27,7 +27,8 @@
 
 namespace StarFish {
 void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
-                                   Font* font)
+                                   Font* font, LayoutUnit viewportWidth,
+                                   LayoutUnit viewportHeight, ComputedStyle* cs)
 {
     if (isFontPercent()) {
         if (m_type == Rem && !rootFontSize.isFixed()) {
@@ -48,6 +49,10 @@ void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
         m_data =
             fontPercentValue(curFontSize.fixed(), rootFontSize.fixed(), font);
         m_type = Fixed;
+    } else if (isViewportPercent()) {
+        m_data = viewportPercentValue(viewportWidth, viewportHeight);
+        m_type = Fixed;
+        cs->m_seenViewPortUnitInStyle = true;
     } else if (isCalc()) {
         GCVector<CalcTerm*>& data = calcData()->terms();
         auto iter = data.begin();
@@ -60,8 +65,9 @@ void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
                 if (v.type().isLength()) {
                     Length l = v.lengthValue().toLength();
                     if (!l.isComputed()) {
-                        l.changeToFixedIfNeeded(curFontSize, rootFontSize,
-                                                font);
+                        l.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                                viewportWidth, viewportHeight,
+                                                cs);
                         v.setValue(CSSLength(CSSLength::PX, l.fixed()));
                     }
                 }
@@ -310,25 +316,36 @@ Length operator/(const float a, const Length& b)
 }
 
 void LengthSize::checkComputed(Length curFontSize, Length rootFontSize,
-                               Font* font)
+                               Font* font, LayoutSize windowSize,
+                               ComputedStyle* cs)
 {
-    m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-    m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                  windowSize.width(), windowSize.height(), cs);
+    m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(), cs);
 }
 
 void LengthPosition::checkComputed(Length curFontSize, Length rootFontSize,
-                                   Font* font)
+                                   Font* font, LayoutSize windowSize,
+                                   ComputedStyle* cs)
 {
-    m_x.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-    m_y.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    m_x.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                              windowSize.width(), windowSize.height(), cs);
+    m_y.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                              windowSize.width(), windowSize.height(), cs);
 }
 
 void LengthBox::checkComputed(Length curFontSize, Length rootFontSize,
-                              Font* font)
+                              Font* font, LayoutSize windowSize,
+                              ComputedStyle* cs)
 {
-    m_left.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-    m_right.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-    m_top.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
-    m_bottom.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+    m_left.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                 windowSize.width(), windowSize.height(), cs);
+    m_right.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                  windowSize.width(), windowSize.height(), cs);
+    m_top.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), cs);
+    m_bottom.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                   windowSize.width(), windowSize.height(), cs);
 }
 }

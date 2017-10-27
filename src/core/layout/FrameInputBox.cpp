@@ -91,8 +91,8 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
 ComputedStyle* FrameInputBox::createInputElementStyleFrom(Node* parent)
 {
     ComputedStyle* childStyle = new ComputedStyle(parent->style());
-    childStyle->loadResources(parent, true);
-    childStyle->arrangeStyleValues(parent->style(), true);
+    childStyle->loadResources(parent);
+    childStyle->arrangeStyleValues(parent->style(), parent);
     childStyle->setDisplay(DisplayValue::InlineDisplayValue);
     return childStyle;
 }
@@ -120,7 +120,7 @@ void FrameInputBox::layout(LayoutContext& ctx,
         }
 
         style()->setFontSize(fontSize);
-        style()->loadFont(node(), fontSize.fixed());
+        style()->loadFont(node());
         // TODO: propagate fontsize
     }
 

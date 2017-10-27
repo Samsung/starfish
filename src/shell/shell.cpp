@@ -519,6 +519,7 @@ int main(int argc, char* argv[])
     // STARFISH_LOG_INFO("%d", (int)sizeof (StarFish::ComputedStyle));
 
     std::string screenShot;
+    std::string userAgentExtraString;
     int width = 1280, height = 720;
     int x = 0, y = 0;
 #ifdef STARFISH_TIZEN_TV
@@ -567,6 +568,8 @@ int main(int argc, char* argv[])
             x = std::atoi(argv[i] + strlen("--posX="));
         } else if (strstr(argv[i], "--posY=") == argv[i]) {
             y = std::atoi(argv[i] + strlen("--posY="));
+        } else if (strstr(argv[i], "--useragent-extra=") == argv[i]) {
+            userAgentExtraString = argv[i] + strlen("--useragent-extra=");
         }
     }
 
@@ -620,7 +623,8 @@ int main(int argc, char* argv[])
     info.availableRect.setHeight(height);
     StarFish::StarFish* sf = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
-        width, height, x, y, 1, info, "", "/tmp/StarFish_Cookies.txt");
+        width, height, x, y, 1, info, "", "/tmp/StarFish_Cookies.txt",
+        String::fromUTF8(userAgentExtraString.data()));
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();

@@ -28,25 +28,42 @@
 
 namespace StarFish {
 
-class FontSelectorImplCairo;
+extern FT_Library g_freeTypeInstance;
+#define CHECK_ERROR                            \
+    if (error) {                               \
+        STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+    }
+
+class FontSelectorImplCairo : public FontSelector {
+public:
+    typedef std::unordered_map<char32_t, std::pair<unsigned, unsigned>>
+        GlyphIndexCachePerFace;
+    std::unordered_map<FT_Face, std::unique_ptr<GlyphIndexCachePerFace>>
+        m_glyphIndexCache;
+
+    FontSelectorImplCairo(Document* document,
+                          PlatformFontSelector* platformFontData,
+                          PlatformFontCache* platformFontCache)
+        : FontSelector(document, platformFontData, platformFontCache)
+    {
+    }
+};
 
 class FontFaceImplCairo : public FontFace {
 public:
-    FontFaceImplCairo(String* familyName, FT_Face face, hb_font_t* hbFace,
-                      char style, char weight)
+    FontFaceImplCairo(FT_Face face, hb_font_t* hbFace,
+                      uint8_t* dataBuffer = nullptr, size_t dataBufferSize = 0)
     {
-        m_familyName = familyName;
+        m_dataBuffer = dataBuffer;
+        m_dataBufferSize = dataBufferSize;
         m_face = face;
         m_hbFace = hbFace;
-        m_weight = weight;
-        m_style = style;
-        m_supportsKerning = m_face->face_flags & FT_FACE_FLAG_KERNING;
 
         FT_Error error;
         FT_UInt glyph_index = FT_Get_Char_Index(m_face, 'x');
         if (glyph_index) {
             error = FT_Load_Glyph(m_face, glyph_index, FT_LOAD_NO_SCALE);
-            m_xHeight = m_face->glyph->metrics.height;
+            m_xHeight = (int)m_face->glyph->metrics.height;
         } else {
             m_xHeight = 0;
         }
@@ -61,6 +78,17 @@ public:
             m_ascender = m_unitsPerEM; // fallback
             m_descender = 0;
         }
+
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                FontFaceImplCairo* m = (FontFaceImplCairo*)obj;
+                hb_font_destroy(m->m_hbFace);
+                FT_Done_Face(m->m_face);
+                GlyphIndexCache().swap(m->m_glyphIndexCache);
+                free(m->m_dataBuffer);
+            },
+            NULL, NULL, NULL);
     }
 
     virtual FontMetrics metrics(float size)
@@ -86,12 +114,61 @@ public:
         return met;
     }
 
+    bool loadGlyph(
+        int intSize, char32_t ch,
+        std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>>& result)
+    {
+        FT_Face face = m_face;
+        hb_font_t* hbFace = m_hbFace;
+
+        auto iter = m_glyphIndexCache.find(ch);
+        if (iter != m_glyphIndexCache.end()) {
+            if (iter->second.first) {
+                LayoutUnit width =
+                    LayoutUnit((int)(iter->second.second * intSize)) /
+                    LayoutUnit((int)(m_unitsPerEM));
+                result = std::make_pair(
+                    this, std::make_pair(iter->second.first, width));
+                return true;
+            }
+        } else {
+            FT_UInt glyphIndex = FT_Get_Char_Index(face, ch);
+            FT_Load_Glyph(face, glyphIndex, FT_LOAD_NO_SCALE);
+
+            m_glyphIndexCache.insert(std::make_pair(
+                ch,
+                std::make_pair(glyphIndex, face->glyph->metrics.horiAdvance)));
+
+            if (glyphIndex) {
+                LayoutUnit width =
+                    LayoutUnit(
+                        (int)(face->glyph->metrics.horiAdvance * intSize)) /
+                    LayoutUnit((int)(m_unitsPerEM));
+                result =
+                    std::make_pair(this, std::make_pair(glyphIndex, width));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    virtual size_t dataSize()
+    {
+        return m_dataBufferSize;
+    }
+
+    uint8_t* m_dataBuffer;
+    size_t m_dataBufferSize;
     FT_Face m_face;
     hb_font_t* m_hbFace;
-    unsigned m_xHeight;
-    unsigned m_unitsPerEM;
-    unsigned m_ascender;
-    unsigned m_descender;
+    int m_xHeight;
+    int m_unitsPerEM;
+    int m_ascender;
+    int m_descender;
+
+    typedef std::unordered_map<char32_t, std::pair<unsigned, unsigned>>
+        GlyphIndexCache;
+    GlyphIndexCache m_glyphIndexCache;
 };
 
 class FontCairoTextRun {
@@ -121,19 +198,173 @@ public:
 
     virtual LayoutUnit measureText(const StringView& str);
 
-    virtual void* unwrap()
-    {
-        return nullptr;
-    }
-
-    FontSelectorImplCairo* m_fontSelector;
+    std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>> loadGlyph(
+        char32_t ch);
 };
 
+class PlatformFontSelectorImplCairo : public PlatformFontSelector {
+public:
+    PlatformFontSelectorImplCairo()
+    {
+        if (!g_freeTypeInstance) {
+            FT_Error error;
+            error = FT_Init_FreeType(&g_freeTypeInstance);
+            CHECK_ERROR;
+        }
+    }
+
+    ~PlatformFontSelectorImplCairo()
+    {
+    }
+
+    virtual UTF8StringDataNonGCStd findFont(
+        const UTF8StringDataNonGCStd& familyName, bool isGenericName,
+        char style, char weight) override
+    {
+        // http://www.w3.org/TR/css3-fonts/#font-matching-algorithm
+        FcPattern* pattern = FcPatternCreate();
+        auto u8FamilyName = familyName;
+
+        if (!FcPatternAddString(pattern, FC_FAMILY,
+                                (const FcChar8*)u8FamilyName.data())) {
+            FcPatternDestroy(pattern);
+            return UTF8StringDataNonGCStd();
+        }
+
+        if (style == FontStyleItalic) {
+            if (!FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ITALIC)) {
+                FcPatternDestroy(pattern);
+                return UTF8StringDataNonGCStd();
+            }
+        } else if (style == FontStyleOblique) {
+            if (!FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_OBLIQUE)) {
+                FcPatternDestroy(pattern);
+                return UTF8StringDataNonGCStd();
+            }
+        } else {
+            if (!FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ROMAN)) {
+                FcPatternDestroy(pattern);
+                return UTF8StringDataNonGCStd();
+            }
+        }
+
+        int fontWeight = FC_WEIGHT_MEDIUM;
+        switch (weight) {
+        case 1:
+            fontWeight = FC_WEIGHT_THIN;
+            break;
+        case 2:
+            fontWeight = FC_WEIGHT_ULTRALIGHT;
+            break;
+        case 3:
+            fontWeight = FC_WEIGHT_LIGHT;
+            break;
+        case 4:
+            fontWeight = FC_WEIGHT_REGULAR;
+            break;
+        case 5:
+            fontWeight = FC_WEIGHT_MEDIUM;
+            break;
+        case 6:
+            fontWeight = FC_WEIGHT_SEMIBOLD;
+            break;
+        case 7:
+            fontWeight = FC_WEIGHT_BOLD;
+            break;
+        case 8:
+            fontWeight = FC_WEIGHT_ULTRABOLD;
+            break;
+        case 9:
+            fontWeight = FC_WEIGHT_ULTRABLACK;
+            break;
+        default:
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+
+        if (!FcPatternAddInteger(pattern, FC_WEIGHT, fontWeight)) {
+            FcPatternDestroy(pattern);
+            return UTF8StringDataNonGCStd();
+        }
+
+        FcPatternAddBool(pattern, FC_SCALABLE, FcTrue);
+
+        // The strategy is originally from Skia
+        // (src/ports/SkFontHost_fontconfig.cpp):
+        // Allow Fontconfig to do pre-match substitution. Unless we are
+        // accessing a "fallback"
+        // family like "sans," this is the only time we allow Fontconfig to
+        // substitute one
+        // family name for another (i.e. if the fonts are aliased to each
+        // other).
+        FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+        FcDefaultSubstitute(pattern);
+
+        FcResult fontConfigResult;
+        FcPattern* resultPattern =
+            FcFontMatch(NULL, pattern, &fontConfigResult);
+        if (!resultPattern) {
+            FcPatternDestroy(pattern);
+            return UTF8StringDataNonGCStd();
+        }
+
+        FcChar8* fontNameAfterMatch;
+        FcPatternGetString(resultPattern, FC_FAMILY, 0, &fontNameAfterMatch);
+        UTF8StringDataNonGCStd after = (char*)fontNameAfterMatch;
+        std::transform(after.begin(), after.end(), after.begin(), ::tolower);
+
+        if (familyName != STARFISH_DEFAULT_FONT_FAMILY) {
+            if (after != familyName) {
+                if (!isGenericName) {
+                    return UTF8StringDataNonGCStd();
+                }
+            }
+        }
+
+        FcChar8* filePath = NULL;
+        if (!FcPatternGetString(resultPattern, FC_FILE, 0, &filePath) ==
+            FcResultMatch) {
+            return UTF8StringDataNonGCStd();
+        }
+        std::string u8FilePath = (char*)filePath;
+
+        FcPatternDestroy(resultPattern);
+        FcPatternDestroy(pattern);
+
+        return u8FilePath;
+    }
+
+    virtual FontFace* loadFontFace(const UTF8StringDataNonGCStd& path) override
+    {
+        auto iter = m_fontPathToFace.find(path);
+        if (iter != m_fontPathToFace.end()) {
+            return iter->second;
+        }
+        FT_Face face;
+        FT_Error error;
+        error = FT_New_Face(g_freeTypeInstance, (char*)path.data(), 0, &face);
+        CHECK_ERROR;
+        FT_Set_Pixel_Sizes(face, 0, 16);
+        auto hbFace = hb_ft_font_create(face, [](void* userData) {});
+
+        auto impl = new FontFaceImplCairo(face, hbFace);
+        m_fontPathToFace.insert(std::make_pair(path, impl));
+        return impl;
+    }
+
+    GCUnorderedMap<UTF8StringDataNonGCStd, FontFaceImplCairo*> m_fontPathToFace;
+};
+
+class PlatformFontCacheImplCairo : public PlatformFontCache {
+public:
+    GCVector<std::tuple<int, FontFaceImplCairo*, char, char>>
+        m_fallbackFontFaceCachePerCodeBlock;
+};
+
+std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>>
+cairoBackendInternalLoadGlyph(Font* f, char32_t ch);
 std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                                                         FontImplCairo* font);
 bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv);
-std::pair<std::pair<FT_Face, hb_font_t*>, std::pair<unsigned, LayoutUnit>>
-cairoBackendInternalLoadGlyph(Font* f, char32_t ch);
 };
 
 #endif

@@ -30,6 +30,7 @@ namespace StarFish {
 
 class ImageData;
 class ImageResource;
+class ComputedStyle;
 
 class BorderImageImpl : public gc {
 public:
@@ -44,9 +45,10 @@ public:
     {
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs)
     {
-        m_slices.checkComputed(curFontSize, rootFontSize, font);
+        m_slices.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
     }
 
     bool operator==(const BorderImageImpl& o)
@@ -144,10 +146,12 @@ public:
         data()->m_imageResource = value;
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs)
     {
         if (m_data) {
-            m_data->checkComputed(curFontSize, rootFontSize, font);
+            m_data->checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                  cs);
         }
     }
 

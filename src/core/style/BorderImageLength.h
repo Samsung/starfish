@@ -20,6 +20,9 @@
 #include "core/style/Length.h"
 
 namespace StarFish {
+
+class ComputedStyle;
+
 class BorderImageLength {
 public:
     enum Type { LengthType, NumberType };
@@ -103,10 +106,13 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs)
     {
         if (m_type == LengthType) {
-            m_length.changeToFixedIfNeeded(curFontSize, rootFontSize, font);
+            m_length.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                           windowSize.width(),
+                                           windowSize.height(), cs);
         }
     }
 
@@ -157,12 +163,13 @@ public:
     {
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font)
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs)
     {
-        m_left.checkComputed(curFontSize, rootFontSize, font);
-        m_right.checkComputed(curFontSize, rootFontSize, font);
-        m_top.checkComputed(curFontSize, rootFontSize, font);
-        m_bottom.checkComputed(curFontSize, rootFontSize, font);
+        m_left.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+        m_right.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+        m_top.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+        m_bottom.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
     }
 
     BorderImageLength& left()

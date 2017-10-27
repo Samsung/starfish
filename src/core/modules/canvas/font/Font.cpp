@@ -17,6 +17,8 @@
 #include "StarFishConfig.h"
 #include "Font.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/WebFont.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
 
@@ -24,8 +26,10 @@ static UTF8StringDataNonGCStd mergeStyleWeightWithString(
     const UTF8StringDataNonGCStd& name, char style, char weight)
 {
     UTF8StringDataNonGCStd result = name;
-    result += " s:" + (style + 'a');
-    result += " w:" + (weight + 'a');
+    result += "@s:";
+    result += (style + 'a');
+    result += "@w:";
+    result += (weight + 'a');
     return result;
 }
 
@@ -54,9 +58,11 @@ static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
         }
     }
 
-    result += " s:" + std::to_string(int(size + 0.5f));
-    result += " s:" + (style + 'a');
-    result += " w:" + (weight + 'a');
+    result += "@s:" + std::to_string(int(size + 0.5f));
+    result += "@s:";
+    result += (style + 'a');
+    result += "@w:";
+    result += (weight + 'a');
     return result;
 }
 
@@ -85,17 +91,18 @@ static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
         }
     }
 
-    result += " s:" + (style + 'a');
-    result += " w:" + (weight + 'a');
+    result += "@s:";
+    result += (style + 'a');
+    result += "@w:";
+    result += (weight + 'a');
     return result;
 }
 
-FontFace* FontSelector::lookupFaceCache(
-    const UTF8StringDataNonGCStd& familyName, char style, char weight,
-    bool& exist)
+FontFace* PlatformFontCache::lookupFaceCache(
+    const UTF8StringDataNonGCStd& mergredFamilyName, bool& exist)
 {
-    auto iter = m_fontFaceCache.find(familyName);
-    if (iter == m_fontFaceCache.end()) {
+    auto iter = m_loadedPlatformFonts.find(mergredFamilyName);
+    if (iter == m_loadedPlatformFonts.end()) {
         exist = false;
         return nullptr;
     } else {
@@ -104,11 +111,12 @@ FontFace* FontSelector::lookupFaceCache(
     }
 }
 
-void FontSelector::insertFaceCache(const UTF8StringDataNonGCStd& familyName,
-                                   char style, char weight, FontFace* face)
+void PlatformFontCache::insertFaceCache(
+    const UTF8StringDataNonGCStd& mergredFamilyName, FontFace* face)
 {
-    STARFISH_ASSERT(m_fontFaceCache.find(familyName) == m_fontFaceCache.end());
-    m_fontFaceCache.insert(std::make_pair(familyName, face));
+    STARFISH_ASSERT(m_loadedPlatformFonts.find(mergredFamilyName) ==
+                    m_loadedPlatformFonts.end());
+    m_loadedPlatformFonts.insert(std::make_pair(mergredFamilyName, face));
 }
 
 static bool isGenericFontName(const UTF8StringDataNonGCStd& familyName)
@@ -131,6 +139,26 @@ static bool isGenericFontName(const UTF8StringDataNonGCStd& familyName)
     return isGenericName;
 }
 
+FontFace* FontSelector::loadFromPlatform(const UTF8StringDataNonGCStd& fm,
+                                         bool isGenericName, char style,
+                                         char weight)
+{
+    if (m_platformFontCache->m_absencePlatformFontNames.find(fm) !=
+        m_platformFontCache->m_absencePlatformFontNames.end()) {
+        // early give up
+        return nullptr;
+    } else {
+        auto fontPath =
+            m_platformFontSelector->findFont(fm, isGenericName, style, weight);
+        if (fontPath.length() == 0) {
+            m_platformFontCache->m_absencePlatformFontNames.insert(fm);
+            return nullptr;
+        } else {
+            return m_platformFontSelector->loadFontFace(fontPath);
+        }
+    }
+}
+
 Font* FontSelector::loadFont(String* familyNameArray[],
                              size_t familyNameArraySize, float size, char style,
                              char weight)
@@ -143,13 +171,15 @@ Font* FontSelector::loadFont(String* familyNameArray[],
     }
 
     Font* result = Font::createEmptyFont(this);
+    result->m_style = style;
+    result->m_weight = weight;
+    result->m_size = size;
 
     auto cacheFontListName =
         mergeFamilyNames(familyNameArray, familyNameArraySize, style, weight);
     auto iter2 = m_fontFaceListCache.find(cacheFontListName);
     if (iter2 != m_fontFaceListCache.end()) {
         result->m_fontFaceList = iter2->second;
-        result->m_size = size;
         result->m_spaceWidth = result->measureText(String::spaceString);
         return result;
     }
@@ -162,16 +192,81 @@ Font* FontSelector::loadFont(String* familyNameArray[],
         UTF8StringDataNonGCStd cacheStr =
             mergeStyleWeightWithString(fm, style, weight);
 
-        bool exist;
-        FontFace* face = lookupFaceCache(cacheStr, style, weight, exist);
-        if (!exist) {
-            bool g = isGenericFontName(fm);
-            face = loadFontFaceImpl(fm, g, style, weight);
-            insertFaceCache(cacheStr, style, weight, face);
+        bool existInPlatformLayerCache = false;
+        bool isGenericName = isGenericFontName(fm);
+
+        FontFace* face = m_platformFontCache->lookupFaceCache(
+            cacheStr, existInPlatformLayerCache);
+
+        if (existInPlatformLayerCache) {
+            if (face) {
+                result->m_fontFaceList->push_back(face);
+                continue;
+            }
+        } else {
+            face = loadFromPlatform(fm, isGenericName, style, weight);
+            if (face) {
+                m_platformFontCache->insertFaceCache(cacheStr, face);
+                result->m_fontFaceList->push_back(face);
+                continue;
+            } else {
+                m_platformFontCache->insertFaceCache(cacheStr, nullptr);
+            }
         }
 
-        if (face) {
-            result->m_fontFaceList->push_back(face);
+        // search webfont Path
+        int fitScore = 0;
+        WebFont* selectedWebFont = nullptr;
+
+        for (size_t k = 0; k < document()->m_webFontList.size(); k++) {
+            auto& webFont = document()->m_webFontList[k];
+            if (webFont.familyName()->equalsIgnoreCase(familyNameArray[i])) {
+                int currentScore = 1;
+
+                if (webFont.isFontStyleSpecified() &&
+                    (char)webFont.fontStyleValue() == style) {
+                    currentScore++;
+                }
+
+                if (currentScore > fitScore) {
+                    selectedWebFont = &webFont;
+                    fitScore = currentScore;
+                }
+            }
+        }
+        if (selectedWebFont) {
+            if (!selectedWebFont->fromLocal()) {
+                // download from web
+                if (selectedWebFont->fontResource()->fontFace()) {
+                    // fontface loaded!
+                    face = selectedWebFont->fontResource()->fontFace();
+                    result->m_fontFaceList->push_back(face);
+                }
+            } else {
+                // local font
+                auto fm = selectedWebFont->localFontName()->toUTF8NonGCString();
+                std::transform(fm.begin(), fm.end(), fm.begin(), ::tolower);
+
+                auto iter = m_webFontLocalSrcCache.find(cacheStr);
+                if (iter == m_webFontLocalSrcCache.end()) {
+                    face = loadFromPlatform(fm, isGenericName, style, weight);
+                    m_webFontLocalSrcCache.insert(
+                        std::make_pair(cacheStr, face));
+                } else {
+                    face = iter->second;
+                }
+
+                if (face) {
+                    result->m_fontFaceList->push_back(face);
+                }
+            }
+
+            if (!face) {
+                if (result->m_seenUnresolvedWebFontIndex == SIZE_MAX) {
+                    result->m_seenUnresolvedWebFontIndex =
+                        result->m_fontFaceList->size();
+                }
+            }
         }
     }
 
@@ -179,19 +274,23 @@ Font* FontSelector::loadFont(String* familyNameArray[],
         g_initialFontFamilyDatas[1].m_familyName->toUTF8NonGCString();
     UTF8StringDataNonGCStd cacheStr =
         mergeStyleWeightWithString(familyName, style, weight);
-    bool exist;
-    FontFace* face = lookupFaceCache(cacheStr, style, weight, exist);
 
-    if (!exist) {
+    bool existInPlatformLayerCache = false;
+    FontFace* face = m_platformFontCache->lookupFaceCache(
+        cacheStr, existInPlatformLayerCache);
+
+    if (!existInPlatformLayerCache) {
         bool g = isGenericFontName(familyName);
-        face = loadFontFaceImpl(familyName, g, style, weight);
-        insertFaceCache(cacheStr, style, weight, face);
+        auto fontPath =
+            m_platformFontSelector->findFont(familyName, g, style, weight);
+        STARFISH_RELEASE_ASSERT(fontPath.length());
+        face = m_platformFontSelector->loadFontFace(fontPath);
+        m_platformFontCache->insertFaceCache(cacheStr, face);
     }
 
-    STARFISH_RELEASE_ASSERT(face);
+    STARFISH_RELEASE_ASSERT(face != nullptr);
 
     result->m_fontFaceList->push_back(face);
-    result->m_size = size;
     result->m_spaceWidth = result->measureText(String::spaceString);
 
     m_fontFaceListCache.insert(

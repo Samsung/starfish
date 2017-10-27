@@ -89,6 +89,14 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_characterSet(charSet)
     , m_contentType(String::createASCIIString("application/xml"))
     , m_resourceLoader(new ResourceLoader(this))
+    , m_fontSelector(
+          FontSelector::create(this, window->starFish()->platformFontSelector(),
+                               window->starFish()->platformFontCache()))
+#if defined(PORT_CANVAS_BACKEND_EFL)
+    , m_fontSelectorGeneric(FontSelector::createGenericFontSelector(
+          this, window->starFish()->platformFontSelector(),
+          window->starFish()->platformFontCache()))
+#endif
     , m_styleResolver(new StyleResolver(this))
     , m_documentBuilder(nullptr)
     , m_styleSheetList(nullptr)
@@ -151,7 +159,9 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     CSSStyleSheet* userAgentStyleSheet =
         new CSSStyleSheet(this, String::createASCIIString(ua));
     userAgentStyleSheet->parseSheetIfneeds();
+    std::vector<CSSStyleDeclaration*> webFonts;
     userAgentStyleSheet->collectStyleRules(userAgentStyleSheet->childRules(),
+                                           webFonts,
                                            userAgentStyleSheet->url());
     userAgentStyleSheet->sortStyleRulesBySpecificity();
 

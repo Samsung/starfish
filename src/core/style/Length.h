@@ -27,6 +27,7 @@ class CalcData;
 class Node;
 class Frame;
 class Element;
+class ComputedStyle;
 
 class Length {
 public:
@@ -67,7 +68,8 @@ public:
     }
 
     void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
-                               Font* font);
+                               Font* font, LayoutUnit viewportWidth,
+                               LayoutUnit viewportHeight, ComputedStyle* cs);
 
     void roundBorderWidth()
     {
@@ -183,6 +185,9 @@ public:
 
     float fixed() const
     {
+        if (!isFixed()) {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
         STARFISH_ASSERT(isFixed());
         return m_data.m_numberData;
     }
@@ -317,7 +322,8 @@ public:
         return !operator==(o);
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font);
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs);
 
     Length m_width;
     Length m_height;
@@ -360,7 +366,8 @@ public:
         return !operator==(o);
     }
 
-    void checkComputed(Length curFontSize, Length rootFontSize, Font* font);
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs);
 
     Length m_x;
     Length m_y;
@@ -410,7 +417,8 @@ public:
         return !operator==(o);
     }
 
-    void checkComputed(Length fontSize, Length rootFontSize, Font* font);
+    void checkComputed(Length fontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs);
 
     const Length& left() const
     {

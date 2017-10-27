@@ -21,6 +21,7 @@
 #include "platform/loader/Resource.h"
 #include "platform/loader/TextResource.h"
 #include "platform/loader/ImageResource.h"
+#include "platform/loader/FontResource.h"
 #include "core/modules/profiling/Profiling.h"
 
 namespace StarFish {
@@ -42,13 +43,11 @@ class ResourceLoader : public gc, public DocumentHoldable {
 public:
     ResourceLoader(Document* doc);
 
-    // TODO these fetch methods are just copying `pointer of url`
-    // but, url is mutable not likes string
-    // we should copy url inside of method
     Resource* fetch(ResourceURL* url);
     TextResource* fetchText(ResourceURL* url,
                             String* preferredEncoding = String::emptyString);
     ImageResource* fetchImage(ResourceURL* url);
+    FontResource* fetchFont(ResourceURL* url);
 
     void markDocumentOpenState()
     {
@@ -83,6 +82,11 @@ public:
         return m_documentOpenTime;
     }
 
+    void updateDocumentOpenTime()
+    {
+        m_documentOpenTime = timestamp();
+    }
+
     void increasePendingResourceCountWhileDocumentOpening();
     void decreasePendingResourceCountWhileDocumentOpening();
 
@@ -98,7 +102,8 @@ private:
     uint64_t m_documentOpenTime;
     size_t m_pendingResourceCountWhileDocumentOpening;
     GCVector<Resource*> m_currentLoadingResources;
-    GCUnorderedMap<ASCIIString, ResourceCacheData> m_imageResourceCache;
+    GCUnorderedMap<UTF8String, ResourceCacheData> m_fontResourceCache;
+    GCUnorderedMap<UTF8String, ResourceCacheData> m_imageResourceCache;
     GCVector<Resource*> m_imageResourceCacheLRUList;
     size_t m_resourceCacheSize;
     uint64_t m_lastCachePruneTime;

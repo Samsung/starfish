@@ -83,6 +83,7 @@ public:
     String* BackgroundPosition();
     String* Font();
     String* FontFamily();
+    String* Src();
     String* Transition();
     String* TransitionTransitionProperty();
     String* TransitionTransitionDuration();
@@ -98,6 +99,8 @@ public:
                          CSSStyleValuePair ret);
 
     void removeCSSValuePair(CSSStyleValuePair::KeyKind name);
+    bool hasCSSValuePair(CSSStyleValuePair::KeyKind name);
+    CSSStyleValuePair getCSSValuePair(CSSStyleValuePair::KeyKind name);
 
     void setBorder(const char* value, size_t len, bool isImportant);
     void setBorderTop(const char* value, size_t len, bool isImportant);
@@ -115,6 +118,7 @@ public:
     void setBorderColor(const char* value, size_t len, bool isImportant);
     void setFont(const char* value, size_t len, bool isImportant);
     void setFontFamily(const char* value, size_t len, bool isImportant);
+    void setSrc(const char* value, size_t len, bool isImportant);
     void setTransition(const char* value, size_t len, bool isImportant);
     void setTransitionTransitionProperty(const char* value, size_t len,
                                          bool isImportant);
