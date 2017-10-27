@@ -22,7 +22,7 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented, CEReactions] attribute DOMString inputMode;
     [Unimplemented] readonly attribute HTMLElement? list;
     [Unimplemented, CEReactions] attribute DOMString max;
-    [Unimplemented, CEReactions] attribute long maxLength;
+    [CEReactions] attribute long maxlength;
     [Unimplemented, CEReactions] attribute DOMString min;
     [Unimplemented, CEReactions] attribute long minLength;
     [Unimplemented, CEReactions] attribute boolean multiple;
