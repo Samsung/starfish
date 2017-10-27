@@ -1272,6 +1272,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
     ComputedStyle* style = this->style();
     if (style == nullptr) {
         style = new ComputedStyle();
+        return d;
     }
 
 // general properties
