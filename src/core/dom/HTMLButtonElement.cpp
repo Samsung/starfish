@@ -31,6 +31,19 @@ HTMLButtonElement::HTMLButtonElement(Document* document)
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
 
+void* HTMLButtonElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLButtonElement)] = { 0 };
+        HTMLFormObject::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLButtonElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 String* HTMLButtonElement::localName()
 {
     return starFish()->staticStrings()->m_buttonTagName.localName();

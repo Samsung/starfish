@@ -66,6 +66,7 @@ HTMLFormElement::HTMLFormElement(Document* document)
 
 HTMLFormObject::HTMLFormObject(Document* document, bool supportTabIndex)
     : HTMLElement(document)
+    , m_value(String::emptyString)
     , m_disabled(false)
     , m_supportTabIndex(supportTabIndex)
 {
@@ -126,12 +127,13 @@ void HTMLFormObject::setType(String* type)
 
 String* HTMLFormObject::value()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+    return m_value;
 }
 
 void HTMLFormObject::setValue(String* value)
 {
-    setAttribute(starFish()->staticStrings()->m_value, value);
+    m_value = value;
+    setNeedsFrameTreeBuild();
 }
 
 int32_t HTMLFormObject::maxlength()
@@ -320,7 +322,7 @@ void* HTMLFormElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLFormElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormElement, m_elements));
-        HTMLElement::fillGCDescriptor(desc);
+        HTMLFormObject::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLFormElement));
         typeInited = true;
     }

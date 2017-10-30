@@ -25,6 +25,9 @@ class HTMLButtonElement : public HTMLFormObject {
 public:
     HTMLButtonElement(Document* document);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLButtonElement() const override;

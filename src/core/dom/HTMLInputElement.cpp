@@ -53,7 +53,7 @@ void* HTMLInputElement::operator new(size_t size)
         GC_word desc[GC_BITMAP_SIZE(HTMLInputElement)] = { 0 };
         GC_set_bit(desc,
                    GC_WORD_OFFSET(HTMLInputElement, m_currentEditingText));
-        HTMLElement::fillGCDescriptor(desc);
+        HTMLFormObject::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLInputElement));
         typeInited = true;
     }
@@ -224,7 +224,8 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
             updateInputboxValue(textToDisplay);
         }
 
-        if (isEditableType() && name == starFish()->staticStrings()->m_value) {
+        if (name == starFish()->staticStrings()->m_value) {
+            setValue(val);
             // TODO: fire correct inputevent
             // TODO: we should fire this event in handleDefaultEvent
             InputEvent* event =

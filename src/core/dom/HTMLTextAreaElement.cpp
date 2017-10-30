@@ -20,6 +20,19 @@
 
 namespace StarFish {
 
+void* HTMLTextAreaElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLTextAreaElement)] = { 0 };
+        HTMLFormObject::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLTextAreaElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 QualifiedName HTMLTextAreaElement::name()
 {
     return starFish()->staticStrings()->m_textareaTagName;

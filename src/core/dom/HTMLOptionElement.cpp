@@ -55,7 +55,7 @@ void* HTMLOptionElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLOptionElement)] = { 0 };
-        HTMLElement::fillGCDescriptor(desc);
+        HTMLFormObject::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLOptionElement));
         typeInited = true;
     }

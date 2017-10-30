@@ -98,8 +98,15 @@ protected:
     HTMLFormObject(Document* document, bool supportTabIndex = true);
     void fireSubmitEvent();
 
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormObject, m_value));
+        HTMLElement::fillGCDescriptor(desc);
+    }
+
 private:
     Node* findAncestor(Node* ancestorToFind, Node* fromThisNode);
+    String* m_value;
     bool m_disabled;
     bool m_supportTabIndex;
     int32_t m_maxlength;
