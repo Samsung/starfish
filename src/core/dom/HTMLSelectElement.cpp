@@ -39,7 +39,7 @@ void* HTMLSelectElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLSelectElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLSelectElement, m_selectedOptions));
-        HTMLElement::fillGCDescriptor(desc);
+        HTMLFormObject::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLSelectElement));
         typeInited = true;
     }

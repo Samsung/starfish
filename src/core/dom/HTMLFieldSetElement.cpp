@@ -20,6 +20,19 @@
 
 namespace StarFish {
 
+void* HTMLFieldSetElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLFieldSetElement)] = { 0 };
+        HTMLFormObject::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLFieldSetElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 QualifiedName HTMLFieldSetElement::name()
 {
     return starFish()->staticStrings()->m_fieldsetTagName;
