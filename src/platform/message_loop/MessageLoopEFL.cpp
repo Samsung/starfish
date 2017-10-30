@@ -317,7 +317,7 @@ void MessageLoop::clearOrInvokePendingIdlers(BrowsingContext* ctx)
     auto iter2 = m_idlersFromOtherThread.begin();
     while (iter2 != m_idlersFromOtherThread.end()) {
         IdlerData* id = (IdlerData*)*iter2;
-        if (id->m_ctx == ctx || ctx == nullptr) {
+        if ((id->m_ctx == ctx || ctx == nullptr) && id->m_shouldExecute) {
             if (!id->m_clearable) {
                 invokeFnNow(id);
             }
