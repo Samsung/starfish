@@ -19,10 +19,6 @@
 
 namespace StarFish {
 
-struct JSONDocumentHolder {
-    void* m_ptr;
-};
-
 class FileIO;
 class SecurityOriginData;
 
@@ -48,7 +44,7 @@ private:
     void jsonDocumentRead();
     void jsonDocumentWrite();
     String* m_localStoragePath;
-    JSONDocumentHolder m_jsonHolder;
+    void* m_jsonHolder;
 };
 }
 
