@@ -388,7 +388,7 @@ void NetworkSharedResourceManager::pruningIfNeed()
             if ((current - iter->second.lastUsedTime) >
                 (CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S * 1000)) {
                 curl_easy_cleanup(iter->second.curl);
-                m_curlHandleDataCache.erase(iter++);
+                iter = m_curlHandleDataCache.erase(iter);
             } else {
                 iter++;
             }

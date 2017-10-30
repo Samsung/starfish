@@ -31,6 +31,12 @@ namespace StarFish {
 MessageLoop::MessageLoop(StarFish* sf)
     : StarFishHoldable(sf)
     , m_idlersFromOtherThreadMutex(new Mutex())
+#ifdef STARFISH_MESSAGELOOP_DEBUG
+    , m_countingMutex(new Mutex())
+    , m_runningThreadCount(0)
+    , m_unjoinedThreadCount(0)
+    , m_runningPoolWorkerCount(0)
+#endif
 {
 }
 

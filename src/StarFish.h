@@ -272,7 +272,6 @@ protected:
     AtomicStringMap m_atomicStringMap;
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
     GCVector<Thread*> m_activeThreadList;
-    Mutex* m_activeThreadListMutex;
 #ifdef STARFISH_ENABLE_TTS
     TTS* m_tts;
 #endif

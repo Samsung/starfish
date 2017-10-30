@@ -454,7 +454,10 @@ void StarFish::addActiveThread(Thread* thread)
 void StarFish::joinAllActiveThread()
 {
     STARFISH_ASSERT(isMainThread());
-    for (auto th : m_activeThreadList) {
+    // NOTE: Iterate copied list.
+    //       joinIfNeeds() may modify m_activeThreadList.
+    GCVector<Thread*> copies = m_activeThreadList;
+    for (auto th : copies) {
         th->joinIfNeeds();
     }
 }

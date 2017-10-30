@@ -71,18 +71,23 @@ void ThreadPool::addWork(BrowsingContext* ctx, ThreadWorker fn, void* data)
                     rooter->pool->m_messageLoop
                         ->addIdlerWithNoGCRootingInOtherThread(
                             nullptr,
-                            [](size_t handle, void* data) { GC_FREE(data); },
-                            r);
+                            [](size_t handle, void* data) { GC_FREE(data); }, r,
+                            false);
                 }
+#ifdef STARFISH_MESSAGELOOP_DEBUG
+                rooter->pool->m_messageLoop->decreaseRunningPoolWorkerCount();
+#endif
                 // STARFISH_LOG_INFO("threadPool worker end\n");
                 rooter->pool->m_messageLoop
                     ->addIdlerWithNoGCRootingInOtherThread(
                         nullptr,
                         [](size_t handle, void* data) { GC_FREE(data); },
-                        rooter);
+                        rooter, false);
                 return NULL;
             };
-
+#ifdef STARFISH_MESSAGELOOP_DEBUG
+            m_messageLoop->increaseRunningPoolWorkerCount();
+#endif
             m_threads[i]->run(m_messageLoop, worker, rooter);
             break;
         }
@@ -96,7 +101,7 @@ void ThreadPool::clearWork(BrowsingContext* ctx)
     auto iter = m_workerQueue.begin();
     while (iter != m_workerQueue.end()) {
         if (((DataRooter*)iter->second)->ctx == ctx || ctx == nullptr) {
-            m_workerQueue.erase(iter++);
+            iter = m_workerQueue.erase(iter);
         } else {
             iter++;
         }

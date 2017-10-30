@@ -22,11 +22,29 @@ namespace StarFish {
 
 class MessageLoop;
 class Mutex;
+class Thread;
 
 typedef void* (*ThreadWorker)(void*);
 
 void registerMainThread();
 bool isMainThread();
+
+struct ThreadData {
+    ThreadData(Thread* t, MessageLoop* m, ThreadWorker w, void* d)
+        : m_thread(t)
+        , m_messageLoop(m)
+        , m_fn(w)
+        , m_data(d)
+        , m_joinHandle(SIZE_MAX)
+    {
+    }
+    Thread* m_thread;
+    MessageLoop* m_messageLoop;
+    ThreadWorker m_fn;
+    void* m_data;
+    pthread_t m_tid;
+    size_t m_joinHandle;
+};
 
 class Thread : public gc, public StarFishHoldable {
 public:
@@ -41,12 +59,12 @@ public:
     {
         return m_alive;
     }
+    void finishUnjoined();
 
 protected:
     volatile bool m_alive;
-    volatile bool m_isJoined;
-    pthread_t m_tid;
     Mutex* m_mutex;
+    ThreadData* m_currentUnjoined;
 };
 }
 

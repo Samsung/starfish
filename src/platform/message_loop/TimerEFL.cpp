@@ -217,7 +217,7 @@ void Timer::clear(BrowsingContext* ctx)
             ctx == nullptr) {
             ecore_timer_del(td->m_timerID);
             GC_FREE(td);
-            m_timeoutHandler.erase(timerIter++);
+            timerIter = m_timeoutHandler.erase(timerIter);
         } else {
             timerIter++;
         }
@@ -230,7 +230,7 @@ void Timer::clear(BrowsingContext* ctx)
             ctx == nullptr) {
             ecore_animator_del((Ecore_Animator*)td->m_timerID);
             GC_FREE(td);
-            m_requestAnimationFrameHandler.erase(aniIter++);
+            aniIter = m_requestAnimationFrameHandler.erase(aniIter);
         } else {
             aniIter++;
         }
@@ -243,7 +243,7 @@ void Timer::clear(BrowsingContext* ctx)
             ctx == nullptr) {
             ecore_animator_del((Ecore_Animator*)ad->m_timerID);
             GC_FREE(ad);
-            m_animationHandler.erase(aniIter2++);
+            aniIter2 = m_animationHandler.erase(aniIter2);
         } else {
             aniIter2++;
         }
