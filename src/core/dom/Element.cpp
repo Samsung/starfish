@@ -1367,17 +1367,23 @@ CSSStyleDeclaration* Element::getComputedStyle()
     }
 
 // length properties
-#define ADD_ABSOLUTE_LENGTH_PAIR(keyKind, getter)                   \
-    {                                                               \
-        CSSStyleValuePair p;                                        \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);          \
-        if (frame() && frame()->isFrameBox()) {                     \
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);   \
-            p.setValue(CSSLength(frame()->asFrameBox()->getter())); \
-        } else {                                                    \
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);     \
-        }                                                           \
-        d->addValuePair(p);                                         \
+#define ADD_ABSOLUTE_LENGTH_PAIR(keyKind, getter)                         \
+    {                                                                     \
+        CSSStyleValuePair p;                                              \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);                \
+        if (frame() && frame()->isFrameBox()) {                           \
+            p.setValueKind(CSSStyleValuePair::ValueKind::Length);         \
+            p.setValue(CSSLength(frame()->asFrameBox()->getter()));       \
+        } else if (frame() && frame()->isFrameInline()) {                 \
+            p.setValueKind(CSSStyleValuePair::ValueKind::Length);         \
+            p.setValue(CSSLength(                                         \
+                blockContainer(frame())                                   \
+                    ->firstInlineNonReplacedBox(frame()->asFrameInline()) \
+                    ->getter()));                                         \
+        } else {                                                          \
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);           \
+        }                                                                 \
+        d->addValuePair(p);                                               \
     }
     ADD_ABSOLUTE_LENGTH_PAIR(MarginTop, marginTop)
     ADD_ABSOLUTE_LENGTH_PAIR(MarginRight, marginRight)
