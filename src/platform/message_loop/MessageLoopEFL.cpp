@@ -157,6 +157,7 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     BrowsingContext* ctx, void (*fn)(size_t, void*), void* data, bool clearable)
 {
+    STARFISH_ASSERT(!isMainThread());
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
     id->m_shouldExecute = true;
@@ -199,6 +200,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     BrowsingContext* ctx, void (*fn)(size_t, void*, void*), void* data,
     void* data1, bool clearable)
 {
+    STARFISH_ASSERT(!isMainThread());
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
     id->m_shouldExecute = true;
