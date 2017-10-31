@@ -312,7 +312,7 @@ int32_t Window::height()
 void Window::resize(uint32_t w, uint32_t h)
 {
     if (document()->styleResolver().mediaQueryAffectedByViewportChange()) {
-        browsingContext()->setWholeDocumentNeedsStyleRecalc();
+        browsingContext()->setNeedsStyleSheetsRecalc();
     } else {
         if (document()->frame()) {
             document()->frame()->asFrameBox()->iterateChildFrameBox([](

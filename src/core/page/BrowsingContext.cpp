@@ -96,6 +96,7 @@ void BrowsingContext::initFlags()
 {
     m_needsStyleRecalc = false;
     m_needsStyleRecalcForWholeDocument = false;
+    m_needsStyleSheetsRecalc = false;
     m_needsFrameTreeBuild = false;
     m_needsLayout = false;
 
@@ -172,40 +173,57 @@ ScriptBindingInstance* BrowsingContext::scriptBindingInstance()
 
 class WebFontLoadChecker : public ResourceClient {
 public:
-    WebFontLoadChecker(Resource* res)
+    WebFontLoadChecker(Resource* res, String* wf)
         : ResourceClient(res)
+        , m_familyName(wf)
     {
     }
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
+        // STARFISH_LOG_INFO("WebFont load failed %s\n",
+        // m_familyName->toUTF8NonGCString().data());
+        resource()
+            ->loader()
+            ->document()
+            ->browsingContext()
+            ->setWholeDocumentNeedsStyleRecalc();
+        resource()->loader()->document()->fontSelector()->clearCache(
+            m_familyName);
+        resource()->loader()->document()->setNeedsPainting();
     }
 
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
+        // STARFISH_LOG_INFO("WebFont loaded %s\n",
+        // m_familyName->toUTF8NonGCString().data());
         resource()
             ->loader()
             ->document()
             ->browsingContext()
             ->setWholeDocumentNeedsStyleRecalc();
         resource()->loader()->document()->setNeedsLayout();
-        resource()->loader()->document()->fontSelector()->clearCache();
+        resource()->loader()->document()->fontSelector()->clearCache(
+            m_familyName);
     }
 
     virtual void didLoadCanceled()
     {
         ResourceClient::didLoadCanceled();
     }
+
+    String* m_familyName;
 };
 
 bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
-        if (m_needsStyleRecalcForWholeDocument) {
+        if (m_needsStyleSheetsRecalc) {
 #ifdef STARFISH_ENABLE_TIMER
             ProfilerTimer t("parse sheet & collect rules");
 #endif
+            m_needsStyleSheetsRecalc = false;
             CSSStyleSheet* uaSheet = document()->styleResolver().sheets()[0];
             document()->styleResolver().removeAllRules();
 
@@ -282,7 +300,7 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
                 bool isFontStyleSpecified = decl->hasCSSValuePair(
                     CSSStyleValuePair::KeyKind::FontStyle);
                 FontStyleValue style = FontStyleValue::NormalFontStyleValue;
-                FontWeightValue weight = FontWeightValue::NormalFontWeightValue;
+                char weight = FontWeightValue::NormalFontWeightValue;
                 if (isFontWeightSpecified) {
                     auto w = decl->getCSSValuePair(
                         CSSStyleValuePair::KeyKind::FontWeight);
@@ -292,6 +310,40 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
                     } else {
                         weight = w.fontWeightValue();
                     }
+                }
+
+                switch (weight) {
+                case OneHundredFontWeightValue:
+                    weight = 1;
+                    break;
+                case TwoHundredsFontWeightValue:
+                    weight = 2;
+                    break;
+                case ThreeHundredsFontWeightValue:
+                    weight = 3;
+                    break;
+                case FourHundredsFontWeightValue:
+                case NormalFontWeightValue:
+                    weight = 4;
+                    break;
+                case FiveHundredsFontWeightValue:
+                    weight = 5;
+                    break;
+                case SixHundredsFontWeightValue:
+                    weight = 6;
+                    break;
+                case SevenHundredsFontWeightValue:
+                case BoldFontWeightValue:
+                    weight = 7;
+                    break;
+                case EightHundredsFontWeightValue:
+                    weight = 8;
+                    break;
+                case NineHundredsFontWeightValue:
+                    weight = 9;
+                    break;
+                default:
+                    break;
                 }
 
                 if (isFontStyleSpecified) {
@@ -330,8 +382,8 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
                                          loadFromB == FontFaceSrcData::Local) {
                                   return true;
                               } else {
-                                  auto formatA = std::get<1>(sa);
-                                  auto formatB = std::get<1>(sb);
+                                  auto formatA = std::get<2>(sa);
+                                  auto formatB = std::get<2>(sb);
                                   return formatA > formatB;
                               }
                           });
@@ -345,7 +397,8 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
                             document()->documentURI()->urlString()));
                     res->request(Resource::SyncIfAlreadyLoaded,
                                  document()->documentURI());
-                    res->addResourceClient(new WebFontLoadChecker(res));
+                    res->addResourceClient(
+                        new WebFontLoadChecker(res, fontFamily));
                     WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
                                     fontFamily, style, weight, res);
                     document()->m_webFontList.push_back(webFont);
@@ -552,6 +605,15 @@ void BrowsingContext::dispose()
 void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
 {
     m_needsStyleRecalcForWholeDocument = true;
+    setNeedsRendering();
+    registerNeedsLayoutInWebView();
+}
+
+void BrowsingContext::setNeedsStyleSheetsRecalc()
+{
+    m_needsStyleSheetsRecalc = true;
+    m_needsStyleRecalcForWholeDocument = true;
+
     setNeedsRendering();
     registerNeedsLayoutInWebView();
 }

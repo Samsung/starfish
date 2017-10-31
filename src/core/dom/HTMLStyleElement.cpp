@@ -158,7 +158,7 @@ void HTMLStyleElement::generateStyleSheet()
     const MediaQueryEvaluator& evaluator =
         document()->styleResolver().mediaQueryEvaluator();
     if (evaluator.eval(mediaQuerySet)) {
-        window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
+        window()->browsingContext()->setNeedsStyleSheetsRecalc();
     }
 }
 
@@ -166,7 +166,7 @@ void HTMLStyleElement::removeStyleSheet()
 {
     if (m_generatedSheet) {
         document()->styleResolver().removeSheet(m_generatedSheet);
-        window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
+        window()->browsingContext()->setNeedsStyleSheetsRecalc();
         m_generatedSheet = nullptr;
     }
 }

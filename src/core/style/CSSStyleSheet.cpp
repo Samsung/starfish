@@ -447,7 +447,7 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setWholeDocumentNeedsStyleRecalc();
+        ->setNeedsStyleSheetsRecalc();
 
     return index;
 }
@@ -506,7 +506,7 @@ void CSSStyleSheet::deleteRule(unsigned index)
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setWholeDocumentNeedsStyleRecalc();
+        ->setNeedsStyleSheetsRecalc();
 }
 
 unsigned CSSStyleSheet::length() const

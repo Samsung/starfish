@@ -165,7 +165,7 @@ void ComputedStyle::loadFont(Node* consumer)
     float fixedFontSize = this->fixedFontSize();
 
     char style = m_inheritedStyles.m_fontStyle;
-    char fontWeight = 4;
+    char fontWeight;
 
     switch (m_inheritedStyles.m_fontWeight) {
     case OneHundredFontWeightValue:

@@ -26,7 +26,7 @@ class WebFont : public gc {
 public:
     WebFont(bool isFontStyleSpecified, bool isFontWeightSpecified,
             String* familyName, FontStyleValue fontStyleValue,
-            FontWeightValue fontWeightValue, FontResource* fontResource)
+            char fontWeightValue, FontResource* fontResource)
     {
         m_fromLocal = false;
         m_isFontStyleSpecified = isFontStyleSpecified;
@@ -39,7 +39,7 @@ public:
 
     WebFont(bool isFontStyleSpecified, bool isFontWeightSpecified,
             String* familyName, FontStyleValue fontStyleValue,
-            FontWeightValue fontWeightValue, String* localFontName)
+            char fontWeightValue, String* localFontName)
     {
         m_fromLocal = true;
         m_isFontStyleSpecified = isFontStyleSpecified;
@@ -75,7 +75,7 @@ public:
         return m_fontStyleValue;
     }
 
-    FontWeightValue fontWeightValue()
+    char fontWeightValue()
     {
         return m_fontWeightValue;
     }
@@ -97,7 +97,7 @@ private:
     bool m_isFontStyleSpecified;
     bool m_isFontWeightSpecified;
     FontStyleValue m_fontStyleValue;
-    FontWeightValue m_fontWeightValue;
+    char m_fontWeightValue;
 
     String* m_familyName;
     union {

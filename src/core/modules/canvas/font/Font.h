@@ -67,6 +67,17 @@ protected:
 };
 
 class FontFaceList : public GCVector<FontFace*>, public gc {
+    friend class Font;
+    friend class FontSelector;
+
+public:
+    FontFaceList()
+    {
+        m_seenUnresolvedWebFontIndex = SIZE_MAX;
+    }
+
+protected:
+    size_t m_seenUnresolvedWebFontIndex;
 };
 
 class Font : public gc {
@@ -82,7 +93,6 @@ protected:
         m_size = 0;
         m_spaceWidth = 0;
         m_fontFaceList = nullptr;
-        m_seenUnresolvedWebFontIndex = SIZE_MAX;
     }
 
 public:
@@ -122,6 +132,11 @@ public:
     char style()
     {
         return m_style;
+    }
+
+    size_t seenUnresolvedWebFontIndex()
+    {
+        return m_fontFaceList->m_seenUnresolvedWebFontIndex;
     }
 
     FontMetrics metrics()
@@ -251,12 +266,7 @@ public:
         return m_platformFontCache;
     }
 
-    void clearCache()
-    {
-        m_fontFaceListCache.clear();
-        m_fontCache.clear();
-        m_webFontLocalSrcCache.clear();
-    }
+    void clearCache(String* relatedFamilyName);
 
     static FontSelector* create(Document* document,
                                 PlatformFontSelector* platformFontSelector,

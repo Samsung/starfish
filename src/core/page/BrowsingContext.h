@@ -95,6 +95,7 @@ public:
     }
 
     void setWholeDocumentNeedsStyleRecalc();
+    void setNeedsStyleSheetsRecalc();
 
     void setNeedsFrameTreeBuild()
     {
@@ -225,6 +226,7 @@ private:
 
     bool m_needsStyleRecalc;
     bool m_needsStyleRecalcForWholeDocument;
+    bool m_needsStyleSheetsRecalc;
     bool m_needsFrameTreeBuild;
     bool m_needsLayout;
 

@@ -183,6 +183,11 @@ public:
         return m_isIncludedInComputingWindowOnLoadEvent;
     }
 
+    bool isFaildToFetchResource()
+    {
+        return m_state == State::Failed;
+    }
+
 protected:
     State state()
     {

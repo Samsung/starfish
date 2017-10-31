@@ -214,9 +214,7 @@ public:
             m_ownerRule->m_generatedSheet = sheet;
             m_ownerRule->m_generatedSheet->parseSheetIfneeds();
             m_ownerRule->m_loading = false;
-            doc->window()
-                ->browsingContext()
-                ->setWholeDocumentNeedsStyleRecalc();
+            doc->window()->browsingContext()->setNeedsStyleSheetsRecalc();
         }
 
         m_ownerRule->m_styleSheetTextResource = nullptr;
@@ -241,7 +239,7 @@ void StyleRuleImport::unloadStyleSheetIfExists()
     if (m_generatedSheet) {
         Document* doc = document();
         doc->styleResolver().removeSheet(m_generatedSheet);
-        doc->window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
+        doc->window()->browsingContext()->setNeedsStyleSheetsRecalc();
         m_generatedSheet = nullptr;
     }
 }
