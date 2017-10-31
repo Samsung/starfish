@@ -33,11 +33,7 @@ public:
     {
         FrameReplaced::computeStyleFlags();
         m_flags.m_isEstablishesStackingContext = true;
-#ifndef STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER
-#define STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER true
-#endif
-        m_flags.m_needsGraphicsBuffer =
-            STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER;
+        m_flags.m_needsGraphicsBuffer = true;
     }
 
     virtual bool isFrameReplacedVideo()
@@ -50,22 +46,11 @@ public:
         return "FrameReplacedVideo";
     }
 
-    virtual void paintReplaced(Canvas* canvas);
-
     virtual IntrinsicSize intrinsicSize();
-
-    virtual void willCompsiteStackingContext(Canvas* c)
-    {
-    }
-
     virtual void didCompsiteStackingContext(Canvas* c);
-
-    virtual void compsitingStackingContext(Canvas* c)
-    {
-        if (!m_flags.m_needsGraphicsBuffer) {
-            didCompsiteStackingContext(c);
-        }
-    }
+    virtual void createGraphicsBuffer(CanvasSurface** surfaceHolder,
+                                      size_t visibleWidth,
+                                      size_t visibleHeight);
 
     void* operator new(size_t size)
     {

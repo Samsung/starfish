@@ -1793,7 +1793,7 @@ bool FrameBox::tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
                                    LayoutRect& result)
 {
     if (sCtx && (this != sCtx->owner() && stackingContext() &&
-                 stackingContext()->needsOwnBuffer())) {
+                 stackingContext()->needsGraphicsBuffer())) {
         return false;
     }
 
@@ -1825,7 +1825,7 @@ void FrameBox::computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
 void FrameBox::clearStackingContextIfNeeds(bool shouldDetachNativeBuffer)
 {
     if (stackingContext()) {
-        stackingContext()->clearOwnBuffer(shouldDetachNativeBuffer);
+        stackingContext()->clearGraphicsBuffer(shouldDetachNativeBuffer);
         frameBoxRareData()->m_stackingContext = nullptr;
     }
 }
@@ -1954,5 +1954,19 @@ LayoutUnit FrameBox::outlineThickness()
     LayoutUnit outlineOffset =
         style()->outlineOffset().specifiedValue(cbContentWidth, this);
     return outlineWidth + outlineOffset;
+}
+
+void FrameBox::createGraphicsBuffer(CanvasSurface** surfaceHolder,
+                                    size_t visibleWidth, size_t visibleHeight)
+{
+    if (!*surfaceHolder || (((*surfaceHolder)->width() != visibleWidth) &&
+                            ((*surfaceHolder)->height() != visibleHeight))) {
+        if (*surfaceHolder) {
+            (*surfaceHolder)->detachNativeBuffer();
+        }
+        (*surfaceHolder) = CanvasSurface::create(
+            node()->window()->starFish()->platformWindow(), visibleWidth,
+            visibleHeight);
+    }
 }
 }

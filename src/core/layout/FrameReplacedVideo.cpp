@@ -15,6 +15,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "StarFish.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLVideoElement.h"
 #include "core/layout/FrameReplacedVideo.h"
@@ -50,17 +51,19 @@ void FrameReplacedVideo::didCompsiteStackingContext(Canvas* c)
     }
 }
 
-void FrameReplacedVideo::paintReplaced(Canvas* canvas)
+void FrameReplacedVideo::createGraphicsBuffer(CanvasSurface** surfaceHolder,
+                                              size_t visibleWidth,
+                                              size_t visibleHeight)
 {
-    FrameReplaced::paintReplaced(canvas);
-    StackingContext* sc = stackingContext()->parent();
-    while (sc->parent()) {
-        sc = sc->parent();
-    }
-
-    bool needsComposite = sc->needsOwnBuffer();
-    if (!needsComposite && !m_flags.m_needsGraphicsBuffer) {
-        didCompsiteStackingContext(canvas);
+    if (!(*surfaceHolder)) {
+        auto v = node()->asHTMLVideoElement();
+        if (v->activeMediaPlayer()) {
+            *surfaceHolder = v->activeMediaPlayer()->createGraphicsBuffer(
+                visibleWidth, visibleHeight);
+        } else {
+            *surfaceHolder = CanvasSurface::create(
+                node()->starFish()->platformWindow(), 1, 1);
+        }
     }
 }
 }

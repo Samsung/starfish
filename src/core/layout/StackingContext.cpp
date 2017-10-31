@@ -33,7 +33,7 @@
 namespace StarFish {
 
 StackingContextRareData::StackingContextRareData()
-    : m_needsOwnBuffer(false)
+    : m_needsGraphicsBuffer(false)
     , m_visibleRect(0, 0, 0, 0)
     , m_buffer(nullptr)
 {
@@ -136,7 +136,7 @@ VisibleRectContext::~VisibleRectContext()
     m_loc->setY(m_loc->y() - m_box->y());
 }
 
-void StackingContext::clearOwnBuffer(bool needsDetachNative)
+void StackingContext::clearGraphicsBuffer(bool needsDetachNative)
 {
     if (m_rareData && m_rareData->m_buffer) {
         if (needsDetachNative) {
@@ -234,7 +234,7 @@ public:
 
                 if (shareWithStackingBuffer && f &&
                     f->asFrameBox()->stackingContext() &&
-                    f->asFrameBox()->stackingContext()->needsOwnBuffer()) {
+                    f->asFrameBox()->stackingContext()->needsGraphicsBuffer()) {
                     nearstBufferedFrame = f;
                     shareWithStackingBuffer = false;
                 }
@@ -269,7 +269,7 @@ public:
             if (sc == nullptr) {
                 break;
             }
-            if (sc->needsOwnBuffer()) {
+            if (sc->needsGraphicsBuffer()) {
                 if (sc->buffer()->pixelRatio() != 1) {
                     canvas->scale(1.0 / sc->buffer()->pixelRatio(),
                                   1.0 / sc->buffer()->pixelRatio());
@@ -383,14 +383,14 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     }
     if (forceNeedsBuffer || childNeedsBuffer ||
         m_owner->needsGraphicsBuffer()) {
-        ensureRareData()->m_needsOwnBuffer = true;
+        ensureRareData()->m_needsGraphicsBuffer = true;
     } else {
         if (m_rareData) {
-            m_rareData->m_needsOwnBuffer = false;
+            m_rareData->m_needsGraphicsBuffer = false;
         }
     }
 
-    if (needsOwnBuffer()) {
+    if (needsGraphicsBuffer()) {
         LayoutLocation l(-m_owner->frameRect().location().x(),
                          -m_owner->frameRect().location().y());
 
@@ -398,7 +398,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
         m_owner->computeVisibleRect(this, l, m_rareData->m_visibleRect);
     }
 
-    return needsOwnBuffer();
+    return needsGraphicsBuffer();
 }
 
 void StackingContext::paintStackingContext(Canvas* canvas)
@@ -418,19 +418,11 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     size_t bufferWidth = (int)(maxX - minX);
     size_t bufferHeight = (int)(maxY - minY);
 
-    bool hasStackingBuffer = needsOwnBuffer();
+    bool hasStackingBuffer = needsGraphicsBuffer();
 
     if (hasStackingBuffer) {
-        if (!m_rareData->m_buffer ||
-            ((m_rareData->m_buffer->width() != bufferWidth) &&
-             (m_rareData->m_buffer->height() != bufferHeight))) {
-            if (m_rareData->m_buffer) {
-                m_rareData->m_buffer->detachNativeBuffer();
-            }
-            m_rareData->m_buffer = CanvasSurface::create(
-                m_owner->node()->window()->starFish()->platformWindow(),
-                bufferWidth, bufferHeight);
-        }
+        m_owner->createGraphicsBuffer(&m_rareData->m_buffer, bufferWidth,
+                                      bufferHeight);
 
         oldCanvas = canvas;
         if (m_rareData->m_buffer->pixelRatio() != 1) {
@@ -654,7 +646,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     ComputedStyle* ownerStyle = m_owner->style();
     canvas->save();
 
-    if (needsOwnBuffer()) {
+    if (needsGraphicsBuffer()) {
         LayoutUnit minX = visibleRect.x();
         LayoutUnit maxX = visibleRect.maxX();
         LayoutUnit minY = visibleRect.y();
@@ -799,7 +791,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         }
     }
 
-    if (needsOwnBuffer()) {
+    if (needsGraphicsBuffer()) {
         if (ownerStyle->opacity() != 1) {
             canvas->endOpacityLayer();
         }

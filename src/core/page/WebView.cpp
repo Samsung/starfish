@@ -543,7 +543,7 @@ bool WebView::rendering(bool force)
 
         canvas->save();
         if (mainBrowsingContext()->document()->frame()->firstChild()) {
-            m_needsComposite = m_rootStackingContext->needsOwnBuffer();
+            m_needsComposite = m_rootStackingContext->needsGraphicsBuffer();
         } else {
             m_needsComposite = false;
         }
@@ -675,7 +675,7 @@ bool WebView::rendering(bool force)
         ProfilerTimer t("composite");
 #endif
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
-            m_rootStackingContext->needsOwnBuffer()) {
+            m_rootStackingContext->needsGraphicsBuffer()) {
             Canvas* canvas =
                 starFish()->platformWindow()->preparePainting(false);
             FrameBlockBox* mainFrame =
@@ -765,7 +765,7 @@ void WebView::clearStackingContext(bool backupBuffer)
         std::function<void(StackingContext*)> clearSC =
             [&](StackingContext* ctx) {
                 if (backupBuffer) {
-                    if (ctx->needsOwnBuffer() && ctx->buffer()) {
+                    if (ctx->needsGraphicsBuffer() && ctx->buffer()) {
                         m_backStackingContextBufferUpWhileReCompsite.push_back(
                             ctx->buffer());
                     }
