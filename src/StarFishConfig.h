@@ -391,6 +391,13 @@ template <typename Key, typename Value, typename Hasher = std::hash<Key>,
 using GCUnorderedMap =
     std::unordered_map<Key, Value, Hasher, Predicate, Allocator>;
 
+template <typename Key, typename Value, typename Hasher = std::hash<Key>,
+          typename Predicate = std::equal_to<Key>,
+          typename Allocator =
+              gc_allocator_ignore_off_page<std::pair<Key, Value>>>
+using GCUnorderedMultiMap =
+    std::unordered_multimap<Key, Value, Hasher, Predicate, Allocator>;
+
 // typedef of GC-aware map
 template <typename Key, typename Value, typename Comparator,
           typename Allocator =

@@ -17,6 +17,9 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Document.h"
+#if defined(STARFISH_ENABLE_HTTPCACHE)
+#include "platform/network/HTTPCache.h"
+#endif
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "platform/network/http/HTTPRequest.h"
 #include "platform/network/http/HTTPResponse.h"
@@ -92,7 +95,12 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
                         .data())
                     ->trim();
         }
-
+#ifdef STARFISH_ENABLE_HTTPCACHE
+        if (requestData->request->starFish()->httpCache() &&
+            !requestData->cacheHit) {
+            requestData->request->starFish()->httpCache()->caching(requestData);
+        }
+#endif
         requestData->request->handleResponseEOF();
     } else if (requestData->httpTransaction->res() ==
                CURLE_OPERATION_TIMEDOUT) {
@@ -180,6 +188,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
     data->request = m_orgProxy;
     data->isAborted = false;
     data->isRedirected = false;
+    data->cacheHit = false;
     data->lastLocation = "";
     m_orgProxy->m_activeNetworkURLWorkerData = data;
 
@@ -187,6 +196,12 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
     switch (m_orgProxy->m_method) {
     case ResourceRequest::GET_METHOD: {
         method = "GET";
+#ifdef STARFISH_ENABLE_HTTPCACHE
+        if (m_orgProxy->starFish()->httpCache()) {
+            data->cacheHit = m_orgProxy->starFish()->httpCache()->cacheHit(
+                m_orgProxy->m_url);
+        }
+#endif
         break;
     }
     case ResourceRequest::POST_METHOD: {
@@ -204,9 +219,9 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
     data->httpTransaction = HTTPTransaction::create();
 
     HTTPHeaderMap headers;
-    fillHeadersWithGeneralHeaders(headers);
-    fillHeadersWithClientHeaders(headers);
     fillHeadersWithResourceRequestHeader(headers);
+    fillHeadersWithClientHeaders(headers);
+    fillHeadersWithGeneralHeaders(headers);
 
     auto urlUTF8Data = m_orgProxy->m_url->urlString()->toUTF8NonGCString();
     auto hostUTF8Data = m_orgProxy->m_url->host()->toUTF8NonGCString();
@@ -258,6 +273,30 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithGeneralHeaders(
     //  * Cache-Control, Connection, Date, Pragma, Trailer, Transfer-Encoding,
     //  * Upgrade, Via, Warning ...
     headers.setHeader(HTTPHeaderMap::kConnection, "keep-alive");
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    if (m_orgProxy->starFish()->httpCache()) {
+        // TODO : set cache-control directives
+    } else {
+        // httpCache is disabled
+        auto it = headers.findHeader(HTTPHeaderMap::kPragma);
+        if (it == headers.headerMap().end()) {
+            headers.setHeader(HTTPHeaderMap::kPragma, "no-cache");
+        }
+        auto it2 = headers.findHeader(HTTPHeaderMap::kCacheControl);
+        if (it2 == headers.headerMap().end()) {
+            headers.setHeader(HTTPHeaderMap::kCacheControl, "no-cache");
+        }
+    }
+#else
+    auto it = headers.findHeader(HTTPHeaderMap::kPragma);
+    if (it == headers.headerMap().end()) {
+        headers.setHeader(HTTPHeaderMap::kPragma, "no-cache");
+    }
+    auto it2 = headers.findHeader(HTTPHeaderMap::kCacheControl);
+    if (it2 == headers.headerMap().end()) {
+        headers.setHeader(HTTPHeaderMap::kCacheControl, "no-cache");
+    }
+#endif
 }
 
 void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
@@ -273,8 +312,6 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     tmpStr = m_orgProxy->starFish()->locale().getName();
     std::replace(tmpStr.begin(), tmpStr.end(), '_', '-');
     headers.setHeader(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
-    headers.setHeader(HTTPHeaderMap::kPragma, "no-cache");
-    headers.setHeader(HTTPHeaderMap::kCacheControl, "no-cache");
     headers.setHeader(
         HTTPHeaderMap::kUserAgent,
         m_orgProxy->starFish()->userAgent()->toUTF8NonGCString().data());
@@ -318,7 +355,6 @@ int NetworkURLResourceRequestJobDelegate::curlProgressCallback(
     NetworkURLWorkerData* workerData = (NetworkURLWorkerData*)clientp;
     ResourceRequest* request = workerData->request;
     Locker<Mutex> locker(*request->m_mutex);
-    // check abort
     if (workerData->isAborted) {
         return 1;
     }

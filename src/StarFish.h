@@ -33,6 +33,9 @@ class ThreadPool;
 class Console;
 class Inspector;
 class Mutex;
+#if defined(STARFISH_ENABLE_HTTPCACHE)
+class HTTPCache;
+#endif
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 class Avplay;
 #endif
@@ -66,9 +69,10 @@ public:
     StarFish(StarFishStartUpFlag flag, const char* locale,
              const char* timezoneID, void* platformHandle, int w, int h, int x,
              int y, float defaultFontSizeMultiplier, ScreenInfo& info,
-             const char* localStorageFilePath,
-             const char* m_cookieStoreFilePath,
+             const char* localStorageFilePath, const char* cookieStoreFilePath,
+             const char* httpCacheDirectorypath,
              String* extraUserAgentString = String::emptyString);
+
     ~StarFish();
     void run();
 
@@ -160,6 +164,13 @@ public:
         return m_localStorageFilePath;
     }
 
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    HTTPCache* httpCache()
+    {
+        return m_httpCache;
+    }
+
+#endif
     String* extraUserAgentString()
     {
         return m_extraUserAgentString;
@@ -246,8 +257,8 @@ protected:
     size_t m_enterCount;
     ScreenInfo m_screenInfo;
     String* m_localStorageFilePath;
-    String* m_cookieStoreFilePath;
     String* m_extraUserAgentString;
+
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     int m_width;
     int m_height;
@@ -263,12 +274,16 @@ protected:
     AtomicStringMap m_atomicStringMap;
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
     GCVector<Thread*> m_activeThreadList;
+    Mutex* m_activeThreadListMutex;
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    HTTPCache* m_httpCache;
+#endif
 #ifdef STARFISH_ENABLE_TTS
     TTS* m_tts;
 #endif
 
 private:
-    void initCookieSession();
+    void initNetworkSharedResourceManager(const char* cookieStoreFilePath);
 };
 
 class StarFishEnterer {

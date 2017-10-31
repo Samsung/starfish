@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
+#if defined(STARFISH_ENABLE_HTTPCACHE)
 #ifndef __StarFishHTTPCacheEntry_
 #define __StarFishHTTPCacheEntry_
 
@@ -22,37 +22,45 @@ class ResourceURL;
 
 class HTTPCacheEntry : public gc {
 public:
-    HTTPCacheEntry();
+    HTTPCacheEntry(ResourceURL* url, time_t date, time_t maxAge);
+    HTTPCacheEntry(ResourceURL* url, time_t date, time_t maxAge,
+                   String* entryFileName);
     ~HTTPCacheEntry();
 
-    size_t getHashKey() const;
+    ResourceURL* url()
+    {
+        return m_url;
+    }
+    String* entryFileName()
+    {
+        return m_entryFileName;
+    }
+
+    void setEntryFileNameUsingCachePath(String* cachePath);
+    bool writeRawDataToEntryFile(std::vector<char>& rawData);
+
+    size_t entryKey() const;
+    time_t maxAge() const
+    {
+        return m_maxAge;
+    }
+
+    String* toString();
 
     bool operator==(const HTTPCacheEntry& other) const
     {
-        return this->m_url == other.m_url;
+        return this->entryKey() == other.entryKey() &&
+               *this->m_url == *other.m_url;
     }
 
 private:
     ResourceURL* m_url;
-    size_t m_hashKey;
+    time_t m_date;
+    time_t m_maxAge;
+    String* m_entryFileName;
 };
 
-struct HTTPCacheEntryHash {
-    size_t operator()(const HTTPCacheEntry* data) const
-    {
-        return data->getHashKey();
-    }
-};
-
-struct HTTPCacheEntryEqual {
-    bool operator()(const HTTPCacheEntry* data1,
-                    const HTTPCacheEntry* data2) const
-    {
-        return data1 == data2 ? true : *data1 == *data2;
-    }
-};
-
-typedef GCUnorderedSet<HTTPCacheEntry*, HTTPCacheEntryHash, HTTPCacheEntryEqual>
-    HTTPCacheEntrySet;
+typedef GCUnorderedMultiMap<size_t, HTTPCacheEntry*> HTTPCacheEntryMultiMap;
 }
+#endif
 #endif
