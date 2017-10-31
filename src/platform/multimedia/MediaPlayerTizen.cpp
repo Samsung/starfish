@@ -1162,8 +1162,9 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
             stream->setWaitingDemuxer(true);
             break;
         }
-        if (packet.first->m_dts > lastDTS &&
+        if (packet.first->m_dts < lastDTS ||
             packet.first->m_dts - lastDTS > 500) {
+            sb->clearPacketAccessCache();
             DEBUG_STREAMBUFFER_LOG(
                 "fillBuffer runs into under run state[2] - requested(%lld) but "
                 "returned(%lld)\n",
@@ -1317,8 +1318,8 @@ void MediaPlayerTizen::updateVideoStreamInfo(MediaStream* stream,
         sb->streamInfo(newInitIndex, activeStreamIndex(StreamTypeVideo));
     m_videoWidth = newInfo->videoWidth();
     m_videoHeight = newInfo->videoHeight();
-    // media_format_set_video_width(mediaFormat, m_videoWidth);
-    // media_format_set_video_height(mediaFormat, m_videoHeight);
+    media_format_set_video_width(mediaFormat, m_videoWidth);
+    media_format_set_video_height(mediaFormat, m_videoHeight);
     stream->setMaxBufferSize((m_videoWidth * m_videoHeight * 30 * 2 * 7) / 100 /
                              8 * 5);
     bool hasFramerateChanged = false;
