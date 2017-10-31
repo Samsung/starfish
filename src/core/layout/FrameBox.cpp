@@ -359,21 +359,29 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas)
         auto br = style()->borderRadius();
 
         float topLeftHorizontal =
-            br.m_topLeftHorizontal.specifiedValue(width(), this);
+            std::min(br.m_topLeftHorizontal.specifiedValue(width(), this),
+                     width().toFloat() / 2);
         float topLeftVertical =
-            br.m_topLeftVertical.specifiedValue(height(), this);
+            std::min(br.m_topLeftVertical.specifiedValue(height(), this),
+                     height().toFloat() / 2);
         float topRightHorizontal =
-            br.m_topRightHorizontal.specifiedValue(width(), this);
+            std::min(br.m_topRightHorizontal.specifiedValue(width(), this),
+                     width().toFloat() / 2);
         float topRightVertical =
-            br.m_topRightVertical.specifiedValue(height(), this);
+            std::min(br.m_topRightVertical.specifiedValue(height(), this),
+                     height().toFloat() / 2);
         float bottomLeftHorizontal =
-            br.m_bottomLeftHorizontal.specifiedValue(width(), this);
+            std::min(br.m_bottomLeftHorizontal.specifiedValue(width(), this),
+                     width().toFloat() / 2);
         float bottomLeftVertical =
-            br.m_bottomLeftVertical.specifiedValue(height(), this);
+            std::min(br.m_bottomLeftVertical.specifiedValue(height(), this),
+                     height().toFloat() / 2);
         float bottomRightHorizontal =
-            br.m_bottomRightHorizontal.specifiedValue(width(), this);
+            std::min(br.m_bottomRightHorizontal.specifiedValue(width(), this),
+                     width().toFloat() / 2);
         float bottomRightVertical =
-            br.m_bottomRightVertical.specifiedValue(height(), this);
+            std::min(br.m_bottomRightVertical.specifiedValue(height(), this),
+                     height().toFloat() / 2);
         float arcR;
 
         // border-left
