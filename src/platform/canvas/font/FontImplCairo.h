@@ -24,6 +24,8 @@
 #include <hb-ft.h>
 #include <hb-icu.h>
 
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
 #include "core/modules/canvas/font/Font.h"
 
 namespace StarFish {
@@ -174,6 +176,7 @@ public:
 class FontCairoTextRun {
 public:
     StringView m_text;
+    size_t m_faceIndex;
     FT_Face m_ftFace;
     hb_font_t* m_hbFont;
     hb_script_t m_script;
@@ -198,8 +201,9 @@ public:
 
     virtual LayoutUnit measureText(const StringView& str);
 
-    std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>> loadGlyph(
-        char32_t ch);
+    std::pair<std::pair<FontFaceImplCairo*, size_t>,
+              std::pair<unsigned, LayoutUnit>>
+    loadGlyph(char32_t ch);
 };
 
 class PlatformFontSelectorImplCairo : public PlatformFontSelector {
@@ -360,7 +364,8 @@ public:
         m_fallbackFontFaceCachePerCodeBlock;
 };
 
-std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>>
+std::pair<std::pair<FontFaceImplCairo*, size_t>,
+          std::pair<unsigned, LayoutUnit>>
 cairoBackendInternalLoadGlyph(Font* f, char32_t ch);
 std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                                                         FontImplCairo* font);

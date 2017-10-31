@@ -187,9 +187,7 @@ public:
         const MediaQueryEvaluator& evaluator =
             m_element->document()->styleResolver().mediaQueryEvaluator();
         if (evaluator.eval(mediaQuerySet)) {
-            m_element->window()
-                ->browsingContext()
-                ->setWholeDocumentNeedsStyleRecalc();
+            m_element->window()->browsingContext()->setNeedsStyleSheetsRecalc();
         }
 
         m_element->m_styleSheetTextResource = nullptr;
@@ -230,7 +228,7 @@ void HTMLLinkElement::unloadStyleSheetIfExists()
     }
     if (m_generatedSheet) {
         document()->styleResolver().removeSheet(m_generatedSheet);
-        window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
+        window()->browsingContext()->setNeedsStyleSheetsRecalc();
         m_generatedSheet = nullptr;
     }
 }

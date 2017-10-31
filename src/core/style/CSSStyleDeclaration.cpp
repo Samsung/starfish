@@ -359,7 +359,7 @@ void StyleRuleCSSStyleDeclaration::setCssText(String* text)
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setWholeDocumentNeedsStyleRecalc();
+        ->setNeedsStyleSheetsRecalc();
 }
 
 void InlineCSSStyleDeclaration::setCssText(String* text)

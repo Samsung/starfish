@@ -105,7 +105,7 @@ void CSSStyleRule::setSelectorText(String* selectorText)
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setWholeDocumentNeedsStyleRecalc();
+        ->setNeedsStyleSheetsRecalc();
 }
 
 String* CSSStyleRule::generateSelectorText() const
@@ -182,7 +182,7 @@ unsigned CSSGroupingRule::insertRule(String* ruleString, unsigned index)
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setWholeDocumentNeedsStyleRecalc();
+        ->setNeedsStyleSheetsRecalc();
     return index;
 }
 
@@ -211,7 +211,7 @@ void CSSGroupingRule::deleteRule(unsigned index)
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setWholeDocumentNeedsStyleRecalc();
+        ->setNeedsStyleSheetsRecalc();
 }
 
 unsigned CSSGroupingRule::length() const

@@ -228,6 +228,11 @@ Font* FontSelector::loadFont(String* familyNameArray[],
                     currentScore++;
                 }
 
+                if (webFont.isFontWeightSpecified() &&
+                    webFont.fontWeightValue() == weight) {
+                    currentScore++;
+                }
+
                 if (currentScore > fitScore) {
                     selectedWebFont = &webFont;
                     fitScore = currentScore;
@@ -241,6 +246,13 @@ Font* FontSelector::loadFont(String* familyNameArray[],
                     // fontface loaded!
                     face = selectedWebFont->fontResource()->fontFace();
                     result->m_fontFaceList->push_back(face);
+                } else if (!selectedWebFont->fontResource()
+                                ->isFaildToFetchResource()) {
+                    if (result->m_fontFaceList->m_seenUnresolvedWebFontIndex ==
+                        SIZE_MAX) {
+                        result->m_fontFaceList->m_seenUnresolvedWebFontIndex =
+                            result->m_fontFaceList->size();
+                    }
                 }
             } else {
                 // local font
@@ -258,13 +270,6 @@ Font* FontSelector::loadFont(String* familyNameArray[],
 
                 if (face) {
                     result->m_fontFaceList->push_back(face);
-                }
-            }
-
-            if (!face) {
-                if (result->m_seenUnresolvedWebFontIndex == SIZE_MAX) {
-                    result->m_seenUnresolvedWebFontIndex =
-                        result->m_fontFaceList->size();
                 }
             }
         }
@@ -298,5 +303,27 @@ Font* FontSelector::loadFont(String* familyNameArray[],
     m_fontCache.insert(std::make_pair(cacheFontName, result));
 
     return result;
+}
+
+template <typename T>
+void cacheDeleter(T& cache, const UTF8StringDataNonGCStd& str)
+{
+    auto iter = cache.begin();
+    while (iter != cache.end()) {
+        if (iter->first.find(str) != std::string::npos) {
+            iter = cache.erase(iter);
+        } else {
+            iter++;
+        }
+    }
+}
+
+void FontSelector::clearCache(String* relatedFamilyName)
+{
+    auto fm = relatedFamilyName->toUTF8NonGCString();
+    std::transform(fm.begin(), fm.end(), fm.begin(), ::tolower);
+    cacheDeleter(m_fontFaceListCache, fm);
+    cacheDeleter(m_fontCache, fm);
+    cacheDeleter(m_webFontLocalSrcCache, fm);
 }
 };

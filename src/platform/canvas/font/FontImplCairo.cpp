@@ -58,10 +58,16 @@ FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
     return new FontFaceImplCairo(face, hbFace, newBuf, dataLen);
 }
 
-std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>>
+std::pair<std::pair<FontFaceImplCairo*, size_t>,
+          std::pair<unsigned, LayoutUnit>>
 FontImplCairo::loadGlyph(char32_t ch)
 {
-    std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>> result =
+    std::pair<std::pair<FontFaceImplCairo*, size_t>,
+              std::pair<unsigned, LayoutUnit>>
+        result = std::make_pair(std::make_pair(nullptr, SIZE_MAX),
+                                std::make_pair(0, 0));
+
+    std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>> glyphResult =
         std::make_pair(nullptr, std::make_pair(0, 0));
 
     int intSize = int(size() + .5f);
@@ -70,8 +76,8 @@ FontImplCairo::loadGlyph(char32_t ch)
     for (size_t i = 0; i < faceList.size(); i++) {
         FontFaceImplCairo* impl = ((FontFaceImplCairo*)faceList[i]);
 
-        if (impl->loadGlyph(intSize, ch, result)) {
-            return result;
+        if (impl->loadGlyph(intSize, ch, glyphResult)) {
+            return std::make_pair(std::make_pair(impl, i), glyphResult.second);
         }
     }
 
@@ -89,8 +95,9 @@ FontImplCairo::loadGlyph(char32_t ch)
             std::get<3>(a) == fontWeight) {
             hasCacheItem = true;
             auto face = std::get<1>(fallbackFontFaceCachePerCodeBlock[i]);
-            if (face->loadGlyph(intSize, ch, result)) {
-                return result;
+            if (face->loadGlyph(intSize, ch, glyphResult)) {
+                return std::make_pair(std::make_pair(face, SIZE_MAX),
+                                      glyphResult.second);
             }
             break;
         }
@@ -184,8 +191,8 @@ FontImplCairo::loadGlyph(char32_t ch)
             std::make_tuple(blockCode, face, fontStyle, fontWeight));
     }
 
-    face->loadGlyph(intSize, ch, result);
-    return result;
+    face->loadGlyph(intSize, ch, glyphResult);
+    return std::make_pair(std::make_pair(face, SIZE_MAX), glyphResult.second);
 }
 
 std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
@@ -197,26 +204,39 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
     UErrorCode errorCode = U_ZERO_ERROR;
     for (size_t i = 0; i < length;) {
         size_t pos = 0;
+        size_t faceIndex = SIZE_MAX;
         FT_Face lastFace = nullptr;
         hb_font_t* hbFace = nullptr;
         UScriptCode lastUnicodeScript;
+        bool failedToFindFont = false;
         while (i + pos < length) {
             size_t idx = i + pos;
             char32_t ch = accessData.charAt(idx);
+
+            UScriptCode unicodeScript =
+                uscript_getScript(accessData.charAt(idx), &errorCode);
             if (!U_SUCCESS(errorCode)) {
                 return result;
             }
-            std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>>
+
+            std::pair<std::pair<FontFaceImplCairo*, size_t>,
+                      std::pair<unsigned, LayoutUnit>>
                 glyphData = font->loadGlyph(ch);
-            UScriptCode unicodeScript =
-                uscript_getScript(accessData.charAt(idx), &errorCode);
+
+            if (pos == 0 && glyphData.first.first == nullptr) {
+                failedToFindFont = true;
+                break;
+            }
+
+            faceIndex = glyphData.first.second;
 
             if (pos == 0) {
-                lastFace = glyphData.first->m_face;
-                hbFace = glyphData.first->m_hbFace;
+                lastFace = glyphData.first.first->m_face;
+                hbFace = glyphData.first.first->m_hbFace;
                 lastUnicodeScript = unicodeScript;
             } else {
-                if (lastFace != glyphData.first->m_face ||
+                if (glyphData.first.first ||
+                    lastFace != glyphData.first.first->m_face ||
                     lastUnicodeScript != unicodeScript ||
                     ((unicodeScript != USCRIPT_INHERITED) &&
                      (!uscript_hasScript(ch, lastUnicodeScript)))) {
@@ -225,11 +245,18 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
             }
             pos++;
         }
+
+        if (failedToFindFont) {
+            i++;
+            continue;
+        }
+
         size_t startPos = i, endPos = i + pos;
 
         i = i + pos;
         FontCairoTextRun run;
         run.m_script = hb_icu_script_to_script(lastUnicodeScript);
+        run.m_faceIndex = faceIndex;
         run.m_ftFace = lastFace;
         run.m_hbFont = hbFace;
         run.m_text = StringView((String*)text, startPos, endPos);
@@ -344,7 +371,8 @@ LayoutUnit FontImplCairo::measureText(const StringView& str)
     return result;
 }
 
-std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>>
+std::pair<std::pair<FontFaceImplCairo*, size_t>,
+          std::pair<unsigned, LayoutUnit>>
 cairoBackendInternalLoadGlyph(Font* f, char32_t ch)
 {
     FontImplCairo* cairoF = (FontImplCairo*)f;
