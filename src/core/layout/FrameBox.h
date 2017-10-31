@@ -22,6 +22,7 @@
 namespace StarFish {
 
 class Canvas;
+class CanvasSurface;
 class LineBox;
 class HTMLElement;
 
@@ -736,6 +737,10 @@ public:
         }
         return m_layoutParent;
     }
+
+    virtual void createGraphicsBuffer(CanvasSurface** surfaceHolder,
+                                      size_t visibleWidth,
+                                      size_t visibleHeight);
 
 protected:
     LayoutUnit minMaxWidthAppliedIfNeeds(LayoutContext& ctx, LayoutUnit width,

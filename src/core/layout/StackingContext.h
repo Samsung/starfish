@@ -40,7 +40,7 @@ private:
 };
 
 struct StackingContextRareData : public gc {
-    bool m_needsOwnBuffer;
+    bool m_needsGraphicsBuffer;
     LayoutRect m_visibleRect;
     CanvasSurface* m_buffer;
     SkMatrix m_matrix;
@@ -70,12 +70,12 @@ public:
         return m_parent;
     }
 
-    bool needsOwnBuffer()
+    bool needsGraphicsBuffer()
     {
-        return m_rareData ? m_rareData->m_needsOwnBuffer : false;
+        return m_rareData ? m_rareData->m_needsGraphicsBuffer : false;
     }
 
-    void clearOwnBuffer(bool needsDetachNative = true);
+    void clearGraphicsBuffer(bool needsDetachNative = true);
 
     CanvasSurface* buffer()
     {

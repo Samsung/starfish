@@ -17,9 +17,13 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
 #include "StarFishConfig.h"
+#include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLMediaElement.h"
 #include "platform/multimedia/MediaPlayer.h"
+#include "platform/window/PlatformWindow.h"
+#include "core/modules/canvas/Canvas.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 
@@ -54,6 +58,11 @@ void MediaPlayer::appendToOperationQueueInContainer(
 Window* MediaPlayer::window()
 {
     return m_container->window();
+}
+CanvasSurface* MediaPlayer::createGraphicsBuffer(size_t visibleWidth,
+                                                 size_t visibleHeight)
+{
+    return CanvasSurface::create(window()->starFish()->platformWindow(), 1, 1);
 }
 }
 #endif /* STARFISH_ENABLE_MULTIMEDIA */
