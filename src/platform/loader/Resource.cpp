@@ -74,6 +74,14 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
                         String::createASCIIString(HTTPHeaderMap::kOrigin),
                         referrerURL->origin());
 
+                    String* nocache = String::createASCIIString("no-cache");
+                    m_resourceRequest->setRequestHeader(
+                        String::createASCIIString(HTTPHeaderMap::kPragma),
+                        nocache);
+                    m_resourceRequest->setRequestHeader(
+                        String::createASCIIString(HTTPHeaderMap::kCacheControl),
+                        nocache);
+
                     if (formSubmitData->m_method ==
                         ResourceRequest::GET_METHOD) {
                         urlToOpen = m_resourceRequest->mutateActionURL(

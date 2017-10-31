@@ -624,7 +624,7 @@ int main(int argc, char* argv[])
     StarFish::StarFish* sf = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
         width, height, x, y, 1, info, "", "/tmp/StarFish_Cookies.txt",
-        String::fromUTF8(userAgentExtraString.data()));
+        "/tmp/.cache", String::fromUTF8(userAgentExtraString.data()));
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();

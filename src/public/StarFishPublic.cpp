@@ -615,7 +615,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     instance->m_starfish = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)0, locale, timezoneID, window,
         windowWidth, windowHeight, windowX, windowY, defaultFontSizeMultiplier,
-        info, "", "");
+        info, "", "", nullptr);
 #if defined(STARFISH_ENABLE_INSPECTOR)
     TO_STARFISH(instance)->setupInspector();
 #endif

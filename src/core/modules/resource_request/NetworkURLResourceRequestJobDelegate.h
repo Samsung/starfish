@@ -29,6 +29,7 @@ class HTTPTransaction;
 struct NetworkURLWorkerData {
     bool isAborted;
     bool isRedirected;
+    bool cacheHit;
     long lastTransactionResponseCode;
     ResourceRequest* request;
     NetworkURLWorkerHelper* networkWorker;

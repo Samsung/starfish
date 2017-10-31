@@ -36,6 +36,9 @@
 #include "core/inspector/Inspector.h"
 #include "core/extra/Console.h"
 #include "core/util/LineBreakerIteratorPool.h"
+#ifdef STARFISH_ENABLE_HTTPCACHE
+#include "platform/network/HTTPCache.h"
+#endif
 #include "platform/network/NetworkSharedResourceManager.h"
 #include "platform/window/PlatformWindow.h"
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
@@ -178,7 +181,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    int x, int y, float defaultFontSizeMultiplier,
                    ScreenInfo& info, const char* localStorageFilePath,
                    const char* cookieStoreFilePath,
+                   const char* httpCacheDirectorypath,
                    String* extraUserAgentString)
+
     : m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
@@ -192,8 +197,10 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_enterCount(0)
     , m_screenInfo(info)
     , m_localStorageFilePath(String::fromUTF8(localStorageFilePath))
-    , m_cookieStoreFilePath(String::fromUTF8(cookieStoreFilePath))
     , m_extraUserAgentString(extraUserAgentString)
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    , m_httpCache(nullptr)
+#endif
 #ifdef STARFISH_ENABLE_TTS
     , m_tts(nullptr)
 #endif
@@ -317,8 +324,12 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif
     m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
-
-    initCookieSession();
+    initNetworkSharedResourceManager(cookieStoreFilePath);
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    if (httpCacheDirectorypath != nullptr) {
+        m_httpCache = new HTTPCache(String::fromUTF8(httpCacheDirectorypath));
+    }
+#endif
 #ifdef STARFISH_ENABLE_TTS
     m_tts = new TTS(this);
 #endif
@@ -363,6 +374,11 @@ StarFish::~StarFish()
 
     joinAllActiveThread();
     NetworkSharedResourceManager::close();
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    if (m_httpCache) {
+        m_httpCache->flush();
+    }
+#endif
 }
 
 void StarFish::run()
@@ -502,14 +518,14 @@ void StarFish::setupInspector(uint32_t portNumber)
 }
 #endif
 
-void StarFish::initCookieSession()
+void StarFish::initNetworkSharedResourceManager(const char* cookieStoreFilePath)
 {
     // NetworkSharedResourceManager is singleton, So do not hold the instance.
-    if (m_cookieStoreFilePath) {
+    if (cookieStoreFilePath) {
         // Disable to store cookies as a file If m_cookieStoreFilePath is
         // nullptr or empty string
         NetworkSharedResourceManager::getInstance()->setCookieStoreFilePath(
-            m_cookieStoreFilePath->toUTF8NonGCString());
+            cookieStoreFilePath);
     }
     NetworkSharedResourceManager::getInstance()->initCookieSession();
 }
