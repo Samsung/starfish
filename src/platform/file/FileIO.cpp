@@ -51,9 +51,10 @@ public:
     }
     long int length()
     {
+        long int currentPosition = ftell(m_fp);
         fseek(m_fp, 0, 2);
         long int len = ftell(m_fp);
-        rewind(m_fp);
+        fseek(m_fp, currentPosition, 0);
         return len;
     }
     size_t read(void* buf, size_t size, size_t count)
@@ -64,19 +65,31 @@ public:
     {
         return fwrite(buf, size, count, m_fp);
     }
-    String* readLine()
+    Nullable<String*> readLine()
     {
         std::string buf;
-        while (!feof(m_fp)) {
-            char temp;
-            read(&temp, 1, 1);
-            if (temp != '\n') {
-                buf += temp;
-            } else {
+        buf.reserve(length());
+        char temp;
+        while (read(&temp, 1, 1)) {
+            if (temp == '\n') {
                 break;
+            } else if (temp == '\r') {
+                read(&temp, 1, 1);
+                if (temp != '\n') {
+                    fseek(m_fp, -1, SEEK_CUR);
+                }
+                break;
+            } else {
+                buf += temp;
             }
         }
-        return String::fromUTF8((char*)(&buf[0]));
+        if (feof(m_fp)) {
+            return nullptr;
+        } else if (buf.size() == 0) {
+            return String::emptyString;
+        } else {
+            return String::fromUTF8(buf.data(), buf.length());
+        }
     }
     String* readAll()
     {
@@ -205,7 +218,7 @@ public:
         // TODO : It will connect to the Tizen file I/O interface.
         return fwrite(buf, size, count, m_fp);
     }
-    String* readLine()
+    Nullable<String*> readLine()
     {
         // TODO : It will connect to the Tizen file I/O interface.
         std::string buf;
