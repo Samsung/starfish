@@ -1317,6 +1317,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
     ADD_VALUE_PAIR(AlignContent, AlignContentValueKind, alignContent)
     ADD_VALUE_PAIR(FlexGrow, Number, flexGrow)
     ADD_VALUE_PAIR(FlexShrink, Number, flexShrink)
+    ADD_VALUE_PAIR(FillOpacity, Number, fillOpacity)
 #undef ADD_VALUE_PAIR
 
     {
