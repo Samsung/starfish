@@ -658,6 +658,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
 
         STARFISH_ASSERT(currentFrame->parent());
     } else {
+        if (current->frame() && current->frame()->isFrameBlockBox()) {
+            current->frame()->asFrameBlockBox()->lineBoxes().clear();
+        }
+
         shouldSkipChildren =
             current->frame() && (current->frame()->isFrameReplaced() ||
                                  current->frame()->isFrameLineBreak() ||
