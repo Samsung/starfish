@@ -65,6 +65,11 @@ FrameBox* containingBlock(Frame* currentFrame)
     // https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#containing-block-details
     if (currentFrame->isAbsolutePositioned()) {
         Frame* f = currentFrame->parent();
+        if (!f) {
+            STARFISH_ASSERT(currentFrame->isFrameDocument());
+            return currentFrame->asFrameBox();
+        }
+
         while (!f->canBeContainingBlockOfAbsolutePositionedBox(currentFrame)) {
             f = f->parent();
         }
