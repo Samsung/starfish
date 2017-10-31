@@ -595,6 +595,7 @@ void MediaPlayerTizen::handleEnded()
 
 void MediaPlayerTizen::close()
 {
+    STARFISH_ASSERT(isMainThread());
     if (!m_alive) {
         return;
     }
@@ -625,19 +626,16 @@ void MediaPlayerTizen::close()
         // NOTE Deplay dispose()
         //      Transparent hole can be exposed by disposal of player.
         m_container->starFish()->platformWindow()->rendering();
-        m_container->starFish()->addPointerInRootSet(this);
         MessageLoop* msgLoop = m_container->starFish()->messageLoop();
         PLAYER_LOGI(
             "MediaPlayerTizen::close() - dispose player next idle time\n");
-        msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->document()->browsingContext(),
-            [](size_t, void* data0, void* data1) {
-                StarFish* starfish = (StarFish*)data0;
-                MediaPlayerTizen* player = (MediaPlayerTizen*)data1;
-                starfish->removePointerFromRootSet(player);
-                player->dispose();
-            },
-            m_container->starFish(), this, false);
+        msgLoop->addIdler(m_container->document()->browsingContext(),
+                          [](size_t, void* data) {
+                              MediaPlayerTizen* player =
+                                  (MediaPlayerTizen*)data;
+                              player->dispose();
+                          },
+                          this, false);
     } else {
         PLAYER_LOGI("MediaPlayerTizen::close() - instant disposal \n");
         dispose();

@@ -54,11 +54,6 @@ public:
     void removeIdler(size_t handle);
     void removeIdlerWithNoGCRooting(size_t handle);
 
-    bool hasPendingIdler()
-    {
-        return m_idlers.size();
-    }
-
     void clearOrInvokePendingIdlers(
         BrowsingContext* ctx); // give nullptr to clear every idlers
     void run();
