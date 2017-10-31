@@ -42,7 +42,6 @@ namespace StarFish {
 FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
     : m_name(name)
     , m_value(value)
-    , m_defaultValue(value)
     , m_type(type)
 {
 }

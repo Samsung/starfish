@@ -34,7 +34,6 @@ public:
 
     String* m_name;
     String* m_value;
-    String* m_defaultValue;
     String* m_type;
 };
 
