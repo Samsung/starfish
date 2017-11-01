@@ -126,6 +126,14 @@ void FrameInputBox::layout(LayoutContext& ctx,
 
     FrameBlockBox::layout(ctx, resolveWhat);
 
+    if (node()->asHTMLInputElement()->canHaveValue()) {
+        if (lineBoxes().size() > 0) {
+            LineBox* lb = *lineBoxes().begin();
+            LayoutUnit availableHeight = contentHeight() - lb->height();
+            lb->setY(availableHeight / 2);
+        }
+    }
+
     HTMLInputElement* e = node()->asHTMLInputElement();
     size_t cPos = e->m_currentCaretPosition;
 
