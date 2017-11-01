@@ -4387,13 +4387,12 @@ void StyleResolver::apply(Element* element,
             case CSSStyleValuePair::ValueKind::Inherit:
                 style->setTransitionProperty(parentStyle->transitionProperty());
                 break;
-            default:
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::TransitionPropertyValueKind ==
-                    cssValues[k].valueKind());
+            case CSSStyleValuePair::ValueKind::TransitionPropertyValueKind:
                 style->setTransitionProperty(
                     cssValues[k].transitionPropertyValue());
                 break;
+            default:
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionDuration:

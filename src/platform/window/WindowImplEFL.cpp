@@ -160,7 +160,7 @@ public:
     }
 
     virtual void clearResources();
-    virtual Canvas* preparePainting(bool forPainting);
+    virtual Canvas* preparePainting();
 
     virtual void showSoftwareKeyboardIfPossible()
     {
@@ -1411,7 +1411,7 @@ void WebView::setNeedsRendering()
 #endif
 }
 
-Canvas* WindowImplEFL::preparePainting(bool forPainting)
+Canvas* WindowImplEFL::preparePainting()
 {
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
 #ifdef STARFISH_ENABLE_TEST
@@ -1441,9 +1441,6 @@ Canvas* WindowImplEFL::preparePainting(bool forPainting)
     dummy* d = new dummy;
     d->a = evas;
     d->b = nullptr;
-    if (!forPainting) {
-        d->b = nullptr;
-    }
     d->w = width;
     d->h = height;
     d->objList = &m_objectList;

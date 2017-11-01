@@ -25,7 +25,7 @@ class TTS : public gc, public StarFishHoldable {
 public:
     TTS(StarFish* starFish)
         : StarFishHoldable(starFish)
-        , m_isTTSEnable(false)
+        , m_isTTSEnabled(false)
     {
         init();
     }
@@ -34,20 +34,20 @@ public:
     {
     }
 
-    bool isTTSEnable()
+    bool isTTSEnabled()
     {
-        return m_isTTSEnable;
+        return m_isTTSEnabled;
     }
-    void setTTSEnable(bool value)
+    void setTTSEnabled(bool value)
     {
-        m_isTTSEnable = value;
+        m_isTTSEnabled = value;
     }
 
     void speech(String* text);
 
 private:
     void init();
-    bool m_isTTSEnable;
+    bool m_isTTSEnabled;
 };
 }
 #endif

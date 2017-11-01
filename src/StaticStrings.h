@@ -277,6 +277,8 @@ public:
     QualifiedName m_placeholder;
     QualifiedName m_selected;
     QualifiedName m_alt;
+    QualifiedName m_scrolling;
+    QualifiedName m_frameborder;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;
@@ -304,7 +306,6 @@ public:
     QualifiedName m_cy;
     // xml:base
     QualifiedName m_xmlBase;
-    QualifiedName m_scrolling;
     // WAI-ARIA
     QualifiedName m_ariaHidden;
     QualifiedName m_ariaLabel;

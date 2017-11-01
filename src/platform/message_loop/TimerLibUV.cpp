@@ -63,7 +63,7 @@ void on_close_handle(uv_handle_t* handle)
     free(handle);
 }
 
-size_t Timer::addTimer(double delay, Window* window,
+size_t Timer::addTimer(unsigned delay, Window* window,
                        WindowSetTimeoutHandler handler, void* data,
                        bool repetitive)
 {

@@ -270,7 +270,7 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
 
 NetworkSharedResourceManager::~NetworkSharedResourceManager()
 {
-    clearAllCurlHandleDataCach();
+    clearAllCurlHandleDataCache();
     curl_share_cleanup(m_curlShareHandle);
     curl_global_cleanup();
 
@@ -401,11 +401,11 @@ void NetworkSharedResourceManager::pruningIfNeed()
     }
 }
 
-void NetworkSharedResourceManager::clearAllCurlHandleDataCach()
+void NetworkSharedResourceManager::clearAllCurlHandleDataCache()
 {
 #ifdef STARFISH_ENABLE_TEST
     STARFISH_LOG_INFO(
-        "NetworkSharedResourceManager::clearAllCurlHandleDataCach(size:%d)\n",
+        "NetworkSharedResourceManager::clearAllCurlHandleDataCache(size:%d)\n",
         (int)m_curlHandleDataCache.size());
 #endif
     Locker<Mutex> locker(*m_mutexes[CurlCacheMutex]);

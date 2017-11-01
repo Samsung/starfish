@@ -57,7 +57,7 @@ struct TimeoutData {
     WindowSetTimeoutHandler m_handler;
 };
 
-size_t Timer::addTimer(double delay, Window* window,
+size_t Timer::addTimer(unsigned delay, Window* window,
                        WindowSetTimeoutHandler handler, void* data,
                        bool repetitive)
 {

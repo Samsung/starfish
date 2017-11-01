@@ -203,6 +203,12 @@ StaticStrings::StaticStrings(StarFish* sf)
                       AtomicString::createAtomicString(sf, "selected"));
     m_alt = QualifiedName(AtomicString::emptyAtomicString(),
                           AtomicString::createAtomicString(sf, "alt"));
+    m_scrolling =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "scrolling"));
+    m_frameborder =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "frameborder"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));
@@ -262,9 +268,6 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_xmlBase = QualifiedName(AtomicString::createAtomicString(sf, "xml"),
                               AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "base"));
-    m_scrolling =
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "scrolling"));
 
     m_ariaHidden =
         QualifiedName(AtomicString::emptyAtomicString(),
