@@ -49,6 +49,9 @@ public:
     // Interface Option
     bool selected();
     void setSelected(bool selected);
+    String* selectedAttributeValue();
+    void setSelectedAttributeValue(bool selected);
+    void setInternalSelected(bool selected);
 
     // Other methods
     void didAttributeChanged(QualifiedName name, String* old, String* val,

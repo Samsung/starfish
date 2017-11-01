@@ -63,30 +63,69 @@ HTMLOptionElement* HTMLSelectElement::firstOptionElement()
     return firstOptionNode ? firstOptionNode->asHTMLOptionElement() : nullptr;
 }
 
-HTMLCollection* HTMLSelectElement::selectedOptions()
+HTMLCollection* HTMLSelectElement::ensureSelectedOptions()
 {
-    if (m_selectedOptions) {
-        return m_selectedOptions;
+    if (!m_selectedOptions) {
+        m_selectedOptions = new HTMLCollection(
+            this, NodeListImpl::SelectedOptionsFilter, nullptr, true);
     }
-
-    m_selectedOptions = new HTMLCollection(
-        this, NodeListImpl::SelectedOptionsFilter, nullptr, false);
     return m_selectedOptions;
 }
 
-HTMLOptionElement* HTMLSelectElement::firstSelectedOptionOrFirstOptionElement()
+HTMLCollection* HTMLSelectElement::selectedOptions()
 {
-    HTMLOptionElement* selected = nullptr;
+    HTMLCollection* selectedOptions = ensureSelectedOptions();
+    if (selectedOptions->length() < 1) {
+        HTMLOptionElement* option = firstOptionElement();
+        if (option != nullptr && option->selected() != true) {
+            option->setInternalSelected(true);
+            selectedOptions->getNodeListImpl().invalidateCache();
+        }
+    }
+    return selectedOptions;
+}
+
+void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)
+{
+    if (newChild->isHTMLOptionElement()) {
+        HTMLOptionElement* newElement = newChild->asHTMLOptionElement();
+        HTMLCollection* selectedOptions = ensureSelectedOptions();
+
+        if (!newElement->selected()) {
+            if (selectedOptions->length() < 1) {
+                HTMLOptionElement* option = firstOptionElement();
+                if (option != nullptr && option->selected() != true) {
+                    selectedOptions->getNodeListImpl().invalidateCache();
+                    option->setInternalSelected(true);
+                }
+            }
+        } else {
+            Element* element = this->firstElementChild();
+            while (element) {
+                if (element->isHTMLOptionElement() &&
+                    element->asHTMLOptionElement() != newElement) {
+                    HTMLOptionElement* option = element->asHTMLOptionElement();
+                    String* str =
+                        option->selectedAttributeValue()->toASCIILower();
+                    if (!str->equals("selected") && option->selected()) {
+                        selectedOptions->getNodeListImpl().invalidateCache();
+                        option->setInternalSelected(false);
+                    }
+                }
+                element = element->nextElementSibling();
+            }
+        }
+    }
+}
+
+HTMLOptionElement* HTMLSelectElement::firstSelectedOptionElement()
+{
     HTMLCollection* selectedOptions = HTMLSelectElement::selectedOptions();
     if (selectedOptions->length() > 0) {
-        selected = selectedOptions->item(0)->asHTMLOptionElement();
+        return selectedOptions->item(0)->asHTMLOptionElement();
     }
 
-    if (!selected) {
-        selected = firstOptionElement();
-    }
-    // Selected can be nullptr
-    return selected;
+    return nullptr;
 }
 
 bool HTMLSelectElement::supportsFocus() const

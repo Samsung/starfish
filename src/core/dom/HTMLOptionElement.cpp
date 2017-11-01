@@ -16,7 +16,9 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+#include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLOptionElement.h"
+#include "core/dom/HTMLSelectElement.h"
 
 namespace StarFish {
 
@@ -74,6 +76,16 @@ bool HTMLOptionElement::selected()
 
 void HTMLOptionElement::setSelected(bool selected)
 {
+    setSelectedAttributeValue(selected);
+}
+
+String* HTMLOptionElement::selectedAttributeValue()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_selected);
+}
+
+void HTMLOptionElement::setSelectedAttributeValue(bool selected)
+{
     if (selected) {
         setAttribute(starFish()->staticStrings()->m_selected,
                      String::createASCIIString("true"));
@@ -83,12 +95,19 @@ void HTMLOptionElement::setSelected(bool selected)
     m_dirtiness = true;
 }
 
+void HTMLOptionElement::setInternalSelected(bool selected)
+{
+    m_selectedness = selected;
+}
+
 void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
                                             String* val, bool attributeCreated,
                                             bool attributeRemoved)
 {
     HTMLFormObject::didAttributeChanged(name, old, val, attributeCreated,
                                         attributeRemoved);
+
+    // TODO: should implement according to whether m_multiple is true or not.
     if (name == starFish()->staticStrings()->m_selected) {
         if (attributeCreated && !m_dirtiness) {
             m_selectedness = true;

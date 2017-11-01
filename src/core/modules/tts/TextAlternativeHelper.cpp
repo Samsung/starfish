@@ -291,7 +291,7 @@ bool TextAlternativeHelper::appendFromEmbeddedControlIfNeeds(Node* node)
     } else if (node->isHTMLSelectElement()) {
         HTMLOptionElement* oe = node->asElement()
                                     ->asHTMLSelectElement()
-                                    ->firstSelectedOptionOrFirstOptionElement();
+                                    ->firstSelectedOptionElement();
         if (oe) {
             value =
                 oe->getAttributeOrEmpty(starFish()->staticStrings()->m_value);
