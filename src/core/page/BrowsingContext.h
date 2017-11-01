@@ -179,6 +179,26 @@ public:
     void releaseFocusedNode(Node* n, bool resetActiveElement = true);
     Element* activeElement();
 
+    void setKeydownEventDefaultPrevented(bool b)
+    {
+        m_keydownEventDefaultPrevented = b;
+    }
+
+    bool keydownEventDefaultPrevented() const
+    {
+        return m_keydownEventDefaultPrevented;
+    }
+
+    void setCompositionStartEventDefeaultPrevented(bool b)
+    {
+        m_compositionStartEventDefeaultPrevented = b;
+    }
+
+    bool compositionStartEventDefaultPrevented() const
+    {
+        return m_compositionStartEventDefeaultPrevented;
+    }
+
     void paintWindowBackground(Canvas* canvas);
 
     bool isTopLevelBrowsingContext()
@@ -248,6 +268,9 @@ private:
 
     Node* m_focusedNode;
     Element* m_activeElement;
+
+    bool m_keydownEventDefaultPrevented;
+    bool m_compositionStartEventDefeaultPrevented;
 
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;

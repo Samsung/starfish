@@ -1208,15 +1208,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 }
             }
 
-            if (tryFilter) {
-                Ecore_IMF_Event_Key_Down ecore_ev;
-                ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
-                if (ecore_imf_context_filter_event(
-                        self->m_imfContext, ECORE_IMF_EVENT_KEY_DOWN,
-                        (Ecore_IMF_Event*)&ecore_ev)) {
-                    return;
-                }
-            }
             // process non-char keys
             STARFISH_LOG_INFO("process non-char [%s]\n", ev->key);
             auto keyValue = ecoreEventKeyToKeyValue(
@@ -1231,6 +1222,15 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             self->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
             self->dispatchKeyEvent(PlatformWindow::KeyEventPress, kdata);
             self->m_isKeyDown = true;
+            if (tryFilter) {
+                Ecore_IMF_Event_Key_Down ecore_ev;
+                ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
+                if (ecore_imf_context_filter_event(
+                        self->m_imfContext, ECORE_IMF_EVENT_KEY_DOWN,
+                        (Ecore_IMF_Event*)&ecore_ev)) {
+                    return;
+                }
+            }
         },
         wnd);
     evas_object_event_callback_add(

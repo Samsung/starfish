@@ -100,6 +100,9 @@ void BrowsingContext::initFlags()
     m_needsFrameTreeBuild = false;
     m_needsLayout = false;
 
+    m_keydownEventDefaultPrevented = false;
+    m_compositionStartEventDefeaultPrevented = false;
+
     m_hasRootElementBackground = false;
     m_hasBodyElementBackground = false;
     m_isRunning = true;
@@ -1351,10 +1354,14 @@ void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
     String* eventType = String::emptyString;
     if (kind == PlatformWindow::KeyEventKind::KeyEventUp) {
         eventType = starFish()->staticStrings()->m_keyup.localName();
+        setKeydownEventDefaultPrevented(false);
     } else if (kind == PlatformWindow::KeyEventKind::KeyEventPress) {
         if (!data.isASCIIVisibleChar()) {
             return;
+        } else if (keydownEventDefaultPrevented()) {
+            return;
         }
+
         eventType = starFish()->staticStrings()->m_keypress.localName();
     } else {
         // kind == KeyEventKind::KeyEventDown
@@ -1485,18 +1492,27 @@ void BrowsingContext::dispatchCompositionEvent(
         }
         return;
     }
+
+    if (keydownEventDefaultPrevented()) {
+        return;
+    }
+
     // Dispatch event
     String* eventType = String::emptyString;
     if (kind == PlatformWindow::CompositionEventKind::CompositionEventStart) {
         eventType = starFish()->staticStrings()->m_compositionstart.localName();
     } else if (kind ==
                PlatformWindow::CompositionEventKind::CompositionEventUpdate) {
+        if (compositionStartEventDefaultPrevented()) {
+            return;
+        }
         eventType =
             starFish()->staticStrings()->m_compositionupdate.localName();
     } else {
         STARFISH_ASSERT(
             kind == PlatformWindow::CompositionEventKind::CompositionEventEnd);
         eventType = starFish()->staticStrings()->m_compositionend.localName();
+        setCompositionStartEventDefeaultPrevented(false);
     }
     CompositionEvent* e = new CompositionEvent(document(), eventType, data);
     e->setBubbles(true);

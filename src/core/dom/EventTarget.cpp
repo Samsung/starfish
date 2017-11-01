@@ -21,6 +21,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/EventTarget.h"
 #include "core/dom/Event.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 
 namespace StarFish {
@@ -321,6 +322,21 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                     }
                 }
             }
+        }
+    }
+
+    if (event->defaultPrevented()) {
+        if (event->type() ==
+            starFish()->staticStrings()->m_keydown.localName()) {
+            document()->browsingContext()->setKeydownEventDefaultPrevented(
+                true);
+        } else if (event->type() ==
+                   starFish()
+                       ->staticStrings()
+                       ->m_compositionstart.localName()) {
+            document()
+                ->browsingContext()
+                ->setCompositionStartEventDefeaultPrevented(true);
         }
     }
 
