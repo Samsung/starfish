@@ -76,6 +76,9 @@ public:
     bool firstDefaultValue();
     void setFirstDefaultValue(bool firstDefaultValue);
 
+    int32_t maxLength();
+    void setMaxLength(int32_t maxlength);
+
 protected:
 private:
     void toggleChecked();
@@ -91,6 +94,7 @@ private:
     LayoutLocation m_currentCaretLayoutLocation;
     String* m_currentEditingText;
     bool m_firstDefaultValue;
+    int32_t m_maxlength;
 };
 }
 

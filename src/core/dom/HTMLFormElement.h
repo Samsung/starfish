@@ -74,9 +74,6 @@ public:
     String* defaultValue();
     void setDefaultValue(String* defaultValue);
 
-    int32_t maxlength();
-    void setMaxlength(int32_t maxlength);
-
     bool disabled();
     void setDisabled(bool disabled);
 
