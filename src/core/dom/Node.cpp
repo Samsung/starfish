@@ -829,27 +829,33 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
     }
     if (isDocument()) {
         if (node->isElement()) {
-            if ((firstElementChild() != nullptr) ||
-                (child != nullptr && child->isElement()) ||
-                (child != nullptr && child->nextSibling() != nullptr &&
-                 child->nextSibling()->isDocumentType())) {
-                throw new DOMException(document(),
-                                       DOMException::HIERARCHY_REQUEST_ERR,
-                                       "parent has an element child, child is "
-                                       "a doctype, or child is not null and a "
-                                       "doctype is following child.");
+            if (child != nullptr) {
+                Node* c = firstChild();
+                while (c) {
+                    if (c->isElement() && child != c) {
+                        throw new DOMException(
+                            document(), DOMException::HIERARCHY_REQUEST_ERR,
+                            "parent has an element child, child is "
+                            "a doctype, or child is not null and a "
+                            "doctype is following child.");
+                    }
+                    c = c->nextSibling();
+                }
             }
         } else if (node->isDocumentType()) {
-            if (getDoctypeChild() ||
-                (child != nullptr && child->previousSibling() != nullptr &&
-                 child->previousSibling()->isElement()) ||
-                (child == nullptr && firstElementChild() != nullptr)) {
-                throw new DOMException(document(),
-                                       DOMException::HIERARCHY_REQUEST_ERR,
-                                       "parent has a doctype child, child is "
-                                       "non-null and an element is preceding "
-                                       "child, or child is null and parent has "
-                                       "an element child.");
+            if (child != nullptr) {
+                Node* c = firstChild();
+                while (c) {
+                    if (c->isDocumentType() && child != c) {
+                        throw new DOMException(
+                            document(), DOMException::HIERARCHY_REQUEST_ERR,
+                            "parent has a doctype child, child is "
+                            "non-null and an element is preceding "
+                            "child, or child is null and parent has "
+                            "an element child.");
+                    }
+                    c = c->nextSibling();
+                }
             }
         }
     }
@@ -1053,27 +1059,32 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
     }
     if (isDocument()) {
         if (child->isElement()) {
-            if ((firstElementChild() != nullptr) ||
-                (childRef != nullptr && childRef->isElement()) ||
-                (childRef != nullptr && childRef->nextSibling() != nullptr &&
-                 childRef->nextSibling()->isDocumentType())) {
-                throw new DOMException(document(),
-                                       DOMException::HIERARCHY_REQUEST_ERR,
-                                       "parent has an element child that is "
-                                       "not child or a doctype is following "
-                                       "child.");
+            if (childRef != nullptr) {
+                Node* c = firstChild();
+                while (c) {
+                    if (c->isElement() && childRef != c) {
+                        throw new DOMException(
+                            document(), DOMException::HIERARCHY_REQUEST_ERR,
+                            "parent has an element child that is "
+                            "not child or a doctype is following "
+                            "child.");
+                    }
+                    c = c->nextSibling();
+                }
             }
         } else if (child->isDocumentType()) {
-            if ((getDoctypeChild() != nullptr &&
-                 getDoctypeChild() != childRef) ||
-                (childRef != nullptr &&
-                 childRef->previousSibling() != nullptr &&
-                 childRef->previousSibling()->isElement())) {
-                throw new DOMException(document(),
-                                       DOMException::HIERARCHY_REQUEST_ERR,
-                                       "parent has a doctype child that is not "
-                                       "child, or an element is preceding "
-                                       "child.");
+            if (childRef != nullptr) {
+                Node* c = firstChild();
+                while (c) {
+                    if (c->isDocumentType() && childRef != c) {
+                        throw new DOMException(
+                            document(), DOMException::HIERARCHY_REQUEST_ERR,
+                            "parent has an element child that is "
+                            "not child or a doctype is following "
+                            "child.");
+                    }
+                    c = c->nextSibling();
+                }
             }
         }
     }
