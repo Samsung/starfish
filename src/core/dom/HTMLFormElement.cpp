@@ -135,16 +135,6 @@ void HTMLFormObject::setValue(String* value)
     setNeedsFrameTreeBuild();
 }
 
-int32_t HTMLFormObject::maxlength()
-{
-    return m_maxlength;
-}
-
-void HTMLFormObject::setMaxlength(int32_t maxlength)
-{
-    m_maxlength = maxlength;
-}
-
 String* HTMLFormObject::defaultValue()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_defaultValue);

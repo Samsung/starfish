@@ -33,6 +33,11 @@
 
 namespace StarFish {
 
+// TODO: We should discuss the maxlength limitation
+// because the spec doesn't describe the actual number.
+// 524288 is Chromium's
+static const int INITIAL_MAXLENGTH = 524288;
+
 HTMLInputElement::HTMLInputElement(Document* document)
     : HTMLFormObject(document)
     , m_checked(false)
@@ -41,6 +46,7 @@ HTMLInputElement::HTMLInputElement(Document* document)
     , m_currentCaretPosition(0)
     , m_currentEditingText(String::emptyString)
     , m_firstDefaultValue(true)
+    , m_maxlength(INITIAL_MAXLENGTH)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
@@ -215,7 +221,8 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
                                         attributeRemoved);
 
     if (name == starFish()->staticStrings()->m_maxlength) {
-        setMaxlength(String::parseInt(val));
+        // TODO: the logic for the negative value
+        setMaxLength(String::parseInt(val));
     }
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
@@ -344,7 +351,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                     }
                 } else {
                     if (event->asKeyboardEvent()->isASCIIVisibleChar() &&
-                        m_currentCaretPosition < (size_t)maxlength()) {
+                        m_currentCaretPosition < (size_t)maxLength()) {
                         char key = (char)event->asKeyboardEvent()->keyValue();
                         value = value->concat(key);
                         m_currentCaretPosition++;
@@ -370,7 +377,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                                           m_currentCaretPosition);
                     m_shouldDrawCaret = true;
                 } else if (event->type()->equalsIgnoreCase("compositionend") &&
-                           m_currentCaretPosition < (size_t)maxlength()) {
+                           m_currentCaretPosition < (size_t)maxLength()) {
                     value = value->remove(m_currentCaretPosition,
                                           m_currentEditingText->length());
                     value = value->insert(event->asCompositionEvent()->data(),
@@ -469,5 +476,15 @@ void HTMLInputElement::styleForPresentationAttribute(
         pair.setLengthValue(CSSLength(CSSLength::EM, siz));
         cssValues.push_back(pair);
     }
+}
+
+int32_t HTMLInputElement::maxLength()
+{
+    return m_maxlength;
+}
+
+void HTMLInputElement::setMaxLength(int32_t maxlength)
+{
+    m_maxlength = maxlength;
 }
 }
