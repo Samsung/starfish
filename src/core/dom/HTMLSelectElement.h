@@ -35,14 +35,17 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLSelectElement() const override;
 
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 
     HTMLCollection* selectedOptions();
+    HTMLCollection* ensureSelectedOptions();
 
     // Other methods
     HTMLOptionElement* firstOptionElement();
-    HTMLOptionElement* firstSelectedOptionOrFirstOptionElement();
+    HTMLOptionElement* firstSelectedOptionElement();
 
     bool supportsFocus() const override;
 
