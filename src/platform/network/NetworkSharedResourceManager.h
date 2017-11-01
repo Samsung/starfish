@@ -56,7 +56,7 @@ public:
 
     CurlHandleData getCurlHandleData(const std::string& host);
     void cachingCurlHandleData(const std::string& host, CurlHandleData& cd);
-    void clearAllCurlHandleDataCach();
+    void clearAllCurlHandleDataCache();
     void pruningIfNeed();
     void initCookieSession();
 

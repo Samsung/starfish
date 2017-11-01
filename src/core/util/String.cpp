@@ -492,6 +492,18 @@ bool String::containsOnlyASCIIChars() const
     return true;
 }
 
+bool String::containsOnlyDigits() const
+{
+    auto data = bufferAccessData();
+    for (size_t i = 0; i < data.length; i++) {
+        const char32_t c = data.utf32Data()[i];
+        if (!isdigit(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 String* String::stripAndCollapseASCIIwhitespace()
 {
     StringBuilder sb;

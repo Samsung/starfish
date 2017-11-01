@@ -18,8 +18,8 @@
 #define __StarFishCanvas__
 
 #include "core/modules/canvas/TextDecorationData.h"
+#include "core/modules/canvas/CanvasShadowData.h"
 #include "core/layout/Frame.h"
-#include "CanvasShadowData.h"
 
 namespace StarFish {
 

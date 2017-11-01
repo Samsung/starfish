@@ -35,7 +35,7 @@ static void onAccessibilityChanged(keynode_t* keynodeName, void* data)
     int at = 0;
     int vconf_ret = vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &at);
 
-    tts->setTTSEnable((vconf_ret == 0 && at == 1));
+    tts->setTTSEnabled((vconf_ret == 0 && at == 1));
 }
 
 void TTS::init()
@@ -43,7 +43,7 @@ void TTS::init()
     int at = 0;
     int vconf_ret = vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &at);
 
-    m_isTTSEnable = (vconf_ret == 0 && at == 1);
+    m_isTTSEnabled = (vconf_ret == 0 && at == 1);
 
     // Add listener
     vconf_notify_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS,

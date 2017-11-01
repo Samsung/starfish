@@ -73,6 +73,8 @@ public:
                                      bool attributeRemoved);
     virtual void didNodeInsertedToDocumentTree();
     virtual void didNodeRemovedFromDocumentTree();
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues);
 
     uint32_t frameWidth();
     uint32_t frameHeight();

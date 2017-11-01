@@ -535,21 +535,29 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                  ->isTopLevelBrowsingContext()) {
             FrameBlockBox* document =
                 m_owner->layoutParent()->asFrameBlockBox();
-            canvas->translate(document->scrollLeft(), document->scrollTop());
+            FrameBox* iframeBox = m_owner->node()
+                                      ->document()
+                                      ->browsingContext()
+                                      ->sourceElement()
+                                      ->frame()
+                                      ->asFrameBox();
+            canvas->translate(iframeBox->borderLeft() +
+                                  iframeBox->paddingLeft(),
+                              iframeBox->borderTop() + iframeBox->paddingTop());
             m_owner->node()
                 ->document()
                 ->browsingContext()
                 ->paintWindowBackground(canvas);
-            canvas->translate(-document->scrollLeft(), -document->scrollTop());
         }
     }
     m_owner->paintBackgroundAndBorders(canvas);
 
     if (!hasStackingBuffer && owner()->shouldApplyOverflow()) {
         canvas->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
-        if (m_owner->isFrameBlockBox())
+        if (m_owner->isFrameBlockBox()) {
             canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
                               -m_owner->asFrameBlockBox()->scrollTop());
+        }
     }
 
     // the child stacking contexts with negative stack levels (most negative
@@ -620,6 +628,17 @@ void StackingContext::paintStackingContext(Canvas* canvas)
             HTMLIFrameElement* iframe =
                 m_owner->node()->document()->browsingContext()->sourceElement();
             if (!iframe->scrolling()->toASCIILower()->equals("no")) {
+                canvas->save();
+                canvas->translate(m_owner->node()
+                                      ->document()
+                                      ->browsingContext()
+                                      ->window()
+                                      ->scrollX(),
+                                  m_owner->node()
+                                      ->document()
+                                      ->browsingContext()
+                                      ->window()
+                                      ->scrollY());
                 FrameBlockBox* document =
                     m_owner->layoutParent()->asFrameBlockBox();
                 m_owner->node()
@@ -630,6 +649,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                     ->paintScrollbars(canvas, document,
                                       document->appliedOverflowX(),
                                       document->appliedOverflowY());
+                canvas->restore();
             }
         }
     }

@@ -480,12 +480,12 @@ bool Element::handleDefaultEvent(Event* event)
     }
 #ifdef STARFISH_ENABLE_TTS
     StarFish* sf = document()->window()->starFish();
-    if (sf->tts()->isTTSEnable()) {
+    if (sf->tts()->isTTSEnabled()) {
         if (isHTMLElement() && isFocusable() && event->isFocusEvent() &&
             event->type()->equals("focus")) {
             TextAlternativeHelper tah(sf);
             String* altText = tah.getComputedTextAlternative(this);
-            if (altText) {
+            if (altText->length()) {
                 sf->tts()->speech(altText);
             }
         }

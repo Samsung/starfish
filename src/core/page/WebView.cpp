@@ -507,7 +507,7 @@ bool WebView::rendering(bool force)
               .documentOpenTime()) < 1000)) {
         STARFISH_LOG_INFO("delay rendering due to pending stylesheet\n");
         m_needsRendering = false;
-        Canvas* canvas = starFish()->platformWindow()->preparePainting(true);
+        Canvas* canvas = starFish()->platformWindow()->preparePainting();
 #ifndef STARFISH_TIZEN
         canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
@@ -539,7 +539,7 @@ bool WebView::rendering(bool force)
         ProfilerTimer t("painting");
 #endif
         // painting
-        Canvas* canvas = starFish()->platformWindow()->preparePainting(true);
+        Canvas* canvas = starFish()->platformWindow()->preparePainting();
 
         canvas->save();
         if (mainBrowsingContext()->document()->frame()->firstChild()) {
@@ -676,8 +676,7 @@ bool WebView::rendering(bool force)
 #endif
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
             m_rootStackingContext->needsGraphicsBuffer()) {
-            Canvas* canvas =
-                starFish()->platformWindow()->preparePainting(false);
+            Canvas* canvas = starFish()->platformWindow()->preparePainting();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
             canvas->save();

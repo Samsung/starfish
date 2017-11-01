@@ -21,6 +21,7 @@ namespace StarFish {
 
 class AnimationExecutor;
 class Canvas;
+class CompositingCanvas;
 class Node;
 class WebView;
 class ImageData;
@@ -63,7 +64,7 @@ public:
     virtual void resizeTo(int w, int h) = 0;
     virtual void* unwrap() = 0;
     virtual void clearResources() = 0;
-    virtual Canvas* preparePainting(bool forPainting) = 0;
+    virtual Canvas* preparePainting() = 0;
     virtual void showSoftwareKeyboardIfPossible()
     {
     }

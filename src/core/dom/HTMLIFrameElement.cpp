@@ -121,6 +121,10 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
         m_tabIndexWasSetExplicitly = true;
         if (m_tabIndex == -1)
             m_tabIndex = 0;
+    } else if (name == starFish()->staticStrings()->m_frameborder) {
+        if (frame()) {
+            setNeedsStyleRecalc();
+        }
     }
 }
 
@@ -192,5 +196,30 @@ void HTMLIFrameElement::childBrowsingContextLoaded()
     String* eventType = starFish()->staticStrings()->m_load.localName();
     Event* e = new Event(document(), eventType, EventInit(false, false));
     dispatchEventByUA(e);
+}
+
+void HTMLIFrameElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues);
+    size_t idx = hasAttribute(starFish()->staticStrings()->m_frameborder);
+    if (idx != SIZE_MAX) {
+        String* val = getAssuredAttribute(idx);
+        if (val->equals("0") || val->equalsIgnoreCase("none")) {
+            CSSStyleValuePair pair;
+            pair.setLengthValue(CSSLength(0));
+            pair.setKeyKind(CSSStyleValuePair::BorderTopWidth);
+            cssValues.push_back(pair);
+
+            pair.setKeyKind(CSSStyleValuePair::BorderRightWidth);
+            cssValues.push_back(pair);
+
+            pair.setKeyKind(CSSStyleValuePair::BorderBottomWidth);
+            cssValues.push_back(pair);
+
+            pair.setKeyKind(CSSStyleValuePair::BorderLeftWidth);
+            cssValues.push_back(pair);
+        }
+    }
 }
 }

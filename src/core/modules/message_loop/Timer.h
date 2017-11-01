@@ -30,7 +30,7 @@ class Timer : public gc {
 
 public:
     Timer(StarFish* sf);
-    size_t addTimer(double delay, Window* window,
+    size_t addTimer(unsigned delay, Window* window,
                     WindowSetTimeoutHandler handler, void* data,
                     bool repetitive);
     void removeTimer(size_t reqID);
