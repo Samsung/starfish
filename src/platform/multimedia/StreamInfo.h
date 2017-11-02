@@ -219,7 +219,7 @@ public:
     {
         m_data.m_videoData.m_hasFramerate = flag;
     }
-    size_t codedTimeToMilliseconds(size_t raw)
+    uint64_t codedTimeToMilliseconds(uint64_t raw)
     {
         return (raw * 1000LL) / (m_timescale == 0 ? 1 : m_timescale);
     }

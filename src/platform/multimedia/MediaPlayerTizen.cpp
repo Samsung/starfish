@@ -1182,7 +1182,8 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
             } else {
                 DEBUG_STREAMBUFFER_LOG(
                     "fillBuffer detect changed config (and will submit packet "
-                    "including idr)\n");
+                    "including idr. DTS:%d)\n",
+                    (int)packet.first->m_dts);
                 updateStreamInfo(stream, currentInitIndex, packet.second);
                 stream->setInitSegmentIndex(packet.second);
                 currentInitIndex = packet.second;
@@ -1324,6 +1325,9 @@ void MediaPlayerTizen::updateVideoStreamInfo(MediaStream* stream,
                              8 * 5);
     bool hasFramerateChanged = false;
     if (newInfo->videoHasFramerate() && newInfo->videoFramerate().isValid()) {
+        if (newInfo->videoFramerate().toDouble() > 60.0) {
+            newInfo->setVideoFramerate(Framerate(60, 1));
+        }
         if (!pastInfo->videoHasFramerate() ||
             !pastInfo->videoFramerate().isValid() ||
             isFramerateChanged(pastInfo->videoFramerate(),
@@ -1354,9 +1358,10 @@ void MediaPlayerTizen::updateVideoStreamInfo(MediaStream* stream,
     PLAYER_LOGI("> size      : %lu x %lu\n", m_videoWidth, m_videoHeight);
     PLAYER_LOGI("> max_buffer: %llu\n", stream->maxBufferSize());
     PLAYER_LOGI("> framerate_changed: %s\n",
-                isFramerateChanged ? "true" : "false");
-    PLAYER_LOGI("> avg_frame_rate: %d/%d\n", newInfo->videoFramerate().m_num,
-                newInfo->videoFramerate().m_den);
+                hasFramerateChanged ? "true" : "false");
+    PLAYER_LOGI(
+        "> avg_frame_rate: %d/%d(%f)\n", newInfo->videoFramerate().m_num,
+        newInfo->videoFramerate().m_den, newInfo->videoFramerate().toDouble());
     PLAYER_LOGI("---------------------------------------\n");
 }
 

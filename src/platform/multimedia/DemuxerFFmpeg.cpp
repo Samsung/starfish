@@ -253,12 +253,12 @@ public:
             // (int)avPacket.size, (int)pts);
             for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                 MediaPacket packet;
-                packet.m_streamIndex = avPacket.stream_index;
                 packet.m_data = avPacket.data;
                 packet.m_dataSize = avPacket.size;
                 packet.m_duration = 0; // TODO
                 packet.m_pts = pts;
-                if (!m_demuxerClients[j]->onDetectPacket(packet)) {
+                if (!m_demuxerClients[j]->onDetectPacket(avPacket.stream_index,
+                                                         packet)) {
                     // demux ffmpeg could not support this operation now
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }

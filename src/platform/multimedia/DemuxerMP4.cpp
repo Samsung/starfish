@@ -667,7 +667,6 @@ bool DemuxerMP4::findStreamPacket(DemuxerSource* source)
             uint64_t currentDTS = parsingInfo.m_DTS;
             for (size_t i = 0; i < parsingInfo.m_samples.size(); i++) {
                 MediaPacket packet;
-                packet.m_streamIndex = parsingInfo.m_streamIndex;
                 size_t sampleSize = resolvePacketSize(stream, parsingInfo, i);
                 if (sampleSize <= 0 || sizeSum + sampleSize > mdat->size) {
                     DEMUXERMP4_LOG("Unexpected structure of MP4\n");
@@ -692,7 +691,10 @@ bool DemuxerMP4::findStreamPacket(DemuxerSource* source)
                     return false;
                 }
                 currentDTS += duration;
-                packet.m_duration = stream.codedTimeToMilliseconds(duration);
+                STARFISH_ASSERT(stream.codedTimeToMilliseconds(duration) <
+                                SIZE_MAX);
+                packet.m_duration =
+                    (size_t)stream.codedTimeToMilliseconds(duration);
 
                 if (!m_packetGenerator->generate(source, sampleSize, packet)) {
                     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -701,7 +703,8 @@ bool DemuxerMP4::findStreamPacket(DemuxerSource* source)
                     return false;
                 }
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
-                    if (!m_demuxerClients[j]->onDetectPacket(packet)) {
+                    if (!m_demuxerClients[j]->onDetectPacket(
+                            parsingInfo.m_streamIndex, packet)) {
                         delete[] packet.m_data;
                         DEMUXERMP4_LOG("Unexpected structure of MP4\n");
                         DEMUXERMP4_LOG("> Failed to append packet to groups\n");

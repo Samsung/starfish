@@ -50,19 +50,19 @@ struct MediaPacketGroup {
     size_t m_initSegmentIndex;
     size_t m_dataSize;
     StreamInfo* m_streamInfo;
-    uint64_t m_maxFrameDuration;
+    size_t m_maxFrameDuration;
     uint64_t m_groupTimestampStart;
     uint64_t m_groupTimestampEnd;
     std::vector<MediaPacket*> m_packets;
     MediaPacketGroup(size_t idx, size_t initSegmentIdx, StreamInfo* streamInfo,
-                     uint64_t duration = 0,
+                     size_t maxFrameDuration = 0,
                      uint64_t start = std::numeric_limits<uint64_t>::max(),
                      uint64_t end = 0)
         : m_streamIndex(idx)
         , m_initSegmentIndex(initSegmentIdx)
         , m_dataSize(0)
         , m_streamInfo(streamInfo)
-        , m_maxFrameDuration(duration)
+        , m_maxFrameDuration(maxFrameDuration)
         , m_groupTimestampStart(start)
         , m_groupTimestampEnd(end)
     {
@@ -272,6 +272,7 @@ protected:
 
     void prepareAppend(size_t newDataSize);
     bool codedFrameEviction(size_t newDataSize);
+    void evictByLastCachedDTS(uint64_t minimumEvictDTS);
     void bufferAppend(SourceBufferData* data);
     void postBufferAppend(SourceBufferData* data);
     void setBufferedRangeNeedsUpdate()
@@ -299,6 +300,7 @@ protected:
     GCVector<GCVector<StreamInfo*>> m_streamInfo;
     std::vector<MediaPacketGroup*> m_packetGroups;
     GCVector<std::pair<size_t, size_t>> m_packetAccessCachePerStream;
+    uint64_t m_lastCachedDTS;
     Mutex* m_packetGroupsMutex;
 };
 }

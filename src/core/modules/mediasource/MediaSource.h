@@ -160,8 +160,8 @@ public:
     {
         return m_usedBufferSize >= STARFISH_MAX_MEDIASOURCE_BUFFERSPACE;
     }
-
     void evict(uint64_t start, uint64_t end);
+    void evictByLastCachedDTS(uint64_t minimumEvictDTS);
 
 protected:
     bool anySourceBufferInUpdatingState();

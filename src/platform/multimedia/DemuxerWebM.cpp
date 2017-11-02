@@ -236,7 +236,6 @@ public:
                     theFrame.Read(&src, dataPtr);
 
                     MediaPacket packet;
-                    packet.m_streamIndex = tn - 1;
                     packet.m_data = dataPtr;
                     packet.m_dataSize = size;
                     packet.m_pts = pts;
@@ -244,7 +243,8 @@ public:
                     packet.m_duration = 33; // temp soluation
 
                     for (size_t j = 0; j < m_demuxerClients.size(); j++) {
-                        if (m_demuxerClients[j]->onDetectPacket(packet)) {
+                        if (m_demuxerClients[j]->onDetectPacket(tn - 1,
+                                                                packet)) {
                             dataPtr = nullptr;
                             break;
                         }
