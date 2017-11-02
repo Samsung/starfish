@@ -790,13 +790,13 @@ private:
         cairo_font_face_t* fontFace = nullptr;
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
         int size = lastState().m_font->size();
-        cairo_glyph_t* glyphs =
-            ALLOCA(sv.length() * sizeof(cairo_glyph_t), cairo_glyph_t);
-        size_t glyphCount = 0;
 
         cairo_translate(canvas, 0, lastState().m_font->metrics().m_ascender);
+        cairo_glyph_t* glyphs = nullptr;
+        size_t glyphCount = 0;
 
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
+            glyphs = ALLOCA(sv.length() * sizeof(cairo_glyph_t), cairo_glyph_t);
             for (size_t i = 0; i < sv.length(); i++) {
                 std::pair<std::pair<FontFaceImplCairo*, size_t>,
                           std::pair<unsigned, LayoutUnit>>
@@ -848,6 +848,16 @@ private:
             }
         } else {
             auto runs = generateFontCairoTextRuns(&sv, f);
+
+            size_t glyphAllocCount = 0;
+            for (size_t i = 0; i < runs.size(); i++) {
+                FontCairoTextRun& run = runs[i];
+                glyphAllocCount += run.m_glyphs.size();
+            }
+
+            glyphs =
+                ALLOCA(glyphAllocCount * sizeof(cairo_glyph_t), cairo_glyph_t);
+
             float xBias = 0;
             for (size_t i = 0; i < runs.size(); i++) {
                 FontCairoTextRun& run = runs[i];
@@ -893,8 +903,8 @@ private:
                             glyphs[glyphCount].x =
                                 run.m_glyphPositions[j].x() + xBias;
                             glyphs[glyphCount].y = run.m_glyphPositions[j].y();
+                            STARFISH_ASSERT(glyphCount < glyphAllocCount);
                             glyphCount++;
-                            STARFISH_ASSERT(glyphCount <= sv.length());
                         }
                     }
                 }
