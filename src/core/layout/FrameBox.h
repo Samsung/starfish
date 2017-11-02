@@ -23,6 +23,7 @@ namespace StarFish {
 
 class Canvas;
 class CanvasSurface;
+class Compositor;
 class LineBox;
 class HTMLElement;
 
@@ -691,17 +692,17 @@ public:
     void clearStackingContextIfNeeds(bool shouldDetachNativeBuffer = true);
 
     virtual void paintStackingContextContent(Canvas* canvas);
-    virtual void willCompsiteStackingContext(Canvas* c)
+    virtual void willCompsiteStackingContext(Compositor* c)
     {
     }
 
-    virtual void didCompsiteStackingContext(Canvas* c)
+    virtual void didCompsiteStackingContext(Compositor* c)
     {
     }
 
     // this callback only called (establishesStackingContext &&
     // !needsGraphicsBuffer)
-    virtual void compsitingStackingContext(Canvas* c)
+    virtual void compsitingStackingContext(Compositor* c)
     {
     }
 

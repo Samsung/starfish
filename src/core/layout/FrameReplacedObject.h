@@ -48,7 +48,7 @@ public:
 
     virtual IntrinsicSize intrinsicSize();
 
-    virtual void didCompsiteStackingContext(Canvas* c);
+    virtual void didCompsiteStackingContext(Compositor* c);
 
     void* operator new(size_t size)
     {

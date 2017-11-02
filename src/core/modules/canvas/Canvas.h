@@ -90,9 +90,7 @@ public:
     virtual void restore() = 0; // pop state stack and restore state
     // transformations (default transform is the identity matrix)
     virtual void scale(double x, double y) = 0;
-    virtual void scale(double x, double y, double ox, double oy) = 0;
     virtual void rotate(double angle) = 0;
-    virtual void rotate(double angle, double ox, double oy) = 0;
     virtual void translate(double x, double y) = 0;
     virtual void translate(LayoutUnit x, LayoutUnit y) = 0;
     virtual void postMatrix(const SkMatrix& matrix) = 0;

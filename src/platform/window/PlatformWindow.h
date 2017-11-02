@@ -21,7 +21,7 @@ namespace StarFish {
 
 class AnimationExecutor;
 class Canvas;
-class CompositingCanvas;
+class Compositor;
 class Node;
 class WebView;
 class ImageData;
@@ -65,6 +65,7 @@ public:
     virtual void* unwrap() = 0;
     virtual void clearResources() = 0;
     virtual Canvas* preparePainting() = 0;
+    virtual Compositor* prepareCompositor() = 0;
     virtual void showSoftwareKeyboardIfPossible()
     {
     }
@@ -90,7 +91,6 @@ public:
     void resume();
     void close();
 
-    void paintWindowBackground(Canvas* canvas);
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     void paintVirtualCursor(Canvas* canvas);
 #endif

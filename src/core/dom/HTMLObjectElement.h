@@ -25,6 +25,7 @@
 namespace StarFish {
 
 class Canvas;
+class Compositor;
 class HTMLObjectElementContent;
 
 class HTMLObjectElement : public HTMLElement {
@@ -90,7 +91,7 @@ public:
         return STARFISH_OBJECT_ELEMENT_DEFAULT_WIDTH;
     }
 
-    virtual void drawContent(Canvas* canvas, const LayoutRect& videoRect,
+    virtual void drawContent(Compositor* canvas, const LayoutRect& videoRect,
                              const LayoutRect& absVideoRect) = 0;
 
 protected:
@@ -104,7 +105,7 @@ public:
     {
     }
 
-    virtual void drawContent(Canvas* canvas, const LayoutRect& contentRect,
+    virtual void drawContent(Compositor* canvas, const LayoutRect& contentRect,
                              const LayoutRect& absContentRect);
 };
 }

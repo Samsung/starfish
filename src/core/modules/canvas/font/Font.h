@@ -102,12 +102,10 @@ public:
 
     virtual LayoutUnit measureText(const StringView& sv) = 0;
 
-#if defined(PORT_CANVAS_BACKEND_EFL)
     virtual void* unwrap()
     {
         return nullptr;
     }
-#endif
 
     float spaceWidth()
     {

@@ -22,6 +22,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/HTMLVideoElement.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/modules/mediasource/SourceBuffer.h"
@@ -102,7 +103,8 @@ void MediaPlayerTizenTV::setNativePlayerDefaultOptions(ResourceURL* url)
     }
 }
 
-void MediaPlayerTizenTV::drawVideo(Canvas* canvas, const LayoutRect& videoRect,
+void MediaPlayerTizenTV::drawVideo(Compositor* canvas,
+                                   const LayoutRect& videoRect,
                                    const LayoutRect& absVideoRect)
 {
     if (!alive()) {
