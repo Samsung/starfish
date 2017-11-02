@@ -285,6 +285,9 @@ void MediaPlayerTizenTV::initVideoStreamInfo(size_t initSegmentIndex)
         (m_videoWidth * m_videoHeight * 30 * 2 * 7) / 100 / 8 * 5);
 
     if (info->videoHasFramerate() && info->videoFramerate().isValid()) {
+        if (info->videoFramerate().toDouble() > 60.0) {
+            info->setVideoFramerate(Framerate(60, 1));
+        }
         mediaFormatExtra->framerate_num = info->videoFramerate().m_num;
         mediaFormatExtra->framerate_den = info->videoFramerate().m_den;
     } else {

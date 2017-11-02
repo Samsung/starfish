@@ -25,12 +25,11 @@ class DemuxerSource;
 class PacketGenerator;
 
 struct MediaPacket {
-    size_t m_streamIndex;
     uint8_t* m_data;
     size_t m_dataSize;
-    uint64_t m_pts;
-    uint64_t m_dts;
-    uint64_t m_duration;
+    uint64_t m_pts;    // ms
+    uint64_t m_dts;    // ms
+    size_t m_duration; // ms
     bool m_hasIdr : 1;
 };
 
@@ -43,7 +42,7 @@ public:
     {
     }
     // return true means client consume packet data
-    virtual bool onDetectPacket(const MediaPacket& packet)
+    virtual bool onDetectPacket(size_t streamIndex, const MediaPacket& packet)
     {
         return false;
     }

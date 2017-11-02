@@ -35,7 +35,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/page/Window.h"
 
-#define STARFISH_FRAME_EVICTION_BACKWARD_DUR 1
+#define STARFISH_FRAME_EVICTION_BACKWARD_DUR 1000
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
 #define SOURCEBUFFER_LOG(sb, ...)                                            \
@@ -193,10 +193,9 @@ public:
         }
     }
 
-    virtual bool onDetectPacket(const MediaPacket& packet)
+    virtual bool onDetectPacket(size_t streamIndex, const MediaPacket& packet)
     {
-        int streamIndex = packet.m_streamIndex;
-        if ((int)m_streamProcessInfo.size() <= streamIndex) {
+        if (m_streamProcessInfo.size() <= streamIndex) {
             m_streamProcessInfo.resize(streamIndex + 1);
         }
         uint64_t groupTimestampEnd = 0;
@@ -297,14 +296,13 @@ public:
                 m_packetGroups.push_back(newgroup);
                 group = newgroup;
             } else {
-                group = findRecentPacketGroup((size_t)streamIndex);
+                group = findRecentPacketGroup(streamIndex);
             }
 
             MediaPacket* pkt = new MediaPacket();
             pkt->m_dts = decodeTimestamp;
             pkt->m_pts = presentationTimestamp;
             pkt->m_duration = frameDuration;
-            pkt->m_streamIndex = streamIndex;
             pkt->m_dataSize = packet.m_dataSize;
             pkt->m_data = packet.m_data;
             pkt->m_hasIdr = packet.m_hasIdr;
@@ -414,6 +412,7 @@ SourceBuffer::SourceBuffer(Document* document, String* type)
     , m_groupEndTimestamp(0)
     , m_type(type)
     , m_parentMediaSource(nullptr)
+    , m_lastCachedDTS(0)
     , m_packetGroupsMutex(new Mutex())
 {
     m_demuxer = Demuxer::createDemuxer(m_type);
@@ -837,8 +836,20 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
         *iter2 = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
         iter2++;
     }
+    m_lastCachedDTS = 0;
     decreaseUsedBufferSize(removedSize);
     setBufferedRangeNeedsUpdate();
+}
+
+void SourceBuffer::evictByLastCachedDTS(uint64_t minimumEvictDTS)
+{
+    Locker<Mutex> lock(*m_packetGroupsMutex);
+    uint64_t targetPos =
+        m_lastCachedDTS > minimumEvictDTS ? m_lastCachedDTS : minimumEvictDTS;
+    if (targetPos > STARFISH_FRAME_EVICTION_BACKWARD_DUR) {
+        rangeRemovalWithoutGuard(0, targetPos -
+                                        STARFISH_FRAME_EVICTION_BACKWARD_DUR);
+    }
 }
 
 bool SourceBuffer::codedFrameEviction(size_t newDataSize)
@@ -866,10 +877,8 @@ bool SourceBuffer::codedFrameEviction(size_t newDataSize)
         HTMLMediaElement* element = m_parentMediaSource->attachedMediaElement();
         double playbackPos = element ? element->currentTime() : 0;
         // Try to remove backward packets
-        double backwardPos = playbackPos - STARFISH_FRAME_EVICTION_BACKWARD_DUR;
-        if (backwardPos > 0) {
-            m_parentMediaSource->evict(0, backwardPos * 1000);
-        }
+        m_parentMediaSource->evictByLastCachedDTS(
+            (uint64_t)(playbackPos * 1000));
         SOURCEBUFFER_LOG(this, "Remove backward data (available: %d)\n",
                          (int)m_parentMediaSource->availableBufferSize());
         // TODO Try to remove fragmented forward packets
@@ -1022,18 +1031,16 @@ void SourceBuffer::postBufferAppend(SourceBufferData* inputBuffer)
             StreamInfo* stream =
                 streamInfo(group->m_initSegmentIndex, group->m_streamIndex);
             group->m_streamInfo = stream;
-            if (stream->isVideo()) {
+            if (stream->isVideo() && !stream->videoHasFramerate()) {
                 // Calculate average framerate for video
-                if (!stream->videoHasFramerate()) {
-                    int sampleCount = group->m_packets.size();
-                    uint64_t totalDuration = group->m_groupTimestampEnd -
-                                             group->m_groupTimestampStart;
-                    Framerate framerate = Framerate::createFromLL(
-                        (int64_t)sampleCount * 1000, (int64_t)totalDuration);
-                    if (framerate.isValid()) {
-                        stream->setVideoFramerate(framerate);
-                        stream->setVideoHasFramerate(true);
-                    }
+                int sampleCount = group->m_packets.size();
+                uint64_t totalDuration =
+                    group->m_groupTimestampEnd - group->m_groupTimestampStart;
+                Framerate framerate = Framerate::createFromLL(
+                    (int64_t)sampleCount * 1000, (int64_t)totalDuration);
+                if (framerate.isValid()) {
+                    stream->setVideoFramerate(framerate);
+                    stream->setVideoHasFramerate(true);
                 }
             }
             rangeRemovalWithoutGuard(group->m_groupTimestampStart,
@@ -1106,6 +1113,7 @@ void SourceBuffer::clearPacketAccessCache()
         *iter = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
         iter++;
     }
+    m_lastCachedDTS = 0;
 }
 
 void SourceBuffer::initializePacketAccessCache(size_t streamCount)
@@ -1114,6 +1122,7 @@ void SourceBuffer::initializePacketAccessCache(size_t streamCount)
         m_packetAccessCachePerStream.push_back(
             std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX));
     }
+    m_lastCachedDTS = 0;
 }
 
 std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
@@ -1129,6 +1138,7 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
                 startPositionInDTSWantToFind <= grp->m_groupTimestampEnd) {
                 size_t idx = cache.second + 1;
                 if (idx < grp->m_packets.size()) {
+                    m_lastCachedDTS = grp->m_packets[idx]->m_dts;
                     m_packetAccessCachePerStream[streamIdx] =
                         std::make_pair(cache.first, idx);
                     return std::make_pair(grp->m_packets[idx],
@@ -1149,6 +1159,7 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
                 const std::vector<MediaPacket*>& v = grp->m_packets;
                 for (size_t j = 0; j < v.size(); j++) {
                     if (v[j]->m_dts >= startPositionInDTSWantToFind) {
+                        m_lastCachedDTS = v[j]->m_dts;
                         m_packetAccessCachePerStream[streamIdx] =
                             std::make_pair(i, j);
                         return std::make_pair(v[j], grp->m_initSegmentIndex);
@@ -1166,6 +1177,8 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
     }
 
     if (nearestPacketGroupInfo.first != SIZE_MAX) {
+        m_lastCachedDTS =
+            m_packetGroups[nearestPacketGroupInfo.first]->m_packets[0]->m_dts;
         m_packetAccessCachePerStream[streamIdx] =
             std::make_pair(nearestPacketGroupInfo.first, 0);
         return std::make_pair(
@@ -1178,11 +1191,15 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
 
 void SourceBuffer::revertLastCacheIfPossible(size_t streamIdx)
 {
+    Locker<Mutex> packetGroupLocker(*m_packetGroupsMutex);
     auto cache = m_packetAccessCachePerStream[streamIdx];
     if (cache.second > 0) {
+        m_lastCachedDTS =
+            m_packetGroups[cache.first]->m_packets[cache.second - 1]->m_dts;
         m_packetAccessCachePerStream[streamIdx] =
             std::make_pair(cache.first, cache.second - 1);
     } else {
+        m_lastCachedDTS = 0;
         m_packetAccessCachePerStream[streamIdx] =
             std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
     }
@@ -1527,8 +1544,10 @@ StreamInfo* SourceBuffer::streamInfo(size_t initSegmentIndex,
 void SourceBuffer::increaseUsedBufferSize(size_t amount)
 {
     if (m_parentMediaSource) {
-        SOURCEBUFFER_LOG(this, "Increased packet data (%d)\n", (int)amount);
         m_parentMediaSource->m_usedBufferSize += amount;
+        SOURCEBUFFER_LOG(this, "Increased packet data: %d (capacity: %d)\n",
+                         (int)amount,
+                         (int)m_parentMediaSource->availableBufferSize());
     }
 }
 
@@ -1536,8 +1555,10 @@ void SourceBuffer::decreaseUsedBufferSize(size_t amount)
 {
     if (m_parentMediaSource) {
         STARFISH_ASSERT(m_parentMediaSource->m_usedBufferSize >= amount);
-        SOURCEBUFFER_LOG(this, "Removed packet data (%d)\n", (int)amount);
         m_parentMediaSource->m_usedBufferSize -= amount;
+        SOURCEBUFFER_LOG(this, "Removed packet data: %d (capacity: %d)\n",
+                         (int)amount,
+                         (int)m_parentMediaSource->availableBufferSize());
     }
 }
 }
