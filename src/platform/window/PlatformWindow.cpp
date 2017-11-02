@@ -246,11 +246,6 @@ bool PlatformWindow::rendering()
     return webView()->rendering();
 }
 
-void PlatformWindow::paintWindowBackground(Canvas* canvas)
-{
-    webView()->mainBrowsingContext()->paintWindowBackground(canvas);
-}
-
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
 void PlatformWindow::paintVirtualCursor(Canvas* canvas)
 {

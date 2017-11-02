@@ -24,6 +24,7 @@
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/modules/mediasource//SourceBuffer.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/multimedia/Demuxer.h"
 #include "platform/multimedia/MockMediaPlayer.h"
@@ -187,7 +188,7 @@ void MockMediaPlayer::prepare(ResourceURL* url)
         HTMLMediaElement::HAVE_FUTURE_DATA);
 }
 
-void MockMediaPlayer::drawVideo(Canvas* canvas, const LayoutRect& videoRect,
+void MockMediaPlayer::drawVideo(Compositor* canvas, const LayoutRect& videoRect,
                                 const LayoutRect& absVideoRect)
 {
     canvas->setColor(Unit::Color(0, 0, 0, 255));

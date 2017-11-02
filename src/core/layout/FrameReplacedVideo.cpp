@@ -21,6 +21,7 @@
 #include "core/layout/FrameReplacedVideo.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
@@ -37,7 +38,7 @@ IntrinsicSize FrameReplacedVideo::intrinsicSize()
     return result;
 }
 
-void FrameReplacedVideo::didCompsiteStackingContext(Canvas* c)
+void FrameReplacedVideo::didCompsiteStackingContext(Compositor* c)
 {
     STARFISH_ASSERT(node()->isHTMLVideoElement());
     auto v = node()->asHTMLVideoElement();

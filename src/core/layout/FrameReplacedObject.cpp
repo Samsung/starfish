@@ -19,6 +19,7 @@
 #include "core/dom/HTMLObjectElement.h"
 #include "core/layout/FrameReplacedObject.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 
 namespace StarFish {
 
@@ -38,7 +39,7 @@ IntrinsicSize FrameReplacedObject::intrinsicSize()
     return result;
 }
 
-void FrameReplacedObject::didCompsiteStackingContext(Canvas* c)
+void FrameReplacedObject::didCompsiteStackingContext(Compositor* c)
 {
     auto v = node()->asHTMLObjectElement();
     LayoutRect contentRect(borderLeft() + paddingLeft(),

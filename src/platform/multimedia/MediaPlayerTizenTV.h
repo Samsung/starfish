@@ -51,7 +51,7 @@ public:
     }
 
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);
-    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
+    virtual void drawVideo(Compositor* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect);
 
     virtual void prepareMediaSource();

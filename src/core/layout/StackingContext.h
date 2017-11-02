@@ -21,6 +21,7 @@ namespace StarFish {
 
 class Canvas;
 class CanvasSurface;
+class Compositor;
 class Frame;
 class FrameBox;
 class Node;
@@ -101,7 +102,7 @@ public:
     bool computeStackingContextProperties(bool forceNeedsBuffer = false);
 
     void paintStackingContext(Canvas* canvas);
-    void compositeStackingContext(Canvas* canvas);
+    void compositeStackingContext(Compositor* compositor);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                   BrowsingContext* from);
     LayoutLocation relativeLocation(StackingContext* child);

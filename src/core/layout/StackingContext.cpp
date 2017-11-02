@@ -27,6 +27,7 @@
 #include "core/layout/FrameReplaced.h"
 #include "core/page/BrowsingContext.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "core/page/Window.h"
 #include "platform/window/PlatformWindow.h"
 
@@ -190,35 +191,12 @@ private:
     };
 
 public:
-    CanvasStateRestorer(Canvas* canvas, StackingContext* sCtx, FrameBox* owner,
-                        bool isCompositing)
+    CanvasStateRestorer(Canvas* canvas, StackingContext* sCtx, FrameBox* owner)
         : m_canvas(canvas)
     {
         canvas->save();
 
         FrameBox* self = sCtx->owner();
-        if (isCompositing) {
-            LayoutLocation l = self->absolutePoint(owner);
-            canvas->translate(l.x(), l.y());
-
-            if (self->style()->position() == FixedPositionValue) {
-                Frame* parent = self->layoutParent();
-                LayoutUnit offsetX = self->x(), offsetY = self->y();
-                while (parent->isLineBox() ||
-                       !parent->canBeContainingBlockOfAbsolutePositionedBox(
-                           self)) {
-                    offsetX += parent->asFrameBox()->x();
-                    offsetY += parent->asFrameBox()->y();
-                    parent = parent->layoutParent();
-                }
-
-                if (parent->isFrameBlockBox()) {
-                    canvas->translate(parent->asFrameBlockBox()->scrollLeft(),
-                                      parent->asFrameBlockBox()->scrollTop());
-                }
-            }
-            return;
-        }
 
         std::vector<FrameBox*> frameList;
         Frame* nearstBufferedFrame = nullptr;
@@ -361,6 +339,42 @@ public:
     }
 
     Canvas* m_canvas;
+};
+
+class CompositorStateRestorer {
+public:
+    CompositorStateRestorer(Compositor* canvas, StackingContext* sCtx,
+                            FrameBox* owner)
+        : m_compositor(canvas)
+    {
+        m_compositor->save();
+
+        FrameBox* self = sCtx->owner();
+        LayoutLocation l = self->absolutePoint(owner);
+        m_compositor->translate(l.x(), l.y());
+
+        if (self->style()->position() == FixedPositionValue) {
+            Frame* parent = self->layoutParent();
+            LayoutUnit offsetX = self->x(), offsetY = self->y();
+            while (parent->isLineBox() ||
+                   !parent->canBeContainingBlockOfAbsolutePositionedBox(self)) {
+                offsetX += parent->asFrameBox()->x();
+                offsetY += parent->asFrameBox()->y();
+                parent = parent->layoutParent();
+            }
+
+            if (parent->isFrameBlockBox()) {
+                m_compositor->translate(parent->asFrameBlockBox()->scrollLeft(),
+                                        parent->asFrameBlockBox()->scrollTop());
+            }
+        }
+    }
+    ~CompositorStateRestorer()
+    {
+        m_compositor->restore();
+    }
+
+    Compositor* m_compositor;
 };
 
 bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
@@ -576,7 +590,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                 canvas->save();
 
                 {
-                    CanvasStateRestorer r(canvas, sCtx, m_owner, false);
+                    CanvasStateRestorer r(canvas, sCtx, m_owner);
                     sCtx->paintStackingContext(canvas);
                 }
 
@@ -604,7 +618,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                     canvas->save();
 
                     {
-                        CanvasStateRestorer r(canvas, sCtx, m_owner, false);
+                        CanvasStateRestorer r(canvas, sCtx, m_owner);
                         sCtx->paintStackingContext(canvas);
                     }
 
@@ -660,11 +674,11 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     }
 }
 
-void StackingContext::compositeStackingContext(Canvas* canvas)
+void StackingContext::compositeStackingContext(Compositor* compositor)
 {
     LayoutRect visibleRect = StackingContext::visibleRect();
     ComputedStyle* ownerStyle = m_owner->style();
-    canvas->save();
+    compositor->save();
 
     if (needsGraphicsBuffer()) {
         LayoutUnit minX = visibleRect.x();
@@ -681,7 +695,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         size_t bufferHeight = (int)(maxY - minY);
 
         if (ownerStyle->opacity() != 1) {
-            canvas->beginOpacityLayer(ownerStyle->opacity());
+            compositor->beginOpacityLayer(ownerStyle->opacity());
         }
 
         m_rareData->m_matrix = m_owner->style()->transformsToMatrix(
@@ -718,41 +732,42 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             if (!testResult) {
                 // ignorePaintingDueToInvalidMatrix
                 if (ownerStyle->opacity() != 1) {
-                    canvas->endOpacityLayer();
+                    compositor->endOpacityLayer();
                 }
-                canvas->restore();
+                compositor->restore();
                 return;
             }
-            canvas->translate(ox, oy);
-            canvas->postMatrix(m_rareData->m_matrix);
-            canvas->translate(-ox, -oy);
+            compositor->translate(ox, oy);
+            compositor->postMatrix(m_rareData->m_matrix);
+            compositor->translate(-ox, -oy);
         }
 
         if (owner()->shouldApplyOverflow()) {
-            canvas->clip(Unit::Rect(0, 0, owner()->width(), owner()->height()));
+            compositor->clip(
+                Unit::Rect(0, 0, owner()->width(), owner()->height()));
             if (m_owner->isFrameBlockBox())
-                canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
-                                  -m_owner->asFrameBlockBox()->scrollTop());
+                compositor->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
+                                      -m_owner->asFrameBlockBox()->scrollTop());
         }
 
         if (bufferWidth && bufferHeight) {
-            owner()->willCompsiteStackingContext(canvas);
-            canvas->drawImage(
+            owner()->willCompsiteStackingContext(compositor);
+            compositor->drawSurface(
                 m_rareData->m_buffer,
                 Unit::Rect(minX, minY, bufferWidth, bufferHeight));
-            owner()->didCompsiteStackingContext(canvas);
+            owner()->didCompsiteStackingContext(compositor);
         }
         // draw debug rect
         // canvas->setColor(Color(255, 0, 0, 128));
         // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
     } else {
         if (owner()->shouldApplyOverflow()) {
-            canvas->clip(owner()->makeRect(BoxValue::BorderBoxBoxValue));
+            compositor->clip(owner()->makeRect(BoxValue::BorderBoxBoxValue));
             if (m_owner->isFrameBlockBox())
-                canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
-                                  -m_owner->asFrameBlockBox()->scrollTop());
+                compositor->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
+                                      -m_owner->asFrameBlockBox()->scrollTop());
         }
-        owner()->compsitingStackingContext(canvas);
+        owner()->compsitingStackingContext(compositor);
     }
 
     // Within each stacking context, the following layers are painted in
@@ -771,14 +786,14 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             auto iter2 = child->begin();
             while (iter2 != child->end()) {
                 StackingContext* sCtx = *iter2;
-                canvas->save();
+                compositor->save();
 
                 {
-                    CanvasStateRestorer r(canvas, sCtx, m_owner, true);
-                    sCtx->compositeStackingContext(canvas);
+                    CompositorStateRestorer r(compositor, sCtx, m_owner);
+                    sCtx->compositeStackingContext(compositor);
                 }
 
-                canvas->restore();
+                compositor->restore();
                 iter2++;
             }
             iter++;
@@ -796,14 +811,14 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
                 auto iter2 = child->begin();
                 while (iter2 != child->end()) {
                     StackingContext* sCtx = *iter2;
-                    canvas->save();
+                    compositor->save();
 
                     {
-                        CanvasStateRestorer r(canvas, sCtx, m_owner, true);
-                        sCtx->compositeStackingContext(canvas);
+                        CompositorStateRestorer r(compositor, sCtx, m_owner);
+                        sCtx->compositeStackingContext(compositor);
                     }
 
-                    canvas->restore();
+                    compositor->restore();
                     iter2++;
                 }
             }
@@ -813,11 +828,11 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
 
     if (needsGraphicsBuffer()) {
         if (ownerStyle->opacity() != 1) {
-            canvas->endOpacityLayer();
+            compositor->endOpacityLayer();
         }
     }
 
-    canvas->restore();
+    compositor->restore();
 }
 
 LayoutLocation StackingContext::relativeLocation(StackingContext* sCtx)

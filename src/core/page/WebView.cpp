@@ -27,6 +27,7 @@
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/util/URL.h"
@@ -557,7 +558,7 @@ bool WebView::rendering(bool force)
                 canvas->save();
                 canvas->translate(-mainFrame->scrollLeft(),
                                   -mainFrame->scrollTop());
-                starFish()->platformWindow()->paintWindowBackground(canvas);
+                mainBrowsingContext()->paintWindowBackground(canvas);
                 m_didCompositeBefore = false;
             }
             mainFrame->paint(ctx);
@@ -588,6 +589,7 @@ bool WebView::rendering(bool force)
 #ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableStackingContextDump) {
+            size_t totalSurfaceBufferSize = 0;
             if (mainBrowsingContext()->document()->frame()->firstChild()) {
                 STARFISH_ASSERT(mainBrowsingContext()
                                     ->document()
@@ -602,68 +604,80 @@ bool WebView::rendering(bool force)
                                            ->asFrameBox()
                                            ->stackingContext();
 
-                std::function<void(StackingContext*, int)> dumpSC = [&dumpSC](
-                    StackingContext* ctx, int depth) {
-                    for (int i = 0; i < depth; i++) {
-                        printf("  ");
-                    }
-
-                    auto fr = ctx->visibleRect();
-
-                    if (ctx->owner()->node() &&
-                        ctx->owner()->node()->isHTMLElement()) {
-                        std::string className;
-                        HTMLElement* element =
-                            ctx->owner()->node()->asHTMLElement();
-                        for (unsigned i = 0; i < element->classNames().size();
-                             i++) {
-                            auto s = element->classNames()[i]
-                                         .string()
-                                         ->toUTF8NonGCString();
-                            className += s;
-                            className += " ";
-                        }
-
-                        auto utf8DataLog1 =
-                            element->localName()->toUTF8NonGCString();
-                        auto utf8DataLog2 = element->id()->toUTF8NonGCString();
-                        printf(
-                            "StackingContext[%p, node %p %s id:%s className:%s"
-                            ", frame %p, buf %p %d %d %d %d]\n",
-                            ctx, element, utf8DataLog1.data(),
-                            utf8DataLog2.data(), className.data(), ctx->owner(),
-                            ctx->buffer(), (int)fr.x(), (int)fr.y(),
-                            (int)fr.width(), (int)fr.height());
-                    } else {
-                        printf(
-                            "StackingContext[%p, anonymous node"
-                            ", frame %p, buf %p %d %d %d %d]\n",
-                            ctx, ctx->owner(), ctx->buffer(), (int)fr.x(),
-                            (int)fr.y(), (int)fr.width(), (int)fr.height());
-                    }
-
-                    auto iter = ctx->childContexts().begin();
-                    while (iter != ctx->childContexts().end()) {
-                        StackingContextChild* child = *iter;
-                        int32_t num = child->at(0)->zIndex();
-
-                        for (int i = 0; i < depth + 1; i++) {
+                std::function<void(StackingContext*, int)> dumpSC =
+                    [&dumpSC, &totalSurfaceBufferSize](StackingContext* ctx,
+                                                       int depth) {
+                        for (int i = 0; i < depth; i++) {
                             printf("  ");
                         }
 
-                        printf("z-index: %d\n", (int)num);
+                        auto fr = ctx->visibleRect();
 
-                        auto iter2 = child->begin();
-                        while (iter2 != child->end()) {
-                            dumpSC(*iter2, depth + 2);
-                            iter2++;
+                        if (ctx->buffer()) {
+                            totalSurfaceBufferSize +=
+                                ctx->buffer()->bufferWidth() *
+                                ctx->buffer()->bufferHeight() * 4;
                         }
 
-                        iter++;
-                    }
-                };
+                        if (ctx->owner()->node() &&
+                            ctx->owner()->node()->isHTMLElement()) {
+                            std::string className;
+                            HTMLElement* element =
+                                ctx->owner()->node()->asHTMLElement();
+                            for (unsigned i = 0;
+                                 i < element->classNames().size(); i++) {
+                                auto s = element->classNames()[i]
+                                             .string()
+                                             ->toUTF8NonGCString();
+                                className += s;
+                                className += " ";
+                            }
+
+                            auto utf8DataLog1 =
+                                element->localName()->toUTF8NonGCString();
+                            auto utf8DataLog2 =
+                                element->id()->toUTF8NonGCString();
+                            printf(
+                                "StackingContext[%p, node %p %s id:%s "
+                                "className:%s"
+                                ", frame %p, buf %p %d %d %d %d]\n",
+                                ctx, element, utf8DataLog1.data(),
+                                utf8DataLog2.data(), className.data(),
+                                ctx->owner(), ctx->buffer(), (int)fr.x(),
+                                (int)fr.y(), (int)fr.width(), (int)fr.height());
+                        } else {
+                            printf(
+                                "StackingContext[%p, anonymous node"
+                                ", frame %p, buf %p %d %d %d %d]\n",
+                                ctx, ctx->owner(), ctx->buffer(), (int)fr.x(),
+                                (int)fr.y(), (int)fr.width(), (int)fr.height());
+                        }
+
+                        auto iter = ctx->childContexts().begin();
+                        while (iter != ctx->childContexts().end()) {
+                            StackingContextChild* child = *iter;
+                            int32_t num = child->at(0)->zIndex();
+
+                            for (int i = 0; i < depth + 1; i++) {
+                                printf("  ");
+                            }
+
+                            printf("z-index: %d\n", (int)num);
+
+                            auto iter2 = child->begin();
+                            while (iter2 != child->end()) {
+                                dumpSC(*iter2, depth + 2);
+                                iter2++;
+                            }
+
+                            iter++;
+                        }
+                    };
 
                 dumpSC(ctx, 0);
+
+                printf("total buffer Size -> %f\n",
+                       totalSurfaceBufferSize / 1024.f / 1024.f);
             }
         }
 #endif
@@ -676,22 +690,26 @@ bool WebView::rendering(bool force)
 #endif
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
             m_rootStackingContext->needsGraphicsBuffer()) {
-            Canvas* canvas = starFish()->platformWindow()->preparePainting();
+            Compositor* compositor =
+                starFish()->platformWindow()->prepareCompositor();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
-            canvas->save();
-            canvas->translate(-mainFrame->scrollLeft(),
-                              -mainFrame->scrollTop());
-            starFish()->platformWindow()->paintWindowBackground(canvas);
+            compositor->save();
+            compositor->translate(-mainFrame->scrollLeft(),
+                                  -mainFrame->scrollTop());
+            Canvas* canvas = Compositor::createCanvasAdaptor(compositor);
+            mainBrowsingContext()->paintWindowBackground(canvas);
+
             mainBrowsingContext()
                 ->document()
                 ->frame()
                 ->firstChild()
                 ->asFrameBox()
                 ->stackingContext()
-                ->compositeStackingContext(canvas);
+                ->compositeStackingContext(compositor);
 
-            canvas->restore();
+            compositor->restore();
+
             mainBrowsingContext()->window()->scrolling()->paintScrollbars(
                 canvas, mainFrame, mainFrame->appliedOverflowX(),
                 mainFrame->appliedOverflowY());
@@ -700,7 +718,7 @@ bool WebView::rendering(bool force)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
             starFish()->platformWindow()->paintVirtualCursor(canvas);
 #endif
-            delete canvas;
+            delete compositor;
 #ifdef STARFISH_TIZEN_WEARABLE
             evas_object_raise(eflWindow->m_dummyBox);
 #endif
@@ -715,7 +733,7 @@ bool WebView::rendering(bool force)
     {
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
             evas_object_image_save(g_imgBufferForScreehShot, path, NULL, NULL);
 
             // int writeImage(char* filename, int width, int height, void
@@ -728,8 +746,8 @@ bool WebView::rendering(bool force)
                 exit(0);
             }
 
-#elif defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#elif defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+
             cairo_surface_t* png_buffer;
             png_buffer = cairo_image_surface_create_for_data(
                 (unsigned char*)g_imgBufferForScreehShot, CAIRO_FORMAT_ARGB32,

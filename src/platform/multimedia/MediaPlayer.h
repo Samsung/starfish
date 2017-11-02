@@ -40,6 +40,7 @@ namespace StarFish {
 
 class Canvas;
 class CanvasSurface;
+class Compositor;
 class MediaSource;
 class URL;
 class Window;
@@ -88,7 +89,7 @@ public:
         return m_playbackState;
     }
 
-    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
+    virtual void drawVideo(Compositor* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect) = 0;
 
     virtual CanvasSurface* createGraphicsBuffer(size_t visibleWidth,

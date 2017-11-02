@@ -24,6 +24,7 @@
 #include "core/dom/TouchEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
@@ -161,6 +162,7 @@ public:
 
     virtual void clearResources();
     virtual Canvas* preparePainting();
+    virtual Compositor* prepareCompositor();
 
     virtual void showSoftwareKeyboardIfPossible()
     {
@@ -264,7 +266,7 @@ public:
 
 static WindowImplEFL* g_currentWnd = nullptr;
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_COMPOSITOR_BACKEND_EFL)
 
 class CanvasSurfaceEFL : public CanvasSurface {
 public:
@@ -1034,14 +1036,17 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-            int w, h;
-            evas_object_image_size_get(wnd->m_canvasAdpater, &w, &h);
-            if (w != wnd->width() || h != wnd->height()) {
-                evas_object_image_data_set(wnd->m_canvasAdpater, nullptr);
-                evas_object_image_data_update_add(wnd->m_canvasAdpater, 0, 0,
-                                                  wnd->width(), wnd->height());
-                StarFishEnterer enter(wnd->starFish());
-                wnd->onResize();
+            if (wnd->m_canvasAdpaterSurface) {
+                int w, h;
+                evas_object_image_size_get(wnd->m_canvasAdpater, &w, &h);
+                if (w != wnd->width() || h != wnd->height()) {
+                    evas_object_image_data_set(wnd->m_canvasAdpater, nullptr);
+                    evas_object_image_data_update_add(wnd->m_canvasAdpater, 0,
+                                                      0, wnd->width(),
+                                                      wnd->height());
+                    StarFishEnterer enter(wnd->starFish());
+                    wnd->onResize();
+                }
             }
 #else
             StarFishEnterer enter(wnd->starFish());
@@ -1510,6 +1515,7 @@ Canvas* WindowImplEFL::preparePainting()
             cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width(), height());
         m_canvasAdpaterCairo = cairo_create(m_canvasAdpaterSurface);
         evas_object_image_size_set(m_canvasAdpater, width(), height());
+        evas_object_show(m_canvasAdpater);
     }
 
     unsigned char* imageData =
@@ -1531,19 +1537,164 @@ Canvas* WindowImplEFL::preparePainting()
 #endif
 }
 
+Compositor* WindowImplEFL::prepareCompositor()
+{
+#if defined(PORT_COMPOSITOR_BACKEND_CAIRO)
+#if defined(STARFISH_TIZEN) && defined(STARFISH_TIZEN_EVASGL_CAIRO)
+    struct dummy {
+        cairo_t* cairo;
+        cairo_surface_t* surface;
+        int w;
+        int h;
+    } d;
+    d.cairo = m_cairo;
+    d.surface = m_surface;
+    d.w = width();
+    d.h = height();
+    return Compositor::create(starFish(), &d);
+#endif
+#ifdef STARFISH_ENABLE_TEST
+    {
+        const char* path = getenv("SCREEN_SHOT");
+        if (path && strlen(path) && g_fireOnloadEvent) {
+            g_surfaceForScreehShot =
+                CanvasSurface::create(this, width(), height());
+            g_imgBufferForScreehShot =
+                (Evas_Object*)g_surfaceForScreehShot->unwrap();
+            Compositor* c =
+                Compositor::create(starFish(), g_surfaceForScreehShot);
+            return c;
+        }
+    }
+#endif
+
+    if (m_canvasAdpaterSurface) {
+        if (width() != cairo_image_surface_get_width(m_canvasAdpaterSurface) ||
+            height() !=
+                cairo_image_surface_get_height(m_canvasAdpaterSurface)) {
+            cairo_destroy(m_canvasAdpaterCairo);
+            cairo_surface_destroy(m_canvasAdpaterSurface);
+            m_canvasAdpaterCairo = nullptr;
+            m_canvasAdpaterSurface = nullptr;
+        }
+    }
+
+    if (!m_canvasAdpaterSurface) {
+        m_canvasAdpaterSurface =
+            cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width(), height());
+        m_canvasAdpaterCairo = cairo_create(m_canvasAdpaterSurface);
+        evas_object_image_size_set(m_canvasAdpater, width(), height());
+        evas_object_show(m_canvasAdpater);
+    }
+
+    unsigned char* imageData =
+        cairo_image_surface_get_data(cairo_get_target(m_canvasAdpaterCairo));
+    evas_object_image_data_set(m_canvasAdpater, imageData);
+    evas_object_image_data_update_add(m_canvasAdpater, 0, 0, width(), height());
+
+    struct dummy {
+        cairo_t* cairo;
+        cairo_surface_t* surface;
+        int w;
+        int h;
+    } d;
+    d.cairo = m_canvasAdpaterCairo;
+    d.surface = m_canvasAdpaterSurface;
+    d.w = width();
+    d.h = height();
+    return Compositor::create(starFish(), &d);
+#endif
+#if defined(PORT_COMPOSITOR_BACKEND_EFL)
+#ifdef STARFISH_ENABLE_TEST
+    {
+        const char* path = getenv("SCREEN_SHOT");
+        if (path && strlen(path) && g_fireOnloadEvent) {
+            g_surfaceForScreehShot =
+                CanvasSurface::create(this, width(), height());
+            g_imgBufferForScreehShot =
+                (Evas_Object*)g_surfaceForScreehShot->unwrap();
+            Compositor* c =
+                Compositor::create(starFish(), g_surfaceForScreehShot);
+            return c;
+        }
+    }
+#endif
+    int width, height;
+    evas_object_geometry_get(m_window, NULL, NULL, &width, &height);
+    Evas* evas = evas_object_evas_get(m_window);
+    struct dummy {
+        void* a;
+        void* b;
+        int w;
+        int h;
+        std::vector<Evas_Object*>* objList;
+        std::vector<Evas_Object*>* surfaceList;
+    };
+    dummy* d = new dummy;
+    d->a = evas;
+    d->b = nullptr;
+    d->w = width;
+    d->h = height;
+    d->objList = &m_objectList;
+    d->surfaceList = &m_surfaceList;
+    auto iter = m_objectList.begin();
+    while (iter != m_objectList.end()) {
+        evas_object_del(*iter);
+        iter++;
+    }
+    m_objectList.clear();
+    m_objectList.shrink_to_fit();
+
+    iter = m_surfaceList.begin();
+    while (iter != m_surfaceList.end()) {
+        evas_object_hide(*iter);
+        iter++;
+    }
+    m_surfaceList.clear();
+    m_surfaceList.shrink_to_fit();
+
+    Compositor* c = Compositor::create(starFish(), d);
+    delete d;
+
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+    if (m_canvasAdpaterSurface) {
+        cairo_destroy(m_canvasAdpaterCairo);
+        cairo_surface_destroy(m_canvasAdpaterSurface);
+        m_canvasAdpaterCairo = nullptr;
+        m_canvasAdpaterSurface = nullptr;
+        evas_object_hide(m_canvasAdpater);
+        evas_object_image_size_set(m_canvasAdpater, 0, 0);
+    }
+#endif
+
+    return c;
+#endif
+}
+
 void WindowImplEFL::clearResources()
 {
     if (m_renderingAnimator) {
         ecore_animator_del(m_renderingAnimator);
     }
 
-    webView()->clearStackingContext(false);
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+    auto iter = m_objectList.begin();
+    while (iter != m_objectList.end()) {
+        evas_object_del(*iter);
+        iter++;
+    }
+    m_objectList.clear();
+    m_objectList.shrink_to_fit();
+
+    iter = m_surfaceList.begin();
+    while (iter != m_surfaceList.end()) {
+        evas_object_hide(*iter);
+        iter++;
+    }
+
     m_objectList.clear();
     m_objectList.shrink_to_fit();
     m_surfaceList.clear();
     m_surfaceList.shrink_to_fit();
-#endif
 }
 }
 #endif

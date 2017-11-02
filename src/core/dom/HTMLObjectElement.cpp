@@ -18,6 +18,7 @@
 #include "StarFish.h"
 #include "core/dom/HTMLObjectElement.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 
 namespace StarFish {
 
@@ -57,7 +58,7 @@ void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-void MockHTMLObjectElementContent::drawContent(Canvas* canvas,
+void MockHTMLObjectElementContent::drawContent(Compositor* canvas,
                                                const LayoutRect& contentRect,
                                                const LayoutRect& absContentRect)
 {

@@ -596,6 +596,7 @@ void BrowsingContext::dispose()
         m_starFish->timer()->clear(nullptr);
         m_starFish->platformWindow()->clearResources();
         m_starFish->messageLoop()->clearOrInvokePendingIdlers(nullptr);
+        webView()->clearStackingContext(false);
 
         m_webView->initRenderingFlags();
     } else {

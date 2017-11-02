@@ -16,7 +16,7 @@
 
 #include "StarFishConfig.h"
 
-#if defined(PORT_CANVAS_BACKEND_EFL)
+#if defined(PORT_CANVAS_BACKEND_EFL) | defined(PORT_COMPOSITOR_BACKEND_EFL)
 #include "StarFish.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
@@ -1766,6 +1766,17 @@ protected:
     CanvasShadowDataList m_textShadowDataList;
 };
 
+Canvas* createCanvasDirectEFL(StarFish* starfish, void* data)
+{
+    return new CanvasEFL(starfish, data);
+}
+
+Canvas* createCanvasEFL(StarFish* starfish, CanvasSurface* data)
+{
+    return new CanvasEFL(starfish, data);
+}
+
+#if defined(PORT_CANVAS_BACKEND_EFL)
 Canvas* Canvas::createDirect(StarFish* starfish, void* data)
 {
     return new CanvasEFL(starfish, data);
@@ -1775,5 +1786,6 @@ Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
 {
     return new CanvasEFL(starfish, data);
 }
+#endif
 }
 #endif
