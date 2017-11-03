@@ -79,7 +79,6 @@ public:
             if (sizeBefore == sizeNow) {
                 m_element->setNeedsPainting();
             } else {
-                // TODO consider width, height attribute
                 m_element->setNeedsLayout();
             }
         }
@@ -106,9 +105,23 @@ String* HTMLImageElement::src()
 
 unsigned long HTMLImageElement::width()
 {
+    unsigned long result = 0;
     String* widthStr =
         getAttributeOrEmpty(starFish()->staticStrings()->m_width);
-    return String::parseInt(widthStr);
+    String* heightStr =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_height);
+
+    if (widthStr->equals(String::emptyString)) {
+        if (heightStr->equals(String::emptyString)) {
+            result = m_imageData->width();
+        } else {
+            result = String::parseInt(heightStr) *
+                     (m_imageData->width() / m_imageData->height());
+        }
+    } else {
+        result = String::parseInt(widthStr);
+    }
+    return result;
 }
 
 void HTMLImageElement::setWidth(unsigned long width)
@@ -118,9 +131,23 @@ void HTMLImageElement::setWidth(unsigned long width)
 
 unsigned long HTMLImageElement::height()
 {
+    unsigned long result = 0;
+    String* widthStr =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_width);
     String* heightStr =
         getAttributeOrEmpty(starFish()->staticStrings()->m_height);
-    return String::parseInt(heightStr);
+
+    if (heightStr->equals(String::emptyString)) {
+        if (widthStr->equals(String::emptyString)) {
+            result = m_imageData->height();
+        } else {
+            result = String::parseInt(widthStr) *
+                     (m_imageData->height() / m_imageData->width());
+        }
+    } else {
+        result = String::parseInt(heightStr);
+    }
+    return result;
 }
 
 void HTMLImageElement::setHeight(unsigned long height)
