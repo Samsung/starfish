@@ -97,7 +97,7 @@ public:
 
     virtual void* unwrap()
     {
-        return m_image;
+        return nullptr;
     }
 
     virtual size_t width()
@@ -629,7 +629,7 @@ protected:
 ImageData* ImageData::create(String* localImageSrc)
 {
     ImageData* imageData = new ImageDataMISC(localImageSrc);
-    if (imageData->unwrap() == NULL) {
+    if (imageData->data() == NULL) {
         return NULL;
     }
     return imageData;
@@ -638,7 +638,7 @@ ImageData* ImageData::create(String* localImageSrc)
 ImageData* ImageData::create(const char* buf, size_t len)
 {
     ImageData* imageData = new ImageDataMISC(buf, len);
-    if (imageData->unwrap() == NULL) {
+    if (imageData->data() == NULL) {
         return NULL;
     }
     return imageData;

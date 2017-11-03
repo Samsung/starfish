@@ -65,7 +65,6 @@ extern "C" Ecore_Window ecore_evas_window_get(const Ecore_Evas* e);
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
-extern Evas_Object* g_imgBufferForScreehShot;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
@@ -266,7 +265,7 @@ public:
 
 static WindowImplEFL* g_currentWnd = nullptr;
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_COMPOSITOR_BACKEND_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
 
 class CanvasSurfaceEFL : public CanvasSurface {
 public:
@@ -464,7 +463,7 @@ public:
 
     virtual void* unwrap()
     {
-        return (void*)buffer;
+        return nullptr;
     }
 
     virtual uint8_t* data()
@@ -1424,8 +1423,6 @@ Canvas* WindowImplEFL::preparePainting()
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
-            g_imgBufferForScreehShot =
-                (Evas_Object*)g_surfaceForScreehShot->unwrap();
             Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
             return c;
         }
@@ -1491,8 +1488,6 @@ Canvas* WindowImplEFL::preparePainting()
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
-            g_imgBufferForScreehShot =
-                (Evas_Object*)g_surfaceForScreehShot->unwrap();
             Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
             return c;
         }
@@ -1559,8 +1554,6 @@ Compositor* WindowImplEFL::prepareCompositor()
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
-            g_imgBufferForScreehShot =
-                (Evas_Object*)g_surfaceForScreehShot->unwrap();
             Compositor* c =
                 Compositor::create(starFish(), g_surfaceForScreehShot);
             return c;
@@ -1611,8 +1604,6 @@ Compositor* WindowImplEFL::prepareCompositor()
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
-            g_imgBufferForScreehShot =
-                (Evas_Object*)g_surfaceForScreehShot->unwrap();
             Compositor* c =
                 Compositor::create(starFish(), g_surfaceForScreehShot);
             return c;
@@ -1664,6 +1655,7 @@ Compositor* WindowImplEFL::prepareCompositor()
         m_canvasAdpaterSurface = nullptr;
         evas_object_hide(m_canvasAdpater);
         evas_object_image_size_set(m_canvasAdpater, 0, 0);
+        evas_object_image_data_set(m_canvasAdpater, nullptr);
     }
 #endif
 
