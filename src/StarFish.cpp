@@ -300,7 +300,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         evas_object_resize((Evas_Object*)platformHandle, w, h);
         evas_object_move((Evas_Object*)platformHandle, x, y);
     }
-
 #endif
     m_nativeHandle = platformHandle;
     m_deviceKind = deviceKindUseTouchScreen;

@@ -1247,32 +1247,43 @@ public:
         }
 
         Evas_Object* imgData = (Evas_Object*)data->unwrap();
-        // NOTE
-        // we don't need to check `!shouldApplyEvasMap()` here
-        // but, `evas_object_image_source_set(eo, imgData) + evas_map` gives
-        // segfault or incorrect result.....
-        if (evas_object_evas_get(imgData) == evas_object_evas_get(eo) &&
-            !shouldApplyEvasMap()) {
-            evas_object_image_source_set(eo, imgData);
+
+        if (!imgData) {
+            evas_object_image_size_set(eo, data->width(), data->height());
+            evas_object_image_colorspace_set(eo, EVAS_COLORSPACE_ARGB8888);
+            evas_object_image_data_set(eo, data->data());
+            evas_object_image_data_update_add(eo, 0, 0, data->width(),
+                                              data->height());
         } else {
-            if (((char*)evas_object_data_get(imgData, "local"))[0] == '0') {
-                void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
+            // NOTE
+            // we don't need to check `!shouldApplyEvasMap()` here
+            // but, `evas_object_image_source_set(eo, imgData) + evas_map` gives
+            // segfault or incorrect result.....
+            if (evas_object_evas_get(imgData) == evas_object_evas_get(eo) &&
+                !shouldApplyEvasMap()) {
+                evas_object_image_source_set(eo, imgData);
+            } else {
+                if (((char*)evas_object_data_get(imgData, "local"))[0] == '0') {
+                    void* imgBuf =
+                        evas_object_image_data_get(imgData, EINA_FALSE);
+                    evas_object_image_size_set(eo, data->width(),
+                                               data->height());
+#ifndef STARFISH_TIZEN_TV
+                    evas_object_image_colorspace_set(
+                        eo, evas_object_image_colorspace_get(imgData));
+#endif
+                    evas_object_image_data_set(eo, imgBuf);
+                } else {
+                    const char* path;
+                    evas_object_image_file_get(imgData, &path, NULL);
+                    evas_object_image_file_set(eo, path, NULL);
+                }
                 evas_object_image_size_set(eo, data->width(), data->height());
 #ifndef STARFISH_TIZEN_TV
                 evas_object_image_colorspace_set(
                     eo, evas_object_image_colorspace_get(imgData));
 #endif
-                evas_object_image_data_set(eo, imgBuf);
-            } else {
-                const char* path;
-                evas_object_image_file_get(imgData, &path, NULL);
-                evas_object_image_file_set(eo, path, NULL);
             }
-            evas_object_image_size_set(eo, data->width(), data->height());
-#ifndef STARFISH_TIZEN_TV
-            evas_object_image_colorspace_set(
-                eo, evas_object_image_colorspace_get(imgData));
-#endif
         }
 
         evas_object_image_filled_set(eo, EINA_TRUE);
@@ -1347,6 +1358,16 @@ public:
         }
 
         Evas_Object* imgData = (Evas_Object*)data->unwrap();
+
+        if (!imgData) {
+            imgData = evas_object_image_add(m_canvas);
+            if (m_objList) {
+                m_objList->push_back(imgData);
+            }
+
+            evas_object_image_data_set(imgData, data->data());
+            evas_object_image_size_set(imgData, data->width(), data->height());
+        }
         // const char* buf;
         // evas_object_image_file_get(imgData, &buf, NULL);
         // evas_object_image_file_set(eo, buf, NULL);
@@ -1510,6 +1531,20 @@ public:
         }
 
         Evas_Object* eo = (Evas_Object*)data->unwrap();
+        if (!eo) {
+            eo = evas_object_image_add(m_canvas);
+            evas_object_image_filled_set(eo, EINA_TRUE);
+            evas_object_image_colorspace_set(
+                eo, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
+            evas_object_image_alpha_set(eo, EINA_TRUE);
+            evas_object_anti_alias_set(eo, EINA_TRUE);
+            evas_object_image_size_set(eo, data->bufferWidth(),
+                                       data->bufferHeight());
+            evas_object_image_data_set(eo, data->data());
+            if (m_objList) {
+                m_objList->push_back(eo);
+            }
+        }
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
         evas_object_raise(eo);
