@@ -144,6 +144,31 @@ void HTMLAnchorElement::setHost(String* host)
     setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
 }
 
+String* HTMLAnchorElement::pathname()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        return (new ResourceURL(hrefAttr.getValue()->trim(),
+                                document()->urlString()))
+            ->pathname();
+    }
+    return String::emptyString;
+}
+
+void HTMLAnchorElement::setPathname(String* path)
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (!hrefAttr.hasValue()) {
+        return;
+    }
+    ResourceURL* resourceURL =
+        new ResourceURL(hrefAttr.getValue()->trim(), document()->urlString());
+    resourceURL = resourceURL->setPathname(path);
+    setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
+}
+
 String* HTMLAnchorElement::protocol()
 {
     Nullable<String*> hrefAttr =

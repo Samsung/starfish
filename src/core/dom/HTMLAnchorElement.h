@@ -54,6 +54,9 @@ public:
     String* host();
     void setHost(String* host);
 
+    String* pathname();
+    void setPathname(String* host);
+
     String* protocol();
     void setProtocol(String* protocol);
 };

@@ -178,7 +178,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
 | Document (non-standard) | method | (HTMLCollection or Node or null) document._nodeName_ | Returns elements of type a, applet, area, embed, form, frameset, img, or object with name="_nodeName_". Returns an element if there is only one such element. |
 | [VisibilityChange Event](https://www.w3.org/TR/page-visibility/#sec-visibilitychange-event) | Event Handler | visibilitychange | Fire when the content of a tab has become visible or has been hidden. |
-| [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | DocumentFragment is a "lightweight" or "minimal" Document object. It is very common to want to be able to extract a portion of a document's tree or to create a new fragment of a document. |
+| [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | DocumentFragment is a "lightweight" or "minimal" Document object. It is very common to want to be able to extract a portion of a document's tree or to create a new fragment of a document. Also it implements [ParentNode](https://dom.spec.whatwg.org/#interface-parentnode) and [NonElementParentNode](https://www.w3.org/TR/dom/#interface-nonelementparentnode)|
 | [DocumentType](https://dom.spec.whatwg.org/#documenttype) | interface | DocumentType | Document type |
 |  | attribute | name | Return the context object’s name. |
 |  | attribute | publicId | Return the context object’s public ID. |

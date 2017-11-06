@@ -11,7 +11,7 @@ interface HTMLHyperlinkElementUtils {
   [CEReactions] attribute USVString host;
   [Unimplemented, CEReactions] attribute USVString hostname;
   [Unimplemented, CEReactions] attribute USVString port;
-  [Unimplemented, CEReactions] attribute USVString pathname;
+  [CEReactions] attribute USVString pathname;
   [Unimplemented, CEReactions] attribute USVString search;
   [Unimplemented, CEReactions] attribute USVString hash;
 };
