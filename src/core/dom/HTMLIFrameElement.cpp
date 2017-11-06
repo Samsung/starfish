@@ -183,12 +183,14 @@ Window* HTMLIFrameElement::contentWindow() const
 void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
                                  ResourceURL* referrerURL)
 {
-    unloadSrc();
-    if (!m_historyManager) {
-        m_historyManager = HistoryManager::create(this);
+    if (ResourceURL::isValidURL(url->urlString())) {
+        unloadSrc();
+        if (!m_historyManager) {
+            m_historyManager = HistoryManager::create(this);
+        }
+        m_browsingContext = BrowsingContext::create(this);
+        m_browsingContext->navigate(url, type, referrerURL);
     }
-    m_browsingContext = BrowsingContext::create(this);
-    m_browsingContext->navigate(url, type, referrerURL);
 }
 
 void HTMLIFrameElement::childBrowsingContextLoaded()

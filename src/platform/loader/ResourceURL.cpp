@@ -488,6 +488,7 @@ String* ResourceURL::mergeDocumentURIWithURIString(String* documentURI,
 String* ResourceURL::baseURI() const
 {
     if (m_protocol == Protocol::DATA_PROTOCOL ||
+        m_protocol == Protocol::JAVASCRIPT_PROTOCOL ||
         m_protocol == Protocol::ABOUT_PROTOCOL) {
         return String::emptyString;
     }
