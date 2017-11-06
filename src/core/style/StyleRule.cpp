@@ -257,7 +257,7 @@ void StyleRuleImport::requestStyleSheet()
 
     unloadStyleSheetIfExists();
     ResourceURL* absURL =
-        new ResourceURL(m_strHref, m_parentStyleSheet->url()->string());
+        new ResourceURL(m_strHref, m_parentStyleSheet->url()->urlString());
     CSSStyleSheet* rootSheet = m_parentStyleSheet;
     for (CSSStyleSheet* sheet = m_parentStyleSheet; sheet;
          sheet = sheet->parentStyleSheet()) {
