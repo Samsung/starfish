@@ -112,11 +112,13 @@ unsigned long HTMLImageElement::width()
         getAttributeOrEmpty(starFish()->staticStrings()->m_height);
 
     if (widthStr->equals(String::emptyString)) {
-        if (heightStr->equals(String::emptyString)) {
-            result = m_imageData->width();
-        } else {
-            result = String::parseInt(heightStr) *
-                     (m_imageData->width() / m_imageData->height());
+        if (m_imageData) {
+            if (heightStr->equals(String::emptyString)) {
+                result = m_imageData->width();
+            } else {
+                result = String::parseInt(heightStr) *
+                         (m_imageData->width() / m_imageData->height());
+            }
         }
     } else {
         result = String::parseInt(widthStr);
@@ -138,11 +140,13 @@ unsigned long HTMLImageElement::height()
         getAttributeOrEmpty(starFish()->staticStrings()->m_height);
 
     if (heightStr->equals(String::emptyString)) {
-        if (widthStr->equals(String::emptyString)) {
-            result = m_imageData->height();
-        } else {
-            result = String::parseInt(widthStr) *
-                     (m_imageData->height() / m_imageData->width());
+        if (m_imageData) {
+            if (widthStr->equals(String::emptyString)) {
+                result = m_imageData->height();
+            } else {
+                result = String::parseInt(widthStr) *
+                         (m_imageData->height() / m_imageData->width());
+            }
         }
     } else {
         result = String::parseInt(heightStr);
