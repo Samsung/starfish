@@ -41,6 +41,8 @@ public:
     virtual String* nodeName();
 
     virtual Node* clone();
+
+    Element* getElementById(String* id);
 };
 }
 

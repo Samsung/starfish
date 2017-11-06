@@ -18,6 +18,8 @@
 #include "StarFish.h"
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/Text.h"
+#include "core/dom/Traverse.h"
+#include "core/dom/HTMLElement.h"
 
 namespace StarFish {
 
@@ -30,5 +32,20 @@ Node* DocumentFragment::clone()
 {
     DocumentFragment* newNode = new DocumentFragment(document());
     return newNode;
+}
+
+Element* DocumentFragment::getElementById(String* id)
+{
+    if (id->length() == 0) {
+        return nullptr;
+    }
+    return (Element*)Traverse::findDescendant(this, [&](Node* child) {
+        if (child->isHTMLElement() && child->asHTMLElement()->hasId() &&
+            child->asHTMLElement()->id()->equals(id)) {
+            return true;
+        } else {
+            return false;
+        }
+    });
 }
 }
