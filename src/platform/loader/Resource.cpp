@@ -24,7 +24,6 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/page/Window.h"
-#include "platform/network/http/HTTPHeaderMap.h"
 
 namespace StarFish {
 
@@ -38,17 +37,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
         ResourceRequest::MethodType method = ResourceRequest::GET_METHOD;
         String* entityBody = String::emptyString;
 
-        if (isImageResource()) {
-            m_resourceRequest->setRequestHeader(
-                String::createASCIIString(HTTPHeaderMap::kAccept),
-                String::createASCIIString("image/*"));
-        } else {
-            // The current implementation has no difference between
-            // text resource and default resource.
-            m_resourceRequest->setRequestHeader(
-                String::createASCIIString(HTTPHeaderMap::kAccept),
-                String::createASCIIString("text/html,text/plain,text/*"));
-        }
+        prepare();
 
         String* urlToOpen = url()->urlString();
         if (m_url->isDocumentURL()) {

@@ -311,6 +311,7 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     std::string tmpStr;
     tmpStr = m_orgProxy->starFish()->locale().getName();
     std::replace(tmpStr.begin(), tmpStr.end(), '_', '-');
+    tmpStr = tmpStr + " , en-US , en";
     headers.setHeader(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
     headers.setHeader(
         HTTPHeaderMap::kUserAgent,
