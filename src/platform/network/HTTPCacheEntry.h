@@ -19,11 +19,24 @@
 
 namespace StarFish {
 class ResourceURL;
+struct CacheControl {
+    CacheControl()
+        : noCache(false)
+        , noStore(false)
+        , mustRevalidate(false)
+        , maxAge(0)
+    {
+    }
 
+    bool noCache : 1;
+    bool noStore : 1;
+    bool mustRevalidate : 1;
+    time_t maxAge;
+};
 class HTTPCacheEntry : public gc {
 public:
-    HTTPCacheEntry(ResourceURL* url, time_t date, time_t maxAge);
-    HTTPCacheEntry(ResourceURL* url, time_t date, time_t maxAge,
+    HTTPCacheEntry(ResourceURL* url, time_t date, CacheControl& cacheControl);
+    HTTPCacheEntry(ResourceURL* url, time_t date, CacheControl& cacheControl,
                    String* entryFileName);
     ~HTTPCacheEntry();
 
@@ -31,6 +44,12 @@ public:
     {
         return m_url;
     }
+
+    time_t date()
+    {
+        return m_date;
+    }
+
     String* entryFileName()
     {
         return m_entryFileName;
@@ -40,9 +59,9 @@ public:
     bool writeRawDataToEntryFile(std::vector<char>& rawData);
 
     size_t entryKey() const;
-    time_t maxAge() const
+    CacheControl cacheControl() const
     {
-        return m_maxAge;
+        return m_cacheControl;
     }
 
     String* toString();
@@ -56,7 +75,7 @@ public:
 private:
     ResourceURL* m_url;
     time_t m_date;
-    time_t m_maxAge;
+    CacheControl m_cacheControl;
     String* m_entryFileName;
 };
 

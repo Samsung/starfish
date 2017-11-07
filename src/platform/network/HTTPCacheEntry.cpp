@@ -24,17 +24,21 @@
 #include <iostream>
 namespace StarFish {
 
-HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, time_t date, time_t maxAge)
-    : HTTPCacheEntry(url, date, maxAge, String::emptyString)
+HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, time_t date,
+                               CacheControl& cacheControl)
+    : m_url(url)
+    , m_date(date)
+    , m_cacheControl(cacheControl)
+    , m_entryFileName(nullptr)
 {
 }
 
-HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, time_t date, time_t maxAge,
+HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, time_t date,
+                               CacheControl& cacheControl,
                                String* entryFileName)
-    : m_url(url)
-    , m_maxAge(maxAge)
-    , m_entryFileName(entryFileName)
+    : HTTPCacheEntry(url, date, cacheControl)
 {
+    m_entryFileName = entryFileName;
 }
 
 HTTPCacheEntry::~HTTPCacheEntry()
@@ -86,13 +90,25 @@ String* HTTPCacheEntry::toString()
 {
     StringBuilder builder;
     std::string entryKeystr = std::to_string(entryKey());
-    std::string maxAgeStr = std::to_string(maxAge());
+    std::string dateStr = std::to_string(date());
+    std::string maxAgeStr = std::to_string(m_cacheControl.maxAge);
+
+    // etrentryKey(UINT) urlString(STRING) date(UINT) maxAge(UINT) no-cache(0|1)
+    // mustRevalidate(0|1) entryFileName(STRING)
 
     builder.appendString(entryKeystr.data());
     builder.appendString(" ");
     builder.appendString(url()->urlString());
     builder.appendString(" ");
+    builder.appendString(dateStr.data());
+    builder.appendString(" ");
     builder.appendString(maxAgeStr.data());
+    builder.appendString(" ");
+    m_cacheControl.noCache ? builder.appendString("1")
+                           : builder.appendString("0");
+    builder.appendString(" ");
+    m_cacheControl.mustRevalidate ? builder.appendString("1")
+                                  : builder.appendString("0");
     builder.appendString(" ");
     builder.appendString(entryFileName());
 
