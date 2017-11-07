@@ -981,8 +981,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     // but it influence its child boxes, within it's inline formatting context
     // and is further propagated to any in-flow block-level boxes that split the
     // inline (see section 9.2.1.1).
-    // we store text-decoration values in FrameBlockBox
-    // so we need to rebuild frame from this point
     // https://www.w3.org/TR/CSS2/text.html#propdef-text-decoration
     if (newStyle->m_textDecoration != oldStyle->m_textDecoration) {
         damage = (ComputedStyleDamage)(
@@ -1036,35 +1034,61 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                           : false;
     if (oldComplex != newComplex) {
         damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            ComputedStyleDamage::
+                ComputedStyleDamageComputeStackingContextProperties |
+            damage);
+    }
+
+    // TODO
+    if (/*compare transform-3d is not same*/ false) {
+        // damage = (ComputedStyleDamage)(
+        //     ComputedStyleDamage::ComputedStyleDamageComputeStackingContextProperties
+        //     | damage);
+    }
+
+    // TODO
+    if (/*compare transform-3d perspective is not same*/ false) {
+        // damage = (ComputedStyleDamage)(
+        //     ComputedStyleDamage::ComputedStyleDamageComputeStackingContextProperties
+        //     | damage);
     }
 
     if (!newStyle->hasTransforms() && !oldStyle->hasTransforms()) {
     } else if (!newStyle->hasTransforms() || !oldStyle->hasTransforms()) {
-        // if element has transform, we should re-layout for building
+        // FIXME if element has transform, we should re-layout for building
         // stacking-context
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::
+                ComputedStyleDamageComputeStackingContextProperties |
+            damage);
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     } else {
         if (*newStyle->m_rareComputedStyleData->m_transforms !=
             *oldStyle->m_rareComputedStyleData->m_transforms) {
             damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamageComposite | damage);
+                ComputedStyleDamage::
+                    ComputedStyleDamageComputeStackingContextProperties |
+                damage);
         }
     }
 
     if (!newStyle->hasTransformOrigin() && !oldStyle->hasTransformOrigin()) {
-    } else if (!newStyle->hasTransformOrigin() ||
-               !oldStyle->hasTransformOrigin()) {
+    } else if (newStyle->hasTransformOrigin() !=
+               oldStyle->hasTransformOrigin()) {
         damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageComposite | damage);
+            ComputedStyleDamage::
+                ComputedStyleDamageComputeStackingContextProperties |
+            damage);
     } else {
         if (!(*newStyle->m_rareComputedStyleData->m_transformOrigin ==
               *oldStyle->m_rareComputedStyleData->m_transformOrigin)) {
             damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamageComposite | damage);
+                ComputedStyleDamage::
+                    ComputedStyleDamageComputeStackingContextProperties |
+                damage);
         }
     }
 

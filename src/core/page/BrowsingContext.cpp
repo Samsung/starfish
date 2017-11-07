@@ -457,6 +457,7 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
         document()->frame()->layout(ctx,
                                     Frame::LayoutWantToResolve::ResolveAll);
         m_needsLayout = false;
+        webView()->setNeedsComputeStackingContextProperties();
         return true;
     }
     return false;

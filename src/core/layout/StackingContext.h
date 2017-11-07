@@ -71,6 +71,11 @@ public:
         return m_parent;
     }
 
+    bool isRootContext()
+    {
+        return parent() == nullptr;
+    }
+
     bool needsGraphicsBuffer()
     {
         return m_rareData ? m_rareData->m_needsGraphicsBuffer : false;
@@ -88,18 +93,20 @@ public:
         return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
     }
 
-    SkMatrix transformMatrix()
-    {
-        return m_rareData ? m_rareData->m_matrix : SkMatrix::I();
-    }
-
     void unite(const LayoutRect& other)
     {
         STARFISH_ASSERT(m_rareData);
         m_rareData->m_visibleRect.unite(other);
     }
 
-    bool computeStackingContextProperties(bool forceNeedsBuffer = false);
+    LayoutLocation transformOrigin();
+    void computeTransformMatrix();
+    SkMatrix transformMatrix()
+    {
+        return m_rareData ? m_rareData->m_matrix : SkMatrix::I();
+    }
+
+    void computeStackingContextProperties();
 
     void paintStackingContext(Canvas* canvas);
     void compositeStackingContext(Compositor* compositor);
@@ -114,6 +121,12 @@ public:
 
 protected:
     StackingContextRareData* ensureRareData();
+
+    struct ComputeStackingContextContext;
+    void computeStackingContextProperties(ComputeStackingContextContext& ctx,
+                                          StackingContext* ancestorLayer,
+                                          bool& descendantHas3DTransform);
+
     FrameBox* m_owner;
     StackingContext* m_parent;
     GCVector<StackingContextChild*> m_childContexts;

@@ -83,6 +83,7 @@ WebView::WebView(StarFish* starFish)
     , m_seed((unsigned int)time(NULL))
     , m_inRendering(false)
     , m_needsRendering(false)
+    , m_needsComputeStackingContextProperties(false)
     , m_needsPainting(false)
     , m_needsComposite(false)
     , m_didCompositeBefore(false)
@@ -445,44 +446,24 @@ void WebView::layoutIfNeeds()
 
     for (size_t i = 0; i < m_browsingContextsNeedsLayout.size(); i++) {
         didLayout =
-            m_browsingContextsNeedsLayout[i]->layoutIfNeeds() || didLayout;
+            didLayout | m_browsingContextsNeedsLayout[i]->layoutIfNeeds();
     }
     m_browsingContextsNeedsLayout.clear();
 
     if (didLayout) {
-        {
-#ifdef STARFISH_ENABLE_TIMER
-            ProfilerTimer t("computeStackingContextProperties");
-#endif
-            m_topLevelBrowsingContext->document()
-                ->frame()
-                ->establishesStackingContextIfNeeds();
-            if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
-                m_rootStackingContext = m_topLevelBrowsingContext->document()
-                                            ->frame()
-                                            ->firstChild()
-                                            ->asFrameBox()
-                                            ->stackingContext();
-                m_rootStackingContext->computeStackingContextProperties();
-            }
-
-            // STARFISH_LOG_INFO("computeStackingContextProperties end composite
-            // %d\n", (int)m_rootStackingContext->needsOwnBuffer());
+        m_topLevelBrowsingContext->document()
+            ->frame()
+            ->establishesStackingContextIfNeeds();
+        if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
+            m_rootStackingContext = m_topLevelBrowsingContext->document()
+                                        ->frame()
+                                        ->firstChild()
+                                        ->asFrameBox()
+                                        ->stackingContext();
+        } else {
+            m_rootStackingContext = nullptr;
         }
-#ifdef STARFISH_ENABLE_TEST
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableComputedStyleDump) {
-            // dump style
-            m_topLevelBrowsingContext->document()->styleResolver().dumpDOMStyle(
-                m_topLevelBrowsingContext->document());
-        }
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableFrameTreeDump) {
-            FrameTreeBuilder::dumpFrameTree(
-                m_topLevelBrowsingContext->document(), 0);
-        }
-#endif
-        m_needsPainting = true;
+        setNeedsComputeStackingContextProperties();
     }
 }
 
@@ -523,6 +504,35 @@ bool WebView::rendering(bool force)
 #endif
 
     layoutIfNeeds();
+
+    if (m_needsComputeStackingContextProperties) {
+        {
+#ifdef STARFISH_ENABLE_TIMER
+            ProfilerTimer t("computeStackingContextProperties");
+#endif
+            if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
+                m_rootStackingContext->computeStackingContextProperties();
+            }
+
+            // STARFISH_LOG_INFO("computeStackingContextProperties end composite
+            // %d\n", (int)m_rootStackingContext->needsOwnBuffer());
+            m_needsComputeStackingContextProperties = false;
+        }
+
+#ifdef STARFISH_ENABLE_TEST
+        if (m_starFish->startUpFlag() &
+            StarFishStartUpFlag::enableComputedStyleDump) {
+            // dump style
+            m_topLevelBrowsingContext->document()->styleResolver().dumpDOMStyle(
+                m_topLevelBrowsingContext->document());
+        }
+        if (m_starFish->startUpFlag() &
+            StarFishStartUpFlag::enableFrameTreeDump) {
+            FrameTreeBuilder::dumpFrameTree(
+                m_topLevelBrowsingContext->document(), 0);
+        }
+#endif
+    }
 
     {
         size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
