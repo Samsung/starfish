@@ -35,6 +35,17 @@ class TextResource : public Resource {
     }
 
 public:
+    virtual void prepare()
+    {
+        if (m_resourceRequest) {
+            m_resourceRequest->setRequestHeader(
+                String::createASCIIString(HTTPHeaderMap::kAccept),
+                String::createASCIIString(
+                    "text/html,text/plain,text/javascript,text/"
+                    "ecmascript,application/x-javascript,text/*"));
+        }
+    }
+
     virtual bool isTextResource()
     {
         return true;

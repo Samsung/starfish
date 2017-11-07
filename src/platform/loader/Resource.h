@@ -20,6 +20,7 @@
 #include "core/util/URL.h"
 #include "platform/loader/ResourceClient.h"
 #include "core/modules/resource_request/ResourceRequest.h"
+#include "platform/network/http/HTTPHeaderMap.h"
 
 namespace StarFish {
 
@@ -63,6 +64,15 @@ public:
 
     virtual ~Resource()
     {
+    }
+
+    virtual void prepare()
+    {
+        if (m_resourceRequest) {
+            m_resourceRequest->setRequestHeader(
+                String::createASCIIString(HTTPHeaderMap::kAccept),
+                String::createASCIIString("*/*"));
+        }
     }
 
     virtual bool isTextResource()

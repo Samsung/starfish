@@ -37,6 +37,16 @@ class ImageResource : public Resource {
     }
 
 public:
+    virtual void prepare()
+    {
+        if (m_resourceRequest) {
+            m_resourceRequest->setRequestHeader(
+                String::createASCIIString(HTTPHeaderMap::kAccept),
+                String::createASCIIString(
+                    "image/png , image/jpeg , image/gif"));
+        }
+    }
+
     virtual bool isImageResource()
     {
         return true;
