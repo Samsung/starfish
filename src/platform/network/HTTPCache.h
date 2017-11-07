@@ -22,21 +22,6 @@
 namespace StarFish {
 class NetworkURLWorkerData;
 
-struct CacheControl {
-    CacheControl()
-        : noCache(false)
-        , noStore(false)
-        , mustRevalidate(false)
-        , maxAge(0)
-    {
-    }
-
-    bool noCache : 1;
-    bool noStore : 1;
-    bool mustRevalidate : 1;
-    time_t maxAge;
-};
-
 class HTTPCache : public gc {
 public:
     HTTPCache(String* cacheDirPath);

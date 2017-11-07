@@ -17,6 +17,7 @@
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "StarFishConfig.h"
 #include "HTTPCache.h"
+#include "platform/network/http/HTTPHeaderMap.h"
 #include "platform/file/FileIO.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/modules/resource_request/ResourceRequest.h"
@@ -118,16 +119,23 @@ void HTTPCache::initFromIndexFileIfPossible()
     // hash-key url-string max-age entry-file-name
     std::ifstream ifs(m_indexFilePath->toUTF8NonGCString().data());
 
-    size_t entryKey = 0;
-    std::string urlStr;
-    time_t date = 0;
-    time_t maxAge = 0;
-    std::string entryfileName;
+    size_t entryKey;
+    std::string urlStr, entryfileName;
+    time_t date, maxAge;
+    int noCache, mustRevalidate;
 
-    while (ifs >> entryKey >> urlStr >> date >> maxAge >> entryfileName) {
+    while (ifs >> entryKey >> urlStr >> date >> maxAge >> noCache >>
+           mustRevalidate >> entryfileName) {
         ResourceURL* url = new ResourceURL(urlStr.data());
+
+        CacheControl cc;
+        cc.maxAge = maxAge;
+        cc.noCache = (bool)noCache;
+        cc.mustRevalidate = (bool)mustRevalidate;
+
         HTTPCacheEntry* newEntry = new HTTPCacheEntry(
-            url, date, maxAge, String::fromUTF8(entryfileName.data()));
+            url, date, cc, String::fromUTF8(entryfileName.data()));
+
         m_cacheEntryTable.insert(
             std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
     }
@@ -184,10 +192,19 @@ void HTTPCache::caching(NetworkURLWorkerData* data)
     // updated.
     // auto date =
     // data->request->responseHeaderMap().find(HTTPHeaderMap::kDate);
-    // auto cacheControl = data->request->responseHeaderMap().find(
-    //     HTTPHeaderMap::kCacheControl);
 
-    HTTPCacheEntry* newEntry = new HTTPCacheEntry(data->request->url(), 0, 0);
+    CacheControl cc;
+    auto it =
+        data->request->responseHeaderMap().find(HTTPHeaderMap::kCacheControl);
+    if (it != data->request->responseHeaderMap().end()) {
+        cc = parseCacheControl(it->second);
+    }
+
+    if (cc.noStore) {
+        return;
+    }
+
+    HTTPCacheEntry* newEntry = new HTTPCacheEntry(data->request->url(), 0, cc);
     newEntry->setEntryFileNameUsingCachePath(m_cacheDirPath);
 
     bool ret = newEntry->writeRawDataToEntryFile(data->request->response());
@@ -230,8 +247,40 @@ void HTTPCache::clearAndRemoveCacheDir()
 
 CacheControl HTTPCache::parseCacheControl(std::string directives)
 {
-    // TODO
-    return CacheControl();
+    // https://tools.ietf.org/html/rfc7234#page-21
+    // See 5.2, 5.2.1, 5.2.2
+
+    String* str = String::fromUTF8(directives.data());
+
+    GCVector<String*> tokens;
+    str->split(',', tokens);
+
+    CacheControl cc;
+    for (auto directive : tokens) {
+        directive = directive->trim();
+
+        size_t pos = directive->find("=");
+
+        if (pos != SIZE_MAX) {
+            String* key = directive->substring(0, pos)->trim();
+            String* value =
+                directive->substring(pos + 1, directive->length() - pos - 1)
+                    ->trim();
+
+            if (key->equals("max-age")) {
+                cc.maxAge = String::parseInt64(value);
+            }
+        } else {
+            if (directive->equals("no-cache")) {
+                cc.noCache = true;
+            } else if (directive->equals("no-store")) {
+                cc.noStore = true;
+            } else if (directive->equals("must-revalidate")) {
+                cc.mustRevalidate = true;
+            }
+        }
+    }
+    return cc;
 }
 }
 #endif
