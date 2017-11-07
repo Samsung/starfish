@@ -6235,6 +6235,11 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
             element->setNeedsLayout();
         }
 
+        if (damage & ComputedStyleDamage::
+                         ComputedStyleDamageComputeStackingContextProperties) {
+            element->webView()->setNeedsComputeStackingContextProperties();
+        }
+
         if (damage & ComputedStyleDamage::ComputedStyleDamagePainting) {
             element->setNeedsPainting();
         }

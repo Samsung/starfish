@@ -1220,6 +1220,12 @@ public:
         return !operator==(src);
     }
 
+    bool intersects(const LayoutRect& other) const
+    {
+        return !isEmpty() && !other.isEmpty() && x() < other.maxX() &&
+               other.x() < maxX() && y() < other.maxY() && other.y() < maxY();
+    }
+
 private:
     LayoutLocation m_location;
     LayoutSize m_size;

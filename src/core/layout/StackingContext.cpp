@@ -1,4 +1,28 @@
 /*
+ * Copyright (C) 2009, 2010 Apple Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY APPLE INC. ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE INC. OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/*
  * Copyright (c) 2016-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,9 +53,159 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
+
+struct StackingContext::ComputeStackingContextContext {
+    StackingContext* rootLayer;
+    StackingContext* compositingAncestor;
+    std::shared_ptr<std::unordered_map<StackingContext*, LayoutRect>>
+        extentPerLayer;
+    std::shared_ptr<std::vector<StackingContext*>> compositedLayers;
+    std::shared_ptr<bool> overlapMapFilled;
+    bool subLayerHasGraphicsBuffer;
+    bool testingOverlap;
+
+    ComputeStackingContextContext(StackingContext* rootLayer,
+                                  StackingContext* compositingAncestor,
+                                  bool testingOverlap = true)
+        : rootLayer(rootLayer)
+        , compositingAncestor(compositingAncestor)
+        , extentPerLayer(new std::unordered_map<StackingContext*, LayoutRect>())
+        , compositedLayers(new std::vector<StackingContext*>())
+        , overlapMapFilled(new bool(false))
+        , subLayerHasGraphicsBuffer(false)
+        , testingOverlap(testingOverlap)
+    {
+    }
+
+    ComputeStackingContextContext(const ComputeStackingContextContext& other)
+        : rootLayer(other.rootLayer)
+        , compositingAncestor(other.compositingAncestor)
+        , extentPerLayer(other.extentPerLayer)
+        , compositedLayers(other.compositedLayers)
+        , overlapMapFilled(other.overlapMapFilled)
+        , subLayerHasGraphicsBuffer(other.subLayerHasGraphicsBuffer)
+        , testingOverlap(other.testingOverlap)
+    {
+    }
+
+    LayoutRect computeLayerExtent(StackingContext* c, SkMatrix m)
+    {
+        LayoutRect rt = c->owner()->frameRect();
+        if (m.rectStaysRect()) {
+            SkRect skRect =
+                SkRect::MakeXYWH((float)rt.x(), (float)rt.y(),
+                                 (float)rt.width(), (float)rt.height());
+            m.mapRect(&skRect);
+
+            return LayoutRect(skRect.x(), skRect.y(), skRect.width(),
+                              skRect.height());
+        } else {
+            SkPoint pt[4];
+
+            pt[0].fX = rt.x();
+            pt[0].fX = rt.y();
+
+            pt[1].fX = rt.maxX();
+            pt[1].fX = rt.y();
+
+            pt[2].fX = rt.x();
+            pt[2].fX = rt.maxY();
+
+            pt[3].fX = rt.maxX();
+            pt[3].fX = rt.maxY();
+
+            m.mapPoints(pt, 4);
+
+            LayoutUnit minX = pt[0].x();
+            LayoutUnit minY = pt[0].y();
+            LayoutUnit maxX = pt[0].x();
+            LayoutUnit maxY = pt[0].y();
+
+            for (size_t i = 1; i < 4; i++) {
+                minX = std::min((float)pt[i].x(), (float)minX);
+                minY = std::min((float)pt[i].y(), (float)minY);
+
+                maxX = std::max((float)pt[i].x(), (float)maxX);
+                maxY = std::max((float)pt[i].y(), (float)maxY);
+            }
+
+            return LayoutRect(minX, minY, (maxX - minX).abs(),
+                              (maxY - minY).abs());
+        }
+    }
+
+    LayoutRect screenExtentPerLayer(StackingContext* c)
+    {
+        auto iter = extentPerLayer->find(c);
+        if (iter != extentPerLayer->end()) {
+            return iter->second;
+        }
+
+        StackingContext* cur = c;
+
+        std::vector<StackingContext*> path;
+        while (cur != rootLayer) {
+            path.push_back(cur);
+            cur = cur->parent();
+        }
+
+        SkMatrix m = SkMatrix::I();
+        FrameBox* before = rootLayer->owner();
+        FrameBox* after;
+        for (size_t i = 0; i < path.size(); i++) {
+            after = path[i]->owner();
+
+            SkMatrix m2 = after->stackingContext()->transformMatrix();
+            if (!m2.isIdentity()) {
+                LayoutLocation to = after->stackingContext()->transformOrigin();
+                m.postTranslate((float)to.x(), (float)to.y());
+                m.postConcat(m2);
+                m.postTranslate(-(float)to.x(), -(float)to.y());
+            }
+
+            auto pos = after->absolutePointIncludingScroll(before);
+            m.postTranslate((float)pos.x(), (float)pos.y());
+
+            after = before;
+        }
+
+        LayoutRect rt = computeLayerExtent(c, m);
+
+        extentPerLayer->insert(std::make_pair(c, rt));
+
+        return rt;
+    }
+
+    bool isOverlap(StackingContext* a, StackingContext* b)
+    {
+        auto extentA = screenExtentPerLayer(a);
+        auto extentB = screenExtentPerLayer(b);
+        return extentA.intersects(extentB);
+    }
+
+    void pushCompsitedLayer(StackingContext* c)
+    {
+        if (!c->isRootContext()) {
+            compositedLayers->push_back(c);
+        }
+    }
+
+    bool isOverlapWithAlreadyCompositedLayer(StackingContext* a)
+    {
+        auto extentA = screenExtentPerLayer(a);
+        for (size_t i = 0; i < compositedLayers->size(); i++) {
+            auto extentB = screenExtentPerLayer(compositedLayers->at(i));
+            if (extentA.intersects(extentB)) {
+                return true;
+            }
+        }
+        return false;
+    }
+};
 
 StackingContextRareData::StackingContextRareData()
     : m_needsGraphicsBuffer(false)
@@ -377,32 +551,328 @@ public:
     Compositor* m_compositor;
 };
 
-bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
+LayoutLocation StackingContext::transformOrigin()
 {
-    bool childNeedsBuffer = false;
+    LayoutUnit ox = m_owner->width() / 2;
+    LayoutUnit oy = m_owner->height() / 2;
+    ComputedStyle* cs = m_owner->style();
+    if (cs->hasTransformOrigin()) {
+        auto od = cs->transformOrigin()->originValue();
+        ox = od->getXAxis().specifiedValue(m_owner->width(), m_owner);
+        oy = od->getYAxis().specifiedValue(m_owner->height(), m_owner);
+    }
+    return LayoutLocation(ox, oy);
+}
+
+void StackingContext::computeTransformMatrix()
+{
+    ComputedStyle* cs = m_owner->style();
+    if (cs->hasTransforms(m_owner)) {
+        ensureRareData();
+        m_rareData->m_matrix = cs->transformsToMatrix(
+            m_owner->width(), m_owner->height(), m_owner, true);
+
+        if (!m_rareData->m_matrix.isIdentity()) {
+            /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
+                               m_rareData->m_matrix.getScaleX(),
+                               m_rareData->m_matrix.getSkewX(),
+                               m_rareData->m_matrix.getTranslateX(),
+                               m_rareData->m_matrix.getSkewY(),
+                               m_rareData->m_matrix.getScaleY(),
+                               m_rareData->m_matrix.getTranslateY(),
+                               m_rareData->m_matrix.getPerspX(),
+                               m_rareData->m_matrix.getPerspY(),
+                               m_rareData->m_matrix.get(8));*/
+            SkMatrix test;
+            bool testResult = m_rareData->m_matrix.invert(&test);
+            if (!testResult) {
+                m_rareData->m_matrix = SkMatrix::InvalidMatrix();
+            }
+        }
+    } else {
+        if (m_rareData) {
+            m_rareData->m_matrix = SkMatrix::I();
+        }
+    }
+}
+
+enum IndirectCompositingReason {
+    None,
+    Stacking,
+    Overlap,
+    BackgroundLayer,
+    GraphicalEffect, // opacity, mask, filter, transform etc.
+    Perspective,
+    Preserve3D
+};
+
+bool requiresCompositingForIndirectReason(FrameBox* owner,
+                                          bool hasCompositedDescendants,
+                                          bool has3DTransformedDescendants,
+                                          IndirectCompositingReason& reason)
+{
+    // When a layer has composited descendants, some effects, like 2d
+    // transforms, filters, masks etc must be implemented
+    // via compositing so that they also apply to those composited descendants.
+    if (hasCompositedDescendants && owner->style()->hasTransforms(owner)) {
+        // && (layer.isolatesCompositedBlending() || layer.transform() ||
+        // renderer.createsGroup() || renderer.hasReflection() ||
+        // renderer.isRenderNamedFlowFragmentContainer())) {
+        reason = IndirectCompositingReason::GraphicalEffect;
+        return true;
+    }
+
+    // A layer with preserve-3d or perspective only needs to be composited if
+    // there are descendant layers that
+    // will be affected by the preserve-3d or perspective.
+    if (has3DTransformedDescendants) {
+        // TODO enable this after implement transform3d
+        /*
+        if (renderer.style().transformStyle3D() == TransformStyle3DPreserve3D) {
+            reason = RenderLayer::IndirectCompositingReason::Preserve3D;
+            return true;
+        }
+
+        if (renderer.style().hasPerspective()) {
+            reason = RenderLayer::IndirectCompositingReason::Perspective;
+            return true;
+        }*/
+    }
+
+    reason = IndirectCompositingReason::None;
+    return false;
+}
+
+void StackingContext::computeStackingContextProperties()
+{
+    STARFISH_ASSERT(parent() == nullptr);
+
+    ComputeStackingContextContext ctx(this, nullptr);
+    bool descendantHas3DTransform;
+    computeStackingContextProperties(ctx, nullptr, descendantHas3DTransform);
+}
+
+void StackingContext::computeStackingContextProperties(
+    ComputeStackingContextContext& compositingState,
+    StackingContext* ancestorLayer, bool& descendantHas3DTransform)
+{
+    computeTransformMatrix();
+
+    // OverlapExtent layerExtent;
+    // Use the fact that we're composited as a hint to check for an animating
+    // transform.
+    // FIXME: Maybe needsToBeComposited() should return a bitmask of reasons, to
+    // avoid the need to recompute things.
+    // if (willBeComposited && !layer.isRootLayer())
+    //      layerExtent.hasTransformAnimation =
+    //      isRunningTransformAnimation(layer.renderer());
+
+    // bool respectTransforms = !layerExtent.hasTransformAnimation;
+    // overlapMap.geometryMap().pushMappingsToAncestor(&layer, ancestorLayer,
+    // respectTransforms);
+
+    bool willBeComposited = m_owner->needsGraphicsBuffer();
+    IndirectCompositingReason compositingReason =
+        compositingState.subLayerHasGraphicsBuffer
+            ? IndirectCompositingReason::Stacking
+            : IndirectCompositingReason::None;
+
+    if (!willBeComposited && compositingState.testingOverlap &&
+        (*compositingState.overlapMapFilled.get())) {
+        // TODO
+        // compositingReason =
+        // compositingState.isOverlapWithAlreadyCompositedLayer(this) ?
+        // IndirectCompositingReason::Overlap : IndirectCompositingReason::None;
+    }
+
+    if (m_owner->isFrameReplaced() &&
+        m_owner->asFrameReplaced()->isFrameReplacedVideo()) {
+        compositingReason = IndirectCompositingReason::Overlap;
+    }
+
+    // layer.setIndirectCompositingReason(compositingReason);
+
+    // Check if the computed indirect reason will force the layer to become
+    // composited.
+    if (!willBeComposited && compositingReason) {
+        willBeComposited = true;
+    }
+
+    // The children of this layer don't need to composite, unless there is
+    // a compositing layer among them, so start by inheriting the compositing
+    // ancestor with subtreeIsCompositing set to false.
+    ComputeStackingContextContext childState(compositingState);
+    childState.subLayerHasGraphicsBuffer = false;
+
+    if (willBeComposited) {
+        // Tell the parent it has compositing descendants.
+        compositingState.subLayerHasGraphicsBuffer = true;
+        // This layer now acts as the ancestor for kids.
+        childState.compositingAncestor = this;
+
+        compositingState.pushCompsitedLayer(this);
+        // overlapMap.pushCompositingContainer();
+        // This layer is going to be composited, so children can safely ignore
+        // the fact that there's an
+        // animation running behind this layer, meaning they can rely on the
+        // overlap map testing again.
+        childState.testingOverlap = true;
+
+        // computeExtent(overlapMap, layer, layerExtent);
+
+        // childState.ancestorHasTransformAnimation |=
+        // layerExtent.hasTransformAnimation;
+        // Too hard to compute animated bounds if both us and some ancestor is
+        // animating transform.
+        // layerExtent.animationCausesExtentUncertainty |=
+        // layerExtent.hasTransformAnimation &&
+        // compositingState.ancestorHasTransformAnimation;
+    }
+
+    bool anyDescendantHas3DTransform = false;
+
     auto iter = m_childContexts.begin();
     while (iter != m_childContexts.end()) {
         StackingContextChild* child = *iter;
+        int32_t num = child->at(0)->zIndex();
+        if (num >= 0) {
+            break;
+        }
         auto iter2 = child->begin();
         while (iter2 != child->end()) {
-            childNeedsBuffer |=
-                (*iter2)->computeStackingContextProperties(childNeedsBuffer);
+            (*iter2)->computeStackingContextProperties(
+                childState, this, anyDescendantHas3DTransform);
+
+            // If we have to make a layer for this child, make one now so we can
+            // have a contents layer
+            // (since we need to ensure that the -ve z-order child renders
+            // underneath our contents).
+            if (!willBeComposited && childState.subLayerHasGraphicsBuffer) {
+                // make layer compositing
+                // layer.setIndirectCompositingReason(RenderLayer::IndirectCompositingReason::BackgroundLayer);
+                compositingReason = BackgroundLayer;
+                childState.compositingAncestor = this;
+                // overlapMap.pushCompositingContainer();
+                compositingState.pushCompsitedLayer(this);
+                // This layer is going to be composited, so children can safely
+                // ignore the fact that there's an
+                // animation running behind this layer, meaning they can rely on
+                // the overlap map testing again
+                childState.testingOverlap = true;
+                willBeComposited = true;
+            }
             iter2++;
         }
         iter++;
     }
 
-    if (m_rareData) {
-        m_rareData->m_matrix = SkMatrix::I();
+    iter = m_childContexts.begin();
+    while (iter != m_childContexts.end()) {
+        StackingContextChild* child = *iter;
+        int32_t num = child->at(0)->zIndex();
+        if (num >= 0) {
+            auto iter2 = child->begin();
+            while (iter2 != child->end()) {
+                (*iter2)->computeStackingContextProperties(
+                    childState, this, anyDescendantHas3DTransform);
+                iter2++;
+            }
+        }
+        iter++;
     }
-    if (forceNeedsBuffer || childNeedsBuffer ||
-        m_owner->needsGraphicsBuffer()) {
+
+    // If we just entered compositing mode, the root will have become composited
+    // (as long as accelerated compositing is enabled).
+    if (isRootContext()) {
+        // if (inCompositingMode() && m_hasAcceleratedCompositing)
+        if (compositingState.compositedLayers->size()) {
+            willBeComposited = true;
+        }
+    }
+
+    if (childState.compositingAncestor &&
+        !(childState.compositingAncestor->parent() == nullptr)) {
+        // addToOverlapMap(overlapMap, layer, layerExtent);
+        (*compositingState.overlapMapFilled.get()) = true;
+    }
+
+    // Now check for reasons to become composited that depend on the state of
+    // descendant layers.
+    IndirectCompositingReason indirectCompositingReason;
+    if (!willBeComposited /*&& canBeComposited(layer)*/
+        && requiresCompositingForIndirectReason(
+               m_owner, childState.subLayerHasGraphicsBuffer,
+               anyDescendantHas3DTransform, indirectCompositingReason)) {
+        // layer.setIndirectCompositingReason(indirectCompositingReason);
+        childState.compositingAncestor = this;
+        // overlapMap.pushCompositingContainer();
+        compositingState.pushCompsitedLayer(this);
+        // addToOverlapMapRecursive(overlapMap, layer);
+        (*compositingState.overlapMapFilled.get()) = true;
+        willBeComposited = true;
+    }
+
+    // ASSERT(willBeComposited == needsToBeComposited(layer));
+    // if (layer.reflectionLayer()) {
+    // FIXME: Shouldn't we call computeCompositingRequirements to handle a
+    // reflection overlapping with another renderer?
+    // layer.reflectionLayer()->setIndirectCompositingReason(willBeComposited ?
+    // RenderLayer::IndirectCompositingReason::Stacking :
+    // RenderLayer::IndirectCompositingReason::None);
+    // }
+
+    // Subsequent layers in the parent stacking context also need to composite.
+    if (childState.subLayerHasGraphicsBuffer)
+        compositingState.subLayerHasGraphicsBuffer = true;
+
+    // Set the flag to say that this layer has compositing children.
+    // layer.setHasCompositingDescendant(childState.subtreeIsCompositing);
+    /*
+        // setHasCompositingDescendant() may have changed the answer to
+       needsToBeComposited() when clipping, so test that again.
+        bool isCompositedClippingLayer = canBeComposited(layer) &&
+       clipsCompositingDescendants(layer);
+
+        // Turn overlap testing off for later layers if it's already off, or if
+       we have an animating transform.
+        // Note that if the layer clips its descendants, there's no reason to
+       propagate the child animation to the parent layers. That's because
+        // we know for sure the animation is contained inside the clipping
+       rectangle, which is already added to the overlap map.
+        if ((!childState.testingOverlap && !isCompositedClippingLayer) ||
+       layerExtent.knownToBeHaveExtentUncertainty())
+            compositingState.testingOverlap = false;
+
+        if (isCompositedClippingLayer) {
+            if (!willBeComposited) {
+                childState.compositingAncestor = &layer;
+                overlapMap.pushCompositingContainer();
+                addToOverlapMapRecursive(overlapMap, layer);
+                willBeComposited = true;
+             }
+        }
+    */
+
+    bool compositedBefore = needsGraphicsBuffer();
+
+    if (compositedBefore != willBeComposited) {
+        m_owner->node()->webView()->markNeedsPaintingWhileRendering();
+    } else if (compositedBefore && compositedBefore == willBeComposited) {
+        m_owner->node()->webView()->markNeedsCompositeWhileRendering();
+    } else if (!compositedBefore && compositedBefore == willBeComposited) {
+        m_owner->node()->webView()->markNeedsPaintingWhileRendering();
+    }
+
+    if (willBeComposited) {
         ensureRareData()->m_needsGraphicsBuffer = true;
     } else {
         if (m_rareData) {
             m_rareData->m_needsGraphicsBuffer = false;
         }
     }
+
+    descendantHas3DTransform |= anyDescendantHas3DTransform ||
+                                m_owner->style()->hasComplexTransforms(m_owner);
 
     if (needsGraphicsBuffer()) {
         LayoutLocation l(-m_owner->frameRect().location().x(),
@@ -411,8 +881,6 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
         m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
         m_owner->computeVisibleRect(this, l, m_rareData->m_visibleRect);
     }
-
-    return needsGraphicsBuffer();
 }
 
 void StackingContext::paintStackingContext(Canvas* canvas)
@@ -477,36 +945,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     }
 
     if (!hasStackingBuffer) {
-        SkMatrix m = m_owner->style()->transformsToMatrix(
-            m_owner->width(), m_owner->height(), m_owner,
-            m_owner->style()->hasTransforms(m_owner));
+        SkMatrix m = transformMatrix();
 
         if (!m.isIdentity()) {
-            ensureRareData()->m_matrix = m;
-            /*STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
-                              m_rareData->m_matrix.getScaleX(),
-                              m_rareData->m_matrix.getSkewX(),
-                              m_rareData->m_matrix.getTranslateX(),
-                              m_rareData->m_matrix.getSkewY(),
-                              m_rareData->m_matrix.getScaleY(),
-                              m_rareData->m_matrix.getTranslateY(),
-                              m_rareData->m_matrix.getPerspX(),
-                              m_rareData->m_matrix.getPerspY(),
-                              m_rareData->m_matrix.get(8));*/
-            LayoutUnit ox = m_owner->width() / 2;
-            LayoutUnit oy = m_owner->height() / 2;
-            if (m_owner->style()->hasTransformOrigin()) {
-                ox = m_owner->style()
-                         ->transformOrigin()
-                         ->originValue()
-                         ->getXAxis()
-                         .specifiedValue(m_owner->width(), m_owner);
-                oy = m_owner->style()
-                         ->transformOrigin()
-                         ->originValue()
-                         ->getYAxis()
-                         .specifiedValue(m_owner->height(), m_owner);
-            }
             SkMatrix test;
             bool testResult = m_rareData->m_matrix.invert(&test);
             if (!testResult) {
@@ -519,11 +960,11 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                     delete canvas;
                 }
                 return;
-            } else {
             }
-            canvas->translate(ox, oy);
-            canvas->postMatrix(m_rareData->m_matrix);
-            canvas->translate(-ox, -oy);
+            LayoutLocation to = transformOrigin();
+            canvas->translate(to.x(), to.y());
+            canvas->postMatrix(m);
+            canvas->translate(-to.x(), -to.y());
         }
     }
 
@@ -698,35 +1139,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             compositor->beginOpacityLayer(ownerStyle->opacity());
         }
 
-        m_rareData->m_matrix = m_owner->style()->transformsToMatrix(
-            m_owner->width(), m_owner->height(), m_owner,
-            ownerStyle->hasTransforms(m_owner));
-
-        if (!m_rareData->m_matrix.isIdentity()) {
-            /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
-                               m_rareData->m_matrix.getScaleX(),
-                               m_rareData->m_matrix.getSkewX(),
-                               m_rareData->m_matrix.getTranslateX(),
-                               m_rareData->m_matrix.getSkewY(),
-                               m_rareData->m_matrix.getScaleY(),
-                               m_rareData->m_matrix.getTranslateY(),
-                               m_rareData->m_matrix.getPerspX(),
-                               m_rareData->m_matrix.getPerspY(),
-                               m_rareData->m_matrix.get(8));*/
-            LayoutUnit ox = m_owner->width() / 2;
-            LayoutUnit oy = m_owner->height() / 2;
-            if (m_owner->style()->hasTransformOrigin()) {
-                ox = m_owner->style()
-                         ->transformOrigin()
-                         ->originValue()
-                         ->getXAxis()
-                         .specifiedValue(m_owner->width(), m_owner);
-                oy = m_owner->style()
-                         ->transformOrigin()
-                         ->originValue()
-                         ->getYAxis()
-                         .specifiedValue(m_owner->height(), m_owner);
-            }
+        SkMatrix m = transformMatrix();
+        if (!m.isIdentity()) {
             SkMatrix test;
             bool testResult = m_rareData->m_matrix.invert(&test);
             if (!testResult) {
@@ -737,9 +1151,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 compositor->restore();
                 return;
             }
-            compositor->translate(ox, oy);
-            compositor->postMatrix(m_rareData->m_matrix);
-            compositor->translate(-ox, -oy);
+
+            LayoutLocation to = transformOrigin();
+            compositor->translate(to.x(), to.y());
+            compositor->postMatrix(m);
+            compositor->translate(-to.x(), -to.y());
         }
 
         if (owner()->shouldApplyOverflow()) {
@@ -860,28 +1276,16 @@ LayoutLocation StackingContext::relativeLocation(StackingContext* sCtx)
 Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                                BrowsingContext* from)
 {
-    if (m_rareData && !m_rareData->m_matrix.isIdentity()) {
+    SkMatrix m = transformMatrix();
+    if (!m.isIdentity()) {
         SkMatrix invert;
-        if (!m_rareData->m_matrix.invert(&invert)) {
+        if (!m.invert(&invert)) {
             return nullptr;
         }
 
-        LayoutUnit ox = m_owner->width() / 2;
-        LayoutUnit oy = m_owner->height() / 2;
-        LayoutUnit vw = from->window()->width();
-        LayoutUnit vh = from->window()->height();
-        if (m_owner->style()->hasTransformOrigin()) {
-            ox = m_owner->style()
-                     ->transformOrigin()
-                     ->originValue()
-                     ->getXAxis()
-                     .specifiedValue(m_owner->width(), m_owner);
-            oy = m_owner->style()
-                     ->transformOrigin()
-                     ->originValue()
-                     ->getYAxis()
-                     .specifiedValue(m_owner->height(), m_owner);
-        }
+        auto to = transformOrigin();
+        LayoutUnit ox = to.x();
+        LayoutUnit oy = to.y();
         x -= ox;
         y -= oy;
         SkPoint pt = SkPoint::Make((float)x, (float)y);

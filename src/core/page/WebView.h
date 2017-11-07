@@ -69,6 +69,7 @@ class CanvasSurface;
 
 class WebView : public StarFishHoldable, public gc {
     friend class BrowsingContext;
+    friend class StackingContext;
     friend class PlatformWindow;
 
 public:
@@ -139,6 +140,30 @@ public:
         }
     }
 
+    void setNeedsComputeStackingContextProperties()
+    {
+        if (!m_needsComputeStackingContextProperties) {
+            m_needsComputeStackingContextProperties = true;
+            setNeedsRendering();
+        }
+    }
+
+    void markNeedsPaintingWhileRendering()
+    {
+        STARFISH_ASSERT(m_inRendering);
+        if (!m_needsPainting) {
+            m_needsPainting = true;
+        }
+    }
+
+    void markNeedsCompositeWhileRendering()
+    {
+        STARFISH_ASSERT(m_inRendering);
+        if (!m_needsComposite) {
+            m_needsComposite = true;
+        }
+    }
+
 private:
     WebView(StarFish* starFish);
 
@@ -182,6 +207,7 @@ private:
     uint64_t m_lastRenderingTime;
     bool m_inRendering;
     bool m_needsRendering;
+    bool m_needsComputeStackingContextProperties;
     bool m_needsPainting;
     bool m_needsComposite;
     bool m_didCompositeBefore; // last state of enabling composite
