@@ -97,6 +97,7 @@ void MediaPlayerTizenTV::setNativePlayerDefaultOptions(ResourceURL* url)
                            displayHandle);
         player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_DST_ROI);
         // NOTE: Do not edit `player_set_display_roi_area` parameter
+        m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
         player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
     } else {
         player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_NONE, nullptr);
@@ -120,9 +121,12 @@ void MediaPlayerTizenTV::drawVideo(Compositor* canvas,
     }
     canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
                                  videoRect.width(), videoRect.height()));
-    player_set_display_roi_area(
-        m_nativePlayer, absVideoRect.x().toInt(), absVideoRect.y().toInt(),
-        absVideoRect.width().toInt(), absVideoRect.height().toInt());
+    if (m_lastAbsoluteROIArea != absVideoRect) {
+        player_set_display_roi_area(
+            m_nativePlayer, absVideoRect.x().toInt(), absVideoRect.y().toInt(),
+            absVideoRect.width().toInt(), absVideoRect.height().toInt());
+        m_lastAbsoluteROIArea = absVideoRect;
+    }
 }
 
 static void seekedCallback(void* data)

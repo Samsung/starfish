@@ -272,7 +272,6 @@ protected:
 
     void prepareAppend(size_t newDataSize);
     bool codedFrameEviction(size_t newDataSize);
-    void evictByLastCachedDTS(uint64_t minimumEvictDTS);
     void bufferAppend(SourceBufferData* data);
     void postBufferAppend(SourceBufferData* data);
     void setBufferedRangeNeedsUpdate()
@@ -300,7 +299,6 @@ protected:
     GCVector<GCVector<StreamInfo*>> m_streamInfo;
     std::vector<MediaPacketGroup*> m_packetGroups;
     GCVector<std::pair<size_t, size_t>> m_packetAccessCachePerStream;
-    uint64_t m_lastCachedDTS;
     Mutex* m_packetGroupsMutex;
 };
 }

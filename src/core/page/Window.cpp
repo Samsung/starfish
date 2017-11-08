@@ -228,6 +228,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
         throw e;
     }
 
+#ifndef STARFISH_IGNORE_CROSS_ORIGIN
     if (!targetOrigin->equals("*") && !targetOrigin->equals("about://blank") &&
         !targetOrigin->equals(origin)) {
         COMPOSE_MESSAGE(reason, ORIGINS_ARE_NOT_MATCHED,
@@ -238,7 +239,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
         starFish()->console()->error(String::fromUTF8(msg));
         return;
     }
-
+#endif
     if (browsingContext()) {
         starFish()->messageLoop()->addIdler(
             browsingContext(),

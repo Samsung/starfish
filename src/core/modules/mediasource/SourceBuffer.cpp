@@ -35,7 +35,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/page/Window.h"
 
-#define STARFISH_FRAME_EVICTION_BACKWARD_DUR 1000
+#define STARFISH_FRAME_EVICTION_BACKWARD_DUR 500
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
 #define SOURCEBUFFER_LOG(sb, ...)                                            \
@@ -412,7 +412,6 @@ SourceBuffer::SourceBuffer(Document* document, String* type)
     , m_groupEndTimestamp(0)
     , m_type(type)
     , m_parentMediaSource(nullptr)
-    , m_lastCachedDTS(0)
     , m_packetGroupsMutex(new Mutex())
 {
     m_demuxer = Demuxer::createDemuxer(m_type);
@@ -836,20 +835,8 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
         *iter2 = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
         iter2++;
     }
-    m_lastCachedDTS = 0;
     decreaseUsedBufferSize(removedSize);
     setBufferedRangeNeedsUpdate();
-}
-
-void SourceBuffer::evictByLastCachedDTS(uint64_t minimumEvictDTS)
-{
-    Locker<Mutex> lock(*m_packetGroupsMutex);
-    uint64_t targetPos =
-        m_lastCachedDTS > minimumEvictDTS ? m_lastCachedDTS : minimumEvictDTS;
-    if (targetPos > STARFISH_FRAME_EVICTION_BACKWARD_DUR) {
-        rangeRemovalWithoutGuard(0, targetPos -
-                                        STARFISH_FRAME_EVICTION_BACKWARD_DUR);
-    }
 }
 
 bool SourceBuffer::codedFrameEviction(size_t newDataSize)
@@ -873,12 +860,15 @@ bool SourceBuffer::codedFrameEviction(size_t newDataSize)
     if (maxAssume >= STARFISH_MAX_MEDIASOURCE_BUFFERSPACE) {
         return false;
     }
-    if (maxAssume >= m_parentMediaSource->availableBufferSize()) {
+    if (maxAssume >= m_parentMediaSource->availableBufferSize() / 4) {
         HTMLMediaElement* element = m_parentMediaSource->attachedMediaElement();
         double playbackPos = element ? element->currentTime() : 0;
         // Try to remove backward packets
-        m_parentMediaSource->evictByLastCachedDTS(
-            (uint64_t)(playbackPos * 1000));
+        uint64_t targetPos = (uint64_t)(playbackPos * 1000);
+        if (targetPos > STARFISH_FRAME_EVICTION_BACKWARD_DUR) {
+            m_parentMediaSource->evict(
+                0, targetPos - STARFISH_FRAME_EVICTION_BACKWARD_DUR);
+        }
         SOURCEBUFFER_LOG(this, "Remove backward data (available: %d)\n",
                          (int)m_parentMediaSource->availableBufferSize());
         // TODO Try to remove fragmented forward packets
@@ -1113,7 +1103,6 @@ void SourceBuffer::clearPacketAccessCache()
         *iter = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
         iter++;
     }
-    m_lastCachedDTS = 0;
 }
 
 void SourceBuffer::initializePacketAccessCache(size_t streamCount)
@@ -1122,7 +1111,6 @@ void SourceBuffer::initializePacketAccessCache(size_t streamCount)
         m_packetAccessCachePerStream.push_back(
             std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX));
     }
-    m_lastCachedDTS = 0;
 }
 
 std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
@@ -1138,7 +1126,6 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
                 startPositionInDTSWantToFind <= grp->m_groupTimestampEnd) {
                 size_t idx = cache.second + 1;
                 if (idx < grp->m_packets.size()) {
-                    m_lastCachedDTS = grp->m_packets[idx]->m_dts;
                     m_packetAccessCachePerStream[streamIdx] =
                         std::make_pair(cache.first, idx);
                     return std::make_pair(grp->m_packets[idx],
@@ -1159,7 +1146,6 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
                 const std::vector<MediaPacket*>& v = grp->m_packets;
                 for (size_t j = 0; j < v.size(); j++) {
                     if (v[j]->m_dts >= startPositionInDTSWantToFind) {
-                        m_lastCachedDTS = v[j]->m_dts;
                         m_packetAccessCachePerStream[streamIdx] =
                             std::make_pair(i, j);
                         return std::make_pair(v[j], grp->m_initSegmentIndex);
@@ -1177,8 +1163,6 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
     }
 
     if (nearestPacketGroupInfo.first != SIZE_MAX) {
-        m_lastCachedDTS =
-            m_packetGroups[nearestPacketGroupInfo.first]->m_packets[0]->m_dts;
         m_packetAccessCachePerStream[streamIdx] =
             std::make_pair(nearestPacketGroupInfo.first, 0);
         return std::make_pair(
@@ -1194,12 +1178,9 @@ void SourceBuffer::revertLastCacheIfPossible(size_t streamIdx)
     Locker<Mutex> packetGroupLocker(*m_packetGroupsMutex);
     auto cache = m_packetAccessCachePerStream[streamIdx];
     if (cache.second > 0) {
-        m_lastCachedDTS =
-            m_packetGroups[cache.first]->m_packets[cache.second - 1]->m_dts;
         m_packetAccessCachePerStream[streamIdx] =
             std::make_pair(cache.first, cache.second - 1);
     } else {
-        m_lastCachedDTS = 0;
         m_packetAccessCachePerStream[streamIdx] =
             std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
     }
