@@ -233,13 +233,16 @@ public:
                         double surfaceWidth, double surfaceHeight,
                         bool isFromSurface = false)
     {
-        cairo_save(m_canvas);
+        float xx = dst.x();
+        float yy = dst.y();
+        float ww = dst.width();
+        float hh = dst.height();
 
-        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-        xx = dst.x();
-        yy = dst.y();
-        ww = dst.width();
-        hh = dst.height();
+        if (!surfaceWidth || !surfaceHeight || !ww || !hh) {
+            return;
+        }
+
+        cairo_save(m_canvas);
 
         cairo_pattern_t* resizePattern;
         cairo_matrix_t matrix;
@@ -251,16 +254,54 @@ public:
         cairo_matrix_scale(&matrix, surfaceWidth / ww, surfaceHeight / hh);
         cairo_pattern_set_matrix(resizePattern, &matrix);
         cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_FAST);
-
+        checkError();
         cairo_set_source(m_canvas, resizePattern);
 
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
         cairo_clip(m_canvas);
 
-        cairo_paint_with_alpha(m_canvas, m_opacityVector.back());
+        cairo_matrix_t t;
+        cairo_get_matrix(m_canvas, &t);
+        double x, y;
+        double minX, minY, maxX, maxY;
+        x = dst.x();
+        y = dst.y();
+        cairo_matrix_transform_point(&t, &x, &y);
+        minX = x;
+        minY = y;
+        maxX = x;
+        maxY = y;
+
+        x = dst.maxX();
+        y = dst.y();
+        cairo_matrix_transform_point(&t, &x, &y);
+        minX = std::min(x, minX);
+        minY = std::min(y, minY);
+        maxX = std::min(x, maxX);
+        maxY = std::max(y, maxY);
+
+        x = dst.x();
+        y = dst.maxY();
+        cairo_matrix_transform_point(&t, &x, &y);
+        minX = std::min(x, minX);
+        minY = std::min(y, minY);
+        maxX = std::min(x, maxX);
+        maxY = std::max(y, maxY);
+
+        x = dst.maxX();
+        y = dst.maxY();
+        cairo_matrix_transform_point(&t, &x, &y);
+        minX = std::min(x, minX);
+        minY = std::min(y, minY);
+        maxX = std::min(x, maxX);
+        maxY = std::max(y, maxY);
+        if (std::abs(minX - maxX) < 65535 && std::abs(minY - maxY) < 65535) {
+            cairo_paint_with_alpha(m_canvas, m_opacityVector.back());
+        }
 
         cairo_pattern_destroy(resizePattern);
         cairo_restore(m_canvas);
+        checkError();
     }
 
     void drawDebugLine(double xx, double yy, double ww, double hh)
@@ -301,7 +342,7 @@ public:
             data->bufferWidth(), data->bufferHeight(),
             cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
                                           data->bufferWidth()));
-
+        checkError();
         drawImageCairo(image, dst, data->bufferWidth(), data->bufferHeight(),
                        true);
         cairo_surface_destroy(image);
