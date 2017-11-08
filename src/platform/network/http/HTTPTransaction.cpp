@@ -20,6 +20,7 @@
 #include "HTTPResponse.h"
 #include "HTTPTransaction.h"
 #include "platform/network/NetworkSharedResourceManager.h"
+#include "core/modules/profiling/Profiling.h"
 
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <net_connection.h>
@@ -215,7 +216,9 @@ void HTTPTransaction::start()
     }
 #endif
 
+    m_httpRequest->setRequestTime(timestamp() / 1000);
     m_res = curl_easy_perform(m_curl);
+    m_httpResponse->setResponseTime(timestamp() / 1000);
 
     updateTransactionStatus();
 

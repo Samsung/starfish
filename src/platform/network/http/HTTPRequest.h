@@ -60,6 +60,16 @@ public:
         return m_entityBody;
     }
 
+    void setRequestTime(time_t requestTime)
+    {
+        m_requestTime = requestTime;
+    }
+
+    time_t requestTime() const
+    {
+        return m_requestTime;
+    }
+
 private:
     HTTPRequest(const std::string& url, const std::string& baseURL,
                 const std::string& method, const HTTPHeaderMap& headers,
@@ -70,6 +80,7 @@ private:
     std::string m_method;
     HTTPHeaderMap m_headers;
     std::string m_entityBody;
+    time_t m_requestTime;
 };
 }
 

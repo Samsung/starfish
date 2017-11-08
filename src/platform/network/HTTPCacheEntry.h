@@ -33,23 +33,35 @@ struct CacheControl {
     bool noCache : 1;
     bool noStore : 1;
     bool mustRevalidate : 1;
-    time_t maxAge;
+    int64_t maxAge;
 };
+
+struct EntryFreshnessInfo {
+    EntryFreshnessInfo()
+        : date(0)
+        , age(0)
+        , requestTime(0)
+        , responseTime(0)
+    {
+    }
+
+    int64_t date;
+    int64_t age;
+    int64_t requestTime;
+    int64_t responseTime;
+};
+
 class HTTPCacheEntry : public gc {
 public:
-    HTTPCacheEntry(ResourceURL* url, time_t date, CacheControl& cacheControl);
-    HTTPCacheEntry(ResourceURL* url, time_t date, CacheControl& cacheControl,
-                   String* entryFileName);
+    HTTPCacheEntry(ResourceURL* url, EntryFreshnessInfo& info,
+                   CacheControl& cacheControl);
+    HTTPCacheEntry(ResourceURL* url, EntryFreshnessInfo& info,
+                   CacheControl& cacheControl, String* entryFileName);
     ~HTTPCacheEntry();
 
     ResourceURL* url()
     {
         return m_url;
-    }
-
-    time_t date()
-    {
-        return m_date;
     }
 
     String* entryFileName()
@@ -62,6 +74,12 @@ public:
     bool readRawDataFromEntryFile(std::vector<char>& out);
 
     size_t entryKey() const;
+
+    EntryFreshnessInfo entryFreshnessInfo() const
+    {
+        return m_entryFreshnessInfo;
+    }
+
     CacheControl cacheControl() const
     {
         return m_cacheControl;
@@ -77,7 +95,7 @@ public:
 
 private:
     ResourceURL* m_url;
-    time_t m_date;
+    EntryFreshnessInfo m_entryFreshnessInfo;
     CacheControl m_cacheControl;
     String* m_entryFileName;
     Mutex* m_mutex;

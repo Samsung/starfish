@@ -34,6 +34,7 @@ public:
     }
 
     void caching(NetworkURLWorkerData* data);
+    bool isFresh(HTTPCacheEntry* entry);
     bool flush();
     // expire
     // prunning

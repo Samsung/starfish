@@ -21,8 +21,14 @@
 #include "platform/file/FileIO.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/modules/resource_request/ResourceRequest.h"
+#include "platform/network/http/HTTPResponse.h"
+#include "platform/network/http/HTTPRequest.h"
+#include "platform/network/http/HTTPTransaction.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/profiling/Profiling.h"
+#include "binding/ScriptWrappable.h"
+#include "core/dom/Document.h"
 #include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -114,18 +120,16 @@ void HTTPCache::initFromIndexFileIfPossible()
 {
     STARFISH_ASSERT(isMainThread());
 
-    // Index is set of cache entry.
-    // The initial state is empty, otherwise each rows are conist of
-    // hash-key url-string max-age entry-file-name
     std::ifstream ifs(m_indexFilePath->toUTF8NonGCString().data());
 
     size_t entryKey;
     std::string urlStr, entryfileName;
-    time_t date, maxAge;
+    int64_t date, age, requestTime, responseTime, maxAge;
     int noCache, mustRevalidate;
 
-    while (ifs >> entryKey >> urlStr >> date >> maxAge >> noCache >>
-           mustRevalidate >> entryfileName) {
+    while (ifs >> entryKey >> urlStr >> date >> age >> requestTime >>
+           responseTime >> maxAge >> noCache >> mustRevalidate >>
+           entryfileName) {
         ResourceURL* url = new ResourceURL(urlStr.data());
 
         CacheControl cc;
@@ -133,8 +137,14 @@ void HTTPCache::initFromIndexFileIfPossible()
         cc.noCache = (bool)noCache;
         cc.mustRevalidate = (bool)mustRevalidate;
 
+        EntryFreshnessInfo info;
+        info.date = date;
+        info.age = age;
+        info.requestTime = requestTime;
+        info.responseTime = responseTime;
+
         HTTPCacheEntry* newEntry = new HTTPCacheEntry(
-            url, date, cc, String::fromUTF8(entryfileName.data()));
+            url, info, cc, String::fromUTF8(entryfileName.data()));
 
         m_cacheEntryTable.insert(
             std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
@@ -150,6 +160,27 @@ void HTTPCache::initFromIndexFileIfPossible()
         clearAndRemoveCacheDir();
         initCacheDir();
     }
+}
+
+bool HTTPCache::isFresh(HTTPCacheEntry* entry)
+{
+    // https://tools.ietf.org/html/rfc7234#section-4.2
+    // See 4.2. Freshness
+    // response_is_fresh = (freshnessLifetime > currentAge)
+
+    EntryFreshnessInfo info = entry->entryFreshnessInfo();
+    int64_t responeTime = info.responseTime;
+    int64_t freshnessLifetime = entry->cacheControl().maxAge;
+    int64_t apparentAge =
+        (0 > (responeTime - info.date)) ? 0 : (responeTime - info.date);
+    int64_t responseDelay = (responeTime - info.requestTime);
+    int64_t correctedAgeValue = (info.age + responseDelay);
+    int64_t correctedInitialAge =
+        (apparentAge > correctedAgeValue) ? apparentAge : correctedAgeValue;
+    int64_t residentTime = ((timestamp() / 1000) - responeTime);
+    int64_t currentAge = correctedInitialAge + residentTime;
+
+    return freshnessLifetime > currentAge;
 }
 
 HTTPCacheEntryMultiMap::iterator HTTPCache::cacheHit(ResourceURL* url)
@@ -190,8 +221,6 @@ void HTTPCache::caching(NetworkURLWorkerData* data)
 
     // TODO : Consider date, max-age, if it is fresh enough, only max-age is
     // updated.
-    // auto date =
-    // data->request->responseHeaderMap().find(HTTPHeaderMap::kDate);
 
     CacheControl cc;
     auto it =
@@ -204,7 +233,28 @@ void HTTPCache::caching(NetworkURLWorkerData* data)
         return;
     }
 
-    HTTPCacheEntry* newEntry = new HTTPCacheEntry(data->request->url(), 0, cc);
+    EntryFreshnessInfo info;
+    it = data->request->responseHeaderMap().find(HTTPHeaderMap::kDate);
+    if (it != data->request->responseHeaderMap().end()) {
+        String* value = String::createASCIIString(it->second.data());
+        double parsedDate = parseDate(
+            data->request->document()->scriptBindingInstance(), value);
+        if (!std::isnan(parsedDate)) {
+            info.date = parsedDate / 1000.0;
+        }
+    }
+
+    it = data->request->responseHeaderMap().find(HTTPHeaderMap::kAge);
+    if (it != data->request->responseHeaderMap().end()) {
+        String* value = String::createASCIIString(it->second.data());
+        info.age = String::parseInt64(value);
+    }
+
+    info.requestTime = data->httpTransaction->httpRequest().requestTime();
+    info.responseTime = data->httpTransaction->httpResponse().responseTime();
+
+    HTTPCacheEntry* newEntry =
+        new HTTPCacheEntry(data->request->url(), info, cc);
     newEntry->setEntryFileNameUsingCachePath(m_cacheDirPath);
 
     bool ret = newEntry->writeRawDataToEntryFile(data->request->response());

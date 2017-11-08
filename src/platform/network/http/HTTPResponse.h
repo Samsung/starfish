@@ -60,6 +60,14 @@ public:
     {
         return m_entityBody;
     }
+    void setResponseTime(int64_t responseTime)
+    {
+        m_responseTime = responseTime;
+    }
+    int64_t responseTime() const
+    {
+        return m_responseTime;
+    }
 
     std::string lastEffectiveURL()
     {
@@ -78,6 +86,7 @@ private:
     std::string m_lastEffectiveURL;
     HTTPHeaderMap m_headers;
     EntityBody m_entityBody;
+    int64_t m_responseTime;
 };
 }
 

@@ -54,6 +54,10 @@ public:
         m_httpRequest = std::move(httpRequest);
     }
 
+    HTTPRequest& httpRequest()
+    {
+        return *m_httpRequest;
+    }
     HTTPResponse& httpResponse()
     {
         return *m_httpResponse;

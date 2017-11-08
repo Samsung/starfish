@@ -41,6 +41,7 @@ public:
     static const char kAcceptEncoding[];
     static const char kAcceptLanguage[];
     static const char kAuthorization[];
+    static const char kAge[];
     static const char kCookie[];
     static const char kExpect[];
     static const char kFrom[];

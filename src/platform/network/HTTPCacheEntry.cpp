@@ -26,20 +26,20 @@
 #include <iostream>
 namespace StarFish {
 
-HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, time_t date,
+HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, EntryFreshnessInfo& info,
                                CacheControl& cacheControl)
     : m_url(url)
-    , m_date(date)
+    , m_entryFreshnessInfo(info)
     , m_cacheControl(cacheControl)
     , m_entryFileName(nullptr)
     , m_mutex(new Mutex())
 {
 }
 
-HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, time_t date,
+HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, EntryFreshnessInfo& info,
                                CacheControl& cacheControl,
                                String* entryFileName)
-    : HTTPCacheEntry(url, date, cacheControl)
+    : HTTPCacheEntry(url, info, cacheControl)
 {
     m_entryFileName = entryFileName;
 }
@@ -122,10 +122,16 @@ String* HTTPCacheEntry::toString()
 {
     StringBuilder builder;
     std::string entryKeystr = std::to_string(entryKey());
-    std::string dateStr = std::to_string(date());
+    std::string dateStr = std::to_string(m_entryFreshnessInfo.date);
+    std::string ageStr = std::to_string(m_entryFreshnessInfo.age);
+    std::string requestTimeStr =
+        std::to_string(m_entryFreshnessInfo.requestTime);
+    std::string responseTimeStr =
+        std::to_string(m_entryFreshnessInfo.responseTime);
     std::string maxAgeStr = std::to_string(m_cacheControl.maxAge);
 
-    // etrentryKey(UINT) urlString(STRING) date(UINT) maxAge(UINT) no-cache(0|1)
+    // entryKey(UINT) urlString(STRING) date(UINT) age(UINT)
+    // rquestTime(UINT) responeTime(UINT) maxAge(UINT) no-cache(0|1)
     // mustRevalidate(0|1) entryFileName(STRING)
 
     builder.appendString(entryKeystr.data());
@@ -133,6 +139,12 @@ String* HTTPCacheEntry::toString()
     builder.appendString(url()->urlString());
     builder.appendString(" ");
     builder.appendString(dateStr.data());
+    builder.appendString(" ");
+    builder.appendString(ageStr.data());
+    builder.appendString(" ");
+    builder.appendString(requestTimeStr.data());
+    builder.appendString(" ");
+    builder.appendString(responseTimeStr.data());
     builder.appendString(" ");
     builder.appendString(maxAgeStr.data());
     builder.appendString(" ");
