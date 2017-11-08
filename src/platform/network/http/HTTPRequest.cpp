@@ -29,6 +29,7 @@ HTTPRequest::HTTPRequest(const std::string& url, const std::string& baseURL,
     , m_method(method)
     , m_headers(headers)
     , m_entityBody(entityBody)
+    , m_requestTime(0)
 {
 }
 

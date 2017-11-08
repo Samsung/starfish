@@ -34,6 +34,7 @@ const char HTTPHeaderMap::kAcceptCharset[] = "Accept-Charset";
 const char HTTPHeaderMap::kAcceptEncoding[] = "Accept-Encoding";
 const char HTTPHeaderMap::kAcceptLanguage[] = "Accept-Language";
 const char HTTPHeaderMap::kAuthorization[] = "Authorization";
+const char HTTPHeaderMap::kAge[] = "Age";
 const char HTTPHeaderMap::kCookie[] = "Cookie";
 const char HTTPHeaderMap::kExpect[] = "Expect";
 const char HTTPHeaderMap::kFrom[] = "From";

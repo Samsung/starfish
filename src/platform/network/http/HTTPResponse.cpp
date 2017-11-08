@@ -26,6 +26,7 @@ HTTPResponse::HTTPResponse()
     , m_reasonPhrase()
     , m_headers()
     , m_entityBody()
+    , m_responseTime(0)
 {
 }
 
