@@ -37,35 +37,74 @@
 
 namespace StarFish {
 
+NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
+    : isAborted(false)
+    , isRedirected(false)
+    , lastTransactionResponseCode(0)
+    , request(orgRequest)
+    , helper(nullptr)
+    , httpTransaction(HTTPTransaction::create())
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    , cacheHit(false)
+    , cachedEntry(nullptr)
+#endif
+    , lastLocation("")
+{
+}
+
 void* NetworkURLWorkerHelper::networkWorker(void* data)
 {
-    NetworkURLWorkerData* requestData = (NetworkURLWorkerData*)data;
-    requestData->httpTransaction->start();
+    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+    nwd->httpTransaction->start();
 
     // TODO : Do not use libur libcurl error codes
-    if (requestData->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK) {
-        responseHandlerWrapper(requestData->httpTransaction->res(),
-                               requestData);
+    if (nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK) {
+        responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
     } else {
-        requestData->request->starFish()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                requestData->request->document()->browsingContext(),
-                [](size_t, void* data) {
-                    NetworkURLWorkerData* requestData =
-                        (NetworkURLWorkerData*)data;
-                    if (requestData ==
-                        requestData->request->m_activeNetworkURLWorkerData) {
-                        requestData->request->m_activeNetworkURLWorkerData =
-                            nullptr;
-                    }
-                    requestData->~NetworkURLWorkerData();
-                    GC_FREE(requestData);
-                },
-                requestData);
+        workerAbortHandeler(nwd);
     }
+    return nullptr;
+}
 
-    return NULL;
+#ifdef STARFISH_ENABLE_HTTPCACHE
+void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
+{
+    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+    ResourceRequest* request = (ResourceRequest*)nwd->request;
+
+    bool ret;
+    {
+        // NOTE: may need the headers received when RawData cached, but
+        // currently only the entity-body is cached.
+        Locker<Mutex> locker(*request->m_mutex);
+        ret = nwd->cachedEntry->readRawDataFromEntryFile(
+            nwd->request->response());
+    }
+    if (ret) {
+        nwd->httpTransaction->httpResponse().setResponseCode(200);
+        responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
+    } else {
+        workerAbortHandeler(nwd);
+    }
+    return nullptr;
+}
+#endif
+void NetworkURLWorkerHelper::workerAbortHandeler(void* data)
+{
+    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+    nwd->request->starFish()
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(
+            nwd->request->document()->browsingContext(),
+            [](size_t, void* data) {
+                NetworkURLWorkerData* d = (NetworkURLWorkerData*)data;
+                if (d == d->request->m_activeNetworkURLWorkerData) {
+                    d->request->m_activeNetworkURLWorkerData = nullptr;
+                }
+                d->~NetworkURLWorkerData();
+                GC_FREE(d);
+            },
+            nwd);
 }
 
 void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
@@ -184,13 +223,9 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
     STARFISH_ASSERT(isMainThread());
     STARFISH_ASSERT(m_orgProxy->m_url->isNetworkURL());
 
-    NetworkURLWorkerData* data = new (NoGC) NetworkURLWorkerData();
-    data->request = m_orgProxy;
-    data->isAborted = false;
-    data->isRedirected = false;
-    data->cacheHit = false;
-    data->lastLocation = "";
-    m_orgProxy->m_activeNetworkURLWorkerData = data;
+    NetworkURLWorkerData* nwd = new (NoGC) NetworkURLWorkerData(m_orgProxy);
+
+    m_orgProxy->m_activeNetworkURLWorkerData = nwd;
 
     std::string method;
     switch (m_orgProxy->m_method) {
@@ -198,8 +233,14 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
         method = "GET";
 #ifdef STARFISH_ENABLE_HTTPCACHE
         if (m_orgProxy->starFish()->httpCache()) {
-            data->cacheHit = m_orgProxy->starFish()->httpCache()->cacheHit(
+            auto it = m_orgProxy->starFish()->httpCache()->cacheHit(
                 m_orgProxy->m_url);
+
+            if (it !=
+                m_orgProxy->starFish()->httpCache()->cacheEntryTableEnd()) {
+                nwd->cacheHit = true;
+                nwd->cachedEntry = it->second;
+            }
         }
 #endif
         break;
@@ -216,8 +257,6 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
         STARFISH_ASSERT_NOT_REACHED();
     }
 
-    data->httpTransaction = HTTPTransaction::create();
-
     HTTPHeaderMap headers;
     fillHeadersWithResourceRequestHeader(headers);
     fillHeadersWithClientHeaders(headers);
@@ -226,20 +265,19 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
     auto urlUTF8Data = m_orgProxy->m_url->urlString()->toUTF8NonGCString();
     auto hostUTF8Data = m_orgProxy->m_url->host()->toUTF8NonGCString();
     auto bodyUTF8Data = body->toUTF8NonGCString();
-    data->httpTransaction->setHTTPRequest(HTTPRequest::create(
+    nwd->httpTransaction->setHTTPRequest(HTTPRequest::create(
         urlUTF8Data, hostUTF8Data, method, headers, bodyUTF8Data));
-    data->httpTransaction->setTimeout(
+    nwd->httpTransaction->setTimeout(
         static_cast<unsigned long>(m_orgProxy->m_timeout));
 
-    data->httpTransaction->setProgressCallbackAndData(curlProgressCallback,
-                                                      data);
-    data->httpTransaction->setWriteHeaderCallbackAndData(
-        curlWriteHeaderCallback, data);
-    data->httpTransaction->setWriteCallbackAndData(curlWriteCallback, data);
+    nwd->httpTransaction->setProgressCallbackAndData(curlProgressCallback, nwd);
+    nwd->httpTransaction->setWriteHeaderCallbackAndData(curlWriteHeaderCallback,
+                                                        nwd);
+    nwd->httpTransaction->setWriteCallbackAndData(curlWriteCallback, nwd);
 
     if (m_orgProxy->isSync()) {
-        data->networkWorker = new SyncNetworkWorkHelper();
-        worker(data);
+        nwd->helper = new SyncNetworkWorkHelper();
+        worker(nwd);
     } else {
         auto& header = headers.headerMap();
         auto pos = std::find_if(
@@ -248,7 +286,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
                    o) { return o.second == "text/event-stream"; });
 
         if (pos != header.end()) {
-            data->networkWorker = new AsyncNetworkWorkHelper();
+            nwd->helper = new AsyncNetworkWorkHelper();
             Thread* t = new Thread(m_orgProxy->starFish());
             t->run(m_orgProxy->starFish()->messageLoop(),
                    [](void* data) -> void* {
@@ -256,12 +294,12 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
                        NetworkURLResourceRequestJobDelegate::worker(d);
                        return nullptr;
                    },
-                   data);
+                   nwd);
         } else {
-            data->networkWorker = new AsyncNetworkWorkHelper();
+            nwd->helper = new AsyncNetworkWorkHelper();
             m_orgProxy->starFish()->threadPool()->addWork(
                 m_orgProxy->document()->browsingContext(),
-                NetworkURLResourceRequestJobDelegate::worker, data);
+                NetworkURLResourceRequestJobDelegate::worker, nwd);
         }
     }
 }
@@ -345,8 +383,16 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithResourceRequestHeader(
 
 void* NetworkURLResourceRequestJobDelegate::worker(void* data)
 {
-    NetworkURLWorkerData* requestData = (NetworkURLWorkerData*)data;
-    return requestData->networkWorker->networkWorker(data);
+    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    if (nwd->cacheHit) {
+        return nwd->helper->httpCacheWorker(data);
+    } else {
+        return nwd->helper->networkWorker(data);
+    }
+#else
+    return nwd->helper->networkWorker(data);
+#endif
 }
 
 int NetworkURLResourceRequestJobDelegate::curlProgressCallback(

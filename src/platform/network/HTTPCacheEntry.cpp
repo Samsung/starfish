@@ -17,6 +17,8 @@
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "StarFishConfig.h"
 #include "HTTPCacheEntry.h"
+#include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Locker.h"
 #include "core/modules/profiling/Profiling.h"
 #include "platform/loader/ResourceURL.h"
 
@@ -30,6 +32,7 @@ HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, time_t date,
     , m_date(date)
     , m_cacheControl(cacheControl)
     , m_entryFileName(nullptr)
+    , m_mutex(new Mutex())
 {
 }
 
@@ -67,6 +70,7 @@ void HTTPCacheEntry::setEntryFileNameUsingCachePath(String* cachePath)
 
 bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
 {
+    Locker<Mutex> locker(*m_mutex);
     STARFISH_ASSERT(m_entryFileName != String::emptyString);
 
     std::ofstream ofs(m_entryFileName->toUTF8NonGCString().data());
@@ -82,7 +86,35 @@ bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
     if (!ofs.good()) {
         return false;
     }
+    return true;
+}
 
+bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
+{
+    Locker<Mutex> locker(*m_mutex);
+    STARFISH_ASSERT(m_entryFileName != String::emptyString);
+
+    std::ifstream ifs(m_entryFileName->toUTF8NonGCString().data(),
+                      std::ifstream::binary);
+
+    if (!ifs.good()) {
+        return false;
+    }
+
+    ifs.seekg(0, std::ios::end);
+    std::streampos length(ifs.tellg());
+
+    if (length) {
+        ifs.seekg(0, std::ios::beg);
+        out.resize(static_cast<std::size_t>(length));
+        ifs.read(&out.front(), static_cast<std::size_t>(length));
+    }
+
+    ifs.close();
+
+    if (!ifs.good()) {
+        return false;
+    }
     return true;
 }
 

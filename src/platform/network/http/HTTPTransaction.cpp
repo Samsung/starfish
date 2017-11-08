@@ -95,10 +95,10 @@ static std::vector<std::string> split(const std::string& s, char seperator)
 
 HTTPTransaction::HTTPTransaction()
     : m_httpRequest()
-    , m_httpResponse()
+    , m_httpResponse(HTTPResponse::create())
     , m_timeout(0)
     , m_curl(nullptr)
-    , m_res()
+    , m_res(CURLE_OK)
     , m_procCB(nullptr)
     , m_procData(nullptr)
     , m_writeHeaderCB(nullptr)
@@ -121,11 +121,9 @@ void HTTPTransaction::start()
             m_httpRequest->baseURL());
 
     m_curl = cd.curl;
-    m_httpResponse = HTTPResponse::create();
 
     STARFISH_ASSERT(m_curl);
     STARFISH_ASSERT(curlsh);
-    STARFISH_ASSERT(m_httpResponse);
 
 #ifdef STARFISH_ENABLE_TEST
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);

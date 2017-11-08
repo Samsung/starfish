@@ -152,17 +152,17 @@ void HTTPCache::initFromIndexFileIfPossible()
     }
 }
 
-bool HTTPCache::cacheHit(ResourceURL* url)
+HTTPCacheEntryMultiMap::iterator HTTPCache::cacheHit(ResourceURL* url)
 {
     // TODO : Check that cached data is fresh enough.
 
     auto range = m_cacheEntryTable.equal_range(url->urlString()->hashValue());
     for (auto it = range.first; it != range.second; ++it) {
         if (*(it->second->url()) == *url) {
-            return true;
+            return it;
         }
     }
-    return false;
+    return m_cacheEntryTable.end();
 }
 
 void HTTPCache::initCacheDir()

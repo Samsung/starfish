@@ -23,17 +23,23 @@ namespace StarFish {
 
 class ResourceRequest;
 class NetworkURLWorkerHelper;
+class HTTPCacheEntry;
 class HTTPHeaderMap;
 class HTTPTransaction;
 
 struct NetworkURLWorkerData {
+    NetworkURLWorkerData(ResourceRequest* orgRequest);
+
     bool isAborted;
     bool isRedirected;
-    bool cacheHit;
     long lastTransactionResponseCode;
     ResourceRequest* request;
-    NetworkURLWorkerHelper* networkWorker;
+    NetworkURLWorkerHelper* helper;
     std::unique_ptr<HTTPTransaction> httpTransaction;
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    bool cacheHit;
+    HTTPCacheEntry* cachedEntry;
+#endif
     std::string lastLocation;
 };
 
@@ -46,6 +52,10 @@ public:
     {
     }
     void* networkWorker(void* data);
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    void* httpCacheWorker(void* data);
+#endif
+    void workerAbortHandeler(void* data);
 
 protected:
     virtual void responseHandlerWrapper(int res,
