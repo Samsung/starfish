@@ -326,6 +326,8 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
         hb_buffer_reset(hbBuffer);
     }
 
+    hb_buffer_destroy(hbBuffer);
+
     return result;
 }
 

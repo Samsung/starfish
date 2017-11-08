@@ -453,10 +453,14 @@ private:
 
     static int getGifTransparentIndex(GifFileType* gif)
     {
+#ifdef GIF_LIB_VERSION // order versions of giflib(~4)
+        return 0;
+#else
         GraphicsControlBlock first_gcb;
         memset(&first_gcb, 0, sizeof(first_gcb));
         DGifSavedExtensionToGCB(gif, 0, &first_gcb);
         return first_gcb.TransparentColor;
+#endif
     }
 
     void readGIFFileOrBufferedInput(String* localImageSrc,
@@ -586,6 +590,12 @@ private:
             gifRow = screenBuffer[h];
             for (unsigned long w = 0; w < m_width; w++) {
                 colorMapEntry = &colorMap->Colors[gifRow[w]];
+#ifdef GIF_LIB_VERSION // order versions of giflib(~4)
+                *buffer++ = colorMapEntry->Blue;
+                *buffer++ = colorMapEntry->Green;
+                *buffer++ = colorMapEntry->Red;
+                *buffer++ = 255;
+#else
                 if (ti == NO_TRANSPARENT_COLOR) {
                     *buffer++ = colorMapEntry->Blue;
                     *buffer++ = colorMapEntry->Green;
@@ -597,6 +607,7 @@ private:
                     *buffer++ = 0;
                     *buffer++ = 0;
                 }
+#endif
             }
         }
 
