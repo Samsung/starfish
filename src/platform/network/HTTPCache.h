@@ -27,7 +27,12 @@ public:
     HTTPCache(String* cacheDirPath);
     ~HTTPCache();
     void initFromIndexFileIfPossible();
-    bool cacheHit(ResourceURL* url);
+    HTTPCacheEntryMultiMap::iterator cacheHit(ResourceURL* url);
+    HTTPCacheEntryMultiMap::iterator cacheEntryTableEnd()
+    {
+        return m_cacheEntryTable.end();
+    }
+
     void caching(NetworkURLWorkerData* data);
     bool flush();
     // expire

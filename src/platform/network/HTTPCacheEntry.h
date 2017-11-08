@@ -19,6 +19,8 @@
 
 namespace StarFish {
 class ResourceURL;
+class Mutex;
+
 struct CacheControl {
     CacheControl()
         : noCache(false)
@@ -57,6 +59,7 @@ public:
 
     void setEntryFileNameUsingCachePath(String* cachePath);
     bool writeRawDataToEntryFile(std::vector<char>& rawData);
+    bool readRawDataFromEntryFile(std::vector<char>& out);
 
     size_t entryKey() const;
     CacheControl cacheControl() const
@@ -77,6 +80,7 @@ private:
     time_t m_date;
     CacheControl m_cacheControl;
     String* m_entryFileName;
+    Mutex* m_mutex;
 };
 
 typedef GCUnorderedMultiMap<size_t, HTTPCacheEntry*> HTTPCacheEntryMultiMap;
