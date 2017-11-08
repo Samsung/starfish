@@ -108,7 +108,8 @@ void MockMediaPlayer::play()
             [](Window* window, void* data) {
                 MockMediaPlayer* self = (MockMediaPlayer*)data;
 
-                if (self->activeMediaSource()->activeVideoSourceBuffer()) {
+                if (self->activeMediaSource() &&
+                    self->activeMediaSource()->activeVideoSourceBuffer()) {
                     uint64_t videoStart = self->m_currentTimestamp;
                     while (self->m_currentTimestamp - videoStart < 250) {
                         std::pair<MediaPacket*, size_t> packet =
@@ -182,10 +183,19 @@ void MockMediaPlayer::prepare(ResourceURL* url)
     }
     m_videoWidth = STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
     m_videoHeight = STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
-    container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
-        HTMLMediaElement::HAVE_METADATA);
-    container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
-        HTMLMediaElement::HAVE_FUTURE_DATA);
+
+    MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+    msgLoop->addIdler(
+        m_container->document()->browsingContext(),
+        [](size_t, void* data) {
+            MockMediaPlayer* self = (MockMediaPlayer*)data;
+            self->processNextOperationQueueInContainer();
+            self->container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
+                HTMLMediaElement::HAVE_METADATA);
+            self->container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
+                HTMLMediaElement::HAVE_ENOUGH_DATA);
+        },
+        this);
 }
 
 void MockMediaPlayer::drawVideo(Compositor* canvas, const LayoutRect& videoRect,

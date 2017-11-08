@@ -37,6 +37,14 @@
 #include "core/util/URL.h"
 #include "platform/multimedia/MediaPlayer.h"
 
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
+#define MEDIA_ELEMENT_LOG(element, ...)               \
+    STARFISH_LOG_INFO("[MediaElement|%p] ", element); \
+    STARFISH_LOG_INFO(__VA_ARGS__);
+#else
+#define MEDIA_ELEMENT_LOG(element, ...)
+#endif
+
 namespace StarFish {
 
 HTMLMediaElement::HTMLMediaElement(Document* document)
@@ -67,14 +75,12 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
         this,
         [](void* obj, void* cd) {
             HTMLMediaElement* element = (HTMLMediaElement*)obj;
-#ifdef STARFISH_MEDIAPLAYER_DEBUG
-            STARFISH_LOG_INFO("HTMLMediaElement::~HTMLMediaElement (%s|%p)\n",
-                              element->isHTMLVideoElement()
-                                  ? "VIDEO"
-                                  : element->isHTMLAudioElement() ? "AUDIO"
-                                                                  : "ETC",
-                              element);
-#endif
+            MEDIA_ELEMENT_LOG(
+                element, "HTMLMediaElement::~HTMLMediaElement (%s|%p)\n",
+                element->isHTMLVideoElement()
+                    ? "VIDEO"
+                    : element->isHTMLAudioElement() ? "AUDIO" : "ETC",
+                element);
             element->closeMediaPlayer();
         },
         NULL, NULL, NULL);
@@ -112,16 +118,14 @@ void HTMLMediaElement::onDOMContentLoaded()
 {
     if (!document()->inParsing() && networkState() == NETWORK_EMPTY &&
         (autoplay() || preloadValue() != HTMLMediaElement::PRELOAD_NONE)) {
-        STARFISH_LOG_INFO(
+        MEDIA_ELEMENT_LOG(
+            this,
             "HTMLMediaElement::onDOMContentLoaded() causes content load "
             "(autoplay:%s, preload:%s)\n",
             autoplay() ? "true" : "false",
             preload()->toUTF8NonGCString().data());
+        MEDIA_ELEMENT_LOG(this, "src: %s\n", src()->toUTF8NonGCString().data());
         load();
-        if (autoplay()) {
-            appendToPlayOperationQueue(
-                new MediaOperationQueueDataRequestPlay(this));
-        }
     }
 }
 
@@ -135,16 +139,13 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
     if (name == starFish()->staticStrings()->m_src) {
         if (!document()->inParsing() &&
             (autoplay() || preloadValue() != HTMLMediaElement::PRELOAD_NONE)) {
-            STARFISH_LOG_INFO(
+            MEDIA_ELEMENT_LOG(
+                this,
                 "HTMLMediaElement::Changing src attribute causes content load "
                 "(autoplay:%s, preload:%s)\n",
                 autoplay() ? "true" : "false",
                 preload()->toUTF8NonGCString().data());
             load();
-            if (autoplay()) {
-                appendToPlayOperationQueue(
-                    new MediaOperationQueueDataRequestPlay(this));
-            }
         }
     } else if (name == starFish()->staticStrings()->m_loop) {
         MediaPlayer* player = activeMediaPlayer();
@@ -167,7 +168,7 @@ void HTMLMediaElement::didNodeRemovedFromDocumentTree()
 
 void HTMLMediaElement::load()
 {
-    STARFISH_LOG_INFO("HTMLMediaElement::load()\n");
+    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::load()\n");
     // 4.8.12.5 Loading the media resource
     // While the delaying-the-load-event flag is true, the element must delay
     // the load event of its document.
@@ -249,6 +250,11 @@ void HTMLMediaElement::load()
     // TODO Set the playbackRate attribute to the value of the
     // defaultPlaybackRate attribute.
 
+    if (autoplay()) {
+        appendToPlayOperationQueue(
+            new MediaOperationQueueDataRequestPlay(this));
+    }
+
     // Set the error attribute to null and the autoplaying flag to true.
     m_autoplayingFlag = true;
 
@@ -275,7 +281,7 @@ void HTMLMediaElement::initMediaPlayer()
 
 void HTMLMediaElement::resourceSelection()
 {
-    STARFISH_LOG_INFO("HTMLMediaElement::resourceSelection()\n");
+    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::resourceSelection()\n");
     closeMediaPlayer();
     m_networkState = NETWORK_NO_SOURCE;
     // Set the element's show poster flag to true.
@@ -735,16 +741,16 @@ void HTMLMediaElement::setCurrentTime(double time)
     // then it must set the media element’s default playback start position
     // to the new value; otherwise, it must set the official playback position
     // to the new value and then seek to the new value.
-    STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() %lf \n", time);
+    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::setCurrentTime() %lf \n", time);
     MediaPlayer* player = activeMediaPlayer();
     if (!player) {
         return;
     }
     if (m_readyState == HAVE_NOTHING) {
         m_defaultPlaybackStartPosition = time;
-        STARFISH_LOG_INFO(
-            "HTMLMediaElement::setCurrentTime() readyState is "
-            "HAVE_NOTHING..\n");
+        MEDIA_ELEMENT_LOG(this,
+                          "HTMLMediaElement::setCurrentTime() readyState is "
+                          "HAVE_NOTHING..\n");
     } else {
         m_isEnded = false;
         if (m_isSeeking) {
@@ -755,8 +761,8 @@ void HTMLMediaElement::setCurrentTime(double time)
             // the step that it is running to complete.
             // Note : But there is no way of aborting player_set_position_async,
             // we have to wait.
-            STARFISH_LOG_INFO(
-                "HTMLMediaElement::setCurrentTime() Seek pending..\n");
+            MEDIA_ELEMENT_LOG(
+                this, "HTMLMediaElement::setCurrentTime() Seek pending..\n");
             m_pendingSeek = time;
         } else {
             if (!m_isPaused) {
@@ -890,7 +896,10 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(
     if (state == m_readyState) {
         return;
     }
-
+    MEDIA_ELEMENT_LOG(
+        this,
+        "HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(%d)\n",
+        (int)state);
     HTMLMediaElement::ReadyState prevState = m_readyState;
     m_readyState = state;
 
@@ -978,8 +987,8 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(
 
 void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
 {
-    STARFISH_LOG_INFO(
-        "HTMLMediaElement::mediaPlayerNotifySeekedItsContainer (%lf)\n",
+    MEDIA_ELEMENT_LOG(
+        this, "HTMLMediaElement::mediaPlayerNotifySeekedItsContainer (%lf)\n",
         currentTime);
     // Note : Set officialPlaybackPosition manually instead of calling
     // setOfficialPlaybackPosition()
@@ -987,7 +996,8 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
     m_officialPlaybackPosition = currentTime;
 
     if (!std::isnan(m_pendingSeek) && m_pendingSeek != currentTime) {
-        STARFISH_LOG_INFO(
+        MEDIA_ELEMENT_LOG(
+            this,
             "HTMLMediaElement::mediaPlayerNotifySeekedItsContainer found "
             "pending seek operation (%lf)\n",
             m_pendingSeek);
@@ -1010,8 +1020,8 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
 
 void HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer()
 {
-    STARFISH_LOG_INFO(
-        "HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer\n");
+    MEDIA_ELEMENT_LOG(
+        this, "HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer\n");
     m_isSeeking = false;
     m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
     // TODO
@@ -1091,7 +1101,7 @@ ADD_DISPATCH_EVENT_DEF(volumechange, Volumechange);
 void HTMLMediaElement::abortEveryPendingOperation(
     DOMException* exceptionForPlayPromise)
 {
-    STARFISH_LOG_INFO("HTMLMediaElement::abortEveryPendingOperation()\n");
+    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::abortEveryPendingOperation()\n");
     if (m_currentOperation) {
         m_currentOperation->cancelOperation();
         m_currentOperation = nullptr;
@@ -1218,9 +1228,9 @@ void ResourceSelectionContext::failedWithElements(Element* candidate)
 
 void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 {
-    STARFISH_LOG_INFO(
-        "MediaOperationQueueDataRequestResourceSelection::"
-        "processOperationQueue()\n");
+    MEDIA_ELEMENT_LOG(m_mediaElement,
+                      "MediaOperationQueueDataRequestResourceSelection::"
+                      "processOperationQueue()\n");
     HTMLMediaElement* self = m_mediaElement;
     self->processNextOperationQueue();
 
@@ -1339,7 +1349,8 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 
 void MediaOperationQueueDataRequestPrepare::processOperationQueue()
 {
-    STARFISH_LOG_INFO(
+    MEDIA_ELEMENT_LOG(
+        m_mediaElement,
         "MediaOperationQueueDataRequestPrepare::processOperationQueue()\n");
     MediaPlayer* player = mediaPlayer();
     if (player) {
@@ -1354,7 +1365,8 @@ void MediaOperationQueueDataRequestPrepare::cancelOperation()
 
 void MediaOperationQueueDataRequestSeek::processOperationQueue()
 {
-    STARFISH_LOG_INFO(
+    MEDIA_ELEMENT_LOG(
+        m_mediaElement,
         "MediaOperationQueueDataRequestSeek::processOperationQueue()\n");
     // Seek task does not hold operation queue
     m_mediaElement->processNextOperationQueue();
@@ -1388,7 +1400,8 @@ void MediaOperationQueueDataRequestSeek::processOperationQueue()
 
 void MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()
 {
-    STARFISH_LOG_INFO(
+    MEDIA_ELEMENT_LOG(
+        m_mediaElement,
         "MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()"
         "\n");
     if (m_mediaElement->m_defaultPlaybackStartPosition != 0) {
@@ -1402,7 +1415,8 @@ void MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()
 
 void MediaOperationQueueDataRequestPause::processOperationQueue()
 {
-    STARFISH_LOG_INFO(
+    MEDIA_ELEMENT_LOG(
+        m_mediaElement,
         "MediaOperationQueueDataRequestPause::processOperationQueue()\n");
     m_mediaElement->processNextOperationQueue();
     MediaPlayer* player = mediaPlayer();
@@ -1434,7 +1448,7 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
 void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
 {
     auto s = m_event->type()->toUTF8NonGCString();
-    // STARFISH_LOG_INFO(
+    // MEDIA_ELEMENT_LOG(
     //     "MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
     //     "
     //     "-> %s\n",
@@ -1456,7 +1470,8 @@ MediaOperationQueueDataRequestPlay::MediaOperationQueueDataRequestPlay(
 
 void MediaOperationQueueDataRequestPlay::processOperationQueue()
 {
-    STARFISH_LOG_INFO(
+    MEDIA_ELEMENT_LOG(
+        m_mediaElement,
         "MediaOperationQueueDataRequestPlay::processOperationQueue()\n");
     MediaPlayer* player = mediaPlayer();
     if (player) {
@@ -1476,5 +1491,7 @@ void MediaOperationQueueDataRequestPlay::cancelOperation(
     m_promise->reject(exception->scriptValue());
 }
 }
+
+#undef MEDIA_ELEMENT_LOG
 
 #endif
