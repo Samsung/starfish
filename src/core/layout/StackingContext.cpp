@@ -297,20 +297,6 @@ int32_t StackingContext::zIndex()
     }
 }
 
-VisibleRectContext::VisibleRectContext(FrameBox* box, LayoutLocation* loc)
-    : m_box(box)
-    , m_loc(loc)
-{
-    m_loc->setX(m_loc->x() + m_box->x());
-    m_loc->setY(m_loc->y() + m_box->y());
-}
-
-VisibleRectContext::~VisibleRectContext()
-{
-    m_loc->setX(m_loc->x() - m_box->x());
-    m_loc->setY(m_loc->y() - m_box->y());
-}
-
 void StackingContext::clearGraphicsBuffer(bool needsDetachNative)
 {
     if (m_rareData && m_rareData->m_buffer) {
@@ -606,10 +592,9 @@ enum IndirectCompositingReason {
     Preserve3D
 };
 
-bool requiresCompositingForIndirectReason(FrameBox* owner,
-                                          bool hasCompositedDescendants,
-                                          bool has3DTransformedDescendants,
-                                          IndirectCompositingReason& reason)
+static bool requiresCompositingForIndirectReason(
+    FrameBox* owner, bool hasCompositedDescendants,
+    bool has3DTransformedDescendants, IndirectCompositingReason& reason)
 {
     // When a layer has composited descendants, some effects, like 2d
     // transforms, filters, masks etc must be implemented
@@ -875,11 +860,12 @@ void StackingContext::computeStackingContextProperties(
                                 m_owner->style()->hasComplexTransforms(m_owner);
 
     if (needsGraphicsBuffer()) {
-        LayoutLocation l(-m_owner->frameRect().location().x(),
-                         -m_owner->frameRect().location().y());
-
+        SkMatrix l = SkMatrix::I();
         m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
-        m_owner->computeVisibleRect(this, l, m_rareData->m_visibleRect);
+        Frame::ComputeVisibleRectContext ctx(
+            Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
+            m_rareData->m_visibleRect);
+        m_owner->computeVisibleRect(ctx);
     }
 }
 

@@ -26,6 +26,7 @@
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameFlexibleBox.h"
+#include "core/layout/StackingContext.h"
 
 namespace StarFish {
 
@@ -772,6 +773,73 @@ LayoutUnit LayoutContext::contentHeight(FrameBox* box)
         return intMaxForLayoutUnit;
     }
     return iter->second;
+}
+
+void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
+{
+    SkMatrix m = tranformMatrix;
+
+    // If Frame has `skew, rotate, 3d-transform`, Frame must own it's graphics
+    // buffer.
+    // If matrix is not rect, we should ignore child visible rects from here
+    if (!m.rectStaysRect()) {
+        return;
+    }
+    SkRect skRect = SkRect::MakeXYWH((float)r.x(), (float)r.y(),
+                                     (float)r.width(), (float)r.height());
+
+    m.mapRect(&skRect);
+    LayoutRect tmp =
+        LayoutRect(skRect.x(), skRect.y(), skRect.width(), skRect.height());
+    result.unite(tmp);
+}
+
+Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
+    ComputeVisibleRectContext& ctx, FrameBox* fragmentBox)
+    : ctx(ctx)
+    , fragmentBox(fragmentBox)
+    , transformMatrixBefore(ctx.tranformMatrix)
+    , shouldStopComputingBecauseMatrixInvalidFromHere(false)
+{
+    if (ctx.ignoreTransformOnce) {
+        ctx.ignoreTransformOnce = false;
+        return;
+    }
+
+    ComputedStyle* cs = fragmentBox->style();
+    if (ctx.purpose == Frame::ComputeVisibleRectContext::GraphicsBuffer && cs &&
+        cs->hasTransforms(fragmentBox)) {
+        // transform Frame must own StackingContext
+        SkMatrix m = fragmentBox->stackingContext()->transformMatrix();
+        // If Frame has `skew, rotate, 3d-transform`, Frame must own it's
+        // graphics buffer.
+        // If matrix is not rect, we should ignore child visible rects from here
+        if (!m.rectStaysRect()) {
+            shouldStopComputingBecauseMatrixInvalidFromHere = true;
+            return;
+        }
+        STARFISH_ASSERT(m.rectStaysRect());
+
+        auto to = fragmentBox->stackingContext()->transformOrigin();
+
+        ctx.tranformMatrix.postTranslate((float)fragmentBox->x(),
+                                         (float)fragmentBox->y());
+        ctx.tranformMatrix.postTranslate((float)to.x(), (float)to.y());
+        ctx.tranformMatrix.preConcat(m);
+        ctx.tranformMatrix.postTranslate((float)-to.x(), (float)-to.y());
+
+        if (!ctx.tranformMatrix.rectStaysRect()) {
+            shouldStopComputingBecauseMatrixInvalidFromHere = true;
+            return;
+        }
+    } else {
+        ctx.tranformMatrix.postTranslate((float)fragmentBox->x(),
+                                         (float)fragmentBox->y());
+    }
+}
+Frame::ComputeVisibleRectContextFragment::~ComputeVisibleRectContextFragment()
+{
+    ctx.tranformMatrix = transformMatrixBefore;
 }
 
 Frame::Frame(Node* node, ComputedStyle* s)

@@ -1789,11 +1789,11 @@ void FrameBox::establishesStackingContextIfNeeds()
     }
 }
 
-bool FrameBox::tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
-                                   LayoutRect& result)
+bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
 {
-    if (sCtx && (this != sCtx->owner() && stackingContext() &&
-                 stackingContext()->needsGraphicsBuffer())) {
+    if (ctx.sourceStackingContext &&
+        (this != ctx.sourceStackingContext->owner() && stackingContext() &&
+         stackingContext()->needsGraphicsBuffer())) {
         return false;
     }
 
@@ -1801,25 +1801,41 @@ bool FrameBox::tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
         return true;
     }
 
+    bool ret = !shouldApplyOverflow();
     LayoutRect r = frameRect();
-    r.setX(r.x() + loc.x());
-    r.setY(r.y() + loc.y());
-    if (style()->outlineStyle() != BorderStyleValue::NoneBorderStyleValue) {
+    r.setX(0);
+    r.setY(0);
+
+    // TODO add box-shadow size into visibleRect when box-shadow implemented
+    ComputedStyle* cs = style();
+    if (ctx.purpose == Frame::ComputeVisibleRectContext::GraphicsBuffer &&
+        isFrameBlockBox() && isBlockLevel()) {
+        if (cs->backgroundColor().isTransparent() &&
+            cs->backgroundLayerSize() == 0 && !cs->hasBorderStyle() &&
+            cs->outlineStyle() == BorderStyleValue::NoneBorderStyleValue) {
+            r.setWidth(0);
+            r.setHeight(0);
+            ret = true;
+        }
+    }
+
+    if (cs->outlineStyle() != BorderStyleValue::NoneBorderStyleValue) {
         LayoutUnit t = outlineThickness();
         r.setX(r.x() - t);
         r.setY(r.y() - t);
         r.setWidth(r.width() + t * 2);
         r.setHeight(r.height() + t * 2);
     }
-    result.unite(r);
 
-    return !shouldApplyOverflow();
+    ctx.uniteRect(r);
+
+    return ret;
 }
 
-void FrameBox::computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
-                                  LayoutRect& result)
+void FrameBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
 {
-    tryUniteVisibleRect(sCtx, loc, result);
+    Frame::ComputeVisibleRectContextFragment f(ctx, this);
+    tryUniteVisibleRect(ctx);
 }
 
 void FrameBox::clearStackingContextIfNeeds(bool shouldDetachNativeBuffer)

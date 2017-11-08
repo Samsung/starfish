@@ -1347,8 +1347,39 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
-                                    LayoutRect& result)
+    struct ComputeVisibleRectContext {
+        enum ComputePurpose { Scrolling, GraphicsBuffer };
+        ComputePurpose purpose;
+        bool ignoreTransformOnce;
+        StackingContext* sourceStackingContext;
+        SkMatrix& tranformMatrix;
+        LayoutRect& result;
+
+        ComputeVisibleRectContext(ComputePurpose purpose,
+                                  StackingContext* sourceStackingContext,
+                                  SkMatrix& tranformMatrix, LayoutRect& result)
+            : purpose(purpose)
+            , ignoreTransformOnce(purpose == GraphicsBuffer ? true : false)
+            , sourceStackingContext(sourceStackingContext)
+            , tranformMatrix(tranformMatrix)
+            , result(result)
+        {
+        }
+
+        void uniteRect(const LayoutRect& r);
+    };
+
+    struct ComputeVisibleRectContextFragment {
+        ComputeVisibleRectContext& ctx;
+        FrameBox* fragmentBox;
+        SkMatrix transformMatrixBefore;
+        bool shouldStopComputingBecauseMatrixInvalidFromHere;
+        ComputeVisibleRectContextFragment(ComputeVisibleRectContext& ctx,
+                                          FrameBox* fragmentBox);
+        ~ComputeVisibleRectContextFragment();
+    };
+
+    virtual void computeVisibleRect(ComputeVisibleRectContext& ctx)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

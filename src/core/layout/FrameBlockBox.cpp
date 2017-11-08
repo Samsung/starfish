@@ -488,17 +488,18 @@ void FrameBlockBox::layout(LayoutContext& ctx,
 
     // compute scroll width & height
     LayoutRect visibleRect = LayoutRect(0, 0, width(), height());
+    SkMatrix loc = SkMatrix::I();
+    Frame::ComputeVisibleRectContext vctx(
+        Frame::ComputeVisibleRectContext::Scrolling, nullptr, loc, visibleRect);
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
-            LayoutLocation loc;
-            child->computeVisibleRect(nullptr, loc, visibleRect);
+            child->computeVisibleRect(vctx);
             child = child->next();
         }
     } else {
-        LayoutLocation loc;
         for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-            m_lineBoxes[i]->computeVisibleRect(nullptr, loc, visibleRect);
+            m_lineBoxes[i]->computeVisibleRect(vctx);
         }
     }
 
@@ -614,24 +615,23 @@ void FrameBlockBox::establishesStackingContextIfNeeds()
     }
 }
 
-void FrameBlockBox::computeVisibleRect(StackingContext* sCtx,
-                                       LayoutLocation& loc, LayoutRect& result)
+void FrameBlockBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
 {
-    if (!tryUniteVisibleRect(sCtx, loc, result)) {
+    Frame::ComputeVisibleRectContextFragment f(ctx, this);
+
+    if (!tryUniteVisibleRect(ctx)) {
         return;
     }
-
-    VisibleRectContext ctx(this, &loc);
 
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
-            child->computeVisibleRect(sCtx, loc, result);
+            child->computeVisibleRect(ctx);
             child = child->next();
         }
     } else {
         for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-            m_lineBoxes[i]->computeVisibleRect(sCtx, loc, result);
+            m_lineBoxes[i]->computeVisibleRect(ctx);
         }
     }
 }

@@ -1079,14 +1079,12 @@ void* InlineBoxLayoutParentBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void InlineBoxLayoutParentBox::computeVisibleRect(StackingContext* sCtx,
-                                                  LayoutLocation& loc,
-                                                  LayoutRect& result)
+void InlineBoxLayoutParentBox::computeVisibleRect(
+    Frame::ComputeVisibleRectContext& ctx)
 {
-    VisibleRectContext ctx(this, &loc);
-
+    FrameBox::ComputeVisibleRectContextFragment f(ctx, this);
     for (size_t i = 0; i < m_boxes.size(); i++) {
-        m_boxes[i]->computeVisibleRect(sCtx, loc, result);
+        m_boxes[i]->computeVisibleRect(ctx);
     }
 }
 

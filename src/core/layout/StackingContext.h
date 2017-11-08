@@ -31,15 +31,6 @@ class BrowsingContext;
 class StackingContextChild : public GCVector<StackingContext*>, public gc {
 };
 
-struct VisibleRectContext {
-    VisibleRectContext(FrameBox* box, LayoutLocation* loc);
-    ~VisibleRectContext();
-
-private:
-    FrameBox* m_box;
-    LayoutLocation* m_loc;
-};
-
 struct StackingContextRareData : public gc {
     bool m_needsGraphicsBuffer;
     LayoutRect m_visibleRect;
@@ -91,12 +82,6 @@ public:
     LayoutRect visibleRect()
     {
         return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
-    }
-
-    void unite(const LayoutRect& other)
-    {
-        STARFISH_ASSERT(m_rareData);
-        m_rareData->m_visibleRect.unite(other);
     }
 
     LayoutLocation transformOrigin();

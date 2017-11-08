@@ -201,8 +201,7 @@ public:
         return ret;
     }
 
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
-                                    LayoutRect& result);
+    virtual void computeVisibleRect(Frame::ComputeVisibleRectContext& ctx);
 
     FrameBox* firstInlineBox();
     FrameBox* lastInlineBox();
@@ -352,14 +351,13 @@ public:
         return InlineBoxLayoutParentBox::firstInlineNonReplacedBox(f);
     }
 
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
-                                    LayoutRect& result)
+    virtual void computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     {
-        if (!tryUniteVisibleRect(sCtx, loc, result)) {
+        if (!tryUniteVisibleRect(ctx)) {
             return;
         }
 
-        InlineBoxLayoutParentBox::computeVisibleRect(sCtx, loc, result);
+        InlineBoxLayoutParentBox::computeVisibleRect(ctx);
     }
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
@@ -600,8 +598,7 @@ public:
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f);
 
     virtual void establishesStackingContextIfNeeds();
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
-                                    LayoutRect& result);
+    virtual void computeVisibleRect(FrameBox::ComputeVisibleRectContext& ctx);
 
     virtual bool hasBlockFlow()
     {

@@ -683,11 +683,9 @@ public:
     }
 
     virtual void establishesStackingContextIfNeeds();
-    virtual void computeVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
-                                    LayoutRect& result);
+    virtual void computeVisibleRect(Frame::ComputeVisibleRectContext& ctx);
 
-    bool tryUniteVisibleRect(StackingContext* sCtx, LayoutLocation& loc,
-                             LayoutRect& result);
+    bool tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx);
 
     void clearStackingContextIfNeeds(bool shouldDetachNativeBuffer = true);
 
