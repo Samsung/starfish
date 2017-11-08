@@ -211,6 +211,7 @@ public:
     bool m_pendingPlay : 1;
     bool m_underrunMode : 1;
     size_t m_seekingTimer;
+    LayoutRect m_lastAbsoluteROIArea;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_fillBufferMutex;
     ResourceURL* m_currentURL;

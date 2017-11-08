@@ -1052,6 +1052,11 @@ public:
         return width() == src.width() && height() == src.height();
     }
 
+    bool operator!=(const LayoutSize& src) const
+    {
+        return !operator==(src);
+    }
+
 protected:
     LayoutUnit m_width, m_height;
 };
@@ -1082,6 +1087,16 @@ public:
     LayoutUnit y() const
     {
         return m_y;
+    }
+
+    bool operator==(const LayoutLocation& src) const
+    {
+        return x() == src.x() && y() == src.y();
+    }
+
+    bool operator!=(const LayoutLocation& src) const
+    {
+        return !operator==(src);
     }
 
 protected:
@@ -1193,6 +1208,16 @@ public:
 
         m_location = newLocation;
         m_size = newMaxPoint - newLocation;
+    }
+
+    bool operator==(const LayoutRect& src) const
+    {
+        return location() == src.location() && size() == src.size();
+    }
+
+    bool operator!=(const LayoutRect& src) const
+    {
+        return !operator==(src);
     }
 
 private:
