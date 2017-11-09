@@ -218,7 +218,7 @@ NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
 {
 }
 
-void NetworkURLResourceRequestJobDelegate::send(String* body)
+void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     STARFISH_ASSERT(isMainThread());
     STARFISH_ASSERT(m_orgProxy->m_url->isNetworkURL());
@@ -232,7 +232,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body)
     case ResourceRequest::GET_METHOD: {
         method = "GET";
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        if (m_orgProxy->starFish()->httpCache()) {
+        if (allowCache && m_orgProxy->starFish()->httpCache()) {
             auto it = m_orgProxy->starFish()->httpCache()->cacheHit(
                 m_orgProxy->m_url);
 

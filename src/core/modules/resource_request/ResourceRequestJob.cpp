@@ -52,7 +52,7 @@ FileURLResourceRequestJobDelegate::FileURLResourceRequestJobDelegate(
 {
 }
 
-void FileURLResourceRequestJobDelegate::send(String* body)
+void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     STARFISH_ASSERT(m_orgProxy->m_url->isFileURL());
     // this area doesn't require lock.
@@ -104,7 +104,7 @@ DataURLResourceRequestJobDelegate::DataURLResourceRequestJobDelegate(
 {
 }
 
-void DataURLResourceRequestJobDelegate::send(String* body)
+void DataURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     STARFISH_ASSERT(m_orgProxy->m_url->isDataURL());
     // this area doesn't require lock.
@@ -170,7 +170,7 @@ AboutURLResourceRequestJobDelegate::AboutURLResourceRequestJobDelegate(
 {
 }
 
-void AboutURLResourceRequestJobDelegate::send(String* body)
+void AboutURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     STARFISH_ASSERT(m_orgProxy->m_url->isAboutURL());
     // this area doesn't require lock.
@@ -210,7 +210,7 @@ UnknownURLResourceRequestJobDelegate::UnknownURLResourceRequestJobDelegate(
 {
 }
 
-void UnknownURLResourceRequestJobDelegate::send(String* body)
+void UnknownURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     // this area doesn't require lock.
     if (m_orgProxy->m_isSync) {
@@ -244,7 +244,7 @@ BlobURLResourceRequestJobDelegate::BlobURLResourceRequestJobDelegate(
 {
 }
 
-void BlobURLResourceRequestJobDelegate::send(String* body)
+void BlobURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     STARFISH_ASSERT(m_orgProxy->m_url->isBlobURL());
     // this area doesn't require lock.

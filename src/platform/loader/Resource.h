@@ -140,7 +140,7 @@ public:
         AlwaysSync
     };
     virtual void request(ResourceRequestSyncLevel syncLevel,
-                         ResourceURL* referrerURL);
+                         ResourceURL* referrerURL, bool allowCache = false);
     virtual void cancel();
     virtual void didHeaderReceived(
         const std::unordered_map<std::string, std::string>& headrs);

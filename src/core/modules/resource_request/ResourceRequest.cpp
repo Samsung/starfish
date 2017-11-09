@@ -295,13 +295,13 @@ void ResourceRequest::abort(bool isExplicitAction)
     }
 }
 
-void ResourceRequest::send(String* body)
+void ResourceRequest::send(String* body, bool allowCache)
 {
     document()->browsingContext()->addPointerInRootSet(this);
     m_didSend = true;
 
     STARFISH_ASSERT(m_networkRequestJobDelegate);
-    m_networkRequestJobDelegate->send(body);
+    m_networkRequestJobDelegate->send(body, allowCache);
 
     changeProgress(LOADSTART, true);
 }

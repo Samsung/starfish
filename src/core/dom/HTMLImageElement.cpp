@@ -217,7 +217,7 @@ void HTMLImageElement::loadImage(String* src)
         new ElementResourceClient(this, m_imageResource));
     m_imageResource->request(
         Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
-        document()->documentURI());
+        document()->documentURI(), true);
 }
 
 String* HTMLImageElement::nameAttr()

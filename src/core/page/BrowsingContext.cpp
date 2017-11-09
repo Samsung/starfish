@@ -399,7 +399,7 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
                             std::get<0>(fontFaceData),
                             document()->documentURI()->urlString()));
                     res->request(Resource::SyncIfAlreadyLoaded,
-                                 document()->documentURI());
+                                 document()->documentURI(), true);
                     res->addResourceClient(
                         new WebFontLoadChecker(res, fontFamily));
                     WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,

@@ -181,7 +181,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             res->request(forceSync
                              ? Resource::ResourceRequestSyncLevel::AlwaysSync
                              : Resource::ResourceRequestSyncLevel::NeverSync,
-                         document()->documentURI());
+                         document()->documentURI(), true);
             return true;
         }
     }

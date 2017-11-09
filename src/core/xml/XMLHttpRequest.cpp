@@ -199,7 +199,7 @@ void XMLHttpRequest::send(String* body)
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
-    m_resourceRequest->send(body);
+    m_resourceRequest->send(body, false);
 }
 
 DEFINE_EVENT_LISTENER(XMLHttpRequest, readystatechange);
