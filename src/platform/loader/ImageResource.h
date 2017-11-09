@@ -68,7 +68,7 @@ public:
     }
 
     virtual void request(ResourceRequestSyncLevel syncLevel,
-                         ResourceURL* referrerURL);
+                         ResourceURL* referrerURL, bool allowCache = false);
     virtual void didLoadFinished();
     virtual void didCacheHit(Resource* cache)
     {

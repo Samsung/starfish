@@ -217,7 +217,7 @@ void HTMLLinkElement::loadStyleSheet()
     willStyleSheetLoad();
     m_styleSheetTextResource->request(
         Resource::ResourceRequestSyncLevel::NeverSync,
-        document()->documentURI());
+        document()->documentURI(), true);
 }
 
 void HTMLLinkElement::unloadStyleSheetIfExists()

@@ -90,7 +90,8 @@ public:
     static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb,
                                           void* data);
     NetworkURLResourceRequestJobDelegate(ResourceRequest* proxy);
-    virtual void send(String* body = String::emptyString);
+    virtual void send(String* body = String::emptyString,
+                      bool allowCache = false);
 
 private:
     void fillHeadersWithGeneralHeaders(HTTPHeaderMap& headers);

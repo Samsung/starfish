@@ -128,7 +128,7 @@ void ImageResource::doLoadFile(void* data)
 #endif
 
 void ImageResource::request(ResourceRequestSyncLevel syncLevel,
-                            ResourceURL* referrerURL)
+                            ResourceURL* referrerURL, bool allowCache)
 {
 #if defined(PORT_CANVAS_BACKEND_EFL)
     if (m_url->isFileURL() && !m_url->urlString()->endsWith(".svg", false)) {
@@ -148,10 +148,10 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel,
             }
         }
     } else {
-        Resource::request(syncLevel, referrerURL);
+        Resource::request(syncLevel, referrerURL, allowCache);
     }
 #else
-    Resource::request(syncLevel, referrerURL);
+    Resource::request(syncLevel, referrerURL, allowCache);
 #endif
 }
 

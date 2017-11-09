@@ -118,7 +118,8 @@ public:
               ResourceURL* referrer, String* userName = String::emptyString,
               String* password = String::emptyString);
     void abort(bool isExplicitAction = true);
-    virtual void send(String* body = String::emptyString);
+    virtual void send(String* body = String::emptyString,
+                      bool allowCache = false);
 
     void setTimeout(uint32_t ms)
     {

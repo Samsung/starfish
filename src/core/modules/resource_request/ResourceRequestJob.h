@@ -27,7 +27,8 @@ class ResourceRequestJobInterface {
 public:
     // Currently, only 'send' is chosen as a common interface, but more
     // interfaces can be added later.
-    virtual void send(String* body = String::emptyString) = 0;
+    virtual void send(String* body = String::emptyString,
+                      bool allowCache = false) = 0;
 };
 
 class ResourceRequestJobDelegateFactory {
@@ -44,7 +45,8 @@ class FileURLResourceRequestJobDelegate : public gc,
 public:
     static void worker(ResourceRequest* res, String* filePath);
     FileURLResourceRequestJobDelegate(ResourceRequest* proxy);
-    virtual void send(String* body = String::emptyString);
+    virtual void send(String* body = String::emptyString,
+                      bool allowCache = false);
 
 private:
     ResourceRequest* m_orgProxy;
@@ -55,7 +57,8 @@ class DataURLResourceRequestJobDelegate : public gc,
 public:
     static void worker(ResourceRequest* res, String* filePath);
     DataURLResourceRequestJobDelegate(ResourceRequest* proxy);
-    virtual void send(String* body = String::emptyString);
+    virtual void send(String* body = String::emptyString,
+                      bool allowCache = false);
 
 private:
     ResourceRequest* m_orgProxy;
@@ -66,7 +69,8 @@ class BlobURLResourceRequestJobDelegate : public gc,
 public:
     static void worker(ResourceRequest* res, String* filePath);
     BlobURLResourceRequestJobDelegate(ResourceRequest* proxy);
-    virtual void send(String* body = String::emptyString);
+    virtual void send(String* body = String::emptyString,
+                      bool allowCache = false);
 
 private:
     ResourceRequest* m_orgProxy;
@@ -77,7 +81,8 @@ class AboutURLResourceRequestJobDelegate : public gc,
 public:
     static void worker(ResourceRequest* res, String* filePath);
     AboutURLResourceRequestJobDelegate(ResourceRequest* proxy);
-    virtual void send(String* body = String::emptyString);
+    virtual void send(String* body = String::emptyString,
+                      bool allowCache = false);
 
 private:
     ResourceRequest* m_orgProxy;
@@ -89,7 +94,8 @@ class UnknownURLResourceRequestJobDelegate
 public:
     static void worker(ResourceRequest* res, String* filePath);
     UnknownURLResourceRequestJobDelegate(ResourceRequest* proxy);
-    virtual void send(String* body = String::emptyString);
+    virtual void send(String* body = String::emptyString,
+                      bool allowCache = false);
 
 private:
     ResourceRequest* m_orgProxy;

@@ -284,7 +284,7 @@ void HTMLDocumentBuilder::build(ResourceURL* url, ResourceURL* referrerURL)
     m_resource->addResourceClient(new HTMLResourceClient(m_resource, *this));
 #ifndef STARFISH_TIZEN_WEARABLE
     m_resource->request(Resource::ResourceRequestSyncLevel::NeverSync,
-                        referrerURL);
+                        referrerURL, true);
 #else
     m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
                         referrerURL);

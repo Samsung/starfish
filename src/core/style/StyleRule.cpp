@@ -277,7 +277,7 @@ void StyleRuleImport::requestStyleSheet()
 
     m_styleSheetTextResource->request(
         Resource::ResourceRequestSyncLevel::NeverSync,
-        document()->documentURI());
+        document()->documentURI(), true);
     m_loading = true;
 }
 
