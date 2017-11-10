@@ -39,7 +39,7 @@ public:
     virtual bool isDOMTokenList() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    static GCVector<StringView> tokenize(String* src);
+    static void tokenize(String* src, GCVector<StringView>& tokens);
     static void concatTokensInsideParentheses(GCVector<String*>* tokens);
     uint32_t length();
     Nullable<String*> item(unsigned long index);

@@ -352,7 +352,8 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         }
         document()->invalidNamedAccessCacheIfNeeded();
     } else if (name == ss->m_class) {
-        GCVector<StringView> tokens = DOMTokenList::tokenize(value);
+        GCVector<StringView> tokens;
+        DOMTokenList::tokenize(value, tokens);
         m_classNames.clear();
         for (size_t i = 0; i < tokens.size(); i++) {
             m_classNames.push_back(
