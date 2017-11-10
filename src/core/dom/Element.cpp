@@ -1925,6 +1925,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
     return d;
 }
 
+#ifdef STARFISH_ENABLE_TEST
 void Element::dumpStyle()
 {
     dump();
@@ -1933,6 +1934,7 @@ void Element::dumpStyle()
     printf("%s", s.data());
     printf(" }");
 }
+#endif
 
 String* Element::getLaunguage()
 {

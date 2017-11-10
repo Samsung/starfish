@@ -242,6 +242,7 @@ inline void __attribute__((optimize("O0"))) clearStack()
         ::abort();                                                    \
     } while (0)
 
+#ifdef STARFISH_ENABLE_TEST
 #define STARFISH_RELEASE_ASSERT_UNIMPLEMENTED()                      \
     do {                                                             \
         STARFISH_LOG_ERROR(                                          \
@@ -256,6 +257,10 @@ inline void __attribute__((optimize("O0"))) clearStack()
             __PRETTY_FUNCTION__, __FILE__, __LINE__);                \
         STARFISH_LOG_ERROR(__VA_ARGS__);                             \
     } while (0)
+#else
+#define STARFISH_RELEASE_ASSERT_UNIMPLEMENTED()
+#define STARFISH_BINDING_ASSERT_UNIMPLEMENTED(...)
+#endif
 
 #define STARFISH_MAKE_STACK_ALLOCATED()              \
     inline void* operator new(size_t size) = delete; \

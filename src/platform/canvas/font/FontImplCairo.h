@@ -85,12 +85,16 @@ public:
             this,
             [](void* obj, void* cd) {
                 FontFaceImplCairo* m = (FontFaceImplCairo*)obj;
-                hb_font_destroy(m->m_hbFace);
-                FT_Done_Face(m->m_face);
+                if (m->m_hbFace) {
+                    hb_font_destroy(m->m_hbFace);
+                    FT_Done_Face(m->m_face);
+                }
                 GlyphIndexCache().swap(m->m_glyphIndexCache);
                 free(m->m_dataBuffer);
             },
             NULL, NULL, NULL);
+
+        clearCache();
     }
 
     virtual FontMetrics metrics(float size)
@@ -116,10 +120,21 @@ public:
         return met;
     }
 
+    virtual void clearCache()
+    {
+        if (m_face && m_dataBuffer) {
+            hb_font_destroy(m_hbFace);
+            FT_Done_Face(m_face);
+            m_face = nullptr;
+            m_hbFace = nullptr;
+        }
+    }
+
     bool loadGlyph(
         int intSize, char32_t ch,
         std::pair<FontFaceImplCairo*, std::pair<unsigned, LayoutUnit>>& result)
     {
+        ensureFonts();
         FT_Face face = m_face;
         hb_font_t* hbFace = m_hbFace;
 
@@ -159,10 +174,20 @@ public:
         return m_dataBufferSize;
     }
 
+    FT_Face freetypeFace()
+    {
+        ensureFonts();
+        return m_face;
+    }
+
+    hb_font_t* harfbuzzFace()
+    {
+        ensureFonts();
+        return m_hbFace;
+    }
+
     uint8_t* m_dataBuffer;
     size_t m_dataBufferSize;
-    FT_Face m_face;
-    hb_font_t* m_hbFace;
     int m_xHeight;
     int m_unitsPerEM;
     int m_ascender;
@@ -171,6 +196,22 @@ public:
     typedef std::unordered_map<char32_t, std::pair<unsigned, unsigned>>
         GlyphIndexCache;
     GlyphIndexCache m_glyphIndexCache;
+
+private:
+    void ensureFonts()
+    {
+        if (m_face == nullptr) {
+            FT_Error error = FT_New_Memory_Face(
+                g_freeTypeInstance, m_dataBuffer, m_dataBufferSize, 0, &m_face);
+            if (error) {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            FT_Set_Pixel_Sizes(m_face, 0, 16);
+            m_hbFace = hb_ft_font_create(m_face, [](void* userData) {});
+        }
+    }
+    FT_Face m_face;
+    hb_font_t* m_hbFace;
 };
 
 class FontCairoTextRun {

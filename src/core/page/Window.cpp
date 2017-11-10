@@ -650,10 +650,12 @@ ScriptValue Window::namedAccess(String* name)
     return scriptNull();
 }
 
+#ifdef STARFISH_ENABLE_TEST
 void Window::screenShot(std::string filePath)
 {
     browsingContext()->starFish()->platformWindow()->screenShot(filePath);
 }
+#endif
 
 uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler,
                                        void* data)

@@ -342,6 +342,11 @@ public:
 
     StyleSheetList* styleSheets();
 
+    const GCVector<FontResource*>& loadedWebFontList()
+    {
+        return m_loadedWebFontList;
+    }
+
     ImageData* brokenImage();
     AnimationExecutor* animationExecutor()
     {
@@ -511,6 +516,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fontSelectorGeneric));
 #endif
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webFontList));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_loadedWebFontList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleResolver));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentBuilder));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleSheetList));
@@ -561,6 +567,7 @@ protected:
     FontSelector* m_fontSelectorGeneric;
 #endif
     GCVector<WebFont> m_webFontList;
+    GCVector<FontResource*> m_loadedWebFontList;
     StyleResolver* m_styleResolver;
     DocumentBuilder* m_documentBuilder;
     StyleSheetList* m_styleSheetList;

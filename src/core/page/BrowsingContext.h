@@ -225,6 +225,7 @@ public:
     bool layoutIfNeeds(bool fromWebView = true);
 
     void registerMediaElement(HTMLMediaElement* element);
+    void onIdle();
 
 private:
     void didFocusEvent();
