@@ -52,7 +52,7 @@ extern bool g_forceRendering;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
-// #define STARFISH_ENABLE_TIMER
+#define STARFISH_ENABLE_TIMER
 
 #include <cairo.h>
 
@@ -868,5 +868,12 @@ void WebView::blur()
         return;
     }
     mainBrowsingContext()->releaseFocusedNode(nullptr);
+}
+
+void WebView::onIdle()
+{
+    if (m_topLevelBrowsingContext) {
+        m_topLevelBrowsingContext->onIdle();
+    }
 }
 }

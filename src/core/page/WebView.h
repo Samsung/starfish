@@ -164,6 +164,8 @@ public:
         }
     }
 
+    void onIdle();
+
 private:
     WebView(StarFish* starFish);
 

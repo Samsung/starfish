@@ -27,7 +27,7 @@
             'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_ENABLE_DOMPARSER',
             'STARFISH_ENABLE_TTS',
-            'STARFISH_ENABLE_TEST',
+            #'STARFISH_ENABLE_TEST',
             'STARFISH_ENABLE_BODY_FOCUS_RING',
             #'STARFISH_ENABLE_VIRTUAL_CURSOR',
             'STARFISH_IGNORE_CROSS_ORIGIN',
@@ -43,7 +43,6 @@
         ],
         'defines_release': [
             'NDEBUG',
-            'STARFISH_ENABLE_TEST',
         ],
         'cflags_default': [
             '-std=c++11',

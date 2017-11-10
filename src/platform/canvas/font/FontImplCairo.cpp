@@ -231,12 +231,12 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
             faceIndex = glyphData.first.second;
 
             if (pos == 0) {
-                lastFace = glyphData.first.first->m_face;
-                hbFace = glyphData.first.first->m_hbFace;
+                lastFace = glyphData.first.first->freetypeFace();
+                hbFace = glyphData.first.first->harfbuzzFace();
                 lastUnicodeScript = unicodeScript;
             } else {
                 if (glyphData.first.first ||
-                    lastFace != glyphData.first.first->m_face ||
+                    lastFace != glyphData.first.first->freetypeFace() ||
                     lastUnicodeScript != unicodeScript ||
                     ((unicodeScript != USCRIPT_INHERITED) &&
                      (!uscript_hasScript(ch, lastUnicodeScript)))) {

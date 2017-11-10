@@ -278,7 +278,7 @@ void PlatformWindow::onResize()
     webView()->mainBrowsingContext()->window()->resize(width(), height());
 }
 
-#define IDLE_TIMER_TIMEOUT 3000
+#define IDLE_TIMER_TIMEOUT 1500
 void PlatformWindow::registerOrUpdateIdleTimeCleaner()
 {
     if (m_idleCleanerTimerID != SIZE_MAX) {
@@ -290,11 +290,10 @@ void PlatformWindow::registerOrUpdateIdleTimeCleaner()
         [](Window* wnd, void* data) {
             PlatformWindow* pwnd = (PlatformWindow*)data;
 
+            pwnd->webView()->onIdle();
             // STARFISH_LOG_INFO("Do idle time GC\n");
             auto fn = GC_get_on_collection_event();
             GC_set_on_collection_event(nullptr);
-            GC_gcollect_and_unmap();
-            GC_gcollect_and_unmap();
             GC_gcollect_and_unmap();
             GC_set_on_collection_event(fn);
 
@@ -303,6 +302,7 @@ void PlatformWindow::registerOrUpdateIdleTimeCleaner()
         this, false);
 }
 
+#ifdef STARFISH_ENABLE_TEST
 void PlatformWindow::screenShot(std::string filePath)
 {
     bool oldNeedsPainting = webView()->m_needsPainting;
@@ -319,4 +319,5 @@ void PlatformWindow::screenShot(std::string filePath)
     webView()->m_needsPainting = oldNeedsPainting;
     webView()->setNeedsRendering();
 }
+#endif
 }

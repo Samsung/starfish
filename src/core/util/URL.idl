@@ -5,18 +5,18 @@
  ConstructorCallWith=Window,
  Exposed=(Window,Worker)]
 interface URL {
-  [STARFISH_ENABLE_TEST] stringifier attribute DOMString href;
-  [STARFISH_ENABLE_TEST] readonly attribute DOMString origin;
-  [STARFISH_ENABLE_TEST] attribute DOMString protocol;
-  [STARFISH_ENABLE_TEST] attribute DOMString username;
-  [STARFISH_ENABLE_TEST] attribute DOMString password;
-  [STARFISH_ENABLE_TEST] attribute DOMString host;
-  [STARFISH_ENABLE_TEST] attribute DOMString hostname;
-  [STARFISH_ENABLE_TEST] attribute DOMString port;
-  [STARFISH_ENABLE_TEST] attribute DOMString pathname;
-  [STARFISH_ENABLE_TEST] attribute DOMString search;
+  stringifier attribute DOMString href;
+  readonly attribute DOMString origin;
+  attribute DOMString protocol;
+  attribute DOMString username;
+  attribute DOMString password;
+  attribute DOMString host;
+  attribute DOMString hostname;
+  attribute DOMString port;
+  attribute DOMString pathname;
+  attribute DOMString search;
   [Unimplemented, SameObject] readonly attribute URLSearchParams searchParams;
-  [STARFISH_ENABLE_TEST] attribute DOMString hash;
+  attribute DOMString hash;
   [Unimplemented] DOMString toJSON();
 
 

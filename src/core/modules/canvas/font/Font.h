@@ -60,6 +60,9 @@ public:
     {
         return 0;
     }
+    virtual void clearCache()
+    {
+    }
 
     static FontFace* create(const uint8_t* data, size_t dataLen);
 

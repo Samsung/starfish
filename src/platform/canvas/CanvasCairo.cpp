@@ -808,13 +808,13 @@ private:
                             continue;
                         }
                     }
-                    if (lastFontFace != g.first.first->m_face) {
+                    if (lastFontFace != g.first.first->freetypeFace()) {
                         if (fontFace) {
                             cairo_show_glyphs(canvas, glyphs, glyphCount);
                             glyphCount = 0;
                             cairo_font_face_destroy(fontFace);
                         }
-                        lastFontFace = g.first.first->m_face;
+                        lastFontFace = g.first.first->freetypeFace();
                         fontFace = cairo_ft_font_face_create_for_ft_face(
                             lastFontFace, 0);
                         cairo_set_font_face(canvas, fontFace);
@@ -921,7 +921,7 @@ private:
     {
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
         FontFaceImplCairo* fc = (FontFaceImplCairo*)f->fontFaceList()[0];
-        FT_Face face = fc->m_face;
+        FT_Face face = fc->freetypeFace();
         int intSize(f->size() + 0.5f);
 
         float lineWidth =

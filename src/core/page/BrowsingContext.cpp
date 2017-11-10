@@ -187,8 +187,6 @@ public:
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
-        // STARFISH_LOG_INFO("WebFont load failed %s\n",
-        // m_familyName->toUTF8NonGCString().data());
         resource()
             ->loader()
             ->document()
@@ -202,8 +200,6 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        // STARFISH_LOG_INFO("WebFont loaded %s\n",
-        // m_familyName->toUTF8NonGCString().data());
         resource()
             ->loader()
             ->document()
@@ -397,14 +393,33 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
                 auto fontFaceData = src->data()[indexes[0]];
 
                 if (std::get<1>(fontFaceData) != FontFaceSrcData::Local) {
-                    FontResource* res =
-                        document()->resourceLoader().fetchFont(new ResourceURL(
-                            std::get<0>(fontFaceData),
-                            document()->documentURI()->urlString()));
-                    res->request(Resource::SyncIfAlreadyLoaded,
-                                 document()->documentURI(), true);
-                    res->addResourceClient(
-                        new WebFontLoadChecker(res, fontFamily));
+                    ResourceURL* fontURL =
+                        new ResourceURL(std::get<0>(fontFaceData),
+                                        document()->documentURI()->urlString());
+
+                    FontResource* res = nullptr;
+                    for (size_t i = 0;
+                         i < document()->m_loadedWebFontList.size(); i++) {
+                        if (fontURL->urlString()->equals(
+                                document()
+                                    ->m_loadedWebFontList[i]
+                                    ->url()
+                                    ->urlString())) {
+                            res = document()->m_loadedWebFontList[i];
+                            break;
+                        }
+                    }
+
+                    if (res == nullptr) {
+                        res = document()->resourceLoader().fetchFont(fontURL);
+                        res->request(Resource::SyncIfAlreadyLoaded,
+                                     document()->documentURI(), true);
+                        res->addResourceClient(
+                            new WebFontLoadChecker(res, fontFamily));
+
+                        document()->m_loadedWebFontList.push_back(res);
+                    }
+
                     WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
                                     fontFamily, style, weight, res);
                     document()->m_webFontList.push_back(webFont);
@@ -539,6 +554,20 @@ void BrowsingContext::iterateChildContext(
 void BrowsingContext::registerMediaElement(HTMLMediaElement* element)
 {
     m_existingMediaElements.push_back(element);
+}
+
+void BrowsingContext::onIdle()
+{
+    if (document()) {
+        const auto& v = document()->loadedWebFontList();
+        for (size_t i = 0; i < v.size(); i++) {
+            if (v[i]->fontFace()) {
+                v[i]->fontFace()->clearCache();
+            }
+        }
+    }
+
+    iterateChildContext([](BrowsingContext* ctx) { ctx->onIdle(); });
 }
 
 void BrowsingContext::dispose()
