@@ -15,26 +15,29 @@
  */
 
 #include "StarFishConfig.h"
-#include "FileIO.h"
+#include "File.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 
 namespace StarFish {
 
-const char* FileIOTypeList[] = { "r", "w", "w+" };
+const char* File::kFileModeStrList[] = { "r", "w", "w+" };
 
-class FileIOPosix : public FileIO {
+class FilePosix : public File {
 public:
-    FileIOPosix()
-        : m_fp(nullptr)
+    FilePosix()
+        : File()
+        , m_fp(nullptr)
     {
     }
-    ~FileIOPosix()
+
+    ~FilePosix()
     {
         close();
     }
-    bool open(const char* filePath, FileIOType filemode)
+
+    bool open(const char* filePath, FileMode filemode) override
     {
         close();
         struct stat s;
@@ -43,89 +46,79 @@ public:
             return false;
         }
 
-        m_fp = fopen(filePath, FileIOTypeCheck(filemode));
+        m_fp = fopen(filePath, fileModeToString(filemode));
         if (m_fp) {
-            return true;
+            m_isOpen = true;
+            return m_isOpen;
         }
         return false;
     }
-    long int length()
+
+    long int size() override
     {
         long int currentPosition = ftell(m_fp);
-        fseek(m_fp, 0, 2);
+        fseek(m_fp, 0, SEEK_END);
         long int len = ftell(m_fp);
         fseek(m_fp, currentPosition, 0);
         return len;
     }
-    size_t read(void* buf, size_t size, size_t count)
+
+    size_t read(void* buf, size_t size, size_t count) override
     {
         return fread(buf, size, count, m_fp);
     }
-    size_t write(void* buf, size_t size, size_t count)
+
+    size_t write(void* buf, size_t size, size_t count) override
     {
         return fwrite(buf, size, count, m_fp);
     }
-    Nullable<String*> readLine()
+
+    ssize_t readLine(char** out, size_t* len) override
     {
-        std::string buf;
-        buf.reserve(length());
-        char temp;
-        while (read(&temp, 1, 1)) {
-            if (temp == '\n') {
-                break;
-            } else if (temp == '\r') {
-                read(&temp, 1, 1);
-                if (temp != '\n') {
-                    fseek(m_fp, -1, SEEK_CUR);
-                }
-                break;
-            } else {
-                buf += temp;
-            }
+        if (m_fp) {
+            return -1;
         }
-        if (feof(m_fp)) {
-            return nullptr;
-        } else if (buf.size() == 0) {
-            return String::emptyString;
-        } else {
-            return String::fromUTF8(buf.data(), buf.length());
-        }
+        return getline(out, len, m_fp);
     }
-    String* readAll()
+
+    bool readAll(std::string& out) override
     {
+        size_t expected = size();
+
+        out.reserve(expected);
+        if ((out.capacity()) != expected || !m_fp) {
+            return false;
+        }
+
         rewind(m_fp);
 
-        std::string buf;
-        buf.reserve(length());
+        const size_t bufferSize = 262143;
+        char temp[bufferSize];
 
-        char buffer[256];
-        const size_t bufferSize = 255;
         while (!feof(m_fp)) {
-            size_t readCount = read(buffer, 1, bufferSize);
-            buf.append(buffer, readCount);
-            buf[readCount] = 0;
+            size_t readCount = read(temp, bufferSize, 1);
+            if (readCount < bufferSize && !feof(m_fp)) {
+                return false;
+            }
+            if (readCount) {
+                out.append(temp, readCount);
+            }
         }
-        return String::fromUTF8(buf.data(), buf.length());
+        return true;
     }
-    size_t writeLine(String* buf)
-    {
-        auto s = buf->toUTF8NonGCString();
-        return fprintf(m_fp, "%s", s.data());
-    }
-    size_t writeLine(const char* buf)
-    {
-        return fprintf(m_fp, "%s", buf);
-    }
-    int close()
+
+    int close() override
     {
         int ret = -1;
         if (m_fp) {
             ret = fclose(m_fp);
             m_fp = nullptr;
+            m_isOpen = false;
         }
         return ret;
     }
-    int flush()
+
+    int flush() override
     {
         return fflush(m_fp);
     }
@@ -155,22 +148,22 @@ extern sfread_cb read_cb;
 extern sfclose_cb close_cb;
 extern sfmatchLocation_cb matchLocation_cb;
 
-class FileIOTizen : public FileIO {
+class FileTizen : public File {
 public:
-    FileIOTizen()
+    FileTizen()
+        : File()
+        , m_fp(nullptr)
     {
-        m_fp = nullptr;
     }
 
-    ~FileIOTizen()
+    ~FileTizen()
     {
         close();
     }
 
-    bool open(const char* filePath, FileIOType filemode)
+    bool open(const char* filePath, FileMode filemode) override
     {
         close();
-
         String* newName =
             PathResolver::matchLocation(String::fromUTF8(filePath));
 
@@ -182,69 +175,55 @@ public:
             auto s = newName->toUTF8NonGCString();
             m_fp = open_cb(s.data());
         } else {
-            m_fp = fopen(filePath, FileIOTypeCheck(filemode));
+            m_fp = fopen(filePath, fileModeToString(filemode));
         }
         if (m_fp) {
-            return true;
+            m_isOpen = true;
+            return m_isOpen;
         }
         return false;
     }
 
-    long int length()
+    long int size() override
     {
         if (length_cb) {
             return length_cb(m_fp);
         }
-        fseek(m_fp, 0, 2);
+        fseek(m_fp, 0, SEEK_END);
         long int len = ftell(m_fp);
         rewind(m_fp);
         return len;
     }
 
-    size_t read(void* buf, size_t size, size_t count)
+    size_t read(void* buf, size_t size, size_t count) override
     {
         if (read_cb) {
             return read_cb(buf, size, count, m_fp);
         }
         return fread(buf, size, count, m_fp);
     }
-    String* readAll()
+
+    bool readAll(std::string& out) override
     {
         // TODO : It will connect to the Tizen file I/O interface.
-        return String::emptyString;
+        return -1;
     }
-    size_t write(void* buf, size_t size, size_t count)
+
+    size_t write(void* buf, size_t size, size_t count) override
     {
         // TODO : It will connect to the Tizen file I/O interface.
         return fwrite(buf, size, count, m_fp);
     }
-    Nullable<String*> readLine()
+
+    ssize_t readLine(char** out, size_t* len) override
     {
-        // TODO : It will connect to the Tizen file I/O interface.
-        std::string buf;
-        while (!feof(m_fp)) {
-            char temp;
-            read(&temp, 1, 1);
-            if (temp != '\n') {
-                buf += temp;
-            } else {
-                break;
-            }
+        if (m_fp) {
+            return -1;
         }
-        return String::fromUTF8((char*)(&buf[0]));
+        return getline(out, len, m_fp);
     }
-    size_t writeLine(String* buf)
-    {
-        // TODO : It will connect to the Tizen file I/O interface.
-        auto s = buf->toUTF8NonGCString();
-        return fprintf(m_fp, "%s", s.data());
-    }
-    size_t writeLine(const char* buf)
-    {
-        // TODO : It will connect to the Tizen file I/O interface.
-        return fprintf(m_fp, "%s", buf);
-    }
-    int close()
+
+    int close() override
     {
         int res = -1;
         if (m_fp) {
@@ -254,10 +233,12 @@ public:
                 res = fclose(m_fp);
             }
             m_fp = nullptr;
+            m_isOpen = false;
         }
         return res;
     }
-    int flush()
+
+    int flush() override
     {
         // TODO : It will connect to the Tizen file I/O interface.
         return fflush(m_fp);
@@ -284,23 +265,23 @@ String* PathResolver::matchLocation(String* filePath)
 
 #endif
 
-FileIO* FileIO::create()
+File* File::create()
 {
 #ifdef STARFISH_TIZEN_WEARABLE_LIB
-    FileIOTizen* fio = new FileIOTizen();
+    FileTizen* fio = new FileTizen();
 #else
-    FileIOPosix* fio = new FileIOPosix();
+    FilePosix* fio = new FilePosix();
 #endif
     return fio;
 }
 
-FileIO* FileIO::createInNonGCArea()
+File* File::createInNonGCArea()
 {
 #ifdef STARFISH_TIZEN_WEARABLE_LIB
-    FileIOTizen* fio = new (malloc(sizeof(FileIOTizen))) FileIOTizen();
+    FileTizen* fio = new (malloc(sizeof(FileTizen))) FileTizen();
 #else
-    FileIOPosix* fio = new (malloc(sizeof(FileIOPosix))) FileIOPosix();
+    FilePosix* fio = new (malloc(sizeof(FilePosix))) FilePosix();
 #endif
     return fio;
 }
-}
+} // namespace StarFish

@@ -140,6 +140,7 @@ public:
     // http://foo.com/asdf?asdf=1 -> http://foo.com/asdf
     String* urlStringWithoutSearchPart() const;
     String* getUrlPathString() const;
+
     bool operator==(const ResourceURL& other) const
     {
         return other.urlString()->equals(m_urlString);

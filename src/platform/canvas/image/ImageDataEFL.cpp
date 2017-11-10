@@ -18,7 +18,7 @@
 
 #if defined(PORT_IMAGEDECODER_BACKEND_EFL)
 #include "core/modules/canvas/image/ImageData.h"
-#include "platform/file/FileIO.h"
+#include "platform/file/File.h"
 
 #include <Elementary.h>
 

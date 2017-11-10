@@ -19,7 +19,6 @@
 
 namespace StarFish {
 
-class FileIO;
 class SecurityOriginData;
 
 class StorageManager : public gc {
