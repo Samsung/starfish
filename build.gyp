@@ -140,6 +140,7 @@
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
+#                './build.dep.gyp:zmq.tizen',
                 './build.dep.gyp:capi-network-connection',
                 './build.dep.gyp:capi-media-player',
                 './build.dep.gyp:vconf',

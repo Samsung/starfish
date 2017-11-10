@@ -278,6 +278,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     if (!platformHandle) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
 #ifdef STARFISH_TIZEN
+#ifdef STARFISH_ENABLE_TRANSPARENT_WINDOW
         // Set efl configuration for resizing window (Without this, Window'll be
         // full-screen only )
         elm_win_aux_hint_add(wndObj, "wm.policy.win.user.geometry", "1");
@@ -290,6 +291,15 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                                          EVAS_HINT_EXPAND);
         elm_win_resize_object_add(wndObj, bg);
         evas_object_show(bg);
+#else
+        Evas_Object* bg = elm_bg_add(wndObj);
+        evas_object_color_set(bg, 0xff, 0xff, 0xff, 0xff);
+
+        evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND,
+                                         EVAS_HINT_EXPAND);
+        elm_win_resize_object_add(wndObj, bg);
+        evas_object_show(bg);
+#endif
 #endif
         elm_win_title_set(wndObj, "StarFish");
         elm_win_autodel_set(wndObj, EINA_TRUE);

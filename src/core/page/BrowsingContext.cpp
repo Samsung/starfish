@@ -142,6 +142,9 @@ void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type,
 
     m_window->document()->init(referrerURL);
 
+    // STARFISH_LOG_INFO("BrowsingContext::navigate %s\n",
+    // url->urlString()->toUTF8String().data());
+
     switch (type) {
     case HistoryManager::Action::Add:
         historyManager()->push(document(), url);

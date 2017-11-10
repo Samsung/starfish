@@ -163,7 +163,7 @@ struct StackingContext::ComputeStackingContextContext {
             if (!m2.isIdentity()) {
                 LayoutLocation to = after->stackingContext()->transformOrigin();
                 m.postTranslate((float)to.x(), (float)to.y());
-                m.postConcat(m2);
+                m.preConcat(m2);
                 m.postTranslate(-(float)to.x(), -(float)to.y());
             }
 
