@@ -22,7 +22,6 @@
 #include "core/dom/Document.h"
 #include "core/dom/DOMTokenList.h"
 #include "platform/loader/ElementResourceClient.h"
-#include "platform/file/FileIO.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"

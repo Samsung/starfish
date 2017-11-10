@@ -19,7 +19,7 @@
 #include "core/dom/Document.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/loader/ResourceLoader.h"
-#include "platform/file/FileIO.h"
+#include "platform/file/File.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/page/Window.h"
@@ -102,13 +102,13 @@ void ImageResource::doLoadFile(void* data)
     Resource* res = (Resource*)data;
     // special path for image resource
     if (res->url()->isFileURL()) {
-        FileIO* fio = FileIO::create();
+        File* fio = File::create();
         // NOTE
         // we should special logic to load file url for image
         // we can pass src of image to platform layer in efl
         String* path = res->url()->urlStringWithoutSearchPart();
         String* filePath = path->substring(7, path->length() - 7);
-        bool canLoad = fio->open(filePath, Read);
+        bool canLoad = fio->open(filePath, File::Read);
         delete fio;
         if (!canLoad) {
             res->didLoadFailed();

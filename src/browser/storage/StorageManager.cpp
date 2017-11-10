@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 #include "StorageManager.h"
 #include "core/page/SecurityOriginData.h"
-#include "platform/file/FileIO.h"
+#include "platform/file/File.h"
 
 #include "../third_party/rapidjson/include/rapidjson/document.h"
 #include "../third_party/rapidjson/include/rapidjson/stringbuffer.h"
@@ -235,12 +235,14 @@ unsigned long StorageManager::length(SecurityOriginData* securityOriginData)
 void StorageManager::jsonDocumentRead()
 {
     JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    FileIO* m_fileIO = FileIO::create();
-    bool canLoad = m_fileIO->open(m_localStoragePath, Read);
+    File* m_fileIO = File::create();
+    bool canLoad = m_fileIO->open(m_localStoragePath, File::Read);
     if (canLoad == true) {
-        String* filedata = m_fileIO->readAll();
-        auto s = filedata->toUTF8NonGCString();
-        root->Parse(s.data());
+        Nullable<String*> filedata = m_fileIO->readAll();
+        if (filedata.hasValue()) {
+            auto s = filedata.getValue()->toUTF8NonGCString();
+            root->Parse(s.data());
+        }
     }
     m_fileIO->close();
 
@@ -258,8 +260,8 @@ void StorageManager::jsonDocumentWrite()
     STARFISH_ASSERT(root->IsArray());
     root->Accept(writer);
 
-    FileIO* m_fileIO = FileIO::create();
-    bool canLoad = m_fileIO->open(m_localStoragePath, Write);
+    File* m_fileIO = File::create();
+    bool canLoad = m_fileIO->open(m_localStoragePath, File::Write);
     if (canLoad == true) {
         m_fileIO->write((void*)buffer.GetString(), 1, buffer.GetSize());
     }

@@ -19,7 +19,7 @@
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
 #include "core/fileapi/Blob.h"
-#include "platform/file/FileIO.h"
+#include "platform/file/File.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/resource_request/ResourceRequestJob.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
@@ -79,12 +79,12 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
                                                String* filePath)
 {
-    FileIO* fio = FileIO::create();
-    if (fio->open(filePath, Read)) {
+    File* fio = File::create();
+    if (fio->open(filePath, File::Read)) {
         res->m_status = 200;
         res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
         res->changeReadyState(ResourceRequest::LOADING, true);
-        size_t responseLength = fio->length();
+        size_t responseLength = fio->size();
         res->m_response.resize(responseLength);
         fio->read(res->m_response.data(), sizeof(const char), responseLength);
         fio->close();

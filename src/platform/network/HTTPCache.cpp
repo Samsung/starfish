@@ -18,7 +18,6 @@
 #include "StarFishConfig.h"
 #include "HTTPCache.h"
 #include "platform/network/http/HTTPHeaderMap.h"
-#include "platform/file/FileIO.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/network/http/HTTPResponse.h"

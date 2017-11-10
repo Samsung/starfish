@@ -25,7 +25,6 @@
 #define PNG_SKIP_SETJMP_CHECK
 
 #include "core/modules/canvas/image/ImageData.h"
-#include "platform/file/FileIO.h"
 
 #include <png.h>
 #include <turbojpeg.h>
