@@ -324,6 +324,26 @@
             },
         },
         {
+            'target_name': 'zmq.tizen',
+            'type': 'none',
+            'copies': [
+                {
+                    'files': [
+                        'tizen_dep/arm/libzmq.a',
+                    ],
+                    'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
+                },
+            ],
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    'third_party/zeromq/include',
+                ],
+                'libraries': [
+                    'lib/tizen/libzmq.a',
+                ],
+            },
+        },
+        {
             'target_name': 'gc.x64.release',
             'type': 'none',
             'copies': [

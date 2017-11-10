@@ -33,7 +33,7 @@ Inspector::Inspector(StarFish* starFish, uint32_t portNumber)
 {
     m_ioThread = new Thread(m_starFish);
     std::string addr;
-    addr = "tcp://127.0.0.1:";
+    addr = "tcp://0.0.0.0:";
     addr += std::to_string(portNumber);
     STARFISH_LOG_INFO("inspector open server %s\n", addr.c_str());
     try {
