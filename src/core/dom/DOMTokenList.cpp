@@ -27,10 +27,8 @@ ScriptBindingInstance* DOMTokenList::scriptBindingInstance()
     return m_element->document()->scriptBindingInstance();
 }
 
-GCVector<StringView> DOMTokenList::tokenize(String* src)
+void DOMTokenList::tokenize(String* src, GCVector<StringView>& tokens)
 {
-    GCVector<StringView> tokens;
-
     auto accessData = src->bufferAccessData();
     size_t length = accessData.length;
 
@@ -65,7 +63,7 @@ GCVector<StringView> DOMTokenList::tokenize(String* src)
             if (String::isSpaceOrNewline(ch) && !inQuotationMarks) {
                 if (!inParenthesis) {
                     isWhiteSpaceState = true;
-                    tokens.push_back(new StringView(src, start, end));
+                    tokens.emplace_back(src, start, end);
                     end = start = i;
                 }
             } else {
@@ -75,10 +73,8 @@ GCVector<StringView> DOMTokenList::tokenize(String* src)
     }
 
     if (end - start) {
-        tokens.push_back(new StringView(src, start, end));
+        tokens.emplace_back(src, start, end);
     }
-
-    return tokens;
 }
 
 void DOMTokenList::concatTokensInsideParentheses(GCVector<String*>* tokens)
@@ -118,7 +114,8 @@ uint32_t DOMTokenList::length()
 {
     Nullable<String*> src = m_element->getAttribute(m_localName);
     if (src.hasValue()) {
-        GCVector<StringView> tokens = tokenize(src.getValue());
+        GCVector<StringView> tokens;
+        tokenize(src.getValue(), tokens);
         return tokens.size();
     }
     return 0;
@@ -128,7 +125,8 @@ Nullable<String*> DOMTokenList::item(unsigned long index)
 {
     Nullable<String*> src = m_element->getAttribute(m_localName);
     if (src.hasValue()) {
-        GCVector<StringView> tokens = tokenize(src.getValue());
+        GCVector<StringView> tokens;
+        tokenize(src.getValue(), tokens);
         if (index < tokens.size()) {
             return Nullable<String*>(new StringView(tokens[index]));
         }
@@ -142,7 +140,8 @@ bool DOMTokenList::contains(String* token)
 
     Nullable<String*> src = m_element->getAttribute(m_localName);
     if (src.hasValue()) {
-        GCVector<StringView> tokens = tokenize(src.getValue());
+        GCVector<StringView> tokens;
+        tokenize(src.getValue(), tokens);
         for (unsigned i = 0; i < tokens.size(); i++) {
             if (tokens[i].equals(token)) {
                 return true;
@@ -183,7 +182,8 @@ void DOMTokenList::add(GCVector<String*>& tokensToAdd)
         return;
     }
     String* str = m_element->getAttributeOrEmpty(m_localName);
-    GCVector<StringView> tokens = tokenize(str);
+    GCVector<StringView> tokens;
+    tokenize(str, tokens);
     for (unsigned i = 0; i < tokensToAdd.size(); i++) {
         validateToken(tokensToAdd[i]);
         str = addSingleToken(str, tokens, tokensToAdd[i]);
@@ -226,7 +226,8 @@ void DOMTokenList::remove(GCVector<String*>& tokensToRemove)
     }
     String* src = old.getValue();
     String* dst = String::createASCIIString("");
-    GCVector<StringView> tokens = tokenize(src);
+    GCVector<StringView> tokens;
+    tokenize(src, tokens);
     bool* matchFlags = new bool[tokens.size()];
     int matchCount = 0;
     for (unsigned i = 0; i < tokensToRemove.size(); i++) {
@@ -264,7 +265,8 @@ bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
 {
     validateToken(token);
     String* str = m_element->getAttributeOrEmpty(m_localName);
-    GCVector<StringView> tokens = tokenize(str);
+    GCVector<StringView> tokens;
+    tokenize(str, tokens);
     bool needAdd = false;
     if (isForced) {
         if (forceValue) {

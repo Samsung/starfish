@@ -907,8 +907,8 @@ protected:
 class StringUtils {
 public:
     // token is only 1-byte char now.
-    static GCVector<StringView> tokenize(String* src, const char* tokens,
-                                         size_t tokensLength);
+    static void tokenize(String* src, const char* tokens, size_t tokensLength,
+                         GCVector<StringView>& result);
     static bool equalsIgnoreCase(const std::string& a, const std::string& b);
 };
 

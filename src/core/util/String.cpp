@@ -1054,10 +1054,9 @@ String* String::trim()
     return substring(first, (last - first + 1));
 }
 
-GCVector<StringView> StringUtils::tokenize(String* src, const char* tokens,
-                                           size_t tokensLength)
+void StringUtils::tokenize(String* src, const char* tokens, size_t tokensLength,
+                           GCVector<StringView>& result)
 {
-    GCVector<StringView> result;
     auto accessData = src->bufferAccessData();
 
     size_t start = 0;
@@ -1073,7 +1072,7 @@ GCVector<StringView> StringUtils::tokenize(String* src, const char* tokens,
         }
 
         if (isToken) {
-            result.push_back(StringView(src, start, end));
+            result.emplace_back(src, start, end);
             end = start = i;
         } else {
             end++;
@@ -1081,10 +1080,8 @@ GCVector<StringView> StringUtils::tokenize(String* src, const char* tokens,
     }
 
     if (end - start) {
-        result.push_back(StringView(src, start, end));
+        result.emplace_back(src, start, end);
     }
-
-    return result;
 }
 
 bool StringUtils::equalsIgnoreCase(const std::string& a, const std::string& b)

@@ -143,7 +143,8 @@ void HTMLLinkElement::checkLoadStyleSheet()
          !type.hasValue()) &&
         href.hasValue() && !href.getValue()->isEmpty() && rel.hasValue()) {
         String* relString = rel.getValue();
-        GCVector<StringView> tokens = DOMTokenList::tokenize(relString);
+        GCVector<StringView> tokens;
+        DOMTokenList::tokenize(relString, tokens);
         for (size_t i = 0; i < tokens.size(); i++) {
             if (tokens[i].equals("stylesheet")) {
                 loadStyleSheet();

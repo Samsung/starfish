@@ -304,7 +304,8 @@ void HTMLElement::setInnerText(String* text)
         removeChild(firstChild());
     }
 
-    GCVector<StringView> v = StringUtils::tokenize(text, "\r\n", 2);
+    GCVector<StringView> v;
+    StringUtils::tokenize(text, "\r\n", 2, v);
     for (size_t i = 0; i < v.size(); i++) {
         appendChild(new Text(document(), new StringView(v[i])));
         if (i + 1 < v.size()) {
