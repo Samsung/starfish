@@ -270,7 +270,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                 iter++;
             }
         });
-        GC_set_free_space_divisor(8);
+        GC_set_free_space_divisor(12);
         GC_set_force_unmap_on_gcollect(1);
     }
 
