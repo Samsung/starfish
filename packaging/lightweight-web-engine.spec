@@ -37,11 +37,6 @@ BuildRequires: pkgconfig(icu-i18n)
 BuildRequires: pkgconfig(icu-uc)
 BuildRequires: pkgconfig(libcurl)
 BuildRequires: pkgconfig(libxml-2.0)
-%if "%{?tizen_profile_name}" != "wearable"
-BuildRequires: pkgconfig(libavcodec)
-BuildRequires: pkgconfig(libavutil)
-BuildRequires: pkgconfig(libavformat)
-%endif
 BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-media-player)
 %if "%{?tizen_profile_name}" != "tv"
@@ -71,6 +66,8 @@ lightweight-web-engine development headers
 %setup -q
 
 %build
+#CFLAGS+=' -Os'
+#CXXFLAGS+=' -Os'
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen.release
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
