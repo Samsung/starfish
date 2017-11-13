@@ -21,6 +21,7 @@ namespace StarFish {
 
 const char HTTPHeaderMap::kCacheControl[] = "Cache-Control";
 const char HTTPHeaderMap::kConnection[] = "Connection";
+const char HTTPHeaderMap::kContentLength[] = "Content-Length";
 const char HTTPHeaderMap::kContentType[] = "Content-type";
 const char HTTPHeaderMap::kDate[] = "Date";
 const char HTTPHeaderMap::kPragma[] = "Pragma";
@@ -54,6 +55,135 @@ const char HTTPHeaderMap::kUserAgent[] = "User-Agent";
 const char HTTPHeaderMap::kLocation[] = "Location";
 const char HTTPHeaderMap::kUpgradeInsecureRequests[] =
     "Upgrade-Insecure-Requests";
+
+std::string HTTPHeaderMap::tryToConvertToHeaderMapString(
+    const std::string& header)
+{
+    size_t len = header.length();
+    std::string ret = header;
+    std::string lower;
+    lower.resize(header.length());
+    std::transform(header.begin(), header.end(), lower.begin(), ::tolower);
+
+    switch (len) {
+    case 2:
+        if (lower.compare("te") == 0) {
+            ret = HTTPHeaderMap::kTE;
+        }
+        break;
+    case 3:
+        if (lower.compare("via") == 0) {
+            ret = HTTPHeaderMap::kVia;
+        } else if (lower.compare("age") == 0) {
+            ret = HTTPHeaderMap::kAge;
+        }
+        break;
+    case 4:
+        if (lower.compare("date") == 0) {
+            ret = HTTPHeaderMap::kDate;
+        } else if (lower.compare("from") == 0) {
+            ret = HTTPHeaderMap::kFrom;
+        } else if (lower.compare("host") == 0) {
+            ret = HTTPHeaderMap::kHost;
+        }
+        break;
+    case 5:
+        if (lower.compare("range") == 0) {
+            ret = HTTPHeaderMap::kRange;
+        }
+        break;
+    case 6:
+        if (lower.compare("origin") == 0) {
+            ret = HTTPHeaderMap::kOrigin;
+        } else if (lower.compare("pragma") == 0) {
+            ret = HTTPHeaderMap::kPragma;
+        } else if (lower.compare("accept") == 0) {
+            ret = HTTPHeaderMap::kAccept;
+        } else if (lower.compare("cookie") == 0) {
+            ret = HTTPHeaderMap::kCookie;
+        } else if (lower.compare("expect") == 0) {
+            ret = HTTPHeaderMap::kExpect;
+        }
+        break;
+    case 7:
+        if (lower.compare("warning") == 0) {
+            ret = HTTPHeaderMap::kWarning;
+        } else if (lower.compare("upgrade") == 0) {
+            ret = HTTPHeaderMap::kUpgrade;
+        } else if (lower.compare("trailer") == 0) {
+            ret = HTTPHeaderMap::kTrailer;
+        } else if (lower.compare("referer") == 0) {
+            ret = HTTPHeaderMap::kReferer;
+        }
+        break;
+    case 8:
+        if (lower.compare("location") == 0) {
+            ret = HTTPHeaderMap::kLocation;
+        } else if (lower.compare("if-range") == 0) {
+            ret = HTTPHeaderMap::kIfRange;
+        } else if (lower.compare("if-match") == 0) {
+            ret = HTTPHeaderMap::kIfMatch;
+        }
+        break;
+    case 10:
+        if (lower.compare("user-agent") == 0) {
+            ret = HTTPHeaderMap::kUserAgent;
+        }
+        break;
+    case 12:
+        if (lower.compare("max-forwards") == 0) {
+            ret = HTTPHeaderMap::kMaxForwards;
+        } else if (lower.compare("content-type") == 0) {
+            ret = HTTPHeaderMap::kContentType;
+        }
+        break;
+    case 13:
+        if (lower.compare("if-none-match") == 0) {
+            ret = HTTPHeaderMap::kIfNoneMatch;
+        } else if (lower.compare("cache-control") == 0) {
+            ret = HTTPHeaderMap::kCacheControl;
+        } else if (lower.compare("authorization") == 0) {
+            ret = HTTPHeaderMap::kAuthorization;
+        }
+        break;
+    case 14:
+        if (lower.compare("accept-charset") == 0) {
+            ret = HTTPHeaderMap::kAcceptCharset;
+        } else if (lower.compare("content-length") == 0) {
+            ret = HTTPHeaderMap::kContentLength;
+        }
+        break;
+    case 15:
+        if (lower.compare("accept-encoding") == 0) {
+            ret = HTTPHeaderMap::kAcceptEncoding;
+        } else if (lower.compare("accept-language") == 0) {
+            ret = HTTPHeaderMap::kAcceptLanguage;
+        }
+        break;
+    case 17:
+        if (lower.compare("if-modified-since") == 0) {
+            ret = HTTPHeaderMap::kIfModifiedSince;
+        } else if (lower.compare("transfer-encoding") == 0) {
+            ret = HTTPHeaderMap::kTransferEncoding;
+        }
+        break;
+    case 19:
+        if (lower.compare("if-unmodified-since") == 0) {
+            ret = HTTPHeaderMap::kIfUnmodifiedSince;
+        } else if (lower.compare("proxy-authorization") == 0) {
+            ret = HTTPHeaderMap::kProxyAuthorization;
+        }
+        break;
+    case 25:
+        if (lower.compare("upgrade-insecure-requests") == 0) {
+            ret = HTTPHeaderMap::kUpgradeInsecureRequests;
+        }
+        break;
+    default:
+        break;
+    }
+    return ret;
+}
 
 HTTPHeaderMap::HTTPHeaderMap()
 {

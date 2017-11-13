@@ -42,6 +42,7 @@ struct EntryFreshnessInfo {
         , age(0)
         , requestTime(0)
         , responseTime(0)
+        , contentLength(0)
     {
     }
 
@@ -49,6 +50,7 @@ struct EntryFreshnessInfo {
     int64_t age;
     int64_t requestTime;
     int64_t responseTime;
+    size_t contentLength;
 };
 
 class HTTPCacheEntry : public gc {
@@ -102,7 +104,7 @@ private:
 };
 
 typedef GCUnorderedMultiMap<size_t, HTTPCacheEntry*> HTTPCacheEntryMultiMap;
-typedef GCList<ResourceURL*> HTTPCacheLRUList;
+typedef std::vector<std::string> HTTPCacheLRUList;
 }
 #endif
 #endif

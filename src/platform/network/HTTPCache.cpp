@@ -37,8 +37,9 @@
 #include <unistd.h>
 
 #define INDEX_FILE_NAME "/index.txt"
-#define HTTP_CACHE_SIZE 1024 * 1024 * 10
-#define HTTP_CACHE_PRUNE_MINIMUM_INTERVAL 3
+#define DEFAULT_HTTP_CACHE_SIZE 1024 * 1024 * 10
+#define MAX_ENTRY_FILE_SIZE (DEFAULT_HTTP_CACHE_SIZE * 0.04)
+#define NUM_OF_COL 11
 
 namespace StarFish {
 
@@ -108,8 +109,7 @@ HTTPCache::HTTPCache(String* cacheDirPath)
     : m_cacheEntryTable()
     , m_cacheDirPath(cacheDirPath)
     , m_indexFilePath()
-    , m_httpCacheSize(0)
-    , m_lastCachePruneTime(tickCount())
+    , m_currentCacheSize(0)
 {
     m_indexFilePath = m_cacheDirPath->concat(INDEX_FILE_NAME);
     initCacheDir();
@@ -151,15 +151,15 @@ void HTTPCache::initFromIndexFileIfPossible()
         GCVector<String*> columns;
         row->split(' ', columns);
 
-        if (columns.size() != 10) {
+        if (columns.size() != NUM_OF_COL) {
             m_cacheEntryTable.clear();
             return;
         }
         // TODO : Check whether each column is valid or not
 
         // entryKey(UINT) urlString(STRING) date(UINT) age(UINT)
-        // requestTime(UINT) responeTime(UINT) maxAge(UINT) no-cache(0|1)
-        // mustRevalidate(0|1) entryFileName(STRING)
+        // requestTime(UINT) contentLength(UINT) contentLength(UINT)
+        // maxAge(UINT) no-cache(0|1) mustRevalidate(0|1) entryFileName(STRING)
         ResourceURL* url = new ResourceURL(columns[1]);
 
         EntryFreshnessInfo info;
@@ -167,25 +167,21 @@ void HTTPCache::initFromIndexFileIfPossible()
         info.age = String::parseInt64(columns[3]);
         info.requestTime = String::parseInt64(columns[4]);
         info.responseTime = String::parseInt64(columns[5]);
+        info.contentLength = String::parseInt64(columns[6]);
 
         CacheControl cc;
-        cc.maxAge = String::parseInt64(columns[6]);
-        cc.noCache = columns[7]->equals("true") ? true : false;
-        cc.mustRevalidate = columns[8]->equals("true") ? true : false;
+        cc.maxAge = String::parseInt64(columns[7]);
+        cc.noCache = columns[8]->equals("true") ? true : false;
+        cc.mustRevalidate = columns[9]->equals("true") ? true : false;
 
         HTTPCacheEntry* newEntry =
-            new HTTPCacheEntry(url, info, cc, columns[9]);
+            new HTTPCacheEntry(url, info, cc, columns[10]);
 
         m_cacheEntryTable.insert(
             std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
-        m_cacheLRUList.push_back(url);
+        m_cacheLRUList.push_back(columns[1]->toUTF8NonGCString());
 
-        File* fio = File::create();
-        fio->open(newEntry->entryFileName(), File::Read);
-        if (fio->isOpen()) {
-            m_httpCacheSize += fio->size();
-        }
-        fio->close();
+        m_currentCacheSize += info.contentLength;
     }
     expire();
     return;
@@ -215,26 +211,21 @@ bool HTTPCache::isFresh(HTTPCacheEntry* entry)
 HTTPCacheEntryMultiMap::iterator HTTPCache::cacheHit(ResourceURL* url)
 {
     // TODO : Check that cached data is fresh enough.
-    auto entryIter = findEntryTableData(url);
+    auto entryIter = findEntryTableData(url->urlString());
     if (entryIter == m_cacheEntryTable.end()) {
         return m_cacheEntryTable.end();
     }
-
-    auto listIter = std::find(m_cacheLRUList.begin(), m_cacheLRUList.end(),
-                              entryIter->second->url());
-    if (m_cacheLRUList.end() != listIter) {
-        m_cacheLRUList.erase(listIter);
-    }
-    m_cacheLRUList.push_back(entryIter->second->url());
+    auto urlStr = entryIter->second->url()->urlString()->toUTF8NonGCString();
+    addCacheLRUListData(urlStr);
 
     return entryIter;
 }
 
-HTTPCacheEntryMultiMap::iterator HTTPCache::findEntryTableData(ResourceURL* url)
+HTTPCacheEntryMultiMap::iterator HTTPCache::findEntryTableData(String* key)
 {
-    auto range = m_cacheEntryTable.equal_range(url->urlString()->hashValue());
+    auto range = m_cacheEntryTable.equal_range(key->hashValue());
     for (auto it = range.first; it != range.second; ++it) {
-        if (*(it->second->url()) == *url) {
+        if (it->second->url()->urlString()->equals(key)) {
             return it;
         }
     }
@@ -272,18 +263,18 @@ void HTTPCache::caching(NetworkURLWorkerData* data)
     // TODO : Consider date, max-age, if it is fresh enough, only max-age is
     // updated.
 
-    CacheControl cc;
+    EntryFreshnessInfo info;
     auto it =
-        data->request->responseHeaderMap().find(HTTPHeaderMap::kCacheControl);
+        data->request->responseHeaderMap().find(HTTPHeaderMap::kContentLength);
     if (it != data->request->responseHeaderMap().end()) {
-        cc = parseCacheControl(it->second);
+        String* value = String::createASCIIString(it->second.data());
+        info.contentLength = String::parseInt64(value);
     }
 
-    if (cc.noStore) {
+    if (info.contentLength > MAX_ENTRY_FILE_SIZE) {
         return;
     }
 
-    EntryFreshnessInfo info;
     it = data->request->responseHeaderMap().find(HTTPHeaderMap::kDate);
     if (it != data->request->responseHeaderMap().end()) {
         String* value = String::createASCIIString(it->second.data());
@@ -303,32 +294,34 @@ void HTTPCache::caching(NetworkURLWorkerData* data)
     info.requestTime = data->httpTransaction->httpRequest().requestTime();
     info.responseTime = data->httpTransaction->httpResponse().responseTime();
 
+    CacheControl cc;
+    it = data->request->responseHeaderMap().find(HTTPHeaderMap::kCacheControl);
+    if (it != data->request->responseHeaderMap().end()) {
+        cc = parseCacheControl(it->second);
+    }
+
+    if (cc.noStore) {
+        return;
+    }
+
+    pruningIfNeeds(info.contentLength);
+
     HTTPCacheEntry* newEntry =
         new HTTPCacheEntry(data->request->url(), info, cc);
     newEntry->setEntryFileNameUsingCachePath(m_cacheDirPath);
 
     bool ret = newEntry->writeRawDataToEntryFile(data->request->response());
 
-    if (ret) {
-        m_cacheEntryTable.insert(
-            std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
+    if (!ret) {
+        return;
     }
 
-    auto iter = std::find(m_cacheLRUList.begin(), m_cacheLRUList.end(),
-                          data->request->url());
-    if (m_cacheLRUList.end() != iter) {
-        m_cacheLRUList.erase(iter);
-    }
-    m_cacheLRUList.push_back(data->request->url());
+    m_cacheEntryTable.insert(
+        std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
+    auto urlStr = data->request->url()->urlString()->toUTF8NonGCString();
+    addCacheLRUListData(urlStr);
 
-    File* fio = File::create();
-    fio->open(newEntry->entryFileName(), File::Read);
-    if (fio->isOpen()) {
-        m_httpCacheSize += fio->size();
-    }
-    fio->close();
-
-    pruningIfNeed();
+    m_currentCacheSize += info.contentLength;
 }
 
 bool HTTPCache::flush()
@@ -357,26 +350,32 @@ bool HTTPCache::flush()
     return ret;
 }
 
-void HTTPCache::pruningIfNeed()
+void HTTPCache::pruningIfNeeds(size_t contentLength)
 {
-    if (m_httpCacheSize > HTTP_CACHE_SIZE &&
-        ((tickCount() - m_lastCachePruneTime) >
-         (HTTP_CACHE_PRUNE_MINIMUM_INTERVAL * 1000))) {
+    STARFISH_ASSERT(isMainThread());
+
+    expire();
+    // Consider indexFile size
+
+    if (m_currentCacheSize + contentLength > DEFAULT_HTTP_CACHE_SIZE) {
         size_t removedSize = 0;
-        size_t currentTick = tickCount();
         auto iter = m_cacheLRUList.begin();
 
-        while (m_cacheLRUList.size() && removedSize < HTTP_CACHE_SIZE * 0.5) {
-            ResourceURL* res = (*iter);
-            auto tableIter = findEntryTableData(res);
+        size_t reserve = ((DEFAULT_HTTP_CACHE_SIZE * 0.30) < contentLength)
+                             ? contentLength
+                             : DEFAULT_HTTP_CACHE_SIZE * 0.30;
+        while (m_cacheLRUList.size() && removedSize <= reserve) {
+            std::string urlStr = (*iter);
+            auto tableIter =
+                findEntryTableData(String::fromUTF8(urlStr.data()));
             HTTPCacheEntry* cacheEntry = tableIter->second;
+            EntryFreshnessInfo info = cacheEntry->entryFreshnessInfo();
 
             File* fio = File::create();
             fio->open(cacheEntry->entryFileName(), File::Read);
             if (fio->isOpen()) {
-                size_t fileSize = fio->size();
-                m_httpCacheSize -= fileSize;
-                removedSize += fileSize;
+                m_currentCacheSize -= info.contentLength;
+                removedSize += info.contentLength;
                 fio->removeFile();
             }
             fio->close();
@@ -384,7 +383,6 @@ void HTTPCache::pruningIfNeed()
             m_cacheEntryTable.erase(tableIter);
             iter = m_cacheLRUList.erase(iter);
         }
-        m_lastCachePruneTime = tickCount();
     }
 }
 
@@ -398,11 +396,9 @@ void HTTPCache::expire()
                 fio->removeFile();
             }
             fio->close();
-            auto listIter = std::find(m_cacheLRUList.begin(),
-                                      m_cacheLRUList.end(), it->second->url());
-            if (m_cacheLRUList.end() != listIter) {
-                m_cacheLRUList.erase(listIter);
-            }
+
+            auto urlStr = it->second->url()->urlString()->toUTF8NonGCString();
+            deleteCacheLRUListData(urlStr);
             it = m_cacheEntryTable.erase(it);
         } else {
             it++;
@@ -413,6 +409,23 @@ void HTTPCache::expire()
 void HTTPCache::clearAndRemoveCacheDir()
 {
     clearDirectory(m_cacheDirPath->toUTF8NonGCString().data());
+}
+
+void HTTPCache::addCacheLRUListData(std::string& url)
+{
+    auto it = std::find(m_cacheLRUList.begin(), m_cacheLRUList.end(), url);
+    if (m_cacheLRUList.end() != it) {
+        m_cacheLRUList.erase(it);
+    }
+    m_cacheLRUList.push_back(url);
+}
+
+void HTTPCache::deleteCacheLRUListData(std::string& url)
+{
+    auto it = std::find(m_cacheLRUList.begin(), m_cacheLRUList.end(), url);
+    if (m_cacheLRUList.end() != it) {
+        m_cacheLRUList.erase(it);
+    }
 }
 
 CacheControl HTTPCache::parseCacheControl(std::string directives)
