@@ -102,6 +102,7 @@ private:
 };
 
 typedef GCUnorderedMultiMap<size_t, HTTPCacheEntry*> HTTPCacheEntryMultiMap;
+typedef GCList<ResourceURL*> HTTPCacheLRUList;
 }
 #endif
 #endif
