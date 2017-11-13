@@ -631,6 +631,7 @@ int main(int argc, char* argv[])
 #endif
     sf->loadHTMLDocument(String::createASCIIString(argv[1]));
 
+#if defined(STARFISH_ENABLE_TEST)
     pthread_t t;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -680,8 +681,8 @@ int main(int argc, char* argv[])
                        return NULL;
                    },
                    sf);
+#endif
 
-    // sf->messageLoop()->addIdler(test, sf);
     sf->run();
     delete sf;
     sf = nullptr;

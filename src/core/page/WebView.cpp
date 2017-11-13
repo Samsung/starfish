@@ -52,7 +52,7 @@ extern bool g_forceRendering;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
-#define STARFISH_ENABLE_TIMER
+// #define STARFISH_ENABLE_TIMER
 
 #include <cairo.h>
 
@@ -465,6 +465,7 @@ void WebView::layoutIfNeeds()
         }
         setNeedsComputeStackingContextProperties();
     }
+    clearStack<1024 * 16>();
 }
 
 bool WebView::rendering(bool force)
@@ -594,6 +595,7 @@ bool WebView::rendering(bool force)
 #ifdef STARFISH_TIZEN_WEARABLE
         evas_object_raise(eflWindow->m_dummyBox);
 #endif
+        clearStack<1024 * 16>();
 
 #ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() &

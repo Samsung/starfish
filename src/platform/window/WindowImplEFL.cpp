@@ -32,6 +32,7 @@
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/profiling/Profiling.h"
 #include "core/dom/CompositionEvent.h"
 
 #include <Elementary.h>
@@ -206,6 +207,25 @@ public:
     virtual bool isIMEEnabledNow()
     {
         return evas_object_focus_get(m_mainBox) == EINA_TRUE;
+    }
+
+    bool rendering()
+    {
+        ProfilerTimer renderingTimer("WindowImplEFL::rendering");
+        bool ret = PlatformWindow::rendering();
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+        evas_render(evas_object_evas_get(m_window));
+
+        if (m_canvasAdpaterSurface) {
+            cairo_destroy(m_canvasAdpaterCairo);
+            STARFISH_RELEASE_ASSERT(
+                cairo_surface_get_reference_count(m_canvasAdpaterSurface) == 1);
+            cairo_surface_destroy(m_canvasAdpaterSurface);
+            m_canvasAdpaterCairo = nullptr;
+            m_canvasAdpaterSurface = nullptr;
+        }
+#endif
+        return ret;
     }
 
     uintptr_t m_handle;
@@ -1035,17 +1055,15 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-            if (wnd->m_canvasAdpaterSurface) {
-                int w, h;
-                evas_object_image_size_get(wnd->m_canvasAdpater, &w, &h);
-                if (w != wnd->width() || h != wnd->height()) {
-                    evas_object_image_data_set(wnd->m_canvasAdpater, nullptr);
-                    evas_object_image_data_update_add(wnd->m_canvasAdpater, 0,
-                                                      0, wnd->width(),
-                                                      wnd->height());
-                    StarFishEnterer enter(wnd->starFish());
-                    wnd->onResize();
-                }
+            int w, h;
+            evas_object_image_size_get(wnd->m_canvasAdpater, &w, &h);
+            evas_object_image_data_set(wnd->m_canvasAdpater, nullptr);
+            evas_object_image_data_update_add(wnd->m_canvasAdpater, 0, 0,
+                                              wnd->width(), wnd->height());
+            evas_render(evas_object_evas_get(wnd->m_window));
+            if (w != wnd->width() || h != wnd->height()) {
+                StarFishEnterer enter(wnd->starFish());
+                wnd->onResize();
             }
 #else
             StarFishEnterer enter(wnd->starFish());
