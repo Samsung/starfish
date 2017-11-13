@@ -17,6 +17,7 @@
 #ifndef __StarFishFile__
 #define __StarFishFile__
 
+#define IDEAL_BUFFER_SIZE 262143
 namespace StarFish {
 
 class File : public gc_cleanup {
@@ -25,6 +26,12 @@ public:
         Read,
         Write,
         ReadWrite,
+    };
+
+    enum Whence {
+        Start = SEEK_SET,
+        Current = SEEK_CUR,
+        End = SEEK_END,
     };
 
     static File* create();
@@ -101,15 +108,46 @@ public:
         }
     }
 
+    template <class T>
+    bool readAll(T& out)
+    {
+        if (!isOpen()) {
+            return false;
+        }
+
+        size_t expected = size();
+
+        out.reserve(expected);
+        if ((out.capacity()) != expected) {
+            return false;
+        }
+
+        seek(0, Whence::Start);
+
+        char temp[IDEAL_BUFFER_SIZE];
+
+        while (!eof()) {
+            size_t readCount = read(temp, sizeof(char), IDEAL_BUFFER_SIZE);
+            if (readCount < IDEAL_BUFFER_SIZE && !eof()) {
+                return false;
+            }
+            if (readCount) {
+                out.insert(out.end(), temp, temp + readCount);
+            }
+        }
+        return true;
+    }
+
     virtual bool open(const char* filePath, FileMode mode) = 0;
     virtual long int size() = 0;
     virtual size_t read(void* buf, size_t size, size_t count) = 0;
     virtual size_t write(void* buf, size_t size, size_t count) = 0;
     virtual ssize_t readLine(char** out, size_t* len) = 0;
-    virtual bool readAll(std::string& out) = 0;
 
+    virtual int seek(long offset, int whence) = 0;
     virtual int flush() = 0;
     virtual int close() = 0;
+    virtual int eof() = 0;
 
 protected:
     File()
@@ -137,4 +175,6 @@ public:
     static String* matchLocation(String* filePath);
 };
 }
+
+#undef IDEAL_BUFFER_SIZE
 #endif

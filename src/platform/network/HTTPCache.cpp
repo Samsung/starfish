@@ -16,6 +16,7 @@
 
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "StarFishConfig.h"
+#include "platform/file/File.h"
 #include "HTTPCache.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
@@ -33,13 +34,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <fstream>
-#include <iostream>
 
 #define INDEX_FILE_NAME "/index.txt"
 
 namespace StarFish {
 
+// TODO : Implement Directory util and move the below method to it
 static void clearDirectory(const char* path)
 {
     STARFISH_ASSERT(isMainThread());
@@ -119,46 +119,62 @@ void HTTPCache::initFromIndexFileIfPossible()
 {
     STARFISH_ASSERT(isMainThread());
 
-    std::ifstream ifs(m_indexFilePath->toUTF8NonGCString().data());
+    File* in = File::create();
+
+    if (!in->open(m_indexFilePath, File::FileMode::Read)) {
+        return;
+    }
 
     size_t entryKey;
     std::string urlStr, entryfileName;
     int64_t date, age, requestTime, responseTime, maxAge;
     int noCache, mustRevalidate;
 
-    while (ifs >> entryKey >> urlStr >> date >> age >> requestTime >>
-           responseTime >> maxAge >> noCache >> mustRevalidate >>
-           entryfileName) {
-        ResourceURL* url = new ResourceURL(urlStr.data());
+    Nullable<String*> data = in->readAll();
+    in->close();
 
-        CacheControl cc;
-        cc.maxAge = maxAge;
-        cc.noCache = (bool)noCache;
-        cc.mustRevalidate = (bool)mustRevalidate;
+    if (!data.hasValue()) {
+        return;
+    }
+
+    String* index = data.getValue();
+    GCVector<String*> table;
+
+    index->split('\n', table);
+
+    for (auto& row : table) {
+        GCVector<String*> columns;
+        row->split(' ', columns);
+
+        if (columns.size() != 10) {
+            m_cacheEntryTable.clear();
+            return;
+        }
+        // TODO : Check whether each column is valid or not
+
+        // entryKey(UINT) urlString(STRING) date(UINT) age(UINT)
+        // requestTime(UINT) responeTime(UINT) maxAge(UINT) no-cache(0|1)
+        // mustRevalidate(0|1) entryFileName(STRING)
+        ResourceURL* url = new ResourceURL(columns[1]);
 
         EntryFreshnessInfo info;
-        info.date = date;
-        info.age = age;
-        info.requestTime = requestTime;
-        info.responseTime = responseTime;
+        info.date = String::parseInt64(columns[2]);
+        info.age = String::parseInt64(columns[3]);
+        info.requestTime = String::parseInt64(columns[4]);
+        info.responseTime = String::parseInt64(columns[5]);
 
-        HTTPCacheEntry* newEntry = new HTTPCacheEntry(
-            url, info, cc, String::fromUTF8(entryfileName.data()));
+        CacheControl cc;
+        cc.maxAge = String::parseInt64(columns[6]);
+        cc.noCache = columns[7]->equals("true") ? true : false;
+        cc.mustRevalidate = columns[8]->equals("true") ? true : false;
+
+        HTTPCacheEntry* newEntry =
+            new HTTPCacheEntry(url, info, cc, columns[9]);
 
         m_cacheEntryTable.insert(
             std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
     }
-
-    if (m_cacheEntryTable.size() > 0 && ifs.eof()) {
-        ifs.eof();
-    } else {
-        // Failed to load index file
-        m_cacheEntryTable.clear();
-        ifs.close();
-        // Clear and init cache dir
-        clearAndRemoveCacheDir();
-        initCacheDir();
-    }
+    return;
 }
 
 bool HTTPCache::isFresh(HTTPCacheEntry* entry)
@@ -197,12 +213,17 @@ HTTPCacheEntryMultiMap::iterator HTTPCache::cacheHit(ResourceURL* url)
 
 void HTTPCache::initCacheDir()
 {
+    STARFISH_ASSERT(isMainThread());
+
     const char* path = m_cacheDirPath->toUTF8NonGCString().data();
     int ret = mkdir(path, 0755);
+
     if (ret == 0) {
-        std::ofstream ofs;
-        ofs.open(m_indexFilePath->toUTF8NonGCString().data());
-        ofs.close();
+        File* in = File::create();
+        if (!in->open(m_indexFilePath, File::FileMode::Write)) {
+            return;
+        }
+        in->close();
     } else if (ret == -1 && errno != EEXIST) {
         STARFISH_LOG_ERROR("%s directory create error : %s\n", path,
                            strerror(errno));
@@ -266,27 +287,26 @@ void HTTPCache::caching(NetworkURLWorkerData* data)
 
 bool HTTPCache::flush()
 {
-    std::ofstream ofs(m_indexFilePath->toUTF8NonGCString().data());
+    STARFISH_ASSERT(isMainThread());
 
-    if (!ofs.good()) {
+    File* out = File::create();
+
+    if (!out->open(m_indexFilePath, File::FileMode::Write)) {
         return false;
     }
 
     for (auto it : m_cacheEntryTable) {
         HTTPCacheEntry* entry = it.second;
-        ofs << entry->toString()->toUTF8NonGCString().data() << std::endl;
+        if (!out->writeLine(entry->toString())) {
+            out->close();
+            return false;
+        }
     }
 
-    ofs.flush();
-    ofs.close();
-
-    if (!ofs.good()) {
-        return false;
-    }
-
+    bool ret = (out->flush() == 0) & (out->close() == 0);
     // TODO : Verify data consistency
 
-    return true;
+    return ret;
 }
 
 void HTTPCache::clearAndRemoveCacheDir()

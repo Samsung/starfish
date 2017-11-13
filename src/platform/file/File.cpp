@@ -57,9 +57,9 @@ public:
     long int size() override
     {
         long int currentPosition = ftell(m_fp);
-        fseek(m_fp, 0, SEEK_END);
+        seek(0, Whence::End);
         long int len = ftell(m_fp);
-        fseek(m_fp, currentPosition, 0);
+        seek(currentPosition, Whence::Start);
         return len;
     }
 
@@ -81,32 +81,6 @@ public:
         return getline(out, len, m_fp);
     }
 
-    bool readAll(std::string& out) override
-    {
-        size_t expected = size();
-
-        out.reserve(expected);
-        if ((out.capacity()) != expected || !m_fp) {
-            return false;
-        }
-
-        rewind(m_fp);
-
-        const size_t bufferSize = 262143;
-        char temp[bufferSize];
-
-        while (!feof(m_fp)) {
-            size_t readCount = read(temp, bufferSize, 1);
-            if (readCount < bufferSize && !feof(m_fp)) {
-                return false;
-            }
-            if (readCount) {
-                out.append(temp, readCount);
-            }
-        }
-        return true;
-    }
-
     int close() override
     {
         int ret = -1;
@@ -118,9 +92,19 @@ public:
         return ret;
     }
 
+    int seek(long offset, int whence) override
+    {
+        return fseek(m_fp, offset, whence);
+    }
+
     int flush() override
     {
         return fflush(m_fp);
+    }
+
+    int eof() override
+    {
+        return feof(m_fp);
     }
 
 private:
@@ -189,9 +173,10 @@ public:
         if (length_cb) {
             return length_cb(m_fp);
         }
-        fseek(m_fp, 0, SEEK_END);
+        long int currentPosition = ftell(m_fp);
+        seek(0, Whence::End);
         long int len = ftell(m_fp);
-        rewind(m_fp);
+        seek(currentPosition, Whence::Start);
         return len;
     }
 
@@ -206,7 +191,7 @@ public:
     bool readAll(std::string& out) override
     {
         // TODO : It will connect to the Tizen file I/O interface.
-        return -1;
+        return false;
     }
 
     size_t write(void* buf, size_t size, size_t count) override
@@ -238,10 +223,20 @@ public:
         return res;
     }
 
+    int seek(long offset, int whence) override
+    {
+        return fseek(m_fp, offset, whence);
+    }
+
     int flush() override
     {
         // TODO : It will connect to the Tizen file I/O interface.
         return fflush(m_fp);
+    }
+
+    int eof() override
+    {
+        return feof(m_fp);
     }
 
 private:
