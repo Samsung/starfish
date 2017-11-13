@@ -70,6 +70,7 @@ extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
 const uint32_t REPEAT_DURATION = 1000;
+Evas* g_internalCanvas;
 
 namespace StarFish {
 
@@ -77,6 +78,12 @@ struct IdlerData {
     void (*m_fn)(void*);
     void* m_data;
 };
+
+Evas* internalCanvas()
+{
+    STARFISH_RELEASE_ASSERT(g_internalCanvas);
+    return g_internalCanvas;
+}
 
 class WindowImplEFL : public PlatformWindow {
 public:

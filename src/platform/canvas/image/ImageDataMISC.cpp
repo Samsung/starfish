@@ -86,12 +86,8 @@ public:
         if (m_width) {
             STARFISH_ASSERT(m_stride);
         }
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           // STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL\n");
-                                           free(cd);
-                                       },
-                                       m_image, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this, [](void* obj, void* cd) { free(cd); }, m_image, NULL, NULL);
     }
 
     virtual void* unwrap()

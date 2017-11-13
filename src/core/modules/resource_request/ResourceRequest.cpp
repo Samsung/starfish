@@ -159,38 +159,58 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         changeReadyState(LOADING, true);
     }
     if (readyState == HEADERS_RECEIVED) {
-        {
-            auto it = m_responseHeaderMap.find("Content-Type");
-            if (it != m_responseHeaderMap.end()) {
-                size_t pos = it->second.find(";");
-                if (pos != std::string::npos) {
-                    m_responseMimeType = String::fromUTF8(it->second.data());
-                } else {
-                    m_responseMimeType =
-                        String::fromUTF8(it->second.substr(0, pos).data());
-                }
+        // FIXME remove duplicate code
+        auto it = m_responseHeaderMap.begin();
+        while (it != m_responseHeaderMap.end()) {
+            std::string h = it->first;
+            std::transform(h.begin(), h.end(), h.begin(), ::tolower);
+            if (h == "content-type") {
+                break;
             }
-
-            it = m_responseHeaderMap.find("Content-Language");
-            if (it != m_responseHeaderMap.end()) {
-                size_t pos = it->second.find(";");
-                if (pos != std::string::npos) {
-                    m_contentLanguage = String::fromUTF8(it->second.data());
-                } else {
-                    m_contentLanguage =
-                        String::fromUTF8(it->second.substr(0, pos).data());
-                }
+            it++;
+        }
+        if (it != m_responseHeaderMap.end()) {
+            size_t pos = it->second.find(";");
+            if (pos != std::string::npos) {
+                m_responseMimeType = String::fromUTF8(it->second.data());
+            } else {
+                m_responseMimeType =
+                    String::fromUTF8(it->second.substr(0, pos).data());
             }
         }
-        {
-            auto it = m_responseHeaderMap.find("Content-Transfer-Encoding");
-            if (it != m_responseHeaderMap.end()) {
-                std::string part = it->second;
-                std::transform(part.begin(), part.end(), part.begin(),
-                               ::tolower);
-                if (part.compare("base64") == 0) {
-                    m_containsBase64Content = true;
-                }
+
+        it = m_responseHeaderMap.begin();
+        while (it != m_responseHeaderMap.end()) {
+            std::string h = it->first;
+            std::transform(h.begin(), h.end(), h.begin(), ::tolower);
+            if (h == "content-language") {
+                break;
+            }
+            it++;
+        }
+        if (it != m_responseHeaderMap.end()) {
+            size_t pos = it->second.find(";");
+            if (pos != std::string::npos) {
+                m_contentLanguage = String::fromUTF8(it->second.data());
+            } else {
+                m_contentLanguage =
+                    String::fromUTF8(it->second.substr(0, pos).data());
+            }
+        }
+        it = m_responseHeaderMap.begin();
+        while (it != m_responseHeaderMap.end()) {
+            std::string h = it->first;
+            std::transform(h.begin(), h.end(), h.begin(), ::tolower);
+            if (h == "content-transfer-encoding") {
+                break;
+            }
+            it++;
+        }
+        if (it != m_responseHeaderMap.end()) {
+            std::string part = it->second;
+            std::transform(part.begin(), part.end(), part.begin(), ::tolower);
+            if (part.compare("base64") == 0) {
+                m_containsBase64Content = true;
             }
         }
 

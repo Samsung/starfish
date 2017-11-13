@@ -356,6 +356,9 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
             result = sbresult.result;
         }
     }
+
+    clearStack<102400>();
+
     return result;
 }
 
@@ -409,6 +412,9 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
         return scriptRef.m_script->execute(state);
     });
+
+    clearStack<102400>();
+
     sb->destroy();
     if (!sbresult.error->isEmpty()) {
         STARFISH_LOG_ERROR("Uncaught %s\n",

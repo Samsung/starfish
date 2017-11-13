@@ -116,7 +116,7 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
 {
     clearBlobURLStore();
     initRenderingFlags();
-    clearStack<1024 * 20>();
+    clearStack<102400>();
     if (m_topLevelBrowsingContext) {
         m_topLevelBrowsingContext->dispose();
     }
@@ -465,7 +465,7 @@ void WebView::layoutIfNeeds()
         }
         setNeedsComputeStackingContextProperties();
     }
-    clearStack<1024 * 16>();
+    clearStack<102400>();
 }
 
 bool WebView::rendering(bool force)
@@ -595,7 +595,7 @@ bool WebView::rendering(bool force)
 #ifdef STARFISH_TIZEN_WEARABLE
         evas_object_raise(eflWindow->m_dummyBox);
 #endif
-        clearStack<1024 * 16>();
+        clearStack<102400>();
 
 #ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() &

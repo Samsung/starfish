@@ -34,7 +34,7 @@ public:
         xMaxYMax,
     };
 
-    static ImageData* create(String* localImageSrc);
+    static ImageData* create(String* localImageSrc); // this is for EFL backend
     static ImageData* create(const char* buf, size_t len);
     static ImageData* create(size_t width, size_t height);
 
