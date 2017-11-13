@@ -20,6 +20,7 @@
 #include "HTTPResponse.h"
 #include "HTTPTransaction.h"
 #include "platform/network/NetworkSharedResourceManager.h"
+#include "platform/network/http/HTTPHeaderMap.h"
 #include "core/modules/profiling/Profiling.h"
 
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -246,7 +247,164 @@ void HTTPTransaction::didReceiveHeader(const std::string& header)
         trim(key);
         trim(value);
 
-        m_httpResponse->headers().setHeader(key, value);
+        std::string keyLower = key;
+        std::transform(keyLower.begin(), keyLower.end(), keyLower.begin(),
+                       ::tolower);
+
+        size_t len = keyLower.length();
+        bool notFound = false;
+        switch (len) {
+        case 2:
+            if (keyLower.compare("te") == 0) {
+                keyLower = HTTPHeaderMap::kTE;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 3:
+            if (keyLower.compare("via") == 0) {
+                keyLower = HTTPHeaderMap::kVia;
+            } else if (keyLower.compare("age") == 0) {
+                keyLower = HTTPHeaderMap::kAge;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 4:
+            if (keyLower.compare("date") == 0) {
+                keyLower = HTTPHeaderMap::kDate;
+            } else if (keyLower.compare("from") == 0) {
+                keyLower = HTTPHeaderMap::kFrom;
+            } else if (keyLower.compare("host") == 0) {
+                keyLower = HTTPHeaderMap::kHost;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 5:
+            if (keyLower.compare("range") == 0) {
+                keyLower = HTTPHeaderMap::kRange;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 6:
+            if (keyLower.compare("origin") == 0) {
+                keyLower = HTTPHeaderMap::kOrigin;
+            } else if (keyLower.compare("pragma") == 0) {
+                keyLower = HTTPHeaderMap::kPragma;
+            } else if (keyLower.compare("accept") == 0) {
+                keyLower = HTTPHeaderMap::kAccept;
+            } else if (keyLower.compare("cookie") == 0) {
+                keyLower = HTTPHeaderMap::kCookie;
+            } else if (keyLower.compare("expect") == 0) {
+                keyLower = HTTPHeaderMap::kExpect;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 7:
+            if (keyLower.compare("warning") == 0) {
+                keyLower = HTTPHeaderMap::kWarning;
+            } else if (keyLower.compare("upgrade") == 0) {
+                keyLower = HTTPHeaderMap::kUpgrade;
+            } else if (keyLower.compare("trailer") == 0) {
+                keyLower = HTTPHeaderMap::kTrailer;
+            } else if (keyLower.compare("referer") == 0) {
+                keyLower = HTTPHeaderMap::kReferer;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 8:
+            if (keyLower.compare("location") == 0) {
+                keyLower = HTTPHeaderMap::kLocation;
+            } else if (keyLower.compare("if-range") == 0) {
+                keyLower = HTTPHeaderMap::kIfRange;
+            } else if (keyLower.compare("if-match") == 0) {
+                keyLower = HTTPHeaderMap::kIfMatch;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 10:
+            if (keyLower.compare("user-agent") == 0) {
+                keyLower = HTTPHeaderMap::kUserAgent;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 12:
+            if (keyLower.compare("max-forwards") == 0) {
+                keyLower = HTTPHeaderMap::kMaxForwards;
+            } else if (keyLower.compare("content-type") == 0) {
+                keyLower = HTTPHeaderMap::kContentType;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 13:
+            if (keyLower.compare("if-none-match") == 0) {
+                keyLower = HTTPHeaderMap::kIfNoneMatch;
+            } else if (keyLower.compare("cache-control") == 0) {
+                keyLower = HTTPHeaderMap::kCacheControl;
+            } else if (keyLower.compare("authorization") == 0) {
+                keyLower = HTTPHeaderMap::kAuthorization;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 14:
+            if (keyLower.compare("accept-charset") == 0) {
+                keyLower = HTTPHeaderMap::kAcceptCharset;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 15:
+            if (keyLower.compare("accept-encoding") == 0) {
+                keyLower = HTTPHeaderMap::kAcceptEncoding;
+            } else if (keyLower.compare("accept-language") == 0) {
+                keyLower = HTTPHeaderMap::kAcceptLanguage;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 17:
+            if (keyLower.compare("if-modified-since") == 0) {
+                keyLower = HTTPHeaderMap::kIfModifiedSince;
+            } else if (keyLower.compare("transfer-encoding") == 0) {
+                keyLower = HTTPHeaderMap::kTransferEncoding;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 19:
+            if (keyLower.compare("if-unmodified-since") == 0) {
+                keyLower = HTTPHeaderMap::kIfUnmodifiedSince;
+            } else if (keyLower.compare("proxy-authorization") == 0) {
+                keyLower = HTTPHeaderMap::kProxyAuthorization;
+            } else {
+                notFound = true;
+            }
+            break;
+        case 25:
+            if (keyLower.compare("upgrade-insecure-requests") == 0) {
+                keyLower = HTTPHeaderMap::kUpgradeInsecureRequests;
+            } else {
+                notFound = true;
+            }
+            break;
+        default:
+            notFound = true;
+            break;
+        }
+
+        if (notFound) {
+            m_httpResponse->headers().setHeader(key, value);
+        } else {
+            m_httpResponse->headers().setHeader(keyLower, value);
+        }
     }
 }
 
