@@ -111,6 +111,7 @@ protected:
     void computeStackingContextProperties(ComputeStackingContextContext& ctx,
                                           StackingContext* ancestorLayer,
                                           bool& descendantHas3DTransform);
+    bool canComposite(ComputeStackingContextContext& ctx);
 
     FrameBox* m_owner;
     StackingContext* m_parent;

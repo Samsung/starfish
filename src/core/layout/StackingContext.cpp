@@ -65,17 +65,25 @@ struct StackingContext::ComputeStackingContextContext {
         extentPerLayer;
     std::shared_ptr<std::vector<StackingContext*>> compositedLayers;
     std::shared_ptr<bool> overlapMapFilled;
+    std::shared_ptr<std::set<StackingContext*>>
+        seenPossiblyNonCompositeLayers; // when found prev computing
+    std::shared_ptr<std::vector<StackingContext*>>
+        seenPossiblyNonCompositeLayersNow;
     bool subLayerHasGraphicsBuffer;
     bool testingOverlap;
 
     ComputeStackingContextContext(StackingContext* rootLayer,
                                   StackingContext* compositingAncestor,
+                                  std::shared_ptr<std::set<StackingContext*>>
+                                      seenPossiblyNonCompositeLayers,
                                   bool testingOverlap = true)
         : rootLayer(rootLayer)
         , compositingAncestor(compositingAncestor)
         , extentPerLayer(new std::unordered_map<StackingContext*, LayoutRect>())
         , compositedLayers(new std::vector<StackingContext*>())
         , overlapMapFilled(new bool(false))
+        , seenPossiblyNonCompositeLayers(seenPossiblyNonCompositeLayers)
+        , seenPossiblyNonCompositeLayersNow(new std::vector<StackingContext*>())
         , subLayerHasGraphicsBuffer(false)
         , testingOverlap(testingOverlap)
     {
@@ -87,6 +95,9 @@ struct StackingContext::ComputeStackingContextContext {
         , extentPerLayer(other.extentPerLayer)
         , compositedLayers(other.compositedLayers)
         , overlapMapFilled(other.overlapMapFilled)
+        , seenPossiblyNonCompositeLayers(other.seenPossiblyNonCompositeLayers)
+        , seenPossiblyNonCompositeLayersNow(
+              other.seenPossiblyNonCompositeLayersNow)
         , subLayerHasGraphicsBuffer(other.subLayerHasGraphicsBuffer)
         , testingOverlap(other.testingOverlap)
     {
@@ -632,9 +643,41 @@ void StackingContext::computeStackingContextProperties()
 {
     STARFISH_ASSERT(parent() == nullptr);
 
-    ComputeStackingContextContext ctx(this, nullptr);
-    bool descendantHas3DTransform;
-    computeStackingContextProperties(ctx, nullptr, descendantHas3DTransform);
+    std::shared_ptr<std::set<StackingContext*>> seenPossiblyNonCompositeLayers(
+        new std::set<StackingContext*>());
+    ComputeStackingContextContext ctx(this, nullptr,
+                                      seenPossiblyNonCompositeLayers);
+    bool descendantHas3DTransform = false;
+
+    size_t prevCnt = SIZE_MAX;
+    do {
+        prevCnt = seenPossiblyNonCompositeLayers->size();
+        computeStackingContextProperties(ctx, nullptr,
+                                         descendantHas3DTransform);
+        for (size_t i = 0; i < ctx.seenPossiblyNonCompositeLayersNow->size();
+             i++) {
+            seenPossiblyNonCompositeLayers->insert(
+                ctx.seenPossiblyNonCompositeLayersNow->at(i));
+        }
+        if (prevCnt == seenPossiblyNonCompositeLayers->size()) {
+            break;
+        }
+    } while (seenPossiblyNonCompositeLayers->size());
+}
+
+bool StackingContext::canComposite(ComputeStackingContextContext& ctx)
+{
+    if (m_owner->needsGraphicsBuffer()) {
+        return true;
+    }
+
+    ComputedStyle* cs = m_owner->style();
+    if (cs->hasTransforms(m_owner)) {
+        return true;
+    }
+
+    auto iter = ctx.seenPossiblyNonCompositeLayers->find(this);
+    return ctx.seenPossiblyNonCompositeLayers->end() == iter;
 }
 
 void StackingContext::computeStackingContextProperties(
@@ -679,7 +722,8 @@ void StackingContext::computeStackingContextProperties(
 
     // Check if the computed indirect reason will force the layer to become
     // composited.
-    if (!willBeComposited && compositingReason) {
+    if (!willBeComposited && compositingReason &&
+        canComposite(compositingState)) {
         willBeComposited = true;
     }
 
@@ -732,7 +776,8 @@ void StackingContext::computeStackingContextProperties(
             // have a contents layer
             // (since we need to ensure that the -ve z-order child renders
             // underneath our contents).
-            if (!willBeComposited && childState.subLayerHasGraphicsBuffer) {
+            if (!willBeComposited && childState.subLayerHasGraphicsBuffer &&
+                canComposite(compositingState)) {
                 // make layer compositing
                 // layer.setIndirectCompositingReason(RenderLayer::IndirectCompositingReason::BackgroundLayer);
                 compositingReason = BackgroundLayer;
@@ -784,10 +829,10 @@ void StackingContext::computeStackingContextProperties(
     // Now check for reasons to become composited that depend on the state of
     // descendant layers.
     IndirectCompositingReason indirectCompositingReason;
-    if (!willBeComposited /*&& canBeComposited(layer)*/
-        && requiresCompositingForIndirectReason(
-               m_owner, childState.subLayerHasGraphicsBuffer,
-               anyDescendantHas3DTransform, indirectCompositingReason)) {
+    if (!willBeComposited && canComposite(compositingState) &&
+        requiresCompositingForIndirectReason(
+            m_owner, childState.subLayerHasGraphicsBuffer,
+            anyDescendantHas3DTransform, indirectCompositingReason)) {
         // layer.setIndirectCompositingReason(indirectCompositingReason);
         childState.compositingAncestor = this;
         // overlapMap.pushCompositingContainer();
@@ -866,6 +911,15 @@ void StackingContext::computeStackingContextProperties(
             Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
             m_rareData->m_visibleRect);
         m_owner->computeVisibleRect(ctx);
+
+        if (m_rareData->m_visibleRect.isEmpty()) {
+            compositingState.seenPossiblyNonCompositeLayersNow->push_back(this);
+        }
+    } else {
+        if (m_rareData && m_rareData->m_buffer) {
+            m_rareData->m_buffer->detachNativeBuffer();
+            m_rareData->m_buffer = nullptr;
+        }
     }
 }
 

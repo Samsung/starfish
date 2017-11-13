@@ -75,7 +75,7 @@ public:
         if (request->readyState() == ResourceRequest::HEADERS_RECEIVED) {
             uint16_t statusCode = request->status();
             bool isMimeTypeValid = request->responseMimeType()->contains(
-                String::createASCIIString("text/event-stream"), false);
+                "text/event-stream", false);
             const ResponseHeaderMap& headerMap = request->responseHeaderMap();
             m_isResponseValid = statusCode == HTTP_STATUS_OK && isMimeTypeValid;
 

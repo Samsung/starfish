@@ -38,15 +38,7 @@
 
 #include <cairo.h>
 
-Evas* g_internalCanvas;
-
 namespace StarFish {
-
-Evas* internalCanvas()
-{
-    STARFISH_RELEASE_ASSERT(g_internalCanvas);
-    return g_internalCanvas;
-}
 
 class CanvasStateEFL : public CanvasState {
 public:
