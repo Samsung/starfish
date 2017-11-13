@@ -1,7 +1,7 @@
 # Specification
 
 ## HTML
-This section describes the complete list of supported HTML tags and attributes by the Web widget engine. Please note that only the tags and attributes mentioned explicitly in this section are supported. In addition, the Widget engine supports only HTML5 documents, and it assumes all input documents are HTML5 documents even if `!DOCTYPE` is not explicitly specified.
+This section describes the complete list of supported HTML tags and attributes by the lightweight web engine. Please note that only the tags and attributes mentioned explicitly in this section are supported. In addition, the Widget engine supports only HTML5 documents, and it assumes all input documents are HTML5 documents even if `!DOCTYPE` is not explicitly specified.
 
 | HTML Tag | Attribute | Allowed Value | Usage | Note |
 |----------|-----------|---------------|-------|------|
@@ -17,7 +17,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | media | media query | &lt;link rel="stylesheet" href="mystyle.css" media="screen"&gt; |  |
 |  | type | text/css | &lt;link rel="stylesheet" href="mystyle.css" type="text/css"&gt; |  |
 |  [meta](https://www.w3.org/TR/html5/document-metadata.html#the-meta-element)  | charset | UTF-8 | &lt;meta charset="UTF-8"&gt; | Only UTF-8 is supported  |
-|  | name | tizen-transparent-background | &lt;meta name="tizen-transparent-background" content="yes"&gt; | name and content are used to set the widget background transparent only. To do so, both name and content must be set in the same meta tag |
+|  | name | tizen-transparent-background | &lt;meta name="tizen-transparent-background" content="yes"&gt; | name and content are used to set the background transparent only. To do so, both name and content must be set in the same meta tag |
 |  | name | tizen-widget-transparent-background | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; | name and content are used to set the widget background transparent only. To do so, both name and content must be set in the same meta tag |
 |  | content | yes &#124; no | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; |  |
 |  [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element)  | media | media query | &lt;style type="text/css" media="screen"&gt;&lt;/style&gt; | |
@@ -66,7 +66,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | size | Possible values:<br>- An integer between 1 and 7. This sets the font to some fixed size, whose rendering depends on the user agent. Not all user agents may render all seven sizes.<br>-A relative increase in font size. The value "+1" means one size larger. The value "-3" means three sizes smaller. All sizes belong to the scale of 1 to 7. | &lt;font size="+3"&gt;SAMSUNG&lt;/font&gt; | Obsolete features. |
 |  [fieldset](https://www.w3.org/TR/html5/forms.html#the-fieldset-element) |  |  | &lt;fieldset&gt;&lt;legend&gt;Card&lt;/legend&gt;&lt;/fieldset&gt; |  |
 |  [legend](https://www.w3.org/TR/html5/forms.html#the-legend-elementT) |  |  | &lt;legend&gt;Display&lt;/legend&gt; |  |
-|  [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype)  |  | html | &lt;!DOCTYPE html&gt; | The DOCTYPE declaration must be the first tag in your HTML document. The Web widget engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported.|
+|  [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype)  |  | html | &lt;!DOCTYPE html&gt; | The DOCTYPE declaration must be the first tag in your HTML document. The lightweight web engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported.|
 
 ## DOM
 
@@ -125,7 +125,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [CSSConditionRule](https://drafts.csswg.org/css-conditional-3/#cssconditionrule) | interface | CSSConditionRule | Represents all the “conditional” at-rules, which consist of a condition and a statement block. |
 |  | attribute | conditionText | Returns the result of serializing the associated condition. |
 | [CSSMediaRule](https://drafts.csswg.org/css-conditional-3/#cssmediarule) | interface | CSSMediaRule | Represents a @media at-rule. |
-|  | attribute | conditionText | Returns the value of media.mediaText on the rule. (CSSMediaRule-specific definition for attribute on CSSConditionRule) Note: Currently, widget engine supports only getter.|
+|  | attribute | conditionText | Returns the value of media.mediaText on the rule. (CSSMediaRule-specific definition for attribute on CSSConditionRule) Note: Currently, lightweight web engine supports only getter.|
 | [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | Represents a CSS style sheet. |
 | | attribute | ownerRule | If this style sheet is imported into the document using an @import rule, the ownerRule property will return that CSSImportRule, otherwise it returns null. |
 | | attribute | cssRules | Returns a live CSSRuleList, listing the CSSRule objects in the style sheet. |
@@ -966,7 +966,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [Transform](https://www.w3.org/TR/css-transforms-1/) | transform | none &#124; matrix &#124; translate &#124; translateX &#124; translateY &#124; scale &#124; scaleX &#124; scaleY &#124; rotate &#124; skew &#124; skewX &#124; skewY | Applies a 2D transformation to an element. | The transform property applies a 2D transformation to an element. This property allows you to rotate, scale, move and skew. A transformable element is an element whose layout is governed by the CSS box model which is either a block-level or atomic inline-level element. |
 | | transform-origin | &lt;percentage&gt; &#124; &lt;length&gt; &#124; top &#124; right &#124; bottom &#124; left &#124; center | Changes the position of transformed elements | |
 | [Functional Notations](https://www.w3.org/TR/css3-values/#functional-notations) | calc | refer to spec | Allows mathematical expressions with addition (+), subtraction (-), multiplication (*), and division (/) to be used as component values.  | At present, only support length, time and anlge only. |
-| [Media Queries - Media Types](https://www.w3.org/TR/css3-mediaqueries/) | all &#124; screen | all &#124; screen | Describes media types supported by web widget engine. | ‘all’ means suitable for all supported devices. |
+| [Media Queries - Media Types](https://www.w3.org/TR/css3-mediaqueries/) | all &#124; screen | all &#124; screen | Describes media types supported by lightweight web engine. | ‘all’ means suitable for all supported devices. |
 | [Media Queries - Media Features](https://www.w3.org/TR/css3-mediaqueries/#media1) | width | &lt;length&gt; | Describes the width of the targeted display area of the output device. | |
 | | height | &lt;length&gt; | Describes the height of the targeted display area of the output device. | |
 | | device-width | &lt;length&gt; | Describes the width of the rendering surface of the output device. | |
@@ -978,8 +978,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | | color-index | &lt;integer&gt; | Describes the number of entries in the color lookup table of the output device. If the device does not use a color lookup table, the value is zero. | |
 | | monochrome | &lt;integer&gt; | Describes the number of bits per pixel in a monochrome frame buffer. If the device is not a monochrome device, the output device value will be 0. | |
 | | resolution | &lt;resolution&gt; | Describes the resolution of the output device, i.e. the density of the pixels.  | |
-| | scan | progressive &#124; interlace | Describes the scanning process of "tv" output devices. | The Web widget engine doesn't support this feature. |
-| | grid | &lt;integer&gt; | This is used to query whether the output device is grid or bitmap. If the output device is grid-based (e.g., a "tty" terminal, or a phone display with only one fixed font), the value will be 1. Otherwise, the value will be 0. | The Web widget engine supports only bitmap device. |
+| | scan | progressive &#124; interlace | Describes the scanning process of "tv" output devices. | The lightweight web engine doesn't support this feature. |
+| | grid | &lt;integer&gt; | This is used to query whether the output device is grid or bitmap. If the output device is grid-based (e.g., a "tty" terminal, or a phone display with only one fixed font), the value will be 1. Otherwise, the value will be 0. | The lightweight web engine supports only bitmap device. |
 | [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-4/) | hover | none &#124; hover | The hover media feature is used to query the user’s ability to hover over elements on the page with the primary pointing device. | |
 
 
@@ -1090,7 +1090,7 @@ The EventSource interface is used to receive server-sent events. It connects to 
 | CLOSED         | The connection is not open, and the user agent is not trying to reconnect. Either there was a fatal error or the close() method was invoked. | 2 |
 
 ### Blob
-Blob object is used by an XMLHTTPRequest object to retrieve binary data. Supported binary data are the resources supported by the widget engine. When blob is used for other types of binary data, it is likely that the binary data is not recognized by the widget engine.
+Blob object is used by an XMLHTTPRequest object to retrieve binary data. Supported binary data are the resources supported by the lightweight web engine. When blob is used for other types of binary data, it is likely that the binary data is not recognized by the lightweight web engine.
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
@@ -1123,7 +1123,7 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | | attribute | longitude | The longitude attribute is a geographic coordinate specified in decimal degrees. |
 | | attribute |	altitude | The altitude attribute denotes the height of the position, specified in meters above the WGS84 ellipsoid.|
 | | attribute | accuracy | The accuracy attribute denotes the accuracy level of the latitude and longitude coordinates. It is specified in meters, and is a non-negative real number.|
-| | attribute |  altitudeAccuracy |	 Not supported by the widget engine. Always returns null.|
+| | attribute |  altitudeAccuracy |	 Not supported by the lightweight web engine. Always returns null.|
 | | attribute |	 heading | The heading attribute denotes the direction of travel of the hosting device and is specified in degrees, where 0° ≤ heading < 360°, counting clockwise relative to the true north.|
 | | attribute |	 speed | The speed attribute denotes the magnitude of the horizontal component of the hosting device's current velocity and is specified in meters per second. The value of the speed attribute is a non-negative real number.|
 | [Geoposition](none)	| interface	| Geoposition	| The Geoposition interface represents the position of the concerned device at a given time |
@@ -1140,20 +1140,14 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 
 | Error Code | Description | Numeric Value |
 |------------|-------------|---------------|
-| PERMISSION_DENIED | The location acquisition process failed because the widget does not have permission to use the Geolocation API. | 1 |
+| PERMISSION_DENIED | The location acquisition process failed because the lightweight web engine does not have permission to use the Geolocation API. | 1 |
 | POSITION_UNAVAILABLE | The position of the device could not be determined. | 2 |
 | TIMEOUT | The length of time specified by the timeout property has elapsed before successfully acquiring a new Position object. | 3 |
 
 ## Web Device API
-The following describes Web device APIs supported by Widget Engine. Supported interfaces and methods are generally the same as the interfaces and methods supported by Tizen API, respectively. If there are exceptions, they are explicitly mentioned below.
+The following describes Web device APIs supported by lightweight web engine. Supported interfaces and methods are generally the same as the interfaces and methods supported by Tizen API, respectively. If there are exceptions, they are explicitly mentioned below.
 
 | API            | Description | Note |
 |----------------|-------------|------|
-| [Application](https://developer.tizen.org/dev-guide/2.3.1/org.tizen.web.apireference/html/device_api/wearable/tizen/application.html) | This API allows a widget to launch and access installed applications. Note that launching other Web widgets installed on the same device is deprecated in Tizen 3.0, so such use is not recommended. | Unsupported methods:<br>- ApplicationManager: Application getCurrentApplication()<br>- Application: void exit()<br>- Application: void hide()<br>- Application: RequestedApplicationControl getRequestedAppControl() |
-| [Preference](https://developer.tizen.org/development/api-references/web-application?redirect=/dev-guide/2.3.2/org.tizen.web.apireference/html/device_api/wearable/tizen/preference.html) | This API allows to store and retrieve a (key, value) pair to set application preferences. | |
-| [Sensor](https://developer.tizen.org/development/api-references/web-application?redirect=/dev-guide/2.3.1/org.tizen.web.apireference/html/device_api/wearable/tizen/sensor.html) | This API provides interfaces and methods for getting sensor data from the various device sensors. | |
-| [System Information](https://developer.tizen.org/development/api-references/web-application?redirect=/dev-guide/2.3.1/org.tizen.web.apireference/html/device_api/wearable/tizen/systeminfo.html) | This API provides information about the device's display, network, storage and other capabilities. | Unsupported feature:<br>Getting 'LOCALE' value using addPropertyValueChangeListener() is not supported. Because when 'LOCALE' is changed, web widget will be restarted so it is not possible to get 'LOCALE' at runtime. |
-| [SAP*](http://img-developer.samsung.com/onlinedocs/samsung_webapi_guide_public_2.0/html/wapi_spec/sap.html) | The Samsung Accessory Protocol (SAP) APIs offers services that enable mobile devices to establish connections and exchange data with web widget applications. | |
-| [Widgetservice](https://developer.tizen.org/development/api-references/web-application?redirect=/dev-guide/2.3.2/org.tizen.web.apireference/html/device_api/wearable/tizen/widgetservice.html) | This API provides information about installed widgets. | Unsupported methods:<br>- WidgetInstance: void changeUpdatePeriod()<br>- WidgetInstance: void sendContent()<br>- WidgetInstance: void getContent()<br>Important Notice<br>- The `WidgetInstanceId` in interface `WidgetInstance` is not persistent, i.e., each widget instance is assigned a new `WidgetInstace.id` at every reboot of a wearable device. Therefore, it cannot be used to identify a widget instance existed before rebooting a device. |
-
-\* The SAP (Samsung Accessory Protocol) is a Samsung device API.
+| [Application](https://developer.tizen.org/dev-guide/4.0.0/org.tizen.web.apireference/html/device_api/tv/tizen/application.html) | The Application API provides a way to launch other applications and access application management. | |
+| [MessagePort](https://developer.tizen.org/dev-guide/4.0.0/org.tizen.web.apireference/html/device_api/tv/tizen/messageport.html) | The MessagePort API provides the functionality for communicating with other applications. | |
