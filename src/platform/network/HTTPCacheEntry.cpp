@@ -16,14 +16,13 @@
 
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "StarFishConfig.h"
+#include "platform/file/File.h"
 #include "HTTPCacheEntry.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/profiling/Profiling.h"
 #include "platform/loader/ResourceURL.h"
 
-#include <fstream>
-#include <iostream>
 namespace StarFish {
 
 HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, EntryFreshnessInfo& info,
@@ -70,52 +69,39 @@ void HTTPCacheEntry::setEntryFileNameUsingCachePath(String* cachePath)
 
 bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
 {
-    Locker<Mutex> locker(*m_mutex);
     STARFISH_ASSERT(m_entryFileName != String::emptyString);
 
-    std::ofstream ofs(m_entryFileName->toUTF8NonGCString().data());
-
-    if (!ofs.good()) {
+    Locker<Mutex> locker(*m_mutex);
+    if (rawData.size() == 0) {
         return false;
     }
 
-    ofs.write(rawData.data(), rawData.size());
-    ofs.flush();
-    ofs.close();
-
-    if (!ofs.good()) {
+    File* out = File::create();
+    if (!out->open(m_entryFileName, File::Write)) {
         return false;
     }
-    return true;
+
+    size_t writeSize = out->write(rawData.data(), sizeof(char), rawData.size());
+    bool ret = (rawData.size() == writeSize) & (out->flush() == 0);
+
+    return ret & (out->close() == 0);
 }
 
 bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
 {
-    Locker<Mutex> locker(*m_mutex);
     STARFISH_ASSERT(m_entryFileName != String::emptyString);
+    Locker<Mutex> locker(*m_mutex);
 
-    std::ifstream ifs(m_entryFileName->toUTF8NonGCString().data(),
-                      std::ifstream::binary);
-
-    if (!ifs.good()) {
+    File* in = File::createInNonGCArea(); // Must free
+    if (!in->open(m_entryFileName, File::Read)) {
         return false;
     }
 
-    ifs.seekg(0, std::ios::end);
-    std::streampos length(ifs.tellg());
+    bool ret = in->readAll(out) & (in->close() == 0);
 
-    if (length) {
-        ifs.seekg(0, std::ios::beg);
-        out.resize(static_cast<std::size_t>(length));
-        ifs.read(&out.front(), static_cast<std::size_t>(length));
-    }
+    free(in);
 
-    ifs.close();
-
-    if (!ifs.good()) {
-        return false;
-    }
-    return true;
+    return ret;
 }
 
 String* HTTPCacheEntry::toString()
