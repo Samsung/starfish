@@ -114,11 +114,13 @@ String* HTTPCacheEntry::toString()
         std::to_string(m_entryFreshnessInfo.requestTime);
     std::string responseTimeStr =
         std::to_string(m_entryFreshnessInfo.responseTime);
+    std::string contentLengthStr =
+        std::to_string(m_entryFreshnessInfo.contentLength);
     std::string maxAgeStr = std::to_string(m_cacheControl.maxAge);
 
     // entryKey(UINT) urlString(STRING) date(UINT) age(UINT)
-    // rquestTime(UINT) responeTime(UINT) maxAge(UINT) no-cache(0|1)
-    // mustRevalidate(0|1) entryFileName(STRING)
+    // rquestTime(UINT) responeTime(UINT) contentLength(UINT)
+    // maxAge(UINT) no-cache(0|1) mustRevalidate(0|1) entryFileName(STRING)
 
     builder.appendString(entryKeystr.data());
     builder.appendString(" ");
@@ -131,6 +133,8 @@ String* HTTPCacheEntry::toString()
     builder.appendString(requestTimeStr.data());
     builder.appendString(" ");
     builder.appendString(responseTimeStr.data());
+    builder.appendString(" ");
+    builder.appendString(contentLengthStr.data());
     builder.appendString(" ");
     builder.appendString(maxAgeStr.data());
     builder.appendString(" ");

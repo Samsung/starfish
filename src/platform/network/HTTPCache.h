@@ -37,21 +37,22 @@ public:
     bool isFresh(HTTPCacheEntry* entry);
     bool flush();
     void expire();
-    void pruningIfNeed();
+    void pruningIfNeeds(size_t contentLength);
     // consistency checking
 
 private:
     void initCacheDir();
     void clearAndRemoveCacheDir();
-    HTTPCacheEntryMultiMap::iterator findEntryTableData(ResourceURL* url);
+    void addCacheLRUListData(std::string& url);
+    void deleteCacheLRUListData(std::string& url);
+    HTTPCacheEntryMultiMap::iterator findEntryTableData(String* key);
     CacheControl parseCacheControl(std::string directives);
 
     HTTPCacheEntryMultiMap m_cacheEntryTable;
     HTTPCacheLRUList m_cacheLRUList;
     String* m_cacheDirPath;
     String* m_indexFilePath;
-    size_t m_httpCacheSize;
-    uint64_t m_lastCachePruneTime;
+    size_t m_currentCacheSize;
 };
 }
 #endif
