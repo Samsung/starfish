@@ -499,37 +499,26 @@ int main(int argc, char* argv[])
     setbuf(stderr, NULL);
 #endif
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+    const char* defaultEngine = "gl";
+    const char* engine = getenv("STARFISH_EFL_ENGINE");
+    if (!engine || strlen(engine) == 0) {
+        engine = defaultEngine;
+    }
+    setenv("ELM_ENGINE", engine, 1);
 
-#if defined(STARFISH_TIZEN)
-    setenv("ELM_ENGINE", "wayland_shm", 1);
-    setenv("ELM_DISPLAY", "wayland_shm", 1);
-#else
-    setenv("ELM_ENGINE", "gl", 1);
-#endif
-
-#endif
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-
-#if defined(STARFISH_TIZEN)
-    elm_config_accel_preference_set("wayland_shm");
-#else
-    elm_config_accel_preference_set("opengl");
+    elm_config_accel_preference_set(engine);
 #endif
 
-#endif
-
-    // GC_disable();
     int flag = 0;
 
     if (argc == 1) {
         puts("please specify file path");
         return -1;
     }
-    // STARFISH_LOG_INFO("%d", (int)sizeof (StarFish::ComputedStyle));
 
     std::string screenShot;
     std::string userAgentExtraString;
