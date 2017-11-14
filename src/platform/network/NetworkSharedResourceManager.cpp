@@ -101,33 +101,33 @@ static void appendMatchingCookie(String* cookie, String* domain, String* path,
         return;
     }
 
-    GCVector<String*> tokens;
-    cookie->split('\t', tokens);
+    GCVector<StringView> tokens;
+    StringUtils::tokenize(cookie, "\t", 1, tokens);
     STARFISH_ASSERT(tokens.size() == 7);
 
-    if (tokens[0]->startsWith("#HttpOnly_")) {
+    if (tokens[0].startsWith("#HttpOnly_")) {
         return;
     }
-    if (!domainMatch(tokens[0], domain)) {
+    if (!domainMatch(&tokens[0], domain)) {
         return;
     }
-    int index = path->find(tokens[2]);
+    int index = path->find(&tokens[2]);
     if (index) {
         return;
     }
     time_t now = 0;
     time(&now);
     // Use int64_t to explicitly specify the width of bits.
-    int64_t expires = String::parseInt64(tokens[4]);
+    int64_t expires = String::parseInt64(&tokens[4]);
     if (expires && now > expires) {
         return;
     }
     if (cookiesBuilder.contentLength() > 0) {
         cookiesBuilder.appendString("; ");
     }
-    cookiesBuilder.appendString(tokens[5]);
+    cookiesBuilder.appendString(new StringView(tokens[5]));
     cookiesBuilder.appendString("=");
-    cookiesBuilder.appendString(tokens[6]);
+    cookiesBuilder.appendString(new StringView(tokens[6]));
     return;
 }
 
@@ -140,21 +140,21 @@ static String* transformetoNetscapeCookieFormat(Document* document,
     if (!value->containsOnlyASCIIChars()) {
         return String::emptyString;
     }
-    GCVector<String*> tokens;
-    value->split(';', tokens);
+    GCVector<StringView> tokens;
+    StringUtils::tokenize(value, ";", 1, tokens);
     String* cookieName = String::emptyString;
     String* cookieValue = String::emptyString;
 
     // First attr should be 'cookiename=value'
-    if (tokens[0]->contains("=")) {
-        GCVector<String*> pair;
-        tokens[0]->split('=', pair);
-        cookieName = pair[0];
-        cookieValue = pair[1];
+    if (tokens[0].contains("=")) {
+        GCVector<StringView> pair;
+        StringUtils::tokenize(&tokens[0], "=", 1, pair);
+        cookieName = new StringView(pair[0]);
+        cookieValue = new StringView(pair[1]);
     } else {
         // According to RFC6265, it should be ignored
         // but modern browsers appear to treat this as <cookiename>=<empty>"
-        cookieName = tokens[0];
+        cookieName = new StringView(tokens[0]);
     }
     int64_t expires = 0;
     String* domain = url->host();
@@ -162,12 +162,12 @@ static String* transformetoNetscapeCookieFormat(Document* document,
     const char* secure = "FALSE";
 
     for (size_t i = 1; i < tokens.size(); ++i) {
-        if (tokens[i]->contains("=")) {
-            GCVector<String*> pair;
-            tokens[i]->split('=', pair);
-            String* key = pair[0]->trim()->toASCIILower();
-            String* value = pair[1]->trim();
+        if (tokens[i].contains("=")) {
+            GCVector<StringView> pair;
+            StringUtils::tokenize(&tokens[i], "=", 1, pair);
+            String* key = pair[0].trim()->toASCIILower();
             if (key->equals("expires")) {
+                String* value = pair[1].trim();
                 double parsedDate =
                     parseDate(document->scriptBindingInstance(), value);
                 // RFC6265 say : If the attribute-value failed to parse as a
@@ -176,6 +176,7 @@ static String* transformetoNetscapeCookieFormat(Document* document,
                     expires = parsedDate / 1000.0;
                 }
             } else if (key->equals("max-age")) {
+                String* value = pair[1].trim();
                 int64_t parsedValue = String::parseInt64(value);
                 time_t current = time(0);
                 if (parsedValue > 0 &&
@@ -183,18 +184,20 @@ static String* transformetoNetscapeCookieFormat(Document* document,
                     expires = current + parsedValue;
                 }
             } else if (key->equals("domain")) {
+                String* value = (new StringView(pair[1]))->trim();
                 domain = value;
             } else if (key->equals("path")) {
+                String* value = (new StringView(pair[1]))->trim();
                 path = value;
             }
         } else {
-            String* key = tokens[i]->trim()->toASCIILower();
+            String* key = tokens[i].trim()->toASCIILower();
             if (key->equals("secure")) {
                 secure = "TRUE";
             }
         }
     }
-    const char* allowSubDomain = domain->startsWith(".") ? "True" : "FALSE";
+    const char* allowSubDomain = domain->startsWith(".") ? "TRUE" : "FALSE";
     String* expiresStr = String::fromInt64(expires);
     StringBuilder builder;
 

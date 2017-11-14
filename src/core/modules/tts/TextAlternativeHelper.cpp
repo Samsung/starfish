@@ -232,8 +232,8 @@ bool TextAlternativeHelper::appendFromAriaByTypeIfNeeds(Node* node,
         break;
     }
 
-    GCVector<String*> tokens;
-    value->split(' ', tokens);
+    GCVector<StringView> tokens;
+    StringUtils::tokenize(value, " ", 1, tokens);
     size_t oldSize = m_textAlts.size();
 
     if (node->document()) {
@@ -245,7 +245,7 @@ bool TextAlternativeHelper::appendFromAriaByTypeIfNeeds(Node* node,
     }
 
     for (auto id : tokens) {
-        Element* element = node->document()->getElementById(id);
+        Element* element = node->document()->getElementById(&id);
         if (element) {
             if (isVisitedNode(element)) {
                 continue;

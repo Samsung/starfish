@@ -84,23 +84,18 @@ public:
             auto it = headerMap.find(HTTPHeaderMap::kContentType);
             if (it != headerMap.end()) {
                 String* values = String::fromUTF8(it->second.data());
-                GCVector<String*> tokens;
-                values->split(';', tokens);
+                GCVector<StringView> tokens;
+                StringUtils::tokenize(values, ";", 1, tokens);
 
                 for (auto token : tokens) {
-                    String* t = token->trim();
-                    size_t pos = t->find("=");
-                    if (pos != SIZE_MAX) {
-                        String* key = t->substring(0, pos)->trim();
-                        String* value =
-                            t->substring(pos + 1, t->length() - pos - 1)
-                                ->trim();
-                        if (key->equalsIgnoreCase("charset")) {
-                            isCharsetValid =
-                                value->equalsIgnoreCase("utf-8") ||
-                                value->equalsIgnoreCase("\"utf-8\"");
-                            charsetValue = value;
-                        }
+                    GCVector<StringView> pair;
+                    StringUtils::tokenize(&token, "=", 1, pair);
+                    String* key = pair[0].trim();
+                    if (key->equalsIgnoreCase("charset")) {
+                        String* value = (new StringView(pair[1]))->trim();
+                        isCharsetValid = value->equalsIgnoreCase("utf-8") ||
+                                         value->equalsIgnoreCase("\"utf-8\"");
+                        charsetValue = value;
                     }
                 }
             }
