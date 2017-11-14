@@ -104,6 +104,7 @@ public:
         m_lastClickedTimestamp = 0;
         m_clickedCount = 0;
         m_canRendering = true;
+        m_inRendering = false;
         m_imfContext = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
@@ -218,20 +219,10 @@ public:
 
     bool rendering()
     {
-        ProfilerTimer renderingTimer("WindowImplEFL::rendering");
+        m_inRendering = true;
+        // ProfilerTimer renderingTimer("WindowImplEFL::rendering");
         bool ret = PlatformWindow::rendering();
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-        evas_render(evas_object_evas_get(m_window));
-
-        if (m_canvasAdpaterSurface) {
-            cairo_destroy(m_canvasAdpaterCairo);
-            STARFISH_RELEASE_ASSERT(
-                cairo_surface_get_reference_count(m_canvasAdpaterSurface) == 1);
-            cairo_surface_destroy(m_canvasAdpaterSurface);
-            m_canvasAdpaterCairo = nullptr;
-            m_canvasAdpaterSurface = nullptr;
-        }
-#endif
+        m_inRendering = false;
         return ret;
     }
 
@@ -284,6 +275,7 @@ public:
     bool m_isMouseLbuttonDown;
     bool m_isKeyDown;
     bool m_canRendering;
+    bool m_inRendering;
     uint32_t m_lastClickedTimestamp;
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
@@ -829,12 +821,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 #else
     evas_object_show(wnd->m_window);
 #endif
-    /*
-    evas_event_callback_add(e, EVAS_CALLBACK_RENDER_FLUSH_POST,
-        [](void *data,
-            Evas *e, void *event_info) {
-        }, wnd);
-    */
 
     wnd->m_desktopMouseDownEventHandler = ecore_event_handler_add(
         ECORE_EVENT_MOUSE_BUTTON_DOWN,
@@ -1049,13 +1035,22 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 #endif
 
     // Rendering control callback
-    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
-                            EVAS_CALLBACK_RENDER_POST,
-                            [](void* data, Evas* e, void* event_info) {
-                                WindowImplEFL* wnd = (WindowImplEFL*)data;
-                                wnd->m_canRendering = true;
-                            },
-                            wnd);
+    evas_event_callback_add(
+        evas_object_evas_get(wnd->m_window), EVAS_CALLBACK_RENDER_POST,
+        [](void* data, Evas* e, void* event_info) {
+            STARFISH_ASSERT(isMainThread());
+            WindowImplEFL* wnd = (WindowImplEFL*)data;
+            wnd->m_canRendering = true;
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+            if (!wnd->m_inRendering && wnd->m_canvasAdpaterSurface) {
+                cairo_destroy(wnd->m_canvasAdpaterCairo);
+                cairo_surface_destroy(wnd->m_canvasAdpaterSurface);
+                wnd->m_canvasAdpaterCairo = nullptr;
+                wnd->m_canvasAdpaterSurface = nullptr;
+            }
+#endif
+        },
+        wnd);
 
     evas_object_event_callback_add(
         wnd->m_mainBox, EVAS_CALLBACK_RESIZE,

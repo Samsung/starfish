@@ -500,13 +500,26 @@ int main(int argc, char* argv[])
 #endif
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+
+#if defined(STARFISH_TIZEN)
+    setenv("ELM_ENGINE", "wayland_shm", 1);
+    setenv("ELM_DISPLAY", "wayland_shm", 1);
+#else
     setenv("ELM_ENGINE", "gl", 1);
+#endif
+
 #endif
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+
+#if defined(STARFISH_TIZEN)
+    elm_config_accel_preference_set("wayland_shm");
+#else
     elm_config_accel_preference_set("opengl");
+#endif
+
 #endif
 
     // GC_disable();

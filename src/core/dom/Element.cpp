@@ -744,10 +744,7 @@ static void applyTransform(DOMQuad* q, FrameBox* box)
 void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        // FIXME
-        // now computing matrix of stacking needs painting/ compositing
-        // move computing into other step
-        window()->webView()->renderingIfNeeds();
+        window()->webView()->layoutIfNeeds();
     }
 
     Frame* frameObject = this->frame();

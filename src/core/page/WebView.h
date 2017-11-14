@@ -132,14 +132,6 @@ public:
     BrowsingContext* focusedBrowsingContext();
     void blur();
 
-    void renderingIfNeeds()
-    {
-        if (m_needsRendering) {
-            rendering(true);
-            m_needsRendering = false;
-        }
-    }
-
     void setNeedsComputeStackingContextProperties()
     {
         if (!m_needsComputeStackingContextProperties) {
@@ -148,20 +140,29 @@ public:
         }
     }
 
-    void markNeedsPaintingWhileRendering()
+    void markNeedsPaintingConsiderInRendering()
     {
-        STARFISH_ASSERT(m_inRendering);
         if (!m_needsPainting) {
             m_needsPainting = true;
         }
+        if (!m_inRendering) {
+            setNeedsRendering();
+        }
     }
 
-    void markNeedsCompositeWhileRendering()
+    void markNeedsCompositeConsiderInRendering()
     {
-        STARFISH_ASSERT(m_inRendering);
         if (!m_needsComposite) {
             m_needsComposite = true;
         }
+        if (!m_inRendering) {
+            setNeedsRendering();
+        }
+    }
+
+    bool inRendering()
+    {
+        return m_inRendering;
     }
 
     void onIdle();
