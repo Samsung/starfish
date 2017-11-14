@@ -886,11 +886,11 @@ void StackingContext::computeStackingContextProperties(
     bool compositedBefore = needsGraphicsBuffer();
 
     if (compositedBefore != willBeComposited) {
-        m_owner->node()->webView()->markNeedsPaintingWhileRendering();
+        m_owner->node()->webView()->markNeedsPaintingConsiderInRendering();
     } else if (compositedBefore && compositedBefore == willBeComposited) {
-        m_owner->node()->webView()->markNeedsCompositeWhileRendering();
+        m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
     } else if (!compositedBefore && compositedBefore == willBeComposited) {
-        m_owner->node()->webView()->markNeedsPaintingWhileRendering();
+        m_owner->node()->webView()->markNeedsPaintingConsiderInRendering();
     }
 
     if (willBeComposited) {

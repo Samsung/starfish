@@ -465,6 +465,33 @@ void WebView::layoutIfNeeds()
         }
         setNeedsComputeStackingContextProperties();
     }
+
+    if (m_needsComputeStackingContextProperties) {
+        {
+#ifdef STARFISH_ENABLE_TIMER
+            ProfilerTimer t("computeStackingContextProperties");
+#endif
+            if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
+                m_rootStackingContext->computeStackingContextProperties();
+            }
+            m_needsComputeStackingContextProperties = false;
+        }
+
+#ifdef STARFISH_ENABLE_TEST
+        if (m_starFish->startUpFlag() &
+            StarFishStartUpFlag::enableComputedStyleDump) {
+            // dump style
+            m_topLevelBrowsingContext->document()->styleResolver().dumpDOMStyle(
+                m_topLevelBrowsingContext->document());
+        }
+        if (m_starFish->startUpFlag() &
+            StarFishStartUpFlag::enableFrameTreeDump) {
+            FrameTreeBuilder::dumpFrameTree(
+                m_topLevelBrowsingContext->document(), 0);
+        }
+#endif
+    }
+
     clearStack<102400>();
 }
 
@@ -505,35 +532,6 @@ bool WebView::rendering(bool force)
 #endif
 
     layoutIfNeeds();
-
-    if (m_needsComputeStackingContextProperties) {
-        {
-#ifdef STARFISH_ENABLE_TIMER
-            ProfilerTimer t("computeStackingContextProperties");
-#endif
-            if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
-                m_rootStackingContext->computeStackingContextProperties();
-            }
-
-            // STARFISH_LOG_INFO("computeStackingContextProperties end composite
-            // %d\n", (int)m_rootStackingContext->needsOwnBuffer());
-            m_needsComputeStackingContextProperties = false;
-        }
-
-#ifdef STARFISH_ENABLE_TEST
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableComputedStyleDump) {
-            // dump style
-            m_topLevelBrowsingContext->document()->styleResolver().dumpDOMStyle(
-                m_topLevelBrowsingContext->document());
-        }
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableFrameTreeDump) {
-            FrameTreeBuilder::dumpFrameTree(
-                m_topLevelBrowsingContext->document(), 0);
-        }
-#endif
-    }
 
     {
         size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
