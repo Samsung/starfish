@@ -61,6 +61,7 @@ public:
     virtual void detachNativeBuffer() = 0;
     virtual size_t bufferWidth() = 0;
     virtual size_t bufferHeight() = 0;
+    virtual size_t bufferStride() = 0;
     virtual size_t pixelRatio() = 0;
     virtual ~CanvasSurface()
     {

@@ -85,6 +85,8 @@ Evas* internalCanvas()
     return g_internalCanvas;
 }
 
+static int g_totalCanvasSurfaceEFLSize;
+
 class WindowImplEFL : public PlatformWindow {
 public:
     WindowImplEFL(StarFish* sf)
@@ -110,6 +112,7 @@ public:
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
         m_softKeyboardOrigin = nullptr;
+        m_lastRenderingTime = tickCount();
 
 #if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
     defined(STARFISH_TIZEN_EVASGL_CAIRO)
@@ -221,14 +224,20 @@ public:
     virtual void onIdle()
     {
         PlatformWindow::onIdle();
-
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-        if (!m_inRendering && m_canvasAdpaterSurface && m_isEvasFlushed) {
-            cairo_destroy(m_canvasAdpaterCairo);
-            cairo_surface_destroy(m_canvasAdpaterSurface);
-            m_canvasAdpaterCairo = nullptr;
-            m_canvasAdpaterSurface = nullptr;
-        }
+// leave code block for future
+// drop screen buffer for cairo when we can use efl software backend
+/*
+auto tick = tickCount();
+if (!m_inRendering && m_canvasAdpaterSurface && m_isEvasFlushed && (tick -
+m_lastRenderingTime > 1000)) {
+    STARFISH_LOG_INFO("drop screen buffer for cairo");
+    cairo_destroy(m_canvasAdpaterCairo);
+    cairo_surface_destroy(m_canvasAdpaterSurface);
+    m_canvasAdpaterCairo = nullptr;
+    m_canvasAdpaterSurface = nullptr;
+}
+*/
 #endif
     }
 
@@ -238,6 +247,16 @@ public:
         m_inRendering = true;
         // ProfilerTimer renderingTimer("WindowImplEFL::rendering");
         bool ret = PlatformWindow::rendering();
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+        if (ret && m_canvasAdpaterCairo) {
+            unsigned char* imageData = cairo_image_surface_get_data(
+                cairo_get_target(m_canvasAdpaterCairo));
+            evas_object_image_data_set(m_canvasAdpater, imageData);
+            evas_object_image_data_update_add(m_canvasAdpater, 0, 0, width(),
+                                              height());
+            evas_object_show(m_canvasAdpater);
+        }
+#endif
         m_inRendering = false;
         return ret;
     }
@@ -296,12 +315,13 @@ public:
     uint32_t m_lastClickedTimestamp;
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
+    uint64_t m_lastRenderingTime;
     int m_offsetYDueToSoftwareKeyboard;
 };
 
 static WindowImplEFL* g_currentWnd = nullptr;
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_COMPOSITOR_BACKEND_EFL)
 
 class CanvasSurfaceEFL : public CanvasSurface {
 public:
@@ -317,6 +337,8 @@ public:
 #endif
         evas_object_image_alpha_set(m_image, EINA_TRUE);
         evas_object_anti_alias_set(m_image, EINA_TRUE);
+        evas_object_image_content_hint_set(m_image,
+                                           EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
                                 EVAS_COLORSPACE_ARGB8888);
 
@@ -347,7 +369,10 @@ public:
         CanvasSurfaceEFL* s = (CanvasSurfaceEFL*)this;
         // STARFISH_LOG_INFO("detach CanvasSurfaceEFL NativeBuffer %p\n",
         //                   image);
-        // evas_object_image_size_set(image, 0, 0);
+        int w, h;
+        evas_object_image_size_get(m_image, &w, &h);
+        g_totalCanvasSurfaceEFLSize -= (w * h * 4);
+        evas_object_image_size_set(image, 0, 0);
         evas_object_hide(image);
         STARFISH_RELEASE_ASSERT(evas_object_ref_get(image) == 0);
         evas_object_del(image);
@@ -376,6 +401,10 @@ public:
     virtual void resize(size_t w, size_t h)
     {
         if (m_width != w || m_height != h) {
+            int ww, hh;
+            evas_object_image_size_get(m_image, &ww, &hh);
+            g_totalCanvasSurfaceEFLSize -= (ww * hh * 4);
+
             m_pixelRatio = 1;
 
             while ((w / m_pixelRatio > 20000) || (h / m_pixelRatio > 20000)) {
@@ -388,6 +417,8 @@ public:
             m_bufferHeight = std::max((size_t)1, m_height / m_pixelRatio);
 
             evas_object_image_size_set(m_image, m_bufferWidth, m_bufferHeight);
+
+            g_totalCanvasSurfaceEFLSize += (m_bufferWidth * m_bufferHeight * 4);
         }
 #ifndef NDEBUG
         void* address = evas_object_image_data_get(m_image, EINA_TRUE);
@@ -426,6 +457,11 @@ public:
         return m_pixelRatio;
     }
 
+    virtual size_t bufferStride()
+    {
+        return evas_object_image_stride_get(m_image);
+    }
+
     virtual void clear()
     {
         void* address = evas_object_image_data_get(m_image, EINA_TRUE);
@@ -449,7 +485,7 @@ CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
     return new CanvasSurfaceEFL(wnd, w, h);
 }
 
-#elif defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#else
 
 class CanvasSurfaceSimple : public CanvasSurface {
 public:
@@ -520,6 +556,11 @@ public:
     virtual size_t bufferWidth()
     {
         return m_bufferWidth;
+    }
+
+    virtual size_t bufferStride()
+    {
+        return m_bufferWidth * sizeof(uint32_t);
     }
 
     virtual size_t bufferHeight()
@@ -774,13 +815,13 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     wnd->m_canvasAdpater =
         evas_object_image_filled_add(evas_object_evas_get((Evas_Object*)win));
+    evas_object_image_content_hint_set(wnd->m_canvasAdpater,
+                                       EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
     evas_object_size_hint_weight_set(wnd->m_canvasAdpater, EVAS_HINT_EXPAND,
                                      EVAS_HINT_EXPAND);
-    evas_object_image_size_set(wnd->m_canvasAdpater, wnd->width(),
-                               wnd->height());
     elm_win_resize_object_add((Evas_Object*)win, wnd->m_canvasAdpater);
     evas_object_image_alpha_set(wnd->m_canvasAdpater, EINA_TRUE);
-    evas_object_show(wnd->m_canvasAdpater);
+
 #endif
 #if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
     defined(STARFISH_TIZEN_EVASGL_CAIRO)
@@ -1059,8 +1100,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                 WindowImplEFL* wnd = (WindowImplEFL*)data;
                                 wnd->m_canRendering = true;
                                 wnd->m_isEvasFlushed = true;
+                                wnd->m_lastRenderingTime = tickCount();
                             },
                             wnd);
+
     evas_event_callback_add(evas_object_evas_get(wnd->m_window),
                             EVAS_CALLBACK_RENDER_PRE,
                             [](void* data, Evas* e, void* event_info) {
@@ -1084,13 +1127,12 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+            ProfilerTimer t("WindowImplEFL resize");
             int w, h;
             evas_object_image_size_get(wnd->m_canvasAdpater, &w, &h);
-            evas_object_image_data_set(wnd->m_canvasAdpater, nullptr);
-            evas_object_image_data_update_add(wnd->m_canvasAdpater, 0, 0,
-                                              wnd->width(), wnd->height());
-            evas_render(evas_object_evas_get(wnd->m_window));
             if (w != wnd->width() || h != wnd->height()) {
+                evas_object_image_size_set(wnd->m_canvasAdpater, 0, 0);
+                evas_render(evas_object_evas_get(wnd->m_window));
                 StarFishEnterer enter(wnd->starFish());
                 wnd->onResize();
             }
@@ -1542,29 +1584,19 @@ Canvas* WindowImplEFL::preparePainting()
     }
 #endif
 
-    if (m_canvasAdpaterSurface) {
-        if (width() != cairo_image_surface_get_width(m_canvasAdpaterSurface) ||
-            height() !=
-                cairo_image_surface_get_height(m_canvasAdpaterSurface)) {
-            cairo_destroy(m_canvasAdpaterCairo);
-            cairo_surface_destroy(m_canvasAdpaterSurface);
-            m_canvasAdpaterCairo = nullptr;
-            m_canvasAdpaterSurface = nullptr;
-        }
+    if (m_canvasAdpaterCairo) {
+        cairo_destroy(m_canvasAdpaterCairo);
+        cairo_surface_destroy(m_canvasAdpaterSurface);
+        m_canvasAdpaterCairo = nullptr;
+        m_canvasAdpaterSurface = nullptr;
     }
 
-    if (!m_canvasAdpaterSurface) {
-        m_canvasAdpaterSurface =
-            cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width(), height());
-        m_canvasAdpaterCairo = cairo_create(m_canvasAdpaterSurface);
-        evas_object_image_size_set(m_canvasAdpater, width(), height());
-        evas_object_show(m_canvasAdpater);
-    }
-
-    unsigned char* imageData =
-        cairo_image_surface_get_data(cairo_get_target(m_canvasAdpaterCairo));
-    evas_object_image_data_set(m_canvasAdpater, imageData);
-    evas_object_image_data_update_add(m_canvasAdpater, 0, 0, width(), height());
+    evas_object_image_size_set(m_canvasAdpater, width(), height());
+    m_canvasAdpaterSurface = cairo_image_surface_create_for_data(
+        (unsigned char*)evas_object_image_data_get(m_canvasAdpater, EINA_TRUE),
+        CAIRO_FORMAT_ARGB32, width(), height(),
+        evas_object_image_stride_get(m_canvasAdpater));
+    m_canvasAdpaterCairo = cairo_create(m_canvasAdpaterSurface);
 
     struct dummy {
         cairo_t* cairo;
@@ -1582,8 +1614,8 @@ Canvas* WindowImplEFL::preparePainting()
 
 Compositor* WindowImplEFL::prepareCompositor()
 {
-    m_isEvasFlushed = false;
 #if defined(PORT_COMPOSITOR_BACKEND_CAIRO)
+    m_isEvasFlushed = false;
 #if defined(STARFISH_TIZEN) && defined(STARFISH_TIZEN_EVASGL_CAIRO)
     struct dummy {
         cairo_t* cairo;
@@ -1610,29 +1642,19 @@ Compositor* WindowImplEFL::prepareCompositor()
     }
 #endif
 
-    if (m_canvasAdpaterSurface) {
-        if (width() != cairo_image_surface_get_width(m_canvasAdpaterSurface) ||
-            height() !=
-                cairo_image_surface_get_height(m_canvasAdpaterSurface)) {
-            cairo_destroy(m_canvasAdpaterCairo);
-            cairo_surface_destroy(m_canvasAdpaterSurface);
-            m_canvasAdpaterCairo = nullptr;
-            m_canvasAdpaterSurface = nullptr;
-        }
+    if (m_canvasAdpaterCairo) {
+        cairo_destroy(m_canvasAdpaterCairo);
+        cairo_surface_destroy(m_canvasAdpaterSurface);
+        m_canvasAdpaterCairo = nullptr;
+        m_canvasAdpaterSurface = nullptr;
     }
 
-    if (!m_canvasAdpaterSurface) {
-        m_canvasAdpaterSurface =
-            cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width(), height());
-        m_canvasAdpaterCairo = cairo_create(m_canvasAdpaterSurface);
-        evas_object_image_size_set(m_canvasAdpater, width(), height());
-        evas_object_show(m_canvasAdpater);
-    }
-
-    unsigned char* imageData =
-        cairo_image_surface_get_data(cairo_get_target(m_canvasAdpaterCairo));
-    evas_object_image_data_set(m_canvasAdpater, imageData);
-    evas_object_image_data_update_add(m_canvasAdpater, 0, 0, width(), height());
+    evas_object_image_size_set(m_canvasAdpater, width(), height());
+    m_canvasAdpaterSurface = cairo_image_surface_create_for_data(
+        (unsigned char*)evas_object_image_data_get(m_canvasAdpater, EINA_TRUE),
+        CAIRO_FORMAT_ARGB32, width(), height(),
+        evas_object_image_stride_get(m_canvasAdpater));
+    m_canvasAdpaterCairo = cairo_create(m_canvasAdpaterSurface);
 
     struct dummy {
         cairo_t* cairo;
@@ -1702,9 +1724,9 @@ Compositor* WindowImplEFL::prepareCompositor()
         cairo_surface_destroy(m_canvasAdpaterSurface);
         m_canvasAdpaterCairo = nullptr;
         m_canvasAdpaterSurface = nullptr;
-        evas_object_hide(m_canvasAdpater);
+
         evas_object_image_size_set(m_canvasAdpater, 0, 0);
-        evas_object_image_data_set(m_canvasAdpater, nullptr);
+        evas_object_hide(m_canvasAdpater);
     }
 #endif
 

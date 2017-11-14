@@ -121,8 +121,7 @@ public:
         m_shouldDestroySurface = true;
 
         initFromBuffer(data->data(), data->bufferWidth(), data->bufferHeight(),
-                       cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
-                                                     data->bufferWidth()));
+                       data->bufferStride());
 
         init();
         save();

@@ -290,12 +290,12 @@ void PlatformWindow::registerOrUpdateIdleTimeCleaner()
         [](Window* wnd, void* data) {
             PlatformWindow* pwnd = (PlatformWindow*)data;
 
-            clearStack<102400>();
             pwnd->onIdle();
             pwnd->webView()->onIdle();
             // STARFISH_LOG_INFO("Do idle time GC\n");
             auto fn = GC_get_on_collection_event();
             GC_set_on_collection_event(nullptr);
+            clearStack<102400>();
             GC_gcollect_and_unmap();
             GC_set_on_collection_event(fn);
 
