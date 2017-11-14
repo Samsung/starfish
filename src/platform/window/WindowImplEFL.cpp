@@ -105,6 +105,7 @@ public:
         m_clickedCount = 0;
         m_canRendering = true;
         m_inRendering = false;
+        m_isEvasFlushed = false;
         m_imfContext = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
@@ -217,6 +218,20 @@ public:
         return evas_object_focus_get(m_mainBox) == EINA_TRUE;
     }
 
+    virtual void onIdle()
+    {
+        PlatformWindow::onIdle();
+
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+        if (!m_inRendering && m_canvasAdpaterSurface && m_isEvasFlushed) {
+            cairo_destroy(m_canvasAdpaterCairo);
+            cairo_surface_destroy(m_canvasAdpaterSurface);
+            m_canvasAdpaterCairo = nullptr;
+            m_canvasAdpaterSurface = nullptr;
+        }
+#endif
+    }
+
     bool rendering()
     {
         m_inRendering = true;
@@ -276,6 +291,7 @@ public:
     bool m_isKeyDown;
     bool m_canRendering;
     bool m_inRendering;
+    bool m_isEvasFlushed;
     uint32_t m_lastClickedTimestamp;
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
@@ -1035,22 +1051,15 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 #endif
 
     // Rendering control callback
-    evas_event_callback_add(
-        evas_object_evas_get(wnd->m_window), EVAS_CALLBACK_RENDER_POST,
-        [](void* data, Evas* e, void* event_info) {
-            STARFISH_ASSERT(isMainThread());
-            WindowImplEFL* wnd = (WindowImplEFL*)data;
-            wnd->m_canRendering = true;
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-            if (!wnd->m_inRendering && wnd->m_canvasAdpaterSurface) {
-                cairo_destroy(wnd->m_canvasAdpaterCairo);
-                cairo_surface_destroy(wnd->m_canvasAdpaterSurface);
-                wnd->m_canvasAdpaterCairo = nullptr;
-                wnd->m_canvasAdpaterSurface = nullptr;
-            }
-#endif
-        },
-        wnd);
+    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+                            EVAS_CALLBACK_RENDER_POST,
+                            [](void* data, Evas* e, void* event_info) {
+                                STARFISH_ASSERT(isMainThread());
+                                WindowImplEFL* wnd = (WindowImplEFL*)data;
+                                wnd->m_canRendering = true;
+                                wnd->m_isEvasFlushed = true;
+                            },
+                            wnd);
 
     evas_object_event_callback_add(
         wnd->m_mainBox, EVAS_CALLBACK_RESIZE,
@@ -1436,6 +1445,7 @@ void WebView::setNeedsRendering()
 
 Canvas* WindowImplEFL::preparePainting()
 {
+    m_isEvasFlushed = false;
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
 #ifdef STARFISH_ENABLE_TEST
     {
@@ -1554,6 +1564,7 @@ Canvas* WindowImplEFL::preparePainting()
 
 Compositor* WindowImplEFL::prepareCompositor()
 {
+    m_isEvasFlushed = false;
 #if defined(PORT_COMPOSITOR_BACKEND_CAIRO)
 #if defined(STARFISH_TIZEN) && defined(STARFISH_TIZEN_EVASGL_CAIRO)
     struct dummy {
