@@ -433,8 +433,8 @@ String* XMLHttpRequest::getAllResponseHeaders()
         const auto& key = it.first;
         const auto& value = it.second;
 
-        if (StringUtils::equalsIgnoreCase(key, std::string("set-cookie")) ||
-            StringUtils::equalsIgnoreCase(key, std::string("set-cookie2"))) {
+        if ((key.compare(HTTPHeaderMap::kSetCookie) == 0) ||
+            (key.compare(HTTPHeaderMap::kSetCookie2) == 0)) {
             continue;
         }
 
@@ -456,8 +456,8 @@ Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
         return nullptr;
     }
     if (name->length() == 0 || !name->containsOnlyASCIIChars() ||
-        name->equalsIgnoreCase("set-cookie") ||
-        name->equalsIgnoreCase("set-cookie2")) {
+        name->equalsIgnoreCase(HTTPHeaderMap::kSetCookie) ||
+        name->equalsIgnoreCase(HTTPHeaderMap::kSetCookie2)) {
         return nullptr;
     }
 
