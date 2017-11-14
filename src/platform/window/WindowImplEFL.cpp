@@ -234,6 +234,7 @@ public:
 
     bool rendering()
     {
+        m_isEvasFlushed = false;
         m_inRendering = true;
         // ProfilerTimer renderingTimer("WindowImplEFL::rendering");
         bool ret = PlatformWindow::rendering();
@@ -1060,6 +1061,23 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                 wnd->m_isEvasFlushed = true;
                             },
                             wnd);
+    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+                            EVAS_CALLBACK_RENDER_PRE,
+                            [](void* data, Evas* e, void* event_info) {
+                                STARFISH_ASSERT(isMainThread());
+                                WindowImplEFL* wnd = (WindowImplEFL*)data;
+                                wnd->m_isEvasFlushed = false;
+                            },
+                            wnd);
+    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+                            EVAS_CALLBACK_RENDER_POST,
+                            [](void* data, Evas* e, void* event_info) {}, wnd);
+    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+                            EVAS_CALLBACK_RENDER_FLUSH_PRE,
+                            [](void* data, Evas* e, void* event_info) {}, wnd);
+    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+                            EVAS_CALLBACK_RENDER_FLUSH_POST,
+                            [](void* data, Evas* e, void* event_info) {}, wnd);
 
     evas_object_event_callback_add(
         wnd->m_mainBox, EVAS_CALLBACK_RESIZE,
