@@ -664,12 +664,12 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     // set prefix to the part before and localName to the part after.
     // + It is not valid if qualifiedName has multiple ":" characters.
     // + It is not valid if it has 0-length prefix or localName part.
-    GCVector<String*> tokens;
-    qualifiedName->split(':', tokens);
+    GCVector<StringView> tokens;
+    StringUtils::tokenize(qualifiedName, ":", 1, tokens);
     if (tokens.size() > 2) {
         throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
     } else if (tokens.size() == 2) {
-        if (tokens[0]->length() == 0 || tokens[1]->length() == 0) {
+        if (tokens[0].length() == 0 || tokens[1].length() == 0) {
             throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
         }
         prefix = AtomicString::createAtomicString(starFish(), tokens[0]);

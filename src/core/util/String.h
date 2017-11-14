@@ -476,7 +476,6 @@ public:
     String* concat(const char c);
     String* concat(const char* str);
     String* concat(String* str);
-    void split(char delim, GCVector<String*>& tokens);
     String* trim();
 
     icu::UnicodeString toUnicodeString() const;

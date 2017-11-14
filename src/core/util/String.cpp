@@ -1010,20 +1010,6 @@ String* String::fromInt64(int64_t i)
     return String::fromUTF8(std::to_string(i).c_str());
 }
 
-void String::split(char delim, GCVector<String*>& tokens)
-{
-    size_t prev_pos = 0, pos = 0;
-    while ((pos = find(delim, pos)) != SIZE_MAX) {
-        tokens.push_back(new StringView(this, prev_pos, pos));
-        prev_pos = ++pos;
-    }
-
-    if (pos == SIZE_MAX)
-        pos = length();
-
-    tokens.push_back(new StringView(this, prev_pos, pos)); // Last word
-}
-
 String* String::trim()
 {
     size_t first = 0;
@@ -1061,11 +1047,12 @@ void StringUtils::tokenize(String* src, const char* tokens, size_t tokensLength,
 
     size_t start = 0;
     size_t end = 0;
+    bool isToken = false;
     for (size_t i = 0; i < accessData.length; i++) {
-        char c = accessData.charAt(i);
-        bool isToken = false;
+        char32_t c = accessData.charAt(i);
+        isToken = false;
         for (size_t j = 0; j < tokensLength; j++) {
-            if (c == tokens[j]) {
+            if (c == (char32_t)tokens[j]) {
                 isToken = true;
                 break;
             }
@@ -1073,7 +1060,7 @@ void StringUtils::tokenize(String* src, const char* tokens, size_t tokensLength,
 
         if (isToken) {
             result.emplace_back(src, start, end);
-            end = start = i;
+            end = start = i + 1;
         } else {
             end++;
         }
@@ -1081,6 +1068,10 @@ void StringUtils::tokenize(String* src, const char* tokens, size_t tokensLength,
 
     if (end - start) {
         result.emplace_back(src, start, end);
+    }
+
+    if (isToken) {
+        result.emplace_back(src, end, end);
     }
 }
 

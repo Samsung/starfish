@@ -2150,14 +2150,14 @@ String* CSSStyleDeclaration::BackgroundRepeat()
 {
     String* repeatX = BackgroundRepeatX();
     String* repeatY = BackgroundRepeatY();
-    GCVector<String *> vRepeatX, vRepeatY;
-    repeatX->split(',', vRepeatX);
-    repeatY->split(',', vRepeatY);
+    GCVector<StringView> vRepeatX, vRepeatY;
+    StringUtils::tokenize(repeatX, ",", 1, vRepeatX);
+    StringUtils::tokenize(repeatY, ",", 1, vRepeatY);
 
     StringBuilder builder;
     for (size_t i = 0; i < vRepeatX.size(); i++) {
-        String* rX = vRepeatX[i]->trim();
-        String* rY = vRepeatY[i]->trim();
+        String* rX = vRepeatX[i].trim();
+        String* rY = vRepeatY[i].trim();
         if (rX->equals("repeat") && rY->equals("repeat")) {
             builder.appendString("repeat");
         } else if (rX->equals("repeat") && rY->equals("no-repeat")) {
@@ -2212,14 +2212,14 @@ String* CSSStyleDeclaration::BackgroundPosition()
 {
     String* positionX = BackgroundPositionX();
     String* positionY = BackgroundPositionY();
-    GCVector<String *> vPositionX, vPositionY;
-    positionX->split(',', vPositionX);
-    positionY->split(',', vPositionY);
+    GCVector<StringView> vPositionX, vPositionY;
+    StringUtils::tokenize(positionX, ",", 1, vPositionX);
+    StringUtils::tokenize(positionY, ",", 1, vPositionY);
 
     StringBuilder builder;
     for (size_t i = 0; i < vPositionX.size(); i++) {
-        String* pX = vPositionX[i]->trim();
-        String* pY = vPositionY[i]->trim();
+        String* pX = vPositionX[i].trim();
+        String* pY = vPositionY[i].trim();
         if (pX->equals(String::initialString)) {
             if (pY->equals(String::initialString)) {
                 builder.appendString(String::initialString);
@@ -2352,15 +2352,15 @@ String* CSSStyleDeclaration::Background()
     String* origins = BackgroundOrigin();
     String* clips = BackgroundClip();
     String* color = BackgroundColor();
-    GCVector<String *> vImages, vPositions, vSizes, vRepeats, vAttachments,
+    GCVector<StringView> vImages, vPositions, vSizes, vRepeats, vAttachments,
         vOrigins, vClips;
-    images->split(',', vImages);
-    positions->split(',', vPositions);
-    sizes->split(',', vSizes);
-    repeats->split(',', vRepeats);
-    attachments->split(',', vAttachments);
-    origins->split(',', vOrigins);
-    clips->split(',', vClips);
+    StringUtils::tokenize(images, ",", 1, vImages);
+    StringUtils::tokenize(positions, ",", 1, vPositions);
+    StringUtils::tokenize(sizes, ",", 1, vSizes);
+    StringUtils::tokenize(repeats, ",", 1, vRepeats);
+    StringUtils::tokenize(attachments, ",", 1, vAttachments);
+    StringUtils::tokenize(origins, ",", 1, vOrigins);
+    StringUtils::tokenize(clips, ",", 1, vClips);
 
     size_t max = vImages.size();
     if (max < vPositions.size()) {
@@ -2384,19 +2384,19 @@ String* CSSStyleDeclaration::Background()
 
     for (unsigned int i = 0; i < max; i++) {
         String* image =
-            (i < vImages.size()) ? vImages[i]->trim() : String::emptyString;
-        String* position = (i < vPositions.size()) ? vPositions[i]->trim()
+            (i < vImages.size()) ? vImages[i].trim() : String::emptyString;
+        String* position = (i < vPositions.size()) ? vPositions[i].trim()
                                                    : String::emptyString;
         String* size =
-            (i < vSizes.size()) ? vSizes[i]->trim() : String::emptyString;
+            (i < vSizes.size()) ? vSizes[i].trim() : String::emptyString;
         String* repeat =
-            (i < vRepeats.size()) ? vRepeats[i]->trim() : String::emptyString;
-        String* attachment = (i < vAttachments.size()) ? vAttachments[i]->trim()
+            (i < vRepeats.size()) ? vRepeats[i].trim() : String::emptyString;
+        String* attachment = (i < vAttachments.size()) ? vAttachments[i].trim()
                                                        : String::emptyString;
         String* origin =
-            (i < vOrigins.size()) ? vOrigins[i]->trim() : String::emptyString;
+            (i < vOrigins.size()) ? vOrigins[i].trim() : String::emptyString;
         String* clip =
-            (i < vClips.size()) ? vClips[i]->trim() : String::emptyString;
+            (i < vClips.size()) ? vClips[i].trim() : String::emptyString;
         builder.appendString(
             printBackground(image, position, size, repeat, attachment, origin,
                             clip, i == max - 1 ? color : String::emptyString));
