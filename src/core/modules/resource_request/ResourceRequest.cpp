@@ -160,15 +160,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
     }
     if (readyState == HEADERS_RECEIVED) {
         // FIXME remove duplicate code
-        auto it = m_responseHeaderMap.begin();
-        while (it != m_responseHeaderMap.end()) {
-            std::string h = it->first;
-            std::transform(h.begin(), h.end(), h.begin(), ::tolower);
-            if (h == "content-type") {
-                break;
-            }
-            it++;
-        }
+        auto it = m_responseHeaderMap.find(HTTPHeaderMap::kContentType);
         if (it != m_responseHeaderMap.end()) {
             size_t pos = it->second.find(";");
             if (pos != std::string::npos) {
@@ -179,15 +171,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
             }
         }
 
-        it = m_responseHeaderMap.begin();
-        while (it != m_responseHeaderMap.end()) {
-            std::string h = it->first;
-            std::transform(h.begin(), h.end(), h.begin(), ::tolower);
-            if (h == "content-language") {
-                break;
-            }
-            it++;
-        }
+        it = m_responseHeaderMap.find(HTTPHeaderMap::kContentLanguage);
         if (it != m_responseHeaderMap.end()) {
             size_t pos = it->second.find(";");
             if (pos != std::string::npos) {
@@ -197,15 +181,8 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
                     String::fromUTF8(it->second.substr(0, pos).data());
             }
         }
-        it = m_responseHeaderMap.begin();
-        while (it != m_responseHeaderMap.end()) {
-            std::string h = it->first;
-            std::transform(h.begin(), h.end(), h.begin(), ::tolower);
-            if (h == "content-transfer-encoding") {
-                break;
-            }
-            it++;
-        }
+
+        it = m_responseHeaderMap.find(HTTPHeaderMap::kContentTransferEncoding);
         if (it != m_responseHeaderMap.end()) {
             std::string part = it->second;
             std::transform(part.begin(), part.end(), part.begin(), ::tolower);

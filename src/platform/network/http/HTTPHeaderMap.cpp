@@ -21,6 +21,9 @@ namespace StarFish {
 
 const char HTTPHeaderMap::kCacheControl[] = "Cache-Control";
 const char HTTPHeaderMap::kConnection[] = "Connection";
+const char HTTPHeaderMap::kContentTransferEncoding[] =
+    "Content-Transfer-Encoding";
+const char HTTPHeaderMap::kContentLanguage[] = "Content-Language";
 const char HTTPHeaderMap::kContentLength[] = "Content-Length";
 const char HTTPHeaderMap::kContentType[] = "Content-type";
 const char HTTPHeaderMap::kDate[] = "Date";
@@ -37,6 +40,8 @@ const char HTTPHeaderMap::kAcceptLanguage[] = "Accept-Language";
 const char HTTPHeaderMap::kAuthorization[] = "Authorization";
 const char HTTPHeaderMap::kAge[] = "Age";
 const char HTTPHeaderMap::kCookie[] = "Cookie";
+const char HTTPHeaderMap::kSetCookie[] = "Set-Cookie";
+const char HTTPHeaderMap::kSetCookie2[] = "Set-Cookie2";
 const char HTTPHeaderMap::kExpect[] = "Expect";
 const char HTTPHeaderMap::kFrom[] = "From";
 const char HTTPHeaderMap::kHost[] = "Host";
@@ -128,6 +133,13 @@ std::string HTTPHeaderMap::tryToConvertToHeaderMapString(
     case 10:
         if (lower.compare("user-agent") == 0) {
             ret = HTTPHeaderMap::kUserAgent;
+        } else if (lower.compare("set-cookie") == 0) {
+            ret = HTTPHeaderMap::kSetCookie;
+        }
+        break;
+    case 11:
+        if (lower.compare("set-cookie2") == 0) {
+            ret = HTTPHeaderMap::kSetCookie2;
         }
         break;
     case 12:
@@ -160,6 +172,11 @@ std::string HTTPHeaderMap::tryToConvertToHeaderMapString(
             ret = HTTPHeaderMap::kAcceptLanguage;
         }
         break;
+    case 16:
+        if (lower.compare("content-language") == 0) {
+            ret = HTTPHeaderMap::kContentLanguage;
+        }
+        break;
     case 17:
         if (lower.compare("if-modified-since") == 0) {
             ret = HTTPHeaderMap::kIfModifiedSince;
@@ -177,6 +194,8 @@ std::string HTTPHeaderMap::tryToConvertToHeaderMapString(
     case 25:
         if (lower.compare("upgrade-insecure-requests") == 0) {
             ret = HTTPHeaderMap::kUpgradeInsecureRequests;
+        } else if (lower.compare("content-transfer-encoding") == 0) {
+            ret = HTTPHeaderMap::kContentTransferEncoding;
         }
         break;
     default:

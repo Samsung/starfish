@@ -79,10 +79,31 @@ public:
             const ResponseHeaderMap& headerMap = request->responseHeaderMap();
             m_isResponseValid = statusCode == HTTP_STATUS_OK && isMimeTypeValid;
 
-            auto cs = headerMap.find(std::string("charset"));
-            bool isCharsetValid =
-                (cs == headerMap.end()) ||
-                StringUtils::equalsIgnoreCase(cs->second, std::string("utf-8"));
+            bool isCharsetValid = true;
+            String* charsetValue = String::emptyString;
+            auto it = headerMap.find(HTTPHeaderMap::kContentType);
+            if (it != headerMap.end()) {
+                String* values = String::fromUTF8(it->second.data());
+                GCVector<String*> tokens;
+                values->split(';', tokens);
+
+                for (auto token : tokens) {
+                    String* t = token->trim();
+                    size_t pos = t->find("=");
+                    if (pos != SIZE_MAX) {
+                        String* key = t->substring(0, pos)->trim();
+                        String* value =
+                            t->substring(pos + 1, t->length() - pos - 1)
+                                ->trim();
+                        if (key->equalsIgnoreCase("charset")) {
+                            isCharsetValid =
+                                value->equalsIgnoreCase("utf-8") ||
+                                value->equalsIgnoreCase("\"utf-8\"");
+                            charsetValue = value;
+                        }
+                    }
+                }
+            }
 
             m_isResponseValid &= isCharsetValid;
             if (m_isResponseValid) {
@@ -119,7 +140,7 @@ public:
                 } else if (!isCharsetValid) {
                     msg.appendString(
                         "EventSource's response has a charset (\"");
-                    msg.appendString(cs->second.data());
+                    msg.appendString(charsetValue);
                     msg.appendString(
                         "\") that is not UTF-8. Aborting the connection.");
                 } else if (!isMimeTypeValid) {

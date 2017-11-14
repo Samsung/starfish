@@ -28,6 +28,8 @@ public:
 
     static const char kCacheControl[];
     static const char kConnection[];
+    static const char kContentTransferEncoding[];
+    static const char kContentLanguage[];
     static const char kContentLength[];
     static const char kContentType[];
     static const char kDate[];
@@ -44,6 +46,8 @@ public:
     static const char kAuthorization[];
     static const char kAge[];
     static const char kCookie[];
+    static const char kSetCookie[];
+    static const char kSetCookie2[];
     static const char kExpect[];
     static const char kFrom[];
     static const char kHost[];
