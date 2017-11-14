@@ -58,6 +58,22 @@ public:
         return !operator==(o);
     }
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(TranslateTransform)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(TranslateTransform, m_tx));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(TranslateTransform, m_ty));
+            descr =
+                GC_make_descriptor(obj_bitmap, GC_WORD_LEN(TranslateTransform));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
     Length m_tx;
     Length m_ty;
 };

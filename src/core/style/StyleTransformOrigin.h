@@ -41,6 +41,26 @@ public:
     {
     }
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(TransformOriginData)] = { 0 };
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(TransformOriginData, m_xaxis));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(TransformOriginData, m_yaxis));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(TransformOriginData, m_zaxis));
+            descr = GC_make_descriptor(obj_bitmap,
+                                       GC_WORD_LEN(TransformOriginData));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
     void setData(TransformOriginData* data)
     {
         m_xaxis = data->m_xaxis;
@@ -90,6 +110,14 @@ public:
     {
     }
 
+    void setOrigin(StyleTransformOrigin* origin)
+    {
+        if (!m_originValue) {
+            m_originValue = new TransformOriginData();
+        }
+        m_originValue->setData(origin->originValue());
+    }
+
     void setOriginValue(Length x, Length y, Length z)
     {
         if (!m_originValue) {
@@ -123,6 +151,27 @@ public:
                m_originValue->getYAxis() == origin.m_originValue->getYAxis() &&
                m_originValue->getZAxis() == origin.m_originValue->getZAxis();
     }
+
+    bool operator!=(const StyleTransformOrigin& origin)
+    {
+        return !(this->operator==(origin));
+    }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(StyleTransformOrigin)] = { 0 };
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(StyleTransformOrigin, m_originValue));
+            descr = GC_make_descriptor(obj_bitmap,
+                                       GC_WORD_LEN(StyleTransformOrigin));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
 
 private:
     TransformOriginData* m_originValue;

@@ -63,6 +63,25 @@ public:
         return !operator==(o);
     }
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(BorderImageImpl)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(BorderImageImpl, m_url));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(BorderImageImpl, m_slices));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(BorderImageImpl, m_widths));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(BorderImageImpl, m_imageResource));
+            descr =
+                GC_make_descriptor(obj_bitmap, GC_WORD_LEN(BorderImageImpl));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
 public:
     // NOTE: current spec does not support border-image-repeat
     BorderImageRepeatValue m_repeatX; // [border-image-repeat]
@@ -82,6 +101,8 @@ public:
         : m_data(nullptr)
     {
     }
+
+    STARFISH_MAKE_STACK_ALLOCATED();
 
     String* url()
     {

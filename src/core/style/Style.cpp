@@ -4878,15 +4878,15 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::Opacity:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_opacity = parentStyle->m_opacity;
+                style->setOpacity(parentStyle->opacity());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->m_opacity = 1.0;
+                style->setOpacity(1.0);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Number) {
                 float beforeClip = cssValues[k].numberValue();
-                style->m_opacity =
-                    beforeClip < 0 ? 0 : (beforeClip > 1.0 ? 1.0 : beforeClip);
+                style->setOpacity(
+                    beforeClip < 0 ? 0 : (beforeClip > 1.0 ? 1.0 : beforeClip));
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -4930,21 +4930,19 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::ZIndex:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_zIndex = parentStyle->m_zIndex;
+                style->setZIndex(parentStyle->zIndex());
             } else if (cssValues[k].valueKind() ==
                            CSSStyleValuePair::ValueKind::Initial ||
                        cssValues[k].valueKind() ==
                            CSSStyleValuePair::ValueKind::Auto) {
-                style->m_zIndex = 0;
+                style->setZIndex(0);
             } else {
-                style->m_zIndex = cssValues[k].int32Value();
+                style->setZIndex(cssValues[k].int32Value());
                 style->m_zIndexSpecifiedByUser = true;
             }
             break;
         case CSSStyleValuePair::KeyKind::Transform:
-            if (style->hasTransforms()) {
-                style->setTransform(nullptr);
-            }
+            style->clearTransform();
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 style->setTransform(parentStyle->transforms());
@@ -4988,9 +4986,11 @@ void StyleResolver::apply(Element* element,
                                                   dValues[4], dValues[5]);
 
                         if (dValues[0] != dValues[3] || dValues[1] ||
-                            dValues[2])
-                            style->m_rareComputedStyleData->m_transforms
+                            dValues[2]) {
+                            style->setRareComputedStyleDataIfNeeded();
+                            style->m_rareComputedStyleData->ensureTransforms()
                                 ->m_hasComplexTransform = true;
+                        }
                         break;
                     case CSSTransformFunction::Kind::Translate: {
                         Length a, b(Length::Fixed, 0);
@@ -5050,29 +5050,29 @@ void StyleResolver::apply(Element* element,
                         break;
                     case CSSTransformFunction::Kind::Rotate:
                         style->setTransformRotate(dValues[0]);
-                        style->m_rareComputedStyleData->m_transforms
+                        style->m_rareComputedStyleData->ensureTransforms()
                             ->m_hasComplexTransform = true;
                         break;
                     case CSSTransformFunction::Kind::Skew:
                         if (valueSize == 2) {
                             style->setTransformSkew(dValues[0], dValues[1]);
-                            style->m_rareComputedStyleData->m_transforms
+                            style->m_rareComputedStyleData->ensureTransforms()
                                 ->m_hasComplexTransform = true;
                             break;
                         }
                     case CSSTransformFunction::Kind::SkewX:
                         style->setTransformSkew(dValues[0], 0);
-                        style->m_rareComputedStyleData->m_transforms
+                        style->m_rareComputedStyleData->ensureTransforms()
                             ->m_hasComplexTransform = true;
                         break;
                     case CSSTransformFunction::Kind::SkewY:
                         style->setTransformSkew(0, dValues[0]);
-                        style->m_rareComputedStyleData->m_transforms
+                        style->m_rareComputedStyleData->ensureTransforms()
                             ->m_hasComplexTransform = true;
                         break;
                     default:
-                        style->setTransformIfNeeded();
-                        style->m_rareComputedStyleData->m_transforms
+                        style->setRareComputedStyleDataIfNeeded();
+                        style->m_rareComputedStyleData->ensureTransforms()
                             ->m_hasComplexTransform = true;
                         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                     }
@@ -5183,7 +5183,6 @@ void StyleResolver::apply(Element* element,
                     CSSStyleValuePair::ValueKind::Initial ||
                 cssValues[k].valueKind() ==
                     CSSStyleValuePair::ValueKind::Inherit) {
-                return;
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
@@ -5247,10 +5246,10 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::Order:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
-                style->m_order = 0;
+                style->setOrder(0);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_order = parentStyle->m_order;
+                style->setOrder(parentStyle->order());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Int32) {
                 style->setOrder(cssValues[k].int32Value());
@@ -5321,10 +5320,10 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::FlexGrow:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
-                style->m_flexGrow = 0;
+                style->setFlexGrow(0);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_flexGrow = parentStyle->m_flexGrow;
+                style->setFlexGrow(parentStyle->flexGrow());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Number) {
                 style->setFlexGrow(cssValues[k].numberValue());
@@ -5335,10 +5334,10 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::FlexShrink:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
-                style->m_flexShrink = 1;
+                style->setFlexShrink(1);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_flexShrink = parentStyle->m_flexShrink;
+                style->setFlexShrink(parentStyle->flexShrink());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Number) {
                 style->setFlexShrink(cssValues[k].numberValue());
@@ -5354,7 +5353,7 @@ void StyleResolver::apply(Element* element,
                 style->setFlexBasis(FlexBasisData(true));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_flexBasis = parentStyle->m_flexBasis;
+                style->setFlexBasis(parentStyle->flexBasis());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::FlexBasisValueKind) {
                 style->setFlexBasis(FlexBasisData(true));
@@ -5499,10 +5498,12 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::OutlineColor:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
-                if (style->hasRareComputeStyleData() &&
-                    style->rareComputedStyleData()->m_outline) {
-                    style->rareComputedStyleData()
-                        ->m_outline->m_outline.clearColor();
+                if (style->hasRareComputeStyleData()) {
+                    OutlineData* outline =
+                        style->rareComputedStyleData()->outline();
+                    if (outline) {
+                        outline->border().clearColor();
+                    }
                 }
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
@@ -5514,10 +5515,12 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::NamedColorValueKind) {
                 if (cssValues[k].namedColorValue() ==
                     NamedColor::currentColor) {
-                    if (style->hasRareComputeStyleData() &&
-                        style->rareComputedStyleData()->m_outline) {
-                        style->rareComputedStyleData()
-                            ->m_outline->m_outline.clearColor();
+                    if (style->hasRareComputeStyleData()) {
+                        OutlineData* outline =
+                            style->rareComputedStyleData()->outline();
+                        if (outline) {
+                            outline->border().clearColor();
+                        }
                     }
                 } else {
                     style->setOutlineColor(NamedColor::namedColorToColor(

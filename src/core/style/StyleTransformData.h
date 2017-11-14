@@ -182,6 +182,25 @@ public:
         translate()->setData(x, y);
     }
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(StyleTransformData)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StyleTransformData, m_value));
+            descr =
+                GC_make_descriptor(obj_bitmap, GC_WORD_LEN(StyleTransformData));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new(size_t size, StyleTransformData* transform)
+    {
+        return transform;
+    }
+    void* operator new[](size_t size) = delete;
+
 private:
     friend inline bool operator==(const StyleTransformData& a,
                                   const StyleTransformData& b);
@@ -260,6 +279,18 @@ public:
 
     ~StyleTransformDataGroup()
     {
+    }
+
+    void clear()
+    {
+        m_hasComplexTransform = false;
+        m_group.clear();
+    }
+
+    void reset(StyleTransformDataGroup* other)
+    {
+        m_hasComplexTransform = other->m_hasComplexTransform;
+        m_group.assign(other->m_group.begin(), other->m_group.end());
     }
 
     void append(StyleTransformData f)

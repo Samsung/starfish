@@ -967,37 +967,43 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
         //
 
         double bWidth =
-            style()->surround()->border.top().width().specifiedValue(height(),
-                                                                     this);
+            style()->surround()->m_border.top().width().specifiedValue(height(),
+                                                                       this);
         double bImgWidth =
-            style()->surround()->border.image().widths().top().specifiedValue(
+            style()->surround()->m_border.image().widths().top().specifiedValue(
                 bWidth, this);
         double bImgSlice =
-            style()->surround()->border.image().slices().top().specifiedValue(
+            style()->surround()->m_border.image().slices().top().specifiedValue(
                 height(), this);
 
         size_t imgWidth =
-            style()->surround()->border.image().imageData()->width();
+            style()->surround()->m_border.image().imageData()->width();
         size_t imgHeight =
-            style()->surround()->border.image().imageData()->height();
+            style()->surround()->m_border.image().imageData()->height();
 
-        size_t lSlice =
-            style()->surround()->border.image().slices().left().specifiedValue(
-                width(), this);
+        size_t lSlice = style()
+                            ->surround()
+                            ->m_border.image()
+                            .slices()
+                            .left()
+                            .specifiedValue(width(), this);
         size_t tSlice =
-            style()->surround()->border.image().slices().top().specifiedValue(
+            style()->surround()->m_border.image().slices().top().specifiedValue(
                 height(), this);
-        size_t rSlice =
-            style()->surround()->border.image().slices().right().specifiedValue(
-                width(), this);
+        size_t rSlice = style()
+                            ->surround()
+                            ->m_border.image()
+                            .slices()
+                            .right()
+                            .specifiedValue(width(), this);
         size_t bSlice = style()
                             ->surround()
-                            ->border.image()
+                            ->m_border.image()
                             .slices()
                             .bottom()
                             .specifiedValue(height(), this);
 
-        ImageData* imgData = style()->surround()->border.image().imageData();
+        ImageData* imgData = style()->surround()->m_border.image().imageData();
 
         if (bImgSlice > imgWidth || bImgSlice > imgHeight) {
             bImgSlice = std::min(imgWidth, imgHeight);
@@ -1044,7 +1050,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                            drawRect, drawRect),
                 lSlice, 0, 0, bSlice, scale, isFill);
         } else {
-            isFill = style()->surround()->border.image().sliceFill();
+            isFill = style()->surround()->m_border.image().sliceFill();
             canvas->drawBorderImage(
                 imgData,
                 Unit::Rect(rect.x(), rect.y(), rect.width(), rect.height()),

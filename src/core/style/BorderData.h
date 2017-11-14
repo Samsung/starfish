@@ -30,6 +30,8 @@ public:
     {
     }
 
+    STARFISH_MAKE_STACK_ALLOCATED();
+
     bool hasBorderColor()
     {
         return m_top.hasBorderColor() || m_right.hasBorderColor() ||

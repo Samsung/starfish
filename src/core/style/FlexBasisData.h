@@ -43,6 +43,8 @@ public:
         }
     }
 
+    STARFISH_MAKE_STACK_ALLOCATED();
+
     bool isContent() const
     {
         return m_type == Content;
@@ -56,6 +58,24 @@ public:
     Length width() const
     {
         return m_width;
+    }
+
+    bool operator==(const FlexBasisData& o)
+    {
+        if (m_type != o.m_type) {
+            return false;
+        }
+
+        if (m_type == Content) {
+            return true;
+        }
+
+        return width() == o.width();
+    }
+
+    bool operator!=(const FlexBasisData& o)
+    {
+        return !operator==(o);
     }
 };
 }

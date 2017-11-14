@@ -38,6 +38,8 @@ public:
         return m_style;
     }
 
+    STARFISH_MAKE_STACK_ALLOCATED();
+
     Length width()
     {
         if (style() == BorderStyleValue::NoneBorderStyleValue)

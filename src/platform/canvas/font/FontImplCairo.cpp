@@ -51,6 +51,7 @@ FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
     FT_Error error =
         FT_New_Memory_Face(g_freeTypeInstance, newBuf, dataLen, 0, &face);
     if (error) {
+        delete newBuf;
         return nullptr;
     }
     FT_Set_Pixel_Sizes(face, 0, 16);

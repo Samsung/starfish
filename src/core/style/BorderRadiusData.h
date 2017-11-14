@@ -42,6 +42,37 @@ public:
     {
     }
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(BorderRadiusData)] = { 0 };
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(BorderRadiusData, m_topLeftHorizontal));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(BorderRadiusData, m_topLeftVertical));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(BorderRadiusData, m_topRightHorizontal));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(BorderRadiusData, m_topRightVertical));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(BorderRadiusData,
+                                                  m_bottomRightHorizontal));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(BorderRadiusData, m_bottomRightVertical));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(BorderRadiusData,
+                                                  m_bottomLeftHorizontal));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(BorderRadiusData, m_bottomLeftVertical));
+            descr =
+                GC_make_descriptor(obj_bitmap, GC_WORD_LEN(BorderRadiusData));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new[](size_t size) = delete;
+
     bool operator==(const BorderRadiusData& o)
     {
         return this->m_topLeftHorizontal == o.m_topLeftHorizontal &&
