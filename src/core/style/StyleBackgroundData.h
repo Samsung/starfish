@@ -52,9 +52,9 @@ public:
         , m_imageResource(NULL)
         , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
         , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
+        , m_sizeIsLength(true)
         , m_positionX(Length(Length::Percent, 0.0f))
         , m_positionY(Length(Length::Percent, 0.0f))
-        , m_sizeIsLength(true)
         , m_attachment(
               BackgroundAttachmentValue::ScrollBackgroundAttachmentValue)
         , m_clip(BoxValue::BorderBoxBoxValue)
@@ -215,6 +215,32 @@ public:
                                           windowSize.height(), cs);
     }
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(BackgroundLayer)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(BackgroundLayer, m_image));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(BackgroundLayer, m_imageResource));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(BackgroundLayer, m_positionX));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(BackgroundLayer, m_positionY));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(BackgroundLayer, m_size));
+            descr =
+                GC_make_descriptor(obj_bitmap, GC_WORD_LEN(BackgroundLayer));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new(size_t size, BackgroundLayer* layer)
+    {
+        return layer;
+    }
+    void* operator new[](size_t size) = delete;
+
 private:
     friend inline bool operator==(const BackgroundLayer& a,
                                   const BackgroundLayer& b);
@@ -227,12 +253,12 @@ private:
     // background-repeat
     BackgroundRepeatValue m_repeatX : 1;
     BackgroundRepeatValue m_repeatY : 1;
+    // background-size
+    bool m_sizeIsLength : 1;
 
     // background-position
     Length m_positionX;
     Length m_positionY;
-    // background-size
-    bool m_sizeIsLength;
     BackgroundSize m_size;
     // background-attachment
     BackgroundAttachmentValue m_attachment;

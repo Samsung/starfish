@@ -20,7 +20,7 @@
 namespace StarFish {
 class CanvasShadowData;
 class CanvasShadowDataList;
-class ShadowData {
+class ShadowData : public gc {
 public:
     ShadowData()
         : m_hasColor(false)
@@ -81,6 +81,26 @@ public:
     {
         return !operator==(o);
     }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(ShadowData)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ShadowData, m_offsetX));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ShadowData, m_offsetY));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ShadowData, m_radius));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ShadowData));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new(size_t size, ShadowData* shadow)
+    {
+        return shadow;
+    }
+    void* operator new[](size_t size) = delete;
 
 private:
     Length m_offsetX;

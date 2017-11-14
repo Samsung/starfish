@@ -33,22 +33,22 @@ public:
     {
     }
 
-    TransitionPropertyValue transitionProperty()
+    TransitionPropertyValue property()
     {
         return m_property;
     }
 
-    void setTransitionProperty(TransitionPropertyValue property)
+    void setProperty(TransitionPropertyValue property)
     {
         m_property = property;
     }
 
-    CSSTime transitionDuration()
+    CSSTime duration()
     {
         return m_duration;
     }
 
-    void setTransitionDuration(CSSTime duration)
+    void setDuration(CSSTime duration)
     {
         m_duration = duration;
     }

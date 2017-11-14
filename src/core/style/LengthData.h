@@ -39,6 +39,8 @@ public:
     {
     }
 
+    STARFISH_MAKE_STACK_ALLOCATED();
+
     Length top()
     {
         return m_top;

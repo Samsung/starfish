@@ -322,6 +322,21 @@ public:
         return !operator==(o);
     }
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(LengthSize)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(LengthSize, m_width));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(LengthSize, m_height));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(LengthSize));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
                        LayoutSize windowSize, ComputedStyle* cs);
 
@@ -365,6 +380,21 @@ public:
     {
         return !operator==(o);
     }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(LengthPosition)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(LengthPosition, m_x));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(LengthPosition, m_y));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(LengthPosition));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
 
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
                        LayoutSize windowSize, ComputedStyle* cs);

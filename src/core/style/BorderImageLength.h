@@ -45,6 +45,8 @@ public:
     {
     }
 
+    STARFISH_MAKE_STACK_ALLOCATED();
+
     void setValue(Length length)
     {
         m_type = LengthType;
@@ -162,6 +164,8 @@ public:
         , m_bottom(b)
     {
     }
+
+    STARFISH_MAKE_STACK_ALLOCATED();
 
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
                        LayoutSize windowSize, ComputedStyle* cs)
