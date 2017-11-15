@@ -2091,6 +2091,12 @@ public:
         m_value.m_backgroundAttachment = val;
     }
 
+    void setBorderStyleValue(BorderStyleValue val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
+        m_value.m_borderStyle = val;
+    }
+
     void setBoxValue(BoxValue value)
     {
         m_valueKind = CSSStyleValuePair::ValueKind::BoxValueKind;

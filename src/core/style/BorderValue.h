@@ -42,8 +42,6 @@ public:
 
     Length width()
     {
-        if (style() == BorderStyleValue::NoneBorderStyleValue)
-            return Length(Length::Fixed, 0);
         return m_width;
     }
 

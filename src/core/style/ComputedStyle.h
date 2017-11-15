@@ -18,12 +18,13 @@
 #define __StarFishComputedStyle__
 
 #include "core/style/BorderRadiusData.h"
+#include "core/style/BorderData.h"
+#include "core/style/LengthData.h"
 #include "core/style/ContentData.h"
 #include "core/style/FlexBasisData.h"
 #include "core/style/DefaultStyle.h"
 #include "core/style/Style.h"
 #include "core/style/StyleBackgroundData.h"
-#include "core/style/StyleSurroundData.h"
 #include "core/style/StyleTransformData.h"
 #include "core/style/StyleTransformOrigin.h"
 #include "core/style/StyleTransitionData.h"
@@ -70,6 +71,10 @@ class RareComputedStyleData : public gc {
         FlexGrow,
         FlexShrink,
         Opacity,
+        Border,
+        Padding,
+        Margin,
+        Offset,
         MinWidth,
         MaxWidth,
         MinHeight,
@@ -85,13 +90,14 @@ class RareComputedStyleData : public gc {
         PositionedMask,
         CachedPsuedoStyles,
         Background,
-        Surround,
     };
 
     union RareComputedStyleValue {
         int32_t m_int32Value;
         float m_floatValue;
         Length m_length;
+        BorderData m_borderData;
+        LengthData m_lengthData;
         FlexBasisData m_flexBasis;
         StyleTransformDataGroup* m_transforms;
         StyleTransformOrigin* m_transformOrigin;
@@ -102,7 +108,6 @@ class RareComputedStyleData : public gc {
         PositionedMaskData* m_positionedMask;
         GCVector<ComputedStyle*>* m_pseudoStyles;
         StyleBackgroundData* m_background;
-        StyleSurroundData* m_surround;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -116,6 +121,16 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(Length length)
             : m_length(length)
+        {
+        }
+
+        RareComputedStyleValue(BorderData borderData)
+            : m_borderData(borderData)
+        {
+        }
+
+        RareComputedStyleValue(LengthData lengthData)
+            : m_lengthData(lengthData)
         {
         }
 
@@ -166,11 +181,6 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(StyleBackgroundData* background)
             : m_background(background)
-        {
-        }
-
-        RareComputedStyleValue(StyleSurroundData* surround)
-            : m_surround(surround)
         {
         }
     };
@@ -244,6 +254,34 @@ public:
     GETTER_VALUE(float, floatValue, flexGrow, FlexGrow);
     GETTER_VALUE(float, floatValue, flexShrink, FlexShrink);
     GETTER_VALUE(float, floatValue, opacity, Opacity);
+    GETTER_VALUE(LengthData, lengthData, margin, Margin);
+    GETTER_VALUE(LengthData, lengthData, padding, Padding);
+    GETTER_VALUE(BorderData, borderData, border, Border);
+
+    LengthData* ensureOffset()
+    {
+        FIND_VALUE(Offset);
+
+        if (it == m_styles.end()) {
+            LengthData offset = LengthData(Length());
+            m_styles.emplace_back(KeyKind::Offset, offset);
+            return &m_styles.back().m_value.m_lengthData;
+        }
+
+        return &(*it).m_value.m_lengthData;
+    }
+
+    Nullable<LengthData> offset()
+    {
+        FIND_VALUE(Offset);
+
+        if (it == m_styles.end()) {
+            return Nullable<LengthData>();
+        }
+
+        return Nullable<LengthData>((*it).m_value.m_lengthData);
+    }
+
     GETTER_VALUE(Length, length, minWidth, MinWidth);
     GETTER_VALUE(Length, length, maxWidth, MaxWidth);
     GETTER_VALUE(Length, length, minHeight, MinHeight);
@@ -290,7 +328,6 @@ public:
     GETTER_PTR(GCVector<ComputedStyle*>, pseudoStyles, cachedPsuedoStyles,
                CachedPsuedoStyles);
     GETTER_PTR(StyleBackgroundData, background, background, Background);
-    GETTER_PTR(StyleSurroundData, surround, surround, Surround);
 
 #undef GETTER_PTR
 
@@ -1056,77 +1093,25 @@ public:
         return nullptr;
     }
 
-    bool hasBorderColor()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround == nullptr) {
-            return false;
-        } else {
-            return surround->m_border.hasBorderColor();
-        }
-    }
-
-    bool hasBorderStyle()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround == nullptr) {
-            return false;
-        } else {
-            return surround->m_border.hasBorderStyle();
-        }
-    }
-
-    bool hasBorderImageData()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround == nullptr) {
-            return false;
-        } else {
-            return surround->m_border.hasBorderImageData();
-        }
-    }
-
     bool isFourSideBorderStyleValueSolid();
 
-#define BORDER_COLOR(UPOS, LPOS, ...)                      \
-    Unit::Color border##UPOS##Color()                      \
-    {                                                      \
-        StyleSurroundData* surround = this->surround();    \
-        if (surround == nullptr ||                         \
-            !surround->m_border.LPOS().hasBorderColor()) { \
-            return m_inheritedStyles.m_color;              \
-        } else {                                           \
-            return surround->m_border.LPOS().color();      \
-        }                                                  \
-    }
-    GEN_FOURSIDE(BORDER_COLOR)
-#undef BORDER_COLOR
+    BorderData border()
+    {
+        if (!m_rareComputedStyleData) {
+            BorderData b = BorderData();
+            b.makeZeroWidth();
+            return b;
+        }
 
-#define BORDER_STYLE(UPOS, LPOS, ...)                   \
-    BorderStyleValue border##UPOS##Style()              \
-    {                                                   \
-        StyleSurroundData* surround = this->surround(); \
-        if (surround == nullptr) {                      \
-            return initialBorderStyle();                \
-        } else {                                        \
-            return surround->m_border.LPOS().style();   \
-        }                                               \
-    }
-    GEN_FOURSIDE(BORDER_STYLE)
-#undef BORDER_STYLE
+        Nullable<BorderData> border = m_rareComputedStyleData->border();
+        if (border.hasValue()) {
+            return border.getValue();
+        }
 
-#define BORDER_WIDTH(UPOS, LPOS, ...)                   \
-    Length border##UPOS##Width()                        \
-    {                                                   \
-        StyleSurroundData* surround = this->surround(); \
-        if (surround == nullptr) {                      \
-            return initialBorderWidth();                \
-        } else {                                        \
-            return surround->m_border.LPOS().width();   \
-        }                                               \
+        BorderData b = BorderData();
+        b.makeZeroWidth();
+        return b;
     }
-    GEN_FOURSIDE(BORDER_WIDTH)
-#undef BORDER_WIDTH
 
     StyleTransformOrigin* transformOrigin()
     {
@@ -1152,158 +1137,80 @@ public:
         return m_rareComputedStyleData->transformOrigin() != nullptr;
     }
 
-    void clearBorderTopColor()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround) {
-            surround->m_border.top().clearColor();
-        }
-    }
-
-    void clearBorderRightColor()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround) {
-            surround->m_border.right().clearColor();
-        }
-    }
-
-    void clearBorderBottomColor()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround) {
-            surround->m_border.bottom().clearColor();
-        }
-    }
-
-    void clearBorderLeftColor()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround) {
-            surround->m_border.left().clearColor();
-        }
-    }
-
-#define SET_BORDER_COLOR(UPOS, LPOS, ...)                                    \
-    void setBorder##UPOS##Color(Unit::Color color)                           \
-    {                                                                        \
-        setRareComputedStyleDataIfNeeded();                                  \
-        m_rareComputedStyleData->ensureSurround()->m_border.LPOS().setColor( \
-            color);                                                          \
+#define SET_BORDER_COLOR(UPOS, LPOS, ...)                                \
+    void setBorder##UPOS##Color(Unit::Color color)                       \
+    {                                                                    \
+        setRareComputedStyleDataIfNeeded();                              \
+        m_rareComputedStyleData->ensureBorder()->LPOS().setColor(color); \
     }
     GEN_FOURSIDE(SET_BORDER_COLOR)
 #undef SET_BORDER_COLOR
 
-#define SET_BORDER_STYLE(UPOS, LPOS, ...)                                    \
-    void setBorder##UPOS##Style(BorderStyleValue style)                      \
-    {                                                                        \
-        setRareComputedStyleDataIfNeeded();                                  \
-        m_rareComputedStyleData->ensureSurround()->m_border.LPOS().setStyle( \
-            style);                                                          \
+#define CLEAR_BORDER_COLOR(UPOS, LPOS, ...)                           \
+    void clearBorder##UPOS##Color()                                   \
+    {                                                                 \
+        setRareComputedStyleDataIfNeeded();                           \
+        m_rareComputedStyleData->ensureBorder()->LPOS().clearColor(); \
+    }
+    GEN_FOURSIDE(CLEAR_BORDER_COLOR)
+#undef CLEAR_BORDER_COLOR
+
+#define SET_BORDER_STYLE(UPOS, LPOS, ...)                                \
+    void setBorder##UPOS##Style(BorderStyleValue style)                  \
+    {                                                                    \
+        setRareComputedStyleDataIfNeeded();                              \
+        m_rareComputedStyleData->ensureBorder()->LPOS().setStyle(style); \
     }
     GEN_FOURSIDE(SET_BORDER_STYLE)
 #undef SET_BORDER_STYLE
 
-#define SET_BORDER_WIDTH(UPOS, LPOS, ...)                                    \
-    void setBorder##UPOS##Width(Length width)                                \
-    {                                                                        \
-        setRareComputedStyleDataIfNeeded();                                  \
-        m_rareComputedStyleData->ensureSurround()->m_border.LPOS().setWidth( \
-            width);                                                          \
+#define SET_BORDER_WIDTH(UPOS, LPOS, ...)                                \
+    void setBorder##UPOS##Width(Length width)                            \
+    {                                                                    \
+        setRareComputedStyleDataIfNeeded();                              \
+        m_rareComputedStyleData->ensureBorder()->LPOS().setWidth(width); \
     }
     GEN_FOURSIDE(SET_BORDER_WIDTH)
 #undef SET_BORDER_WIDTH
 
-    String* borderImageSource()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround) {
-            return surround->m_border.image().url();
-        }
-        return initialBorderImageSource();
-    }
-
-    LengthBox borderImageSlices()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround) {
-            return surround->m_border.image().slices();
-        }
-        return initialBorderImageSlices();
-    }
-
-    bool borderImageSliceFill()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround) {
-            return surround->m_border.image().sliceFill();
-        }
-        return initialBorderImageSliceFill();
-    }
-
-    BorderImageLengthBox borderImageWidths()
-    {
-        StyleSurroundData* surround = this->surround();
-        if (surround) {
-            return surround->m_border.image().widths();
-        }
-        return initialBorderImageWidths();
-    }
-
     void setBorderImageSource(String* url)
     {
         setRareComputedStyleDataIfNeeded();
-        m_rareComputedStyleData->ensureSurround()->m_border.image().setUrl(url);
+        m_rareComputedStyleData->ensureBorder()->image().setUrl(url);
     }
 
     void setBorderImageSlices(LengthBox slices)
     {
         setRareComputedStyleDataIfNeeded();
-        m_rareComputedStyleData->ensureSurround()->m_border.image().setSlices(
-            slices);
+        m_rareComputedStyleData->ensureBorder()->image().setSlices(slices);
     }
 
     void setBorderImageSliceFill(bool fill)
     {
         setRareComputedStyleDataIfNeeded();
-        m_rareComputedStyleData->ensureSurround()
-            ->m_border.image()
-            .setSliceFill(fill);
+        m_rareComputedStyleData->ensureBorder()->image().setSliceFill(fill);
     }
 
     void setBorderImageWidths(BorderImageLengthBox value)
     {
         setRareComputedStyleDataIfNeeded();
-        m_rareComputedStyleData->ensureSurround()->m_border.image().setWidths(
-            value);
+        m_rareComputedStyleData->ensureBorder()->image().setWidths(value);
     }
 
     void setBorderImageResource(ImageResource* value)
     {
         setRareComputedStyleDataIfNeeded();
-        m_rareComputedStyleData->ensureSurround()
-            ->m_border.image()
-            .setImageResource(value);
+        m_rareComputedStyleData->ensureBorder()->image().setImageResource(
+            value);
     }
 
     void setBorderImageSliceFromOther(ComputedStyle* other)
     {
-        setBorderImageSlices(other->borderImageSlices());
-        setBorderImageSliceFill(other->borderImageSliceFill());
-    }
-
-    StyleSurroundData* surround()
-    {
-        if (!m_rareComputedStyleData) {
-            return nullptr;
-        }
-
-        StyleSurroundData* surround = m_rareComputedStyleData->surround();
-        if (surround) {
-            return surround;
-        }
-
-        return nullptr;
+        BorderData oBorder = other->border();
+        setRareComputedStyleDataIfNeeded();
+        BorderData* border = m_rareComputedStyleData->ensureBorder();
+        border->image().setSlices(oBorder.image().slices());
+        border->image().setSliceFill(oBorder.image().sliceFill());
     }
 
     OverflowValue overflowX()
@@ -1356,71 +1263,83 @@ public:
         m_rareComputedStyleData->ensureTransition()->setDuration(duration);
     }
 
-#define SET_SIDE(UPOS, ...)                                                  \
-    void set##UPOS(Length unit)                                              \
-    {                                                                        \
-        setRareComputedStyleDataIfNeeded();                                  \
-        m_rareComputedStyleData->ensureSurround()->m_offset.set##UPOS(unit); \
+#define SET_SIDE(UPOS, ...)                                       \
+    void set##UPOS(Length unit)                                   \
+    {                                                             \
+        setRareComputedStyleDataIfNeeded();                       \
+        m_rareComputedStyleData->ensureOffset()->set##UPOS(unit); \
     }
     GEN_FOURSIDE(SET_SIDE)
 #undef SET_SIDE
 
-#define SET_MARGIN(UPOS, ...)                                                \
-    void setMargin##UPOS(Length unit)                                        \
-    {                                                                        \
-        setRareComputedStyleDataIfNeeded();                                  \
-        m_rareComputedStyleData->ensureSurround()->m_margin.set##UPOS(unit); \
+#define SET_MARGIN(UPOS, ...)                                     \
+    void setMargin##UPOS(Length unit)                             \
+    {                                                             \
+        setRareComputedStyleDataIfNeeded();                       \
+        m_rareComputedStyleData->ensureMargin()->set##UPOS(unit); \
     }
     GEN_FOURSIDE(SET_MARGIN)
 #undef SET_MARGIN
 
-#define SET_PADDING(UPOS, ...)                                                \
-    void setPadding##UPOS(Length unit)                                        \
-    {                                                                         \
-        setRareComputedStyleDataIfNeeded();                                   \
-        m_rareComputedStyleData->ensureSurround()->m_padding.set##UPOS(unit); \
+#define SET_PADDING(UPOS, ...)                                     \
+    void setPadding##UPOS(Length unit)                             \
+    {                                                              \
+        setRareComputedStyleDataIfNeeded();                        \
+        m_rareComputedStyleData->ensurePadding()->set##UPOS(unit); \
     }
     GEN_FOURSIDE(SET_PADDING)
 #undef SET_PADDING
 
-#define GET_SIDE(UPOS, LPOS, ...)                       \
-    Length LPOS()                                       \
-    {                                                   \
-        StyleSurroundData* surround = this->surround(); \
-        if (surround == nullptr) {                      \
-            return Length();                            \
-        } else {                                        \
-            return surround->m_offset.LPOS();           \
-        }                                               \
+    LengthData offset()
+    {
+        if (!m_rareComputedStyleData) {
+            return LengthData(Length());
+        }
+
+        Nullable<LengthData> offset = m_rareComputedStyleData->offset();
+        if (offset.hasValue()) {
+            return offset.getValue();
+        }
+
+        return LengthData(Length());
+    }
+
+#define GET_SIDE(UPOS, LPOS, ...)           \
+    Length LPOS()                           \
+    {                                       \
+        LengthData offset = this->offset(); \
+        return offset.LPOS();               \
     }
     GEN_FOURSIDE(GET_SIDE)
 #undef GET_SIDE
 
-#define GET_MARGIN(UPOS, LPOS, ...)                     \
-    Length margin##UPOS()                               \
-    {                                                   \
-        StyleSurroundData* surround = this->surround(); \
-        if (surround == nullptr) {                      \
-            return initialMargin();                     \
-        } else {                                        \
-            return surround->m_margin.LPOS();           \
-        }                                               \
-    }
-    GEN_FOURSIDE(GET_MARGIN)
-#undef GET_MARGIN
+    LengthData margin()
+    {
+        if (!m_rareComputedStyleData) {
+            return LengthData();
+        }
 
-#define GET_PADDING(UPOS, LPOS, ...)                    \
-    Length padding##UPOS()                              \
-    {                                                   \
-        StyleSurroundData* surround = this->surround(); \
-        if (surround == nullptr) {                      \
-            return initialPadding();                    \
-        } else {                                        \
-            return surround->m_padding.LPOS();          \
-        }                                               \
+        Nullable<LengthData> margin = m_rareComputedStyleData->margin();
+        if (margin.hasValue()) {
+            return margin.getValue();
+        }
+
+        return LengthData();
     }
-    GEN_FOURSIDE(GET_PADDING)
-#undef GET_PADDING
+
+    LengthData padding()
+    {
+        if (!m_rareComputedStyleData) {
+            return LengthData();
+        }
+
+        Nullable<LengthData> padding = m_rareComputedStyleData->padding();
+        if (padding.hasValue()) {
+            return padding.getValue();
+        }
+
+        return LengthData();
+    }
 
     Length fontSize()
     {
@@ -1481,47 +1400,6 @@ public:
         return InheritedStylesRareData().m_letterSpacing;
     }
 
-    static VerticalAlignValue initialVerticalAlign()
-    {
-        return VerticalAlignValue::BaselineVAlignValue;
-    }
-    static Length initialPadding()
-    {
-        return Length(Length::Fixed, 0);
-    }
-    static Length initialMargin()
-    {
-        return Length(Length::Fixed, 0);
-    }
-    static Length initialBorderWidth()
-    {
-        return Length(Length::Fixed, 0);
-    }
-    static BorderStyleValue initialBorderStyle()
-    {
-        return BorderStyleValue::NoneBorderStyleValue;
-    }
-    static String* initialBgImage()
-    {
-        return String::emptyString;
-    }
-    static String* initialBorderImageSource()
-    {
-        return String::emptyString;
-    }
-    static BorderImageLengthBox initialBorderImageWidths()
-    {
-        return BorderImageLengthBox(1.0);
-    }
-    static LengthBox initialBorderImageSlices()
-    {
-        return LengthBox(Length(Length::Fixed, 0), Length(Length::Fixed, 0),
-                         Length(Length::Fixed, 0), Length(Length::Fixed, 0));
-    }
-    static bool initialBorderImageSliceFill()
-    {
-        return false;
-    }
     static bool isDisplayTableValueType(DisplayValue display)
     {
         return display == DisplayValue::TableDisplayValue ||
@@ -2038,10 +1916,7 @@ public:
 
         OutlineData* outline = m_rareComputedStyleData->outline();
         if (outline) {
-            if (outline->border().hasBorderColor()) {
-                return outline->border().color();
-            }
-            return color();
+            return outline->border().color();
         }
         return color();
     }
@@ -2163,7 +2038,7 @@ protected:
         m_overflowX = OverflowValue::VisibleOverflow;
         m_overflowY = OverflowValue::VisibleOverflow;
         m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
-        m_verticalAlign = initialVerticalAlign();
+        m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
         m_tableLayout = TableLayoutValue::AutoTableLayoutValue;

@@ -3830,7 +3830,8 @@ void StyleResolver::apply(Element* element,
                         parentStyle->verticalAlignLength());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->setVerticalAlign(ComputedStyle::initialVerticalAlign());
+                style->setVerticalAlign(
+                    VerticalAlignValue::BaselineVAlignValue);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::VerticalAlignValueKind) {
                 STARFISH_ASSERT(cssValues[k].verticalAlignValue() !=
@@ -3843,7 +3844,7 @@ void StyleResolver::apply(Element* element,
                     style->setVerticalAlignLength(length.getValue());
                 } else {
                     style->setVerticalAlign(
-                        ComputedStyle::initialVerticalAlign());
+                        VerticalAlignValue::BaselineVAlignValue);
                 }
             }
             break;
@@ -4047,7 +4048,7 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::BackgroundImage:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
-                style->setBackgroundImage(ComputedStyle::initialBgImage());
+                style->setBackgroundImage(String::emptyString);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
                 style->setBackgroundImage(parentStyle->backgroundImage());
@@ -4065,8 +4066,7 @@ void StyleResolver::apply(Element* element,
                         style->setBackgroundImage(item.urlValue(origin), i);
                     } else if (item.valueKind() ==
                                CSSStyleValuePair::ValueKind::Initial) {
-                        style->setBackgroundImage(
-                            ComputedStyle::initialBgImage(), i);
+                        style->setBackgroundImage(String::emptyString, i);
                     } else if (cssValues[k].valueKind() ==
                                CSSStyleValuePair::ValueKind::Inherit) {
                         style->setBackgroundImage(
@@ -4429,8 +4429,7 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::BorderImageSlice:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
-                style->setBorderImageSlices(
-                    ComputedStyle::initialBorderImageSlices());
+                style->setBorderImageSlices(LengthBox(0));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
                 // TODO: Prevent parentStyle->surround() from creating object
@@ -4487,7 +4486,8 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::BorderImageSource:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->setBorderImageSource(parentStyle->borderImageSource());
+                BorderData pBorder = parentStyle->border();
+                style->setBorderImageSource(pBorder.image().url());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->setBorderImageSource(String::emptyString);
@@ -4503,7 +4503,8 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::BorderImageWidth:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->setBorderImageWidths(parentStyle->borderImageWidths());
+                BorderData pBorder = parentStyle->border();
+                style->setBorderImageWidths(pBorder.image().widths());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
                 BorderImageLengthBox box;
@@ -4746,94 +4747,98 @@ void StyleResolver::apply(Element* element,
             ADD_RESOLVE_STYLE_POS(Bottom, bottom)
             ADD_RESOLVE_STYLE_POS(Left, left)
 #undef ADD_RESOLVE_STYLE_POS
-#define ADD_RESOLVE_STYLE_BORDER_STYLE(POS)                                  \
-    case CSSStyleValuePair::KeyKind::Border##POS##Style:                     \
-        if (cssValues[k].valueKind() ==                                      \
-            CSSStyleValuePair::ValueKind::Inherit) {                         \
-            style->setBorder##POS##Style(parentStyle->border##POS##Style()); \
-        } else if (cssValues[k].valueKind() ==                               \
-                   CSSStyleValuePair::ValueKind::Initial) {                  \
-            style->setBorder##POS##Style(                                    \
-                BorderStyleValue::NoneBorderStyleValue);                     \
-        } else if (cssValues[k].valueKind() ==                               \
-                   CSSStyleValuePair::ValueKind::BorderStyleValueKind) {     \
-            style->setBorder##POS##Style(cssValues[k].borderStyleValue());   \
-        } else {                                                             \
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();                           \
-        }                                                                    \
+#define ADD_RESOLVE_STYLE_BORDER_STYLE(POS, pos)                           \
+    case CSSStyleValuePair::KeyKind::Border##POS##Style:                   \
+        if (cssValues[k].valueKind() ==                                    \
+            CSSStyleValuePair::ValueKind::Inherit) {                       \
+            BorderData pBorder = parentStyle->border();                    \
+            style->setBorder##POS##Style(pBorder.pos().style());           \
+        } else if (cssValues[k].valueKind() ==                             \
+                   CSSStyleValuePair::ValueKind::Initial) {                \
+            style->setBorder##POS##Style(                                  \
+                BorderStyleValue::NoneBorderStyleValue);                   \
+        } else if (cssValues[k].valueKind() ==                             \
+                   CSSStyleValuePair::ValueKind::BorderStyleValueKind) {   \
+            style->setBorder##POS##Style(cssValues[k].borderStyleValue()); \
+        } else {                                                           \
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();                         \
+        }                                                                  \
         break;
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Top)
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Right)
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Bottom)
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Left)
+            ADD_RESOLVE_STYLE_BORDER_STYLE(Top, top)
+            ADD_RESOLVE_STYLE_BORDER_STYLE(Right, right)
+            ADD_RESOLVE_STYLE_BORDER_STYLE(Bottom, bottom)
+            ADD_RESOLVE_STYLE_BORDER_STYLE(Left, left)
 #undef ADD_RESOLVE_STYLE_BORDER_STYLE
-#define ADD_RESOLVE_STYLE_BORDER_WIDTH(POS)                                  \
-    case CSSStyleValuePair::KeyKind::Border##POS##Width:                     \
-        if (cssValues[k].valueKind() ==                                      \
-            CSSStyleValuePair::ValueKind::Inherit) {                         \
-            style->setBorder##POS##Width(parentStyle->border##POS##Width()); \
-        } else if (cssValues[k].valueKind() ==                               \
-                   CSSStyleValuePair::ValueKind::Initial) {                  \
-            style->setBorder##POS##Width(Length(Length::Fixed, 3));          \
-        } else if (cssValues[k].valueKind() ==                               \
-                   CSSStyleValuePair::ValueKind::Length) {                   \
-            style->setBorder##POS##Width(                                    \
-                cssValues[k].cssLengthValue().toLength());                   \
-        } else if (cssValues[k].valueKind() ==                               \
-                   CSSStyleValuePair::ValueKind::BorderWidthValueKind) {     \
-            if (cssValues[k].borderWidthValue() ==                           \
-                BorderWidthValue::ThinBorderWidthValue) {                    \
-                style->setBorder##POS##Width(Length(Length::Fixed, 1));      \
-            } else if (cssValues[k].borderWidthValue() ==                    \
-                       BorderWidthValue::MediumBorderWidthValue) {           \
-                style->setBorder##POS##Width(Length(Length::Fixed, 3));      \
-            } else if (cssValues[k].borderWidthValue() ==                    \
-                       BorderWidthValue::ThickBorderWidthValue) {            \
-                style->setBorder##POS##Width(Length(Length::Fixed, 5));      \
-            }                                                                \
-        } else {                                                             \
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();                           \
-        }                                                                    \
+#define ADD_RESOLVE_STYLE_BORDER_WIDTH(POS, pos)                         \
+    case CSSStyleValuePair::KeyKind::Border##POS##Width:                 \
+        if (cssValues[k].valueKind() ==                                  \
+            CSSStyleValuePair::ValueKind::Inherit) {                     \
+            BorderData pBorder = parentStyle->border();                  \
+            style->setBorder##POS##Width(pBorder.pos().width());         \
+        } else if (cssValues[k].valueKind() ==                           \
+                   CSSStyleValuePair::ValueKind::Initial) {              \
+            style->setBorder##POS##Width(Length(Length::Fixed, 3));      \
+        } else if (cssValues[k].valueKind() ==                           \
+                   CSSStyleValuePair::ValueKind::Length) {               \
+            style->setBorder##POS##Width(                                \
+                cssValues[k].cssLengthValue().toLength());               \
+        } else if (cssValues[k].valueKind() ==                           \
+                   CSSStyleValuePair::ValueKind::BorderWidthValueKind) { \
+            if (cssValues[k].borderWidthValue() ==                       \
+                BorderWidthValue::ThinBorderWidthValue) {                \
+                style->setBorder##POS##Width(Length(Length::Fixed, 1));  \
+            } else if (cssValues[k].borderWidthValue() ==                \
+                       BorderWidthValue::MediumBorderWidthValue) {       \
+                style->setBorder##POS##Width(Length(Length::Fixed, 3));  \
+            } else if (cssValues[k].borderWidthValue() ==                \
+                       BorderWidthValue::ThickBorderWidthValue) {        \
+                style->setBorder##POS##Width(Length(Length::Fixed, 5));  \
+            }                                                            \
+        } else {                                                         \
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();                       \
+        }                                                                \
         break;
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Top)
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Right)
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Bottom)
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Left)
+            ADD_RESOLVE_STYLE_BORDER_WIDTH(Top, top)
+            ADD_RESOLVE_STYLE_BORDER_WIDTH(Right, right)
+            ADD_RESOLVE_STYLE_BORDER_WIDTH(Bottom, bottom)
+            ADD_RESOLVE_STYLE_BORDER_WIDTH(Left, left)
 #undef ADD_RESOLVE_STYLE_BORDER_WIDTH
-#define ADD_RESOLVE_STYLE_BORDER_COLOR(POS)                                  \
-    case CSSStyleValuePair::KeyKind::Border##POS##Color:                     \
-        if (cssValues[k].valueKind() ==                                      \
-            CSSStyleValuePair::ValueKind::Inherit) {                         \
-            style->setBorder##POS##Color(parentStyle->border##POS##Color()); \
-        } else if (cssValues[k].valueKind() ==                               \
-                   CSSStyleValuePair::ValueKind::Initial) {                  \
-            style->clearBorder##POS##Color();                                \
-        } else if (cssValues[k].valueKind() ==                               \
-                   CSSStyleValuePair::ValueKind::ColorValueKind) {           \
-            style->setBorder##POS##Color(cssValues[k].colorValue());         \
-        } else {                                                             \
-            STARFISH_ASSERT(                                                 \
-                cssValues[k].valueKind() ==                                  \
-                CSSStyleValuePair::ValueKind::NamedColorValueKind);          \
-            if (cssValues[k].namedColorValue() ==                            \
-                NamedColor::NamedColorValue::currentColor) {                 \
-                style->clearBorder##POS##Color();                            \
-            } else {                                                         \
-                style->setBorder##POS##Color(NamedColor::namedColorToColor(  \
-                    cssValues[k].namedColorValue()));                        \
-            }                                                                \
-        }                                                                    \
+#define ADD_RESOLVE_STYLE_BORDER_COLOR(POS, pos)                            \
+    case CSSStyleValuePair::KeyKind::Border##POS##Color:                    \
+        if (cssValues[k].valueKind() ==                                     \
+            CSSStyleValuePair::ValueKind::Inherit) {                        \
+            BorderData pBorder = parentStyle->border();                     \
+            style->setBorder##POS##Color(pBorder.pos().color());            \
+        } else if (cssValues[k].valueKind() ==                              \
+                   CSSStyleValuePair::ValueKind::Initial) {                 \
+            style->clearBorder##POS##Color();                               \
+        } else if (cssValues[k].valueKind() ==                              \
+                   CSSStyleValuePair::ValueKind::ColorValueKind) {          \
+            style->setBorder##POS##Color(cssValues[k].colorValue());        \
+        } else {                                                            \
+            STARFISH_ASSERT(                                                \
+                cssValues[k].valueKind() ==                                 \
+                CSSStyleValuePair::ValueKind::NamedColorValueKind);         \
+            if (cssValues[k].namedColorValue() ==                           \
+                NamedColor::NamedColorValue::currentColor) {                \
+                style->clearBorder##POS##Color();                           \
+            } else {                                                        \
+                style->setBorder##POS##Color(NamedColor::namedColorToColor( \
+                    cssValues[k].namedColorValue()));                       \
+            }                                                               \
+        }                                                                   \
         break;
-            ADD_RESOLVE_STYLE_BORDER_COLOR(Top)
-            ADD_RESOLVE_STYLE_BORDER_COLOR(Right)
-            ADD_RESOLVE_STYLE_BORDER_COLOR(Bottom)
-            ADD_RESOLVE_STYLE_BORDER_COLOR(Left)
+            ADD_RESOLVE_STYLE_BORDER_COLOR(Top, top)
+            ADD_RESOLVE_STYLE_BORDER_COLOR(Right, right)
+            ADD_RESOLVE_STYLE_BORDER_COLOR(Bottom, bottom)
+            ADD_RESOLVE_STYLE_BORDER_COLOR(Left, left)
 #undef ADD_RESOLVE_STYLE_BORDER_COLOR
-#define ADD_RESOLVE_STYLE_MARGIN(POS)                            \
+#define ADD_RESOLVE_STYLE_MARGIN(POS, pos)                       \
     case CSSStyleValuePair::KeyKind::Margin##POS:                \
         if (cssValues[k].valueKind() ==                          \
             CSSStyleValuePair::ValueKind::Inherit) {             \
-            style->setMargin##POS(parentStyle->margin##POS());   \
+            LengthData pMargin = parentStyle->margin();          \
+            style->setMargin##POS(pMargin.pos());                \
         } else if (cssValues[k].valueKind() ==                   \
                    CSSStyleValuePair::ValueKind::Initial) {      \
             style->setMargin##POS(Length(Length::Fixed, 0));     \
@@ -4847,33 +4852,34 @@ void StyleResolver::apply(Element* element,
             }                                                    \
         }                                                        \
         break;
-            ADD_RESOLVE_STYLE_MARGIN(Top)
-            ADD_RESOLVE_STYLE_MARGIN(Right)
-            ADD_RESOLVE_STYLE_MARGIN(Bottom)
-            ADD_RESOLVE_STYLE_MARGIN(Left)
+            ADD_RESOLVE_STYLE_MARGIN(Top, top)
+            ADD_RESOLVE_STYLE_MARGIN(Right, right)
+            ADD_RESOLVE_STYLE_MARGIN(Bottom, bottom)
+            ADD_RESOLVE_STYLE_MARGIN(Left, left)
 #undef ADD_RESOLVE_STYLE_MARGIN
-#define ADD_RESOLVE_STYLE_PADDING(POS)                                   \
-    case CSSStyleValuePair::KeyKind::Padding##POS:                       \
-        if (cssValues[k].valueKind() ==                                  \
-            CSSStyleValuePair::ValueKind::Inherit) {                     \
-            style->setPadding##POS(parentStyle->padding##POS());         \
-        } else if (cssValues[k].valueKind() ==                           \
-                   CSSStyleValuePair::ValueKind::Initial) {              \
-            style->setPadding##POS(ComputedStyle::initialPadding());     \
-        } else {                                                         \
-            Nullable<Length> length = convertValueToLength(              \
-                cssValues[k].valueKind(), cssValues[k].value());         \
-            if (length.hasValue()) {                                     \
-                style->setPadding##POS(length.getValue());               \
-            } else {                                                     \
-                style->setPadding##POS(ComputedStyle::initialPadding()); \
-            }                                                            \
-        }                                                                \
+#define ADD_RESOLVE_STYLE_PADDING(POS, pos)                       \
+    case CSSStyleValuePair::KeyKind::Padding##POS:                \
+        if (cssValues[k].valueKind() ==                           \
+            CSSStyleValuePair::ValueKind::Inherit) {              \
+            LengthData pPadding = parentStyle->padding();         \
+            style->setPadding##POS(pPadding.pos());               \
+        } else if (cssValues[k].valueKind() ==                    \
+                   CSSStyleValuePair::ValueKind::Initial) {       \
+            style->setPadding##POS(Length(Length::Fixed, 0));     \
+        } else {                                                  \
+            Nullable<Length> length = convertValueToLength(       \
+                cssValues[k].valueKind(), cssValues[k].value());  \
+            if (length.hasValue()) {                              \
+                style->setPadding##POS(length.getValue());        \
+            } else {                                              \
+                style->setPadding##POS(Length(Length::Fixed, 0)); \
+            }                                                     \
+        }                                                         \
         break;
-            ADD_RESOLVE_STYLE_PADDING(Top)
-            ADD_RESOLVE_STYLE_PADDING(Right)
-            ADD_RESOLVE_STYLE_PADDING(Bottom)
-            ADD_RESOLVE_STYLE_PADDING(Left)
+            ADD_RESOLVE_STYLE_PADDING(Top, top)
+            ADD_RESOLVE_STYLE_PADDING(Right, right)
+            ADD_RESOLVE_STYLE_PADDING(Bottom, bottom)
+            ADD_RESOLVE_STYLE_PADDING(Left, left)
 #undef ADD_RESOLVE_STYLE_PADDING
         case CSSStyleValuePair::KeyKind::Opacity:
             if (cssValues[k].valueKind() ==
