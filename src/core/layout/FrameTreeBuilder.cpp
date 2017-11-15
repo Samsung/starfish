@@ -453,7 +453,8 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
     }
 
     STARFISH_ASSERT(parent->isElement());
-    parent->asElement()->setPseudoElement(pseudoId, pseudoElement);
+    // TODO: Save the generated pseudo-elements and reuse them.
+    // parent->asElement()->setPseudoElement(pseudoId, pseudoElement);
 }
 
 Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
