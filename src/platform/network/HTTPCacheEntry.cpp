@@ -25,17 +25,17 @@
 
 namespace StarFish {
 
-HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, EntryFreshnessInfo& info,
+HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, HTTPFreshnessInfo& info,
                                CacheControl& cacheControl)
     : m_url(url)
-    , m_entryFreshnessInfo(info)
+    , m_httpFreshnessInfo(info)
     , m_cacheControl(cacheControl)
     , m_entryFileName(nullptr)
     , m_mutex(new Mutex())
 {
 }
 
-HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, EntryFreshnessInfo& info,
+HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, HTTPFreshnessInfo& info,
                                CacheControl& cacheControl,
                                String* entryFileName)
     : HTTPCacheEntry(url, info, cacheControl)
@@ -49,13 +49,26 @@ HTTPCacheEntry::~HTTPCacheEntry()
 
 size_t HTTPCacheEntry::entryKey() const
 {
+    Locker<Mutex> locker(*m_mutex);
     return m_url->urlString()->hashValue();
+}
+
+void HTTPCacheEntry::setHTTPFreshnessInfo(HTTPFreshnessInfo& info)
+{
+    Locker<Mutex> locker(*m_mutex);
+    m_httpFreshnessInfo = info;
+}
+
+void HTTPCacheEntry::setCacheControl(CacheControl& cc)
+{
+    Locker<Mutex> locker(*m_mutex);
+    m_cacheControl = cc;
 }
 
 void HTTPCacheEntry::setEntryFileNameUsingCachePath(String* cachePath)
 {
     StringBuilder builder;
-    std::string entryKeystr = std::to_string(entryKey());
+    std::string entryKeystr = std::to_string(m_url->urlString()->hashValue());
     std::string tcnt = std::to_string(longTickCount());
 
     builder.appendString(cachePath);
@@ -104,22 +117,46 @@ bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
     return ret;
 }
 
+bool HTTPCacheEntry::isFresh()
+{
+    // https://tools.ietf.org/html/rfc7234#section-4.2
+    // See 4.2. Freshness
+    // response_is_fresh = (freshnessLifetime > currentAge)
+    Locker<Mutex> locker(*m_mutex);
+    int64_t responeTime = m_httpFreshnessInfo.responseTime;
+    int64_t freshnessLifetime = m_cacheControl.maxAge;
+    int64_t apparentAge = (0 > (responeTime - m_httpFreshnessInfo.date))
+                              ? 0
+                              : (responeTime - m_httpFreshnessInfo.date);
+    int64_t responseDelay = (responeTime - m_httpFreshnessInfo.requestTime);
+    int64_t correctedAgeValue = (m_httpFreshnessInfo.age + responseDelay);
+    int64_t correctedInitialAge =
+        (apparentAge > correctedAgeValue) ? apparentAge : correctedAgeValue;
+    int64_t residentTime = ((timestamp() / 1000) - responeTime);
+    int64_t currentAge = correctedInitialAge + residentTime;
+
+    return freshnessLifetime > currentAge;
+}
+
 String* HTTPCacheEntry::toString()
 {
+    Locker<Mutex> locker(*m_mutex);
     StringBuilder builder;
-    std::string entryKeystr = std::to_string(entryKey());
-    std::string dateStr = std::to_string(m_entryFreshnessInfo.date);
-    std::string ageStr = std::to_string(m_entryFreshnessInfo.age);
+    std::string entryKeystr = std::to_string(m_url->urlString()->hashValue());
+    std::string dateStr = std::to_string(m_httpFreshnessInfo.date);
+    std::string ageStr = std::to_string(m_httpFreshnessInfo.age);
     std::string requestTimeStr =
-        std::to_string(m_entryFreshnessInfo.requestTime);
+        std::to_string(m_httpFreshnessInfo.requestTime);
     std::string responseTimeStr =
-        std::to_string(m_entryFreshnessInfo.responseTime);
+        std::to_string(m_httpFreshnessInfo.responseTime);
+    std::string lastModifiedStr =
+        std::to_string(m_httpFreshnessInfo.lastModified);
     std::string contentLengthStr =
-        std::to_string(m_entryFreshnessInfo.contentLength);
+        std::to_string(m_httpFreshnessInfo.contentLength);
     std::string maxAgeStr = std::to_string(m_cacheControl.maxAge);
 
     // entryKey(UINT) urlString(STRING) date(UINT) age(UINT)
-    // rquestTime(UINT) responeTime(UINT) contentLength(UINT)
+    // rquestTime(UINT) responeTime(UINT) lastModified(UINT) contentLength(UINT)
     // maxAge(UINT) no-cache(0|1) mustRevalidate(0|1) entryFileName(STRING)
 
     builder.appendString(entryKeystr.data());
@@ -134,6 +171,8 @@ String* HTTPCacheEntry::toString()
     builder.appendString(" ");
     builder.appendString(responseTimeStr.data());
     builder.appendString(" ");
+    builder.appendString(lastModifiedStr.data());
+    builder.appendString(" ");
     builder.appendString(contentLengthStr.data());
     builder.appendString(" ");
     builder.appendString(maxAgeStr.data());
@@ -144,7 +183,7 @@ String* HTTPCacheEntry::toString()
     m_cacheControl.mustRevalidate ? builder.appendString("1")
                                   : builder.appendString("0");
     builder.appendString(" ");
-    builder.appendString(entryFileName());
+    builder.appendString(m_entryFileName);
 
     return builder.finalize();
 }

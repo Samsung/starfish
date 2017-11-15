@@ -17,47 +17,17 @@
 #ifndef __StarFishHTTPCacheEntry_
 #define __StarFishHTTPCacheEntry_
 
+#include "platform/network/http/HTTPUtil.h"
+
 namespace StarFish {
 class ResourceURL;
 class Mutex;
 
-struct CacheControl {
-    CacheControl()
-        : noCache(false)
-        , noStore(false)
-        , mustRevalidate(false)
-        , maxAge(0)
-    {
-    }
-
-    bool noCache : 1;
-    bool noStore : 1;
-    bool mustRevalidate : 1;
-    int64_t maxAge;
-};
-
-struct EntryFreshnessInfo {
-    EntryFreshnessInfo()
-        : date(0)
-        , age(0)
-        , requestTime(0)
-        , responseTime(0)
-        , contentLength(0)
-    {
-    }
-
-    int64_t date;
-    int64_t age;
-    int64_t requestTime;
-    int64_t responseTime;
-    size_t contentLength;
-};
-
 class HTTPCacheEntry : public gc {
 public:
-    HTTPCacheEntry(ResourceURL* url, EntryFreshnessInfo& info,
+    HTTPCacheEntry(ResourceURL* url, HTTPFreshnessInfo& info,
                    CacheControl& cacheControl);
-    HTTPCacheEntry(ResourceURL* url, EntryFreshnessInfo& info,
+    HTTPCacheEntry(ResourceURL* url, HTTPFreshnessInfo& info,
                    CacheControl& cacheControl, String* entryFileName);
     ~HTTPCacheEntry();
 
@@ -74,18 +44,21 @@ public:
     void setEntryFileNameUsingCachePath(String* cachePath);
     bool writeRawDataToEntryFile(std::vector<char>& rawData);
     bool readRawDataFromEntryFile(std::vector<char>& out);
+    bool isFresh();
 
     size_t entryKey() const;
 
-    EntryFreshnessInfo entryFreshnessInfo() const
+    HTTPFreshnessInfo httpFreshnessInfo() const
     {
-        return m_entryFreshnessInfo;
+        return m_httpFreshnessInfo;
     }
+    void setHTTPFreshnessInfo(HTTPFreshnessInfo& info);
 
     CacheControl cacheControl() const
     {
         return m_cacheControl;
     }
+    void setCacheControl(CacheControl& info);
 
     String* toString();
 
@@ -97,7 +70,7 @@ public:
 
 private:
     ResourceURL* m_url;
-    EntryFreshnessInfo m_entryFreshnessInfo;
+    HTTPFreshnessInfo m_httpFreshnessInfo;
     CacheControl m_cacheControl;
     String* m_entryFileName;
     Mutex* m_mutex;

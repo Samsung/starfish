@@ -76,7 +76,7 @@ public:
             uint16_t statusCode = request->status();
             bool isMimeTypeValid = request->responseMimeType()->contains(
                 "text/event-stream", false);
-            const ResponseHeaderMap& headerMap = request->responseHeaderMap();
+            const HeaderMap& headerMap = request->responseHeaderMap();
             m_isResponseValid = statusCode == HTTP_STATUS_OK && isMimeTypeValid;
 
             bool isCharsetValid = true;
@@ -285,7 +285,7 @@ void EventSource::start(ResourceRequest::MethodType method)
     m_resourceRequest->send();
 }
 
-void EventSource::didHeaderReceived(const ResponseHeaderMap& headrs)
+void EventSource::didHeaderReceived(const HeaderMap& headrs)
 {
 }
 

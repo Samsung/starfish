@@ -91,6 +91,7 @@ ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
                               size_t len);
 ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData);
 double parseDate(ScriptBindingInstance* instance, String* date);
+String* timeToUTCString(ScriptBindingInstance* instance, int64_t time);
 
 void throwScriptTypeError(String* message);
 

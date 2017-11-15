@@ -427,7 +427,7 @@ String* XMLHttpRequest::getAllResponseHeaders()
     }
 
     StringBuilder sb;
-    const ResponseHeaderMap& map = m_resourceRequest->responseHeaderMap();
+    const HeaderMap& map = m_resourceRequest->responseHeaderMap();
 
     for (const auto& it : map) {
         const auto& key = it.first;
@@ -461,7 +461,7 @@ Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
         return nullptr;
     }
 
-    const ResponseHeaderMap& map = m_resourceRequest->responseHeaderMap();
+    const HeaderMap& map = m_resourceRequest->responseHeaderMap();
 
     for (const auto& pair : map) {
         if (name->equalsIgnoreCase(pair.first.data())) {

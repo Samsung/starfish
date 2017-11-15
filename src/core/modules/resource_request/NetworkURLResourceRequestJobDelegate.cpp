@@ -19,11 +19,15 @@
 #include "core/dom/Document.h"
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "platform/network/HTTPCache.h"
+#include "platform/network/HTTPCacheEntry.h"
 #endif
+#include "binding/ScriptWrappable.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "platform/network/http/HTTPRequest.h"
 #include "platform/network/http/HTTPResponse.h"
+#include "platform/network/http/HTTPStatus.h"
 #include "platform/network/http/HTTPTransaction.h"
+#include "platform/network/http/HTTPUtil.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "platform/network/NetworkSharedResourceManager.h"
@@ -45,7 +49,6 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     , helper(nullptr)
     , httpTransaction(HTTPTransaction::create())
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    , cacheHit(false)
     , cachedEntry(nullptr)
 #endif
     , lastLocation("")
@@ -59,7 +62,16 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
 
     // TODO : Do not use libur libcurl error codes
     if (nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK) {
+#ifdef STARFISH_ENABLE_HTTPCACHE
+        if (nwd->httpTransaction->httpResponse().responseCode() ==
+            HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
+            NetworkURLWorkerHelper::httpCacheWorker(nwd);
+        } else {
+            responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
+        }
+#else
         responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
+#endif
     } else {
         workerAbortHandeler(nwd);
     }
@@ -135,9 +147,38 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
                     ->trim();
         }
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        if (requestData->request->starFish()->httpCache() &&
-            !requestData->cacheHit) {
-            requestData->request->starFish()->httpCache()->caching(requestData);
+        HTTPCache* cache = requestData->request->starFish()->httpCache();
+        if (cache) {
+            if (!requestData->cachedEntry) {
+                cache->put(requestData);
+            } else {
+                if (requestData->httpTransaction->httpResponse()
+                        .responseCode() ==
+                    HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
+                    // Update Entry property
+                    CacheControl cc;
+                    auto it = requestData->request->responseHeaderMap().find(
+                        HTTPHeaderMap::kCacheControl);
+                    if (it != requestData->request->responseHeaderMap().end()) {
+                        cc = HTTPUtil::parseCacheControl(it->second);
+                    }
+
+                    HTTPFreshnessInfo info =
+                        HTTPUtil::getHTTPFreshnessInfoFromHeaders(
+                            requestData->request->document()
+                                ->scriptBindingInstance(),
+                            requestData->request->responseHeaderMap());
+                    info.responseTime =
+                        requestData->cachedEntry->httpFreshnessInfo()
+                            .responseTime;
+                    info.requestTime =
+                        requestData->cachedEntry->httpFreshnessInfo()
+                            .requestTime;
+
+                    requestData->cachedEntry->setCacheControl(cc);
+                    requestData->cachedEntry->setHTTPFreshnessInfo(info);
+                }
+            }
         }
 #endif
         requestData->request->handleResponseEOF();
@@ -226,6 +267,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     NetworkURLWorkerData* nwd = new (NoGC) NetworkURLWorkerData(m_orgProxy);
 
     m_orgProxy->m_activeNetworkURLWorkerData = nwd;
+    HTTPHeaderMap headers;
 
     std::string method;
     switch (m_orgProxy->m_method) {
@@ -233,13 +275,12 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         method = "GET";
 #ifdef STARFISH_ENABLE_HTTPCACHE
         if (allowCache && m_orgProxy->starFish()->httpCache()) {
-            auto it = m_orgProxy->starFish()->httpCache()->cacheHit(
-                m_orgProxy->m_url);
+            auto it =
+                m_orgProxy->starFish()->httpCache()->get(m_orgProxy->m_url);
 
-            if (it !=
-                m_orgProxy->starFish()->httpCache()->cacheEntryTableEnd()) {
-                nwd->cacheHit = true;
+            if (it != m_orgProxy->starFish()->httpCache()->end()) {
                 nwd->cachedEntry = it->second;
+                fillHeadersWithCachedEntry(headers, nwd->cachedEntry);
             }
         }
 #endif
@@ -257,7 +298,6 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         STARFISH_ASSERT_NOT_REACHED();
     }
 
-    HTTPHeaderMap headers;
     fillHeadersWithResourceRequestHeader(headers);
     fillHeadersWithClientHeaders(headers);
     fillHeadersWithGeneralHeaders(headers);
@@ -311,30 +351,6 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithGeneralHeaders(
     //  * Cache-Control, Connection, Date, Pragma, Trailer, Transfer-Encoding,
     //  * Upgrade, Via, Warning ...
     headers.setHeader(HTTPHeaderMap::kConnection, "keep-alive");
-#ifdef STARFISH_ENABLE_HTTPCACHE
-    if (m_orgProxy->starFish()->httpCache()) {
-        // TODO : set cache-control directives
-    } else {
-        // httpCache is disabled
-        auto it = headers.findHeader(HTTPHeaderMap::kPragma);
-        if (it == headers.headerMap().end()) {
-            headers.setHeader(HTTPHeaderMap::kPragma, "no-cache");
-        }
-        auto it2 = headers.findHeader(HTTPHeaderMap::kCacheControl);
-        if (it2 == headers.headerMap().end()) {
-            headers.setHeader(HTTPHeaderMap::kCacheControl, "no-cache");
-        }
-    }
-#else
-    auto it = headers.findHeader(HTTPHeaderMap::kPragma);
-    if (it == headers.headerMap().end()) {
-        headers.setHeader(HTTPHeaderMap::kPragma, "no-cache");
-    }
-    auto it2 = headers.findHeader(HTTPHeaderMap::kCacheControl);
-    if (it2 == headers.headerMap().end()) {
-        headers.setHeader(HTTPHeaderMap::kCacheControl, "no-cache");
-    }
-#endif
 }
 
 void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
@@ -343,7 +359,6 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     // Set Client Request header
     //  * Accept, Accept-Charset, Accept-Encoding, Accept-Language,
     //  * Authorization, Cookie, Expect, From, Host, If-Match,
-    //  * If-Modified-Since, If-None-Match, If-Range, If-Unmodified-Since,
     //  * Max-Forwards, Origin, Proxy-Authorization, Range, Referer, TE,
     //  * User-Agent ...
     std::string tmpStr;
@@ -380,12 +395,53 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithResourceRequestHeader(
         headers.setHeader(utf8Data1, utf8Data2);
     }
 }
+#ifdef STARFISH_ENABLE_HTTPCACHE
+void NetworkURLResourceRequestJobDelegate::fillHeadersWithCachedEntry(
+    HTTPHeaderMap& headers, HTTPCacheEntry* cachedEntry)
+{
+    // * If-Modified-Since, If-None-Match, If-Range, If-Unmodified-Since
+    if (cachedEntry->isFresh()) {
+        return;
+    }
 
+    // If-Modified-Since = HTTP-date
+    // When used for cache updates, a cache will typically use the value of
+    // the cached message's Last-Modified field to generate the field value
+    // of If-Modified-Since.  This behavior is most interoperable for cases
+    // where clocks are poorly synchronized or when the server has chosen to
+    // only honor exact timestamp matches (due to a problem with
+    // Last-Modified dates that appear to go "back in time" when the origin
+    // server's clock is corrected or a representation is restored from an
+    // archived backup).  However, caches occasionally generate the field
+    // value based on other data, such as the Date header field of the
+    // cached message or the local clock time that the message was received,
+    // particularly when the cached message does not contain a Last-Modified
+    // field.
+    std::string value;
+    HTTPFreshnessInfo info = cachedEntry->httpFreshnessInfo();
+
+    if (info.lastModified) {
+        std::string value =
+            timeToUTCString(m_orgProxy->document()->scriptBindingInstance(),
+                            info.lastModified * 1000)
+                ->toUTF8NonGCString();
+        headers.setHeader(HTTPHeaderMap::kIfModifiedSince, value);
+    } else if (info.date) {
+        std::string value =
+            timeToUTCString(m_orgProxy->document()->scriptBindingInstance(),
+                            info.date * 1000)
+                ->toUTF8NonGCString();
+        headers.setHeader(HTTPHeaderMap::kIfModifiedSince, value);
+    }
+
+    // TODO : Make If-None-Match header
+}
+#endif
 void* NetworkURLResourceRequestJobDelegate::worker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (nwd->cacheHit) {
+    if (nwd->cachedEntry && nwd->cachedEntry->isFresh()) {
         return nwd->helper->httpCacheWorker(data);
     } else {
         return nwd->helper->networkWorker(data);

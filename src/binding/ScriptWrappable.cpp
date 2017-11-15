@@ -473,6 +473,15 @@ double parseDate(ScriptBindingInstance* instance, String* date)
     return ret;
 }
 
+String* timeToUTCString(ScriptBindingInstance* instance, int64_t value)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    DateObjectRef* obj = DateObjectRef::create(state);
+    obj->setTimeValue(value);
+    return toBrowserString(state, obj->toUTCString(state));
+}
+
 bool isCallableScriptValue(ScriptValue v)
 {
     if (v->isFunction()) {

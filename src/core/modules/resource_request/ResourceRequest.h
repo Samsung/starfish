@@ -18,6 +18,7 @@
 #define __StarFishResourceRequest__
 
 #include "binding/DocumentHoldable.h"
+#include "platform/network/http/HTTPUtil.h"
 #include "core/util/URL.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Semaphore.h"
@@ -31,9 +32,7 @@ class Document;
 class ResourceRequest;
 class FormDataSetItem;
 
-typedef std::vector<char> NetworkRequestResponse;
-typedef std::basic_string<char> NetworkRequestResponseHeader;
-typedef std::unordered_map<std::string, std::string> ResponseHeaderMap;
+typedef std::vector<char> EntityBody;
 
 class ResourceRequestClient : public gc {
 public:
@@ -161,14 +160,14 @@ public:
         return m_isSync;
     }
 
-    const ResponseHeaderMap& responseHeaderMap()
+    const HeaderMap& responseHeaderMap()
     {
         return m_responseHeaderMap;
     }
 
     // Reading response is only safe when onProgress callback fired | request
     // ended
-    NetworkRequestResponse& response()
+    EntityBody& response()
     {
         return m_response;
     }
@@ -230,9 +229,8 @@ protected:
     void clearIdlers();
 
     template <typename StrType>
-    static NetworkRequestResponse parseBase64String(const StrType& str,
-                                                    size_t startAt,
-                                                    size_t endAt);
+    static EntityBody parseBase64String(const StrType& str, size_t startAt,
+                                        size_t endAt);
     void changeReadyState(ReadyState readyState, bool isExplicitAction);
     void changeProgress(ProgressState progress, bool isExplicitAction);
     void handleResponseEOF();
@@ -267,7 +265,7 @@ protected:
     String* m_responseMimeType;
     String* m_contentLanguage;
     String* m_lastLocation;
-    NetworkRequestResponse m_response;
+    EntityBody m_response;
     GCVector<size_t> m_requstedIdlers;
     GCVector<std::pair<String*, String*>> m_requestHeaders;
 
@@ -283,7 +281,7 @@ protected:
 
     GCVector<ResourceRequestClient*> m_clients;
 
-    ResponseHeaderMap m_responseHeaderMap;
+    HeaderMap m_responseHeaderMap;
 };
 }
 

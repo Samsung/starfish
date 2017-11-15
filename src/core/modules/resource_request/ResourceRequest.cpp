@@ -70,8 +70,8 @@ ResourceRequest::ResourceRequest(Document* document)
         [](void* obj, void* cd) {
             // STARFISH_LOG_INFO("ResourceRequest::~ResourceRequest %p\n", obj);
             ResourceRequest* nr = (ResourceRequest*)obj;
-            NetworkRequestResponse().swap(nr->m_response);
-            ResponseHeaderMap().swap(nr->m_responseHeaderMap);
+            EntityBody().swap(nr->m_response);
+            HeaderMap().swap(nr->m_responseHeaderMap);
         },
         NULL, NULL, NULL);
 
@@ -83,8 +83,8 @@ void ResourceRequest::initVariables()
 {
     m_responseMimeType = String::emptyString;
     m_contentLanguage = String::emptyString;
-    NetworkRequestResponse().swap(m_response);
-    ResponseHeaderMap().swap(m_responseHeaderMap);
+    EntityBody().swap(m_response);
+    HeaderMap().swap(m_responseHeaderMap);
     m_isSync = false;
     m_gotError = false;
     m_containsBase64Content = false;
@@ -230,8 +230,8 @@ void ResourceRequest::changeProgress(ProgressState progress,
     }
 
     if (m_progressState == ProgressState::LOADEND) {
-        NetworkRequestResponse().swap(m_response);
-        ResponseHeaderMap().swap(m_responseHeaderMap);
+        EntityBody().swap(m_response);
+        HeaderMap().swap(m_responseHeaderMap);
     }
 }
 
@@ -560,16 +560,15 @@ static inline bool isBase64(unsigned char c)
 }
 
 template <typename StrType>
-NetworkRequestResponse ResourceRequest::parseBase64String(const StrType& str,
-                                                          size_t startAt,
-                                                          size_t endAt)
+EntityBody ResourceRequest::parseBase64String(const StrType& str,
+                                              size_t startAt, size_t endAt)
 {
     size_t inLen = endAt - startAt;
     size_t i = 0;
     size_t j = 0;
     size_t in_ = startAt;
     unsigned char charArray4[4] = {}, charArray3[3] = {};
-    NetworkRequestResponse result;
+    EntityBody result;
 
     while (inLen--) {
         if (((unsigned char)str[in_] != '=') &&

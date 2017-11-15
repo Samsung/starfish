@@ -27,14 +27,13 @@ public:
     HTTPCache(String* cacheDirPath);
     ~HTTPCache();
     void initFromIndexFileIfPossible();
-    HTTPCacheEntryMultiMap::iterator cacheHit(ResourceURL* url);
-    HTTPCacheEntryMultiMap::iterator cacheEntryTableEnd()
+    HTTPCacheEntryMultiMap::iterator get(ResourceURL* url);
+    HTTPCacheEntryMultiMap::iterator end()
     {
         return m_cacheEntryTable.end();
     }
 
-    void caching(NetworkURLWorkerData* data);
-    bool isFresh(HTTPCacheEntry* entry);
+    void put(NetworkURLWorkerData* data);
     bool flush();
     void expire();
     void pruningIfNeeds(size_t contentLength);
@@ -46,7 +45,6 @@ private:
     void addCacheLRUListData(std::string& url);
     void deleteCacheLRUListData(std::string& url);
     HTTPCacheEntryMultiMap::iterator findEntryTableData(String* key);
-    CacheControl parseCacheControl(std::string directives);
 
     HTTPCacheEntryMultiMap m_cacheEntryTable;
     HTTPCacheLRUList m_cacheLRUList;

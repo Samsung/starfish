@@ -95,7 +95,7 @@ public:
     void start(ResourceRequest::MethodType method);
     void initResponseData();
 
-    void didHeaderReceived(const ResponseHeaderMap& headrs);
+    void didHeaderReceived(const HeaderMap& headrs);
     void didDataReceived(const char*, size_t length);
 
     void onMessageEvent(String* type, String* data, String* lastEventId);
