@@ -500,23 +500,32 @@ int main(int argc, char* argv[])
 #endif
 
     const char* defaultEngine = "gl";
-    const char* engine = getenv("STARFISH_EFL_ENGINE");
+    const char* engine = getenv("STARFISH_ELM_ENGINE");
     if (!engine || strlen(engine) == 0) {
         engine = defaultEngine;
     }
+    const char* defaultConfig = "opengl";
+    const char* config = getenv("STARFISH_ELM_CONFIG");
+    if (!config || strlen(config) == 0) {
+        config = defaultConfig;
+    }
+
+    // printf("engine-> %s\n", engine);
+    // printf("config-> %s\n", config);
+
     setenv("ELM_ENGINE", engine, 1);
 
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-    elm_config_accel_preference_set(engine);
+    elm_config_accel_preference_set(config);
 #endif
 
     int flag = 0;
 
     if (argc == 1) {
-        puts("please specify file path");
+        puts("please specify url");
         return -1;
     }
 

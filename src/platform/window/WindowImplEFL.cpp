@@ -99,6 +99,7 @@ public:
         m_canvasAdpater = nullptr;
         m_canvasAdpaterSurface = nullptr;
         m_canvasAdpaterCairo = nullptr;
+        ecore_animator_frametime_set(1.0 / 60);
 #endif
         m_renderingAnimator = nullptr;
         m_isMouseLbuttonDown = false;
@@ -821,7 +822,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                      EVAS_HINT_EXPAND);
     elm_win_resize_object_add((Evas_Object*)win, wnd->m_canvasAdpater);
     evas_object_image_alpha_set(wnd->m_canvasAdpater, EINA_TRUE);
-
+    evas_object_render_op_set(wnd->m_canvasAdpater, EVAS_RENDER_COPY);
 #endif
 #if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
     defined(STARFISH_TIZEN_EVASGL_CAIRO)
@@ -1485,11 +1486,19 @@ void WebView::setNeedsRendering()
             if (g_currentWnd != wnd) {
                 return ECORE_CALLBACK_CANCEL;
             }
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
+
+#ifdef STARFISH_TIZEN_TV
+            auto currentTick = tickCount();
+            auto diff = currentTick - wnd->m_lastRenderingTime;
+            if (!wnd->m_canRendering || (diff < (1.0 / 120 * 1000))) {
+                return ECORE_CALLBACK_RENEW;
+            }
+#else
             if (!wnd->m_canRendering) {
                 return ECORE_CALLBACK_RENEW;
             }
 #endif
+
             StarFishEnterer enter(wnd->starFish());
             if (wnd->rendering()) {
                 wnd->m_canRendering = false;
