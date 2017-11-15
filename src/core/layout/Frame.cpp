@@ -464,17 +464,25 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
         Length height = container->style()->height();
         if (height.isDefinite(false)) {
             return true;
-        } else if (container->isAbsolutePositioned() &&
-                   ((height.isPercent() || height.isCalc()) ||
-                    (container->style()->bottom().isSpecified() &&
-                     container->style()->top().isSpecified()))) {
-            return true;
-        } else if (height.isAuto()) {
-            return false;
-        } else {
-            STARFISH_ASSERT(height.isPercent() || height.isCalc());
-            container = blockContainer(container);
         }
+
+        if (container->isAbsolutePositioned()) {
+            if (height.isPercent() || height.isCalc()) {
+                return true;
+            }
+
+            LengthData offset = container->style()->offset();
+            if (offset.bottom().isSpecified() && offset.top().isSpecified()) {
+                return true;
+            }
+        }
+
+        if (height.isAuto()) {
+            return false;
+        }
+
+        STARFISH_ASSERT(height.isPercent() || height.isCalc());
+        container = blockContainer(container);
     }
     return false;
 }
@@ -503,14 +511,16 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
                     Length(Length::Fixed,
                            height.specifiedValue(parentHeight, container)));
                 break;
-            } else if (container->style()->top().isSpecified() &&
-                       container->style()->bottom().isSpecified()) {
+            }
+
+            LengthData offset = container->style()->offset();
+            if (offset.top().isSpecified() && offset.bottom().isSpecified()) {
                 LayoutUnit parentHeight =
                     containingBlock(container)->contentHeight();
-                LayoutUnit t = container->style()->top().specifiedValue(
-                    parentHeight, container);
-                LayoutUnit b = container->style()->bottom().specifiedValue(
-                    parentHeight, container);
+                LayoutUnit t =
+                    offset.top().specifiedValue(parentHeight, container);
+                LayoutUnit b =
+                    offset.bottom().specifiedValue(parentHeight, container);
                 LayoutUnit height;
                 if (container->style()->boxSizing() ==
                     BorderBoxBoxSizingValue) {

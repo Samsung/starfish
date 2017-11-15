@@ -319,23 +319,25 @@ void FlexFormattingContext::resolveMainMargin()
             }
 
             if (m_isMainAxisInInlineAxis) {
+                LengthData margin = flexItem->style()->margin();
                 if (sumOfMainSize <= m_availableMainSize &&
-                    flexItem->style()->marginLeft().isAuto()) {
+                    margin.left().isAuto()) {
                     autoMarginCnt++;
                 }
                 sumOfMainSize += flexItem->outerWidth();
                 if (sumOfMainSize <= m_availableMainSize &&
-                    flexItem->style()->marginRight().isAuto()) {
+                    margin.right().isAuto()) {
                     autoMarginCnt++;
                 }
             } else {
+                LengthData margin = flexItem->style()->margin();
                 if (sumOfMainSize <= m_availableMainSize &&
-                    flexItem->style()->marginTop().isAuto()) {
+                    margin.top().isAuto()) {
                     autoMarginCnt++;
                 }
                 sumOfMainSize += flexItem->outerHeight();
                 if (sumOfMainSize <= m_availableMainSize &&
-                    flexItem->style()->marginBottom().isAuto()) {
+                    margin.bottom().isAuto()) {
                     autoMarginCnt++;
                 }
             }
@@ -352,27 +354,27 @@ void FlexFormattingContext::resolveMainMargin()
                 }
 
                 if (m_isMainAxisInInlineAxis) {
-                    if (flexItem->style()->marginLeft().isAuto()) {
+                    LengthData marginL = flexItem->style()->margin();
+                    if (marginL.left().isAuto()) {
                         flexItem->setMarginLeft(margin);
                         sumOfMainSize += margin;
                         autoMarginCnt--;
                     }
 
-                    if (autoMarginCnt > 0 &&
-                        flexItem->style()->marginRight().isAuto()) {
+                    if (autoMarginCnt > 0 && marginL.right().isAuto()) {
                         flexItem->setMarginRight(margin);
                         sumOfMainSize += margin;
                         autoMarginCnt--;
                     }
                 } else {
-                    if (flexItem->style()->marginTop().isAuto()) {
+                    LengthData marginL = flexItem->style()->margin();
+                    if (marginL.top().isAuto()) {
                         flexItem->setMarginTop(margin);
                         sumOfMainSize += margin;
                         autoMarginCnt--;
                     }
 
-                    if (autoMarginCnt > 0 &&
-                        flexItem->style()->marginBottom().isAuto()) {
+                    if (autoMarginCnt > 0 && marginL.bottom().isAuto()) {
                         flexItem->setMarginBottom(margin);
                         sumOfMainSize += margin;
                         autoMarginCnt--;
@@ -538,13 +540,13 @@ void FlexFormattingContext::computeCrossSize()
         for (size_t j = 0; j < flexItems.size(); j++) {
             FrameBox* flexItem = flexItems[j];
             bool shouldAlignAtFirstBaseline = false;
+            LengthData margin = flexItem->style()->margin();
 
             if (!flexItem->isAbsolutePositioned() &&
                 flexItem->isFrameBlockBox() &&
                 flexItem->style()->alignSelf() == BaselineAlignItemValue &&
-                m_isMainAxisInInlineAxis &&
-                !flexItem->style()->marginTop().isAuto() &&
-                !flexItem->style()->marginBottom().isAuto()) {
+                m_isMainAxisInInlineAxis && !margin.top().isAuto() &&
+                !margin.bottom().isAuto()) {
                 shouldAlignAtFirstBaseline = true;
             }
 
@@ -584,12 +586,10 @@ void FlexFormattingContext::computeCrossSize()
             if (flexItem->style()->alignSelf() == StretchAlignItemValue) {
                 if ((m_isMainAxisInInlineAxis &&
                      flexItem->style()->height().isAuto() &&
-                     !flexItem->style()->marginTop().isAuto() &&
-                     !flexItem->style()->marginBottom().isAuto()) ||
+                     !margin.top().isAuto() && !margin.bottom().isAuto()) ||
                     (!m_isMainAxisInInlineAxis &&
                      flexItem->style()->width().isAuto() &&
-                     !flexItem->style()->marginLeft().isAuto() &&
-                     !flexItem->style()->marginRight().isAuto())) {
+                     !margin.left().isAuto() && !margin.right().isAuto())) {
                     flexItemsToStretchInfos.emplace_back(i, flexItem);
                 }
             }
@@ -700,29 +700,28 @@ void FlexFormattingContext::resolveCrossMargin()
                 continue;
             }
 
+            LengthData marginL = item->style()->margin();
             if (m_isMainAxisInInlineAxis) {
                 if (lineCrossSize > item->outerHeight()) {
                     LayoutUnit margin = lineCrossSize - item->outerHeight();
-                    if (item->style()->marginTop().isAuto() &&
-                        item->style()->marginBottom().isAuto()) {
+                    if (marginL.top().isAuto() && marginL.bottom().isAuto()) {
                         item->setMarginTop(margin / 2);
                         item->setMarginBottom(margin / 2);
-                    } else if (item->style()->marginTop().isAuto()) {
+                    } else if (marginL.top().isAuto()) {
                         item->setMarginTop(margin);
-                    } else if (item->style()->marginBottom().isAuto()) {
+                    } else if (marginL.bottom().isAuto()) {
                         item->setMarginBottom(margin);
                     }
                 }
             } else {
                 if (lineCrossSize > item->outerWidth()) {
                     LayoutUnit margin = lineCrossSize - item->outerWidth();
-                    if (item->style()->marginLeft().isAuto() &&
-                        item->style()->marginRight().isAuto()) {
+                    if (marginL.left().isAuto() && marginL.right().isAuto()) {
                         item->setMarginLeft(margin / 2);
                         item->setMarginRight(margin / 2);
-                    } else if (item->style()->marginLeft().isAuto()) {
+                    } else if (marginL.left().isAuto()) {
                         item->setMarginLeft(margin);
-                    } else if (item->style()->marginRight().isAuto()) {
+                    } else if (marginL.right().isAuto()) {
                         item->setMarginRight(margin);
                     }
                 }

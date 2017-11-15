@@ -3616,9 +3616,10 @@ LayoutUnit PreferredWidthContext::leftMBPWidth(Frame* f)
 {
     LayoutUnit width;
     LayoutUnit unused;
-    Length borderLeftWidth = f->style()->borderLeftWidth();
-    Length paddingLeft = f->style()->paddingLeft();
-    Length marginLeft = f->style()->marginLeft();
+    BorderData border = f->style()->border();
+    Length borderLeftWidth = border.left().width();
+    Length paddingLeft = f->style()->padding().left();
+    Length marginLeft = f->style()->margin().left();
 
     if (borderLeftWidth.isDefinite(false)) {
         width += borderLeftWidth.specifiedValue(unused, f);
@@ -3639,9 +3640,12 @@ LayoutUnit PreferredWidthContext::rightMBPWidth(Frame* f)
 {
     LayoutUnit width;
     LayoutUnit unused;
-    Length borderRightWidth = f->style()->borderRightWidth();
-    Length paddingRight = f->style()->paddingRight();
-    Length marginRight = f->style()->marginRight();
+    BorderData border = f->style()->border();
+    LengthData padding = f->style()->padding();
+    LengthData margin = f->style()->margin();
+    Length borderRightWidth = border.right().width();
+    Length paddingRight = padding.right();
+    Length marginRight = margin.right();
 
     if (borderRightWidth.isDefinite(false)) {
         width += borderRightWidth.specifiedValue(unused, f);

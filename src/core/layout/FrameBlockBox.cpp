@@ -96,8 +96,9 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
         FrameTableBox* tableBox = asFrameTableBox();
         tableBox->computeTableWidth(ctx);
     } else {
-        Length left = style()->left();
-        Length right = style()->right();
+        LengthData offset = style()->offset();
+        Length left = offset.left();
+        Length right = offset.right();
         Length width = style()->width();
         BoxSizingValue boxSizing = style()->boxSizing();
         LayoutUnit contentWidth;
@@ -167,8 +168,9 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         if (isAbsolutePositioned()) {
             parentHeight = cb->contentHeight() + cb->paddingHeight();
             if (height.isAuto()) {
-                Length top = style()->top();
-                Length bottom = style()->bottom();
+                LengthData offset = style()->offset();
+                Length top = offset.top();
+                Length bottom = offset.bottom();
                 if (top.isSpecified() && bottom.isSpecified()) {
                     LayoutUnit t = top.specifiedValue(parentHeight, this);
                     LayoutUnit b = bottom.specifiedValue(parentHeight, this);
@@ -217,10 +219,11 @@ static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
 {
     LayoutUnit x = 0;
     LayoutUnit y = 0;
-    Length left = f->style()->left();
-    Length right = f->style()->right();
-    Length top = f->style()->top();
-    Length bottom = f->style()->bottom();
+    LengthData offset = f->style()->offset();
+    Length left = offset.left();
+    Length right = offset.right();
+    Length top = offset.top();
+    Length bottom = offset.bottom();
 
     // left, right
     if (!left.isAuto() && !right.isAuto()) {
@@ -286,11 +289,12 @@ void LayoutContext::applyRelativePositionInlineCase(Frame* origin,
 
     LayoutLocation loc =
         relativeLocation(*this, origin, LayoutSize(parentWidth, parentHeight));
+    LengthData offset = box->style()->offset();
 
-    if (box->style()->left().isAuto() && box->style()->right().isAuto()) {
+    if (offset.left().isAuto() && offset.right().isAuto()) {
         box->moveX(loc.x());
     }
-    if (box->style()->top().isAuto() && box->style()->bottom().isAuto()) {
+    if (offset.top().isAuto() && offset.bottom().isAuto()) {
         box->moveY(loc.y());
     }
 }
@@ -317,8 +321,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             HorizontalDataLocToContainingBlock data =
                 computeHorizontalDataToContainingBlock(ctx, cb);
 
-            Length left = style()->left();
-            Length right = style()->right();
+            LengthData offset = style()->offset();
+            Length left = offset.left();
+            Length right = offset.right();
             Length width = style()->width();
 
             if (left.isAuto() && right.isAuto()) {
@@ -365,8 +370,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                     computeHorizontalMargin(data.m_contentWidth - data.m_left -
                                                 data.m_right,
                                             parentDirection);
-                    Length marginLeft = style()->marginLeft();
-                    Length marginRight = style()->marginRight();
+                    LengthData margin = style()->margin();
+                    Length marginLeft = margin.left();
+                    Length marginRight = margin.right();
                     bool relativeToLeft = false;
 
                     if (marginLeft.isAuto() && marginRight.isAuto()) {
@@ -435,8 +441,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         VerticalDataLocToContainingBlock data =
             computeVerticalDataToContainingBlock(ctx, cb);
 
-        Length top = style()->top();
-        Length bottom = style()->bottom();
+        LengthData offset = style()->offset();
+        Length top = offset.top();
+        Length bottom = offset.bottom();
 
         // 10.6.4 Absolutely positioned, non-replaced elements
 

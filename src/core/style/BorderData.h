@@ -32,12 +32,6 @@ public:
 
     STARFISH_MAKE_STACK_ALLOCATED();
 
-    bool hasBorderColor()
-    {
-        return m_top.hasBorderColor() || m_right.hasBorderColor() ||
-               m_bottom.hasBorderColor() || m_left.hasBorderColor();
-    }
-
     bool hasBorderStyle()
     {
         return m_top.hasBorderStyle() || m_right.hasBorderStyle() ||
@@ -74,13 +68,45 @@ public:
         return m_image;
     }
 
+    void makeZeroWidth()
+    {
+        m_left.setWidth(Length(Length::Fixed, 0));
+        m_right.setWidth(Length(Length::Fixed, 0));
+        m_top.setWidth(Length(Length::Fixed, 0));
+        m_bottom.setWidth(Length(Length::Fixed, 0));
+    }
+
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
                        LayoutSize windowSize, ComputedStyle* cs)
     {
-        m_left.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
-        m_right.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
-        m_top.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
-        m_bottom.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+        if (m_left.hasBorderStyle()) {
+            m_left.checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                 cs);
+        } else {
+            m_left.setWidth(Length(Length::Fixed, 0));
+        }
+
+        if (m_right.hasBorderStyle()) {
+            m_right.checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                  cs);
+        } else {
+            m_right.setWidth(Length(Length::Fixed, 0));
+        }
+
+        if (m_top.hasBorderStyle()) {
+            m_top.checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                cs);
+        } else {
+            m_top.setWidth(Length(Length::Fixed, 0));
+        }
+
+        if (m_bottom.hasBorderStyle()) {
+            m_bottom.checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                   cs);
+        } else {
+            m_bottom.setWidth(Length(Length::Fixed, 0));
+        }
+
         m_image.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
     }
 

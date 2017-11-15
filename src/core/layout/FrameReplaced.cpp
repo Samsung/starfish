@@ -355,8 +355,9 @@ void FrameReplaced::layout(LayoutContext& ctx,
         if (isAbsolutePositioned()) {
             HorizontalDataLocToContainingBlock data =
                 computeHorizontalDataToContainingBlock(ctx, cb);
-            Length left = style()->left();
-            Length right = style()->right();
+            LengthData offset = style()->offset();
+            Length left = offset.left();
+            Length right = offset.right();
 
             if (left.isAuto() && right.isAuto()) {
                 // static location computed in normal flow processing
@@ -381,8 +382,9 @@ void FrameReplaced::layout(LayoutContext& ctx,
                 computeHorizontalMargin(data.m_contentWidth - data.m_left -
                                             data.m_right,
                                         parentDirection);
-                Length marginLeft = style()->marginLeft();
-                Length marginRight = style()->marginRight();
+                LengthData margin = style()->margin();
+                Length marginLeft = margin.left();
+                Length marginRight = margin.right();
                 bool relativeToLeft = false;
 
                 if (marginLeft.isAuto() && marginRight.isAuto()) {
@@ -421,8 +423,9 @@ void FrameReplaced::layout(LayoutContext& ctx,
         if (isAbsolutePositioned()) {
             VerticalDataLocToContainingBlock data =
                 computeVerticalDataToContainingBlock(ctx, cb);
-            Length top = style()->top();
-            Length bottom = style()->bottom();
+            LengthData offset = style()->offset();
+            Length top = offset.top();
+            Length bottom = offset.bottom();
 
             if (top.isAuto() && bottom.isAuto()) {
                 // static location computed in normal flow processing

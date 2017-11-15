@@ -86,55 +86,55 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
                                           LayoutUnit parentContentWidth)
 {
     // padding
-    if (style()->paddingLeft().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-        setPaddingLeft(
-            style()->paddingLeft().specifiedValue(parentContentWidth, this));
+    LengthData padding = style()->padding();
+    if (padding.left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
+        setPaddingLeft(padding.left().specifiedValue(parentContentWidth, this));
     } else {
         setPaddingLeft(0);
     }
-    if (style()->paddingTop().isSpecified()) {
-        setPaddingTop(
-            style()->paddingTop().specifiedValue(parentContentWidth, this));
+    if (padding.top().isSpecified()) {
+        setPaddingTop(padding.top().specifiedValue(parentContentWidth, this));
     } else {
         setPaddingTop(0);
     }
-    if (style()->paddingRight().isSpecified() && !m_flags.m_isRightMBPCleared) {
+    if (padding.right().isSpecified() && !m_flags.m_isRightMBPCleared) {
         setPaddingRight(
-            style()->paddingRight().specifiedValue(parentContentWidth, this));
+            padding.right().specifiedValue(parentContentWidth, this));
     } else {
         setPaddingRight(0);
     }
-    if (style()->paddingBottom().isSpecified()) {
+    if (padding.bottom().isSpecified()) {
         setPaddingBottom(
-            style()->paddingBottom().specifiedValue(parentContentWidth, this));
+            padding.bottom().specifiedValue(parentContentWidth, this));
     } else {
         setPaddingBottom(0);
     }
 
     // border
-    if (style()->hasBorderStyle()) {
-        if (style()->borderLeftWidth().isSpecified() &&
+    BorderData border = style()->border();
+    if (border.hasBorderStyle()) {
+        if (border.left().width().isSpecified() &&
             !m_flags.m_isLeftMBPCleared) {
-            setBorderLeft(style()->borderLeftWidth().specifiedValue(
-                parentContentWidth, this));
+            setBorderLeft(
+                border.left().width().specifiedValue(parentContentWidth, this));
         } else {
             setBorderLeft(0);
         }
-        if (style()->borderTopWidth().isSpecified()) {
-            setBorderTop(style()->borderTopWidth().specifiedValue(
-                parentContentWidth, this));
+        if (border.top().width().isSpecified()) {
+            setBorderTop(
+                border.top().width().specifiedValue(parentContentWidth, this));
         } else {
             setBorderTop(0);
         }
-        if (style()->borderRightWidth().isSpecified() &&
+        if (border.right().width().isSpecified() &&
             !m_flags.m_isRightMBPCleared) {
-            setBorderRight(style()->borderRightWidth().specifiedValue(
+            setBorderRight(border.right().width().specifiedValue(
                 parentContentWidth, this));
         } else {
             setBorderRight(0);
         }
-        if (style()->borderBottomWidth().isSpecified()) {
-            setBorderBottom(style()->borderBottomWidth().specifiedValue(
+        if (border.bottom().width().isSpecified()) {
+            setBorderBottom(border.bottom().width().specifiedValue(
                 parentContentWidth, this));
         } else {
             setBorderBottom(0);
@@ -147,27 +147,25 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     }
 
     // margin
-    if (style()->marginLeft().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-        setMarginLeft(
-            style()->marginLeft().specifiedValue(parentContentWidth, this));
+    LengthData margin = style()->margin();
+    if (margin.left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
+        setMarginLeft(margin.left().specifiedValue(parentContentWidth, this));
     } else {
         setMarginLeft(0);
     }
-    if (style()->marginTop().isSpecified()) {
-        setMarginTop(
-            style()->marginTop().specifiedValue(parentContentWidth, this));
+    if (margin.top().isSpecified()) {
+        setMarginTop(margin.top().specifiedValue(parentContentWidth, this));
     } else {
         setMarginTop(0);
     }
-    if (style()->marginRight().isSpecified() && !m_flags.m_isRightMBPCleared) {
-        setMarginRight(
-            style()->marginRight().specifiedValue(parentContentWidth, this));
+    if (margin.right().isSpecified() && !m_flags.m_isRightMBPCleared) {
+        setMarginRight(margin.right().specifiedValue(parentContentWidth, this));
     } else {
         setMarginRight(0);
     }
-    if (style()->marginBottom().isSpecified()) {
+    if (margin.bottom().isSpecified()) {
         setMarginBottom(
-            style()->marginBottom().specifiedValue(parentContentWidth, this));
+            margin.bottom().specifiedValue(parentContentWidth, this));
     } else {
         setMarginBottom(0);
     }
@@ -195,8 +193,9 @@ FrameBox::computeHorizontalDataToContainingBlock(LayoutContext& ctx,
         cb->contentWidth() + cb->paddingWidth();
 
     LayoutUnit l, r;
-    Length left = style()->left();
-    Length right = style()->right();
+    LengthData offset = style()->offset();
+    Length left = offset.left();
+    Length right = offset.right();
     if (left.isSpecified()) {
         l = left.specifiedValue(containgBlockContentWidth, this);
     }
@@ -227,8 +226,9 @@ VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
     LayoutUnit absY = l2.y() - l1.y() - cb->borderTop();
 
     LayoutUnit t, b;
-    Length top = style()->top();
-    Length bottom = style()->bottom();
+    LengthData offset = style()->offset();
+    Length top = offset.top();
+    Length bottom = offset.bottom();
     if (top.isSpecified()) {
         t = top.specifiedValue(containgBlockContentHeight, this);
     }
@@ -244,8 +244,9 @@ VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
 void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth,
                                        DirectionValue parentDirection)
 {
-    Length marginLeft = style()->marginLeft();
-    Length marginRight = style()->marginRight();
+    LengthData margin = style()->margin();
+    Length marginLeft = margin.left();
+    Length marginRight = margin.right();
     LayoutUnit remainingWidth = parentContentWidth - width();
 
     if (marginLeft.isAuto() && marginRight.isAuto()) {
@@ -275,8 +276,9 @@ void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth,
 void FrameBox::computeVerticalMargin(LayoutUnit parentContentHeight)
 {
     STARFISH_ASSERT(isAbsolutePositioned());
-    Length marginTop = style()->marginTop();
-    Length marginBottom = style()->marginBottom();
+    LengthData margin = style()->margin();
+    Length marginTop = margin.top();
+    Length marginBottom = margin.bottom();
     LayoutUnit remainingHeight = parentContentHeight - height();
 
     if (marginTop.isAuto() && marginBottom.isAuto()) {
@@ -606,14 +608,14 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             frameBoxRareData()->m_bufferForBorderRadius->data(),
             frameBoxRareData()->m_bufferForBorderRadius->width(),
             frameBoxRareData()->m_bufferForBorderRadius->height());
-    } else if (style()->borderTopStyle() ==
-                   BorderStyleValue::DashedBorderStyleValue ||
-               style()->borderRightStyle() ==
-                   BorderStyleValue::DashedBorderStyleValue ||
-               style()->borderBottomStyle() ==
-                   BorderStyleValue::DashedBorderStyleValue ||
-               style()->borderLeftStyle() ==
-                   BorderStyleValue::DashedBorderStyleValue) {
+        return;
+    }
+
+    BorderData border = style()->border();
+    if (border.top().style() == BorderStyleValue::DashedBorderStyleValue ||
+        border.right().style() == BorderStyleValue::DashedBorderStyleValue ||
+        border.bottom().style() == BorderStyleValue::DashedBorderStyleValue ||
+        border.left().style() == BorderStyleValue::DashedBorderStyleValue) {
         cairoCanvasUsed = true;
         if (!ensureFrameBoxRareData()->m_bufferForBorderRadius ||
             frameBoxRareData()->m_bufferForBorderRadius->width() !=
@@ -956,7 +958,8 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
     canvas->save();
 
     // draw border-image
-    if (style()->hasBorderImageData()) {
+    BorderData border = style()->border();
+    if (border.hasBorderImageData()) {
         // Draw image borders at the four corners as shown below.
         //   ______________
         //  |_|          |_|
@@ -966,44 +969,25 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
         //  |_|__________|_|
         //
 
-        double bWidth =
-            style()->surround()->m_border.top().width().specifiedValue(height(),
-                                                                       this);
+        double bWidth = border.top().width().specifiedValue(height(), this);
         double bImgWidth =
-            style()->surround()->m_border.image().widths().top().specifiedValue(
-                bWidth, this);
+            border.image().widths().top().specifiedValue(bWidth, this);
         double bImgSlice =
-            style()->surround()->m_border.image().slices().top().specifiedValue(
-                height(), this);
+            border.image().slices().top().specifiedValue(height(), this);
 
-        size_t imgWidth =
-            style()->surround()->m_border.image().imageData()->width();
-        size_t imgHeight =
-            style()->surround()->m_border.image().imageData()->height();
+        size_t imgWidth = border.image().imageData()->width();
+        size_t imgHeight = border.image().imageData()->height();
 
-        size_t lSlice = style()
-                            ->surround()
-                            ->m_border.image()
-                            .slices()
-                            .left()
-                            .specifiedValue(width(), this);
+        size_t lSlice =
+            border.image().slices().left().specifiedValue(width(), this);
         size_t tSlice =
-            style()->surround()->m_border.image().slices().top().specifiedValue(
-                height(), this);
-        size_t rSlice = style()
-                            ->surround()
-                            ->m_border.image()
-                            .slices()
-                            .right()
-                            .specifiedValue(width(), this);
-        size_t bSlice = style()
-                            ->surround()
-                            ->m_border.image()
-                            .slices()
-                            .bottom()
-                            .specifiedValue(height(), this);
+            border.image().slices().top().specifiedValue(height(), this);
+        size_t rSlice =
+            border.image().slices().right().specifiedValue(width(), this);
+        size_t bSlice =
+            border.image().slices().bottom().specifiedValue(height(), this);
 
-        ImageData* imgData = style()->surround()->m_border.image().imageData();
+        ImageData* imgData = border.image().imageData();
 
         if (bImgSlice > imgWidth || bImgSlice > imgHeight) {
             bImgSlice = std::min(imgWidth, imgHeight);
@@ -1050,13 +1034,13 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                            drawRect, drawRect),
                 lSlice, 0, 0, bSlice, scale, isFill);
         } else {
-            isFill = style()->surround()->m_border.image().sliceFill();
+            isFill = border.image().sliceFill();
             canvas->drawBorderImage(
                 imgData,
                 Unit::Rect(rect.x(), rect.y(), rect.width(), rect.height()),
                 lSlice, tSlice, rSlice, bSlice, scale, isFill);
         }
-    } else if (style()->hasBorderStyle()) {
+    } else if (border.hasBorderStyle()) {
         if (style()->hasBorderRadius()) {
             float x, y;
             auto br = style()->borderRadius();
@@ -1082,7 +1066,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
             float arcR;
             // draw border-left
             {
-                canvas->setColor(style()->borderLeftColor());
+                canvas->setColor(border.left().color());
 
                 if (topLeftHorizontal && topLeftVertical) {
                     canvas->save();
@@ -1184,7 +1168,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
             // draw border-top
             {
-                canvas->setColor(style()->borderTopColor());
+                canvas->setColor(border.top().color());
 
                 if (topLeftHorizontal && topLeftVertical) {
                     if (topLeftHorizontal > borderLeft() &&
@@ -1286,7 +1270,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
             // draw border-right
             {
-                canvas->setColor(style()->borderRightColor());
+                canvas->setColor(border.right().color());
 
                 if (topRightHorizontal && topRightVertical) {
                     if (topRightHorizontal > borderRight() &&
@@ -1396,7 +1380,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
             // border-bottom
             {
-                canvas->setColor(style()->borderBottomColor());
+                canvas->setColor(border.bottom().color());
                 if (bottomRightHorizontal && bottomRightVertical) {
                     if (bottomRightHorizontal > borderRight() &&
                         bottomRightVertical > borderBottom()) {
@@ -1498,9 +1482,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
         } else {
             if (style()->isFourSideBorderStyleValueSolid() &&
-                (style()->borderTopColor() == style()->borderRightColor()) &&
-                (style()->borderRightColor() == style()->borderBottomColor()) &&
-                (style()->borderBottomColor() == style()->borderLeftColor())) {
+                (border.top().color() == border.right().color()) &&
+                (border.right().color() == border.bottom().color()) &&
+                (border.bottom().color() == border.left().color())) {
                 // Draw solid borders fast around the given rect
                 // when all 4 colors are the same.
                 //    _______________
@@ -1512,7 +1496,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 //   |_______________|
                 //
 
-                canvas->setColor(style()->borderTopColor());
+                canvas->setColor(border.top().color());
 
                 // top
                 canvas->drawRect(
@@ -1547,22 +1531,20 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
                 Unit::Color black =
                     NamedColor::namedColorToColor(NamedColor::blackNamedColor);
-
                 // top
-                if (style()->borderTopStyle() ==
+                if (border.top().style() ==
                     BorderStyleValue::InsetBorderStyleValue) {
-                    canvas->setColor(
-                        style()->borderTopColor().getDarkerColor());
-                } else if ((style()->borderTopStyle() ==
+                    canvas->setColor(border.top().color().getDarkerColor());
+                } else if ((border.top().style() ==
                             BorderStyleValue::OutsetBorderStyleValue) &&
-                           (style()->borderTopColor() == black)) {
-                    canvas->setColor(Unit::Color(
-                        238, 238, 238, style()->borderTopColor().a()));
+                           (border.top().color() == black)) {
+                    canvas->setColor(
+                        Unit::Color(238, 238, 238, border.top().color().a()));
                 } else {
-                    canvas->setColor(style()->borderTopColor());
+                    canvas->setColor(border.top().color());
                 }
 
-                if ((style()->borderTopStyle() ==
+                if ((border.top().style() ==
                      BorderStyleValue::DashedBorderStyleValue)) {
                     paintDashedLine(
                         canvas, LayoutLocation(rect.x(), rect.y()),
@@ -1586,20 +1568,19 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 }
 
                 // right
-                if ((style()->borderRightStyle() ==
+                if ((border.right().style() ==
                      BorderStyleValue::InsetBorderStyleValue) &&
-                    (style()->borderRightColor() == black)) {
-                    canvas->setColor(Unit::Color(
-                        238, 238, 238, style()->borderRightColor().a()));
-                } else if (style()->borderRightStyle() ==
-                           BorderStyleValue::OutsetBorderStyleValue) {
+                    (border.right().color() == black)) {
                     canvas->setColor(
-                        style()->borderRightColor().getDarkerColor());
+                        Unit::Color(238, 238, 238, border.right().color().a()));
+                } else if (border.right().style() ==
+                           BorderStyleValue::OutsetBorderStyleValue) {
+                    canvas->setColor(border.right().color().getDarkerColor());
                 } else {
-                    canvas->setColor(style()->borderRightColor());
+                    canvas->setColor(border.right().color());
                 }
 
-                if ((style()->borderRightStyle() ==
+                if ((border.right().style() ==
                      BorderStyleValue::DashedBorderStyleValue)) {
                     paintDashedLine(
                         canvas,
@@ -1630,19 +1611,18 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 }
 
                 // bottom
-                if ((style()->borderBottomStyle() ==
+                if ((border.bottom().style() ==
                      BorderStyleValue::InsetBorderStyleValue) &&
-                    (style()->borderBottomColor() == black)) {
-                    canvas->setColor(Unit::Color(
-                        238, 238, 238, style()->borderBottomColor().a()));
-                } else if (style()->borderBottomStyle() ==
+                    (border.bottom().color() == black)) {
+                    canvas->setColor(Unit::Color(238, 238, 238,
+                                                 border.bottom().color().a()));
+                } else if (border.bottom().style() ==
                            BorderStyleValue::OutsetBorderStyleValue) {
-                    canvas->setColor(
-                        style()->borderBottomColor().getDarkerColor());
+                    canvas->setColor(border.bottom().color().getDarkerColor());
                 } else {
-                    canvas->setColor(style()->borderBottomColor());
+                    canvas->setColor(border.bottom().color());
                 }
-                if ((style()->borderBottomStyle() ==
+                if ((border.bottom().style() ==
                      BorderStyleValue::DashedBorderStyleValue)) {
                     paintDashedLine(
                         canvas,
@@ -1674,21 +1654,20 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 }
 
                 // left
-                if (style()->borderLeftStyle() ==
+                if (border.left().style() ==
                     BorderStyleValue::InsetBorderStyleValue) {
-                    canvas->setColor(
-                        style()->borderLeftColor().getDarkerColor());
-                } else if ((style()->borderLeftStyle() ==
+                    canvas->setColor(border.left().color().getDarkerColor());
+                } else if ((border.left().style() ==
                             BorderStyleValue::OutsetBorderStyleValue) &&
-                           (style()->borderLeftColor() == black)) {
-                    canvas->setColor(Unit::Color(
-                        238, 238, 238, style()->borderLeftColor().a()));
+                           (border.left().color() == black)) {
+                    canvas->setColor(
+                        Unit::Color(238, 238, 238, border.left().color().a()));
                 } else {
-                    canvas->setColor(style()->borderLeftColor());
+                    canvas->setColor(border.left().color());
                 }
 
-                if ((style()->borderLeftStyle() ==
-                     BorderStyleValue::DashedBorderStyleValue)) {
+                if (border.left().style() ==
+                    BorderStyleValue::DashedBorderStyleValue) {
                     paintDashedLine(
                         canvas, LayoutLocation(rect.x(), rect.y()),
                         LayoutLocation(rect.x(), rect.y() + borderTop()),
@@ -1816,8 +1795,9 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     ComputedStyle* cs = style();
     if (ctx.purpose == Frame::ComputeVisibleRectContext::GraphicsBuffer &&
         isFrameBlockBox() && isBlockLevel()) {
+        BorderData border = cs->border();
         if (cs->backgroundColor().isTransparent() &&
-            cs->backgroundLayerSize() == 0 && !cs->hasBorderStyle() &&
+            cs->backgroundLayerSize() == 0 && !border.hasBorderStyle() &&
             cs->outlineStyle() == BorderStyleValue::NoneBorderStyleValue) {
             r.setWidth(0);
             r.setHeight(0);
