@@ -18,15 +18,13 @@
 #define __StarFishHTTPResponse__
 
 #include <curl/curl.h>
-
+#include "HTTPUtil.h"
 namespace StarFish {
 
 class HTTPHeaderMap;
 
 class HTTPResponse {
 public:
-    typedef std::vector<char> EntityBody;
-
     static std::unique_ptr<HTTPResponse> create()
     {
         return std::unique_ptr<HTTPResponse>(new HTTPResponse());

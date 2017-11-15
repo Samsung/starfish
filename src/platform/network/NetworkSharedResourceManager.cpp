@@ -22,6 +22,7 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 
+#include <curl/curl.h>
 #include <openssl/crypto.h>
 
 #define CURLHANDLE_CACHE_PRUNE_MINIMUM_SIZE 12

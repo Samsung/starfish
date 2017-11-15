@@ -17,15 +17,13 @@
 #ifndef __StarFishHTTPHeaderMap__
 #define __StarFishHTTPHeaderMap__
 
-#include <curl/curl.h>
-#include <unordered_map>
+#include "HTTPUtil.h"
+struct curl_slist;
 
 namespace StarFish {
 
 class HTTPHeaderMap {
 public:
-    typedef std::unordered_map<std::string, std::string> HeaderMap;
-
     static const char kCacheControl[];
     static const char kConnection[];
     static const char kContentTransferEncoding[];
@@ -56,6 +54,7 @@ public:
     static const char kIfNoneMatch[];
     static const char kIfRange[];
     static const char kIfUnmodifiedSince[];
+    static const char kLastModified[];
     static const char kMaxForwards[];
     static const char kOrigin[];
     static const char kProxyAuthorization[];
@@ -65,8 +64,6 @@ public:
     static const char kUserAgent[];
     static const char kLocation[];
     static const char kUpgradeInsecureRequests[];
-
-    static std::string tryToConvertToHeaderMapString(const std::string& header);
 
     HTTPHeaderMap();
     ~HTTPHeaderMap();

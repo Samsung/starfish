@@ -19,6 +19,7 @@
 #include "HTTPRequest.h"
 #include "HTTPResponse.h"
 #include "HTTPTransaction.h"
+#include "HTTPUtil.h"
 #include "platform/network/NetworkSharedResourceManager.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "core/modules/profiling/Profiling.h"
@@ -28,72 +29,6 @@
 #endif
 
 namespace StarFish {
-
-// trim from start (in place)
-static inline void ltrim(std::string& s)
-{
-    s.erase(s.begin(),
-            std::find_if(s.begin(), s.end(),
-                         std::not1(std::ptr_fun<int, int>(std::isspace))));
-}
-
-// trim from end (in place)
-static inline void rtrim(std::string& s)
-{
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-                         std::not1(std::ptr_fun<int, int>(std::isspace)))
-                .base(),
-            s.end());
-}
-
-// trim from both ends (in place)
-static inline void trim(std::string& s)
-{
-    ltrim(s);
-    rtrim(s);
-}
-
-// trim from start (copying)
-static inline std::string ltrimmed(std::string s)
-{
-    ltrim(s);
-    return s;
-}
-
-// trim from end (copying)
-static inline std::string rtrimmed(std::string s)
-{
-    rtrim(s);
-    return s;
-}
-
-// trim from both ends (copying)
-static inline std::string trimmed(std::string s)
-{
-    trim(s);
-    return s;
-}
-
-static void skipSpaces(const std::string& input, unsigned long int& startIndex)
-{
-    while (startIndex < input.length() && input[startIndex] == ' ') {
-        ++startIndex;
-    }
-}
-
-static std::vector<std::string> split(const std::string& s, char seperator)
-{
-    std::vector<std::string> output;
-    std::string::size_type prev_pos = 0, pos = 0;
-    while ((pos = s.find(seperator, pos)) != std::string::npos) {
-        std::string substring(s.substr(prev_pos, pos - prev_pos));
-        output.push_back(substring);
-        prev_pos = ++pos;
-    }
-
-    output.push_back(s.substr(prev_pos, pos - prev_pos)); // Last word
-    return output;
-}
 
 HTTPTransaction::HTTPTransaction()
     : m_httpRequest()
@@ -244,11 +179,10 @@ void HTTPTransaction::didReceiveHeader(const std::string& header)
         std::string key = header.substr(0, pos);
         std::string value = header.substr(pos + 1);
 
-        trim(key);
-        trim(value);
+        StringUtils::trim(key);
+        StringUtils::trim(value);
 
-        std::string converted =
-            HTTPHeaderMap::tryToConvertToHeaderMapString(key);
+        std::string converted = HTTPUtil::tryToConvertToHeaderMapString(key);
         m_httpResponse->headers().setHeader(converted, value);
     }
 }

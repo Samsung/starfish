@@ -909,6 +909,15 @@ public:
     static void tokenize(String* src, const char* tokens, size_t tokensLength,
                          GCVector<StringView>& result);
     static bool equalsIgnoreCase(const std::string& a, const std::string& b);
+    static void ltrim(std::string& s);
+    static void rtrim(std::string& s);
+    static void trim(std::string& s);
+    static std::string ltrimmed(std::string s);
+    static std::string rtrimmed(std::string s);
+    static std::string trimmed(std::string s);
+    static void skipSpaces(const std::string& input,
+                           unsigned long int& startIndex);
+    static std::vector<std::string> split(const std::string& s, char seperator);
 };
 
 #ifndef STRING_BUILDER_INLINE_STORAGE_MAX

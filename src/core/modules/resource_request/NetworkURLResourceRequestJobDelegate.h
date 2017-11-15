@@ -37,7 +37,6 @@ struct NetworkURLWorkerData {
     NetworkURLWorkerHelper* helper;
     std::unique_ptr<HTTPTransaction> httpTransaction;
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    bool cacheHit;
     HTTPCacheEntry* cachedEntry;
 #endif
     std::string lastLocation;
@@ -97,7 +96,10 @@ private:
     void fillHeadersWithGeneralHeaders(HTTPHeaderMap& headers);
     void fillHeadersWithClientHeaders(HTTPHeaderMap& headers);
     void fillHeadersWithResourceRequestHeader(HTTPHeaderMap& headers);
-
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    void fillHeadersWithCachedEntry(HTTPHeaderMap& headers,
+                                    HTTPCacheEntry* cachedEntry);
+#endif
     ResourceRequest* m_orgProxy;
 };
 }
