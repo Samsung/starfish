@@ -145,7 +145,7 @@ public:
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
         int width;
         evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, NULL);
-        return width;
+        return width * starFish()->screenInfo().deviceScaleFactor;
     }
 
     virtual int32_t height() override
@@ -160,7 +160,8 @@ public:
         int height;
         evas_object_geometry_get(eflWindow->m_window, NULL, NULL, NULL,
                                  &height);
-        return height - m_offsetYDueToSoftwareKeyboard;
+        return (height * starFish()->screenInfo().deviceScaleFactor) -
+               m_offsetYDueToSoftwareKeyboard;
     }
 
     virtual void resizeTo(int w, int h)
@@ -896,9 +897,12 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 } else {
                     sf->m_clickedCount++;
                 }
-                MouseData mdata(MouseData::MouseButtonValue::LeftButton,
-                                MouseData::MouseButtonsValue::LeftButtonDown,
-                                d->x, d->y, sf->m_clickedCount);
+                MouseData mdata(
+                    MouseData::MouseButtonValue::LeftButton,
+                    MouseData::MouseButtonsValue::LeftButtonDown,
+                    d->x * sf->starFish()->screenInfo().deviceScaleFactor,
+                    d->y * sf->starFish()->screenInfo().deviceScaleFactor,
+                    sf->m_clickedCount);
                 sf->dispatchMouseEvent(PlatformWindow::MouseEventDown, mdata);
                 sf->m_isMouseLbuttonDown = true;
             }
@@ -914,9 +918,12 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             // We care just left button now
             if (d->buttons == 1) {
                 StarFishEnterer enter(sf->starFish());
-                MouseData mdata(MouseData::MouseButtonValue::NoButton,
-                                MouseData::MouseButtonsValue::NoButtonDown,
-                                d->x, d->y, sf->m_clickedCount);
+                MouseData mdata(
+                    MouseData::MouseButtonValue::NoButton,
+                    MouseData::MouseButtonsValue::NoButtonDown,
+                    d->x * sf->starFish()->screenInfo().deviceScaleFactor,
+                    d->y * sf->starFish()->screenInfo().deviceScaleFactor,
+                    sf->m_clickedCount);
                 sf->dispatchMouseEvent(PlatformWindow::MouseEventUp, mdata);
                 sf->m_isMouseLbuttonDown = false;
             }
@@ -931,7 +938,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             Ecore_Event_Mouse_Wheel* d = (Ecore_Event_Mouse_Wheel*)event;
             StarFishEnterer enter(sf->m_starFish);
             // We only care vertical wheel
-            sf->dispatchMouseWheelEvent(d->x, d->y, d->z, true);
+            sf->dispatchMouseWheelEvent(
+                d->x * sf->starFish()->screenInfo().deviceScaleFactor,
+                d->y * sf->starFish()->screenInfo().deviceScaleFactor, d->z,
+                true);
             return EINA_TRUE;
         },
         wnd);
@@ -946,7 +956,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 sf->m_isMouseLbuttonDown
                     ? MouseData::MouseButtonsValue::LeftButtonDown
                     : 0;
-            MouseData mdata(0, buttons, d->x, d->y, 0);
+            MouseData mdata(
+                0, buttons,
+                d->x * sf->starFish()->screenInfo().deviceScaleFactor,
+                d->y * sf->starFish()->screenInfo().deviceScaleFactor, 0);
             sf->dispatchMouseEvent(PlatformWindow::MouseEventMove, mdata);
             return EINA_TRUE;
         },
@@ -1739,6 +1752,8 @@ Compositor* WindowImplEFL::prepareCompositor()
     }
 #endif
 
+    c->scale(1 / starFish()->screenInfo().deviceScaleFactor,
+             1 / starFish()->screenInfo().deviceScaleFactor);
     return c;
 #endif
 }

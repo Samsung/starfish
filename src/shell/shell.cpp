@@ -533,6 +533,7 @@ int main(int argc, char* argv[])
     std::string userAgentExtraString;
     int width = 1280, height = 720;
     int x = 0, y = 0;
+    float scaleFactor = 1;
 #ifdef STARFISH_TIZEN_TV
     width = 1920;
     height = 1080;
@@ -579,6 +580,8 @@ int main(int argc, char* argv[])
             x = std::atoi(argv[i] + strlen("--posX="));
         } else if (strstr(argv[i], "--posY=") == argv[i]) {
             y = std::atoi(argv[i] + strlen("--posY="));
+        } else if (strstr(argv[i], "--device-scale-factor=") == argv[i]) {
+            scaleFactor = std::atof(argv[i] + strlen("--device-scale-factor="));
         } else if (strstr(argv[i], "--useragent-extra=") == argv[i]) {
             userAgentExtraString = argv[i] + strlen("--useragent-extra=");
         }
@@ -632,6 +635,9 @@ int main(int argc, char* argv[])
     info.rect.setHeight(height);
     info.availableRect.setWidth(width);
     info.availableRect.setHeight(height);
+#if defined(STARFISH_EFL_CAIRO)
+    info.deviceScaleFactor = scaleFactor;
+#endif
     StarFish::StarFish* sf = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
         width, height, x, y, 1, info, "", "/tmp/StarFish_Cookies.txt",

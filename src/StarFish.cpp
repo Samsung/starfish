@@ -179,7 +179,7 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    const char* timezoneID, void* platformHandle, int w, int h,
                    int x, int y, float defaultFontSizeMultiplier,
-                   ScreenInfo& info, const char* localStorageFilePath,
+                   const ScreenInfo& info, const char* localStorageFilePath,
                    const char* cookieStoreFilePath,
                    const char* httpCacheDirectorypath,
                    String* extraUserAgentString)
