@@ -68,7 +68,7 @@ class StarFish : public gc {
 public:
     StarFish(StarFishStartUpFlag flag, const char* locale,
              const char* timezoneID, void* platformHandle, int w, int h, int x,
-             int y, float defaultFontSizeMultiplier, ScreenInfo& info,
+             int y, float defaultFontSizeMultiplier, const ScreenInfo& info,
              const char* localStorageFilePath, const char* cookieStoreFilePath,
              const char* httpCacheDirectorypath,
              String* extraUserAgentString = String::emptyString);
@@ -239,6 +239,7 @@ protected:
     String* m_timezoneID;
     unsigned int m_startUpFlag;
     float m_defaultFontSizeMultiplier;
+    float m_screenScaleRatio;
     StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;
     Timer* m_timer;

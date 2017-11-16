@@ -670,12 +670,6 @@ bool StackingContext::canComposite(ComputeStackingContextContext& ctx)
     if (m_owner->needsGraphicsBuffer()) {
         return true;
     }
-
-    ComputedStyle* cs = m_owner->style();
-    if (cs->hasTransforms(m_owner)) {
-        return true;
-    }
-
     auto iter = ctx.seenPossiblyNonCompositeLayers->find(this);
     return ctx.seenPossiblyNonCompositeLayers->end() == iter;
 }
@@ -1161,6 +1155,22 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     ComputedStyle* ownerStyle = m_owner->style();
     compositor->save();
 
+    SkMatrix m = transformMatrix();
+    if (!m.isIdentity()) {
+        SkMatrix test;
+        bool testResult = m_rareData->m_matrix.invert(&test);
+        if (!testResult) {
+            // ignorePaintingDueToInvalidMatrix
+            compositor->restore();
+            return;
+        }
+
+        LayoutLocation to = transformOrigin();
+        compositor->translate(to.x(), to.y());
+        compositor->postMatrix(m);
+        compositor->translate(-to.x(), -to.y());
+    }
+
     if (needsGraphicsBuffer()) {
         LayoutUnit minX = visibleRect.x();
         LayoutUnit maxX = visibleRect.maxX();
@@ -1177,25 +1187,6 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
         if (ownerStyle->opacity() != 1) {
             compositor->beginOpacityLayer(ownerStyle->opacity());
-        }
-
-        SkMatrix m = transformMatrix();
-        if (!m.isIdentity()) {
-            SkMatrix test;
-            bool testResult = m_rareData->m_matrix.invert(&test);
-            if (!testResult) {
-                // ignorePaintingDueToInvalidMatrix
-                if (ownerStyle->opacity() != 1) {
-                    compositor->endOpacityLayer();
-                }
-                compositor->restore();
-                return;
-            }
-
-            LayoutLocation to = transformOrigin();
-            compositor->translate(to.x(), to.y());
-            compositor->postMatrix(m);
-            compositor->translate(-to.x(), -to.y());
         }
 
         if (owner()->shouldApplyOverflow()) {
