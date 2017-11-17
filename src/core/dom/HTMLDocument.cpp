@@ -62,6 +62,7 @@
 #include "core/dom/HTMLTitleElement.h"
 #include "core/dom/HTMLTrackElement.h"
 #include "core/dom/HTMLUListElement.h"
+#include "core/dom/HTMLOListElement.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
@@ -130,6 +131,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLLIElement(document);
     } else if (name == str->m_ulTagName.localNameAtomic()) {
         return new HTMLUListElement(document);
+    } else if (name == str->m_olTagName.localNameAtomic()) {
+        return new HTMLOListElement(document);
     } else if (name == str->m_strongTagName.localNameAtomic()) {
         return new HTMLStrongElement(document);
     } else if (name == str->m_tableTagName.localNameAtomic()) {

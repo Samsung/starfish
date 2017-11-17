@@ -202,6 +202,7 @@ bool HTMLStackItem::isSpecialNode() const
            localName == ss.m_titleTagName.localNameAtomic() ||
            localName == ss.m_trTagName.localNameAtomic() ||
            localName == ss.m_ulTagName.localNameAtomic() ||
+           localName == ss.m_olTagName.localNameAtomic() ||
            localName == ss.m_wbrTagName.localNameAtomic() ||
            localName == ss.m_xmpTagName.localNameAtomic();
 }
