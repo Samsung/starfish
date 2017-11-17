@@ -349,7 +349,8 @@ class ComputedStyle : public gc {
     friend void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
                                      ComputedStyle* parentStyle, bool force);
     friend ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
-                                            ComputedStyle* newStyle);
+                                            ComputedStyle* newStyle,
+                                            bool* damagedKeys);
 
     struct InheritedStylesRareData {
         Length m_letterSpacing;
@@ -2110,10 +2111,10 @@ protected:
 };
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
-                                 ComputedStyle* newStyle);
+                                 ComputedStyle* newStyle, bool* damagedKeys);
 
 void applyTransition(Element* element, ComputedStyle* oldStyle,
-                     ComputedStyle* newStyle);
+                     ComputedStyle* newStyle, const bool* damagedKeys);
 }
 
 #endif

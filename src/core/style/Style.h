@@ -899,14 +899,18 @@ enum TransitionPropertyValue {
     TransitionPropertyPaddingTopValue,
     TransitionPropertyRightValue,
     TransitionPropertyTextIndentValue,
-    TransitionPropertyTextDhadowValue,
+    TransitionPropertyTextShadowValue,
+    TransitionPropertyTransformValue,
+    TransitionPropertyTransformOriginValue,
     TransitionPropertyTopValue,
     TransitionPropertyVerticalAlignValue,
     TransitionPropertyVisibilityValue,
     TransitionPropertyWidthValue,
     TransitionPropertyWordSpacingValue,
-    TransitionPropertyZIndexValue
+    TransitionPropertyZIndexValue,
 };
+
+String* transitionPropertyValueToString(TransitionPropertyValue val);
 
 enum TransitionTimingFunctionValue {
     TransitionTimingFunctionEaseValue,
@@ -1215,7 +1219,8 @@ public:
         FOR_EACH_STYLE_ATTRIBUTE(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
             FontKeyKindStart = FontSize,
-        FontKeyKindEnd = FontFamily
+        FontKeyKindEnd = FontFamily,
+        KeyKindSize,
     };
     // font related properties must be followed end of this enum(KeyKind)
     // This order is used by CSSParser::parseFontFaceRule

@@ -162,6 +162,108 @@ static Nullable<Length> convertValueToLength(CSSStyleValuePair::ValueKind kind,
     }
 }
 
+String* transitionPropertyValueToString(TransitionPropertyValue val)
+{
+    switch (val) {
+    case TransitionPropertyAllValue:
+        return String::createASCIIString("all");
+    case TransitionPropertyBackgroundColorValue:
+        return String::createASCIIString("background-color");
+    case TransitionPropertyBackgroundPositionValue:
+        return String::createASCIIString("background-position");
+    case TransitionPropertyBorderBottomColorValue:
+        return String::createASCIIString("border-bottom-color");
+    case TransitionPropertyBorderBottomWidthValue:
+        return String::createASCIIString("border-bottom-width");
+    case TransitionPropertyBorderLeftColorValue:
+        return String::createASCIIString("border-left-color");
+    case TransitionPropertyBorderLeftWidthValue:
+        return String::createASCIIString("border-left-width");
+    case TransitionPropertyBorderRightColorValue:
+        return String::createASCIIString("border-right-color");
+    case TransitionPropertyBorderRightWidthValue:
+        return String::createASCIIString("border-right-width");
+    case TransitionPropertyBorderSpacingValue:
+        return String::createASCIIString("border-spacing");
+    case TransitionPropertyBorderTopColorValue:
+        return String::createASCIIString("border-top-color");
+    case TransitionPropertyBorderTopWidthValue:
+        return String::createASCIIString("border-top-width");
+    case TransitionPropertyBottomValue:
+        return String::createASCIIString("bottom");
+    case TransitionPropertyClipValue:
+        return String::createASCIIString("clip");
+    case TransitionPropertyColorValue:
+        return String::createASCIIString("color");
+    case TransitionPropertyFontSizeValue:
+        return String::createASCIIString("font-size");
+    case TransitionPropertyFontWeightValue:
+        return String::createASCIIString("font-weight");
+    case TransitionPropertyHeightValue:
+        return String::createASCIIString("height");
+    case TransitionPropertyLeftValue:
+        return String::createASCIIString("left");
+    case TransitionPropertyLetterSpacingValue:
+        return String::createASCIIString("letter-spacing");
+    case TransitionPropertyLineHeightValue:
+        return String::createASCIIString("line-height");
+    case TransitionPropertyMarginBottomValue:
+        return String::createASCIIString("margin-bottom");
+    case TransitionPropertyMarginLeftValue:
+        return String::createASCIIString("margin-left");
+    case TransitionPropertyMarginRightValue:
+        return String::createASCIIString("margin-right");
+    case TransitionPropertyMarginTopValue:
+        return String::createASCIIString("margin-top");
+    case TransitionPropertyMaxHeightValue:
+        return String::createASCIIString("max-height");
+    case TransitionPropertyMaxWidthValue:
+        return String::createASCIIString("max-width");
+    case TransitionPropertyMinHeightValue:
+        return String::createASCIIString("min-height");
+    case TransitionPropertyMinWidthValue:
+        return String::createASCIIString("min-width");
+    case TransitionPropertyOpacityValue:
+        return String::createASCIIString("opacity");
+    case TransitionPropertyOutlineColorValue:
+        return String::createASCIIString("outline-color");
+    case TransitionPropertyOutlineWidthValue:
+        return String::createASCIIString("outline-width");
+    case TransitionPropertyPaddingBottomValue:
+        return String::createASCIIString("padding-bottom");
+    case TransitionPropertyPaddingLeftValue:
+        return String::createASCIIString("padding-left");
+    case TransitionPropertyPaddingRightValue:
+        return String::createASCIIString("padding-right");
+    case TransitionPropertyPaddingTopValue:
+        return String::createASCIIString("padding-top");
+    case TransitionPropertyRightValue:
+        return String::createASCIIString("right");
+    case TransitionPropertyTextIndentValue:
+        return String::createASCIIString("text-indent");
+    case TransitionPropertyTextShadowValue:
+        return String::createASCIIString("text-shadow");
+    case TransitionPropertyTransformValue:
+        return String::createASCIIString("transform");
+    case TransitionPropertyTransformOriginValue:
+        return String::createASCIIString("transform-origin");
+    case TransitionPropertyTopValue:
+        return String::createASCIIString("top");
+    case TransitionPropertyVerticalAlignValue:
+        return String::createASCIIString("vertical-align");
+    case TransitionPropertyVisibilityValue:
+        return String::createASCIIString("visibility");
+    case TransitionPropertyWidthValue:
+        return String::createASCIIString("width");
+    case TransitionPropertyWordSpacingValue:
+        return String::createASCIIString("word-spacing");
+    case TransitionPropertyZIndexValue:
+        return String::createASCIIString("z-index");
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
 static void setComputedStyleBackgroundPositionX(ComputedStyle* style,
                                                 const CSSStyleValuePair& value,
                                                 unsigned int layer = 0)
@@ -1907,100 +2009,7 @@ String* CSSStyleValuePair::toString() const
         return list->toString();
     }
     case CSSStyleValuePair::ValueKind::TransitionPropertyValueKind:
-        switch (transitionPropertyValue()) {
-        case TransitionPropertyAllValue:
-            return String::fromUTF8("all");
-        case TransitionPropertyBackgroundColorValue:
-            return String::fromUTF8("background-color");
-        case TransitionPropertyBackgroundPositionValue:
-            return String::fromUTF8("background-position");
-        case TransitionPropertyBorderBottomColorValue:
-            return String::fromUTF8("border-bottom-color");
-        case TransitionPropertyBorderBottomWidthValue:
-            return String::fromUTF8("border-bottom-width");
-        case TransitionPropertyBorderLeftColorValue:
-            return String::fromUTF8("border-left-color");
-        case TransitionPropertyBorderLeftWidthValue:
-            return String::fromUTF8("border-left-width");
-        case TransitionPropertyBorderRightColorValue:
-            return String::fromUTF8("border-right-color");
-        case TransitionPropertyBorderRightWidthValue:
-            return String::fromUTF8("border-right-width");
-        case TransitionPropertyBorderSpacingValue:
-            return String::fromUTF8("border-spacing");
-        case TransitionPropertyBorderTopColorValue:
-            return String::fromUTF8("border-top-color");
-        case TransitionPropertyBorderTopWidthValue:
-            return String::fromUTF8("border-top-width");
-        case TransitionPropertyBottomValue:
-            return String::fromUTF8("bottom");
-        case TransitionPropertyClipValue:
-            return String::fromUTF8("clip");
-        case TransitionPropertyColorValue:
-            return String::fromUTF8("color");
-        case TransitionPropertyFontSizeValue:
-            return String::fromUTF8("font-size");
-        case TransitionPropertyFontWeightValue:
-            return String::fromUTF8("font-weight");
-        case TransitionPropertyHeightValue:
-            return String::fromUTF8("height");
-        case TransitionPropertyLeftValue:
-            return String::fromUTF8("left");
-        case TransitionPropertyLetterSpacingValue:
-            return String::fromUTF8("letter-spacing");
-        case TransitionPropertyLineHeightValue:
-            return String::fromUTF8("line-height");
-        case TransitionPropertyMarginBottomValue:
-            return String::fromUTF8("margin-bottom");
-        case TransitionPropertyMarginLeftValue:
-            return String::fromUTF8("margin-left");
-        case TransitionPropertyMarginRightValue:
-            return String::fromUTF8("margin-right");
-        case TransitionPropertyMarginTopValue:
-            return String::fromUTF8("margin-top");
-        case TransitionPropertyMaxHeightValue:
-            return String::fromUTF8("max-height");
-        case TransitionPropertyMaxWidthValue:
-            return String::fromUTF8("max-width");
-        case TransitionPropertyMinHeightValue:
-            return String::fromUTF8("min-height");
-        case TransitionPropertyMinWidthValue:
-            return String::fromUTF8("min-width");
-        case TransitionPropertyOpacityValue:
-            return String::fromUTF8("opacity");
-        case TransitionPropertyOutlineColorValue:
-            return String::fromUTF8("outline-color");
-        case TransitionPropertyOutlineWidthValue:
-            return String::fromUTF8("outline-width");
-        case TransitionPropertyPaddingBottomValue:
-            return String::fromUTF8("padding-bottom");
-        case TransitionPropertyPaddingLeftValue:
-            return String::fromUTF8("padding-left");
-        case TransitionPropertyPaddingRightValue:
-            return String::fromUTF8("padding-right");
-        case TransitionPropertyPaddingTopValue:
-            return String::fromUTF8("padding-top");
-        case TransitionPropertyRightValue:
-            return String::fromUTF8("right");
-        case TransitionPropertyTextIndentValue:
-            return String::fromUTF8("text-indent");
-        case TransitionPropertyTextDhadowValue:
-            return String::fromUTF8("text-shadow");
-        case TransitionPropertyTopValue:
-            return String::fromUTF8("top");
-        case TransitionPropertyVerticalAlignValue:
-            return String::fromUTF8("vertical-align");
-        case TransitionPropertyVisibilityValue:
-            return String::fromUTF8("visibility");
-        case TransitionPropertyWidthValue:
-            return String::fromUTF8("width");
-        case TransitionPropertyWordSpacingValue:
-            return String::fromUTF8("word-spacing");
-        case TransitionPropertyZIndexValue:
-            return String::fromUTF8("z-index");
-        default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        return transitionPropertyValueToString(transitionPropertyValue());
     case CSSStyleValuePair::ValueKind::Time:
         return timeValue().toString();
     case CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind:
@@ -2740,7 +2749,13 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
             TransitionPropertyValue::TransitionPropertyTextIndentValue;
     } else if (STRING_VALUE_IS_STRING("text-shadow")) {
         m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyTextDhadowValue;
+            TransitionPropertyValue::TransitionPropertyTextShadowValue;
+    } else if (STRING_VALUE_IS_STRING("transform")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyTransformValue;
+    } else if (STRING_VALUE_IS_STRING("transform-origin")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyTransformOriginValue;
     } else if (STRING_VALUE_IS_STRING("top")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyTopValue;
@@ -2819,7 +2834,7 @@ static bool parseTransitionShorthand(const CSSTokenVector& tokens,
 
     for (size_t i = 0; i < len; i++) {
         const CSSTokenValue& tok = tokens[i];
-        if (temp.updateValueUnitTimeOrCalc(tok, 0)) {
+        if (temp.updateValueUnitTransitionProperty(tok)) {
             *property = temp;
         } else if (isFirstTimeValue && temp.updateValueUnitTimeOrCalc(tok, 0)) {
             *duration = temp;
@@ -6223,13 +6238,16 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
 
     if (element->needsStyleRecalc() || inheritedStyleChanged) {
         ComputedStyle* style = resolver->resolveStyle(element, parentStyle);
+        bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
+            false,
+        };
 
         if (!element->style()) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageInherited |
                 ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
         } else {
-            damage = compareStyle(element->style(), style);
+            damage = compareStyle(element->style(), style, damagedKeys);
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageInherited) {
@@ -6259,9 +6277,10 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
 
         if (element->style() && !style->transitionDuration().isZero() &&
             (damage != ComputedStyleDamage::ComputedStyleDamageNone)) {
-            applyTransition(element, element->style(), style);
+            if (element->webView()->inRendering()) {
+                applyTransition(element, element->style(), style, damagedKeys);
+            }
         } else {
-            // TODO: temporal code
             element->document()->animationExecutor()->cancelAnimation(element);
         }
         element->setStyle(style);

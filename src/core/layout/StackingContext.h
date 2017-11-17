@@ -93,13 +93,25 @@ public:
 
     void computeStackingContextProperties();
 
-    void paintStackingContext(Canvas* canvas);
+    void paintStackingContext(Canvas* canvas, bool needsPainting);
     void compositeStackingContext(Compositor* compositor);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                   BrowsingContext* from);
     LayoutLocation relativeLocation(StackingContext* child);
 
     int32_t zIndex();
+
+    bool needsRepainting()
+    {
+        STARFISH_ASSERT(isRootContext() || needsGraphicsBuffer());
+        return m_needsRepainting;
+    }
+
+    void setNeedsRepainting()
+    {
+        STARFISH_ASSERT(isRootContext() || needsGraphicsBuffer());
+        m_needsRepainting = true;
+    }
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -113,6 +125,7 @@ protected:
                                           bool& descendantHas3DTransform);
     bool canComposite(ComputeStackingContextContext& ctx);
 
+    bool m_needsRepainting;
     FrameBox* m_owner;
     StackingContext* m_parent;
     GCVector<StackingContextChild*> m_childContexts;

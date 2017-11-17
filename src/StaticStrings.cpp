@@ -425,6 +425,15 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_onmessageerror =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "onmessageerror"));
+    m_transitionstart =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "transitionstart"));
+    m_transitionend =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "transitionend"));
+    m_transitioncancel =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "transitioncancel"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_cuechange =
         QualifiedName(AtomicString::emptyAtomicString(),

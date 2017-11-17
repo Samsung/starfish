@@ -241,10 +241,11 @@ void* StackingContextRareData::operator new(size_t size)
 }
 
 StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
-    : m_rareData(nullptr)
+    : m_needsRepainting(true)
+    , m_owner(owner)
+    , m_parent(parent)
+    , m_rareData(nullptr)
 {
-    m_owner = owner;
-    m_parent = parent;
     if (m_parent) {
         int32_t num = owner->isPositioned() ? owner->style()->zIndex() : 0;
         auto iter = m_parent->m_childContexts.rbegin();
@@ -917,8 +918,27 @@ void StackingContext::computeStackingContextProperties(
     }
 }
 
-void StackingContext::paintStackingContext(Canvas* canvas)
+class FlagRestorer {
+public:
+    FlagRestorer(bool& flag)
+        : m_target(flag)
+        , m_initialValue(flag)
+    {
+    }
+
+    ~FlagRestorer()
+    {
+        m_target = m_initialValue;
+    }
+
+    bool& m_target;
+    bool m_initialValue;
+};
+
+void StackingContext::paintStackingContext(Canvas* canvas, bool needsPainting)
 {
+    FlagRestorer needsPaintingFlagRestorer(needsPainting);
+
     Canvas* oldCanvas = nullptr;
     LayoutRect visibleRect = StackingContext::visibleRect();
     LayoutUnit minX = visibleRect.x();
@@ -937,6 +957,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     bool hasStackingBuffer = needsGraphicsBuffer();
 
     if (hasStackingBuffer) {
+        needsPainting = m_needsRepainting;
         m_owner->createGraphicsBuffer(&m_rareData->m_buffer, bufferWidth,
                                       bufferHeight);
 
@@ -950,8 +971,11 @@ void StackingContext::paintStackingContext(Canvas* canvas)
             canvas = Canvas::create(m_owner->node()->starFish(),
                                     m_rareData->m_buffer);
         }
-        canvas->clearColor(Unit::Color(0, 0, 0, 0));
+
         canvas->setTextDecorationData(oldCanvas->textDecorationData());
+        if (needsPainting) {
+            canvas->clearColor(Unit::Color(0, 0, 0, 0));
+        }
         if (m_rareData->m_buffer->pixelRatio() != 1) {
             canvas->scale(1.0 / m_rareData->m_buffer->pixelRatio(),
                           1.0 / m_rareData->m_buffer->pixelRatio());
@@ -1033,13 +1057,17 @@ void StackingContext::paintStackingContext(Canvas* canvas)
             canvas->translate(iframeBox->borderLeft() +
                                   iframeBox->paddingLeft(),
                               iframeBox->borderTop() + iframeBox->paddingTop());
-            m_owner->node()
-                ->document()
-                ->browsingContext()
-                ->paintWindowBackground(canvas);
+            if (needsPainting) {
+                m_owner->node()
+                    ->document()
+                    ->browsingContext()
+                    ->paintWindowBackground(canvas);
+            }
         }
     }
-    m_owner->paintBackgroundAndBorders(canvas);
+    if (needsPainting) {
+        m_owner->paintBackgroundAndBorders(canvas);
+    }
 
     if (!hasStackingBuffer && owner()->shouldApplyOverflow()) {
         canvas->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
@@ -1066,7 +1094,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
                 {
                     CanvasStateRestorer r(canvas, sCtx, m_owner);
-                    sCtx->paintStackingContext(canvas);
+                    sCtx->paintStackingContext(canvas, needsPainting);
                 }
 
                 canvas->restore();
@@ -1076,8 +1104,10 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         }
     }
 
-    m_owner->paintStackingContextContent(canvas);
-    m_owner->paintOutline(canvas);
+    if (needsPainting) {
+        m_owner->paintStackingContextContent(canvas);
+        m_owner->paintOutline(canvas);
+    }
 
     // the child stacking contexts with positive stack levels (least positive
     // first).
@@ -1094,7 +1124,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
                     {
                         CanvasStateRestorer r(canvas, sCtx, m_owner);
-                        sCtx->paintStackingContext(canvas);
+                        sCtx->paintStackingContext(canvas, needsPainting);
                     }
 
                     canvas->restore();
@@ -1130,14 +1160,16 @@ void StackingContext::paintStackingContext(Canvas* canvas)
                                       ->scrollY());
                 FrameBlockBox* document =
                     m_owner->layoutParent()->asFrameBlockBox();
-                m_owner->node()
-                    ->document()
-                    ->browsingContext()
-                    ->window()
-                    ->scrolling()
-                    ->paintScrollbars(canvas, document,
-                                      document->appliedOverflowX(),
-                                      document->appliedOverflowY());
+                if (needsPainting) {
+                    m_owner->node()
+                        ->document()
+                        ->browsingContext()
+                        ->window()
+                        ->scrolling()
+                        ->paintScrollbars(canvas, document,
+                                          document->appliedOverflowX(),
+                                          document->appliedOverflowY());
+                }
                 canvas->restore();
             }
         }
@@ -1146,6 +1178,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     canvas->restore();
     if (hasStackingBuffer) {
         delete canvas;
+    }
+    if (hasStackingBuffer || isRootContext()) {
+        // m_needsRepainting = false;
     }
 }
 

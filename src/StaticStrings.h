@@ -368,6 +368,9 @@ public:
     QualifiedName m_onmessage;
     QualifiedName m_messageerror;
     QualifiedName m_onmessageerror;
+    QualifiedName m_transitionstart;
+    QualifiedName m_transitionend;
+    QualifiedName m_transitioncancel;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;
     QualifiedName m_sourceopen;

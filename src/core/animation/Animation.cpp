@@ -19,6 +19,7 @@
 #include "core/animation/Animation.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
+#include "core/dom/TransitionEvent.h"
 #include "core/style/ComputedStyle.h"
 #include "core/page/Window.h"
 #include "core/modules/message_loop/Timer.h"
@@ -37,19 +38,21 @@ static size_t getCurrentMillisecond()
 
 AnimationTask::AnimationTask(Node* target,
                              CSSStyleValuePair::KeyKind targetProperty,
-                             AnimatedValue from, AnimatedValue to,
-                             float durationS, float delayS,
+                             String* targetPropertyString, AnimatedValue from,
+                             AnimatedValue to, float durationS, float delayS,
                              CubicBeizer* cubicBezier)
 {
     m_isExpired = false;
+    m_isStarted = false;
     m_targetElement = target;
     m_durationMs = durationS * 1000;
     m_delayMs = delayS * 1000;
-    m_startTimeMs = getCurrentMillisecond() + m_delayMs;
+    m_lastModifiedTimeMs = m_startTimeMs = getCurrentMillisecond() + m_delayMs;
     m_fromValue = from;
     m_toValue = to;
     m_property = targetProperty;
     m_cubicBezier = cubicBezier;
+    m_targetPropertyString = targetPropertyString;
 }
 
 // This function update last execution time.
@@ -57,6 +60,54 @@ AnimationTask::AnimationTask(Node* target,
 void AnimationTask::update()
 {
     m_lastModifiedTimeMs = getCurrentMillisecond();
+}
+
+void AnimationTask::fireStartEventIfNeeds()
+{
+    if (!m_isStarted) {
+        TransitionEventInit init;
+        init.setPropertyName(m_targetPropertyString);
+        init.setBubbles(true);
+        init.setCancelable(false);
+        // TODO add more information to init
+        TransitionEvent* event = new TransitionEvent(
+            m_targetElement->document(), m_targetElement->starFish()
+                                             ->staticStrings()
+                                             ->m_transitionstart.localName(),
+            init);
+        m_targetElement->dispatchEventByUA(event);
+        m_isStarted = true;
+    }
+}
+
+void AnimationTask::fireEndEvent()
+{
+    TransitionEventInit init;
+    init.setPropertyName(m_targetPropertyString);
+    init.setBubbles(true);
+    init.setCancelable(true);
+    // TODO add more information to init
+    TransitionEvent* event = new TransitionEvent(
+        m_targetElement->document(), m_targetElement->starFish()
+                                         ->staticStrings()
+                                         ->m_transitionend.localName(),
+        init);
+    m_targetElement->dispatchEventByUA(event);
+}
+
+void AnimationTask::fireCancelEvent()
+{
+    TransitionEventInit init;
+    init.setPropertyName(m_targetPropertyString);
+    init.setBubbles(true);
+    init.setCancelable(false);
+    // TODO add more information to init
+    TransitionEvent* event = new TransitionEvent(
+        m_targetElement->document(), m_targetElement->starFish()
+                                         ->staticStrings()
+                                         ->m_transitioncancel.localName(),
+        init);
+    m_targetElement->dispatchEventByUA(event);
 }
 
 // This function returns false if
@@ -84,7 +135,7 @@ bool AnimationTask::canExecute()
 float AnimationTask::progress()
 {
     if (m_durationMs == 0 || isExpired()) {
-        return 100.0;
+        return 1;
     }
     float result =
         (m_lastModifiedTimeMs - m_startTimeMs) / ((float)m_durationMs);
@@ -168,11 +219,13 @@ void AnimationExecutor::cancelPreviousAnimation(
     Node* target, CSSStyleValuePair::KeyKind cssType)
 {
     // TODO : Need optimization
+    // fire end event
     m_animationList.erase(
         std::remove_if(m_animationList.begin(), m_animationList.end(),
                        [&target, cssType](AnimationTask* current) {
                            if (current->node() == target &&
                                current->propertyType() == cssType) {
+                               current->fireCancelEvent();
                                return true;
                            }
                            return false;
@@ -187,6 +240,7 @@ void AnimationExecutor::cancelAnimation(Node* target)
                                          m_animationList.end(),
                                          [&target](AnimationTask* current) {
                                              if (current->node() == target) {
+                                                 current->fireCancelEvent();
                                                  return true;
                                              }
                                              return false;
@@ -249,9 +303,12 @@ void AnimationExecutor::step()
     STARFISH_ASSERT(m_isAlive);
     for (auto it = m_animationList.begin(); it != m_animationList.end();) {
         if ((*it)->isExpired()) {
+            // fire end event
+            (*it)->fireEndEvent();
             it = m_animationList.erase(it);
         } else {
             if ((*it)->canExecute()) {
+                (*it)->fireStartEventIfNeeds();
                 (*it)->execute();
             }
             it++;
