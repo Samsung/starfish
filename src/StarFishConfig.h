@@ -372,7 +372,11 @@ inline bool operator!=(const T& a, const Nullable<T>& b)
 
 // typedef of GC-aware vector
 template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
-using GCVector = StarFish::Vector<T, Allocator>;
+using GCVectorT = StarFish::Vector<T, Allocator>;
+
+template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+class GCVector : public GCVectorT<T, Allocator>, public gc {
+};
 
 // typedef of GC-aware vector with atomic contents
 template <typename T, typename Allocator =

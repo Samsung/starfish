@@ -28,7 +28,7 @@ class Node;
 class StackingContext;
 class BrowsingContext;
 
-class StackingContextChild : public GCVector<StackingContext*>, public gc {
+class StackingContextChild : public GCVector<StackingContext*> {
 };
 
 struct StackingContextRareData : public gc {

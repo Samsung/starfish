@@ -67,7 +67,11 @@ public:
     virtual Serializable* toSerializable() const override;
     virtual ScriptBindingInstance* scriptBindingInstance();
 
-    virtual SerializedData* serialized() override;
+    virtual SerializedData* serialize(SerializingMap& memory) override;
+    virtual void deserialize(SerializedData* serialized,
+                             DeserializingMap& memory) const override
+    {
+    }
 
     void* data()
     {
@@ -125,7 +129,8 @@ public:
     {
     }
 
-    ScriptWrappable* deserialized(Document* document) const override
+    ScriptWrappable* createDeserializingInstance(
+        Document* document) const override
     {
         return new Blob(document, m_data);
     }

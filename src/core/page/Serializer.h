@@ -36,9 +36,13 @@ class SerializedObjectData;
 class SerializedTypedData;
 class ScriptWrappable;
 
+typedef GCUnorderedMap<void*, SerializedTypedData*> SerializingMap;
+typedef GCUnorderedMap<void*, ScriptValue> DeserializingMap;
 class Serializable {
 public:
-    virtual SerializedData* serialized() = 0;
+    virtual SerializedData* serialize(SerializingMap& memory) = 0;
+    virtual void deserialize(SerializedData* serialized,
+                             DeserializingMap& memory) const = 0;
 };
 
 class SerializedData : public gc {
@@ -252,7 +256,8 @@ public:
         return true;
     }
 
-    virtual ScriptWrappable* deserialized(Document* document) const = 0;
+    virtual ScriptWrappable* createDeserializingInstance(
+        Document* document) const = 0;
 };
 
 class SerializedObjectData : public SerializedData {
@@ -406,6 +411,12 @@ public:
         return m_data;
     }
 
+    void setPlatformObjectData(SerializedData* data)
+    {
+        STARFISH_ASSERT(m_type == PlatformObject);
+        m_data = data;
+    }
+
     enum Type {
         Undefined,
         Null,
@@ -438,8 +449,13 @@ private:
 
 class Serializer {
 public:
+    static SerializedTypedData* serialize(Document* document, ScriptValue value,
+                                          SerializingMap& memory);
     static SerializedTypedData* serialize(Document* document,
                                           ScriptValue value);
+    static ScriptValue deserialize(Document* document,
+                                   SerializedTypedData* value,
+                                   DeserializingMap& memory);
     static ScriptValue deserialize(Document* document,
                                    SerializedTypedData* value);
 };

@@ -81,72 +81,120 @@ void* SerializedTypedData::operator new(size_t size)
 
 static SerializedTypedData* serializeInternal(Document* document,
                                               ExecutionStateRef* state,
-                                              ScriptValue value);
+                                              ScriptValue value,
+                                              SerializingMap& memory);
 static ScriptValue deserializeInternal(Document* document,
                                        Escargot::ExecutionStateRef* state,
-                                       SerializedTypedData* value);
+                                       SerializedTypedData* value,
+                                       DeserializingMap& memory);
 
-static void deepcopy(Document* document, Escargot::ExecutionStateRef* state,
-                     Escargot::ObjectRef* dst, SerializedData* src)
+static bool deserializingDeep(Document* document,
+                              Escargot::ExecutionStateRef* state,
+                              ScriptValue dst, SerializedTypedData* src,
+                              DeserializingMap& memory)
 {
-    if (src->isSerializedArrayData()) {
-        SerializedArrayData* serializedArray = src->asSerializedArrayData();
+    memory.insert(std::make_pair(src, dst));
+    if (src->isArray()) {
+        ScriptObject arrayobj = dst->asObject();
+        SerializedArrayData* serializedArray =
+            src->data()->asSerializedArrayData();
         size_t len = serializedArray->length();
         for (size_t i = 0; i < len; i++) {
             SerializedTypedData* serialized = (*serializedArray)[i];
-            ValueRef* deserialized =
-                deserializeInternal(document, state, serialized);
-            dst->defineDataProperty(
+            ScriptValue deserialized =
+                deserializeInternal(document, state, serialized, memory);
+            if (!deserialized) {
+                return false;
+            }
+            arrayobj->defineDataProperty(
                 state, ValueRef::create(ValueRef::create(i)->toString(state)),
                 deserialized, true, true, true);
         }
-    } else {
-        SerializedObjectData* serializedObject = src->asSerializedObjectData();
+    } else if (src->isObject()) {
+        ScriptObject obj = dst->asObject();
+        SerializedObjectData* serializedObject =
+            src->data()->asSerializedObjectData();
         size_t len = serializedObject->length();
         for (size_t i = 0; i < len; i++) {
             auto& propertyAndValue = serializedObject->keyAndValue(i);
-            ValueRef* deserialized =
-                deserializeInternal(document, state, propertyAndValue.second);
-            dst->defineDataProperty(state, propertyAndValue.first, deserialized,
+            ScriptValue deserialized = deserializeInternal(
+                document, state, propertyAndValue.second, memory);
+            if (!deserialized) {
+                return false;
+            }
+            obj->defineDataProperty(state, propertyAndValue.first, deserialized,
                                     true, true, true);
         }
+    } else if (src->isPlatformObject()) {
+        ScriptWrappable* sw = (ScriptWrappable*)(dst->asObject()->extraData());
+        STARFISH_ASSERT(sw->isSerializable());
+        sw->toSerializable()->deserialize(src->data(), memory);
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
     }
+    return true;
 }
 
-static void deepcopy(Document* document, Escargot::ExecutionStateRef* state,
-                     SerializedData* dst, Escargot::ObjectRef* src)
+static bool serializingDeep(Document* document,
+                            Escargot::ExecutionStateRef* state,
+                            SerializedTypedData* dst, ScriptValue src,
+                            SerializingMap& memory)
 {
-    ValueVectorRef* values = src->getOwnPropertyKeys(state);
-    if (dst->isSerializedArrayData()) {
-        SerializedArrayData* serializedArray = dst->asSerializedArrayData();
+    memory.insert(std::make_pair(src, dst));
+    if (dst->isArray()) {
+        ScriptObject arrayobj = src->asObject();
+        SerializedArrayData* serializedArray =
+            dst->data()->asSerializedArrayData();
         for (size_t i = 0; i < serializedArray->length(); i++) {
             ValueRef* key = ValueRef::create(i);
-            if (src->hasOwnProperty(state, key)) {
-                SerializedTypedData* serialized =
-                    serializeInternal(document, state, src->get(state, key));
+            if (arrayobj->hasOwnProperty(state, key)) {
+                SerializedTypedData* serialized = serializeInternal(
+                    document, state, arrayobj->get(state, key), memory);
+                if (!serialized) {
+                    return false;
+                }
                 serializedArray->insert(i, serialized);
             }
         }
-    } else {
-        SerializedObjectData* serializedObject = dst->asSerializedObjectData();
+    } else if (dst->isObject()) {
+        ScriptObject obj = src->asObject();
+        ValueVectorRef* values = obj->getOwnPropertyKeys(state);
+        SerializedObjectData* serializedObject =
+            dst->data()->asSerializedObjectData();
         for (size_t i = 0; i < values->size(); i++) {
             ValueRef* key = values->at(i);
-            if (key->isString() && src->hasOwnProperty(state, key)) {
-                SerializedTypedData* serialized =
-                    serializeInternal(document, state, src->get(state, key));
+            if (key->isString() && obj->hasOwnProperty(state, key)) {
+                SerializedTypedData* serialized = serializeInternal(
+                    document, state, obj->get(state, key), memory);
+                if (!serialized) {
+                    return false;
+                }
                 serializedObject->setKeyAndValue(key, serialized);
             }
         }
+    } else if (dst->isPlatformObject()) {
+        ScriptWrappable* sw = (ScriptWrappable*)(src->asObject()->extraData());
+        STARFISH_ASSERT(sw->isSerializable());
+        SerializedData* result = sw->toSerializable()->serialize(memory);
+        dst->setPlatformObjectData(result);
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
     }
+    return true;
 }
 
 static SerializedTypedData* serializeInternal(Document* document,
                                               ExecutionStateRef* state,
-                                              ScriptValue value)
+                                              ScriptValue value,
+                                              SerializingMap& memory)
 {
+    auto checkCycle = memory.find(value);
+    if (checkCycle != memory.end()) {
+        return checkCycle->second;
+    }
     uint8_t type = SerializedTypedData::Undefined;
     SerializedData* data = nullptr;
-    bool failed = false;
+    bool deep = false;
 
     if (value->isUndefined()) {
         type = SerializedTypedData::Undefined;
@@ -170,7 +218,7 @@ static SerializedTypedData* serializeInternal(Document* document,
         type = SerializedTypedData::StringPrimitive;
         data = new SerializedStringData(value->asString());
     } else if (value->isObject()) {
-        ObjectRef* obj = value->asObject();
+        ScriptObject obj = value->asObject();
         if (obj->isBooleanObject()) {
             type = SerializedTypedData::Boolean;
             data = new SerializedPrimitiveValueData(
@@ -188,50 +236,62 @@ static SerializedTypedData* serializeInternal(Document* document,
             data = new SerializedPrimitiveValueData(
                 obj->asDateObject()->primitiveValue());
         } else if (obj->isRegExpObject()) {
-            type = SerializedTypedData::RegExp;
-            STARFISH_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        } else if (obj->isArrayBufferObject()) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        } else if (obj->isArrayBufferView()) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         } else if (obj->isArrayObject()) {
             type = SerializedTypedData::Array;
             ValueRef* length = obj->getOwnProperty(
                 state, ValueRef::create(StringRef::fromASCII("length")));
             data = new SerializedArrayData(length->asUint32());
-            deepcopy(document, state, data, obj);
+            deep = true;
         } else if (obj->extraData()) {
             ScriptWrappable* scriptWrappable =
                 (ScriptWrappable*)(obj->extraData());
             if (scriptWrappable->isSerializable()) {
+                if (scriptWrappable->isTransferable() &&
+                    scriptWrappable->toTransferable()->idDetached()) {
+                    return nullptr;
+                }
                 type = SerializedTypedData::PlatformObject;
-                data = scriptWrappable->toSerializable()->serialized();
+                deep = true;
             } else {
-                failed = true;
+                return nullptr;
             }
         } else if (obj->isFunctionObject() || obj->isErrorObject() ||
                    obj->isGlobalObject()) {
-            failed = true;
+            return nullptr;
         }
 #if ESCARGOT_ENABLE_PROMISE
         else if (obj->isPromiseObject()) {
-            failed = true;
+            return nullptr;
         }
 #endif
         else {
             type = SerializedTypedData::Object;
             data = new SerializedObjectData();
-            deepcopy(document, state, data, obj);
+            deep = true;
         }
     }
 
-    if (failed) {
+    SerializedTypedData* serialized = new SerializedTypedData(type, data);
+    if (deep && !serializingDeep(document, state, serialized, value, memory)) {
         return nullptr;
     }
-
-    return new SerializedTypedData(type, data);
+    return serialized;
 }
 
 static ScriptValue deserializeInternal(Document* document,
                                        Escargot::ExecutionStateRef* state,
-                                       SerializedTypedData* value)
+                                       SerializedTypedData* value,
+                                       DeserializingMap& memory)
 {
+    auto checkCycle = memory.find(value);
+    if (checkCycle != memory.end()) {
+        return checkCycle->second;
+    }
     if (value->isUndefined()) {
         return ValueRef::createUndefined();
     } else if (value->isNull()) {
@@ -286,34 +346,53 @@ static ScriptValue deserializeInternal(Document* document,
         array->set(
             state, ValueRef::create(StringRef::fromASCII("length")),
             ValueRef::create(value->data()->asSerializedArrayData()->length()));
-        deepcopy(document, state, array, value->data());
-        return ValueRef::create(array);
+        ScriptValue result = ValueRef::create(array);
+        if (!deserializingDeep(document, state, result, value, memory)) {
+            return nullptr;
+        }
+        return result;
     } else if (value->isObject()) {
-        ObjectRef* obj = ObjectRef::create(state);
-        deepcopy(document, state, obj, value->data());
-        return ValueRef::create(obj);
+        ScriptValue result = ValueRef::create(ObjectRef::create(state));
+        if (!deserializingDeep(document, state, result, value, memory)) {
+            return nullptr;
+        }
+        return result;
+    } else if (value->isPlatformObject()) {
+        ScriptValue result = value->data()
+                                 ->asSerializedPlatformObjectData()
+                                 ->createDeserializingInstance(document)
+                                 ->scriptValue();
+        if (!deserializingDeep(document, state, result, value, memory)) {
+            return nullptr;
+        }
+        return result;
     } else {
-        STARFISH_ASSERT(value->isPlatformObject());
-        return value->data()
-            ->asSerializedPlatformObjectData()
-            ->deserialized(document)
-            ->scriptValue();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
+    return nullptr;
 }
 
 SerializedTypedData* Serializer::serialize(Document* document,
                                            ScriptValue value)
 {
+    SerializingMap initialMap;
+    return serialize(document, value, initialMap);
+}
+
+SerializedTypedData* Serializer::serialize(Document* document,
+                                           ScriptValue value,
+                                           SerializingMap& memory)
+{
     SandBoxRef* sandBox =
         SandBoxRef::create(document->scriptBindingInstance()->scriptContext());
     SerializedTypedData* data = nullptr;
     auto result = sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
-        data = serializeInternal(document, state, value);
+        data = serializeInternal(document, state, value, memory);
         return ValueRef::createNull();
     });
     sandBox->destroy();
 
-    if (result.error->isEmpty()) {
+    if (result.error->isEmpty() && data) {
         return data;
     } else {
         COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
@@ -325,16 +404,24 @@ SerializedTypedData* Serializer::serialize(Document* document,
 ScriptValue Serializer::deserialize(Document* document,
                                     SerializedTypedData* value)
 {
+    DeserializingMap initialMap;
+    return deserialize(document, value, initialMap);
+}
+
+ScriptValue Serializer::deserialize(Document* document,
+                                    SerializedTypedData* value,
+                                    DeserializingMap& memory)
+{
     SandBoxRef* sandBox =
         SandBoxRef::create(document->scriptBindingInstance()->scriptContext());
     ScriptValue data = ValueRef::createUndefined();
     auto result = sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
-        data = deserializeInternal(document, state, value);
+        data = deserializeInternal(document, state, value, memory);
         return ValueRef::createNull();
     });
     sandBox->destroy();
 
-    if (result.error->isEmpty()) {
+    if (result.error->isEmpty() && data) {
         return data;
     } else {
         COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,

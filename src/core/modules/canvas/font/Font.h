@@ -69,7 +69,7 @@ public:
 protected:
 };
 
-class FontFaceList : public GCVector<FontFace*>, public gc {
+class FontFaceList : public GCVector<FontFace*> {
     friend class Font;
     friend class FontSelector;
 
