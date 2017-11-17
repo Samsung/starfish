@@ -608,29 +608,30 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             frameBoxRareData()->m_bufferForBorderRadius->data(),
             frameBoxRareData()->m_bufferForBorderRadius->width(),
             frameBoxRareData()->m_bufferForBorderRadius->height());
-        return;
-    }
+    } else {
+        BorderData border = style()->border();
+        if (border.top().style() == BorderStyleValue::DashedBorderStyleValue ||
+            border.right().style() ==
+                BorderStyleValue::DashedBorderStyleValue ||
+            border.bottom().style() ==
+                BorderStyleValue::DashedBorderStyleValue ||
+            border.left().style() == BorderStyleValue::DashedBorderStyleValue) {
+            cairoCanvasUsed = true;
+            if (!ensureFrameBoxRareData()->m_bufferForBorderRadius ||
+                frameBoxRareData()->m_bufferForBorderRadius->width() !=
+                    width().toUnsigned() ||
+                frameBoxRareData()->m_bufferForBorderRadius->height() !=
+                    height().toUnsigned()) {
+                frameBoxRareData()->m_bufferForBorderRadius = ImageData::create(
+                    width().toUnsigned(), height().toUnsigned());
+            }
 
-    BorderData border = style()->border();
-    if (border.top().style() == BorderStyleValue::DashedBorderStyleValue ||
-        border.right().style() == BorderStyleValue::DashedBorderStyleValue ||
-        border.bottom().style() == BorderStyleValue::DashedBorderStyleValue ||
-        border.left().style() == BorderStyleValue::DashedBorderStyleValue) {
-        cairoCanvasUsed = true;
-        if (!ensureFrameBoxRareData()->m_bufferForBorderRadius ||
-            frameBoxRareData()->m_bufferForBorderRadius->width() !=
-                width().toUnsigned() ||
-            frameBoxRareData()->m_bufferForBorderRadius->height() !=
-                height().toUnsigned()) {
-            frameBoxRareData()->m_bufferForBorderRadius =
-                ImageData::create(width().toUnsigned(), height().toUnsigned());
+            canvas = Canvas::createGenericCanvas(
+                node()->starFish(),
+                frameBoxRareData()->m_bufferForBorderRadius->data(),
+                frameBoxRareData()->m_bufferForBorderRadius->width(),
+                frameBoxRareData()->m_bufferForBorderRadius->height());
         }
-
-        canvas = Canvas::createGenericCanvas(
-            node()->starFish(),
-            frameBoxRareData()->m_bufferForBorderRadius->data(),
-            frameBoxRareData()->m_bufferForBorderRadius->width(),
-            frameBoxRareData()->m_bufferForBorderRadius->height());
     }
 #endif
 

@@ -298,8 +298,10 @@ bool HTTPCache::flush()
         return false;
     }
 
-    for (auto it : m_cacheEntryTable) {
-        HTTPCacheEntry* entry = it.second;
+    for (auto it : m_cacheLRUList) {
+        const std::string& urlStr = it;
+        auto tableIter = findEntryTableData(String::fromUTF8(urlStr.data()));
+        HTTPCacheEntry* entry = tableIter->second;
         if (!out->writeLine(entry->toString())) {
             out->close();
             return false;
