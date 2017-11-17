@@ -1200,7 +1200,7 @@ protected:
     ValueList* m_values;
 };
 
-class CSSTransformFunctions : public GCVector<CSSTransformFunction>, public gc {
+class CSSTransformFunctions : public GCVector<CSSTransformFunction> {
 public:
     String* toString();
 };
@@ -2333,7 +2333,7 @@ class CSSSelector;
 class CSSAttributeSelector;
 class CSSPseudoSelector;
 
-class CSSSelectorList : public GCVector<CSSSelector*>, public gc {
+class CSSSelectorList : public GCVector<CSSSelector*> {
 public:
     CSSSelectorList()
         : m_specificity(0)

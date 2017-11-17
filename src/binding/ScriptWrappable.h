@@ -24,7 +24,25 @@ namespace StarFish {
 class Document;
 class Element;
 class Serializable;
-class Transferable;
+
+class Transferable {
+public:
+    Transferable()
+        : m_detached(false)
+    {
+    }
+    bool idDetached()
+    {
+        return m_detached;
+    }
+    void setDetached()
+    {
+        m_detached = true;
+    }
+
+protected:
+    bool m_detached;
+};
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;

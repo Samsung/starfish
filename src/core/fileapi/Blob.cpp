@@ -34,7 +34,7 @@ ScriptBindingInstance* Blob::scriptBindingInstance()
     return document()->scriptBindingInstance();
 }
 
-SerializedData* Blob::serialized()
+SerializedData* Blob::serialize(SerializingMap& memory)
 {
     return new SerializedBlobData(m_blobData);
 }
