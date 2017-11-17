@@ -1,0 +1,11 @@
+// https://html.spec.whatwg.org/#htmlolistelement
+
+[HTMLConstructor]
+interface HTMLOListElement : HTMLElement {
+  // also has obsolete members
+
+  // https://html.spec.whatwg.org/#HTMLOListElement-partial
+  [Unimplemented,CEReactions] attribute boolean reversed;
+  [Unimplemented,CEReactions] attribute long start;
+  [Unimplemented,CEReactions] attribute DOMString type;
+};
