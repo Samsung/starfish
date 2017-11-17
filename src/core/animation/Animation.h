@@ -145,8 +145,9 @@ class AnimationTask : public gc {
 public:
     static const int THRESHOLD_TICK = 10;
     AnimationTask(Node* target, CSSStyleValuePair::KeyKind targetProperty,
-                  AnimatedValue from, AnimatedValue to, float duration,
-                  float delay, CubicBeizer* cubicBezier);
+                  String* targetPropertyString, AnimatedValue from,
+                  AnimatedValue to, float duration, float delay,
+                  CubicBeizer* cubicBezier);
     float progress();
     bool canExecute();
     bool isExpired()
@@ -154,7 +155,13 @@ public:
         return m_isExpired;
     }
     void update();
-    virtual void execute() = 0;
+    void fireStartEventIfNeeds();
+    void fireEndEvent();
+    void fireCancelEvent();
+    virtual void execute()
+    {
+        m_isExpired = true;
+    }
     Node* node()
     {
         return m_targetElement;
@@ -171,10 +178,12 @@ protected:
 
 private:
     bool m_isExpired;
+    bool m_isStarted;
     size_t m_startTimeMs;
     size_t m_lastModifiedTimeMs;
     size_t m_durationMs;
     size_t m_delayMs;
+    String* m_targetPropertyString;
     Node* m_targetElement;
     CubicBeizer* m_cubicBezier;
 };
@@ -182,10 +191,11 @@ private:
 class ColorAnimationTask : public AnimationTask {
 public:
     ColorAnimationTask(Node* target, CSSStyleValuePair::KeyKind targetProperty,
-                       AnimatedValue fromValue, AnimatedValue toValue,
-                       float duration, float delay, CubicBeizer* cubicBezier)
-        : AnimationTask(target, targetProperty, fromValue, toValue, duration,
-                        delay, cubicBezier)
+                       String* targetPropertyString, AnimatedValue fromValue,
+                       AnimatedValue toValue, float duration, float delay,
+                       CubicBeizer* cubicBezier)
+        : AnimationTask(target, targetProperty, targetPropertyString, fromValue,
+                        toValue, duration, delay, cubicBezier)
     {
     }
     void execute();
@@ -194,10 +204,11 @@ public:
 class LengthAnimationTask : public AnimationTask {
 public:
     LengthAnimationTask(Node* target, CSSStyleValuePair::KeyKind targetProperty,
-                        AnimatedValue fromValue, AnimatedValue toValue,
-                        float duration, float delay, CubicBeizer* cubicBezier)
-        : AnimationTask(target, targetProperty, fromValue, toValue, duration,
-                        delay, cubicBezier)
+                        String* targetPropertyString, AnimatedValue fromValue,
+                        AnimatedValue toValue, float duration, float delay,
+                        CubicBeizer* cubicBezier)
+        : AnimationTask(target, targetProperty, targetPropertyString, fromValue,
+                        toValue, duration, delay, cubicBezier)
     {
     }
     void execute();

@@ -1,0 +1,13 @@
+// https://drafts.csswg.org/css-transitions/#interface-transitionevent
+dictionary TransitionEventInit : EventInit {
+  CSSOMString propertyName = "";
+  float elapsedTime = 0.0;
+  CSSOMString pseudoElement = "";
+};
+
+[Constructor(DOMString type, optional TransitionEventInit transitionEventInitDict), ConstructorCallWith=Document]
+interface TransitionEvent : Event {
+  readonly attribute CSSOMString propertyName;
+  readonly attribute float elapsedTime;
+  readonly attribute CSSOMString pseudoElement;
+};

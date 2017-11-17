@@ -682,49 +682,69 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
 }
 
 void applyTransition(Element* element, ComputedStyle* oldStyle,
-                     ComputedStyle* newStyle)
+                     ComputedStyle* newStyle, const bool* damagedKeys)
 {
     AnimationExecutor* executor = element->document()->animationExecutor();
-    if (newStyle->transitionProperty() ==
-        TransitionPropertyValue::TransitionPropertyWidthValue) {
+    TransitionPropertyValue property = newStyle->transitionProperty();
+    bool isPropertyAll =
+        property == TransitionPropertyValue::TransitionPropertyAllValue;
+    if ((isPropertyAll ||
+         property == TransitionPropertyValue::TransitionPropertyWidthValue) &&
+        damagedKeys[CSSStyleValuePair::Width]) {
         Length from = oldStyle->width();
         Length to = newStyle->width();
 
-        // TODO this check is wrong. we should use BoundRect for this
         if (from.isFixed() && to.isFixed()) {
             executor->registerAnimation(new LengthAnimationTask(
-                element, CSSStyleValuePair::KeyKind::Width, AnimatedValue(from),
-                AnimatedValue(to), newStyle->transitionDuration().value(), 0,
+                element, CSSStyleValuePair::KeyKind::Width,
+                transitionPropertyValueToString(
+                    TransitionPropertyValue::TransitionPropertyWidthValue),
+                AnimatedValue(from), AnimatedValue(to),
+                newStyle->transitionDuration().value(), 0,
                 new CubicBeizer(0.25, 0.1, 0.25, 1)));
             // keep current computed style
             newStyle->setWidth(from);
         }
-    } else if (newStyle->transitionProperty() ==
-               TransitionPropertyValue::TransitionPropertyHeightValue) {
+    }
+    if ((isPropertyAll ||
+         property == TransitionPropertyValue::TransitionPropertyHeightValue) &&
+        damagedKeys[CSSStyleValuePair::Height]) {
         Length from = oldStyle->height();
         Length to = newStyle->height();
 
-        // TODO this check is wrong. we should use BoundRect for this
         if (from.isFixed() && to.isFixed()) {
             executor->registerAnimation(new LengthAnimationTask(
                 element, CSSStyleValuePair::KeyKind::Height,
+                transitionPropertyValueToString(
+                    TransitionPropertyValue::TransitionPropertyHeightValue),
                 AnimatedValue(from), AnimatedValue(to),
                 newStyle->transitionDuration().value(), 0,
                 new CubicBeizer(0.25, 0.1, 0.25, 1)));
             // keep current computed style
             newStyle->setHeight(from);
         }
-    } else if (newStyle->transitionProperty() ==
-               TransitionPropertyValue::TransitionPropertyAllValue) {
+    }
+    if ((isPropertyAll ||
+         property ==
+             TransitionPropertyValue::TransitionPropertyTransformValue) &&
+        damagedKeys[CSSStyleValuePair::Transform]) {
+        executor->registerAnimation(new AnimationTask(
+            element, CSSStyleValuePair::KeyKind::Transform,
+            transitionPropertyValueToString(
+                TransitionPropertyValue::TransitionPropertyTransformValue),
+            AnimatedValue(), AnimatedValue(),
+            newStyle->transitionDuration().value(), 0,
+            new CubicBeizer(0.25, 0.1, 0.25, 1)));
     }
 }
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
-                                 ComputedStyle* newStyle)
+                                 ComputedStyle* newStyle, bool* damagedKeys)
 {
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
     if (newStyle->m_inheritedStyles.m_color !=
         oldStyle->m_inheritedStyles.m_color) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Color] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
@@ -732,6 +752,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_direction !=
         oldStyle->m_inheritedStyles.m_direction) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Direction] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
@@ -739,12 +760,14 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_whiteSpace !=
         oldStyle->m_inheritedStyles.m_whiteSpace) {
+        damagedKeys[CSSStyleValuePair::KeyKind::WhiteSpace] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->fontSize() != oldStyle->fontSize()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FontSize] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -752,6 +775,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_fontStyle !=
         oldStyle->m_inheritedStyles.m_fontStyle) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FontStyle] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -759,6 +783,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_fontFamilyDatas[0].m_length !=
         oldStyle->m_inheritedStyles.m_fontFamilyDatas[0].m_length) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FontFamily] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -769,6 +794,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                      .m_familyName->equals(
                          oldStyle->m_inheritedStyles.m_fontFamilyDatas[i + 1]
                              .m_familyName)) {
+                damagedKeys[CSSStyleValuePair::KeyKind::FontFamily] = true;
                 damage = (ComputedStyleDamage)(
                     ComputedStyleDamage::ComputedStyleDamageInherited |
                     ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -779,6 +805,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_fontWeight !=
         oldStyle->m_inheritedStyles.m_fontWeight) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FontWeight] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -786,30 +813,36 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_wordWrap !=
         oldStyle->m_inheritedStyles.m_wordWrap) {
+        damagedKeys[CSSStyleValuePair::KeyKind::WordWrap] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->letterSpacing() != oldStyle->letterSpacing()) {
+        // TODO
+        // damagedKeys[CSSStyleValuePair::KeyKind::LetterSpacing] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->lineHeight() != oldStyle->lineHeight()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::LineHeight] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->textIndent() != oldStyle->textIndent()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextIndent] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->textTransform() != oldStyle->textTransform()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextTransform] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -817,6 +850,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_textAlign !=
         oldStyle->m_inheritedStyles.m_textAlign) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextAlign] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -824,6 +858,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_visibility !=
         oldStyle->m_inheritedStyles.m_visibility) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Visibility] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
@@ -831,6 +866,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_borderCollapse !=
         oldStyle->m_inheritedStyles.m_borderCollapse) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderCollapse] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -838,6 +874,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->horizontalBorderSpacing() !=
         oldStyle->horizontalBorderSpacing()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderSpacing] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -845,6 +882,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->verticalBorderSpacing() !=
         oldStyle->verticalBorderSpacing()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderSpacing] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -852,6 +890,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_captionSide !=
         oldStyle->m_inheritedStyles.m_captionSide) {
+        damagedKeys[CSSStyleValuePair::KeyKind::CaptionSide] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -859,133 +898,186 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_inheritedStyles.m_emptyCells !=
         oldStyle->m_inheritedStyles.m_emptyCells) {
+        damagedKeys[CSSStyleValuePair::KeyKind::EmptyCells] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->fill() != oldStyle->fill()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Fill] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->fillRule() != oldStyle->fillRule()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FillRule] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->fillOpacity() != oldStyle->fillOpacity()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FillOpacity] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->stroke() != oldStyle->stroke()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Stroke] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->strokeWidth() != oldStyle->strokeWidth()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StrokeWidth] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->m_display != oldStyle->m_display) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Display] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
     if (newStyle->m_originalDisplay != oldStyle->m_originalDisplay) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Display] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
     if (newStyle->m_position != oldStyle->m_position) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Position] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
     if (newStyle->m_float != oldStyle->m_float) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Float] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
     if (newStyle->m_clear != oldStyle->m_clear) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Clear] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_width != oldStyle->m_width) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Width] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->minWidth() != oldStyle->minWidth()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::MinWidth] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->maxWidth() != oldStyle->maxWidth()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::MaxWidth] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_height != oldStyle->m_height) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Height] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->minHeight() != oldStyle->minHeight()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::MinHeight] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->maxHeight() != oldStyle->maxHeight()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::MaxHeight] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->margin() != oldStyle->margin()) {
+        // TODO seprate this
+        damagedKeys[CSSStyleValuePair::KeyKind::MarginTop] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::MarginRight] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::MarginBottom] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::MarginLeft] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->padding() != oldStyle->padding()) {
+        // TODO seprate this
+        damagedKeys[CSSStyleValuePair::KeyKind::PaddingTop] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::PaddingRight] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::PaddingBottom] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::PaddingLeft] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->offset() != oldStyle->offset()) {
+        // TODO seprate this
+        damagedKeys[CSSStyleValuePair::KeyKind::Left] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::Top] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::Right] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::Bottom] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->border() != oldStyle->border()) {
+        // TODO seprate this
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderTopWidth] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderTopColor] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderTopStyle] = true;
+
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderRightWidth] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderRightColor] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderRightStyle] = true;
+
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomWidth] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomColor] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomStyle] = true;
+
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftWidth] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftColor] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftStyle] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_unicodeBidi != oldStyle->m_unicodeBidi) {
+        damagedKeys[CSSStyleValuePair::KeyKind::UnicodeBidi] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_verticalAlign != oldStyle->m_verticalAlign) {
+        damagedKeys[CSSStyleValuePair::KeyKind::VerticalAlign] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->verticalAlignLength() != oldStyle->verticalAlignLength()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::VerticalAlign] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_overflowX != oldStyle->m_overflowX &&
         newStyle->m_overflowY != oldStyle->m_overflowY) {
+        damagedKeys[CSSStyleValuePair::KeyKind::OverflowX] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::OverflowY] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     } else if (newStyle->m_overflowX != oldStyle->m_overflowX) {
@@ -993,6 +1085,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             newStyle->m_overflowX == OverflowValue::VisibleOverflow &&
             oldStyle->m_overflowY != OverflowValue::VisibleOverflow) {
         } else {
+            damagedKeys[CSSStyleValuePair::KeyKind::OverflowX] = true;
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageLayout | damage);
         }
@@ -1001,12 +1094,14 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             newStyle->m_overflowY == OverflowValue::VisibleOverflow &&
             oldStyle->m_overflowX != OverflowValue::VisibleOverflow) {
         } else {
+            damagedKeys[CSSStyleValuePair::KeyKind::OverflowY] = true;
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageLayout | damage);
         }
     }
 
     if (newStyle->m_tableLayout != oldStyle->m_tableLayout) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TableLayout] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
@@ -1018,6 +1113,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     // inline (see section 9.2.1.1).
     // https://www.w3.org/TR/CSS2/text.html#propdef-text-decoration
     if (newStyle->m_textDecoration != oldStyle->m_textDecoration) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextDecoration] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
@@ -1026,6 +1122,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     float oldOpacity = oldStyle->opacity();
 
     if (newOpacity != oldOpacity) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Opacity] = true;
         if (newOpacity < 1 && oldOpacity < 1) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamagePainting | damage);
@@ -1037,6 +1134,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     // FIXME changing z-index not always cause tree-rebuild
     if (newStyle->zIndex() != oldStyle->zIndex()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::ZIndex] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
@@ -1051,10 +1149,19 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             : nullptr;
 
     if (newBackground == nullptr && oldBackground == nullptr) {
-    } else if (newBackground == nullptr || oldBackground == nullptr) {
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
-    } else if (*newBackground != *oldBackground) {
+    } else if ((newBackground == nullptr || oldBackground == nullptr) ||
+               (*newBackground != *oldBackground)) {
+        // TODO seprate this
+        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundAttachment] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundClip] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundColor] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundImage] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundOrigin] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundPositionX] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundPositionY] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundRepeatX] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundRepeatY] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundSize] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
@@ -1087,6 +1194,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     bool newComplex =
         newTransforms ? newTransforms->hasComplexTransform() : false;
     if (oldComplex != newComplex) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::
                 ComputedStyleDamageComputeStackingContextProperties |
@@ -1095,6 +1203,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newTransforms == nullptr && oldTransforms == nullptr) {
     } else if (newTransforms == nullptr || oldTransforms == nullptr) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
         // FIXME if element has transform, we should re-layout for building
         // stacking-context
         damage = (ComputedStyleDamage)(
@@ -1107,6 +1216,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     } else {
         if (*newTransforms != *oldTransforms) {
+            damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::
                     ComputedStyleDamageComputeStackingContextProperties |
@@ -1125,12 +1235,14 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newTransformOrigin == nullptr && oldTransformOrigin == nullptr) {
     } else if (newTransformOrigin == nullptr || oldTransformOrigin == nullptr) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TransformOrigin] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::
                 ComputedStyleDamageComputeStackingContextProperties |
             damage);
     } else {
         if (*newTransformOrigin != *oldTransformOrigin) {
+            damagedKeys[CSSStyleValuePair::KeyKind::TransformOrigin] = true;
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::
                     ComputedStyleDamageComputeStackingContextProperties |
@@ -1139,56 +1251,67 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     if (newStyle->m_boxSizing != oldStyle->m_boxSizing) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BoxSizing] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_flexDirection != oldStyle->m_flexDirection) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FlexDirection] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_flexWrap != oldStyle->m_flexWrap) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FlexWrap] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->order() != oldStyle->order()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Order] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_justifyContent != oldStyle->m_justifyContent) {
+        damagedKeys[CSSStyleValuePair::KeyKind::JustifyContent] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_alignItems != oldStyle->m_alignItems) {
+        damagedKeys[CSSStyleValuePair::KeyKind::AlignItems] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_alignSelf != oldStyle->m_alignSelf) {
+        damagedKeys[CSSStyleValuePair::KeyKind::AlignSelf] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->m_alignContent != oldStyle->m_alignContent) {
+        damagedKeys[CSSStyleValuePair::KeyKind::AlignContent] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->flexGrow() != oldStyle->flexGrow()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FlexGrow] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->flexShrink() != oldStyle->flexShrink()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FlexShrink] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->flexBasis() != oldStyle->flexBasis()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FlexBasis] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
@@ -1207,41 +1330,53 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newContent == nullptr && oldContent == nullptr) {
     } else if (newContent == nullptr || oldContent == nullptr) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Content] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     } else {
         if (*oldContent != *newContent) {
+            damagedKeys[CSSStyleValuePair::KeyKind::Content] = true;
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
         }
     }
 
     if (newStyle->outlineColor() != oldStyle->outlineColor()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::OutlineColor] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->outlineStyle() != oldStyle->outlineStyle()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::OutlineStyle] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->outlineWidth() != oldStyle->outlineWidth()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::OutlineWidth] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->outlineOffset() != oldStyle->outlineOffset()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::OutlineOffset] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->borderRadius() != oldStyle->borderRadius()) {
+        // TODO seprate this
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderTopLeftRadius] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderTopRightRadius] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomLeftRadius] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomRightRadius] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->textShadow() != oldStyle->textShadow()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextShadow] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }

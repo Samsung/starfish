@@ -230,7 +230,10 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
     style->arrangeStyleValues(parentStyle, parent);
 
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
-    damage = compareStyle(parentStyle, style);
+    bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
+        false,
+    };
+    damage = compareStyle(parentStyle, style, damagedKeys);
 
     if (style->pseudoType() !=
             StyleResolver::PseudoElementType::PseudoElementNone &&

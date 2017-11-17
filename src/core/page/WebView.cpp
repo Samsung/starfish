@@ -528,7 +528,7 @@ bool WebView::rendering(bool force)
     m_lastRenderingTime = currentTick;
     m_inRendering = true;
 #ifdef STARFISH_ENABLE_TIMER
-    ProfilerTimer renderingTimer("BrowsingContext::rendering");
+    ProfilerTimer renderingTimer("WebView::rendering");
 #endif
 
     layoutIfNeeds();

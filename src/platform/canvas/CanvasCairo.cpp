@@ -538,8 +538,7 @@ public:
         double surfaceWidth = 0, surfaceHeight = 0;
 
         if (imgData) {
-            int stride =
-                cairo_format_stride_for_width(CAIRO_FORMAT, data->width());
+            size_t stride = data->stride();
             image = cairo_image_surface_create_for_data(
                 (unsigned char*)imgData, CAIRO_FORMAT, data->width(),
                 data->height(), stride);
