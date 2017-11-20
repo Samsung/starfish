@@ -2000,23 +2000,11 @@ bool Element::tabIndexSetExplicitly() const
 void Element::focus()
 {
     // TODO: Consider nested browsing contexts.
-    starFish()->messageLoop()->addIdler(
-        window()->browsingContext(),
-        [](size_t, void* data) {
-            Element* element = (Element*)data;
-            element->window()->browsingContext()->setFocusedNode(element);
-        },
-        this);
+    window()->browsingContext()->setFocusedNode(this);
 }
 
 void Element::blur()
 {
-    starFish()->messageLoop()->addIdler(
-        window()->browsingContext(),
-        [](size_t, void* data) {
-            Element* element = (Element*)data;
-            element->window()->browsingContext()->releaseFocusedNode(element);
-        },
-        this);
+    window()->browsingContext()->releaseFocusedNode(this);
 }
 }
