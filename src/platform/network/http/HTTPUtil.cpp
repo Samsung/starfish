@@ -49,6 +49,8 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(const std::string& header)
     case 4:
         if (lower.compare("date") == 0) {
             ret = HTTPHeaderMap::kDate;
+        } else if (lower.compare("etag") == 0) {
+            ret = HTTPHeaderMap::kETag;
         } else if (lower.compare("from") == 0) {
             ret = HTTPHeaderMap::kFrom;
         } else if (lower.compare("host") == 0) {
@@ -241,6 +243,12 @@ HTTPFreshnessInfo HTTPUtil::getHTTPFreshnessInfoFromHeaders(
         }
         String* utc = timeToUTCString(instance, info.lastModified * 1000);
     }
+
+    it = headers.find(HTTPHeaderMap::kETag);
+    if (it != headers.end()) {
+        info.etag = it->second;
+    }
+
     return info;
 }
 }

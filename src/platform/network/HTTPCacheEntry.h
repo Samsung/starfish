@@ -41,6 +41,11 @@ public:
         return m_entryFileName;
     }
 
+    bool shouldRevalidate()
+    {
+        return isFresh() || m_httpFreshnessInfo.etag.size();
+    }
+
     void setEntryFileNameUsingCachePath(String* cachePath);
     bool writeRawDataToEntryFile(std::vector<char>& rawData);
     bool readRawDataFromEntryFile(std::vector<char>& out);
