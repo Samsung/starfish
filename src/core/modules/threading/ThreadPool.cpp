@@ -71,8 +71,8 @@ void ThreadPool::addWork(BrowsingContext* ctx, ThreadWorker fn, void* data)
                     rooter->pool->m_messageLoop
                         ->addIdlerWithNoGCRootingInOtherThread(
                             nullptr,
-                            [](size_t handle, void* data) { GC_FREE(data); }, r,
-                            false);
+                            [](size_t handle, void* data) { GC_FREE(data); },
+                            r);
                 }
 #ifdef STARFISH_MESSAGELOOP_DEBUG
                 rooter->pool->m_messageLoop->decreaseRunningPoolWorkerCount();
@@ -82,7 +82,7 @@ void ThreadPool::addWork(BrowsingContext* ctx, ThreadWorker fn, void* data)
                     ->addIdlerWithNoGCRootingInOtherThread(
                         nullptr,
                         [](size_t handle, void* data) { GC_FREE(data); },
-                        rooter, false);
+                        rooter);
                 return NULL;
             };
 #ifdef STARFISH_MESSAGELOOP_DEBUG

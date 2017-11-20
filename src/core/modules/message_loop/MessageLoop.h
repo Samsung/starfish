@@ -34,22 +34,22 @@ class MessageLoop : public gc, public StarFishHoldable {
 public:
     MessageLoop(StarFish* sf);
     size_t addIdler(BrowsingContext* ctx, void (*fn)(size_t handle, void*),
-                    void* data, bool clearable = true);
+                    void* data, bool clearable = false);
     size_t addIdler(BrowsingContext* ctx,
                     void (*fn)(size_t handle, void*, void*), void* data,
-                    void* data1, bool clearable = true);
+                    void* data1, bool clearable = false);
     size_t addIdler(BrowsingContext* ctx,
                     void (*fn)(size_t handle, void*, void*, void*), void* data,
-                    void* data1, void* data2, bool clearable = true);
+                    void* data1, void* data2, bool clearable = false);
     size_t addIdlerWithNoGCRootingInOtherThread(
         BrowsingContext* ctx, void (*fn)(size_t handle, void*), void* data,
-        bool clearable = true);
+        bool clearable = false);
     size_t addIdlerWithNoGCRootingInOtherThread(
         BrowsingContext* ctx, void (*fn)(size_t handle, void*, void*),
-        void* data, void* data1, bool clearable = true);
+        void* data, void* data1, bool clearable = false);
     size_t addIdlerWithNoScriptInstanceEntering(
         BrowsingContext* ctx, void (*fn)(size_t handle, void*, void*),
-        void* data, void* data1, bool clearable = true);
+        void* data, void* data1, bool clearable = false);
 
     void removeIdler(size_t handle);
     void removeIdlerWithNoGCRooting(size_t handle);

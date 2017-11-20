@@ -1089,7 +1089,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                         // Delete SourceBufferData manually (NOGC)
                         delete inputBuffer;
                     },
-                    inputBuffer, (void*)processedSize, false);
+                    inputBuffer, (void*)processedSize);
             return nullptr;
         },
         inputBuffer);
