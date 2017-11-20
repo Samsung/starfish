@@ -27,6 +27,7 @@ const char HTTPHeaderMap::kContentLanguage[] = "Content-Language";
 const char HTTPHeaderMap::kContentLength[] = "Content-Length";
 const char HTTPHeaderMap::kContentType[] = "Content-type";
 const char HTTPHeaderMap::kDate[] = "Date";
+const char HTTPHeaderMap::kETag[] = "ETag";
 const char HTTPHeaderMap::kPragma[] = "Pragma";
 const char HTTPHeaderMap::kTrailer[] = "Trailer";
 const char HTTPHeaderMap::kTransferEncoding[] = "Transfer-Encoding";

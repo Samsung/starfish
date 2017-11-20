@@ -49,6 +49,7 @@ struct HTTPFreshnessInfo {
         , requestTime(0)
         , responseTime(0)
         , lastModified(0)
+        , etag()
         , contentLength(0)
     {
     }
@@ -58,6 +59,7 @@ struct HTTPFreshnessInfo {
     int64_t requestTime;
     int64_t responseTime;
     int64_t lastModified;
+    std::string etag;
     size_t contentLength;
 };
 

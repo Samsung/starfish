@@ -31,6 +31,7 @@ public:
     static const char kContentLength[];
     static const char kContentType[];
     static const char kDate[];
+    static const char kETag[];
     static const char kPragma[];
     static const char kTrailer[];
     static const char kTransferEncoding[];

@@ -400,7 +400,7 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithCachedEntry(
     HTTPHeaderMap& headers, HTTPCacheEntry* cachedEntry)
 {
     // * If-Modified-Since, If-None-Match, If-Range, If-Unmodified-Since
-    if (cachedEntry->isFresh()) {
+    if (!cachedEntry->shouldRevalidate()) {
         return;
     }
 
@@ -434,14 +434,16 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithCachedEntry(
         headers.setHeader(HTTPHeaderMap::kIfModifiedSince, value);
     }
 
-    // TODO : Make If-None-Match header
+    if (info.etag.size()) {
+        headers.setHeader(HTTPHeaderMap::kIfNoneMatch, info.etag);
+    }
 }
 #endif
 void* NetworkURLResourceRequestJobDelegate::worker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (nwd->cachedEntry && nwd->cachedEntry->isFresh()) {
+    if (nwd->cachedEntry && nwd->cachedEntry->shouldRevalidate()) {
         return nwd->helper->httpCacheWorker(data);
     } else {
         return nwd->helper->networkWorker(data);

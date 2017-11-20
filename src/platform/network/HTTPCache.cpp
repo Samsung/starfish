@@ -40,7 +40,7 @@
 #define INDEX_FILE_NAME "/index.txt"
 #define DEFAULT_HTTP_CACHE_SIZE 1024 * 1024 * 10
 #define MAX_ENTRY_FILE_SIZE (DEFAULT_HTTP_CACHE_SIZE * 0.04)
-#define NUM_OF_COL 12
+#define NUM_OF_COL 13
 
 namespace StarFish {
 
@@ -156,7 +156,7 @@ void HTTPCache::initFromIndexFileIfPossible()
         }
         // TODO : Check whether each column is valid or not
         // entryKey(UINT) urlString(STRING) date(UINT) age(UINT)
-        // rquestTime(UINT) responeTime(UINT) lastModified(UINT)
+        // rquestTime(UINT) responeTime(UINT) lastModified(UINT) Etag(STRING)
         // contentLength(UINT) maxAge(UINT) no-cache(0|1) mustRevalidate(0|1)
         // entryFileName(STRING)
 
@@ -170,14 +170,16 @@ void HTTPCache::initFromIndexFileIfPossible()
         info.requestTime = String::parseInt64(&columns[4]);
         info.responseTime = String::parseInt64(&columns[5]);
         info.lastModified = String::parseInt64(&columns[6]);
-        info.contentLength = String::parseInt64(&columns[7]);
-
+        if (!columns[7].equals("null")) {
+            info.etag = columns[7].toUTF8NonGCString();
+        }
+        info.contentLength = String::parseInt64(&columns[8]);
         CacheControl cc;
-        cc.maxAge = String::parseInt64(&columns[8]);
-        cc.noCache = columns[9].equals("true") ? true : false;
-        cc.mustRevalidate = columns[10].equals("true") ? true : false;
+        cc.maxAge = String::parseInt64(&columns[9]);
+        cc.noCache = columns[10].equals("true") ? true : false;
+        cc.mustRevalidate = columns[11].equals("true") ? true : false;
 
-        tempStr = columns[11].toUTF8NonGCString();
+        tempStr = columns[12].toUTF8NonGCString();
 
         HTTPCacheEntry* newEntry = new HTTPCacheEntry(
             url, info, cc, String::fromUTF8(tempStr.data(), tempStr.length()));

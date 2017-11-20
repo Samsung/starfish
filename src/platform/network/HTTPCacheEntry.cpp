@@ -151,13 +151,19 @@ String* HTTPCacheEntry::toString()
         std::to_string(m_httpFreshnessInfo.responseTime);
     std::string lastModifiedStr =
         std::to_string(m_httpFreshnessInfo.lastModified);
+
+    // Etag has no spaces or htab,
+    // See https://tools.ietf.org/html/rfc7232#section-2.3
+    std::string etagStr =
+        (m_httpFreshnessInfo.etag.size()) ? m_httpFreshnessInfo.etag : "null";
     std::string contentLengthStr =
         std::to_string(m_httpFreshnessInfo.contentLength);
     std::string maxAgeStr = std::to_string(m_cacheControl.maxAge);
 
     // entryKey(UINT) urlString(STRING) date(UINT) age(UINT)
-    // rquestTime(UINT) responeTime(UINT) lastModified(UINT) contentLength(UINT)
-    // maxAge(UINT) no-cache(0|1) mustRevalidate(0|1) entryFileName(STRING)
+    // rquestTime(UINT) responeTime(UINT) lastModified(UINT) Etag(STRING)
+    // contentLength(UINT) maxAge(UINT) no-cache(0|1) mustRevalidate(0|1)
+    // entryFileName(STRING)
 
     builder.appendString(entryKeystr.data());
     builder.appendString(" ");
@@ -172,6 +178,8 @@ String* HTTPCacheEntry::toString()
     builder.appendString(responseTimeStr.data());
     builder.appendString(" ");
     builder.appendString(lastModifiedStr.data());
+    builder.appendString(" ");
+    builder.appendString(etagStr.data());
     builder.appendString(" ");
     builder.appendString(contentLengthStr.data());
     builder.appendString(" ");
