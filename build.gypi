@@ -24,7 +24,7 @@
             'STARFISH_TIZEN_TV',
             #'STARFISH_ENABLE_INSPECTOR',
             #'STARFISH_ENABLE_AVPLAY',
-            #'STARFISH_ENABLE_TRANSPARENT_WINDOW',
+            'STARFISH_ENABLE_TRANSPARENT_WINDOW',
             'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_ENABLE_DOMPARSER',
             'STARFISH_ENABLE_TTS',
@@ -32,7 +32,7 @@
             #'STARFISH_ENABLE_BODY_FOCUS_RING',
             #'STARFISH_ENABLE_VIRTUAL_CURSOR',
             'STARFISH_IGNORE_CROSS_ORIGIN',
-            #'TIZEN_DEVICE_API',
+            'TIZEN_DEVICE_API',
             'USE_PRODUCT_FEATURE',
             'SIZE_MAX=0xffffffff',
         ],
@@ -97,7 +97,7 @@
         'variables': {
             'variables': {
                 'component%': 'static_library',
-                'backend%': 'efl',
+                'backend%': 'efl_cairo',
                 'enable_ffmpeg_demuxer%': 'false',
                 'platform%': 'linux',
                 'deplib%': 'shared_library',
