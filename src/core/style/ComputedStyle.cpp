@@ -108,7 +108,7 @@ StyleTransformDataGroup* ComputedStyle::transforms(Frame* frame)
     }
 
     // https://www.w3.org/TR/css-transforms-1/#transformable-element
-    if (frame && (frame->isFrameInline() || frame->isInlineNonReplacedBox())) {
+    if (frame && !frame->isTransformable()) {
         return nullptr;
     }
 

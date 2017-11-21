@@ -2219,7 +2219,7 @@ protected:
     GCUnorderedSet<void*> m_pointerRooter;
 };
 
-class ValueList : protected GCAtomicVector<CSSStyleValuePair>, public gc {
+class ValueList : protected GCAtomicVector<CSSStyleValuePair> {
 public:
     enum Separator {
         None,
@@ -2283,6 +2283,11 @@ public:
     const CSSStyleValuePair& operator[](const size_t& idx) const
     {
         return at(idx);
+    }
+
+    static void* operator new(size_t size)
+    {
+        return GC_MALLOC(size);
     }
 
     String* toString()

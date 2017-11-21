@@ -381,15 +381,28 @@ class GCVector : public GCVectorT<T, Allocator>, public gc {
 // typedef of GC-aware vector with atomic contents
 template <typename T, typename Allocator =
                           GCUtil::gc_malloc_atomic_ignore_off_page_allocator<T>>
-using GCAtomicVector = StarFish::Vector<T, Allocator>;
+using GCAtomicVectorT = StarFish::Vector<T, Allocator>;
+
+template <typename T, typename Allocator =
+                          GCUtil::gc_malloc_atomic_ignore_off_page_allocator<T>>
+class GCAtomicVector : public GCAtomicVectorT<T, Allocator>, public gc {
+};
 
 // typedef of GC-aware list
 template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
-using GCList = std::list<T, Allocator>;
+using GCListT = std::list<T, Allocator>;
+
+template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+class GCList : public GCListT<T, Allocator>, public gc {
+};
 
 // typedef of GC-aware deque
 template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
-using GCDeque = std::deque<T, Allocator>;
+using GCDequeT = std::deque<T, Allocator>;
+
+template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+class GCDeque : public GCDequeT<T, Allocator>, public gc {
+};
 
 // typedef of GC-aware unordered_map
 template <typename Key, typename Value, typename Hasher = std::hash<Key>,
