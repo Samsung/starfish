@@ -139,8 +139,8 @@ static void seekedCallback(void* data)
 void MediaPlayerTizenTV::seekOperation(int timeInMS)
 {
     PLAYER_LOGI("MediaPlayerTizenTV::seekOperation() (time: %d)\n", timeInMS);
-    int ret = player_set_play_position(m_nativePlayer, timeInMS, false,
-                                       seekedCallback, this);
+    int ret = player_set_play_position_ex(m_nativePlayer, timeInMS, true,
+                                          seekedCallback, this);
     if (ret != PLAYER_ERROR_NONE) {
         // Failed immediately
         PLAYER_LOGI(
