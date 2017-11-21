@@ -142,7 +142,8 @@ public:
 
     bool dispatchEvent(Event* event);
     bool dispatchEventByUA(Event* event);
-    bool dispatchEventByUA(EventTarget* origin, Event* event);
+    bool dispatchEventByUA(EventTarget* origin, Event* event,
+                           bool onlyTarget = false);
 
     virtual bool handleDefaultEvent(Event* event)
     {
@@ -202,6 +203,7 @@ protected:
 
 private:
     bool dispatchEvent(EventTarget* origin, Event* event);
+    bool dispatchEventForTarget(EventTarget* origin, Event* event);
 };
 
 #define DECLARE_EVENT_LISTENER(EVENT)            \

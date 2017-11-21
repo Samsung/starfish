@@ -170,10 +170,12 @@ bool EventTarget::dispatchEventByUA(Event* event)
     return dispatchEventByUA(this, event);
 }
 
-bool EventTarget::dispatchEventByUA(EventTarget* origin, Event* event)
+bool EventTarget::dispatchEventByUA(EventTarget* origin, Event* event,
+                                    bool onlyTarget)
 {
     event->setIsTrusted(true);
-    return dispatchEvent(origin, event);
+    return onlyTarget ? dispatchEventForTarget(origin, event)
+                      : dispatchEvent(origin, event);
 }
 
 // This method should only be called by JS binding
@@ -362,6 +364,32 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // 13. Return false if event's canceled flag is set, and true otherwise.
     //     Returns true if either event's cancelable attribute value is false or
     //     its preventDefault() method was not invoked, and false otherwise.
+    return (event->cancelable() && event->defaultPrevented()) ? false : true;
+}
+
+bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
+{
+    event->setTarget(origin);
+    event->setEventPhase(Event::AT_TARGET);
+    // Invoke event listeners
+    GCVector<EventListener*>* originals =
+        origin->getEventListeners(event->type());
+    if (originals) {
+        if (!event->stopPropagationValue()) {
+            // Iterate Copied Vector : listeners can be removed during iteration
+            GCVector<EventListener*> copies =
+                GCVector<EventListener*>(*originals);
+            for (auto listener : copies) {
+                STARFISH_ASSERT(listener);
+                if (std::find(originals->begin(), originals->end(), listener) !=
+                    originals->end()) {
+                    event->setCurrentTarget(origin);
+                    listener->call(event);
+                }
+            }
+        }
+    }
+    event->setEventPhase(Event::NONE);
     return (event->cancelable() && event->defaultPrevented()) ? false : true;
 }
 
