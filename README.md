@@ -10,7 +10,7 @@ Starfish is a lightweight Web browser engine for mobile and wearable devices.
 sudo add-apt-repository ppa:enlightenment-git/ppa
 sudo apt-get update
 sudo apt-get install libefl-dev
-sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev
+sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libjpeg-turbo8-dev libgif-dev
 sudo apt-get install python-pip
 pip install Jinja2
 ```
@@ -41,7 +41,7 @@ Default values are in **bold**.
   Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
 * -Ddeplib=[ **shared_library** | static_library ]<br>
   Generate third-party libraries as shared libraries or obj files
-* -Dbackend=[ **efl** | dali | efl_cairo ]<br>
+* -Dbackend=[ efl | dali | **efl_cairo** ]<br>
   Use either efl, dali, or efl_cairo as the backend graphics library
 * -Dplatform=[ **linux** | tizen ]<br>
   Compile Starfish for either linux or tizen platform
