@@ -410,14 +410,16 @@ public:
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::drawImageCairo");
 
-        cairo_save(m_canvas);
-
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
         xx = dst.x();
         yy = dst.y();
         ww = dst.width();
         hh = dst.height();
 
+        if (ww == 0 || hh == 0)
+            return;
+
+        cairo_save(m_canvas);
         cairo_pattern_t* resizePattern;
         cairo_matrix_t matrix;
 
