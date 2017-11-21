@@ -137,6 +137,30 @@
                     'libraries_extra': [
                     ],
                 }],
+                ['backend=="efl_cairo"', {
+                    'cflags_extra': [
+                    ],
+                    'include_dirs_extra': [
+                    ],
+                    'sources_extra': [
+                    ],
+                    'libraries_extra': [
+                        '-lturbojpeg',
+                        '-lgif',
+                    ],
+                }],
+                ['backend=="dali"', {
+                    'cflags_extra': [
+                    ],
+                    'include_dirs_extra': [
+                    ],
+                    'sources_extra': [
+                    ],
+                    'libraries_extra': [
+                        '-lturbojpeg',
+                        '-lgif',
+                    ],
+                }],
             ],
         },
         'component%':'<(component)',
@@ -191,8 +215,6 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
-                    '-lturbojpeg',
-                    '-lgif',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_cairo.x64',
@@ -209,8 +231,6 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
-                    '-lturbojpeg',
-                    '-lgif',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_cairo.tizen',
@@ -231,8 +251,6 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
-                    '-lturbojpeg',
-                    '-lgif',
                 ],
             }],
             ['platform=="tizen" and backend=="dali"', {
@@ -254,8 +272,6 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
-                    '-lturbojpeg',
-                    '-lgif',
                     '-pthread',
                 ],
             }],

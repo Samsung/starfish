@@ -126,7 +126,6 @@
                 './build.dep.gyp:escargot.x64.release',
                 './build.dep.gyp:gc.x64.release',
                 './build.dep.gyp:zmq.x64.release',
-                './build.dep.gyp:js_binding',
                 '<@(deps_release_extra)',
             ],
             'defines': [
