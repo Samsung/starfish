@@ -108,6 +108,19 @@ public:
     virtual void drawContent(Compositor* canvas, const LayoutRect& contentRect,
                              const LayoutRect& absContentRect);
 };
+
+#ifdef STARFISH_ENABLE_AVPLAY
+class AVPlayHTMLObjectElementContent : public HTMLObjectElementContent {
+public:
+    AVPlayHTMLObjectElementContent(HTMLObjectElement* element)
+        : HTMLObjectElementContent(element)
+    {
+    }
+
+    virtual void drawContent(Compositor* canvas, const LayoutRect& contentRect,
+                             const LayoutRect& absContentRect);
+};
+#endif
 }
 
 #endif

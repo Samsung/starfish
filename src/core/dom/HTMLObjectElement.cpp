@@ -52,7 +52,17 @@ void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old,
         if (m_content) {
             m_content->unload();
         }
+
+#ifdef STARFISH_ENABLE_AVPLAY
+        if (value->toASCIILower()->equals("application/avplayer")) {
+            m_content = new AVPlayHTMLObjectElementContent(this);
+        } else {
+            m_content = new MockHTMLObjectElementContent(this);
+        }
+#else
         m_content = new MockHTMLObjectElementContent(this);
+#endif
+
         m_content->load();
         setNeedsFrameTreeBuild();
     }
@@ -62,7 +72,15 @@ void MockHTMLObjectElementContent::drawContent(Compositor* canvas,
                                                const LayoutRect& contentRect,
                                                const LayoutRect& absContentRect)
 {
+}
+
+#ifdef STARFISH_ENABLE_AVPLAY
+void AVPlayHTMLObjectElementContent::drawContent(
+    Compositor* canvas, const LayoutRect& contentRect,
+    const LayoutRect& absContentRect)
+{
     canvas->punchHole(Unit::Rect(contentRect.x(), contentRect.y(),
                                  contentRect.width(), contentRect.height()));
 }
+#endif
 }
