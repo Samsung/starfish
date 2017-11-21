@@ -1553,17 +1553,14 @@ void Node::setNeedsPainting()
                         if (ctx->isRootContext() ||
                             ctx->needsGraphicsBuffer()) {
                             ctx->setNeedsRepainting();
-                            break;
+                            return;
                         }
                         ctx = ctx->parent();
                     }
-                } else {
-                    webView()->rootStackingContext()->setNeedsRepainting();
                 }
-            } else {
-                webView()->rootStackingContext()->setNeedsRepainting();
             }
-        } else {
+        }
+        if (webView()->rootStackingContext()) {
             webView()->rootStackingContext()->setNeedsRepainting();
         }
     }
