@@ -25,11 +25,13 @@
 #include "core/dom/HTMLImageElement.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameReplacedImage.h"
+#include "core/layout/StackingContext.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
@@ -501,6 +503,9 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                 }
 #ifdef STARFISH_ENABLE_TEST
                 g_fireOnloadEvent = true;
+                if (doc->webView()->rootStackingContext()) {
+                    doc->webView()->rootStackingContext()->setNeedsRepainting();
+                }
                 doc->window()->browsingContext()->setNeedsPainting();
                 doc->window()->testStart();
 #endif

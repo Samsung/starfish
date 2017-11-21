@@ -1582,12 +1582,10 @@ void BrowsingContext::resume()
 {
     STARFISH_LOG_INFO("BrowsingContext::resume\n");
     if (m_isRunning) {
-        setNeedsPainting();
         return;
     }
 
     m_isRunning = true;
-    setNeedsPainting();
 
     document()->setVisibilityState(VisibilityState::VisibilityStateVisible);
 
@@ -1597,6 +1595,16 @@ void BrowsingContext::resume()
 void BrowsingContext::setNeedsPainting()
 {
     m_webView->setNeedsPainting();
+
+    if (m_webView->didCompositeBefore() && document() && document()->frame() &&
+        document()->frame()->firstChild()) {
+        document()
+            ->frame()
+            ->firstChild()
+            ->asFrameBox()
+            ->stackingContext()
+            ->setNeedsRepainting();
+    }
 }
 
 void BrowsingContext::setNeedsComposite()

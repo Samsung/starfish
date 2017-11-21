@@ -886,6 +886,7 @@ void StackingContext::computeStackingContextProperties(
         m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
     } else if (!compositedBefore && compositedBefore == willBeComposited) {
         m_owner->node()->webView()->markNeedsPaintingConsiderInRendering();
+        m_needsRepainting = true;
     }
 
     if (willBeComposited) {
@@ -935,7 +936,8 @@ public:
     bool m_initialValue;
 };
 
-void StackingContext::paintStackingContext(Canvas* canvas, bool needsPainting)
+void StackingContext::paintStackingContext(
+    Canvas* canvas, bool needsPainting, bool parentGraphicsLayerNeedsPainting)
 {
     FlagRestorer needsPaintingFlagRestorer(needsPainting);
 
@@ -957,7 +959,10 @@ void StackingContext::paintStackingContext(Canvas* canvas, bool needsPainting)
     bool hasStackingBuffer = needsGraphicsBuffer();
 
     if (hasStackingBuffer) {
-        needsPainting = m_needsRepainting;
+        needsPainting = m_needsRepainting || parentGraphicsLayerNeedsPainting;
+        if (m_needsRepainting) {
+            parentGraphicsLayerNeedsPainting = true;
+        }
         m_owner->createGraphicsBuffer(&m_rareData->m_buffer, bufferWidth,
                                       bufferHeight);
 
@@ -1094,7 +1099,9 @@ void StackingContext::paintStackingContext(Canvas* canvas, bool needsPainting)
 
                 {
                     CanvasStateRestorer r(canvas, sCtx, m_owner);
-                    sCtx->paintStackingContext(canvas, needsPainting);
+                    sCtx->paintStackingContext(
+                        canvas, needsPainting,
+                        parentGraphicsLayerNeedsPainting);
                 }
 
                 canvas->restore();
@@ -1124,7 +1131,9 @@ void StackingContext::paintStackingContext(Canvas* canvas, bool needsPainting)
 
                     {
                         CanvasStateRestorer r(canvas, sCtx, m_owner);
-                        sCtx->paintStackingContext(canvas, needsPainting);
+                        sCtx->paintStackingContext(
+                            canvas, needsPainting,
+                            parentGraphicsLayerNeedsPainting);
                     }
 
                     canvas->restore();
@@ -1180,7 +1189,7 @@ void StackingContext::paintStackingContext(Canvas* canvas, bool needsPainting)
         delete canvas;
     }
     if (hasStackingBuffer || isRootContext()) {
-        // m_needsRepainting = false;
+        m_needsRepainting = false;
     }
 }
 

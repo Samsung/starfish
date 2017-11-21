@@ -121,6 +121,10 @@ public:
 
     void layoutIfNeeds();
     void clearStackingContext(bool backupBuffer);
+    StackingContext* rootStackingContext()
+    {
+        return m_rootStackingContext;
+    }
 
     bool didCompositeBefore()
     {
