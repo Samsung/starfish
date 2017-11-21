@@ -104,13 +104,11 @@ public:
 
     bool needsRepainting()
     {
-        STARFISH_ASSERT(isRootContext() || needsGraphicsBuffer());
         return m_needsRepainting;
     }
 
     void setNeedsRepainting()
     {
-        STARFISH_ASSERT(isRootContext() || needsGraphicsBuffer());
         m_needsRepainting = true;
     }
 

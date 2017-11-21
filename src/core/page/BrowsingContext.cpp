@@ -1598,12 +1598,18 @@ void BrowsingContext::setNeedsPainting()
 
     if (m_webView->didCompositeBefore() && document() && document()->frame() &&
         document()->frame()->firstChild()) {
-        document()
-            ->frame()
-            ->firstChild()
-            ->asFrameBox()
-            ->stackingContext()
-            ->setNeedsRepainting();
+        if (document()
+                ->frame()
+                ->firstChild()
+                ->asFrameBox()
+                ->stackingContext()) {
+            document()
+                ->frame()
+                ->firstChild()
+                ->asFrameBox()
+                ->stackingContext()
+                ->setNeedsRepainting();
+        }
     }
 }
 

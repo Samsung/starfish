@@ -1153,6 +1153,15 @@ public:
 
     virtual ComputedStyle* style();
 
+    bool isTransformable()
+    {
+        // https://www.w3.org/TR/css-transforms-1/#transformable-element
+        if (isFrameInline() || isInlineNonReplacedBox()) {
+            return false;
+        }
+        return true;
+    }
+
     Frame* enclosingFirstLineStyle();
     ComputedStyle* pseudoStyleForFirstLine(
         StyleResolver::PseudoElementType pseudoId, ComputedStyle* parentStyle);
