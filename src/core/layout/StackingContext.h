@@ -93,7 +93,8 @@ public:
 
     void computeStackingContextProperties();
 
-    void paintStackingContext(Canvas* canvas, bool needsPainting);
+    void paintStackingContext(Canvas* canvas, bool needsPainting,
+                              bool parentGraphicsLayerNeedsPainting = false);
     void compositeStackingContext(Compositor* compositor);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                   BrowsingContext* from);

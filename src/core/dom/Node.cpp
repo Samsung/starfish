@@ -34,7 +34,9 @@
 #include "core/dom/SelectorQuery.h"
 #include "core/dom/Text.h"
 #include "core/layout/Frame.h"
+#include "core/layout/FrameBox.h"
 #include "core/layout/FrameTreeBuilder.h"
+#include "core/layout/StackingContext.h"
 #include "core/page/Window.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
@@ -1529,7 +1531,42 @@ void Node::setNeedsPainting()
         return;
     }
 
-    window()->browsingContext()->setNeedsPainting();
+    webView()->markNeedsPaintingConsiderInRendering();
+
+    Frame* frame = this->frame();
+    if (frame && webView()->didCompositeBefore()) {
+        while (frame) {
+            if (frame->isFrameBox()) {
+                break;
+            }
+            frame = frame->parent();
+        }
+        if (frame) {
+            FrameBox* box = frame->asFrameBox();
+            while (box->layoutParent() != nullptr && !box->stackingContext()) {
+                box = box->layoutParent()->asFrameBox();
+            }
+            if (box) {
+                StackingContext* ctx = box->stackingContext();
+                if (ctx) {
+                    while (true) {
+                        if (ctx->isRootContext() ||
+                            ctx->needsGraphicsBuffer()) {
+                            ctx->setNeedsRepainting();
+                            break;
+                        }
+                        ctx = ctx->parent();
+                    }
+                } else {
+                    webView()->rootStackingContext()->setNeedsRepainting();
+                }
+            } else {
+                webView()->rootStackingContext()->setNeedsRepainting();
+            }
+        } else {
+            webView()->rootStackingContext()->setNeedsRepainting();
+        }
+    }
 }
 
 void Node::setNeedsComposite()
