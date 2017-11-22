@@ -131,9 +131,9 @@ String* URL::username()
     return m_resourceURL->username();
 }
 
-void URL::setUsername(String* newPath)
+void URL::setUsername(String* newUsername)
 {
-    m_resourceURL = m_resourceURL->setUsername(newPath);
+    m_resourceURL = m_resourceURL->setUsername(newUsername);
 }
 
 String* URL::password()
@@ -141,9 +141,9 @@ String* URL::password()
     return m_resourceURL->password();
 }
 
-void URL::setPassword(String* newPath)
+void URL::setPassword(String* newPassword)
 {
-    m_resourceURL = m_resourceURL->setPassword(newPath);
+    m_resourceURL = m_resourceURL->setPassword(newPassword);
 }
 
 String* URL::host()
@@ -191,9 +191,9 @@ String* URL::search()
     return m_resourceURL->search();
 }
 
-void URL::setSearch(String* newPath)
+void URL::setSearch(String* newSearch)
 {
-    m_resourceURL = m_resourceURL->setSearch(newPath);
+    m_resourceURL = m_resourceURL->setSearch(newSearch);
 }
 
 String* URL::hash()
@@ -201,8 +201,8 @@ String* URL::hash()
     return m_resourceURL->hash();
 }
 
-void URL::setHash(String* newPath)
+void URL::setHash(String* newHash)
 {
-    m_resourceURL = m_resourceURL->setHash(newPath);
+    m_resourceURL = m_resourceURL->setHash(newHash);
 }
 }

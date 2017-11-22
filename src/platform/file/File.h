@@ -42,7 +42,7 @@ public:
 
     bool open(String* filePath, FileMode mode)
     {
-        m_path = filePath;
+        m_path = ResourceURL::createPercentDecodingString(filePath);
         auto utf8Data = m_path->toUTF8NonGCString();
         return open(utf8Data.data(), mode);
     }
@@ -138,7 +138,6 @@ public:
         return true;
     }
 
-    virtual bool open(const char* filePath, FileMode mode) = 0;
     virtual long int size() = 0;
     virtual size_t read(void* buf, size_t size, size_t count) = 0;
     virtual size_t write(void* buf, size_t size, size_t count) = 0;
@@ -155,6 +154,8 @@ protected:
         , m_isOpen(false)
     {
     }
+
+    virtual bool open(const char* filePath, FileMode mode) = 0;
 
     const char* fileModeToString(const FileMode var)
     {

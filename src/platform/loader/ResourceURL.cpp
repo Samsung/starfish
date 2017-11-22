@@ -41,58 +41,191 @@ static bool toHexAndAppend(StringBuilder& builder, char32_t ch)
     return true;
 }
 
-static bool isUnreserved(char32_t c)
+inline static bool isDecimalDigit(char32_t ch)
+{
+    return ('0' <= ch && ch <= '9');
+}
+
+inline static bool isHexadecimalDigit(char32_t ch)
+{
+    return isDecimalDigit(ch) || ('A' <= ch && ch <= 'F') ||
+           ('a' <= ch && ch <= 'f');
+}
+
+static bool isFormUrlEncodingExceptional(char32_t c)
+{
+    return isASCIILower(c) || isASCIIUpper(c) || isASCIIDigit(c) ||
+           (c == '*') || (c == '-') || (c == '.') || (c == '_');
+}
+
+static bool isURIReserved(char32_t c)
+{
+    // RFC 3986 section 2.2 Reserved Characters (January 2005)
+    return (c == ':') || (c == '/') || (c == '?') || (c == '#') || (c == '[') ||
+           (c == ']') || (c == '@') || (c == '!') || (c == '$') || (c == '&') ||
+           (c == '\'') || (c == '(') || (c == ')') || (c == '*') ||
+           (c == '+') || (c == ',') || (c == ';') || (c == '=');
+}
+
+static bool isURIUnreserved(char32_t c)
 {
     // RFC 3986 section 2.3 Unreserved Characters (January 2005)
     return isASCIILower(c) || isASCIIUpper(c) || isASCIIDigit(c) ||
-           (c == '-') || (c == '_') || (c == '.') || (c == '~');
+           (c == '-') || (c == '.') || (c == '_') || (c == '~');
 }
 
-String* ResourceURL::createPercentEncodingString(String* src)
+String* ResourceURL::createPercentEncodingString(String* src, bool forForm)
 {
     StringBuilder encoded;
-    auto bufferAccessData = src->bufferAccessData();
-
-    if (bufferAccessData.hasASCIIContent) {
-        for (size_t i = 0; i < bufferAccessData.length; i++) {
-            char ch = bufferAccessData.charAt(i);
-            if (isUnreserved(ch) || ch == ' ') {
-                encoded.appendChar(ch);
-            } else {
-                toHexAndAppend(encoded, ch);
+    for (size_t i = 0; i < src->length(); i++) {
+        char32_t ch32 = src->charAt(i);
+        bool urlEncoded = false;
+        if (forForm) {
+            if (ch32 == U' ') {
+                encoded.appendChar('+');
+                urlEncoded = true;
+            } else if (isFormUrlEncodingExceptional(ch32)) {
+                encoded.appendChar(ch32);
+                urlEncoded = true;
+            }
+        } else {
+            if (isURIReserved(ch32) || isURIUnreserved(ch32) || ch32 == U'%') {
+                encoded.appendChar(ch32);
+                urlEncoded = true;
             }
         }
-    } else {
-        for (size_t i = 0; i < bufferAccessData.length; i++) {
-            char32_t ch32 = bufferAccessData.charAt(i);
-            if (isUnreserved(ch32) || ch32 == U' ') {
-                encoded.appendChar(ch32);
+
+        if (!urlEncoded) {
+            // https://tools.ietf.org/html/rfc3629#section-3
+            if (ch32 <= 0x007F) {
+                toHexAndAppend(encoded, ch32);
+            } else if (0x0080 <= ch32 && ch32 <= 0x07FF) {
+                toHexAndAppend(encoded, 0x00C0 + (ch32 & 0x07C0) / 0x0040);
+                toHexAndAppend(encoded, 0x0080 + (ch32 & 0x003F));
+            } else if (0x0800 <= ch32 && ch32 <= 0xFFFF) {
+                toHexAndAppend(encoded, 0x00E0 + (ch32 & 0xF000) / 0x1000);
+                toHexAndAppend(encoded, 0x0080 + (ch32 & 0x0FC0) / 0x0040);
+                toHexAndAppend(encoded, 0x0080 + (ch32 & 0x003F));
+            } else if (0x10000 <= ch32 && ch32 <= 0x10FFFF) {
+                toHexAndAppend(encoded, 0x00F0 + (ch32 & 0x1C0000) / 0x40000);
+                toHexAndAppend(encoded, 0x0080 + (ch32 & 0x3F000) / 0x1000);
+                toHexAndAppend(encoded, 0x0080 + (ch32 & 0x0FC0) / 0x0040);
+                toHexAndAppend(encoded, 0x0080 + (ch32 & 0x003F));
             } else {
-                // https://tools.ietf.org/html/rfc3629#section-3
-                if (ch32 <= 0x007F) {
-                    toHexAndAppend(encoded, ch32);
-                } else if (0x0080 <= ch32 && ch32 <= 0x07FF) {
-                    toHexAndAppend(encoded, 0x00C0 + (ch32 & 0x07C0) / 0x0040);
-                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x003F));
-                } else if (0x0800 <= ch32 && ch32 <= 0xFFFF) {
-                    toHexAndAppend(encoded, 0x00E0 + (ch32 & 0xF000) / 0x1000);
-                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x0FC0) / 0x0040);
-                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x003F));
-                } else if (0x10000 <= ch32 && ch32 <= 0x10FFFF) {
-                    toHexAndAppend(encoded,
-                                   0x00F0 + (ch32 & 0x1C0000) / 0x40000);
-                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x3F000) / 0x1000);
-                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x0FC0) / 0x0040);
-                    toHexAndAppend(encoded, 0x0080 + (ch32 & 0x003F));
-                } else {
-                    STARFISH_LOG_INFO(
-                        "Got invalid unicode while convert to "
-                        "PercentEncoding(URI Encoding). Ignore it");
-                }
+                STARFISH_LOG_INFO(
+                    "Got invalid unicode while convert to "
+                    "PercentEncoding(URI Encoding). Ignore it");
             }
         }
     }
+
     return encoded.finalize();
+}
+
+static bool twoCharToHex(char32_t ch1, char32_t ch2, unsigned char* res)
+{
+    if (!isHexadecimalDigit(ch1) || !isHexadecimalDigit(ch2))
+        return false;
+    *res = (((ch1 & 0x10) ? (ch1 & 0xf) : ((ch1 & 0xf) + 9)) << 4) |
+           ((ch2 & 0x10) ? (ch2 & 0xf) : ((ch2 & 0xf) + 9));
+    return true;
+}
+
+inline static bool codeUnitToHex(String* str, size_t start, unsigned char* res)
+{
+    STARFISH_ASSERT(str && str->length() > start + 2);
+    if (str->charAt(start) != '%')
+        return false;
+    bool succeed =
+        twoCharToHex(str->charAt(start + 1), str->charAt(start + 2), res);
+    // The two most significant bits of res should be 10.
+    return succeed && (*res & 0xC0) == 0x80;
+}
+
+String* ResourceURL::createPercentDecodingString(String* src)
+{
+    StringBuilder decoded;
+
+    for (size_t i = 0; i < src->length(); i++) {
+        char32_t ch32 = src->charAt(i);
+        if (ch32 != '%') {
+            decoded.appendChar(ch32);
+        } else {
+            size_t start = i;
+            if (i + 2 >= src->length())
+                break;
+            char32_t next = src->charAt(i + 1);
+            char32_t nextnext = src->charAt(i + 2);
+
+            // char to hex
+            unsigned char b = 0;
+            if (!twoCharToHex(next, nextnext, &b))
+                break;
+            i += 2;
+
+            // most significant bit in b is 0
+            if (!(b & 0x80)) {
+                // let C be the character with code unit value B.
+                // if C is not in reservedSet, then let S be the String
+                // containing only the character C.
+                // else, C is in reservedSet, Let S be the substring of string
+                // from position start to position k included.
+                const char32_t c = b & 0x7f;
+                decoded.appendChar(c);
+            } else { // most significant bit in b is 1
+                unsigned char b_tmp = b;
+                int n = 1;
+                while (n < 5) {
+                    b_tmp <<= 1;
+                    if ((b_tmp & 0x80) == 0) {
+                        break;
+                    }
+                    n++;
+                }
+                if (n == 1 || n == 5 || (i + (3 * (n - 1)) >= src->length())) {
+                    break;
+                }
+                unsigned char octets[4];
+                octets[0] = b;
+
+                int j = 1;
+                while (j < n) {
+                    if (!codeUnitToHex(src, ++i, &b)) // "%XY" type
+                        break;
+                    i += 2;
+                    octets[j] = b;
+                    j++;
+                }
+                STARFISH_ASSERT(n == 2 || n == 3 || n == 4);
+                char32_t v = 0;
+                if (n == 2) {
+                    v = (octets[0] & 0x1F) << 6 | (octets[1] & 0x3F);
+                    if ((octets[0] == 0xC0) || (octets[0] == 0xC1)) {
+                        break;
+                    }
+                } else if (n == 3) {
+                    v = (octets[0] & 0x0F) << 12 | (octets[1] & 0x3F) << 6 |
+                        (octets[2] & 0x3F);
+                    if ((0xD800 <= v && v <= 0xDFFF) ||
+                        ((octets[0] == 0xE0) &&
+                         ((octets[1] < 0xA0) || (octets[1] > 0xBF)))) {
+                        break;
+                    }
+                } else if (n == 4) {
+                    v = (octets[0] & 0x07) << 18 | (octets[1] & 0x3F) << 12 |
+                        (octets[2] & 0x3F) << 6 | (octets[3] & 0x3F);
+                    if ((octets[0] == 0xF0) &&
+                        ((octets[1] < 0x90) || (octets[1] > 0xBF))) {
+                        break;
+                    }
+                }
+
+                decoded.appendChar(v);
+            }
+        }
+    }
+
+    return decoded.finalize();
 }
 
 ResourceURL::ResourceURL(String* url)
@@ -101,10 +234,35 @@ ResourceURL::ResourceURL(String* url)
 }
 
 ResourceURL::ResourceURL(String* url, String* baseURL)
-    : m_string(url)
 {
-    m_protocolEnd = m_userStart = m_userEnd = m_passwordEnd = m_hostEnd =
-        m_portEnd = m_pathEnd = m_queryEnd = m_fragmentEnd = 0;
+    unsigned numLeadingSpaces = 0;
+    unsigned numTrailingSpaces = 0;
+    size_t urlLength = url->length();
+    for (; numLeadingSpaces < urlLength; ++numLeadingSpaces) {
+        if (!String::isSpaceOrNewline(url->charAt(numLeadingSpaces))) {
+            break;
+        }
+    }
+    if (numLeadingSpaces != urlLength) {
+        for (; numTrailingSpaces < urlLength; ++numTrailingSpaces) {
+            if (!String::isSpaceOrNewline(
+                    url->charAt(urlLength - 1 - numTrailingSpaces))) {
+                break;
+            }
+        }
+        STARFISH_ASSERT(numLeadingSpaces + numTrailingSpaces < urlLength);
+
+        if (numLeadingSpaces || numTrailingSpaces) {
+            url = url->substring(numLeadingSpaces,
+                                 urlLength -
+                                     (numLeadingSpaces + numTrailingSpaces));
+        }
+    }
+
+    url = ResourceURL::createPercentEncodingString(url, false);
+    m_string = url;
+    m_protocolEnd = m_usernameStart = m_usernameEnd = m_passwordEnd =
+        m_hostEnd = m_portEnd = m_pathEnd = m_searchEnd = m_hashEnd = 0;
     m_isValid = false;
 
     parseURLString(baseURL, url);
@@ -215,23 +373,23 @@ void ResourceURL::resolvePositions()
         hierarchical && m_urlString->charAt(m_protocolEnd + 1) == '/';
 
     // username & password
-    m_userStart = m_protocolEnd;
+    m_usernameStart = m_protocolEnd;
     if (hierarchical) {
-        m_userStart++;
+        m_usernameStart++;
         if (hasSecondSlash) {
-            m_userStart++;
+            m_usernameStart++;
             if (m_protocol != FILE_PROTOCOL) {
-                while (m_urlString->charAt(m_userStart) == '/') {
-                    m_userStart++;
+                while (m_urlString->charAt(m_usernameStart) == '/') {
+                    m_usernameStart++;
                 }
             }
         }
     }
 
-    m_userEnd = m_passwordEnd = m_userStart;
+    m_usernameEnd = m_passwordEnd = m_usernameStart;
 
     // host
-    pos = m_urlString->find("/", m_userStart);
+    pos = m_urlString->find("/", m_usernameStart);
     if (pos != SIZE_MAX) {
         m_hostEnd = m_portEnd = pos;
 
@@ -240,18 +398,18 @@ void ResourceURL::resolvePositions()
             m_pathEnd = pos2;
             size_t pos3 = m_urlString->find("#", pos2);
             if (pos3 != SIZE_MAX) {
-                m_queryEnd = pos3;
-                m_fragmentEnd = m_urlString->length();
+                m_searchEnd = pos3;
+                m_hashEnd = m_urlString->length();
             } else {
-                m_queryEnd = m_fragmentEnd = m_urlString->length();
+                m_searchEnd = m_hashEnd = m_urlString->length();
             }
         } else {
             size_t pos3 = m_urlString->find("#", pos);
             if (pos3 != SIZE_MAX) {
-                m_pathEnd = m_queryEnd = pos3;
-                m_fragmentEnd = m_urlString->length();
+                m_pathEnd = m_searchEnd = pos3;
+                m_hashEnd = m_urlString->length();
             } else {
-                m_pathEnd = m_queryEnd = m_fragmentEnd = m_urlString->length();
+                m_pathEnd = m_searchEnd = m_hashEnd = m_urlString->length();
             }
         }
     } else {
@@ -260,35 +418,35 @@ void ResourceURL::resolvePositions()
             m_hostEnd = m_portEnd = m_pathEnd = pos2;
             size_t pos3 = m_urlString->find("#", pos2);
             if (pos3 != SIZE_MAX) {
-                m_queryEnd = pos3;
-                m_fragmentEnd = m_urlString->length();
+                m_searchEnd = pos3;
+                m_hashEnd = m_urlString->length();
             } else {
-                m_queryEnd = m_fragmentEnd = m_urlString->length();
+                m_searchEnd = m_hashEnd = m_urlString->length();
             }
         } else {
             size_t pos3 = m_urlString->find("#");
             if (pos3 != SIZE_MAX) {
-                m_hostEnd = m_portEnd = m_pathEnd = m_queryEnd = pos3;
-                m_fragmentEnd = m_urlString->length();
+                m_hostEnd = m_portEnd = m_pathEnd = m_searchEnd = pos3;
+                m_hashEnd = m_urlString->length();
             } else {
-                m_hostEnd = m_portEnd = m_pathEnd = m_queryEnd = m_fragmentEnd =
+                m_hostEnd = m_portEnd = m_pathEnd = m_searchEnd = m_hashEnd =
                     m_urlString->length();
             }
         }
     }
 
     // username & password & port
-    pos = m_urlString->find("@", m_userStart);
+    pos = m_urlString->find("@", m_usernameStart);
     if (pos != SIZE_MAX && pos < m_hostEnd) {
-        m_userEnd = m_passwordEnd = pos;
+        m_usernameEnd = m_passwordEnd = pos;
 
         // ':' for username
-        pos = m_urlString->find(":", m_userStart);
-        if (pos != SIZE_MAX && pos < m_userEnd) {
-            m_userEnd = pos;
+        pos = m_urlString->find(":", m_usernameStart);
+        if (pos != SIZE_MAX && pos < m_usernameEnd) {
+            m_usernameEnd = pos;
         }
         // ':' for port
-        pos = m_urlString->find(":", m_userEnd + 1);
+        pos = m_urlString->find(":", m_usernameEnd + 1);
         if (pos != SIZE_MAX && m_passwordEnd < pos && pos < m_hostEnd) {
             m_hostEnd = pos;
         }
@@ -300,50 +458,27 @@ void ResourceURL::resolvePositions()
     }
 
     if (m_protocol == BLOB_PROTOCOL || m_protocol == DATA_PROTOCOL) {
-        m_userEnd = m_userStart;
-        m_passwordEnd = m_userEnd;
+        m_usernameEnd = m_usernameStart;
+        m_passwordEnd = m_usernameEnd;
         m_hostEnd = m_passwordEnd;
         m_portEnd = m_hostEnd;
     }
 
     STARFISH_ASSERT(m_protocolEnd);
-    STARFISH_ASSERT(m_userStart);
-    STARFISH_ASSERT(m_userEnd);
+    STARFISH_ASSERT(m_usernameStart);
+    STARFISH_ASSERT(m_usernameEnd);
     STARFISH_ASSERT(m_passwordEnd);
     STARFISH_ASSERT(m_hostEnd);
     STARFISH_ASSERT(m_portEnd);
     STARFISH_ASSERT(m_pathEnd);
-    STARFISH_ASSERT(m_queryEnd);
-    STARFISH_ASSERT(m_fragmentEnd);
+    STARFISH_ASSERT(m_searchEnd);
+    STARFISH_ASSERT(m_hashEnd);
 }
 
 void ResourceURL::parseURLString(String* baseURL, String* url)
 {
-    unsigned numLeadingSpaces = 0;
-    unsigned numTrailingSpaces = 0;
-    m_isValid = true;
-
     size_t urlLength = url->length();
-    for (; numLeadingSpaces < urlLength; ++numLeadingSpaces) {
-        if (!String::isSpaceOrNewline(url->charAt(numLeadingSpaces))) {
-            break;
-        }
-    }
-    if (numLeadingSpaces != urlLength) {
-        for (; numTrailingSpaces < urlLength; ++numTrailingSpaces) {
-            if (!String::isSpaceOrNewline(
-                    url->charAt(urlLength - 1 - numTrailingSpaces))) {
-                break;
-            }
-        }
-        STARFISH_ASSERT(numLeadingSpaces + numTrailingSpaces < urlLength);
-
-        if (numLeadingSpaces || numTrailingSpaces) {
-            url = url->substring(numLeadingSpaces,
-                                 urlLength -
-                                     (numLeadingSpaces + numTrailingSpaces));
-        }
-    }
+    m_isValid = true;
 
     bool isAbsolute = false;
 
@@ -558,72 +693,57 @@ ResourceURL* ResourceURL::setProtocol(String* newProtocol)
 
 String* ResourceURL::username()
 {
-    return m_urlString->substring(m_userStart, m_userEnd - m_userStart);
+    return m_urlString->substring(m_usernameStart,
+                                  m_usernameEnd - m_usernameStart);
 }
 
-ResourceURL* ResourceURL::setUsername(String* newUser)
+ResourceURL* ResourceURL::setUsername(String* newUsername)
 {
     if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
-        // user or password exists
-        if (m_passwordEnd != m_userEnd || m_userStart != m_userEnd) {
-            return new ResourceURL(
-                m_urlString->substring(0, m_userStart)
-                    ->concat(newUser)
-                    ->concat(m_urlString->substring(
-                        m_userEnd, m_urlString->length() - m_userEnd)));
-        } else {
-            return new ResourceURL(
-                m_urlString->substring(0, m_userStart)
-                    ->concat(newUser)
-                    ->concat(String::createASCIIString("@"))
-                    ->concat(m_urlString->substring(
-                        m_userEnd, m_urlString->length() - m_userEnd)));
+        StringBuilder builder;
+        builder.appendString(m_urlString->substring(0, m_usernameStart));
+        builder.appendString(newUsername);
+        if (m_passwordEnd == m_usernameEnd &&
+            m_usernameStart == m_usernameEnd) {
+            builder.appendChar('@');
         }
+        builder.appendString(m_urlString->substring(
+            m_usernameEnd, m_urlString->length() - m_usernameEnd));
+        return new ResourceURL(builder.finalize());
     }
     return new ResourceURL(m_urlString);
 }
 
 String* ResourceURL::password()
 {
-    if (m_passwordEnd != m_userEnd) {
-        return m_urlString->substring(m_userEnd + 1,
-                                      m_passwordEnd - m_userEnd - 1);
+    if (m_passwordEnd != m_usernameEnd) {
+        return m_urlString->substring(m_usernameEnd + 1,
+                                      m_passwordEnd - m_usernameEnd - 1);
     } else {
         return String::emptyString;
     }
 }
 
-ResourceURL* ResourceURL::setPassword(String* newPass)
+ResourceURL* ResourceURL::setPassword(String* newPassword)
 {
     if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
+        StringBuilder builder;
         // password exists
-        if (m_passwordEnd != m_userEnd) {
-            return new ResourceURL(
-                m_urlString->substring(0, m_userEnd + 1)
-                    ->concat(newPass)
-                    ->concat(m_urlString->substring(
-                        m_passwordEnd, m_urlString->length() - m_passwordEnd)));
+        if (m_passwordEnd != m_usernameEnd) {
+            builder.appendString(m_urlString->substring(0, m_usernameEnd + 1));
+            builder.appendString(newPassword);
         } else {
-            // user exists
-            if (m_userStart != m_userEnd) {
-                return new ResourceURL(
-                    m_urlString->substring(0, m_userEnd)
-                        ->concat(String::createASCIIString(":"))
-                        ->concat(newPass)
-                        ->concat(m_urlString->substring(m_passwordEnd,
-                                                        m_urlString->length() -
-                                                            m_passwordEnd)));
-            } else {
-                return new ResourceURL(
-                    m_urlString->substring(0, m_userEnd)
-                        ->concat(String::createASCIIString(":"))
-                        ->concat(newPass)
-                        ->concat(String::createASCIIString("@"))
-                        ->concat(m_urlString->substring(m_passwordEnd,
-                                                        m_urlString->length() -
-                                                            m_passwordEnd)));
+            builder.appendString(m_urlString->substring(0, m_usernameEnd));
+            builder.appendChar(':');
+            builder.appendString(newPassword);
+            // user not exists
+            if (m_usernameStart == m_usernameEnd) {
+                builder.appendChar('@');
             }
         }
+        builder.appendString(m_urlString->substring(
+            m_passwordEnd, m_urlString->length() - m_passwordEnd));
+        return new ResourceURL(builder.finalize());
     }
     return new ResourceURL(m_urlString);
 }
@@ -643,17 +763,19 @@ ResourceURL* ResourceURL::setHost(String* newHost)
 {
     STARFISH_ASSERT(newHost->length());
     size_t start =
-        (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
-    return new ResourceURL(
-        m_urlString->substring(0, start)->concat(newHost)->concat(
-            m_urlString->substring(m_portEnd,
-                                   m_urlString->length() - m_portEnd)));
+        (m_passwordEnd == m_usernameStart) ? m_passwordEnd : m_passwordEnd + 1;
+    StringBuilder builder;
+    builder.appendString(m_urlString->substring(0, start));
+    builder.appendString(newHost);
+    builder.appendString(
+        m_urlString->substring(m_portEnd, m_urlString->length() - m_portEnd));
+    return new ResourceURL(builder.finalize());
 }
 
 String* ResourceURL::hostname()
 {
     size_t start =
-        (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
+        (m_passwordEnd == m_usernameStart) ? m_passwordEnd : m_passwordEnd + 1;
     return m_urlString->substring(start, m_hostEnd - start);
 }
 
@@ -675,20 +797,18 @@ String* ResourceURL::port()
 ResourceURL* ResourceURL::setPort(String* newPort)
 {
     if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
-        if (newPort->equals(String::emptyString)) {
-            return new ResourceURL(
-                m_urlString->substring(0, m_hostEnd)
-                    ->concat(m_urlString->substring(
-                        m_portEnd, m_urlString->length() - m_portEnd)));
-        } else {
+        StringBuilder builder;
+        builder.appendString(m_urlString->substring(0, m_hostEnd));
+
+        if (newPort->length()) {
             uint16_t port = String::parseInt(newPort);
-            return new ResourceURL(
-                m_urlString->substring(0, m_hostEnd)
-                    ->concat(String::createASCIIString(":"))
-                    ->concat(String::fromInt(port))
-                    ->concat(m_urlString->substring(
-                        m_portEnd, m_urlString->length() - m_portEnd)));
+            builder.appendChar(':');
+            builder.appendString(String::fromInt(port));
         }
+
+        builder.appendString(m_urlString->substring(
+            m_portEnd, m_urlString->length() - m_portEnd));
+        return new ResourceURL(builder.finalize());
     } else {
         return new ResourceURL(m_urlString);
     }
@@ -705,56 +825,58 @@ String* ResourceURL::pathname()
 
 ResourceURL* ResourceURL::setPathname(String* newPath, bool needRemovingDots)
 {
+    StringBuilder builder;
+    builder.appendString(m_urlString->substring(0, m_portEnd));
     if (!newPath->length() || newPath->charAt(0) != '/') {
         newPath = String::createASCIIString("/")->concat(newPath);
     }
     if (needRemovingDots) {
-        String* tmp = removingDots(newPath);
-        if (tmp != newPath) {
-            newPath = tmp;
-        }
+        newPath = removingDots(newPath);
     }
-    return new ResourceURL(
-        m_urlString->substring(0, m_portEnd)->concat(newPath));
+    builder.appendString(newPath);
+    return new ResourceURL(builder.finalize());
 }
 
 String* ResourceURL::search()
 {
-    if (m_pathEnd != m_queryEnd) {
-        return m_urlString->substring(m_pathEnd, m_queryEnd - m_pathEnd);
+    if (m_pathEnd != m_searchEnd) {
+        return m_urlString->substring(m_pathEnd, m_searchEnd - m_pathEnd);
     } else {
         return String::emptyString;
     }
 }
 
-ResourceURL* ResourceURL::setSearch(String* newPath)
+ResourceURL* ResourceURL::setSearch(String* newSearch)
 {
-    if (newPath->length() && newPath->charAt(0) != '?') {
-        newPath = String::createASCIIString("?")->concat(newPath);
+    StringBuilder builder;
+    builder.appendString(m_urlString->substring(0, m_pathEnd));
+    if (newSearch->length() && newSearch->charAt(0) != '?') {
+        builder.appendChar('?');
     }
-    return new ResourceURL(
-        m_urlString->substring(0, m_pathEnd)
-            ->concat(newPath)
-            ->concat(m_urlString->substring(m_queryEnd, m_urlString->length() -
-                                                            m_queryEnd)));
+    builder.appendString(newSearch);
+    builder.appendString(m_urlString->substring(
+        m_searchEnd, m_urlString->length() - m_searchEnd));
+    return new ResourceURL(builder.finalize());
 }
 
 String* ResourceURL::hash()
 {
-    if (m_queryEnd != m_fragmentEnd) {
-        return m_urlString->substring(m_queryEnd, m_fragmentEnd - m_queryEnd);
+    if (m_searchEnd != m_hashEnd) {
+        return m_urlString->substring(m_searchEnd, m_hashEnd - m_searchEnd);
     } else {
         return String::emptyString;
     }
 }
 
-ResourceURL* ResourceURL::setHash(String* newPath)
+ResourceURL* ResourceURL::setHash(String* newHash)
 {
-    if (newPath->length() && newPath->charAt(0) != '#') {
-        newPath = String::createASCIIString("#")->concat(newPath);
+    StringBuilder builder;
+    builder.appendString(m_urlString->substring(0, m_searchEnd));
+    if (newHash->length() && newHash->charAt(0) != '#') {
+        builder.appendChar('#');
     }
-    return new ResourceURL(
-        m_urlString->substring(0, m_queryEnd)->concat(newPath));
+    builder.appendString(newHash);
+    return new ResourceURL(builder.finalize());
 }
 
 DocumentURL::DocumentURL(String* url)

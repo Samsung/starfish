@@ -94,50 +94,44 @@ void Location::setHref(String* newURL)
 
 void Location::setHost(String* newHost)
 {
-    ResourceURL* newUrl = new ResourceURL(url()->urlString());
-    newUrl->setHost(newHost);
+    ResourceURL* newUrl = url()->setHost(newHost);
     assign(newUrl);
 }
 
 void Location::setHostname(String* newHostname)
 {
-    ResourceURL* newUrl = new ResourceURL(url()->urlString());
-    newUrl->setHostname(newHostname);
+    ResourceURL* newUrl = url()->setHostname(newHostname);
     assign(newUrl);
 }
 
 void Location::setPort(String* newPort)
 {
-    ResourceURL* newUrl = new ResourceURL(url()->urlString());
-    newUrl = newUrl->setPort(newPort);
+    ResourceURL* newUrl = url()->setPort(newPort);
     assign(newUrl);
 }
 
 void Location::setProtocol(String* newProtocol)
 {
-    ResourceURL* newUrl = new ResourceURL(url()->urlString());
-    newUrl->setProtocol(newProtocol);
+    ResourceURL* newUrl = url()->setProtocol(newProtocol);
     assign(newUrl);
 }
 
 void Location::setPathname(String* newPath, bool needRemovingDots)
 {
-    ResourceURL* newUrl = new ResourceURL(url()->urlString());
-    newUrl->setPathname(newPath, needRemovingDots);
+    ResourceURL* newUrl = url()->setPathname(newPath, needRemovingDots);
     assign(newUrl);
 }
 
 void Location::setSearch(String* search)
 {
-    ResourceURL* newUrl = new ResourceURL(url()->urlString());
+    ResourceURL* newUrl = new ResourceURL(*url());
     newUrl->setSearch(search);
     assign(newUrl);
 }
 
 void Location::setHash(String* search)
 {
-    ResourceURL* newUrl = new ResourceURL(url()->urlString());
-    newUrl->setHash(search);
+    ResourceURL* newUrl = url()->setHash(search);
     assign(newUrl);
 }
 
@@ -173,10 +167,10 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url)
     }
 }
 
-void Location::assign(ResourceURL* url)
+void Location::assign(ResourceURL* url, bool force)
 {
     if (!url->isJavascriptURL()) {
-        if (!this->url()->urlString()->equals(url->urlString())) {
+        if (force || !this->url()->urlString()->equals(url->urlString())) {
             navigateImpl(document()->browsingContext(), url);
         }
     }
@@ -199,7 +193,7 @@ void Location::replace(String* url)
 
 void Location::reload()
 {
-    ResourceURL* newUrl = new ResourceURL(url()->urlString());
+    ResourceURL* newUrl = new ResourceURL(*url());
     assign(newUrl);
 }
 }

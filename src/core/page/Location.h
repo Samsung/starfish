@@ -74,7 +74,7 @@ public:
     void setLocation(String* newURL);
 
 private:
-    void assign(ResourceURL* url);
+    void assign(ResourceURL* url, bool force = false);
 };
 }
 

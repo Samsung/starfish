@@ -41,7 +41,8 @@ public:
         UNKNOWN,
     };
 
-    static String* createPercentEncodingString(String* src);
+    static String* createPercentEncodingString(String* src, bool forForm);
+    static String* createPercentDecodingString(String* src);
 
     ResourceURL(const char* url)
         : ResourceURL(String::createASCIIString(url))
@@ -56,14 +57,14 @@ public:
         m_urlString = src.m_urlString;
 
         m_protocolEnd = src.m_protocolEnd;
-        m_userStart = src.m_userStart;
-        m_userEnd = src.m_userEnd;
+        m_usernameStart = src.m_usernameStart;
+        m_usernameEnd = src.m_usernameEnd;
         m_passwordEnd = src.m_passwordEnd;
         m_hostEnd = src.m_hostEnd;
         m_portEnd = src.m_portEnd;
         m_pathEnd = src.m_pathEnd;
-        m_queryEnd = src.m_queryEnd;
-        m_fragmentEnd = src.m_fragmentEnd;
+        m_searchEnd = src.m_searchEnd;
+        m_hashEnd = src.m_hashEnd;
 
         m_protocol = src.m_protocol;
         m_isValid = src.m_isValid;
@@ -152,21 +153,21 @@ public:
     String* protocol();
     ResourceURL* setProtocol(String* newProtocol);
     String* username();
-    ResourceURL* setUsername(String* newPath);
+    ResourceURL* setUsername(String* newUsername);
     String* password();
-    ResourceURL* setPassword(String* newPath);
+    ResourceURL* setPassword(String* newPassword);
     String* host();
     ResourceURL* setHost(String* newHost);
     String* hostname();
     ResourceURL* setHostname(String* newHostname);
     String* port();
-    ResourceURL* setPort(String* newPost);
+    ResourceURL* setPort(String* newPort);
     String* pathname();
-    ResourceURL* setPathname(String* newPath, bool needRemovingDots = true);
+    ResourceURL* setPathname(String* newPathname, bool needRemovingDots = true);
     String* search();
-    ResourceURL* setSearch(String* newPath);
+    ResourceURL* setSearch(String* newSearch);
     String* hash();
-    ResourceURL* setHash(String* newPath);
+    ResourceURL* setHash(String* newHash);
 
     virtual bool isDocumentURL()
     {
@@ -188,14 +189,14 @@ protected:
     String* m_urlString;
 
     unsigned int m_protocolEnd;
-    unsigned int m_userStart;
-    unsigned int m_userEnd;
+    unsigned int m_usernameStart;
+    unsigned int m_usernameEnd;
     unsigned int m_passwordEnd;
     unsigned int m_hostEnd;
     unsigned int m_portEnd;
     unsigned int m_pathEnd;
-    unsigned int m_queryEnd;
-    unsigned int m_fragmentEnd;
+    unsigned int m_searchEnd;
+    unsigned int m_hashEnd;
 
     enum Protocol m_protocol;
 

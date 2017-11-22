@@ -39,11 +39,11 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
 
         prepare();
 
-        String* urlToOpen = url()->urlString();
-        if (m_url->isDocumentURL()) {
-            DocumentURL* url = m_url->asDocumentURL();
-            if (url->formSubmitData()) {
-                FormSubmitData* formSubmitData = url->formSubmitData();
+        ResourceURL* url = m_url;
+        if (url->isDocumentURL()) {
+            if (url->asDocumentURL()->formSubmitData()) {
+                FormSubmitData* formSubmitData =
+                    url->asDocumentURL()->formSubmitData();
                 if (url->isNetworkURL()) {
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString(HTTPHeaderMap::kAccept),
@@ -73,7 +73,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
 
                     if (formSubmitData->m_method ==
                         ResourceRequest::GET_METHOD) {
-                        urlToOpen = m_resourceRequest->mutateActionURL(
+                        url = m_resourceRequest->mutateActionURL(
                             url, formSubmitData);
                     } else if (formSubmitData->m_method ==
                                ResourceRequest::POST_METHOD) {
@@ -91,7 +91,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
             new ResourceNetworkRequestClient(this));
 
         m_resourceRequest->open(
-            method, urlToOpen,
+            method, url,
             !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync),
             referrerURL);
 
