@@ -235,7 +235,7 @@ void ResourceRequest::changeProgress(ProgressState progress,
     }
 }
 
-void ResourceRequest::open(MethodType method, String* url, bool async,
+void ResourceRequest::open(MethodType method, ResourceURL* url, bool async,
                            ResourceURL* referrer, String* userName,
                            String* password)
 {
@@ -252,7 +252,7 @@ void ResourceRequest::open(MethodType method, String* url, bool async,
     {
         initVariables();
         m_method = method;
-        m_url = new ResourceURL(url, document()->documentURI()->baseURI());
+        m_url = url;
         if (userName->length()) {
             m_url->setUsername(userName);
         }
@@ -364,20 +364,15 @@ String* ResourceRequest::encodeFormDataSet(
     GCVector<FormDataSetItem*>* formDataSet,
     ResourceRequest::EncodeType formEnctype)
 {
-    String* space = String::spaceString;
-    String* plus = String::createASCIIString("+");
-
     String* result = String::createASCIIString("");
     if (formEnctype == APPLICATION_X_WWW_FORM_URLENCODED) {
         for (size_t i = 0; i < formDataSet->size(); i++) {
             FormDataSetItem* item = (*formDataSet)[i];
             String* name =
-                ResourceURL::createPercentEncodingString(item->m_name)
-                    ->replaceAll(space, plus);
+                ResourceURL::createPercentEncodingString(item->m_name, true);
             String* value =
-                ResourceURL::createPercentEncodingString(item->m_value)
-                    ->replaceAll(space, plus);
-            String* type = item->m_type->replaceAll(space, plus);
+                ResourceURL::createPercentEncodingString(item->m_value, true);
+            String* type = item->m_type;
 
             if (i == 0 && name->equalsIgnoreCase("isindex") &&
                 type->equalsIgnoreCase("text")) {
@@ -406,14 +401,12 @@ String* ResourceRequest::encodeFormDataSet(
     return result;
 }
 
-String* ResourceRequest::mutateActionURL(DocumentURL* url,
-                                         FormSubmitData* formSubmitData)
+ResourceURL* ResourceRequest::mutateActionURL(ResourceURL* url,
+                                              FormSubmitData* formSubmitData)
 {
     String* encodedFormData = encodeFormDataSet(formSubmitData->m_formDataSet,
                                                 formSubmitData->m_enctype);
-    String* actionURL = url->urlString()->concat("?");
-    actionURL = actionURL->concat(encodedFormData);
-    return actionURL;
+    return url->setSearch(encodedFormData);
 }
 
 static size_t base64Table[128] = {

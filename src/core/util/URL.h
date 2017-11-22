@@ -47,9 +47,9 @@ public:
     String* protocol();
     void setProtocol(String* newProtocol);
     String* username();
-    void setUsername(String* newPath);
+    void setUsername(String* newUsername);
     String* password();
-    void setPassword(String* newPath);
+    void setPassword(String* newPassword);
     String* host();
     void setHost(String* newHost);
     String* hostname();
@@ -59,9 +59,9 @@ public:
     String* pathname();
     void setPathname(String* newPath, bool needRemovingDots = true);
     String* search();
-    void setSearch(String* newPath);
+    void setSearch(String* newSearch);
     String* hash();
-    void setHash(String* newPath);
+    void setHash(String* newHash);
 
 protected:
     ScriptBindingInstance* m_scriptBindingInstance;

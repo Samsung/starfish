@@ -113,7 +113,7 @@ public:
     };
 
     ResourceRequest(Document* document);
-    void open(ResourceRequest::MethodType method, String* url, bool async,
+    void open(ResourceRequest::MethodType method, ResourceURL* url, bool async,
               ResourceURL* referrer, String* userName = String::emptyString,
               String* password = String::emptyString);
     void abort(bool isExplicitAction = true);
@@ -221,7 +221,8 @@ public:
 
     String* encodeFormDataSet(GCVector<FormDataSetItem*>* formDataSet,
                               ResourceRequest::EncodeType formEnctype);
-    String* mutateActionURL(DocumentURL* url, FormSubmitData* formSubmitData);
+    ResourceURL* mutateActionURL(ResourceURL* url,
+                                 FormSubmitData* formSubmitData);
 
 protected:
     void pareseHeader(const char* header, size_t len);
