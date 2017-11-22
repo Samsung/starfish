@@ -136,6 +136,7 @@ String* XMLSerializer::serializeToXML(Element* e, bool includeSelf)
 
     std::string s;
     int xmlFlag = rapidxml::print_no_expand_quot |
+                  rapidxml::print_no_expand_lt_gt |
                   rapidxml::print_no_expand_amp | rapidxml::print_no_indenting |
                   rapidxml::print_care_script_style;
     if (!includeSelf) {
