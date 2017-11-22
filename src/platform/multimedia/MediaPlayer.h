@@ -21,6 +21,7 @@
 #define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
 
 #include "core/dom/HTMLMediaElement.h"
+#include "platform/multimedia/StreamInfo.h"
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
 #include <sys/types.h>
@@ -97,7 +98,7 @@ public:
 
     virtual unsigned long videoWidth()
     {
-        if (m_hasVideo) {
+        if (!m_hasVideo) {
             return STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
         } else {
             return m_videoWidth;
@@ -106,7 +107,7 @@ public:
 
     virtual unsigned long videoHeight()
     {
-        if (m_hasVideo) {
+        if (!m_hasVideo) {
             return STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
         } else {
             return m_videoHeight;
@@ -137,6 +138,9 @@ protected:
     void updateElementReadyState(HTMLMediaElement::ReadyState state);
     void processNextOperationQueueInContainer();
     void appendToOperationQueueInContainer(MediaOperationQueueData* data);
+    SourceBuffer* activeSourceBuffer(StreamType type);
+    uint64_t activeStreamIndex(StreamType type);
+    bool isMSE();
     bool m_alive;
     bool m_foundError;
     bool m_isLooping;

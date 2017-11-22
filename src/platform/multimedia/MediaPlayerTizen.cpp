@@ -1244,33 +1244,6 @@ void MediaPlayerTizen::setLoop(bool loop)
     }
 }
 
-SourceBuffer* MediaPlayerTizen::activeSourceBuffer(StreamType type)
-{
-    if (m_activeMediaSource) {
-        if (type == StreamTypeAudio) {
-            return m_activeMediaSource->activeAudioSourceBuffer();
-        } else {
-            return m_activeMediaSource->activeVideoSourceBuffer();
-        }
-    }
-    return nullptr;
-}
-
-uint64_t MediaPlayerTizen::activeStreamIndex(StreamType type)
-{
-    STARFISH_ASSERT(m_activeMediaSource);
-    if (type == StreamTypeAudio) {
-        return m_activeMediaSource->activeAudioStreamIndex();
-    }
-    STARFISH_ASSERT(type == StreamTypeVideo);
-    return m_activeMediaSource->activeVideoStreamIndex();
-}
-
-bool MediaPlayerTizen::isMSE()
-{
-    return m_activeMediaSource;
-}
-
 bool MediaPlayerTizen::isMSEBufferEOS()
 {
     bool isEOS = true;
