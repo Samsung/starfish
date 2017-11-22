@@ -455,59 +455,59 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
     hasAspectRatio = s.m_hasAspectRatio;
     auto a = s.m_intrinsicSizeIsSpecifiedByAttributeOfElement;
     auto b = s.m_intrinsicContentSize;
-    if (a.first.isAuto() && a.second.isAuto()) {
-        intrinsicWidth = s.m_intrinsicContentSize.width();
-        intrinsicHeight = s.m_intrinsicContentSize.height();
-    } else if (a.first.isSpecified() && a.second.isAuto()) {
-        intrinsicWidth = a.first.specifiedValue(parentContentWidth, this);
-        if (s.m_hasAspectRatio) {
-            intrinsicHeight = intrinsicWidth * (b.height() / b.width());
-        } else {
-            intrinsicHeight = b.height();
-        }
-    } else if (a.first.isSpecified() && (a.second.isDefinite(false))) {
-        intrinsicWidth = a.first.specifiedValue(parentContentWidth, this);
-        LayoutUnit unused;
-        intrinsicHeight = a.second.specifiedValue(unused, this);
-    } else if (a.first.isSpecified() &&
-               (a.second.isPercent() || a.second.isCalc())) {
-        if ((parentContentHeight.isFixed())) {
-            intrinsicWidth = a.first.specifiedValue(parentContentWidth, this);
-            intrinsicHeight =
-                a.second.specifiedValue(parentContentHeight.fixed(), this);
-        } else {
-            intrinsicWidth = a.first.specifiedValue(parentContentWidth, this);
-            if (s.m_hasAspectRatio) {
-                intrinsicHeight = intrinsicWidth * (b.height() / b.width());
-            } else {
-                intrinsicHeight = b.height();
-            }
-        }
-    } else if (a.first.isAuto() && a.second.isDefinite(false)) {
-        LayoutUnit unused;
-        intrinsicHeight = a.second.specifiedValue(unused, this);
-        if (s.m_hasAspectRatio) {
-            intrinsicWidth = intrinsicHeight * (b.width() / b.height());
-        } else {
-            intrinsicWidth = b.width();
-        }
-    } else {
-        STARFISH_ASSERT(a.first.isAuto() &&
-                        (a.second.isPercent() || a.second.isCalc()));
-        if (parentContentHeight.isFixed()) {
-            intrinsicHeight =
-                a.second.specifiedValue(parentContentHeight.fixed(), this);
+
+    if (a.first.isAuto() || parentContentWidth == intMaxForLayoutUnit) {
+        if (a.second.isAuto()) {
+            intrinsicWidth = s.m_intrinsicContentSize.width();
+            intrinsicHeight = s.m_intrinsicContentSize.height();
+        } else if (a.second.isDefinite(false)) {
+            LayoutUnit unused;
+            intrinsicHeight = a.second.specifiedValue(unused, this);
             if (s.m_hasAspectRatio) {
                 intrinsicWidth = intrinsicHeight * (b.width() / b.height());
             } else {
                 intrinsicWidth = b.width();
             }
         } else {
-            intrinsicWidth = s.m_intrinsicContentSize.width();
-            intrinsicHeight = s.m_intrinsicContentSize.height();
+            STARFISH_ASSERT(a.second.isPercent() || a.second.isCalc());
+            if (parentContentHeight.isFixed()) {
+                intrinsicHeight =
+                    a.second.specifiedValue(parentContentHeight.fixed(), this);
+                if (s.m_hasAspectRatio) {
+                    intrinsicWidth = intrinsicHeight * (b.width() / b.height());
+                } else {
+                    intrinsicWidth = b.width();
+                }
+            } else {
+                intrinsicWidth = s.m_intrinsicContentSize.width();
+                intrinsicHeight = s.m_intrinsicContentSize.height();
+            }
         }
-        // intrinsicHeight = a.second.fixed();
-        // intrinsicWidth = intrinsicHeight * (b.width() / b.height());
+    } else {
+        STARFISH_ASSERT(parentContentWidth != intMaxForLayoutUnit &&
+                        a.first.isSpecified());
+        intrinsicWidth = a.first.specifiedValue(parentContentWidth, this);
+        if (a.second.isAuto()) {
+            if (s.m_hasAspectRatio) {
+                intrinsicHeight = intrinsicWidth * (b.height() / b.width());
+            } else {
+                intrinsicHeight = b.height();
+            }
+        } else if (a.second.isDefinite(false)) {
+            LayoutUnit unused;
+            intrinsicHeight = a.second.specifiedValue(unused, this);
+        } else {
+            if ((parentContentHeight.isFixed())) {
+                intrinsicHeight =
+                    a.second.specifiedValue(parentContentHeight.fixed(), this);
+            } else {
+                if (s.m_hasAspectRatio) {
+                    intrinsicHeight = intrinsicWidth * (b.height() / b.width());
+                } else {
+                    intrinsicHeight = b.height();
+                }
+            }
+        }
     }
 }
 

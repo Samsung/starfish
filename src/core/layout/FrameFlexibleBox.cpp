@@ -491,7 +491,9 @@ void FlexFormattingContext::layoutMain()
     computeMainSize();
     applyFlexFactor();
     resolveMainMargin();
-    applyJustifyContent();
+    if (m_isMainAxisInInlineAxis) {
+        applyJustifyContent();
+    }
 }
 
 bool FlexFormattingContext::isAnonymousFlexItemContainingOnlyWhitespace(
@@ -645,42 +647,44 @@ void FlexFormattingContext::computeCrossSize()
         auto& flexItemsToStretchInfo = flexItemsToStretchInfos[i];
         size_t lineIdx = flexItemsToStretchInfo.first;
         FrameBox* flexItem = flexItemsToStretchInfo.second;
+        // Invalid content height cache.
+        m_layoutContext.registerContentHeight(flexItem, intMaxForLayoutUnit);
+        FlexLine& flexLine = m_flexLines[lineIdx];
 
         if (m_isMainAxisInInlineAxis) {
             Length old = flexItem->style()->height();
             LayoutUnit oldContentWidth = flexItem->contentWidth();
             flexItem->style()->setHeight(
-                Length(Length::Fixed, m_flexLines[lineIdx].m_lineHeight -
-                                          flexItem->marginHeight()));
+                Length(Length::Fixed,
+                       flexLine.m_lineHeight - flexItem->marginHeight()));
             flexItem->layout(m_layoutContext,
                              Frame::LayoutWantToResolve::ResolveHeight);
             flexItem->style()->setHeight(old);
-            if (oldContentWidth > flexItem->contentWidth()) {
-                flexItem->setContentWidth(oldContentWidth);
-            } else if (flexItem->contentWidth() > oldContentWidth) {
-                m_container->computeContentWidth(m_layoutContext,
-                                                 m_container->contentWidth() +
-                                                     flexItem->contentWidth() -
-                                                     oldContentWidth);
-            }
+
+            flexLine.m_lineWidth += flexItem->contentWidth() - oldContentWidth;
         } else {
             Length old = flexItem->style()->width();
             LayoutUnit oldContentHeight = flexItem->contentHeight();
             flexItem->style()->setWidth(
-                Length(Length::Fixed, m_flexLines[lineIdx].m_lineHeight -
-                                          flexItem->marginWidth()));
+                Length(Length::Fixed,
+                       flexLine.m_lineHeight - flexItem->marginWidth()));
             flexItem->layout(m_layoutContext,
                              Frame::LayoutWantToResolve::ResolveAll);
             flexItem->style()->setWidth(old);
-            if (oldContentHeight > flexItem->contentHeight()) {
-                flexItem->setContentHeight(oldContentHeight);
-            } else if (flexItem->contentHeight() > oldContentHeight) {
-                m_container->computeContentHeight(
-                    m_layoutContext, m_container->contentHeight() +
-                                         flexItem->contentHeight() -
-                                         oldContentHeight);
-            }
+
+            flexLine.m_lineWidth +=
+                flexItem->contentHeight() - oldContentHeight;
         }
+    }
+
+    if (!m_isMainAxisInInlineAxis) {
+        LayoutUnit maxMainSize = 0;
+        for (size_t i = 0; i < lines; i++) {
+            FlexLine& flexLine = m_flexLines[i];
+            maxMainSize = std::max(maxMainSize, flexLine.m_lineWidth);
+        }
+        m_container->computeContentHeight(m_layoutContext, maxMainSize);
+        applyJustifyContent();
     }
 }
 

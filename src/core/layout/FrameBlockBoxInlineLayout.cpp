@@ -3776,7 +3776,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     bool parentHasFixedHeight;
     bool hasAspectRatio;
 
-    parentContentWidth = cb->contentWidth();
+    parentContentWidth = intMaxForLayoutUnit;
     parentHasFixedHeight = ctx.layoutContext().parentHasFixedHeight(this);
 
     if (parentHasFixedHeight) {
