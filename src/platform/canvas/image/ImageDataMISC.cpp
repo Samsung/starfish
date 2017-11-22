@@ -438,7 +438,7 @@ private:
             }
             free(screenBuffer);
         }
-#ifdef GIF_LIB_VERSION // order versions of giflib(~4)
+#ifdef GIF_LIB_VERSION
         DGifCloseFile(gifFile);
 #else
         int errorCode = 0;
@@ -448,7 +448,7 @@ private:
 
     static int getGifTransparentIndex(GifFileType* gif)
     {
-#ifdef GIF_LIB_VERSION // order versions of giflib(~4)
+#ifdef GIF_LIB_VERSION
         return 0;
 #else
         GraphicsControlBlock first_gcb;
@@ -478,7 +478,7 @@ private:
 
         if (localImageSrc) {
             auto utf8Data = localImageSrc->toUTF8NonGCString();
-#ifdef GIF_LIB_VERSION // order versions of giflib(~4)
+#ifdef GIF_LIB_VERSION
             gifFile = DGifOpenFileName(utf8Data.data());
 #else
             gifFile = DGifOpenFileName(utf8Data.data(), &errorCode);
@@ -490,8 +490,7 @@ private:
         } else {
             readData.mem = (void*)bufferedInput;
             readData.size = 0;
-#ifdef GIF_LIB_VERSION // order versions of giflib(~4)
-            STARFISH_LOG_ERROR("[youngj] order versions of giflib(~4)\n");
+#ifdef GIF_LIB_VERSION
             gifFile = DGifOpen(&readData, gifRead);
 #else
             gifFile = DGifOpen(&readData, gifRead, &errorCode);
@@ -585,7 +584,7 @@ private:
             gifRow = screenBuffer[h];
             for (unsigned long w = 0; w < m_width; w++) {
                 colorMapEntry = &colorMap->Colors[gifRow[w]];
-#ifdef GIF_LIB_VERSION // order versions of giflib(~4)
+#ifdef GIF_LIB_VERSION
                 *buffer++ = colorMapEntry->Blue;
                 *buffer++ = colorMapEntry->Green;
                 *buffer++ = colorMapEntry->Red;
