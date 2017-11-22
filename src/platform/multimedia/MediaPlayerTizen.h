@@ -19,7 +19,6 @@
 #define __StarFishMediaPlayerTizen__
 
 #include "platform/multimedia/MediaPlayer.h"
-#include "platform/multimedia/StreamInfo.h"
 
 #include <media/player.h>
 #include <media/player_internal.h>
@@ -165,24 +164,6 @@ public:
     virtual void handleSeekTimeout();
     virtual void handleSeeked();
 
-    virtual unsigned long videoWidth()
-    {
-        if (m_hasVideo) {
-            return m_videoWidth;
-        } else {
-            return STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
-        }
-    }
-
-    virtual unsigned long videoHeight()
-    {
-        if (m_hasVideo) {
-            return m_videoHeight;
-        } else {
-            return STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
-        }
-    }
-
     virtual double currentTime()
     {
         int s;
@@ -227,9 +208,6 @@ public:
     {
         return type == StreamTypeAudio ? m_audioStream : m_videoStream;
     }
-    SourceBuffer* activeSourceBuffer(StreamType type);
-    uint64_t activeStreamIndex(StreamType type);
-    bool isMSE();
     bool isMSEBufferEOS();
 };
 }

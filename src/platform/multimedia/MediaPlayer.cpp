@@ -23,6 +23,7 @@
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/window/PlatformWindow.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/mediasource/MediaSource.h"
 #include "core/page/Window.h"
 
 namespace StarFish {
@@ -36,6 +37,8 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     , m_playbackState(PLAYBACK_STATE_NONE)
     , m_container(element)
     , m_activeMediaSource(nullptr)
+    , m_videoWidth(STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS)
+    , m_videoHeight(STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS)
     , m_currentTimeUpdateTimer(SIZE_MAX)
 {
 }
@@ -63,6 +66,33 @@ CanvasSurface* MediaPlayer::createGraphicsBuffer(size_t visibleWidth,
                                                  size_t visibleHeight)
 {
     return CanvasSurface::create(window()->starFish()->platformWindow(), 1, 1);
+}
+
+SourceBuffer* MediaPlayer::activeSourceBuffer(StreamType type)
+{
+    if (m_activeMediaSource) {
+        if (type == StreamTypeAudio) {
+            return m_activeMediaSource->activeAudioSourceBuffer();
+        } else {
+            return m_activeMediaSource->activeVideoSourceBuffer();
+        }
+    }
+    return nullptr;
+}
+
+uint64_t MediaPlayer::activeStreamIndex(StreamType type)
+{
+    STARFISH_ASSERT(m_activeMediaSource);
+    if (type == StreamTypeAudio) {
+        return m_activeMediaSource->activeAudioStreamIndex();
+    }
+    STARFISH_ASSERT(type == StreamTypeVideo);
+    return m_activeMediaSource->activeVideoStreamIndex();
+}
+
+bool MediaPlayer::isMSE()
+{
+    return m_activeMediaSource;
 }
 }
 #endif /* STARFISH_ENABLE_MULTIMEDIA */
