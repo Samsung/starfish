@@ -129,6 +129,8 @@ public:
         return (m_seekState != SEEKSTATE_NO_SEEK);
     }
 
+    bool isMSE();
+
     virtual void prepareMediaSource() = 0;
 
     virtual Window* window();
@@ -140,7 +142,6 @@ protected:
     void appendToOperationQueueInContainer(MediaOperationQueueData* data);
     SourceBuffer* activeSourceBuffer(StreamType type);
     uint64_t activeStreamIndex(StreamType type);
-    bool isMSE();
     bool m_alive;
     bool m_foundError;
     bool m_isLooping;
