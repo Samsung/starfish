@@ -73,10 +73,11 @@ MessageLoop::MessageLoop(StarFish* sf)
                             ml->m_idlersFromOtherThread.begin());
                     }
 
-                    if (id != nullptr && id->m_shouldExecute) {
-                        StarFishEnterer enter(ml->m_starFish);
-                        id->m_fn((size_t)id, id->m_data);
-
+                    if (id) {
+                        if (id->m_shouldExecute) {
+                            StarFishEnterer enter(ml->m_starFish);
+                            id->m_fn((size_t)id, id->m_data);
+                        }
                         delete id;
                     }
                 }
@@ -97,11 +98,12 @@ MessageLoop::MessageLoop(StarFish* sf)
                             ml->m_idlersFromOtherThread.begin());
                     }
 
-                    if (id != nullptr && id->m_shouldExecute) {
-                        StarFishEnterer enter(ml->m_starFish);
-                        ((void (*)(size_t, void*, void*))id->m_fn)(
-                            (size_t)id, id->m_data, id->m_data1);
-
+                    if (id) {
+                        if (id->m_shouldExecute) {
+                            StarFishEnterer enter(ml->m_starFish);
+                            ((void (*)(size_t, void*, void*))id->m_fn)(
+                                (size_t)id, id->m_data, id->m_data1);
+                        }
                         delete id;
                     }
                 }
@@ -325,13 +327,13 @@ void MessageLoop::clearOrInvokePendingIdlers(BrowsingContext* ctx)
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
         if (id->m_ctx == ctx || ctx == nullptr) {
+            iter = m_idlers.erase(iter);
             uv_idle_stop(id->m_idler_uv);
             uv_close((uv_handle_t*)id->m_idler_uv, on_close_handle);
             if (!id->m_clearable) {
                 invokeFnNow(id);
             }
             GC_FREE(id);
-            iter = m_idlers.erase(iter);
         } else {
             iter++;
         }
