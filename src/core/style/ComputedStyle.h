@@ -33,6 +33,8 @@
 #include "core/style/PositionedMaskData.h"
 #include "core/style/OutlineData.h"
 
+#include "core/animation/Animation.h"
+
 namespace StarFish {
 
 class Frame;
@@ -1262,6 +1264,27 @@ public:
     {
         setRareComputedStyleDataIfNeeded();
         m_rareComputedStyleData->ensureTransition()->setDuration(duration);
+    }
+
+    TransitionTimingFunctionValue transitionTimingFunction()
+    {
+        if (!m_rareComputedStyleData) {
+            return TransitionTimingFunctionValue::
+                TransitionTimingFunctionEaseValue;
+        }
+
+        StyleTransitionData* transition = m_rareComputedStyleData->transition();
+        if (transition) {
+            return transition->timingFunction();
+        }
+
+        return TransitionTimingFunctionValue::TransitionTimingFunctionEaseValue;
+    }
+
+    void setTransitionTimingFunction(TransitionTimingFunctionValue f)
+    {
+        setRareComputedStyleDataIfNeeded();
+        m_rareComputedStyleData->ensureTransition()->setTimingFunction(f);
     }
 
 #define SET_SIDE(UPOS, ...)                                       \

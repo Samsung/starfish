@@ -1488,6 +1488,21 @@ public:
         return m_flags.m_isAnonymous;
     }
 
+    bool isRunningTransformAnimation()
+    {
+        return m_flags.m_isRunningTransformAnimation;
+    }
+
+    void markRunningTransformAnimation()
+    {
+        m_flags.m_isRunningTransformAnimation = true;
+    }
+
+    void clearRunningTransformAnimation()
+    {
+        m_flags.m_isRunningTransformAnimation = false;
+    }
+
     bool isBlockLevel()
     {
         // block, table, list-item
@@ -1641,6 +1656,8 @@ protected:
         bool m_isAbsolutePositioned : 1;
         bool m_isFloating : 1;
         bool m_isFlexItem : 1;
+
+        bool m_isRunningTransformAnimation : 1;
 
         // special flag for FrameBlockBox
         bool m_heightComputed : 1;

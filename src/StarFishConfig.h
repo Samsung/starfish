@@ -447,6 +447,7 @@ inline void hash_combine(std::size_t& seed, const T& v)
 #include "core/style/Unit.h"
 #include "core/style/UnitHelper.h"
 #include "core/modules/canvas/font/Font.h"
+#include "core/modules/profiling/Profiling.h"
 #include "platform/loader/ResourceURL.h"
 
 #endif

@@ -19,6 +19,7 @@
 
 #include "core/style/Style.h"
 #include "core/style/MatrixTransform.h"
+#include "core/style/InternalMatrixTransform.h"
 #include "core/style/ScaleTransform.h"
 #include "core/style/RotateTransform.h"
 #include "core/style/SkewTransform.h"
@@ -31,7 +32,15 @@ class ComputedStyle;
 
 class StyleTransformData : public gc {
 public:
-    enum OperationType { Matrix, Translate, Scale, Rotate, Skew, None };
+    enum OperationType {
+        Matrix,
+        Translate,
+        Scale,
+        Rotate,
+        Skew,
+        None,
+        InternalMatrix
+    };
 
     StyleTransformData()
         : m_type(None)
@@ -61,6 +70,16 @@ public:
             m_value.m_matrix = new MatrixTransform(a, b, c, d, e, f);
         } else {
             m_value.m_matrix->setData(a, b, c, d, e, f);
+        }
+    }
+
+    void setInternalMatrix(const SkMatrix& matrix)
+    {
+        STARFISH_ASSERT(m_type == InternalMatrix);
+        if (m_value.m_internalMatrix == NULL) {
+            m_value.m_internalMatrix = new InternalMatrixTransform(matrix);
+        } else {
+            m_value.m_internalMatrix->setMatrix(matrix);
         }
     }
 
@@ -108,6 +127,12 @@ public:
     {
         STARFISH_ASSERT(type() == OperationType::Matrix);
         return m_value.m_matrix;
+    }
+
+    InternalMatrixTransform* internalMatrix() const
+    {
+        STARFISH_ASSERT(type() == OperationType::InternalMatrix);
+        return m_value.m_internalMatrix;
     }
 
     TranslateTransform* translate() const
@@ -210,6 +235,7 @@ private:
     OperationType m_type;
     union TransformPointer {
         MatrixTransform* m_matrix;
+        InternalMatrixTransform* m_internalMatrix;
         TranslateTransform* m_translate;
         ScaleTransform* m_scale;
         RotateTransform* m_rotate;
@@ -252,6 +278,11 @@ bool operator==(const StyleTransformData& a, const StyleTransformData& b)
         break;
     case StyleTransformData::OperationType::Skew:
         if (*(a.skew()) != *(b.skew())) {
+            return false;
+        }
+        break;
+    case StyleTransformData::OperationType::InternalMatrix:
+        if (*(a.internalMatrix()) != *(b.internalMatrix())) {
             return false;
         }
         break;
@@ -298,12 +329,17 @@ public:
         m_group.push_back(f);
     }
 
-    StyleTransformData at(int i) const
+    void removeAt(size_t idx)
+    {
+        m_group.erase(idx);
+    }
+
+    StyleTransformData at(size_t i) const
     {
         return m_group[i];
     }
 
-    StyleTransformData& at(int i)
+    StyleTransformData& at(size_t i)
     {
         return m_group[i];
     }

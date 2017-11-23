@@ -17,10 +17,13 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/animation/Animation.h"
+#include "core/animation/CubicBezier.h"
+#include "core/animation/Steps.h"
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/page/BrowsingContext.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/page/Window.h"
@@ -681,6 +684,29 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
     }
 }
 
+static AnimationTimingFunction* getTimingFunction(ComputedStyle* style)
+{
+    TransitionTimingFunctionValue fn = style->transitionTimingFunction();
+    switch (fn) {
+    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseValue:
+        return new CubicBeizer(0.25, 0.1, 0.25, 1);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionLinearValue:
+        return new CubicBeizer(0, 0, 1, 1);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseInValue:
+        return new CubicBeizer(0.42, 0, 1, 1);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseOutValue:
+        return new CubicBeizer(0.0, 0.0, 0.58, 1.0);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseInOutValue:
+        return new CubicBeizer(0.42, 0.0, 0.58, 1.0);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionStepStartValue:
+        return new Steps(1, false);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionStepEndValue:
+        return new Steps(1, true);
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
 void applyTransition(Element* element, ComputedStyle* oldStyle,
                      ComputedStyle* newStyle, const bool* damagedKeys)
 {
@@ -688,6 +714,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle,
     TransitionPropertyValue property = newStyle->transitionProperty();
     bool isPropertyAll =
         property == TransitionPropertyValue::TransitionPropertyAllValue;
+
     if ((isPropertyAll ||
          property == TransitionPropertyValue::TransitionPropertyWidthValue) &&
         damagedKeys[CSSStyleValuePair::Width]) {
@@ -700,8 +727,8 @@ void applyTransition(Element* element, ComputedStyle* oldStyle,
                 transitionPropertyValueToString(
                     TransitionPropertyValue::TransitionPropertyWidthValue),
                 AnimatedValue(from), AnimatedValue(to),
-                newStyle->transitionDuration().value(), 0,
-                new CubicBeizer(0.25, 0.1, 0.25, 1)));
+                newStyle->transitionDuration().toTimeValue(), 0,
+                getTimingFunction(newStyle)));
             // keep current computed style
             newStyle->setWidth(from);
         }
@@ -718,8 +745,8 @@ void applyTransition(Element* element, ComputedStyle* oldStyle,
                 transitionPropertyValueToString(
                     TransitionPropertyValue::TransitionPropertyHeightValue),
                 AnimatedValue(from), AnimatedValue(to),
-                newStyle->transitionDuration().value(), 0,
-                new CubicBeizer(0.25, 0.1, 0.25, 1)));
+                newStyle->transitionDuration().toTimeValue(), 0,
+                getTimingFunction(newStyle)));
             // keep current computed style
             newStyle->setHeight(from);
         }
@@ -728,13 +755,29 @@ void applyTransition(Element* element, ComputedStyle* oldStyle,
          property ==
              TransitionPropertyValue::TransitionPropertyTransformValue) &&
         damagedKeys[CSSStyleValuePair::Transform]) {
-        executor->registerAnimation(new AnimationTask(
-            element, CSSStyleValuePair::KeyKind::Transform,
-            transitionPropertyValueToString(
-                TransitionPropertyValue::TransitionPropertyTransformValue),
-            AnimatedValue(), AnimatedValue(),
-            newStyle->transitionDuration().value(), 0,
-            new CubicBeizer(0.25, 0.1, 0.25, 1)));
+        if (element->frame() && element->frame()->isTransformable()) {
+            STARFISH_ASSERT(element->frame()->isFrameBox());
+            FrameBox* box = element->frame()->asFrameBox();
+            SkMatrix matrixBefore = oldStyle->transformsToMatrix(
+                box->width(), box->height(), box, true);
+
+            TransformAnimationTask* task = new TransformAnimationTask(
+                element, CSSStyleValuePair::KeyKind::Transform,
+                transitionPropertyValueToString(
+                    TransitionPropertyValue::TransitionPropertyTransformValue),
+                AnimatedValue(matrixBefore),
+                newStyle->transitionDuration().toTimeValue(), 0,
+                getTimingFunction(newStyle));
+            executor->registerAnimation(task);
+
+            element->document()->browsingContext()->addDidLayoutCallback(
+                [](void* data) {
+                    TransformAnimationTask* task =
+                        (TransformAnimationTask*)data;
+                    task->computeToValue();
+                },
+                task);
+        }
     }
 }
 
@@ -1419,6 +1462,8 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
             matrix.set(3, m->b());
             matrix.set(4, m->d());
             matrix.set(5, m->f());
+        } else if (t.type() == StyleTransformData::InternalMatrix) {
+            matrix = t.internalMatrix()->matrix();
         } else if (t.type() == StyleTransformData::Scale) {
             ScaleTransform* m = t.scale();
             matrix.preScale(m->x(), m->y());
