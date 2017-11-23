@@ -259,6 +259,7 @@ m_lastRenderingTime > 1000)) {
             evas_object_show(m_canvasAdpater);
         }
 #endif
+
         m_inRendering = false;
         return ret;
     }
@@ -332,6 +333,7 @@ public:
         m_window = (WindowImplEFL*)wnd;
         m_image =
             evas_object_image_add(evas_object_evas_get(m_window->m_window));
+        m_window->m_surfaceList.push_back(m_image);
         evas_object_image_filled_set(m_image, EINA_TRUE);
 #ifndef STARFISH_TIZEN_TV
         evas_object_image_colorspace_set(
@@ -1571,8 +1573,6 @@ Canvas* WindowImplEFL::preparePainting()
         evas_object_hide(*iter);
         iter++;
     }
-    m_surfaceList.clear();
-    m_surfaceList.shrink_to_fit();
 
     Canvas* canvas = Canvas::createDirect(starFish(), d);
     delete d;
@@ -1734,8 +1734,6 @@ Compositor* WindowImplEFL::prepareCompositor()
         evas_object_hide(*iter);
         iter++;
     }
-    m_surfaceList.clear();
-    m_surfaceList.shrink_to_fit();
 
     Compositor* c = Compositor::create(starFish(), d);
     delete d;
