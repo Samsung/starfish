@@ -645,6 +645,7 @@ void BrowsingContext::dispose()
         m_starFish->timer()->clear(this);
         m_starFish->messageLoop()->clearOrInvokePendingIdlers(this);
     }
+
     unRegisterNeedsLayoutInWebView();
 }
 

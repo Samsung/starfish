@@ -201,13 +201,13 @@ static ValueRef* debugPauseFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    window->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
-        window->browsingContext(),
-        [](size_t, void* data, void*) {
-            StarFish* sf = (StarFish*)data;
-            sf->pause();
-        },
-        window->starFish(), nullptr);
+    window->starFish()->messageLoop()->addIdler(window->browsingContext(),
+                                                [](size_t, void* data, void*) {
+                                                    StarFish* sf =
+                                                        (StarFish*)data;
+                                                    sf->pause();
+                                                },
+                                                window->starFish(), nullptr);
     return scriptUndefined();
 }
 
@@ -217,13 +217,13 @@ static ValueRef* debugResumeFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    window->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
-        window->browsingContext(),
-        [](size_t, void* data, void*) {
-            StarFish* sf = (StarFish*)data;
-            sf->resume();
-        },
-        window->starFish(), nullptr);
+    window->starFish()->messageLoop()->addIdler(window->browsingContext(),
+                                                [](size_t, void* data, void*) {
+                                                    StarFish* sf =
+                                                        (StarFish*)data;
+                                                    sf->resume();
+                                                },
+                                                window->starFish(), nullptr);
     return scriptUndefined();
 }
 

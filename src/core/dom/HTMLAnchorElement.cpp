@@ -63,7 +63,7 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
             String* hrefStr = hrefAttr.getValue()->trim();
             if (hrefStr->length()) {
                 if (hrefStr->startsWith("#")) {
-                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                    window()->location()->setHash(hrefStr);
                 } else if (hrefStr->startsWith("javascript:", false)) {
                     String* ret2 = toBrowserString(
                         window()->scriptBindingInstance(),

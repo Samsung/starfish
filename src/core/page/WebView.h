@@ -171,6 +171,9 @@ public:
 
     void onIdle();
 
+    void assignGraphicsBuffer(CanvasSurface** surfaceHolder,
+                              size_t visibleWidth, size_t visibleHeight);
+
 private:
     WebView(StarFish* starFish);
 

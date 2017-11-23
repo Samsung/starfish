@@ -23,6 +23,7 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 
 #include <Elementary.h>
 
@@ -31,6 +32,7 @@ namespace StarFish {
 MessageLoop::MessageLoop(StarFish* sf)
     : StarFishHoldable(sf)
     , m_idlersFromOtherThreadMutex(new Mutex())
+    , m_navigateInvokeIdler(nullptr)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     , m_countingMutex(new Mutex())
     , m_runningThreadCount(0)
@@ -241,35 +243,6 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(
-    BrowsingContext* ctx, void (*fn)(size_t handle, void*, void*), void* data,
-    void* data1, bool clearable)
-{
-    STARFISH_ASSERT(isMainThread());
-    IdlerData* id = new (NoGC) IdlerData;
-    m_idlers.insert((size_t)id);
-    id->m_isMainThreadData = true;
-    id->m_fn = (void (*)(size_t, void*))fn;
-    id->m_data = data;
-    id->m_data1 = data1;
-    id->m_dataCount = 2;
-    id->m_ml = this;
-    id->m_ctx = ctx;
-    id->m_clearable = clearable;
-    id->m_idler = ecore_animator_add(
-        [](void* data) -> Eina_Bool {
-            IdlerData* id = (IdlerData*)data;
-            id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-            ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                       id->m_data1);
-
-            GC_FREE(id);
-            return ECORE_CALLBACK_CANCEL;
-        },
-        id);
-    return (size_t)id;
-}
-
 void MessageLoop::removeIdler(size_t handle)
 {
     STARFISH_ASSERT(isMainThread());
@@ -327,6 +300,43 @@ void MessageLoop::clearOrInvokePendingIdlers(BrowsingContext* ctx)
         }
         iter2++;
     }
+}
+
+struct InvokeNavigateData : public gc {
+    WebView* wv;
+    ResourceURL* url;
+    ResourceURL* referrerURL;
+    Ecore_Idler* idler;
+
+    static void* operator new(size_t s)
+    {
+        return GC_MALLOC_UNCOLLECTABLE(s);
+    }
+};
+
+void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
+                                 ResourceURL* referrerURL)
+{
+    if (m_navigateInvokeIdler != nullptr) {
+        auto data = ((InvokeNavigateData*)m_navigateInvokeIdler);
+        ecore_idler_del(data->idler);
+        delete data;
+    }
+
+    InvokeNavigateData* data = new InvokeNavigateData();
+    m_navigateInvokeIdler = data;
+    data->wv = wv;
+    data->url = url;
+    data->referrerURL = referrerURL;
+    data->idler = ecore_idler_add(
+        [](void* d) -> Eina_Bool {
+            InvokeNavigateData* data = (InvokeNavigateData*)d;
+            data->wv->navigate(data->url, HistoryManager::Action::Add,
+                               data->referrerURL);
+            delete data;
+            return ECORE_CALLBACK_CANCEL;
+        },
+        data);
 }
 }
 #endif

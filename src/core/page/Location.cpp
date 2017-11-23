@@ -132,7 +132,15 @@ void Location::setSearch(String* search)
 void Location::setHash(String* search)
 {
     ResourceURL* newUrl = url()->setHash(search);
-    assign(newUrl);
+    document()->setDocumentURI(newUrl);
+    String* str = newUrl->hash();
+    if (str->length() > 1) {
+        Element* e =
+            document()->getElementById(str->substring(1, str->length()));
+        if (e) {
+            e->scrollIntoView();
+        }
+    }
 }
 
 void Location::setLocation(String* url)
@@ -152,15 +160,8 @@ void Location::assign(String* url)
 static void navigateImpl(BrowsingContext* ctx, ResourceURL* url)
 {
     if (ctx->isTopLevelBrowsingContext()) {
-        ctx->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering(
-            ctx,
-            [](size_t id, void* data, void* data2) {
-                BrowsingContext* ctx = (BrowsingContext*)data;
-                ResourceURL* url = (ResourceURL*)data2;
-                ctx->webView()->navigate(url, HistoryManager::Action::Add,
-                                         ctx->document()->documentURI());
-            },
-            ctx, url);
+        ctx->starFish()->messageLoop()->invokeNavigate(
+            ctx->webView(), url, ctx->document()->documentURI());
     } else {
         ctx->window()->browsingContext()->navigate(
             url, HistoryManager::Action::Add, ctx->document()->documentURI());

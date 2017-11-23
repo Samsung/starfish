@@ -82,6 +82,7 @@ void ScriptBindingInstance::close()
     m_deviceAPI = nullptr;
     DeviceAPI::close(m_scriptContext);
 #endif
+    m_scriptContext->destroy();
 }
 
 static String* toBrowserStringForConsole(ExecutionStateRef* state,

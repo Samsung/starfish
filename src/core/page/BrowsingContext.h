@@ -140,6 +140,11 @@ public:
         return m_hasBodyElementBackground;
     }
 
+    bool isActive()
+    {
+        return m_isActive;
+    }
+
     Node* hitTest(float x, float y);
 
     bool hasPendingStyleSheet()
@@ -257,7 +262,7 @@ private:
     size_t m_pendingRenderingCount;
 
     bool m_isRunning;
-    bool m_isActive;
+    bool m_isActive; // true means this context is alive
 
     Unit::Location m_touchDownPoint;
 

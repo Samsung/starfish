@@ -47,9 +47,6 @@ public:
     size_t addIdlerWithNoGCRootingInOtherThread(
         BrowsingContext* ctx, void (*fn)(size_t handle, void*, void*),
         void* data, void* data1, bool clearable = false);
-    size_t addIdlerWithNoScriptInstanceEntering(
-        BrowsingContext* ctx, void (*fn)(size_t handle, void*, void*),
-        void* data, void* data1, bool clearable = false);
 
     void removeIdler(size_t handle);
     void removeIdlerWithNoGCRooting(size_t handle);
@@ -57,11 +54,14 @@ public:
     void clearOrInvokePendingIdlers(
         BrowsingContext* ctx); // give nullptr to clear every idlers
     void run();
+    void invokeNavigate(WebView* wv, ResourceURL* url,
+                        ResourceURL* referrerURL);
 
 protected:
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
     std::unordered_set<size_t> m_idlersFromOtherThread;
+    void* m_navigateInvokeIdler;
 #ifdef STARFISH_MESSAGELOOP_DEBUG
 public:
     Mutex* m_countingMutex;
