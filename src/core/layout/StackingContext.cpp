@@ -930,8 +930,8 @@ void StackingContext::applyStackingContextProperties(
     auto iter = m_childContexts.begin();
     while (iter != m_childContexts.end()) {
         StackingContextChild* child = *iter;
-        auto iter2 = child->begin();
-        while (iter2 != child->end()) {
+        auto iter2 = child->rbegin();
+        while (iter2 != child->rend()) {
             (*iter2)->applyStackingContextProperties(ctx);
             iter2++;
         }
@@ -944,7 +944,9 @@ void StackingContext::applyStackingContextProperties(
         Frame::ComputeVisibleRectContext ctx(
             Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
             m_rareData->m_visibleRect);
+
         m_owner->computeVisibleRect(ctx);
+
     } else {
         if (m_rareData && m_rareData->m_buffer) {
             m_rareData->m_buffer->detachNativeBuffer();
@@ -996,8 +998,13 @@ void StackingContext::paintStackingContext(
         needsPainting = m_needsRepainting || parentGraphicsLayerNeedsPainting;
         if (m_needsRepainting) {
             parentGraphicsLayerNeedsPainting = true;
-            m_owner->node()->webView()->assignGraphicsBuffer(
-                &m_rareData->m_buffer, bufferWidth, bufferHeight);
+            m_owner->createGraphicsBuffer(&m_rareData->m_buffer, bufferWidth,
+                                          bufferHeight);
+
+            if (!m_rareData->m_buffer) {
+                m_owner->node()->webView()->assignGraphicsBuffer(
+                    &m_rareData->m_buffer, bufferWidth, bufferHeight);
+            }
         }
 
         oldCanvas = canvas;

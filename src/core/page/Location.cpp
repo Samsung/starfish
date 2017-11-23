@@ -136,7 +136,7 @@ void Location::setHash(String* search)
     String* str = newUrl->hash();
     if (str->length() > 1) {
         Element* e =
-            document()->getElementById(str->substring(1, str->length()));
+            document()->getElementById(str->substring(1, str->length() - 1));
         if (e) {
             e->scrollIntoView();
         }

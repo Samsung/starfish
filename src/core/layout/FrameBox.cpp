@@ -1795,12 +1795,13 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     // TODO add box-shadow size into visibleRect when box-shadow implemented
     ComputedStyle* cs = style();
     if (ctx.purpose == Frame::ComputeVisibleRectContext::GraphicsBuffer &&
-        isFrameBlockBox() && isBlockLevel()) {
+        isFrameBlockBox()) {
         BorderData border = cs->border();
         if (isAnonymous() ||
             (cs->backgroundColor().isTransparent() &&
              cs->backgroundLayerSize() == 0 && !border.hasBorderStyle() &&
-             cs->outlineStyle() == BorderStyleValue::NoneBorderStyleValue)) {
+             (cs->outlineStyle() == BorderStyleValue::NoneBorderStyleValue ||
+              outlineThickness() == 0))) {
             r.setWidth(0);
             r.setHeight(0);
             ret = true;
