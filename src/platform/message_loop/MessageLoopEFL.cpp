@@ -304,12 +304,12 @@ void MessageLoop::clearOrInvokePendingIdlers(BrowsingContext* ctx)
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
         if (id->m_ctx == ctx || ctx == nullptr) {
+            iter = m_idlers.erase(iter);
             ecore_animator_del(id->m_idler);
             if (!id->m_clearable) {
                 invokeFnNow(id);
             }
             GC_FREE(id);
-            iter = m_idlers.erase(iter);
         } else {
             iter++;
         }
