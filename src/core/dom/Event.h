@@ -204,6 +204,12 @@ public:
         m_isTrusted = false;
     }
 
+protected:
+    void setType(String* type)
+    {
+        m_type = type;
+    }
+
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
     Nullable<String*> m_type;

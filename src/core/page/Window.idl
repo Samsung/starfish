@@ -64,7 +64,8 @@ interface Window : EventTarget {
   [Custom] unsigned long requestAnimationFrame(FrameRequestCallback callback);
   void cancelAnimationFrame(unsigned long handle);
 
-  [Custom] void postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
+  // NOTE transfer: sequence<object> -> sequence<any>
+  [RaisesException] void postMessage(any message, DOMString targetOrigin, optional sequence<any> transfer);
 
   // https://html.spec.whatwg.org/#Window-partial
   [Unimplemented] void captureEvents();

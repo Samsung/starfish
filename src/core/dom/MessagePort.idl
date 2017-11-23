@@ -1,0 +1,14 @@
+
+// https://html.spec.whatwg.org/multipage/web-messaging.html#message-ports
+
+[Exposed=(Window,Worker,AudioWorklet), Transferable]
+interface MessagePort : EventTarget {
+  // NOTE transfer: sequence<object> -> sequence<any>
+  [RaisesException] void postMessage(any message, optional sequence<any> transfer);
+  void start();
+  void close();
+
+  // event handlers
+  attribute EventHandler onmessage;
+  attribute EventHandler onmessageerror;
+};

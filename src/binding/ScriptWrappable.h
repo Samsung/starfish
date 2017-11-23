@@ -24,25 +24,7 @@ namespace StarFish {
 class Document;
 class Element;
 class Serializable;
-
-class Transferable {
-public:
-    Transferable()
-        : m_detached(false)
-    {
-    }
-    bool idDetached()
-    {
-        return m_detached;
-    }
-    void setDetached()
-    {
-        m_detached = true;
-    }
-
-protected:
-    bool m_detached;
-};
+class Transferable;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
@@ -87,6 +69,7 @@ void throwJSTypeErrorException(Escargot::ExecutionStateRef* state,
                                String* message);
 
 ScriptString createScriptString(String* str);
+ScriptValue createScriptValue(ScriptObject object);
 ScriptValue createScriptValue(ScriptString s);
 ScriptValue createScriptValue(ScriptArrayBuffer buffer);
 ScriptValue createScriptValue(ScriptArrayBufferView buffer);
@@ -243,6 +226,9 @@ public:
 protected:
     Escargot::ObjectRef* m_object;
 };
+
+ScriptWrappable* toScriptWrappable(ScriptValue v);
+ScriptWrappable* toScriptWrappable(ScriptObject v);
 
 class AttributeEventFunction : public ScriptWrappable {
 public:

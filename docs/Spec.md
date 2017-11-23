@@ -499,6 +499,15 @@ This section describes the complete list of supported HTML tags and attributes b
 | [MediaQueryList](https://drafts.csswg.org/cssom-view/#mediaquerylist) | interface | MediaQueryList | A MediaQueryList object stores information on a media query applied to a document, and handles sending notifications to listeners when the media query state change (i.e. when the media query test starts or stops evaluating to true). |
 |  | attribute | media | Return the associated media. |
 |  | attribute | matches | Return the associated matches state. |
+| [MessageChannel](https://www.w3.org/TR/webmessaging/#messagechannel) | interface | MessageChannel | To enable independent pieces of code (e.g. running in different browsing contexts) to communicate directly, authors can use channel messaging. |
+|  | attribute | port1 | Returns the first MessagePort object. |
+|  | attribute | port2 | Returns the second MessagePort object. |
+| [MessagePort](https://html.spec.whatwg.org/multipage/web-messaging.html#messageport) | interface | MessagePort | Each channel has two message ports. Data sent through one port is received by the other port, and vice versa. |
+|  | method | postMessage | Posts a message through the channel. |
+|  | method | start | Begins dispatching messages received on the port. |
+|  | method | close | Disconnects the port, so that it is no longer active. |
+|  | attribute | onmessage | Fired at an object when it receives a message. |
+|  | attribute | onmessageerror | Fired at an object when it receives a message that cannot be deserialized. |
 | [NamedNodeMap](https://dom.spec.whatwg.org/#interface-namednodemap) | interface | NamedNodeMap |  |
 |  | attribute | length | Return the attribute list’s size. |
 |  | method | Attr? item(unsigned long index) | Return the attribute at the given index, or null if the index is higher or equal to the number of nodes. |
@@ -803,11 +812,14 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | clientY | The vertical coordinate at which the event occurred relative to the viewport |
 | | attribute | button | Indicates which button was pressed on the mouse to trigger the event |
 | | attribute | buttons | Indicates which buttons are pressed on the mouse when the event is triggered. |
+| | method | initMouseEvent | Initializes attributes of a MouseEvent object. |
 | [MouseEventInit](https://w3c.github.io/uievents/#idl-mouseeventinit) | dictionary | MouseEventInit |  |
 | | attribute | screenX | Initializes the screenX attribute of the MouseEvent object |
 | | attribute | screenY | Initializes the screenY attribute of the MouseEvent object |
 | | attribute | clientX | Initializes the clientX attribute of the MouseEvent object |
 | | attribute | clientY | Initializes the clientY attribute of the MouseEvent object |
+| | attribute | button | Initializes the button attribute of the MouseEvent object |
+| | attribute | buttons | Initializes the buttons attribute of the MouseEvent object |
 | [KeyboardEvent](https://w3c.github.io/uievents/#interface-keyboardevent) | interface | KeyboardEvent | KeyboardEvent objects describe a user interaction with the keyboard. Each event describes a key; the event type (keydown, keypress, or keyup) identifies what kind of activity was performed. |
 |  | constant | DOM_KEY_LOCATION_STANDARD = 0x00 |  |
 |  | constant | DOM_KEY_LOCATION_LEFT = 0x01 |  |
@@ -852,6 +864,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | origin | Returns the origin of the message, for server-sent events and cross-document messaging. |
 | | attribute | lastEventId | Returns the last event ID string, for server-sent events. |
 | | attribute | source | Returns the WindowProxy of the source window, for cross-document messaging, and the MessagePort being attached, in the connect event fired at SharedWorkerGlobalScope objects. |
+| | attribute | ports | Returns the MessagePort array sent with the message, for cross-document messaging and channel messaging. |
 | [WindowEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers) | partial<br>interface | WindowEventHandlers | WindowEventHandlers are the event handlers common to several interfaces like Window, or HTMLBodyElement and  HTMLFrameSetElement. Each of these interfaces can implement additional specific event handlers. |
 | | attribute | onmessage | Fired at an object when it receives a message. |
 | | attribute | onmessageerror | Fired at an object when it receives a message that cannot be deserialized. |
