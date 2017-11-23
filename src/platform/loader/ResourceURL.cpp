@@ -396,9 +396,12 @@ void ResourceURL::resolvePositions()
         size_t pos2 = m_urlString->find("?", pos);
         if (pos2 != SIZE_MAX) {
             m_pathEnd = pos2;
-            size_t pos3 = m_urlString->find("#", pos2);
+            size_t pos3 = m_urlString->find("#", pos);
             if (pos3 != SIZE_MAX) {
                 m_searchEnd = pos3;
+                if (m_searchEnd < m_pathEnd) {
+                    m_searchEnd = m_pathEnd;
+                }
                 m_hashEnd = m_urlString->length();
             } else {
                 m_searchEnd = m_hashEnd = m_urlString->length();

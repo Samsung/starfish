@@ -629,15 +629,6 @@ bool WebView::rendering(bool force)
 
     layoutIfNeeds();
 
-    {
-        size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
-        for (size_t i = 0; i < bufSiz; i++) {
-            m_backStackingContextBufferUpWhileReCompsite[i]
-                ->detachNativeBuffer();
-        }
-        m_backStackingContextBufferUpWhileReCompsite.clear();
-    }
-
     if (m_needsPainting) {
         INSTALL_PROFILE_TIMER("painting");
 
@@ -689,6 +680,15 @@ bool WebView::rendering(bool force)
         evas_object_raise(eflWindow->m_dummyBox);
 #endif
         clearStack<102400>();
+    }
+
+    {
+        size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
+        for (size_t i = 0; i < bufSiz; i++) {
+            m_backStackingContextBufferUpWhileReCompsite[i]
+                ->detachNativeBuffer();
+        }
+        m_backStackingContextBufferUpWhileReCompsite.clear();
     }
 
     if (m_needsComposite) {
@@ -872,6 +872,42 @@ void WebView::onIdle()
 {
     if (m_topLevelBrowsingContext) {
         m_topLevelBrowsingContext->onIdle();
+    }
+}
+
+void WebView::assignGraphicsBuffer(CanvasSurface** surfaceHolder,
+                                   size_t visibleWidth, size_t visibleHeight)
+{
+    STARFISH_ASSERT(m_inRendering);
+    if (!*surfaceHolder || (((*surfaceHolder)->width() != visibleWidth) &&
+                            ((*surfaceHolder)->height() != visibleHeight))) {
+        if (*surfaceHolder) {
+            m_backStackingContextBufferUpWhileReCompsite.push_back(
+                *surfaceHolder);
+        }
+
+        *surfaceHolder = nullptr;
+
+        for (size_t i = 0;
+             i < m_backStackingContextBufferUpWhileReCompsite.size(); i++) {
+            size_t savedW =
+                m_backStackingContextBufferUpWhileReCompsite[i]->width();
+            size_t savedH =
+                m_backStackingContextBufferUpWhileReCompsite[i]->height();
+            if (savedW == visibleWidth && savedH == visibleHeight) {
+                (*surfaceHolder) =
+                    m_backStackingContextBufferUpWhileReCompsite[i];
+                m_backStackingContextBufferUpWhileReCompsite.erase(i);
+                return;
+            }
+        }
+
+        if (*surfaceHolder == nullptr) {
+            INSTALL_PROFILE_TIMER(
+                "WebView::assignGraphicsBuffer - create canvas surface");
+            (*surfaceHolder) = CanvasSurface::create(
+                starFish()->platformWindow(), visibleWidth, visibleHeight);
+        }
     }
 }
 }

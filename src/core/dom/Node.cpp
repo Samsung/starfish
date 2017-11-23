@@ -1534,7 +1534,8 @@ void Node::setNeedsPainting()
     webView()->markNeedsPaintingConsiderInRendering();
 
     Frame* frame = this->frame();
-    if (frame && webView()->didCompositeBefore()) {
+    if (frame) {
+        bool careHasGraphicsBuffer = webView()->didCompositeBefore();
         while (frame) {
             if (frame->isFrameBox()) {
                 break;
@@ -1551,7 +1552,8 @@ void Node::setNeedsPainting()
                 if (ctx) {
                     while (true) {
                         if (ctx->isRootContext() ||
-                            ctx->needsGraphicsBuffer()) {
+                            (careHasGraphicsBuffer &&
+                             ctx->needsGraphicsBuffer())) {
                             ctx->setNeedsRepainting();
                             return;
                         }

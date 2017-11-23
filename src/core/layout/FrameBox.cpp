@@ -1959,18 +1959,4 @@ LayoutUnit FrameBox::outlineThickness()
         style()->outlineOffset().specifiedValue(cbContentWidth, this);
     return outlineWidth + outlineOffset;
 }
-
-void FrameBox::createGraphicsBuffer(CanvasSurface** surfaceHolder,
-                                    size_t visibleWidth, size_t visibleHeight)
-{
-    if (!*surfaceHolder || (((*surfaceHolder)->width() != visibleWidth) &&
-                            ((*surfaceHolder)->height() != visibleHeight))) {
-        if (*surfaceHolder) {
-            (*surfaceHolder)->detachNativeBuffer();
-        }
-        (*surfaceHolder) = CanvasSurface::create(
-            node()->window()->starFish()->platformWindow(), visibleWidth,
-            visibleHeight);
-    }
-}
 }

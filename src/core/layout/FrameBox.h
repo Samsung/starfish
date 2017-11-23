@@ -737,10 +737,6 @@ public:
         return m_layoutParent;
     }
 
-    virtual void createGraphicsBuffer(CanvasSurface** surfaceHolder,
-                                      size_t visibleWidth,
-                                      size_t visibleHeight);
-
 protected:
     LayoutUnit minMaxWidthAppliedIfNeeds(LayoutContext& ctx, LayoutUnit width,
                                          LayoutUnit parentWidth,

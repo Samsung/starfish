@@ -94,6 +94,11 @@ public:
     virtual void drawContent(Compositor* canvas, const LayoutRect& videoRect,
                              const LayoutRect& absVideoRect) = 0;
 
+    virtual bool needsGraphicsBuffer()
+    {
+        return false;
+    }
+
 protected:
     HTMLObjectElement* m_element;
 };
@@ -115,6 +120,11 @@ public:
     AVPlayHTMLObjectElementContent(HTMLObjectElement* element)
         : HTMLObjectElementContent(element)
     {
+    }
+
+    virtual bool needsGraphicsBuffer()
+    {
+        return true;
     }
 
     virtual void drawContent(Compositor* canvas, const LayoutRect& contentRect,

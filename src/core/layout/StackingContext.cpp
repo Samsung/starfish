@@ -996,13 +996,8 @@ void StackingContext::paintStackingContext(
         needsPainting = m_needsRepainting || parentGraphicsLayerNeedsPainting;
         if (m_needsRepainting) {
             parentGraphicsLayerNeedsPainting = true;
-            {
-                INSTALL_PROFILE_TIMER(
-                    "StackingContext::paintStackingContext::"
-                    "createGraphicsBuffer");
-                m_owner->createGraphicsBuffer(&m_rareData->m_buffer,
-                                              bufferWidth, bufferHeight);
-            }
+            m_owner->node()->webView()->assignGraphicsBuffer(
+                &m_rareData->m_buffer, bufferWidth, bufferHeight);
         }
 
         oldCanvas = canvas;

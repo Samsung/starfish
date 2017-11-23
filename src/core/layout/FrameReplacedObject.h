@@ -29,13 +29,7 @@ public:
         computeStyleFlags();
     }
 
-    virtual void computeStyleFlags()
-    {
-        FrameReplaced::computeStyleFlags();
-        m_flags.m_isEstablishesStackingContext = true;
-        m_flags.m_needsGraphicsBuffer = true;
-    }
-
+    virtual void computeStyleFlags();
     virtual bool isFrameReplacedObject()
     {
         return true;

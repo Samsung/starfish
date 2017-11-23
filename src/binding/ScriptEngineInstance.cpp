@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "binding/ScriptEngineInstance.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
@@ -42,11 +43,22 @@ ScriptEngineInstance::ScriptEngineInstance(StarFish* starFish)
             window->browsingContext(),
             [](size_t, void* data, void* data2) {
                 Window* window = (Window*)data;
-                ExecutionStateRef* state = ExecutionStateRef::create(
-                    window->scriptBindingInstance()->scriptContext());
+
+                if (!window->browsingContext()->isActive()) {
+                    return;
+                }
+
                 JobRef* job = (JobRef*)data2;
-                job->run(state);
-                state->destroy();
+                auto sbresult = job->run();
+
+                if (!sbresult.error->isEmpty()) {
+                    STARFISH_LOG_ERROR(
+                        "Uncaught %s\n",
+                        toBrowserString(window->scriptBindingInstance(),
+                                        ValueRef::create(sbresult.error))
+                            ->toUTF8NonGCString()
+                            .data());
+                }
             },
             window, job);
     });
