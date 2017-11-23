@@ -224,6 +224,8 @@ public:
     // return did layout
     bool layoutIfNeeds(bool fromWebView = true);
 
+    typedef void (*DidLayoutCallback)(void*);
+    void addDidLayoutCallback(DidLayoutCallback cb, void* data);
     void registerMediaElement(HTMLMediaElement* element);
     void onIdle();
 
@@ -279,6 +281,7 @@ private:
     GCVector<EventTarget*> m_globalPointingEventListener;
     GCUnorderedMap<void*, size_t> m_rootMap;
     GCVector<HTMLMediaElement*> m_existingMediaElements;
+    GCVector<std::pair<DidLayoutCallback, void*>> m_didLayoutCallbacks;
 };
 }
 

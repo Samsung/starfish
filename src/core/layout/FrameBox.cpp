@@ -1797,9 +1797,10 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     if (ctx.purpose == Frame::ComputeVisibleRectContext::GraphicsBuffer &&
         isFrameBlockBox() && isBlockLevel()) {
         BorderData border = cs->border();
-        if (cs->backgroundColor().isTransparent() &&
-            cs->backgroundLayerSize() == 0 && !border.hasBorderStyle() &&
-            cs->outlineStyle() == BorderStyleValue::NoneBorderStyleValue) {
+        if (isAnonymous() ||
+            (cs->backgroundColor().isTransparent() &&
+             cs->backgroundLayerSize() == 0 && !border.hasBorderStyle() &&
+             cs->outlineStyle() == BorderStyleValue::NoneBorderStyleValue)) {
             r.setWidth(0);
             r.setHeight(0);
             ret = true;

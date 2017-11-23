@@ -17,28 +17,16 @@
 #ifndef __StarFishAnimation__
 #define __StarFishAnimation__
 
-#include "core/animation/CubicBezier.h"
+#include "core/animation/AnimationTimingFunction.h"
 #include "core/style/Style.h"
 
-#include <sys/time.h>
-
 namespace StarFish {
+
 class Node;
 class PlatformWindow;
 
-enum TransitionTimingFunction {
-    Ease,      // cubic-bezier(0, 0, 1, 1)
-    Linear,    // cubic-bezier(0, 0, 1, 1)
-    EaseIn,    // cubic-bezier(0.42, 0, 1, 1)
-    EaseOut,   // cubic-bezier(0, 0, 0.58, 1)
-    EaseInOut, // cubic-bezier(0.42, 0, 0.58, 1)
-    StepStart,
-    StepEnd,
-    Custom
-};
-
 class AnimatedValue : public gc {
-    enum VAULETYPE { UNDEFINED, COLOR, LENGTH, FLOAT, INT };
+    enum ValueType { UNDEFINED, COLOR, LENGTH, FLOAT, INT, MATRIX };
 
 public:
     AnimatedValue()
@@ -70,24 +58,35 @@ public:
         m_type = INT;
     }
 
-    virtual bool isColor()
+    AnimatedValue(const SkMatrix& matrix)
+    {
+        m_data.m_matrix = matrix;
+        m_type = MATRIX;
+    }
+
+    bool isColor()
     {
         return m_type == COLOR;
     }
 
-    virtual bool isLength()
+    bool isLength()
     {
         return m_type == LENGTH;
     }
 
-    virtual bool isFloat()
+    bool isFloat()
     {
         return m_type == FLOAT;
     }
 
-    virtual bool isInt()
+    bool isInt()
     {
         return m_type == INT;
+    }
+
+    bool isMatrix()
+    {
+        return m_type == MATRIX;
     }
 
     Unit::Color getColor()
@@ -114,6 +113,12 @@ public:
         return m_data.m_int;
     }
 
+    SkMatrix getMatrix()
+    {
+        STARFISH_ASSERT(m_type == MATRIX);
+        return m_data.m_matrix;
+    }
+
     void* operator new(size_t size)
     {
         static bool typeInited = false;
@@ -134,20 +139,21 @@ protected:
         Length m_length;
         float m_float;
         int m_int;
+        SkMatrix m_matrix;
         ValueData()
         {
         }
     } m_data;
-    VAULETYPE m_type;
+    ValueType m_type;
 };
 
 class AnimationTask : public gc {
 public:
     static const int THRESHOLD_TICK = 10;
-    AnimationTask(Node* target, CSSStyleValuePair::KeyKind targetProperty,
+    AnimationTask(Element* target, CSSStyleValuePair::KeyKind targetProperty,
                   String* targetPropertyString, AnimatedValue from,
-                  AnimatedValue to, float duration, float delay,
-                  CubicBeizer* cubicBezier);
+                  AnimatedValue to, float durationInms, float delayInms,
+                  AnimationTimingFunction* timingFunction);
     float progress();
     bool canExecute();
     bool isExpired()
@@ -162,13 +168,20 @@ public:
     {
         m_isExpired = true;
     }
-    Node* node()
+    virtual void attachedToElement()
     {
-        return m_targetElement;
+    }
+    virtual void detachedFromElement()
+    {
     }
     CSSStyleValuePair::KeyKind propertyType()
     {
         return m_property;
+    }
+
+    Element* targetElement() const
+    {
+        return m_targetElement;
     }
 
 protected:
@@ -184,18 +197,19 @@ private:
     size_t m_durationMs;
     size_t m_delayMs;
     String* m_targetPropertyString;
-    Node* m_targetElement;
-    CubicBeizer* m_cubicBezier;
+    Element* m_targetElement;
+    AnimationTimingFunction* m_timingFunction;
 };
 
 class ColorAnimationTask : public AnimationTask {
 public:
-    ColorAnimationTask(Node* target, CSSStyleValuePair::KeyKind targetProperty,
+    ColorAnimationTask(Element* target,
+                       CSSStyleValuePair::KeyKind targetProperty,
                        String* targetPropertyString, AnimatedValue fromValue,
                        AnimatedValue toValue, float duration, float delay,
-                       CubicBeizer* cubicBezier)
+                       AnimationTimingFunction* timingFunction)
         : AnimationTask(target, targetProperty, targetPropertyString, fromValue,
-                        toValue, duration, delay, cubicBezier)
+                        toValue, duration, delay, timingFunction)
     {
     }
     void execute();
@@ -203,15 +217,35 @@ public:
 
 class LengthAnimationTask : public AnimationTask {
 public:
-    LengthAnimationTask(Node* target, CSSStyleValuePair::KeyKind targetProperty,
+    LengthAnimationTask(Element* target,
+                        CSSStyleValuePair::KeyKind targetProperty,
                         String* targetPropertyString, AnimatedValue fromValue,
                         AnimatedValue toValue, float duration, float delay,
-                        CubicBeizer* cubicBezier)
+                        AnimationTimingFunction* timingFunction)
         : AnimationTask(target, targetProperty, targetPropertyString, fromValue,
-                        toValue, duration, delay, cubicBezier)
+                        toValue, duration, delay, timingFunction)
     {
     }
     void execute();
+};
+
+class TransformAnimationTask : public AnimationTask {
+public:
+    TransformAnimationTask(Element* target,
+                           CSSStyleValuePair::KeyKind targetProperty,
+                           String* targetPropertyString,
+                           AnimatedValue fromValue, float duration, float delay,
+                           AnimationTimingFunction* timingFunction)
+        : AnimationTask(
+              target, CSSStyleValuePair::KeyKind::Transform,
+              transitionPropertyValueToString(TransitionPropertyTransformValue),
+              fromValue, AnimatedValue(), duration, delay, timingFunction)
+    {
+    }
+    void computeToValue();
+    void execute() override;
+    void attachedToElement() override;
+    void detachedFromElement() override;
 };
 
 class AnimationExecutor : public gc {
@@ -234,20 +268,19 @@ public:
     }
 
     void registerAnimation(AnimationTask* newtask);
-    void cancelPreviousAnimation(Node* target,
+    void cancelPreviousAnimation(Element* target,
                                  CSSStyleValuePair::KeyKind cssType);
-    void cancelAnimation(Node* target);
+    void cancelAnimation(Element* target);
     void startIfNeeds();
     void stop();
     void stopIfNeeds();
     void step();
 
 private:
-    Window* m_window;
     bool m_isAlive;
+    Window* m_window;
     size_t m_platformAnimator;
     GCVector<AnimationTask*> m_animationList;
-    CubicBeizer* m_timingFunctionPreset[5];
 };
 }
 #endif

@@ -1617,6 +1617,8 @@ String* CSSStyleValuePair::toString() const
         return String::inheritString;
     case CSSStyleValuePair::ValueKind::Length:
         return cssLengthValue().toString();
+    case CSSStyleValuePair::ValueKind::CalcValueKind:
+        return calcValue()->toString();
     case CSSStyleValuePair::ValueKind::Percentage: {
         StringBuilder builder;
         builder.appendString(String::fromFloat(percentageValue() * 100.f));
@@ -4436,10 +4438,26 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
-            // TODO
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setTransitionTimingFunction(
+                    TransitionTimingFunctionEaseValue);
+                break;
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setTransitionTimingFunction(
+                    parentStyle->transitionTimingFunction());
+                break;
+            case CSSStyleValuePair::ValueKind::
+                TransitionTimingFunctionValueKind:
+                style->setTransitionTimingFunction(
+                    cssValues[k].transitionTimingFunctionValue());
+                break;
+            default:
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
             break;
         case CSSStyleValuePair::KeyKind::TransitionDelay:
-            // TODO
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             break;
         case CSSStyleValuePair::KeyKind::BorderImageSlice:
             if (cssValues[k].valueKind() ==
@@ -8329,8 +8347,39 @@ bool CSSStyleValuePair::updateValueTransitionDuration(
 bool CSSStyleValuePair::updateValueTransitionTimingFunction(
     const CSSTokenVector& tokens)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return true;
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    // TODO parse steps, cubic-bezier function
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind =
+        CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind;
+    if (STRING_VALUE_IS_STRING("ease")) {
+        m_value.m_transitionTimingFunction =
+            TransitionTimingFunctionValue::TransitionTimingFunctionEaseValue;
+    } else if (STRING_VALUE_IS_STRING("linear")) {
+        m_value.m_transitionTimingFunction =
+            TransitionTimingFunctionValue::TransitionTimingFunctionLinearValue;
+    } else if (STRING_VALUE_IS_STRING("ease-in")) {
+        m_value.m_transitionTimingFunction =
+            TransitionTimingFunctionValue::TransitionTimingFunctionEaseInValue;
+    } else if (STRING_VALUE_IS_STRING("ease-out")) {
+        m_value.m_transitionTimingFunction =
+            TransitionTimingFunctionValue::TransitionTimingFunctionEaseOutValue;
+    } else if (STRING_VALUE_IS_STRING("ease-in-out")) {
+        m_value.m_transitionTimingFunction = TransitionTimingFunctionValue::
+            TransitionTimingFunctionEaseInOutValue;
+    } else if (STRING_VALUE_IS_STRING("step-start")) {
+        m_value.m_transitionTimingFunction = TransitionTimingFunctionValue::
+            TransitionTimingFunctionStepStartValue;
+    } else if (STRING_VALUE_IS_STRING("step-end")) {
+        m_value.m_transitionTimingFunction =
+            TransitionTimingFunctionValue::TransitionTimingFunctionStepEndValue;
+    } else {
+        return false;
+    }
+    return false;
 }
 
 bool CSSStyleValuePair::updateValueTransitionDelay(const CSSTokenVector& tokens)

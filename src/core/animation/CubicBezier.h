@@ -27,6 +27,8 @@
 #ifndef __StarFishCubicBezier__
 #define __StarFishCubicBezier__
 
+#include "core/animation/AnimationTimingFunction.h"
+
 namespace StarFish {
 
 // These values are established by empiricism with tests (tradeoff: performance
@@ -38,10 +40,15 @@ namespace StarFish {
 #define kSplineTableSize 11
 #define kSampleStepSize 1.0 / (kSplineTableSize - 1.0)
 
-class CubicBeizer : public gc {
+class CubicBeizer : public AnimationTimingFunction {
 public:
     CubicBeizer(float mX1, float mY1, float mX2, float mY2);
     float getValue(float x);
+
+    static void* operator new(size_t size)
+    {
+        return GC_MALLOC_ATOMIC(size);
+    }
 
 private:
     float getTForX(float aX);

@@ -69,6 +69,8 @@ struct StackingContext::ComputeStackingContextContext {
         seenPossiblyNonCompositeLayers; // when found prev computing
     std::shared_ptr<std::vector<StackingContext*>>
         seenPossiblyNonCompositeLayersNow;
+    std::shared_ptr<std::unordered_map<StackingContext*, bool>>
+        compositeFlagInfo;
     bool subLayerHasGraphicsBuffer;
     bool testingOverlap;
 
@@ -84,6 +86,7 @@ struct StackingContext::ComputeStackingContextContext {
         , overlapMapFilled(new bool(false))
         , seenPossiblyNonCompositeLayers(seenPossiblyNonCompositeLayers)
         , seenPossiblyNonCompositeLayersNow(new std::vector<StackingContext*>())
+        , compositeFlagInfo(new std::unordered_map<StackingContext*, bool>())
         , subLayerHasGraphicsBuffer(false)
         , testingOverlap(testingOverlap)
     {
@@ -98,6 +101,7 @@ struct StackingContext::ComputeStackingContextContext {
         , seenPossiblyNonCompositeLayers(other.seenPossiblyNonCompositeLayers)
         , seenPossiblyNonCompositeLayersNow(
               other.seenPossiblyNonCompositeLayersNow)
+        , compositeFlagInfo(other.compositeFlagInfo)
         , subLayerHasGraphicsBuffer(other.subLayerHasGraphicsBuffer)
         , testingOverlap(other.testingOverlap)
     {
@@ -653,6 +657,7 @@ void StackingContext::computeStackingContextProperties()
     size_t prevCnt = SIZE_MAX;
     do {
         prevCnt = seenPossiblyNonCompositeLayers->size();
+        ctx.compositeFlagInfo->clear();
         computeStackingContextProperties(ctx, nullptr,
                                          descendantHas3DTransform);
         for (size_t i = 0; i < ctx.seenPossiblyNonCompositeLayersNow->size();
@@ -664,11 +669,14 @@ void StackingContext::computeStackingContextProperties()
             break;
         }
     } while (seenPossiblyNonCompositeLayers->size());
+
+    applyStackingContextProperties(ctx);
 }
 
 bool StackingContext::canComposite(ComputeStackingContextContext& ctx)
 {
-    if (m_owner->needsGraphicsBuffer()) {
+    if (m_owner->needsGraphicsBuffer() ||
+        m_owner->isRunningTransformAnimation()) {
         return true;
     }
     auto iter = ctx.seenPossiblyNonCompositeLayers->find(this);
@@ -694,7 +702,8 @@ void StackingContext::computeStackingContextProperties(
     // overlapMap.geometryMap().pushMappingsToAncestor(&layer, ancestorLayer,
     // respectTransforms);
 
-    bool willBeComposited = m_owner->needsGraphicsBuffer();
+    bool willBeComposited = m_owner->needsGraphicsBuffer() ||
+                            m_owner->isRunningTransformAnimation();
     IndirectCompositingReason compositingReason =
         compositingState.subLayerHasGraphicsBuffer
             ? IndirectCompositingReason::Stacking
@@ -878,15 +887,36 @@ void StackingContext::computeStackingContextProperties(
         }
     */
 
+    compositingState.compositeFlagInfo->insert(
+        std::make_pair(this, willBeComposited));
+
+    descendantHas3DTransform |= anyDescendantHas3DTransform ||
+                                m_owner->style()->hasComplexTransforms(m_owner);
+
+    if (willBeComposited) {
+        SkMatrix l = SkMatrix::I();
+        LayoutRect visibleRect(0, 0, 0, 0);
+        Frame::ComputeVisibleRectContext ctx(
+            Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
+            visibleRect);
+        m_owner->computeVisibleRect(ctx);
+
+        if (visibleRect.isEmpty()) {
+            compositingState.seenPossiblyNonCompositeLayersNow->push_back(this);
+        }
+    }
+}
+
+void StackingContext::applyStackingContextProperties(
+    ComputeStackingContextContext& ctx)
+{
     bool compositedBefore = needsGraphicsBuffer();
 
+    bool willBeComposited = (*ctx.compositeFlagInfo)[this];
     if (compositedBefore != willBeComposited) {
-        m_owner->node()->webView()->markNeedsPaintingConsiderInRendering();
+        m_owner->node()->setNeedsPainting();
     } else if (compositedBefore && compositedBefore == willBeComposited) {
         m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
-    } else if (!compositedBefore && compositedBefore == willBeComposited) {
-        m_owner->node()->webView()->markNeedsPaintingConsiderInRendering();
-        m_needsRepainting = true;
     }
 
     if (willBeComposited) {
@@ -897,8 +927,16 @@ void StackingContext::computeStackingContextProperties(
         }
     }
 
-    descendantHas3DTransform |= anyDescendantHas3DTransform ||
-                                m_owner->style()->hasComplexTransforms(m_owner);
+    auto iter = m_childContexts.begin();
+    while (iter != m_childContexts.end()) {
+        StackingContextChild* child = *iter;
+        auto iter2 = child->begin();
+        while (iter2 != child->end()) {
+            (*iter2)->applyStackingContextProperties(ctx);
+            iter2++;
+        }
+        iter++;
+    }
 
     if (needsGraphicsBuffer()) {
         SkMatrix l = SkMatrix::I();
@@ -907,10 +945,6 @@ void StackingContext::computeStackingContextProperties(
             Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
             m_rareData->m_visibleRect);
         m_owner->computeVisibleRect(ctx);
-
-        if (m_rareData->m_visibleRect.isEmpty()) {
-            compositingState.seenPossiblyNonCompositeLayersNow->push_back(this);
-        }
     } else {
         if (m_rareData && m_rareData->m_buffer) {
             m_rareData->m_buffer->detachNativeBuffer();
@@ -962,9 +996,14 @@ void StackingContext::paintStackingContext(
         needsPainting = m_needsRepainting || parentGraphicsLayerNeedsPainting;
         if (m_needsRepainting) {
             parentGraphicsLayerNeedsPainting = true;
+            {
+                INSTALL_PROFILE_TIMER(
+                    "StackingContext::paintStackingContext::"
+                    "createGraphicsBuffer");
+                m_owner->createGraphicsBuffer(&m_rareData->m_buffer,
+                                              bufferWidth, bufferHeight);
+            }
         }
-        m_owner->createGraphicsBuffer(&m_rareData->m_buffer, bufferWidth,
-                                      bufferHeight);
 
         oldCanvas = canvas;
         if (m_rareData->m_buffer->pixelRatio() != 1) {

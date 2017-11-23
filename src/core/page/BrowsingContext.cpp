@@ -56,8 +56,6 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "platform/loader/ResourceLoader.h"
 
-// #define STARFISH_ENABLE_TIMER
-
 namespace StarFish {
 
 BrowsingContext* BrowsingContext::create(StarFish* starFish, WebView* webView)
@@ -218,13 +216,17 @@ public:
     String* m_familyName;
 };
 
+void BrowsingContext::addDidLayoutCallback(DidLayoutCallback cb, void* data)
+{
+    m_didLayoutCallbacks.push_back(std::make_pair(cb, data));
+}
+
 bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleSheetsRecalc) {
-#ifdef STARFISH_ENABLE_TIMER
-            ProfilerTimer t("parse sheet & collect rules");
-#endif
+            INSTALL_PROFILE_TIMER("parse sheet & collect rules");
+
             m_needsStyleSheetsRecalc = false;
             CSSStyleSheet* uaSheet = document()->styleResolver().sheets()[0];
             document()->styleResolver().removeAllRules();
@@ -433,10 +435,9 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 #endif
         }
 
-// resolve style
-#ifdef STARFISH_ENABLE_TIMER
-        ProfilerTimer t("resolve style");
-#endif
+        // resolve style
+        INSTALL_PROFILE_TIMER("resolve style");
+
         document()->styleResolver().resolveDOMStyle(
             document(), m_needsStyleRecalcForWholeDocument);
         m_needsStyleRecalc = false;
@@ -448,24 +449,24 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
             if (fromWebView) {
                 webView()->clearStackingContext(true);
             }
-// create frame tree
-#ifdef STARFISH_ENABLE_TIMER
-            ProfilerTimer t("create frame tree");
-#endif
+
+            // create frame tree
+            INSTALL_PROFILE_TIMER("create frame tree");
+
             FrameTreeBuilder::buildFrameTree(document());
             m_needsLayout = true;
             m_needsFrameTreeBuild = false;
         }
     }
 
+    bool ret = false;
     if (m_needsLayout) {
         if (fromWebView) {
             webView()->clearStackingContext(true);
         }
-// lay out frame tree
-#ifdef STARFISH_ENABLE_TIMER
-        ProfilerTimer t("lay out frame tree");
-#endif
+
+        // lay out frame tree
+        INSTALL_PROFILE_TIMER("lay out frame tree");
 
         LayoutContext ctx(starFish(), document()
                                           ->frame()
@@ -476,9 +477,15 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
                                     Frame::LayoutWantToResolve::ResolveAll);
         m_needsLayout = false;
         webView()->setNeedsComputeStackingContextProperties();
-        return true;
+        ret = true;
     }
-    return false;
+
+    for (size_t i = 0; i < m_didLayoutCallbacks.size(); i++) {
+        m_didLayoutCallbacks[i].first(m_didLayoutCallbacks[i].second);
+    }
+    m_didLayoutCallbacks.clear();
+
+    return ret;
 }
 
 void BrowsingContext::paintWindowBackground(Canvas* canvas)

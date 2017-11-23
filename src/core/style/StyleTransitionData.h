@@ -53,6 +53,16 @@ public:
         m_duration = duration;
     }
 
+    TransitionTimingFunctionValue timingFunction()
+    {
+        return m_timingFunction;
+    }
+
+    void setTimingFunction(TransitionTimingFunctionValue f)
+    {
+        m_timingFunction = f;
+    }
+
 private:
     friend inline bool operator==(const StyleTransitionData& a,
                                   const StyleTransitionData& b);
@@ -60,6 +70,7 @@ private:
                                   const StyleTransitionData& b);
 
     TransitionPropertyValue m_property;
+    TransitionTimingFunctionValue m_timingFunction;
     CSSTime m_duration;
 };
 
@@ -70,6 +81,10 @@ bool operator==(const StyleTransitionData& a, const StyleTransitionData& b)
     }
 
     if (a.m_duration != b.m_duration) {
+        return false;
+    }
+
+    if (a.m_timingFunction != b.m_timingFunction) {
         return false;
     }
 

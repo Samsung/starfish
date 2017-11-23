@@ -20,6 +20,10 @@
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
 #include "core/dom/TransitionEvent.h"
+#include "core/layout/Frame.h"
+#include "core/layout/FrameBlockBox.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/style/ComputedStyle.h"
 #include "core/page/Window.h"
 #include "core/modules/message_loop/Timer.h"
@@ -27,31 +31,23 @@
 
 namespace StarFish {
 
-// This function returns current time
-// * return unit: millisecond
-static size_t getCurrentMillisecond()
-{
-    timeval currentTime;
-    gettimeofday(&currentTime, NULL);
-    return currentTime.tv_sec * 1000 + currentTime.tv_usec / 1000;
-}
-
-AnimationTask::AnimationTask(Node* target,
+AnimationTask::AnimationTask(Element* target,
                              CSSStyleValuePair::KeyKind targetProperty,
                              String* targetPropertyString, AnimatedValue from,
-                             AnimatedValue to, float durationS, float delayS,
-                             CubicBeizer* cubicBezier)
+                             AnimatedValue to, float durationInms,
+                             float delayInms,
+                             AnimationTimingFunction* timingFunction)
 {
     m_isExpired = false;
     m_isStarted = false;
     m_targetElement = target;
-    m_durationMs = durationS * 1000;
-    m_delayMs = delayS * 1000;
-    m_lastModifiedTimeMs = m_startTimeMs = getCurrentMillisecond() + m_delayMs;
+    m_durationMs = durationInms;
+    m_delayMs = delayInms;
+    m_lastModifiedTimeMs = m_startTimeMs = tickCount() + m_delayMs;
     m_fromValue = from;
     m_toValue = to;
     m_property = targetProperty;
-    m_cubicBezier = cubicBezier;
+    m_timingFunction = timingFunction;
     m_targetPropertyString = targetPropertyString;
 }
 
@@ -59,7 +55,7 @@ AnimationTask::AnimationTask(Node* target,
 // * This function is called before calling step() function.
 void AnimationTask::update()
 {
-    m_lastModifiedTimeMs = getCurrentMillisecond();
+    m_lastModifiedTimeMs = tickCount();
 }
 
 void AnimationTask::fireStartEventIfNeeds()
@@ -82,6 +78,8 @@ void AnimationTask::fireStartEventIfNeeds()
 
 void AnimationTask::fireEndEvent()
 {
+    detachedFromElement();
+
     TransitionEventInit init;
     init.setPropertyName(m_targetPropertyString);
     init.setBubbles(true);
@@ -97,6 +95,8 @@ void AnimationTask::fireEndEvent()
 
 void AnimationTask::fireCancelEvent()
 {
+    detachedFromElement();
+
     TransitionEventInit init;
     init.setPropertyName(m_targetPropertyString);
     init.setBubbles(true);
@@ -119,7 +119,7 @@ bool AnimationTask::canExecute()
     if (isExpired()) {
         return false;
     }
-    size_t currentTime = getCurrentMillisecond();
+    size_t currentTime = tickCount();
     if ((currentTime >= m_startTimeMs)) {
         if (m_lastModifiedTimeMs == 0 ||
             ((currentTime - m_lastModifiedTimeMs) > THRESHOLD_TICK)) {
@@ -137,13 +137,13 @@ float AnimationTask::progress()
     if (m_durationMs == 0 || isExpired()) {
         return 1;
     }
-    float result =
-        (m_lastModifiedTimeMs - m_startTimeMs) / ((float)m_durationMs);
+    auto timeDiff = std::max((size_t)1, m_lastModifiedTimeMs - m_startTimeMs);
+    float result = timeDiff / ((float)m_durationMs);
     if (result >= 1) {
         result = 1;
         m_isExpired = true;
     }
-    result = m_cubicBezier->getValue(result);
+    result = m_timingFunction->getValue(result);
     return result;
 }
 
@@ -154,7 +154,7 @@ void ColorAnimationTask::execute()
     Unit::Color from = m_fromValue.getColor();
     Unit::Color to = m_toValue.getColor();
 
-    Node* current = node();
+    Element* current = targetElement();
     ComputedStyle* style = current->style();
     float tmp_progress = progress();
 
@@ -180,14 +180,14 @@ void LengthAnimationTask::execute()
     Length from = m_fromValue.getLength();
     Length to = m_toValue.getLength();
 
-    Node* current = node();
+    Element* current = targetElement();
     ComputedStyle* style = current->style();
-    float tmp_progress = progress();
+    float tmpProgress = progress();
     float newLength;
     if (from.fixed() < to.fixed()) {
-        newLength = from.fixed() + (to.fixed() - from.fixed()) * tmp_progress;
+        newLength = from.fixed() + (to.fixed() - from.fixed()) * tmpProgress;
     } else {
-        newLength = from.fixed() - (from.fixed() - to.fixed()) * tmp_progress;
+        newLength = from.fixed() - (from.fixed() - to.fixed()) * tmpProgress;
     }
 
     // TODO : More types should be supported
@@ -202,13 +202,88 @@ void LengthAnimationTask::execute()
     current->setNeedsLayout();
 }
 
+void TransformAnimationTask::computeToValue()
+{
+    FrameBox* box = targetElement()->frame()->asFrameBox();
+    SkMatrix matrix = box->style()->transformsToMatrix(
+        box->width(), box->height(), box, true);
+    m_toValue = AnimatedValue(matrix);
+
+    Element* current = targetElement();
+    ComputedStyle* style = current->style();
+
+    if (!style->hasTransforms()) {
+        style->setRareComputedStyleDataIfNeeded();
+        // NOTE
+        // having transform is reason of creating StackingContext
+        // for rebuilding stacking context, we should give layout damage
+        current->setNeedsLayout();
+    }
+    style->rareComputedStyleData()->ensureTransforms()->append(
+        StyleTransformData(StyleTransformData::InternalMatrix));
+    // calling execute function explicity for setting initial value of
+    // ComputedStyle
+    execute();
+}
+
+void TransformAnimationTask::attachedToElement()
+{
+    AnimationTask::attachedToElement();
+    if (targetElement()->frame()) {
+        targetElement()->frame()->markRunningTransformAnimation();
+    }
+}
+
+void TransformAnimationTask::detachedFromElement()
+{
+    AnimationTask::detachedFromElement();
+    if (targetElement()->frame()) {
+        targetElement()->frame()->clearRunningTransformAnimation();
+    }
+}
+
+void TransformAnimationTask::execute()
+{
+    SkMatrix from = m_fromValue.getMatrix();
+    SkMatrix to = m_toValue.getMatrix();
+
+    Element* current = targetElement();
+    ComputedStyle* style = current->style();
+    float tmpProgress = progress();
+
+    if (isExpired()) {
+        // cleanup
+        style->rareComputedStyleData()->transforms()->removeAt(
+            style->rareComputedStyleData()->transforms()->size() - 1);
+        if (!style->hasTransforms()) {
+            // NOTE
+            // having transform is reason of creating StackingContext
+            // for rebuilding stacking context, we should give layout damage
+            current->setNeedsLayout();
+        }
+    } else {
+        auto transforms = style->rareComputedStyleData()->transforms();
+        StyleTransformData& data = transforms->at(transforms->size() - 1);
+        SkMatrix now;
+        for (size_t i = 0; i < 9; i++) {
+            double d =
+                from.get(i) * (1 - tmpProgress) + to.get(i) * tmpProgress;
+            now.set(i, d);
+        }
+
+        data.setInternalMatrix(now);
+    }
+    current->webView()->setNeedsComputeStackingContextProperties();
+}
+
 // [NOTICE]
 // registerAnimation will be replaced 'createAnimation'
 // Creation of AnimationTask will happen in Animation Executor.
 void AnimationExecutor::registerAnimation(AnimationTask* newTask)
 {
     startIfNeeds();
-    cancelPreviousAnimation(newTask->node(), newTask->propertyType());
+    cancelPreviousAnimation(newTask->targetElement(), newTask->propertyType());
+    newTask->attachedToElement();
     m_animationList.push_back(newTask);
 }
 
@@ -216,14 +291,14 @@ void AnimationExecutor::registerAnimation(AnimationTask* newTask)
 // which is related taget node and its property.
 // * This function is called when we need new animation.
 void AnimationExecutor::cancelPreviousAnimation(
-    Node* target, CSSStyleValuePair::KeyKind cssType)
+    Element* target, CSSStyleValuePair::KeyKind cssType)
 {
     // TODO : Need optimization
     // fire end event
     m_animationList.erase(
         std::remove_if(m_animationList.begin(), m_animationList.end(),
                        [&target, cssType](AnimationTask* current) {
-                           if (current->node() == target &&
+                           if (current->targetElement() == target &&
                                current->propertyType() == cssType) {
                                current->fireCancelEvent();
                                return true;
@@ -234,18 +309,18 @@ void AnimationExecutor::cancelPreviousAnimation(
 }
 
 // This function clear All animation which is related target node.
-void AnimationExecutor::cancelAnimation(Node* target)
+void AnimationExecutor::cancelAnimation(Element* target)
 {
-    m_animationList.erase(std::remove_if(m_animationList.begin(),
-                                         m_animationList.end(),
-                                         [&target](AnimationTask* current) {
-                                             if (current->node() == target) {
-                                                 current->fireCancelEvent();
-                                                 return true;
-                                             }
-                                             return false;
-                                         }),
-                          m_animationList.end());
+    m_animationList.erase(
+        std::remove_if(m_animationList.begin(), m_animationList.end(),
+                       [&target](AnimationTask* current) {
+                           if (current->targetElement() == target) {
+                               current->fireCancelEvent();
+                               return true;
+                           }
+                           return false;
+                       }),
+        m_animationList.end());
 }
 
 // [NOTICE]
@@ -296,7 +371,7 @@ void AnimationExecutor::stopIfNeeds()
 // * In reality, there will not be many works to be done(means number of
 // parallel animations)
 // * And Calculating and Changing computed style is pretty light work.
-// * If we spent a lot of time during other stuff, Ecore_main_loop will adjust
+// * If we spent a lot of time during other stuff, MessageLoop will adjust
 // next execution.
 void AnimationExecutor::step()
 {

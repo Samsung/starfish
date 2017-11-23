@@ -122,6 +122,7 @@ protected:
     void computeStackingContextProperties(ComputeStackingContextContext& ctx,
                                           StackingContext* ancestorLayer,
                                           bool& descendantHas3DTransform);
+    void applyStackingContextProperties(ComputeStackingContextContext& ctx);
     bool canComposite(ComputeStackingContextContext& ctx);
 
     bool m_needsRepainting;
