@@ -21,6 +21,8 @@
 
 namespace StarFish {
 
+class Window;
+
 // https://w3c.github.io/uievents/#idl-mouseevent
 // https://w3c.github.io/uievents/#idl-mouseeventinit
 class MouseData {
@@ -222,6 +224,23 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isMouseEvent() const override;
+
+    void initMouseEvent(String* type, bool bubbles, bool cancelable,
+                        Window* view, int32_t detail, double screenX,
+                        double screenY, double clientX, double clientY,
+                        unsigned char button)
+    {
+        setType(type);
+        setBubbles(bubbles);
+        setCancelable(cancelable);
+        setView(view);
+        setDetail(detail);
+        m_mouseData.setScreenX(screenX);
+        m_mouseData.setScreenY(screenY);
+        m_mouseData.setClientX(clientX);
+        m_mouseData.setClientY(clientY);
+        m_mouseData.setButton(button);
+    }
 
 private:
     MouseData m_mouseData;

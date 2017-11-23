@@ -93,7 +93,6 @@ static bool deserializingDeep(Document* document,
                               ScriptValue dst, SerializedTypedData* src,
                               DeserializingMap& memory)
 {
-    memory.insert(std::make_pair(src, dst));
     if (src->isArray()) {
         ScriptObject arrayobj = dst->asObject();
         SerializedArrayData* serializedArray =
@@ -140,7 +139,6 @@ static bool serializingDeep(Document* document,
                             SerializedTypedData* dst, ScriptValue src,
                             SerializingMap& memory)
 {
-    memory.insert(std::make_pair(src, dst));
     if (dst->isArray()) {
         ScriptObject arrayobj = src->asObject();
         SerializedArrayData* serializedArray =
@@ -195,6 +193,7 @@ static SerializedTypedData* serializeInternal(Document* document,
     uint8_t type = SerializedTypedData::Undefined;
     SerializedData* data = nullptr;
     bool deep = false;
+    bool primitive = true;
 
     if (value->isUndefined()) {
         type = SerializedTypedData::Undefined;
@@ -218,6 +217,7 @@ static SerializedTypedData* serializeInternal(Document* document,
         type = SerializedTypedData::StringPrimitive;
         data = new SerializedStringData(value->asString());
     } else if (value->isObject()) {
+        primitive = false;
         ScriptObject obj = value->asObject();
         if (obj->isBooleanObject()) {
             type = SerializedTypedData::Boolean;
@@ -237,10 +237,6 @@ static SerializedTypedData* serializeInternal(Document* document,
                 obj->asDateObject()->primitiveValue());
         } else if (obj->isRegExpObject()) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        } else if (obj->isArrayBufferObject()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        } else if (obj->isArrayBufferView()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         } else if (obj->isArrayObject()) {
             type = SerializedTypedData::Array;
             ValueRef* length = obj->getOwnProperty(
@@ -252,7 +248,7 @@ static SerializedTypedData* serializeInternal(Document* document,
                 (ScriptWrappable*)(obj->extraData());
             if (scriptWrappable->isSerializable()) {
                 if (scriptWrappable->isTransferable() &&
-                    scriptWrappable->toTransferable()->idDetached()) {
+                    scriptWrappable->toTransferable()->isDetached()) {
                     return nullptr;
                 }
                 type = SerializedTypedData::PlatformObject;
@@ -269,6 +265,13 @@ static SerializedTypedData* serializeInternal(Document* document,
             return nullptr;
         }
 #endif
+#ifdef ESCARGOT_ENABLE_TYPEDARRAY
+        else if (obj->isArrayBufferObject()) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        } else if (obj->isArrayBufferView()) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
+#endif
         else {
             type = SerializedTypedData::Object;
             data = new SerializedObjectData();
@@ -277,6 +280,9 @@ static SerializedTypedData* serializeInternal(Document* document,
     }
 
     SerializedTypedData* serialized = new SerializedTypedData(type, data);
+    if (!primitive) {
+        memory.insert(std::make_pair(value, serialized));
+    }
     if (deep && !serializingDeep(document, state, serialized, value, memory)) {
         return nullptr;
     }
@@ -292,24 +298,49 @@ static ScriptValue deserializeInternal(Document* document,
     if (checkCycle != memory.end()) {
         return checkCycle->second;
     }
-    if (value->isUndefined()) {
-        return ValueRef::createUndefined();
+
+    // NOTE result of nullptr indicates error
+    ScriptValue result = nullptr;
+    bool deep = false;
+
+    if (value->isTransferedTypedData()) {
+        TransferedTypedData* transfered = value->asTransferedTypedData();
+        STARFISH_ASSERT(!transfered->isTransferConsumed());
+        transfered->setTransferConsumed();
+        if (transfered->isPlatformObject()) {
+            TransferedData* data = transfered->data();
+            STARFISH_ASSERT(data->isTransferedPlatformObjectData());
+            ScriptWrappable* sw =
+                data->asTransferedPlatformObjectData()
+                    ->createTransferReceivingInstance(document);
+            STARFISH_ASSERT(sw->isTransferable());
+            sw->toTransferable()->transferReceive(data);
+            result = sw->scriptValue();
+        }
+#if ESCARGOT_ENABLE_TYPEDARRAY
+        else if (transfered->isArrayBuffer()) {
+            // TODO Handle SharedArrayBuffer case (ECMAScript2018)
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+#endif
+    } else if (value->isUndefined()) {
+        result = ValueRef::createUndefined();
     } else if (value->isNull()) {
-        return ValueRef::createNull();
+        result = ValueRef::createNull();
     } else if (value->isBooleanPrimitive()) {
-        return ValueRef::create(
+        result = ValueRef::create(
             value->data()->asSerializedPrimitiveValueData()->booleanData());
     } else if (value->isInt32Primitive()) {
-        return ValueRef::create(
+        result = ValueRef::create(
             value->data()->asSerializedPrimitiveValueData()->int32Data());
     } else if (value->isUint32Primitive()) {
-        return ValueRef::create(
+        result = ValueRef::create(
             value->data()->asSerializedPrimitiveValueData()->uint32Data());
     } else if (value->isNumberPrimitive()) {
-        return ValueRef::create(
+        result = ValueRef::create(
             value->data()->asSerializedPrimitiveValueData()->numberData());
     } else if (value->isStringPrimitive()) {
-        return ValueRef::create(
+        result = ValueRef::create(
             value->data()->asSerializedStringData()->stringData());
     } else if (value->isBoolean()) {
         BooleanObjectRef* booleanObj = BooleanObjectRef::create(state);
@@ -317,59 +348,55 @@ static ScriptValue deserializeInternal(Document* document,
             state, ValueRef::create(value->data()
                                         ->asSerializedPrimitiveValueData()
                                         ->booleanData()));
-        return ValueRef::create(booleanObj);
+        result = ValueRef::create(booleanObj);
     } else if (value->isNumber()) {
         NumberObjectRef* numberObj = NumberObjectRef::create(state);
         numberObj->setPrimitiveValue(
             state,
             ValueRef::create(
                 value->data()->asSerializedPrimitiveValueData()->numberData()));
-        return ValueRef::create(numberObj);
+        result = ValueRef::create(numberObj);
     } else if (value->isString()) {
         StringObjectRef* stringObj = StringObjectRef::create(state);
         stringObj->setPrimitiveValue(
             state, ValueRef::create(
                        value->data()->asSerializedStringData()->stringData()));
-        return ValueRef::create(stringObj);
+        result = ValueRef::create(stringObj);
     } else if (value->isDate()) {
         DateObjectRef* dateObj = DateObjectRef::create(state);
         dateObj->setTimeValue(
             state,
             ValueRef::create(
                 value->data()->asSerializedPrimitiveValueData()->numberData()));
-        return ValueRef::create(dateObj);
+        result = ValueRef::create(dateObj);
     } else if (value->isRegExp()) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return ValueRef::createUndefined();
+        result = ValueRef::createUndefined();
     } else if (value->isArray()) {
         ArrayObjectRef* array = ArrayObjectRef::create(state);
         array->set(
             state, ValueRef::create(StringRef::fromASCII("length")),
             ValueRef::create(value->data()->asSerializedArrayData()->length()));
-        ScriptValue result = ValueRef::create(array);
-        if (!deserializingDeep(document, state, result, value, memory)) {
-            return nullptr;
-        }
-        return result;
+        result = ValueRef::create(array);
+        deep = true;
     } else if (value->isObject()) {
-        ScriptValue result = ValueRef::create(ObjectRef::create(state));
-        if (!deserializingDeep(document, state, result, value, memory)) {
-            return nullptr;
-        }
-        return result;
+        result = ValueRef::create(ObjectRef::create(state));
+        deep = true;
     } else if (value->isPlatformObject()) {
-        ScriptValue result = value->data()
-                                 ->asSerializedPlatformObjectData()
-                                 ->createDeserializingInstance(document)
-                                 ->scriptValue();
-        if (!deserializingDeep(document, state, result, value, memory)) {
-            return nullptr;
-        }
-        return result;
+        result = value->data()
+                     ->asSerializedPlatformObjectData()
+                     ->createDeserializingInstance(document)
+                     ->scriptValue();
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
-    return nullptr;
+    if (result) {
+        memory.insert(std::make_pair(value, result));
+    }
+    if (deep && !deserializingDeep(document, state, result, value, memory)) {
+        return nullptr;
+    }
+    return result;
 }
 
 SerializedTypedData* Serializer::serialize(Document* document,
@@ -427,6 +454,102 @@ ScriptValue Serializer::deserialize(Document* document,
         COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
                         result.msgStr->toStdUTF8String().data());
         throw new DOMException(document, DOMException::DATA_CLONE_ERR, reason);
+    }
+}
+
+void Serializer::serializeWithTransfer(Document* document, ScriptValue value,
+                                       GCVector<ScriptValue>& transferValues,
+                                       SerializeWithTransferResult& result)
+{
+    STARFISH_ASSERT(result.m_serializedTransfer.size() == 0);
+    SerializingMap initialMap;
+    for (size_t i = 0; i < transferValues.size(); i++) {
+        ScriptValue item = transferValues[i];
+        if (item->isObject()) {
+            if (item->asObject()->extraData()) {
+                ScriptWrappable* sw =
+                    (ScriptWrappable*)(item->asObject()->extraData());
+                if (sw->isTransferable() &&
+                    !sw->toTransferable()->isDetached()) {
+                    TransferedTypedData* placeHolder = new TransferedTypedData(
+                        TransferedTypedData::PlatformObject);
+                    initialMap.insert(std::make_pair(item, placeHolder));
+                    result.m_serializedTransfer.push_back(placeHolder);
+                    continue;
+                }
+            }
+#if ESCARGOT_ENABLE_TYPEDARRAY
+            else if (item->asObject()->isArrayBufferObject()) {
+                // TODO Handle SharedArrayBuffer case (ECMAScript2018)
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
+#endif
+        }
+        throw new DOMException(document, DOMException::DATA_CLONE_ERR);
+    }
+    SerializedTypedData* serialized = serialize(document, value, initialMap);
+    STARFISH_ASSERT(transferValues.size() ==
+                    result.m_serializedTransfer.size());
+    for (size_t i = 0; i < transferValues.size(); i++) {
+        ScriptValue item = transferValues[i];
+        TransferedTypedData* placeHolder = result.m_serializedTransfer[i];
+        if (placeHolder->isPlatformObject()) {
+            STARFISH_ASSERT(item->isObject() && item->asObject()->extraData());
+            Transferable* tf =
+                ((ScriptWrappable*)(item->asObject()->extraData()))
+                    ->toTransferable();
+            TransferedData* dataHolder = tf->transfer();
+            tf->setDetached();
+            placeHolder->setPlatformObjectData(dataHolder);
+        }
+#if ESCARGOT_ENABLE_TYPEDARRAY
+        else if (placeHolder->isArrayBuffer()) {
+            // TODO Handle SharedArrayBuffer case (ECMAScript2018)
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+#endif
+    }
+    result.m_serialized = serialized;
+}
+
+void Serializer::deserializeWithTransfer(
+    Document* document, SerializeWithTransferResult& serialized,
+    DeserializeWithTransferResult& result)
+{
+    STARFISH_ASSERT(result.m_deserializedTransfer.size() == 0);
+    DeserializingMap initialMap;
+    ScriptValue deserialized = nullptr;
+    SandBoxRef* sandBox =
+        SandBoxRef::create(document->scriptBindingInstance()->scriptContext());
+    bool errorFound = false;
+    auto sandBoxResult =
+        sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
+            deserialized = deserializeInternal(
+                document, state, serialized.m_serialized, initialMap);
+            if (deserialized) {
+                for (size_t i = 0; i < serialized.m_serializedTransfer.size();
+                     i++) {
+                    ScriptValue v = deserializeInternal(
+                        document, state, serialized.m_serializedTransfer[i],
+                        initialMap);
+                    if (v) {
+                        result.m_deserializedTransfer.push_back(v);
+                    } else {
+                        errorFound = true;
+                        break;
+                    }
+                }
+            } else {
+                errorFound = true;
+            }
+            return ValueRef::createNull();
+        });
+    sandBox->destroy();
+
+    if (sandBoxResult.error->isEmpty() && !errorFound) {
+        result.m_deserialized = deserialized;
+    } else {
+        throw new DOMException(document, DOMException::DATA_CLONE_ERR);
     }
 }
 }

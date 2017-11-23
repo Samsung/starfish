@@ -34,6 +34,8 @@ class SerializedArrayData;
 class SerializedPlatformObjectData;
 class SerializedObjectData;
 class SerializedTypedData;
+class TransferedPlatformObjectData;
+class TransferedTypedData;
 class ScriptWrappable;
 
 typedef GCUnorderedMap<void*, SerializedTypedData*> SerializingMap;
@@ -72,6 +74,11 @@ public:
         return false;
     }
 
+    virtual bool isTransferedPlatformObjectData() const
+    {
+        return false;
+    }
+
     SerializedPrimitiveValueData* asSerializedPrimitiveValueData() const
     {
         STARFISH_ASSERT(isSerializedValueData());
@@ -100,6 +107,12 @@ public:
     {
         STARFISH_ASSERT(isSerializedObjectData());
         return (SerializedObjectData*)this;
+    }
+
+    TransferedPlatformObjectData* asTransferedPlatformObjectData() const
+    {
+        STARFISH_ASSERT(isTransferedPlatformObjectData());
+        return (TransferedPlatformObjectData*)this;
     }
 };
 
@@ -302,6 +315,17 @@ public:
     {
     }
 
+    virtual bool isTransferedTypedData() const
+    {
+        return false;
+    }
+
+    TransferedTypedData* asTransferedTypedData() const
+    {
+        STARFISH_ASSERT(isTransferedTypedData());
+        return (TransferedTypedData*)this;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
@@ -380,17 +404,16 @@ public:
         return m_type == ArrayBufferView;
     }
 #endif
-    /*
-        bool isMap() const
-        {
-            return m_type == Map;
-        }
+    bool isMap() const
+    {
+        return m_type == Map;
+    }
 
-        bool isSet() const
-        {
-            return m_type == Set;
-        }
-    */
+    bool isSet() const
+    {
+        return m_type == Set;
+    }
+
     bool isArray() const
     {
         return m_type == Array;
@@ -435,16 +458,99 @@ public:
         ArrayBuffer,
         ArrayBufferView,
 #endif
-        // Map,
-        // Set,
+        Map,
+        Set,
         Array,
         PlatformObject,
         Object,
     };
 
-private:
+protected:
     uint8_t m_type;
     SerializedData* m_data;
+};
+
+typedef SerializedData TransferedData;
+
+class Transferable {
+public:
+    Transferable()
+        : m_detached(false)
+    {
+    }
+    bool isDetached()
+    {
+        return m_detached;
+    }
+    void setDetached()
+    {
+        m_detached = true;
+    }
+    virtual TransferedData* transfer() = 0;
+    virtual void transferReceive(TransferedData* transfered) = 0;
+
+protected:
+    bool m_detached;
+};
+
+class TransferedPlatformObjectData : public TransferedData {
+public:
+    TransferedPlatformObjectData()
+    {
+    }
+
+    bool isTransferedPlatformObjectData() const override
+    {
+        return true;
+    }
+
+    virtual ScriptWrappable* createTransferReceivingInstance(
+        Document* document) const = 0;
+};
+
+class TransferedTypedData : public SerializedTypedData {
+public:
+    TransferedTypedData(uint8_t type, TransferedData* data)
+        : SerializedTypedData(type, data)
+        , m_transferConsumed(false)
+    {
+        STARFISH_ASSERT(type == SharedArrayBuffer || type == PlatformObject);
+    }
+
+    TransferedTypedData(uint8_t type)
+        : TransferedTypedData(type, nullptr)
+    {
+    }
+
+    bool isTransferedTypedData() const override
+    {
+        return true;
+    }
+
+    bool isTransferConsumed() const
+    {
+        return m_transferConsumed;
+    }
+
+    void setTransferConsumed()
+    {
+        m_transferConsumed = true;
+    }
+
+protected:
+    bool m_transferConsumed;
+};
+
+class SerializeWithTransferResult : public gc {
+public:
+    SerializedTypedData* m_serialized;
+    GCVector<TransferedTypedData*> m_serializedTransfer;
+};
+
+class DeserializeWithTransferResult : public gc {
+public:
+    ScriptValue m_deserialized;
+    GCVector<ScriptValue> m_deserializedTransfer;
 };
 
 class Serializer {
@@ -458,6 +564,12 @@ public:
                                    DeserializingMap& memory);
     static ScriptValue deserialize(Document* document,
                                    SerializedTypedData* value);
+    static void serializeWithTransfer(Document* document, ScriptValue value,
+                                      GCVector<ScriptValue>& transferValues,
+                                      SerializeWithTransferResult& result);
+    static void deserializeWithTransfer(Document* document,
+                                        SerializeWithTransferResult& serialized,
+                                        DeserializeWithTransferResult& result);
 };
 }
 

@@ -194,47 +194,6 @@ ValueRef* requestAnimationFrameWindowFunction(ExecutionStateRef* state,
     return scriptUndefined();
 }
 
-ValueRef* postMessageWindowFunction(ExecutionStateRef* state,
-                                    ValueRef* thisValue, size_t argc,
-                                    ValueRef** argv, bool isNewExpression)
-{
-    GENERATE_WINDOW();
-    size_t argCount = argc;
-    if (argCount < 2) {
-        char buffer[2];
-        snprintf(buffer, 2, "%zu", argCount);
-        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
-        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
-                        reason);
-        THROW_EXCEPTION(msg);
-    }
-    // Declare native value (empty when type is void)
-    ValueRef* arg0 = argv[0];
-    ValueRef* arg1 = argv[1];
-    ValueRef* arg2 = (argc > 2) ? argv[2] : ValueRef::createUndefined();
-    // Handle argument arg2
-    auto value2 = std::vector<ScriptObject>();
-    if (!arg2->isUndefinedOrNull()) {
-        // TODO:
-    }
-    // Handle argument arg1
-    String* value1 = String::emptyString;
-    value1 = toBrowserString(state, arg1);
-    // Handle argument arg0
-    ScriptValue value0;
-    value0 = arg0;
-    // Call native function (nargs: 3)
-    try {
-        window->postMessage(value0, value1, value2);
-    } catch (DOMException* e) {
-        state->throwException(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    // Return ValueRef* from native value
-    return ValueRef::createUndefined();
-}
-
 #ifdef STARFISH_ENABLE_TEST
 static ValueRef* debugPauseFunction(ExecutionStateRef* state,
                                     ValueRef* thisValue, size_t argc,

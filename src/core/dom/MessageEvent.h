@@ -21,6 +21,8 @@
 
 namespace StarFish {
 
+class MessagePort;
+
 // https://html.spec.whatwg.org/multipage/comms.html#messageeventinit
 struct MessageEventInit : EventInit {
     STARFISH_MAKE_STACK_ALLOCATED()
@@ -42,6 +44,16 @@ public:
     void setData(ScriptValue data)
     {
         m_data = data;
+    }
+
+    GCVector<MessagePort*> ports() const
+    {
+        return m_ports;
+    }
+
+    void setPorts(GCVector<MessagePort*>& ports)
+    {
+        m_ports = ports;
     }
 
     String* origin() const
@@ -76,6 +88,7 @@ public:
 
 private:
     ScriptValue m_data;
+    GCVector<MessagePort*> m_ports;
     String* m_origin;
     String* m_lastEventId;
     // FIXME: Should change this type to MessageEventSource*
@@ -106,6 +119,7 @@ public:
                  const MessageEventInit& init)
         : Event(document, eventType, init)
         , m_data(init.data())
+        , m_ports(init.ports())
         , m_origin(init.origin())
         , m_lastEventId(init.lastEventId())
         , m_source(nullptr)
@@ -124,6 +138,16 @@ public:
     void setData(ScriptValue data)
     {
         m_data = data;
+    }
+
+    GCVector<MessagePort*> ports()
+    {
+        return m_ports;
+    }
+
+    void setPorts(GCVector<MessagePort*>& ports)
+    {
+        m_ports = ports;
     }
 
     String* origin() const
@@ -169,6 +193,7 @@ public:
 
 private:
     ScriptValue m_data;
+    GCVector<MessagePort*> m_ports;
     String* m_origin;
     String* m_lastEventId;
     // FIXME: Should change this type to MessageEventSource*

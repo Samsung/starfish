@@ -221,6 +221,22 @@ static int utf32ToUtf16(char32_t i, char16_t* u)
     }
 }
 
+ScriptWrappable* toScriptWrappable(ScriptValue v)
+{
+    if (v->isObject()) {
+        return toScriptWrappable(v->asObject());
+    }
+    return nullptr;
+}
+
+ScriptWrappable* toScriptWrappable(ScriptObject v)
+{
+    if (v->extraData()) {
+        return (ScriptWrappable*)v->extraData();
+    }
+    return nullptr;
+}
+
 StringRef* createScriptString(String* str)
 {
     auto data = str->bufferAccessData();
@@ -245,6 +261,11 @@ StringRef* createScriptString(String* str)
 
         return StringRef::fromUTF16(out.data(), out.length());
     }
+}
+
+ScriptValue createScriptValue(ScriptObject object)
+{
+    return ValueRef::create(object);
 }
 
 ScriptValue createScriptValue(ScriptString s)

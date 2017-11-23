@@ -5,8 +5,8 @@ dictionary MouseEventInit : EventModifierInit {
   double clientX = 0;
   double clientY = 0;
 
-  [Unimplemented] short button = 0;
-  [Unimplemented] unsigned short buttons = 0;
+  short button = 0;
+  unsigned short buttons = 0;
   [Unimplemented] EventTarget? relatedTarget = null;
 };
 
@@ -27,6 +27,23 @@ interface MouseEvent : UIEvent {
   readonly attribute unsigned short buttons;
 
   [Unimplemented] readonly attribute EventTarget? relatedTarget;
-
   [Unimplemented] boolean getModifierState(DOMString keyArg);
+
+  // The initMouseEvent method is deprecated, but supported for backwards-compatibility with widely-deployed implementations.
+  void initMouseEvent(DOMString type,
+                      optional boolean bubbles = false,
+                      optional boolean cancelable = false,
+                      optional Window? view = null,
+                      optional long detail = 0,
+                      optional long screenX = 0,
+                      optional long screenY = 0,
+                      optional long clientX = 0,
+                      optional long clientY = 0,
+                      // optional boolean ctrlKey,
+                      // optional boolean altKey,
+                      // optional boolean shiftKey,
+                      // optional boolean metaKey,
+                      optional unsigned short button = 0,
+                      // optional EventTarget? relatedTarget
+                      );
 };

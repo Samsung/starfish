@@ -195,8 +195,14 @@ Storage* Window::sessionStorage()
         this, origin);
 }
 
+void Window::postMessage(ScriptValue message, String* targetOrigin)
+{
+    GCVector<ScriptValue> emptyList;
+    postMessage(message, targetOrigin, emptyList);
+}
+
 void Window::postMessage(ScriptValue message, String* targetOrigin,
-                         std::vector<ScriptObject>& transfer)
+                         GCVector<ScriptValue>& transfer)
 {
     Window* source = parent();
     while (!source->browsingContext()->isTopLevelBrowsingContext()) {
@@ -217,10 +223,11 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
         ResourceURL* url = new ResourceURL(targetOrigin);
         targetOrigin = url->origin();
     }
-
-    SerializedTypedData* serialized;
+    SerializeWithTransferResult* serializedRecord =
+        new (GC) SerializeWithTransferResult();
     try {
-        serialized = Serializer::serialize(document(), message);
+        Serializer::serializeWithTransfer(document(), message, transfer,
+                                          *serializedRecord);
     } catch (DOMException* e) {
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         e->message()->toUTF8NonGCString().data());
@@ -240,17 +247,20 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
         return;
     }
 #endif
+    // NOTE addIder would hold serializedRecord
     if (browsingContext()) {
         starFish()->messageLoop()->addIdler(
             browsingContext(),
             [](size_t handle, void* data, void* data1) {
                 Window* window = (Window*)data;
-                SerializedTypedData* serialized = (SerializedTypedData*)data1;
-                ScriptValue deserialized;
+                SerializeWithTransferResult* serializedRecord =
+                    (SerializeWithTransferResult*)data1;
+                DeserializeWithTransferResult deserializedRecord;
                 bool fail = false;
                 try {
-                    deserialized =
-                        Serializer::deserialize(window->document(), serialized);
+                    Serializer::deserializeWithTransfer(window->document(),
+                                                        *serializedRecord,
+                                                        deserializedRecord);
                 } catch (DOMException* e) {
                     fail = true;
                 }
@@ -261,7 +271,21 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
                                     ->staticStrings()
                                     ->m_message.localName();
                     e = new MessageEvent(window->document(), eventType);
-                    e->setData(deserialized);
+                    e->setData(deserializedRecord.m_deserialized);
+
+                    GCVector<MessagePort*> newPorts;
+                    for (size_t i = 0;
+                         i < deserializedRecord.m_deserializedTransfer.size();
+                         i++) {
+                        ScriptValue item =
+                            deserializedRecord.m_deserializedTransfer[i];
+                        STARFISH_ASSERT(isObjectScriptValue(item));
+                        ScriptWrappable* sw = toScriptWrappable(item);
+                        if (sw && sw->isMessagePort()) {
+                            newPorts.push_back(sw->asMessagePort());
+                        }
+                    }
+                    e->setPorts(newPorts);
 
                 } else {
                     eventType = window->starFish()
@@ -278,7 +302,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
                 e->setOrigin(source->location()->origin());
                 window->dispatchEventByUA(e);
             },
-            this, serialized);
+            this, serializedRecord);
     }
 }
 

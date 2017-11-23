@@ -312,8 +312,9 @@ public:
     void focus();
     void blur();
 
+    void postMessage(ScriptValue message, String* targetOrigin);
     void postMessage(ScriptValue message, String* targetOrigin,
-                     std::vector<ScriptObject>& transfer);
+                     GCVector<ScriptValue>& transfer);
 
     // https://html.spec.whatwg.org/multipage/
     // browsers.html#named-access-on-the-window-object
