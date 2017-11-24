@@ -19,6 +19,7 @@
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/modules/location/Geolocation.h"
+#include <sys/utsname.h>
 
 namespace StarFish {
 
@@ -52,5 +53,18 @@ ScriptBindingInstance* Navigator::scriptBindingInstance()
 String* Navigator::userAgent()
 {
     return starFish()->userAgent();
+}
+
+String* Navigator::platform()
+{
+    // Unix-like systems
+    struct utsname osname;
+    StringBuilder platformName;
+    if (uname(&osname) == 0) {
+        platformName.appendString(osname.sysname);
+        platformName.appendString(String::spaceString);
+        platformName.appendString(osname.machine);
+    }
+    return platformName.finalize();
 }
 }

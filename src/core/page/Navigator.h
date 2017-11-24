@@ -49,12 +49,25 @@ public:
         return userAgent();
     }
 
+    String* platform();
+
+    String* product()
+    {
+        return String::createASCIIString(PRODUCT_NAME);
+    }
+
     String* vendor()
     {
         return String::createASCIIString(VENDOR_NAME);
     }
 
+    String* vendorSub()
+    {
+        return String::emptyString;
+    }
+
     String* userAgent();
+
     Geolocation* geolocation();
 
     void dispose();
