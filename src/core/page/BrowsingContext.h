@@ -216,6 +216,8 @@ public:
         return m_parentBrowsingContext;
     }
 
+    bool isDescendantOf(BrowsingContext* other);
+
     HistoryManager* historyManager();
 
     void addGlobalPointingEventInterceptListener(EventTarget* node);

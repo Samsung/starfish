@@ -1075,7 +1075,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
             // Add post task to main
             inputBuffer->m_sourceBuffer->m_starFish->messageLoop()
                 ->addIdlerWithNoGCRootingInOtherThread(
-                    inputBuffer->m_sourceBuffer->document()->browsingContext(),
+                    nullptr,
                     [](size_t, void* data, void* data1) {
                         SourceBufferData* inputBuffer = (SourceBufferData*)data;
                         size_t processedSize = (size_t)data1;

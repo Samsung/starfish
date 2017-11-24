@@ -107,7 +107,7 @@ void NetworkURLWorkerHelper::workerAbortHandeler(void* data)
     nwd->request->starFish()
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(
-            nwd->request->document()->browsingContext(),
+            nullptr,
             [](size_t, void* data) {
                 NetworkURLWorkerData* d = (NetworkURLWorkerData*)data;
                 if (d == d->request->m_activeNetworkURLWorkerData) {

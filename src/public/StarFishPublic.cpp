@@ -37,6 +37,7 @@
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/KeyboardEvent.h"
+#include "core/page/WebView.h"
 
 #include <uv.h>
 #if defined(STARFISH_TIZEN)
@@ -282,6 +283,14 @@ public:
     {
         if (TO_STARFISH(m_instance) == nullptr || !m_isInit)
             return true;
+        if (!(TO_STARFISH(m_instance)->platformWindow() &&
+              TO_STARFISH(m_instance)->platformWindow()->webView() &&
+              TO_STARFISH(m_instance)
+                  ->platformWindow()
+                  ->webView()
+                  ->mainBrowsingContext())) {
+            return true;
+        }
 
         size_t pointCount = data.GetPointCount();
         if (pointCount == 1) {
@@ -306,7 +315,10 @@ public:
                 TO_STARFISH(m_instance)
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
-                        nullptr,
+                        TO_STARFISH(m_instance)
+                            ->platformWindow()
+                            ->webView()
+                            ->mainBrowsingContext(),
                         [](size_t, void* data) {
                             dummy* d = (dummy*)data;
                             StarFish::StarFish* m_sf = d->starfish;
@@ -328,7 +340,10 @@ public:
                 TO_STARFISH(m_instance)
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
-                        nullptr,
+                        TO_STARFISH(m_instance)
+                            ->platformWindow()
+                            ->webView()
+                            ->mainBrowsingContext(),
                         [](size_t, void* data) {
                             dummy* d = (dummy*)data;
                             StarFish::StarFish* m_sf = d->starfish;
@@ -352,7 +367,10 @@ public:
                 TO_STARFISH(m_instance)
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
-                        nullptr,
+                        TO_STARFISH(m_instance)
+                            ->platformWindow()
+                            ->webView()
+                            ->mainBrowsingContext(),
                         [](size_t, void* data) {
                             dummy* d = (dummy*)data;
                             StarFish::StarFish* m_sf = d->starfish;
@@ -371,6 +389,14 @@ public:
     {
         if (TO_STARFISH(m_instance) == nullptr || !m_isInit)
             return true;
+        if (!(TO_STARFISH(m_instance)->platformWindow() &&
+              TO_STARFISH(m_instance)->platformWindow()->webView() &&
+              TO_STARFISH(m_instance)
+                  ->platformWindow()
+                  ->webView()
+                  ->mainBrowsingContext())) {
+            return true;
+        }
 
         const Dali::Vector2& point = event.GetPoint(0).screen;
         StarFish::StarFishEnterer enter(TO_STARFISH(m_instance));
@@ -390,7 +416,10 @@ public:
         TO_STARFISH(m_instance)
             ->messageLoop()
             ->addIdlerWithNoGCRootingInOtherThread(
-                nullptr,
+                TO_STARFISH(m_instance)
+                    ->platformWindow()
+                    ->webView()
+                    ->mainBrowsingContext(),
                 [](size_t, void* data) {
                     dummy* d = (dummy*)data;
                     StarFish::StarFish* m_sf = d->starfish;
@@ -407,6 +436,14 @@ public:
     {
         if (TO_STARFISH(m_instance) == nullptr || !m_isInit)
             return;
+        if (!(TO_STARFISH(m_instance)->platformWindow() &&
+              TO_STARFISH(m_instance)->platformWindow()->webView() &&
+              TO_STARFISH(m_instance)
+                  ->platformWindow()
+                  ->webView()
+                  ->mainBrowsingContext())) {
+            return true;
+        }
 
         StarFish::KeyboardData kdata(StarFish::KeyValue::UnidentifiedKey);
         if (32 < event.keyPressed.c_str()[0] &&
@@ -428,7 +465,10 @@ public:
             TO_STARFISH(m_instance)
                 ->messageLoop()
                 ->addIdlerWithNoGCRootingInOtherThread(
-                    nullptr,
+                    TO_STARFISH(m_instance)
+                        ->platformWindow()
+                        ->webView()
+                        ->mainBrowsingContext(),
                     [](size_t, void* data) {
                         dummy* d = (dummy*)data;
                         StarFish::StarFish* m_sf = d->starfish;
@@ -445,7 +485,10 @@ public:
             TO_STARFISH(m_instance)
                 ->messageLoop()
                 ->addIdlerWithNoGCRootingInOtherThread(
-                    nullptr,
+                    TO_STARFISH(m_instance)
+                        ->platformWindow()
+                        ->webView()
+                        ->mainBrowsingContext(),
                     [](size_t, void* data) {
                         dummy* d = (dummy*)data;
                         StarFish::StarFish* m_sf = d->starfish;

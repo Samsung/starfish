@@ -49,6 +49,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/threading/Thread.h"
 #include "core/util/URL.h"
 #include "platform/window/PlatformWindow.h"
 #include "core/animation/Animation.h"
@@ -637,15 +638,16 @@ void BrowsingContext::dispose()
     if (isTopLevelBrowsingContext()) {
         m_starFish->timer()->clear(nullptr);
         m_starFish->platformWindow()->clearResources();
-        m_starFish->messageLoop()->clearOrInvokePendingIdlers(nullptr);
+        m_starFish->messageLoop()->clearPendingIdlers(this);
         webView()->clearStackingContext(false);
 
         m_webView->initRenderingFlags();
     } else {
         m_starFish->timer()->clear(this);
-        m_starFish->messageLoop()->clearOrInvokePendingIdlers(this);
+        m_starFish->messageLoop()->clearPendingIdlers(this);
     }
 
+    m_rootMap.clear();
     unRegisterNeedsLayoutInWebView();
 }
 
@@ -1673,6 +1675,10 @@ void BrowsingContext::removeGlobalPointingEventInterceptListener(
 
 void BrowsingContext::addPointerInRootSet(void* ptr)
 {
+    STARFISH_ASSERT(isMainThread());
+    if (!isActive()) {
+        return;
+    }
     auto iter = m_rootMap.find(ptr);
     if (iter == m_rootMap.end()) {
         m_rootMap.insert(std::make_pair(ptr, 1));
@@ -1683,6 +1689,10 @@ void BrowsingContext::addPointerInRootSet(void* ptr)
 
 void BrowsingContext::removePointerFromRootSet(void* ptr)
 {
+    STARFISH_ASSERT(isMainThread());
+    if (!isActive()) {
+        return;
+    }
     auto iter = m_rootMap.find(ptr);
     if (iter != m_rootMap.end()) {
         if (iter->second == 1) {
@@ -1691,6 +1701,20 @@ void BrowsingContext::removePointerFromRootSet(void* ptr)
             iter->second--;
         }
     }
+}
+
+bool BrowsingContext::isDescendantOf(BrowsingContext* ancester)
+{
+    if (ancester) {
+        BrowsingContext* parent = m_parentBrowsingContext;
+        while (parent) {
+            if (parent == ancester) {
+                return true;
+            }
+            parent = parent->parentBrowsingContext();
+        }
+    }
+    return false;
 }
 
 #ifndef NDEBUG

@@ -323,7 +323,7 @@ void WebView::setNeedsRendering()
 
     wnd->m_renderingIdlerData = id;
     wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
-        mainBrowsingContext(),
+        nullptr,
         [](size_t handle, void* data) {
             IdlerData* id = (IdlerData*)data;
             PlatformWindow* wnd = (PlatformWindow*)id->m_data;

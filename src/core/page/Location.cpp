@@ -163,8 +163,8 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url)
         ctx->starFish()->messageLoop()->invokeNavigate(
             ctx->webView(), url, ctx->document()->documentURI());
     } else {
-        ctx->window()->browsingContext()->navigate(
-            url, HistoryManager::Action::Add, ctx->document()->documentURI());
+        ctx->sourceElement()->navigate(url, HistoryManager::Action::Add,
+                                       ctx->document()->documentURI());
     }
 }
 
