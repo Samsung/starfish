@@ -276,7 +276,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     if (!platformHandle) {
-        Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
+        Evas_Object* wndObj = elm_win_add(NULL, STARFISH_NAME, ELM_WIN_BASIC);
 #ifdef STARFISH_TIZEN
 #ifdef STARFISH_ENABLE_TRANSPARENT_WINDOW
         // Set efl configuration for resizing window (Without this, Window'll be
@@ -301,7 +301,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         evas_object_show(bg);
 #endif
 #endif
-        elm_win_title_set(wndObj, "StarFish");
+        elm_win_title_set(wndObj, STARFISH_NAME);
         elm_win_autodel_set(wndObj, EINA_TRUE);
         evas_object_resize(wndObj, w, h);
         evas_object_move(wndObj, x, y);
@@ -613,7 +613,7 @@ void StarFish::removePointerFromRootSet(void* ptr)
 
 String* StarFish::userAgent()
 {
-    String* str = String::createASCIIString(USER_AGENT(APP_CODE_NAME, VERSION));
+    String* str = String::createASCIIString(USER_AGENT(STARFISH_NAME, VERSION));
     if (extraUserAgentString()->length()) {
         str = str->concat(" ");
         str = str->concat(extraUserAgentString());

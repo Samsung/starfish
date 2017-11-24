@@ -187,21 +187,24 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_INFO
 #include <dlog.h>
-#define STARFISH_LOG_INFO(...) dlog_print(DLOG_INFO, "StarFish", __VA_ARGS__);
+#define STARFISH_LOG_INFO(...) \
+    dlog_print(DLOG_INFO, STARFISH_NAME, __VA_ARGS__);
 #endif
 
 #define STARFISH_LOG_ERROR(...) fprintf(stderr, __VA_ARGS__);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_ERROR
 #include <dlog.h>
-#define STARFISH_LOG_ERROR(...) dlog_print(DLOG_ERROR, "StarFish", __VA_ARGS__);
+#define STARFISH_LOG_ERROR(...) \
+    dlog_print(DLOG_ERROR, STARFISH_NAME, __VA_ARGS__);
 #endif
 
 #define STARFISH_LOG_WARN(...) fprintf(stderr, __VA_ARGS__);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_WARN
 #include <dlog.h>
-#define STARFISH_LOG_WARN(...) dlog_print(DLOG_WARN, "StarFish", __VA_ARGS__);
+#define STARFISH_LOG_WARN(...) \
+    dlog_print(DLOG_WARN, STARFISH_NAME, __VA_ARGS__);
 #endif
 
 #define STARFISH_CRASH STARFISH_RELEASE_ASSERT_NOT_REACHED
@@ -278,12 +281,13 @@ inline void __attribute__((optimize("O0"))) clearStack()
     (typenameWithoutPointer*)(LIKELY(bytes < 512) ? alloca(bytes) \
                                                   : GC_MALLOC(bytes))
 
-#define APP_NAME "StarFish"
-#define APP_CODE_NAME "StarFish"
+#define APP_NAME "Netscape"
+#define APP_CODE_NAME "Mozilla"
+#define PRODUCT_NAME "Gecko"
+#define STARFISH_NAME "StarFish"
 #define VERSION "0.1.0"
-#define APP_VERSION(APP_NAME, VERSION) APP_NAME "/" VERSION
-#define USER_AGENT(APP_CODE_NAME, VERSION) \
-    "Mozilla/5.0 " APP_CODE_NAME "/" VERSION
+#define USER_AGENT(STARFISH_NAME, VERSION) \
+    "Mozilla/5.0 " STARFISH_NAME "/" VERSION
 #define USER_AGENT_MAXIMUM_DATE_VALUE 8.64e15
 #define VENDOR_NAME "Samsung Electronics Co., Ltd."
 
