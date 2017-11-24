@@ -629,13 +629,13 @@ void MediaPlayerTizen::close()
         MessageLoop* msgLoop = m_container->starFish()->messageLoop();
         PLAYER_LOGI(
             "MediaPlayerTizen::close() - dispose player next idle time\n");
-        msgLoop->addIdler(m_container->document()->browsingContext(),
+        msgLoop->addIdler(nullptr,
                           [](size_t, void* data) {
                               MediaPlayerTizen* player =
                                   (MediaPlayerTizen*)data;
                               player->dispose();
                           },
-                          this, false);
+                          this);
     } else {
         PLAYER_LOGI("MediaPlayerTizen::close() - instant disposal \n");
         dispose();

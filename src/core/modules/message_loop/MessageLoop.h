@@ -34,25 +34,26 @@ class MessageLoop : public gc, public StarFishHoldable {
 public:
     MessageLoop(StarFish* sf);
     size_t addIdler(BrowsingContext* ctx, void (*fn)(size_t handle, void*),
-                    void* data, bool clearable = false);
+                    void* data);
     size_t addIdler(BrowsingContext* ctx,
                     void (*fn)(size_t handle, void*, void*), void* data,
-                    void* data1, bool clearable = false);
+                    void* data1);
     size_t addIdler(BrowsingContext* ctx,
                     void (*fn)(size_t handle, void*, void*, void*), void* data,
-                    void* data1, void* data2, bool clearable = false);
+                    void* data1, void* data2);
     size_t addIdlerWithNoGCRootingInOtherThread(
-        BrowsingContext* ctx, void (*fn)(size_t handle, void*), void* data,
-        bool clearable = false);
-    size_t addIdlerWithNoGCRootingInOtherThread(
-        BrowsingContext* ctx, void (*fn)(size_t handle, void*, void*),
-        void* data, void* data1, bool clearable = false);
+        BrowsingContext* ctx, void (*fn)(size_t handle, void*), void* data);
+    size_t addIdlerWithNoGCRootingInOtherThread(BrowsingContext* ctx,
+                                                void (*fn)(size_t handle, void*,
+                                                           void*),
+                                                void* data, void* data1);
 
     void removeIdler(size_t handle);
     void removeIdlerWithNoGCRooting(size_t handle);
 
-    void clearOrInvokePendingIdlers(
+    void clearPendingIdlers(
         BrowsingContext* ctx); // give nullptr to clear every idlers
+
     void run();
     void invokeNavigate(WebView* wv, ResourceURL* url,
                         ResourceURL* referrerURL);

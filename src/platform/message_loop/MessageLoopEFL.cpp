@@ -22,6 +22,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 
@@ -57,16 +58,28 @@ struct IdlerData {
     Ecore_Animator* m_idler;
     MessageLoop* m_ml;
     BrowsingContext* m_ctx;
-    volatile bool m_shouldExecute;
+    volatile bool m_valid;
     bool m_isMainThreadData;
-    bool m_clearable;
     size_t m_dataCount;
 };
 
+static void removeIderFromList(std::unordered_set<size_t>& list, IdlerData* id)
+{
+    list.erase(list.find((size_t)id));
+}
+
+static bool validateContext(BrowsingContext* context)
+{
+    // NOTE null value of context means the idler does not related with browsing
+    // context
+    return !context || context->isActive();
+}
+
 size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
-                             void* data, bool clearable)
+                             void* data)
 {
     STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(validateContext(ctx));
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -75,14 +88,14 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     id->m_dataCount = 1;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_clearable = clearable;
     id->m_idler = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
-            id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-            StarFishEnterer enter(id->m_ml->m_starFish);
-            id->m_fn((size_t)id, id->m_data);
-
+            removeIderFromList(id->m_ml->m_idlers, id);
+            if (validateContext(id->m_ctx)) {
+                StarFishEnterer enter(id->m_ml->m_starFish);
+                id->m_fn((size_t)id, id->m_data);
+            }
             GC_FREE(id);
             return ECORE_CALLBACK_CANCEL;
         },
@@ -93,9 +106,10 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
 
 size_t MessageLoop::addIdler(BrowsingContext* ctx,
                              void (*fn)(size_t, void*, void*), void* data,
-                             void* data1, bool clearable)
+                             void* data1)
 {
     STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(validateContext(ctx));
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -105,15 +119,15 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_dataCount = 2;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_clearable = clearable;
     id->m_idler = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
-            id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-            StarFishEnterer enter(id->m_ml->m_starFish);
-            ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                       id->m_data1);
-
+            removeIderFromList(id->m_ml->m_idlers, id);
+            if (validateContext(id->m_ctx)) {
+                StarFishEnterer enter(id->m_ml->m_starFish);
+                ((void (*)(size_t, void*, void*))id->m_fn)(
+                    (size_t)id, id->m_data, id->m_data1);
+            }
             GC_FREE(id);
             return ECORE_CALLBACK_CANCEL;
         },
@@ -124,10 +138,10 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
 
 size_t MessageLoop::addIdler(BrowsingContext* ctx,
                              void (*fn)(size_t, void*, void*, void*),
-                             void* data, void* data1, void* data2,
-                             bool clearable)
+                             void* data, void* data1, void* data2)
 {
     STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(validateContext(ctx));
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -138,16 +152,15 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_dataCount = 3;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_clearable = clearable;
     id->m_idler = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
-            id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-
-            StarFishEnterer enter(id->m_ml->m_starFish);
-            ((void (*)(size_t, void*, void*, void*))id->m_fn)(
-                (size_t)id, id->m_data, id->m_data1, id->m_data2);
-
+            removeIderFromList(id->m_ml->m_idlers, id);
+            if (validateContext(id->m_ctx)) {
+                StarFishEnterer enter(id->m_ml->m_starFish);
+                ((void (*)(size_t, void*, void*, void*))id->m_fn)(
+                    (size_t)id, id->m_data, id->m_data1, id->m_data2);
+            }
             GC_FREE(id);
             return ECORE_CALLBACK_CANCEL;
         },
@@ -157,18 +170,17 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    BrowsingContext* ctx, void (*fn)(size_t, void*), void* data, bool clearable)
+    BrowsingContext* ctx, void (*fn)(size_t, void*), void* data)
 {
     STARFISH_ASSERT(!isMainThread());
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
-    id->m_shouldExecute = true;
+    id->m_valid = true;
     id->m_fn = fn;
     id->m_data = data;
     id->m_dataCount = 1;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_clearable = clearable;
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
         m_idlersFromOtherThread.insert((size_t)id);
@@ -182,10 +194,10 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                     {
                         Locker<Mutex> l(
                             *id->m_ml->m_idlersFromOtherThreadMutex);
-                        id->m_ml->m_idlersFromOtherThread.erase(
-                            id->m_ml->m_idlersFromOtherThread.find((size_t)id));
+                        removeIderFromList(id->m_ml->m_idlersFromOtherThread,
+                                           id);
                     }
-                    if (id->m_shouldExecute) {
+                    if (id->m_valid && validateContext(id->m_ctx)) {
                         StarFishEnterer enter(id->m_ml->m_starFish);
                         id->m_fn((size_t)id, id->m_data);
                     }
@@ -200,19 +212,18 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     BrowsingContext* ctx, void (*fn)(size_t, void*, void*), void* data,
-    void* data1, bool clearable)
+    void* data1)
 {
     STARFISH_ASSERT(!isMainThread());
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
-    id->m_shouldExecute = true;
+    id->m_valid = true;
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
     id->m_data1 = data1;
     id->m_dataCount = 2;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_clearable = clearable;
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
         m_idlersFromOtherThread.insert((size_t)id);
@@ -226,10 +237,10 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                     {
                         Locker<Mutex> l(
                             *id->m_ml->m_idlersFromOtherThreadMutex);
-                        id->m_ml->m_idlersFromOtherThread.erase(
-                            id->m_ml->m_idlersFromOtherThread.find((size_t)id));
+                        removeIderFromList(id->m_ml->m_idlersFromOtherThread,
+                                           id);
                     }
-                    if (id->m_shouldExecute) {
+                    if (id->m_valid && validateContext(id->m_ctx)) {
                         StarFishEnterer enter(id->m_ml->m_starFish);
                         ((void (*)(size_t, void*, void*))id->m_fn)(
                             (size_t)id, id->m_data, id->m_data1);
@@ -246,16 +257,22 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 void MessageLoop::removeIdler(size_t handle)
 {
     STARFISH_ASSERT(isMainThread());
+    if (handle == SIZE_MAX) {
+        return;
+    }
     IdlerData* id = (IdlerData*)handle;
-    m_idlers.erase(m_idlers.find(handle));
+    removeIderFromList(m_idlers, id);
     ecore_animator_del(id->m_idler);
     GC_FREE(id);
 }
 
 void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
 {
+    if (handle == SIZE_MAX) {
+        return;
+    }
     IdlerData* id = (IdlerData*)handle;
-    id->m_shouldExecute = false;
+    id->m_valid = false;
 }
 
 static void invokeFnNow(IdlerData* id)
@@ -271,35 +288,31 @@ static void invokeFnNow(IdlerData* id)
     }
 }
 
-void MessageLoop::clearOrInvokePendingIdlers(BrowsingContext* ctx)
+void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
 {
+    STARFISH_ASSERT(isMainThread());
+    // Remove idlers
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
-        if (id->m_ctx == ctx || ctx == nullptr) {
-            iter = m_idlers.erase(iter);
+        if (id->m_ctx == ctx) {
             ecore_animator_del(id->m_idler);
-            if (!id->m_clearable) {
-                invokeFnNow(id);
-            }
-            GC_FREE(id);
+            iter = m_idlers.erase(iter);
         } else {
             iter++;
         }
     }
-
-    Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
-    auto iter2 = m_idlersFromOtherThread.begin();
-    while (iter2 != m_idlersFromOtherThread.end()) {
-        IdlerData* id = (IdlerData*)*iter2;
-        if ((id->m_ctx == ctx || ctx == nullptr) && id->m_shouldExecute) {
-            if (!id->m_clearable) {
-                invokeFnNow(id);
-            }
-            id->m_shouldExecute = false;
+    // Remove idlers from other thread
+    m_idlersFromOtherThreadMutex->lock();
+    auto iterOther = m_idlersFromOtherThread.begin();
+    while (iterOther != m_idlersFromOtherThread.end()) {
+        IdlerData* id = (IdlerData*)*iterOther;
+        if (id->m_ctx == ctx && id->m_valid) {
+            id->m_valid = false;
         }
-        iter2++;
+        iterOther++;
     }
+    m_idlersFromOtherThreadMutex->unlock();
 }
 
 struct InvokeNavigateData : public gc {

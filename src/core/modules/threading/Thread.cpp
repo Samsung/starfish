@@ -113,7 +113,7 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
                             ThreadData* d = (ThreadData*)data;
                             d->m_thread->finishUnjoined();
                         },
-                        d, false);
+                        d);
             } // else: joinIfNeeds() called while thread running
             pthread_exit(ret);
         },
