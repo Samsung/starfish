@@ -157,16 +157,6 @@ ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
     return ValueRef::create(result);
 }
 
-static void animationFrameTimeoutHandler(Window* wnd, void* data)
-{
-    FunctionObjectRef* fn = (FunctionObjectRef*)data;
-    callScriptFunction(wnd->scriptBindingInstance(), ValueRef::create(fn),
-                       nullptr, 0, scriptUndefined());
-}
-
-// TODO : Pass "any... arguments" if exist
-// TODO : First argument can be function or script source (currently allow
-// function only)
 ValueRef* requestAnimationFrameWindowFunction(ExecutionStateRef* state,
                                               ValueRef* thisValue, size_t argc,
                                               ValueRef** argv,
@@ -186,12 +176,23 @@ ValueRef* requestAnimationFrameWindowFunction(ExecutionStateRef* state,
     uint32_t result;
     ValueRef* arg0 = argv[0];
 
-    if (arg0->isFunction()) {
-        return ValueRef::create(
-            window->requestAnimationFrame(animationFrameTimeoutHandler, arg0));
+    TimeOutData* td = new TimeOutData();
+    // Handle ellipsis arguments from index1
+    for (size_t i = 1; i < argCount; i++) {
+        td->argVector.push_back(argv[i]);
+    }
+    // Handle argument arg0
+    if (argv[0]->isFunction()) {
+        td->listener = argv[0]->asObject();
+    } else {
+        String* bodyStr = toBrowserString(state, argv[0]);
+        String* name[] = { String::emptyString };
+        bool error = false;
+        td->listener = createScriptFunction(window->scriptBindingInstance(),
+                                            name, 1, bodyStr, error);
     }
 
-    return scriptUndefined();
+    return ValueRef::create(window->requestAnimationFrame(timeoutHandler, td));
 }
 
 #ifdef STARFISH_ENABLE_TEST

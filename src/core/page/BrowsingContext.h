@@ -17,8 +17,6 @@
 #ifndef __StarFishBrowsingContext__
 #define __StarFishBrowsingContext__
 
-#include "StarFishConfig.h"
-
 #include "binding/StarFishHoldable.h"
 #include "browser/history/HistoryManager.h"
 #include "platform/window/PlatformWindow.h"
@@ -48,6 +46,7 @@ class BrowsingContext : public gc, public StarFishHoldable {
     friend class HTMLBodyElement;
     friend class HTMLLinkElement;
     friend class WebView;
+    friend class HTMLIFrameElement;
     friend class FrameReplacedIFrame;
 
 public:
@@ -77,9 +76,6 @@ public:
         STARFISH_ASSERT(!isTopLevelBrowsingContext());
         return m_sourceElement;
     }
-
-    void navigate(ResourceURL* url, HistoryManager::Action type,
-                  ResourceURL* referrerURL);
 
     void pause();
     void resume();
@@ -237,6 +233,12 @@ public:
     void onIdle();
 
 private:
+    // Don't call function directly
+    // you can use this function from WebView::navigate or
+    // HTMLIFrameElement::navigate
+    void open(ResourceURL* url, HistoryManager::Action type,
+              ResourceURL* referrerURL);
+
     void didFocusEvent();
     void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
     void focusNavigation(bool forward = true);

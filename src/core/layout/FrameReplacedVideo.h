@@ -51,6 +51,10 @@ public:
     virtual void createGraphicsBuffer(CanvasSurface** surfaceHolder,
                                       size_t visibleWidth,
                                       size_t visibleHeight);
+    virtual bool hasOwnGraphicsBufferMethod()
+    {
+        return true;
+    }
 
     void* operator new(size_t size)
     {
