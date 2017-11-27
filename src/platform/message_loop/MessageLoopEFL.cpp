@@ -60,7 +60,6 @@ struct IdlerData {
     BrowsingContext* m_ctx;
     volatile bool m_valid;
     bool m_isMainThreadData;
-    size_t m_dataCount;
 };
 
 static void removeIderFromList(std::unordered_set<size_t>& list, IdlerData* id)
@@ -85,7 +84,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     id->m_isMainThreadData = true;
     id->m_fn = fn;
     id->m_data = data;
-    id->m_dataCount = 1;
     id->m_ml = this;
     id->m_ctx = ctx;
     id->m_idler = ecore_animator_add(
@@ -116,7 +114,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
     id->m_data1 = data1;
-    id->m_dataCount = 2;
     id->m_ml = this;
     id->m_ctx = ctx;
     id->m_idler = ecore_animator_add(
@@ -149,7 +146,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data = data;
     id->m_data1 = data1;
     id->m_data2 = data2;
-    id->m_dataCount = 3;
     id->m_ml = this;
     id->m_ctx = ctx;
     id->m_idler = ecore_animator_add(
@@ -178,7 +174,6 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     id->m_valid = true;
     id->m_fn = fn;
     id->m_data = data;
-    id->m_dataCount = 1;
     id->m_ml = this;
     id->m_ctx = ctx;
     {
@@ -221,7 +216,6 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
     id->m_data1 = data1;
-    id->m_dataCount = 2;
     id->m_ml = this;
     id->m_ctx = ctx;
     {
@@ -275,19 +269,6 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
     id->m_valid = false;
 }
 
-static void invokeFnNow(IdlerData* id)
-{
-    if (id->m_dataCount == 1) {
-        ((void (*)(size_t, void*))id->m_fn)((size_t)id, id->m_data);
-    } else if (id->m_dataCount == 2) {
-        ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                   id->m_data1);
-    } else if (id->m_dataCount == 3) {
-        ((void (*)(size_t, void*, void*, void*))id->m_fn)(
-            (size_t)id, id->m_data, id->m_data1, id->m_data2);
-    }
-}
-
 void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
 {
     STARFISH_ASSERT(isMainThread());
@@ -295,9 +276,10 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
-        if (id->m_ctx == ctx) {
+        if (id->m_ctx == ctx || ctx == nullptr) {
             ecore_animator_del(id->m_idler);
             iter = m_idlers.erase(iter);
+            GC_FREE(id);
         } else {
             iter++;
         }
@@ -307,7 +289,7 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
     auto iterOther = m_idlersFromOtherThread.begin();
     while (iterOther != m_idlersFromOtherThread.end()) {
         IdlerData* id = (IdlerData*)*iterOther;
-        if (id->m_ctx == ctx && id->m_valid) {
+        if ((id->m_ctx == ctx || ctx == nullptr) && id->m_valid) {
             id->m_valid = false;
         }
         iterOther++;
