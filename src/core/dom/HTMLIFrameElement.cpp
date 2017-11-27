@@ -189,7 +189,7 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
             m_historyManager = HistoryManager::create(this);
         }
         m_browsingContext = BrowsingContext::create(this);
-        m_browsingContext->navigate(url, type, referrerURL);
+        m_browsingContext->open(url, type, referrerURL);
     }
 }
 

@@ -108,8 +108,8 @@ void BrowsingContext::initFlags()
     m_pendingStyleSheetCount = 0;
 }
 
-void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type,
-                               ResourceURL* referrerURL)
+void BrowsingContext::open(ResourceURL* url, HistoryManager::Action type,
+                           ResourceURL* referrerURL)
 {
     dispose();
     initFlags();
@@ -118,7 +118,6 @@ void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type,
 
     StarFishEnterer enter(m_starFish);
 
-    // TODO: Use location to open a new document
     if (isTopLevelBrowsingContext()) {
         m_window = Window::create(m_starFish, this, url,
                                   starFish()->platformWindow()->width(),
@@ -141,7 +140,7 @@ void BrowsingContext::navigate(ResourceURL* url, HistoryManager::Action type,
 
     m_window->document()->init(referrerURL);
 
-    // STARFISH_LOG_INFO("BrowsingContext::navigate %s\n",
+    // STARFISH_LOG_INFO("BrowsingContext::open %s\n",
     // url->urlString()->toUTF8String().data());
 
     switch (type) {

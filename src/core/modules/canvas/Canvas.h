@@ -44,6 +44,10 @@ public:
     }
 };
 
+#ifndef STARFISH_CANVAS_SURFACE_MARGIN
+#define STARFISH_CANVAS_SURFACE_MARGIN 5
+#endif
+
 class CanvasSurface : public gc {
 protected:
     CanvasSurface()
@@ -55,17 +59,25 @@ public:
     virtual void* unwrap() = 0;
     virtual uint8_t* data() = 0;
     virtual void resize(size_t w, size_t h) = 0;
-    virtual size_t width() = 0;
-    virtual size_t height() = 0;
     virtual void clear() = 0;
     virtual void detachNativeBuffer() = 0;
-    virtual size_t bufferWidth() = 0;
-    virtual size_t bufferHeight() = 0;
-    virtual size_t bufferStride() = 0;
-    virtual size_t pixelRatio() = 0;
     virtual ~CanvasSurface()
     {
     }
+
+    // width / pixelRatio == imageWidth
+    // bufferWidth > imageWidth
+    // buffer is can be lager than image
+    virtual size_t width() = 0;
+    virtual size_t height() = 0;
+    virtual size_t pixelRatio() = 0;
+
+    virtual size_t imageWidth() = 0;
+    virtual size_t imageHeight() = 0;
+
+    virtual size_t bufferWidth() = 0;
+    virtual size_t bufferHeight() = 0;
+    virtual size_t bufferStride() = 0;
 };
 
 class Canvas : public gc {

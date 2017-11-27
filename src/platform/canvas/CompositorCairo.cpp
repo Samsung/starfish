@@ -62,8 +62,7 @@ public:
         m_shouldDestroySurface = true;
 
         initFromBuffer(data->data(), data->bufferWidth(), data->bufferHeight(),
-                       cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
-                                                     data->bufferWidth()));
+                       data->bufferStride());
 
         m_stateSize = 0;
         m_opacityVector.push_back(1);
@@ -339,11 +338,9 @@ public:
         cairo_surface_t* image;
         image = cairo_image_surface_create_for_data(
             (unsigned char*)data->data(), CAIRO_FORMAT_ARGB32,
-            data->bufferWidth(), data->bufferHeight(),
-            cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
-                                          data->bufferWidth()));
+            data->imageWidth(), data->imageHeight(), data->bufferStride());
         checkError();
-        drawImageCairo(image, dst, data->bufferWidth(), data->bufferHeight(),
+        drawImageCairo(image, dst, data->imageWidth(), data->imageHeight(),
                        true);
         cairo_surface_destroy(image);
     }
@@ -379,8 +376,7 @@ public:
         double surfaceWidth = 0, surfaceHeight = 0;
 
         if (imgData) {
-            int stride =
-                cairo_format_stride_for_width(CAIRO_FORMAT, data->width());
+            int stride = data->stride();
             image = cairo_image_surface_create_for_data(
                 (unsigned char*)imgData, CAIRO_FORMAT, data->width(),
                 data->height(), stride);

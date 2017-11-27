@@ -102,10 +102,6 @@ class CanvasEFL : public Canvas {
         }
         evas_output_method_set(canvas, method);
 
-        if (stride == -1) {
-            stride = width * 4;
-        }
-
         Evas_Engine_Info_Buffer* einfo;
         void* pixels = buffer;
 
@@ -145,6 +141,10 @@ class CanvasEFL : public Canvas {
         lastState().m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
                                        SkFloatToScalar((float)m_height));
         lastState().m_clipper = NULL;
+
+        if (m_forceMapMode) {
+            assureMapMode();
+        }
     }
 
 public:
@@ -155,6 +155,7 @@ public:
         m_image = NULL;
         m_buffer = NULL;
         m_directDraw = true;
+        m_forceMapMode = false;
         struct dummy {
             void* a;
             void* b;
@@ -162,6 +163,7 @@ public:
             int h;
             std::vector<Evas_Object*>* objList;
             std::vector<Evas_Object*>* surfaceList;
+            bool f;
         };
         dummy* d = (dummy*)data;
         m_canvas = (Evas*)d->a;
@@ -169,7 +171,7 @@ public:
         m_height = d->h;
         m_objList = d->objList;
         m_surfaceList = d->surfaceList;
-
+        m_forceMapMode = d->f;
         initState();
     }
 
@@ -179,12 +181,12 @@ public:
         m_imageCount = 0;
         m_objList = NULL;
         m_surfaceList = NULL;
-        m_directDraw = false;
+        m_forceMapMode = m_directDraw = false;
         m_image = (Evas_Object*)data->unwrap();
         void* buffer = evas_object_image_data_get(m_image, EINA_TRUE);
         m_buffer = buffer;
-        initFromBuffer(buffer, data->bufferWidth(), data->bufferHeight(),
-                       evas_object_image_stride_get(m_image));
+        initFromBuffer(buffer, data->imageWidth(), data->imageHeight(),
+                       data->bufferStride());
     }
 
     virtual ~CanvasEFL()
@@ -1498,29 +1500,22 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-        if (lastState().m_mapMode) {
-            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)dst.x()),
-                                          SkFloatToScalar((float)dst.y()),
-                                          SkFloatToScalar((float)dst.width()),
-                                          SkFloatToScalar((float)dst.height()));
-            if (!shouldApplyEvasMap()) {
-                lastState().m_matrix.mapRect(&sss);
-            }
-            xx = sss.x();
-            yy = sss.y();
-            ww = sss.width();
-            hh = sss.height();
-        } else {
-            xx = dst.x();
-            yy = dst.y();
-            if (!shouldApplyEvasMap()) {
-                xx = lastState().m_baseX + dst.x();
-                yy = lastState().m_baseY + dst.y();
-            }
-            ww = dst.width();
-            hh = dst.height();
+
+        save();
+        if (!lastState().m_mapMode) {
+            assureMapMode();
         }
+
+        SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)dst.x()),
+                                      SkFloatToScalar((float)dst.y()),
+                                      SkFloatToScalar((float)dst.width()),
+                                      SkFloatToScalar((float)dst.height()));
+        lastState().m_matrix.mapRect(&sss);
+
+        float xx = sss.x();
+        float yy = sss.y();
+        float ww = sss.width();
+        float hh = sss.height();
 
         Evas_Object* eo = (Evas_Object*)data->unwrap();
         if (!eo) {
@@ -1540,13 +1535,15 @@ public:
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
         evas_object_raise(eo);
+
 #ifdef STARFISH_ENABLE_TEST
         if (evas_object_evas_get(eo) != m_canvas) {
             eo = evas_object_image_add(m_canvas);
             evas_object_move(eo, xx, yy);
             evas_object_resize(eo, ww, hh);
             evas_object_raise(eo);
-            evas_object_image_size_set(eo, data->width(), data->height());
+            evas_object_image_size_set(eo, data->imageWidth(),
+                                       data->imageHeight());
 #ifndef STARFISH_TIZEN_TV
             evas_object_image_colorspace_set(
                 eo,
@@ -1554,9 +1551,18 @@ public:
 #endif
             evas_object_image_filled_set(eo, EINA_TRUE);
             evas_object_image_alpha_set(eo, EINA_TRUE);
-            evas_object_image_data_set(
-                eo, evas_object_image_data_get((Evas_Object*)data->unwrap(),
-                                               EINA_FALSE));
+
+            size_t h = data->imageHeight();
+            size_t w = data->imageWidth();
+            size_t st = data->bufferStride();
+            uint8_t* ptr = data->data();
+            uint8_t* dst = (uint8_t*)evas_object_image_data_get(eo, EINA_TRUE);
+            size_t dstSt = evas_object_image_stride_get(eo);
+            for (size_t y = 0; y < h; y++) {
+                memcpy(&dst[y * dstSt], &ptr[y * st], dstSt);
+            }
+
+            evas_object_image_data_set(eo, dst);
         }
 #endif
 
@@ -1586,12 +1592,89 @@ public:
             m_objList->push_back(clip);
         }
         evas_object_clip_set(eo, clip);
-        applyEvasMapIfNeeded(eo, dst, true);
+
+        Evas_Map* map = evas_map_new(4);
+
+        evas_map_util_points_populate_from_object(map, eo);
+        int img_w = data->imageWidth(), img_h = data->imageHeight();
+        evas_map_point_image_uv_set(map, 0, 0, 0);
+        evas_map_point_image_uv_set(map, 1, img_w, 0);
+        evas_map_point_image_uv_set(map, 2, img_w, img_h);
+        evas_map_point_image_uv_set(map, 3, 0, img_h);
+
+        {
+            SkScalar fromX;
+            SkScalar fromY;
+            SkPoint to;
+            fromX = SkFloatToScalar((float)dst.x());
+            fromY = SkFloatToScalar((float)dst.y());
+            if (lastState().m_mapMode) {
+                lastState().m_matrix.mapXY(fromX, fromY, &to);
+            } else {
+                to.set(lastState().m_baseX + fromX,
+                       lastState().m_baseY + fromY);
+            }
+            evas_map_point_coord_set(map, 0, SkScalarToFloat(to.x()),
+                                     SkScalarToFloat(to.y()), 0);
+
+            fromX = SkFloatToScalar((float)(dst.x() + dst.width()));
+            fromY = SkFloatToScalar((float)dst.y());
+            if (lastState().m_mapMode) {
+                lastState().m_matrix.mapXY(fromX, fromY, &to);
+            } else {
+                to.set(lastState().m_baseX + fromX,
+                       lastState().m_baseY + fromY);
+            }
+            evas_map_point_coord_set(map, 1, SkScalarToFloat(to.x()),
+                                     SkScalarToFloat(to.y()), 0);
+
+            fromX = SkFloatToScalar((float)(dst.x() + dst.width()));
+            fromY = SkFloatToScalar((float)(dst.y() + dst.height()));
+            if (lastState().m_mapMode) {
+                lastState().m_matrix.mapXY(fromX, fromY, &to);
+            } else {
+                to.set(lastState().m_baseX + fromX,
+                       lastState().m_baseY + fromY);
+            }
+            evas_map_point_coord_set(map, 2, SkScalarToFloat(to.x()),
+                                     SkScalarToFloat(to.y()), 0);
+
+            fromX = SkFloatToScalar((float)dst.x());
+            fromY = SkFloatToScalar((float)(dst.y() + dst.height()));
+            if (lastState().m_mapMode) {
+                lastState().m_matrix.mapXY(fromX, fromY, &to);
+            } else {
+                to.set(lastState().m_baseX + fromX,
+                       lastState().m_baseY + fromY);
+            }
+            evas_map_point_coord_set(map, 3, SkScalarToFloat(to.x()),
+                                     SkScalarToFloat(to.y()), 0);
+        }
+
+        evas_object_anti_alias_set(eo, EINA_TRUE);
+
+        /*
+        evas_map_alpha_set(map, EINA_TRUE);
+        if (lastState().m_opacity != 1) {
+            int c = lastState().m_opacity * 255;
+            evas_map_point_color_set(map, 0, c, c, c, c);
+            evas_map_point_color_set(map, 1, c, c, c, c);
+            evas_map_point_color_set(map, 2, c, c, c, c);
+            evas_map_point_color_set(map, 3, c, c, c, c);
+        }
+        */
+        evas_map_smooth_set(map, EINA_TRUE);
+
+        evas_object_map_set(eo, map);
+        evas_object_map_enable_set(eo, EINA_TRUE);
+        evas_map_free(map);
 
         evas_object_show(eo);
         // if (m_surfaceList) {
         //     m_surfaceList->push_back(eo);
         // }
+
+        restore();
     }
 
     virtual void postMatrix(const SkMatrix& matrix)
@@ -1655,7 +1738,8 @@ public:
 
     bool shouldApplyEvasMap()
     {
-        return lastState().m_mapMode && !lastState().m_matrix.isIdentity();
+        return (lastState().m_mapMode && !lastState().m_matrix.isIdentity()) ||
+               m_forceMapMode;
     }
 
     void applyEvasMapIfNeeded(Evas_Object* eo, const LayoutRect& dst,
@@ -1748,6 +1832,8 @@ public:
             evas_object_map_set(eo, map);
             evas_object_map_enable_set(eo, EINA_TRUE);
             evas_map_free(map);
+        } else {
+            evas_object_map_enable_set(eo, EINA_FALSE);
         }
     }
 
@@ -1780,6 +1866,7 @@ protected:
     std::unordered_map<Frame*, CanvasStateEFL> m_statePerFrame;
     Evas* m_canvas;
     bool m_directDraw;
+    bool m_forceMapMode;
     Evas_Object* m_image;
     void* m_buffer;
     unsigned m_width;

@@ -346,11 +346,11 @@ public:
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) ==
                                 EVAS_COLORSPACE_ARGB8888);
 
-        m_bufferWidth = m_width = -1;
-        m_bufferHeight = m_height = -1;
+        m_bufferStride = m_imageWidth = m_bufferWidth = m_width = SIZE_MAX;
+        m_imageHeight = m_bufferHeight = m_height = SIZE_MAX;
         m_pixelRatio = 1;
 
-        resize(w, h);
+        attachNativeBuffer(w, h);
         // STARFISH_LOG_INFO("create CanvasSurfaceEFL %p %p\n", this, m_image);
 
         STARFISH_ASSERT(evas_object_visible_get(m_image) == EINA_FALSE);
@@ -402,26 +402,38 @@ public:
         m_image = nullptr;
     }
 
-    virtual void resize(size_t w, size_t h)
+    void attachNativeBuffer(size_t w, size_t h)
     {
         if (m_width != w || m_height != h) {
             int ww, hh;
             evas_object_image_size_get(m_image, &ww, &hh);
             g_totalCanvasSurfaceEFLSize -= (ww * hh * 4);
 
+            m_width = w;
+            m_height = h;
+
+            if ((int)w < m_window->starFish()->screenInfo().rect.width()) {
+                w += STARFISH_CANVAS_SURFACE_MARGIN;
+            }
+            if ((int)h < m_window->starFish()->screenInfo().rect.height()) {
+                h += STARFISH_CANVAS_SURFACE_MARGIN;
+            }
+
             m_pixelRatio = 1;
 
-            while ((w / m_pixelRatio > 20000) || (h / m_pixelRatio > 20000)) {
+            while ((m_width / m_pixelRatio > 20000) ||
+                   (m_height / m_pixelRatio > 20000)) {
                 m_pixelRatio++;
             }
 
-            m_width = w;
-            m_height = h;
-            m_bufferWidth = std::max((size_t)1, m_width / m_pixelRatio);
-            m_bufferHeight = std::max((size_t)1, m_height / m_pixelRatio);
+            m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
+            m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
+
+            m_bufferWidth = std::max((size_t)1, w / m_pixelRatio);
+            m_bufferHeight = std::max((size_t)1, h / m_pixelRatio);
 
             evas_object_image_size_set(m_image, m_bufferWidth, m_bufferHeight);
-
+            m_bufferStride = evas_object_image_stride_get(m_image);
             g_totalCanvasSurfaceEFLSize += (m_bufferWidth * m_bufferHeight * 4);
         }
 #ifndef NDEBUG
@@ -429,6 +441,28 @@ public:
         STARFISH_ASSERT(address);
         evas_object_image_data_set(m_image, address);
 #endif
+    }
+
+    virtual void resize(size_t w, size_t h)
+    {
+        STARFISH_RELEASE_ASSERT(w <= m_bufferWidth * m_pixelRatio);
+        STARFISH_RELEASE_ASSERT(h <= m_bufferHeight * m_pixelRatio);
+
+        m_width = w;
+        m_height = h;
+
+        m_pixelRatio = 1;
+
+        while ((m_width / m_pixelRatio > 20000) ||
+               (m_height / m_pixelRatio > 20000)) {
+            m_pixelRatio++;
+        }
+
+        m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
+        m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
+
+        STARFISH_RELEASE_ASSERT(m_imageWidth <= m_bufferWidth);
+        STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
     }
 
     virtual void* unwrap()
@@ -456,6 +490,16 @@ public:
         return m_bufferHeight;
     }
 
+    virtual size_t imageWidth()
+    {
+        return m_imageWidth;
+    }
+
+    virtual size_t imageHeight()
+    {
+        return m_imageHeight;
+    }
+
     virtual size_t pixelRatio()
     {
         return m_pixelRatio;
@@ -463,7 +507,7 @@ public:
 
     virtual size_t bufferStride()
     {
-        return evas_object_image_stride_get(m_image);
+        return m_bufferStride;
     }
 
     virtual void clear()
@@ -479,8 +523,11 @@ protected:
     Evas_Object* m_image;
     size_t m_width;
     size_t m_height;
+    size_t m_imageWidth;
+    size_t m_imageHeight;
     size_t m_bufferWidth;
     size_t m_bufferHeight;
+    size_t m_bufferStride;
     size_t m_pixelRatio;
 };
 
@@ -495,13 +542,14 @@ class CanvasSurfaceSimple : public CanvasSurface {
 public:
     CanvasSurfaceSimple(PlatformWindow* wnd, size_t w, size_t h)
     {
+        m_window = wnd;
         m_width = w;
         m_height = h;
-        m_bufferWidth = m_width = -1;
-        m_bufferHeight = m_height = -1;
+        m_imageWidth = m_bufferWidth = m_width = -1;
+        m_imageHeight = m_bufferHeight = m_height = -1;
         m_pixelRatio = 1;
 
-        resize(w, h);
+        attachNativeBuffer(w, h);
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            CanvasSurfaceSimple* s =
@@ -513,28 +561,63 @@ public:
 
     virtual void detachNativeBuffer()
     {
-        free(buffer);
-        buffer = nullptr;
+        free(m_buffer);
+        m_buffer = nullptr;
+    }
+
+    void attachNativeBuffer(size_t w, size_t h)
+    {
+        if (m_width != w || m_height != h) {
+            m_width = w;
+            m_height = h;
+
+            if ((int)w < m_window->starFish()->screenInfo().rect.width()) {
+                w += STARFISH_CANVAS_SURFACE_MARGIN;
+            }
+            if ((int)h < m_window->starFish()->screenInfo().rect.height()) {
+                h += STARFISH_CANVAS_SURFACE_MARGIN;
+            }
+
+            m_pixelRatio = 1;
+
+            while ((m_width / m_pixelRatio > 20000) ||
+                   (m_height / m_pixelRatio > 20000)) {
+                m_pixelRatio++;
+            }
+
+            m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
+            m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
+
+            m_bufferWidth = std::max((size_t)1, w / m_pixelRatio);
+            m_bufferHeight = std::max((size_t)1, h / m_pixelRatio);
+            m_bufferStride = m_bufferWidth * 4;
+
+            detachNativeBuffer();
+            m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
+                                              sizeof(uint32_t));
+        }
     }
 
     virtual void resize(size_t w, size_t h)
     {
-        if (m_width != w || m_height != h) {
-            m_pixelRatio = 1;
+        STARFISH_RELEASE_ASSERT(w <= m_bufferWidth * m_pixelRatio);
+        STARFISH_RELEASE_ASSERT(h <= m_bufferHeight * m_pixelRatio);
 
-            while ((w / m_pixelRatio > 20000) || (h / m_pixelRatio > 20000)) {
-                m_pixelRatio++;
-            }
+        m_width = w;
+        m_height = h;
 
-            m_width = w;
-            m_height = h;
-            m_bufferWidth = std::max((size_t)1, m_width / m_pixelRatio);
-            m_bufferHeight = std::max((size_t)1, m_height / m_pixelRatio);
+        m_pixelRatio = 1;
 
-            detachNativeBuffer();
-            buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
-                                            sizeof(uint32_t));
+        while ((m_width / m_pixelRatio > 20000) ||
+               (m_height / m_pixelRatio > 20000)) {
+            m_pixelRatio++;
         }
+
+        m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
+        m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
+
+        STARFISH_RELEASE_ASSERT(m_imageWidth <= m_bufferWidth);
+        STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
     }
 
     virtual void* unwrap()
@@ -544,7 +627,7 @@ public:
 
     virtual uint8_t* data()
     {
-        return buffer;
+        return m_buffer;
     }
 
     virtual size_t width()
@@ -562,14 +645,19 @@ public:
         return m_bufferWidth;
     }
 
-    virtual size_t bufferStride()
-    {
-        return m_bufferWidth * sizeof(uint32_t);
-    }
-
     virtual size_t bufferHeight()
     {
         return m_bufferHeight;
+    }
+
+    virtual size_t imageWidth()
+    {
+        return m_imageWidth;
+    }
+
+    virtual size_t imageHeight()
+    {
+        return m_imageHeight;
     }
 
     virtual size_t pixelRatio()
@@ -577,18 +665,27 @@ public:
         return m_pixelRatio;
     }
 
+    virtual size_t bufferStride()
+    {
+        return m_bufferStride;
+    }
+
     virtual void clear()
     {
         size_t end = m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
-        memset(buffer, 0x00, end);
+        memset(m_buffer, 0x00, end);
     }
 
 protected:
-    unsigned char* buffer;
+    PlatformWindow* m_window;
+    unsigned char* m_buffer;
     size_t m_width;
     size_t m_height;
+    size_t m_imageWidth;
+    size_t m_imageHeight;
     size_t m_bufferWidth;
     size_t m_bufferHeight;
+    size_t m_bufferStride;
     size_t m_pixelRatio;
 };
 
@@ -1552,6 +1649,7 @@ Canvas* WindowImplEFL::preparePainting()
         int h;
         std::vector<Evas_Object*>* objList;
         std::vector<Evas_Object*>* surfaceList;
+        bool f;
     };
     dummy* d = new dummy;
     d->a = evas;
@@ -1560,6 +1658,7 @@ Canvas* WindowImplEFL::preparePainting()
     d->h = height;
     d->objList = &m_objectList;
     d->surfaceList = &m_surfaceList;
+    d->f = false;
     auto iter = m_objectList.begin();
     while (iter != m_objectList.end()) {
         evas_object_del(*iter);
@@ -1713,6 +1812,7 @@ Compositor* WindowImplEFL::prepareCompositor()
         int h;
         std::vector<Evas_Object*>* objList;
         std::vector<Evas_Object*>* surfaceList;
+        bool f;
     };
     dummy* d = new dummy;
     d->a = evas;
@@ -1721,6 +1821,7 @@ Compositor* WindowImplEFL::prepareCompositor()
     d->h = height;
     d->objList = &m_objectList;
     d->surfaceList = &m_surfaceList;
+    d->f = true;
     auto iter = m_objectList.begin();
     while (iter != m_objectList.end()) {
         evas_object_del(*iter);

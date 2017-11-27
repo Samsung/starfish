@@ -740,7 +740,13 @@ public:
     virtual void createGraphicsBuffer(CanvasSurface** surfaceHolder,
                                       size_t visibleWidth, size_t visibleHeight)
     {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return;
+    }
+
+    virtual bool hasOwnGraphicsBufferMethod()
+    {
+        return false;
     }
 
 protected:

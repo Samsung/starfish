@@ -14,6 +14,8 @@
  *    limitations under the License.
  */
 
+// #define STARFISH_ENABLE_PROFILE_TIMER
+
 #include "StarFishConfig.h"
 
 #include "WebView.h"
@@ -119,7 +121,7 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
         m_topLevelBrowsingContext->dispose();
     }
     m_topLevelBrowsingContext = BrowsingContext::create(starFish(), this);
-    m_topLevelBrowsingContext->navigate(url, type, referrerURL);
+    m_topLevelBrowsingContext->open(url, type, referrerURL);
 }
 
 bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
@@ -685,6 +687,9 @@ bool WebView::rendering(bool force)
     {
         size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
         for (size_t i = 0; i < bufSiz; i++) {
+            // printf("drop canvas surface %d %d\n",
+            // (int)m_backStackingContextBufferUpWhileReCompsite[i]->bufferWidth(),
+            //         (int)m_backStackingContextBufferUpWhileReCompsite[i]->bufferHeight());
             m_backStackingContextBufferUpWhileReCompsite[i]
                 ->detachNativeBuffer();
         }
@@ -745,9 +750,10 @@ bool WebView::rendering(bool force)
                 (unsigned char*)g_surfaceForScreehShot->data(),
                 CAIRO_FORMAT_ARGB32, starFish()->platformWindow()->width(),
                 starFish()->platformWindow()->height(),
-                cairo_format_stride_for_width(
-                    CAIRO_FORMAT_ARGB32,
-                    starFish()->platformWindow()->width()));
+                g_surfaceForScreehShot->bufferStride());
+
+            Evas_Object* eo = (Evas_Object*)g_surfaceForScreehShot->unwrap();
+            evas_object_image_save(eo, "111.png", 0, 0);
 
             cairo_surface_write_to_png(png_buffer, path);
             cairo_surface_destroy(png_buffer);
@@ -772,15 +778,7 @@ void WebView::clearStackingContext(bool backupBuffer)
         StackingContext* ctx = m_rootStackingContext;
         std::function<void(StackingContext*)> clearSC =
             [&](StackingContext* ctx) {
-                if (backupBuffer) {
-                    if (ctx->needsGraphicsBuffer() && ctx->buffer()) {
-                        m_backStackingContextBufferUpWhileReCompsite.push_back(
-                            ctx->buffer());
-                    }
-                    ctx->owner()->clearStackingContextIfNeeds(false);
-                } else {
-                    ctx->owner()->clearStackingContextIfNeeds();
-                }
+                ctx->owner()->clearStackingContextIfNeeds(!backupBuffer);
                 auto iter = ctx->childContexts().begin();
                 while (iter != ctx->childContexts().end()) {
                     StackingContextChild* child = *iter;
@@ -902,7 +900,48 @@ void WebView::assignGraphicsBuffer(CanvasSurface** surfaceHolder,
             }
         }
 
+        // find best nearset buffer
+        size_t bestFitScore = SIZE_MAX;
+        size_t bestFitIdx = SIZE_MAX;
+
+        for (size_t i = 0;
+             i < m_backStackingContextBufferUpWhileReCompsite.size(); i++) {
+            size_t savedW =
+                m_backStackingContextBufferUpWhileReCompsite[i]->bufferWidth() *
+                m_backStackingContextBufferUpWhileReCompsite[i]->pixelRatio();
+            size_t savedH =
+                m_backStackingContextBufferUpWhileReCompsite[i]
+                    ->bufferHeight() *
+                m_backStackingContextBufferUpWhileReCompsite[i]->pixelRatio();
+
+            if (savedW >= visibleWidth && savedH >= visibleHeight) {
+                size_t areaA = savedW * savedH;
+                size_t areaB = visibleWidth * visibleHeight;
+                size_t score = areaA - areaB;
+
+                if (score < (areaA * 0.1)) {
+                    if (score < bestFitScore) {
+                        bestFitScore = score;
+                        bestFitIdx = i;
+                    }
+                }
+            }
+        }
+
+        if (bestFitIdx != SIZE_MAX) {
+            (*surfaceHolder) =
+                m_backStackingContextBufferUpWhileReCompsite[bestFitIdx];
+            m_backStackingContextBufferUpWhileReCompsite.erase(bestFitIdx);
+            // printf("WebView::assignGraphicsBuffer - reuse canvas surface %d
+            // %d -> %d %d\n", (int)visibleWidth, (int)visibleHeight,
+            // (int)(*surfaceHolder)->bufferWidth(),
+            // (int)(*surfaceHolder)->bufferHeight());
+            (*surfaceHolder)->resize(visibleWidth, visibleHeight);
+        }
+
         if (*surfaceHolder == nullptr) {
+            // printf("WebView::assignGraphicsBuffer - create canvas surface %d
+            // %d\n", (int)visibleWidth, (int)visibleHeight);
             INSTALL_PROFILE_TIMER(
                 "WebView::assignGraphicsBuffer - create canvas surface");
             (*surfaceHolder) = CanvasSurface::create(
