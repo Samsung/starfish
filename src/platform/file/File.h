@@ -124,7 +124,7 @@ public:
         return true;
     }
 
-    virtual long int size() = 0;
+    virtual size_t size() = 0;
     virtual size_t read(void* buf, size_t size, size_t count) = 0;
     virtual size_t write(void* buf, size_t size, size_t count) = 0;
     virtual ssize_t readLine(char** out, size_t* len) = 0;
@@ -133,6 +133,9 @@ public:
     virtual int flush() = 0;
     virtual int close() = 0;
     virtual int eof() = 0;
+    virtual int64_t lastAccessTime() = 0;
+    virtual int64_t lastModifyTime() = 0;
+    virtual int64_t lastChangeTime() = 0;
 
 protected:
     File()

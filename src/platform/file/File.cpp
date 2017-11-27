@@ -54,11 +54,11 @@ public:
         return false;
     }
 
-    long int size() override
+    size_t size() override
     {
-        long int currentPosition = ftell(m_fp);
+        size_t currentPosition = ftell(m_fp);
         seek(0, Whence::End);
-        long int len = ftell(m_fp);
+        size_t len = ftell(m_fp);
         seek(currentPosition, Whence::Start);
         return len;
     }
@@ -105,6 +105,27 @@ public:
     int eof() override
     {
         return feof(m_fp);
+    }
+
+    int64_t lastAccessTime() override
+    {
+        struct stat s;
+        stat(m_path.data(), &s);
+        return s.st_atime;
+    }
+
+    int64_t lastModifyTime() override
+    {
+        struct stat s;
+        stat(m_path.data(), &s);
+        return s.st_mtime;
+    }
+
+    int64_t lastChangeTime() override
+    {
+        struct stat s;
+        stat(m_path.data(), &s);
+        return s.st_ctime;
     }
 
 private:
@@ -168,14 +189,14 @@ public:
         return false;
     }
 
-    long int size() override
+    size_t size() override
     {
         if (length_cb) {
             return length_cb(m_fp);
         }
-        long int currentPosition = ftell(m_fp);
+        size_t currentPosition = ftell(m_fp);
         seek(0, Whence::End);
-        long int len = ftell(m_fp);
+        size_t len = ftell(m_fp);
         seek(currentPosition, Whence::Start);
         return len;
     }
@@ -237,6 +258,27 @@ public:
     int eof() override
     {
         return feof(m_fp);
+    }
+
+    int64_t lastAccessTime() override
+    {
+        struct stat s;
+        stat(m_path.data(), &s);
+        return s.st_atime;
+    }
+
+    int64_t lastModifyTime() override
+    {
+        struct stat s;
+        stat(m_path.data(), &s);
+        return s.st_mtime;
+    }
+
+    int64_t lastChangeTime() override
+    {
+        struct stat s;
+        stat(m_path.data(), &s);
+        return s.st_ctime;
     }
 
 private:
