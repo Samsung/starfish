@@ -26,16 +26,22 @@ class Mutex;
 class HTTPCacheEntry : public gc {
 public:
     HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
-                   HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo);
+                   HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
+                   int64_t lastModifyFileTime);
     HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
                    HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
-                   String* entryFileName);
+                   int64_t lastModifyFileTime, String* entryFileName);
     ~HTTPCacheEntry();
     HTTPCacheEntry(const HTTPCacheEntry& rhs);
 
     ResourceURL* url()
     {
         return m_url;
+    }
+
+    int64_t lastModifyFileTime()
+    {
+        return m_lastModifyFileTime;
     }
 
     String* entryFileName()
@@ -97,6 +103,7 @@ private:
     CacheControl m_cacheControl;
     HTTPContentInfo m_httpContentInfo;
     HTTPFreshnessInfo m_httpFreshnessInfo;
+    int64_t m_lastModifyFileTime;
     String* m_entryFileName;
 
     Mutex* m_mutex;

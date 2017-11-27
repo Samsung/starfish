@@ -29,11 +29,13 @@ namespace StarFish {
 const char* HTTPCacheEntry::kSeparator = "\t";
 
 HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
-                               HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo)
+                               HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
+                               int64_t lastModifyFileTime)
     : m_url(url)
     , m_cacheControl(cacheControl)
     , m_httpContentInfo(cinfo)
     , m_httpFreshnessInfo(finfo)
+    , m_lastModifyFileTime(lastModifyFileTime)
     , m_entryFileName(nullptr)
     , m_mutex(new Mutex())
     , m_usingCount(0)
@@ -42,8 +44,9 @@ HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
 
 HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
                                HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
+                               int64_t lastModifyFileTime,
                                String* entryFileName)
-    : HTTPCacheEntry(url, cacheControl, cinfo, finfo)
+    : HTTPCacheEntry(url, cacheControl, cinfo, finfo, lastModifyFileTime)
 {
     m_entryFileName = entryFileName;
 }
@@ -61,6 +64,7 @@ HTTPCacheEntry::HTTPCacheEntry(const HTTPCacheEntry& rhs)
     m_cacheControl = rhs.m_cacheControl;
     m_httpContentInfo = rhs.m_httpContentInfo;
     m_httpFreshnessInfo = rhs.m_httpFreshnessInfo;
+    m_lastModifyFileTime = rhs.m_lastModifyFileTime;
     m_entryFileName = rhs.m_entryFileName;
 
     m_mutex = new Mutex();
@@ -122,6 +126,8 @@ bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
 
     size_t writeSize = out->write(rawData.data(), sizeof(char), rawData.size());
     bool ret = (rawData.size() == writeSize) & (out->flush() == 0);
+
+    m_lastModifyFileTime = out->lastModifyTime();
 
     return ret & (out->close() == 0);
 }
@@ -194,7 +200,8 @@ String* HTTPCacheEntry::toString()
     //  entryKey(UINT) urlString(STRING) no-cache(0|1) mustRevalidate(0|1)
     //  maxAge(UINT) contentLanguage(STRING) contentLength(UINT)
     //  contentType(STRING) date(UINT) age(UINT) rquestTime(UINT)
-    //  responeTime(UINT) lastModified(UINT) Etag(STRING) entryFileName(STRING)
+    //  responeTime(UINT) lastModified(UINT) Etag(STRING)
+    //  lastModifyFileTime(UINT) entryFileName(STRING)
 
     StringBuilder builder;
     std::string entryKey =
@@ -258,6 +265,10 @@ String* HTTPCacheEntry::toString()
                            ? copied->m_httpFreshnessInfo.etag
                            : "null";
     builder.appendString(etag.data());
+    builder.appendString(kSeparator);
+    std::string lastModifyFileTime =
+        std::to_string(copied->m_lastModifyFileTime);
+    builder.appendString(lastModifyFileTime.data());
     builder.appendString(kSeparator);
 
     builder.appendString(copied->m_entryFileName);

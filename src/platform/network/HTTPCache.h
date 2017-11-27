@@ -20,14 +20,14 @@
 #include "HTTPCacheEntry.h"
 
 namespace StarFish {
-typedef std::vector<std::string> HTTPCacheLRUList;
+typedef GCVector<String*> HTTPCacheLRUList;
 class NetworkURLWorkerData;
 
 class HTTPCache : public gc {
 public:
     HTTPCache(String* cacheDirPath);
     ~HTTPCache();
-    void initFromIndexFileIfPossible();
+    bool initFromIndexFileIfPossible();
     HTTPCacheEntryMultiMap::iterator get(ResourceURL* url);
     HTTPCacheEntryMultiMap::iterator end()
     {
@@ -38,13 +38,13 @@ public:
     bool flush();
     void expire();
     void pruningIfNeeds(size_t contentLength);
-    // consistency checking
+    bool isConsistent();
 
 private:
-    void initCacheDir();
-    void clearAndRemoveCacheDir();
-    void addCacheLRUListData(std::string& url);
-    void deleteCacheLRUListData(std::string& url);
+    void initCacheDirectory();
+    void initCacheMeber();
+    void addCacheLRUListData(String* url);
+    void deleteCacheLRUListData(String* url);
     HTTPCacheEntryMultiMap::iterator findEntryTableData(String* key);
 
     HTTPCacheEntryMultiMap m_cacheEntryTable;
