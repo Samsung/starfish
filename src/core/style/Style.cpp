@@ -2223,6 +2223,12 @@ String* CSSStyleDeclaration::BackgroundPosition()
 {
     String* positionX = BackgroundPositionX();
     String* positionY = BackgroundPositionY();
+
+    if (positionX->equals(String::emptyString) ||
+        positionY->equals(String::emptyString)) {
+        return String::emptyString;
+    }
+
     GCVector<StringView> vPositionX, vPositionY;
     StringUtils::tokenize(positionX, ",", 1, vPositionX);
     StringUtils::tokenize(positionY, ",", 1, vPositionY);
