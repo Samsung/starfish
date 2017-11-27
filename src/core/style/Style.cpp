@@ -3726,6 +3726,9 @@ void StyleResolver::apply(Element* element,
                     cssValues[k].valueKind(), cssValues[k].value());
                 if (length.hasValue()) {
                     Length l = length.getValue();
+                    if (l.isViewportPercent()) {
+                        style->m_seenViewPortUnitInStyle = true;
+                    }
                     style->setFontSize(l);
                 } else {
                     style->setFontSize(
