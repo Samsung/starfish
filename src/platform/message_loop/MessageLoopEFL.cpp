@@ -320,6 +320,7 @@ struct InvokeNavigateData : public gc {
     ResourceURL* url;
     ResourceURL* referrerURL;
     Ecore_Idler* idler;
+    void** extra;
 
     static void* operator new(size_t s)
     {
@@ -338,6 +339,7 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
 
     InvokeNavigateData* data = new InvokeNavigateData();
     m_navigateInvokeIdler = data;
+    data->extra = &m_navigateInvokeIdler;
     data->wv = wv;
     data->url = url;
     data->referrerURL = referrerURL;
@@ -346,6 +348,7 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
             InvokeNavigateData* data = (InvokeNavigateData*)d;
             data->wv->navigate(data->url, HistoryManager::Action::Add,
                                data->referrerURL);
+            *(data->extra) = nullptr;
             delete data;
             return ECORE_CALLBACK_CANCEL;
         },
