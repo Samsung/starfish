@@ -1599,6 +1599,14 @@ void Node::didNodeRemoved(Node* parent, Node* oldChild)
     }
 }
 
+void Node::didNodeRemovedFromDocumentTree()
+{
+    setState(NodeStateNormal, DynamicRestyleFlags::NotAffected, false);
+    if (isElement()) {
+        document()->animationExecutor()->cancelAnimation(asElement());
+    }
+}
+
 RareNodeMembers* Node::ensureRareMembers()
 {
     STARFISH_ASSERT(!isElement());

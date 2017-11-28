@@ -26,6 +26,7 @@
 
 #include "core/modules/canvas/image/ImageData.h"
 
+#include <cairo.h>
 #include <png.h>
 #include <turbojpeg.h>
 #include <gif_lib.h>
@@ -40,14 +41,14 @@ public:
         FILE* fp = fopen(utf8Data.data(), "rb");
         decodeImage(fp, localImageSrc, nullptr, 0);
         fclose(fp);
-        reigsterFinalizer();
+        registerFinalizer();
     }
 
     ImageDataMISC(const char* buf, size_t len)
     {
         if (buf && len != 0) {
             decodeImage(nullptr, nullptr, buf, len);
-            reigsterFinalizer();
+            registerFinalizer();
         }
     }
 
@@ -57,7 +58,7 @@ public:
         m_width = w;
         m_height = h;
         m_stride = w * 4;
-        reigsterFinalizer();
+        registerFinalizer();
     }
 
     virtual uint8_t* data()
@@ -81,18 +82,28 @@ public:
         }
     }
 
-    void reigsterFinalizer()
+    void registerFinalizer()
     {
-        if (m_width) {
-            STARFISH_ASSERT(m_stride);
+        if (m_width && m_height) {
+            m_imageSurface = cairo_image_surface_create_for_data(
+                (unsigned char*)m_image, CAIRO_FORMAT_ARGB32, m_width, m_height,
+                m_stride);
         }
         GC_REGISTER_FINALIZER_NO_ORDER(
-            this, [](void* obj, void* cd) { free(cd); }, m_image, NULL, NULL);
+            this,
+            [](void* obj, void* cd) {
+                ImageDataMISC* self = (ImageDataMISC*)obj;
+                if (self->m_imageSurface) {
+                    cairo_surface_destroy(self->m_imageSurface);
+                }
+                free(self->m_image);
+            },
+            NULL, NULL, NULL);
     }
 
     virtual void* unwrap()
     {
-        return nullptr;
+        return m_imageSurface;
     }
 
     virtual size_t width()
@@ -646,6 +657,7 @@ protected:
     size_t m_width;
     size_t m_stride;
     size_t m_height;
+    cairo_surface_t* m_imageSurface;
 };
 
 ImageData* ImageData::create(String* localImageSrc)

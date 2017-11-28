@@ -6307,7 +6307,7 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
             if (element->webView()->inRendering()) {
                 applyTransition(element, element->style(), style, damagedKeys);
             }
-        } else {
+        } else if (element->webView()->inRendering()) {
             element->document()->animationExecutor()->cancelAnimation(element);
         }
         element->setStyle(style);

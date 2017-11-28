@@ -488,7 +488,7 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
     return ret;
 }
 
-void BrowsingContext::paintWindowBackground(Canvas* canvas)
+void BrowsingContext::clearingBeforePaint(Canvas* canvas)
 {
 #ifdef STARFISH_TIZEN
     if (!document()->tizenWidgetTransparentBackground()) {
@@ -501,6 +501,11 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
     if (document()->browsingContext()->isTopLevelBrowsingContext())
         canvas->clearColor(Unit::Color(255, 255, 255, 255));
 #endif
+}
+
+void BrowsingContext::paintWindowBackground(Canvas* canvas)
+{
+    clearingBeforePaint(canvas);
 
     if (!document()->rootElement()) {
         return;
