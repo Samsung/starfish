@@ -278,8 +278,6 @@ protected:
     volatile size_t m_loaded;
     volatile size_t m_total;
 
-    volatile size_t m_pendingNetworkWorkerEndIdlerHandle;
-
     GCVector<ResourceRequestClient*> m_clients;
 
     HeaderMap m_responseHeaderMap;
