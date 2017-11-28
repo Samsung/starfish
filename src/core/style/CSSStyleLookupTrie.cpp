@@ -1319,6 +1319,7 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             break;
         }
+        break;
     case 't':
         if (memcmp(data, "transitionProperty", 18) == 0) {
             return CSSStyleKind::TransitionProperty;
@@ -1326,7 +1327,6 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         if (memcmp(data, "transitionDuration", 18) == 0) {
             return CSSStyleKind::TransitionDuration;
         }
-        break;
         break;
     case 19:
         switch (data[0]) {
