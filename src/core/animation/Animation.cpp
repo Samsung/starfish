@@ -201,7 +201,6 @@ void LengthAnimationTask::execute()
 
     current->setNeedsLayout();
 }
-
 void TransformAnimationTask::computeToValue()
 {
     FrameBox* box = targetElement()->frame()->asFrameBox();
@@ -221,6 +220,11 @@ void TransformAnimationTask::computeToValue()
     }
     style->rareComputedStyleData()->ensureTransforms()->append(
         StyleTransformData(StyleTransformData::InternalMatrix));
+}
+
+void TransformAnimationTask::setup()
+{
+    computeToValue();
     // calling execute function explicity for setting initial value of
     // ComputedStyle
     execute();
@@ -251,18 +255,24 @@ void TransformAnimationTask::execute()
     ComputedStyle* style = current->style();
     float tmpProgress = progress();
 
+    auto transforms = style->rareComputedStyleData()->transforms();
     if (isExpired()) {
         // cleanup
-        style->rareComputedStyleData()->transforms()->removeAt(
-            style->rareComputedStyleData()->transforms()->size() - 1);
-        if (!style->hasTransforms()) {
-            // NOTE
-            // having transform is reason of creating StackingContext
-            // for rebuilding stacking context, we should give layout damage
-            current->setNeedsLayout();
+        if (transforms->at(transforms->size() - 1).type() ==
+            StyleTransformData::InternalMatrix) {
+            transforms->removeAt(transforms->size() - 1);
+            if (!style->hasTransforms()) {
+                // NOTE
+                // having transform is reason of creating StackingContext
+                // for rebuilding stacking context, we should give layout damage
+                current->setNeedsLayout();
+            }
         }
     } else {
-        auto transforms = style->rareComputedStyleData()->transforms();
+        if (transforms->at(transforms->size() - 1).type() !=
+            StyleTransformData::InternalMatrix) {
+            computeToValue();
+        }
         StyleTransformData& data = transforms->at(transforms->size() - 1);
         SkMatrix now;
         for (size_t i = 0; i < 9; i++) {
@@ -376,17 +386,17 @@ void AnimationExecutor::stopIfNeeds()
 void AnimationExecutor::step()
 {
     STARFISH_ASSERT(m_isAlive);
-    for (auto it = m_animationList.begin(); it != m_animationList.end();) {
-        if ((*it)->isExpired()) {
-            // fire end event
-            (*it)->fireEndEvent();
-            it = m_animationList.erase(it);
+    for (size_t i = 0; i < m_animationList.size(); i++) {
+        AnimationTask* task = m_animationList[i];
+        if (task->isExpired()) {
+            task->fireEndEvent();
+            m_animationList.erase(i);
+            i--;
         } else {
-            if ((*it)->canExecute()) {
-                (*it)->fireStartEventIfNeeds();
-                (*it)->execute();
+            if (task->canExecute()) {
+                task->fireStartEventIfNeeds();
+                task->execute();
             }
-            it++;
         }
     }
     stopIfNeeds();

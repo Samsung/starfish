@@ -14,6 +14,8 @@
  *    limitations under the License.
  */
 
+// #define STARFISH_ENABLE_PROFILE_TIMER
+
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
@@ -146,11 +148,18 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
-        INSTALL_PROFILE_TIMER("CanvasImplCairo::clearColor");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::clear");
         cairo_save(m_canvas);
-        cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
-        cairo_set_operator(m_canvas, CAIRO_OPERATOR_SOURCE);
-        cairo_paint(m_canvas);
+        if (clr.a() == 0) {
+            cairo_set_operator(m_canvas, CAIRO_OPERATOR_CLEAR);
+        } else {
+            cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
+            cairo_set_operator(m_canvas, CAIRO_OPERATOR_SOURCE);
+        }
+        cairo_reset_clip(m_canvas);
+        cairo_identity_matrix(m_canvas);
+        cairo_rectangle(m_canvas, 0, 0, m_width, m_height);
+        cairo_fill(m_canvas);
         cairo_restore(m_canvas);
     }
 
@@ -398,8 +407,7 @@ public:
     }
 
     void drawImageCairo(cairo_surface_t* localSurface, const Unit::Rect& dst,
-                        double surfaceWidth, double surfaceHeight,
-                        bool isFromSurface = false)
+                        double surfaceWidth, double surfaceHeight)
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::drawImageCairo");
 
@@ -423,13 +431,18 @@ public:
         cairo_matrix_scale(&matrix, surfaceWidth / ww, surfaceHeight / hh);
         cairo_pattern_set_matrix(resizePattern, &matrix);
         cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_FAST);
+        cairo_pattern_set_extend(resizePattern, CAIRO_EXTEND_PAD);
 
         cairo_set_source(m_canvas, resizePattern);
 
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
-        cairo_clip(m_canvas);
 
-        cairo_paint(m_canvas);
+        if (lastState().m_opacity < 1) {
+            cairo_clip(m_canvas);
+            cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
+        } else {
+            cairo_fill(m_canvas);
+        }
 
         // drawDebugLine(xx,yy,ww,hh);
         cairo_pattern_destroy(resizePattern);
@@ -453,21 +466,23 @@ public:
             return;
         }
 
-        void* imgData = data->data();
-        double surfaceWidth = 0, surfaceHeight = 0;
-        cairo_surface_t* image;
+        size_t surfaceWidth = data->width(), surfaceHeight = data->height();
+#if defined(PORT_CANVAS_BACKEND_CAIRO) && !defined(PORT_CANVAS_BACKEND_EFL)
+        if (surfaceWidth && surfaceHeight) {
+            cairo_surface_t* image = (cairo_surface_t*)data->unwrap();
+            drawImageCairo(image, dst, surfaceWidth, surfaceHeight);
+        }
+#else
+        if (surfaceWidth && surfaceHeight) {
+            cairo_surface_t* image;
+            image = cairo_image_surface_create_for_data(
+                (unsigned char*)data->data(), CAIRO_FORMAT_ARGB32, surfaceWidth,
+                surfaceHeight, data->stride());
 
-        int stride = data->stride();
-        image = cairo_image_surface_create_for_data((unsigned char*)imgData,
-                                                    CAIRO_FORMAT, data->width(),
-                                                    data->height(), stride);
-        surfaceWidth = data->width();
-        surfaceHeight = data->height();
-        STARFISH_ASSERT(surfaceWidth);
-        STARFISH_ASSERT(surfaceHeight);
-        STARFISH_ASSERT(stride);
-        drawImageCairo(image, dst, surfaceWidth, surfaceHeight);
-        cairo_surface_destroy(image);
+            drawImageCairo(image, dst, surfaceWidth, surfaceHeight);
+            cairo_surface_destroy(image);
+        }
+#endif
     }
 
     virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst)
@@ -478,12 +493,9 @@ public:
         cairo_surface_t* image;
         image = cairo_image_surface_create_for_data(
             (unsigned char*)data->data(), CAIRO_FORMAT_ARGB32,
-            data->bufferWidth(), data->bufferHeight(),
-            cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
-                                          data->bufferWidth()));
+            data->imageWidth(), data->imageHeight(), data->bufferStride());
 
-        drawImageCairo(image, dst, data->bufferWidth(), data->bufferHeight(),
-                       true);
+        drawImageCairo(image, dst, data->imageWidth(), data->imageHeight());
         cairo_surface_destroy(image);
     }
 
@@ -527,40 +539,32 @@ public:
 
         cairo_pattern_t* pattern;
         cairo_matrix_t matrix;
-        cairo_surface_t* image = nullptr;
+        cairo_surface_t* image = (cairo_surface_t*)data->unwrap();
 
-        void* imgData = data->data();
-        double surfaceWidth = 0, surfaceHeight = 0;
+        double surfaceWidth = data->width(), surfaceHeight = data->height();
+        if (surfaceWidth && surfaceHeight) {
+            pattern = cairo_pattern_create_for_surface(image);
+            cairo_matrix_init_scale(&matrix, surfaceWidth / imageWidth,
+                                    surfaceHeight / imageHeight);
+            cairo_matrix_translate(&matrix, -x, -y);
 
-        if (imgData) {
-            size_t stride = data->stride();
-            image = cairo_image_surface_create_for_data(
-                (unsigned char*)imgData, CAIRO_FORMAT, data->width(),
-                data->height(), stride);
-            surfaceWidth = data->width();
-            surfaceHeight = data->height();
-        } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            cairo_pattern_set_matrix(pattern, &matrix);
+            cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
+
+            cairo_translate(m_canvas, xx, yy);
+            cairo_set_source(m_canvas, pattern);
+
+            cairo_rectangle(m_canvas, 0, 0, ww, hh);
+
+            if (lastState().m_opacity < 1) {
+                cairo_clip(m_canvas);
+                cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
+            } else {
+                cairo_fill(m_canvas);
+            }
+
+            cairo_pattern_destroy(pattern);
         }
-
-        pattern = cairo_pattern_create_for_surface(image);
-        cairo_matrix_init_scale(&matrix, surfaceWidth / imageWidth,
-                                surfaceHeight / imageHeight);
-        cairo_matrix_translate(&matrix, -x, -y);
-
-        cairo_pattern_set_matrix(pattern, &matrix);
-        cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
-
-        cairo_translate(m_canvas, xx, yy);
-        cairo_set_source(m_canvas, pattern);
-
-        cairo_rectangle(m_canvas, 0, 0, ww, hh);
-        cairo_clip(m_canvas);
-        cairo_paint(m_canvas);
-
-        cairo_pattern_destroy(pattern);
-        cairo_surface_destroy(image);
-
         cairo_restore(m_canvas);
     }
 

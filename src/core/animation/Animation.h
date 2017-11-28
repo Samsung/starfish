@@ -242,10 +242,13 @@ public:
               fromValue, AnimatedValue(), duration, delay, timingFunction)
     {
     }
-    void computeToValue();
+    void setup();
     void execute() override;
     void attachedToElement() override;
     void detachedFromElement() override;
+    void computeToValue();
+
+private:
 };
 
 class AnimationExecutor : public gc {

@@ -851,9 +851,6 @@ void MediaPlayerTizen::handlePrepared()
             STARFISH_ASSERT(height > 0);
             m_videoWidth = (unsigned long)width;
             m_videoHeight = (unsigned long)height;
-            if (m_canvasSurface) {
-                m_canvasSurface->resize(m_videoWidth, m_videoHeight);
-            }
         }
 
         PLAYER_LOGI("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec,

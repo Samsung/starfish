@@ -718,7 +718,8 @@ public:
             return false;
         }
 
-        return m_rareComputedStyleData->transforms() != nullptr;
+        return m_rareComputedStyleData->transforms() != nullptr &&
+               m_rareComputedStyleData->transforms()->size();
     }
 
     bool hasTransforms(Frame* frame);

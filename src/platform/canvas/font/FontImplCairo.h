@@ -208,9 +208,9 @@ private:
             }
             FT_Set_Pixel_Sizes(m_face, 0, 16);
 
-            FT_UInt glyph_index = FT_Get_Char_Index(m_face, 'x');
+            FT_UInt glyph_index = FT_Get_Char_Index(m_face, ' ');
             if (glyph_index) {
-                FT_Load_Glyph(m_face, glyph_index, FT_LOAD_NO_SCALE);
+                FT_Load_Glyph(m_face, glyph_index, FT_LOAD_RENDER);
             }
 
             m_hbFace = hb_ft_font_create(m_face, [](void* userData) {});

@@ -774,7 +774,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle,
                 [](void* data) {
                     TransformAnimationTask* task =
                         (TransformAnimationTask*)data;
-                    task->computeToValue();
+                    task->setup();
                 },
                 task);
         }

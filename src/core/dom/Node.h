@@ -519,10 +519,7 @@ public:
     virtual void didNodeInsertedToDocumentTree()
     {
     }
-    virtual void didNodeRemovedFromDocumentTree()
-    {
-        setState(NodeStateNormal, DynamicRestyleFlags::NotAffected, false);
-    }
+    virtual void didNodeRemovedFromDocumentTree();
 
     virtual void didNodeAdopted()
     {

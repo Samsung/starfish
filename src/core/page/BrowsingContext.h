@@ -200,6 +200,7 @@ public:
         return m_compositionStartEventDefeaultPrevented;
     }
 
+    void clearingBeforePaint(Canvas* canvas);
     void paintWindowBackground(Canvas* canvas);
 
     bool isTopLevelBrowsingContext()
