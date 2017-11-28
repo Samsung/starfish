@@ -1,5 +1,22 @@
 // https://html.spec.whatwg.org/#the-navigator-object
 
+[
+  PartialInterface,
+  NoInterfaceObject
+] interface NavigatorCookies {
+  readonly attribute boolean cookieEnabled;
+};
+
+[
+  PartialInterface,
+  NoInterfaceObject,
+  Exposed=(Window,Worker),
+] interface NavigatorLanguage {
+  readonly attribute DOMString language;
+  [Unimplemented] readonly attribute DOMString[] languages;
+};
+
+
 interface Navigator {
   // Partial
   // https://dev.w3.org/geo/api/spec-source.html#navi-geo

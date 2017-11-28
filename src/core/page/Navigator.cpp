@@ -67,4 +67,9 @@ String* Navigator::platform()
     }
     return platformName.finalize();
 }
+
+String* Navigator::language()
+{
+    return String::fromUTF8(starFish()->locale().getName());
+}
 }

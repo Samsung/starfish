@@ -390,6 +390,7 @@ bool HTMLElement::isContentEditable()
 }
 
 DEFINE_EVENT_LISTENER(HTMLElement, abort);
+DEFINE_EVENT_LISTENER(HTMLElement, blur);
 DEFINE_EVENT_LISTENER(HTMLElement, canplay);
 DEFINE_EVENT_LISTENER(HTMLElement, canplaythrough);
 DEFINE_EVENT_LISTENER(HTMLElement, click);

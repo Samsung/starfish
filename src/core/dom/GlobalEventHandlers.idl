@@ -4,7 +4,7 @@
 interface GlobalEventHandlers {
   attribute EventHandler onabort;
   [Unimplemented] attribute EventHandler onauxclick;
-  [Unimplemented] attribute EventHandler onblur;
+  attribute EventHandler onblur;
   [Unimplemented] attribute EventHandler oncancel;
   attribute EventHandler oncanplay;
   attribute EventHandler oncanplaythrough;

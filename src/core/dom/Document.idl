@@ -84,12 +84,12 @@ interface Document : Node {
   [CEReactions] attribute DOMString dir;
   [RaisesException=Setter, CEReactions] attribute HTMLElement? body;
   readonly attribute HTMLHeadElement? head;
-  [Unimplemented, SameObject] readonly attribute HTMLCollection images;
+  [SameObject] readonly attribute HTMLCollection images;
   [Unimplemented, SameObject] readonly attribute HTMLCollection embeds;
   [Unimplemented, SameObject] readonly attribute HTMLCollection plugins;
   [Unimplemented, SameObject] readonly attribute HTMLCollection links;
-  [Unimplemented, SameObject] readonly attribute HTMLCollection forms;
-  [Unimplemented, SameObject] readonly attribute HTMLCollection scripts;
+  [SameObject] readonly attribute HTMLCollection forms;
+  [SameObject] readonly attribute HTMLCollection scripts;
   NodeList getElementsByName(DOMString elementName);
   readonly attribute HTMLOrSVGScriptElement? currentScript; // classic scripts in a document tree only
 

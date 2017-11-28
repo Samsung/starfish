@@ -88,7 +88,7 @@ public:
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
     DECLARE_EVENT_LISTENER(abort);
     // DECLARE_EVENT_LISTENER(auxclick);
-    // DECLARE_EVENT_LISTENER(blur);
+    DECLARE_EVENT_LISTENER(blur);
     // DECLARE_EVENT_LISTENER(cancel);
     DECLARE_EVENT_LISTENER(canplay);
     DECLARE_EVENT_LISTENER(canplaythrough);

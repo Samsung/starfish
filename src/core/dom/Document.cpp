@@ -620,6 +620,21 @@ NodeList* Document::getElementsByName(String* elementName)
         this, elementName);
 }
 
+HTMLCollection* Document::images()
+{
+    return getElementsByTagName(starFish()->staticStrings()->m_imgTagName);
+}
+
+HTMLCollection* Document::forms()
+{
+    return getElementsByTagName(starFish()->staticStrings()->m_formTagName);
+}
+
+HTMLCollection* Document::scripts()
+{
+    return getElementsByTagName(starFish()->staticStrings()->m_scriptTagName);
+}
+
 DocumentFragment* Document::createDocumentFragment()
 {
     return new DocumentFragment(this);
@@ -1506,6 +1521,7 @@ Event* Document::createEvent(String* type)
 }
 
 DEFINE_EVENT_LISTENER(Document, abort);
+DEFINE_EVENT_LISTENER(Document, blur);
 DEFINE_EVENT_LISTENER(Document, canplay);
 DEFINE_EVENT_LISTENER(Document, canplaythrough);
 DEFINE_EVENT_LISTENER(Document, click);

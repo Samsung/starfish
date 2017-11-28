@@ -168,6 +168,9 @@ This section describes the complete list of supported HTML tags and attributes b
 | [Document](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
 |  | attribute | body | Returns body element or null if not exists |
 |  | attribute | head | Returns head element or null if not exists |
+|  | attribute | images | Returns an HTMLCollection rooted at the Document node, whose filter matches only img elements |
+|  | attribute | forms | Returns an HTMLCollection rooted at the Document node, whose filter matches only form elements |
+|  | attribute | scripts | Returns an HTMLCollection rooted at the Document node, whose filter matches only script elements |
 |  | attribute | defaultView | Returns this Document's browsing context's WindowProxy object, if this Document has an associated browsing context, or null otherwise |
 |  | attribute | activeElement | Returns the currently focused element. |
 |  | attribute | designMode | Returns "on" if the document is editable, and "off" if it isn't. Can be set, to change the document's current state. This focuses the document and resets the selection in that document. |
@@ -780,6 +783,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | relatedTarget | Used to identify a secondary EventTarget related to a Focus event, depending on the type of event. |
 | [GlobalEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers) | partial<br>interface | GlobalEventHandlers | The GlobalEventHandlers are the event handlers common to several interfaces like HTMLElement, Document, or Window. |
 | | attribute | onabort | Fired at the Window when the download was aborted by the user |
+| | attribute | onblur | Fired at nodes when they stop being focused |
 | | attribute | oncanplay | Fired when the user agent can resume playback of the media data, but estimates that if playback were to be started now, the media resource could not be rendered at the current playback rate up to its end without having to stop for further buffering of content. |
 | | attribute | oncanplaythrough | Fired when the user agent estimates that if playback were to be started now, the media resource could be rendered at the current playback rate all the way to its end without having to stop for further buffering. |
 | | attribute | onchange | Fired at controls when the user commits a value change. |
@@ -1122,6 +1126,8 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 |----------------------|--------|---------------------------|-------------|
 | [Navigator](https://html.spec.whatwg.org/#the-navigator-object)	| interface	| Navigator	| The navigator attribute of the Window interface must return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
 | |	attribute	| geolocation	| Return geolocation interface |
+| |	attribute	| cookieEnabled	| Return true if the user agent attempts to handle cookies according to the cookie specification |
+| |	attribute	| language	| Return a string representing the language version as defined in BCP 47 |
 | [NavigatorID](https://html.spec.whatwg.org/multipage/#navigatorid)	| interface	|	| NavigatorID is used for identifying Navigator |
 | |	attribute	| appCodeName	| Returns  the string "StarFish".|
 | |	attribute	| appName	| Returns  the string "StarFish".|
