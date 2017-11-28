@@ -312,6 +312,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [ElementCSSInlineStyle](https://drafts.csswg.org/cssom/#elementcssinlinestyle) | interface | ElementCSSInlineStyle | The ElementCSSInlineStyle interface provides access to inline style properties of an element. |
 |  | attribute | style | Return a live CSS declaration block. |
 | [HTMLAnchorElement](https://html.spec.whatwg.org/multipage/semantics.html#the-a-element) | interface | HTMLAnchorElement | The HTMLAnchorElement interface represents hyperlink elements and provides special properties and methods (beyond those of the regular HTMLElement object interface that they inherit from) for manipulating the layout and presentation of such elements. |
+|  | attribute | target | Reflect the respective content attribute of the same name |
 | [HTMLHyperlinkElementUtils](https://html.spec.whatwg.org/multipage/links.html#api-for-a-and-area-elements) | interface | HTMLHyperlinkElementUtils | The HTMLHyperlinkElementUtils mixin defines utility methods and properties to work with HTMLAnchorElement and HTMLAreaElement. These utilities allow to deal with common features like URLs. |
 |  | attribute | href | Return the whole URL. |
 |  | attribute | protocol | Return the whole protocol. |
@@ -816,6 +817,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | clientY | The vertical coordinate at which the event occurred relative to the viewport |
 | | attribute | button | Indicates which button was pressed on the mouse to trigger the event |
 | | attribute | buttons | Indicates which buttons are pressed on the mouse when the event is triggered. |
+| | attribute | relatedTarget | Used to identify a secondary EventTarget related to a UI event, depending on the type of event |
 | | method | initMouseEvent | Initializes attributes of a MouseEvent object. |
 | [MouseEventInit](https://w3c.github.io/uievents/#idl-mouseeventinit) | dictionary | MouseEventInit |  |
 | | attribute | screenX | Initializes the screenX attribute of the MouseEvent object |
@@ -824,6 +826,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | clientY | Initializes the clientY attribute of the MouseEvent object |
 | | attribute | button | Initializes the button attribute of the MouseEvent object |
 | | attribute | buttons | Initializes the buttons attribute of the MouseEvent object |
+| | attribute | relatedTarget | Initializes the relatedTarget attribute of the MouseEvent object |
 | [KeyboardEvent](https://w3c.github.io/uievents/#interface-keyboardevent) | interface | KeyboardEvent | KeyboardEvent objects describe a user interaction with the keyboard. Each event describes a key; the event type (keydown, keypress, or keyup) identifies what kind of activity was performed. |
 |  | constant | DOM_KEY_LOCATION_STANDARD = 0x00 |  |
 |  | constant | DOM_KEY_LOCATION_LEFT = 0x01 |  |

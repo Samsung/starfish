@@ -999,21 +999,22 @@ void BrowsingContext::handleHover(PlatformWindow::MouseEventKind kind,
     if (setHoveredNode(targetNode)) {
         Node* newTarget = m_hoveredNodeTarget;
         if (newTarget != oldTarget) {
+            Node* newElement = newTarget->nearestParentElement();
+            Node* oldElement = nullptr;
             if (oldTarget) {
                 String* name =
                     starFish()->staticStrings()->m_mouseout.localName();
-                MouseData data(button, buttons, posX, posY, 0);
+                MouseData data(button, buttons, posX, posY, 0, newElement);
                 Event* e = createMouseEvent(document(), name, data);
-                Node* t = oldTarget->nearestParentElement();
-                t = t ? t : document();
-                document()->window()->dispatchEventByUA(t ? t : document(), e);
+                oldElement = oldTarget->nearestParentElement();
+                document()->window()->dispatchEventByUA(
+                    oldElement ? oldElement : document(), e);
             }
             String* name = starFish()->staticStrings()->m_mouseover.localName();
-            MouseData data(button, buttons, posX, posY, 0);
+            MouseData data(button, buttons, posX, posY, 0, oldElement);
             Event* e = createMouseEvent(document(), name, data);
-            Node* t = newTarget->nearestParentElement();
-            t = t ? t : document();
-            document()->window()->dispatchEventByUA(t ? t : document(), e);
+            document()->window()->dispatchEventByUA(
+                newElement ? newElement : document(), e);
         }
     }
 }

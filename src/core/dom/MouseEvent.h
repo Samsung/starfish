@@ -50,15 +50,16 @@ public:
     }
 
     MouseData(unsigned char button, unsigned char buttons, double clientX,
-              double clientY, int32_t clickCount)
+              double clientY, int32_t clickCount,
+              EventTarget* relatedTarget = nullptr)
         : MouseData(button, buttons, clientX, clientY, clientX, clientY,
-                    clickCount)
+                    clickCount, relatedTarget)
     {
     }
 
     MouseData(unsigned char button, unsigned char buttons, double clientX,
               double clientY, double screenX, double screenY,
-              int32_t clickCount)
+              int32_t clickCount, EventTarget* relatedTarget = nullptr)
         : m_button(button)
         , m_buttons(buttons)
         , m_clientX(clientX)
@@ -66,6 +67,7 @@ public:
         , m_screenX(screenX)
         , m_screenY(screenY)
         , m_clickCount(clickCount)
+        , m_relatedTarget(relatedTarget)
     {
     }
 
@@ -139,6 +141,16 @@ public:
         m_clickCount = clickCount;
     }
 
+    EventTarget* relatedTarget() const
+    {
+        return m_relatedTarget;
+    }
+
+    void setRelatedTarget(EventTarget* relatedTarget)
+    {
+        m_relatedTarget = relatedTarget;
+    }
+
 protected:
     unsigned char m_button;
     unsigned char m_buttons;
@@ -149,6 +161,7 @@ protected:
     double m_screenY;
 
     int32_t m_clickCount;
+    EventTarget* m_relatedTarget;
 };
 
 // Binding interface
@@ -221,6 +234,11 @@ public:
         return m_mouseData.buttons();
     }
 
+    EventTarget* relatedTarget() const
+    {
+        return m_mouseData.relatedTarget();
+    }
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isMouseEvent() const override;
@@ -228,7 +246,7 @@ public:
     void initMouseEvent(String* type, bool bubbles, bool cancelable,
                         Window* view, int32_t detail, double screenX,
                         double screenY, double clientX, double clientY,
-                        unsigned char button)
+                        unsigned char button, EventTarget* relatedTarget)
     {
         setType(type);
         setBubbles(bubbles);
@@ -240,6 +258,7 @@ public:
         m_mouseData.setClientX(clientX);
         m_mouseData.setClientY(clientY);
         m_mouseData.setButton(button);
+        m_mouseData.setRelatedTarget(relatedTarget);
     }
 
 private:

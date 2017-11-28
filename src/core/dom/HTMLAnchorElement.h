@@ -59,6 +59,9 @@ public:
 
     String* protocol();
     void setProtocol(String* protocol);
+
+    String* target();
+    void setTarget(String* target);
 };
 }
 

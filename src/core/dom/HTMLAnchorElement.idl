@@ -3,7 +3,7 @@
 
 [HTMLConstructor]
 interface HTMLAnchorElement : HTMLElement {
-  [Unimplemented, CEReactions] attribute DOMString target;
+  [CEReactions] attribute DOMString target;
   [Unimplemented, CEReactions] attribute DOMString download;
   [Unimplemented, CEReactions] attribute DOMString ping;
   [Unimplemented, CEReactions] attribute DOMString rel;
