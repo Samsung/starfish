@@ -127,6 +127,7 @@ public:
             FT_Done_Face(m_face);
             m_face = nullptr;
             m_hbFace = nullptr;
+            GlyphIndexCache().swap(m_glyphIndexCache);
         }
     }
 

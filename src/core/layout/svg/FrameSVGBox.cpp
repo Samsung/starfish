@@ -129,7 +129,7 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
     }
 }
 
-void FrameSVGBox::paint(PaintingContext& ctx)
+void FrameSVGBox::paintContent(PaintingContext& ctx)
 {
     ctx.m_canvas->save();
 

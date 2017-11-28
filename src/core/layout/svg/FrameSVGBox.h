@@ -43,7 +43,7 @@ public:
     void resolvePosition(LayoutContext& ctx);
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
-    virtual void paint(PaintingContext& ctx);
+    virtual void paintContent(PaintingContext& ctx);
     virtual void paintSVG(PaintingContext& ctx)
     {
     }

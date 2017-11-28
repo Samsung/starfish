@@ -601,6 +601,8 @@ public:
         return outerHeight;
     }
 
+    virtual void paintOwnContent(Canvas* canvas);
+    virtual void paintContent(PaintingContext& ctx);
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 

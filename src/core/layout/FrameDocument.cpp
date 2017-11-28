@@ -101,7 +101,7 @@ bool FrameDocument::scrollTo(LayoutUnit left, LayoutUnit top)
     return isEffective;
 }
 
-void FrameDocument::paint(PaintingContext& ctx)
+void FrameDocument::paintContent(PaintingContext& ctx)
 {
     STARFISH_ASSERT(ctx.m_paintingStage == PaintingStageEnd);
     STARFISH_ASSERT(firstChild() == lastChild());

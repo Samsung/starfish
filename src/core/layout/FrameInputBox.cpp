@@ -187,9 +187,9 @@ void FrameInputBox::layout(LayoutContext& ctx,
     }
 }
 
-void FrameInputBox::paint(PaintingContext& ctx)
+void FrameInputBox::paintContent(PaintingContext& ctx)
 {
-    FrameBlockBox::paint(ctx);
+    FrameBlockBox::paintContent(ctx);
 
     if (ctx.m_paintingStage == PaintingStage::PaintingNormalFlowInline) {
         HTMLInputElement* e = node()->asHTMLInputElement();

@@ -34,7 +34,8 @@ public:
         xMaxYMax,
     };
 
-    static ImageData* create(String* localImageSrc); // this is for EFL backend
+    static ImageData* create(
+        String* localImageSrc); // this is only for EFL backend
     static ImageData* create(const char* buf, size_t len);
     static ImageData* create(size_t width, size_t height);
 
@@ -46,6 +47,7 @@ public:
     virtual size_t width() = 0;
     virtual size_t height() = 0;
     virtual size_t stride() = 0;
+    virtual bool hasTransparentPixel() = 0;
     virtual ~ImageData()
     {
     }

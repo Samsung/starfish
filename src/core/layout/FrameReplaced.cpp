@@ -511,7 +511,7 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
     }
 }
 
-void FrameReplaced::paint(PaintingContext& ctx)
+void FrameReplaced::paintContent(PaintingContext& ctx)
 {
     if (isEstablishesStackingContext()) {
         return;
@@ -523,18 +523,11 @@ void FrameReplaced::paint(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
-    if (isPositioned()) {
-        if (ctx.m_paintingStage == PaintingPositionedElements) {
-            paintBackgroundAndBorders(ctx.m_canvas);
-            paintReplaced(ctx.m_canvas);
-            paintOutline(ctx.m_canvas);
-        }
-    } else if (isBlockLevel()) {
+    if (isBlockLevel()) {
         if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
         } else if (ctx.m_paintingStage == PaintingNormalFlowInline) {
             paintReplaced(ctx.m_canvas);
-        } else if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintOutline(ctx.m_canvas);
         }
     } else if (isInlineLevel() || isFlexItem()) {
@@ -542,7 +535,6 @@ void FrameReplaced::paint(PaintingContext& ctx)
             ctx.m_paintingInlineStage == PaintingReplaced) {
             paintBackgroundAndBorders(ctx.m_canvas);
             paintReplaced(ctx.m_canvas);
-        } else if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintOutline(ctx.m_canvas);
         }
     } else if (isFloating()) {

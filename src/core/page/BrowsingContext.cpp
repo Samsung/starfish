@@ -14,6 +14,8 @@
  *    limitations under the License.
  */
 
+// #define STARFISH_ENABLE_PROFILE_TIMER
+
 #include "StarFishConfig.h"
 #include "StarFish.h"
 

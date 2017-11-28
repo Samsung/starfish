@@ -43,7 +43,7 @@ public:
 
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
-    void paint(PaintingContext& ctx);
+    void paintContent(PaintingContext& ctx);
 
 private:
     static ComputedStyle* createInputElementStyleFrom(Node* parent);

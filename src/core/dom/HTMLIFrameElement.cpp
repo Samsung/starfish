@@ -37,6 +37,15 @@ void* HTMLIFrameElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+HTMLIFrameElement::HTMLIFrameElement(Document* document)
+    : HTMLElement(document)
+    , m_browsingContext(nullptr)
+    , m_historyManager(nullptr)
+{
+    m_tabIndexWasSetExplicitly = true;
+    m_tabIndex = 0;
+}
+
 QualifiedName HTMLIFrameElement::name()
 {
     return starFish()->staticStrings()->m_iframeTagName;
@@ -149,10 +158,10 @@ void HTMLIFrameElement::loadSrc()
     String* s = src();
     if (s->length()) {
         navigate(new ResourceURL(s, document()->documentURI()->baseURI()),
-                 HistoryManager::Action::Intact, nullptr);
+                 HistoryManager::Action::Intact, document()->documentURI());
     } else {
         navigate(new ResourceURL(String::createASCIIString("about:blank")),
-                 HistoryManager::Action::Intact, nullptr);
+                 HistoryManager::Action::Intact, document()->documentURI());
     }
 }
 
@@ -185,6 +194,7 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
 {
     if (ResourceURL::isValidURL(url->urlString())) {
         unloadSrc();
+
         if (!m_historyManager) {
             m_historyManager = HistoryManager::create(this);
         }

@@ -58,9 +58,6 @@ enum PaintingStage {
     PaintingNormalFlowInline,    // the in-flow, inline-level, non-positioned
                                  // descendants, including inline tables and
                                  // inline blocks.
-    PaintingPositionedElements,  // the child stacking contexts with stack level
-                                 // 0 and the positioned descendants with stack
-                                 // level 0.
     PaintingStageEnd
 };
 
@@ -847,7 +844,7 @@ private:
 
 class PaintingContext {
 public:
-    PaintingContext(Canvas* canvas)
+    explicit PaintingContext(Canvas* canvas)
         : m_canvas(canvas)
         , m_paintingStage(PaintingNormalFlowBlock)
         , m_paintingInlineStage(PaintingInlineBox)
@@ -1389,11 +1386,6 @@ public:
     };
 
     virtual void computeVisibleRect(ComputeVisibleRectContext& ctx)
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    virtual void paint(PaintingContext& ctx)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
