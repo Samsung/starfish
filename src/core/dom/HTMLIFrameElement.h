@@ -32,14 +32,7 @@ class HTMLIFrameElement : public HTMLElement {
     friend class ResourceLoader;
 
 public:
-    HTMLIFrameElement(Document* document)
-        : HTMLElement(document)
-        , m_browsingContext(nullptr)
-        , m_historyManager(nullptr)
-    {
-        m_tabIndexWasSetExplicitly = true;
-        m_tabIndex = 0;
-    }
+    HTMLIFrameElement(Document* document);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

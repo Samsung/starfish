@@ -69,19 +69,6 @@ LayoutLocation FrameBox::absolutePointIncludingScroll(FrameBox* top)
     return l;
 }
 
-void FrameBox::paintChildrenWith(PaintingContext& ctx)
-{
-    Frame* child = firstChild();
-    while (child) {
-        ctx.m_canvas->save();
-        ctx.m_canvas->translate(child->asFrameBox()->x(),
-                                child->asFrameBox()->y());
-        child->paint(ctx);
-        ctx.m_canvas->restore();
-        child = child->next();
-    }
-}
-
 void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
                                           LayoutUnit parentContentWidth)
 {
@@ -1698,9 +1685,34 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
     canvas->restore();
 }
 
+void FrameBox::paintContent(PaintingContext& ctx)
+{
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
+void FrameBox::paintOwnContent(Canvas* canvas)
+{
+}
+
+void FrameBox::paintChildrenWith(PaintingContext& ctx)
+{
+    Frame* child = firstChild();
+    while (child) {
+        ctx.m_canvas->save();
+        ctx.m_canvas->translate(child->asFrameBox()->x(),
+                                child->asFrameBox()->y());
+        child->asFrameBox()->paintContent(ctx);
+        ctx.m_canvas->restore();
+        child = child->next();
+    }
+}
+
 void FrameBox::paintStackingContextContent(Canvas* canvas)
 {
+    paintOwnContent(canvas);
+
     PaintingContext ctx(canvas);
+
     // the in-flow, non-inline-level, non-positioned descendants.
     ctx.m_paintingStage = PaintingNormalFlowBlock;
     ctx.m_paintingInlineStage = PaintingInlineBox;
@@ -1715,10 +1727,7 @@ void FrameBox::paintStackingContextContent(Canvas* canvas)
     ctx.m_paintingStage = PaintingNormalFlowInline;
     paintChildrenWith(ctx);
 
-    // the child stacking contexts with stack level 0 and the positioned
-    // descendants with stack level 0.
-    ctx.m_paintingStage = PaintingPositionedElements;
-    paintChildrenWith(ctx);
+    paintOutline(canvas);
 }
 
 void FrameBox::establishesStackingContextIfNeeds()

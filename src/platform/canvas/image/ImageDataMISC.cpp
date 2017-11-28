@@ -58,6 +58,7 @@ public:
         m_width = w;
         m_height = h;
         m_stride = w * 4;
+        m_hasTransparentPixel = true;
         registerFinalizer();
     }
 
@@ -328,6 +329,11 @@ private:
         for (png_uint_32 y = 0; y < m_height; y++) {
             for (png_uint_32 x = 0; x < rowbytes; x += 4) {
                 uint32_t* tmp = (uint32_t*)(&(data[y * rowbytes + x]));
+
+                if (data[y * rowbytes + x + 3] != 255) {
+                    m_hasTransparentPixel = true;
+                }
+
                 *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
                     data[y * rowbytes + x], data[y * rowbytes + x + 1],
                     data[y * rowbytes + x + 2], data[y * rowbytes + x + 3]);
@@ -616,6 +622,7 @@ private:
                     *buffer++ = 0;
                     *buffer++ = 0;
                     *buffer++ = 0;
+                    m_hasTransparentPixel = true;
                 }
 #endif
             }
@@ -627,6 +634,7 @@ private:
     void decodeImage(FILE* fp, String* localImageSrc, const char* buf,
                      size_t len)
     {
+        m_hasTransparentPixel = false;
         ImageFormat imageFormat;
         if (fp) {
             imageFormat = parseImageFormatFromFile(fp);
@@ -657,7 +665,13 @@ private:
         }
     }
 
+    virtual bool hasTransparentPixel()
+    {
+        return m_hasTransparentPixel;
+    }
+
 protected:
+    bool m_hasTransparentPixel;
     void* m_image;
     size_t m_width;
     size_t m_stride;

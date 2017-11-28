@@ -115,7 +115,7 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         ctx.m_canvas->translate(
             child->asFrameBox()->x() - borderLeft() - paddingLeft(),
             child->asFrameBox()->y() - borderTop() - paddingTop());
-        child->asFrameSVGBox()->paint(ctx);
+        child->asFrameSVGBox()->paintContent(ctx);
         ctx.m_canvas->restore();
         child = child->next();
     }
@@ -155,7 +155,7 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         ctx.m_canvas->translate(
             child->asFrameBox()->x() - borderLeft() - paddingLeft(),
             child->asFrameBox()->y() - borderTop() - paddingTop());
-        child->asFrameSVGBox()->paint(ctx);
+        child->asFrameSVGBox()->paintContent(ctx);
         ctx.m_canvas->restore();
         child = child->next();
     }

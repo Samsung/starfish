@@ -42,7 +42,7 @@ public:
 
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
-    virtual void paint(PaintingContext& ctx);
+    virtual void paintContent(PaintingContext& ctx) override;
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
     virtual LayoutUnit scrollLeft() override

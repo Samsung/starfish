@@ -557,6 +557,7 @@ public:
             cairo_matrix_translate(&matrix, -x, -y);
 
             cairo_pattern_set_matrix(pattern, &matrix);
+            cairo_pattern_set_filter(pattern, CAIRO_FILTER_FAST);
             cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
 
             cairo_translate(m_canvas, xx, yy);

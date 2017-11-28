@@ -4047,7 +4047,7 @@ void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
                     LayoutUnit dx = childBox->x();
                     LayoutUnit dy = childBox->y();
                     ctx.m_canvas->translate(dx, dy);
-                    childBox->paint(ctx);
+                    childBox->paintContent(ctx);
                     ctx.m_canvas->translate(-dx, -dy);
                 }
                 ctx.m_canvas->translate(-ldx, -ldy);
@@ -4078,7 +4078,7 @@ FrameText* InlineTextBox::origin()
     return node()->frame()->asFrameText();
 }
 
-void InlineTextBox::paint(PaintingContext& ctx)
+void InlineTextBox::paintContent(PaintingContext& ctx)
 {
     if (ctx.m_paintingInlineStage == PaintingInlineBox) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline) {
@@ -4153,7 +4153,7 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
     }
 }
 
-void InlineNonReplacedBox::paint(PaintingContext& ctx)
+void InlineNonReplacedBox::paintContent(PaintingContext& ctx)
 {
     if (isEstablishesStackingContext()) {
         return;
@@ -4172,19 +4172,7 @@ void InlineNonReplacedBox::paint(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
-    // CHECK THIS at https://www.w3.org/TR/CSS2/zindex.html#stacking-defs
-    if (isPositioned()) {
-        if (ctx.m_paintingStage == PaintingPositionedElements) {
-            paintBackgroundAndBorders(ctx.m_canvas);
-            PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
-            while (s != PaintingStageEnd) {
-                ctx.m_paintingStage = s;
-                paintChildrenWith(ctx);
-                s = (PaintingStage)(s + 1);
-            }
-            ctx.m_paintingStage = PaintingPositionedElements;
-        }
-    } else if (isFloating()) {
+    if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             paintBackgroundAndBorders(ctx.m_canvas);
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
@@ -4214,7 +4202,7 @@ void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
         LayoutUnit dx = child->asFrameBox()->x();
         LayoutUnit dy = child->asFrameBox()->y();
         ctx.m_canvas->translate(dx, dy);
-        child->paint(ctx);
+        child->paintContent(ctx);
         ctx.m_canvas->translate(-dx, -dy);
         iter++;
     }

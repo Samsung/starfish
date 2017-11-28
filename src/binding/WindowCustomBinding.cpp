@@ -503,6 +503,7 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
         }
 
         STARFISH_LOG_ERROR("%s\n", "[FAIL]testImgDiff fail");
+
         customExit(-1, window);
     }
 

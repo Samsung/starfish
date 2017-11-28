@@ -47,7 +47,7 @@ public:
 private:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
-    virtual void paint(PaintingContext& ctx);
+    virtual void paintContent(PaintingContext& ctx);
 };
 }
 

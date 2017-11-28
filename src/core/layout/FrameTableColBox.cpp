@@ -55,7 +55,7 @@ void FrameTableColBox::layout(LayoutContext& ctx,
     STARFISH_ASSERT_NOT_REACHED();
 }
 
-void FrameTableColBox::paint(PaintingContext& ctx)
+void FrameTableColBox::paintContent(PaintingContext& ctx)
 {
     // FrameTableCol should only exist logically and ignore paint.
 }

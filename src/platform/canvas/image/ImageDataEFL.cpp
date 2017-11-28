@@ -33,6 +33,7 @@ public:
         // STARFISH_LOG_INFO("ImageDataEFL::ImageDataEFL %s\n",
         // localImageSrc->toUTF8NonGCString().data();
         m_image = evas_object_image_add(internalCanvas());
+        m_hasTransparentPixel = true;
         auto utf8Data =
             PathResolver::matchLocation(localImageSrc)->toUTF8NonGCString();
         evas_object_image_file_set(m_image, utf8Data.data(), NULL);
@@ -44,7 +45,7 @@ public:
             if (w >= 0 && h >= 0) {
                 m_width = w;
                 m_height = h;
-
+                // isThereTransparentPixel();
                 reigsterFinalizer();
                 return;
             }
@@ -56,6 +57,7 @@ public:
     ImageDataEFL(const char* buf, size_t len)
     {
         m_image = evas_object_image_add(internalCanvas());
+        m_hasTransparentPixel = true;
         evas_object_data_set(m_image, "local", "0");
         char format[4] = "";
         evas_object_image_memfile_set(m_image, (void*)buf, (int)len, format,
@@ -67,6 +69,7 @@ public:
             if (w >= 0 && h >= 0) {
                 m_width = w;
                 m_height = h;
+                // isThereTransparentPixel();
                 reigsterFinalizer();
                 return;
             }
@@ -78,6 +81,8 @@ public:
     ImageDataEFL(size_t w, size_t h)
     {
         m_image = evas_object_image_add(internalCanvas());
+        m_hasTransparentPixel = true;
+
         evas_object_data_set(m_image, "local", "0");
         evas_object_image_size_set(m_image, w, h);
         evas_object_image_filled_set(m_image, EINA_TRUE);
@@ -105,7 +110,7 @@ public:
 
     virtual uint8_t* data()
     {
-        void* address = evas_object_image_data_get(m_image, EINA_TRUE);
+        void* address = evas_object_image_data_get(m_image, EINA_FALSE);
         evas_object_image_data_set(m_image, address);
         return (uint8_t*)address;
     }
@@ -116,6 +121,25 @@ public:
             return m_width * m_height * 4;
         } else {
             return 0;
+        }
+    }
+
+    void isThereTransparentPixel()
+    {
+        uint8_t* ptr = data();
+        size_t stride = this->stride();
+
+        for (size_t y = 0; y < m_height; y++) {
+            uint8_t* b = ptr;
+            for (size_t x = 0; x < m_width; x++) {
+                if (b[3] != 255) {
+                    m_hasTransparentPixel = true;
+                    return;
+                }
+                b += 4;
+            }
+
+            ptr += stride;
         }
     }
 
@@ -156,7 +180,13 @@ public:
         return m_height;
     }
 
+    virtual bool hasTransparentPixel()
+    {
+        return m_hasTransparentPixel;
+    }
+
 protected:
+    bool m_hasTransparentPixel;
     Evas_Object* m_image;
     size_t m_width;
     size_t m_height;

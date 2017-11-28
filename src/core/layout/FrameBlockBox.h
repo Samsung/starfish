@@ -60,7 +60,7 @@ public:
         return true;
     }
 
-    virtual void paint(PaintingContext& ctx);
+    virtual void paintContent(PaintingContext& ctx);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
 #ifdef STARFISH_ENABLE_TEST
@@ -324,7 +324,7 @@ public:
     }
 
     virtual void layoutInline(LineFormattingContext& lineFormattingContext);
-    virtual void paint(PaintingContext& ctx);
+    virtual void paintContent(PaintingContext& ctx);
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
@@ -589,8 +589,8 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
 #endif
-    virtual void paint(PaintingContext& ctx);
-    virtual void paintChildrenWith(PaintingContext& ctx);
+    virtual void paintContent(PaintingContext& ctx) override;
+    virtual void paintChildrenWith(PaintingContext& ctx) override;
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                        HitTestStage stage);

@@ -810,7 +810,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     return nullptr;
 }
 
-void FrameBlockBox::paint(PaintingContext& ctx)
+void FrameBlockBox::paintContent(PaintingContext& ctx)
 {
     if (isEstablishesStackingContext()) {
         return;
@@ -832,30 +832,13 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
-    if (isPositioned()) {
-        if (ctx.m_paintingStage == PaintingPositionedElements) {
-            paintBackgroundAndBorders(ctx.m_canvas);
-            if (overflowApplied) {
-                ctx.m_canvas->save();
-                ctx.m_canvas->clip(makeRect(BoxValue::PaddingBoxBoxValue));
-                ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
-            }
-            PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
-            while (s != PaintingStageEnd) {
-                ctx.m_paintingStage = s;
-                paintChildrenWith(ctx);
-                s = (PaintingStage)(s + 1);
-            }
-            if (overflowApplied) {
-                ctx.m_canvas->restore();
-            }
-            paintOutline(ctx.m_canvas);
-            ctx.m_paintingStage = PaintingPositionedElements;
-        }
-    } else if (isInlineLevel() || isFlexItem()) {
+    STARFISH_ASSERT(!isPositioned());
+
+    if (isInlineLevel() || isFlexItem()) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline &&
             ctx.m_paintingInlineStage == PaintingBlockBox) {
             paintBackgroundAndBorders(ctx.m_canvas);
+
             if (overflowApplied) {
                 ctx.m_canvas->save();
                 ctx.m_canvas->clip(makeRect(BoxValue::PaddingBoxBoxValue));
@@ -871,25 +854,26 @@ void FrameBlockBox::paint(PaintingContext& ctx)
                 ctx.m_canvas->restore();
             }
             ctx.m_paintingStage = PaintingNormalFlowInline;
-        }
-        if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintOutline(ctx.m_canvas);
         }
     } else if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats &&
             ctx.m_paintingInlineStage == PaintingBlockBox) {
             paintBackgroundAndBorders(ctx.m_canvas);
+
             if (overflowApplied) {
                 ctx.m_canvas->save();
                 ctx.m_canvas->clip(makeRect(BoxValue::PaddingBoxBoxValue));
                 ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
             }
+
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
                 ctx.m_paintingStage = s;
                 paintChildrenWith(ctx);
                 s = (PaintingStage)(s + 1);
             }
+
             if (overflowApplied) {
                 ctx.m_canvas->restore();
             }
@@ -916,7 +900,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
         }
     }
 
-    if (overflowApplied && ctx.m_paintingStage == PaintingPositionedElements) {
+    if (overflowApplied && ctx.m_paintingStage == PaintingNormalFlowInline) {
         if (node() && node()->isElement()) {
             if (node()->asElement()->hasRareMembers() &&
                 node()->asElement()->rareMembers()->m_scrolling) {

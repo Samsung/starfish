@@ -655,7 +655,7 @@ bool WebView::rendering(bool force)
                 mainBrowsingContext()->paintWindowBackground(canvas);
                 m_didCompositeBefore = false;
             }
-            mainFrame->paint(ctx);
+            mainFrame->paintContent(ctx);
         }
 
         if (!m_needsComposite) {
