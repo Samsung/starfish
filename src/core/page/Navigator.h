@@ -72,6 +72,13 @@ public:
 
     void dispose();
 
+    bool cookieEnabled()
+    {
+        return true;
+    }
+
+    String* language();
+
 protected:
     Geolocation* m_geolocation;
 };
