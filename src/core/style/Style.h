@@ -1773,7 +1773,7 @@ public:
         MaskSizeValue m_maskSize;
 
         ValueData(int v)
-            : m_floatValue(v)
+            : m_int32Value(v)
         {
         }
         ValueData(float v)
