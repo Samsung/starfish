@@ -193,4 +193,14 @@ void HTMLAnchorElement::setProtocol(String* protocol)
     resourceURL = resourceURL->setProtocol(protocol);
     setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
 }
+
+String* HTMLAnchorElement::target()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_target);
+}
+
+void HTMLAnchorElement::setTarget(String* target)
+{
+    setAttribute(starFish()->staticStrings()->m_target, target);
+}
 }
