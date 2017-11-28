@@ -42,28 +42,14 @@ public:
 
     bool open(String* filePath, FileMode mode)
     {
-        m_path = ResourceURL::createPercentDecodingString(filePath);
-        auto utf8Data = m_path->toUTF8NonGCString();
-        return open(utf8Data.data(), mode);
-    }
-
-    bool open(ResourceURL* url, FileMode mode)
-    {
-        if (!url->isFileURL()) {
-            return false;
-        }
-
-        String* path = url->getUrlPathString();
-        String* filePath = path->substring(7, path->length() - 7);
-
-        return this->open(filePath, mode);
+        m_path = filePath->toUTF8NonGCString();
+        return open(m_path.data(), mode);
     }
 
     int removeFile()
     {
         close();
-        auto utf8Data = m_path->toUTF8NonGCString();
-        return remove(utf8Data.data());
+        return remove(m_path.data());
     }
 
     bool isOpen()
@@ -150,7 +136,7 @@ public:
 
 protected:
     File()
-        : m_path(String::emptyString)
+        : m_path()
         , m_isOpen(false)
     {
     }
@@ -163,7 +149,7 @@ protected:
         return kFileModeStrList[var];
     }
 
-    String* m_path;
+    std::string m_path;
     bool m_isOpen;
 
 private:

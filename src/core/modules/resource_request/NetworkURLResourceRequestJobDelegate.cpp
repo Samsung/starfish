@@ -55,6 +55,15 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
 {
 }
 
+NetworkURLWorkerData::~NetworkURLWorkerData()
+{
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    if (cachedEntry) {
+        cachedEntry->decreaseUsingCount();
+    }
+#endif
+}
+
 void* NetworkURLWorkerHelper::networkWorker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
@@ -67,9 +76,15 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
             HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
             NetworkURLWorkerHelper::httpCacheWorker(nwd);
         } else {
+            STARFISH_LOG_INFO(
+                "Load Resource[%s] from network\n",
+                nwd->request->m_url->urlString()->toUTF8NonGCString().data());
             responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
         }
 #else
+        STARFISH_LOG_INFO(
+            "Load Resource[%s] from network\n",
+            nwd->request->m_url->urlString()->toUTF8NonGCString().data());
         responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
 #endif
     } else {
@@ -83,7 +98,9 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     ResourceRequest* request = (ResourceRequest*)nwd->request;
-
+    STARFISH_LOG_INFO(
+        "Load Resource[%s] from Disk\n",
+        nwd->request->m_url->urlString()->toUTF8NonGCString().data());
     bool ret;
     {
         // NOTE: may need the headers received when RawData cached, but
@@ -91,6 +108,7 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
         Locker<Mutex> locker(*request->m_mutex);
         ret = nwd->cachedEntry->readRawDataFromEntryFile(
             nwd->request->response());
+        nwd->cachedEntry->readEntryHeaders(nwd->request->m_responseHeaderMap);
     }
     if (ret) {
         nwd->httpTransaction->httpResponse().setResponseCode(200);
@@ -253,6 +271,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 
             if (it != m_orgProxy->starFish()->httpCache()->end()) {
                 nwd->cachedEntry = it->second;
+                nwd->cachedEntry->increaseUsingCount();
                 fillHeadersWithCachedEntry(headers, nwd->cachedEntry);
             }
         }
@@ -416,7 +435,7 @@ void* NetworkURLResourceRequestJobDelegate::worker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (nwd->cachedEntry && nwd->cachedEntry->shouldRevalidate()) {
+    if (nwd->cachedEntry && !nwd->cachedEntry->shouldRevalidate()) {
         return nwd->helper->httpCacheWorker(data);
     } else {
         return nwd->helper->networkWorker(data);

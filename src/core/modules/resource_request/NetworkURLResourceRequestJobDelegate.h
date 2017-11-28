@@ -29,6 +29,7 @@ class HTTPTransaction;
 
 struct NetworkURLWorkerData {
     NetworkURLWorkerData(ResourceRequest* orgRequest);
+    ~NetworkURLWorkerData();
 
     bool isAborted;
     bool isRedirected;
@@ -47,9 +48,11 @@ public:
     NetworkURLWorkerHelper()
     {
     }
+
     virtual ~NetworkURLWorkerHelper()
     {
     }
+
     void* networkWorker(void* data);
 #ifdef STARFISH_ENABLE_HTTPCACHE
     void* httpCacheWorker(void* data);

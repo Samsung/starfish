@@ -18,6 +18,7 @@
 #include "StarFishConfig.h"
 #include "platform/file/File.h"
 #include "HTTPCacheEntry.h"
+#include "platform/network/http/HTTPHeaderMap.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/profiling/Profiling.h"
@@ -25,20 +26,24 @@
 
 namespace StarFish {
 
-HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, HTTPFreshnessInfo& info,
-                               CacheControl& cacheControl)
+const char* HTTPCacheEntry::kSeparator = "\t";
+
+HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
+                               HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo)
     : m_url(url)
-    , m_httpFreshnessInfo(info)
     , m_cacheControl(cacheControl)
+    , m_httpContentInfo(cinfo)
+    , m_httpFreshnessInfo(finfo)
     , m_entryFileName(nullptr)
     , m_mutex(new Mutex())
+    , m_usingCount(0)
 {
 }
 
-HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, HTTPFreshnessInfo& info,
-                               CacheControl& cacheControl,
+HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
+                               HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
                                String* entryFileName)
-    : HTTPCacheEntry(url, info, cacheControl)
+    : HTTPCacheEntry(url, cacheControl, cinfo, finfo)
 {
     m_entryFileName = entryFileName;
 }
@@ -47,10 +52,31 @@ HTTPCacheEntry::~HTTPCacheEntry()
 {
 }
 
+HTTPCacheEntry::HTTPCacheEntry(const HTTPCacheEntry& rhs)
+{
+    if (this == &rhs) {
+        return;
+    }
+    m_url = new ResourceURL(*(rhs.m_url));
+    m_cacheControl = rhs.m_cacheControl;
+    m_httpContentInfo = rhs.m_httpContentInfo;
+    m_httpFreshnessInfo = rhs.m_httpFreshnessInfo;
+    m_entryFileName = rhs.m_entryFileName;
+
+    m_mutex = new Mutex();
+    m_usingCount = rhs.m_usingCount;
+}
+
 size_t HTTPCacheEntry::entryKey() const
 {
     Locker<Mutex> locker(*m_mutex);
     return m_url->urlString()->hashValue();
+}
+
+void HTTPCacheEntry::setHTTPContentInfo(HTTPContentInfo& info)
+{
+    Locker<Mutex> locker(*m_mutex);
+    m_httpContentInfo = info;
 }
 
 void HTTPCacheEntry::setHTTPFreshnessInfo(HTTPFreshnessInfo& info)
@@ -117,6 +143,24 @@ bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
     return ret;
 }
 
+void HTTPCacheEntry::readEntryHeaders(HeaderMap& out)
+{
+    Locker<Mutex> locker(*m_mutex);
+    if (m_httpContentInfo.contentLanguage.size()) {
+        out.insert(std::make_pair(HTTPHeaderMap::kContentLanguage,
+                                  m_httpContentInfo.contentLanguage));
+    }
+    if (m_httpContentInfo.contentLength) {
+        out.insert(
+            std::make_pair(HTTPHeaderMap::kContentLength,
+                           std::to_string(m_httpContentInfo.contentLength)));
+    }
+    if (m_httpContentInfo.contentType.size()) {
+        out.insert(std::make_pair(HTTPHeaderMap::kContentType,
+                                  m_httpContentInfo.contentType));
+    }
+}
+
 bool HTTPCacheEntry::isFresh()
 {
     // https://tools.ietf.org/html/rfc7234#section-4.2
@@ -140,60 +184,97 @@ bool HTTPCacheEntry::isFresh()
 
 String* HTTPCacheEntry::toString()
 {
-    Locker<Mutex> locker(*m_mutex);
+    HTTPCacheEntry* copied;
+    {
+        Locker<Mutex> locker(*m_mutex);
+        copied = new HTTPCacheEntry(*this);
+    }
+    // The toString order starts with entrykey and then follows the order of
+    // each member. therefore, it is as follows :
+    //  entryKey(UINT) urlString(STRING) no-cache(0|1) mustRevalidate(0|1)
+    //  maxAge(UINT) contentLanguage(STRING) contentLength(UINT)
+    //  contentType(STRING) date(UINT) age(UINT) rquestTime(UINT)
+    //  responeTime(UINT) lastModified(UINT) Etag(STRING) entryFileName(STRING)
+
     StringBuilder builder;
-    std::string entryKeystr = std::to_string(m_url->urlString()->hashValue());
-    std::string dateStr = std::to_string(m_httpFreshnessInfo.date);
-    std::string ageStr = std::to_string(m_httpFreshnessInfo.age);
-    std::string requestTimeStr =
-        std::to_string(m_httpFreshnessInfo.requestTime);
-    std::string responseTimeStr =
-        std::to_string(m_httpFreshnessInfo.responseTime);
-    std::string lastModifiedStr =
-        std::to_string(m_httpFreshnessInfo.lastModified);
+    std::string entryKey =
+        std::to_string(copied->m_url->urlString()->hashValue());
+    builder.appendString(entryKey.data());
+    builder.appendString(kSeparator);
 
-    // Etag has no spaces or htab,
-    // See https://tools.ietf.org/html/rfc7232#section-2.3
-    std::string etagStr =
-        (m_httpFreshnessInfo.etag.size()) ? m_httpFreshnessInfo.etag : "null";
-    std::string contentLengthStr =
-        std::to_string(m_httpFreshnessInfo.contentLength);
-    std::string maxAgeStr = std::to_string(m_cacheControl.maxAge);
-
-    // entryKey(UINT) urlString(STRING) date(UINT) age(UINT)
-    // rquestTime(UINT) responeTime(UINT) lastModified(UINT) Etag(STRING)
-    // contentLength(UINT) maxAge(UINT) no-cache(0|1) mustRevalidate(0|1)
-    // entryFileName(STRING)
-
-    builder.appendString(entryKeystr.data());
-    builder.appendString(" ");
     builder.appendString(url()->urlString());
-    builder.appendString(" ");
-    builder.appendString(dateStr.data());
-    builder.appendString(" ");
-    builder.appendString(ageStr.data());
-    builder.appendString(" ");
-    builder.appendString(requestTimeStr.data());
-    builder.appendString(" ");
-    builder.appendString(responseTimeStr.data());
-    builder.appendString(" ");
-    builder.appendString(lastModifiedStr.data());
-    builder.appendString(" ");
-    builder.appendString(etagStr.data());
-    builder.appendString(" ");
-    builder.appendString(contentLengthStr.data());
-    builder.appendString(" ");
-    builder.appendString(maxAgeStr.data());
-    builder.appendString(" ");
-    m_cacheControl.noCache ? builder.appendString("1")
-                           : builder.appendString("0");
-    builder.appendString(" ");
+    builder.appendString(kSeparator);
+
+    // cache-contorl
+    copied->m_cacheControl.noCache ? builder.appendString("1")
+                                   : builder.appendString("0");
+    builder.appendString(kSeparator);
     m_cacheControl.mustRevalidate ? builder.appendString("1")
                                   : builder.appendString("0");
-    builder.appendString(" ");
-    builder.appendString(m_entryFileName);
+    builder.appendString(kSeparator);
+    std::string maxAge = std::to_string(copied->m_cacheControl.maxAge);
+    builder.appendString(maxAge.data());
+    builder.appendString(kSeparator);
+
+    // http content-xxx
+    std::string contentLanguage =
+        (copied->m_httpContentInfo.contentLanguage.size())
+            ? copied->m_httpContentInfo.contentLanguage
+            : "null";
+    builder.appendString(contentLanguage.data());
+    builder.appendString(kSeparator);
+    std::string contentLength =
+        std::to_string(copied->m_httpContentInfo.contentLength);
+    builder.appendString(contentLength.data());
+    builder.appendString(kSeparator);
+    std::string contentType = (copied->m_httpContentInfo.contentType.size())
+                                  ? copied->m_httpContentInfo.contentType
+                                  : "null";
+    builder.appendString(contentType.data());
+    builder.appendString(kSeparator);
+
+    // http freshness info
+    std::string date = std::to_string(copied->m_httpFreshnessInfo.date);
+    builder.appendString(date.data());
+    builder.appendString(kSeparator);
+    std::string age = std::to_string(copied->m_httpFreshnessInfo.age);
+    builder.appendString(age.data());
+    builder.appendString(kSeparator);
+    std::string requestTime =
+        std::to_string(copied->m_httpFreshnessInfo.requestTime);
+    builder.appendString(requestTime.data());
+    builder.appendString(kSeparator);
+    std::string responseTime =
+        std::to_string(copied->m_httpFreshnessInfo.responseTime);
+    builder.appendString(responseTime.data());
+    builder.appendString(kSeparator);
+    std::string lastModified =
+        std::to_string(copied->m_httpFreshnessInfo.lastModified);
+    builder.appendString(lastModified.data());
+    builder.appendString(kSeparator);
+    // Etag has no spaces or htab,
+    // See https://tools.ietf.org/html/rfc7232#section-2.3
+    std::string etag = (copied->m_httpFreshnessInfo.etag.size())
+                           ? copied->m_httpFreshnessInfo.etag
+                           : "null";
+    builder.appendString(etag.data());
+    builder.appendString(kSeparator);
+
+    builder.appendString(copied->m_entryFileName);
 
     return builder.finalize();
+}
+
+void HTTPCacheEntry::increaseUsingCount()
+{
+    Locker<Mutex> locker(*m_mutex);
+    m_usingCount++;
+}
+
+void HTTPCacheEntry::decreaseUsingCount()
+{
+    Locker<Mutex> locker(*m_mutex);
+    m_usingCount--;
 }
 }
 #endif

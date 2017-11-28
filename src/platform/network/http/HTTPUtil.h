@@ -41,6 +41,18 @@ struct CacheControl {
     bool mustRevalidate : 1;
     int64_t maxAge;
 };
+struct HTTPContentInfo {
+    HTTPContentInfo()
+        : contentLanguage()
+        , contentLength(0)
+        , contentType()
+    {
+    }
+
+    std::string contentLanguage;
+    size_t contentLength;
+    std::string contentType;
+};
 
 struct HTTPFreshnessInfo {
     HTTPFreshnessInfo()
@@ -50,7 +62,6 @@ struct HTTPFreshnessInfo {
         , responseTime(0)
         , lastModified(0)
         , etag()
-        , contentLength(0)
     {
     }
 
@@ -60,7 +71,6 @@ struct HTTPFreshnessInfo {
     int64_t responseTime;
     int64_t lastModified;
     std::string etag;
-    size_t contentLength;
 };
 
 class HTTPUtil {
@@ -69,6 +79,8 @@ public:
     static CacheControl parseCacheControl(std::string directives);
     static HTTPFreshnessInfo getHTTPFreshnessInfoFromHeaders(
         ScriptBindingInstance* instance, const HeaderMap& headers);
+    static HTTPContentInfo getHTTPContentInfoFromHeaders(
+        const HeaderMap& headers);
 };
 }
 

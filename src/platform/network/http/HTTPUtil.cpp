@@ -213,13 +213,8 @@ HTTPFreshnessInfo HTTPUtil::getHTTPFreshnessInfoFromHeaders(
     ScriptBindingInstance* instance, const HeaderMap& headers)
 {
     HTTPFreshnessInfo info;
-    auto it = headers.find(HTTPHeaderMap::kContentLength);
-    if (it != headers.end()) {
-        String* value = String::createASCIIString(it->second.data());
-        info.contentLength = String::parseInt64(value);
-    }
 
-    it = headers.find(HTTPHeaderMap::kDate);
+    auto it = headers.find(HTTPHeaderMap::kDate);
     if (it != headers.end()) {
         String* value = String::createASCIIString(it->second.data());
         double parsedDate = parseDate(instance, value);
@@ -247,6 +242,32 @@ HTTPFreshnessInfo HTTPUtil::getHTTPFreshnessInfoFromHeaders(
     it = headers.find(HTTPHeaderMap::kETag);
     if (it != headers.end()) {
         info.etag = it->second;
+    }
+
+    return info;
+}
+
+HTTPContentInfo HTTPUtil::getHTTPContentInfoFromHeaders(
+    const HeaderMap& headers)
+{
+    HTTPContentInfo info;
+
+    auto it = headers.find(HTTPHeaderMap::kContentLanguage);
+    if (it != headers.end()) {
+        String* value = String::createASCIIString(it->second.data());
+        info.contentLanguage = it->second;
+    }
+
+    it = headers.find(HTTPHeaderMap::kContentLength);
+    if (it != headers.end()) {
+        String* value = String::createASCIIString(it->second.data());
+        info.contentLength = String::parseInt64(value);
+    }
+
+    it = headers.find(HTTPHeaderMap::kContentType);
+    if (it != headers.end()) {
+        String* value = String::createASCIIString(it->second.data());
+        info.contentType = it->second;
     }
 
     return info;

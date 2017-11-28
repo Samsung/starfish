@@ -20,6 +20,7 @@
 #include "HTTPCacheEntry.h"
 
 namespace StarFish {
+typedef std::vector<std::string> HTTPCacheLRUList;
 class NetworkURLWorkerData;
 
 class HTTPCache : public gc {
@@ -51,6 +52,7 @@ private:
     String* m_cacheDirPath;
     String* m_indexFilePath;
     size_t m_currentCacheSize;
+    size_t m_cacheSize;
 };
 }
 #endif
