@@ -25,11 +25,13 @@ class Mutex;
 
 class HTTPCacheEntry : public gc {
 public:
-    HTTPCacheEntry(ResourceURL* url, HTTPFreshnessInfo& info,
-                   CacheControl& cacheControl);
-    HTTPCacheEntry(ResourceURL* url, HTTPFreshnessInfo& info,
-                   CacheControl& cacheControl, String* entryFileName);
+    HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
+                   HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo);
+    HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
+                   HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
+                   String* entryFileName);
     ~HTTPCacheEntry();
+    HTTPCacheEntry(const HTTPCacheEntry& rhs);
 
     ResourceURL* url()
     {
@@ -43,27 +45,35 @@ public:
 
     bool shouldRevalidate()
     {
-        return isFresh() || m_httpFreshnessInfo.etag.size();
+        return !isFresh() || m_httpFreshnessInfo.etag.size() ||
+               m_cacheControl.mustRevalidate || m_cacheControl.noCache;
     }
 
     void setEntryFileNameUsingCachePath(String* cachePath);
     bool writeRawDataToEntryFile(std::vector<char>& rawData);
     bool readRawDataFromEntryFile(std::vector<char>& out);
+    void readEntryHeaders(HeaderMap& out);
     bool isFresh();
 
     size_t entryKey() const;
-
-    HTTPFreshnessInfo httpFreshnessInfo() const
-    {
-        return m_httpFreshnessInfo;
-    }
-    void setHTTPFreshnessInfo(HTTPFreshnessInfo& info);
 
     CacheControl cacheControl() const
     {
         return m_cacheControl;
     }
     void setCacheControl(CacheControl& info);
+
+    HTTPContentInfo httpContentInfo() const
+    {
+        return m_httpContentInfo;
+    }
+    void setHTTPContentInfo(HTTPContentInfo& info);
+
+    HTTPFreshnessInfo httpFreshnessInfo() const
+    {
+        return m_httpFreshnessInfo;
+    }
+    void setHTTPFreshnessInfo(HTTPFreshnessInfo& info);
 
     String* toString();
 
@@ -73,16 +83,27 @@ public:
                *this->m_url == *other.m_url;
     }
 
+    void increaseUsingCount();
+    void decreaseUsingCount();
+    size_t usingCount()
+    {
+        return m_usingCount;
+    }
+
+    static const char* kSeparator;
+
 private:
     ResourceURL* m_url;
-    HTTPFreshnessInfo m_httpFreshnessInfo;
     CacheControl m_cacheControl;
+    HTTPContentInfo m_httpContentInfo;
+    HTTPFreshnessInfo m_httpFreshnessInfo;
     String* m_entryFileName;
+
     Mutex* m_mutex;
+    size_t m_usingCount;
 };
 
 typedef GCUnorderedMultiMap<size_t, HTTPCacheEntry*> HTTPCacheEntryMultiMap;
-typedef std::vector<std::string> HTTPCacheLRUList;
 }
 #endif
 #endif

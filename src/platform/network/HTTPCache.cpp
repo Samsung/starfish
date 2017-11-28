@@ -40,7 +40,7 @@
 #define INDEX_FILE_NAME "/index.txt"
 #define DEFAULT_HTTP_CACHE_SIZE 1024 * 1024 * 10
 #define MAX_ENTRY_FILE_SIZE (DEFAULT_HTTP_CACHE_SIZE * 0.04)
-#define NUM_OF_COL 13
+#define NUM_OF_COL 15
 
 namespace StarFish {
 
@@ -111,6 +111,7 @@ HTTPCache::HTTPCache(String* cacheDirPath)
     , m_cacheDirPath(cacheDirPath)
     , m_indexFilePath()
     , m_currentCacheSize(0)
+    , m_cacheSize(DEFAULT_HTTP_CACHE_SIZE)
 {
     m_indexFilePath = m_cacheDirPath->concat(INDEX_FILE_NAME);
     initCacheDir();
@@ -146,7 +147,7 @@ void HTTPCache::initFromIndexFileIfPossible()
     // Last line is "\n"
     for (auto row = table.begin(); row != table.end() - 1; row++) {
         GCVector<StringView> columns;
-        StringUtils::tokenize(&(*row), " ", 1, columns);
+        StringUtils::tokenize(&(*row), HTTPCacheEntry::kSeparator, 1, columns);
 
         if (columns.size() != NUM_OF_COL) {
             m_cacheEntryTable.clear();
@@ -155,40 +156,52 @@ void HTTPCache::initFromIndexFileIfPossible()
             return;
         }
         // TODO : Check whether each column is valid or not
-        // entryKey(UINT) urlString(STRING) date(UINT) age(UINT)
-        // rquestTime(UINT) responeTime(UINT) lastModified(UINT) Etag(STRING)
-        // contentLength(UINT) maxAge(UINT) no-cache(0|1) mustRevalidate(0|1)
+
+        // entryKey(UINT) urlString(STRING) no-cache(0|1) mustRevalidate(0|1)
+        // maxAge(UINT) contentLanguage(STRING) contentLength(UINT)
+        // contentType(STRING) date(UINT) age(UINT) rquestTime(UINT)
+        // responeTime(UINT) lastModified(UINT) Etag(STRING)
         // entryFileName(STRING)
 
         auto tempStr = columns[1].toUTF8NonGCString();
         ResourceURL* url =
             new ResourceURL(String::fromUTF8(tempStr.data(), tempStr.length()));
 
-        HTTPFreshnessInfo info;
-        info.date = String::parseInt64(&columns[2]);
-        info.age = String::parseInt64(&columns[3]);
-        info.requestTime = String::parseInt64(&columns[4]);
-        info.responseTime = String::parseInt64(&columns[5]);
-        info.lastModified = String::parseInt64(&columns[6]);
-        if (!columns[7].equals("null")) {
-            info.etag = columns[7].toUTF8NonGCString();
-        }
-        info.contentLength = String::parseInt64(&columns[8]);
         CacheControl cc;
-        cc.maxAge = String::parseInt64(&columns[9]);
-        cc.noCache = columns[10].equals("true") ? true : false;
-        cc.mustRevalidate = columns[11].equals("true") ? true : false;
+        cc.noCache = columns[2].equals("true") ? true : false;
+        cc.mustRevalidate = columns[3].equals("true") ? true : false;
+        cc.maxAge = String::parseInt64(&columns[4]);
 
-        tempStr = columns[12].toUTF8NonGCString();
+        HTTPContentInfo cinfo;
+        if (!columns[5].equals("null")) {
+            cinfo.contentLanguage = columns[5].toUTF8NonGCString();
+        }
+        cinfo.contentLength = String::parseInt64(&columns[6]);
+        if (!columns[7].equals("null")) {
+            cinfo.contentType = columns[7].toUTF8NonGCString();
+        }
+
+        HTTPFreshnessInfo finfo;
+        finfo.date = String::parseInt64(&columns[8]);
+        finfo.age = String::parseInt64(&columns[9]);
+        finfo.requestTime = String::parseInt64(&columns[10]);
+        finfo.responseTime = String::parseInt64(&columns[11]);
+        finfo.lastModified = String::parseInt64(&columns[12]);
+        if (!columns[13].equals("null")) {
+            finfo.etag = columns[7].toUTF8NonGCString();
+        }
+
+        tempStr = columns[14].toUTF8NonGCString();
 
         HTTPCacheEntry* newEntry = new HTTPCacheEntry(
-            url, info, cc, String::fromUTF8(tempStr.data(), tempStr.length()));
+            url, cc, cinfo, finfo,
+            String::fromUTF8(tempStr.data(), tempStr.length()));
 
         m_cacheEntryTable.insert(
             std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
         m_cacheLRUList.push_back(columns[1].toUTF8NonGCString());
 
-        m_currentCacheSize += info.contentLength;
+        m_currentCacheSize += cinfo.contentLength;
     }
     expire();
     return;
@@ -196,6 +209,8 @@ void HTTPCache::initFromIndexFileIfPossible()
 
 HTTPCacheEntryMultiMap::iterator HTTPCache::get(ResourceURL* url)
 {
+    STARFISH_ASSERT(isMainThread());
+
     auto entryIter = findEntryTableData(url->urlString());
     if (entryIter == m_cacheEntryTable.end()) {
         return m_cacheEntryTable.end();
@@ -246,30 +261,33 @@ void HTTPCache::put(NetworkURLWorkerData* data)
     }
 
     const HeaderMap& headerMap = data->request->responseHeaderMap();
-    HTTPFreshnessInfo info = HTTPUtil::getHTTPFreshnessInfoFromHeaders(
-        data->request->document()->scriptBindingInstance(), headerMap);
 
-    if (info.contentLength > MAX_ENTRY_FILE_SIZE) {
+    HTTPContentInfo cinfo = HTTPUtil::getHTTPContentInfoFromHeaders(headerMap);
+    if (cinfo.contentLength > MAX_ENTRY_FILE_SIZE) {
         return;
     }
-
-    info.requestTime = data->httpTransaction->httpRequest().requestTime();
-    info.responseTime = data->httpTransaction->httpResponse().responseTime();
 
     CacheControl cc;
     auto it = headerMap.find(HTTPHeaderMap::kCacheControl);
     if (it != headerMap.end()) {
         cc = HTTPUtil::parseCacheControl(it->second);
     }
-
-    if (cc.noStore) {
+    // TODO : Change initial value(ex: -1 or using string) of max-age and then
+    // modify freshness calculation algorithm appropriately
+    if (cc.noStore || cc.maxAge == 0) {
         return;
     }
 
-    pruningIfNeeds(info.contentLength);
+    HTTPFreshnessInfo finfo = HTTPUtil::getHTTPFreshnessInfoFromHeaders(
+        data->request->document()->scriptBindingInstance(), headerMap);
+
+    finfo.requestTime = data->httpTransaction->httpRequest().requestTime();
+    finfo.responseTime = data->httpTransaction->httpResponse().responseTime();
+
+    pruningIfNeeds(cinfo.contentLength);
 
     HTTPCacheEntry* newEntry =
-        new HTTPCacheEntry(data->request->url(), info, cc);
+        new HTTPCacheEntry(data->request->url(), cc, cinfo, finfo);
     newEntry->setEntryFileNameUsingCachePath(m_cacheDirPath);
 
     bool ret = newEntry->writeRawDataToEntryFile(data->request->response());
@@ -285,7 +303,7 @@ void HTTPCache::put(NetworkURLWorkerData* data)
     // TODO : LRUlist must be flushed to disk and restored from disk.
     addCacheLRUListData(urlStr);
 
-    m_currentCacheSize += info.contentLength;
+    m_currentCacheSize += cinfo.contentLength;
 }
 
 bool HTTPCache::flush()
@@ -322,30 +340,30 @@ void HTTPCache::pruningIfNeeds(size_t contentLength)
 
     expire();
     // Consider indexFile size
+    size_t removedSize = 0;
+    size_t reserve = contentLength;
 
-    if (m_currentCacheSize + contentLength > DEFAULT_HTTP_CACHE_SIZE) {
-        size_t removedSize = 0;
-        auto iter = m_cacheLRUList.begin();
-
-        size_t reserve = ((DEFAULT_HTTP_CACHE_SIZE * 0.30) < contentLength)
-                             ? contentLength
-                             : DEFAULT_HTTP_CACHE_SIZE * 0.30;
-        while (m_cacheLRUList.size() && removedSize <= reserve) {
+    if (m_currentCacheSize + reserve > m_cacheSize) {
+        for (auto iter = m_cacheLRUList.begin();
+             iter != m_cacheLRUList.end() && removedSize < reserve;) {
             std::string urlStr = (*iter);
             auto tableIter =
                 findEntryTableData(String::fromUTF8(urlStr.data()));
             HTTPCacheEntry* cacheEntry = tableIter->second;
-            HTTPFreshnessInfo info = cacheEntry->httpFreshnessInfo();
+
+            if (cacheEntry->usingCount() > 0) {
+                iter++;
+                continue;
+            }
 
             File* fio = File::create();
-            fio->open(cacheEntry->entryFileName(), File::Read);
-            if (fio->isOpen()) {
+            if (fio->open(cacheEntry->entryFileName(), File::Read)) {
+                HTTPContentInfo info = cacheEntry->httpContentInfo();
                 m_currentCacheSize -= info.contentLength;
                 removedSize += info.contentLength;
                 fio->removeFile();
+                fio->close();
             }
-            fio->close();
-
             m_cacheEntryTable.erase(tableIter);
             iter = m_cacheLRUList.erase(iter);
         }
