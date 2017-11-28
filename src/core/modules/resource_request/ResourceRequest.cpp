@@ -63,7 +63,6 @@ ResourceRequest::ResourceRequest(Document* document)
     , m_pendingOnProgressEventIdlerHandle(SIZE_MAX)
     , m_loaded(0)
     , m_total(0)
-    , m_pendingNetworkWorkerEndIdlerHandle(SIZE_MAX)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -113,12 +112,6 @@ void ResourceRequest::clearIdlers()
         starFish()->messageLoop()->removeIdlerWithNoGCRooting(
             m_pendingOnProgressEventIdlerHandle);
         m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
-    }
-
-    if (m_pendingNetworkWorkerEndIdlerHandle != SIZE_MAX) {
-        starFish()->messageLoop()->removeIdlerWithNoGCRooting(
-            m_pendingNetworkWorkerEndIdlerHandle);
-        m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
     }
 
     if (m_activeNetworkURLWorkerData) {

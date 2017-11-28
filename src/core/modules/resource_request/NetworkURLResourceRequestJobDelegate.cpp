@@ -129,15 +129,6 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 
     if (requestData->isAborted) {
     } else if (requestData->httpTransaction->res() == 0) {
-        if (!requestData->request->isSync()) {
-            Locker<Mutex> locker(*requestData->request->m_mutex);
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle =
-                SIZE_MAX;
-        }
-        STARFISH_ASSERT(
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
-            SIZE_MAX);
-
         if (requestData->isRedirected) {
             requestData->request->m_lastLocation =
                 String::createASCIIString(
@@ -184,28 +175,12 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         requestData->request->handleResponseEOF();
     } else if (requestData->httpTransaction->res() ==
                CURLE_OPERATION_TIMEDOUT) {
-        if (!requestData->request->isSync()) {
-            Locker<Mutex> locker(*requestData->request->m_mutex);
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle =
-                SIZE_MAX;
-        }
-        STARFISH_ASSERT(
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
-            SIZE_MAX);
         auto s = requestData->request->m_url->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO(
             "got timeout %s[%d]\n", s.data(),
             (int)requestData->httpTransaction->httpResponse().responseCode());
         requestData->request->handleError(ResourceRequest::TIMEOUT);
     } else {
-        if (!requestData->request->isSync()) {
-            Locker<Mutex> locker(*requestData->request->m_mutex);
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle =
-                SIZE_MAX;
-        }
-        STARFISH_ASSERT(
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle ==
-            SIZE_MAX);
         auto s = requestData->request->m_url->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO("failed to open %s\n", s.data());
         requestData->request->handleError(ResourceRequest::ERROR);
@@ -245,12 +220,10 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(
     int res, NetworkURLWorkerData* requestData)
 {
     Locker<Mutex> locker(*requestData->request->m_mutex);
-    requestData->request->m_pendingNetworkWorkerEndIdlerHandle =
-        requestData->request->starFish()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                requestData->request->document()->browsingContext(),
-                this->responseHandler, requestData);
+    requestData->request->starFish()
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(nullptr, this->responseHandler,
+                                               requestData);
 }
 
 NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
@@ -494,7 +467,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                 request->starFish()
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
-                        request->document()->browsingContext(),
+                        nullptr,
                         [](size_t handle, void* data) {
                             ResourceRequest* request = (ResourceRequest*)data;
                             Locker<Mutex> locker(*request->m_mutex);
@@ -552,7 +525,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                         request->starFish()
                             ->messageLoop()
                             ->addIdlerWithNoGCRootingInOtherThread(
-                                request->document()->browsingContext(),
+                                nullptr,
                                 [](size_t handle, void* data) {
                                     ResourceRequest* request =
                                         (ResourceRequest*)data;
