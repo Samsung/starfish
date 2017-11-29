@@ -25,6 +25,7 @@
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/HTMLStyleElement.h"
 #include "core/dom/Text.h"
@@ -9258,6 +9259,14 @@ void dump(Node* node, unsigned depth)
     while (child) {
         if (child->isElement()) {
             dump(child, depth + 1);
+            if (child->isHTMLIFrameElement() &&
+                child->asHTMLIFrameElement()->browsingContext()) {
+                dump(child->asHTMLIFrameElement()
+                         ->browsingContext()
+                         ->document()
+                         ->asNode(),
+                     depth + 1);
+            }
         }
         child = child->nextSibling();
     }
