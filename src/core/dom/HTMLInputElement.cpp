@@ -220,10 +220,6 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLFormObject::didAttributeChanged(name, old, val, attributeCreated,
                                         attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_maxlength) {
-        // TODO: the logic for the negative value
-        setMaxLength(String::parseInt(val));
-    }
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
         if (name == starFish()->staticStrings()->m_type || !old->equals(val)) {
@@ -480,11 +476,32 @@ void HTMLInputElement::styleForPresentationAttribute(
 
 int32_t HTMLInputElement::maxLength()
 {
-    return m_maxlength;
+    int32_t result = 0;
+    String* maxLengthStr =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_maxlength);
+
+    if (maxLengthStr->equals(String::emptyString)) {
+        result = -1;
+    } else {
+        result = String::parseInt(maxLengthStr);
+        if (result < 0) {
+            result = -1;
+        }
+    }
+    return result;
 }
 
 void HTMLInputElement::setMaxLength(int32_t maxlength)
 {
-    m_maxlength = maxlength;
+    if (maxlength < 0) {
+        COMPOSE_MESSAGE(reason, NOT_POSITIVE,
+                        String::fromInt(maxlength)->toUTF8NonGCString().data());
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "maxLength",
+                        "HTMLInputElement", reason);
+        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+    } else {
+        setAttribute(starFish()->staticStrings()->m_maxlength,
+                     String::fromInt(maxlength));
+    }
 }
 }
