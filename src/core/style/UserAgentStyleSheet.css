@@ -134,7 +134,7 @@
 "    padding-left: 40px;"
 "}"
 "li {"
-"    display: block;"
+"    display: list-item;"
 "}"
 "dd {"
 "    display:block;"

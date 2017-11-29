@@ -2104,8 +2104,8 @@ protected:
     bool m_seenViewPortUnitInStyle : 1;
     FloatValue m_float : 2;
     ClearValue m_clear : 2;
-    DisplayValue m_display : 4;
-    DisplayValue m_originalDisplay : 4;
+    DisplayValue m_display : 5;
+    DisplayValue m_originalDisplay : 5;
     PositionValue m_position : 2;
     VerticalAlignValue m_verticalAlign : 4;
     OverflowValue m_overflowX : 2;

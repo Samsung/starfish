@@ -1656,6 +1656,10 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("inline");
         case DisplayValue::BlockDisplayValue:
             return String::fromUTF8("block");
+        case DisplayValue::InlineListItemDisplayValue:
+            return String::fromUTF8("inline-list-item");
+        case DisplayValue::ListItemDisplayValue:
+            return String::fromUTF8("list-item");
         case DisplayValue::InlineBlockDisplayValue:
             return String::fromUTF8("inline-block");
         case DisplayValue::TableDisplayValue:
@@ -6614,6 +6618,10 @@ bool CSSStyleValuePair::updateValueDisplay(const CSSTokenVector& tokens)
         m_value.m_display = DisplayValue::BlockDisplayValue;
     } else if (STRING_VALUE_IS_STRING("inline")) {
         m_value.m_display = DisplayValue::InlineDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("inline-list-item")) {
+        m_value.m_display = DisplayValue::InlineListItemDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("list-item")) {
+        m_value.m_display = DisplayValue::ListItemDisplayValue;
     } else if (STRING_VALUE_IS_STRING("inline-block")) {
         m_value.m_display = DisplayValue::InlineBlockDisplayValue;
     } else if (STRING_VALUE_IS_STRING("table")) {
