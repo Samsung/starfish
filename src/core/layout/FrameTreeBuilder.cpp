@@ -142,8 +142,9 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
     }
 
     if (!isBlockChild || (!currentFrame->isNormalFlow())) {
-        if (currentNode->parentNode()->style()->display() ==
-            InlineDisplayValue) {
+        DisplayValue display = currentNode->parentNode()->style()->display();
+        if (display == InlineDisplayValue ||
+            display == InlineListItemDisplayValue) {
             auto iter = ctx.frameInlineItem().find(currentNode->parentNode());
             iter->second->appendChild(currentFrame);
             return;
@@ -550,9 +551,11 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             currentFrame = new FrameFlexibleBox(current, nullptr);
         } else {
             if (display == DisplayValue::BlockDisplayValue ||
-                display == DisplayValue::InlineBlockDisplayValue) {
+                display == DisplayValue::InlineBlockDisplayValue ||
+                display == DisplayValue::ListItemDisplayValue) {
                 currentFrame = new FrameBlockBox(current, nullptr);
-            } else if (display == DisplayValue::InlineDisplayValue) {
+            } else if (display == DisplayValue::InlineDisplayValue ||
+                       display == DisplayValue::InlineListItemDisplayValue) {
                 if (current->isCharacterData() &&
                     current->asCharacterData()->isText()) {
                     currentFrame = new FrameText(current, current->style());

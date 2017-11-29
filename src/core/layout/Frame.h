@@ -1503,20 +1503,30 @@ public:
         m_flags.m_isRunningTransformAnimation = false;
     }
 
-    bool isBlockLevel()
+    bool isBlockLevel(bool originally = false)
     {
-        // block, table, list-item
-        return (style()->display() == DisplayValue::BlockDisplayValue) ||
-               (style()->display() == DisplayValue::TableDisplayValue) ||
-               (style()->display() == DisplayValue::FlexDisplayValue);
+        DisplayValue display;
+        if (originally) {
+            display = style()->originalDisplay();
+        } else {
+            display = style()->display();
+        }
+
+        return (display == DisplayValue::BlockDisplayValue) ||
+               (display == DisplayValue::ListItemDisplayValue) ||
+               (display == DisplayValue::TableDisplayValue) ||
+               (display == DisplayValue::FlexDisplayValue);
     }
 
     bool isInlineLevel()
     {
-        return (style()->display() == DisplayValue::InlineDisplayValue) ||
-               (style()->display() == DisplayValue::InlineBlockDisplayValue) ||
-               (style()->display() == DisplayValue::InlineTableDisplayValue) ||
-               (style()->display() == DisplayValue::InlineFlexDisplayValue);
+        DisplayValue display = style()->display();
+
+        return (display == DisplayValue::InlineDisplayValue) ||
+               (display == DisplayValue::InlineListItemDisplayValue) ||
+               (display == DisplayValue::InlineBlockDisplayValue) ||
+               (display == DisplayValue::InlineTableDisplayValue) ||
+               (display == DisplayValue::InlineFlexDisplayValue);
     }
 
     bool isAtomicInlineLevel()

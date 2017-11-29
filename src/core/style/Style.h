@@ -589,13 +589,15 @@ inline CSSTime& operator/=(CSSTime& a, float b)
     return a;
 }
 
-// inline | block | list-item | inline-block | table | inline-table |
-// table-row-group | table-header-group | table-footer-group | table-row |
-// table-column-group | table-column | table-cell | table-caption | flex |
-// inline-flex | none | inherit
+// inline | block | list-item | inline-list-item | inline-block | table |
+// inline-table | table-row-group | table-header-group | table-footer-group |
+// table-row | table-column-group | table-column | table-cell | table-caption |
+// flex | inline-flex | none | inherit
 enum DisplayValue {
     InlineDisplayValue, // initial value
     BlockDisplayValue,
+    ListItemDisplayValue,
+    InlineListItemDisplayValue,
     InlineBlockDisplayValue,
     TableDisplayValue,
     InlineTableDisplayValue,

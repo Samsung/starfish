@@ -1411,7 +1411,7 @@ void LineFormattingContext::insertAbsolutePositionedBoxes()
             }
         }
 
-        if (box->style()->originalDisplay() == BlockDisplayValue) {
+        if (box->isBlockLevel(true)) {
             if (dir == DirectionValue::LtrDirectionValue) {
                 box->setX(m_leftBoundary - m_absPosition.x() - m_lineBoxX);
             } else {
@@ -2425,7 +2425,7 @@ void LineFormattingContext::handleAbsoluteBox(FrameBox* box, bool canInsert,
             registerAbsolutePositionedBox(box);
         }
 
-        if (box->style()->originalDisplay() != BlockDisplayValue) {
+        if (!box->isBlockLevel(true)) {
             m_currentLayoutParent->insertInlineBox(box);
         }
 
