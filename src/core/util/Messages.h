@@ -50,6 +50,8 @@ static const char* INVALID_DATA_CLONE = "'%s' could not be cloned.";
 static const char* ORIGINS_ARE_NOT_MATCHED =
     "The target origin provided('%s') "
     "does not match the recipient window's origin('%s')";
+static const char* NOT_POSITIVE =
+    "The value provided (%s) is not positive or 0.";
 
 size_t bufferSize(std::initializer_list<const char*> args);
 
