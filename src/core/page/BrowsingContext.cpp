@@ -614,6 +614,11 @@ void BrowsingContext::dispose()
 
     m_globalPointingEventListener.clear();
 
+    if (isTopLevelBrowsingContext())
+        m_starFish->timer()->clear(nullptr);
+    else
+        m_starFish->timer()->clear(this);
+
     if (m_window) {
         StarFishEnterer enter(m_starFish);
         if (!document()->onLoadFired()) {
@@ -640,14 +645,12 @@ void BrowsingContext::dispose()
     m_isActive = false;
 
     if (isTopLevelBrowsingContext()) {
-        m_starFish->timer()->clear(nullptr);
         m_starFish->platformWindow()->clearResources();
         m_starFish->messageLoop()->clearPendingIdlers(this);
         webView()->clearStackingContext(false);
 
         m_webView->initRenderingFlags();
     } else {
-        m_starFish->timer()->clear(this);
         m_starFish->messageLoop()->clearPendingIdlers(this);
     }
 
