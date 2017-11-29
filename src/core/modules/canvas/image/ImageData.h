@@ -41,7 +41,8 @@ public:
     virtual size_t bufferSize() = 0;
     virtual uint8_t* data() = 0;
     virtual void clear() = 0;
-    virtual void* unwrap() = 0;
+    virtual void* unwrap() = 0;          // Use in EFL port
+    virtual void* internalSurface() = 0; // Use in Cairo port
     virtual size_t width() = 0;
     virtual size_t height() = 0;
     virtual size_t stride() = 0;

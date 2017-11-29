@@ -419,28 +419,32 @@ public:
                 h += STARFISH_CANVAS_SURFACE_MARGIN;
             }
 
-            m_pixelRatio = 1;
+            size_t v = 20000;
+            void* address = nullptr;
+            do {
+                m_pixelRatio = 1;
 
-            while ((m_width / m_pixelRatio > 20000) ||
-                   (m_height / m_pixelRatio > 20000)) {
-                m_pixelRatio++;
-            }
+                while ((m_width / m_pixelRatio > v) ||
+                       (m_height / m_pixelRatio > v)) {
+                    m_pixelRatio++;
+                }
 
-            m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
-            m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
+                m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
+                m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
 
-            m_bufferWidth = std::max((size_t)1, w / m_pixelRatio);
-            m_bufferHeight = std::max((size_t)1, h / m_pixelRatio);
+                m_bufferWidth = std::max((size_t)1, w / m_pixelRatio);
+                m_bufferHeight = std::max((size_t)1, h / m_pixelRatio);
 
-            evas_object_image_size_set(m_image, m_bufferWidth, m_bufferHeight);
+                evas_object_image_size_set(m_image, m_bufferWidth,
+                                           m_bufferHeight);
+                address = evas_object_image_data_get(m_image, EINA_FALSE);
+                evas_object_image_data_set(m_image, address);
+            } while (address == nullptr && (v -= 5000));
+            STARFISH_ASSERT(address);
+
             m_bufferStride = evas_object_image_stride_get(m_image);
             g_totalCanvasSurfaceEFLSize += (m_bufferWidth * m_bufferHeight * 4);
         }
-#ifndef NDEBUG
-        void* address = evas_object_image_data_get(m_image, EINA_TRUE);
-        STARFISH_ASSERT(address);
-        evas_object_image_data_set(m_image, address);
-#endif
     }
 
     virtual void resize(size_t w, size_t h)
@@ -450,13 +454,6 @@ public:
 
         m_width = w;
         m_height = h;
-
-        m_pixelRatio = 1;
-
-        while ((m_width / m_pixelRatio > 20000) ||
-               (m_height / m_pixelRatio > 20000)) {
-            m_pixelRatio++;
-        }
 
         m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
         m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);

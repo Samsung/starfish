@@ -467,22 +467,21 @@ public:
         }
 
         size_t surfaceWidth = data->width(), surfaceHeight = data->height();
-#if defined(PORT_CANVAS_BACKEND_CAIRO) && !defined(PORT_CANVAS_BACKEND_EFL)
-        if (surfaceWidth && surfaceHeight) {
-            cairo_surface_t* image = (cairo_surface_t*)data->unwrap();
-            drawImageCairo(image, dst, surfaceWidth, surfaceHeight);
-        }
-#else
-        if (surfaceWidth && surfaceHeight) {
-            cairo_surface_t* image;
-            image = cairo_image_surface_create_for_data(
-                (unsigned char*)data->data(), CAIRO_FORMAT_ARGB32, surfaceWidth,
-                surfaceHeight, data->stride());
 
-            drawImageCairo(image, dst, surfaceWidth, surfaceHeight);
+        bool surfaceWasCreated = false;
+        cairo_surface_t* image = (cairo_surface_t*)data->internalSurface();
+        if (!image) {
+            surfaceWasCreated = true;
+            image = cairo_image_surface_create_for_data(
+                (unsigned char*)data->data(), CAIRO_FORMAT, data->width(),
+                data->height(), data->stride());
+        }
+
+        drawImageCairo(image, dst, surfaceWidth, surfaceHeight);
+
+        if (surfaceWasCreated) {
             cairo_surface_destroy(image);
         }
-#endif
     }
 
     virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst)
@@ -539,7 +538,16 @@ public:
 
         cairo_pattern_t* pattern;
         cairo_matrix_t matrix;
-        cairo_surface_t* image = (cairo_surface_t*)data->unwrap();
+
+        cairo_surface_t* image = (cairo_surface_t*)data->internalSurface();
+
+        bool surfaceWasCreated = false;
+        if (!image) {
+            surfaceWasCreated = true;
+            image = cairo_image_surface_create_for_data(
+                (unsigned char*)data->data(), CAIRO_FORMAT, data->width(),
+                data->height(), data->stride());
+        }
 
         double surfaceWidth = data->width(), surfaceHeight = data->height();
         if (surfaceWidth && surfaceHeight) {
@@ -564,6 +572,10 @@ public:
             }
 
             cairo_pattern_destroy(pattern);
+        }
+
+        if (surfaceWasCreated) {
+            cairo_surface_destroy(image);
         }
         cairo_restore(m_canvas);
     }
