@@ -101,9 +101,14 @@ public:
             NULL, NULL, NULL);
     }
 
-    virtual void* unwrap()
+    virtual void* internalSurface()
     {
         return m_imageSurface;
+    }
+
+    virtual void* unwrap()
+    {
+        return nullptr;
     }
 
     virtual size_t width()

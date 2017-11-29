@@ -136,6 +136,11 @@ public:
         return m_image;
     }
 
+    virtual void* internalSurface()
+    {
+        return nullptr;
+    }
+
     virtual size_t width()
     {
         return m_width;
