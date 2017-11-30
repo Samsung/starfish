@@ -185,7 +185,7 @@ void HTTPCache::put(NetworkURLWorkerData* data)
     const HeaderMap& headerMap = data->request->responseHeaderMap();
 
     HTTPContentInfo cinfo = HTTPUtil::getHTTPContentInfoFromHeaders(headerMap);
-    if (cinfo.contentLength > MAX_ENTRY_FILE_SIZE) {
+    if (cinfo.contentLength > MAX_ENTRY_FILE_SIZE || cinfo.contentLength == 0) {
         return;
     }
 
