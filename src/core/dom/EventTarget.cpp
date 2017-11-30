@@ -279,6 +279,9 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 GCVector<EventListener*>(*originals);
             for (auto listener : copies) {
                 STARFISH_ASSERT(listener);
+                if (event->stopImmediatePropagationValue()) {
+                    break;
+                }
                 if (std::find(originals->begin(), originals->end(), listener) !=
                     originals->end()) {
                     // STARFISH_LOG_INFO("[AT_TARGET] node: %s\n",
@@ -381,6 +384,9 @@ bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
                 GCVector<EventListener*>(*originals);
             for (auto listener : copies) {
                 STARFISH_ASSERT(listener);
+                if (event->stopImmediatePropagationValue()) {
+                    break;
+                }
                 if (std::find(originals->begin(), originals->end(), listener) !=
                     originals->end()) {
                     event->setCurrentTarget(origin);
