@@ -40,6 +40,10 @@
 #endif
 
 namespace StarFish {
+#ifdef STARFISH_ENABLE_PROFILING
+int64_t NetworkURLWorkerData::reqCnt = 0;
+int64_t NetworkURLWorkerData::hitCnt = 0;
+#endif
 
 NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     : isAborted(false)
@@ -52,7 +56,14 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     , cachedEntry(nullptr)
 #endif
     , lastLocation("")
+#ifdef STARFISH_ENABLE_PROFILING
+    , start(longTickCount())
+    , cachehit(false)
+#endif
 {
+#ifdef STARFISH_ENABLE_PROFILING
+    NetworkURLWorkerData::reqCnt++;
+#endif
 }
 
 NetworkURLWorkerData::~NetworkURLWorkerData()
@@ -61,6 +72,17 @@ NetworkURLWorkerData::~NetworkURLWorkerData()
     if (cachedEntry) {
         cachedEntry->decreaseUsingCount();
     }
+#endif
+#ifdef STARFISH_ENABLE_PROFILING
+    if (cachehit) {
+        NetworkURLWorkerData::hitCnt++;
+    }
+    uint64_t end = longTickCount();
+    STARFISH_LOG_INFO(
+        "[Profile] Resource Raw data Load in %f ms, diskcache: %s, HitRate: "
+        "%lf\n",
+        (float)((end - start) / 1000.f), (cachehit) ? "hit" : "miss",
+        (hitCnt) ? (double)hitCnt / reqCnt : 0);
 #endif
 }
 
@@ -76,15 +98,9 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
             HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
             NetworkURLWorkerHelper::httpCacheWorker(nwd);
         } else {
-            STARFISH_LOG_INFO(
-                "Load Resource[%s] from network\n",
-                nwd->request->m_url->urlString()->toUTF8NonGCString().data());
             responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
         }
 #else
-        STARFISH_LOG_INFO(
-            "Load Resource[%s] from network\n",
-            nwd->request->m_url->urlString()->toUTF8NonGCString().data());
         responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
 #endif
     } else {
@@ -98,9 +114,7 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     ResourceRequest* request = (ResourceRequest*)nwd->request;
-    STARFISH_LOG_INFO(
-        "Load Resource[%s] from Disk\n",
-        nwd->request->m_url->urlString()->toUTF8NonGCString().data());
+
     bool ret;
     {
         // NOTE: may need the headers received when RawData cached, but
@@ -109,6 +123,9 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
         ret = nwd->cachedEntry->readRawDataFromEntryFile(
             nwd->request->response());
         nwd->cachedEntry->readEntryHeaders(nwd->request->m_responseHeaderMap);
+#ifdef STARFISH_ENABLE_PROFILING
+        nwd->cachehit = true;
+#endif
     }
     if (ret) {
         nwd->httpTransaction->httpResponse().setResponseCode(200);

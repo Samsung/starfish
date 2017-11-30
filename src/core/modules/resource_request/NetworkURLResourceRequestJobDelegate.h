@@ -41,6 +41,12 @@ struct NetworkURLWorkerData {
     HTTPCacheEntry* cachedEntry;
 #endif
     std::string lastLocation;
+#ifdef STARFISH_ENABLE_PROFILING
+    uint64_t start;
+    bool cachehit;
+    static int64_t reqCnt;
+    static int64_t hitCnt;
+#endif
 };
 
 class NetworkURLWorkerHelper : public gc {
