@@ -1579,6 +1579,7 @@ public:
             }
         } else {
             clip = evas_object_rectangle_add(m_canvas);
+            evas_object_static_clip_set(clip, EINA_TRUE);
             int c = lastState().m_opacity * 255;
             evas_object_color_set(eo, c, c, c, c);
             evas_object_move(clip, lastState().m_clipRect.x(),

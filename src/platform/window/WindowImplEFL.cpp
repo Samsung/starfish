@@ -1242,6 +1242,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             evas_object_image_size_get(wnd->m_canvasAdpater, &w, &h);
             if (w != wnd->width() || h != wnd->height()) {
                 evas_object_image_size_set(wnd->m_canvasAdpater, 0, 0);
+                evas_object_hide(wnd->m_canvasAdpater);
                 evas_render(evas_object_evas_get(wnd->m_window));
                 StarFishEnterer enter(wnd->starFish());
                 wnd->onResize();
@@ -1596,17 +1597,9 @@ void WebView::setNeedsRendering()
                 return ECORE_CALLBACK_CANCEL;
             }
 
-#ifdef STARFISH_TIZEN_TV
-            auto currentTick = tickCount();
-            auto diff = currentTick - wnd->m_lastRenderingTime;
-            if (!wnd->m_canRendering || (diff < (1.0 / 120 * 1000))) {
-                return ECORE_CALLBACK_RENEW;
-            }
-#else
             if (!wnd->m_canRendering) {
                 return ECORE_CALLBACK_RENEW;
             }
-#endif
 
             StarFishEnterer enter(wnd->starFish());
             if (wnd->rendering()) {
@@ -1709,7 +1702,20 @@ Canvas* WindowImplEFL::preparePainting()
         m_canvasAdpaterSurface = nullptr;
     }
 
-    evas_object_image_size_set(m_canvasAdpater, width(), height());
+    {
+        int w, h;
+        evas_object_image_size_get(m_canvasAdpater, &w, &h);
+        if (w != width() || h != height()) {
+            evas_object_image_size_set(m_canvasAdpater, width(), height());
+            void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
+            memset(addr, 0,
+                   evas_object_image_stride_get(m_canvasAdpater) * height());
+            evas_object_image_data_set(m_canvasAdpater, addr);
+            evas_object_image_data_update_add(m_canvasAdpater, 0, 0, width(),
+                                              height());
+        }
+    }
+
     m_canvasAdpaterSurface = cairo_image_surface_create_for_data(
         (unsigned char*)evas_object_image_data_get(m_canvasAdpater, EINA_TRUE),
         CAIRO_FORMAT_ARGB32, width(), height(),
@@ -1767,7 +1773,20 @@ Compositor* WindowImplEFL::prepareCompositor()
         m_canvasAdpaterSurface = nullptr;
     }
 
-    evas_object_image_size_set(m_canvasAdpater, width(), height());
+    {
+        int w, h;
+        evas_object_image_size_get(m_canvasAdpater, &w, &h);
+        if (w != width() || h != height()) {
+            evas_object_image_size_set(m_canvasAdpater, width(), height());
+            void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
+            memset(addr, 0,
+                   evas_object_image_stride_get(m_canvasAdpater) * height());
+            evas_object_image_data_set(m_canvasAdpater, addr);
+            evas_object_image_data_update_add(m_canvasAdpater, 0, 0, width(),
+                                              height());
+        }
+    }
+
     m_canvasAdpaterSurface = cairo_image_surface_create_for_data(
         (unsigned char*)evas_object_image_data_get(m_canvasAdpater, EINA_TRUE),
         CAIRO_FORMAT_ARGB32, width(), height(),
