@@ -1661,6 +1661,10 @@ protected:
 
         bool m_isRunningTransformAnimation : 1;
 
+        bool m_seenNormalFlowBlockChild : 1;
+        bool m_seenNonPositionedFloats : 1;
+        bool m_seenNormalFlowInline : 1;
+
         // special flag for FrameBlockBox
         bool m_heightComputed : 1;
         bool m_hasBiggerContentThanFrameWidth : 1;

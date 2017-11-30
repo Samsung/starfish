@@ -201,6 +201,20 @@ void LengthAnimationTask::execute()
 
     current->setNeedsLayout();
 }
+
+TransformAnimationTask::TransformAnimationTask(
+    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    String* targetPropertyString, AnimatedValue fromValue, float duration,
+    float delay, AnimationTimingFunction* timingFunction)
+    : AnimationTask(
+          target, CSSStyleValuePair::KeyKind::Transform,
+          transitionPropertyValueToString(TransitionPropertyTransformValue),
+          fromValue, AnimatedValue(), duration, delay, timingFunction)
+{
+    target->style()->setRareComputedStyleDataIfNeeded();
+    target->style()->rareComputedStyleData()->ensureTransforms();
+}
+
 void TransformAnimationTask::computeToValue()
 {
     FrameBox* box = targetElement()->frame()->asFrameBox();
@@ -218,6 +232,7 @@ void TransformAnimationTask::computeToValue()
         // for rebuilding stacking context, we should give layout damage
         current->setNeedsLayout();
     }
+    style->setRareComputedStyleDataIfNeeded();
     style->rareComputedStyleData()->ensureTransforms()->append(
         StyleTransformData(StyleTransformData::InternalMatrix));
 }
@@ -255,7 +270,15 @@ void TransformAnimationTask::execute()
     ComputedStyle* style = current->style();
     float tmpProgress = progress();
 
+    style->setRareComputedStyleDataIfNeeded();
+    style->rareComputedStyleData()->ensureTransforms();
     auto transforms = style->rareComputedStyleData()->transforms();
+    if (transforms->size() == 0 ||
+        transforms->at(transforms->size() - 1).type() !=
+            StyleTransformData::InternalMatrix) {
+        computeToValue();
+    }
+
     if (isExpired()) {
         // cleanup
         if (transforms->at(transforms->size() - 1).type() ==
@@ -269,10 +292,6 @@ void TransformAnimationTask::execute()
             }
         }
     } else {
-        if (transforms->at(transforms->size() - 1).type() !=
-            StyleTransformData::InternalMatrix) {
-            computeToValue();
-        }
         StyleTransformData& data = transforms->at(transforms->size() - 1);
         SkMatrix now;
         for (size_t i = 0; i < 9; i++) {

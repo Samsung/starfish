@@ -513,7 +513,7 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
 
 void FrameReplaced::paintContent(PaintingContext& ctx)
 {
-    if (isEstablishesStackingContext()) {
+    if (canSkipPaintingStage(ctx)) {
         return;
     }
 

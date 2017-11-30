@@ -812,7 +812,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 
 void FrameBlockBox::paintContent(PaintingContext& ctx)
 {
-    if (isEstablishesStackingContext()) {
+    if (canSkipPaintingStage(ctx)) {
         return;
     }
 

@@ -888,6 +888,9 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_hasBiggerContentThanFrameHeight = false;
     m_flags.m_isFirstLine = false;
     m_flags.m_isRunningTransformAnimation = false;
+    m_flags.m_seenNormalFlowBlockChild = false;
+    m_flags.m_seenNonPositionedFloats = false;
+    m_flags.m_seenNormalFlowInline = false;
 
     computeStyleFlags();
 }

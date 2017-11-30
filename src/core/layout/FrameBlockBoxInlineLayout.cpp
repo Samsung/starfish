@@ -4155,7 +4155,7 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
 
 void InlineNonReplacedBox::paintContent(PaintingContext& ctx)
 {
-    if (isEstablishesStackingContext()) {
+    if (canSkipPaintingStage(ctx)) {
         return;
     }
 

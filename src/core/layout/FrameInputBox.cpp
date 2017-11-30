@@ -189,6 +189,10 @@ void FrameInputBox::layout(LayoutContext& ctx,
 
 void FrameInputBox::paintContent(PaintingContext& ctx)
 {
+    if (canSkipPaintingStage(ctx)) {
+        return;
+    }
+
     FrameBlockBox::paintContent(ctx);
 
     if (ctx.m_paintingStage == PaintingStage::PaintingNormalFlowInline) {
