@@ -235,13 +235,7 @@ public:
                            CSSStyleValuePair::KeyKind targetProperty,
                            String* targetPropertyString,
                            AnimatedValue fromValue, float duration, float delay,
-                           AnimationTimingFunction* timingFunction)
-        : AnimationTask(
-              target, CSSStyleValuePair::KeyKind::Transform,
-              transitionPropertyValueToString(TransitionPropertyTransformValue),
-              fromValue, AnimatedValue(), duration, delay, timingFunction)
-    {
-    }
+                           AnimationTimingFunction* timingFunction);
     void setup();
     void execute() override;
     void attachedToElement() override;

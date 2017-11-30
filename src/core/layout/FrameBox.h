@@ -603,6 +603,31 @@ public:
 
     virtual void paintOwnContent(Canvas* canvas);
     virtual void paintContent(PaintingContext& ctx);
+    bool canSkipPaintingStage(PaintingContext& ctx)
+    {
+        if (isEstablishesStackingContext()) {
+            return true;
+        }
+        return false;
+
+        if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
+            if (!m_flags.m_seenNormalFlowBlockChild) {
+                return true;
+            }
+        } else if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
+            if (!m_flags.m_seenNonPositionedFloats) {
+                return true;
+            }
+        } else {
+            STARFISH_ASSERT(ctx.m_paintingStage == PaintingNormalFlowInline);
+            if (!m_flags.m_seenNormalFlowInline) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
