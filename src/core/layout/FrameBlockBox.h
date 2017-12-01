@@ -60,7 +60,7 @@ public:
         return true;
     }
 
-    virtual void paintContent(PaintingContext& ctx);
+    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
 #ifdef STARFISH_ENABLE_TEST
@@ -217,7 +217,7 @@ public:
     void layoutInlineBoxes(LineFormattingContext* ctx, LayoutUnit start);
     virtual void coordinateVerticalProperties(LineFormattingContext* ctx,
                                               LayoutUnit yOffset);
-    void registerRelativePositionedBoxes(LayoutContext& ctx);
+    void registerRelativePositionedBoxesAndMarkPaintFlag(LayoutContext& ctx);
 
     void moveToNewLineBox(LineFormattingContext* ctx, FrameBox* box,
                           LineBox* lineBox);
@@ -251,6 +251,8 @@ public:
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+
+    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage);
 
 protected:
     GCVector<FrameBox*> m_boxes;
@@ -324,7 +326,8 @@ public:
     }
 
     virtual void layoutInline(LineFormattingContext& lineFormattingContext);
-    virtual void paintContent(PaintingContext& ctx);
+    virtual void paintStackingContextContent(Canvas* canvas);
+    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage);
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
@@ -645,6 +648,7 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    void paintInlineContent(Canvas* canvas);
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
@@ -887,7 +891,7 @@ public:
     void markInlineBoxIndex(FrameBox* box);
 
     bool removeLastLineBoxIfNeeds();
-    void registerRelativePositionedBoxes();
+    void registerRelativePositionedBoxesAndMarkPaintFlag();
     LayoutUnit contentHeightForBlock();
 
     LineBox* currentLine()

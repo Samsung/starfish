@@ -344,6 +344,8 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
 void FrameReplaced::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
+    Frame::computePaintingFlags(ctx, resolveWhat);
+
     FrameBox* cb = containingBlock(this);
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         LayoutUnit parentContentWidth = cb->contentWidth();
@@ -523,25 +525,22 @@ void FrameReplaced::paintContent(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
-    if (isBlockLevel()) {
-        if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
+    if (isFloating()) {
+        if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             paintBackgroundAndBorders(ctx.m_canvas);
-        } else if (ctx.m_paintingStage == PaintingNormalFlowInline) {
+            paintReplaced(ctx.m_canvas);
+            paintOutline(ctx.m_canvas);
+        }
+    } else if (isBlockLevel()) {
+        if (ctx.m_paintingStage == PaintingReplacedBlock) {
+            paintBackgroundAndBorders(ctx.m_canvas);
             paintReplaced(ctx.m_canvas);
             paintOutline(ctx.m_canvas);
         }
     } else if (isInlineLevel() || isFlexItem()) {
-        if (ctx.m_paintingStage == PaintingNormalFlowInline &&
-            ctx.m_paintingInlineStage == PaintingReplaced) {
+        if (ctx.m_paintingStage == PaintingNormalFlowInline) {
             paintBackgroundAndBorders(ctx.m_canvas);
             paintReplaced(ctx.m_canvas);
-            paintOutline(ctx.m_canvas);
-        }
-    } else if (isFloating()) {
-        if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
-            paintBackgroundAndBorders(ctx.m_canvas);
-            paintReplaced(ctx.m_canvas);
-        } else if (ctx.m_paintingStage == PaintingNormalFlowInline) {
             paintOutline(ctx.m_canvas);
         }
     }

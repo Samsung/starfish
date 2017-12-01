@@ -890,9 +890,57 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_isRunningTransformAnimation = false;
     m_flags.m_seenNormalFlowBlockChild = false;
     m_flags.m_seenNonPositionedFloats = false;
+    m_flags.m_seenReplacedBlock = false;
     m_flags.m_seenNormalFlowInline = false;
 
     computeStyleFlags();
+}
+
+void Frame::computePaintingFlags(LayoutContext& ctx,
+                                 LayoutWantToResolve resolveWhat)
+{
+    if (resolveWhat & LayoutWantToResolve::ResolveWidth) {
+        m_flags.m_seenNormalFlowBlockChild = false;
+        m_flags.m_seenNonPositionedFloats = false;
+        m_flags.m_seenReplacedBlock = false;
+        m_flags.m_seenNormalFlowInline = false;
+    }
+
+    PaintingKind kind;
+
+    if (isInlineLevel() || isFlexItem()) {
+        kind = NormalFlowInline;
+    } else if (isFloating()) {
+        kind = NonPositionedFloats;
+    } else if (isBlockLevel() && isFrameReplaced()) {
+        kind = ReplacedBlock;
+    } else {
+        kind = NormalFlowBlockChild;
+    }
+
+    seenPaintingKind(kind);
+}
+
+void Frame::seenPaintingKind(PaintingKind kind)
+{
+    Frame* f = this;
+    while (f) {
+        if (kind == NormalFlowInline) {
+            f->m_flags.m_seenNormalFlowInline = true;
+        } else if (kind == NonPositionedFloats) {
+            f->m_flags.m_seenNonPositionedFloats = true;
+        } else if (kind == ReplacedBlock) {
+            f->m_flags.m_seenReplacedBlock = true;
+        } else {
+            f->m_flags.m_seenNormalFlowBlockChild = true;
+        }
+
+        if (f->isEstablishesStackingContext()) {
+            break;
+        }
+
+        f = f->layoutParent();
+    }
 }
 
 bool Frame::shouldApplyOverflow()

@@ -211,8 +211,16 @@ float Length::fontPercentValue(Node* n, bool isFontSize) const
         font = e->style()->font();
     }
 
-    return fontPercentValue(
-        fontSize, e->document()->rootElement()->style()->fixedFontSize(), font);
+    float rootElementFixedFontSize;
+
+    if (n->document()->rootElement() && n->document()->rootElement()->style()) {
+        rootElementFixedFontSize =
+            n->document()->rootElement()->style()->fixedFontSize();
+    } else {
+        rootElementFixedFontSize = fontSize;
+    }
+
+    return fontPercentValue(fontSize, rootElementFixedFontSize, font);
 }
 
 bool Length::operator==(const Length& src) const

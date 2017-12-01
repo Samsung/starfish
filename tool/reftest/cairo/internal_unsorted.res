@@ -215,7 +215,7 @@
 461;test/cairo/internal-test/css/table/table_section-position_01.html
 197;test/cairo/internal-test/cookie/cookie-internal-test-1.html
 173;test/cairo/internal-test/cookie/cookie-internal-test-2.html
-1432;http://10.113.64.74:7000/cookie/cookie-internal-test-3.html
+1432;http://10.113.63.233:7000/cookie/cookie-internal-test-3.html
 272;test/cairo/internal-test/css/text/word-concatenating.html
 267;test/cairo/internal-test/css/border/starting_unprocessed_mbp_with_pre.html
 276;test/cairo/internal-test/css/width/dont-break-line.html

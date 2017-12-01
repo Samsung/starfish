@@ -55,6 +55,7 @@ enum PaintingStage {
     PaintingNormalFlowBlock,     // the in-flow, non-inline-level,
                                  // non-positioned descendants.
     PaintingNonPositionedFloats, // the non-positioned float
+    PaintingReplacedBlock,       // block-level replaced elements
     PaintingNormalFlowInline,    // the in-flow, inline-level, non-positioned
                                  // descendants, including inline tables and
                                  // inline blocks.
@@ -67,13 +68,6 @@ enum HitTestStage {
     HitTestNonPositionedFloats,
     HitTestNormalFlowBlock,
     HitTestStageEnd,
-};
-
-enum PaintingInlineStage {
-    PaintingInlineBox,
-    PaintingBlockBox,
-    PaintingReplaced,
-    PaintingInlineStageEnd
 };
 
 class LineBox;
@@ -847,13 +841,11 @@ public:
     explicit PaintingContext(Canvas* canvas)
         : m_canvas(canvas)
         , m_paintingStage(PaintingNormalFlowBlock)
-        , m_paintingInlineStage(PaintingInlineBox)
     {
     }
 
     Canvas* m_canvas;
     PaintingStage m_paintingStage;
-    PaintingInlineStage m_paintingInlineStage;
 };
 
 class FrameTreeItemModel {
@@ -1328,6 +1320,20 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
+    enum PaintingKind {
+        NormalFlowBlockChild,
+        NonPositionedFloats,
+        NormalFlowInline,
+        ReplacedBlock,
+    };
+    void computePaintingFlags(LayoutContext& ctx,
+                              LayoutWantToResolve resolveWhat);
+    void seenPaintingKind(PaintingKind kind);
+    void markSeenNormalFlowInline()
+    {
+        m_flags.m_seenNormalFlowInline = true;
+    }
+
     virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
     {
         return false;
@@ -1663,6 +1669,7 @@ protected:
 
         bool m_seenNormalFlowBlockChild : 1;
         bool m_seenNonPositionedFloats : 1;
+        bool m_seenReplacedBlock : 1;
         bool m_seenNormalFlowInline : 1;
 
         // special flag for FrameBlockBox

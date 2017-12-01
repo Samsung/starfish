@@ -42,7 +42,9 @@ protected:
     const char* m_msg;
 };
 
-// #define STARFISH_ENABLE_PROFILE_TIMER
+#ifdef STARFISH_ENABLE_PROFILING
+#define STARFISH_ENABLE_PROFILE_TIMER
+#endif
 
 #ifdef STARFISH_ENABLE_PROFILE_TIMER
 #define INSTALL_PROFILE_TIMER(s) ProfilerTimer _p(s);

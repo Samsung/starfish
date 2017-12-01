@@ -1566,33 +1566,79 @@ public:
         }
 #endif
 
-        Evas_Object* clip = nullptr;
-        if (lastState().m_hasPathClip) {
-            clip = createPathClipper(lastState().m_opacity);
-            if (!clip) {
-                clip = evas_object_rectangle_add(m_canvas);
-                int c = 0;
-                evas_object_color_set(eo, c, c, c, c);
-                evas_object_move(clip, 0, 0);
-                evas_object_resize(clip, 0, 0);
-                evas_object_show(clip);
-            }
+        bool isClipNeeds = false;
+        if (lastState().m_opacity != 1) {
+            isClipNeeds = true;
+        } else if (lastState().m_hasPathClip) {
+            isClipNeeds = true;
         } else {
-            clip = evas_object_rectangle_add(m_canvas);
-            evas_object_static_clip_set(clip, EINA_TRUE);
-            int c = lastState().m_opacity * 255;
-            evas_object_color_set(eo, c, c, c, c);
-            evas_object_move(clip, lastState().m_clipRect.x(),
-                             lastState().m_clipRect.y());
-            evas_object_resize(clip, lastState().m_clipRect.width(),
-                               lastState().m_clipRect.height());
-            evas_object_show(clip);
+            LayoutRect r(
+                lastState().m_clipRect.x(), lastState().m_clipRect.y(),
+                lastState().m_clipRect.width() + 1.f / kFixedPointDenominator,
+                lastState().m_clipRect.height() + 1.f / kFixedPointDenominator);
+
+            SkScalar fromX;
+            SkScalar fromY;
+            SkPoint to;
+            fromX = SkFloatToScalar((float)dst.x());
+            fromY = SkFloatToScalar((float)dst.y());
+            lastState().m_matrix.mapXY(fromX, fromY, &to);
+
+            SkScalar fromX2;
+            SkScalar fromY2;
+            SkPoint to2;
+            fromX2 = SkFloatToScalar((float)dst.x() + dst.width());
+            fromY2 = SkFloatToScalar((float)dst.y());
+            lastState().m_matrix.mapXY(fromX2, fromY2, &to2);
+
+            SkScalar fromX3;
+            SkScalar fromY3;
+            SkPoint to3;
+            fromX3 = SkFloatToScalar((float)dst.x());
+            fromY3 = SkFloatToScalar((float)dst.y() + dst.height());
+            lastState().m_matrix.mapXY(fromX3, fromY3, &to3);
+
+            SkScalar fromX4;
+            SkScalar fromY4;
+            SkPoint to4;
+            fromX4 = SkFloatToScalar((float)dst.x() + dst.width());
+            fromY4 = SkFloatToScalar((float)dst.y() + dst.height());
+            lastState().m_matrix.mapXY(fromX4, fromY4, &to4);
+
+            if (r.contains(to.fX, to.fY) && r.contains(to2.fX, to2.fY) &&
+                r.contains(to3.fX, to3.fY) && r.contains(to4.fX, to4.fY)) {
+            } else {
+                isClipNeeds = true;
+            }
         }
 
-        if (m_objList) {
-            m_objList->push_back(clip);
+        if (isClipNeeds) {
+            Evas_Object* clip = nullptr;
+            if (lastState().m_hasPathClip) {
+                clip = createPathClipper(lastState().m_opacity);
+                if (!clip) {
+                    clip = evas_object_rectangle_add(m_canvas);
+                    int c = 0;
+                    evas_object_color_set(eo, c, c, c, c);
+                    evas_object_move(clip, 0, 0);
+                    evas_object_resize(clip, 0, 0);
+                    evas_object_show(clip);
+                }
+            } else {
+                clip = evas_object_rectangle_add(m_canvas);
+                int c = lastState().m_opacity * 255;
+                evas_object_color_set(eo, c, c, c, c);
+                evas_object_move(clip, lastState().m_clipRect.x(),
+                                 lastState().m_clipRect.y());
+                evas_object_resize(clip, lastState().m_clipRect.width(),
+                                   lastState().m_clipRect.height());
+                evas_object_show(clip);
+            }
+            if (m_objList) {
+                m_objList->push_back(clip);
+            }
+            evas_object_clip_set(eo, clip);
         }
-        evas_object_clip_set(eo, clip);
 
         Evas_Map* map = evas_map_new(4);
 
