@@ -1690,10 +1690,6 @@ void FrameBox::paintContent(PaintingContext& ctx)
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-void FrameBox::paintOwnContent(Canvas* canvas)
-{
-}
-
 void FrameBox::paintChildrenWith(PaintingContext& ctx)
 {
     Frame* child = firstChild();
@@ -1709,25 +1705,24 @@ void FrameBox::paintChildrenWith(PaintingContext& ctx)
 
 void FrameBox::paintStackingContextContent(Canvas* canvas)
 {
-    paintOwnContent(canvas);
-
     PaintingContext ctx(canvas);
 
     // the in-flow, non-inline-level, non-positioned descendants.
     ctx.m_paintingStage = PaintingNormalFlowBlock;
-    ctx.m_paintingInlineStage = PaintingInlineBox;
     paintChildrenWith(ctx);
 
     // the non-positioned float
     ctx.m_paintingStage = PaintingNonPositionedFloats;
     paintChildrenWith(ctx);
 
+    // block-level replaced element
+    ctx.m_paintingStage = PaintingReplacedBlock;
+    paintChildrenWith(ctx);
+
     // the in-flow, inline-level, non-positioned descendants, including inline
     // tables and inline blocks.
     ctx.m_paintingStage = PaintingNormalFlowInline;
     paintChildrenWith(ctx);
-
-    paintOutline(canvas);
 }
 
 void FrameBox::establishesStackingContextIfNeeds()

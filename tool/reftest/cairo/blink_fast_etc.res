@@ -1,4 +1,4 @@
-http://10.113.64.74:7000/xmlhttprequest-recursive-sync-event.html
+http://10.113.63.233:7000/xmlhttprequest-recursive-sync-event.html
 test/cairo/reftest/vendor/blink/fast/animation/request-animation-frame-callback-id.html
 test/cairo/reftest/vendor/blink/fast/backgrounds/obscured-background-child-style-change.html
 test/cairo/reftest/vendor/blink/fast/backgrounds/root-background-display-none-no-crash.html

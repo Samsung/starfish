@@ -83,6 +83,13 @@ struct FrameBoxRareData : public gc {
     void* operator new[](size_t size) = delete;
 };
 
+enum PaintingInlineStage {
+    PaintingInlineBox,
+    PaintingBlockBox,
+    PaintingReplaced,
+    PaintingInlineStageEnd
+};
+
 class FrameBox : public Frame {
 public:
     FrameBox(Node* node, ComputedStyle* style)
@@ -601,14 +608,16 @@ public:
         return outerHeight;
     }
 
-    virtual void paintOwnContent(Canvas* canvas);
     virtual void paintContent(PaintingContext& ctx);
+    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage)
+    {
+    }
+
     bool canSkipPaintingStage(PaintingContext& ctx)
     {
         if (isEstablishesStackingContext()) {
             return true;
         }
-        return false;
 
         if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
             if (!m_flags.m_seenNormalFlowBlockChild) {
@@ -616,6 +625,10 @@ public:
             }
         } else if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             if (!m_flags.m_seenNonPositionedFloats) {
+                return true;
+            }
+        } else if (ctx.m_paintingStage == PaintingReplacedBlock) {
+            if (!m_flags.m_seenReplacedBlock) {
                 return true;
             }
         } else {
