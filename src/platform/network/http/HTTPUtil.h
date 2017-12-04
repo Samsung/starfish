@@ -46,12 +46,14 @@ struct HTTPContentInfo {
         : contentLanguage()
         , contentLength(0)
         , contentType()
+        , contentTransferEncoding()
     {
     }
 
     std::string contentLanguage;
     size_t contentLength;
     std::string contentType;
+    std::string contentTransferEncoding;
 };
 
 struct HTTPFreshnessInfo {

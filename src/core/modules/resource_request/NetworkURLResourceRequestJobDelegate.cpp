@@ -57,7 +57,7 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
 #endif
     , lastLocation("")
 #ifdef STARFISH_ENABLE_PROFILING
-    , start(longTickCount())
+    , workingTime(0)
     , cachehit(false)
 #endif
 {
@@ -73,23 +73,19 @@ NetworkURLWorkerData::~NetworkURLWorkerData()
         cachedEntry->decreaseUsingCount();
     }
 #endif
-#ifdef STARFISH_ENABLE_PROFILING
-    if (cachehit) {
-        NetworkURLWorkerData::hitCnt++;
-    }
-    uint64_t end = longTickCount();
-    STARFISH_LOG_INFO(
-        "[Profile] Resource Raw data Load in %f ms, diskcache: %s, HitRate: "
-        "%lf\n",
-        (float)((end - start) / 1000.f), (cachehit) ? "hit" : "miss",
-        (hitCnt) ? (double)hitCnt / reqCnt : 0);
-#endif
 }
 
 void* NetworkURLWorkerHelper::networkWorker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+#ifdef STARFISH_ENABLE_PROFILING
+    uint64_t start = longTickCount();
+#endif
     nwd->httpTransaction->start();
+#ifdef STARFISH_ENABLE_PROFILING
+    uint64_t end = longTickCount();
+    nwd->workingTime += end - start;
+#endif
 
     // TODO : Do not use libur libcurl error codes
     if (nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK) {
@@ -112,6 +108,9 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
 #ifdef STARFISH_ENABLE_HTTPCACHE
 void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
 {
+#ifdef STARFISH_ENABLE_PROFILING
+    uint64_t start = longTickCount();
+#endif
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     ResourceRequest* request = (ResourceRequest*)nwd->request;
 
@@ -125,6 +124,8 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
         nwd->cachedEntry->readEntryHeaders(nwd->request->m_responseHeaderMap);
 #ifdef STARFISH_ENABLE_PROFILING
         nwd->cachehit = true;
+        uint64_t end = longTickCount();
+        nwd->workingTime += end - start;
 #endif
     }
     if (ret) {
@@ -156,80 +157,73 @@ void NetworkURLWorkerHelper::workerAbortHandeler(void* data)
 
 void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 {
-    NetworkURLWorkerData* requestData = (NetworkURLWorkerData*)data;
+    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     STARFISH_ASSERT(isMainThread());
     // TODO : Do not use libur libcurl error codes
-    STARFISH_ASSERT(requestData->httpTransaction->res() !=
-                    CURLE_ABORTED_BY_CALLBACK);
+    STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK);
 
-    if (requestData->isAborted) {
-    } else if (requestData->httpTransaction->res() == 0) {
-        if (requestData->isRedirected) {
-            requestData->request->m_lastLocation =
-                String::createASCIIString(
-                    requestData->httpTransaction->httpResponse()
-                        .lastEffectiveURL()
-                        .data())
+    if (nwd->isAborted) {
+    } else if (nwd->httpTransaction->res() == 0) {
+        if (nwd->isRedirected) {
+            nwd->request->m_lastLocation =
+                String::createASCIIString(nwd->httpTransaction->httpResponse()
+                                              .lastEffectiveURL()
+                                              .data())
                     ->trim();
         }
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        HTTPCache* cache = requestData->request->starFish()->httpCache();
+        HTTPCache* cache = nwd->request->starFish()->httpCache();
         if (cache) {
-            if (!requestData->cachedEntry) {
-                cache->put(requestData);
+            if (!nwd->cachedEntry) {
+                cache->put(nwd);
             } else {
-                if (requestData->httpTransaction->httpResponse()
-                        .responseCode() ==
+                if (nwd->httpTransaction->httpResponse().responseCode() ==
                     HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
                     // Update Entry property
                     CacheControl cc;
-                    auto it = requestData->request->responseHeaderMap().find(
+                    auto it = nwd->request->responseHeaderMap().find(
                         HTTPHeaderMap::kCacheControl);
-                    if (it != requestData->request->responseHeaderMap().end()) {
+                    if (it != nwd->request->responseHeaderMap().end()) {
                         cc = HTTPUtil::parseCacheControl(it->second);
                     }
 
                     HTTPFreshnessInfo info =
                         HTTPUtil::getHTTPFreshnessInfoFromHeaders(
-                            requestData->request->document()
-                                ->scriptBindingInstance(),
-                            requestData->request->responseHeaderMap());
+                            nwd->request->document()->scriptBindingInstance(),
+                            nwd->request->responseHeaderMap());
                     info.responseTime =
-                        requestData->cachedEntry->httpFreshnessInfo()
-                            .responseTime;
+                        nwd->cachedEntry->httpFreshnessInfo().responseTime;
                     info.requestTime =
-                        requestData->cachedEntry->httpFreshnessInfo()
-                            .requestTime;
+                        nwd->cachedEntry->httpFreshnessInfo().requestTime;
 
-                    requestData->cachedEntry->setCacheControl(cc);
-                    requestData->cachedEntry->setHTTPFreshnessInfo(info);
+                    nwd->cachedEntry->setCacheControl(cc);
+                    nwd->cachedEntry->setHTTPFreshnessInfo(info);
                 }
             }
         }
 #endif
-        requestData->request->handleResponseEOF();
-    } else if (requestData->httpTransaction->res() ==
-               CURLE_OPERATION_TIMEDOUT) {
-        auto s = requestData->request->m_url->urlString()->toUTF8NonGCString();
+        nwd->request->handleResponseEOF();
+    } else if (nwd->httpTransaction->res() == CURLE_OPERATION_TIMEDOUT) {
+        auto s = nwd->request->m_url->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO(
             "got timeout %s[%d]\n", s.data(),
-            (int)requestData->httpTransaction->httpResponse().responseCode());
-        requestData->request->handleError(ResourceRequest::TIMEOUT);
+            (int)nwd->httpTransaction->httpResponse().responseCode());
+        nwd->request->handleError(ResourceRequest::TIMEOUT);
     } else {
-        auto s = requestData->request->m_url->urlString()->toUTF8NonGCString();
+        auto s = nwd->request->m_url->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO("failed to open %s\n", s.data());
-        requestData->request->handleError(ResourceRequest::ERROR);
+        nwd->request->handleError(ResourceRequest::ERROR);
     }
 
     if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=
         SIZE_MAX) {
-        requestData->request->starFish()->timer()->removeTimer(
+        nwd->request->starFish()->timer()->removeTimer(
             NetworkSharedResourceManager::getInstance()->cacheClearTimerID());
     }
 
-    size_t timerID = requestData->request->starFish()->timer()->addTimer(
+    size_t timerID = nwd->request->starFish()->timer()->addTimer(
         STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS,
-        requestData->request->document()->window(),
+        nwd->request->document()->window(),
         [](Window* wnd, void* data) {
             NetworkSharedResourceManager::getInstance()
                 ->clearAllCurlHandleDataCache();
@@ -240,25 +234,39 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 
     NetworkSharedResourceManager::getInstance()->setCacheClearTimerID(timerID);
 
-    requestData->request->m_activeNetworkURLWorkerData = nullptr;
-    requestData->~NetworkURLWorkerData();
-    GC_FREE(requestData);
+    nwd->request->m_activeNetworkURLWorkerData = nullptr;
+    nwd->~NetworkURLWorkerData();
+    GC_FREE(nwd);
 }
 
-void SyncNetworkWorkHelper::responseHandlerWrapper(
-    int res, NetworkURLWorkerData* requestData)
+void SyncNetworkWorkHelper::responseHandlerWrapper(int res,
+                                                   NetworkURLWorkerData* nwd)
 {
-    responseHandler(res, requestData);
+    responseHandler(res, nwd);
 }
 
-void AsyncNetworkWorkHelper::responseHandlerWrapper(
-    int res, NetworkURLWorkerData* requestData)
+void AsyncNetworkWorkHelper::responseHandlerWrapper(int res,
+                                                    NetworkURLWorkerData* nwd)
 {
-    Locker<Mutex> locker(*requestData->request->m_mutex);
-    requestData->request->starFish()
+    Locker<Mutex> locker(*nwd->request->m_mutex);
+#ifdef STARFISH_ENABLE_PROFILING
+    if (nwd->cachehit) {
+        NetworkURLWorkerData::hitCnt++;
+    }
+    STARFISH_LOG_INFO(
+        "[Profiling] Resource Raw data(%zu byte) Load in %f ms, diskcache: "
+        "%s, HitRate: %lf\n",
+        nwd->request->response().size(), (float)((nwd->workingTime) / 1000.f),
+        (nwd->cachehit) ? "hit" : "miss",
+        (NetworkURLWorkerData::hitCnt)
+            ? (double)NetworkURLWorkerData::hitCnt /
+                  NetworkURLWorkerData::reqCnt
+            : 0);
+#endif
+    nwd->request->starFish()
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(nullptr, this->responseHandler,
-                                               requestData);
+                                               nwd);
 }
 
 NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
@@ -282,6 +290,9 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     case ResourceRequest::GET_METHOD: {
         method = "GET";
 #ifdef STARFISH_ENABLE_HTTPCACHE
+#ifdef STARFISH_ENABLE_PROFILING
+        uint64_t start = longTickCount();
+#endif
         if (allowCache && m_orgProxy->starFish()->httpCache()) {
             auto it =
                 m_orgProxy->starFish()->httpCache()->get(m_orgProxy->m_url);
@@ -292,6 +303,10 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
                 fillHeadersWithCachedEntry(headers, nwd->cachedEntry);
             }
         }
+#endif
+#ifdef STARFISH_ENABLE_PROFILING
+        uint64_t end = longTickCount();
+        nwd->workingTime += end - start;
 #endif
         break;
     }
@@ -413,7 +428,7 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithCachedEntry(
         return;
     }
 
-    // If-Modified-Since = HTTP-date
+    // If-Modified-Since = lastModified or HTTP-date
     // When used for cache updates, a cache will typically use the value of
     // the cached message's Last-Modified field to generate the field value
     // of If-Modified-Since.  This behavior is most interoperable for cases
@@ -466,10 +481,10 @@ int NetworkURLResourceRequestJobDelegate::curlProgressCallback(
     void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal,
     curl_off_t ulnow)
 {
-    NetworkURLWorkerData* workerData = (NetworkURLWorkerData*)clientp;
-    ResourceRequest* request = workerData->request;
+    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)clientp;
+    ResourceRequest* request = nwd->request;
     Locker<Mutex> locker(*request->m_mutex);
-    if (workerData->isAborted) {
+    if (nwd->isAborted) {
         return 1;
     }
 
@@ -483,8 +498,8 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                                                size_t nmemb,
                                                                void* data)
 {
-    NetworkURLWorkerData* workerData = (NetworkURLWorkerData*)data;
-    ResourceRequest* request = workerData->request;
+    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+    ResourceRequest* request = nwd->request;
 
     Locker<Mutex> locker(*request->m_mutex);
 
@@ -530,26 +545,22 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
 size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     void* ptr, size_t size, size_t nmemb, void* data)
 {
-    NetworkURLWorkerData* workerData = (NetworkURLWorkerData*)data;
-    ResourceRequest* request = workerData->request;
+    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+    ResourceRequest* request = nwd->request;
 
     Locker<Mutex> locker(*request->m_mutex);
 
-    workerData->httpTransaction->updateTransactionStatus();
+    nwd->httpTransaction->updateTransactionStatus();
     size_t realSize = size * nmemb;
     std::string rawHeader(static_cast<const char*>(ptr), realSize);
 
-    request->m_status =
-        workerData->httpTransaction->httpResponse().responseCode();
+    request->m_status = nwd->httpTransaction->httpResponse().responseCode();
 
-    if (workerData->httpTransaction->httpResponse()
-            .isSuccessfulResponseStatus()) {
+    if (nwd->httpTransaction->httpResponse().isSuccessfulResponseStatus()) {
         if ((rawHeader.compare("\r\n") == 0) ||
             (rawHeader.compare("\n") == 0)) {
-            request->m_responseHeaderMap =
-                std::move(workerData->httpTransaction->httpResponse()
-                              .headers()
-                              .headerMap());
+            request->m_responseHeaderMap = std::move(
+                nwd->httpTransaction->httpResponse().headers().headerMap());
 
             if (request->m_pendingOnHeaderReceivedEventIdlerHandle ==
                 SIZE_MAX) {
@@ -583,12 +594,12 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                 }
             }
         } else {
-            workerData->httpTransaction->didReceiveHeader(rawHeader);
+            nwd->httpTransaction->didReceiveHeader(rawHeader);
         }
-    } else if (workerData->httpTransaction->httpResponse()
+    } else if (nwd->httpTransaction->httpResponse()
                    .isRedirectionResponseStatus()) {
-        if (!workerData->isRedirected) {
-            workerData->isRedirected = true;
+        if (!nwd->isRedirected) {
+            nwd->isRedirected = true;
         }
     }
 
