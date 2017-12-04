@@ -40,7 +40,7 @@
 #define INDEX_FILE_NAME "/index.txt"
 #define DEFAULT_HTTP_CACHE_SIZE 1024 * 1024 * 10
 #define MAX_ENTRY_FILE_SIZE (DEFAULT_HTTP_CACHE_SIZE * 0.04)
-#define NUM_OF_COL 16
+#define NUM_OF_COL 17
 
 namespace StarFish {
 
@@ -98,20 +98,22 @@ bool HTTPCache::initFromIndexFileIfPossible()
 
         // entryKey(UINT) urlString(STRING) no-cache(0|1) mustRevalidate(0|1)
         // maxAge(UINT) contentLanguage(STRING) contentLength(UINT)
-        // contentType(STRING) date(UINT) age(UINT) rquestTime(UINT)
-        // responeTime(UINT) lastModified(UINT) Etag(STRING)
-        // lastModifyFileTime(UINT) entryFileName(STRING)
+        // contentType(STRING) contentTransferEncoding(STRING) date(UINT)
+        // age(UINT) rquestTime(UINT) responeTime(UINT) lastModified(UINT)
+        // Etag(STRING) lastModifyFileTime(UINT) entryFileName(STRING)
 
         auto tempStr = columns[1].toUTF8NonGCString();
         String* urlString = String::fromUTF8(tempStr.data(), tempStr.length());
         m_cacheLRUList.push_back(urlString);
         ResourceURL* url = new ResourceURL(urlString);
 
+        // 2~4
         CacheControl cc;
         cc.noCache = columns[2].equals("true") ? true : false;
         cc.mustRevalidate = columns[3].equals("true") ? true : false;
         cc.maxAge = String::parseInt64(&columns[4]);
 
+        // 5~8
         HTTPContentInfo cinfo;
         if (!columns[5].equals("null")) {
             cinfo.contentLanguage = columns[5].toUTF8NonGCString();
@@ -120,21 +122,27 @@ bool HTTPCache::initFromIndexFileIfPossible()
         if (!columns[7].equals("null")) {
             cinfo.contentType = columns[7].toUTF8NonGCString();
         }
-
-        HTTPFreshnessInfo finfo;
-        finfo.date = String::parseInt64(&columns[8]);
-        finfo.age = String::parseInt64(&columns[9]);
-        finfo.requestTime = String::parseInt64(&columns[10]);
-        finfo.responseTime = String::parseInt64(&columns[11]);
-        finfo.lastModified = String::parseInt64(&columns[12]);
-        if (!columns[13].equals("null")) {
-            finfo.etag = columns[7].toUTF8NonGCString();
+        if (!columns[8].equals("null")) {
+            cinfo.contentTransferEncoding = columns[8].toUTF8NonGCString();
         }
 
-        tempStr = columns[15].toUTF8NonGCString();
-        HTTPCacheEntry* newEntry = new HTTPCacheEntry(
-            url, cc, cinfo, finfo, String::parseInt64(&columns[14]),
-            String::fromUTF8(tempStr.data(), tempStr.length()));
+        // 9~14
+        HTTPFreshnessInfo finfo;
+        finfo.date = String::parseInt64(&columns[9]);
+        finfo.age = String::parseInt64(&columns[10]);
+        finfo.requestTime = String::parseInt64(&columns[11]);
+        finfo.responseTime = String::parseInt64(&columns[12]);
+        finfo.lastModified = String::parseInt64(&columns[13]);
+        if (!columns[14].equals("null")) {
+            finfo.etag = columns[14].toUTF8NonGCString();
+        }
+        // 15~16
+        int64_t lmft = String::parseInt64(&columns[15]);
+        tempStr = columns[16].toUTF8NonGCString();
+        String* efn = String::fromUTF8(tempStr.data(), tempStr.length());
+
+        HTTPCacheEntry* newEntry =
+            new HTTPCacheEntry(url, cc, cinfo, finfo, lmft, efn);
 
         m_cacheEntryTable.insert(
             std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
@@ -351,14 +359,17 @@ void HTTPCache::initCacheDirectory()
     STARFISH_ASSERT(isMainThread());
 
     Directory* dir = Directory::create();
+
     if (dir->open(m_cacheDirPath)) {
         dir->clear();
     }
+
     if (!dir->mkDir()) {
         STARFISH_LOG_ERROR("%s directory create error\n",
                            m_cacheDirPath->toUTF8NonGCString().data());
         STARFISH_ASSERT_NOT_REACHED();
     }
+
     dir->close();
 
     File* file = File::create();

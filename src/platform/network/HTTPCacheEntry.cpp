@@ -26,7 +26,7 @@
 
 namespace StarFish {
 
-const char* HTTPCacheEntry::kSeparator = "\t";
+const char* HTTPCacheEntry::kSeparator = "\037"; // unit separator
 
 HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
                                HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
@@ -151,19 +151,25 @@ bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
 
 void HTTPCacheEntry::readEntryHeaders(HeaderMap& out)
 {
-    Locker<Mutex> locker(*m_mutex);
-    if (m_httpContentInfo.contentLanguage.size()) {
+    m_mutex->lock();
+    HTTPContentInfo copied = m_httpContentInfo;
+    m_mutex->unlock();
+
+    if (copied.contentLanguage.size()) {
         out.insert(std::make_pair(HTTPHeaderMap::kContentLanguage,
-                                  m_httpContentInfo.contentLanguage));
+                                  copied.contentLanguage));
     }
-    if (m_httpContentInfo.contentLength) {
+    if (copied.contentLength) {
+        out.insert(std::make_pair(HTTPHeaderMap::kContentLength,
+                                  std::to_string(copied.contentLength)));
+    }
+    if (copied.contentType.size()) {
         out.insert(
-            std::make_pair(HTTPHeaderMap::kContentLength,
-                           std::to_string(m_httpContentInfo.contentLength)));
+            std::make_pair(HTTPHeaderMap::kContentType, copied.contentType));
     }
-    if (m_httpContentInfo.contentType.size()) {
-        out.insert(std::make_pair(HTTPHeaderMap::kContentType,
-                                  m_httpContentInfo.contentType));
+    if (copied.contentTransferEncoding.size()) {
+        out.insert(std::make_pair(HTTPHeaderMap::kContentTransferEncoding,
+                                  copied.contentTransferEncoding));
     }
 }
 
@@ -199,8 +205,8 @@ String* HTTPCacheEntry::toString()
     // each member. therefore, it is as follows :
     //  entryKey(UINT) urlString(STRING) no-cache(0|1) mustRevalidate(0|1)
     //  maxAge(UINT) contentLanguage(STRING) contentLength(UINT)
-    //  contentType(STRING) date(UINT) age(UINT) rquestTime(UINT)
-    //  responeTime(UINT) lastModified(UINT) Etag(STRING)
+    //  contentType(STRING) contentTransferEncoding(STRING) date(UINT) age(UINT)
+    //  rquestTime(UINT) responeTime(UINT) lastModified(UINT) Etag(STRING)
     //  lastModifyFileTime(UINT) entryFileName(STRING)
 
     StringBuilder builder;
@@ -239,6 +245,12 @@ String* HTTPCacheEntry::toString()
                                   : "null";
     builder.appendString(contentType.data());
     builder.appendString(kSeparator);
+    std::string contentTransferEncoding =
+        (copied->m_httpContentInfo.contentTransferEncoding.size())
+            ? copied->m_httpContentInfo.contentTransferEncoding
+            : "null";
+    builder.appendString(contentTransferEncoding.data());
+    builder.appendString(kSeparator);
 
     // http freshness info
     std::string date = std::to_string(copied->m_httpFreshnessInfo.date);
@@ -259,7 +271,6 @@ String* HTTPCacheEntry::toString()
         std::to_string(copied->m_httpFreshnessInfo.lastModified);
     builder.appendString(lastModified.data());
     builder.appendString(kSeparator);
-    // Etag has no spaces or htab,
     // See https://tools.ietf.org/html/rfc7232#section-2.3
     std::string etag = (copied->m_httpFreshnessInfo.etag.size())
                            ? copied->m_httpFreshnessInfo.etag

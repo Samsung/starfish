@@ -42,7 +42,7 @@ struct NetworkURLWorkerData {
 #endif
     std::string lastLocation;
 #ifdef STARFISH_ENABLE_PROFILING
-    uint64_t start;
+    uint64_t workingTime;
     bool cachehit;
     static int64_t reqCnt;
     static int64_t hitCnt;

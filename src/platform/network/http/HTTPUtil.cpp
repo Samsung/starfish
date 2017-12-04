@@ -21,8 +21,6 @@
 #include <time.h>
 #include <algorithm>
 
-#define HTTP_DATE_FORMAT "%a, %d %m %Y %H:%M:%S %Z"
-
 namespace StarFish {
 
 std::string HTTPUtil::tryToConvertToHeaderMapString(const std::string& header)
@@ -254,7 +252,6 @@ HTTPContentInfo HTTPUtil::getHTTPContentInfoFromHeaders(
 
     auto it = headers.find(HTTPHeaderMap::kContentLanguage);
     if (it != headers.end()) {
-        String* value = String::createASCIIString(it->second.data());
         info.contentLanguage = it->second;
     }
 
@@ -266,8 +263,12 @@ HTTPContentInfo HTTPUtil::getHTTPContentInfoFromHeaders(
 
     it = headers.find(HTTPHeaderMap::kContentType);
     if (it != headers.end()) {
-        String* value = String::createASCIIString(it->second.data());
         info.contentType = it->second;
+    }
+
+    it = headers.find(HTTPHeaderMap::kContentTransferEncoding);
+    if (it != headers.end()) {
+        info.contentTransferEncoding = it->second;
     }
 
     return info;
