@@ -111,9 +111,7 @@ void AnimationTask::fireCancelEvent()
 }
 
 // This function returns false if
-// * Current AnimationTask is expired, OR
-// * Minimum period(THRESHOLD_TICK,10ms) has not passed yet
-// * This function is called when we get tick from ecore_animator.
+// * Current AnimationTask is expired
 bool AnimationTask::canExecute()
 {
     if (isExpired()) {
@@ -121,11 +119,8 @@ bool AnimationTask::canExecute()
     }
     size_t currentTime = tickCount();
     if ((currentTime >= m_startTimeMs)) {
-        if (m_lastModifiedTimeMs == 0 ||
-            ((currentTime - m_lastModifiedTimeMs) > THRESHOLD_TICK)) {
-            update();
-            return true;
-        }
+        update();
+        return true;
     }
     return false;
 }
