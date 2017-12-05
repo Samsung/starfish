@@ -149,7 +149,6 @@ protected:
 
 class AnimationTask : public gc {
 public:
-    static const int THRESHOLD_TICK = 10;
     AnimationTask(Element* target, CSSStyleValuePair::KeyKind targetProperty,
                   String* targetPropertyString, AnimatedValue from,
                   AnimatedValue to, float durationInms, float delayInms,

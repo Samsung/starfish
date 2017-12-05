@@ -287,7 +287,7 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #define STARFISH_NAME "StarFish"
 #define VERSION "0.1.0"
 #define USER_AGENT(STARFISH_NAME, VERSION) \
-    "Mozilla/5.0 " STARFISH_NAME "/" VERSION
+    "Mozilla/5.0 (like Firefox, Gecko)" STARFISH_NAME "/" VERSION
 #define USER_AGENT_MAXIMUM_DATE_VALUE 8.64e15
 #define VENDOR_NAME "Samsung Electronics Co., Ltd."
 

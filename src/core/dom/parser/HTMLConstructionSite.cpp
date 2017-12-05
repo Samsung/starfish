@@ -88,12 +88,9 @@ static bool hasImpliedEndTag(const HTMLStackItem* item)
 
 static bool shouldUseLengthLimit(const Node* node)
 {
-    StaticStrings* s = const_cast<Node*>(node)->starFish()->staticStrings();
-    return !const_cast<Node*>(node)->localName()->equals(
-               s->m_scriptTagName.localName()) &&
-           !const_cast<Node*>(node)->localName()->equals(
-               s->m_styleTagName.localName());
-    // && !node->hasTagName(SVGNames::scriptTag);
+    return !const_cast<Node*>(node)->isHTMLStyleElement() &&
+           !const_cast<Node*>(node)->isHTMLScriptElement() &&
+           !const_cast<Node*>(node)->isSVGScriptElement();
 }
 
 static unsigned textLengthLimitForContainer(const Node* node)

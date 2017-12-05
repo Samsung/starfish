@@ -249,7 +249,7 @@ m_lastRenderingTime > 1000)) {
         // ProfilerTimer renderingTimer("WindowImplEFL::rendering");
         bool ret = PlatformWindow::rendering();
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-        if (ret) {
+        if (ret && m_canvasAdpaterCairo) {
             int w, h;
             evas_object_image_size_get(m_canvasAdpater, &w, &h);
             evas_object_image_data_update_add(m_canvasAdpater, 0, 0, w, h);
@@ -1857,6 +1857,7 @@ Compositor* WindowImplEFL::prepareCompositor()
             memset(addr, 0, 4);
             evas_object_image_data_set(m_canvasAdpater, addr);
             evas_object_image_data_update_add(m_canvasAdpater, 0, 0, 1, 1);
+            evas_object_hide(m_canvasAdpater);
         }
     }
 #endif
