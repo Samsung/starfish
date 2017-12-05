@@ -59,8 +59,7 @@ class String;
     Escargot::FunctionObjectRef* binding##exportName( \
         ScriptBindingInstance* scriptBindingInstance);
 
-STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_DECLARE_FN);
-STARFISH_ENUM_LAZY_BINDING_NICKNAMES(FOR_EACH_DECLARE_FN);
+STARFISH_ENUM_BINDING_NAMES(FOR_EACH_DECLARE_FN);
 #undef FOR_EACH_DECLARE_FN
 
 class ScriptBindingInstance : public gc {
@@ -91,8 +90,7 @@ public:
         return m_fn##exportName;                                         \
     }
 
-    STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_GETTER_FN)
-    STARFISH_ENUM_LAZY_BINDING_NICKNAMES(FOR_EACH_GETTER_FN)
+    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_GETTER_FN)
 #undef FOR_EACH_GETTER_FN
 
 #define FOR_EACH_GETTER_VALUE_FN(exportName)                             \
@@ -106,21 +104,18 @@ public:
         return m_value##exportName;                                      \
     }
 
-    STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_GETTER_VALUE_FN)
-    STARFISH_ENUM_LAZY_BINDING_NICKNAMES(FOR_EACH_GETTER_VALUE_FN)
+    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_GETTER_VALUE_FN)
 #undef FOR_EACH_GETTER_VALUE_FN
 
 #define FOR_EACH_SCRIPT_FN(exportName) \
     Escargot::FunctionObjectRef* m_fn##exportName;
-    STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_SCRIPT_FN)
-    STARFISH_ENUM_LAZY_BINDING_NICKNAMES(FOR_EACH_SCRIPT_FN)
+    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_SCRIPT_FN)
 #undef FOR_EACH_SCRIPT_FN
 
 public:
 #define FOR_EACH_SCRIPTVALUE_FN(exportName) \
     Escargot::ValueRef* m_value##exportName;
-    STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_SCRIPTVALUE_FN)
-    STARFISH_ENUM_LAZY_BINDING_NICKNAMES(FOR_EACH_SCRIPTVALUE_FN)
+    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_SCRIPTVALUE_FN)
 #undef FOR_EACH_SCRIPTVALUE_FN
 
     Escargot::ContextRef* scriptContext()

@@ -109,7 +109,7 @@ void invokeTestStartFunction(ScriptBindingInstance* instance);
 #endif
 
 #define FOR_EACH_FORWARD_DECLARATION(exportName) class exportName;
-STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_FORWARD_DECLARATION)
+STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
 #undef FOR_EACH_FORWARD_DECLARATION
 
 #define THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, MSG) \
@@ -151,7 +151,7 @@ public:
         return false;                   \
     }
 
-    STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_REFLECT_FN);
+    STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_REFLECT_FN);
 #undef FOR_EACH_REFLECT_FN
 
 #define FOR_EACH_CAST_FN(exportName)           \
@@ -161,7 +161,7 @@ public:
         return (exportName*)this;              \
     }
 
-    STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_CAST_FN);
+    STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_CAST_FN);
 #undef FOR_EACH_CAST_FN
 
     ScriptWrappable(void* extraPointerData);
