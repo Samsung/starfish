@@ -146,6 +146,7 @@ namespace rapidxml
         node_element,       //!< An element node. Name contains element name. Value contains text of first data node.
         node_element_self_close,// self cloing tag eg)img..
         node_data,          //!< A data node. Name is empty. Value contains data text.
+        node_data_specialChar,  //!< A data node. Name is empty. Value contains data text.
         node_cdata,         //!< A CDATA node. Name is empty. Value contains data text.
         node_comment,       //!< A comment node. Name is empty. Value contains comment text.
         node_declaration,   //!< A declaration node. Name and value are empty. Declaration parameters (version, encoding and standalone) are in node attributes.

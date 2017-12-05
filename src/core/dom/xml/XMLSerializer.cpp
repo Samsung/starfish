@@ -67,6 +67,32 @@ static bool isSelfClosingTag(char* str)
     return false;
 }
 
+// https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
+// If a <div>, <span>, or <noembed> node has a child text node that includes the
+// characters (&), (<), or (>), innerHTML returns these characters as &amp, &lt
+// and &gt respectively.
+static bool hasSpecialChar(char* str, char* parentTagName)
+{
+    if (!str)
+        return false;
+
+    if (!parentTagName)
+        return false;
+
+    if ((strncmp(parentTagName, "div", 3) == 0) ||
+        (strncmp(parentTagName, "span", 4) == 0) ||
+        (strncmp(parentTagName, "noembed", 7) == 0)) {
+        char* current = str;
+        while (current != '\0') {
+            if (*current == '&' || *current == '<' || *current == '>') {
+                return true;
+            }
+            current++;
+        }
+    }
+    return false;
+}
+
 static rapidxml::xml_node<char>* createXMLNodeFromElement(
     Element* e, rapidxml::xml_document<char>& xmlDocument)
 {
@@ -110,8 +136,14 @@ static rapidxml::xml_node<char>* createXMLNodeFromElement(
             auto utf8Data =
                 child->asCharacterData()->data()->toUTF8NonGCString();
             char* allocateValue = xmlDocument.allocate_string(utf8Data.data());
-            childXMLNode = xmlDocument.allocate_node(
-                rapidxml::node_type::node_data, "", allocateValue);
+            if (hasSpecialChar(allocateValue, allocateName)) {
+                childXMLNode = xmlDocument.allocate_node(
+                    rapidxml::node_type::node_data_specialChar, "",
+                    allocateValue);
+            } else {
+                childXMLNode = xmlDocument.allocate_node(
+                    rapidxml::node_type::node_data, "", allocateValue);
+            }
         } else if (child->isDocumentType()) {
             auto utf8Data =
                 child->asDocumentType()->nodeName()->toUTF8NonGCString();
