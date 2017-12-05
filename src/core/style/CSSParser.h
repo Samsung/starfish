@@ -1094,6 +1094,8 @@ public:
 
     enum RuleListType { TopLevelRuleList, RegularRuleList, KeyframesRuleList };
 
+    enum ParseResult { Consumed, ErrorFounded, FAIL };
+
     CSSParser(Document* document);
     inline ~CSSParser()
     {
@@ -1104,11 +1106,11 @@ public:
     void parseRules(RefPtr<CSSToken> token, GCVector<StyleRuleBase*>& rootRule,
                     RuleListType ruleListType);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
-    bool parseStyleRule(RefPtr<CSSToken> aToken,
-                        GCVector<StyleRuleBase*>& rules,
-                        AllowedRulesType allowedRules,
-                        GCVector<CSSSelectorList*>* sList,
-                        bool isQueryingSelector = false);
+    ParseResult parseStyleRule(RefPtr<CSSToken> aToken,
+                               GCVector<StyleRuleBase*>& rules,
+                               AllowedRulesType allowedRules,
+                               GCVector<CSSSelectorList*>* sList,
+                               bool isQueryingSelector = false);
     RefPtr<CSSToken> makeToken(String* str);
     StyleRuleMedia* parseMediaRule();
     MediaQuerySet* parseMediaQuery();
@@ -1149,9 +1151,9 @@ protected:
     String* getStringWithoutQuotationMarks(const CSSTokenString& value);
 
     CSSTokenString parseDefaultPropertyValue(RefPtr<CSSToken> token);
-    void parseDeclaration(RefPtr<CSSToken> aToken,
-                          CSSStyleDeclaration* declaration,
-                          bool allowSrcProperty = false);
+    ParseResult parseDeclaration(RefPtr<CSSToken> aToken,
+                                 CSSStyleDeclaration* declaration,
+                                 bool allowSrcProperty = false);
     void addUnknownAtRule();
     void reportError(const char* aMsg);
     bool parseCharsetRule(GCVector<StyleRuleBase*>& rules);
