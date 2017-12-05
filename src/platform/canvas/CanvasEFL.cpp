@@ -162,7 +162,6 @@ public:
             int w;
             int h;
             std::vector<Evas_Object*>* objList;
-            std::vector<Evas_Object*>* surfaceList;
             bool f;
         };
         dummy* d = (dummy*)data;
@@ -170,7 +169,6 @@ public:
         m_width = d->w;
         m_height = d->h;
         m_objList = d->objList;
-        m_surfaceList = d->surfaceList;
         m_forceMapMode = d->f;
         initState();
     }
@@ -180,7 +178,6 @@ public:
         m_starfish = starfish;
         m_imageCount = 0;
         m_objList = NULL;
-        m_surfaceList = NULL;
         m_forceMapMode = m_directDraw = false;
         m_image = (Evas_Object*)data->unwrap();
         void* buffer = evas_object_image_data_get(m_image, EINA_TRUE);
@@ -351,6 +348,7 @@ public:
                                           SkFloatToScalar((float)rt.width()),
                                           SkFloatToScalar((float)rt.height()));
             lastState().m_matrix.mapRect(&sss);
+            sss.sort();
             xx = sss.x();
             yy = sss.y();
             ww = sss.width();
@@ -485,6 +483,7 @@ public:
                                    SkFloatToScalar((float)rt.width()),
                                    SkFloatToScalar((float)rt.height()));
             lastState().m_matrix.mapRect(&sss);
+            sss.sort();
         } else {
             sss = SkRect::MakeXYWH(
                 SkFloatToScalar((float)rt.x() + lastState().m_baseX),
@@ -758,6 +757,7 @@ public:
                                           SkFloatToScalar((float)rt.height()));
             if (!shouldApplyEvasMap()) {
                 lastState().m_matrix.mapRect(&sss);
+                sss.sort();
             }
             xx = sss.x();
             yy = sss.y();
@@ -793,6 +793,7 @@ public:
                                           SkFloatToScalar((float)rt.height()));
             if (!shouldApplyEvasMap()) {
                 lastState().m_matrix.mapRect(&sss);
+                sss.sort();
             }
             xx = sss.x();
             yy = sss.y();
@@ -828,6 +829,7 @@ public:
                                           SkFloatToScalar((float)rt.height()));
             if (!shouldApplyEvasMap()) {
                 lastState().m_matrix.mapRect(&sss);
+                sss.sort();
             }
             xx = sss.x();
             yy = sss.y();
@@ -1004,6 +1006,7 @@ public:
                                      SkFloatToScalar((float)rt.height()));
                 if (!shouldApplyEvasMap()) {
                     lastState().m_matrix.mapRect(&sss);
+                    sss.sort();
                 }
                 xx = sss.x();
                 yy = sss.y();
@@ -1082,6 +1085,7 @@ public:
                                      SkFloatToScalar((float)rt.height()));
                 if (!shouldApplyEvasMap()) {
                     lastState().m_matrix.mapRect(&sss);
+                    sss.sort();
                 }
                 xx = sss.x();
                 yy = sss.y();
@@ -1219,6 +1223,7 @@ public:
                                           SkFloatToScalar((float)dst.height()));
             if (!shouldApplyEvasMap()) {
                 lastState().m_matrix.mapRect(&sss);
+                sss.sort();
             }
             xx = sss.x();
             yy = sss.y();
@@ -1335,6 +1340,7 @@ public:
                                           SkFloatToScalar((float)dst.height()));
             if (!shouldApplyEvasMap()) {
                 lastState().m_matrix.mapRect(&sss);
+                sss.sort();
             }
             xx = sss.x();
             yy = sss.y();
@@ -1511,6 +1517,7 @@ public:
                                       SkFloatToScalar((float)dst.width()),
                                       SkFloatToScalar((float)dst.height()));
         lastState().m_matrix.mapRect(&sss);
+        sss.sort();
 
         float xx = sss.x();
         float yy = sss.y();
@@ -1717,9 +1724,6 @@ public:
         evas_map_free(map);
 
         evas_object_show(eo);
-        // if (m_surfaceList) {
-        //     m_surfaceList->push_back(eo);
-        // }
 
         restore();
     }
@@ -1751,6 +1755,7 @@ public:
                                           SkFloatToScalar((float)lp.width()),
                                           SkFloatToScalar((float)lp.height()));
             lastState().m_matrix.mapRect(&sss);
+            sss.sort();
             lp.setX(sss.x());
             lp.setY(sss.y());
             lp.setWidth(sss.width());
@@ -1920,7 +1925,6 @@ protected:
     unsigned m_height;
     size_t m_imageCount;
     std::vector<Evas_Object*>* m_objList;
-    std::vector<Evas_Object*>* m_surfaceList;
     GCUnorderedMap<ImageData*, std::vector<std::pair<Evas_Object*, bool>>,
                    std::hash<ImageData*>,
                    std::equal_to<ImageData*>>* m_prevDrawnImageMap;

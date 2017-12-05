@@ -799,8 +799,36 @@ void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
                                      (float)r.width(), (float)r.height());
 
     m.mapRect(&skRect);
+    skRect.sort();
     LayoutRect tmp =
         LayoutRect(skRect.x(), skRect.y(), skRect.width(), skRect.height());
+
+    for (size_t i = 0; i < boundMaxExtentDueToOverflow.size(); i++) {
+        LayoutRect rt = std::get<0>(boundMaxExtentDueToOverflow[i]);
+
+        if (std::get<1>(boundMaxExtentDueToOverflow[i])) { // x
+            if (tmp.x() < rt.x()) {
+                tmp =
+                    LayoutRect(rt.x(), tmp.y(),
+                               tmp.width() - (rt.x() - tmp.x()), tmp.height());
+            }
+
+            if (tmp.maxX() > rt.maxX()) {
+                tmp.setWidth(tmp.width() - (tmp.maxX() - rt.maxX()));
+            }
+        }
+
+        if (std::get<2>(boundMaxExtentDueToOverflow[i])) { // y
+            if (tmp.y() < rt.y()) {
+                tmp = LayoutRect(tmp.x(), rt.y(), tmp.width(),
+                                 tmp.height() - (rt.y() - tmp.y()));
+            }
+            if (tmp.maxY() > rt.maxY()) {
+                tmp.setHeight(tmp.height() - (tmp.maxY() - rt.maxY()));
+            }
+        }
+    }
+
     result.unite(tmp);
 }
 
@@ -810,6 +838,8 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
     , fragmentBox(fragmentBox)
     , transformMatrixBefore(ctx.tranformMatrix)
     , shouldStopComputingBecauseMatrixInvalidFromHere(false)
+    , overflowXWasApplyed(false)
+    , overflowYWasApplyed(false)
 {
     if (ctx.ignoreTransformOnce) {
         ctx.ignoreTransformOnce = false;
@@ -846,10 +876,34 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
         ctx.tranformMatrix.postTranslate((float)fragmentBox->x(),
                                          (float)fragmentBox->y());
     }
+
+    if (fragmentBox->shouldApplyOverflow()) {
+        overflowXWasApplyed = cs->overflowX() != OverflowValue::VisibleOverflow;
+        overflowYWasApplyed = cs->overflowY() != OverflowValue::VisibleOverflow;
+
+        if (overflowXWasApplyed || overflowYWasApplyed) {
+            LayoutRect rt = fragmentBox->frameVisibleRect();
+
+            SkRect skRect =
+                SkRect::MakeXYWH((float)rt.x(), (float)rt.y(),
+                                 (float)rt.width(), (float)rt.height());
+
+            ctx.tranformMatrix.mapRect(&skRect);
+            skRect.sort();
+            LayoutRect tmp = LayoutRect(skRect.x(), skRect.y(), skRect.width(),
+                                        skRect.height());
+
+            ctx.boundMaxExtentDueToOverflow.push_back(
+                std::make_tuple(tmp, overflowXWasApplyed, overflowYWasApplyed));
+        }
+    }
 }
 Frame::ComputeVisibleRectContextFragment::~ComputeVisibleRectContextFragment()
 {
     ctx.tranformMatrix = transformMatrixBefore;
+    if (overflowXWasApplyed || overflowYWasApplyed) {
+        ctx.boundMaxExtentDueToOverflow.pop_back();
+    }
 }
 
 Frame::Frame(Node* node, ComputedStyle* s)
@@ -957,8 +1011,13 @@ bool Frame::shouldApplyOverflow()
         }
     }
 
-    return (style()->overflowX() != OverflowValue::VisibleOverflow) ||
-           (style()->overflowY() != OverflowValue::VisibleOverflow);
+    ComputedStyle* cs = style();
+    if (cs) {
+        return (cs->overflowX() != OverflowValue::VisibleOverflow) ||
+               (cs->overflowY() != OverflowValue::VisibleOverflow);
+    } else {
+        return false;
+    }
 }
 
 void Frame::computeStyleFlags()

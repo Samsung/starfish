@@ -1366,6 +1366,8 @@ public:
         StackingContext* sourceStackingContext;
         SkMatrix& tranformMatrix;
         LayoutRect& result;
+        std::vector<std::tuple<LayoutRect, bool, bool>>
+            boundMaxExtentDueToOverflow;
 
         ComputeVisibleRectContext(ComputePurpose purpose,
                                   StackingContext* sourceStackingContext,
@@ -1386,6 +1388,8 @@ public:
         FrameBox* fragmentBox;
         SkMatrix transformMatrixBefore;
         bool shouldStopComputingBecauseMatrixInvalidFromHere;
+        bool overflowXWasApplyed;
+        bool overflowYWasApplyed;
         ComputeVisibleRectContextFragment(ComputeVisibleRectContext& ctx,
                                           FrameBox* fragmentBox);
         ~ComputeVisibleRectContextFragment();

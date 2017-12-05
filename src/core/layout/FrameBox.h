@@ -134,6 +134,9 @@ public:
         return m_frameRect;
     }
 
+    // FrameRect including outline, box-shadow
+    LayoutRect frameVisibleRect();
+
     LayoutUnit x() const
     {
         return m_frameRect.x();

@@ -510,15 +510,17 @@ int main(int argc, char* argv[])
         config = defaultConfig;
     }
 
-    // printf("engine-> %s\n", engine);
-    // printf("config-> %s\n", config);
+// printf("engine-> %s\n", engine);
+// printf("config-> %s\n", config);
 
+#if defined(STARFISH_TIZEN)
     setenv("ELM_ENGINE", engine, 1);
+#endif
 
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && defined(STARFISH_TIZEN)
     elm_config_accel_preference_set(config);
 #endif
 
