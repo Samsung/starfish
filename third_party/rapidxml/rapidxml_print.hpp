@@ -173,6 +173,11 @@ namespace rapidxml
                 out = print_data_node<OutIt, Ch>(out, node, flags, indent);
                 break;
             
+            // Data with special char('<','>','&')
+            case node_data_specialChar:
+                out = print_data_node<OutIt, Ch>(out, node, rapidxml::print_no_expand_quot | rapidxml::print_no_indenting, indent);
+                break;
+
             // CDATA
             case node_cdata:
                 out = print_cdata_node<OutIt, Ch>(out, node, flags, indent);
@@ -255,7 +260,7 @@ namespace rapidxml
         template<class OutIt, class Ch>
         inline OutIt print_data_node(OutIt out, const xml_node<Ch> *node, int flags, int indent)
         {
-            assert(node->type() == node_data);
+            assert(node->type() == node_data || node->type() == node_data_specialChar);
             if (!(flags & print_no_indenting))
                 out = fill_chars(out, indent, Ch('\t'));
             out = copy_and_expand_chars(node->value(), node->value() + node->value_size(), Ch(0), out, flags);
