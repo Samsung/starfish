@@ -1779,6 +1779,25 @@ void FrameBox::establishesStackingContextIfNeeds()
     }
 }
 
+LayoutRect FrameBox::frameVisibleRect()
+{
+    LayoutRect r = frameRect();
+    r.setX(0);
+    r.setY(0);
+
+    ComputedStyle* cs = style();
+    // TODO add box-shadow size into visibleRect when box-shadow implemented
+    if (cs->outlineStyle() != BorderStyleValue::NoneBorderStyleValue) {
+        LayoutUnit t = outlineThickness();
+        r.setX(r.x() - t);
+        r.setY(r.y() - t);
+        r.setWidth(r.width() + t * 2);
+        r.setHeight(r.height() + t * 2);
+    }
+
+    return r;
+}
+
 bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
 {
     if (ctx.sourceStackingContext &&
@@ -1792,12 +1811,10 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     }
 
     bool ret = !shouldApplyOverflow();
-    LayoutRect r = frameRect();
-    r.setX(0);
-    r.setY(0);
+    LayoutRect r = frameVisibleRect();
 
-    // TODO add box-shadow size into visibleRect when box-shadow implemented
     ComputedStyle* cs = style();
+    // TODO consider box-shadow here visibleRect when box-shadow implemented
     if (ctx.purpose == Frame::ComputeVisibleRectContext::GraphicsBuffer &&
         isFrameBlockBox()) {
         BorderData border = cs->border();
@@ -1810,14 +1827,6 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
             r.setHeight(0);
             ret = true;
         }
-    }
-
-    if (cs->outlineStyle() != BorderStyleValue::NoneBorderStyleValue) {
-        LayoutUnit t = outlineThickness();
-        r.setX(r.x() - t);
-        r.setY(r.y() - t);
-        r.setWidth(r.width() + t * 2);
-        r.setHeight(r.height() + t * 2);
     }
 
     ctx.uniteRect(r);

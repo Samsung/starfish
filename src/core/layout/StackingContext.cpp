@@ -115,6 +115,7 @@ struct StackingContext::ComputeStackingContextContext {
                 SkRect::MakeXYWH((float)rt.x(), (float)rt.y(),
                                  (float)rt.width(), (float)rt.height());
             m.mapRect(&skRect);
+            skRect.sort();
 
             return LayoutRect(skRect.x(), skRect.y(), skRect.width(),
                               skRect.height());
@@ -1017,7 +1018,9 @@ void StackingContext::paintStackingContext(
                                     m_rareData->m_buffer);
         }
 
-        canvas->setTextDecorationData(oldCanvas->textDecorationData());
+        if (oldCanvas) {
+            canvas->setTextDecorationData(oldCanvas->textDecorationData());
+        }
         if (needsPainting) {
             canvas->clearColor(Unit::Color(0, 0, 0, 0));
         }

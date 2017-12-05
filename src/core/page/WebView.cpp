@@ -634,9 +634,8 @@ bool WebView::rendering(bool force)
 
         didPaintingOrCompositing = true;
         // painting
-        Canvas* canvas = starFish()->platformWindow()->preparePainting();
+        Canvas* canvas = nullptr;
 
-        canvas->save();
         if (mainBrowsingContext()->document()->frame()->firstChild()) {
             m_needsComposite = m_rootStackingContext->needsGraphicsBuffer();
         } else {
@@ -644,22 +643,37 @@ bool WebView::rendering(bool force)
         }
 
         {
-            PaintingContext ctx(canvas);
-            ctx.m_paintingStage = PaintingStageEnd;
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
             if (!m_needsComposite) {
+                canvas = starFish()->platformWindow()->preparePainting();
                 canvas->save();
                 canvas->translate(-mainFrame->scrollLeft(),
                                   -mainFrame->scrollTop());
                 mainBrowsingContext()->paintWindowBackground(canvas);
+
+                if (mainFrame->firstChild()) {
+                    canvas->save();
+                    canvas->translate(
+                        mainFrame->firstChild()->asFrameBox()->x(),
+                        mainFrame->firstChild()->asFrameBox()->y());
+                    mainFrame->firstChild()
+                        ->asFrameBox()
+                        ->stackingContext()
+                        ->paintStackingContext(canvas, true);
+                    canvas->restore();
+                }
+                canvas->restore();
                 m_didCompositeBefore = false;
+            } else {
+                mainFrame->firstChild()
+                    ->asFrameBox()
+                    ->stackingContext()
+                    ->paintStackingContext(nullptr, false);
             }
-            mainFrame->paintContent(ctx);
         }
 
         if (!m_needsComposite) {
-            canvas->restore();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
             mainBrowsingContext()->window()->scrolling()->paintScrollbars(
@@ -668,7 +682,6 @@ bool WebView::rendering(bool force)
         }
 
         m_needsPainting = false;
-        canvas->restore();
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
         if (!m_needsComposite) {
             starFish()->platformWindow()->paintVirtualCursor(canvas);
@@ -751,8 +764,6 @@ bool WebView::rendering(bool force)
                 g_surfaceForScreehShot->bufferStride());
 
             Evas_Object* eo = (Evas_Object*)g_surfaceForScreehShot->unwrap();
-            evas_object_image_save(eo, "111.png", 0, 0);
-
             cairo_surface_write_to_png(png_buffer, path);
             cairo_surface_destroy(png_buffer);
 

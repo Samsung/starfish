@@ -112,7 +112,7 @@ void FrameDocument::paintContent(PaintingContext& ctx)
     ctx.m_canvas->translate(firstChild()->asFrameBox()->x(),
                             firstChild()->asFrameBox()->y());
     firstChild()->asFrameBox()->stackingContext()->paintStackingContext(
-        ctx.m_canvas, true);
+        ctx.m_canvas, false);
     ctx.m_canvas->restore();
 }
 
