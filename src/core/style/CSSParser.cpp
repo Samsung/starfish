@@ -1597,9 +1597,9 @@ CSSTokenString CSSParser::combineAndTrimTokenValues(
     return result;
 }
 
-void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
-                                 CSSStyleDeclaration* declaration,
-                                 bool allowSrcProperty)
+CSSParser::ParseResult CSSParser::parseDeclaration(
+    RefPtr<CSSToken> aToken, CSSStyleDeclaration* declaration,
+    bool allowSrcProperty)
 {
     preserveState();
     GCVector<RefPtr<CSSToken>> blocks;
@@ -1622,14 +1622,14 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
                                 ungetToken();
                             }
                         } else {
-                            return;
+                            return ParseResult::Consumed;
                         }
                     } else {
-                        return;
+                        return ParseResult::Consumed;
                     }
                 } else if (token->isNotNull() && !token->isSymbol(';') &&
                            !token->isSymbol('}')) {
-                    return;
+                    return ParseResult::Consumed;
                 }
 
                 if (!aToken->value()->hasASCIIContent()) {
@@ -1698,7 +1698,7 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
                         },
                         &sender);
                 }
-                return;
+                return ParseResult::Consumed;
             }
         }
     } else if (aToken->isComment()) {
@@ -1711,7 +1711,7 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
         }
         return aToken.value;
         */
-        return;
+        return ParseResult::Consumed;
     }
 
     // we have an error here, let's skip it
@@ -1757,21 +1757,28 @@ void CSSParser::parseDeclaration(RefPtr<CSSToken> aToken,
         }
         if (isURLFunc) {
             token = getToken(true, false, true);
+            if (token->isString()) {
+                String* tokenStr = token->value()->toString();
+                if (tokenStr->startsWith(String::fromUTF8("'")) ||
+                    tokenStr->startsWith(String::fromUTF8("\""))) {
+                    // https://drafts.csswg.org/css-values-3/#urls
+                    return ParseResult::ErrorFounded;
+                }
+            }
         } else {
             token = getToken(false, false);
         }
     }
-    return;
+    return ParseResult::Consumed;
 }
 
-bool CSSParser::parseStyleRule(RefPtr<CSSToken> aToken,
-                               GCVector<StyleRuleBase*>& rules,
-                               AllowedRulesType allowedRules,
-                               GCVector<CSSSelectorList*>* sList,
-                               bool isQueryingSelector)
+CSSParser::ParseResult CSSParser::parseStyleRule(
+    RefPtr<CSSToken> aToken, GCVector<StyleRuleBase*>& rules,
+    AllowedRulesType allowedRules, GCVector<CSSSelectorList*>* sList,
+    bool isQueryingSelector)
 {
     if (allowedRules > RegularRules) {
-        return false;
+        return ParseResult::FAIL;
     }
 
     // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
@@ -1783,21 +1790,23 @@ bool CSSParser::parseStyleRule(RefPtr<CSSToken> aToken,
     parseSelector(list, validSelector);
 
     bool valid = false;
+    bool invalidDeclaration = false;
     CSSStyleDeclaration* declarations = new CSSStyleDeclaration();
     if (list.size()) {
         RefPtr<CSSToken> token = currentToken();
         if (token->isSymbol('{')) {
             RefPtr<CSSToken> token = getToken(true, false);
             while (true) {
-                if (!token->isNotNull()) {
-                    valid = true;
-                    break;
-                }
-                if (token->isSymbol('}')) {
+                if (!token->isNotNull() || token->isSymbol('}')) {
                     valid = true;
                     break;
                 } else {
-                    parseDeclaration(token, declarations);
+                    if (parseDeclaration(token, declarations) ==
+                        ParseResult::ErrorFounded) {
+                        valid = true;
+                        invalidDeclaration = true;
+                        break;
+                    }
                 }
                 token = getToken(true, false);
             }
@@ -1807,7 +1816,7 @@ bool CSSParser::parseStyleRule(RefPtr<CSSToken> aToken,
     } else if (!validSelector) {
         if (isQueryingSelector) {
             forgetState();
-            return false;
+            return ParseResult::FAIL;
         } else {
             // selector is invalid so the whole rule is invalid with it
             RefPtr<CSSToken> token = getToken(true, true);
@@ -1818,13 +1827,9 @@ bool CSSParser::parseStyleRule(RefPtr<CSSToken> aToken,
                 token = getToken(true, false);
             }
             while (true) {
-                if (!token->isNotNull()) {
+                if (!token->isNotNull() || token->isSymbol('}')) {
                     forgetState();
-                    return false;
-                }
-                if (token->isSymbol('}')) {
-                    forgetState();
-                    return false;
+                    return ParseResult::FAIL;
                 } else {
                     parseDeclaration(token, declarations);
                 }
@@ -1843,12 +1848,13 @@ bool CSSParser::parseStyleRule(RefPtr<CSSToken> aToken,
             }
         }
         forgetState();
-        return true;
+        return invalidDeclaration ? ParseResult::ErrorFounded
+                                  : ParseResult::Consumed;
     }
     restoreState();
     addUnknownAtRule();
 
-    return false;
+    return ParseResult::FAIL;
 }
 
 void CSSParser::addUnknownAtRule()
@@ -2230,9 +2236,16 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
         } else {
             // plain style rules
             GCVector<StyleRuleBase*> rules;
-            if (parseStyleRule(token, rules, allowedRules, nullptr, false)) {
+            CSSParser::ParseResult res =
+                parseStyleRule(token, rules, allowedRules, nullptr, false);
+            if (res != ParseResult::FAIL) {
                 allowedRules = computeNewAllowedRules(allowedRules, rules[0]);
                 rootRule.insert(rootRule.end(), rules.begin(), rules.end());
+                if (res == ParseResult::ErrorFounded) {
+                    // If quoted <string> 'url()' contains an error, we do not
+                    // need to process the contents of the remaining stylesheet.
+                    break;
+                }
             }
         }
 
