@@ -83,6 +83,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_notPSelector = AtomicString::createAtomicString(sf, "not(");
     m_selectionSelector = AtomicString::createAtomicString(sf, "selection");
     m_rootSelector = AtomicString::createAtomicString(sf, "root");
+    m_checkedSelector = AtomicString::createAtomicString(sf, "checked");
 
     m_id = QualifiedName(AtomicString::emptyAtomicString(),
                          AtomicString::createAtomicString(sf, "id"));

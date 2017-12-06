@@ -240,6 +240,10 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
             event->setInputType(String::createASCIIString("insertText"));
             dispatchEventByUA(event);
         }
+    } else if (name == starFish()->staticStrings()->m_checked) {
+        if (val->equals("checked") || val->equals(String::emptyString)) {
+            setChecked(true);
+        }
     }
 }
 

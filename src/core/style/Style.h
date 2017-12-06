@@ -2415,6 +2415,7 @@ public:
         PseudoHover,
         PseudoFocus,
         PseudoActive,
+        PseudoChecked,
         PseudoEnabled,
         PseudoDisabled,
         PseudoTarget,
