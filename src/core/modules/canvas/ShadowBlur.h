@@ -22,43 +22,19 @@
 namespace StarFish {
 class ShadowBlur {
 public:
-    ShadowBlur(unsigned char* source, int& width, int& height, int& stride,
-               int channel);
+    ShadowBlur(uint8_t* source, const size_t& width, const size_t& height,
+               const size_t& stride);
     ~ShadowBlur();
-    bool process(float radius);
+    void process(float radius);
 
     static const float RADIUS_LIMIT;
 
 private:
-    bool init();
-    void dispose();
-    void gaussBlur(unsigned* src, unsigned* dest, int w, int h, int* bxs);
-    void boxesForGauss(int* bxs, int n, int r);
-    void boxBlur(unsigned* src, unsigned* dest, int w, int h, int r);
-    void boxBlurH(unsigned* src, unsigned* dest, int w, int h, int r);
-    void boxBlurT(unsigned* src, unsigned* dest, int w, int h, int r);
-
-    int sourceBufferLength()
-    {
-        return m_height * m_stride;
-    }
-
-    int colorBufferLength()
-    {
-        return m_height * m_width;
-    }
-
-    LayoutRect rect;
-    int m_width;
-    int m_height;
-    int m_stride;
-    int m_channel;
-    bool m_initialized;
-    unsigned char* m_source;
-    unsigned* m_alpha;
-    unsigned* m_red;
-    unsigned* m_green;
-    unsigned* m_blue;
+    size_t m_width;
+    size_t m_height;
+    size_t m_stride;
+    uint8_t* m_source;
+    std::unique_ptr<uint8_t> m_workspace;
 };
 }
 #endif
