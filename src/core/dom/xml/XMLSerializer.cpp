@@ -83,7 +83,7 @@ static bool hasSpecialChar(char* str, char* parentTagName)
         (strncmp(parentTagName, "span", 4) == 0) ||
         (strncmp(parentTagName, "noembed", 7) == 0)) {
         char* current = str;
-        while (current != '\0') {
+        while (*current != '\0') {
             if (*current == '&' || *current == '<' || *current == '>') {
                 return true;
             }

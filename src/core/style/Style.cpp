@@ -28,6 +28,8 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/HTMLStyleElement.h"
+#include "core/dom/HTMLInputElement.h"
+#include "core/dom/HTMLOptionElement.h"
 #include "core/dom/Text.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
@@ -1113,6 +1115,8 @@ CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(StarFish* sf,
         return CSSSelector::PseudoType::PseudoSelection;
     } else if (name == sstrs->m_rootSelector) {
         return CSSSelector::PseudoType::PseudoRoot;
+    } else if (name == sstrs->m_checkedSelector) {
+        return CSSSelector::PseudoType::PseudoChecked;
     } else {
         return CSSSelector::PseudoNone;
     }
@@ -1173,7 +1177,9 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
         case PseudoAny:
         case PseudoAnyLink:
         case PseudoAutofill:
-        case PseudoChecked:
+    */
+    case PseudoChecked:
+    /*
         case PseudoCornerPresent:
         case PseudoDecrement:
         case PseudoDefault:
@@ -6229,6 +6235,19 @@ bool StyleResolver::checkPseudoClass(Element* element,
     case CSSSelector::PseudoDisabled: {
         if (element->isHTMLElement()) {
             return element->asHTMLElement()->disabled();
+        }
+        break;
+    }
+    case CSSSelector::PseudoChecked: {
+        if (element->isHTMLElement()) {
+            if (element->isHTMLInputElement()) {
+                if (element->asHTMLInputElement()->type()->equals("radio") ||
+                    element->asHTMLInputElement()->type()->equals("checkbox")) {
+                    return element->asHTMLInputElement()->checked();
+                }
+            } else if (element->isHTMLOptionElement()) {
+                return element->asHTMLOptionElement()->selected();
+            }
         }
         break;
     }

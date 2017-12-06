@@ -214,6 +214,7 @@ public:
     AtomicString m_notPSelector;
     AtomicString m_selectionSelector;
     AtomicString m_rootSelector;
+    AtomicString m_checkedSelector;
 
 // HTML Tag Names
 #define DEFINE_HTML_LOCAL_NAMES(name) QualifiedName m_##name##TagName;
