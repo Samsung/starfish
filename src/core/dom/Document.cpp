@@ -1030,12 +1030,14 @@ void Document::didNodeInserted(Node* parent, Node* newChild)
 {
     Node::didNodeInserted(parent, newChild);
     updateDOMVersion();
+    window()->invalidateFramesIfNeeded();
 }
 
 void Document::didNodeRemoved(Node* parent, Node* oldChild)
 {
     Node::didNodeRemoved(parent, oldChild);
     updateDOMVersion();
+    window()->invalidateFramesIfNeeded();
 }
 
 HTMLCollection* Document::namedAccess(String* name)

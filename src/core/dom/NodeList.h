@@ -31,6 +31,9 @@ public:
 
     NodeList(Node* root, bool canCache = true);
 
+    NodeList(Node* root, NodeListFilterFunction filter, void* data,
+             bool canCache);
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isNodeList() const override;

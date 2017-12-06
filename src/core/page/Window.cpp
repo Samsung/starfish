@@ -26,6 +26,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/MessageEvent.h"
+#include "core/dom/NodeList.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/WebOrigin.h"
@@ -75,6 +76,7 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
     , m_scrolling(new Scrolling(this))
     , m_width(initialWidth)
     , m_height(initialHeight)
+    , m_frames(nullptr)
 {
     /*
         GC_REGISTER_FINALIZER_NO_ORDER(
@@ -236,7 +238,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
     }
 
 #ifndef STARFISH_IGNORE_CROSS_ORIGIN
-    if (!targetOrigin->equals("*") && !targetOrigin->equals("about://blank") &&
+    if (!targetOrigin->equals("*") && !targetOrigin->equals("about:blank") &&
         !targetOrigin->equals(origin)) {
         COMPOSE_MESSAGE(reason, ORIGINS_ARE_NOT_MATCHED,
                         targetOrigin->toUTF8NonGCString().data(),
@@ -646,7 +648,7 @@ MediaQueryList* Window::matchMedia(String* query)
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
-ScriptValue Window::namedAccess(String* name)
+Nullable<ScriptObject> Window::defaultNamedGetter(String* name)
 {
     // TODO
     // when child browser context(ex- iframe) implemented, we should
@@ -655,24 +657,66 @@ ScriptValue Window::namedAccess(String* name)
         HTMLCollection* coll = document()->namedAccess(name);
         if (coll) {
             if (coll->length() > 1) {
-                return coll->scriptValue();
+                return coll->scriptObject();
             } else if (coll->length() == 1) {
-                if (coll->item(0)->isHTMLIFrameElement()) {
-                    HTMLIFrameElement* iframe =
-                        coll->item(0)->asHTMLIFrameElement();
-                    if (iframe->contentWindow()) {
-                        return iframe->contentWindow()->scriptValue();
-                    } else {
-                        return iframe->scriptValue();
-                    }
-                } else {
-                    return coll->item(0)->scriptValue();
-                }
+                return coll->item(0)->scriptObject();
             }
         }
     }
 
-    return scriptNull();
+    return Nullable<ScriptObject>();
+}
+
+Window* Window::defaultIndexedGetter(uint32_t idx)
+{
+    Node* item = ensureFrames()->item(idx);
+    if (item) {
+        if (item->isHTMLIFrameElement()) {
+            STARFISH_ASSERT(item->asHTMLIFrameElement()->contentWindow());
+            return item->asHTMLIFrameElement()->contentWindow();
+        }
+        // TODO Handle HTMLFrameElement
+        // else if (item->isHTMLFrameElement()) {}
+        else {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+    }
+    return nullptr;
+}
+
+uint32_t Window::length()
+{
+    return ensureFrames()->length();
+}
+
+void Window::invalidateFramesIfNeeded()
+{
+    if (m_frames) {
+        m_frames->getNodeListImpl().invalidateCache();
+    }
+}
+
+static bool gatherFrames(Node* node, void* data, GCVector<Node*>* collection)
+{
+    StaticStrings* strings = (StaticStrings*)data;
+    if (node->isElement()) {
+        if (node->asElement()->name().localNameAtomic() ==
+                strings->m_frameTagName.localNameAtomic() ||
+            node->asElement()->name().localNameAtomic() ==
+                strings->m_iframeTagName.localNameAtomic()) {
+            return true;
+        }
+    }
+    return false;
+};
+
+NodeList* Window::ensureFrames()
+{
+    if (!m_frames) {
+        m_frames = new NodeList(document(), gatherFrames,
+                                starFish()->staticStrings(), true);
+    }
+    return m_frames;
 }
 
 #ifdef STARFISH_ENABLE_TEST

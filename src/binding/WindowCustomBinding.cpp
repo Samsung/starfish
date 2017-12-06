@@ -40,13 +40,6 @@ void customExit(int returnCode, Window* window)
 }
 #endif
 
-ValueRef* windowWindowGetterFunction(ExecutionStateRef* state,
-                                     ValueRef* thisValue, size_t argc,
-                                     ValueRef** argv, bool isNewExpression)
-{
-    return ValueRef::create(state->context()->globalObject());
-}
-
 struct TimeOutData : public gc {
     TimeOutData()
         : listener(nullptr)

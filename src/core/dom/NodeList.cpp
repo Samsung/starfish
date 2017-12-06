@@ -35,6 +35,13 @@ NodeList::NodeList(Node* root, bool canCache)
 {
 }
 
+NodeList::NodeList(Node* root, NodeListFilterFunction filter, void* data,
+                   bool canCache)
+    : ScriptWrappable(this)
+    , m_nodeListImpl(root, filter, data, canCache)
+{
+}
+
 ScriptBindingInstance* NodeList::scriptBindingInstance()
 {
     return m_nodeListImpl.root()->document()->scriptBindingInstance();

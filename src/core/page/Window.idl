@@ -11,11 +11,11 @@ dictionary ScrollToOptions : ScrollOptions {
     unrestricted double top;
 };
 
-[PrimaryGlobal, LegacyUnenumerableNamedProperties]
+[PrimaryGlobal, LegacyUnenumerableNamedProperties, CustomDescriptor]
 interface Window : EventTarget {
   // the current browsing context
-  [Custom, Unforgeable] readonly attribute WindowProxy window;
-
+  // NOTE WindowProxy -> Window
+  [Unforgeable] readonly attribute Window window;
   // `self` is Implemented in virtual id
   // [Replaceable] readonly attribute WindowProxy self;
   [Unforgeable] readonly attribute Document document;
@@ -37,18 +37,19 @@ interface Window : EventTarget {
   void blur();
 
   // other browsing contexts
-  [Unimplemented, Replaceable] readonly attribute WindowProxy frames;
-  [Unimplemented, Replaceable] readonly attribute unsigned long length;
-  [Unforgeable] readonly attribute Window? top; // Change WindowProxy -> Window
+  // NOTE WindowProxy -> Window
+  [Replaceable] readonly attribute Window frames;
+  [Replaceable] readonly attribute unsigned long length;
+
+  // NOTE WindowProxy -> Window
+  [Unforgeable] readonly attribute Window? top;
   [Unimplemented] attribute any opener;
-  // [Unimplemented, Replaceable] readonly attribute WindowProxy? parent;
+  // NOTE WindowProxy -> Window
   [Replaceable] readonly attribute Window? parent;
   readonly attribute Element? frameElement;
   [Unimplemented] WindowProxy? open(optional DOMString url = "about:blank", optional DOMString target = "_blank", [TreatNullAs=EmptyString] optional DOMString features = "");
-  [Unimplemented] getter object (DOMString name);
-  // Since this is the global object, the IDL named getter adds a NamedPropertiesObject exotic
-  // object on the prototype chain. Indeed, this does not make the global object an exotic object.
-  // Indexed access is taken care of by the WindowProxy exotic object.
+  [Unimplemented, NotEnumerable] getter object (DOMString name);
+  [Unimplemented, NotEnumerable] getter Window (unsigned long index);
 
   // the user agent
   readonly attribute Navigator navigator;
