@@ -1131,12 +1131,15 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | |	attribute	| geolocation	| Return geolocation interface |
 | |	attribute	| cookieEnabled	| Return true if the user agent attempts to handle cookies according to the cookie specification |
 | |	attribute	| language	| Return a string representing the language version as defined in BCP 47 |
-| [NavigatorID](https://html.spec.whatwg.org/multipage/#navigatorid)	| interface	|	| NavigatorID is used for identifying Navigator |
-| |	attribute	| appCodeName	| Returns  the string "StarFish".|
-| |	attribute	| appName	| Returns  the string "StarFish".|
-| |	attribute	| appVersion	| Returns the string "Mozilla/5.0 StarFish/0.1".|
-| |	attribute	| userAgent	| Returns the string "Mozilla/5.0 StarFish/0.1".|
-| |	attribute	| vendor	| Returns the string "Samsung Electronics Co., Ltd."|
+| [NavigatorID](https://html.spec.whatwg.org/multipage/#navigatorid) | interface | | NavigatorID is used for identifying Navigator. |
+| | attribute | appCodeName | Returns the string "Mozilla". |
+| | attribute | appName | Returns the string "Netscape". |
+| | attribute | appVersion | Returns the string "Mozilla/5.0 (like Firefox, Gecko) StarFish/0.1.0". |
+| | attribute | platform | Returns either the empty string or a string representing the platform on which the MWE is executing. |
+| | attribute | product | Returns the string "Gecko". |
+| | attribute | userAgent | Returns the string "Mozilla/5.0 (like Firefox, Gecko) StarFish/0.1.0". |
+| | attribute | vendor | Returns the string "Samsung Electronics Co., Ltd.". |
+| | attribute | vendorSub | Returns the empty string. |
 | [Geolocation](https://dev.w3.org/geo/api/spec-source.html#geolocation) | interface	| Geolocation | |
 | | method   | void getCurrentPosition(PositionCallback successCallback, optional PositionErrorCallback errorCallback, optional PositionOptions options)	| Parameters are in following formats:<br>`successCallback`: `function(position) {}`<br>`errorCallback`: `function (positionError) {}`<br>`options`: `PositionOptions` |
 | | callback | PositionCallback = void (Position position) | |

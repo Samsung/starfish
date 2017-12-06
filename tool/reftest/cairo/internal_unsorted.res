@@ -242,3 +242,4 @@
 403;test/cairo/internal-test/storage/storage_01.html
 264;test/cairo/internal-test/css/length/simple_calc.html
 199;test/cairo/internal-test/css/fontSize/font_size_with_viewport_percent.html
+384;test/cairo/internal-test/css/url/url-invalid.html
