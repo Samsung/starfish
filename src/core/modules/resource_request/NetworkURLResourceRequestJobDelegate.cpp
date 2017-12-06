@@ -176,7 +176,8 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         if (cache) {
             if (!nwd->cachedEntry) {
                 cache->put(nwd);
-            } else {
+            } // TODO : If the entry is before it expires but is no longer fresh
+            else {
                 if (nwd->httpTransaction->httpResponse().responseCode() ==
                     HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
                     // Update Entry property
@@ -424,7 +425,7 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithCachedEntry(
     HTTPHeaderMap& headers, HTTPCacheEntry* cachedEntry)
 {
     // * If-Modified-Since, If-None-Match, If-Range, If-Unmodified-Since
-    if (!cachedEntry->shouldRevalidate()) {
+    if (!cachedEntry->shouldReValidate()) {
         return;
     }
 
@@ -467,10 +468,10 @@ void* NetworkURLResourceRequestJobDelegate::worker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (nwd->cachedEntry && !nwd->cachedEntry->shouldRevalidate()) {
-        return nwd->helper->httpCacheWorker(data);
-    } else {
+    if (!nwd->cachedEntry || (nwd->cachedEntry->shouldReValidate())) {
         return nwd->helper->networkWorker(data);
+    } else {
+        return nwd->helper->httpCacheWorker(data);
     }
 #else
     return nwd->helper->networkWorker(data);

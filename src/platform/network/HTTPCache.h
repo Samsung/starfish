@@ -37,7 +37,7 @@ public:
     void put(NetworkURLWorkerData* data);
     bool flush();
     void expire();
-    void pruningIfNeeds(size_t contentLength);
+    bool pruneAsNeededForCacheSpace(const size_t reserve);
     bool isConsistent();
 
 private:
@@ -45,7 +45,7 @@ private:
     void initCacheMeber();
     void addCacheLRUListData(String* url);
     void deleteCacheLRUListData(String* url);
-    HTTPCacheEntryMultiMap::iterator findEntryTableData(String* key);
+    HTTPCacheEntryMultiMap::iterator findEntry(String* key);
 
     HTTPCacheEntryMultiMap m_cacheEntryTable;
     HTTPCacheLRUList m_cacheLRUList;
