@@ -49,7 +49,7 @@ public:
         return m_entryFileName;
     }
 
-    bool shouldRevalidate()
+    bool shouldReValidate()
     {
         return !isFresh() || m_httpFreshnessInfo.etag.size() ||
                m_cacheControl.mustRevalidate || m_cacheControl.noCache;
