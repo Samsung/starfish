@@ -1036,10 +1036,9 @@ private:
                     cairo_image_surface_get_data(surfaceForBlur);
 
                 if (data && format == CAIRO_FORMAT) {
-                    ShadowBlur sb(data, width, height, stride, 4);
-                    if (sb.process(shadow->radius())) {
-                        cairo_surface_mark_dirty(surfaceForBlur);
-                    }
+                    ShadowBlur sb(data, width, height, stride);
+                    sb.process(shadow->radius());
+                    cairo_surface_mark_dirty(surfaceForBlur);
                 }
             }
 
