@@ -28,6 +28,7 @@ class HTMLCollection;
 class Location;
 class MediaQueryList;
 class Navigator;
+class NodeList;
 class PlatformWindow;
 class ResourceURL;
 class Screen;
@@ -193,16 +194,10 @@ public:
         return DocumentHoldable::document();
     }
 
-    // WindowProxy == Window are same in StarFish
-    Window* self()
-    {
-        return this;
-    }
-
     // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
-    // WindowProxy == Window are same in StarFish
     Window* parent();
     Window* top();
+
     Element* frameElement();
 
     History* history()
@@ -319,6 +314,18 @@ public:
     // https://html.spec.whatwg.org/multipage/
     // browsers.html#named-access-on-the-window-object
     ScriptValue namedAccess(String* name);
+    Nullable<ScriptObject> defaultNamedGetter(String* name);
+    Window* defaultIndexedGetter(uint32_t idx);
+    uint32_t length();
+    void invalidateFramesIfNeeded();
+    Window* frames()
+    {
+        return this;
+    }
+    Window* window()
+    {
+        return this;
+    }
 
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
@@ -420,6 +427,7 @@ private:
     Window(StarFish* starFish, BrowsingContext* browsingContext,
            ResourceURL* url, uint32_t initialWidth, uint32_t initialHeight);
     Window();
+    NodeList* ensureFrames();
 
     StarFish* m_starFish;
     BrowsingContext* m_browsingContext;
@@ -434,6 +442,7 @@ private:
     uint32_t m_height;
 
     Node* m_cssTarget;
+    NodeList* m_frames;
 };
 }
 

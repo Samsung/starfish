@@ -215,9 +215,9 @@ static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
     }
 
     String* name = toBrowserString(state, key);
-    ScriptValue coll = self->namedAccess(name);
-    if (!coll->isNull()) {
-        return coll;
+    Nullable<ScriptObject> coll = self->defaultNamedGetter(name);
+    if (coll.hasValue()) {
+        return ValueRef::create(coll.getValue());
     }
 
     if (name->equals("self")) {

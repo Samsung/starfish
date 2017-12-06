@@ -705,6 +705,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | location | Return this Window object's Location object. |
 |  | attribute | history | Return the object implementing the History interface for this Window object's associated Document. |
 |  | attribute | navigator | Return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
+|  | attribute | frames | Return Window object's browsing context's WindowProxy object. |
+|  | attribute | length | Return the number of document-tree child browsing contexts of this Window object. |
 |  | method | postMessage(message, targetOrigin, transfer) | Posts a message to the given window. |
 | [Window](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface) | enum | ScrollBehvior | "auto", "instant", "smooth" |
 |  [ScrollOptions](https://www.w3.org/TR/cssom-view-1/#dictdef-scrolloptions) | dictionary | ScrollOptions |  |

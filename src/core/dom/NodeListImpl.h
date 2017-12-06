@@ -93,6 +93,16 @@ public:
     {
     }
 
+    NodeListImpl(Node* root, NodeListFilterFunction filter, void* data,
+                 bool canCache)
+        : m_canCache(canCache)
+        , m_isCacheValid(true)
+        , m_root(root)
+        , m_filter(filter)
+        , m_data(data)
+    {
+    }
+
     size_t length() const;
     Node* item(uint32_t index) const;
     void invalidateCache() const

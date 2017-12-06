@@ -6,9 +6,6 @@
 // [REF1]----------------------------------------------------------------
 [Exposed=(Window,Worker)]
 interface EventTarget {
-  // NOTE Starfish only support boolean type for third argument
-  // void addEventListener(DOMString type, EventListener? callback, optional (AddEventListenerOptions or boolean) options);
-  // void removeEventListener(DOMString type, EventListener? callback, optional (EventListenerOptions or boolean) options);
   [ForceDenyStrictMode] void addEventListener(DOMString type, EventListener? callback, optional boolean capture);
   [ForceDenyStrictMode] void removeEventListener(DOMString type, EventListener? callback, optional boolean captures);
   [RaisesException, ForceDenyStrictMode] boolean dispatchEvent(Event event);
