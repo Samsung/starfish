@@ -181,8 +181,8 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
         };
         Mode mode = Mode::WaitCommand;
         bool gotMinus = false;
-        float x, y, x2, y2;
-        float x3, y3, x4, y4;
+        float x = 0, y = 0, x2 = 0, y2 = 0;
+        float x3 = 0, y3 = 0, x4 = 0, y4 = 0;
         float lastX = 0, lastY = 0;
         float lastOfLastX = 0, lastOfLastY = 0;
         char paintMode = ' ';

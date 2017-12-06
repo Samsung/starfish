@@ -1995,7 +1995,7 @@ int Element::tabIndex() const
 bool Element::tabIndexSetExplicitly() const
 {
     return m_tabIndexWasSetExplicitly;
-};
+}
 
 void Element::focus()
 {
