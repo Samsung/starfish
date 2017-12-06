@@ -1778,7 +1778,7 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
     bool isQueryingSelector)
 {
     if (allowedRules > RegularRules) {
-        return ParseResult::FAIL;
+        return ParseResult::Failed;
     }
 
     // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
@@ -1816,7 +1816,7 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
     } else if (!validSelector) {
         if (isQueryingSelector) {
             forgetState();
-            return ParseResult::FAIL;
+            return ParseResult::Failed;
         } else {
             // selector is invalid so the whole rule is invalid with it
             RefPtr<CSSToken> token = getToken(true, true);
@@ -1829,7 +1829,7 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
             while (true) {
                 if (!token->isNotNull() || token->isSymbol('}')) {
                     forgetState();
-                    return ParseResult::FAIL;
+                    return ParseResult::Failed;
                 } else {
                     parseDeclaration(token, declarations);
                 }
@@ -1854,7 +1854,7 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
     restoreState();
     addUnknownAtRule();
 
-    return ParseResult::FAIL;
+    return ParseResult::Failed;
 }
 
 void CSSParser::addUnknownAtRule()
@@ -2238,7 +2238,7 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
             GCVector<StyleRuleBase*> rules;
             CSSParser::ParseResult res =
                 parseStyleRule(token, rules, allowedRules, nullptr, false);
-            if (res != ParseResult::FAIL) {
+            if (res != ParseResult::Failed) {
                 allowedRules = computeNewAllowedRules(allowedRules, rules[0]);
                 rootRule.insert(rootRule.end(), rules.begin(), rules.end());
                 if (res == ParseResult::ErrorFounded) {

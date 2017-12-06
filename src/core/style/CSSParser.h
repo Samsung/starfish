@@ -1094,7 +1094,7 @@ public:
 
     enum RuleListType { TopLevelRuleList, RegularRuleList, KeyframesRuleList };
 
-    enum ParseResult { Consumed, ErrorFounded, FAIL };
+    enum ParseResult { Consumed, ErrorFounded, Failed };
 
     CSSParser(Document* document);
     inline ~CSSParser()
