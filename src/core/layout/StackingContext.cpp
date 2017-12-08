@@ -331,7 +331,7 @@ void StackingContext::clearGraphicsBuffer(bool needsDetachNative)
 
 class CanvasStateRestorer {
 private:
-    std::unordered_map<Frame*, std::pair<bool, bool>>
+    std::vector<std::pair<Frame*, std::pair<bool, bool>>>
         m_canApplyOverflowOrScrolls;
     struct OverflowStatus {
         Frame* m_child;
@@ -372,6 +372,29 @@ private:
         }
     };
 
+    void insertIntoCanApplyOverflowOrScrolls(Frame* f, std::pair<bool, bool> v)
+    {
+        auto len = m_canApplyOverflowOrScrolls.size();
+        for (size_t i = 0; i < len; i++) {
+            if (m_canApplyOverflowOrScrolls[i].first == f) {
+                m_canApplyOverflowOrScrolls[i].second = v;
+                return;
+            }
+        }
+        m_canApplyOverflowOrScrolls.push_back(std::make_pair(f, v));
+    }
+
+    std::pair<bool, bool> readFromCanApplyOverflowOrScrolls(Frame* f)
+    {
+        auto len = m_canApplyOverflowOrScrolls.size();
+        for (size_t i = 0; i < len; i++) {
+            if (m_canApplyOverflowOrScrolls[i].first == f) {
+                return m_canApplyOverflowOrScrolls[i].second;
+            }
+        }
+        return std::make_pair(false, false);
+    }
+
 public:
     CanvasStateRestorer(Canvas* canvas, StackingContext* sCtx, FrameBox* owner)
         : m_canvas(canvas)
@@ -380,7 +403,32 @@ public:
 
         FrameBox* self = sCtx->owner();
 
+        {
+            bool needsRestore = false;
+            Frame* s = self->layoutParent();
+            while (s) {
+                if ((s->shouldApplyOverflow() &&
+                     !s->isEstablishesStackingContext()) ||
+                    (s->style() &&
+                     s->style()->position() == FixedPositionValue)) {
+                    needsRestore = true;
+                    break;
+                }
+                s = s->layoutParent();
+            }
+
+            if (!needsRestore) {
+                auto o = self->absolutePointIncludingScroll(owner);
+                canvas->translate(o.x(), o.y());
+                return;
+            }
+        }
+
         std::vector<FrameBox*> frameList;
+
+        frameList.reserve(32);
+        m_canApplyOverflowOrScrolls.reserve(32);
+
         Frame* nearstBufferedFrame = nullptr;
         bool shareWithStackingBuffer = true;
         {
@@ -401,14 +449,16 @@ public:
 
                 if (shareWithStackingBuffer) {
                     if (status.canApplyOverflow(f)) {
-                        m_canApplyOverflowOrScrolls[f] = std::make_pair(
-                            true, canScroll && f && f->isFrameBlockBox());
+                        insertIntoCanApplyOverflowOrScrolls(
+                            f, std::make_pair(true, canScroll && f &&
+                                                        f->isFrameBlockBox()));
                         status.reset(f);
                         canScroll = status.m_child->style()->position() !=
                                     FixedPositionValue;
                     } else {
-                        m_canApplyOverflowOrScrolls[f] = std::make_pair(
-                            false, canScroll && f && f->isFrameBlockBox());
+                        insertIntoCanApplyOverflowOrScrolls(
+                            f, std::make_pair(false, canScroll && f &&
+                                                         f->isFrameBlockBox()));
                     }
                 }
 
@@ -443,6 +493,7 @@ public:
 
         auto iter = frameList.rbegin();
         shareWithStackingBuffer = nearstBufferedFrame == nullptr;
+        LayoutUnit dx, dy;
         while (iter != frameList.rend()) {
             FrameBox* b = *iter;
 
@@ -466,54 +517,49 @@ public:
             }
 
             if (!(nearstBufferedFrame && nearstBufferedFrame == b)) {
-                canvas->translate(b->x(), b->y());
+                dx += b->x();
+                dy += b->y();
             }
 
             if (b->style()) {
-                auto overflowOrScroll = m_canApplyOverflowOrScrolls[b];
+                auto overflowOrScroll = readFromCanApplyOverflowOrScrolls(b);
 
                 if (b != self) {
                     if (b != nearstBufferedFrame) {
-                        SkMatrix m = b->style()->transformsToMatrix(
-                            b->width(), b->height(), b,
-                            b->style()->hasTransforms(b));
-                        if (!m.isIdentity()) {
-                            LayoutUnit ox = b->width() / 2;
-                            LayoutUnit oy = b->height() / 2;
-                            if (b->style()->hasTransformOrigin()) {
-                                ox = b->style()
-                                         ->transformOrigin()
-                                         ->originValue()
-                                         ->getXAxis()
-                                         .specifiedValue(b->width(), b);
-                                oy = b->style()
-                                         ->transformOrigin()
-                                         ->originValue()
-                                         ->getYAxis()
-                                         .specifiedValue(b->height(), b);
+                        StackingContext* ctx = b->stackingContext();
+                        if (ctx) {
+                            SkMatrix m =
+                                b->stackingContext()->transformMatrix();
+                            if (!m.isIdentity()) {
+                                canvas->translate(dx, dy);
+                                dx = dy = 0;
+
+                                auto o =
+                                    b->stackingContext()->transformOrigin();
+                                canvas->translate(o.x(), o.y());
+                                canvas->postMatrix(m);
+                                canvas->translate(-o.x(), -o.y());
                             }
-                            canvas->translate(ox, oy);
-                            canvas->postMatrix(m);
-                            canvas->translate(-ox, -oy);
                         }
                     }
 
                     if (overflowOrScroll.first) {
-                        canvas->clip(
-                            Unit::Rect(b->borderLeft(), b->borderTop(),
-                                       b->width() - b->borderWidth(),
-                                       b->height() - b->borderHeight()));
+                        Unit::Rect rt(b->borderLeft() + dx, b->borderTop() + dy,
+                                      b->width() - b->borderWidth(),
+                                      b->height() - b->borderHeight());
+                        canvas->clip(rt);
                     }
 
                     if (overflowOrScroll.second) {
-                        canvas->translate(-b->asFrameBlockBox()->scrollLeft(),
-                                          -b->asFrameBlockBox()->scrollTop());
+                        dx += -b->asFrameBlockBox()->scrollLeft();
+                        dy += -b->asFrameBlockBox()->scrollTop();
                     }
                 }
             }
 
             iter++;
         }
+        canvas->translate(dx, dy);
     }
     ~CanvasStateRestorer()
     {
@@ -1135,16 +1181,9 @@ void StackingContext::paintStackingContext(
             auto iter2 = child->begin();
             while (iter2 != child->end()) {
                 StackingContext* sCtx = *iter2;
-                canvas->save();
-
-                {
-                    CanvasStateRestorer r(canvas, sCtx, m_owner);
-                    sCtx->paintStackingContext(
-                        canvas, needsPainting,
-                        parentGraphicsLayerNeedsPainting);
-                }
-
-                canvas->restore();
+                CanvasStateRestorer r(canvas, sCtx, m_owner);
+                sCtx->paintStackingContext(canvas, needsPainting,
+                                           parentGraphicsLayerNeedsPainting);
                 iter2++;
             }
             iter++;
@@ -1166,16 +1205,10 @@ void StackingContext::paintStackingContext(
                 auto iter2 = child->begin();
                 while (iter2 != child->end()) {
                     StackingContext* sCtx = *iter2;
-                    canvas->save();
-
-                    {
-                        CanvasStateRestorer r(canvas, sCtx, m_owner);
-                        sCtx->paintStackingContext(
-                            canvas, needsPainting,
-                            parentGraphicsLayerNeedsPainting);
-                    }
-
-                    canvas->restore();
+                    CanvasStateRestorer r(canvas, sCtx, m_owner);
+                    sCtx->paintStackingContext(
+                        canvas, needsPainting,
+                        parentGraphicsLayerNeedsPainting);
                     iter2++;
                 }
             }

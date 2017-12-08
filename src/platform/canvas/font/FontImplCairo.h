@@ -81,6 +81,8 @@ public:
             m_descender = 0;
         }
 
+        m_supportsKerning = m_face->face_flags & FT_FACE_FLAG_KERNING;
+
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
             [](void* obj, void* cd) {
@@ -193,6 +195,7 @@ public:
     int m_unitsPerEM;
     int m_ascender;
     int m_descender;
+    bool m_supportsKerning;
 
     typedef std::unordered_map<char32_t, std::pair<unsigned, unsigned>>
         GlyphIndexCache;
@@ -398,7 +401,7 @@ public:
         FT_Set_Pixel_Sizes(face, 0, 16);
         auto hbFace = hb_ft_font_create(face, [](void* userData) {});
 
-        auto impl = new FontFaceImplCairo(face, hbFace);
+        auto impl = new (PointerFreeGC) FontFaceImplCairo(face, hbFace);
         m_fontPathToFace.insert(std::make_pair(path, impl));
         return impl;
     }

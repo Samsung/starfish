@@ -56,7 +56,7 @@ FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
     }
     FT_Set_Pixel_Sizes(face, 0, 16);
     auto hbFace = hb_ft_font_create(face, [](void* userData) {});
-    return new FontFaceImplCairo(face, hbFace, newBuf, dataLen);
+    return new (PointerFreeGC) FontFaceImplCairo(face, hbFace, newBuf, dataLen);
 }
 
 std::pair<std::pair<FontFaceImplCairo*, size_t>,
@@ -347,12 +347,12 @@ LayoutUnit FontImplCairo::measureText(const StringView& str)
     }
 #endif
     LayoutUnit result;
-    size_t length = str.length();
-    auto accessData = str.bufferAccessData();
-
     bool isSimpleCase = cairoBackendCanUseSimpleFontPath(this, str);
 
     if (isSimpleCase) {
+        size_t length = str.length();
+        auto accessData = str.bufferAccessData();
+
         for (size_t i = 0; i < length; i++) {
             char32_t ch = accessData.charAt(i);
             auto g = loadGlyph(ch);
@@ -387,7 +387,30 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
     if (sv.length() == 1) {
         return true;
     }
-    return false;
+
+    if (((FontFaceImplCairo*)(FontImplCairo*)f->fontFaceList()[0])
+            ->m_supportsKerning) {
+        // TODO multiply devicePixelRatio if it implemented
+        if (f->size() >= 48) {
+            return false;
+        }
+    }
+
+    size_t length = sv.length();
+    auto accessData = sv.bufferAccessData();
+    for (size_t i = 0; i < length; i++) {
+        char32_t ch = accessData.charAt(i);
+
+        auto property = u_getIntPropertyValue(ch, UCHAR_BIDI_CLASS);
+        if ((property == U_RIGHT_TO_LEFT) ||
+            (property == U_RIGHT_TO_LEFT_ARABIC) ||
+            (property == U_RIGHT_TO_LEFT_EMBEDDING) ||
+            (property == U_RIGHT_TO_LEFT_OVERRIDE)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 #if !defined(PORT_CANVAS_BACKEND_EFL)

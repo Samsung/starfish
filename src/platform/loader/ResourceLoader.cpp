@@ -239,11 +239,9 @@ public:
     Resource* m_watcher;
 };
 
-static void traverseChildFrames(
-    Frame* parent, std::unordered_set<std::string>& currentUsingResourcePaths)
+static void registerImageURLs(
+    Frame* c, std::unordered_set<std::string>& currentUsingResourcePaths)
 {
-    Frame* c = parent;
-
     if (c->isFrameReplaced() && c->asFrameReplaced()->isFrameReplacedImage()) {
         String* u = ResourceURL::mergeDocumentURIWithURIString(
             c->node()->document(), c->node()->asHTMLImageElement()->src());
@@ -251,19 +249,17 @@ static void traverseChildFrames(
         currentUsingResourcePaths.insert(utf8Data.data());
     }
 
-    size_t i = 0;
-    while (i < c->style()->backgroundLayerSize()) {
-        if (c->style()->backgroundImage(i)->length()) {
-            auto utf8Data = c->style()->backgroundImage(i)->toUTF8NonGCString();
-            currentUsingResourcePaths.insert(utf8Data.data());
-        }
-        i++;
-    }
+    ComputedStyle* cs = c->style();
 
-    c = parent->firstChild();
-    while (c) {
-        traverseChildFrames(c, currentUsingResourcePaths);
-        c = c->next();
+    if (cs) {
+        size_t i = 0;
+        while (i < cs->backgroundLayerSize()) {
+            if (cs->backgroundImage(i)->length()) {
+                auto utf8Data = cs->backgroundImage(i)->toUTF8NonGCString();
+                currentUsingResourcePaths.insert(utf8Data.data());
+            }
+            i++;
+        }
     }
 }
 
@@ -280,7 +276,10 @@ void ResourceLoader::cachePruning()
         std::unordered_set<std::string> currentUsingResourcePaths;
 
         if (document()->frame()) {
-            traverseChildFrames(document()->frame(), currentUsingResourcePaths);
+            document()->frame()->asFrameBox()->iterateChildFrameBox(
+                [&](FrameBox* box) {
+                    registerImageURLs(box, currentUsingResourcePaths);
+                });
         }
 
         // remove non-referenced resources
@@ -289,7 +288,7 @@ void ResourceLoader::cachePruning()
             ResourceCacheData data = iter->second;
             auto utf8Data =
                 data.m_resource->url()->urlString()->toUTF8NonGCString();
-            if ((currentUsingResourcePaths.find(utf8Data.data()) !=
+            if ((currentUsingResourcePaths.find(utf8Data.data()) ==
                  currentUsingResourcePaths.end()) &&
                 !data.m_resource->m_isReferencedByAnoterResource &&
                 data.m_resource->state() == Resource::State::Finished) {
