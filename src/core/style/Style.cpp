@@ -6017,7 +6017,8 @@ static bool isFirstOfType(Element* element)
     Node* sibling = element->previousSibling();
     while (sibling) {
         if (sibling->isElement() &&
-            sibling->localName()->equalsIgnoreCase(element->localName())) {
+            sibling->asElement()->name().localName()->equalsIgnoreCase(
+                element->name().localName())) {
             return false;
         }
         sibling = sibling->previousSibling();
@@ -6031,7 +6032,8 @@ static bool isLastOfType(Element* element)
     Node* sibling = element->nextSibling();
     while (sibling) {
         if (sibling->isElement() &&
-            sibling->localName()->equalsIgnoreCase(element->localName())) {
+            sibling->asElement()->name().localName()->equalsIgnoreCase(
+                element->name().localName())) {
             return false;
         }
         sibling = sibling->nextSibling();

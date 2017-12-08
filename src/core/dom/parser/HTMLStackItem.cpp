@@ -57,7 +57,7 @@ HTMLStackItem::HTMLStackItem(Node* node, ItemType type)
         break;
     case ItemForContextElement:
         m_tokenLocalName = AtomicString::createAttrAtomicString(
-            m_node->starFish(), m_node->localName());
+            m_node->starFish(), m_node->nodeName());
         if (m_node->asElement()->name().namespaceURI().hasValue()) {
             m_namespaceURI =
                 m_node->asElement()->name().namespaceURI().getValue();

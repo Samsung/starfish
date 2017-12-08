@@ -1269,6 +1269,21 @@ void InlineBoxLayoutParentBox::registerRelativePositionedBoxesAndMarkPaintFlag(
         STARFISH_ASSERT(childBox != nullptr);
         childBox->markSeenNormalFlowInline();
 
+        if (!childBox->isEstablishesStackingContext()) {
+            if (childBox->isInlineNonReplacedBox()) {
+                seenInlineBox(PaintingInlineStage::PaintingInlineBox);
+            } else if (childBox->isInlineTextBox()) {
+                seenInlineBox(PaintingInlineStage::PaintingInlineBox);
+            } else if (childBox->isAtomicInlineLevel() ||
+                       childBox->isFlexItem() || childBox->isFloating()) {
+                seenInlineBox(PaintingInlineStage::PaintingInlineBlockBox);
+            } else if (childBox->isFrameReplaced()) {
+                seenInlineBox(PaintingInlineStage::PaintingInlineReplaced);
+            } else {
+                seenInlineBox(PaintingInlineStage::PaintingInlineBox);
+            }
+        }
+
         if (!childBox->isFrameBlockBox()) {
             if (childBox->style()->position() ==
                 PositionValue::RelativePositionValue) {
@@ -1296,17 +1311,29 @@ void InlineBoxLayoutParentBox::moveToNewLineBox(LineFormattingContext* ctx,
 }
 
 void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
-                                                  PaintingInlineStage stage)
+                                                  PaintingInlineStage stage,
+                                                  LayoutUnit dx, LayoutUnit dy)
 {
+    if (stage == PaintingInlineBox && !m_flags.m_seenNormalFlowInlineBox) {
+        return;
+    } else if (stage == PaintingInlineBlockBox &&
+               !m_flags.m_seenNormalFlowInlineBlockBox) {
+        return;
+    } else if (stage == PaintingInlineReplaced &&
+               !m_flags.m_seenNormalFlowInlineReplaced) {
+        return;
+    }
+
     for (size_t k = 0; k < m_boxes.size(); k++) {
         FrameBox* childBox = m_boxes[k];
         if (childBox->isEstablishesStackingContext()) {
             continue;
         }
 
-        LayoutUnit dx = childBox->x();
-        LayoutUnit dy = childBox->y();
-        canvas->translate(dx, dy);
+        LayoutUnit cdx = childBox->x();
+        LayoutUnit cdy = childBox->y();
+        dx += cdx;
+        dy += cdy;
 
         if (childBox->isInlineNonReplacedBox()) {
             canvas->save();
@@ -1328,37 +1355,53 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
 
             if (overflowApplied) {
                 canvas->save();
-                canvas->clip(childBox->makeRect(BoxValue::PaddingBoxBoxValue));
+                auto clipRect =
+                    childBox->makeRect(BoxValue::PaddingBoxBoxValue);
+                clipRect.setX(clipRect.x() + dx);
+                clipRect.setY(clipRect.y() + dy);
+                canvas->clip(clipRect);
             }
 
-            childBox->paintInlineContent(canvas, stage);
+            childBox->paintInlineContent(canvas, stage, dx, dy);
 
             if (overflowApplied) {
                 canvas->restore();
             }
 
             canvas->restore();
-            childBox->paintOutline(canvas);
         } else if (childBox->isInlineTextBox()) {
-            childBox->paintInlineContent(canvas, stage);
+            childBox->paintInlineContent(canvas, stage, dx, dy);
         } else if (childBox->isFrameReplaced()) {
-            if (stage == PaintingReplaced) {
+            if (stage == PaintingInlineBlockBox && childBox->isFloating()) {
                 PaintingContext ctx(canvas);
-                while (ctx.m_paintingStage != PaintingStageEnd) {
-                    childBox->paintContent(ctx);
-                    ctx.m_paintingStage =
-                        (PaintingStage)(ctx.m_paintingStage + 1);
-                }
-                childBox->paintOutline(canvas);
+                ctx.m_paintingStage = PaintingNonPositionedFloats;
+                canvas->translate(dx, dy);
+                childBox->paintContent(ctx);
+                canvas->translate(-dx, -dy);
+            } else if (stage == PaintingInlineBlockBox &&
+                       childBox->isAtomicInlineLevel()) { // inline-block
+                PaintingContext ctx(canvas);
+                ctx.m_paintingStage = PaintingNormalFlowInline;
+                canvas->translate(dx, dy);
+                childBox->paintContent(ctx);
+                canvas->translate(-dx, -dy);
+            } else if (stage == PaintingInlineReplaced) {
+                PaintingContext ctx(canvas);
+                ctx.m_paintingStage = PaintingNormalFlowInline;
+                canvas->translate(dx, dy);
+                childBox->paintContent(ctx);
+                canvas->translate(-dx, -dy);
             }
+
         } else if (childBox->isAtomicInlineLevel() || childBox->isFlexItem() ||
                    childBox->isFloating()) {
-            if (stage == PaintingBlockBox) {
+            if (stage == PaintingInlineBlockBox) {
                 STARFISH_ASSERT(childBox->isFrameBlockBox());
+                canvas->save();
+
+                canvas->translate(dx, dy);
                 PaintingContext ctx(canvas);
                 childBox->paintBackgroundAndBorders(canvas);
-
-                canvas->save();
 
                 if (childBox->shouldResetTextDecoration()) {
                     canvas->resetTextDecorationData();
@@ -1412,14 +1455,13 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                 }
 
                 canvas->restore();
-
-                childBox->paintOutline(canvas);
             }
         } else {
-            childBox->paintInlineContent(canvas, stage);
+            childBox->paintInlineContent(canvas, stage, dx, dy);
         }
 
-        canvas->translate(-dx, -dy);
+        dx -= cdx;
+        dy -= cdy;
     }
 }
 
@@ -2725,6 +2767,7 @@ void* FrameTextRareData::operator new(size_t size)
 FrameText::FrameText(Node* node, ComputedStyle* style)
     : Frame(node, style)
 {
+    m_flags.m_isFrameText = true;
 }
 
 String* FrameText::text()
@@ -4220,14 +4263,17 @@ void FrameBlockBox::paintInlineContent(Canvas* canvas)
 {
     PaintingInlineStage stage = PaintingInlineBox;
 
+    LayoutUnit dx, dy;
     while (stage != PaintingInlineStageEnd) {
         for (size_t i = 0; i < m_lineBoxes.size(); i++) {
             LineBox& b = *m_lineBoxes[i];
             LayoutUnit ldx = b.frameRect().x();
             LayoutUnit ldy = b.frameRect().y();
-            canvas->translate(ldx, ldy);
-            b.paintInlineContent(canvas, stage);
-            canvas->translate(-ldx, -ldy);
+            dx += ldx;
+            dy += ldy;
+            b.paintInlineContent(canvas, stage, dx, dy);
+            dx -= ldx;
+            dy -= ldy;
         }
         stage = (PaintingInlineStage)(stage + 1);
     }
@@ -4340,7 +4386,8 @@ FrameText* InlineTextBox::origin()
 }
 
 void InlineTextBox::paintInlineContent(Canvas* canvas,
-                                       PaintingInlineStage stage)
+                                       PaintingInlineStage stage, LayoutUnit dx,
+                                       LayoutUnit dy)
 {
     if (stage == PaintingInlineStage::PaintingInlineBox) {
         ComputedStyle* s = style();
@@ -4359,7 +4406,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
         if (hasShadow) {
             canvas->setTextShadowData(list);
         }
-        canvas->drawText(0, 0, contentWidth(), text());
+        canvas->drawText(dx, dy, contentWidth(), text());
         if (hasShadow) {
             canvas->clearTextShadowData();
         }
@@ -4418,23 +4465,26 @@ void InlineNonReplacedBox::paintStackingContextContent(Canvas* canvas)
     PaintingInlineStage stage = PaintingInlineBox;
 
     while (stage != PaintingInlineStageEnd) {
-        InlineBoxLayoutParentBox::paintInlineContent(canvas, stage);
+        InlineBoxLayoutParentBox::paintInlineContent(canvas, stage, 0, 0);
         stage = (PaintingInlineStage)(stage + 1);
     }
 }
 
 void InlineNonReplacedBox::paintInlineContent(Canvas* canvas,
-                                              PaintingInlineStage stage)
+                                              PaintingInlineStage stage,
+                                              LayoutUnit dx, LayoutUnit dy)
 {
     if (isEstablishesStackingContext()) {
         return;
     }
 
     if (stage == PaintingInlineBox) {
+        canvas->translate(dx, dy);
         paintBackgroundAndBorders(canvas);
+        canvas->translate(-dx, -dy);
     }
 
-    InlineBoxLayoutParentBox::paintInlineContent(canvas, stage);
+    InlineBoxLayoutParentBox::paintInlineContent(canvas, stage, dx, dy);
 }
 
 void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
@@ -4443,7 +4493,7 @@ void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
         PaintingInlineStage stage = PaintingInlineBox;
 
         while (stage != PaintingInlineStageEnd) {
-            paintInlineContent(ctx.m_canvas, stage);
+            paintInlineContent(ctx.m_canvas, stage, 0, 0);
             stage = (PaintingInlineStage)(stage + 1);
         }
     }

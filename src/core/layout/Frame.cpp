@@ -22,6 +22,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/page/Window.h"
 #include "core/layout/Frame.h"
+#include "core/layout/FrameText.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameDocument.h"
@@ -937,6 +938,7 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_isNormalFlow = true;
     m_flags.m_isAbsolutePositioned = false;
     m_flags.m_isFloating = false;
+    m_flags.m_isFrameText = false;
     m_flags.m_heightComputed = false;
     m_flags.m_hasBiggerContentThanFrameWidth = false;
     m_flags.m_hasBiggerContentThanFrameHeight = false;
@@ -946,6 +948,9 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_seenNonPositionedFloats = false;
     m_flags.m_seenReplacedBlock = false;
     m_flags.m_seenNormalFlowInline = false;
+    m_flags.m_seenNormalFlowInlineBox = false;
+    m_flags.m_seenNormalFlowInlineBlockBox = false;
+    m_flags.m_seenNormalFlowInlineReplaced = false;
 
     computeStyleFlags();
 }
@@ -999,11 +1004,12 @@ void Frame::seenPaintingKind(PaintingKind kind)
 
 bool Frame::shouldApplyOverflow()
 {
-    if (!isAnonymous()) {
-        if (node()->isHTMLHtmlElement()) {
+    Node* thisNode = node();
+    if (thisNode /* isAnonymous() */) {
+        if (thisNode->isHTMLHtmlElement()) {
             return false;
-        } else if (node()->isHTMLBodyElement()) {
-            HTMLHtmlElement* html = node()->document()->rootElement();
+        } else if (thisNode->isHTMLBodyElement()) {
+            HTMLHtmlElement* html = thisNode->document()->rootElement();
             if (html->style()->overflowX() == OverflowValue::VisibleOverflow &&
                 html->style()->overflowY() == OverflowValue::VisibleOverflow) {
                 return false;
@@ -1079,13 +1085,17 @@ void Frame::computeStyleFlags()
     m_flags.m_needsGraphicsBuffer |= (style->hasComplexTransforms(this));
 }
 
-ComputedStyle* Frame::style()
+Node* Frame::nodeSlowCase() const
 {
-    if (UNLIKELY(isAnonymous())) {
-        return m_styleWhenNodeIsAnonymous;
-    } else {
-        return node()->style();
+    STARFISH_ASSERT(isFrameText());
+    FrameText* self = const_cast<Frame*>(this)->asFrameText();
+    if (self->hasRareData()) {
+        return self->frameTextRareData()->m_node;
     }
+    if (self->isAnonymous()) {
+        return nullptr;
+    }
+    return m_node;
 }
 
 Frame* Frame::enclosingFirstLineStyle()

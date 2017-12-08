@@ -19,6 +19,7 @@
 
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 
 namespace StarFish {
 
@@ -908,9 +909,9 @@ public:
         return false;
     }
 
-    virtual bool isFrameText()
+    bool isFrameText() const
     {
-        return false;
+        return m_flags.m_isFrameText;
     }
 
     virtual bool isFrameInline()
@@ -1145,7 +1146,14 @@ public:
         return false;
     }
 
-    virtual ComputedStyle* style();
+    ComputedStyle* style()
+    {
+        if (UNLIKELY(isAnonymous())) {
+            return m_styleWhenNodeIsAnonymous;
+        } else {
+            return node()->style();
+        }
+    }
 
     bool isTransformable()
     {
@@ -1167,14 +1175,19 @@ public:
 
     void updateComputedStyle(Node* refNode);
 
-    virtual Node* node() const
+    inline Node* node() const
     {
+        if (isFrameText()) {
+            return nodeSlowCase();
+        }
         if (isAnonymous()) {
             return nullptr;
         } else {
             return m_node;
         }
     }
+
+    Node* nodeSlowCase() const;
 
     Node* nearstNotAnonymousNode()
     {
@@ -1674,6 +1687,7 @@ protected:
         bool m_isAbsolutePositioned : 1;
         bool m_isFloating : 1;
         bool m_isFlexItem : 1;
+        bool m_isFrameText : 1;
 
         bool m_isRunningTransformAnimation : 1;
 
@@ -1693,6 +1707,10 @@ protected:
         bool m_gotLongString : 1;
         // special flag for InlineNonReplacedBox
         bool m_isCollapsed : 1;
+        bool m_seenNormalFlowInlineBox : 1;
+        bool m_seenNormalFlowInlineBlockBox : 1;
+        bool m_seenNormalFlowInlineReplaced : 1;
+
     } m_flags;
 
     STARFISH_COMPILE_ASSERT(sizeof(FrameFlags) <= sizeof(uint32_t),

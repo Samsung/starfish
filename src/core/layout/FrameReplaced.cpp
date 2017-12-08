@@ -529,6 +529,7 @@ void FrameReplaced::paintContent(PaintingContext& ctx)
         if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             paintBackgroundAndBorders(ctx.m_canvas);
             paintReplaced(ctx.m_canvas);
+        } else if (ctx.m_paintingStage == PaintingNormalFlowInline) {
             paintOutline(ctx.m_canvas);
         }
     } else if (isBlockLevel()) {

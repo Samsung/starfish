@@ -60,7 +60,8 @@ public:
         return true;
     }
 
-    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage);
+    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
+                                    LayoutUnit dx, LayoutUnit dy);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
 #ifdef STARFISH_ENABLE_TEST
@@ -252,7 +253,26 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage);
+    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
+                                    LayoutUnit dx, LayoutUnit dy);
+
+    void seenInlineBox(PaintingInlineStage stage)
+    {
+        if (stage == PaintingInlineStage::PaintingInlineBox) {
+            m_flags.m_seenNormalFlowInlineBox = true;
+        } else if (stage == PaintingInlineStage::PaintingInlineBlockBox) {
+            m_flags.m_seenNormalFlowInlineBlockBox = true;
+        } else {
+            STARFISH_ASSERT(stage ==
+                            PaintingInlineStage::PaintingInlineReplaced);
+            m_flags.m_seenNormalFlowInlineReplaced = true;
+        }
+
+        auto lp = layoutParent();
+        if (lp->isInlineBoxLayoutParentBox()) {
+            lp->asInlineBoxLayoutParentBox()->seenInlineBox(stage);
+        }
+    }
 
 protected:
     GCVector<FrameBox*> m_boxes;
@@ -327,7 +347,8 @@ public:
 
     virtual void layoutInline(LineFormattingContext& lineFormattingContext);
     virtual void paintStackingContextContent(Canvas* canvas);
-    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage);
+    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
+                                    LayoutUnit dx, LayoutUnit dy);
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
