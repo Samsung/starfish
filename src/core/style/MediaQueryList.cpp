@@ -15,6 +15,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/MediaQueryList.h"
@@ -35,6 +36,30 @@ String* MediaQueryList::media() const
 bool MediaQueryList::matches()
 {
     return m_evaluator->eval(m_media);
+}
+
+void MediaQueryList::addListener(EventListener* listener)
+{
+    // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-addlistener
+    if (!listener) {
+        return;
+    }
+
+    m_media->document()->addEventListener(m_media->document()
+                                              ->starFish()
+                                              ->staticStrings()
+                                              ->m_onchange.localName(),
+                                          listener, false);
+}
+
+void MediaQueryList::removeListener(EventListener* listener)
+{
+    // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-removelistener
+    m_media->document()->removeEventListener(m_media->document()
+                                                 ->starFish()
+                                                 ->staticStrings()
+                                                 ->m_onchange.localName(),
+                                             listener, false);
 }
 
 } /* namespace StarFish */

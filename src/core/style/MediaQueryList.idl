@@ -3,7 +3,7 @@
 interface MediaQueryList : EventTarget {
     readonly attribute CSSOMString media;
     readonly attribute boolean matches;
-    [Unimplemented] void addListener(EventListener? listener);
-    [Unimplemented] void removeListener(EventListener? listener);
+    void addListener(EventListener? listener);
+    void removeListener(EventListener? listener);
     [Unimplemented] attribute EventHandler onchange;
 };
