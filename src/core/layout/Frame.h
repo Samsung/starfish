@@ -876,7 +876,11 @@ class Frame : public gc {
 public:
     Frame(Node* node, ComputedStyle* s);
 
-    bool shouldApplyOverflow();
+    void computeShouldApplyOverflow();
+    bool shouldApplyOverflow()
+    {
+        return m_flags.m_shouldApplyOverflow;
+    }
 
     virtual void computeStyleFlags();
 
@@ -1695,6 +1699,7 @@ protected:
         bool m_seenNonPositionedFloats : 1;
         bool m_seenReplacedBlock : 1;
         bool m_seenNormalFlowInline : 1;
+        bool m_shouldApplyOverflow : 1;
 
         // special flag for FrameBlockBox
         bool m_heightComputed : 1;

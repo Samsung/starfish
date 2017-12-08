@@ -944,6 +944,7 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_hasBiggerContentThanFrameHeight = false;
     m_flags.m_isFirstLine = false;
     m_flags.m_isRunningTransformAnimation = false;
+    m_flags.m_shouldApplyOverflow = false;
     m_flags.m_seenNormalFlowBlockChild = false;
     m_flags.m_seenNonPositionedFloats = false;
     m_flags.m_seenReplacedBlock = false;
@@ -1002,32 +1003,38 @@ void Frame::seenPaintingKind(PaintingKind kind)
     }
 }
 
-bool Frame::shouldApplyOverflow()
+void Frame::computeShouldApplyOverflow()
 {
     Node* thisNode = node();
-    if (thisNode /* isAnonymous() */) {
+    if (thisNode /* !isAnonymous() */) {
         if (thisNode->isHTMLHtmlElement()) {
-            return false;
+            m_flags.m_shouldApplyOverflow = false;
+            return;
         } else if (thisNode->isHTMLBodyElement()) {
             HTMLHtmlElement* html = thisNode->document()->rootElement();
             if (html->style()->overflowX() == OverflowValue::VisibleOverflow &&
                 html->style()->overflowY() == OverflowValue::VisibleOverflow) {
-                return false;
+                m_flags.m_shouldApplyOverflow = false;
+                return;
             }
         }
     }
 
     ComputedStyle* cs = style();
     if (cs) {
-        return (cs->overflowX() != OverflowValue::VisibleOverflow) ||
-               (cs->overflowY() != OverflowValue::VisibleOverflow);
+        m_flags.m_shouldApplyOverflow =
+            (cs->overflowX() != OverflowValue::VisibleOverflow) ||
+            (cs->overflowY() != OverflowValue::VisibleOverflow);
     } else {
-        return false;
+        m_flags.m_shouldApplyOverflow = false;
+        ;
     }
 }
 
 void Frame::computeStyleFlags()
 {
+    computeShouldApplyOverflow();
+
     ComputedStyle* style = Frame::style();
     if (!style) {
         return;
