@@ -1786,7 +1786,7 @@ public:
     FlexBasisData flexBasis()
     {
         if (!m_rareComputedStyleData) {
-            return FlexBasisData(true);
+            return FlexBasisData(false);
         }
 
         Nullable<FlexBasisData> flexBasis =
@@ -1795,7 +1795,7 @@ public:
             return flexBasis.getValue();
         }
 
-        return FlexBasisData(true);
+        return FlexBasisData(false);
     }
 
     ContentDataGroup* content()

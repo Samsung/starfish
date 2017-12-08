@@ -104,8 +104,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
         LayoutUnit contentWidth;
 
         if (width.isAuto()) {
-            if (isNormalFlow() &&
-                style()->display() != InlineBlockDisplayValue) {
+            if (isNormalFlow() && !isAtomicInlineLevel()) {
                 // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
                 // width of containing block =
                 //     'margin-left' + 'border-left-width' + 'padding-left' +

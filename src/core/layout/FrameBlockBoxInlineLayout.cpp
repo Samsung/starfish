@@ -3822,14 +3822,16 @@ LayoutUnit PreferredWidthContext::mbpWidth(Frame* f)
     return leftMBPWidth(f) + rightMBPWidth(f);
 }
 
-LayoutUnit PreferredWidthContext::preferredWidthWithNewContext(Frame* f)
+std::pair<LayoutUnit, LayoutUnit>
+PreferredWidthContext::preferredWidthsWithNewContext(Frame* f)
 {
     LayoutUnit mbpWidth = this->mbpWidth(f);
     PreferredWidthContext newCtx(m_layoutContext, f,
                                  m_remainingWidth - mbpWidth);
     newCtx.computePreferredWidth();
 
-    return newCtx.preferredWidth() + mbpWidth;
+    return std::make_pair(newCtx.preferredWidth() + mbpWidth,
+                          newCtx.preferredMinWidth() + mbpWidth);
 }
 
 void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
@@ -3848,16 +3850,22 @@ void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
 
             updateCurrentLineWidthByWordWidth();
 
-            LayoutUnit w = preferredWidthWithNewContext(f);
+            auto widths = preferredWidthsWithNewContext(f);
+            LayoutUnit pMinWidth = widths.second;
+            LayoutUnit pWidth = widths.first;
 
             if (f->isFloating()) {
-                updatePreferredMinWidth(w);
-                handleFloatingBox(f, w);
+                updatePreferredMinWidth(pMinWidth);
+                handleFloatingBox(f, pWidth);
             } else {
-                w = widthAppliedByTextIndent(w);
-                updatePreferredMinWidth(w);
+                LayoutUnit oldTextIndent = m_textIndentWidth;
+                pMinWidth = widthAppliedByTextIndent(pMinWidth);
+                updatePreferredMinWidth(pMinWidth);
+                m_textIndentWidth = oldTextIndent;
+                pWidth = widthAppliedByTextIndent(pWidth);
                 setIsWhiteSpaceAtLast(false, 0);
-                updateCurrentLineWidth(f, w + m_unprocessedStartingMBPWidth);
+                updateCurrentLineWidth(f,
+                                       pWidth + m_unprocessedStartingMBPWidth);
             }
         } else {
             f->computePreferredWidth(*this);
@@ -3986,12 +3994,13 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     FrameBox* cb = containingBlock(this);
     computeBorderMarginPadding(ctx.layoutContext(), cb->contentWidth());
     Length width = style()->width();
-    LayoutUnit w;
 
     if (width.isDefinite(false) && !isFrameTableCellBox()) {
         LayoutUnit unused;
-        w = width.specifiedValue(unused, this);
+        LayoutUnit w = width.specifiedValue(unused, this);
         w = contentWidthApplyingBoxSizing(w);
+        ctx.updatePreferredMinWidth(w);
+        ctx.updatePreferredWidth(w);
     } else {
         if (isFrameFlexibleBox()) {
             FrameFlexibleBox* flexibleBox = asFrameFlexibleBox();
@@ -4013,11 +4022,31 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
 
                     FrameBox* flexItem = f->asFrameBox();
                     LayoutUnit mbpWidth = ctx.mbpWidth(f);
-                    LayoutUnit outerBasisSize =
-                        fCtx.basisSize(flexItem) + mbpWidth;
-                    LayoutUnit diff =
-                        ctx.preferredWidthWithNewContext(f->asFrameBox()) -
-                        outerBasisSize;
+                    LayoutUnit basisSize = fCtx.basisSize(flexItem);
+                    LayoutUnit outerBasisSize = basisSize + mbpWidth;
+                    LayoutUnit maxContentContributeSize =
+                        ctx.preferredWidthsWithNewContext(f->asFrameBox())
+                            .first;
+                    Length width = flexItem->style()->width();
+                    LayoutUnit unused;
+                    if (width.isDefinite(false)) {
+                        maxContentContributeSize = std::max(
+                            maxContentContributeSize,
+                            LayoutUnit(width.specifiedValue(unused, flexItem)));
+                    }
+                    if (flexItem->style()->flexGrow() != 0) {
+                        maxContentContributeSize =
+                            std::min(maxContentContributeSize, basisSize);
+                    }
+                    if (flexItem->style()->flexShrink() == 0) {
+                        maxContentContributeSize =
+                            std::max(maxContentContributeSize, basisSize);
+                    }
+                    maxContentContributeSize =
+                        flexItem->minMaxWidthAppliedIfNeeds(
+                            ctx.layoutContext(), maxContentContributeSize,
+                            unused, false);
+                    LayoutUnit diff = maxContentContributeSize - outerBasisSize;
                     if (diff > 0) {
                         if (f->style()->flexGrow() > 0) {
                             maxContentFlexGrowFraction = std::max(
@@ -4029,7 +4058,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                             maxContentFlexShrinkFraction = std::max(
                                 maxContentFlexShrinkFraction,
                                 std::floor(-diff / (f->style()->flexShrink() *
-                                                    outerBasisSize)));
+                                                    basisSize)));
                         }
                     }
 
@@ -4037,6 +4066,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 }
 
                 f = firstChild();
+                LayoutUnit w;
                 while (f) {
                     if (f->isAbsolutePositioned() ||
                         fCtx.isAnonymousFlexItemContainingOnlyWhitespace(f)) {
@@ -4047,26 +4077,28 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                     FrameBox* flexItem = f->asFrameBox();
                     LayoutUnit basisSize = fCtx.basisSize(flexItem);
                     LayoutUnit mbpWidth = flexItem->mbpWidth();
-                    // TODO: should apply max width
+                    LayoutUnit unused;
+                    LayoutUnit itemWidth = basisSize;
                     if (maxContentFlexGrowFraction >
                         maxContentFlexShrinkFraction) {
-                        w +=
-                            basisSize +
+                        itemWidth =
                             f->style()->flexGrow() * maxContentFlexGrowFraction;
                     } else if (maxContentFlexShrinkFraction >
                                maxContentFlexGrowFraction) {
-                        w += basisSize +
-                             f->style()->flexShrink() * basisSize *
-                                 -maxContentFlexShrinkFraction;
-                    } else {
-                        w += basisSize;
+                        itemWidth = f->style()->flexShrink() * basisSize *
+                                    -maxContentFlexShrinkFraction;
                     }
+                    itemWidth = flexItem->minMaxWidthAppliedIfNeeds(
+                        ctx.layoutContext(), itemWidth, unused, false);
+                    w += itemWidth;
                     w += mbpWidth;
                     f = f->next();
                 }
                 w = std::min(ctx.remainingWidth(), w);
+                ctx.updatePreferredWidth(w);
             } else {
                 Frame* f = firstChild();
+                LayoutUnit w;
                 while (f) {
                     if (f->isAbsolutePositioned() ||
                         fCtx.isAnonymousFlexItemContainingOnlyWhitespace(f)) {
@@ -4074,19 +4106,26 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                         continue;
                     }
 
-                    w = std::max(
-                        w, ctx.preferredWidthWithNewContext(f->asFrameBox()));
+                    auto widths =
+                        ctx.preferredWidthsWithNewContext(f->asFrameBox());
+                    w = std::max(w, widths.first);
+                    ctx.updatePreferredMinWidth(widths.second);
                     f = f->next();
                 }
+                ctx.updatePreferredWidth(w);
             }
         } else {
             if (hasBlockFlow()) {
                 Frame* f = firstChild();
+                LayoutUnit w;
                 while (f) {
-                    w = std::max(
-                        w, ctx.preferredWidthWithNewContext(f->asFrameBox()));
+                    auto widths =
+                        ctx.preferredWidthsWithNewContext(f->asFrameBox());
+                    w = std::max(w, widths.first);
+                    ctx.updatePreferredMinWidth(widths.second);
                     f = f->next();
                 }
+                ctx.updatePreferredWidth(w);
             } else {
                 LayoutUnit textIndentWidth = LayoutUnit(0);
                 if ((!isAnonymous() && !hasBlockFlow()) ||
@@ -4098,14 +4137,17 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 ctx.setTextIndentWidth(textIndentWidth);
                 ctx.computePreferredWidthInline(this);
                 ctx.finishLine(false);
-                w = ctx.preferredWidth();
             }
         }
     }
 
     LayoutUnit unused;
-    w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), w, unused, true);
+    LayoutUnit w = minMaxWidthAppliedIfNeeds(
+        ctx.layoutContext(), ctx.preferredWidth(), unused, true);
     ctx.updatePreferredWidth(w);
+    w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), ctx.preferredMinWidth(),
+                                  unused, true);
+    ctx.updatePreferredMinWidth(w);
 }
 
 void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
@@ -4154,9 +4196,12 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
         }
     }
 
+    LayoutUnit oldTextIndentWidth = ctx.textIndentWidth();
     tablePreferredMinWidth =
         ctx.widthAppliedByTextIndent(tablePreferredMinWidth);
     ctx.updatePreferredMinWidth(tablePreferredMinWidth);
+    ctx.setTextIndentWidth(oldTextIndentWidth);
+    tablePreferredWidth = ctx.widthAppliedByTextIndent(tablePreferredWidth);
     ctx.updatePreferredWidth(tablePreferredWidth);
 }
 
