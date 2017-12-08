@@ -44,6 +44,11 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
             LayoutUnit containerHeight =
                 height() - borderHeight() - paddingHeight();
 
+            if (containerWidth == LayoutUnit(0) ||
+                containerHeight == LayoutUnit(0)) {
+                return;
+            }
+
             LayoutUnit imageDstWidth;
             LayoutUnit imageDstHeight;
 

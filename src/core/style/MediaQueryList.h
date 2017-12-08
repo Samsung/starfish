@@ -18,6 +18,7 @@
 #define __StarFishMediaQueryList__
 
 #include "binding/ScriptWrappable.h"
+#include "core/dom/EventTarget.h"
 
 namespace StarFish {
 
@@ -45,6 +46,8 @@ public:
     /* DOM APIs */
     String* media() const;
     bool matches();
+    void addListener(EventListener* listener);
+    void removeListener(EventListener* listener);
 
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
