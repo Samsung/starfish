@@ -395,15 +395,15 @@ public:
             }
         }
 
-        cairo_save(m_canvas);
         if (m_textShadowDataList.size()) {
             for (auto& sd : m_textShadowDataList) {
+                cairo_save(m_canvas);
                 drawTextInner(rt, sv, &sd);
+                cairo_restore(m_canvas);
             }
         }
 
         drawTextInner(rt, sv);
-        cairo_restore(m_canvas);
     }
 
     void drawImageCairo(cairo_surface_t* localSurface, const Unit::Rect& dst,
@@ -734,7 +734,7 @@ public:
 private:
 #ifdef STARFISH_ENABLE_TEST
     void drawAhemBoxCairo(cairo_t* canvas, LayoutRect rect,
-                          const StringView& sv)
+                          const StringView& sv, LayoutUnit dx, LayoutUnit dy)
     {
         if (g_enablePixelTest) {
             LayoutUnit x = rect.x();
@@ -791,25 +791,30 @@ private:
         }
     }
 #endif
-    void drawGlyphsCairo(cairo_t* canvas, LayoutRect rect, const StringView& sv)
+    void drawGlyphsCairo(cairo_t* canvas, LayoutRect rect, const StringView& sv,
+                         LayoutUnit dx, LayoutUnit dy)
     {
         LayoutUnit xBias = 0;
         FT_UInt glyph_index = 0;
         FT_Face lastFontFace = nullptr;
         cairo_font_face_t* fontFace = nullptr;
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
-        int size = lastState().m_font->size();
+        int size = f->size();
 
-        cairo_translate(canvas, 0, lastState().m_font->metrics().m_ascender);
+        FontMetrics fontMetrics = f->metrics();
+        cairo_translate(canvas, dx, fontMetrics.m_ascender + dy);
         cairo_glyph_t* glyphs = nullptr;
         size_t glyphCount = 0;
 
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
-            glyphs = ALLOCA(sv.length() * sizeof(cairo_glyph_t), cairo_glyph_t);
-            for (size_t i = 0; i < sv.length(); i++) {
+            auto stringAccessData = sv.bufferAccessData();
+            glyphs = ALLOCA(stringAccessData.length * sizeof(cairo_glyph_t),
+                            cairo_glyph_t);
+            for (size_t i = 0; i < stringAccessData.length; i++) {
                 std::pair<std::pair<FontFaceImplCairo*, size_t>,
                           std::pair<unsigned, LayoutUnit>>
-                    g = cairoBackendInternalLoadGlyph(f, sv.charAt(i));
+                    g = cairoBackendInternalLoadGlyph(
+                        f, stringAccessData.charAt(i));
                 if (g.second.first) {
                     if (true) { // skip webfont enabled
                         if (f->seenUnresolvedWebFontIndex() != SIZE_MAX &&
@@ -839,20 +844,18 @@ private:
                 } else {
                     if (true) { // skip webfont enabled
                         if (f->seenUnresolvedWebFontIndex() != SIZE_MAX) {
-                            xBias += lastState().m_font->spaceWidth();
+                            xBias += f->spaceWidth();
                             continue;
                         }
                     }
                     cairo_save(canvas);
                     cairo_set_line_width(canvas, 1);
                     cairo_new_path(canvas);
-                    cairo_rectangle(canvas, xBias,
-                                    -lastState().m_font->metrics().m_ascender,
-                                    lastState().m_font->spaceWidth(),
-                                    lastState().m_font->metrics().m_fontHeight);
+                    cairo_rectangle(canvas, xBias, -fontMetrics.m_ascender,
+                                    f->spaceWidth(), fontMetrics.m_fontHeight);
                     cairo_stroke(canvas);
                     cairo_restore(canvas);
-                    xBias += lastState().m_font->spaceWidth();
+                    xBias += f->spaceWidth();
                 }
             }
         } else {
@@ -879,12 +882,10 @@ private:
                         cairo_set_line_width(canvas, 1);
                         for (size_t j = 0; j < run.m_text.length(); j++) {
                             cairo_new_path(canvas);
-                            cairo_rectangle(
-                                canvas,
-                                xBias + j * lastState().m_font->spaceWidth(),
-                                -lastState().m_font->metrics().m_ascender,
-                                lastState().m_font->spaceWidth(),
-                                lastState().m_font->metrics().m_fontHeight);
+                            cairo_rectangle(canvas, xBias + j * f->spaceWidth(),
+                                            -fontMetrics.m_ascender,
+                                            f->spaceWidth(),
+                                            fontMetrics.m_fontHeight);
                             cairo_stroke(canvas);
                         }
                         cairo_restore(canvas);
@@ -921,18 +922,23 @@ private:
                 xBias += run.m_runWidth;
             }
         }
-        cairo_show_glyphs(canvas, glyphs, glyphCount);
+        if (glyphCount) {
+            cairo_show_glyphs(canvas, glyphs, glyphCount);
+        }
         cairo_font_face_destroy(fontFace);
-        cairo_translate(canvas, 0, -lastState().m_font->metrics().m_ascender);
+        cairo_translate(canvas, -dx, -dy - fontMetrics.m_ascender);
     }
     void drawTextDecorationCairo(cairo_t* canvas, LayoutRect rect,
-                                 const StringView& sv,
+                                 const StringView& sv, LayoutUnit dx,
+                                 LayoutUnit dy,
                                  CanvasShadowData* shadow = nullptr)
     {
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
         FontFaceImplCairo* fc = (FontFaceImplCairo*)f->fontFaceList()[0];
         FT_Face face = fc->freetypeFace();
         int intSize(f->size() + 0.5f);
+
+        cairo_translate(canvas, dx, dy);
 
         float lineWidth =
             face->underline_thickness / (float)fc->m_unitsPerEM * intSize;
@@ -972,11 +978,12 @@ private:
             cairo_line_to(canvas, rect.width(), y);
             cairo_stroke(canvas);
         }
+
+        cairo_translate(canvas, -dx, -dy);
     }
     void drawTextInner(LayoutRect rect, const StringView& sv,
                        CanvasShadowData* shadow = nullptr)
     {
-        cairo_save(m_canvas);
         LayoutUnit xx = rect.x(), yy = rect.y();
         cairo_t* canvas = nullptr;
         cairo_surface_t* surfaceForBlur = nullptr;
@@ -1012,18 +1019,20 @@ private:
             xx = xx + ceil(radiusOffset / 2);
             yy = yy + ceil(radiusOffset / 2);
         }
-        cairo_translate(canvas, xx.toDouble(), yy.toDouble());
+
+        LayoutUnit dx = xx;
+        LayoutUnit dy = yy;
 
 #ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
-            drawAhemBoxCairo(canvas, rect, sv);
+            drawAhemBoxCairo(canvas, rect, sv, dx, dy);
         } else {
-            drawGlyphsCairo(canvas, rect, sv);
-            drawTextDecorationCairo(canvas, rect, sv, shadow);
+            drawGlyphsCairo(canvas, rect, sv, dx, dy);
+            drawTextDecorationCairo(canvas, rect, sv, dx, dy, shadow);
         }
 #else
-        drawGlyphsCairo(canvas, rect, sv);
-        drawTextDecorationCairo(canvas, rect, sv, shadow);
+        drawGlyphsCairo(canvas, rect, sv, dx, dy);
+        drawTextDecorationCairo(canvas, rect, sv, dx, dy, shadow);
 #endif
         if (shadow) {
             if (shadow->radius()) {
@@ -1046,11 +1055,12 @@ private:
                                      shadow->offsetX() - ceil(radiusOffset / 2),
                                      shadow->offsetY() -
                                          ceil(radiusOffset / 2));
+            cairo_translate(m_canvas, dx, dy);
             cairo_paint(m_canvas);
+            cairo_translate(m_canvas, -dx, -dy);
             cairo_surface_destroy(surfaceForBlur);
             cairo_destroy(canvas);
         }
-        cairo_restore(m_canvas);
     }
 
 protected:

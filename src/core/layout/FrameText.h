@@ -42,11 +42,6 @@ class FrameText : public Frame {
 public:
     FrameText(Node* node, ComputedStyle* style);
 
-    virtual bool isFrameText()
-    {
-        return true;
-    }
-
     virtual const char* name()
     {
         return "FrameText";
@@ -65,14 +60,6 @@ public:
     {
         STARFISH_ASSERT(hasRareData());
         return ((FrameTextRareData*)m_node);
-    }
-
-    virtual Node* node() const
-    {
-        if (hasRareData()) {
-            return frameTextRareData()->m_node;
-        }
-        return Frame::node();
     }
 
     String* text();

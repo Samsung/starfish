@@ -85,8 +85,8 @@ struct FrameBoxRareData : public gc {
 
 enum PaintingInlineStage {
     PaintingInlineBox,
-    PaintingBlockBox,
-    PaintingReplaced,
+    PaintingInlineBlockBox,
+    PaintingInlineReplaced,
     PaintingInlineStageEnd
 };
 
@@ -620,7 +620,8 @@ public:
     }
 
     virtual void paintContent(PaintingContext& ctx);
-    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage)
+    virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
+                                    LayoutUnit dx, LayoutUnit dy)
     {
     }
 

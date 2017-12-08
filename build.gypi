@@ -68,6 +68,7 @@
             '-fvisibility=hidden',
             '-fno-omit-frame-pointer',
             '-fstack-protector',
+            #'-flto', #when enable lto, we can get slim binary(-200kb). but I can not sure the result is stable & linking takes all day long!
             '-fPIC',
             #'-fuse-ld=gold', # for fast linking
         ],

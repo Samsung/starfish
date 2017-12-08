@@ -346,10 +346,15 @@ StringDataUTF32::StringDataUTF32(const char* src, size_t len)
     data.resize(utf32Length);
     const char* end = src + len;
     size_t i = 0;
+    char32_t c;
     while (end != src) {
-        char32_t c;
-        src += utf8ToUtf32(src, end, c);
-        data[i++] = c;
+        if (LIKELY(0 == (src[0] & 0x80))) {
+            data[i++] = src[0];
+            src++;
+        } else {
+            src += utf8ToUtf32(src, end, c);
+            data[i++] = c;
+        }
     }
     m_data = SimpleStringBufferHolder<char32_t>(data.takeBuffer(), utf32Length);
 }

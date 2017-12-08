@@ -1694,11 +1694,11 @@ void FrameBox::paintChildrenWith(PaintingContext& ctx)
 {
     Frame* child = firstChild();
     while (child) {
-        ctx.m_canvas->save();
         ctx.m_canvas->translate(child->asFrameBox()->x(),
                                 child->asFrameBox()->y());
         child->asFrameBox()->paintContent(ctx);
-        ctx.m_canvas->restore();
+        ctx.m_canvas->translate(-child->asFrameBox()->x(),
+                                -child->asFrameBox()->y());
         child = child->next();
     }
 }

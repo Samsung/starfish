@@ -195,12 +195,9 @@ public:
         }
     }
 
-    // FIXME: should be removed! This is not listed on the interface
-    // attributes.
     virtual String* localName()
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        return nullptr;
     }
 
     bool hasChildNodes() const
@@ -473,7 +470,7 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump()
     {
-        auto s = localName()->toUTF8NonGCString();
+        auto s = nodeName()->toUTF8NonGCString();
         printf("[%s] ", s.data());
     }
 #endif
