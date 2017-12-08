@@ -187,6 +187,14 @@ public:
         m_frameRect.setHeight(height);
     }
 
+    LayoutUnit minMaxWidthAppliedIfNeeds(LayoutContext& ctx, LayoutUnit width,
+                                         LayoutUnit parentWidth,
+                                         bool underComputingPreferredWidth);
+
+    LayoutUnit minMaxHeightAppliedIfNeeds(LayoutContext& ctx, LayoutUnit height,
+                                          LayoutUnit parentHeight,
+                                          bool parentHasFixedValue);
+
     void applyMinMaxWidthIfNeeds(LayoutContext& ctx, LayoutUnit width,
                                  LayoutUnit parentWidth)
     {
@@ -793,14 +801,6 @@ public:
     }
 
 protected:
-    LayoutUnit minMaxWidthAppliedIfNeeds(LayoutContext& ctx, LayoutUnit width,
-                                         LayoutUnit parentWidth,
-                                         bool underComputingPreferredWidth);
-
-    LayoutUnit minMaxHeightAppliedIfNeeds(LayoutContext& ctx, LayoutUnit height,
-                                          LayoutUnit parentHeight,
-                                          bool parentHasFixedValue);
-
     void applyBorderRadiusClippingIfNeeds(Canvas* canvas);
 
     bool hasRareData() const

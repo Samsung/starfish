@@ -681,6 +681,11 @@ public:
         m_currentLineWidth = w;
     }
 
+    LayoutUnit textIndentWidth()
+    {
+        return m_textIndentWidth;
+    }
+
     LayoutUnit widthAppliedByTextIndent(LayoutUnit w)
     {
         if (m_textIndentWidth != 0) {
@@ -723,7 +728,7 @@ public:
     LayoutUnit rightMBPWidth(Frame* f);
     LayoutUnit startingMBPWidth(Frame* f);
     LayoutUnit endingMBPWidth(Frame* f);
-    LayoutUnit preferredWidthWithNewContext(Frame* f);
+    std::pair<LayoutUnit, LayoutUnit> preferredWidthsWithNewContext(Frame* f);
 
     int hasFloat() const
     {
@@ -1535,7 +1540,8 @@ public:
     {
         return (isFrameReplaced()) ||
                (style()->display() == DisplayValue::InlineBlockDisplayValue) ||
-               (style()->display() == DisplayValue::InlineTableDisplayValue);
+               (style()->display() == DisplayValue::InlineTableDisplayValue) ||
+               (style()->display() == DisplayValue::InlineFlexDisplayValue);
     }
 
     bool canBeContainingBlockOfAbsolutePositionedBox(Frame* child)
