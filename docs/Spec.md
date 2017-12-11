@@ -874,6 +874,12 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | lastEventId | Returns the last event ID string, for server-sent events. |
 | | attribute | source | Returns the WindowProxy of the source window, for cross-document messaging, and the MessagePort being attached, in the connect event fired at SharedWorkerGlobalScope objects. |
 | | attribute | ports | Returns the MessagePort array sent with the message, for cross-document messaging and channel messaging. |
+| [MediaQueryListEvent](https://drafts.csswg.org/cssom-view/#mediaquerylistevent) | interface | MediaQueryListEvent | The MediaQueryListEvent object stores information on the changes that have happened to a MediaQueryList object. |
+| | attribute | media | A DOMString representing a serialized media query. |
+| | attribute | matches | A Boolean that returns true if the document currently matches the media query list, or false if not. |
+| [MediaQueryListEventInit](https://drafts.csswg.org/cssom-view/#dictdef-mediaquerylisteventinit) | dictionary | MediaQueryListEventInit | Dictionary that is used to create MediaQueryListEvent. |
+| | attribute | media | Returns the value it was initialized to. |
+| | attribute | matches | Returns the value it was initialized to. |
 | [WindowEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers) | partial<br>interface | WindowEventHandlers | WindowEventHandlers are the event handlers common to several interfaces like Window, or HTMLBodyElement and  HTMLFrameSetElement. Each of these interfaces can implement additional specific event handlers. |
 | | attribute | onmessage | Fired at an object when it receives a message. |
 | | attribute | onmessageerror | Fired at an object when it receives a message that cannot be deserialized. |
