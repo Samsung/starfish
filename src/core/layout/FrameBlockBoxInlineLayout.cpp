@@ -1310,6 +1310,57 @@ void InlineBoxLayoutParentBox::moveToNewLineBox(LineFormattingContext* ctx,
     ctx->markAbsolutePositionedBoxLayoutParent(lineBox);
 }
 
+void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
+{
+    auto& boxes = this->boxes();
+    auto it = boxes.begin();
+    InlineTextBox* first = nullptr;
+    if (isLineBox() || !hasIsolateBidiContent(style())) {
+        if (ctx->m_languageDirections[ctx->m_block].isMixed()) {
+            return;
+        }
+    } else {
+        if (ctx->m_languageDirections[asInlineNonReplacedBox()->origin()]
+                .isMixed()) {
+            return;
+        }
+    }
+
+    StringBuilder builder;
+    while (it != boxes.end()) {
+        FrameBox* box = *it;
+
+        if (box->isInlineTextBox()) {
+            InlineTextBox* textBox = box->asInlineTextBox();
+            StringView sv = textBox->text();
+            builder.appendString(sv.substring());
+            if (first) {
+                it = boxes.erase(it);
+                continue;
+            } else {
+                first = textBox;
+            }
+        } else {
+            if (first) {
+                first->setText(builder.finalize());
+                first->setWidth(
+                    first->style()->font()->measureText(first->text()));
+                builder.clear();
+                first = nullptr;
+            }
+            if (box->isInlineNonReplacedBox()) {
+                box->asInlineNonReplacedBox()->mergeInlineTextBoxes(ctx);
+            }
+        }
+        it++;
+    }
+
+    if (first) {
+        first->setText(builder.finalize());
+        first->setWidth(first->style()->font()->measureText(first->text()));
+    }
+}
+
 void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                                                   PaintingInlineStage stage,
                                                   LayoutUnit dx, LayoutUnit dy)
@@ -2098,10 +2149,17 @@ void LineFormattingContext::finishLineForLineBox(FrameLineBreak* br,
         }
     }
 
+    insertAbsolutePositionedBoxes();
+#ifdef STARFISH_ENABLE_TEST
+    if (!g_enablePixelTest) {
+        back->mergeInlineTextBoxes(this);
+    }
+#else
+    back->mergeInlineTextBoxes(this);
+#endif
+
     LayoutUnit yDiff = distanceToNextLineBox(
         br, !isLastLine || m_pendingInlineBoxes.size() > 0);
-
-    insertAbsolutePositionedBoxes();
     m_lineBoxY += yDiff;
 
     if (isLastLine) {

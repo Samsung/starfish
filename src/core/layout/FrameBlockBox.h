@@ -274,6 +274,8 @@ public:
         }
     }
 
+    void mergeInlineTextBoxes(LineFormattingContext* ctx);
+
 protected:
     GCVector<FrameBox*> m_boxes;
 
