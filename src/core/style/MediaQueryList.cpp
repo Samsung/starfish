@@ -41,25 +41,13 @@ bool MediaQueryList::matches()
 void MediaQueryList::addListener(EventListener* listener)
 {
     // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-addlistener
-    if (!listener) {
-        return;
-    }
-
-    m_media->document()->addEventListener(m_media->document()
-                                              ->starFish()
-                                              ->staticStrings()
-                                              ->m_onchange.localName(),
-                                          listener, false);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void MediaQueryList::removeListener(EventListener* listener)
 {
     // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-removelistener
-    m_media->document()->removeEventListener(m_media->document()
-                                                 ->starFish()
-                                                 ->staticStrings()
-                                                 ->m_onchange.localName(),
-                                             listener, false);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 } /* namespace StarFish */
