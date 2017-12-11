@@ -290,10 +290,10 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     switch (m_orgProxy->m_method) {
     case ResourceRequest::GET_METHOD: {
         method = "GET";
-#ifdef STARFISH_ENABLE_HTTPCACHE
 #ifdef STARFISH_ENABLE_PROFILING
         uint64_t start = longTickCount();
 #endif
+#ifdef STARFISH_ENABLE_HTTPCACHE
         if (allowCache && m_orgProxy->starFish()->httpCache()) {
             auto it =
                 m_orgProxy->starFish()->httpCache()->get(m_orgProxy->m_url);
