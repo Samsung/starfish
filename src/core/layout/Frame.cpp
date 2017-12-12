@@ -942,6 +942,7 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_heightComputed = false;
     m_flags.m_hasBiggerContentThanFrameWidth = false;
     m_flags.m_hasBiggerContentThanFrameHeight = false;
+    m_flags.m_needsToComputeScrollVisbleRect = false;
     m_flags.m_isFirstLine = false;
     m_flags.m_isRunningTransformAnimation = false;
     m_flags.m_shouldApplyOverflow = false;
