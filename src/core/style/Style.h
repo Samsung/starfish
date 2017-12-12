@@ -970,6 +970,7 @@ class CSSStyleDeclaration;
     F(BackgroundOrigin, backgroundOrigin, "background-origin")               \
     F(LineHeight, lineHeight, "line-height")                                 \
     F(WhiteSpace, whiteSpace, "white-space")                                 \
+    F(WordSpacing, wordSpacing, "word-spacing")                              \
     F(PaddingTop, paddingTop, "padding-top")                                 \
     F(PaddingRight, paddingRight, "padding-right")                           \
     F(PaddingBottom, paddingBottom, "padding-bottom")                        \
@@ -2178,6 +2179,7 @@ public:
     bool updateValueUnitFlexGrow(const CSSTokenValue& value);
     bool updateValueUnitFlexShrink(const CSSTokenValue& value);
     bool updateValueUnitFlexBasis(const CSSTokenValue& value);
+    bool updateValueUnitWordSpacing(const CSSTokenValue& value);
 
     bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit);
 

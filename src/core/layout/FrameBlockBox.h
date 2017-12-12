@@ -899,7 +899,7 @@ private:
     void resolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes);
     void splitInlineBoxes(GCVector<FrameBox*>& boxes);
 
-    bool canInsertToLineBox(Frame* f, LayoutUnit width);
+    bool canInsertToLineBox(FrameBox* f, LayoutUnit width);
     bool hasFloatingBoxAlreadyInLineBox(Frame* f);
     bool canInsertFloatingBox(FrameBox* f, bool allowPendingFloatingBox);
 
@@ -1087,6 +1087,8 @@ public:
             return SIZE_MAX;
         return iter->second;
     }
+
+    LayoutUnit wordSpacing(FrameBox* box, InlineBoxLayoutParentBox* parentBox);
 
     LayoutUnit m_leftBoundary;
     LayoutUnit m_rightBoundary;

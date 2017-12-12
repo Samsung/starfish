@@ -358,6 +358,7 @@ class ComputedStyle : public gc {
         Length m_letterSpacing;
         Length m_lineHeight;
         Length m_textIndent;
+        Length m_wordSpacing;
         Length m_horizontalBorderSpacing; // table
         Length m_verticalBorderSpacing;   // table
 
@@ -375,6 +376,7 @@ class ComputedStyle : public gc {
             m_letterSpacing = Length(Length::Fixed, 0);
             // -100 is used to represent 'normal' value.
             m_lineHeight = Length(Length::Percent, -100);
+            m_wordSpacing = Length(Length::Fixed, 0);
             m_textIndent = Length(Length::Fixed, 0);
             m_horizontalBorderSpacing = Length(Length::Fixed, 0);
             m_verticalBorderSpacing = Length(Length::Fixed, 0);
@@ -709,6 +711,21 @@ public:
     {
         if (!length.isFixed() || length != lineHeight()) {
             ensureRareData()->m_lineHeight = length;
+        }
+    }
+
+    Length wordSpacing()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_wordSpacing;
+        }
+        return Length(Length::Fixed, 0);
+    }
+
+    void setWordSpacing(Length val)
+    {
+        if (!val.isFixed() || val != wordSpacing()) {
+            ensureRareData()->m_wordSpacing = val;
         }
     }
 

@@ -4055,6 +4055,28 @@ void StyleResolver::apply(Element* element,
                     cssValues[k].whiteSpaceValue();
             }
             break;
+        case CSSStyleValuePair::KeyKind::WordSpacing:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->setWordSpacing(parentStyle->wordSpacing());
+            } else if (cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::Initial ||
+                       cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::Normal) {
+                style->setWordSpacing(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::Length ||
+                       cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::CalcValueKind) {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setWordSpacing(length.getValue());
+                } else {
+                    style->setWordSpacing(Length(Length::Fixed, 0));
+                }
+            }
+            break;
 
         case CSSStyleValuePair::KeyKind::BackgroundColor:
             if (cssValues[k].valueKind() ==
@@ -5739,8 +5761,8 @@ void StyleResolver::collectMatchingRulesFromUASheet(
     }
 }
 
-static bool comparingRules(std::pair<StyleRule*, ResourceURL*> r1,
-                           std::pair<StyleRule*, ResourceURL*> r2)
+static bool comparingRules(const std::pair<StyleRule*, ResourceURL*>& r1,
+                           const std::pair<StyleRule*, ResourceURL*>& r2)
 {
     if (r1.first->selectorList().specificity() ==
         r2.first->selectorList().specificity()) {
@@ -6626,6 +6648,28 @@ bool CSSStyleValuePair::updateValueWhiteSpace(const CSSTokenVector& tokens)
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueWordSpacing(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    return updateValueUnitWordSpacing(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueUnitWordSpacing(const CSSTokenValue& value)
+{
+    // <normal> | length | initial | inherit
+    float result = 0.f;
+    if (STRING_VALUE_IS_STRING("normal")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Normal;
+        return true;
+    } else {
+        return updateValueUnitLengthOrCalc(value,
+                                           CSSPropertyParser::AllowNegative);
+    }
 }
 
 bool CSSStyleValuePair::updateValueDisplay(const CSSTokenVector& tokens)
