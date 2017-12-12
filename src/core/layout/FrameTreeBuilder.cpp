@@ -573,8 +573,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             }
         }
 
-        current->setFrame(currentFrame);
-        current->clearNeedsFrameTreeBuild();
+        if (!isTableType) {
+            current->setFrame(currentFrame);
+            current->clearNeedsFrameTreeBuild();
+        }
 
         if (ctx.isInFrameFlexFlow()) {
             if (currentFrame->isFrameText()) {

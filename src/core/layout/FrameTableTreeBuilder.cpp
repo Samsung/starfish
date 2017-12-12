@@ -41,6 +41,8 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
 
     FrameTableObjectBox* currentFrame = nullptr;
     FrameBlockBox* parent = ctx.currentBlockContainer();
+    bool isInFrameInlineFlow = ctx.isInFrameInlineFlow();
+
     bool isProperChild = isProperChildDisplayValueType(
         parent->style()->display(), current->style()->display());
 
@@ -56,6 +58,7 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
         }
 
         ctx.setCurrentBlockContainer(currentFrame);
+        ctx.setIsInFrameInlineFlow(false);
 
         FrameTreeBuilder::createPseudoElementIfNeeded(
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
@@ -79,18 +82,31 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
             // * use the last anonymous wrapper box if it has already been
             // created
             //   by a previous (and continuous) sibling of the current node.
-            Frame* consecutiveSibling = parent->lastChild();
+            Frame* consecutiveSibling = nullptr;
 
-            // NEED TO DISCUSSION : StarFish generate anonymous block box which
-            // has only whitespace, below code treat above situation
-            while (consecutiveSibling && consecutiveSibling->isAnonymous() &&
-                   consecutiveSibling->firstChild() &&
-                   consecutiveSibling->firstChild()->isFrameText() &&
-                   consecutiveSibling->firstChild()
-                       ->asFrameText()
-                       ->text()
-                       ->containsOnlyWhitespace()) {
-                consecutiveSibling = consecutiveSibling->previous();
+            if (isInFrameInlineFlow) {
+                consecutiveSibling = ctx.frameInlineItem()
+                                         .find(current->parentNode())
+                                         ->second->lastChild();
+                while (consecutiveSibling &&
+                       consecutiveSibling->isFrameText() &&
+                       consecutiveSibling->asFrameText()
+                           ->text()
+                           ->containsOnlyWhitespace()) {
+                    consecutiveSibling = consecutiveSibling->previous();
+                }
+            } else {
+                consecutiveSibling = parent->lastChild();
+                while (consecutiveSibling &&
+                       consecutiveSibling->isAnonymous() &&
+                       consecutiveSibling->firstChild() &&
+                       consecutiveSibling->firstChild()->isFrameText() &&
+                       consecutiveSibling->firstChild()
+                           ->asFrameText()
+                           ->text()
+                           ->containsOnlyWhitespace()) {
+                    consecutiveSibling = consecutiveSibling->previous();
+                }
             }
 
             if (consecutiveSibling && consecutiveSibling->isAnonymous() &&
@@ -102,8 +118,16 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
             } else {
                 currentFrame = createAnonymousFrameTableObjectBoxWithParent(
                     parent, current);
+                Frame* p = current->parentNode()->frame();
+                if (currentFrame->isFrameTableBox() && isInFrameInlineFlow &&
+                    p->isInlineLevel()) {
+                    currentFrame->style()->setDisplay(
+                        DisplayValue::InlineTableDisplayValue);
+                }
             }
             ctx.setCurrentBlockContainer(currentFrame);
+            ctx.setIsInFrameInlineFlow(false);
+
             currentFrame->addChild(current, ctx, force);
         } else if (current->childNeedsFrameTreeBuild()) {
             for (Frame* f = current->frame(); f; f = f->parent()) {
@@ -115,6 +139,8 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
                 }
             }
             ctx.setCurrentBlockContainer(currentFrame);
+            ctx.setIsInFrameInlineFlow(false);
+
             currentFrame->addChild(current, ctx, force);
         } else {
             // If the frame-tree-building state get here, I think something
@@ -128,6 +154,7 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
         current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
 
     ctx.setCurrentBlockContainer(parent);
+    ctx.setIsInFrameInlineFlow(isInFrameInlineFlow);
 
     FrameTreeBuilder::createPseudoElementIfNeeded(
         current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
