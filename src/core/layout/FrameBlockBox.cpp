@@ -298,6 +298,26 @@ void LayoutContext::applyRelativePositionInlineCase(Frame* origin,
     }
 }
 
+LayoutRect FrameBlockBox::computeVisibleRectForScroll()
+{
+    LayoutRect visibleRect = LayoutRect(0, 0, width(), height());
+    SkMatrix loc = SkMatrix::I();
+    Frame::ComputeVisibleRectContext vctx(
+        Frame::ComputeVisibleRectContext::Scrolling, nullptr, loc, visibleRect);
+    if (hasBlockFlow()) {
+        Frame* child = firstChild();
+        while (child) {
+            child->computeVisibleRect(vctx);
+            child = child->next();
+        }
+    } else {
+        for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+            m_lineBoxes[i]->computeVisibleRect(vctx);
+        }
+    }
+    return visibleRect;
+}
+
 void FrameBlockBox::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
@@ -494,36 +514,19 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         m_flags.m_hasBiggerContentThanFrameHeight = false;
     }
 
-    // compute scroll width & height
-    LayoutRect visibleRect = LayoutRect(0, 0, width(), height());
-    SkMatrix loc = SkMatrix::I();
-    Frame::ComputeVisibleRectContext vctx(
-        Frame::ComputeVisibleRectContext::Scrolling, nullptr, loc, visibleRect);
-    if (hasBlockFlow()) {
-        Frame* child = firstChild();
-        while (child) {
-            child->computeVisibleRect(vctx);
-            child = child->next();
-        }
-    } else {
-        for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-            m_lineBoxes[i]->computeVisibleRect(vctx);
-        }
-    }
-
-    LayoutUnit scrollWidth = visibleRect.width();
-    if (visibleRect.x() < 0) {
-        scrollWidth += visibleRect.x();
-    }
+    m_flags.m_needsToComputeScrollVisbleRect = true;
 
     auto overflowX = appliedOverflowX();
     if (isFrameDocument()) {
         overflowX = OverflowValue::AutoOverflow;
     }
-    if (scrollWidth > width() && overflowX != OverflowValue::HiddenOverflow) {
-        m_flags.m_hasBiggerContentThanFrameWidth = true;
-        ensureFrameBoxRareData();
-        frameBlockBoxRareData()->m_scrollWidth = scrollWidth;
+    auto overflowY = appliedOverflowY();
+    if (isFrameDocument()) {
+        overflowY = OverflowValue::AutoOverflow;
+    }
+
+    if (overflowX >= AutoOverflow || overflowY >= AutoOverflow) {
+        updateScrollWidthAndHeightIfNeeds(overflowX, overflowY);
     }
 
     if (overflowX >= AutoOverflow) {
@@ -534,6 +537,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             STARFISH_ASSERT(node()->isDocument());
             u = &asFrameDocument()->m_scrollLeft;
         }
+        LayoutUnit scrollWidth = this->scrollWidth();
         if (*u > scrollWidth - width()) {
             *u = scrollWidth - width();
             if (*u < 0) {
@@ -546,21 +550,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         }
     }
 
-    LayoutUnit scrollHeight = visibleRect.height();
-    if (visibleRect.y() < 0) {
-        scrollHeight += visibleRect.y();
-    }
-
-    auto overflowY = appliedOverflowY();
-    if (isFrameDocument()) {
-        overflowY = OverflowValue::AutoOverflow;
-    }
-    if (scrollHeight > height() && overflowY != OverflowValue::HiddenOverflow) {
-        m_flags.m_hasBiggerContentThanFrameHeight = true;
-        ensureFrameBoxRareData();
-        frameBlockBoxRareData()->m_scrollHeight = scrollHeight;
-    }
-
     if (overflowY >= AutoOverflow) {
         LayoutUnit* u;
         if (node()->isElement()) {
@@ -569,6 +558,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             STARFISH_ASSERT(node()->isDocument());
             u = &asFrameDocument()->m_scrollTop;
         }
+        LayoutUnit scrollHeight = this->scrollHeight();
         if (*u > scrollHeight - height()) {
             *u = scrollHeight - height();
             if (*u < 0) {
@@ -578,6 +568,57 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     } else {
         if (node() && node()->isElement() && node()->hasRareMembers()) {
             node()->asElement()->ensureRareElementMembers()->m_scrollTop = 0;
+        }
+    }
+}
+
+void FrameBlockBox::updateScrollWidthAndHeightIfNeeds()
+{
+    auto overflowX = appliedOverflowX();
+    if (isFrameDocument()) {
+        overflowX = OverflowValue::AutoOverflow;
+    }
+    auto overflowY = appliedOverflowY();
+    if (isFrameDocument()) {
+        overflowY = OverflowValue::AutoOverflow;
+    }
+    updateScrollWidthAndHeightIfNeeds(overflowX, overflowY);
+}
+
+void FrameBlockBox::updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
+                                                      OverflowValue overflowY)
+{
+    if (m_flags.m_needsToComputeScrollVisbleRect) {
+        m_flags.m_needsToComputeScrollVisbleRect = false;
+
+        if (isFrameDocument()) {
+            overflowX = OverflowValue::AutoOverflow;
+            overflowY = OverflowValue::AutoOverflow;
+        }
+
+        LayoutRect visibleRect = computeVisibleRectForScroll();
+        LayoutUnit scrollWidth = visibleRect.width();
+        if (visibleRect.x() < 0) {
+            scrollWidth += visibleRect.x();
+        }
+
+        if (scrollWidth > width() &&
+            overflowX != OverflowValue::HiddenOverflow) {
+            m_flags.m_hasBiggerContentThanFrameWidth = true;
+            ensureFrameBoxRareData();
+            frameBlockBoxRareData()->m_scrollWidth = scrollWidth;
+        }
+
+        LayoutUnit scrollHeight = visibleRect.height();
+        if (visibleRect.y() < 0) {
+            scrollHeight += visibleRect.y();
+        }
+
+        if (scrollHeight > height() &&
+            overflowY != OverflowValue::HiddenOverflow) {
+            m_flags.m_hasBiggerContentThanFrameHeight = true;
+            ensureFrameBoxRareData();
+            frameBlockBoxRareData()->m_scrollHeight = scrollHeight;
         }
     }
 }

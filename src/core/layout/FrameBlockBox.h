@@ -535,6 +535,8 @@ public:
     // Do not access this property before finish layout!
     LayoutUnit scrollWidth()
     {
+        updateScrollWidthAndHeightIfNeeds();
+
         if (m_flags.m_hasBiggerContentThanFrameWidth) {
             return frameBlockBoxRareData()->m_scrollWidth;
         } else {
@@ -545,6 +547,8 @@ public:
     // Do not access this property before finish layout!
     LayoutUnit scrollHeight()
     {
+        updateScrollWidthAndHeightIfNeeds();
+
         if (m_flags.m_hasBiggerContentThanFrameHeight) {
             return frameBlockBoxRareData()->m_scrollHeight;
         } else {
@@ -659,19 +663,26 @@ public:
 
     bool hasBiggerContentThanFrameWidth()
     {
+        updateScrollWidthAndHeightIfNeeds();
         return m_flags.m_hasBiggerContentThanFrameWidth;
     }
 
     bool hasBiggerContentThanFrameHeight()
     {
+        updateScrollWidthAndHeightIfNeeds();
         return m_flags.m_hasBiggerContentThanFrameHeight;
     }
+
+    LayoutRect computeVisibleRectForScroll();
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
 protected:
     void paintInlineContent(Canvas* canvas);
+    void updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
+                                           OverflowValue overflowY);
+    void updateScrollWidthAndHeightIfNeeds();
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);

@@ -1705,6 +1705,7 @@ protected:
         bool m_heightComputed : 1;
         bool m_hasBiggerContentThanFrameWidth : 1;
         bool m_hasBiggerContentThanFrameHeight : 1;
+        bool m_needsToComputeScrollVisbleRect : 1;
         // special flag for InlineBox
         bool m_isFirstLine : 1;
         // special flag for InlineTextBox
