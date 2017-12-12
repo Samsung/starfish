@@ -1427,6 +1427,7 @@ CSSStyleDeclaration* Element::getComputedStyle()
     }
 
     ADD_LENGTH_PAIR(TextIndent, textIndent)
+    ADD_LENGTH_PAIR(WordSpacing, wordSpacing)
 
     {
         CSSStyleValuePair w, h;

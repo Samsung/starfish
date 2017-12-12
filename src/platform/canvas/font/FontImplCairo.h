@@ -82,6 +82,10 @@ public:
         }
 
         m_supportsKerning = m_face->face_flags & FT_FACE_FLAG_KERNING;
+        m_xHeight += m_descender;
+        if (m_xHeight < 0) {
+            m_xHeight = 0;
+        }
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,

@@ -811,6 +811,8 @@ public:
 
     void computePreferredWidthInline(Frame* prent);
 
+    LayoutUnit wordSpacing(const TextToken& token);
+
 private:
     LayoutContext& m_layoutContext;
     Frame* m_frame;

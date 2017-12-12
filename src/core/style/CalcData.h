@@ -637,6 +637,7 @@ public:
         StringBuilder builder;
         auto it = m_terms.begin();
         builder.appendString((*it)->toString());
+        it++;
         while (it != m_terms.end()) {
             builder.appendString(String::spaceString);
             String* r = (*it)->toString();

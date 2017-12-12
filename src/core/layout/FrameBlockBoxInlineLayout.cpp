@@ -1233,7 +1233,8 @@ void InlineBoxLayoutParentBox::layoutInlineBoxes(LineFormattingContext* ctx,
                 childBox->asInlineNonReplacedBox()->layoutInlineBoxes(
                     ctx, childBox->borderLeft() + childBox->paddingLeft());
             }
-            x += childBox->outerWidth();
+
+            x += (childBox->outerWidth() + ctx->wordSpacing(childBox, this));
         } else if (childBox->isAbsolutePositioned()) {
             childBox->setX(x);
         }
@@ -1322,6 +1323,16 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
     } else {
         if (ctx->m_languageDirections[asInlineNonReplacedBox()->origin()]
                 .isMixed()) {
+            return;
+        }
+    }
+
+    if (isLineBox()) {
+        if (ctx->m_block->style()->wordSpacing() != Length(Length::Fixed, 0)) {
+            return;
+        }
+    } else {
+        if (this->style()->wordSpacing() != Length(Length::Fixed, 0)) {
             return;
         }
     }
@@ -2217,7 +2228,7 @@ bool PreferredWidthContext::dontBreakLine(LayoutUnit width)
            canInsertToLineBox(width);
 }
 
-bool LineFormattingContext::canInsertToLineBox(Frame* f, LayoutUnit width)
+bool LineFormattingContext::canInsertToLineBox(FrameBox* f, LayoutUnit width)
 {
     if (f->isFloating()) {
         FloatingBoxLayoutContext& fbCtx = *m_floatingBoxLayoutContexts.rbegin();
@@ -2234,7 +2245,8 @@ bool LineFormattingContext::canInsertToLineBox(Frame* f, LayoutUnit width)
         LayoutUnit remainingWidth =
             (m_lineBoxWidth - m_currentLineWidth -
              m_unprocessedStartingMBPWidth - m_textIndentWidth);
-        bool ret = width <= remainingWidth;
+        LayoutUnit ws = wordSpacing(f, m_currentLayoutParent);
+        bool ret = (width + ws) <= remainingWidth;
 
         if (!ret && f->isInlineTextBox()) {
             InlineTextBox* itb = f->asInlineTextBox();
@@ -2398,6 +2410,38 @@ void LineFormattingContext::insertWord(Frame* next)
     }
 }
 
+LayoutUnit LineFormattingContext::wordSpacing(
+    FrameBox* box, InlineBoxLayoutParentBox* parentBox)
+{
+    if (box->isInlineTextBox() &&
+        (isWhiteSpace(box->asInlineTextBox()->textRun()) ||
+         String::isNBSP(box->asInlineTextBox()->text().charAt(0)))) {
+        if (parentBox->isLineBox()) {
+            return m_block->style()->wordSpacing().specifiedValue(LayoutUnit(),
+                                                                  m_block);
+        } else {
+            return parentBox->style()->wordSpacing().specifiedValue(
+                LayoutUnit(), parentBox);
+        }
+    }
+    return 0;
+}
+
+LayoutUnit PreferredWidthContext::wordSpacing(const TextToken& token)
+{
+    int cnt = 0;
+    for (size_t i = token.m_start; i < token.m_end; i++) {
+        if (String::isSpace(token.m_frameText->text()->charAt(i)) ||
+            String::isNBSP(token.m_frameText->text()->charAt(i))) {
+            cnt++;
+        }
+    }
+
+    return cnt *
+           token.m_frameText->parent()->style()->wordSpacing().specifiedValue(
+               LayoutUnit(), token.m_frameText->parent());
+}
+
 void LineFormattingContext::insertInlineBox(FrameBox* box)
 {
     m_currentLayoutParent->insertInlineBox(box);
@@ -2408,7 +2452,8 @@ void LineFormattingContext::insertInlineBox(FrameBox* box)
         self->processStartingMBP(this);
     }
 
-    m_currentLineWidth += box->outerWidth();
+    m_currentLineWidth +=
+        (box->outerWidth() + wordSpacing(box, m_currentLayoutParent));
     setIsWhiteSpaceAtLast(isCollapsibleWhiteSpace(box));
 }
 
@@ -2681,15 +2726,44 @@ void LineFormattingContext::handleTextToken(TextToken& token)
         return;
     }
 
-    generateInlineTextBox(token);
+    std::vector<TextToken> tokens;
+    size_t cur = token.m_start;
+    size_t end = token.m_end;
+    while (cur < end) {
+        if (String::isNBSP(token.m_frameText->text()->charAt(cur))) {
+            TextToken t = TextToken(token.m_frameText, cur, cur + 1,
+                                    token.m_type, token.m_isFirstLine);
+            tokens.push_back(t);
+            cur++;
+        } else {
+            size_t offset = cur + 1;
+            while (offset < end &&
+                   !String::isNBSP(token.m_frameText->text()->charAt(offset))) {
+                offset++;
+            }
+            TextToken t = TextToken(token.m_frameText, cur, offset,
+                                    token.m_type, token.m_isFirstLine);
+            tokens.push_back(t);
+            cur = offset;
+        }
+    }
 
-    // Consider direction for hyphen
-    char32_t c = token.m_frameText->text()->charAt(token.m_end - 1);
-    bool isHyphenAtLast = isSoftHyphen(c) || isHyphen(c);
+    auto iter = tokens.begin();
 
-    if (isHyphenAtLast) {
-        insertWord(token.m_frameText);
-        m_isSoftHyphenAtLast = isSoftHyphen(c);
+    while (iter != tokens.end()) {
+        TextToken& t = *iter;
+        generateInlineTextBox(t);
+
+        // Consider direction for hyphen
+        char32_t c = t.m_frameText->text()->charAt(t.m_end - 1);
+        bool isHyphenAtLast = isSoftHyphen(c) || isHyphen(c);
+
+        if (isHyphenAtLast) {
+            insertWord(t.m_frameText);
+            m_isSoftHyphenAtLast = isSoftHyphen(c);
+        }
+
+        iter++;
     }
 }
 
@@ -2944,12 +3018,12 @@ String* FrameText::makeCapitalized(String* txt, char32_t prev)
     while (iter != locs.end()) {
         next = *iter;
         if (String::isNewline(c)) {
-        } else if (isSeparator(c) || String::isNBPS(c) ||
+        } else if (isSeparator(c) || String::isNBSP(c) ||
                    String::isPunctuation(c)) {
             int32_t offset = cur + 1;
 
             c = txt->charAt(offset);
-            while (offset < next && (isSeparator(c) || String::isNBPS(c) ||
+            while (offset < next && (isSeparator(c) || String::isNBSP(c) ||
                                      String::isPunctuation(c))) {
                 if (String::isNewline(c)) {
                     break;
@@ -2959,7 +3033,7 @@ String* FrameText::makeCapitalized(String* txt, char32_t prev)
             next = offset;
         } else {
             int32_t offset;
-            if (isSeparator(prev) || String::isNBPS(prev) ||
+            if (isSeparator(prev) || String::isNBSP(prev) ||
                 String::isPunctuation(prev)) {
                 c = txt->charAt(cur);
                 sb.appendChar((char32_t)u_totitle(c));
@@ -2971,7 +3045,7 @@ String* FrameText::makeCapitalized(String* txt, char32_t prev)
 
             c = txt->charAt(offset);
             while (offset < next &&
-                   !(isSeparator(c) || String::isNBPS(c) ||
+                   !(isSeparator(c) || String::isNBSP(c) ||
                      String::isPunctuation(c))) {
                 c = txt->charAt(++offset);
             }
@@ -3770,7 +3844,7 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
         return;
     }
 
-    LayoutUnit w = token.width();
+    LayoutUnit w = token.width() + wordSpacing(token);
     if (token.m_type != WordType::CollapsibleWhiteSpace) {
         if (token.m_type == WordType::General) {
             w = widthAppliedByTextIndent(w);

@@ -407,6 +407,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // caption-side
         // Fill-Opacity
         // Stroke-Width
+        // Word-Spacing
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-style", 12) == 0) {
@@ -455,6 +456,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 's':
             if (memcmp(data, "stroke-width", 12) == 0) {
                 return CSSStyleKind::StrokeWidth;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "word-spacing", 12) == 0) {
+                return CSSStyleKind::WordSpacing;
             }
             break;
         }
@@ -1122,6 +1128,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 's':
             if (memcmp(data, "strokeWidth", 11) == 0) {
                 return CSSStyleKind::StrokeWidth;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "wordSpacing", 11) == 0) {
+                return CSSStyleKind::WordSpacing;
             }
             break;
         }
