@@ -168,7 +168,7 @@ private:
 
     void setCandidateCellWidthsAndReturnCellInfo(
         LayoutContext& ctx, LayoutUnit tableWidth, bool hasTableWidth,
-        LayoutUnit* sumOfAutoCellPreferredWidths,
+        bool tableLayoutFixed, LayoutUnit* sumOfAutoCellPreferredWidths,
         LayoutUnit* sumOfAdjustedSpecifiedCellWidths,
         std::vector<ColSizeStruct*>* columnsAdjustedToMinWidths,
         std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
@@ -178,6 +178,9 @@ private:
         LayoutUnit remainingWidth,
         std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
         LayoutUnit* sumOfPercentageWidth);
+
+    bool hasColBox(size_t i);
+    Length cellWidthFromFirstRowOrColGroup(bool tableLayoutFixed, size_t i);
 
     void collectColumnWidths(GCAtomicVector<ColSizeStruct>& columnWidthsSoFar,
                              GCAtomicVector<ColSizeStruct>& columnWidths);
@@ -199,6 +202,7 @@ private:
     GCAtomicVector<ColSizeStruct> m_columnWidths;
 
     GCVector<FrameTableCellBox*> m_cellsInTheFirstRow;
+    GCVector<FrameTableColBox*> m_cellsInTheColGroup;
 
     // Border and background is drawn around FrameTableSections not FrameTable
     // Keep track of FrameTableSections for border and background

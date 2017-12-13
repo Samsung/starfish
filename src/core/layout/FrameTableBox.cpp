@@ -63,6 +63,8 @@ void* FrameTableBox::operator new(size_t size)
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_columnWidths));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(FrameTableBox, m_cellsInTheFirstRow));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableBox, m_cellsInTheColGroup));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_thead));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_tfoot));
 
@@ -153,6 +155,24 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         // one more time.
         bool colspanUpdated = resetColspanIfPossible();
         if (!colspanUpdated) {
+            break;
+        }
+    }
+
+    // check <col> if any
+    m_cellsInTheColGroup.clear();
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableColBox()) {
+            FrameTableColBox* colGroupBox = c->asFrameTableColBox();
+            int index = 0;
+            for (Frame* b = colGroupBox->firstChild(); b; b = b->next()) {
+                FrameTableColBox* colBox = b->asFrameTableColBox();
+                if (colBox->style()->display() ==
+                    DisplayValue::TableColumnDisplayValue) {
+                    m_cellsInTheColGroup.push_back(colBox);
+                    index++;
+                }
+            }
             break;
         }
     }
@@ -253,6 +273,25 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         m_candidateTableContentWidth = tableContentWidth;
     }
 
+    // The values from <col> have higher priority
+    for (auto& col : m_columnWidths) {
+        if (tableLayoutFixed && !isCellWidthAuto(col.id) &&
+            col.id < m_cellsInTheColGroup.size()) {
+            FrameTableColBox* colBox = m_cellsInTheColGroup[col.id];
+            Length width = colBox->style()->width();
+
+            if (width.isDefinite(false)) {
+                LayoutUnit unused;
+                LayoutUnit specifiedWidth = width.specifiedValue(unused, this);
+                specifiedWidth +=
+                    colBox->borderWidth() + colBox->paddingWidth();
+                col.maxSpecifiedWidth = specifiedWidth;
+            } else if (width.isPercent()) {
+                col.maxPercentageWidth = tableContentWidth * width.percent();
+            }
+        }
+    }
+
     LayoutUnit sumOfAutoCellPreferredWidths = 0;
     LayoutUnit sumOfAdjustedSpecifiedCellWidths = 0;
     std::vector<ColSizeStruct*> columnsAdjustedToMinWidths;
@@ -263,9 +302,10 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     availableWidth -= (borderSpacing * m_columnWidths.size()) + borderSpacing;
 
     setCandidateCellWidthsAndReturnCellInfo(
-        ctx, availableWidth, hasTableWidth, &sumOfAutoCellPreferredWidths,
-        &sumOfAdjustedSpecifiedCellWidths, &columnsAdjustedToMinWidths,
-        &columnsMayNeedToAdjustWidths, &sumOfColWidths);
+        ctx, availableWidth, hasTableWidth, tableLayoutFixed,
+        &sumOfAutoCellPreferredWidths, &sumOfAdjustedSpecifiedCellWidths,
+        &columnsAdjustedToMinWidths, &columnsMayNeedToAdjustWidths,
+        &sumOfColWidths);
 
     // 3. If a width of the table is given, we either increase or decrease the
     // cell widths to fit them into the width of table.
@@ -276,8 +316,9 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         for (auto& c : cellsWithSpecifiedWidths) {
             ColSizeStruct& col = *c;
             STARFISH_ASSERT(col.id < m_cellsInTheFirstRow.size());
-            FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
-            Length width = cell->style()->width();
+
+            Length width =
+                cellWidthFromFirstRowOrColGroup(tableLayoutFixed, col.id);
             if (width.isPercent()) {
                 sumOfWidthPercentage += width.percent();
             } else if (width.isCalc()) {
@@ -293,8 +334,9 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             for (auto& c : cellsWithSpecifiedWidths) {
                 ColSizeStruct& col = *c;
                 STARFISH_ASSERT(col.id < m_cellsInTheFirstRow.size());
-                FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
-                Length width = cell->style()->width();
+                Length width =
+                    cellWidthFromFirstRowOrColGroup(tableLayoutFixed, col.id);
+
                 if (width.isPercent()) {
                     LayoutUnit specifiedWidth =
                         width.percentValue(availableWidth) /
@@ -320,7 +362,9 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             if (cellsWithAutoWidths.empty()) {
                 for (auto& col : m_columnWidths) {
                     FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
-                    Length width = cell->style()->width();
+                    Length width = cellWidthFromFirstRowOrColGroup(
+                        tableLayoutFixed, col.id);
+
                     if (width.isDefinite(false)) {
                         LayoutUnit unused;
                         LayoutUnit cellWidth =
@@ -618,7 +662,7 @@ bool FrameTableBox::resetColspanIfPossible()
 // All input parameters are used as out parameters
 void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
     LayoutContext& ctx, LayoutUnit remainingWidth, bool hasTableWidth,
-    LayoutUnit* sumOfAutoCellPreferredWidths,
+    bool tableLayoutFixed, LayoutUnit* sumOfAutoCellPreferredWidths,
     LayoutUnit* sumOfAdjustedSpecifiedCellWidths,
     std::vector<ColSizeStruct*>* columnsAdjustedToMinWidths,
     std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
@@ -660,15 +704,16 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
             *sumOfAutoCellPreferredWidths += col.cellWidth;
         } else {
             LayoutUnit specifiedWidth = 0;
-            Length width = cell->style()->width();
+            Length width =
+                cellWidthFromFirstRowOrColGroup(tableLayoutFixed, col.id);
+
             if (width.isDefinite(false)) {
                 LayoutUnit unused;
                 specifiedWidth = width.specifiedValue(unused, this);
                 specifiedWidth += cell->borderWidth() + cell->paddingWidth();
                 col.cellWidth = specifiedWidth;
-            } else if (col.hasPercentageWidth()) {
-                col.cellWidth =
-                    remainingWidth * cell->style()->width().percent();
+            } else if (width.isPercent()) {
+                col.cellWidth = remainingWidth * width.percent();
             } else {
                 col.cellWidth = col.maxSpecifiedWidth;
             }
@@ -689,6 +734,25 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
 
         *sumOfColWidths += col.cellWidth;
     }
+}
+
+bool FrameTableBox::hasColBox(size_t i)
+{
+    return i < m_cellsInTheColGroup.size();
+}
+
+Length FrameTableBox::cellWidthFromFirstRowOrColGroup(bool tableLayoutFixed,
+                                                      size_t i)
+{
+    Length width;
+    if (tableLayoutFixed && hasColBox(i)) {
+        width = m_cellsInTheColGroup[i]->style()->width();
+    } else {
+        FrameTableCellBox* cell = cellInTheFirstRowAt(i);
+        width = cell->style()->width();
+    }
+
+    return width;
 }
 
 void FrameTableBox::calCellWidthsWithPercentageWidths(
@@ -1030,6 +1094,11 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
         return true;
     } else {
         // Table has a specified width
+
+        if (i < m_cellsInTheColGroup.size() &&
+            !m_cellsInTheColGroup[i]->style()->width().isAuto()) {
+            return false;
+        }
 
         // matching cell is empty because of colspan of previous cell
         // TODO: Do we need to consider specified widths in the rows in the
