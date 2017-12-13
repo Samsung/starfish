@@ -18,8 +18,13 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
+#include "core/layout/Frame.h"
+#include "core/layout/FrameBox.h"
+#include "core/layout/FrameBlockBox.h"
+#include "core/layout/FrameDocument.h"
 #include "core/page/Window.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleLookupTrie.h"
@@ -28,6 +33,54 @@
 #include "core/style/StyleRule.h"
 
 namespace StarFish {
+
+// helper function to convert Length to CSSStyleValuePair format
+static CSSStyleValuePair lengthToCSSStyleValue(Length len)
+{
+    CSSStyleValuePair p;
+    if (len.isFixed()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        p.setValue(CSSLength(len.fixed()));
+    } else if (len.isPercent()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Percentage);
+        p.setValue(len.percent());
+    } else if (len.isFontPercent()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        Length::Type t = len.type();
+        CSSLength::Kind k;
+        if (t == Length::Em) {
+            k = CSSLength::EM;
+        } else if (t == Length::Ex) {
+            k = CSSLength::EX;
+        } else {
+            k = CSSLength::REM;
+        }
+        p.setValue(CSSLength(k, len.fontPercent()));
+    } else if (len.isViewportPercent()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        Length::Type t = len.type();
+        CSSLength::Kind k;
+        if (t == Length::Vw) {
+            k = CSSLength::VW;
+        } else if (t == Length::Vh) {
+            k = CSSLength::VH;
+        } else if (t == Length::Vmin) {
+            k = CSSLength::VMIN;
+        } else {
+            k = CSSLength::VMAX;
+        }
+        p.setValue(CSSLength(k, len.viewportPercent()));
+    } else if (len.isAuto()) {
+        p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+    } else if (len.isCalc()) {
+        p.setCalcValue(len.calcData());
+    } else if (len.isInheritableNumber()) {
+        p.setNumberValue(len.inheritableNumber());
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    return p;
+};
 
 void CSSStyleDeclaration::rootPointerValueIfExists(CSSStyleValuePair v)
 {
@@ -75,6 +128,20 @@ CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
 #define DEFINE_ATTRIBUTE_GETTER(name, ...)                                    \
     String* CSSStyleDeclaration::name()                                       \
     {                                                                         \
+        if (isComputedStyle()) {                                              \
+            ComputedStyleCSSStyleDeclaration::Stage stage =                   \
+                requiredStage(CSSStyleValuePair::KeyKind::name);              \
+            if (stage ==                                                      \
+                ComputedStyleCSSStyleDeclaration::Stage::frameTreeBuild) {    \
+                buildFrameTreeIfNeeds();                                      \
+            } else if (stage ==                                               \
+                       ComputedStyleCSSStyleDeclaration::Stage::layout) {     \
+                layoutIfNeeds();                                              \
+            } else {                                                          \
+                resolveStyleIfNeeds();                                        \
+            }                                                                 \
+            updateValue(CSSStyleValuePair::KeyKind::name);                    \
+        }                                                                     \
         for (unsigned i = 0; i < m_cssValues.size(); i++) {                   \
             if (m_cssValues[i].keyKind() == CSSStyleValuePair::KeyKind::name) \
                 return m_cssValues[i].toString();                             \
@@ -169,6 +236,841 @@ String* CSSStyleDeclaration::combineBoxString(String* t, String* r, String* b,
             *isCombined = false;
         }
         return t;
+    }
+}
+
+void ComputedStyleCSSStyleDeclaration::layoutIfNeeds()
+{
+    if (m_element == nullptr) {
+        return;
+    }
+
+    m_element->window()->browsingContext()->webView()->layoutIfNeeds();
+}
+
+void ComputedStyleCSSStyleDeclaration::buildFrameTreeIfNeeds()
+{
+    if (m_element == nullptr) {
+        return;
+    }
+
+    m_element->window()->browsingContext()->buildFrameTreeIfNeeds();
+}
+
+void ComputedStyleCSSStyleDeclaration::resolveStyleIfNeeds()
+{
+    if (m_element == nullptr) {
+        return;
+    }
+
+    m_element->window()->browsingContext()->resolveStyleIfNeeds();
+}
+
+ComputedStyleCSSStyleDeclaration::Stage
+ComputedStyleCSSStyleDeclaration::requiredStage(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    ComputedStyleCSSStyleDeclaration::Stage result =
+        ComputedStyleCSSStyleDeclaration::Stage::resolveStyle;
+
+    if (keyKind >= CSSStyleValuePair::KeyKind::PaddingTop &&
+        keyKind <= CSSStyleValuePair::KeyKind::PaddingLeft) {
+        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
+    } else if (keyKind >= CSSStyleValuePair::KeyKind::MarginTop &&
+               keyKind <= CSSStyleValuePair::KeyKind::MarginLeft) {
+        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
+    } else if (keyKind >= CSSStyleValuePair::KeyKind::BorderTopWidth &&
+               keyKind <= CSSStyleValuePair::KeyKind::BorderLeftWidth) {
+        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
+    } else if (keyKind >= CSSStyleValuePair::KeyKind::Top &&
+               keyKind <= CSSStyleValuePair::KeyKind::Left) {
+        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
+    } else if (keyKind >= CSSStyleValuePair::KeyKind::Width &&
+               keyKind <= CSSStyleValuePair::KeyKind::Height) {
+        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
+    } else if (keyKind == CSSStyleValuePair::KeyKind::MinWidth ||
+               keyKind == CSSStyleValuePair::KeyKind::MinHeight) {
+        result = ComputedStyleCSSStyleDeclaration::Stage::frameTreeBuild;
+    }
+    return result;
+}
+
+void ComputedStyleCSSStyleDeclaration::updateValue(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    if (m_element == nullptr || m_element->style() == nullptr) {
+        return;
+    }
+
+    Frame* frame = m_element->frame();
+    ComputedStyle* style = m_element->style();
+
+    if ((keyKind >= CSSStyleValuePair::KeyKind::PaddingTop &&
+         keyKind <= CSSStyleValuePair::KeyKind::PaddingLeft) ||
+        (keyKind >= CSSStyleValuePair::KeyKind::MarginTop &&
+         keyKind <= CSSStyleValuePair::KeyKind::MarginLeft) ||
+        (keyKind >= CSSStyleValuePair::KeyKind::BorderTopWidth &&
+         keyKind <= CSSStyleValuePair::KeyKind::BorderLeftWidth)) {
+// length properties
+#define ADD_ABSOLUTE_LENGTH_PAIR(keyKind, getter)                     \
+    {                                                                 \
+        CSSStyleValuePair p;                                          \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);            \
+        if (frame && frame->isFrameBox()) {                           \
+            p.setValueKind(CSSStyleValuePair::ValueKind::Length);     \
+            p.setValue(CSSLength(frame->asFrameBox()->getter()));     \
+        } else if (frame && frame->isFrameInline()) {                 \
+            InlineNonReplacedBox* inb =                               \
+                blockContainer(frame)->firstInlineNonReplacedBox(     \
+                    frame->asFrameInline());                          \
+            if (inb != nullptr) {                                     \
+                p.setValue(CSSLength(inb->getter()));                 \
+                p.setValueKind(CSSStyleValuePair::ValueKind::Length); \
+            } else {                                                  \
+                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);   \
+            }                                                         \
+        } else {                                                      \
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);       \
+        }                                                             \
+        addValuePair(p);                                              \
+    }
+        if (keyKind == CSSStyleValuePair::KeyKind::MarginTop) {
+            ADD_ABSOLUTE_LENGTH_PAIR(MarginTop, marginTop);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::MarginRight) {
+            ADD_ABSOLUTE_LENGTH_PAIR(MarginRight, marginRight);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::MarginBottom) {
+            ADD_ABSOLUTE_LENGTH_PAIR(MarginBottom, marginBottom);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::MarginLeft) {
+            ADD_ABSOLUTE_LENGTH_PAIR(MarginLeft, marginLeft);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::PaddingTop) {
+            ADD_ABSOLUTE_LENGTH_PAIR(PaddingTop, paddingTop);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::PaddingRight) {
+            ADD_ABSOLUTE_LENGTH_PAIR(PaddingRight, paddingRight);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::PaddingBottom) {
+            ADD_ABSOLUTE_LENGTH_PAIR(PaddingBottom, paddingBottom);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::PaddingLeft) {
+            ADD_ABSOLUTE_LENGTH_PAIR(PaddingLeft, paddingLeft);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::BorderTopWidth) {
+            ADD_ABSOLUTE_LENGTH_PAIR(BorderTopWidth, borderTop);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::BorderRightWidth) {
+            ADD_ABSOLUTE_LENGTH_PAIR(BorderRightWidth, borderRight);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::BorderBottomWidth) {
+            ADD_ABSOLUTE_LENGTH_PAIR(BorderBottomWidth, borderBottom);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::BorderLeftWidth) {
+            ADD_ABSOLUTE_LENGTH_PAIR(BorderLeftWidth, borderLeft)
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+    } else if (keyKind >= CSSStyleValuePair::KeyKind::Top &&
+               keyKind <= CSSStyleValuePair::KeyKind::Left && frame &&
+               frame->isFrameBox() && frame->isPositioned()) {
+        CSSStyleValuePair t, b, l, r;
+        t.setKeyKind(CSSStyleValuePair::KeyKind::Top);
+        b.setKeyKind(CSSStyleValuePair::KeyKind::Bottom);
+        l.setKeyKind(CSSStyleValuePair::KeyKind::Left);
+        r.setKeyKind(CSSStyleValuePair::KeyKind::Right);
+
+        LayoutContext ctx(m_element->starFish(),
+                          m_element->document()->frame()->asFrameDocument());
+        FrameBox* cb = containingBlock(frame);
+        FrameBox* self = frame->asFrameBox();
+        LayoutUnit parentContentWidth = cb->contentWidth();
+        LayoutUnit parentContentHeight = cb->contentHeight();
+        if (frame->isAbsolutePositioned()) {
+            FrameBox* parent = frame->layoutParent()->asFrameBox();
+
+            LayoutLocation l1, l2;
+            if (cb->isAncestorOf(parent)) {
+                l2 = parent->absolutePoint(cb);
+            } else {
+                l1 = cb->absolutePoint(ctx.frameDocument());
+                l2 = parent->absolutePoint(ctx.frameDocument());
+            }
+
+            if (keyKind == CSSStyleValuePair::KeyKind::Top ||
+                keyKind == CSSStyleValuePair::KeyKind::Bottom) {
+                LayoutUnit absY = self->y() + l2.y() - l1.y() - cb->borderTop();
+                LayoutUnit top = absY - self->marginTop();
+                parentContentHeight += cb->paddingHeight();
+                t.setLengthValue(CSSLength(top));
+                b.setLengthValue(
+                    CSSLength(parentContentHeight - top - self->outerHeight()));
+            } else {
+                LayoutUnit absX =
+                    self->x() + l2.x() - l1.x() - cb->borderLeft();
+                LayoutUnit left = absX - self->marginLeft();
+                parentContentWidth += cb->paddingWidth();
+                l.setLengthValue(CSSLength(left));
+                r.setLengthValue(
+                    CSSLength(parentContentWidth - left - self->outerWidth()));
+            }
+        } else {
+            STARFISH_ASSERT(style->position() == RelativePositionValue);
+            LengthData offset = style->offset();
+
+            if (keyKind == CSSStyleValuePair::KeyKind::Top ||
+                keyKind == CSSStyleValuePair::KeyKind::Bottom) {
+                Length top = offset.top();
+                Length bottom = offset.bottom();
+                if (!top.isAuto() && !bottom.isAuto()) {
+                    t.setLengthValue(CSSLength(
+                        top.specifiedValue(parentContentHeight, self)));
+                    b.setLengthValue(CSSLength(
+                        bottom.specifiedValue(parentContentHeight, self)));
+                } else if (!top.isAuto()) {
+                    t.setLengthValue(CSSLength(
+                        top.specifiedValue(parentContentHeight, self)));
+                    b.setLengthValue(-1 * t.cssLengthValue());
+                } else if (!bottom.isAuto()) {
+                    b.setLengthValue(CSSLength(
+                        bottom.specifiedValue(parentContentHeight, self)));
+                    t.setLengthValue(-1 * b.cssLengthValue());
+                } else {
+                    t.setLengthValue(CSSLength(0));
+                    b.setLengthValue(CSSLength(0));
+                }
+            } else {
+                Length left = offset.left();
+                Length right = offset.right();
+                if (!left.isAuto() && !right.isAuto()) {
+                    l.setLengthValue(CSSLength(
+                        left.specifiedValue(parentContentWidth, self)));
+                    r.setLengthValue(CSSLength(
+                        right.specifiedValue(parentContentWidth, self)));
+                } else if (!left.isAuto()) {
+                    l.setLengthValue(CSSLength(
+                        left.specifiedValue(parentContentWidth, self)));
+                    r.setLengthValue(-1 * l.cssLengthValue());
+                } else if (!right.isAuto()) {
+                    r.setLengthValue(CSSLength(
+                        right.specifiedValue(parentContentWidth, self)));
+                    l.setLengthValue(-1 * r.cssLengthValue());
+                } else {
+                    l.setLengthValue(CSSLength(0));
+                    r.setLengthValue(CSSLength(0));
+                }
+            }
+        }
+
+        if (keyKind == CSSStyleValuePair::KeyKind::Top) {
+            addValuePair(t);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::Bottom) {
+            addValuePair(b);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::Left) {
+            addValuePair(l);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::Right) {
+            addValuePair(r);
+        }
+    } else if (keyKind >= CSSStyleValuePair::KeyKind::Width &&
+               keyKind <= CSSStyleValuePair::KeyKind::Height) {
+        if (keyKind == CSSStyleValuePair::KeyKind::Width) {
+            CSSStyleValuePair w;
+            w.setKeyKind(CSSStyleValuePair::KeyKind::Width);
+            if (frame && style->width().isDefinite(true)) {
+                LayoutContext ctx(
+                    m_element->starFish(),
+                    m_element->document()->frame()->asFrameDocument());
+                w.setLengthValue(CSSLength(style->width().specifiedValue(
+                    ctx.parentContentWidth(frame), m_element)));
+            } else {
+                if (frame && frame->isFrameBox()) {
+                    w.setLengthValue(
+                        CSSLength(frame->asFrameBox()->contentWidth()));
+                } else {
+                    w.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+                }
+            }
+            addValuePair(w);
+        } else {
+            CSSStyleValuePair h;
+            h.setKeyKind(CSSStyleValuePair::KeyKind::Height);
+            if (frame && frame->isFrameBox()) {
+                LayoutContext ctx(
+                    m_element->starFish(),
+                    m_element->document()->frame()->asFrameDocument());
+                bool parentHasFixedHeight = ctx.parentHasFixedHeight(frame);
+                if (style->height().isDefinite(parentHasFixedHeight)) {
+                    LayoutUnit parentContentHeight;
+                    if (parentHasFixedHeight) {
+                        parentContentHeight = ctx.parentFixedHeight(frame);
+                    }
+                    h.setLengthValue(CSSLength(style->height().specifiedValue(
+                        parentContentHeight, m_element)));
+                } else {
+                    h.setLengthValue(
+                        CSSLength(frame->asFrameBox()->contentHeight()));
+                }
+            } else {
+                h.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
+            addValuePair(h);
+        }
+    } else if (keyKind == CSSStyleValuePair::KeyKind::FontFamily) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::FontFamily);
+        if (style->fontFamily()[0].m_length == 1) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            p.setValue(style->fontFamily()[1].m_familyName);
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* val =
+                new ValueList(ValueList::Separator::
+                                  CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
+            size_t len = style->fontFamily()[0].m_length;
+            for (size_t i = 0; i < len; i++) {
+                val->emplace_back(CSSStyleValuePair::ValueKind::StringValueKind,
+                                  style->fontFamily()[i + 1].m_familyName);
+            }
+            p.setValueList(val);
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::ZIndex) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::ZIndex);
+        if (style->isSpecifiedZIndex()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
+            p.setValue(style->zIndex());
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::FlexBasis) {
+        CSSStyleValuePair p;
+        FlexBasisData flexBasis = style->flexBasis();
+        p.setKeyKind(CSSStyleValuePair::KeyKind::FlexBasis);
+        if (flexBasis.isContent()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::FlexBasisValueKind);
+            p.setValue(FlexBasisValue::ContentFlexBasisValue);
+        } else {
+            Length len = flexBasis.width();
+            lengthToCSSStyleValue(len);
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::TextIndent) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->textIndent());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TextIndent);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::LineHeight) {
+        CSSStyleValuePair lh;
+        lh.setKeyKind(CSSStyleValuePair::KeyKind::LineHeight);
+
+        if (style->hasNormalLineHeight() || !frame) {
+            lh.setValueKind(CSSStyleValuePair::ValueKind::Normal);
+        } else {
+            lh.setLengthValue(CSSLength(CSSLength::PX, frame->lineHeight()));
+        }
+        addValuePair(lh);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::FontSize) {
+        CSSStyleValuePair fs;
+        fs.setKeyKind(CSSStyleValuePair::KeyKind::FontSize);
+
+        fs.setLengthValue(CSSLength(CSSLength::PX, style->fixedFontSize()));
+
+        addValuePair(fs);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::MinWidth) {
+        CSSStyleValuePair minW;
+        minW.setKeyKind(CSSStyleValuePair::KeyKind::MinWidth);
+        Length minWidth = style->minWidth();
+
+        if (minWidth.isAuto()) {
+            if (frame && frame->isFlexItem()) {
+                minW.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            } else {
+                minW.setLengthValue(CSSLength(CSSLength::PX, 0));
+            }
+        } else if (minWidth.isDefinite(false)) {
+            CSSStyleValuePair p = lengthToCSSStyleValue(minWidth);
+            p.setKeyKind(CSSStyleValuePair::KeyKind::MinWidth);
+            minW = p;
+        } else if (minWidth.isPercent()) {
+            minW.setPercentageValue(minWidth.percent());
+        } else if (minWidth.isCalc()) {
+            minW.setCalcValue(minWidth.calcData());
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+
+        addValuePair(minW);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::MinHeight) {
+        CSSStyleValuePair minH;
+        minH.setKeyKind(CSSStyleValuePair::KeyKind::MinHeight);
+        Length minHeight = style->minHeight();
+
+        if (minHeight.isAuto()) {
+            if (frame && frame->isFlexItem()) {
+                minH.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            } else {
+                minH.setLengthValue(CSSLength(CSSLength::PX, 0));
+            }
+        } else if (minHeight.isDefinite(false)) {
+            CSSStyleValuePair p = lengthToCSSStyleValue(minHeight);
+            p.setKeyKind(CSSStyleValuePair::KeyKind::MinHeight);
+            minH = p;
+        } else if (minHeight.isPercent()) {
+            minH.setPercentageValue(minHeight.percent());
+        } else if (minHeight.isCalc()) {
+            minH.setCalcValue(minHeight.calcData());
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+
+        addValuePair(minH);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::MaxWidth) {
+        CSSStyleValuePair maxW;
+        maxW.setKeyKind(CSSStyleValuePair::KeyKind::MaxWidth);
+        Length maxWidth = style->maxWidth();
+
+        if (maxWidth.isAuto()) {
+            maxW.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else if (maxWidth.isDefinite(false)) {
+            CSSStyleValuePair p = lengthToCSSStyleValue(maxWidth);
+            p.setKeyKind(CSSStyleValuePair::KeyKind::MaxWidth);
+            maxW = p;
+        } else if (maxWidth.isPercent()) {
+            maxW.setPercentageValue(maxWidth.percent());
+        } else if (maxWidth.isCalc()) {
+            maxW.setCalcValue(maxWidth.calcData());
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+
+        addValuePair(maxW);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::MaxHeight) {
+        CSSStyleValuePair maxH;
+        maxH.setKeyKind(CSSStyleValuePair::KeyKind::MaxHeight);
+        Length maxHeight = style->maxHeight();
+
+        if (maxHeight.isAuto()) {
+            maxH.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else if (maxHeight.isDefinite(false)) {
+            CSSStyleValuePair p = lengthToCSSStyleValue(maxHeight);
+            p.setKeyKind(CSSStyleValuePair::KeyKind::MaxHeight);
+            maxH = p;
+        } else if (maxHeight.isPercent()) {
+            maxH.setPercentageValue(maxHeight.percent());
+        } else if (maxHeight.isCalc()) {
+            maxH.setCalcValue(maxHeight.calcData());
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        addValuePair(maxH);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundImage) {
+        CSSStyleValuePair bgImage;
+
+        bgImage.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundImage);
+        bgImage.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* bgImageValues;
+        bgImageValues = new ValueList(ValueList::Separator::CommaSeparator);
+
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+            if (style->backgroundImage(i)->length() != 0) {
+                item.setUrlValue(style->backgroundImage(i));
+                bgImageValues->push_back(item);
+            }
+        }
+        bgImage.setValueList(bgImageValues);
+        addValuePair(bgImage);
+
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundSize) {
+        CSSStyleValuePair bgSize;
+
+        bgSize.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundSize);
+        bgSize.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* bgSizeValues;
+
+        bgSizeValues = new ValueList(ValueList::Separator::CommaSeparator);
+
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+            if (style->backgroundSizeIsLength(i)) {
+                item.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+                ValueList* vals =
+                    new ValueList(ValueList::Separator::SpaceSeparator);
+                LengthSize lengthSize = style->backgroundSizeLengthValue(i);
+
+                CSSStyleValuePair w = lengthToCSSStyleValue(lengthSize.width());
+                vals->emplace_back(w.valueKind(), w.value());
+
+                CSSStyleValuePair h =
+                    lengthToCSSStyleValue(lengthSize.height());
+                vals->emplace_back(h.valueKind(), h.value());
+
+                item.setValue(vals);
+            } else {
+                item.setBackgroundSizeValue(style->backgroundSizeTypeValue(i));
+                item.setValueKind(
+                    CSSStyleValuePair::ValueKind::BackgroundSizeValueKind);
+                item.setValue(style->backgroundSizeTypeValue(i));
+            }
+            bgSizeValues->push_back(item);
+        }
+
+        bgSize.setValueList(bgSizeValues);
+        addValuePair(bgSize);
+
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundAttachment) {
+        CSSStyleValuePair bgAttachment;
+
+        bgAttachment.setKeyKind(
+            CSSStyleValuePair::KeyKind::BackgroundAttachment);
+        bgAttachment.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* bgAttachmentValues;
+
+        bgAttachmentValues =
+            new ValueList(ValueList::Separator::CommaSeparator);
+
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+
+            item.setBackgroundAttachmentValue(style->backgroundAttachment(i));
+            bgAttachmentValues->push_back(item);
+        }
+        bgAttachment.setValueList(bgAttachmentValues);
+        addValuePair(bgAttachment);
+
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundClip) {
+        CSSStyleValuePair bgClip;
+
+        bgClip.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundClip);
+        bgClip.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* bgClipValues;
+
+        bgClipValues = new ValueList(ValueList::Separator::CommaSeparator);
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+
+            item.setBoxValue(style->backgroundClip(i));
+            bgClipValues->push_back(item);
+        }
+        bgClip.setValueList(bgClipValues);
+        addValuePair(bgClip);
+
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundOrigin) {
+        CSSStyleValuePair bgOrigin;
+
+        bgOrigin.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundOrigin);
+        bgOrigin.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* bgOriginValues;
+
+        bgOriginValues = new ValueList(ValueList::Separator::CommaSeparator);
+
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+            item.setBoxValue(style->backgroundOrigin(i));
+            bgOriginValues->push_back(item);
+        }
+        bgOrigin.setValueList(bgOriginValues);
+        addValuePair(bgOrigin);
+
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundRepeatX) {
+        CSSStyleValuePair bgRepeatX;
+
+        bgRepeatX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
+        bgRepeatX.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* bgRepeatXValues;
+
+        bgRepeatXValues = new ValueList(ValueList::Separator::CommaSeparator);
+
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+
+            item.setBackgroundRepeatValue(style->backgroundRepeatX(i));
+            bgRepeatXValues->push_back(item);
+        }
+
+        bgRepeatX.setValueList(bgRepeatXValues);
+        addValuePair(bgRepeatX);
+
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundRepeatY) {
+        CSSStyleValuePair bgRepeatY;
+
+        bgRepeatY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
+        bgRepeatY.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* bgRepeatYValues;
+
+        bgRepeatYValues = new ValueList(ValueList::Separator::CommaSeparator);
+
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+            item.setBackgroundRepeatValue(style->backgroundRepeatY(i));
+            bgRepeatYValues->push_back(item);
+        }
+
+        bgRepeatY.setValueList(bgRepeatYValues);
+        addValuePair(bgRepeatY);
+
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
+        CSSStyleValuePair bgPositionX;
+
+        bgPositionX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionX);
+        bgPositionX.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* bgPositionXValues;
+
+        bgPositionXValues = new ValueList(ValueList::Separator::CommaSeparator);
+
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+
+            item = lengthToCSSStyleValue(style->backgroundPositionX(i));
+            bgPositionXValues->push_back(item);
+        }
+
+        bgPositionX.setValueList(bgPositionXValues);
+        addValuePair(bgPositionX);
+
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
+        CSSStyleValuePair bgPositionY;
+
+        bgPositionY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionY);
+        bgPositionY.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* bgPositionYValues;
+
+        bgPositionYValues = new ValueList(ValueList::Separator::CommaSeparator);
+
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+
+            item = lengthToCSSStyleValue(style->backgroundPositionY(i));
+            bgPositionYValues->push_back(item);
+        }
+
+        bgPositionY.setValueList(bgPositionYValues);
+        addValuePair(bgPositionY);
+
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderImageSource) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSource);
+        BorderData border = style->border();
+        if (border.image().url()->length() == 0) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
+            p.setValue(border.image().url());
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderImageSlice) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSlice);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* vals = new ValueList();
+        BorderData border = style->border();
+        LengthBox box = border.image().slices();
+
+        CSSStyleValuePair t = lengthToCSSStyleValue(box.top());
+        vals->emplace_back(t.valueKind(), t.value());
+
+        CSSStyleValuePair r = lengthToCSSStyleValue(box.right());
+        vals->emplace_back(r.valueKind(), r.value());
+
+        CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom());
+        vals->emplace_back(b.valueKind(), b.value());
+
+        CSSStyleValuePair l = lengthToCSSStyleValue(box.left());
+        vals->emplace_back(l.valueKind(), l.value());
+
+        p.setValue(vals);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderImageWidth) {
+        // FIXME: Need to refactor BorderImageLength.h, and update the lines
+        // below
+
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageWidth);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* vals = new ValueList();
+        BorderData border = style->border();
+        BorderImageLengthBox box = border.image().widths();
+
+        if (box.top().isLength()) {
+            CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
+            vals->emplace_back(t.valueKind(), t.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.top().number());
+        }
+        if (box.right().isLength()) {
+            CSSStyleValuePair r = lengthToCSSStyleValue(box.right().length());
+            vals->emplace_back(r.valueKind(), r.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.right().number());
+        }
+        if (box.bottom().isLength()) {
+            CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom().length());
+            vals->emplace_back(b.valueKind(), b.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.bottom().number());
+        }
+        if (box.left().isLength()) {
+            CSSStyleValuePair l = lengthToCSSStyleValue(box.left().length());
+            vals->emplace_back(l.valueKind(), l.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.bottom().number());
+        }
+
+        p.setValue(vals);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::TransformOrigin) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TransformOrigin);
+
+        if (!style->hasTransformOrigin()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* vals = new ValueList();
+
+            CSSStyleValuePair x = lengthToCSSStyleValue(
+                style->transformOrigin()->originValue()->getXAxis());
+            vals->emplace_back(x.valueKind(), x.value());
+
+            CSSStyleValuePair y = lengthToCSSStyleValue(
+                style->transformOrigin()->originValue()->getYAxis());
+            vals->emplace_back(y.valueKind(), y.value());
+
+            p.setValue(vals);
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::Transform) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Transform);
+        if (!style->hasTransforms()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::TransformFunctions);
+            FrameDocument* doc = frame->asFrameDocument();
+            FrameBox* box = frame->findNearestAssociateBox();
+            SkMatrix m = style->transformsToMatrix(
+                box->width(), box->height(), box, style->hasTransforms(frame));
+
+            CSSTransformFunctions* transforms = new CSSTransformFunctions();
+
+            ValueList* values =
+                new ValueList(ValueList::Separator::CommaSeparator);
+
+            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                                 m.getScaleX());
+            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                                 m.getSkewY());
+            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                                 m.getSkewX());
+            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                                 m.getScaleY());
+            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                                 m.getTranslateX());
+            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                                 m.getTranslateY());
+
+            transforms->emplace_back(CSSTransformFunction::Matrix, values);
+            p.setValue(transforms);
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderTopStyle) {
+        CSSStyleValuePair tStyle;
+        tStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderTopStyle);
+        tStyle.setBorderStyleValue(style->border().top().style());
+        addValuePair(tStyle);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderBottomStyle) {
+        CSSStyleValuePair bStyle;
+        bStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderBottomStyle);
+        bStyle.setBorderStyleValue(style->border().bottom().style());
+        addValuePair(bStyle);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderLeftStyle) {
+        CSSStyleValuePair lStyle;
+        lStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderLeftStyle);
+        lStyle.setBorderStyleValue(style->border().left().style());
+        addValuePair(lStyle);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderRightStyle) {
+        CSSStyleValuePair rStyle;
+        rStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderRightStyle);
+        rStyle.setBorderStyleValue(style->border().right().style());
+        addValuePair(rStyle);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderTopColor) {
+        CSSStyleValuePair tColor;
+        tColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderTopColor);
+        tColor.setColorValue(style->border().top().color());
+        addValuePair(tColor);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderBottomColor) {
+        CSSStyleValuePair bColor;
+        bColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderBottomColor);
+        bColor.setColorValue(style->border().bottom().color());
+        addValuePair(bColor);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderLeftColor) {
+        CSSStyleValuePair lColor;
+        lColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderLeftColor);
+        lColor.setColorValue(style->border().left().color());
+        addValuePair(lColor);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderRightColor) {
+        CSSStyleValuePair rColor;
+        rColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderRightColor);
+        rColor.setColorValue(style->border().right().color());
+        addValuePair(rColor);
+    }
+#define ADD_VALUE_PAIR(KEY, VALUE, GETTER)                   \
+    else if (keyKind == CSSStyleValuePair::KeyKind::KEY)     \
+    {                                                        \
+        CSSStyleValuePair p;                                 \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::KEY);       \
+        p.setValueKind(CSSStyleValuePair::ValueKind::VALUE); \
+        p.setValue(style->GETTER());                         \
+        addValuePair(p);                                     \
+    }
+    ADD_VALUE_PAIR(Display, DisplayValueKind, display)
+    ADD_VALUE_PAIR(Position, PositionValueKind, position)
+    ADD_VALUE_PAIR(Float, FloatValueKind, floating)
+    ADD_VALUE_PAIR(Clear, ClearValueKind, clear)
+    ADD_VALUE_PAIR(VerticalAlign, VerticalAlignValueKind, verticalAlign)
+    ADD_VALUE_PAIR(TextAlign, SideValueKind, textAlign)
+    ADD_VALUE_PAIR(TextDecoration, TextDecorationValueKind, textDecoration)
+    ADD_VALUE_PAIR(TextTransform, TextTransformValueKind, textTransform)
+    ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
+    ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
+    ADD_VALUE_PAIR(FontStyle, FontStyleValueKind, fontStyle)
+    ADD_VALUE_PAIR(FontWeight, FontWeightValueKind, fontWeight)
+    ADD_VALUE_PAIR(WordWrap, WordWrapValueKind, wordWrap)
+    ADD_VALUE_PAIR(OverflowWrap, WordWrapValueKind, wordWrap)
+    ADD_VALUE_PAIR(OverflowX, OverflowValueKind, overflowX)
+    ADD_VALUE_PAIR(OverflowY, OverflowValueKind, overflowY)
+    ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiValueKind, unicodeBidi)
+    ADD_VALUE_PAIR(Opacity, Number, opacity)
+    ADD_VALUE_PAIR(BoxSizing, BoxSizingValueKind, boxSizing)
+    ADD_VALUE_PAIR(FlexDirection, FlexDirectionValueKind, flexDirection)
+    ADD_VALUE_PAIR(FlexWrap, FlexWrapValueKind, flexWrap)
+    ADD_VALUE_PAIR(Order, Int32, order)
+    ADD_VALUE_PAIR(JustifyContent, JustifyContentValueKind, justifyContent)
+    ADD_VALUE_PAIR(AlignItems, AlignItemValueKind, alignItems)
+    ADD_VALUE_PAIR(AlignSelf, AlignItemValueKind, alignSelf)
+    ADD_VALUE_PAIR(AlignContent, AlignContentValueKind, alignContent)
+    ADD_VALUE_PAIR(FlexGrow, Number, flexGrow)
+    ADD_VALUE_PAIR(FlexShrink, Number, flexShrink)
+    ADD_VALUE_PAIR(FillOpacity, Number, fillOpacity)
+#undef ADD_VALUE_PAIR
+#define ADD_COLOR_PAIR(KEY, GETTER)                                    \
+    else if (keyKind == CSSStyleValuePair::KeyKind::KEY)               \
+    {                                                                  \
+        CSSStyleValuePair p;                                           \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::KEY);                 \
+        p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind); \
+        p.setValue(style->GETTER().toString());                        \
+        addValuePair(p);                                               \
+    }
+    ADD_COLOR_PAIR(Color, color)
+    ADD_COLOR_PAIR(BackgroundColor, backgroundColor)
+#undef ADD_COLOR_PAIR
+    else
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
 

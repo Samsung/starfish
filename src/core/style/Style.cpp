@@ -3385,8 +3385,7 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
 {
     for (unsigned i = 0; i < m_cssValues.size(); i++) {
         if (m_cssValues[i].keyKind() == name) {
-            if (styleType() == StyleType::InlineStyle ||
-                ret.flagImportant() == true ||
+            if (isInlineStyle() || ret.flagImportant() == true ||
                 (ret.flagImportant() == false &&
                  m_cssValues[i].flagImportant() == false)) {
                 m_cssValues[i].setValueKind(ret.valueKind());

@@ -959,6 +959,14 @@ class CSSStyleDeclaration;
 // The following are for internal use only
 // * border-horizontal-spacing
 // * border-vertical-spacing
+//
+// The order of followings are used to tell which properties should be
+// calculated after layout.
+// * padding-[top|bottom|left|right]
+// * margin-[top|bottom|left|right]
+// * top|bottom|left|right
+// * width|height
+// * border--[top|bottom|left|right]-width
 #define FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)                                    \
     F(Color, color, "color")                                                 \
     F(Direction, direction, "direction")                                     \
@@ -968,6 +976,10 @@ class CSSStyleDeclaration;
     F(BackgroundAttachment, backgroundAttachment, "background-attachment")   \
     F(BackgroundClip, backgroundClip, "background-clip")                     \
     F(BackgroundOrigin, backgroundOrigin, "background-origin")               \
+    F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x")           \
+    F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y")           \
+    F(BackgroundPositionX, backgroundPositionX, "background-position-x")     \
+    F(BackgroundPositionY, backgroundPositionY, "background-position-y")     \
     F(LineHeight, lineHeight, "line-height")                                 \
     F(WhiteSpace, whiteSpace, "white-space")                                 \
     F(WordSpacing, wordSpacing, "word-spacing")                              \
@@ -984,9 +996,9 @@ class CSSStyleDeclaration;
     F(Left, left, "left")                                                    \
     F(Right, right, "right")                                                 \
     F(Width, width, "width")                                                 \
+    F(Height, height, "height")                                              \
     F(MaxWidth, maxWidth, "max-width")                                       \
     F(MinWidth, minWidth, "min-width")                                       \
-    F(Height, height, "height")                                              \
     F(MaxHeight, maxHeight, "max-height")                                    \
     F(MinHeight, minHeight, "min-height")                                    \
     F(WordWrap, wordWrap, "word-wrap")                                       \
@@ -1026,10 +1038,6 @@ class CSSStyleDeclaration;
     F(OverflowY, overflowY, "overflow-y")                                    \
     F(ZIndex, zIndex, "z-index")                                             \
     F(VerticalAlign, verticalAlign, "vertical-align")                        \
-    F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x")           \
-    F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y")           \
-    F(BackgroundPositionX, backgroundPositionX, "background-position-x")     \
-    F(BackgroundPositionY, backgroundPositionY, "background-position-y")     \
     F(Opacity, opacity, "opacity")                                           \
     F(TableLayout, tableLayout, "table-layout")                              \
     F(UnicodeBidi, unicodeBidi, "unicode-bidi")                              \
