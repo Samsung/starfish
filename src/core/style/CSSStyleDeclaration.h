@@ -28,18 +28,12 @@ class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleRuleCSSStyleDeclaration;
 
 public:
-    enum StyleType {
-        ExternalStyle,
-        InternalStyle,
-        InlineStyle,
-    };
+    enum Stage { resolveStyle, frameTreeBuild, layout };
 
-    CSSStyleDeclaration(Element* element = nullptr,
-                        StyleType styleType = InternalStyle)
+    CSSStyleDeclaration(Element* element = nullptr)
         : ScriptWrappable(this)
     {
         m_element = element;
-        m_styleType = styleType;
     }
 
     void addValuePair(CSSStyleValuePair p);
@@ -52,16 +46,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isCSSStyleDeclaration() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
-
-    StyleType styleType()
-    {
-        return m_styleType;
-    }
-
-    void setStyleType(StyleType styleType)
-    {
-        m_styleType = styleType;
-    }
 
     String* generateCSSText() const;
 
@@ -184,13 +168,43 @@ public:
                     String::emptyString);
     }
 
+    virtual bool isInlineStyle() const
+    {
+        return false;
+    }
+
+    virtual bool isComputedStyle() const
+    {
+        return false;
+    }
+
+    virtual void layoutIfNeeds()
+    {
+    }
+
+    virtual void resolveStyleIfNeeds()
+    {
+    }
+
+    virtual void buildFrameTreeIfNeeds()
+    {
+    }
+
+    virtual void updateValue(CSSStyleValuePair::KeyKind keyKind)
+    {
+    }
+
+    virtual Stage requiredStage(CSSStyleValuePair::KeyKind keyKind)
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
 protected:
     void rootPointerValueIfExists(CSSStyleValuePair v);
 
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
     GCUnorderedSet<void*> m_pointerRooter;
     Element* m_element;
-    StyleType m_styleType;
 };
 
 class StyleRuleCSSStyleDeclaration : public CSSStyleDeclaration {
@@ -218,24 +232,39 @@ protected:
 
 class InlineCSSStyleDeclaration : public CSSStyleDeclaration {
 public:
-    InlineCSSStyleDeclaration(Element* element = nullptr,
-                              StyleType styleType = InternalStyle)
-        : CSSStyleDeclaration(element, styleType)
+    InlineCSSStyleDeclaration(Element* element = nullptr)
+        : CSSStyleDeclaration(element)
     {
     }
 
-    void setCssText(String* text);
+    void setCssText(String* text) override;
+
+    bool isInlineStyle() const override
+    {
+        return true;
+    }
 };
 
 class ComputedStyleCSSStyleDeclaration : public CSSStyleDeclaration {
 public:
-    ComputedStyleCSSStyleDeclaration(Element* element = nullptr,
-                                     StyleType styleType = InternalStyle)
-        : CSSStyleDeclaration(element, styleType)
+    ComputedStyleCSSStyleDeclaration(Element* element = nullptr)
+        : CSSStyleDeclaration(element)
     {
     }
 
-    void setCssText(String* text);
+    void setCssText(String* text) override;
+
+    bool isComputedStyle() const override
+    {
+        return true;
+    }
+
+    void layoutIfNeeds() override;
+    void resolveStyleIfNeeds() override;
+    void buildFrameTreeIfNeeds() override;
+
+    void updateValue(CSSStyleValuePair::KeyKind keyKind) override;
+    Stage requiredStage(CSSStyleValuePair::KeyKind keyKind) override;
 };
 }
 

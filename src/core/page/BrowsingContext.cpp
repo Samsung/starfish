@@ -223,7 +223,7 @@ void BrowsingContext::addDidLayoutCallback(DidLayoutCallback cb, void* data)
     m_didLayoutCallbacks.push_back(std::make_pair(cb, data));
 }
 
-bool BrowsingContext::layoutIfNeeds(bool fromWebView)
+void BrowsingContext::resolveStyleIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleSheetsRecalc) {
@@ -445,7 +445,11 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
         m_needsStyleRecalc = false;
         m_needsStyleRecalcForWholeDocument = false;
     }
+}
 
+void BrowsingContext::buildFrameTreeIfNeeds(bool fromWebView)
+{
+    resolveStyleIfNeeds();
     if (m_needsFrameTreeBuild) {
         if (document()->frame()) {
             if (fromWebView) {
@@ -460,6 +464,12 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
             m_needsFrameTreeBuild = false;
         }
     }
+}
+
+bool BrowsingContext::layoutIfNeeds(bool fromWebView)
+{
+    resolveStyleIfNeeds();
+    buildFrameTreeIfNeeds();
 
     bool ret = false;
     if (m_needsLayout) {

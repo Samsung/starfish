@@ -225,6 +225,8 @@ public:
 #ifndef NDEBUG
     size_t countPointersInRootSet(void* ptr);
 #endif
+    void resolveStyleIfNeeds();
+    void buildFrameTreeIfNeeds(bool fromWebView = true);
     // return did layout
     bool layoutIfNeeds(bool fromWebView = true);
 
