@@ -186,6 +186,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | name | Return the context object’s name. |
 |  | attribute | publicId | Return the context object’s public ID. |
 |  | attribute | systemId | Return the context object’s system ID. |
+| [DOMStringList](https://html.spec.whatwg.org/#domstringlist) | interface | DOMStringList | |
+|  | attribute | length | Returns the number of strings in strings. |
+|  | attribute | item | Returns the string with index index from strings. |
+|  | attribute | contain | Returns true if strings contains string, and false otherwise. |
 | [DOMException](https://heycam.github.io/webidl/#idl-exceptions) | interface | DOMException |  |
 |  | attribute | code | Exception code |
 |  | attribute | name | optional exception name |

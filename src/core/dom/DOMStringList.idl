@@ -1,0 +1,8 @@
+// https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#the-domstringlist-interface
+
+[Exposed=(Window,Worker)]
+interface DOMStringList {
+  readonly attribute unsigned long length;
+  getter DOMString? item(unsigned long index);
+  boolean contains(DOMString string);
+};
