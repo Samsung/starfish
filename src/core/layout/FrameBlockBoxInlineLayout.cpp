@@ -3146,7 +3146,7 @@ void FrameInline::layoutInline(LineFormattingContext& ctx)
     // Here we follow the policy of chrome.
     ctx.handleSoftHyphenate(false);
     if (style()->wordWrap() == BreakWordWordWrapValue) {
-        ctx.insertWord(nullptr);
+        ctx.insertWord(this);
     }
 
     InlineNonReplacedBox* inlineBox =
