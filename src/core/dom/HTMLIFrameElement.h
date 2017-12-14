@@ -80,6 +80,9 @@ public:
     void navigate(ResourceURL* url, HistoryManager::Action type,
                   ResourceURL* referrerURL);
 
+    String* nameAttr();
+    void setNameAttr(String* name);
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {

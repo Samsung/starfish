@@ -235,6 +235,15 @@ public:
     void registerMediaElement(HTMLMediaElement* element);
     void onIdle();
 
+    String* name()
+    {
+        return m_name;
+    }
+    void setName(String* name)
+    {
+        m_name = name;
+    }
+
 private:
     // Don't call function directly
     // you can use this function from WebView::navigate or
@@ -294,6 +303,7 @@ private:
     GCUnorderedMap<void*, size_t> m_rootMap;
     GCVector<HTMLMediaElement*> m_existingMediaElements;
     GCVector<std::pair<DidLayoutCallback, void*>> m_didLayoutCallbacks;
+    String* m_name;
 };
 }
 

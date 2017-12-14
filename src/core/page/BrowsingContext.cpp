@@ -89,6 +89,7 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView,
     , m_documentVersionWhenComputingHoveredNodeSet(0)
     , m_focusedNode(nullptr)
     , m_activeElement(nullptr)
+    , m_name(String::emptyString)
 {
     initFlags();
 }
