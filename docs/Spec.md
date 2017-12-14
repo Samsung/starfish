@@ -990,6 +990,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | text-decoration | none &#124; [ underline &#124;&#124; line-through ] | Specifies the decoration added to the text | |
 | | text-transform | none &#124; capitalize &#124; uppercase &#124; lowercase &#124; initial &#124; inherit | Appears in all-uppercase or all-lowercase, or with each word capitalized. | |
 | | white-space | normal &#124; pre &#124; nowrap &#124; pre-wrap &#124; pre-line | Describes how whitespace inside the element is handled. | |
+| | word-spacing | normal &#124; length &#124; initial &#124; inherit | Specifies the spacing behavior between tags and words. | |
 | [Text](https://www.w3.org/TR/css-text-3/) | overflow-wrap &#124; word-wrap | normal &#124; break-word | Specifies whether the UA may break at otherwise disallowed points within a line to prevent overflow, when an otherwise-unbreakable string is too long to fit within the line box, or when sequences of preserved white space would hang. | It only has an effect when white-space allows wrapping. |
 | [Table](https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#q17.0) | table-layout | fixed &#124; auto | Defines the algorithm to be used to lay out table cells, rows, and columns. | |
 | | caption-side | 	top &#124; bottom | Positions the content of a table's &lt;caption&gt; on the specified side. | |

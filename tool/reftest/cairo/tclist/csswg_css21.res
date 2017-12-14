@@ -2025,11 +2025,6 @@ test/cairo/reftest/csswg-test/css21_original/text/white-space-collapsing-breaks-
 # test/cairo/reftest/csswg-test/css21_original/text/white-space-collapsing-bidi-001.htm
 # test/cairo/reftest/csswg-test/css21_original/text/white-space-collapsing-bidi-002.htm
 # test/cairo/reftest/csswg-test/css21_original/text/white-space-collapsing-bidi-003.htm
-# test/cairo/reftest/csswg-test/css21_original/text/word-spacing-characters-002.htm
-# test/cairo/reftest/csswg-test/css21_original/text/word-spacing-characters-003.htm
-# test/cairo/reftest/csswg-test/css21_original/text/word-spacing-remove-space-004.htm
-# test/cairo/reftest/csswg-test/css21_original/text/word-spacing-remove-space-005.htm
-# test/cairo/reftest/csswg-test/css21_original/text/word-spacing-remove-space-006.htm
 # test/cairo/reftest/csswg-test/css21_original/text/white-space-mixed-001.htm
 # test/cairo/reftest/csswg-test/css21_original/text/white-space-mixed-002.htm
 # test/cairo/reftest/csswg-test/css21_original/text/white-space-mixed-003.htm
@@ -2038,6 +2033,73 @@ test/cairo/reftest/csswg-test/css21_original/text/white-space-p-element-001.htm
 # test/cairo/reftest/csswg-test/css21_original/text/white-space-pre-element-001.htm
 # test/cairo/reftest/csswg-test/css21_original/text/white-space-nowrap-attribute-001.htm
 # test/cairo/reftest/csswg-test/css21_original/text/white-space-control-characters-001.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-004.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-005.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-006.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-007.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-008.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-016.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-017.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-018.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-019.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-020.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-028.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-029.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-030.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-031.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-032.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-040.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-041.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-042.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-043.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-044.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-052.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-053.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-054.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-055.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-056.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-064.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-065.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-066.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-067.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-068.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-076.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-077.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-078.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-079.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-080.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-088.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-089.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-090.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-091.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-092.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-097.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-098.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-099.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-100.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-101.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-001.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-002.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-003.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-005.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-006.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-007.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-008.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-009.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-010.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-011.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-012.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-013.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-014.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-applies-to-015.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-characters-001.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-characters-002.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-remove-space-001.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-remove-space-002.htm
+#test/cairo/reftest/csswg-test/css21_original/text/word-spacing-remove-space-003.htm
+#test/cairo/reftest/csswg-test/css21_original/text/word-spacing-remove-space-004.htm
+test/cairo/reftest/csswg-test/css21_original/text/word-spacing-remove-space-005.htm
+#test/cairo/reftest/csswg-test/css21_original/text/word-spacing-remove-space-006.htm
 test/cairo/reftest/csswg-test/css21_original/generated-content/after-content-display-001.htm
 test/cairo/reftest/csswg-test/css21_original/generated-content/after-content-display-002.htm
 #test/cairo/reftest/csswg-test/css21_original/generated-content/after-content-display-003.htm
