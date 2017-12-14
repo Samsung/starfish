@@ -602,8 +602,7 @@ void FrameBlockBox::updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
             scrollWidth += visibleRect.x();
         }
 
-        if (scrollWidth > width() &&
-            overflowX != OverflowValue::HiddenOverflow) {
+        if (scrollWidth > width()) {
             m_flags.m_hasBiggerContentThanFrameWidth = true;
             ensureFrameBoxRareData();
             frameBlockBoxRareData()->m_scrollWidth = scrollWidth;
@@ -614,8 +613,7 @@ void FrameBlockBox::updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
             scrollHeight += visibleRect.y();
         }
 
-        if (scrollHeight > height() &&
-            overflowY != OverflowValue::HiddenOverflow) {
+        if (scrollHeight > height()) {
             m_flags.m_hasBiggerContentThanFrameHeight = true;
             ensureFrameBoxRareData();
             frameBlockBoxRareData()->m_scrollHeight = scrollHeight;

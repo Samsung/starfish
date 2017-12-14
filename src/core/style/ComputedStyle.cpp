@@ -778,6 +778,16 @@ void applyTransition(Element* element, ComputedStyle* oldStyle,
                     task->setup();
                 },
                 task);
+            /*
+            // for disable transform animation
+            executor->registerAnimation(new AnimationTask(
+                element, CSSStyleValuePair::KeyKind::Transform,
+                transitionPropertyValueToString(
+                    TransitionPropertyValue::TransitionPropertyTransformValue),
+                AnimatedValue(), AnimatedValue(),
+                newStyle->transitionDuration().toTimeValue(), 0,
+                getTimingFunction(newStyle)));
+            */
         }
     }
 }
