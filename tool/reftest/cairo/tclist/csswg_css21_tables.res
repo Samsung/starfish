@@ -671,9 +671,9 @@ test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-017.htm
 test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-018.htm
 test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-019.htm
 test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-020.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-021.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-022.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-023.htm
+test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-021.htm
+test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-022.htm
+test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-023.htm
 test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-025.htm
 test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-026.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-027.htm

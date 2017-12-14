@@ -17,7 +17,7 @@
 #ifndef __StarFishFrameTableColBox__
 #define __StarFishFrameTableColBox__
 
-#include "core/layout/FrameTableObjectBox.h"
+#include "core/layout/FrameTableCellBox.h"
 
 namespace StarFish {
 
@@ -27,7 +27,7 @@ class FrameTreeBuilderContext;
 // In the specification, <col> and <colgroup> are very similar
 // The only difference is that <col> should not have children
 // So we will use A appropriately for <col> and <colgroup>
-class FrameTableColBox : public FrameTableObjectBox {
+class FrameTableColBox : public FrameTableCellBox {
 public:
     FrameTableColBox(Node* node, ComputedStyle* style);
 

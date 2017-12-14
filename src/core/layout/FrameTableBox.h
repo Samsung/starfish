@@ -179,8 +179,10 @@ private:
         std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
         LayoutUnit* sumOfPercentageWidth);
 
+    void collectColBoxes();
     bool hasColBox(size_t i);
-    Length cellWidthFromFirstRowOrColGroup(bool tableLayoutFixed, size_t i);
+    FrameTableCellBox* cellFromFirstRowOrColGroup(bool tableLayoutFixed,
+                                                  size_t i);
 
     void collectColumnWidths(GCAtomicVector<ColSizeStruct>& columnWidthsSoFar,
                              GCAtomicVector<ColSizeStruct>& columnWidths);
@@ -202,7 +204,7 @@ private:
     GCAtomicVector<ColSizeStruct> m_columnWidths;
 
     GCVector<FrameTableCellBox*> m_cellsInTheFirstRow;
-    GCVector<FrameTableColBox*> m_cellsInTheColGroup;
+    GCVector<FrameTableColBox*> m_colBoxes;
 
     // Border and background is drawn around FrameTableSections not FrameTable
     // Keep track of FrameTableSections for border and background
