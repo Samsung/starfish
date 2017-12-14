@@ -94,17 +94,13 @@ public:
         rewinddir(m_dir);
 
         size_t ret = 0;
-        while (1) {
-            struct dirent* entry = readdir(m_dir);
-            if (entry) {
-                if (!strncmp(entry->d_name, ".", 1) ||
-                    !strncmp(entry->d_name, "..", 2)) {
-                    continue;
-                }
-                ret++;
-            } else {
-                break;
+        struct dirent* entry = nullptr;
+        while ((entry = readdir(m_dir))) {
+            if (!strncmp(entry->d_name, ".", 1) ||
+                !strncmp(entry->d_name, "..", 2)) {
+                continue;
             }
+            ret++;
         }
         return ret;
     }
@@ -114,17 +110,13 @@ public:
         rewinddir(m_dir);
 
         GCVector<String*> listFiles;
-        while (1) {
-            struct dirent* entry = readdir(m_dir);
-            if (entry) {
-                if (!strncmp(entry->d_name, ".", 1) ||
-                    !strncmp(entry->d_name, "..", 2)) {
-                    continue;
-                }
-                listFiles.push_back(String::fromUTF8(entry->d_name));
-            } else {
-                break;
+        struct dirent* entry = nullptr;
+        while ((entry = readdir(m_dir))) {
+            if (!strncmp(entry->d_name, ".", 1) ||
+                !strncmp(entry->d_name, "..", 2)) {
+                continue;
             }
+            listFiles.push_back(String::fromUTF8(entry->d_name));
         }
         return listFiles;
     }
