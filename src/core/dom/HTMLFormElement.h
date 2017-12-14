@@ -71,9 +71,6 @@ public:
     String* value();
     void setValue(String* value);
 
-    String* defaultValue();
-    void setDefaultValue(String* defaultValue);
-
     bool disabled();
     void setDisabled(bool disabled);
 

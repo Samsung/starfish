@@ -76,6 +76,9 @@ public:
     bool firstDefaultValue();
     void setFirstDefaultValue(bool firstDefaultValue);
 
+    String* defaultValue();
+    void setDefaultValue(String* defaultValue);
+
     int32_t maxLength();
     void setMaxLength(int32_t maxlength);
 
