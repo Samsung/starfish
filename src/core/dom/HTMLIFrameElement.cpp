@@ -207,7 +207,7 @@ void HTMLIFrameElement::childBrowsingContextLoaded()
 {
     String* eventType = starFish()->staticStrings()->m_load.localName();
     Event* e = new Event(document(), eventType, EventInit(false, false));
-    dispatchEventByUA(e);
+    dispatchEventByUA(this, e, true);
 }
 
 void HTMLIFrameElement::styleForPresentationAttribute(
