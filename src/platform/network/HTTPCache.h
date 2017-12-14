@@ -40,19 +40,23 @@ public:
     bool pruneAsNeededForCacheSpace(const size_t reserve);
     bool isConsistent();
 
+    static const size_t kBlockSize;
+
 private:
     void initCacheDirectory();
-    void initCacheMeber();
-    void addCacheLRUListData(String* url);
-    void deleteCacheLRUListData(String* url);
-    HTTPCacheEntryMultiMap::iterator findEntry(String* key);
+    void init();
+    void removeItemInLRUList(String* url);
+    HTTPCacheEntryMultiMap::iterator findEntryInCacheEntryTable(String* key);
+    HTTPCacheLRUList::iterator findItemInLRUList(String* item);
 
+    size_t calcBlocksSize(size_t length);
+    size_t calcBlocksSizeOfIndexFile();
     HTTPCacheEntryMultiMap m_cacheEntryTable;
     HTTPCacheLRUList m_cacheLRUList;
     String* m_cacheDirPath;
     String* m_indexFilePath;
-    size_t m_currentCacheSize;
-    size_t m_cacheSize;
+    size_t m_cacheSizeLimit;
+    size_t m_currentTotalSizeOfBlocks;
 };
 }
 #endif

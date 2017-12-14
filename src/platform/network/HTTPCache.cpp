@@ -33,30 +33,31 @@
 #include "core/dom/Document.h"
 #include <dirent.h>
 #include <errno.h>
+#include <linux/fs.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #define INDEX_FILE_NAME "/index.txt"
-#define DEFAULT_HTTP_CACHE_SIZE 1024 * 1024 * 10
+#define DEFAULT_HTTP_CACHE_SIZE 1024 * 1024 * 50
 #define MAX_ENTRY_FILE_SIZE (DEFAULT_HTTP_CACHE_SIZE * 0.04)
 #define NUM_OF_COL 17
 
 namespace StarFish {
 
-static HTTPCache* instance = nullptr;
+const size_t HTTPCache::kBlockSize = BLKGETSIZE;
 
 HTTPCache::HTTPCache(String* cacheDirPath)
     : m_cacheEntryTable()
     , m_cacheDirPath(cacheDirPath)
     , m_indexFilePath()
-    , m_currentCacheSize(0)
-    , m_cacheSize(DEFAULT_HTTP_CACHE_SIZE)
+    , m_cacheSizeLimit(DEFAULT_HTTP_CACHE_SIZE)
+    , m_currentTotalSizeOfBlocks(0)
 {
     m_indexFilePath = m_cacheDirPath->concat(INDEX_FILE_NAME);
     if (initFromIndexFileIfPossible() == false) {
         initCacheDirectory();
-        initCacheMeber();
+        init();
     }
 }
 
@@ -75,7 +76,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
     }
 
     Nullable<String*> data = in->readAll();
-    in->close();
+    in->removeFile();
 
     if (!data.hasValue()) {
         return false;
@@ -104,7 +105,6 @@ bool HTTPCache::initFromIndexFileIfPossible()
 
         auto tempStr = columns[1].toUTF8NonGCString();
         String* urlString = String::fromUTF8(tempStr.data(), tempStr.length());
-        m_cacheLRUList.push_back(urlString);
         ResourceURL* url = new ResourceURL(urlString);
 
         // 2~4
@@ -147,7 +147,9 @@ bool HTTPCache::initFromIndexFileIfPossible()
         m_cacheEntryTable.insert(
             std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
 
-        m_currentCacheSize += cinfo.contentLength;
+        m_cacheLRUList.push_back(urlString);
+
+        m_currentTotalSizeOfBlocks += calcBlocksSize(cinfo.contentLength);
     }
 
     if (!isConsistent()) {
@@ -162,16 +164,24 @@ HTTPCacheEntryMultiMap::iterator HTTPCache::get(ResourceURL* url)
 {
     STARFISH_ASSERT(isMainThread());
 
-    auto entryIter = findEntry(url->urlString());
-    if (entryIter == m_cacheEntryTable.end()) {
+    String* item = url->urlString();
+
+    auto entryItr = findEntryInCacheEntryTable(item);
+    if (entryItr == m_cacheEntryTable.end()) {
         return m_cacheEntryTable.end();
     }
-    addCacheLRUListData(entryIter->second->url()->urlString());
 
-    return entryIter;
+    auto it = findItemInLRUList(item);
+    STARFISH_ASSERT(it != m_cacheLRUList.end());
+
+    m_cacheLRUList.erase(it);
+    m_cacheLRUList.push_back(item);
+
+    return entryItr;
 }
 
-HTTPCacheEntryMultiMap::iterator HTTPCache::findEntry(String* key)
+HTTPCacheEntryMultiMap::iterator HTTPCache::findEntryInCacheEntryTable(
+    String* key)
 {
     auto range = m_cacheEntryTable.equal_range(key->hashValue());
     for (auto it = range.first; it != range.second; ++it) {
@@ -190,7 +200,7 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
         return;
     }
 
-    auto check = findEntry(nwd->request->url()->urlString());
+    auto check = findEntryInCacheEntryTable(nwd->request->url()->urlString());
     if (check != end()) {
         return;
     }
@@ -220,7 +230,9 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
     finfo.requestTime = nwd->httpTransaction->httpRequest().requestTime();
     finfo.responseTime = nwd->httpTransaction->httpResponse().responseTime();
 
-    if (!pruneAsNeededForCacheSpace(cinfo.contentLength)) {
+    size_t sizeOfBlocks = calcBlocksSize(cinfo.contentLength);
+
+    if (!pruneAsNeededForCacheSpace(sizeOfBlocks)) {
         return;
     }
 
@@ -236,17 +248,36 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
 
     m_cacheEntryTable.insert(
         std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
+    m_cacheLRUList.push_back(nwd->request->url()->urlString());
 
-    addCacheLRUListData(nwd->request->url()->urlString());
+    m_currentTotalSizeOfBlocks += sizeOfBlocks;
 
-    m_currentCacheSize += cinfo.contentLength;
+    STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
+                      (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
 }
 
 bool HTTPCache::flush()
 {
     STARFISH_ASSERT(isMainThread());
 
+    bool check = true;
+
     expire();
+
+    if (!pruneAsNeededForCacheSpace(calcBlocksSizeOfIndexFile())) {
+        STARFISH_LOG_ERROR(
+            "[HTTPCache] Failed to reserve free space to index files\n");
+        check = false;
+    }
+
+    if (!check || !isConsistent()) {
+        STARFISH_LOG_ERROR("[HTTPCache] Cached entries are corrupted")
+        initCacheDirectory();
+        return false;
+    }
+
+    STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
+                      (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
 
     File* out = File::create();
     if (!out->open(m_indexFilePath, File::FileMode::Write)) {
@@ -254,18 +285,15 @@ bool HTTPCache::flush()
     }
 
     for (auto it : m_cacheLRUList) {
-        auto tableIter = findEntry(it);
-        HTTPCacheEntry* entry = tableIter->second;
+        auto tableItr = findEntryInCacheEntryTable(it);
+        HTTPCacheEntry* entry = tableItr->second;
         if (!out->writeLine(entry->toString())) {
             out->close();
             return false;
         }
     }
 
-    bool ret = (out->flush() == 0) & (out->close() == 0);
-    // TODO : Verify data consistency
-
-    return ret;
+    return (out->flush() == 0) & (out->close() == 0);
 }
 
 bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
@@ -275,10 +303,10 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
     // Consider indexFile size
     size_t removedSize = 0;
 
-    if (m_currentCacheSize + reserve > m_cacheSize) {
+    if (m_currentTotalSizeOfBlocks + reserve > m_cacheSizeLimit) {
         auto iter = m_cacheLRUList.begin();
         while (iter != m_cacheLRUList.end() && removedSize < reserve) {
-            auto tableIter = findEntry(*iter);
+            auto tableIter = findEntryInCacheEntryTable(*iter);
             HTTPCacheEntry* cacheEntry = tableIter->second;
 
             if (cacheEntry->usingCount() > 0) {
@@ -289,14 +317,22 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
             File* fio = File::create();
             if (fio->open(cacheEntry->entryFileName(), File::Read)) {
                 HTTPContentInfo info = cacheEntry->httpContentInfo();
-                m_currentCacheSize -= info.contentLength;
-                removedSize += info.contentLength;
+                size_t sizeOfBlock = calcBlocksSize(info.contentLength);
                 fio->removeFile();
                 fio->close();
+
+                m_currentTotalSizeOfBlocks -= sizeOfBlock;
+                removedSize += sizeOfBlock;
             }
             m_cacheEntryTable.erase(tableIter);
             iter = m_cacheLRUList.erase(iter);
         }
+        STARFISH_LOG_INFO(
+            "[HTTPCache] Reserve : %.2lf, Prune : %.2lf, Current size : "
+            "%.2lf\n",
+            (double)reserve / (1024 * 1024),
+            (double)removedSize / (1024 * 1024),
+            (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
         if (iter == m_cacheLRUList.end() && removedSize < reserve) {
             return false;
         }
@@ -314,7 +350,7 @@ bool HTTPCache::isConsistent()
         return false;
     }
 
-    if ((dir->fileCount() - 1) != m_cacheLRUList.size()) {
+    if ((dir->fileCount()) != m_cacheLRUList.size()) {
         dir->close();
         return false;
     }
@@ -359,7 +395,7 @@ void HTTPCache::expire()
 
             fio->close();
 
-            deleteCacheLRUListData(it->second->url()->urlString());
+            removeItemInLRUList(it->second->url()->urlString());
             it = m_cacheEntryTable.erase(it);
         } else {
             it++;
@@ -378,58 +414,56 @@ void HTTPCache::initCacheDirectory()
     }
 
     if (!dir->mkDir()) {
-        STARFISH_LOG_ERROR("%s directory create error\n",
+        STARFISH_LOG_ERROR("[HTTPCache] %s directory create error\n",
                            m_cacheDirPath->toUTF8NonGCString().data());
         STARFISH_ASSERT_NOT_REACHED();
     }
-
     dir->close();
-
-    File* file = File::create();
-    if (file->open(m_indexFilePath, File::FileMode::Write)) {
-        file->close();
-    } else {
-        STARFISH_LOG_ERROR("%s file create error\n",
-                           m_indexFilePath->toUTF8NonGCString().data());
-        STARFISH_ASSERT_NOT_REACHED();
-    }
 }
 
-void HTTPCache::initCacheMeber()
+void HTTPCache::init()
 {
-    m_cacheEntryTable.clear();
-    m_cacheLRUList.clear();
-    m_currentCacheSize = 0;
+    HTTPCacheEntryMultiMap().swap(m_cacheEntryTable);
+    HTTPCacheLRUList().swap(m_cacheLRUList);
+    m_currentTotalSizeOfBlocks = 0;
 }
 
-void HTTPCache::addCacheLRUListData(String* url)
+HTTPCacheLRUList::iterator HTTPCache::findItemInLRUList(String* item)
 {
-    // TODO : LRU search speed
-    auto iter = m_cacheLRUList.begin();
-    while (iter != m_cacheLRUList.end()) {
-        if ((String*)(*iter)->equals(url)) {
-            iter = m_cacheLRUList.erase(iter);
-            break;
+    auto it = m_cacheLRUList.begin();
+    while (it != m_cacheLRUList.end()) {
+        if ((*it)->equals(item)) {
+            return it;
         } else {
-            iter++;
+            it++;
         }
     }
-    m_cacheLRUList.push_back(url);
+    return m_cacheLRUList.end();
 }
 
-void HTTPCache::deleteCacheLRUListData(String* url)
+void HTTPCache::removeItemInLRUList(String* item)
 {
-    // TODO : LRU search speed
-    auto iter = m_cacheLRUList.begin();
-    while (iter != m_cacheLRUList.end()) {
-        if ((String*)(*iter)->equals(url)) {
-            iter = m_cacheLRUList.erase(iter);
-            break;
-        } else {
-            iter++;
-        }
+    auto it = findItemInLRUList(item);
+    if (it != m_cacheLRUList.end()) {
+        m_cacheLRUList.erase(it);
     }
 }
-} // namespace StarFish
+
+size_t HTTPCache::calcBlocksSize(size_t length)
+{
+    return (length / kBlockSize + ((length % kBlockSize) ? 1 : 0)) * kBlockSize;
+}
+
+size_t HTTPCache::calcBlocksSizeOfIndexFile()
+{
+    size_t bytes = 0;
+    for (auto it : m_cacheLRUList) {
+        auto tableIter = findEntryInCacheEntryTable(it);
+        HTTPCacheEntry* entry = tableIter->second;
+        bytes += entry->toString()->toUTF8NonGCString().size() + 1;
+    }
+    return calcBlocksSize(bytes);
+}
+}
 
 #endif
