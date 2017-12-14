@@ -25,6 +25,8 @@ test/cairo/reftest/csswg-test/css1_converted/c532-bgcolor-000.htm
 test/cairo/reftest/csswg-test/css1_converted/c532-bgcolor-001.htm
 test/cairo/reftest/csswg-test/css1_converted/c533-bgimage-000.htm
 test/cairo/reftest/csswg-test/css1_converted/c533-bgimage-001.htm
+test/cairo/reftest/csswg-test/css1_original/c541-word-sp-000.htm
+test/cairo/reftest/csswg-test/css1_original/c541-word-sp-001.htm
 test/cairo/reftest/csswg-test/css1_converted/c5501-imrgn-t-000.htm
 test/cairo/reftest/csswg-test/css1_converted/c5502-mrgn-r-000.htm
 test/cairo/reftest/csswg-test/css1_converted/c5503-imrgn-b-000.htm
