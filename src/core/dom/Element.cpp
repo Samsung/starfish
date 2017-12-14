@@ -577,7 +577,7 @@ double Element::scrollLeft(bool layoutIfNeeds)
     }
 
     if (!isHTMLInputElement()) {
-        if (appliedOverflowX() < OverflowValue::AutoOverflow) {
+        if (appliedOverflowX() < OverflowValue::HiddenOverflow) {
             return 0;
         }
     }
@@ -598,7 +598,7 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
         return;
     }
 
-    if (appliedOverflowX() < OverflowValue::AutoOverflow) {
+    if (appliedOverflowX() < OverflowValue::HiddenOverflow) {
         return;
     }
 
@@ -624,7 +624,7 @@ double Element::scrollTop(bool layoutIfNeeds)
         return 0;
     }
 
-    if (appliedOverflowY() < OverflowValue::AutoOverflow) {
+    if (appliedOverflowY() < OverflowValue::HiddenOverflow) {
         return 0;
     }
 
@@ -644,7 +644,7 @@ bool Element::canScrollVerticaly(bool layoutIfNeeds)
         return false;
     }
 
-    if (appliedOverflowY() < OverflowValue::AutoOverflow) {
+    if (appliedOverflowY() < OverflowValue::HiddenOverflow) {
         return false;
     }
 
@@ -661,7 +661,7 @@ void Element::setScrollTop(double s, bool layoutIfNeeds)
         return;
     }
 
-    if (appliedOverflowY() < OverflowValue::AutoOverflow) {
+    if (appliedOverflowY() < OverflowValue::HiddenOverflow) {
         return;
     }
 
