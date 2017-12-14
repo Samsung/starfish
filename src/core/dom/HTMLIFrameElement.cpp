@@ -134,6 +134,10 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
         if (frame()) {
             setNeedsStyleRecalc();
         }
+    } else if (name == starFish()->staticStrings()->m_name) {
+        if (m_browsingContext) {
+            m_browsingContext->setName(value);
+        }
     }
 }
 
@@ -199,6 +203,7 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
             m_historyManager = HistoryManager::create(this);
         }
         m_browsingContext = BrowsingContext::create(this);
+        m_browsingContext->setName(nameAttr());
         m_browsingContext->open(url, type, referrerURL);
     }
 }
@@ -233,5 +238,15 @@ void HTMLIFrameElement::styleForPresentationAttribute(
             cssValues.push_back(pair);
         }
     }
+}
+
+String* HTMLIFrameElement::nameAttr()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
+}
+
+void HTMLIFrameElement::setNameAttr(String* name)
+{
+    setAttribute(starFish()->staticStrings()->m_name, name);
 }
 }

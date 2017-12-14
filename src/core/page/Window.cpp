@@ -737,4 +737,14 @@ void Window::cancelAnimationFrame(int32_t reqID)
 {
     m_starFish->timer()->removeWindowAnimator(reqID);
 }
+
+String* Window::name()
+{
+    return m_browsingContext->name();
+}
+
+void Window::setName(String* name)
+{
+    m_browsingContext->setName(name);
+}
 }

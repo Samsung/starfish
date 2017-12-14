@@ -3,7 +3,7 @@
 interface HTMLIFrameElement : HTMLElement {
     [CEReactions] attribute DOMString src;
     [Unimplemented, CEReactions] attribute DOMString srcdoc;
-    [Unimplemented, CEReactions] attribute DOMString name;
+    [CEReactions, Rename=nameAttr] attribute DOMString name;
     [Unimplemented, CEReactions, PutForwards=value] readonly attribute DOMTokenList sandbox;
     // Note: The seamless attribute was once supported, but was removed.
     [Unimplemented, CEReactions] attribute boolean allowFullscreen;

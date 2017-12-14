@@ -19,7 +19,7 @@ interface Window : EventTarget {
   // `self` is Implemented in virtual id
   // [Replaceable] readonly attribute WindowProxy self;
   [Unforgeable] readonly attribute Document document;
-  [Unimplemented] attribute DOMString name;
+  attribute DOMString name;
   [PutForwards=href, Unforgeable] readonly attribute Location location;
   readonly attribute History history;
   [Unimplemented] readonly attribute CustomElementRegistry customElements;

@@ -326,6 +326,8 @@ public:
     {
         return this;
     }
+    String* name();
+    void setName(String* name);
 
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
