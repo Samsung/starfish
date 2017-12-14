@@ -135,16 +135,6 @@ void HTMLFormObject::setValue(String* value)
     setNeedsFrameTreeBuild();
 }
 
-String* HTMLFormObject::defaultValue()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_defaultValue);
-}
-
-void HTMLFormObject::setDefaultValue(String* defaultValue)
-{
-    setAttribute(starFish()->staticStrings()->m_defaultValue, defaultValue);
-}
-
 String* HTMLFormObject::formEnctype()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_formEnctype);

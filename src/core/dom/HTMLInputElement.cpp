@@ -114,6 +114,17 @@ void HTMLInputElement::setFirstDefaultValue(bool firstDefaultValue)
     m_firstDefaultValue = firstDefaultValue;
 }
 
+String* HTMLInputElement::defaultValue()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_defaultValue);
+}
+
+void HTMLInputElement::setDefaultValue(String* defaultValue)
+{
+    setAttribute(starFish()->staticStrings()->m_defaultValue, defaultValue);
+    setAttribute(starFish()->staticStrings()->m_value, defaultValue);
+}
+
 String* HTMLInputElement::checkboxTickSymbol()
 {
     return String::createUTF32String(U'\u2714'); // tick
