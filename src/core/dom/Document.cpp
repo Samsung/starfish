@@ -984,6 +984,7 @@ String* Document::dir()
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-dir
 void Document::setDir(String* dir)
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 bool Document::hidden() const
