@@ -24,7 +24,7 @@
 namespace StarFish {
 
 FrameTableColBox::FrameTableColBox(Node* node, ComputedStyle* style)
-    : FrameTableObjectBox(node, style)
+    : FrameTableCellBox(node, style)
 {
 }
 
