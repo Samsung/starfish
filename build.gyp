@@ -137,7 +137,23 @@
         {
             'target_name': 'starfish.tizen.release',
             'type': '<(component)',
-            'product_name': 'lightweight-web-engine',
+            'product_name': 'lightweight-web-engine.tizen',
+            'dependencies': [
+                './build.dep.gyp:escargot.tizen.release',
+                './build.dep.gyp:gc.tizen.release',
+#                './build.dep.gyp:zmq.tizen',
+                './build.dep.gyp:capi-network-connection',
+                './build.dep.gyp:capi-media-player',
+                '<@(deps_release_extra)',
+            ],
+            'defines': [
+                '<@(defines_tizen)',
+            ],
+        },
+        {
+            'target_name': 'starfish.tizen_tv.release',
+            'type': '<(component)',
+            'product_name': 'lightweight-web-engine.tizen_tv',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
@@ -148,8 +164,9 @@
                 '<@(deps_release_extra)',
             ],
             'defines': [
-                '<@(defines_tizen)',
+                '<@(defines_tizen_tv)',
             ],
         },
+
     ],
 }

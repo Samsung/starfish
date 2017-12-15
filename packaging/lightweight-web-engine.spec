@@ -39,17 +39,18 @@ BuildRequires: pkgconfig(libcurl)
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-media-player)
-%if "%{?tizen_profile_name}" != "tv"
 BuildRequires: pkgconfig(capi-location-manager)
-%endif
 BuildRequires: pkgconfig(dali-core)
 BuildRequires: pkgconfig(dali-toolkit)
 BuildRequires: pkgconfig(dali-adaptor)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
+%if "%{?tizen_profile_name tv}"
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
+BuildRequires: pkgconfig(vd-win-util)
+%endif
 
 %description
 Implementation of Lightweight Web Engine
@@ -66,21 +67,41 @@ lightweight-web-engine development headers
 %setup -q
 
 %build
-#CFLAGS+=' -Os'
-#CXXFLAGS+=' -Os'
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
+#CFLAGS+=' -g0'
+#CXXFLAGS+=' -g0'
+
+%if "%{?tizen_profile_name tv}"
+mkdir -p tizen_tv_build
+cd tizen_tv_build
+GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen_tv -Ddeplib=static_library %{?gyp_addition_command}
+ninja -C out/release starfish.tizen_tv.release
+GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen_tv -Ddeplib=static_library %{?gyp_addition_command}
+ninja -C out/release starfish.tizen_tv.release
+cd ..
+%else
+mkdir -p tizen_build
+cd tizen_build
+GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen.release
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
+GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen.release
+cd ..
+%endif
 
 %install
 %define bin StarFish
 
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}
-cp -r out/release/lib/liblightweight-web-engine.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+%if "%{?tizen_profile_name tv}"
+cp -r ./tizen_tv_build/out/release/lib/liblightweight-web-engine.tizen_tv.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
 mkdir -p %{buildroot}%{_bindir}
-cp -r out/release/lightweight-web-engine %{buildroot}%{_bindir}/%{bin}
+cp -r ./tizen_tv_build/out/release/lightweight-web-engine.tizen_tv %{buildroot}%{_bindir}/%{bin}
+%else
+cp -r ./tizen_build/out/release/lib/liblightweight-web-engine.tizen.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+mkdir -p %{buildroot}%{_bindir}
+cp -r ./tizen_build/out/release/lightweight-web-engine.tizen %{buildroot}%{_bindir}/%{bin}
+%endif
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishPublic.h %{buildroot}%{_includedir}/%{name}/
