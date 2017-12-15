@@ -1,0 +1,9 @@
+#test/cairo/reftest/vendor/blink_original/fast/table/fixed-table-layout/cell-box-sizing-fixed-table-layout.html
+#test/cairo/reftest/vendor/blink_original/fast/table/fixed-table-layout/colgroup-removal-crash.html
+#test/cairo/reftest/vendor/blink_original/fast/table/fixed-table-layout/column-box-sizing-fixed-table-layout.html
+#test/cairo/reftest/vendor/blink_original/fast/table/fixed-table-layout/column-group-box-sizing-fixed-table-layout.html
+#test/cairo/reftest/vendor/blink_original/fast/table/fixed-table-layout/column-in-column-group-box-sizing-fixed-table-layout.html
+#test/cairo/reftest/vendor/blink_original/fast/table/fixed-table-layout/empty-table-should-take-no-space-fixed-layout.html
+#test/cairo/reftest/vendor/blink_original/fast/table/fixed-table-layout/fixed-layout-column-colspan-wrong-size.html
+#test/cairo/reftest/vendor/blink_original/fast/table/fixed-table-layout/prepend-in-fixed-table.html
+#test/cairo/reftest/vendor/blink_original/fast/table/fixed-table-layout/table-with-percent-width.html
