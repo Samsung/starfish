@@ -148,24 +148,20 @@ protected:
 };
 
 class AnimationTask : public gc {
+    friend class AnimationExecutor;
+
 public:
     AnimationTask(Element* target, CSSStyleValuePair::KeyKind targetProperty,
                   String* targetPropertyString, AnimatedValue from,
                   AnimatedValue to, float durationInms, float delayInms,
                   AnimationTimingFunction* timingFunction);
-    float progress();
+    float computeProgress(uint64_t tickCount);
     bool canExecute();
-    bool isExpired()
-    {
-        return m_isExpired;
-    }
-    void update();
-    void fireStartEventIfNeeds();
+    void fireStartEvent();
     void fireEndEvent();
     void fireCancelEvent();
-    virtual void execute()
+    virtual void execute(float progress)
     {
-        m_isExpired = true;
     }
     virtual void attachedToElement()
     {
@@ -189,10 +185,7 @@ protected:
     CSSStyleValuePair::KeyKind m_property;
 
 private:
-    bool m_isExpired;
-    bool m_isStarted;
     size_t m_startTimeMs;
-    size_t m_lastModifiedTimeMs;
     size_t m_durationMs;
     size_t m_delayMs;
     String* m_targetPropertyString;
@@ -211,7 +204,7 @@ public:
                         toValue, duration, delay, timingFunction)
     {
     }
-    void execute();
+    void execute(float progress) override;
 };
 
 class LengthAnimationTask : public AnimationTask {
@@ -225,7 +218,7 @@ public:
                         toValue, duration, delay, timingFunction)
     {
     }
-    void execute();
+    void execute(float progress) override;
 };
 
 class TransformAnimationTask : public AnimationTask {
@@ -236,7 +229,7 @@ public:
                            AnimatedValue fromValue, float duration, float delay,
                            AnimationTimingFunction* timingFunction);
     void setup();
-    void execute() override;
+    void execute(float progress) override;
     void attachedToElement() override;
     void detachedFromElement() override;
     void computeToValue();

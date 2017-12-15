@@ -38,12 +38,10 @@ AnimationTask::AnimationTask(Element* target,
                              float delayInms,
                              AnimationTimingFunction* timingFunction)
 {
-    m_isExpired = false;
-    m_isStarted = false;
     m_targetElement = target;
     m_durationMs = durationInms;
     m_delayMs = delayInms;
-    m_lastModifiedTimeMs = m_startTimeMs = tickCount() + m_delayMs;
+    m_startTimeMs = 0;
     m_fromValue = from;
     m_toValue = to;
     m_property = targetProperty;
@@ -51,29 +49,19 @@ AnimationTask::AnimationTask(Element* target,
     m_targetPropertyString = targetPropertyString;
 }
 
-// This function update last execution time.
-// * This function is called before calling step() function.
-void AnimationTask::update()
+void AnimationTask::fireStartEvent()
 {
-    m_lastModifiedTimeMs = tickCount();
-}
-
-void AnimationTask::fireStartEventIfNeeds()
-{
-    if (!m_isStarted) {
-        TransitionEventInit init;
-        init.setPropertyName(m_targetPropertyString);
-        init.setBubbles(true);
-        init.setCancelable(false);
-        // TODO add more information to init
-        TransitionEvent* event = new TransitionEvent(
-            m_targetElement->document(), m_targetElement->starFish()
-                                             ->staticStrings()
-                                             ->m_transitionstart.localName(),
-            init);
-        m_targetElement->dispatchEventByUA(event);
-        m_isStarted = true;
-    }
+    TransitionEventInit init;
+    init.setPropertyName(m_targetPropertyString);
+    init.setBubbles(true);
+    init.setCancelable(false);
+    // TODO add more information to init
+    TransitionEvent* event = new TransitionEvent(
+        m_targetElement->document(), m_targetElement->starFish()
+                                         ->staticStrings()
+                                         ->m_transitionstart.localName(),
+        init);
+    m_targetElement->dispatchEventByUA(event);
 }
 
 void AnimationTask::fireEndEvent()
@@ -110,33 +98,14 @@ void AnimationTask::fireCancelEvent()
     m_targetElement->dispatchEventByUA(event);
 }
 
-// This function returns false if
-// * Current AnimationTask is expired
-bool AnimationTask::canExecute()
-{
-    if (isExpired()) {
-        return false;
-    }
-    size_t currentTime = tickCount();
-    if ((currentTime >= m_startTimeMs)) {
-        update();
-        return true;
-    }
-    return false;
-}
-
 // This function calculte progress value to get intermediate value of animation.
 // * returnVal range : 0-1
-float AnimationTask::progress()
+float AnimationTask::computeProgress(uint64_t tickCount)
 {
-    if (m_durationMs == 0 || isExpired()) {
-        return 1;
-    }
-    auto timeDiff = std::max((size_t)1, m_lastModifiedTimeMs - m_startTimeMs);
+    uint64_t timeDiff = std::max((uint64_t)1, tickCount - m_startTimeMs);
     float result = timeDiff / ((float)m_durationMs);
     if (result >= 1) {
         result = 1;
-        m_isExpired = true;
     }
     result = m_timingFunction->getValue(result);
     return result;
@@ -144,45 +113,43 @@ float AnimationTask::progress()
 
 // This function change computed style of target node.
 // * After this function, NeedsPainting flag will be set.
-void ColorAnimationTask::execute()
+void ColorAnimationTask::execute(float progress)
 {
     Unit::Color from = m_fromValue.getColor();
     Unit::Color to = m_toValue.getColor();
 
     Element* current = targetElement();
     ComputedStyle* style = current->style();
-    float tmp_progress = progress();
 
     // It is arbitrary logic which I made for testing
-    unsigned char r = from.r() * (1 - tmp_progress) + to.r() * tmp_progress;
-    unsigned char g = from.g() * (1 - tmp_progress) + to.g() * tmp_progress;
-    unsigned char b = from.b() * (1 - tmp_progress) + to.b() * tmp_progress;
+    unsigned char r = from.r() * (1 - progress) + to.r() * progress;
+    unsigned char g = from.g() * (1 - progress) + to.g() * progress;
+    unsigned char b = from.b() * (1 - progress) + to.b() * progress;
     unsigned char a = from.a();
 
     // TODO : More types should be supported
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
         style->setBackgroundColor(Unit::Color(r, g, b, a));
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
     current->setNeedsPainting();
 }
 
 // This function change computed style of target node.
 // * After this function, NeedsLayout flag will be set.
-void LengthAnimationTask::execute()
+void LengthAnimationTask::execute(float progress)
 {
     Length from = m_fromValue.getLength();
     Length to = m_toValue.getLength();
 
     Element* current = targetElement();
     ComputedStyle* style = current->style();
-    float tmpProgress = progress();
     float newLength;
     if (from.fixed() < to.fixed()) {
-        newLength = from.fixed() + (to.fixed() - from.fixed()) * tmpProgress;
+        newLength = from.fixed() + (to.fixed() - from.fixed()) * progress;
     } else {
-        newLength = from.fixed() - (from.fixed() - to.fixed()) * tmpProgress;
+        newLength = from.fixed() - (from.fixed() - to.fixed()) * progress;
     }
 
     // TODO : More types should be supported
@@ -191,7 +158,7 @@ void LengthAnimationTask::execute()
     } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
         style->setHeight(Length(Length::Fixed, newLength));
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     current->setNeedsLayout();
@@ -237,7 +204,7 @@ void TransformAnimationTask::setup()
     computeToValue();
     // calling execute function explicity for setting initial value of
     // ComputedStyle
-    execute();
+    execute(0);
 }
 
 void TransformAnimationTask::attachedToElement()
@@ -251,19 +218,37 @@ void TransformAnimationTask::attachedToElement()
 void TransformAnimationTask::detachedFromElement()
 {
     AnimationTask::detachedFromElement();
+
+    Element* current = targetElement();
+    ComputedStyle* style = current->style();
+    style->setRareComputedStyleDataIfNeeded();
+    style->rareComputedStyleData()->ensureTransforms();
+    auto transforms = style->rareComputedStyleData()->transforms();
+
+    // cleanup
+    if (transforms->at(transforms->size() - 1).type() ==
+        StyleTransformData::InternalMatrix) {
+        transforms->removeAt(transforms->size() - 1);
+        if (!style->hasTransforms()) {
+            // NOTE
+            // having transform is reason of creating StackingContext
+            // for rebuilding stacking context, we should give layout damage
+            current->setNeedsLayout();
+        }
+    }
+
     if (targetElement()->frame()) {
         targetElement()->frame()->clearRunningTransformAnimation();
     }
 }
 
-void TransformAnimationTask::execute()
+void TransformAnimationTask::execute(float progress)
 {
     SkMatrix from = m_fromValue.getMatrix();
     SkMatrix to = m_toValue.getMatrix();
 
     Element* current = targetElement();
     ComputedStyle* style = current->style();
-    float tmpProgress = progress();
 
     style->setRareComputedStyleDataIfNeeded();
     style->rareComputedStyleData()->ensureTransforms();
@@ -274,29 +259,14 @@ void TransformAnimationTask::execute()
         computeToValue();
     }
 
-    if (isExpired()) {
-        // cleanup
-        if (transforms->at(transforms->size() - 1).type() ==
-            StyleTransformData::InternalMatrix) {
-            transforms->removeAt(transforms->size() - 1);
-            if (!style->hasTransforms()) {
-                // NOTE
-                // having transform is reason of creating StackingContext
-                // for rebuilding stacking context, we should give layout damage
-                current->setNeedsLayout();
-            }
-        }
-    } else {
-        StyleTransformData& data = transforms->at(transforms->size() - 1);
-        SkMatrix now;
-        for (size_t i = 0; i < 9; i++) {
-            double d =
-                from.get(i) * (1 - tmpProgress) + to.get(i) * tmpProgress;
-            now.set(i, d);
-        }
-
-        data.setInternalMatrix(now);
+    StyleTransformData& data = transforms->at(transforms->size() - 1);
+    SkMatrix now;
+    for (size_t i = 0; i < 9; i++) {
+        double d = from.get(i) * (1 - progress) + to.get(i) * progress;
+        now.set(i, d);
     }
+
+    data.setInternalMatrix(now);
     current->webView()->setNeedsComputeStackingContextProperties();
 }
 
@@ -353,7 +323,7 @@ void AnimationExecutor::cancelAnimation(Element* target)
 // * We do not have a sophisticated solution that surpasses this
 void AnimationExecutor::startIfNeeds()
 {
-    if (m_isAlive && m_platformAnimator) {
+    if (m_isAlive && m_platformAnimator != SIZE_MAX) {
         return;
     }
     m_isAlive = true;
@@ -376,10 +346,10 @@ void AnimationExecutor::stop()
         return;
     }
     m_isAlive = false;
-    if (m_platformAnimator) {
+    if (m_platformAnimator != SIZE_MAX) {
         window()->starFish()->timer()->removeGenericAnimator(
             m_platformAnimator);
-        m_platformAnimator = 0;
+        m_platformAnimator = SIZE_MAX;
     }
 }
 
@@ -400,17 +370,23 @@ void AnimationExecutor::stopIfNeeds()
 void AnimationExecutor::step()
 {
     STARFISH_ASSERT(m_isAlive);
+    uint64_t currentTickCount = tickCount();
+
     for (size_t i = 0; i < m_animationList.size(); i++) {
         AnimationTask* task = m_animationList[i];
-        if (task->isExpired()) {
+
+        if (task->m_startTimeMs == 0) {
+            task->m_startTimeMs = currentTickCount;
+            task->fireStartEvent();
+        }
+
+        float progress = task->computeProgress(currentTickCount);
+        if (progress >= 1) {
             task->fireEndEvent();
             m_animationList.erase(i);
             i--;
         } else {
-            if (task->canExecute()) {
-                task->fireStartEventIfNeeds();
-                task->execute();
-            }
+            task->execute(progress);
         }
     }
     stopIfNeeds();
