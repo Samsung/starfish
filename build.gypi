@@ -23,6 +23,18 @@
         'defines_tizen': [
             'STARFISH_TIZEN',
             'STARFISH_TIZEN_OBS',
+            #'STARFISH_ENABLE_INSPECTOR',
+            'STARFISH_ENABLE_MULTIMEDIA',
+            'STARFISH_ENABLE_DOMPARSER',
+            #'STARFISH_ENABLE_TEST',
+            #'STARFISH_ENABLE_VIRTUAL_CURSOR',
+            'STARFISH_IGNORE_CROSS_ORIGIN',
+            #'TIZEN_DEVICE_API',
+            'SIZE_MAX=0xffffffff',
+        ],
+        'defines_tizen_tv': [
+            'STARFISH_TIZEN',
+            'STARFISH_TIZEN_OBS',
             'STARFISH_TIZEN_TV',
             #'STARFISH_ENABLE_INSPECTOR',
             #'STARFISH_ENABLE_AVPLAY',
@@ -38,6 +50,7 @@
             'USE_PRODUCT_FEATURE',
             'SIZE_MAX=0xffffffff',
         ],
+
         'defines_debug': [
             'GC_DEBUG', # bdwgc
             '_GLIBCXX_DEBUG',
@@ -128,6 +141,25 @@
                         '-lrt',
                         '-ldl',
                         '-lcapi-location-manager',
+                        '-Wl,-soname,liblightweight-web-engine.so',
+                    ],
+                }],
+                ['platform=="tizen_tv"', {
+                    'include_dirs_extra': [
+                        'third_party/deviceapi/src',
+                        '/usr/include/dlog',
+                        '/usr/include/location',
+                    ],
+                    'cflags_extra': [
+                    ],
+                    'sources_extra': [
+                        '<!@(find third_party/deviceapi/src -name *.cpp)',
+                    ],
+                    'libraries_extra': [
+                        '-lrt',
+                        '-ldl',
+                        '-lcapi-location-manager',
+                        '-Wl,-soname,liblightweight-web-engine.so',
                     ],
                 }],
                 ['platform=="linux"', {
@@ -276,6 +308,22 @@
                 'libraries_extra': [
                     '<@(libraries_extra)',
                     '-pthread',
+                ],
+            }],
+            ['platform=="tizen_tv" and backend=="efl_cairo"', {
+                'defines_extra': [
+                    'STARFISH_EFL_CAIRO',
+                ],
+                'cflags_extra': [
+                    '<@(cflags_extra)',
+                    '-fno-rtti',
+                    '-Wno-format-nonliteral',
+                ],
+                'libraries_extra': [
+                    '<@(libraries_extra)',
+                ],
+                'deps_extra': [
+                    './build.dep.gyp:efl_cairo.tizen',
                 ],
             }],
             ['enable_ffmpeg_demuxer=="true"', {

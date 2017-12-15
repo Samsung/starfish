@@ -482,10 +482,10 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@((pkg-config --silence-errors --cflags-only-I vconf vconf-internal-keys-tv | sed s/-I//g) || true)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I vconf vconf-internal-keys-tv vd-win-util | sed s/-I//g) || true)',
                 ],
                 'libraries': [
-                    '<!@((pkg-config --silence-errors --libs-only-l vconf vconf-internal-keys-tv) || true)',
+                    '<!@((pkg-config --silence-errors --libs-only-l vconf vconf-internal-keys-tv vd-win-util) || true)',
                 ],
             },
         },
