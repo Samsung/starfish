@@ -171,6 +171,9 @@ public:
 
     void onIdle();
 
+    typedef void (*DidLayoutCallback)(void*);
+    void addDidLayoutCallback(DidLayoutCallback cb, void* data);
+
     void assignGraphicsBuffer(CanvasSurface** surfaceHolder,
                               size_t visibleWidth, size_t visibleHeight);
 
@@ -225,6 +228,7 @@ private:
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     StackingContext* m_rootStackingContext;
     GCVector<CanvasSurface*> m_backStackingContextBufferUpWhileReCompsite;
+    GCVector<std::pair<DidLayoutCallback, void*>> m_didLayoutCallbacks;
 };
 }
 

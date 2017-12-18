@@ -219,11 +219,6 @@ public:
     String* m_familyName;
 };
 
-void BrowsingContext::addDidLayoutCallback(DidLayoutCallback cb, void* data)
-{
-    m_didLayoutCallbacks.push_back(std::make_pair(cb, data));
-}
-
 void BrowsingContext::resolveStyleIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
@@ -492,11 +487,6 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
         webView()->setNeedsComputeStackingContextProperties();
         ret = true;
     }
-
-    for (size_t i = 0; i < m_didLayoutCallbacks.size(); i++) {
-        m_didLayoutCallbacks[i].first(m_didLayoutCallbacks[i].second);
-    }
-    m_didLayoutCallbacks.clear();
 
     return ret;
 }

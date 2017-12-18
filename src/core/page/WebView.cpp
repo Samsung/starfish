@@ -440,6 +440,11 @@ void WebView::layoutIfNeeds()
     }
     m_browsingContextsNeedsLayout.clear();
 
+    for (size_t i = 0; i < m_didLayoutCallbacks.size(); i++) {
+        m_didLayoutCallbacks[i].first(m_didLayoutCallbacks[i].second);
+    }
+    m_didLayoutCallbacks.clear();
+
     if (didLayout) {
         m_topLevelBrowsingContext->document()
             ->frame()
@@ -583,6 +588,11 @@ void WebView::layoutIfNeeds()
     }
 
     clearStack<102400>();
+}
+
+void WebView::addDidLayoutCallback(DidLayoutCallback cb, void* data)
+{
+    m_didLayoutCallbacks.push_back(std::make_pair(cb, data));
 }
 
 bool WebView::rendering(bool force)

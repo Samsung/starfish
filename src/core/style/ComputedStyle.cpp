@@ -27,6 +27,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "core/style/ComputedStyle.h"
 #include "platform/window/PlatformWindow.h"
 
@@ -771,13 +772,16 @@ void applyTransition(Element* element, ComputedStyle* oldStyle,
                 getTimingFunction(newStyle));
             executor->registerAnimation(task);
 
-            element->document()->browsingContext()->addDidLayoutCallback(
-                [](void* data) {
-                    TransformAnimationTask* task =
-                        (TransformAnimationTask*)data;
-                    task->setup();
-                },
-                task);
+            element->document()
+                ->browsingContext()
+                ->webView()
+                ->addDidLayoutCallback(
+                    [](void* data) {
+                        TransformAnimationTask* task =
+                            (TransformAnimationTask*)data;
+                        task->computeToValue();
+                    },
+                    task);
             /*
             // for disable transform animation
             executor->registerAnimation(new AnimationTask(
