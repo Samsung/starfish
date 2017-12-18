@@ -360,23 +360,26 @@ LayoutUnit FrameTableSectionBox::calCellHeightWithRowspan(
 
 void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 {
-    LayoutUnit unused;
-    LayoutUnit borderSpacing =
-        tableBox()->style()->horizontalBorderSpacing().specifiedValue(
-            unused, tableBox());
-
-    LayoutUnit xSoFar = borderSpacing;
     LayoutUnit maxRowWidth = 0;
-    for (Frame* c = firstChild(); c; c = c->next()) {
-        STARFISH_ASSERT(c->isFrameTableRowBox());
-        c->asFrameTableRowBox()->layoutWidth(ctx);
-        c->asFrameBox()->setX(xSoFar);
-        maxRowWidth = std::max(maxRowWidth, c->asFrameBox()->width());
+
+    // There are no child nodes
+    if (!firstChild()) {
+        LayoutUnit unused;
+        LayoutUnit borderSpacing =
+            tableBox()->style()->horizontalBorderSpacing().specifiedValue(
+                unused, tableBox());
+        maxRowWidth += borderSpacing * 2;
+    } else {
+        for (Frame* c = firstChild(); c; c = c->next()) {
+            STARFISH_ASSERT(c->isFrameTableRowBox());
+            c->asFrameTableRowBox()->layoutWidth(ctx);
+            maxRowWidth = std::max(maxRowWidth, c->asFrameBox()->width());
+        }
     }
 
     // The width of all rows should be the same, so ideally, the maxWidth
     // should be the same as the width of any row.
-    setWidth(borderSpacing + maxRowWidth + borderSpacing);
+    setWidth(maxRowWidth);
 }
 
 void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
