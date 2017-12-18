@@ -140,6 +140,13 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
 
 void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 {
+    LayoutUnit top = paddingTop() + borderTop();
+    LayoutUnit bottom = paddingBottom() + borderBottom();
+    MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext() ||
+                                           isFrameDocument(),
+                          style()->height());
+    ctx.setMarginInfo(this, &marginInfo);
+
     if (isFrameTableBox()) {
         asFrameTableBox()->layoutTable(ctx);
     } else if (isFrameFlexibleBox()) {
@@ -318,10 +325,69 @@ LayoutRect FrameBlockBox::computeVisibleRectForScroll()
     return visibleRect;
 }
 
+void FrameBlockBox::computePaintingFlags(LayoutContext& ctx,
+                                         LayoutWantToResolve resolveWhat)
+{
+    if (isEstablishesBlockFormattingContext() && !needsLayout()) {
+        if (hasBlockFlow()) {
+            Frame* child = firstChild();
+            while (child) {
+                child->computePaintingFlags(ctx, resolveWhat);
+                child = child->next();
+            }
+        } else {
+            for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+                m_lineBoxes[i]->computePaintingFlags(ctx, resolveWhat);
+            }
+        }
+    } else {
+        Frame::computePaintingFlags(ctx, resolveWhat);
+    }
+}
+
+void FrameBlockBox::predictLayout(LayoutPredictionContext& ctx,
+                                  PredictionStage stage)
+{
+    bool b = isEstablishesBlockFormattingContext();
+    if (b) {
+        if (stage == Collect) {
+            ctx.makeState();
+        } else {
+            ctx.nextState();
+            if (ctx.shouldLayout(this)) {
+                markNeedsLayout();
+            } else {
+                /*printf("[Skip layout] ");
+                if (node()) {
+                    node()->dump();
+                } else {
+                    printf("Anonymous node");
+                }
+                printf("\n");*/
+            }
+        }
+    }
+
+    Frame::predictLayout(ctx, stage);
+
+    Frame* child = firstChild();
+    while (child) {
+        child->predictLayout(ctx, stage);
+        child = child->next();
+    }
+
+    if (b) {
+        ctx.prevState();
+    }
+}
+
 void FrameBlockBox::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
-    Frame::computePaintingFlags(ctx, resolveWhat);
+    computePaintingFlags(ctx, resolveWhat);
+    if (isEstablishesBlockFormattingContext() && !needsLayout()) {
+        return;
+    }
 
     BlockFormattingContextBlock blockFormattingContextBlock(this, ctx);
     // Determine the horizontal margins and the width of this object.
@@ -570,6 +636,8 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             node()->asElement()->ensureRareElementMembers()->m_scrollTop = 0;
         }
     }
+
+    clearNeedsLayout();
 }
 
 void FrameBlockBox::updateScrollWidthAndHeightIfNeeds()

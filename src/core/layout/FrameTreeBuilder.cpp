@@ -78,7 +78,7 @@ FrameTreeBuilderContext::frameInlineItem()
     return m_frameInlineItem;
 }
 
-bool FrameTreeBuilderContext::isInFrameInlineFlow()
+bool FrameTreeBuilderContext::isInFrameInlineFlow() const
 {
     return m_isInFrameInlineFlow;
 }
@@ -88,7 +88,7 @@ void FrameTreeBuilderContext::setIsInFrameInlineFlow(bool b)
     m_isInFrameInlineFlow = b;
 }
 
-bool FrameTreeBuilderContext::isInFrameFlexFlow()
+bool FrameTreeBuilderContext::isInFrameFlexFlow() const
 {
     return m_isInFrameFlexFlow;
 }

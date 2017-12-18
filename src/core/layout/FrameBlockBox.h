@@ -226,6 +226,9 @@ public:
     void setLeftMBPs(LineFormattingContext* ctx);
     void setRightMBPs(LineFormattingContext* ctx);
 
+    virtual void computePaintingFlags(LayoutContext& ctx,
+                                      LayoutWantToResolve resolveWhat) override;
+
     virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
     {
         fn(this);
@@ -608,6 +611,10 @@ public:
         return m_flags.m_heightComputed;
     }
 
+    virtual void computePaintingFlags(LayoutContext& ctx,
+                                      LayoutWantToResolve resolveWhat) override;
+    virtual void predictLayout(LayoutPredictionContext& ctx,
+                               PredictionStage stage) override;
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void computePreferredWidth(PreferredWidthContext& ctx);

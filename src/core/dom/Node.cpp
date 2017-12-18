@@ -1523,6 +1523,7 @@ void Node::setNeedsLayout()
     }
 
     window()->browsingContext()->setNeedsLayout();
+    m_needsLayout = true;
 }
 
 void Node::setNeedsPainting()

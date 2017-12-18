@@ -258,6 +258,154 @@ struct PreferredWidthValue {
     }
 };
 
+struct LayoutPredictionStatus {
+public:
+    enum Flag {
+        ViewportWidthChanged = 1 << 0,
+        ViewportHeightChanged = 1 << 1,
+        ContainerWidthMaybeChanged = 1 << 2,
+        ContainerHeightMaybeChanged = 1 << 3,
+        FontSizeChanged = 1 << 4,
+        ChildrenOrSelfChanged = 1 << 5
+    };
+
+    LayoutPredictionStatus()
+        : m_flag(0)
+    {
+    }
+
+    void markViewportWidthChanged()
+    {
+        m_flag |= ViewportWidthChanged;
+    }
+
+    void clearViewportWidthChanged()
+    {
+        m_flag &= ~ViewportWidthChanged;
+    }
+
+    bool viewportWidthChanged() const
+    {
+        return m_flag & ViewportWidthChanged;
+    }
+
+    void markViewportHeightChanged()
+    {
+        m_flag |= ViewportHeightChanged;
+    }
+
+    void clearViewportHeightChanged()
+    {
+        m_flag &= ~ViewportHeightChanged;
+    }
+
+    bool viewportHeightChanged() const
+    {
+        return m_flag & ViewportHeightChanged;
+    }
+
+    void markContainerWidthMaybeChanged()
+    {
+        m_flag |= ContainerWidthMaybeChanged;
+    }
+
+    void clearContainerWidthMaybeChanged()
+    {
+        m_flag &= ~ContainerWidthMaybeChanged;
+    }
+
+    bool containerWidthMaybeChanged() const
+    {
+        return m_flag & ContainerWidthMaybeChanged;
+    }
+
+    void markContainerHeightMaybeChanged()
+    {
+        m_flag |= ContainerHeightMaybeChanged;
+    }
+
+    void clearContainerHeightMaybeChanged()
+    {
+        m_flag &= ~ContainerHeightMaybeChanged;
+    }
+
+    bool containerHeightMaybeChanged() const
+    {
+        return m_flag & ContainerHeightMaybeChanged;
+    }
+
+    void markFontSizeChanged()
+    {
+        m_flag |= FontSizeChanged;
+    }
+
+    void clearFontSizeChanged()
+    {
+        m_flag &= ~FontSizeChanged;
+    }
+
+    bool fontSizeChanged() const
+    {
+        return m_flag & FontSizeChanged;
+    }
+
+    void markChildrenOrSelfChanged()
+    {
+        m_flag |= ChildrenOrSelfChanged;
+    }
+
+    void clearChildrenOrSelfChanged()
+    {
+        m_flag &= ~ChildrenOrSelfChanged;
+    }
+
+    bool childrenOrSelfChanged() const
+    {
+        return m_flag & ChildrenOrSelfChanged;
+    }
+
+    bool predict(bool isHorizontal, bool isMinMax, Length l);
+
+private:
+    uint8_t m_flag;
+};
+
+class LayoutPredictionContext {
+public:
+    LayoutPredictionContext()
+    {
+        reset();
+    }
+
+    void reset()
+    {
+        m_index = SIZE_MAX;
+    }
+
+    void makeState();
+
+    void nextState()
+    {
+        m_index++;
+    }
+
+    void prevState()
+    {
+        m_index--;
+    }
+
+    bool shouldLayout(Frame* f);
+
+    LayoutPredictionStatus& state()
+    {
+        return m_states[m_index];
+    }
+
+private:
+    std::vector<LayoutPredictionStatus> m_states;
+    size_t m_index;
+};
+
 class LayoutContext {
 public:
     LayoutContext(StarFish* starFish, FrameDocument* frameDocument)
@@ -426,12 +574,12 @@ public:
         return m_marginCollapseResult[f];
     }
 
-    void setMarginInfo(FrameBox* f, MarginInfo* marginInfo)
+    void setMarginInfo(FrameBlockBox* f, MarginInfo* marginInfo)
     {
         m_marginInfo[f] = marginInfo;
     }
 
-    MarginInfo* marginInfo(FrameBox* f)
+    MarginInfo* marginInfo(FrameBlockBox* f)
     {
         return m_marginInfo[f];
     }
@@ -560,7 +708,7 @@ private:
         m_relativePositionedBoxes;
     // TODO move these maps into BlockFormattingContext
     std::unordered_map<FrameBox*, MarginCollapseResult> m_marginCollapseResult;
-    std::unordered_map<FrameBox*, MarginInfo*> m_marginInfo;
+    std::unordered_map<FrameBlockBox*, MarginInfo*> m_marginInfo;
 
     void applyRelativePosition(FrameBox* box);
     void applyRelativePositionInlineCase(Frame* refF, FrameBox* box);
@@ -1334,6 +1482,14 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
+    enum PredictionStage {
+        Collect,
+        Predict,
+    };
+
+    virtual void predictLayout(LayoutPredictionContext& ctx,
+                               PredictionStage stage);
+
     enum LayoutWantToResolve {
         ResolveWidth = 1,
         ResolveHeight = 1 << 1,
@@ -1350,8 +1506,8 @@ public:
         NormalFlowInline,
         ReplacedBlock,
     };
-    void computePaintingFlags(LayoutContext& ctx,
-                              LayoutWantToResolve resolveWhat);
+    virtual void computePaintingFlags(LayoutContext& ctx,
+                                      LayoutWantToResolve resolveWhat);
     void seenPaintingKind(PaintingKind kind);
     void markSeenNormalFlowInline()
     {
@@ -1422,6 +1578,21 @@ public:
     virtual void computeVisibleRect(ComputeVisibleRectContext& ctx)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    void markNeedsLayout()
+    {
+        m_flags.m_needsLayout = true;
+    }
+
+    void clearNeedsLayout()
+    {
+        m_flags.m_needsLayout = false;
+    }
+
+    bool needsLayout() const
+    {
+        return m_flags.m_needsLayout;
     }
 
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)

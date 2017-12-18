@@ -747,6 +747,18 @@ void InlineBoxLayoutParentBox::setRightMBPs(LineFormattingContext* ctx)
     }
 }
 
+void InlineBoxLayoutParentBox::computePaintingFlags(
+    LayoutContext& ctx, LayoutWantToResolve resolveWhat)
+{
+    for (size_t i = 0; i < m_boxes.size(); i++) {
+        FrameBox* box = m_boxes[i];
+        if (box->isInlineTextBox()) {
+            continue;
+        }
+        box->computePaintingFlags(ctx, resolveWhat);
+    }
+}
+
 void LineFormattingContext::resolveBidi(DirectionValue parentDir,
                                         GCVector<FrameBox*>& boxes)
 {
@@ -1219,6 +1231,16 @@ bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes(
     }
 
     return true;
+}
+
+void FrameInline::predictLayout(LayoutPredictionContext& ctx,
+                                PredictionStage stage)
+{
+    Frame* child = firstChild();
+    while (child) {
+        child->predictLayout(ctx, stage);
+        child = child->next();
+    }
 }
 
 void InlineBoxLayoutParentBox::layoutInlineBoxes(LineFormattingContext* ctx,
@@ -3760,12 +3782,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         return LayoutUnit(0);
     }
 
-    LayoutUnit top = paddingTop() + borderTop();
-    LayoutUnit bottom = paddingBottom() + borderBottom();
-    MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext() ||
-                                           isFrameDocument(),
-                          style()->height());
-    ctx.setMarginInfo(this, &marginInfo);
     LineFormattingContext lineFormattingContext(this, ctx);
 
     // compute directions
@@ -3791,8 +3807,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                     lineFormattingContext.m_word.isEmpty());
 
     lineFormattingContext.registerRelativePositionedBoxesAndMarkPaintFlag();
-
-    seenPaintingKind(PaintingKind::NormalFlowInline);
 
     return lineFormattingContext.contentHeightForBlock();
 }
@@ -4437,10 +4451,6 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
 
     if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
-            paintBackgroundAndBorders(ctx.m_canvas);
-        }
-    } else if (!hasBlockFlow()) {
-        if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
         }
     } else {

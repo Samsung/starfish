@@ -39,6 +39,8 @@ public:
     }
 
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
+    virtual void predictLayout(LayoutPredictionContext& ctx,
+                               PredictionStage stage) override;
     virtual void layoutInline(LineFormattingContext& ctx);
 
 #ifdef STARFISH_ENABLE_TEST
