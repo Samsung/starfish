@@ -228,7 +228,6 @@ public:
                            String* targetPropertyString,
                            AnimatedValue fromValue, float duration, float delay,
                            AnimationTimingFunction* timingFunction);
-    void setup();
     void execute(float progress) override;
     void attachedToElement() override;
     void detachedFromElement() override;

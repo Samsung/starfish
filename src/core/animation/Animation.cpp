@@ -197,13 +197,6 @@ void TransformAnimationTask::computeToValue()
     style->setRareComputedStyleDataIfNeeded();
     style->rareComputedStyleData()->ensureTransforms()->append(
         StyleTransformData(StyleTransformData::InternalMatrix));
-}
-
-void TransformAnimationTask::setup()
-{
-    computeToValue();
-    // calling execute function explicity for setting initial value of
-    // ComputedStyle
     execute(0);
 }
 
@@ -221,15 +214,14 @@ void TransformAnimationTask::detachedFromElement()
 
     Element* current = targetElement();
     ComputedStyle* style = current->style();
-    style->setRareComputedStyleDataIfNeeded();
-    style->rareComputedStyleData()->ensureTransforms();
     auto transforms = style->rareComputedStyleData()->transforms();
 
-    // cleanup
     if (transforms->at(transforms->size() - 1).type() ==
         StyleTransformData::InternalMatrix) {
+        // cleanup
         transforms->removeAt(transforms->size() - 1);
-        if (!style->hasTransforms()) {
+        current->setNeedsStyleRecalc();
+        if (transforms->size() == 0) {
             // NOTE
             // having transform is reason of creating StackingContext
             // for rebuilding stacking context, we should give layout damage
@@ -249,15 +241,9 @@ void TransformAnimationTask::execute(float progress)
 
     Element* current = targetElement();
     ComputedStyle* style = current->style();
-
-    style->setRareComputedStyleDataIfNeeded();
-    style->rareComputedStyleData()->ensureTransforms();
     auto transforms = style->rareComputedStyleData()->transforms();
-    if (transforms->size() == 0 ||
-        transforms->at(transforms->size() - 1).type() !=
-            StyleTransformData::InternalMatrix) {
-        computeToValue();
-    }
+    STARFISH_RELEASE_ASSERT(transforms->at(transforms->size() - 1).type() ==
+                            StyleTransformData::InternalMatrix);
 
     StyleTransformData& data = transforms->at(transforms->size() - 1);
     SkMatrix now;
@@ -381,7 +367,9 @@ void AnimationExecutor::step()
         }
 
         float progress = task->computeProgress(currentTickCount);
-        if (progress >= 1) {
+        if (progress >= 1 || task->targetElement()->frame() == nullptr ||
+            !task->targetElement()
+                 ->isInDocumentScopeAndDocumentParticipateInRendering()) {
             task->fireEndEvent();
             m_animationList.erase(i);
             i--;
