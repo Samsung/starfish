@@ -41,7 +41,11 @@
 extern bool g_MainLoopAlive;
 #endif
 
+#if defined(PORT_WINDOW_BACKEND_EFL)
 #include <Elementary.h>
+#elif defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
+#include <Ecore.h>
+#endif
 
 using namespace StarFish;
 
@@ -517,11 +521,16 @@ int main(int argc, char* argv[])
     setenv("ELM_ENGINE", engine, 1);
 #endif
 
+#if defined(PORT_WINDOW_BACKEND_EFL)
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && defined(STARFISH_TIZEN)
     elm_config_accel_preference_set(config);
+#endif
+#elif defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
+    ecore_init();
+    ecore_app_args_set(argc, (const char**)argv);
 #endif
 
     int flag = 0;
@@ -604,12 +613,8 @@ int main(int argc, char* argv[])
     Application application = Application::New(&argc, &argv);
     DaliShellController shell(application, width, height);
     application.MainLoop();
-
 #elif defined(PORT_GRAPHIC_BACKEND_EFL) || \
     defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-
-    elm_init(0, 0);
-    elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
 #ifdef STARFISH_ENABLE_TV_MEMPS
     pthread_t vdm;
@@ -707,7 +712,11 @@ int main(int argc, char* argv[])
     sf = nullptr;
 #endif
 
+#if defined(PORT_WINDOW_BACKEND_EFL)
     elm_shutdown();
+#elif defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
+    ecore_shutdown();
+#endif
 
 #ifndef NDEBUG
     clearStack<102400>();

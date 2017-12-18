@@ -15,7 +15,7 @@
  */
 
 #include "StarFishConfig.h"
-#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
+#ifdef PORT_WINDOW_BACKEND_GB
 
 #include "StarFish.h"
 #include <cairo.h>
@@ -34,7 +34,7 @@
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
-extern unsigned char* g_imgBufferForScreehShot;
+unsigned char* g_imgBufferForScreehShot;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 

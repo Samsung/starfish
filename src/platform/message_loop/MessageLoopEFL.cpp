@@ -26,7 +26,13 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 
+#if defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
+#include <Ecore.h>
+#endif
+
+#if defined(PORT_WINDOW_BACKEND_EFL)
 #include <Elementary.h>
+#endif
 
 namespace StarFish {
 
@@ -45,8 +51,13 @@ MessageLoop::MessageLoop(StarFish* sf)
 
 void MessageLoop::run()
 {
-#if !defined(STARFISH_TIZEN_WEARABLE_LIB) && !defined(USE_LIBUV)
+#if defined(STARFISH_TIZEN_WEARABLE_LIB)
+#else
+#if defined(PORT_WINDOW_BACKEND_EFL)
     elm_run();
+#elif defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
+    ecore_main_loop_begin();
+#endif
 #endif
 }
 

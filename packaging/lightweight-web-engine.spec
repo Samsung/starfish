@@ -81,10 +81,17 @@ cd ..
 %else
 mkdir -p tizen_build
 cd tizen_build
+%if "%{?tizen_headless 1}"
+GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen_headless -Ddeplib=static_library %{?gyp_addition_command}
+ninja -C out/release starfish.tizen_headless.release
+GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen_headless -Ddeplib=static_library %{?gyp_addition_command}
+ninja -C out/release starfish.tizen_headless.release
+%else
 GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen.release
 GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen.release
+%endif
 cd ..
 %endif
 
@@ -98,9 +105,17 @@ cp -r ./tizen_tv_build/out/release/lib/liblightweight-web-engine.tizen_tv.so %{b
 mkdir -p %{buildroot}%{_bindir}
 cp -r ./tizen_tv_build/out/release/lightweight-web-engine.tizen_tv %{buildroot}%{_bindir}/%{bin}
 %else
+
+%if "%{?tizen_headless 1}"
+cp -r ./tizen_build/out/release/lib/liblightweight-web-engine.tizen_headless.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+mkdir -p %{buildroot}%{_bindir}
+cp -r ./tizen_build/out/release/lightweight-web-engine.tizen_headless %{buildroot}%{_bindir}/%{bin}
+%else
 cp -r ./tizen_build/out/release/lib/liblightweight-web-engine.tizen.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
 mkdir -p %{buildroot}%{_bindir}
 cp -r ./tizen_build/out/release/lightweight-web-engine.tizen %{buildroot}%{_bindir}/%{bin}
+%endif
+
 %endif
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/

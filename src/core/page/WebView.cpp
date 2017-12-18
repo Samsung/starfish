@@ -56,16 +56,6 @@ extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 
 #include <cairo.h>
 
-#if defined(STARFISH_ENABLE_TEST)
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-#include <cairo.h>
-#endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-#include <Elementary.h>
-#elif defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-#endif
-#endif
-
 namespace StarFish {
 
 WebView* WebView::create(StarFish* starFish)
@@ -763,7 +753,6 @@ bool WebView::rendering(bool force)
                 starFish()->platformWindow()->height(),
                 g_surfaceForScreehShot->bufferStride());
 
-            Evas_Object* eo = (Evas_Object*)g_surfaceForScreehShot->unwrap();
             cairo_surface_write_to_png(png_buffer, path);
             cairo_surface_destroy(png_buffer);
 

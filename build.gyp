@@ -167,6 +167,22 @@
                 '<@(defines_tizen_tv)',
             ],
         },
+        {
+            'target_name': 'starfish.tizen_headless.release',
+            'type': '<(component)',
+            'product_name': 'lightweight-web-engine.tizen_headless',
+            'dependencies': [
+                './build.dep.gyp:escargot.tizen.release',
+                './build.dep.gyp:gc.tizen.release',
+#                './build.dep.gyp:zmq.tizen',
+                './build.dep.gyp:capi-network-connection',
+                './build.dep.gyp:capi-media-player',
+                '<@(deps_release_extra)',
+            ],
+            'defines': [
+                '<@(defines_tizen_headless)',
+            ],
+        },
 
     ],
 }

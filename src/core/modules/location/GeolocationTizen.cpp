@@ -28,7 +28,7 @@
 #include "StarFish.h"
 
 #include <locations.h>
-#include <Elementary.h>
+#include <Ecore.h>
 
 namespace StarFish {
 
@@ -95,8 +95,7 @@ public:
     } m_cachedLocation;
 };
 
-#if defined(STARFISH_TIZEN_MOBILE) || defined(STARFISH_TIZEN_WEARABLE) || \
-    defined(STARFISH_TIZEN_TV)
+#if defined(STARFISH_TIZEN)
 Geolocation* Geolocation::create(Document* d)
 {
     return new GeolocationTizen(d);
