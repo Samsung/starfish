@@ -516,6 +516,19 @@
             },
         },
         {
+            'target_name': 'efl_headless_cairo.tizen',
+            'type': 'none',
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    '<!@((pkg-config --silence-errors --cflags-only-I ecore | sed s/-I//g) || true)',
+                ],
+                'libraries': [
+                    '<!@((pkg-config --silence-errors --libs-only-l ecore) || true)',
+                    '-lturbojpeg -lgif',
+                ],
+            },
+        },
+        {
             'target_name': 'dali.x64',
             'type': 'none',
             'direct_dependent_settings': {

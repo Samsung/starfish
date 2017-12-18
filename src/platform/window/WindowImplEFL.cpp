@@ -16,7 +16,7 @@
 
 #include "StarFishConfig.h"
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_WINDOW_BACKEND_EFL)
 #include "StarFish.h"
 
 #include "core/dom/Element.h"

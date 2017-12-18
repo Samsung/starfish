@@ -28,7 +28,7 @@
 #include "core/modules/message_loop/Timer.h"
 #include "platform/window/PlatformWindow.h"
 
-#include <Elementary.h>
+#include <Ecore.h>
 
 namespace StarFish {
 

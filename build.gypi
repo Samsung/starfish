@@ -50,6 +50,19 @@
             'USE_PRODUCT_FEATURE',
             'SIZE_MAX=0xffffffff',
         ],
+        'defines_tizen_headless': [
+            'STARFISH_TIZEN',
+            'STARFISH_TIZEN_OBS',
+            'STARFISH_TIZEN_HEADLESS',
+            'STARFISH_ENABLE_MULTIMEDIA',
+            #'STARFISH_ENABLE_INSPECTOR',
+            #'STARFISH_ENABLE_MULTIMEDIA',
+            'STARFISH_ENABLE_DOMPARSER',
+            #'STARFISH_ENABLE_TEST',
+            'STARFISH_IGNORE_CROSS_ORIGIN',
+            'TIZEN_DEVICE_API',
+            'SIZE_MAX=0xffffffff',
+        ],
 
         'defines_debug': [
             'GC_DEBUG', # bdwgc
@@ -159,6 +172,22 @@
                         '-lrt',
                         '-ldl',
                         '-lcapi-location-manager',
+                        '-Wl,-soname,liblightweight-web-engine.so',
+                    ],
+                }],
+                ['platform=="tizen_headless"', {
+                    'include_dirs_extra': [
+                        'third_party/deviceapi/src',
+                        '/usr/include/dlog',
+                    ],
+                    'cflags_extra': [
+                    ],
+                    'sources_extra': [
+                        '<!@(find third_party/deviceapi/src -name *.cpp)',
+                    ],
+                    'libraries_extra': [
+                        '-lrt',
+                        '-ldl',
                         '-Wl,-soname,liblightweight-web-engine.so',
                     ],
                 }],
@@ -324,6 +353,22 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_cairo.tizen',
+                ],
+            }],
+            ['platform=="tizen_headless" and backend=="efl_cairo"', {
+                'defines_extra': [
+                    'STARFISH_EFL_CAIRO_HEADLESS',
+                ],
+                'cflags_extra': [
+                    '<@(cflags_extra)',
+                    '-fno-rtti',
+                    '-Wno-format-nonliteral',
+                ],
+                'libraries_extra': [
+                    '<@(libraries_extra)',
+                ],
+                'deps_extra': [
+                    './build.dep.gyp:efl_headless_cairo.tizen',
                 ],
             }],
             ['enable_ffmpeg_demuxer=="true"', {

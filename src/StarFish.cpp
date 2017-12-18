@@ -46,16 +46,18 @@
 #endif
 
 #include <malloc.h>
-#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_WINDOW_BACKEND_EFL)
 #include <Elementary.h>
+#endif
+
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+extern Evas* g_internalCanvas;
+#endif
 
 #if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
 #include <Ecore.h>
 #else
 #include <Ecore_X.h>
-#endif
-
-extern Evas* g_internalCanvas;
 #endif
 
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -302,7 +304,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         GC_set_force_unmap_on_gcollect(1);
     }
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_WINDOW_BACKEND_EFL)
     if (!platformHandle) {
         Evas_Object* wndObj = elm_win_add(NULL, STARFISH_NAME, ELM_WIN_BASIC);
 #ifdef STARFISH_TIZEN
@@ -383,14 +385,13 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_tts = new TTS(this);
 #endif
 
-    int width;
-    int height;
+    int width = w;
+    int height = h;
 
 #if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     width = m_width;
     height = m_height;
-#elif defined(PORT_GRAPHIC_BACKEND_EFL) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#elif defined(PORT_WINDOW_BACKEND_EFL)
     evas_object_geometry_get((Evas_Object*)nativeHandle(), NULL, NULL, &width,
                              &height);
 #endif
