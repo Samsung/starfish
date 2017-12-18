@@ -71,7 +71,6 @@ void FrameTableRowBox::collectCellWidthInfo(LayoutContext& ctx)
 
 void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 {
-    LayoutUnit xSoFar = 0;
     LayoutUnit unused;
     LayoutUnit borderSpacing =
         sectionBox()
@@ -79,6 +78,7 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
             ->style()
             ->horizontalBorderSpacing()
             .specifiedValue(unused, sectionBox()->tableBox());
+    LayoutUnit xSoFar = borderSpacing;
 
     unsigned i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
@@ -123,6 +123,8 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
             i += cell->updatedColspan();
         }
     }
+
+    xSoFar += borderSpacing;
 
     setWidth(xSoFar);
 }

@@ -659,7 +659,7 @@ test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-003c08.ht
 test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-005.htm
 test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-006.htm
 test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-007.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-009.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-009.htm  # gap between lineboxes are different
 test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-010.htm
 test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-011.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-012.htm
@@ -1078,7 +1078,7 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-row-group-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/tables-002.htm
 test/cairo/reftest/csswg-test/css21_original/tables/tables-003.htm
 test/cairo/reftest/csswg-test/css21_original/tables/tables-004.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/tables-101.htm
+test/cairo/reftest/csswg-test/css21_original/tables/tables-101.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/tables-102.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-valign-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-valign-002.htm
@@ -1099,7 +1099,7 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-007.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-008.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-009.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-010.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-011.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-011.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-012.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-013.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-014.htm

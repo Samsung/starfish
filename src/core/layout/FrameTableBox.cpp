@@ -669,9 +669,7 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
 
         if (cell->updatedColspan() > 1) {
             if (col.hasSpecifiedWidth()) {
-                LayoutUnit specifiedWidth = col.maxSpecifiedWidth;
-                specifiedWidth += cell->borderWidth() + cell->paddingWidth();
-                col.cellWidth = specifiedWidth;
+                col.cellWidth = col.maxSpecifiedWidth;
             } else {
                 col.cellWidth = col.maxCellWidth;
             }
