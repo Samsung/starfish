@@ -90,6 +90,126 @@ FrameBox* containingBlock(Frame* currentFrame)
     }
 }
 
+bool LayoutPredictionStatus::predict(bool isHorizontal, bool isMinMax, Length l)
+{
+    if (childrenOrSelfChanged()) {
+        return true;
+    }
+
+    if (l.isFixed()) {
+        return false;
+    } else if (l.isPercent()) {
+        // TODO:
+        return true;
+        /* if (isHorizontal) {
+            return containerWidthMaybeChanged();
+        } else {
+            return containerHeightMaybeChanged();
+        } */
+    } else if (l.isFontPercent()) {
+        // TODO:
+        return true;
+    } else if (l.isViewportPercent()) {
+        Length::Type t = l.type();
+        CSSLength::Kind k;
+        if (t == Length::Vw) {
+            return viewportWidthChanged();
+        } else if (t == Length::Vh) {
+            return viewportHeightChanged();
+        } else {
+            // TODO:
+            return viewportWidthChanged() || viewportHeightChanged();
+        }
+    } else if (l.isAuto()) {
+        return !isMinMax;
+    } else if (l.isCalc()) {
+        // TODO:
+        return true;
+    } else if (l.isInheritableNumber()) {
+        // TODO:
+        return true;
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        return false;
+    }
+}
+
+void LayoutPredictionContext::makeState()
+{
+    LayoutPredictionStatus state;
+
+    if (m_states.size() > 0) {
+        auto& lastState = this->state();
+
+        if (lastState.viewportWidthChanged()) {
+            state.markViewportWidthChanged();
+        }
+
+        if (lastState.viewportHeightChanged()) {
+            state.markViewportHeightChanged();
+        }
+    }
+    m_index++;
+    m_states.push_back(state);
+}
+
+bool LayoutPredictionContext::shouldLayout(Frame* f)
+{
+    auto& state = this->state();
+
+    Length width = f->style()->width();
+    Length height = f->style()->height();
+    LengthData margin = f->style()->margin();
+    Length marginTop = margin.top();
+    Length marginBottom = margin.bottom();
+    Length marginLeft = margin.left();
+    Length marginRight = margin.right();
+    BorderData border = f->style()->border();
+    Length borderTop = border.top().width();
+    Length borderBottom = border.bottom().width();
+    Length borderLeft = border.left().width();
+    Length borderRight = border.right().width();
+    LengthData padding = f->style()->padding();
+    Length paddingTop = padding.top();
+    Length paddingBottom = padding.bottom();
+    Length paddingLeft = padding.left();
+    Length paddingRight = padding.right();
+    Length minWidth = f->style()->minWidth();
+    Length maxWidth = f->style()->maxWidth();
+    Length minHeight = f->style()->minHeight();
+    Length maxHeight = f->style()->maxHeight();
+    Length top, bottom, left, right;
+    if (f->isAbsolutePositioned()) {
+        top = f->style()->top();
+        bottom = f->style()->bottom();
+        left = f->style()->left();
+        right = f->style()->right();
+    }
+
+    return state.predict(true, false, width) ||
+           state.predict(false, false, height) ||
+           state.predict(true, false, marginTop) ||
+           state.predict(true, false, marginBottom) ||
+           state.predict(true, false, marginLeft) ||
+           state.predict(true, false, marginRight) ||
+           state.predict(true, false, borderTop) ||
+           state.predict(true, false, borderBottom) ||
+           state.predict(true, false, borderLeft) ||
+           state.predict(true, false, borderRight) ||
+           state.predict(true, false, paddingTop) ||
+           state.predict(true, false, paddingBottom) ||
+           state.predict(true, false, paddingLeft) ||
+           state.predict(true, false, paddingRight) ||
+           state.predict(true, true, minWidth) ||
+           state.predict(true, true, maxWidth) ||
+           state.predict(false, true, minHeight) ||
+           state.predict(false, true, maxHeight) ||
+           (f->isAbsolutePositioned() && (state.predict(false, false, top) ||
+                                          state.predict(false, false, bottom) ||
+                                          state.predict(true, false, left) ||
+                                          state.predict(true, false, right)));
+}
+
 FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
     : m_box(box)
 {
@@ -957,6 +1077,23 @@ Frame::Frame(Node* node, ComputedStyle* s)
     computeStyleFlags();
 }
 
+void Frame::predictLayout(LayoutPredictionContext& ctx, PredictionStage stage)
+{
+    if (stage == PredictionStage::Collect) {
+        bool ret = needsLayout();
+        clearNeedsLayout();
+
+        if (node()) {
+            ret |= node()->needsLayout();
+            node()->clearNeedsLayout();
+        }
+
+        if (ret) {
+            ctx.state().markChildrenOrSelfChanged();
+        }
+    }
+}
+
 void Frame::computePaintingFlags(LayoutContext& ctx,
                                  LayoutWantToResolve resolveWhat)
 {
@@ -980,6 +1117,9 @@ void Frame::computePaintingFlags(LayoutContext& ctx,
     }
 
     seenPaintingKind(kind);
+    if (isFrameBlockBox() && !asFrameBlockBox()->hasBlockFlow()) {
+        seenPaintingKind(NormalFlowInline);
+    }
 }
 
 void Frame::seenPaintingKind(PaintingKind kind)

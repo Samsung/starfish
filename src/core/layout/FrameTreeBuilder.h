@@ -40,9 +40,9 @@ public:
     void setCurrentBlockContainer(FrameBlockBox* blockContainer);
     FrameBlockBox* currentBlockContainer();
     std::unordered_map<Node*, FrameInline*>& frameInlineItem();
-    bool isInFrameInlineFlow();
+    bool isInFrameInlineFlow() const;
     void setIsInFrameInlineFlow(bool b);
-    bool isInFrameFlexFlow();
+    bool isInFrameFlexFlow() const;
     void setIsInFrameFlexFlow(bool b);
 
 protected:

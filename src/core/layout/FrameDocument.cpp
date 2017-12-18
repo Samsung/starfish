@@ -56,6 +56,13 @@ void FrameDocument::layout(LayoutContext& ctx,
 {
     int w = node()->asDocument()->window()->width();
     int h = node()->asDocument()->window()->height();
+    int ow = 0, oh = 0;
+    if (style()->width().isFixed()) {
+        ow = style()->width().fixed();
+    }
+    if (style()->height().isFixed()) {
+        oh = style()->height().fixed();
+    }
 
     style()->setWidth(Length(Length::Fixed, w));
     style()->setHeight(Length(Length::Fixed, h));
@@ -65,6 +72,21 @@ void FrameDocument::layout(LayoutContext& ctx,
         STARFISH_ASSERT(firstChild()->isRootElement());
 
         style()->setDirection(firstChild()->style()->direction());
+        LayoutPredictionContext pCtx;
+        pCtx.makeState();
+        markNeedsLayout();
+        if (ow != w) {
+            pCtx.state().markViewportWidthChanged();
+            pCtx.state().markContainerWidthMaybeChanged();
+        }
+        if (oh != h) {
+            pCtx.state().markViewportHeightChanged();
+            pCtx.state().markContainerHeightMaybeChanged();
+        }
+        FrameBlockBox::predictLayout(pCtx, Collect);
+        pCtx.reset();
+        pCtx.nextState();
+        FrameBlockBox::predictLayout(pCtx, Predict);
         FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
     }
 }

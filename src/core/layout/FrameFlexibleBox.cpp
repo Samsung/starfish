@@ -657,6 +657,7 @@ void FlexFormattingContext::computeCrossSize()
             flexItem->style()->setHeight(
                 Length(Length::Fixed,
                        flexLine.m_lineHeight - flexItem->marginHeight()));
+            flexItem->markNeedsLayout();
             flexItem->layout(m_layoutContext,
                              Frame::LayoutWantToResolve::ResolveHeight);
             flexItem->style()->setHeight(old);
@@ -668,6 +669,7 @@ void FlexFormattingContext::computeCrossSize()
             flexItem->style()->setWidth(
                 Length(Length::Fixed,
                        flexLine.m_lineHeight - flexItem->marginWidth()));
+            flexItem->markNeedsLayout();
             flexItem->layout(m_layoutContext,
                              Frame::LayoutWantToResolve::ResolveAll);
             flexItem->style()->setWidth(old);
