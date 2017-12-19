@@ -5,7 +5,7 @@
     'variables' : {
         'starfish_root': '.',
         'escargot_root': '<(starfish_root)/third_party/escargot',
-        'third_party_libs': 'libpng cairo freetype2 fontconfig icu-uc icu-i18n harfbuzz harfbuzz-icu',
+        'third_party_libs': 'icu-uc icu-i18n',
         'defines_default': [
             'ESCARGOT_ENABLE_TYPEDARRAY=1',
             'ESCARGOT_ENABLE_PROMISE=1',
@@ -60,6 +60,7 @@
             'STARFISH_ENABLE_DOMPARSER',
             #'STARFISH_ENABLE_TEST',
             'STARFISH_IGNORE_CROSS_ORIGIN',
+            'STARFISH_ENABLE_SHELL',
             'TIZEN_DEVICE_API',
             'SIZE_MAX=0xffffffff',
         ],

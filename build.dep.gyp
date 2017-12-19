@@ -433,10 +433,10 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@((pkg-config --silence-errors --cflags-only-I elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
                 ],
                 'libraries': [
-                    '<!@((pkg-config --silence-errors --libs-only-l elementary ecore ecore-x ecore-imf ecore-imf-evas) || true)',
+                    '<!@((pkg-config --silence-errors --libs-only-l libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas) || true)',
                 ],
             },
         },
@@ -445,10 +445,10 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@((pkg-config --silence-errors --cflags-only-I dlog elementary ecore ecore-imf-evas efl-extension | sed s/-I//g) || true)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf-evas efl-extension | sed s/-I//g) || true)',
                 ],
                 'libraries': [
-                    '<!@((pkg-config --silence-errors --libs-only-l dlog elementary ecore ecore-imf-evas efl-extension) || true)',
+                    '<!@((pkg-config --silence-errors --libs-only-l dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf-evas efl-extension) || true)',
                 ],
             },
         },
@@ -494,10 +494,10 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@((pkg-config --silence-errors --cflags-only-I elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
                 ],
                 'libraries': [
-                    '<!@((pkg-config --silence-errors --libs-only-l elementary ecore ecore-x ecore-imf ecore-imf-evas) || true)',
+                    '<!@((pkg-config --silence-errors --libs-only-l libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas) || true)',
                     '-lturbojpeg -lgif',
                 ],
             },
@@ -507,10 +507,10 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@((pkg-config --silence-errors --cflags-only-I elementary ecore ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
                 ],
                 'libraries': [
-                    '<!@((pkg-config --silence-errors --libs-only-l elementary ecore ecore-imf ecore-imf-evas) || true)',
+                    '<!@((pkg-config --silence-errors --libs-only-l libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-imf-evas) || true)',
                     '-lturbojpeg -lgif',
                 ],
             },
@@ -524,7 +524,6 @@
                 ],
                 'libraries': [
                     '<!@((pkg-config --silence-errors --libs-only-l ecore) || true)',
-                    '-lturbojpeg -lgif',
                 ],
             },
         },
@@ -533,13 +532,13 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@((pkg-config --silence-errors --cflags-only-I elementary ecore | sed s/-I//g) || true)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore | sed s/-I//g) || true)',
                     '/usr/include/dali',
                     'third_party/libtuv/include',
                     'third_party/libtuv/src'
                 ],
                 'libraries': [
-                    '<!@((pkg-config --silence-errors --libs-only-l elementary ecore ) || true)',
+                    '<!@((pkg-config --silence-errors --libs-only-l libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ) || true)',
                     'lib/debug/libtuv.a',
                     '-ldali-core',
                     '-ldali-adaptor',
@@ -552,13 +551,13 @@
             'type': 'none',
             'direct_dependent_settings': {
                 'include_dirs': [
-                    '<!@((pkg-config --silence-errors --cflags-only-I dlog elementary ecore | sed s/-I//g) || true)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore | sed s/-I//g) || true)',
                     '/usr/include/dali',
                     'third_party/libtuv/include',
                     'third_party/libtuv/src'
                 ],
                 'libraries': [
-                    '<!@((pkg-config --silence-errors --libs-only-l dlog elementary ecore ) || true)',
+                    '<!@((pkg-config --silence-errors --libs-only-l dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ) || true)',
                     'lib/tizen/release/libtuv.a',
                     '-ldali-core',
                     '-ldali-adaptor',

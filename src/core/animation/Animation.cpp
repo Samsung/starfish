@@ -241,6 +241,15 @@ void TransformAnimationTask::execute(float progress)
 
     Element* current = targetElement();
     ComputedStyle* style = current->style();
+    if (!style->rareComputedStyleData() ||
+        style->rareComputedStyleData()->transforms() == nullptr ||
+        style->rareComputedStyleData()->transforms()->size() == 0 ||
+        style->rareComputedStyleData()
+                ->transforms()
+                ->at(style->rareComputedStyleData()->transforms()->size() - 1)
+                .type() != StyleTransformData::InternalMatrix) {
+        computeToValue();
+    }
     auto transforms = style->rareComputedStyleData()->transforms();
     STARFISH_RELEASE_ASSERT(transforms->at(transforms->size() - 1).type() ==
                             StyleTransformData::InternalMatrix);

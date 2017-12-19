@@ -281,7 +281,7 @@ void BrowsingContext::resolveStyleIfNeeds()
                 offset += rules;
             }
 
-#if !defined(PORT_CANVAS_BACKEND_EFL)
+#if !defined(PORT_CANVAS_BACKEND_EFL) && !defined(PORT_CANVAS_BACKEND_MOCK)
             for (size_t i = 0; i < webFonts.size(); i++) {
                 CSSStyleDeclaration* decl = webFonts[i];
                 if (decl->getCSSValuePair(

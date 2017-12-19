@@ -21,6 +21,7 @@ License:       Apache-2.0 and LGPL-2.1+ and BSD-2.0 and ICU and BSL-1.0 and MIT 
 %define tizen_profile_name wearable
 %endif
 
+
 # build requirements
 BuildRequires: make
 BuildRequires: ninja
@@ -46,7 +47,7 @@ BuildRequires: pkgconfig(dali-adaptor)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
-%if "%{?tizen_profile_name tv}"
+%if "%{?tizen_profile_name}" == "tv"
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
 BuildRequires: pkgconfig(vd-win-util)
