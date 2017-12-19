@@ -22,7 +22,9 @@
 
 #include <media/player.h>
 #include <media/player_internal.h>
+#if defined(STARFISH_TIZEN_TV)
 #include <media/player_product.h>
+#endif
 
 #ifndef MAX_WAITING_SECONDS_FOR_SEEK_OPERATION
 #define MAX_WAITING_SECONDS_FOR_SEEK_OPERATION 30000
@@ -92,6 +94,8 @@ public:
     }
     uint64_t lastBufferBytes();
     void setLastBufferBytes(size_t value);
+
+#if !defined(STARFISH_TIZEN_HEADLESS)
     player_media_stream_audio_extra_info_s* audioFormatExtra()
     {
         STARFISH_ASSERT(m_type == StreamTypeAudio);
@@ -102,6 +106,7 @@ public:
         STARFISH_ASSERT(m_type == StreamTypeVideo);
         return &(m_formatExtra.m_videoFormatExtra);
     }
+#endif
 
 protected:
     StreamType m_type;
@@ -109,6 +114,7 @@ protected:
     Mutex* m_mediaStreamMutex;
 
     media_format_h m_mediaFormat;
+#if !defined(STARFISH_TIZEN_HEADLESS)
     union MediaFormatExtra {
         MediaFormatExtra()
             : m_audioFormatExtra()
@@ -117,6 +123,7 @@ protected:
         player_media_stream_audio_extra_info_s m_audioFormatExtra;
         player_media_stream_video_extra_info_s m_videoFormatExtra;
     } m_formatExtra;
+#endif
 
     volatile uint64_t m_maxBufferSize;
     volatile uint64_t m_lastSubmittedDTS;
@@ -175,7 +182,7 @@ public:
     }
 
     virtual double duration();
-    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect,
+    virtual void drawVideo(Compositor* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect);
     virtual void prepareMediaSource();
     void updateStreamInfo(MediaStream* stream, size_t pastInitIndex,
@@ -209,6 +216,9 @@ public:
         return type == StreamTypeAudio ? m_audioStream : m_videoStream;
     }
     bool isMSEBufferEOS();
+
+    void initVideoStreamInfo(size_t initSegmentIndex = 0);
+    void initAudioStreamInfo(size_t initSegmentIndex = 0);
 };
 }
 
