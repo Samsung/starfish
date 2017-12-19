@@ -555,7 +555,7 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
 
             if (inputNode->type()->equals("checkbox") ||
                 inputNode->type()->equals("radio")) {
-                if (inputNode->value() == String::emptyString) {
+                if (val->equals(String::emptyString)) {
                     val = String::createASCIIString("on");
                 }
             }

@@ -96,7 +96,6 @@ private:
     size_t m_currentCaretPosition;
     LayoutLocation m_currentCaretLayoutLocation;
     String* m_currentEditingText;
-    bool m_firstDefaultValue;
     int32_t m_maxlength;
 };
 }
