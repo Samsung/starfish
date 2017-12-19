@@ -45,7 +45,6 @@ HTMLInputElement::HTMLInputElement(Document* document)
     , m_caretBlinkingIntervalId(SIZE_MAX)
     , m_currentCaretPosition(0)
     , m_currentEditingText(String::emptyString)
-    , m_firstDefaultValue(true)
     , m_maxlength(INITIAL_MAXLENGTH)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
@@ -102,16 +101,6 @@ bool HTMLInputElement::canHaveValue() const
 bool HTMLInputElement::checked()
 {
     return m_checked;
-}
-
-bool HTMLInputElement::firstDefaultValue()
-{
-    return m_firstDefaultValue;
-}
-
-void HTMLInputElement::setFirstDefaultValue(bool firstDefaultValue)
-{
-    m_firstDefaultValue = firstDefaultValue;
 }
 
 String* HTMLInputElement::defaultValue()
@@ -275,12 +264,6 @@ String* HTMLInputElement::visibleValue()
         val = placeholder();
     }
 
-    if (firstDefaultValue()) {
-        if (!val->equals(String::emptyString)) {
-            setDefaultValue(val);
-            setFirstDefaultValue(false);
-        }
-    }
     return val;
 }
 

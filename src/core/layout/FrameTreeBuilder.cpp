@@ -467,14 +467,14 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
     bool didSplitBlock = false;
     bool shouldSkipChildren = false;
-    bool isTableType =
-        current->style() &&
-        ComputedStyle::isDisplayTableValueType(current->style()->display());
+    bool hasStyle = current->style();
+    bool isTableType = hasStyle && ComputedStyle::isDisplayTableValueType(
+                                       current->style()->display());
     FrameBlockBox* originalFrameBlockBox = nullptr;
     GCVector<FrameInline*> stackedFrameInline;
 
     if (ctx.isInFrameFlexFlow()) {
-        if (!current->isCharacterData() && current->style()) {
+        if (!current->isCharacterData() && hasStyle) {
             current->style()->blockify(current, true);
         }
     }
