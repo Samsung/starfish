@@ -605,17 +605,6 @@ int main(int argc, char* argv[])
         setenv("EXIT_AFTER_SCREEN_SHOT", "1", 1);
     }
 
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-    width = 1920;
-    height = 1080;
-
-    url = argv[1];
-    Application application = Application::New(&argc, &argv);
-    DaliShellController shell(application, width, height);
-    application.MainLoop();
-#elif defined(PORT_GRAPHIC_BACKEND_EFL) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-
 #ifdef STARFISH_ENABLE_TV_MEMPS
     pthread_t vdm;
     pthread_attr_t attrAttr;
@@ -634,6 +623,16 @@ int main(int argc, char* argv[])
         },
         NULL);
 #endif
+
+#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+    width = 1920;
+    height = 1080;
+
+    url = argv[1];
+    Application application = Application::New(&argc, &argv);
+    DaliShellController shell(application, width, height);
+    application.MainLoop();
+#else
 
     // TODO: Need to get screen info from X11.
     // Temporally, rect's width and height are set to window size.
@@ -655,7 +654,7 @@ int main(int argc, char* argv[])
 #endif
     sf->loadHTMLDocument(String::createASCIIString(argv[1]));
 
-#if defined(STARFISH_ENABLE_TEST)
+#if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_SHELL)
     pthread_t t;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
