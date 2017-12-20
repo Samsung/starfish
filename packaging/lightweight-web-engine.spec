@@ -83,6 +83,12 @@ cd ..
 mkdir -p tizen_build
 cd tizen_build
 %if "%{?tizen_headless 1}"
+
+# Thumb instruction causes unknown error at headless,
+# so we uses -marm option here but this can a bit noisy when compile
+CFLAGS+=' -marm '
+CXXFLAGS+=' -marm '
+
 GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen_headless -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen_headless.release
 GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen_headless -Ddeplib=static_library %{?gyp_addition_command}
