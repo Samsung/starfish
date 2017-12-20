@@ -95,7 +95,7 @@ public:
     uint64_t lastBufferBytes();
     void setLastBufferBytes(size_t value);
 
-#if !defined(STARFISH_TIZEN_HEADLESS)
+#if defined(STARFISH_TIZEN_TV)
     player_media_stream_audio_extra_info_s* audioFormatExtra()
     {
         STARFISH_ASSERT(m_type == StreamTypeAudio);
@@ -114,7 +114,7 @@ protected:
     Mutex* m_mediaStreamMutex;
 
     media_format_h m_mediaFormat;
-#if !defined(STARFISH_TIZEN_HEADLESS)
+#if defined(STARFISH_TIZEN_TV)
     union MediaFormatExtra {
         MediaFormatExtra()
             : m_audioFormatExtra()
@@ -185,13 +185,15 @@ public:
     virtual void drawVideo(Compositor* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect);
     virtual void prepareMediaSource();
+
+#if defined(STARFISH_TIZEN_TV)
     void updateStreamInfo(MediaStream* stream, size_t pastInitIndex,
                           size_t newInitIndex);
     void updateAudioStreamInfo(MediaStream* audio, size_t pastInitIndex,
                                size_t newInitIndex);
     void updateVideoStreamInfo(MediaStream* video, size_t pastInitIndex,
                                size_t newInitIndex);
-
+#endif
     void enterUnderrunState();
     void exitUnderrunState();
 

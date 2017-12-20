@@ -251,13 +251,13 @@ MediaStream::MediaStream(StreamType type)
 {
     if (m_type == StreamTypeAudio) {
         m_maxBufferSize = 320 * 1000 / 8 * 5;
-#if !defined(STARFISH_TIZEN_HEADLESS)
+#if defined(STARFISH_TIZEN_TV)
         m_formatExtra.m_audioFormatExtra.codec_extradata = nullptr;
         m_formatExtra.m_audioFormatExtra.extradata_size = 0;
 #endif
     } else {
         STARFISH_ASSERT(m_type == StreamTypeVideo);
-#if !defined(STARFISH_TIZEN_HEADLESS)
+#if defined(STARFISH_TIZEN_TV)
         m_formatExtra.m_videoFormatExtra.codec_extradata = nullptr;
         m_formatExtra.m_videoFormatExtra.extradata_size = 0;
 #endif
@@ -266,15 +266,13 @@ MediaStream::MediaStream(StreamType type)
 
 bool MediaStream::createMediaFormat()
 {
-#if defined(STARFISH_TIZEN_HEADLESS)
-    return false;
-#else
     STARFISH_ASSERT(m_mediaFormat == nullptr);
     int ret = media_format_create(&m_mediaFormat);
     if (ret != MEDIA_FORMAT_ERROR_NONE) {
         printMediaFormatError(ret);
         return false;
     }
+#if defined(STARFISH_TIZEN_TV)
     if (m_type == StreamTypeAudio) {
         player_media_stream_audio_extra_info_s& extra =
             m_formatExtra.m_audioFormatExtra;
@@ -291,8 +289,8 @@ bool MediaStream::createMediaFormat()
         }
         memset(&extra, 0, sizeof(player_media_stream_video_extra_info_s));
     }
-    return true;
 #endif
+    return true;
 }
 
 void MediaStream::releaseMediaFormat()
@@ -301,7 +299,7 @@ void MediaStream::releaseMediaFormat()
         media_format_unref(m_mediaFormat);
         m_mediaFormat = nullptr;
     }
-#if !defined(STARFISH_TIZEN_HEADLESS)
+#if defined(STARFISH_TIZEN_TV)
     if (m_type == StreamTypeAudio) {
         player_media_stream_audio_extra_info_s& extra =
             m_formatExtra.m_audioFormatExtra;
@@ -1130,14 +1128,18 @@ static void* threadFillingBuffer(void* data)
 
 void MediaPlayerTizen::prepareMediaSource()
 {
-#if !defined(STARFISH_TIZEN_HEADLESS)
     PLAYER_LOGI("MediaPlayerTizen::prepareMediaSource\n");
     initAudioStreamInfo();
     if (m_foundError) {
         return;
     }
+#if !defined(STARFISH_TIZEN_HEADLESS)
     initVideoStreamInfo();
     if (m_foundError) {
+        return;
+    }
+#endif
+    if (!m_audioStream && !m_videoStream) {
         return;
     }
 
@@ -1162,7 +1164,6 @@ void MediaPlayerTizen::prepareMediaSource()
     }
 #endif
     PLAYER_LOGI("MediaPlayerTizen::prepareMediaSource end\n");
-#endif
 }
 
 void MediaPlayerTizen::fillBuffer(MediaStream* stream)
@@ -1375,7 +1376,9 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
                     "fillBuffer detect changed config (and will submit packet "
                     "including idr. DTS:%d)\n",
                     (int)packet.first->m_dts);
+#if defined(STARFISH_TIZEN_TV)
                 updateStreamInfo(stream, currentInitIndex, packet.second);
+#endif
                 stream->setInitSegmentIndex(packet.second);
                 currentInitIndex = packet.second;
                 sizeUpTo =
@@ -1447,6 +1450,7 @@ bool MediaPlayerTizen::isMSEBufferEOS()
     return isEOS;
 }
 
+#if defined(STARFISH_TIZEN_TV)
 void MediaPlayerTizen::updateStreamInfo(MediaStream* stream,
                                         size_t pastInitIndex,
                                         size_t newInitIndex)
@@ -1471,7 +1475,6 @@ void MediaPlayerTizen::updateVideoStreamInfo(MediaStream* stream,
                                              size_t pastInitIndex,
                                              size_t newInitIndex)
 {
-#if !defined(STARFISH_TIZEN_HEADLESS)
     media_format_h mediaFormat = stream->mediaFormat();
     if (!mediaFormat) {
         return;
@@ -1528,8 +1531,8 @@ void MediaPlayerTizen::updateVideoStreamInfo(MediaStream* stream,
         "> avg_frame_rate: %d/%d(%f)\n", newInfo->videoFramerate().m_num,
         newInfo->videoFramerate().m_den, newInfo->videoFramerate().toDouble());
     PLAYER_LOGI("---------------------------------------\n");
-#endif
 }
+#endif
 
 #define RETURN_WHEN_PLAYER_ERROR(...) \
     if (ret != PLAYER_ERROR_NONE) {   \
@@ -1541,7 +1544,6 @@ void MediaPlayerTizen::updateVideoStreamInfo(MediaStream* stream,
 
 void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
 {
-#if !defined(STARFISH_TIZEN_HEADLESS)
     SourceBuffer* sb = m_activeMediaSource->activeVideoSourceBuffer();
     if (!sb) {
         return;
@@ -1560,7 +1562,6 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
         return;
     }
     media_format_h mediaFormat = m_videoStream->mediaFormat();
-    auto mediaFormatExtra = m_videoStream->videoFormatExtra();
     // Get info from demuxer
     StreamInfo* info = sb->streamInfo(
         initSegmentIndex, m_activeMediaSource->activeVideoStreamIndex());
@@ -1578,6 +1579,9 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
     m_videoHeight = info->videoHeight();
     media_format_set_video_width(mediaFormat, m_videoWidth);
     media_format_set_video_height(mediaFormat, m_videoHeight);
+
+#if defined(STARFISH_TIZEN_TV)
+    auto mediaFormatExtra = m_videoStream->videoFormatExtra();
     mediaFormatExtra->max_width = STARFISH_VIDEO_MAX_WIDTH;
     mediaFormatExtra->max_height = STARFISH_VIDEO_MAX_HEIGHT;
     m_videoStream->setMaxBufferSize(
@@ -1607,11 +1611,19 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
         memcpy(mediaFormatExtra->codec_extradata, info->m_extraData.data(),
                mediaFormatExtra->extradata_size);
     }
-
+    media_format_set_extra(mediaFormat, mediaFormatExtra);
+#else
+    if (info->duration() > 0) {
+        media_format_set_video_frame_rate(mediaFormat,
+                                          (1000 / info->duration()));
+    }
+#endif
     PLAYER_LOGI("Video Info-----------------------------\n");
     PLAYER_LOGI("> codec     : %s\n", info->codecString());
+#if defined(STARFISH_TIZEN_TV)
     PLAYER_LOGI("> framerate : %d/%d\n", mediaFormatExtra->framerate_num,
                 mediaFormatExtra->framerate_den);
+#endif
     PLAYER_LOGI("> size      : %dx%d\n", info->videoWidth(),
                 info->videoHeight());
     PLAYER_LOGI("> max_buffer: %llu\n", m_videoStream->maxBufferSize());
@@ -1630,7 +1642,6 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
     RETURN_WHEN_PLAYER_ERROR(
         "ERROR: player_set_media_stream_buffer_status_cb_ex\n");
 
-    media_format_set_extra(mediaFormat, mediaFormatExtra);
     ret = player_set_media_stream_info(m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
                                        mediaFormat);
     RETURN_WHEN_PLAYER_ERROR("ERROR: player_set_media_stream_info\n");
@@ -1642,12 +1653,10 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
     RETURN_WHEN_PLAYER_ERROR(
         "ERROR: player_set_media_stream_buffer_max_size\n");
     m_videoStream->setInitSegmentIndex(initSegmentIndex);
-#endif
 }
 
 void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
 {
-#if !defined(STARFISH_TIZEN_HEADLESS)
     SourceBuffer* sb = m_activeMediaSource->activeAudioSourceBuffer();
     if (!sb) {
         return;
@@ -1665,7 +1674,6 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
         return;
     }
     media_format_h mediaFormat = m_audioStream->mediaFormat();
-    auto mediaFormatExtra = m_audioStream->audioFormatExtra();
 
     // Get info from demuxer
     StreamInfo* info = sb->streamInfo(
@@ -1684,8 +1692,10 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
     media_format_set_audio_channel(mediaFormat, (int)info->audioChannels());
     media_format_set_audio_samplerate(mediaFormat,
                                       (int)info->audioSampleRate());
-    // media_format_set_audio_avg_bps(m_audioFormat, audioCodecCtx->bit_rate);
+// media_format_set_audio_avg_bps(m_audioFormat, audioCodecCtx->bit_rate);
 
+#if defined(STARFISH_TIZEN_TV)
+    auto mediaFormatExtra = m_audioStream->audioFormatExtra();
     mediaFormatExtra->extradata_size = info->m_extraData.size();
     if (mediaFormatExtra->extradata_size != 0) {
         mediaFormatExtra->codec_extradata =
@@ -1695,7 +1705,8 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
     }
     // TODO PLAYER_DRM_TYPE_EME
     mediaFormatExtra->drm_type = PLAYER_DRM_TYPE_NONE;
-
+    media_format_set_extra(mediaFormat, mediaFormatExtra);
+#endif
     PLAYER_LOGI("Audio Info-----------------------------\n");
     PLAYER_LOGI("> codec     : %s\n", info->codecString());
     PLAYER_LOGI("> channels  : %d\n", (int)info->audioChannels());
@@ -1716,7 +1727,6 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
     RETURN_WHEN_PLAYER_ERROR(
         "ERROR: player_set_media_stream_buffer_status_cb_ex\n");
 
-    media_format_set_extra(mediaFormat, mediaFormatExtra);
     ret = player_set_media_stream_info(m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO,
                                        mediaFormat);
     RETURN_WHEN_PLAYER_ERROR("ERROR: player_set_media_stream_info\n");
@@ -1728,7 +1738,6 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
         "ERROR: player_set_media_stream_buffer_max_size\n");
 
     m_audioStream->setInitSegmentIndex(initSegmentIndex);
-#endif
 }
 #undef RETURN_WHEN_PLAYER_ERROR
 
