@@ -50,19 +50,19 @@ public:
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
-        m_element->m_imageResource = nullptr;
-        m_element->m_imageData = m_element->document()->brokenImage();
-
-        m_element->setNeedsFrameTreeBuild();
+        updateImage(m_element->document()->brokenImage());
     }
 
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
+        updateImage(m_resource->asImageResource()->imageData());
+    }
 
+    void updateImage(ImageData* imageData)
+    {
         m_element->m_imageResource = nullptr;
         ImageData* imageDataBefore = m_element->imageData();
-        ImageData* imageData = m_resource->asImageResource()->imageData();
         STARFISH_ASSERT(imageData);
 
         LayoutSize sizeBefore(0, 0);

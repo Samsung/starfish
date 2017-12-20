@@ -525,26 +525,25 @@ void Node::setState(NodeState state, DynamicRestyleFlags mask, bool enable)
         m_state = 0;
         m_restyleFlags = 0;
 
-        if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
-            setNeedsStyleRecalcIfNeeded();
-            if (isElement() && asElement()->hasPseudoElements()) {
-                setNeedsFrameTreeBuild();
-            }
-        } else {
-            setNeedsStyleRecalc();
-        }
-
+        setNeedsStyleRecalc();
     } else if (!(m_state & state) == enable) {
         m_state ^= state;
 
         if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
             setNeedsStyleRecalcIfNeeded();
-            if (isElement() && asElement()->hasPseudoElements()) {
-                setNeedsFrameTreeBuild();
-            }
         } else {
             setNeedsStyleRecalc();
         }
+    }
+
+    m_document->browsingContext()->resolveStyleIfNeeds();
+
+    if (isElement() &&
+        (asElement()->hasPseudoElement(
+             StyleResolver::PseudoElementType::PseudoElementBefore) ||
+         asElement()->hasPseudoElement(
+             StyleResolver::PseudoElementType::PseudoElementAfter))) {
+        setNeedsFrameTreeBuild(true);
     }
 
     int newState = m_state;
@@ -918,7 +917,7 @@ static void didInsertNode(Node* self, Node* child)
         notifyNodeInsertedToDocumentTree(self, child);
         self->setNeedsStyleRecalc();
         self->setChildrenNeedsStyleRecalc();
-        child->setNeedsFrameTreeBuild();
+        child->setNeedsFrameTreeBuild(false);
     }
 }
 
@@ -1152,7 +1151,7 @@ Node* Node::removeChild(Node* child)
     child->setParentNode(nullptr);
 
     FrameTreeBuilder::clearTree(child);
-    setNeedsFrameTreeBuild();
+    setNeedsFrameTreeBuild(true);
 
     if (isInDocumentScope() && document()->doesParticipateInRendering()) {
         notifyNodeRemoveFromDocumentTree(child);
@@ -1184,7 +1183,7 @@ Node* Node::parserAppendChild(Node* child)
 
     child->setParentNode(this);
     child->setNeedsStyleRecalc();
-    setNeedsFrameTreeBuild();
+    setNeedsFrameTreeBuild(false);
 
     if (isInDocumentScope()) {
         notifyNodeInsertedToDocumentTree(this, child);
@@ -1273,7 +1272,7 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     child->setPreviousSibling(prev);
     child->setNextSibling(childRef);
     child->setNeedsStyleRecalc();
-    setNeedsFrameTreeBuild();
+    setNeedsFrameTreeBuild(false);
 
     Node* parent = this;
     while (parent) {
@@ -1377,7 +1376,7 @@ NodeList* Node::querySelectorAll(String* selectors)
     return selectorQuery.queryAll(*this);
 }
 
-void Node::setNeedsFrameTreeBuild()
+void Node::setNeedsFrameTreeBuild(bool canSelfRetain)
 {
     if (!document()->doesParticipateInRendering()) {
         return;
@@ -1387,32 +1386,41 @@ void Node::setNeedsFrameTreeBuild()
 
     Frame* old = frame();
     if (old) {
-        Frame* parent = old->parent();
-        if (!parent) {
-            // STARFISH_ASSERT(old->isFrameDocument());
-            parent = document()->frame();
+        Frame* target;
+        if (canSelfRetain) {
+            target = old;
         } else {
-            while (parent) {
-                if (!parent->isAnonymous() &&
-                    (parent->isBlockLevel() || parent->isFrameTableCellBox())) {
+            target = old->parent();
+        }
+        if (!target) {
+            // STARFISH_ASSERT(old->isFrameDocument());
+            target = document()->frame();
+        } else {
+            while (target) {
+                if (!target->isAnonymous() && target->isFrameBlockBox() &&
+                    !target->isFrameTableRowBox() &&
+                    !target->isFrameTableSectionBox() &&
+                    !target->isFrameTableColBox() &&
+                    !target->isFrameTableCaptionBox()) {
                     break;
                 }
-                parent = parent->parent();
+
+                target = target->parent();
             }
         }
 
-        STARFISH_ASSERT(parent);
-        while (parent->firstChild()) {
-            parent->removeChild(parent->firstChild());
+        STARFISH_ASSERT(target);
+        while (target->firstChild()) {
+            target->removeChild(target->firstChild());
         }
 
-        Node* node = parent->node()->firstChild();
+        Node* node = target->node()->firstChild();
         while (node) {
             FrameTreeBuilder::clearTree(node);
             node = node->nextSibling();
         }
 
-        node = parent->node();
+        node = target->node();
         while (node) {
             node->markChildNeedsFrameTreeBuild();
             node = node->parentNode();
@@ -1421,7 +1429,7 @@ void Node::setNeedsFrameTreeBuild()
         Node* node = this;
         while (node) {
             if (node->frame()) {
-                node->setNeedsFrameTreeBuild();
+                node->setNeedsFrameTreeBuild(true);
                 break;
             }
             node = node->parentNode();

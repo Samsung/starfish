@@ -80,6 +80,8 @@ public:
 #endif
 
 private:
+    static Frame* createFrame(Node* current, FrameTreeBuilderContext& ctx,
+                              bool force);
     static Frame* buildTree(Node* current, FrameTreeBuilderContext& ctx,
                             bool force);
     static void insertChild(FrameBlockBox* frameBlockBox, Frame* currentFrame,

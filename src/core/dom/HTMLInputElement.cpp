@@ -274,8 +274,8 @@ void HTMLInputElement::updateInputboxValue(String* value)
         STARFISH_ASSERT(box->firstChild());
         box->firstChild()->asFrameText()->node()->asText()->setData(value);
         setNeedsLayout();
-    } else if (document()->doesParticipateInRendering()) {
-        setNeedsFrameTreeBuild();
+    } else {
+        setNeedsFrameTreeBuild(false);
     }
 }
 

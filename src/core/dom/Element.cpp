@@ -416,7 +416,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
             StyleResolver::PseudoElementType::PseudoElementBefore) ||
         hasPseudoElement(
             StyleResolver::PseudoElementType::PseudoElementAfter)) {
-        setNeedsFrameTreeBuild();
+        setNeedsFrameTreeBuild(true);
     }
 }
 
