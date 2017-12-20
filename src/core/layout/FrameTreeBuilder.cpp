@@ -372,11 +372,6 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
             // FrameTableCellBox and FrameTableCaptionBox. Thus, duplicated
             // frames for the pseudo-element can be created.
             return;
-        } else if (parent->frame()->isFrameBlockBox()) {
-            FrameBlockBox* pre = ctx.currentBlockContainer();
-            ctx.setCurrentBlockContainer(parent->frame()->asFrameBlockBox());
-            pseudoFrame = buildTree(pseudoElement, ctx, true);
-            ctx.setCurrentBlockContainer(pre);
         } else {
             pseudoFrame = buildTree(pseudoElement, ctx, true);
         }
@@ -461,119 +456,97 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
     // parent->asElement()->setPseudoElement(pseudoId, pseudoElement);
 }
 
+Frame* FrameTreeBuilder::createFrame(Node* current,
+                                     FrameTreeBuilderContext& ctx, bool force)
+{
+    DisplayValue display = current->style()->display();
+    bool isVisible = display != DisplayValue::NoneDisplayValue;
+    if (!isVisible) {
+        current->clearNeedsFrameTreeBuild();
+        FrameTreeBuilder::clearTree(current);
+        return nullptr;
+    }
+    if (current->isHTMLImageElement()) {
+        return new FrameReplacedImage(current);
+    }
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    else if (current->isHTMLVideoElement()) {
+        return new FrameReplacedVideo(current);
+    }
+#endif
+    else if (current->isHTMLIFrameElement()) {
+        return new FrameReplacedIFrame(current);
+    } else if (current->isHTMLBRElement()) {
+        return new FrameLineBreak(current);
+    } else if (current->isHTMLObjectElement()) {
+        return new FrameReplacedObject(current);
+    } else if (current->isSVGSVGElement()) {
+        return FrameTreeBuilder::buildSVGFrameTree(current->asSVGSVGElement());
+    } else if (ComputedStyle::isDisplayTableValueType(display)) {
+        Frame* f =
+            FrameTableTreeBuilder::buildFrameTableTree(current, ctx, force);
+        STARFISH_ASSERT(FrameTableTreeBuilder::isTableWrapperDisplayValue(
+            f->style()->display()));
+        return f;
+    } else if (current->isHTMLInputElement()) {
+        return FrameInputBox::buildFrameTree(current, ctx, force);
+    } else if (current->isHTMLSelectElement()) {
+        return new FrameSelectBox(current, nullptr);
+    } else if (current->isHTMLOptGroupElement()) {
+        return new FrameOptGroupBox(current, nullptr);
+    } else if (current->isHTMLOptionElement()) {
+        return new FrameOptionBox(current, nullptr);
+    } else if (display == DisplayValue::FlexDisplayValue ||
+               display == DisplayValue::InlineFlexDisplayValue) {
+        return new FrameFlexibleBox(current, nullptr);
+    } else {
+        if (display == DisplayValue::BlockDisplayValue ||
+            display == DisplayValue::InlineBlockDisplayValue ||
+            display == DisplayValue::ListItemDisplayValue) {
+            return new FrameBlockBox(current, nullptr);
+        } else if (display == DisplayValue::InlineDisplayValue ||
+                   display == DisplayValue::InlineListItemDisplayValue) {
+            if (current->isCharacterData() &&
+                current->asCharacterData()->isText()) {
+                return new FrameText(current, current->style());
+            } else if (current->isComment()) {
+                FrameTreeBuilder::clearTree(current);
+                return nullptr;
+            } else {
+                return new FrameInline(current);
+            }
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+}
+
 Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                                    bool force = false)
 {
     bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
     bool didSplitBlock = false;
-    bool shouldSkipChildren = false;
-    bool hasStyle = current->style();
-    bool isTableType = hasStyle && ComputedStyle::isDisplayTableValueType(
-                                       current->style()->display());
     FrameBlockBox* originalFrameBlockBox = nullptr;
     GCVector<FrameInline*> stackedFrameInline;
+    Frame* currentFrame;
 
     if (ctx.isInFrameFlexFlow()) {
-        if (!current->isCharacterData() && hasStyle) {
+        if (!current->isCharacterData() && current->style()) {
             current->style()->blockify(current, true);
         }
     }
 
-    if ((current->needsFrameTreeBuild() || force) || isTableType) {
+    if ((current->needsFrameTreeBuild() || force)) {
         if (current->needsFrameTreeBuild()) {
             force = true;
         }
 
-        Frame* currentFrame;
-        DisplayValue display = current->style()->display();
-        bool isVisible = display != DisplayValue::NoneDisplayValue;
-        if (!isVisible) {
-            current->clearNeedsFrameTreeBuild();
-            FrameTreeBuilder::clearTree(current);
+        currentFrame = createFrame(current, ctx, force);
+        if (!currentFrame) {
             return nullptr;
         }
-        if (current->isHTMLImageElement()) {
-            currentFrame = new FrameReplacedImage(current);
-            shouldSkipChildren = true;
-        }
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-        else if (current->isHTMLVideoElement()) {
-            currentFrame = new FrameReplacedVideo(current);
-            shouldSkipChildren = true;
-        }
-#endif
-        else if (current->isHTMLIFrameElement()) {
-            currentFrame = new FrameReplacedIFrame(current);
-            shouldSkipChildren = true;
-        } else if (current->isHTMLBRElement()) {
-            currentFrame = new FrameLineBreak(current);
-            shouldSkipChildren = true;
-        } else if (current->isHTMLObjectElement()) {
-            currentFrame = new FrameReplacedObject(current);
-            shouldSkipChildren = true;
-        } else if (current->isSVGSVGElement()) {
-            return FrameTreeBuilder::buildSVGFrameTree(
-                current->asSVGSVGElement());
-        } else if (isTableType) {
-            // table has its own frametree builder
-            // return nullptr, if buildFrameTable reuse before anonymous table
-            // wrapper
-            if (!(current->needsFrameTreeBuild() ||
-                  current->childNeedsFrameTreeBuild())) {
-                return nullptr;
-            }
-            currentFrame =
-                FrameTableTreeBuilder::buildFrameTableTree(current, ctx, force);
-            STARFISH_ASSERT(FrameTableTreeBuilder::isTableWrapperDisplayValue(
-                currentFrame->style()->display()));
-            if (!currentFrame->parent()) {
-                FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
-                                              currentFrame, current, ctx);
-            }
-            if (display != DisplayValue::InlineTableDisplayValue) {
-                ctx.setIsInFrameInlineFlow(false);
-            }
-            shouldSkipChildren = true;
-        } else if (current->isHTMLInputElement()) {
-            currentFrame = FrameInputBox::buildFrameTree(current, ctx, force);
-            if (!currentFrame) {
-                return nullptr;
-            }
-            shouldSkipChildren = true;
-        } else if (current->isHTMLSelectElement()) {
-            currentFrame = new FrameSelectBox(current, nullptr);
-        } else if (current->isHTMLOptGroupElement()) {
-            currentFrame = new FrameOptGroupBox(current, nullptr);
-        } else if (current->isHTMLOptionElement()) {
-            currentFrame = new FrameOptionBox(current, nullptr);
-        } else if (display == DisplayValue::FlexDisplayValue ||
-                   display == DisplayValue::InlineFlexDisplayValue) {
-            currentFrame = new FrameFlexibleBox(current, nullptr);
-        } else {
-            if (display == DisplayValue::BlockDisplayValue ||
-                display == DisplayValue::InlineBlockDisplayValue ||
-                display == DisplayValue::ListItemDisplayValue) {
-                currentFrame = new FrameBlockBox(current, nullptr);
-            } else if (display == DisplayValue::InlineDisplayValue ||
-                       display == DisplayValue::InlineListItemDisplayValue) {
-                if (current->isCharacterData() &&
-                    current->asCharacterData()->isText()) {
-                    currentFrame = new FrameText(current, current->style());
-                } else if (current->isComment()) {
-                    FrameTreeBuilder::clearTree(current);
-                    return nullptr;
-                } else {
-                    currentFrame = new FrameInline(current);
-                    ctx.setIsInFrameInlineFlow(true);
-                    ctx.frameInlineItem().insert(
-                        std::make_pair(current, currentFrame->asFrameInline()));
-                }
-            } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
-        }
 
-        if (!isTableType) {
+        if (!currentFrame->isFrameTableBox()) {
             current->setFrame(currentFrame);
             current->clearNeedsFrameTreeBuild();
         }
@@ -671,35 +644,46 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
 
         STARFISH_ASSERT(currentFrame->parent());
     } else {
+        currentFrame = current->frame();
+        if (ComputedStyle::isDisplayTableValueType(
+                currentFrame->style()->display())) {
+            currentFrame =
+                FrameTableTreeBuilder::buildFrameTableTree(current, ctx, force);
+            STARFISH_ASSERT(FrameTableTreeBuilder::isTableWrapperDisplayValue(
+                currentFrame->style()->display()));
+        }
+
         if (current->frame() && current->frame()->isFrameBlockBox()) {
             current->frame()->asFrameBlockBox()->lineBoxes().clear();
         }
-
-        shouldSkipChildren =
-            current->frame() && (current->frame()->isFrameReplaced() ||
-                                 current->frame()->isFrameLineBreak() ||
-                                 current->frame()->isFrameInputBox());
     }
-
-    Frame* currentFrame = current->frame();
 
     // display == none
     if (!currentFrame) {
         return nullptr;
     }
 
-    createPseudoElementIfNeeded(
-        current, StyleResolver::PseudoElementType::PseudoElementBefore, ctx);
+    bool shouldSkipChildren =
+        (currentFrame->isFrameReplaced() || currentFrame->isFrameLineBreak() ||
+         currentFrame->isFrameInputBox() || currentFrame->isFrameTableBox());
+
+    FrameBlockBox* back = ctx.currentBlockContainer();
+
+    if (currentFrame->isFrameBlockBox()) {
+        ctx.setCurrentBlockContainer(currentFrame->asFrameBlockBox());
+    } else if (currentFrame->isFrameInline()) {
+        ctx.setIsInFrameInlineFlow(true);
+        ctx.frameInlineItem().insert(
+            std::make_pair(current, currentFrame->asFrameInline()));
+    }
+
+    if (!currentFrame->isFrameTableBox()) {
+        createPseudoElementIfNeeded(
+            current, StyleResolver::PseudoElementType::PseudoElementBefore,
+            ctx);
+    }
 
     if (!shouldSkipChildren && (current->childNeedsFrameTreeBuild() || force)) {
-        Frame* currentFrame = current->frame();
-        FrameBlockBox* back = ctx.currentBlockContainer();
-
-        bool isBlockContainer = currentFrame->isFrameBlockBox();
-        if (isBlockContainer) {
-            ctx.setCurrentBlockContainer(currentFrame->asFrameBlockBox());
-        }
-
         Node* n = current->firstChild();
 
         while (n) {
@@ -707,15 +691,19 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             n = n->nextSibling();
         }
 
-        if (isBlockContainer) {
-            ctx.setCurrentBlockContainer(back);
-        }
-
         current->clearChildNeedsFrameTreeBuild();
     }
 
-    createPseudoElementIfNeeded(
-        current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
+    if (!currentFrame->isFrameTableBox()) {
+        createPseudoElementIfNeeded(
+            current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
+    }
+
+    if (currentFrame->isFrameBlockBox()) {
+        ctx.setCurrentBlockContainer(back);
+    } else if (currentFrame->isFrameInline()) {
+        ctx.setIsInFrameInlineFlow(false);
+    }
 
     if (didSplitBlock) {
         FrameInline* prev = nullptr;
@@ -739,11 +727,14 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     if (originalFrameBlockBox) {
         ctx.setCurrentBlockContainer(originalFrameBlockBox);
     }
+
     ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
 
-    createPseudoElementIfNeeded(
-        current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
-        ctx);
+    if (!currentFrame->isFrameTableBox()) {
+        createPseudoElementIfNeeded(
+            current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
+            ctx);
+    }
 
     return currentFrame;
 }

@@ -410,7 +410,7 @@ public:
     // This function sets the dirty flag only for children.
     void setChildrenNeedsStyleRecalc();
 
-    void setNeedsFrameTreeBuild();
+    void setNeedsFrameTreeBuild(bool canSelfRetain);
 
     void markNeedsFrameTreeBuild()
     {

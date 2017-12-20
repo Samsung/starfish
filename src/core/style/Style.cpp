@@ -6373,7 +6373,7 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
-            element->setNeedsFrameTreeBuild();
+            element->setNeedsFrameTreeBuild(false);
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageLayout) {
