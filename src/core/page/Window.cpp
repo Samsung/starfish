@@ -579,13 +579,8 @@ void Window::releaseCSSTarget()
 
 DEFINE_EVENT_LISTENER(Window, abort);
 DEFINE_EVENT_LISTENER(Window, blur);
-DEFINE_EVENT_LISTENER(Window, canplay);
-DEFINE_EVENT_LISTENER(Window, canplaythrough);
 DEFINE_EVENT_LISTENER(Window, click);
 DEFINE_EVENT_LISTENER(Window, change);
-DEFINE_EVENT_LISTENER(Window, durationchange);
-DEFINE_EVENT_LISTENER(Window, emptied);
-DEFINE_EVENT_LISTENER(Window, ended);
 DEFINE_EVENT_LISTENER(Window, error);
 DEFINE_EVENT_LISTENER(Window, focus);
 DEFINE_EVENT_LISTENER(Window, input);
@@ -594,32 +589,38 @@ DEFINE_EVENT_LISTENER(Window, keydown);
 DEFINE_EVENT_LISTENER(Window, keypress);
 DEFINE_EVENT_LISTENER(Window, keyup);
 DEFINE_EVENT_LISTENER(Window, load);
-DEFINE_EVENT_LISTENER(Window, loadeddata);
-DEFINE_EVENT_LISTENER(Window, loadedmetadata);
 DEFINE_EVENT_LISTENER(Window, loadstart);
 DEFINE_EVENT_LISTENER(Window, mousedown);
 DEFINE_EVENT_LISTENER(Window, mousemove);
 DEFINE_EVENT_LISTENER(Window, mouseover);
 DEFINE_EVENT_LISTENER(Window, mouseout);
 DEFINE_EVENT_LISTENER(Window, mouseup);
-DEFINE_EVENT_LISTENER(Window, pause);
-DEFINE_EVENT_LISTENER(Window, play);
-DEFINE_EVENT_LISTENER(Window, playing);
 DEFINE_EVENT_LISTENER(Window, progress);
-DEFINE_EVENT_LISTENER(Window, ratechange);
 DEFINE_EVENT_LISTENER(Window, resize);
-DEFINE_EVENT_LISTENER(Window, seeked);
-DEFINE_EVENT_LISTENER(Window, seeking);
-DEFINE_EVENT_LISTENER(Window, stalled);
 DEFINE_EVENT_LISTENER(Window, submit);
-DEFINE_EVENT_LISTENER(Window, suspend);
-DEFINE_EVENT_LISTENER(Window, timeupdate);
-DEFINE_EVENT_LISTENER(Window, volumechange);
-DEFINE_EVENT_LISTENER(Window, waiting);
-
 DEFINE_EVENT_LISTENER(Window, message);
 DEFINE_EVENT_LISTENER(Window, messageerror);
 DEFINE_EVENT_LISTENER(Window, unload);
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+DEFINE_EVENT_LISTENER(Window, suspend);
+DEFINE_EVENT_LISTENER(Window, emptied);
+DEFINE_EVENT_LISTENER(Window, stalled);
+DEFINE_EVENT_LISTENER(Window, loadedmetadata);
+DEFINE_EVENT_LISTENER(Window, loadeddata);
+DEFINE_EVENT_LISTENER(Window, canplay);
+DEFINE_EVENT_LISTENER(Window, canplaythrough);
+DEFINE_EVENT_LISTENER(Window, playing);
+DEFINE_EVENT_LISTENER(Window, waiting);
+DEFINE_EVENT_LISTENER(Window, seeking);
+DEFINE_EVENT_LISTENER(Window, seeked);
+DEFINE_EVENT_LISTENER(Window, ended);
+DEFINE_EVENT_LISTENER(Window, durationchange);
+DEFINE_EVENT_LISTENER(Window, timeupdate);
+DEFINE_EVENT_LISTENER(Window, play);
+DEFINE_EVENT_LISTENER(Window, pause);
+DEFINE_EVENT_LISTENER(Window, ratechange);
+DEFINE_EVENT_LISTENER(Window, volumechange);
+#endif
 
 CSSStyleDeclaration* Window::getComputedStyle(Element* element)
 {

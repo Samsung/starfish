@@ -22,7 +22,9 @@
 namespace StarFish {
 
 class FrameReplacedImage;
+#ifdef STARFISH_ENABLE_MULTIMEDIA
 class FrameReplacedVideo;
+#endif
 class FrameReplacedIFrame;
 
 struct IntrinsicSize {
@@ -60,10 +62,12 @@ public:
         return false;
     }
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     virtual bool isFrameReplacedVideo()
     {
         return false;
     }
+#endif
 
     virtual bool isFrameReplacedIFrame()
     {
@@ -76,11 +80,13 @@ public:
         return (FrameReplacedImage*)this;
     }
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     FrameReplacedVideo* asFrameReplacedVideo()
     {
         STARFISH_ASSERT(isFrameReplacedVideo());
         return (FrameReplacedVideo*)this;
     }
+#endif
 
     FrameReplacedIFrame* asFrameReplacedIFrame()
     {

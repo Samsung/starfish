@@ -34,7 +34,9 @@ class CanvasSurface;
 class PlatformWindow;
 class Window;
 class HTMLIFrameElement;
+#ifdef STARFISH_ENABLE_MULTIMEDIA
 class HTMLMediaElement;
+#endif
 class MouseData;
 class TouchData;
 class KeyboardData;
@@ -229,8 +231,9 @@ public:
     void buildFrameTreeIfNeeds(bool fromWebView = true);
     // return did layout
     bool layoutIfNeeds(bool fromWebView = true);
-
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     void registerMediaElement(HTMLMediaElement* element);
+#endif
     void onIdle();
 
     String* name()
@@ -299,7 +302,9 @@ private:
 
     GCVector<EventTarget*> m_globalPointingEventListener;
     GCUnorderedMap<void*, size_t> m_rootMap;
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     GCVector<HTMLMediaElement*> m_existingMediaElements;
+#endif
     String* m_name;
 };
 }

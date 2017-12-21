@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if STARFISH_ENABLE_MULTIMEDIA
+#ifdef STARFISH_ENABLE_MULTIMEDIA
 #ifndef __StarFishSourceBuffer__
 #define __StarFishSourceBuffer__
 

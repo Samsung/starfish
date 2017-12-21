@@ -14,7 +14,8 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMediaPlayer__)
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#ifndef __StarFishMediaPlayer__
 #define __StarFishMediaPlayer__
 
 #define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
@@ -154,5 +155,5 @@ protected:
     size_t m_currentTimeUpdateTimer;
 };
 }
-
+#endif
 #endif

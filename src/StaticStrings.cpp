@@ -435,6 +435,10 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_transitioncancel =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "transitioncancel"));
+
+    m_open = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "open"));
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_cuechange =
         QualifiedName(AtomicString::emptyAtomicString(),
@@ -489,8 +493,6 @@ StaticStrings::StaticStrings(StarFish* sf)
                              AtomicString::createAtomicString(sf, "seeked"));
     m_ended = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "ended"));
-    m_open = QualifiedName(AtomicString::emptyAtomicString(),
-                           AtomicString::createAtomicString(sf, "open"));
     m_closed = QualifiedName(AtomicString::emptyAtomicString(),
                              AtomicString::createAtomicString(sf, "closed"));
     m_durationchange =

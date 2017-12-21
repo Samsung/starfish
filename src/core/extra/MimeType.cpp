@@ -14,8 +14,6 @@
  *    limitations under the License.
  */
 
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-
 #include "StarFishConfig.h"
 #include "MimeType.h"
 
@@ -120,5 +118,3 @@ MimeType MimeType::parseFromString(String* str)
     return result;
 }
 }
-
-#endif

@@ -372,6 +372,7 @@ public:
     QualifiedName m_transitionstart;
     QualifiedName m_transitionend;
     QualifiedName m_transitioncancel;
+    QualifiedName m_open;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;
     QualifiedName m_sourceopen;
@@ -395,7 +396,6 @@ public:
     QualifiedName m_seeked;
     QualifiedName m_ended;
     QualifiedName m_closed;
-    QualifiedName m_open;
     QualifiedName m_durationchange;
     QualifiedName m_timeupdate;
     QualifiedName m_play;
