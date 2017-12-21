@@ -199,14 +199,4 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf,
         return AtomicString(iter.operator*());
     }
 }
-
-AtomicString AtomicString::emptyAtomicString()
-{
-    return AtomicString(String::emptyString);
-}
-
-bool AtomicString::isEmptyAtomicString() const
-{
-    return m_string == String::emptyString;
-}
 }

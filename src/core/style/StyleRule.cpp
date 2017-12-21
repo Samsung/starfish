@@ -72,6 +72,11 @@ StyleRule::StyleRule(CSSSelector::Type type, AtomicString selectorText)
     : StyleRuleBase(StyleRuleBase::STYLE_RULE)
     , m_styleDeclaration(new CSSStyleDeclaration())
     , m_order(0)
+    , m_hasIdSelector(false)
+    , m_hasClassSelector(false)
+    , m_isSimpleIDSelector(false)
+    , m_isSimpleClassSelector(false)
+    , m_isSimpleTagSelector(false)
 {
     CSSSelector* selector =
         new CSSSelector(type, CSSSelector::RelationType::None, selectorText);
@@ -83,7 +88,26 @@ StyleRule::StyleRule(CSSSelectorList& selectorList, CSSStyleDeclaration* decl)
     , m_selectorList(selectorList)
     , m_styleDeclaration(decl)
     , m_order(0)
+    , m_hasIdSelector(false)
+    , m_hasClassSelector(false)
+    , m_isSimpleIDSelector(false)
+    , m_isSimpleClassSelector(false)
+    , m_isSimpleTagSelector(false)
 {
+}
+
+void* StyleRule::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(StyleRule)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StyleRule, m_selectorList));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StyleRule, m_styleDeclaration));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(StyleRule));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
 void StyleRule::wrapperTakeSelectorList(CSSSelectorList& selectors)

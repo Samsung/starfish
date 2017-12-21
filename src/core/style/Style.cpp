@@ -5710,15 +5710,41 @@ void StyleResolver::apply(Element* element,
 }
 
 void StyleResolver::collectMatchingRulesFromAuthorSheet(
-    std::pair<StyleRule*, ResourceURL*>* rules, unsigned ruleCount,
-    Element* element, AtomicString elementName, AtomicString elementId,
-    const GCVector<AtomicString>& elementClasses,
+    const GCUnorderedMultiMap<
+        AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
+    const GCUnorderedMultiMap<
+        AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& end,
+    CSSSelector::Type type, Element* element, AtomicString elementName,
+    AtomicString elementId, const GCVector<AtomicString>& elementClasses,
     MatchedStyleRules<16>& authorRules, ComputedStyle* ret,
     PseudoElementType pseudoElementType)
 {
-    for (unsigned int i = 0; i < ruleCount; ++i) {
-        StyleRule* rule = rules[i].first;
-        ResourceURL* url = rules[i].second;
+    for (auto it = begin; it != end; ++it) {
+        StyleRule* rule = it->second.first;
+        ResourceURL* url = it->second.second;
+
+        if (rule->hasIdSelector() && !element->hasId()) {
+            continue;
+        }
+        if (rule->hasClassSelector() && !element->hasClass()) {
+            continue;
+        }
+        if (pseudoElementType == PseudoElementType::PseudoElementNone) {
+            if (type == CSSSelector::Type::Id && rule->isSimpleIDSelector()) {
+                authorRules.push_back(std::make_pair(rule, url));
+                continue;
+            }
+            if (type == CSSSelector::Type::Class &&
+                rule->isSimpleClassSelector()) {
+                authorRules.push_back(std::make_pair(rule, url));
+                continue;
+            }
+            if (type == CSSSelector::Type::Tag && rule->isSimpleTagSelector()) {
+                authorRules.push_back(std::make_pair(rule, url));
+                continue;
+            }
+        }
+
         const CSSSelectorList& selectorList = rule->selectorList();
         MatchResult result;
         if (matchSelector(element, elementName, elementId, elementClasses,
@@ -5789,26 +5815,44 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
 
     MatchedStyleRules<16> authorRules;
     sheet = styleSheetWithStyleRules();
+
     if (element->hasId()) {
+        auto& rules = sheet->ruleSet()->idRules();
+        auto range = rules.equal_range(elementId);
         collectMatchingRulesFromAuthorSheet(
-            sheet->ruleSet()->idRules().data(),
-            sheet->ruleSet()->idRules().size(), element, elementName, elementId,
-            elementClasses, authorRules, ret, pseudoElementType);
+            range.first, range.second, CSSSelector::Type::Id, element,
+            elementName, elementId, elementClasses, authorRules, ret,
+            pseudoElementType);
     }
+
     if (element->hasClass()) {
-        collectMatchingRulesFromAuthorSheet(
-            sheet->ruleSet()->classRules().data(),
-            sheet->ruleSet()->classRules().size(), element, elementName,
-            elementId, elementClasses, authorRules, ret, pseudoElementType);
+        auto& rules = sheet->ruleSet()->classRules();
+        size_t classLen = elementClasses.size();
+        for (unsigned k = 0; k < classLen; k++) {
+            auto range = rules.equal_range(elementClasses[k]);
+            collectMatchingRulesFromAuthorSheet(
+                range.first, range.second, CSSSelector::Type::Class, element,
+                elementName, elementId, elementClasses, authorRules, ret,
+                pseudoElementType);
+        }
     }
-    collectMatchingRulesFromAuthorSheet(
-        sheet->ruleSet()->tagRules().data(),
-        sheet->ruleSet()->tagRules().size(), element, elementName, elementId,
-        elementClasses, authorRules, ret, pseudoElementType);
-    collectMatchingRulesFromAuthorSheet(
-        sheet->ruleSet()->universalRules().data(),
-        sheet->ruleSet()->universalRules().size(), element, elementName,
-        elementId, elementClasses, authorRules, ret, pseudoElementType);
+
+    {
+        auto& rules = sheet->ruleSet()->tagRules();
+        auto range = rules.equal_range(elementName);
+        collectMatchingRulesFromAuthorSheet(
+            range.first, range.second, CSSSelector::Type::Tag, element,
+            elementName, elementId, elementClasses, authorRules, ret,
+            pseudoElementType);
+    }
+
+    {
+        auto& rules = sheet->ruleSet()->universalRules();
+        collectMatchingRulesFromAuthorSheet(
+            rules.begin(), rules.end(), CSSSelector::Type::UnKnown, element,
+            elementName, elementId, elementClasses, authorRules, ret,
+            pseudoElementType);
+    }
     if (authorRules.size() != 0) {
         authorRules.sortVector(comparingRules);
     }

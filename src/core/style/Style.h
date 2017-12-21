@@ -2483,6 +2483,16 @@ public:
         return m_relation;
     }
 
+    PseudoType pseudotype() const
+    {
+        return m_pseudotype;
+    }
+
+    AttributeMatchType attributeMatch() const
+    {
+        return m_attributeMatch;
+    }
+
     void updateRelation(RelationType rel)
     {
         m_relation = rel;
@@ -2723,9 +2733,12 @@ public:
         const GCVector<AtomicString>& elementClasses,
         MatchedStyleRules<6>& authorRules);
     void collectMatchingRulesFromAuthorSheet(
-        std::pair<StyleRule*, ResourceURL*>* rules, unsigned ruleCount,
-        Element* element, AtomicString elementName, AtomicString elementId,
-        const GCVector<AtomicString>& elementClasses,
+        const GCUnorderedMultiMap<
+            AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
+        const GCUnorderedMultiMap<
+            AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& end,
+        CSSSelector::Type type, Element* element, AtomicString elementName,
+        AtomicString elementId, const GCVector<AtomicString>& elementClasses,
         MatchedStyleRules<16>& authorRules, ComputedStyle* ret,
         PseudoElementType pseudoElementType);
 
