@@ -36,22 +36,26 @@ class URL;
 
 class RuleSet : public gc {
 public:
-    GCVector<std::pair<StyleRule*, ResourceURL*>>& idRules()
+    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>&
+    idRules()
     {
         return m_idRules;
     }
 
-    GCVector<std::pair<StyleRule*, ResourceURL*>>& classRules()
+    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>&
+    classRules()
     {
         return m_classRules;
     }
 
-    GCVector<std::pair<StyleRule*, ResourceURL*>>& tagRules()
+    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>&
+    tagRules()
     {
         return m_tagRules;
     }
 
-    GCVector<std::pair<StyleRule*, ResourceURL*>>& universalRules()
+    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>&
+    universalRules()
     {
         return m_universalRules;
     }
@@ -59,23 +63,20 @@ public:
     void clear()
     {
         m_idRules.clear();
-        m_idRules.shrink_to_fit();
-
         m_classRules.clear();
-        m_classRules.shrink_to_fit();
-
         m_tagRules.clear();
-        m_tagRules.shrink_to_fit();
-
         m_universalRules.clear();
-        m_universalRules.shrink_to_fit();
     }
 
 private:
-    GCVector<std::pair<StyleRule*, ResourceURL*>> m_idRules;
-    GCVector<std::pair<StyleRule*, ResourceURL*>> m_classRules;
-    GCVector<std::pair<StyleRule*, ResourceURL*>> m_tagRules;
-    GCVector<std::pair<StyleRule*, ResourceURL*>> m_universalRules;
+    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>
+        m_idRules;
+    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>
+        m_classRules;
+    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>
+        m_tagRules;
+    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>
+        m_universalRules;
 };
 
 class CSSStyleSheet : public StyleSheet {

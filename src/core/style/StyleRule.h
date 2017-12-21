@@ -115,6 +115,9 @@ public:
 
     StyleRule(CSSSelectorList& selectorList, CSSStyleDeclaration* decl);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     CSSSelectorList& selectorList()
     {
         return m_selectorList;
@@ -135,12 +138,68 @@ public:
         m_order = o;
     }
 
+    bool hasIdSelector()
+    {
+        return m_hasIdSelector;
+    }
+
+    void setIDSelector(bool b)
+    {
+        m_hasIdSelector = b;
+    }
+
+    bool hasClassSelector()
+    {
+        return m_hasClassSelector;
+    }
+
+    void setClassSelector(bool b)
+    {
+        m_hasClassSelector = b;
+    }
+
+    bool isSimpleIDSelector()
+    {
+        return m_isSimpleIDSelector;
+    }
+
+    void setIsSimpleIDSelector(bool b)
+    {
+        m_isSimpleIDSelector = b;
+    }
+
+    bool isSimpleClassSelector()
+    {
+        return m_isSimpleClassSelector;
+    }
+
+    void setIsSimpleClassSelector(bool b)
+    {
+        m_isSimpleClassSelector = b;
+    }
+
+    bool isSimpleTagSelector()
+    {
+        return m_isSimpleTagSelector;
+    }
+
+    void setIsSimpleTagSelector(bool b)
+    {
+        m_isSimpleTagSelector = b;
+    }
+
     void wrapperTakeSelectorList(CSSSelectorList& selectors);
 
 protected:
     CSSSelectorList m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
     int m_order;
+    bool m_hasIdSelector : 1;
+    bool m_hasClassSelector : 1;
+
+    bool m_isSimpleIDSelector : 1;
+    bool m_isSimpleClassSelector : 1;
+    bool m_isSimpleTagSelector : 1;
 };
 
 class StyleRuleGroup : public StyleRuleBase {

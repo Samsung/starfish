@@ -55,9 +55,15 @@ public:
                                                const char32_t* str,
                                                size_t length);
     static AtomicString createAttrAtomicString(StarFish* sf, char32_t str);
-    static AtomicString emptyAtomicString();
+    static AtomicString emptyAtomicString()
+    {
+        return AtomicString(String::emptyString);
+    }
 
-    bool isEmptyAtomicString() const;
+    bool isEmptyAtomicString() const
+    {
+        return m_string == String::emptyString;
+    }
 
     String* string() const
     {
@@ -82,5 +88,24 @@ inline bool operator!=(const AtomicString& a, const AtomicString& b)
 {
     return a.string() != b.string();
 }
+}
+
+namespace std {
+template <>
+struct hash<StarFish::AtomicString> {
+    std::size_t operator()(const StarFish::AtomicString& s) const
+    {
+        return s.string()->hashValue();
+    }
+};
+
+template <>
+struct equal_to<StarFish::AtomicString> {
+    bool operator()(const StarFish::AtomicString& s1,
+                    const StarFish::AtomicString& s2) const
+    {
+        return s1 == s2;
+    }
+};
 }
 #endif
