@@ -25,19 +25,16 @@ uint64_t timestamp();     // increase 1000 by 1 second
 
 class ProfilerTimer {
 public:
-    ProfilerTimer(const char* msg)
+    ProfilerTimer(StarFish* starFish, const char* msg)
     {
+        m_starFish = starFish;
         m_start = longTickCount();
         m_msg = msg;
     }
-    ~ProfilerTimer()
-    {
-        uint64_t end = longTickCount();
-        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg,
-                          (float)((end - m_start) / 1000.f));
-    }
+    ~ProfilerTimer();
 
 protected:
+    StarFish* m_starFish;
     uint64_t m_start;
     const char* m_msg;
 };
@@ -47,9 +44,9 @@ protected:
 #endif
 
 #ifdef STARFISH_ENABLE_PROFILE_TIMER
-#define INSTALL_PROFILE_TIMER(s) ProfilerTimer _p(s);
+#define INSTALL_PROFILE_TIMER(starFish, msg) ProfilerTimer _p(starFish, msg);
 #else
-#define INSTALL_PROFILE_TIMER(s)
+#define INSTALL_PROFILE_TIMER(starFish, msg)
 #endif
 }
 

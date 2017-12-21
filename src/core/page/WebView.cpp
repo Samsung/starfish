@@ -465,7 +465,8 @@ void WebView::layoutIfNeeds()
 
     if (m_needsComputeStackingContextProperties) {
         {
-            INSTALL_PROFILE_TIMER("computeStackingContextProperties");
+            INSTALL_PROFILE_TIMER(starFish(),
+                                  "computeStackingContextProperties");
             if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
                 m_rootStackingContext->computeStackingContextProperties();
             }
@@ -627,12 +628,12 @@ bool WebView::rendering(bool force)
     uint64_t currentTick = tickCount();
     m_lastRenderingTime = currentTick;
     m_inRendering = true;
-    INSTALL_PROFILE_TIMER("WebView::rendering");
+    INSTALL_PROFILE_TIMER(starFish(), "WebView::rendering");
 
     layoutIfNeeds();
 
     if (m_needsPainting) {
-        INSTALL_PROFILE_TIMER("painting");
+        INSTALL_PROFILE_TIMER(starFish(), "painting");
 
         didPaintingOrCompositing = true;
         // painting
@@ -710,7 +711,7 @@ bool WebView::rendering(bool force)
     }
 
     if (m_needsComposite) {
-        INSTALL_PROFILE_TIMER("composite");
+        INSTALL_PROFILE_TIMER(starFish(), "composite");
         didPaintingOrCompositing = true;
 
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
@@ -953,6 +954,7 @@ void WebView::assignGraphicsBuffer(CanvasSurface** surfaceHolder,
             // printf("WebView::assignGraphicsBuffer - create canvas surface %d
             // %d\n", (int)visibleWidth, (int)visibleHeight);
             INSTALL_PROFILE_TIMER(
+                starFish(),
                 "WebView::assignGraphicsBuffer - create canvas surface");
             (*surfaceHolder) = CanvasSurface::create(
                 starFish()->platformWindow(), visibleWidth, visibleHeight);
