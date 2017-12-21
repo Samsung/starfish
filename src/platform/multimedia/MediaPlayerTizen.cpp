@@ -1091,9 +1091,9 @@ void MediaPlayerTizen::drawVideo(Compositor* canvas,
 #else
     canvas->setColor(Unit::Color(0, 0, 0, 255));
     canvas->drawRect(videoRect);
-    canvas->drawImage(m_canvasSurface,
-                      Unit::Rect(videoRect.x(), videoRect.y(),
-                                 videoRect.width(), videoRect.height()));
+    canvas->drawSurface(m_canvasSurface,
+                        Unit::Rect(videoRect.x(), videoRect.y(),
+                                   videoRect.width(), videoRect.height()));
 #endif
 #endif
 }
