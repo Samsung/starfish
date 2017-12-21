@@ -224,6 +224,27 @@ public:
 #ifndef NDEBUG
     size_t countPointersInRootSet(void* ptr);
 #endif
+
+    void updateProfileRecord(String* tag, float time)
+    {
+        auto it = m_profilingRecods.find(tag);
+        if (it == m_profilingRecods.end()) {
+            m_profilingRecods.insert(std::make_pair(tag, time));
+        } else {
+            it->second = time;
+        }
+    }
+
+    float profileRecode(String* tag) const
+    {
+        auto it = m_profilingRecods.find(tag);
+        if (it == m_profilingRecods.end()) {
+            return 0;
+        }
+
+        return it->second;
+    }
+
 protected:
     void enter();
     void exit();
@@ -282,6 +303,7 @@ protected:
 #ifdef STARFISH_ENABLE_TTS
     TTS* m_tts;
 #endif
+    GCUnorderedMap<String*, float> m_profilingRecods;
 
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);

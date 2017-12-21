@@ -225,7 +225,7 @@ void BrowsingContext::resolveStyleIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleSheetsRecalc) {
-            INSTALL_PROFILE_TIMER("parse sheet & collect rules");
+            INSTALL_PROFILE_TIMER(starFish(), "parse sheet & collect rules");
 
             m_needsStyleSheetsRecalc = false;
             CSSStyleSheet* uaSheet = document()->styleResolver().sheets()[0];
@@ -436,7 +436,7 @@ void BrowsingContext::resolveStyleIfNeeds()
         }
 
         // resolve style
-        INSTALL_PROFILE_TIMER("resolve style");
+        INSTALL_PROFILE_TIMER(starFish(), "resolve style");
 
         document()->styleResolver().resolveDOMStyle(
             document(), m_needsStyleRecalcForWholeDocument);
@@ -455,7 +455,7 @@ void BrowsingContext::buildFrameTreeIfNeeds(bool fromWebView)
             }
 
             // create frame tree
-            INSTALL_PROFILE_TIMER("create frame tree");
+            INSTALL_PROFILE_TIMER(starFish(), "create frame tree");
 
             FrameTreeBuilder::buildFrameTree(document());
             m_needsLayout = true;
@@ -476,7 +476,7 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
         }
 
         // lay out frame tree
-        INSTALL_PROFILE_TIMER("lay out frame tree");
+        INSTALL_PROFILE_TIMER(starFish(), "lay out frame tree");
 
         LayoutContext ctx(starFish(), document()
                                           ->frame()

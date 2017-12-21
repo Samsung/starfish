@@ -15,6 +15,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "StarFish.h"
 #include "Profiling.h"
 
 #include <sys/timeb.h>
@@ -51,5 +52,16 @@ uint64_t timestamp()
     timestamp_msec = ((long long int)timer_msec.time) * 1000ll +
                      (long long int)timer_msec.millitm;
     return timestamp_msec;
+}
+
+ProfilerTimer::~ProfilerTimer()
+{
+    uint64_t end = longTickCount();
+    float time = (float)((end - m_start) / 1000.f);
+    STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, time);
+    AtomicString aTag = AtomicString::createAtomicString(m_starFish, m_msg);
+    float accumTime = m_starFish->profileRecode(aTag.string()) + time;
+    STARFISH_LOG_INFO("in total, did %s in %f ms\n", m_msg, accumTime);
+    m_starFish->updateProfileRecord(aTag.string(), accumTime);
 }
 }

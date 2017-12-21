@@ -1232,7 +1232,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-            ProfilerTimer t("WindowImplEFL resize");
+            ProfilerTimer t(wnd->starFish(), "WindowImplEFL resize");
             int w, h;
             evas_object_image_size_get(wnd->m_canvasAdpater, &w, &h);
             if (w != wnd->width() || h != wnd->height()) {
