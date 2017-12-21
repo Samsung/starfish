@@ -14,8 +14,9 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && \
-    !defined(__StarFishMediaPlayerTizen__)
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
+#ifndef __StarFishMediaPlayerTizen__
 #define __StarFishMediaPlayerTizen__
 
 #include "platform/multimedia/MediaPlayer.h"
@@ -224,4 +225,6 @@ public:
 };
 }
 
+#endif
+#endif
 #endif

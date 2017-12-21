@@ -769,10 +769,12 @@ void StackingContext::computeStackingContextProperties(
         // IndirectCompositingReason::Overlap : IndirectCompositingReason::None;
     }
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     if (m_owner->isFrameReplaced() &&
         m_owner->asFrameReplaced()->isFrameReplacedVideo()) {
         compositingReason = IndirectCompositingReason::Overlap;
     }
+#endif
 
     // layer.setIndirectCompositingReason(compositingReason);
 

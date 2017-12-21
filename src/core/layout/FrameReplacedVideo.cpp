@@ -13,6 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+#ifdef STARFISH_ENABLE_MULTIMEDIA
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
@@ -68,3 +69,4 @@ void FrameReplacedVideo::createGraphicsBuffer(CanvasSurface** surfaceHolder,
     }
 }
 }
+#endif

@@ -15,6 +15,7 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
+#if defined(STARFISH_USE_MOCK_MEDIAPLAYER) || !defined(STARFISH_TIZEN)
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
@@ -46,12 +47,10 @@
 
 namespace StarFish {
 
-#if !defined(STARFISH_TIZEN)
 MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 {
     return new MockMediaPlayer(element);
 }
-#endif
 
 class MediaPlayerMediaSourceClient : public MediaSourceClient {
 public:
@@ -436,4 +435,5 @@ void MockMediaPlayer::close()
     m_container = nullptr;
 }
 }
+#endif
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

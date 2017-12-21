@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMimeType__)
+#ifndef __StarFishMimeType__
 #define __StarFishMimeType__
 
 namespace StarFish {

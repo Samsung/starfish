@@ -15,7 +15,7 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#ifdef STARFISH_TIZEN
+#if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
@@ -1741,12 +1741,10 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
 }
 #undef RETURN_WHEN_PLAYER_ERROR
 
-#if defined(STARFISH_TIZEN)
 MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 {
     return new MediaPlayerTizen(element);
 }
-#endif
 }
 
 #endif

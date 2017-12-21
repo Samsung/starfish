@@ -31,7 +31,9 @@
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLInputElement.h"
+#ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
+#endif
 #include "core/dom/EventTarget.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
@@ -566,10 +568,12 @@ void BrowsingContext::iterateChildContext(
     }
 }
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
 void BrowsingContext::registerMediaElement(HTMLMediaElement* element)
 {
     m_existingMediaElements.push_back(element);
 }
+#endif
 
 void BrowsingContext::onIdle()
 {
@@ -599,10 +603,12 @@ void BrowsingContext::dispose()
         }
     }
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     for (size_t i = 0; i < m_existingMediaElements.size(); i++) {
         m_existingMediaElements[i]->dispose();
     }
     m_existingMediaElements.clear();
+#endif
 
     m_focusedNode = nullptr;
     m_activeElement = nullptr;

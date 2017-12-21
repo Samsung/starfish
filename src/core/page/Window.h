@@ -341,12 +341,11 @@ public:
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
+    // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
     DECLARE_EVENT_LISTENER(abort);
     // DECLARE_EVENT_LISTENER(auxclick);
     DECLARE_EVENT_LISTENER(blur);
     // DECLARE_EVENT_LISTENER(cancel);
-    DECLARE_EVENT_LISTENER(canplay);
-    DECLARE_EVENT_LISTENER(canplaythrough);
     DECLARE_EVENT_LISTENER(change);
     DECLARE_EVENT_LISTENER(click);
     // DECLARE_EVENT_LISTENER(close);
@@ -361,9 +360,6 @@ public:
     // DECLARE_EVENT_LISTENER(dragover);
     // DECLARE_EVENT_LISTENER(dragstart);
     // DECLARE_EVENT_LISTENER(drop);
-    DECLARE_EVENT_LISTENER(durationchange);
-    DECLARE_EVENT_LISTENER(emptied);
-    DECLARE_EVENT_LISTENER(ended);
     DECLARE_EVENT_LISTENER(error);
     DECLARE_EVENT_LISTENER(focus);
     DECLARE_EVENT_LISTENER(input);
@@ -372,8 +368,6 @@ public:
     DECLARE_EVENT_LISTENER(keypress);
     DECLARE_EVENT_LISTENER(keyup);
     DECLARE_EVENT_LISTENER(load);
-    DECLARE_EVENT_LISTENER(loadeddata);
-    DECLARE_EVENT_LISTENER(loadedmetadata);
     // DECLARE_EVENT_LISTENER(loadend);
     DECLARE_EVENT_LISTENER(loadstart);
     DECLARE_EVENT_LISTENER(mousedown);
@@ -384,25 +378,34 @@ public:
     DECLARE_EVENT_LISTENER(mouseover);
     DECLARE_EVENT_LISTENER(mouseup);
     // DECLARE_EVENT_LISTENER(wheel);
-    DECLARE_EVENT_LISTENER(pause);
-    DECLARE_EVENT_LISTENER(play);
-    DECLARE_EVENT_LISTENER(playing);
     DECLARE_EVENT_LISTENER(progress);
-    DECLARE_EVENT_LISTENER(ratechange);
     // DECLARE_EVENT_LISTENER(reset);
     DECLARE_EVENT_LISTENER(resize);
     // DECLARE_EVENT_LISTENER(scroll);
-    DECLARE_EVENT_LISTENER(seeked);
-    DECLARE_EVENT_LISTENER(seeking);
     // DECLARE_EVENT_LISTENER(select);
     // DECLARE_EVENT_LISTENER(show);
-    DECLARE_EVENT_LISTENER(stalled);
-    DECLARE_EVENT_LISTENER(submit);
-    DECLARE_EVENT_LISTENER(suspend);
-    DECLARE_EVENT_LISTENER(timeupdate);
     // DECLARE_EVENT_LISTENER(toggle);
-    DECLARE_EVENT_LISTENER(volumechange);
+    DECLARE_EVENT_LISTENER(submit);
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    DECLARE_EVENT_LISTENER(suspend);
+    DECLARE_EVENT_LISTENER(emptied);
+    DECLARE_EVENT_LISTENER(stalled);
+    DECLARE_EVENT_LISTENER(loadedmetadata);
+    DECLARE_EVENT_LISTENER(loadeddata);
+    DECLARE_EVENT_LISTENER(canplay);
+    DECLARE_EVENT_LISTENER(canplaythrough);
+    DECLARE_EVENT_LISTENER(playing);
     DECLARE_EVENT_LISTENER(waiting);
+    DECLARE_EVENT_LISTENER(seeking);
+    DECLARE_EVENT_LISTENER(seeked);
+    DECLARE_EVENT_LISTENER(ended);
+    DECLARE_EVENT_LISTENER(durationchange);
+    DECLARE_EVENT_LISTENER(timeupdate);
+    DECLARE_EVENT_LISTENER(play);
+    DECLARE_EVENT_LISTENER(pause);
+    DECLARE_EVENT_LISTENER(ratechange);
+    DECLARE_EVENT_LISTENER(volumechange);
+#endif
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers
     // DECLARE_EVENT_LISTENER(afterprint);

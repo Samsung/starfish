@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
 #ifndef __StarFishFrameReplacedVideo__
 #define __StarFishFrameReplacedVideo__
 
@@ -88,4 +89,5 @@ protected:
 };
 }
 
+#endif
 #endif
