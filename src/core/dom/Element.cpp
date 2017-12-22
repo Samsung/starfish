@@ -32,7 +32,6 @@
 #include "core/dom/NamedNodeMap.h"
 #include "core/dom/SelectorQuery.h"
 #include "core/dom/Text.h"
-#include "core/dom/PseudoElementData.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/parser/HTMLParserIdioms.h"
 #include "core/dom/xml/XMLSerializer.h"
@@ -405,18 +404,50 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         // is partially matched.
         setNeedsStyleRecalcIfNeeded();
     }
+}
 
-    // The 'content' property is used with ::before and ::after pseudo-elements
-    // to generate content in a document. This property supports attr(X)
-    // function and this function returns as a string the value of attribute X.
-    // Since these pseudo-elements are generated during the creation of the
-    // frame tree, if the attribute is changed, the frame tree of the
-    // corresponding node should be rebuilt.
-    if (hasPseudoElement(
-            StyleResolver::PseudoElementType::PseudoElementBefore) ||
-        hasPseudoElement(
-            StyleResolver::PseudoElementType::PseudoElementAfter)) {
-        setNeedsFrameTreeBuild(true);
+void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
+                                      ComputedStyle* newStyle)
+{
+    Node::didComputedStyleChanged(oldStyle, newStyle);
+
+    Frame* frame = Element::frame();
+    if (frame) {
+        if (!needsFrameTreeBuild()) {
+            for (int i = StyleResolver::PseudoElementFirstLine;
+                 i <= StyleResolver::PseudoElementAfter; i++) {
+                bool o = oldStyle->seenPseudoElement(
+                    (StyleResolver::PseudoElementType)i);
+                bool n = newStyle->seenPseudoElement(
+                    (StyleResolver::PseudoElementType)i);
+                if (o != n) {
+                    setNeedsFrameTreeBuild(false);
+                }
+                if (o && n) {
+                    ComputedStyle* ocs = oldStyle->pseudoStyle(
+                        this, (StyleResolver::PseudoElementType)i);
+                    ComputedStyle* ncs = newStyle->pseudoStyle(
+                        this, (StyleResolver::PseudoElementType)i);
+                    bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
+                        false,
+                    };
+                    if (compareStyle(ocs, ncs, damagedKeys) !=
+                        ComputedStyleDamageNone) {
+                        setNeedsFrameTreeBuild(false);
+                    }
+                }
+            }
+        }
+
+        if (frame->isFrameBlockBox()) {
+            frame = frame->firstChild();
+            while (frame) {
+                if (frame->isAnonymous()) {
+                    frame->updateComputedStyle(this);
+                }
+                frame = frame->next();
+            }
+        }
     }
 }
 
@@ -1117,46 +1148,6 @@ Attr* Element::ensureAttr(QualifiedName name)
         rareMembers->m_attrList->push_back(returnAttr);
     }
     return returnAttr;
-}
-
-bool Element::hasPseudoElements()
-{
-    RareElementMembers* rareMembers = ensureRareElementMembers();
-    return (rareMembers->m_pseudoElementData &&
-            rareMembers->m_pseudoElementData->hasPseudoElements());
-}
-
-bool Element::hasPseudoElement(StyleResolver::PseudoElementType type)
-{
-    RareElementMembers* rareMembers = ensureRareElementMembers();
-    return (rareMembers->m_pseudoElementData &&
-            rareMembers->m_pseudoElementData->hasPseudoElement(type));
-}
-
-PseudoElement* Element::pseudoElement(StyleResolver::PseudoElementType type)
-{
-    RareElementMembers* rareMembers = ensureRareElementMembers();
-    return rareMembers->m_pseudoElementData
-               ? rareMembers->m_pseudoElementData->pseudoElement(type)
-               : nullptr;
-}
-
-void Element::setPseudoElement(StyleResolver::PseudoElementType type,
-                               PseudoElement* pseudoElement)
-{
-    RareElementMembers* rareMembers = ensureRareElementMembers();
-    if (!rareMembers->m_pseudoElementData) {
-        rareMembers->m_pseudoElementData = new PseudoElementData();
-    }
-    rareMembers->m_pseudoElementData->setPseudoElement(type, pseudoElement);
-}
-
-void Element::clearPseudoElements()
-{
-    RareElementMembers* rareMembers = ensureRareElementMembers();
-    if (rareMembers->m_pseudoElementData) {
-        rareMembers->m_pseudoElementData->clearPseudoElements();
-    }
 }
 
 void Element::setId(String* id)

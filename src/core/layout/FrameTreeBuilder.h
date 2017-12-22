@@ -66,12 +66,12 @@ public:
     static void buildFrameTree(Document* document);
     static void clearTree(Node* current);
 
-    static void createPseudoElementIfNeeded(
-        Node* parent, StyleResolver::PseudoElementType pseudoId,
-        FrameTreeBuilderContext& ctx);
+    static void createPseudoElement(Node* parent,
+                                    StyleResolver::PseudoElementType pseudoId,
+                                    FrameTreeBuilderContext& ctx);
     static ComputedStyle* pseudoStyleForElementInternal(
         Node* node, StyleResolver::PseudoElementType pseudoId,
-        ComputedStyle* parentStyle, PseudoElement* element);
+        ComputedStyle* parentStyle);
 
     static Frame* buildSVGFrameTree(SVGElement* svgElement);
 #ifdef STARFISH_ENABLE_TEST

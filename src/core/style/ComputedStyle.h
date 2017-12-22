@@ -347,6 +347,7 @@ public:
 
 class ComputedStyle : public gc {
     friend class StyleResolver;
+    friend class Frame;
     friend class Length;
     friend void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
                                      ComputedStyle* parentStyle, bool force);
@@ -415,6 +416,11 @@ public:
         m_inheritedStyles.m_isRareDataAllocated = false;
         m_inheritedStyles.m_fontFamilyDatas = g_initialFontFamilyDatas;
         m_seenViewPortUnitInStyle = false;
+        m_seenPseudoElementFirstLine = false;
+        m_seenPseudoElementFirstLetter = false;
+        m_seenPseudoElementBefore = false;
+        m_seenPseudoElementAfter = false;
+        m_gotInheritedColor = false;
 
         initNonInheritedStyles();
     }
@@ -426,6 +432,11 @@ public:
         m_inheritedStyles = from->m_inheritedStyles;
         m_inheritedStyles.m_isRareDataAllocated = false;
         m_seenViewPortUnitInStyle = false;
+        m_seenPseudoElementFirstLine = false;
+        m_seenPseudoElementFirstLetter = false;
+        m_seenPseudoElementBefore = false;
+        m_seenPseudoElementAfter = false;
+        m_gotInheritedColor = false;
 
         initNonInheritedStyles();
     }
@@ -1889,9 +1900,40 @@ public:
 
         return nullptr;
     }
-    ComputedStyle* cachedPseudoStyle(StyleResolver::PseudoElementType pid);
-    ComputedStyle* addCachedPseudoStyle(ComputedStyle* pseudoStyle);
-    void removeCachedPseudoStyle(StyleResolver::PseudoElementType pid);
+
+    ComputedStyle* pseudoStyle(Element* containerElement,
+                               StyleResolver::PseudoElementType pid);
+    bool seenPseudoElement(StyleResolver::PseudoElementType pseudoId)
+    {
+        if (pseudoId == StyleResolver::PseudoElementType::PseudoElementBefore) {
+            if (seenPseudoElementBefore()) {
+                return true;
+            }
+        } else if (pseudoId ==
+                   StyleResolver::PseudoElementType::PseudoElementAfter) {
+            if (seenPseudoElementAfter()) {
+                return true;
+            }
+        } else if (pseudoId ==
+                   StyleResolver::PseudoElementType::PseudoElementFirstLetter) {
+            if (seenPseudoElementFirstLetter()) {
+                return true;
+            }
+        } else if (pseudoId ==
+                   StyleResolver::PseudoElementType::PseudoElementFirstLine) {
+            if (seenPseudoElementFirstLine()) {
+                return true;
+            }
+        } else if (pseudoId == StyleResolver::PseudoElementType::
+                                   PseudoElementFirstLineInherited) {
+            if (seenPseudoElementFirstLine()) {
+                return true;
+            }
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+        return false;
+    }
 
     bool hasRareComputeStyleData()
     {
@@ -2052,10 +2094,34 @@ public:
         return MaskSizeValue::ContainMaskSizeValue;
     }
 
+    bool seenPseudoElementFirstLine() const
+    {
+        return m_seenPseudoElementFirstLine;
+    }
+
+    bool seenPseudoElementFirstLetter() const
+    {
+        return m_seenPseudoElementFirstLetter;
+    }
+
+    bool seenPseudoElementBefore() const
+    {
+        return m_seenPseudoElementBefore;
+    }
+
+    bool seenPseudoElementAfter() const
+    {
+        return m_seenPseudoElementAfter;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
 protected:
+    ComputedStyle* cachedPseudoStyle(StyleResolver::PseudoElementType pid);
+    ComputedStyle* addCachedPseudoStyle(ComputedStyle* pseudoStyle);
+    void removeCachedPseudoStyle(StyleResolver::PseudoElementType pid);
+
     InheritedStylesRareData* ensureRareData()
     {
         if (m_inheritedStyles.m_isRareDataAllocated) {
@@ -2119,6 +2185,12 @@ protected:
     } m_inheritedStyles;
 
     bool m_seenViewPortUnitInStyle : 1;
+    bool m_seenPseudoElementFirstLine : 1;
+    bool m_seenPseudoElementFirstLetter : 1;
+    bool m_seenPseudoElementBefore : 1;
+    bool m_seenPseudoElementAfter : 1;
+    bool m_seenPseudoElementFirstLineInherited : 1;
+    bool m_gotInheritedColor : 1;
     FloatValue m_float : 2;
     ClearValue m_clear : 2;
     DisplayValue m_display : 5;

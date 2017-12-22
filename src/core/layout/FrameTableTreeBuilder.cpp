@@ -46,6 +46,8 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
     bool isProperChild = isProperChildDisplayValueType(
         parent->style()->display(), current->style()->display());
 
+    bool needsCreatePseudoElement = force || current->needsFrameTreeBuild();
+
     if (isProperChild) {
         if (force || (current->needsFrameTreeBuild() && !current->frame())) {
             force = true;
@@ -60,7 +62,7 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
         ctx.setCurrentBlockContainer(currentFrame);
         ctx.setIsInFrameInlineFlow(false);
 
-        FrameTreeBuilder::createPseudoElementIfNeeded(
+        FrameTreeBuilder::createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
             ctx);
 
@@ -150,15 +152,19 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
         }
     }
 
-    FrameTreeBuilder::createPseudoElementIfNeeded(
-        current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
+    if (needsCreatePseudoElement) {
+        FrameTreeBuilder::createPseudoElement(
+            current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
+    }
 
     ctx.setCurrentBlockContainer(parent);
     ctx.setIsInFrameInlineFlow(isInFrameInlineFlow);
 
-    FrameTreeBuilder::createPseudoElementIfNeeded(
-        current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
-        ctx);
+    if (needsCreatePseudoElement) {
+        FrameTreeBuilder::createPseudoElement(
+            current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
+            ctx);
+    }
 
     STARFISH_ASSERT(currentFrame);
     return currentFrame;

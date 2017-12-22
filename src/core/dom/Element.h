@@ -30,7 +30,6 @@ class CSSStyleDeclaration;
 class HTMLElement;
 class NamedNodeMap;
 class PseudoElement;
-class PseudoElementData;
 class DOMStringMap;
 
 class RareElementMembers : public RareNodeMembers {
@@ -39,7 +38,6 @@ public:
         : RareNodeMembers()
         , m_namedNodeMap(nullptr)
         , m_attrList(nullptr)
-        , m_pseudoElementData(nullptr)
         , m_scrolling(nullptr)
         , m_dataset(nullptr)
     {
@@ -52,7 +50,6 @@ public:
 
     NamedNodeMap* m_namedNodeMap;
     GCVector<Attr*>* m_attrList;
-    PseudoElementData* m_pseudoElementData;
     LayoutUnit m_scrollTop;
     LayoutUnit m_scrollLeft;
     Scrolling* m_scrolling;
@@ -159,6 +156,9 @@ public:
     {
     }
 
+    virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
+                                         ComputedStyle* newStyle);
+
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump()
     {
@@ -232,13 +232,6 @@ public:
 
     Attr* attr(QualifiedName name);
     Attr* ensureAttr(QualifiedName name);
-
-    bool hasPseudoElements();
-    bool hasPseudoElement(StyleResolver::PseudoElementType type);
-    PseudoElement* pseudoElement(StyleResolver::PseudoElementType type);
-    void setPseudoElement(StyleResolver::PseudoElementType type,
-                          PseudoElement* pseudoElement = nullptr);
-    void clearPseudoElements();
 
     AtomicString& atomicId()
     {

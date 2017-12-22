@@ -109,6 +109,7 @@ protected:
 
 class StyleRule : public StyleRuleBase {
     friend class StyleResolver;
+    friend class CSSStyleSheet;
 
 public:
     StyleRule(CSSSelector::Type type, AtomicString selectorText);

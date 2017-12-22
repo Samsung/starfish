@@ -27,6 +27,7 @@
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameFlexibleBox.h"
+#include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
 
 namespace StarFish {
@@ -1256,7 +1257,7 @@ Frame* Frame::enclosingFirstLineStyle()
         if (!firstLineFrame->isAnonymous() &&
             !firstLineFrame->isFrameDocument()) {
             STARFISH_ASSERT(firstLineFrame->node()->isElement());
-            hasPseudo = firstLineFrame->node()->asElement()->hasPseudoElement(
+            hasPseudo = firstLineFrame->style()->seenPseudoElement(
                 StyleResolver::PseudoElementType::PseudoElementFirstLine);
         }
         if (hasPseudo) {
@@ -1299,7 +1300,7 @@ ComputedStyle* Frame::pseudoStyleForFirstLine(
     STARFISH_ASSERT(node());
     STARFISH_ASSERT(node()->isElement());
 
-    if (!node()->asElement()->hasPseudoElement(pseudoId)) {
+    if (!node()->style()->seenPseudoElement(pseudoId)) {
         return nullptr;
     }
     if (!parentStyle) {
@@ -1320,12 +1321,23 @@ ComputedStyle* Frame::pseudoStyleForFirstLine(
 
     Element* element = n->asElement();
     ComputedStyle* result = new ComputedStyle(parentStyle);
+    StyleResolveContext ctx(document());
     if (pseudoId == StyleResolver::PseudoElementType::PseudoElementFirstLine) {
         document()->styleResolver().matchAllRules(
-            element, result, parentStyle,
+            ctx, element, result, parentStyle,
             StyleResolver::PseudoElementType::PseudoElementFirstLine);
     } else {
-        document()->styleResolver().matchAllRules(element, result, parentStyle);
+        ComputedStyle::InheritedStyles orgInheritedStyles =
+            parentStyle->m_inheritedStyles;
+        document()->styleResolver().matchAllRules(
+            ctx, element, result, parentStyle,
+            StyleResolver::PseudoElementType::PseudoElementFirstLine);
+        Unit::Color computedColor = result->color();
+        result->m_inheritedStyles = orgInheritedStyles;
+        if (parentStyle->m_gotInheritedColor) {
+            result->m_inheritedStyles.m_color = computedColor;
+        }
+
         result->setPseudoType(
             StyleResolver::PseudoElementType::PseudoElementFirstLineInherited);
     }
@@ -1347,18 +1359,21 @@ ComputedStyle* Frame::pseudoStyleForFirstLine(
 ComputedStyle* Frame::cachedPseudoStyle(StyleResolver::PseudoElementType pseudo,
                                         ComputedStyle* parentStyle)
 {
-    if (!(node()->isElement() &&
-          node()->asElement()->hasPseudoElement(pseudo))) {
-        return nullptr;
+    if (node() && node()->isElement()) {
+        if (pseudo == StyleResolver::PseudoElementFirstLine ||
+            pseudo == StyleResolver::PseudoElementFirstLineInherited) {
+            auto c = style()->cachedPseudoStyle(pseudo);
+            if (c == nullptr) {
+                auto s = pseudoStyleForFirstLine(pseudo, parentStyle);
+                style()->addCachedPseudoStyle(s);
+                return s;
+            } else {
+                return c;
+            }
+        }
+        return style()->pseudoStyle(node()->asElement(), pseudo);
     }
-
-    ComputedStyle* cachedStyle = style()->cachedPseudoStyle(pseudo);
-    if (cachedStyle) {
-        return cachedStyle;
-    }
-
-    ComputedStyle* result = pseudoStyleForFirstLine(pseudo, parentStyle);
-    return style()->addCachedPseudoStyle(result);
+    return nullptr;
 }
 
 static ComputedStyle* firstLineStyleFromCache(Frame* frame,
@@ -1376,18 +1391,22 @@ static ComputedStyle* firstLineStyleFromCache(Frame* frame,
             return firstLineStyleFromCache(
                 f->asInlineNonReplacedBox()->origin(), style);
         } else if (f->isFrameInline() &&
-                   !(f->node()->asElement()->hasPseudoElement(
+                   !(f->style()->seenPseudoElement(
                        StyleResolver::PseudoElementType::
                            PseudoElementFirstLetter))) {
-            ComputedStyle* parentStyle =
-                f->parent()->firstLineStyle(f->parent(), f->parent()->style());
+            ComputedStyle* parentStyle = f->style();
             if (parentStyle != f->parent()->style()) {
-                f->node()->asElement()->setPseudoElement(
+                Frame* fb = f;
+                while (true) {
+                    if (fb->isFrameBlockBox() && fb->node()) {
+                        break;
+                    }
+                    fb = fb->parent();
+                }
+                return fb->cachedPseudoStyle(
                     StyleResolver::PseudoElementType::
-                        PseudoElementFirstLineInherited);
-                return f->cachedPseudoStyle(StyleResolver::PseudoElementType::
-                                                PseudoElementFirstLineInherited,
-                                            parentStyle);
+                        PseudoElementFirstLineInherited,
+                    parentStyle);
             }
         }
     }

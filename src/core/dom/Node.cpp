@@ -536,16 +536,6 @@ void Node::setState(NodeState state, DynamicRestyleFlags mask, bool enable)
         }
     }
 
-    m_document->browsingContext()->resolveStyleIfNeeds();
-
-    if (isElement() &&
-        (asElement()->hasPseudoElement(
-             StyleResolver::PseudoElementType::PseudoElementBefore) ||
-         asElement()->hasPseudoElement(
-             StyleResolver::PseudoElementType::PseudoElementAfter))) {
-        setNeedsFrameTreeBuild(true);
-    }
-
     int newState = m_state;
     if (oldState != newState) {
         didStateChanged(oldState, newState);
@@ -1182,8 +1172,6 @@ Node* Node::parserAppendChild(Node* child)
     m_lastChild = child;
 
     child->setParentNode(this);
-    child->setNeedsStyleRecalc();
-    setNeedsFrameTreeBuild(false);
 
     if (isInDocumentScope()) {
         notifyNodeInsertedToDocumentTree(this, child);
@@ -1194,6 +1182,9 @@ Node* Node::parserAppendChild(Node* child)
         parent->didNodeInserted(this, child);
         parent = parent->parentNode();
     }
+
+    child->setNeedsStyleRecalc();
+    setNeedsFrameTreeBuild(false);
 
     return child;
 }
@@ -1271,8 +1262,6 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     child->setParentNode(this);
     child->setPreviousSibling(prev);
     child->setNextSibling(childRef);
-    child->setNeedsStyleRecalc();
-    setNeedsFrameTreeBuild(false);
 
     Node* parent = this;
     while (parent) {
@@ -1283,6 +1272,9 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     if (isInDocumentScope()) {
         notifyNodeInsertedToDocumentTree(this, child);
     }
+
+    child->setNeedsStyleRecalc();
+    setNeedsFrameTreeBuild(false);
 }
 
 void Node::parserTakeAllChildrenFrom(Node* oldParent)
@@ -1445,12 +1437,9 @@ void Node::setNeedsStyleRecalc()
 
     if (!m_needsStyleRecalc) {
         m_needsStyleRecalc = true;
-
-        Node* node = parentNode();
-        while (node && !node->childNeedsStyleRecalc()) {
-            node->setChildNeedsStyleRecalc();
-            node = node->parentNode();
-        }
+    }
+    if (parentNode()) {
+        parentNode()->setChildNeedsStyleRecalc();
     }
     window()->browsingContext()->setNeedsStyleRecalc();
 }
@@ -1464,12 +1453,10 @@ void Node::setNeedsStyleRecalcIfNeeded()
     // current node
     if (!m_needsStyleRecalc) {
         m_needsStyleRecalc = true;
+    }
 
-        Node* node = parentNode();
-        while (node && !node->childNeedsStyleRecalc()) {
-            node->setChildNeedsStyleRecalc();
-            node = node->parentNode();
-        }
+    if (parentNode()) {
+        parentNode()->setChildNeedsStyleRecalc();
     }
 
     // siblings
@@ -1490,9 +1477,15 @@ void Node::setSiblingsNeedsStyleRecalcIfNeeded()
                 StyleResolver::CombinatorMatchingResult::
                     CombinatorMatchesPartially) {
             node->m_needsStyleRecalc = true;
+
+            if (parentNode()) {
+                parentNode()->setChildNeedsStyleRecalc();
+            }
         }
         node = node->nextSibling();
     }
+
+    window()->browsingContext()->setNeedsStyleRecalc();
 }
 
 void Node::setChildrenNeedsStyleRecalcIfNeeded()
@@ -1504,10 +1497,16 @@ void Node::setChildrenNeedsStyleRecalcIfNeeded()
                 StyleResolver::CombinatorMatchingResult::
                     CombinatorMatchesPartially) {
             child->m_needsStyleRecalc = true;
+
+            if (parentNode()) {
+                parentNode()->setChildNeedsStyleRecalc();
+            }
         }
         child->setChildrenNeedsStyleRecalcIfNeeded();
         child = child->nextSibling();
     }
+
+    window()->browsingContext()->setNeedsStyleRecalc();
 }
 
 void Node::setChildrenNeedsStyleRecalc()
@@ -1516,12 +1515,16 @@ void Node::setChildrenNeedsStyleRecalc()
         return;
     }
 
+    setChildNeedsStyleRecalc();
+
     Node* child = firstChild();
     while (child) {
         child->m_needsStyleRecalc = true;
         child->setChildrenNeedsStyleRecalc();
         child = child->nextSibling();
     }
+
+    window()->browsingContext()->setNeedsStyleRecalc();
 }
 
 void Node::setNeedsLayout()

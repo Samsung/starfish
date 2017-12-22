@@ -26,6 +26,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/FrameTreeBuilder.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/style/ComputedStyle.h"
@@ -1505,20 +1506,16 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
 }
 
 ComputedStyle* ComputedStyle::cachedPseudoStyle(
-    StyleResolver::PseudoElementType pid)
+    StyleResolver::PseudoElementType pseudoType)
 {
-    if (pseudoType() != StyleResolver::PseudoElementType::PseudoElementNone) {
-        return nullptr;
-    }
-
     GCVector<ComputedStyle*>* styles = cachedPseudoStyles();
     if (!styles) {
         return nullptr;
     }
 
     auto it = std::find_if(styles->begin(), styles->end(),
-                           [&pid](ComputedStyle* pseudoStyle) {
-                               return pseudoStyle->pseudoType() == pid;
+                           [&pseudoType](ComputedStyle* pseudoStyle) {
+                               return pseudoStyle->pseudoType() == pseudoType;
                            });
 
     if (it != styles->end()) {
@@ -1555,6 +1552,22 @@ void ComputedStyle::removeCachedPseudoStyle(
                                      return pseudoStyle->pseudoType() == pid;
                                  }),
                   styles->end());
+}
+
+ComputedStyle* ComputedStyle::pseudoStyle(
+    Element* containerElement, StyleResolver::PseudoElementType pseudoType)
+{
+    if (!seenPseudoElement(pseudoType)) {
+        return nullptr;
+    }
+
+    ComputedStyle* cs = cachedPseudoStyle(pseudoType);
+    if (!cs) {
+        cs = FrameTreeBuilder::pseudoStyleForElementInternal(containerElement,
+                                                             pseudoType, this);
+        addCachedPseudoStyle(cs);
+    }
+    return cs;
 }
 
 bool ComputedStyle::isFourSideBorderStyleValueSolid()

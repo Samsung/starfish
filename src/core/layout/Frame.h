@@ -1794,8 +1794,8 @@ public:
         return style()->whiteSpace() & WhiteSpaceValue::NoWrapWhiteSpaceValue;
     }
 
-    virtual ComputedStyle* style(Frame* parent, ComputedStyle* parentStyle,
-                                 bool isFirstLine)
+    ComputedStyle* style(Frame* parent, ComputedStyle* parentStyle,
+                         bool isFirstLine)
     {
         if (isFirstLine) {
             if (ComputedStyle* style = firstLineStyle(parent, parentStyle)) {

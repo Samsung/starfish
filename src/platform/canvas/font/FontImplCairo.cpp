@@ -208,7 +208,7 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
         size_t faceIndex = SIZE_MAX;
         FT_Face lastFace = nullptr;
         hb_font_t* hbFace = nullptr;
-        UScriptCode lastUnicodeScript;
+        UScriptCode lastUnicodeScript = USCRIPT_COMMON;
         bool failedToFindFont = false;
         while (i + pos < length) {
             size_t idx = i + pos;
