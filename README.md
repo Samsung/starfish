@@ -59,9 +59,30 @@ where target is either:
 * ``starfish.tizen.release``
 
 ### GBS Build
+
+Get ``gbs-conf``
 ```sh
+git clone https://github.sec.samsung.net/RS7-TizenPM/gbs-conf
+vi gbs-conf/gbs.conf
+# Uncomment the profile to use in [general] section, and
+# fill out 'user' and 'passwd'
+```
+
+Build required packages
+```sh
+git clone git@github.sec.samsung.net:RS7-webtf/escargot.git
+cd escargot
+git submodule init
+git submodule update
+make install_header_to_include
+gbs -c ../gbs-conf/gbs.conf build --define 'jobs 16' -A armv7l -P [ profile.40arm | profile.VdKantM ] --incremental --include-all
+```
+
+Build StarFish
+```
+cd starfish
 ./binding_generator/scripts/starfish_code_generator.py src/ src/binding/
-gbs -c packaging/TizenTV_2018.gbs.conf build -A armv7l -P profile.Main2018_KantM --incremental --include-all
+gbs -c ../gbs-conf/gbs.conf build -A armv7l -P [ profile.40arm | profile.VdKantM ] --incremental --include-all
 ```
 
 ### Directory Structure
@@ -81,20 +102,6 @@ out
 ```
 
 ~~Use `./run.sh [html_file_path]` to run StarFish~~
-
-### Makefile-based Build System
-The following Makefile-based build system is to be deprecated.
-
-``` sh
-git clone git@github.sec.samsung.net:RS7-webtf/starfish.git
-cd starfish
-git submodule init
-git submodule update
-./build_third_party.sh
-make [x86|x64|tizen_mobile_arm|tizen_wearable_arm].[exe|lib].[debug|release] -j
-```
-
-e.g. `make x64.exe.debug -j`
 
 
 ## Testing
@@ -192,3 +199,19 @@ cd /home/developer
 ### CI Infrastructure
 
 http://10.113.138.181/overview/444
+
+## Outdated
+All instructions in this section are outdated. They are listed here only for historical reasons.
+
+### Makefile-based Build System
+
+``` sh
+git clone git@github.sec.samsung.net:RS7-webtf/starfish.git
+cd starfish
+git submodule init
+git submodule update
+./build_third_party.sh
+make [x86|x64|tizen_mobile_arm|tizen_wearable_arm].[exe|lib].[debug|release] -j
+```
+
+e.g. `make x64.exe.debug -j`

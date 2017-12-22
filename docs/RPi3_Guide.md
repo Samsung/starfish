@@ -107,8 +107,9 @@ connmanctl> services
 * AR Wired ethernet_XX_cable
 
 connmanctl> config ethernet_XX_cable --ipv4 manual <ipaddress> <netmask> [gateway]
-connmanctl> config ethernet_XX_cable --nameservers <dns>
 connmanctl> exit
+
+echo 'nameserver xx.xx.xx.xx' > /etc/resolv.conf
 ```
 
 ### Setup ssh and openssh-server
