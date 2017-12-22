@@ -39,6 +39,8 @@ HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
     , m_entryFileName(nullptr)
     , m_mutex(new Mutex())
     , m_usingCount(0)
+    , m_needsRawDataUpdate(false)
+    , m_needsPropertiesUpdate(false)
 {
 }
 
@@ -173,7 +175,7 @@ void HTTPCacheEntry::readEntryHeaders(HeaderMap& out)
     }
 }
 
-bool HTTPCacheEntry::isFresh()
+bool HTTPCacheEntry::isFresh() const
 {
     // https://tools.ietf.org/html/rfc7234#section-4.2
     // See 4.2. Freshness
@@ -194,7 +196,7 @@ bool HTTPCacheEntry::isFresh()
     return freshnessLifetime > currentAge;
 }
 
-String* HTTPCacheEntry::toString()
+String* HTTPCacheEntry::toString() const
 {
     HTTPCacheEntry* copied;
     {
@@ -297,6 +299,30 @@ void HTTPCacheEntry::decreaseUsingCount()
 {
     Locker<Mutex> locker(*m_mutex);
     m_usingCount--;
+}
+
+void HTTPCacheEntry::setNeedsRawDataUpdate(bool value)
+{
+    Locker<Mutex> locker(*m_mutex);
+    m_needsRawDataUpdate = value;
+}
+
+bool HTTPCacheEntry::needsRawDataUpdate()
+{
+    Locker<Mutex> locker(*m_mutex);
+    return m_needsRawDataUpdate;
+}
+
+void HTTPCacheEntry::setNeedsPropertiesUpdate(bool value)
+{
+    Locker<Mutex> locker(*m_mutex);
+    m_needsPropertiesUpdate = value;
+}
+
+bool HTTPCacheEntry::needsPropertiesUpdate()
+{
+    Locker<Mutex> locker(*m_mutex);
+    return m_needsPropertiesUpdate;
 }
 }
 #endif

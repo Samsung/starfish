@@ -33,12 +33,14 @@
 #include "core/dom/Document.h"
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <linux/fs.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #define INDEX_FILE_NAME "/index.txt"
+#define LOCK_FILE_NAME "/.starfish-lock"
 #define DEFAULT_HTTP_CACHE_SIZE 1024 * 1024 * 50
 #define MAX_ENTRY_FILE_SIZE (DEFAULT_HTTP_CACHE_SIZE * 0.04)
 #define NUM_OF_COL 17
@@ -50,19 +52,49 @@ const size_t HTTPCache::kBlockSize = BLKGETSIZE;
 HTTPCache::HTTPCache(String* cacheDirPath)
     : m_cacheEntryTable()
     , m_cacheDirPath(cacheDirPath)
-    , m_indexFilePath()
+    , m_indexFilePath(nullptr)
+    , m_lockFilePath(nullptr)
     , m_cacheSizeLimit(DEFAULT_HTTP_CACHE_SIZE)
     , m_currentTotalSizeOfBlocks(0)
+    , m_lockfd(0)
+    , m_good(false)
 {
     m_indexFilePath = m_cacheDirPath->concat(INDEX_FILE_NAME);
-    if (initFromIndexFileIfPossible() == false) {
-        initCacheDirectory();
-        init();
+    m_lockFilePath =
+        m_cacheDirPath->substring(0, m_cacheDirPath->lastIndexOf('/'));
+    m_lockFilePath = m_lockFilePath->concat(LOCK_FILE_NAME);
+
+    if (!lock()) {
+        return;
     }
+    if (!initFromIndexFileIfPossible()) {
+        init();
+        if (!initCacheDirectory()) {
+            return;
+        }
+    }
+    m_good = true;
 }
 
 HTTPCache::~HTTPCache()
 {
+}
+
+bool HTTPCache::lock()
+{
+    auto path = m_lockFilePath->toUTF8NonGCString();
+    return ((m_lockfd = open(path.data(), O_WRONLY | O_CREAT | O_EXCL,
+                             S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) != -1);
+}
+
+void HTTPCache::unlock()
+{
+    if (m_lockfd != -1) {
+        close(m_lockfd);
+        auto path = m_lockFilePath->toUTF8NonGCString();
+        unlink(path.data());
+        STARFISH_LOG_INFO("[HTTPCache] unlock .starfish-lock\n")
+    }
 }
 
 bool HTTPCache::initFromIndexFileIfPossible()
@@ -93,6 +125,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
         StringUtils::tokenize(&(*row), HTTPCacheEntry::kSeparator, 1, columns);
 
         if (columns.size() != NUM_OF_COL) {
+            STARFISH_LOG_ERROR("[HTTPCache] Index file is corrupted\n");
             return false;
         }
         // TODO : Check whether each column is valid or not
@@ -153,6 +186,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
     }
 
     if (!isConsistent()) {
+        STARFISH_LOG_ERROR("[HTTPCache] Cached entries are corrupted");
         return false;
     }
 
@@ -167,7 +201,7 @@ HTTPCacheEntryMultiMap::iterator HTTPCache::get(ResourceURL* url)
     String* item = url->urlString();
 
     auto entryItr = findEntryInCacheEntryTable(item);
-    if (entryItr == m_cacheEntryTable.end()) {
+    if (entryItr == m_cacheEntryTable.end() || !entryItr->second->canUse()) {
         return m_cacheEntryTable.end();
     }
 
@@ -205,55 +239,107 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
         return;
     }
 
-    const HeaderMap& headerMap = nwd->request->responseHeaderMap();
+    CacheControl cc;
+    HTTPContentInfo cinfo;
+    HTTPFreshnessInfo finfo;
 
-    HTTPContentInfo cinfo = HTTPUtil::getHTTPContentInfoFromHeaders(headerMap);
+    extractHTTPCacheEntryProperty(nwd, cc, cinfo, finfo);
+
     if (cinfo.contentLength > MAX_ENTRY_FILE_SIZE || cinfo.contentLength == 0) {
         return;
     }
 
-    CacheControl cc;
-    auto it = headerMap.find(HTTPHeaderMap::kCacheControl);
-    if (it != headerMap.end()) {
-        cc = HTTPUtil::parseCacheControl(it->second);
-    }
-
-    HTTPFreshnessInfo finfo = HTTPUtil::getHTTPFreshnessInfoFromHeaders(
-        nwd->request->document()->scriptBindingInstance(), headerMap);
-
-    // TODO : Change initial value(ex: -1 or using string) of max-age and then
-    // modify freshness calculation algorithm appropriately
     if (cc.noStore || (cc.maxAge == 0 && finfo.etag.size() == 0)) {
         return;
     }
 
-    finfo.requestTime = nwd->httpTransaction->httpRequest().requestTime();
-    finfo.responseTime = nwd->httpTransaction->httpResponse().responseTime();
-
     size_t sizeOfBlocks = calcBlocksSize(cinfo.contentLength);
-
     if (!pruneAsNeededForCacheSpace(sizeOfBlocks)) {
         return;
     }
 
     HTTPCacheEntry* newEntry =
         new HTTPCacheEntry(nwd->request->url(), cc, cinfo, finfo, 0);
+
     newEntry->setEntryFileNameUsingCachePath(m_cacheDirPath);
 
-    bool ret = newEntry->writeRawDataToEntryFile(nwd->request->response());
-
-    if (!ret) {
+    if (!newEntry->writeRawDataToEntryFile(nwd->request->response())) {
+        STARFISH_LOG_ERROR("[HTTPCache] Failed to write RawData\n");
         return;
     }
 
     m_cacheEntryTable.insert(
         std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
-    m_cacheLRUList.push_back(nwd->request->url()->urlString());
-
+    m_cacheLRUList.push_back(newEntry->url()->urlString());
     m_currentTotalSizeOfBlocks += sizeOfBlocks;
 
     STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
                       (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
+}
+
+void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
+{
+    if (findEntryInCacheEntryTable(entry->url()->urlString()) == end()) {
+        put(nwd);
+        return;
+    }
+
+    size_t old = calcBlocksSize(entry->httpContentInfo().contentLength);
+    if (entry->needsPropertiesUpdate()) {
+        entry->setNeedsPropertiesUpdate(false);
+
+        CacheControl cc;
+        HTTPContentInfo cinfo;
+        HTTPFreshnessInfo finfo;
+
+        extractHTTPCacheEntryProperty(nwd, cc, cinfo, finfo);
+
+        entry->setCacheControl(cc);
+        entry->setHTTPContentInfo(cinfo);
+        entry->setHTTPFreshnessInfo(finfo);
+    }
+
+    if (entry->needsRawDataUpdate()) {
+        entry->setNeedsRawDataUpdate(false);
+        size_t sizeOfBlocks =
+            calcBlocksSize(entry->httpContentInfo().contentLength);
+        if (!pruneAsNeededForCacheSpace(sizeOfBlocks)) {
+            // TODO
+            STARFISH_ASSERT_NOT_REACHED();
+            return;
+        }
+
+        if (!entry->writeRawDataToEntryFile(nwd->request->response())) {
+            STARFISH_LOG_ERROR("[HTTPCache] Failed to write RawData\n");
+            // TODO
+            STARFISH_ASSERT_NOT_REACHED();
+            return;
+        }
+        m_currentTotalSizeOfBlocks += (sizeOfBlocks - old);
+    }
+}
+
+void HTTPCache::extractHTTPCacheEntryProperty(NetworkURLWorkerData* nwd,
+                                              CacheControl& cc,
+                                              HTTPContentInfo& cinfo,
+                                              HTTPFreshnessInfo& finfo)
+{
+    const HeaderMap& headerMap = nwd->request->responseHeaderMap();
+
+    // TODO : Change initial value(ex: -1 or using string) of max-age and then
+    // modify freshness calculation algorithm appropriately
+    auto it = headerMap.find(HTTPHeaderMap::kCacheControl);
+    if (it != headerMap.end()) {
+        cc = HTTPUtil::parseCacheControl(it->second);
+    }
+
+    cinfo = HTTPUtil::getHTTPContentInfoFromHeaders(headerMap);
+
+    finfo = HTTPUtil::getHTTPFreshnessInfoFromHeaders(
+        nwd->request->document()->scriptBindingInstance(), headerMap);
+
+    finfo.requestTime = nwd->httpTransaction->httpRequest().requestTime();
+    finfo.responseTime = nwd->httpTransaction->httpResponse().responseTime();
 }
 
 bool HTTPCache::flush()
@@ -293,6 +379,7 @@ bool HTTPCache::flush()
         }
     }
 
+    unlock();
     return (out->flush() == 0) & (out->close() == 0);
 }
 
@@ -345,15 +432,14 @@ bool HTTPCache::isConsistent()
     STARFISH_ASSERT(isMainThread());
 
     Directory* dir = Directory::create();
-    if (!dir->open(m_cacheDirPath)) {
+
+    if (!dir->open(m_cacheDirPath) ||
+        (dir->fileCount()) != m_cacheLRUList.size()) {
+        STARFISH_LOG_ERROR("[HTTPCache] Inconsistent status of directory\n");
         dir->close();
         return false;
     }
 
-    if ((dir->fileCount()) != m_cacheLRUList.size()) {
-        dir->close();
-        return false;
-    }
     dir->close();
 
     for (auto it = m_cacheEntryTable.begin(); it != m_cacheEntryTable.end();
@@ -361,17 +447,16 @@ bool HTTPCache::isConsistent()
         File* file = File::create();
         file->open(it->second->entryFileName(), File::Read);
         if (file->isOpen()) {
-            if (file->lastModifyTime() != it->second->lastModifyFileTime()) {
+            if (file->lastModifyTime() != it->second->lastModifyFileTime() ||
+                file->size() != it->second->httpContentInfo().contentLength) {
+                STARFISH_LOG_ERROR(
+                    "[HTTPCache] Inconsistent status of entry file\n");
                 file->close();
                 return false;
             }
-            if (file->size() != it->second->httpContentInfo().contentLength) {
-                file->close();
-                return false;
-            }
-            file->close();
         } else {
             file->close();
+            STARFISH_LOG_ERROR("[HTTPCache] Inconsistent entry FileName\n");
             return false;
         }
     }
@@ -383,9 +468,7 @@ void HTTPCache::expire()
     STARFISH_ASSERT(isMainThread());
 
     for (auto it = m_cacheEntryTable.begin(); it != m_cacheEntryTable.end();) {
-        if (it->second->usingCount() == 0 &&
-            (!it->second->isFresh() &&
-             it->second->httpFreshnessInfo().etag.size() == 0)) {
+        if (it->second->shouldExpire()) {
             File* fio = File::create();
             fio->open(it->second->entryFileName(), File::Read);
 
@@ -403,22 +486,23 @@ void HTTPCache::expire()
     }
 }
 
-void HTTPCache::initCacheDirectory()
+bool HTTPCache::initCacheDirectory()
 {
     STARFISH_ASSERT(isMainThread());
 
     Directory* dir = Directory::create();
 
     if (dir->open(m_cacheDirPath)) {
-        dir->clear();
+        dir->removeDir();
     }
 
     if (!dir->mkDir()) {
         STARFISH_LOG_ERROR("[HTTPCache] %s directory create error\n",
                            m_cacheDirPath->toUTF8NonGCString().data());
-        STARFISH_ASSERT_NOT_REACHED();
+        return false;
     }
-    dir->close();
+
+    return dir->close();
 }
 
 void HTTPCache::init()

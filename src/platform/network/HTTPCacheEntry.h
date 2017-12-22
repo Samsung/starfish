@@ -34,32 +34,46 @@ public:
     ~HTTPCacheEntry();
     HTTPCacheEntry(const HTTPCacheEntry& rhs);
 
-    ResourceURL* url()
+    ResourceURL* url() const
     {
         return m_url;
     }
 
-    int64_t lastModifyFileTime()
+    int64_t lastModifyFileTime() const
     {
         return m_lastModifyFileTime;
     }
 
-    String* entryFileName()
+    String* entryFileName() const
     {
         return m_entryFileName;
     }
 
-    bool shouldReValidate()
+    bool shouldReValidate() const
     {
         return !isFresh() || m_httpFreshnessInfo.etag.size() ||
                m_cacheControl.mustRevalidate || m_cacheControl.noCache;
+    }
+
+    bool shouldExpire() const
+    {
+        return (m_usingCount == 0 &&
+                ((m_cacheControl.noStore ||
+                  (!isFresh() && m_httpFreshnessInfo.etag.size() == 0))));
+    }
+
+    bool canUse() const
+    {
+        return !m_cacheControl.noStore &&
+               (m_httpFreshnessInfo.lastModified > 0 ||
+                m_httpFreshnessInfo.etag.size() > 0);
     }
 
     void setEntryFileNameUsingCachePath(String* cachePath);
     bool writeRawDataToEntryFile(std::vector<char>& rawData);
     bool readRawDataFromEntryFile(std::vector<char>& out);
     void readEntryHeaders(HeaderMap& out);
-    bool isFresh();
+    bool isFresh() const;
 
     size_t entryKey() const;
 
@@ -81,7 +95,7 @@ public:
     }
     void setHTTPFreshnessInfo(HTTPFreshnessInfo& info);
 
-    String* toString();
+    String* toString() const;
 
     bool operator==(const HTTPCacheEntry& other) const
     {
@@ -91,10 +105,17 @@ public:
 
     void increaseUsingCount();
     void decreaseUsingCount();
+
     size_t usingCount()
     {
         return m_usingCount;
     }
+
+    void setNeedsRawDataUpdate(bool value);
+    bool needsRawDataUpdate();
+
+    void setNeedsPropertiesUpdate(bool value);
+    bool needsPropertiesUpdate();
 
     static const char* kSeparator;
 
@@ -108,6 +129,8 @@ private:
 
     Mutex* m_mutex;
     size_t m_usingCount;
+    bool m_needsRawDataUpdate;
+    bool m_needsPropertiesUpdate;
 };
 
 typedef GCUnorderedMultiMap<size_t, HTTPCacheEntry*> HTTPCacheEntryMultiMap;

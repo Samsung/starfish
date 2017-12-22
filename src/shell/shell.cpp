@@ -644,10 +644,13 @@ int main(int argc, char* argv[])
 #if defined(STARFISH_EFL_CAIRO)
     info.deviceScaleFactor = scaleFactor;
 #endif
+
+    std::string cacheDir(getenv("HOME"));
+    cacheDir += "/Starfish-cache";
     StarFish::StarFish* sf = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
         width, height, x, y, 1, info, "", "/tmp/StarFish_Cookies.txt",
-        "/tmp/.cache", String::fromUTF8(userAgentExtraString.data()));
+        cacheDir.data(), String::fromUTF8(userAgentExtraString.data()));
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();

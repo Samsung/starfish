@@ -90,9 +90,15 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
     // TODO : Do not use libur libcurl error codes
     if (nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK) {
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        if (nwd->httpTransaction->httpResponse().responseCode() ==
-            HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
-            NetworkURLWorkerHelper::httpCacheWorker(nwd);
+        if (nwd->cachedEntry) {
+            nwd->cachedEntry->setNeedsPropertiesUpdate(true);
+            if (nwd->httpTransaction->httpResponse().responseCode() ==
+                HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
+                NetworkURLWorkerHelper::httpCacheWorker(nwd);
+            } else {
+                nwd->cachedEntry->setNeedsRawDataUpdate(true);
+                responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
+            }
         } else {
             responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
         }
@@ -177,29 +183,8 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             if (!nwd->cachedEntry) {
                 cache->put(nwd);
             } // TODO : If the entry is before it expires but is no longer fresh
-            else {
-                if (nwd->httpTransaction->httpResponse().responseCode() ==
-                    HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
-                    // Update Entry property
-                    CacheControl cc;
-                    auto it = nwd->request->responseHeaderMap().find(
-                        HTTPHeaderMap::kCacheControl);
-                    if (it != nwd->request->responseHeaderMap().end()) {
-                        cc = HTTPUtil::parseCacheControl(it->second);
-                    }
-
-                    HTTPFreshnessInfo info =
-                        HTTPUtil::getHTTPFreshnessInfoFromHeaders(
-                            nwd->request->document()->scriptBindingInstance(),
-                            nwd->request->responseHeaderMap());
-                    info.responseTime =
-                        nwd->cachedEntry->httpFreshnessInfo().responseTime;
-                    info.requestTime =
-                        nwd->cachedEntry->httpFreshnessInfo().requestTime;
-
-                    nwd->cachedEntry->setCacheControl(cc);
-                    nwd->cachedEntry->setHTTPFreshnessInfo(info);
-                }
+            else if (nwd->cachedEntry) {
+                cache->update(nwd, nwd->cachedEntry);
             }
         }
 #endif
