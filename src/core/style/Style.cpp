@@ -3478,11 +3478,12 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     return ret;
 }
 
-ComputedStyle* StyleResolver::resolveStyle(Element* element,
+ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
+                                           Element* element,
                                            ComputedStyle* parent)
 {
     ComputedStyle* style = new ComputedStyle(parent);
-    matchAllRules(element, style, parent);
+    matchAllRules(ctx, element, style, parent);
     style->loadResources(element, element->style());
     style->arrangeStyleValues(parent, element);
     return style;
@@ -3662,9 +3663,11 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::Color:
+            style->m_gotInheritedColor = false;
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 style->setColor(parentStyle->m_inheritedStyles.m_color);
+                style->m_gotInheritedColor = true;
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->setColor(Unit::Color(0, 0, 0, 255));
@@ -5710,6 +5713,7 @@ void StyleResolver::apply(Element* element,
 }
 
 void StyleResolver::collectMatchingRulesFromAuthorSheet(
+    StyleResolveContext& ctx,
     const GCUnorderedMultiMap<
         AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
     const GCUnorderedMultiMap<
@@ -5746,14 +5750,31 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
         }
 
         const CSSSelectorList& selectorList = rule->selectorList();
+
         MatchResult result;
         if (matchSelector(element, elementName, elementId, elementClasses,
                           selectorList, 0, result) == Match::SelectorMatches) {
             if (result.pseudoType != PseudoElementType::PseudoElementNone) {
-                element->setPseudoElement(result.pseudoType);
                 if (result.pseudoType == pseudoElementType) {
                     ret->setPseudoType(pseudoElementType);
                     authorRules.push_back(std::make_pair(rule, url));
+                } else {
+                    if (result.pseudoType ==
+                        PseudoElementType::PseudoElementFirstLine) {
+                        ret->m_seenPseudoElementFirstLine = true;
+                    } else if (result.pseudoType ==
+                               PseudoElementType::PseudoElementFirstLetter) {
+                        ret->m_seenPseudoElementFirstLetter = true;
+                    } else if (result.pseudoType ==
+                               PseudoElementType::PseudoElementBefore) {
+                        ret->m_seenPseudoElementBefore = true;
+                    } else if (result.pseudoType ==
+                               PseudoElementType::PseudoElementAfter) {
+                        ret->m_seenPseudoElementAfter = true;
+                    } else if (result.pseudoType ==
+                               PseudoElementType::PseudoElementFirstLine) {
+                        ret->m_seenPseudoElementFirstLine = true;
+                    }
                 }
             } else if (pseudoElementType ==
                        PseudoElementType::PseudoElementNone) {
@@ -5797,8 +5818,8 @@ static bool comparingRules(const std::pair<StyleRule*, ResourceURL*>& r1,
            r2.first->selectorList().specificity();
 }
 
-void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
-                                  ComputedStyle* parent,
+void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
+                                  ComputedStyle* ret, ComputedStyle* parent,
                                   PseudoElementType pseudoElementType)
 {
     AtomicString elementName = element->name().localNameAtomic();
@@ -5820,7 +5841,7 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
         auto& rules = sheet->ruleSet()->idRules();
         auto range = rules.equal_range(elementId);
         collectMatchingRulesFromAuthorSheet(
-            range.first, range.second, CSSSelector::Type::Id, element,
+            ctx, range.first, range.second, CSSSelector::Type::Id, element,
             elementName, elementId, elementClasses, authorRules, ret,
             pseudoElementType);
     }
@@ -5831,9 +5852,9 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
         for (unsigned k = 0; k < classLen; k++) {
             auto range = rules.equal_range(elementClasses[k]);
             collectMatchingRulesFromAuthorSheet(
-                range.first, range.second, CSSSelector::Type::Class, element,
-                elementName, elementId, elementClasses, authorRules, ret,
-                pseudoElementType);
+                ctx, range.first, range.second, CSSSelector::Type::Class,
+                element, elementName, elementId, elementClasses, authorRules,
+                ret, pseudoElementType);
         }
     }
 
@@ -5841,7 +5862,7 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
         auto& rules = sheet->ruleSet()->tagRules();
         auto range = rules.equal_range(elementName);
         collectMatchingRulesFromAuthorSheet(
-            range.first, range.second, CSSSelector::Type::Tag, element,
+            ctx, range.first, range.second, CSSSelector::Type::Tag, element,
             elementName, elementId, elementClasses, authorRules, ret,
             pseudoElementType);
     }
@@ -5849,10 +5870,11 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret,
     {
         auto& rules = sheet->ruleSet()->universalRules();
         collectMatchingRulesFromAuthorSheet(
-            rules.begin(), rules.end(), CSSSelector::Type::UnKnown, element,
-            elementName, elementId, elementClasses, authorRules, ret,
+            ctx, rules.begin(), rules.end(), CSSSelector::Type::UnKnown,
+            element, elementName, elementId, elementClasses, authorRules, ret,
             pseudoElementType);
     }
+
     if (authorRules.size() != 0) {
         authorRules.sortVector(comparingRules);
     }
@@ -6348,14 +6370,17 @@ bool StyleResolver::checkPseudoElement(Element* element,
     }
 }
 
-void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
-                          ComputedStyle* parentStyle,
-                          bool inheritedStyleChanged = false)
+static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
+                                               StyleResolver* resolver,
+                                               Element* element,
+                                               ComputedStyle* parentStyle,
+                                               bool inheritedStyleChanged)
 {
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
 
     if (element->needsStyleRecalc() || inheritedStyleChanged) {
-        ComputedStyle* style = resolver->resolveStyle(element, parentStyle);
+        ComputedStyle* style =
+            resolver->resolveStyle(ctx, element, parentStyle);
         bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
             false,
         };
@@ -6405,60 +6430,77 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element,
         element->clearNeedsStyleRecalc();
     }
 
-    STARFISH_ASSERT(element->style());
-    bool shouldWeStopTreeTraverseHere =
-        element->style()->display() == DisplayValue::NoneDisplayValue;
-    if (shouldWeStopTreeTraverseHere) {
-        return;
-    }
+    return damage;
+}
 
-    if (inheritedStyleChanged | element->childNeedsStyleRecalc()) {
-        if (inheritedStyleChanged && element->frame() &&
-            element->frame()->isFrameBlockBox()) {
-            Frame* frame = element->frame();
-            frame = frame->firstChild();
-            while (frame) {
-                if (frame->isAnonymous()) {
-                    frame->updateComputedStyle(element);
+void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
+                                         StyleResolver* resolver,
+                                         Node* parentElement,
+                                         ComputedStyle* parentElementStyle,
+                                         bool inheritedStyleChanged)
+{
+    ComputedStyle* childTextNodeStyle = nullptr;
+    bool inheritedStyleChangedForTextNode = inheritedStyleChanged;
+
+    Node* child = parentElement->firstChild();
+    while (child) {
+        if (child->isElement()) {
+            bool childIsHiddenBefore =
+                child->style() ? child->style()->display() == NoneDisplayValue
+                               : true;
+            auto damage =
+                resolveElementStyle(ctx, resolver, child->asElement(),
+                                    parentElementStyle, inheritedStyleChanged);
+            if (child->style()->display() == DisplayValue::NoneDisplayValue) {
+                child->asElement()->clearChildNeedsStyleRecalc();
+            } else if (damage & ComputedStyleDamageInherited) {
+                inheritedStyleChanged = true;
+            } else if (childIsHiddenBefore) {
+                inheritedStyleChanged = true;
+            }
+
+        } else {
+            if (inheritedStyleChangedForTextNode || child->needsStyleRecalc()) {
+                if (childTextNodeStyle == nullptr) {
+                    childTextNodeStyle = new ComputedStyle(parentElementStyle);
+                    childTextNodeStyle->loadResources(parentElement);
+                    childTextNodeStyle->arrangeStyleValues(parentElementStyle,
+                                                           child);
                 }
-                frame = frame->next();
+                child->setStyle(childTextNodeStyle);
+                child->clearNeedsStyleRecalc();
+                child->clearChildNeedsStyleRecalc();
             }
         }
-
-        ComputedStyle* childStyle = nullptr;
-        Node* child = element->firstChild();
-        while (child) {
-            if (child->isElement()) {
-                resolveDOMStyleInner(resolver, child->asElement(),
-                                     element->style(), inheritedStyleChanged);
-            } else {
-                if (inheritedStyleChanged || child->needsStyleRecalc()) {
-                    if (childStyle == nullptr) {
-                        childStyle = new ComputedStyle(element->style());
-                        childStyle->loadResources(element);
-                        childStyle->arrangeStyleValues(element->style(), child);
-                    }
-
-                    child->setStyle(childStyle);
-                    child->clearNeedsStyleRecalc();
-                }
-            }
-            child = child->nextSibling();
-        }
-        element->clearNeedsStyleRecalc();
+        STARFISH_ASSERT(!child->needsStyleRecalc());
+        child = child->nextSibling();
     }
+
+    child = parentElement->firstChild();
+    while (child) {
+        if (child->isElement() &&
+            (child->childNeedsStyleRecalc() || inheritedStyleChanged)) {
+            resolveChildrenStyle(ctx, resolver, child->asElement(),
+                                 child->style(), inheritedStyleChanged);
+        }
+        child = child->nextSibling();
+    }
+
+    child = parentElement->firstChild();
+    while (child) {
+        STARFISH_ASSERT(!child->needsStyleRecalc());
+        STARFISH_ASSERT(!child->childNeedsStyleRecalc());
+        child = child->nextSibling();
+    }
+
+    parentElement->clearChildNeedsStyleRecalc();
 }
 
 void StyleResolver::resolveDOMStyle(Document* document, bool force)
 {
-    Node* child = document->firstChild();
-    while (child) {
-        if (child->isElement()) {
-            resolveDOMStyleInner(this, child->asElement(), document->style(),
-                                 force);
-        }
-        child = child->nextSibling();
-    }
+    StyleResolveContext ctx(document);
+    resolveChildrenStyle(ctx, &document->styleResolver(), document,
+                         document->style(), force);
 }
 
 bool StyleResolver::tryAddSheet(Node* node, CSSStyleSheet* sheet)

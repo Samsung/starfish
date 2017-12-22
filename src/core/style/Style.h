@@ -2646,16 +2646,31 @@ using MatchedStyleRules = VectorWithInlineStorage<
     std::allocator<std::pair<StyleRule*, ResourceURL*>>>;
 
 class CSSStyleSheet;
+class StyleResolveContext {
+public:
+    StyleResolveContext(Document* document)
+        : m_document(document)
+    {
+    }
+
+    Document* m_document;
+};
+
 class StyleResolver : public DocumentHoldable, public gc {
+    friend void computeCSSCombinatorSelectorCache(
+        StyleResolver* resolver, Element* element,
+        const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
+        const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& end);
+
 public:
     enum PseudoElementType {
-        PseudoElementNone = 0,
-        PseudoElementFirstLine = 1,
-        PseudoElementFirstLetter = 1 << 1,
-        PseudoElementBefore = 1 << 2,
-        PseudoElementAfter = 1 << 3,
-        PseudoElementFirstLineInherited = 1 << 4,
-        PseudoElementFormOnly = 1 << 5,
+        PseudoElementNone,
+        PseudoElementFirstLine,
+        PseudoElementFirstLetter,
+        PseudoElementBefore,
+        PseudoElementAfter,
+        PseudoElementFirstLineInherited,
+        PseudoElementFormOnly,
     };
 
     enum Match {
@@ -2717,10 +2732,12 @@ public:
     void dumpDOMStyle(Document* document);
 #endif
     ComputedStyle* resolveDocumentStyle(Document* doc);
-    ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent);
+    ComputedStyle* resolveStyle(StyleResolveContext& ctx, Element* node,
+                                ComputedStyle* parent);
 
     void matchAllRules(
-        Element* element, ComputedStyle* ret, ComputedStyle* parent,
+        StyleResolveContext& ctx, Element* element, ComputedStyle* ret,
+        ComputedStyle* parent,
         PseudoElementType pseudoType = PseudoElementType::PseudoElementNone);
     Match matchSelector(Element* element, AtomicString elementName,
                         AtomicString elementId,
@@ -2733,6 +2750,7 @@ public:
         const GCVector<AtomicString>& elementClasses,
         MatchedStyleRules<6>& authorRules);
     void collectMatchingRulesFromAuthorSheet(
+        StyleResolveContext& ctx,
         const GCUnorderedMultiMap<
             AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
         const GCUnorderedMultiMap<
@@ -2758,6 +2776,10 @@ public:
     bool mediaQueryAffectedByDeviceChange();
 
 protected:
+    void resolveChildrenStyle(StyleResolveContext& ctx, StyleResolver* resolver,
+                              Node* element, ComputedStyle* elementStyle,
+                              bool inheritedStyleChanged = false);
+
     void apply(Element* element,
                const GCAtomicVector<CSSStyleValuePair>& cssValues,
                ResourceURL* origin, ComputedStyle* style,

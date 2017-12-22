@@ -204,21 +204,22 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
 
 ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
     Node* parent, StyleResolver::PseudoElementType pseudoId,
-    ComputedStyle* parentStyle, PseudoElement* element)
+    ComputedStyle* parentStyle)
 {
     STARFISH_ASSERT(pseudoId !=
                     StyleResolver::PseudoElementType::PseudoElementNone);
     STARFISH_ASSERT(parentStyle);
 
     ComputedStyle* style = new ComputedStyle(parentStyle);
+    StyleResolveContext ctx(parent->document());
     parent->document()->styleResolver().matchAllRules(
-        parent->asElement(), style, parentStyle, pseudoId);
+        ctx, parent->asElement(), style, parentStyle, pseudoId);
     Length fontSize = style->fontSize();
     fontSize.changeToFixedIfNeeded(
         parentStyle->fontSize(),
-        element->document()->rootElement()->style()->fontSize(),
-        parentStyle->font(), element->window()->innerWidth(),
-        element->window()->innerHeight(), style);
+        parent->document()->rootElement()->style()->fontSize(),
+        parentStyle->font(), parent->window()->innerWidth(),
+        parent->window()->innerHeight(), style);
     style->setFontSize(fontSize);
 
     // TODO: Set the proper style according to the type of pseudo-elements
@@ -259,19 +260,16 @@ Frame* findPseudoFrameForTable(Frame* frame, bool isBefore = true)
     return pseudoFrame;
 }
 
-void FrameTreeBuilder::createPseudoElementIfNeeded(
+void FrameTreeBuilder::createPseudoElement(
     Node* parent, StyleResolver::PseudoElementType pseudoId,
     FrameTreeBuilderContext& ctx)
 {
-    if (!parent->isElement() ||
-        !parent->asElement()->hasPseudoElement(pseudoId)) {
+    if (!parent->isElement() || parent->isPseudoElement()) {
         return;
-    }
-
-    if (pseudoId ==
-            StyleResolver::PseudoElementType::PseudoElementFirstLetter &&
-        !FirstLetterPseudoElement::firstLetterFrameText(parent)) {
-        return;
+    } else {
+        if (!parent->style()->seenPseudoElement(pseudoId)) {
+            return;
+        }
     }
 
     PseudoElement* pseudoElement =
@@ -280,7 +278,8 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
 
     Frame* pseudoParentFrame = nullptr;
     ComputedStyle* parentStyle = parent->style();
-    if (pseudoElement->isFirstLetterPseudoElement()) {
+    if (pseudoId ==
+        StyleResolver::PseudoElementType::PseudoElementFirstLetter) {
         if (Frame* nextFrame =
                 FirstLetterPseudoElement::firstLetterFrameText(pseudoElement)) {
             pseudoParentFrame = nextFrame->parent();
@@ -294,8 +293,8 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
         return;
     }
 
-    ComputedStyle* pseudoStyle = pseudoStyleForElementInternal(
-        parent, pseudoId, parentStyle, pseudoElement);
+    ComputedStyle* pseudoStyle =
+        parent->style()->pseudoStyle(parent->asElement(), pseudoId);
     if (!pseudoElementFrameIsNeeded(pseudoStyle)) {
         return;
     }
@@ -452,8 +451,6 @@ void FrameTreeBuilder::createPseudoElementIfNeeded(
     }
 
     STARFISH_ASSERT(parent->isElement());
-    // TODO: Save the generated pseudo-elements and reuse them.
-    // parent->asElement()->setPseudoElement(pseudoId, pseudoElement);
 }
 
 Frame* FrameTreeBuilder::createFrame(Node* current,
@@ -526,6 +523,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
 {
     bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
     bool didSplitBlock = false;
+    bool needsCreatePseudoElement = false;
     FrameBlockBox* originalFrameBlockBox = nullptr;
     GCVector<FrameInline*> stackedFrameInline;
     Frame* currentFrame;
@@ -537,6 +535,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     }
 
     if ((current->needsFrameTreeBuild() || force)) {
+        needsCreatePseudoElement = true;
+
         if (current->needsFrameTreeBuild()) {
             force = true;
         }
@@ -677,8 +677,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             std::make_pair(current, currentFrame->asFrameInline()));
     }
 
-    if (!currentFrame->isFrameTableBox()) {
-        createPseudoElementIfNeeded(
+    if (needsCreatePseudoElement && !currentFrame->isFrameTableBox()) {
+        createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
             ctx);
     }
@@ -694,8 +694,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         current->clearChildNeedsFrameTreeBuild();
     }
 
-    if (!currentFrame->isFrameTableBox()) {
-        createPseudoElementIfNeeded(
+    if (needsCreatePseudoElement && !currentFrame->isFrameTableBox()) {
+        createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
     }
 
@@ -730,8 +730,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
 
     ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
 
-    if (!currentFrame->isFrameTableBox()) {
-        createPseudoElementIfNeeded(
+    if (needsCreatePseudoElement && !currentFrame->isFrameTableBox()) {
+        createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
             ctx);
     }

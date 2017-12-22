@@ -112,7 +112,7 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
 
     if (!parentFrame || parentFrame->isAnonymous() ||
         !(parentFrame->node()->isElement() &&
-          parentFrame->node()->asElement()->hasPseudoElement(
+          parentFrame->node()->style()->seenPseudoElement(
               StyleResolver::PseudoElementType::PseudoElementFirstLetter)) ||
         !parentFrame->canHaveFirstLineOrFirstLetterStyle()) {
         return nullptr;
@@ -131,11 +131,6 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
                 }
             }
             firstLetterFrame = firstLetterFrame->firstChild();
-        } else if (firstLetterFrame->node()->isElement() &&
-                   firstLetterFrame->node()->asElement()->hasPseudoElement(
-                       StyleResolver::PseudoElementType::
-                           PseudoElementFirstLetter)) {
-            firstLetterFrame = firstLetterFrame->next();
         } else if (firstLetterFrame->isFrameText()) {
             String* str = firstLetterFrame->asFrameText()->text();
             if (firstLetterLength(str) ||
@@ -145,7 +140,7 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
             firstLetterFrame = firstLetterFrame->next();
         } else if (!firstLetterFrame->isNormalFlow()) { // float or out-of-flow
             if (firstLetterFrame->node()->isElement() &&
-                firstLetterFrame->node()->asElement()->hasPseudoElement(
+                firstLetterFrame->node()->style()->seenPseudoElement(
                     StyleResolver::PseudoElementType::
                         PseudoElementFirstLetter)) {
                 firstLetterFrame = firstLetterFrame->firstChild();

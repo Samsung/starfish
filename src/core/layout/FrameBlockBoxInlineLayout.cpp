@@ -2417,7 +2417,7 @@ void LineFormattingContext::insertWord(Frame* next)
         m_word.clear();
     } else {
         if (isFirstLineBox() && m_block->node() &&
-            m_block->node()->asElement()->hasPseudoElement(
+            m_block->node()->style()->seenPseudoElement(
                 StyleResolver::PseudoElementFirstLine)) {
             m_word.unmarkFirstLine();
         }

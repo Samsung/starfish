@@ -547,38 +547,6 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
             (rawHeader.compare("\n") == 0)) {
             request->m_responseHeaderMap = std::move(
                 nwd->httpTransaction->httpResponse().headers().headerMap());
-
-            if (request->m_pendingOnHeaderReceivedEventIdlerHandle ==
-                SIZE_MAX) {
-                if (request->isSync()) {
-                    request->changeReadyState(ResourceRequest::HEADERS_RECEIVED,
-                                              true);
-                } else {
-                    request->m_pendingOnHeaderReceivedEventIdlerHandle =
-                        request->starFish()
-                            ->messageLoop()
-                            ->addIdlerWithNoGCRootingInOtherThread(
-                                nullptr,
-                                [](size_t handle, void* data) {
-                                    ResourceRequest* request =
-                                        (ResourceRequest*)data;
-                                    Locker<Mutex> locker(*request->m_mutex);
-                                    {
-                                        STARFISH_ASSERT(
-                                            handle ==
-                                            request
-                                                ->m_pendingOnHeaderReceivedEventIdlerHandle);
-                                        request
-                                            ->m_pendingOnHeaderReceivedEventIdlerHandle =
-                                            SIZE_MAX;
-                                    }
-                                    request->changeReadyState(
-                                        ResourceRequest::HEADERS_RECEIVED,
-                                        true);
-                                },
-                                request);
-                }
-            }
         } else {
             nwd->httpTransaction->didReceiveHeader(rawHeader);
         }

@@ -395,6 +395,14 @@ public:
     void setChildNeedsStyleRecalc()
     {
         m_childNeedsStyleRecalc = true;
+        Node* parent = parentNode();
+        while (parent) {
+            if (parent->m_childNeedsStyleRecalc) {
+                break;
+            }
+            parent->m_childNeedsStyleRecalc = true;
+            parent = parent->parentNode();
+        }
     }
 
     bool childNeedsStyleRecalc()
