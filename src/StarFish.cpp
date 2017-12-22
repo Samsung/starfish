@@ -378,7 +378,11 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     initNetworkSharedResourceManager(cookieStoreFilePath);
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (httpCacheDirectorypath != nullptr) {
-        m_httpCache = new HTTPCache(String::fromUTF8(httpCacheDirectorypath));
+        auto nullable =
+            HTTPCache::create((String::fromUTF8(httpCacheDirectorypath)));
+        if (nullable.hasValue()) {
+            m_httpCache = nullable.getValue();
+        }
     }
 #endif
 #ifdef STARFISH_ENABLE_TTS

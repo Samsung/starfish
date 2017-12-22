@@ -22,9 +22,17 @@
 namespace StarFish {
 typedef GCVector<String*> HTTPCacheLRUList;
 class NetworkURLWorkerData;
+class File;
 
 class HTTPCache : public gc {
 public:
+    static Nullable<HTTPCache*> create(String* cacheDirPath)
+    {
+        HTTPCache* newObject = new HTTPCache(cacheDirPath);
+        return (newObject->good()) ? Nullable<HTTPCache*>(newObject)
+                                   : Nullable<HTTPCache*>();
+    }
+
     HTTPCache(String* cacheDirPath);
     ~HTTPCache();
     bool initFromIndexFileIfPossible();
@@ -35,19 +43,30 @@ public:
     }
 
     void put(NetworkURLWorkerData* data);
+    void update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry);
     bool flush();
     void expire();
     bool pruneAsNeededForCacheSpace(const size_t reserve);
     bool isConsistent();
 
+    bool good()
+    {
+        return m_good;
+    }
+
     static const size_t kBlockSize;
 
 private:
-    void initCacheDirectory();
+    bool lock();
+    void unlock();
+    bool initCacheDirectory();
     void init();
     void removeItemInLRUList(String* url);
     HTTPCacheEntryMultiMap::iterator findEntryInCacheEntryTable(String* key);
     HTTPCacheLRUList::iterator findItemInLRUList(String* item);
+    void extractHTTPCacheEntryProperty(NetworkURLWorkerData* nwd,
+                                       CacheControl& cc, HTTPContentInfo& cinfo,
+                                       HTTPFreshnessInfo& finfo);
 
     size_t calcBlocksSize(size_t length);
     size_t calcBlocksSizeOfIndexFile();
@@ -55,8 +74,11 @@ private:
     HTTPCacheLRUList m_cacheLRUList;
     String* m_cacheDirPath;
     String* m_indexFilePath;
+    String* m_lockFilePath;
     size_t m_cacheSizeLimit;
     size_t m_currentTotalSizeOfBlocks;
+    int m_lockfd;
+    bool m_good;
 };
 }
 #endif

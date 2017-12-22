@@ -79,9 +79,9 @@ public:
         }
     }
 
-    void clear() override
+    void removeDir() override
     {
-        clearDirectory(m_path->toUTF8NonGCString().data());
+        removeDirectory(m_path->toUTF8NonGCString().data());
     }
 
     bool isOpen() override
@@ -122,7 +122,7 @@ public:
     }
 
 private:
-    void clearDirectory(const char* path)
+    void removeDirectory(const char* path)
     {
         DIR* dir;
         struct stat statPath, statEntry;
@@ -154,7 +154,7 @@ private:
 
             // recursively remove a nested directorys
             if (S_ISDIR(statEntry.st_mode) != 0) {
-                clearDirectory(fullPath.c_str());
+                removeDirectory(fullPath.c_str());
                 continue;
             }
 
