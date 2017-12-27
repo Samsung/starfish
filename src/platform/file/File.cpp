@@ -132,14 +132,14 @@ private:
     FILE* m_fp;
 };
 
-#ifndef STARFISH_TIZEN_WEARABLE_LIB
+#ifndef STARFISH_TIZEN_WEARABLE
 String* PathResolver::matchLocation(String* filePath)
 {
     return filePath;
 }
 #endif
 
-#ifdef STARFISH_TIZEN_WEARABLE_LIB
+#ifdef STARFISH_TIZEN_WEARABLE
 
 typedef FILE* (*sfopen_cb)(const char* fileName);
 typedef long int (*sflength_cb)(FILE* fp);
@@ -207,12 +207,6 @@ public:
             return read_cb(buf, size, count, m_fp);
         }
         return fread(buf, size, count, m_fp);
-    }
-
-    bool readAll(std::string& out) override
-    {
-        // TODO : It will connect to the Tizen file I/O interface.
-        return false;
     }
 
     size_t write(void* buf, size_t size, size_t count) override
@@ -304,7 +298,7 @@ String* PathResolver::matchLocation(String* filePath)
 
 File* File::create()
 {
-#ifdef STARFISH_TIZEN_WEARABLE_LIB
+#ifdef STARFISH_TIZEN_WEARABLE
     FileTizen* fio = new FileTizen();
 #else
     FilePosix* fio = new FilePosix();
@@ -314,7 +308,7 @@ File* File::create()
 
 File* File::createInNonGCArea()
 {
-#ifdef STARFISH_TIZEN_WEARABLE_LIB
+#ifdef STARFISH_TIZEN_WEARABLE
     FileTizen* fio = new (malloc(sizeof(FileTizen))) FileTizen();
 #else
     FilePosix* fio = new (malloc(sizeof(FilePosix))) FilePosix();

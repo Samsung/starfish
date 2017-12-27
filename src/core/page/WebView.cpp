@@ -692,9 +692,6 @@ bool WebView::rendering(bool force)
 #endif
 
         delete canvas;
-#ifdef STARFISH_TIZEN_WEARABLE
-        evas_object_raise(eflWindow->m_dummyBox);
-#endif
         clearStack<102400>();
     }
 
@@ -745,9 +742,6 @@ bool WebView::rendering(bool force)
             starFish()->platformWindow()->paintVirtualCursor(canvas);
 #endif
             delete compositor;
-#ifdef STARFISH_TIZEN_WEARABLE
-            evas_object_raise(eflWindow->m_dummyBox);
-#endif
         }
         m_needsComposite = false;
     }

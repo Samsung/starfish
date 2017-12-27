@@ -88,7 +88,7 @@ gbs -c ../gbs-conf/gbs.conf build -A armv7l -P [ profile.40arm | profile.VdKantM
 The following build options are supported when building RPMs.
 Default values are in **bold**.
 
-* --define 'tizen_profile_name [ **tv** | headless | mobile ]'<br>
+* --define 'tizen_profile_name [ **tv** | headless | mobile | wearable ]'<br>
   Genereate RPMs for either tv, iot, or mobile platform
 
 ### Directory Structure

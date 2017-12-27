@@ -14,9 +14,7 @@
             './build.dep.gyp:js_binding',
             './build.dep.gyp:clipper',
             './build.dep.gyp:cppzmq',
-            './build.dep.gyp:mp4parse',
             './build.dep.gyp:skia',
-            './build.dep.gyp:webm',
             '<@(deps_extra)',
         ],
         'direct_dependent_settings': {
@@ -114,6 +112,8 @@
                 './build.dep.gyp:escargot.x64.debug',
                 './build.dep.gyp:gc.x64.debug',
                 './build.dep.gyp:zmq.x64.debug',
+                './build.dep.gyp:mp4parse',
+                './build.dep.gyp:webm',
                 '<@(deps_debug_extra)',
             ],
             'defines': [
@@ -128,6 +128,8 @@
                 './build.dep.gyp:escargot.x64.release',
                 './build.dep.gyp:gc.x64.release',
                 './build.dep.gyp:zmq.x64.release',
+                './build.dep.gyp:mp4parse',
+                './build.dep.gyp:webm',
                 '<@(deps_release_extra)',
             ],
             'defines': [
@@ -144,6 +146,8 @@
 #                './build.dep.gyp:zmq.tizen',
                 './build.dep.gyp:capi-network-connection',
                 './build.dep.gyp:capi-media-player',
+                './build.dep.gyp:mp4parse',
+                './build.dep.gyp:webm',
                 '<@(deps_release_extra)',
             ],
             'defines': [
@@ -161,12 +165,30 @@
                 './build.dep.gyp:capi-network-connection',
                 './build.dep.gyp:capi-media-player',
                 './build.dep.gyp:vconf',
+                './build.dep.gyp:mp4parse',
+                './build.dep.gyp:webm',
                 '<@(deps_release_extra)',
             ],
             'defines': [
                 '<@(defines_tizen_tv)',
             ],
         },
+        {
+            'target_name': 'starfish.tizen_wearable.release',
+            'type': '<(component)',
+            'product_name': 'lightweight-web-engine.tizen_wearable',
+            'dependencies': [
+                './build.dep.gyp:tizen-dlog',
+                './build.dep.gyp:escargot.tizen.release',
+                './build.dep.gyp:gc.tizen.release',
+                './build.dep.gyp:capi-network-connection',
+                '<@(deps_release_extra)',
+            ],
+            'defines': [
+                '<@(defines_tizen_wearable)',
+            ],
+        },
+
         {
             'target_name': 'starfish.tizen_headless.release',
             'type': '<(component)',
@@ -177,6 +199,8 @@
 #                './build.dep.gyp:zmq.tizen',
                 './build.dep.gyp:capi-network-connection',
                 './build.dep.gyp:capi-media-player',
+                './build.dep.gyp:mp4parse',
+                './build.dep.gyp:webm',
                 '<@(deps_release_extra)',
             ],
             'defines': [
