@@ -8,7 +8,7 @@ License:       Apache-2.0 and LGPL-2.1+ and BSD-2.0 and ICU and BSL-1.0 and MIT 
 
 # RPM ref: http://backreference.org/2011/09/17/some-tips-on-rpm-conditional-macros/
 
-# [ tv | headless | mobile ]
+# [ tv | headless | mobile | wearable ]
 %if %{?tizen_profile_name:1}%{!?tizen_profile_name:0}
 %define tizen_platform %{tizen_profile_name}
 %else
@@ -78,10 +78,10 @@ ninja -C out/release starfish.tizen_tv.release
 cd ..
 %endif
 %if "%{tizen_platform}" == "headless"
-mkdir -p tizen_iot_build
-cd tizen_iot_build
+mkdir -p tizen_headless_build
+cd tizen_headless_build
 # '-mthumb' that's automatically appended to the compiler flag causes an
-# unknown error in iot mode. To fix this (temporarily until correct flags
+# unknown error in headless mode. To fix this (temporarily until correct flags
 # are given by the system), '-marm' is appended to override the '-mthumb' flag.
 # With '-marm', compiler emits some warnings.
 CFLAGS+=' -marm '
@@ -101,6 +101,17 @@ GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="
 ninja -C out/release starfish.tizen.release
 cd ..
 %endif
+%if "%{tizen_platform}" == "wearable"
+CFLAGS+=' -Os '
+CXXFLAGS+=' -Os '
+mkdir -p tizen_wearable_build
+cd tizen_wearable_build
+GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen_wearable -Ddeplib=static_library %{?gyp_addition_command}
+ninja -C out/release starfish.tizen_wearable.release
+GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen_wearable -Ddeplib=static_library %{?gyp_addition_command}
+ninja -C out/release starfish.tizen_wearable.release
+cd ..
+%endif
 
 %install
 %define bin StarFish
@@ -113,14 +124,19 @@ mkdir -p %{buildroot}%{_bindir}
 cp -r ./tizen_tv_build/out/release/lightweight-web-engine.tizen_tv %{buildroot}%{_bindir}/%{bin}
 %endif
 %if "%{tizen_platform}" == "headless"
-cp -r ./tizen_iot_build/out/release/lib/liblightweight-web-engine.tizen_headless.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+cp -r ./tizen_headless_build/out/release/lib/liblightweight-web-engine.tizen_headless.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
 mkdir -p %{buildroot}%{_bindir}
-cp -r ./tizen_iot_build/out/release/lightweight-web-engine.tizen_headless %{buildroot}%{_bindir}/%{bin}
+cp -r ./tizen_headless_build/out/release/lightweight-web-engine.tizen_headless %{buildroot}%{_bindir}/%{bin}
 %endif
 %if "%{tizen_platform}" == "mobile"
 cp -r ./tizen_mobile_build/out/release/lib/liblightweight-web-engine.tizen.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
 mkdir -p %{buildroot}%{_bindir}
 cp -r ./tizen_mobile_build/out/release/lightweight-web-engine.tizen %{buildroot}%{_bindir}/%{bin}
+%endif
+%if "%{tizen_platform}" == "wearable"
+cp -r ./tizen_wearable_build/out/release/lib/liblightweight-web-engine.tizen_wearable.so %{buildroot}%{_libdir}/libWebWidgetEngine.so
+mkdir -p %{buildroot}%{_bindir}
+cp -r ./tizen_wearable_build/out/release/lightweight-web-engine.tizen_wearable %{buildroot}%{_bindir}/%{bin}
 %endif
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/

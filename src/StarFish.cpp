@@ -443,7 +443,7 @@ void StarFish::run()
 void StarFish::enter()
 {
     if (m_enterCount == 0) {
-#ifdef PORT_CANVAS_BACKEND_EFL
+#if defined(PORT_CANVAS_BACKEND_EFL) || defined(PORT_IMAGEDECODER_BACKEND_EFL)
         g_internalCanvas =
             evas_object_evas_get((Evas_Object*)m_platformWindow->unwrap());
 #endif
@@ -454,7 +454,7 @@ void StarFish::enter()
 void StarFish::exit()
 {
     if (m_enterCount == 1) {
-#ifdef PORT_CANVAS_BACKEND_EFL
+#if defined(PORT_CANVAS_BACKEND_EFL) || defined(PORT_IMAGEDECODER_BACKEND_EFL)
         g_internalCanvas = nullptr;
 #endif
     }

@@ -571,10 +571,21 @@ sfclose_cb close_cb = nullptr;
 sfmatchLocation_cb matchLocation_cb = nullptr;
 }
 
+#ifdef STARFISH_TIZEN_TV
 extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
-    void* window, int windowWidth, int windowHeight, int windowX, int windowY,
-    const char* locale, const char* timezoneID, float defaultFontSizeMultiplier)
+    void* window, int windowWidth, int windowHeight, const char* locale,
+    const char* timezoneID, float defaultFontSizeMultiplier)
+#else
+extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
+    void* window, int windowWidth, int windowHeight, const char* locale,
+    const char* timezoneID, const char* defaultFont,
+    float defaultFontSizeMultiplier)
+#endif
 {
+#ifndef STARFISH_TIZEN_TV
+    int windowX = 0;
+    int windowY = 0;
+#endif
 #if defined(STARFISH_DALI)
     if (needToInitMainThread()) {
         initMainThread(&mainThread);
@@ -743,4 +754,22 @@ extern "C" STARFISH_EXPORT void registerFileMatchLocationCB(
     const char* (*cb)(const char* fileName))
 {
     matchLocation_cb = cb;
+}
+
+extern "C" STARFISH_EXPORT void starfishSetWidgetContext(
+    StarFishInstance* instance, const void* widgetContext)
+{
+    STARFISH_LOG_INFO("starfishSetWidgetContext");
+}
+
+extern "C" STARFISH_EXPORT void registerWebWidgetAPISetContentInfoOfContextCB(
+    int (*cb)(const void* ctx, const void* data))
+{
+    STARFISH_LOG_INFO("registerWebWidgetAPISetContentInfoOfContextCB");
+}
+
+extern "C" STARFISH_EXPORT void registerWebWidgetAPIGetContentInfoOfContextCB(
+    int (*cb)(const void* ctx, void** out))
+{
+    STARFISH_LOG_INFO("registerWebWidgetAPIGetContentInfoOfContextCB");
 }
