@@ -6,21 +6,21 @@ Source:        %{name}-%{version}.tar.gz
 Group:         Development/Libraries
 License:       Apache-2.0 and LGPL-2.1+ and BSD-2.0 and ICU and BSL-1.0 and MIT and MPL-1.1
 
-%if "%{?tizen_profile_name}" == "mobile"
+# RPM ref: http://backreference.org/2011/09/17/some-tips-on-rpm-conditional-macros/
+
+# [ tv | headless | mobile ]
+%if %{?tizen_profile_name:1}%{!?tizen_profile_name:0}
+%define tizen_platform %{tizen_profile_name}
+%else
+%define tizen_platform tv
+%endif
+
+%if "%{tizen_platform}" == "mobile"
 #ExcludeArch: %{arm} %ix86 x86_64
 %endif
-%if "%{?tizen_profile_name}" == "tv"
+%if "%{tizen_platform}" == "tv"
 #ExcludeArch: %{arm} %ix86 x86_64
 %endif
-
-%if %{?profile:1}%{!?profile:0}
-%define tizen_profile_name {%profile}
-%endif
-
-%if %{?sec_product_feature_profile_wearable:1}%{!?sec_product_feature_profile_wearable:0}
-%define tizen_profile_name wearable
-%endif
-
 
 # build requirements
 BuildRequires: make
@@ -47,7 +47,7 @@ BuildRequires: pkgconfig(dali-adaptor)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
-%if "%{?tizen_profile_name}" == "tv"
+%if "%{tizen_platform}" == "tv"
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
 BuildRequires: pkgconfig(vd-win-util)
@@ -68,10 +68,7 @@ lightweight-web-engine development headers
 %setup -q
 
 %build
-#CFLAGS+=' -g0'
-#CXXFLAGS+=' -g0'
-
-%if "%{?tizen_profile_name tv}"
+%if "%{tizen_platform}" == "tv"
 mkdir -p tizen_tv_build
 cd tizen_tv_build
 GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen_tv -Ddeplib=static_library %{?gyp_addition_command}
@@ -79,50 +76,51 @@ ninja -C out/release starfish.tizen_tv.release
 GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen_tv -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen_tv.release
 cd ..
-%else
-mkdir -p tizen_build
-cd tizen_build
-%if "%{?tizen_headless 1}"
-
-# Thumb instruction causes unknown error at headless,
-# so we uses -marm option here but this can a bit noisy when compile
+%endif
+%if "%{tizen_platform}" == "headless"
+mkdir -p tizen_iot_build
+cd tizen_iot_build
+# '-mthumb' that's automatically appended to the compiler flag causes an
+# unknown error in iot mode. To fix this (temporarily until correct flags
+# are given by the system), '-marm' is appended to override the '-mthumb' flag.
+# With '-marm', compiler emits some warnings.
 CFLAGS+=' -marm '
 CXXFLAGS+=' -marm '
-
 GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen_headless -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen_headless.release
 GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen_headless -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen_headless.release
-%else
+cd ..
+%endif
+%if "%{tizen_platform}" == "mobile"
+mkdir -p tizen_mobile_build
+cd tizen_mobile_build
 GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen.release
 GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Ddeplib=static_library %{?gyp_addition_command}
 ninja -C out/release starfish.tizen.release
-%endif
 cd ..
 %endif
 
 %install
 %define bin StarFish
-
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}
-%if "%{?tizen_profile_name tv}"
+
+%if "%{tizen_platform}" == "tv"
 cp -r ./tizen_tv_build/out/release/lib/liblightweight-web-engine.tizen_tv.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
 mkdir -p %{buildroot}%{_bindir}
 cp -r ./tizen_tv_build/out/release/lightweight-web-engine.tizen_tv %{buildroot}%{_bindir}/%{bin}
-%else
-
-%if "%{?tizen_headless 1}"
-cp -r ./tizen_build/out/release/lib/liblightweight-web-engine.tizen_headless.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
-mkdir -p %{buildroot}%{_bindir}
-cp -r ./tizen_build/out/release/lightweight-web-engine.tizen_headless %{buildroot}%{_bindir}/%{bin}
-%else
-cp -r ./tizen_build/out/release/lib/liblightweight-web-engine.tizen.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
-mkdir -p %{buildroot}%{_bindir}
-cp -r ./tizen_build/out/release/lightweight-web-engine.tizen %{buildroot}%{_bindir}/%{bin}
 %endif
-
+%if "%{tizen_platform}" == "headless"
+cp -r ./tizen_iot_build/out/release/lib/liblightweight-web-engine.tizen_headless.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+mkdir -p %{buildroot}%{_bindir}
+cp -r ./tizen_iot_build/out/release/lightweight-web-engine.tizen_headless %{buildroot}%{_bindir}/%{bin}
+%endif
+%if "%{tizen_platform}" == "mobile"
+cp -r ./tizen_mobile_build/out/release/lib/liblightweight-web-engine.tizen.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+mkdir -p %{buildroot}%{_bindir}
+cp -r ./tizen_mobile_build/out/release/lightweight-web-engine.tizen %{buildroot}%{_bindir}/%{bin}
 %endif
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
