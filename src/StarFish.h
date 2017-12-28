@@ -245,6 +245,18 @@ public:
         return it->second;
     }
 
+#ifdef TIZEN_DEVICE_API
+    void setWidgetContext(const void* widgetContext)
+    {
+        m_widgetContext = widgetContext;
+    }
+
+    const void* widgetContext()
+    {
+        return m_widgetContext;
+    }
+#endif
+
 protected:
     void enter();
     void exit();
@@ -275,6 +287,9 @@ protected:
 #endif
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* m_inspector;
+#endif
+#ifdef TIZEN_DEVICE_API
+    const void* m_widgetContext;
 #endif
     size_t m_enterCount;
     ScreenInfo m_screenInfo;

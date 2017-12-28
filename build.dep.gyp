@@ -490,6 +490,18 @@
             },
         },
         {
+            'target_name': 'tizen-bundle',
+            'type': 'none',
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    '<!@((pkg-config --silence-errors --cflags-only-I bundle | sed s/-I//g) || true)',
+                ],
+                'libraries': [
+                    '<!@((pkg-config --silence-errors --libs-only-l bundle) || true)',
+                ],
+            },
+        },
+        {
             'target_name': 'vconf',
             'type': 'none',
             'direct_dependent_settings': {

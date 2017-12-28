@@ -224,6 +224,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #if defined(STARFISH_ENABLE_INSPECTOR)
     , m_inspector(nullptr)
 #endif
+#ifdef TIZEN_DEVICE_API
+    , m_widgetContext(nullptr)
+#endif
     , m_enterCount(0)
     , m_screenInfo(info)
     , m_localStorageFilePath(String::fromUTF8(localStorageFilePath))

@@ -59,7 +59,7 @@
             'STARFISH_ENABLE_DOMPARSER',
             #'STARFISH_ENABLE_TEST',
             'STARFISH_IGNORE_CROSS_ORIGIN',
-            #'TIZEN_DEVICE_API',
+            'TIZEN_DEVICE_API',
             'SIZE_MAX=0xffffffff',
         ],
         'defines_tizen_headless': [
