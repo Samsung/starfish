@@ -179,6 +179,7 @@
             'product_name': 'lightweight-web-engine.tizen_wearable',
             'dependencies': [
                 './build.dep.gyp:tizen-dlog',
+                './build.dep.gyp:tizen-bundle',
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
                 './build.dep.gyp:capi-network-connection',

@@ -123,6 +123,13 @@ public:
         return m_scriptContext;
     }
 
+#ifdef TIZEN_DEVICE_API
+    ::DeviceAPI::ExtensionManagerInstance* deviceAPI()
+    {
+        return m_deviceAPI;
+    }
+#endif
+
 protected:
     Escargot::ContextRef* m_scriptContext;
     Window* m_ownerWindow;

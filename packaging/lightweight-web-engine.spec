@@ -52,6 +52,9 @@ BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
 BuildRequires: pkgconfig(vd-win-util)
 %endif
+%if "%{tizen_platform}" == "wearable"
+BuildRequires: pkgconfig(bundle)
+%endif
 
 %description
 Implementation of Lightweight Web Engine

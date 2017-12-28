@@ -19,6 +19,13 @@
 
 #include "StarFishPublic.h"
 
+#ifdef TIZEN_DEVICE_API
+#include "TizenDeviceAPILoaderForEscargot.h"
+#endif
+#include "platform/window/PlatformWindow.h"
+#include "core/page/WebView.h"
+#include "core/page/BrowsingContext.h"
+
 #include <cstdlib>
 
 #define TO_STARFISH(instance) ((StarFish::StarFish*)instance->m_starfish)
@@ -756,20 +763,53 @@ extern "C" STARFISH_EXPORT void registerFileMatchLocationCB(
     matchLocation_cb = cb;
 }
 
+#if defined(STARFISH_TIZEN_WEARABLE) && defined(TIZEN_DEVICE_API)
+typedef int (*sfwebWidgetAPISetContentInfoOfContext_cb)(const void* ctx,
+                                                        const void* data);
+typedef int (*sfwebWidgetAPIGetContentInfoOfContext_cb)(const void* ctx,
+                                                        void** out);
+sfwebWidgetAPISetContentInfoOfContext_cb
+    webWidgetAPISetContentInfoOfContext_cb = nullptr;
+sfwebWidgetAPIGetContentInfoOfContext_cb
+    webWidgetAPIGetContentInfoOfContext_cb = nullptr;
+
 extern "C" STARFISH_EXPORT void starfishSetWidgetContext(
     StarFishInstance* instance, const void* widgetContext)
 {
-    STARFISH_LOG_INFO("starfishSetWidgetContext");
+    TO_STARFISH(instance)->setWidgetContext(widgetContext);
 }
 
 extern "C" STARFISH_EXPORT void registerWebWidgetAPISetContentInfoOfContextCB(
     int (*cb)(const void* ctx, const void* data))
 {
-    STARFISH_LOG_INFO("registerWebWidgetAPISetContentInfoOfContextCB");
+    webWidgetAPISetContentInfoOfContext_cb = cb;
 }
 
 extern "C" STARFISH_EXPORT void registerWebWidgetAPIGetContentInfoOfContextCB(
     int (*cb)(const void* ctx, void** out))
 {
-    STARFISH_LOG_INFO("registerWebWidgetAPIGetContentInfoOfContextCB");
+    webWidgetAPIGetContentInfoOfContext_cb = cb;
 }
+
+extern "C" STARFISH_EXPORT void starfishWebWidgetAPINotifyReceiveContent(
+    StarFishInstance* instance, const void* data)
+{
+    StarFishEnterer enter(TO_STARFISH(instance));
+    DeviceAPI::ExtensionManagerInstance* em = TO_STARFISH(instance)
+                                                  ->platformWindow()
+                                                  ->webView()
+                                                  ->mainBrowsingContext()
+                                                  ->scriptBindingInstance()
+                                                  ->deviceAPI();
+    DeviceAPI::WebWidgetAPIInstance* ww = em->webWidgetAPIInstance();
+    if (ww) {
+        ww->invokeReceiveContentListener(TO_STARFISH(instance)
+                                             ->platformWindow()
+                                             ->webView()
+                                             ->mainBrowsingContext()
+                                             ->scriptBindingInstance()
+                                             ->scriptContext(),
+                                         data);
+    }
+}
+#endif
