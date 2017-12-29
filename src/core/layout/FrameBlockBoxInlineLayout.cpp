@@ -747,15 +747,61 @@ void InlineBoxLayoutParentBox::setRightMBPs(LineFormattingContext* ctx)
     }
 }
 
-void InlineBoxLayoutParentBox::computePaintingFlags(
-    LayoutContext& ctx, LayoutWantToResolve resolveWhat)
+void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
 {
     for (size_t i = 0; i < m_boxes.size(); i++) {
         FrameBox* box = m_boxes[i];
         if (box->isInlineTextBox()) {
             continue;
+        } else if (box->isInlineNonReplacedBox()) {
+            box->asInlineNonReplacedBox()->quickInlineLayout(ctx);
+            if (ctx->isLastLineBox()) {
+                ctx->computeVerticalProperties(box->asInlineNonReplacedBox(),
+                                               false);
+            }
+        } else {
+            if (box->isAbsolutePositioned()) {
+                ctx->m_layoutContext.registerAbsolutePositionedBox(box);
+            } else if (box->isFloating()) {
+                box->layout(ctx->m_layoutContext,
+                            LayoutWantToResolve::ResolveAll);
+                ctx->m_layoutContext.registerFloatingBox(box);
+            } else if (box->isFrameBlockBox()) {
+                ctx->m_layoutContext.pushInlineBlockBox(box->asFrameBlockBox());
+                box->layout(ctx->m_layoutContext,
+                            LayoutWantToResolve::ResolveAll);
+                LayoutUnit ascender;
+                DisplayValue display = box->style()->display();
+
+                if (display == InlineTableDisplayValue) {
+                    ascender = box->asFrameTableBox()->calBaseline(
+                        ctx->m_layoutContext);
+                } else {
+                    Nullable<LayoutUnit> p =
+                        ctx->m_layoutContext.lineBoxAscender(
+                            box->asFrameBlockBox());
+                    if (p.hasValue() &&
+                        box->appliedOverflowX() == VisibleOverflow) {
+                        ascender = p.getValue();
+                    } else {
+                        ascender = height();
+                    }
+                }
+
+                ctx->m_layoutContext.popInlineBlockBox();
+                ctx->registerInlineBlockAscender(ascender,
+                                                 box->asFrameBlockBox());
+            } else {
+                if (box->isEstablishesBlockFormattingContext()) {
+                    box->layout(ctx->m_layoutContext,
+                                LayoutWantToResolve::ResolveAll);
+                } else {
+                    box->computePaintingFlags(ctx->m_layoutContext,
+                                              LayoutWantToResolve::ResolveAll);
+                    box->quickLayout(ctx->m_layoutContext);
+                }
+            }
         }
-        box->computePaintingFlags(ctx, resolveWhat);
     }
 }
 
@@ -1033,13 +1079,18 @@ static void removeBoxFromLine(FrameBox* box)
 }
 
 LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
-                                             LayoutContext& ctx)
+                                             LayoutContext& ctx, bool forQuick)
     : m_textIndentWidth(0)
     , m_unprocessedStartingMBPWidth(0)
     , m_block(block)
     , m_layoutContext(ctx)
+    , m_isLastLineBox(false)
     , m_inlineBoxIndex(0)
 {
+    if (forQuick) {
+        return;
+    }
+
     m_absPosition = block->absolutePoint(m_layoutContext.frameDocument());
     m_leftBoundary =
         m_absPosition.x() + block->paddingLeft() + block->borderLeft();
@@ -1236,6 +1287,7 @@ bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes(
 void FrameInline::predictLayout(LayoutPredictionContext& ctx,
                                 PredictionStage stage)
 {
+    Frame::predictLayout(ctx, stage);
     Frame* child = firstChild();
     while (child) {
         child->predictLayout(ctx, stage);
@@ -3714,28 +3766,6 @@ bool LineFormattingContext::removeLastLineBoxIfNeeds()
     return false;
 }
 
-void LineFormattingContext::registerRelativePositionedBoxesAndMarkPaintFlag()
-{
-    auto iter = m_block->m_lineBoxes.begin();
-
-    while (iter != m_block->m_lineBoxes.end()) {
-        LineBox* lineBox = *iter;
-        STARFISH_ASSERT(lineBox != nullptr);
-
-        if (lineBox->boxes().size() == 0) {
-            if (lineBox->height() == 0) {
-                iter = m_block->m_lineBoxes.erase(iter);
-                continue;
-            }
-        }
-
-        lineBox->markSeenNormalFlowInline();
-        lineBox->registerRelativePositionedBoxesAndMarkPaintFlag(
-            m_layoutContext);
-        iter++;
-    }
-}
-
 LayoutUnit LineFormattingContext::contentHeightForBlock()
 {
     if (m_block->isFrameInputBox()) {
@@ -3784,7 +3814,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         return LayoutUnit(0);
     }
 
-    LineFormattingContext lineFormattingContext(this, ctx);
+    LineFormattingContext lineFormattingContext(this, ctx, false);
 
     // compute directions
     lineFormattingContext.computeDirection(this, style()->direction());
@@ -3808,9 +3838,31 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                         0 &&
                     lineFormattingContext.m_word.isEmpty());
 
-    lineFormattingContext.registerRelativePositionedBoxesAndMarkPaintFlag();
+    registerRelativePositionedBoxesAndMarkPaintFlag(ctx);
 
     return lineFormattingContext.contentHeightForBlock();
+}
+
+void FrameBlockBox::registerRelativePositionedBoxesAndMarkPaintFlag(
+    LayoutContext& ctx)
+{
+    auto iter = m_lineBoxes.begin();
+
+    while (iter != m_lineBoxes.end()) {
+        LineBox* lineBox = *iter;
+        STARFISH_ASSERT(lineBox != nullptr);
+
+        if (lineBox->boxes().size() == 0) {
+            if (lineBox->height() == 0) {
+                iter = m_lineBoxes.erase(iter);
+                continue;
+            }
+        }
+
+        lineBox->markSeenNormalFlowInline();
+        lineBox->registerRelativePositionedBoxesAndMarkPaintFlag(ctx);
+        iter++;
+    }
 }
 
 void InlineNonReplacedBox::layoutInline(LineFormattingContext& ctx)

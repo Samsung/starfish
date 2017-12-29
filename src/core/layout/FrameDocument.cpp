@@ -73,7 +73,7 @@ void FrameDocument::layout(LayoutContext& ctx,
 
         style()->setDirection(firstChild()->style()->direction());
         LayoutPredictionContext pCtx;
-        pCtx.makeState();
+        pCtx.makeState(this);
         markNeedsLayout();
         if (ow != w) {
             pCtx.state().markViewportWidthChanged();
@@ -83,10 +83,8 @@ void FrameDocument::layout(LayoutContext& ctx,
             pCtx.state().markViewportHeightChanged();
             pCtx.state().markContainerHeightMaybeChanged();
         }
-        FrameBlockBox::predictLayout(pCtx, Collect);
-        pCtx.reset();
-        pCtx.nextState();
-        FrameBlockBox::predictLayout(pCtx, Predict);
+        firstChild()->predictLayout(pCtx, Collect);
+        firstChild()->predictLayout(pCtx, Predict);
         FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
     }
 }

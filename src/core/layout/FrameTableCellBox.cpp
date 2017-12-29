@@ -100,13 +100,6 @@ void FrameTableCellBox::layoutHeight(LayoutContext& ctx)
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
 }
 
-void FrameTableCellBox::layout(LayoutContext& ctx,
-                               Frame::LayoutWantToResolve resolveWhat)
-{
-    // This method should not be called, as table uses its own layout algorithm
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-}
-
 bool FrameTableCellBox::emptyContent()
 {
     for (Frame* c = firstChild(); c; c = c->next()) {
