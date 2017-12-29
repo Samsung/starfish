@@ -1359,14 +1359,16 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
         }
     }
 
+    LayoutUnit totalWidth;
     StringBuilder builder;
     while (it != boxes.end()) {
         FrameBox* box = *it;
 
         if (box->isInlineTextBox()) {
             InlineTextBox* textBox = box->asInlineTextBox();
+            totalWidth += textBox->width();
             StringView sv = textBox->text();
-            builder.appendString(sv.substring());
+            builder.appendString(sv);
             if (first) {
                 it = boxes.erase(it);
                 continue;
@@ -1376,10 +1378,10 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
         } else {
             if (first) {
                 first->setText(builder.finalize());
-                first->setWidth(
-                    first->style()->font()->measureText(first->text()));
+                first->setWidth(totalWidth);
                 builder.clear();
                 first = nullptr;
+                totalWidth = 0;
             }
             if (box->isInlineNonReplacedBox()) {
                 box->asInlineNonReplacedBox()->mergeInlineTextBoxes(ctx);
@@ -1390,7 +1392,7 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
 
     if (first) {
         first->setText(builder.finalize());
-        first->setWidth(first->style()->font()->measureText(first->text()));
+        first->setWidth(totalWidth);
     }
 }
 
