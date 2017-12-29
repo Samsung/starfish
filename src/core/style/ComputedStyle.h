@@ -355,7 +355,6 @@ class ComputedStyle : public gc {
 
     struct InheritedStylesRareData {
         Length m_letterSpacing;
-        Length m_lineHeight;
         Length m_textIndent;
         Length m_wordSpacing;
         Length m_horizontalBorderSpacing; // table
@@ -373,8 +372,6 @@ class ComputedStyle : public gc {
         InheritedStylesRareData()
         {
             m_letterSpacing = Length(Length::Fixed, 0);
-            // -100 is used to represent 'normal' value.
-            m_lineHeight = Length(Length::Percent, -100);
             m_wordSpacing = Length(Length::Fixed, 0);
             m_textIndent = Length(Length::Fixed, 0);
             m_horizontalBorderSpacing = Length(Length::Fixed, 0);
@@ -412,6 +409,8 @@ class ComputedStyle : public gc {
         m_inheritedStyles.m_rareData = nullptr;
         m_inheritedStyles.m_isRareDataAllocated = false;
         m_inheritedStyles.m_fontFamilyDatas = nullptr;
+        // -100 is used to represent 'normal' value.
+        m_inheritedStyles.m_lineHeight = Length(Length::Percent, -100);
         m_seenViewPortUnitInStyle = false;
         m_seenPseudoElementFirstLine = false;
         m_seenPseudoElementFirstLetter = false;
@@ -719,7 +718,7 @@ public:
     void setLineHeight(Length length)
     {
         if (!length.isFixed() || length != lineHeight()) {
-            ensureRareData()->m_lineHeight = length;
+            m_inheritedStyles.m_lineHeight = length;
         }
     }
 
@@ -1053,10 +1052,7 @@ public:
         // According to the CSS spec, the computed value is the absolute value
         // for <length> and <percentage> & otherwise as specified.
         // However, our computed value is the absolute value.
-        if (m_inheritedStyles.m_rareData) {
-            return m_inheritedStyles.m_rareData->m_lineHeight;
-        }
-        return InheritedStylesRareData().m_lineHeight;
+        return m_inheritedStyles.m_lineHeight;
     }
 
     bool hasNormalLineHeight()
@@ -2179,6 +2175,7 @@ protected:
         FontFamilyData* m_fontFamilyDatas; // [size_t, String, String...]
         Unit::Color m_color;
         Length m_fontSize;
+        Length m_lineHeight;
         InheritedStylesRareData* m_rareData;
     } m_inheritedStyles;
 

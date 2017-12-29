@@ -76,9 +76,39 @@ static bool isURIUnreserved(char32_t c)
 
 String* ResourceURL::createPercentEncodingString(String* src, bool forForm)
 {
+    StringBufferAccessData dat = src->bufferAccessData();
+
+    bool needsEncoding = false;
+    for (size_t i = 0; i < dat.length; i++) {
+        char32_t ch32 = dat.charAt(i);
+        bool urlEncoded = false;
+        if (forForm) {
+            if (ch32 == U' ') {
+                needsEncoding = true;
+                break;
+            } else if (isFormUrlEncodingExceptional(ch32)) {
+                urlEncoded = true;
+            }
+        } else {
+            if (isURIReserved(ch32) || isURIUnreserved(ch32) || ch32 == U'%') {
+                urlEncoded = true;
+            } else {
+                // needs encoding
+            }
+        }
+        if (!urlEncoded) {
+            needsEncoding = true;
+            break;
+        }
+    }
+
+    if (!needsEncoding) {
+        return src;
+    }
+
     StringBuilder encoded;
-    for (size_t i = 0; i < src->length(); i++) {
-        char32_t ch32 = src->charAt(i);
+    for (size_t i = 0; i < dat.length; i++) {
+        char32_t ch32 = dat.charAt(i);
         bool urlEncoded = false;
         if (forForm) {
             if (ch32 == U' ') {

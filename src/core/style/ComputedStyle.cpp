@@ -76,6 +76,8 @@ void* ComputedStyle::operator new(size_t size)
         GC_set_bit(
             obj_bitmap,
             GC_WORD_OFFSET(ComputedStyle, m_inheritedStyles.m_fontFamilyDatas));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle,
+                                              m_inheritedStyles.m_lineHeight));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_width));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_height));

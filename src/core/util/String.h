@@ -926,7 +926,7 @@ public:
 };
 
 #ifndef STRING_BUILDER_INLINE_STORAGE_MAX
-#define STRING_BUILDER_INLINE_STORAGE_MAX 24
+#define STRING_BUILDER_INLINE_STORAGE_MAX 64
 #endif
 
 class StringBuilder {
@@ -981,6 +981,11 @@ public:
     void appendString(String* str)
     {
         appendPiece(str, 0, str->length());
+    }
+
+    void appendString(StringView sv)
+    {
+        appendPiece(sv.string(), sv.start(), sv.end());
     }
 
     void appendSubString(String* str, size_t s, size_t e)
