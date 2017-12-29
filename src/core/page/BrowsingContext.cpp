@@ -497,8 +497,13 @@ void BrowsingContext::clearingBeforePaint(Canvas* canvas)
 {
 #ifdef STARFISH_TIZEN
     if (!document()->tizenWidgetTransparentBackground()) {
-        if (document()->browsingContext()->isTopLevelBrowsingContext())
+        if (document()->browsingContext()->isTopLevelBrowsingContext()) {
+#ifdef STARFISH_TIZEN_WEARABLE
+            canvas->clearColor(Unit::Color(0, 0, 0, 255));
+#else
             canvas->clearColor(Unit::Color(255, 255, 255, 255));
+#endif
+        }
     } else {
         canvas->clearColor(Unit::Color(0, 0, 0, 0));
     }

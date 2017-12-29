@@ -35,7 +35,7 @@ FT_Library g_freeTypeInstance;
 
 PlatformFontSelector* PlatformFontSelector::create(StarFish* sf)
 {
-    return new PlatformFontSelectorImplCairo();
+    return new PlatformFontSelectorImplCairo(sf);
 }
 
 PlatformFontCache* PlatformFontCache::create(StarFish* sf)

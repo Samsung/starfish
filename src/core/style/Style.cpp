@@ -3469,7 +3469,13 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 {
     ComputedStyle* ret = new ComputedStyle(m_mediumFontSize);
     ret->m_display = DisplayValue::BlockDisplayValue;
+#ifdef STARFISH_TIZEN_WEARABLE
+    ret->m_inheritedStyles.m_color = Unit::Color(255, 255, 255, 255);
+#else
     ret->m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
+#endif
+    ret->m_inheritedStyles.m_fontFamilyDatas =
+        doc->starFish()->initialFontFamilyDatas();
     ret->m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
     ret->m_inheritedStyles.m_whiteSpace =
@@ -3780,7 +3786,7 @@ void StyleResolver::apply(Element* element,
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->m_inheritedStyles.m_fontFamilyDatas =
-                    g_initialFontFamilyDatas;
+                    element->document()->starFish()->initialFontFamilyDatas();
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::StringValueKind) {
                 FontFamilyData* data =
