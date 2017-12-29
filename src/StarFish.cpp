@@ -35,6 +35,7 @@
 #include "core/modules/canvas/image/ImageData.h"
 #include "core/inspector/Inspector.h"
 #include "core/extra/Console.h"
+#include "core/style/ComputedStyle.h"
 #include "core/util/LineBreakerIteratorPool.h"
 #ifdef STARFISH_ENABLE_HTTPCACHE
 #include "platform/network/HTTPCache.h"
@@ -209,7 +210,8 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    const char* timezoneID, void* platformHandle, int w, int h,
                    int x, int y, float defaultFontSizeMultiplier,
-                   const ScreenInfo& info, const char* localStorageFilePath,
+                   String* defaultFontName, const ScreenInfo& info,
+                   const char* localStorageFilePath,
                    const char* cookieStoreFilePath,
                    const char* httpCacheDirectorypath,
                    String* extraUserAgentString)
@@ -224,8 +226,11 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #if defined(STARFISH_ENABLE_INSPECTOR)
     , m_inspector(nullptr)
 #endif
-#ifdef TIZEN_DEVICE_API
+#if defined(TIZEN_DEVICE_API)
     , m_widgetContext(nullptr)
+#endif
+#if defined(STARFISH_TIZEN_WEARABLE)
+    , m_updateFlag(false)
 #endif
     , m_enterCount(0)
     , m_screenInfo(info)
@@ -237,6 +242,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #ifdef STARFISH_ENABLE_TTS
     , m_tts(nullptr)
 #endif
+    , m_initialFontFamilyDatas(new (GC_MALLOC(sizeof(FontFamilyData) * 2))
+                                   FontFamilyData[2]{ 1, defaultFontName })
 {
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     m_width = w;

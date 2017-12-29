@@ -263,7 +263,8 @@ public:
 
 class PlatformFontSelectorImplCairo : public PlatformFontSelector {
 public:
-    PlatformFontSelectorImplCairo()
+    PlatformFontSelectorImplCairo(StarFish* sf)
+        : PlatformFontSelector(sf)
     {
         if (!g_freeTypeInstance) {
             FT_Error error;
@@ -371,7 +372,9 @@ public:
         UTF8StringDataNonGCStd after = (char*)fontNameAfterMatch;
         std::transform(after.begin(), after.end(), after.begin(), ::tolower);
 
-        if (familyName != STARFISH_DEFAULT_FONT_FAMILY) {
+        if (familyName !=
+            m_starfish->initialFontFamilyDatas()[1]
+                .m_familyName->toUTF8NonGCString()) {
             if (after != familyName) {
                 if (!isGenericName) {
                     return UTF8StringDataNonGCStd();

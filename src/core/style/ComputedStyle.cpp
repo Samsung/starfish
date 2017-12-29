@@ -34,10 +34,6 @@
 
 namespace StarFish {
 
-FontFamilyData g_initialFontFamilyDatas[2] = {
-    1, String::createASCIIStringWithNoGC(STARFISH_DEFAULT_FONT_FAMILY)
-};
-
 void* RareComputedStyleData::operator new(size_t size)
 {
     static bool typeInited = false;

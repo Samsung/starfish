@@ -580,8 +580,8 @@ sfmatchLocation_cb matchLocation_cb = nullptr;
 
 #ifdef STARFISH_TIZEN_TV
 extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
-    void* window, int windowWidth, int windowHeight, const char* locale,
-    const char* timezoneID, float defaultFontSizeMultiplier)
+    void* window, int windowWidth, int windowHeight, int windowX, int windowY,
+    const char* locale, const char* timezoneID, float defaultFontSizeMultiplier)
 #else
 extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     void* window, int windowWidth, int windowHeight, const char* locale,
@@ -592,6 +592,8 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
 #ifndef STARFISH_TIZEN_TV
     int windowX = 0;
     int windowY = 0;
+#else
+    const char* defaultFont = "sans-serif";
 #endif
 #if defined(STARFISH_DALI)
     if (needToInitMainThread()) {
@@ -676,7 +678,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     instance->m_starfish = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)0, locale, timezoneID, window,
         windowWidth, windowHeight, windowX, windowY, defaultFontSizeMultiplier,
-        info, "", "", nullptr);
+        String::fromUTF8(defaultFont), info, "", "", nullptr);
 #if defined(STARFISH_ENABLE_INSPECTOR)
     TO_STARFISH(instance)->setupInspector();
 #endif
@@ -763,6 +765,14 @@ extern "C" STARFISH_EXPORT void registerFileMatchLocationCB(
     matchLocation_cb = cb;
 }
 
+#if defined(STARFISH_TIZEN_WEARABLE)
+extern "C" STARFISH_EXPORT void starfishRemoveForUpdate(
+    StarFishInstance* instance)
+{
+    TO_STARFISH(instance)->enableUpdate();
+    starfishRemove(instance);
+}
+#endif
 #if defined(STARFISH_TIZEN_WEARABLE) && defined(TIZEN_DEVICE_API)
 typedef int (*sfwebWidgetAPISetContentInfoOfContext_cb)(const void* ctx,
                                                         const void* data);

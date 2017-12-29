@@ -253,9 +253,9 @@ m_lastRenderingTime > 1000)) {
             evas_object_image_size_get(m_canvasAdpater, &w, &h);
             evas_object_image_data_update_add(m_canvasAdpater, 0, 0, w, h);
         }
-        if (ret) {
-            evas_object_raise(m_dummyBox);
-        }
+#endif
+#if defined(STARFISH_TIZEN_WEARABLE)
+        evas_object_raise(m_dummyBox);
 #endif
 
         m_inRendering = false;
@@ -319,7 +319,9 @@ m_lastRenderingTime > 1000)) {
     int m_offsetYDueToSoftwareKeyboard;
 };
 
+#if defined(STARFISH_TIZEN_TV)
 static WindowImplEFL* g_currentWnd = nullptr;
+#endif
 
 #if defined(PORT_COMPOSITOR_BACKEND_EFL)
 
@@ -904,7 +906,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                        int height)
 {
     auto wnd = new WindowImplEFL(sf);
+#if defined(STARFISH_TIZEN_TV)
     g_currentWnd = wnd;
+#endif
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
@@ -1172,6 +1176,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*)event_info;
         ((WindowImplEFL*)sf)->m_lastMouseX = ev->cur.canvas.x;
         ((WindowImplEFL*)sf)->m_lastMouseY = ev->cur.canvas.y;
+
         StarFishEnterer enter(sf->m_starFish);
 
         unsigned char buttons =
@@ -1214,6 +1219,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_mobileClickEventHandler = [](void* data, Evas_Object* obj,
                                         void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
+
         StarFishEnterer enter(sf->m_starFish);
         MouseData mdata(MouseData::MouseButtonValue::NoButton,
                         MouseData::MouseButtonsValue::NoButtonDown,
@@ -1600,6 +1606,11 @@ PlatformWindow::~PlatformWindow()
                                    eflWindow->m_mobileClickEventHandler);
 
 #endif
+#ifdef STARFISH_TIZEN_WEARABLE
+    if (!starFish()->updateFlag()) {
+        evas_object_del((Evas_Object*)eflWindow->m_window);
+    }
+#endif
 }
 
 void WebView::setNeedsRendering()
@@ -1619,9 +1630,11 @@ void WebView::setNeedsRendering()
     wnd->m_renderingAnimator = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
+#if defined(STARFISH_TIZEN_TV)
             if (g_currentWnd != wnd) {
                 return ECORE_CALLBACK_CANCEL;
             }
+#endif
 
             if (!wnd->m_canRendering) {
                 return ECORE_CALLBACK_RENEW;

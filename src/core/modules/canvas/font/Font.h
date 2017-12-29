@@ -17,10 +17,6 @@
 #ifndef __Font__
 #define __Font__
 
-#ifndef STARFISH_DEFAULT_FONT_FAMILY
-#define STARFISH_DEFAULT_FONT_FAMILY "sans-serif"
-#endif
-
 #include "binding/DocumentHoldable.h"
 
 namespace StarFish {
@@ -205,6 +201,10 @@ protected:
 
 class PlatformFontSelector : public gc {
 public:
+    PlatformFontSelector(StarFish* sf)
+    {
+        m_starfish = sf;
+    }
     virtual ~PlatformFontSelector()
     {
     }
@@ -222,6 +222,7 @@ public:
     }
 
 protected:
+    StarFish* m_starfish;
 };
 
 class PlatformFontCache : public gc {

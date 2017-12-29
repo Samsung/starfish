@@ -649,8 +649,9 @@ int main(int argc, char* argv[])
     cacheDir += "/Starfish-cache";
     StarFish::StarFish* sf = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
-        width, height, x, y, 1, info, "", "/tmp/StarFish_Cookies.txt",
-        cacheDir.data(), String::fromUTF8(userAgentExtraString.data()));
+        width, height, x, y, 1, String::createASCIIString("sans-serif"), info,
+        "", "/tmp/StarFish_Cookies.txt", cacheDir.data(),
+        String::fromUTF8(userAgentExtraString.data()));
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();

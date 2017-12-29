@@ -64,8 +64,6 @@ union FontFamilyData {
     }
 };
 
-extern FontFamilyData g_initialFontFamilyDatas[2];
-
 class RareComputedStyleData : public gc {
     enum KeyKind {
         Order,
@@ -394,7 +392,6 @@ class ComputedStyle : public gc {
         void* operator new(size_t size);
     };
 
-public:
     ComputedStyle(float mediumFontSize = DEFAULT_FONT_SIZE)
     {
         m_font = nullptr;
@@ -414,7 +411,7 @@ public:
         m_inheritedStyles.m_emptyCells = EmptyCellsValue::ShowEmptyCellsValue;
         m_inheritedStyles.m_rareData = nullptr;
         m_inheritedStyles.m_isRareDataAllocated = false;
-        m_inheritedStyles.m_fontFamilyDatas = g_initialFontFamilyDatas;
+        m_inheritedStyles.m_fontFamilyDatas = nullptr;
         m_seenViewPortUnitInStyle = false;
         m_seenPseudoElementFirstLine = false;
         m_seenPseudoElementFirstLetter = false;
@@ -425,6 +422,7 @@ public:
         initNonInheritedStyles();
     }
 
+public:
     ComputedStyle(ComputedStyle* from)
     {
         m_font = nullptr;

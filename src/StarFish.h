@@ -33,6 +33,7 @@ class ThreadPool;
 class Console;
 class Inspector;
 class Mutex;
+union FontFamilyData;
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 class HTTPCache;
 #endif
@@ -68,8 +69,9 @@ class StarFish : public gc {
 public:
     StarFish(StarFishStartUpFlag flag, const char* locale,
              const char* timezoneID, void* platformHandle, int w, int h, int x,
-             int y, float defaultFontSizeMultiplier, const ScreenInfo& info,
-             const char* localStorageFilePath, const char* cookieStoreFilePath,
+             int y, float defaultFontSizeMultiplier, String* defaultFontName,
+             const ScreenInfo& info, const char* localStorageFilePath,
+             const char* cookieStoreFilePath,
              const char* httpCacheDirectorypath,
              String* extraUserAgentString = String::emptyString);
 
@@ -245,6 +247,11 @@ public:
         return it->second;
     }
 
+    FontFamilyData* initialFontFamilyDatas()
+    {
+        return m_initialFontFamilyDatas;
+    }
+
 #ifdef TIZEN_DEVICE_API
     void setWidgetContext(const void* widgetContext)
     {
@@ -254,6 +261,17 @@ public:
     const void* widgetContext()
     {
         return m_widgetContext;
+    }
+#endif
+#ifdef STARFISH_TIZEN_WEARABLE
+    void enableUpdate()
+    {
+        m_updateFlag = true;
+    }
+
+    bool updateFlag()
+    {
+        return m_updateFlag;
     }
 #endif
 
@@ -291,6 +309,9 @@ protected:
 #ifdef TIZEN_DEVICE_API
     const void* m_widgetContext;
 #endif
+#ifdef STARFISH_TIZEN_WEARABLE
+    bool m_updateFlag;
+#endif
     size_t m_enterCount;
     ScreenInfo m_screenInfo;
     String* m_localStorageFilePath;
@@ -319,6 +340,7 @@ protected:
     TTS* m_tts;
 #endif
     GCUnorderedMap<String*, float> m_profilingRecods;
+    FontFamilyData* m_initialFontFamilyDatas;
 
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);

@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "Font.h"
+#include "StarFish.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/WebFont.h"
 #include "core/dom/Document.h"
@@ -275,8 +276,10 @@ Font* FontSelector::loadFont(String* familyNameArray[],
         }
     }
 
-    UTF8StringDataNonGCStd familyName =
-        g_initialFontFamilyDatas[1].m_familyName->toUTF8NonGCString();
+    UTF8StringDataNonGCStd familyName = document()
+                                            ->starFish()
+                                            ->initialFontFamilyDatas()[1]
+                                            .m_familyName->toUTF8NonGCString();
     UTF8StringDataNonGCStd cacheStr =
         mergeStyleWeightWithString(familyName, style, weight);
 
