@@ -29,6 +29,7 @@
 #include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
+#include "core/style/CalcData.h"
 
 namespace StarFish {
 
@@ -91,25 +92,13 @@ FrameBox* containingBlock(Frame* currentFrame)
     }
 }
 
-bool LayoutPredictionStatus::predict(bool isHorizontal, bool isMinMax, Length l)
+bool LayoutPredictionStatus::predict(bool isPercentInfluenced,
+                                     bool isAutoInfluenced, Length l)
 {
-    if (childrenOrSelfChanged()) {
-        return true;
-    }
-
-    if (l.isFixed()) {
+    if (l.isFixed() || l.isFontPercent() || l.isInheritableNumber()) {
         return false;
     } else if (l.isPercent()) {
-        // TODO:
-        return true;
-        /* if (isHorizontal) {
-            return containerWidthMaybeChanged();
-        } else {
-            return containerHeightMaybeChanged();
-        } */
-    } else if (l.isFontPercent()) {
-        // TODO:
-        return true;
+        return isPercentInfluenced;
     } else if (l.isViewportPercent()) {
         Length::Type t = l.type();
         CSSLength::Kind k;
@@ -118,30 +107,48 @@ bool LayoutPredictionStatus::predict(bool isHorizontal, bool isMinMax, Length l)
         } else if (t == Length::Vh) {
             return viewportHeightChanged();
         } else {
-            // TODO:
             return viewportWidthChanged() || viewportHeightChanged();
         }
     } else if (l.isAuto()) {
-        return !isMinMax;
+        return isAutoInfluenced;
     } else if (l.isCalc()) {
-        // TODO:
-        return true;
-    } else if (l.isInheritableNumber()) {
-        // TODO:
-        return true;
+        GCVector<CalcTerm*>& data = l.calcData()->terms();
+        auto iter = data.begin();
+
+        while (iter != data.end()) {
+            GCVector<CalcValue>& data2 = (*iter)->values();
+            auto iter2 = data2.begin();
+            while (iter2 != data2.end()) {
+                CalcValue& v = *iter2;
+                if (v.type().isLength()) {
+                    Length l2 = v.lengthValue().toLength();
+                    if (predict(isPercentInfluenced, isAutoInfluenced, l2)) {
+                        return true;
+                    }
+                } else if (v.type().isPercentage()) {
+                    Length l2 = Length(Length::Percent, v.percentageValue());
+                    if (predict(isPercentInfluenced, isAutoInfluenced, l2)) {
+                        return true;
+                    }
+                }
+                iter2++;
+            }
+            iter++;
+        }
+
+        return false;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return false;
     }
 }
 
-void LayoutPredictionContext::makeState()
+void LayoutPredictionContext::makeState(FrameBlockBox* f)
 {
     LayoutPredictionStatus state;
 
-    if (m_states.size() > 0) {
+    if (m_parents.size() > 0) {
         auto& lastState = this->state();
-
         if (lastState.viewportWidthChanged()) {
             state.markViewportWidthChanged();
         }
@@ -150,65 +157,150 @@ void LayoutPredictionContext::makeState()
             state.markViewportHeightChanged();
         }
     }
-    m_index++;
-    m_states.push_back(state);
+    addParent(f);
 }
 
 bool LayoutPredictionContext::shouldLayout(Frame* f)
 {
     auto& state = this->state();
 
-    Length width = f->style()->width();
-    Length height = f->style()->height();
-    LengthData margin = f->style()->margin();
-    Length marginTop = margin.top();
-    Length marginBottom = margin.bottom();
-    Length marginLeft = margin.left();
-    Length marginRight = margin.right();
-    BorderData border = f->style()->border();
-    Length borderTop = border.top().width();
-    Length borderBottom = border.bottom().width();
-    Length borderLeft = border.left().width();
-    Length borderRight = border.right().width();
-    LengthData padding = f->style()->padding();
-    Length paddingTop = padding.top();
-    Length paddingBottom = padding.bottom();
-    Length paddingLeft = padding.left();
-    Length paddingRight = padding.right();
-    Length minWidth = f->style()->minWidth();
-    Length maxWidth = f->style()->maxWidth();
-    Length minHeight = f->style()->minHeight();
-    Length maxHeight = f->style()->maxHeight();
-    Length top, bottom, left, right;
-    if (f->isAbsolutePositioned()) {
-        top = f->style()->top();
-        bottom = f->style()->bottom();
-        left = f->style()->left();
-        right = f->style()->right();
+    if (state.childrenOrSelfChanged()) {
+        return true;
     }
 
-    return state.predict(true, false, width) ||
-           state.predict(false, false, height) ||
-           state.predict(true, false, marginTop) ||
-           state.predict(true, false, marginBottom) ||
-           state.predict(true, false, marginLeft) ||
-           state.predict(true, false, marginRight) ||
-           state.predict(true, false, borderTop) ||
-           state.predict(true, false, borderBottom) ||
-           state.predict(true, false, borderLeft) ||
-           state.predict(true, false, borderRight) ||
-           state.predict(true, false, paddingTop) ||
-           state.predict(true, false, paddingBottom) ||
-           state.predict(true, false, paddingLeft) ||
-           state.predict(true, false, paddingRight) ||
-           state.predict(true, true, minWidth) ||
-           state.predict(true, true, maxWidth) ||
-           state.predict(false, true, minHeight) ||
-           state.predict(false, true, maxHeight) ||
-           (f->isAbsolutePositioned() && (state.predict(false, false, top) ||
-                                          state.predict(false, false, bottom) ||
-                                          state.predict(true, false, left) ||
-                                          state.predict(true, false, right)));
+    ComputedStyle* style = f->style();
+    bool containerWidthMayBeChanged =
+        true; // state.containerWidthMaybeChanged();
+    bool containerHeightMayBeChanged =
+        true; // state.containerHeightMaybeChanged();
+    Node* n = f->node();
+    bool percentDontCome = false;
+    bool autoDontComeOrAffect = false;
+    if (style->width().isAuto()) {
+        if (containerWidthMayBeChanged) {
+            return true;
+        }
+
+        BorderData border = style->border();
+        if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                          border.left().width()) ||
+            state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                          border.right().width())) {
+            return true;
+        }
+
+        LengthData padding = style->padding();
+        if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                          padding.left()) ||
+            state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                          padding.right())) {
+            return true;
+        }
+
+        if (f->isAbsolutePositioned() && style->left().isSpecified() &&
+            style->right().isSpecified()) {
+            if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                              style->left()) ||
+                state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                              style->right())) {
+                return true;
+            }
+        }
+    } else {
+        if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                          style->width())) {
+            return true;
+        }
+    }
+
+    if (style->height().isAuto() && f->isAbsolutePositioned() &&
+        style->top().isSpecified() && style->bottom().isSpecified()) {
+        if (containerHeightMayBeChanged) {
+            return true;
+        }
+
+        BorderData border = style->border();
+        if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                          border.top().width()) ||
+            state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                          border.bottom().width())) {
+            return true;
+        }
+
+        LengthData padding = style->padding();
+        if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                          padding.top()) ||
+            state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                          padding.bottom())) {
+            return true;
+        }
+
+        if (state.predict(containerHeightMayBeChanged, autoDontComeOrAffect,
+                          style->top()) ||
+            state.predict(containerHeightMayBeChanged, autoDontComeOrAffect,
+                          style->bottom())) {
+            return true;
+        }
+    } else {
+        if (state.predict(containerHeightMayBeChanged, autoDontComeOrAffect,
+                          style->height())) {
+            return true;
+        }
+    }
+
+    if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                      style->minWidth()) ||
+        state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                      style->maxWidth()) ||
+        state.predict(containerHeightMayBeChanged, autoDontComeOrAffect,
+                      style->minHeight()) ||
+        state.predict(containerHeightMayBeChanged, autoDontComeOrAffect,
+                      style->maxHeight())) {
+        return true;
+    }
+
+    if (f->isFrameTableBox()) {
+        if (state.predict(percentDontCome, autoDontComeOrAffect,
+                          style->horizontalBorderSpacing()) ||
+            state.predict(percentDontCome, autoDontComeOrAffect,
+                          style->verticalBorderSpacing())) {
+            return true;
+        }
+    }
+
+    if (f->isFlexItem()) {
+        FlexBasisData flexBasis = f->style()->flexBasis();
+        if (!flexBasis.isContent()) {
+            FrameFlexibleBox* flexibleBox = f->parent()->asFrameFlexibleBox();
+            bool isPercentInfluenced;
+            if (flexibleBox->isMainAxisInInlineAxis()) {
+                isPercentInfluenced = containerWidthMayBeChanged;
+            } else {
+                isPercentInfluenced = containerHeightMayBeChanged;
+            }
+            if (state.predict(isPercentInfluenced, true, flexBasis.width())) {
+                return true;
+            }
+        }
+    }
+
+    if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
+                      style->textIndent()) ||
+        state.predict(percentDontCome, autoDontComeOrAffect,
+                      style->letterSpacing()) ||
+        state.predict(percentDontCome, autoDontComeOrAffect,
+                      style->wordSpacing())) {
+        return true;
+    }
+
+    if (style->verticalAlign() == NumericVAlignValue) {
+        if (state.predict(false /* lineHeight is calculated above */,
+                          autoDontComeOrAffect, style->verticalAlignLength())) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
@@ -1105,21 +1197,23 @@ void Frame::computePaintingFlags(LayoutContext& ctx,
         m_flags.m_seenNormalFlowInline = false;
     }
 
-    PaintingKind kind;
+    if (resolveWhat & LayoutWantToResolve::ResolveHeight) {
+        PaintingKind kind;
 
-    if (isInlineLevel() || isFlexItem()) {
-        kind = NormalFlowInline;
-    } else if (isFloating()) {
-        kind = NonPositionedFloats;
-    } else if (isBlockLevel() && isFrameReplaced()) {
-        kind = ReplacedBlock;
-    } else {
-        kind = NormalFlowBlockChild;
-    }
+        if (isInlineLevel() || isFlexItem()) {
+            kind = NormalFlowInline;
+        } else if (isFloating()) {
+            kind = NonPositionedFloats;
+        } else if (isBlockLevel() && isFrameReplaced()) {
+            kind = ReplacedBlock;
+        } else {
+            kind = NormalFlowBlockChild;
+        }
 
-    seenPaintingKind(kind);
-    if (isFrameBlockBox() && !asFrameBlockBox()->hasBlockFlow()) {
-        seenPaintingKind(NormalFlowInline);
+        seenPaintingKind(kind);
+        if (isFrameBlockBox() && !asFrameBlockBox()->hasBlockFlow()) {
+            seenPaintingKind(NormalFlowInline);
+        }
     }
 }
 

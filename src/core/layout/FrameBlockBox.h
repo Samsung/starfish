@@ -226,8 +226,7 @@ public:
     void setLeftMBPs(LineFormattingContext* ctx);
     void setRightMBPs(LineFormattingContext* ctx);
 
-    virtual void computePaintingFlags(LayoutContext& ctx,
-                                      LayoutWantToResolve resolveWhat) override;
+    void quickInlineLayout(LineFormattingContext* ctx);
 
     virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
     {
@@ -611,12 +610,11 @@ public:
         return m_flags.m_heightComputed;
     }
 
-    virtual void computePaintingFlags(LayoutContext& ctx,
-                                      LayoutWantToResolve resolveWhat) override;
     virtual void predictLayout(LayoutPredictionContext& ctx,
                                PredictionStage stage) override;
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
+    virtual void quickLayout(LayoutContext& ctx) override;
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void layoutInline(LineFormattingContext& ctx);
     void computeContentWidth(LayoutContext& ctx,
@@ -692,6 +690,7 @@ protected:
     void updateScrollWidthAndHeightIfNeeds();
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
+    void registerRelativePositionedBoxesAndMarkPaintFlag(LayoutContext& ctx);
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
 
     virtual bool hasFrameTreeItemModel()
@@ -862,7 +861,6 @@ private:
 class LineFormattingContext {
 private:
     void resetLineBox();
-    void registerInlineContent(FrameLineBreak* br);
     LayoutUnit inlineBlockAscender(FrameBlockBox* box)
     {
         STARFISH_ASSERT(m_inlineBlockAscender.find(box) !=
@@ -914,7 +912,8 @@ private:
                                            std::vector<Frame*>& frames);
 
 public:
-    LineFormattingContext(FrameBlockBox* block, LayoutContext& ctx);
+    LineFormattingContext(FrameBlockBox* block, LayoutContext& ctx,
+                          bool forQuick);
 
     void updateCurrentLayoutParent(Frame* parent);
     void computeVerticalProperties(FrameBox* parentBox, bool dueToBr);
@@ -932,7 +931,6 @@ public:
     void markInlineBoxIndex(FrameBox* box);
 
     bool removeLastLineBoxIfNeeds();
-    void registerRelativePositionedBoxesAndMarkPaintFlag();
     LayoutUnit contentHeightForBlock();
 
     LineBox* currentLine()
@@ -968,6 +966,8 @@ public:
     {
         return m_currentLineWidth;
     }
+
+    void registerInlineContent(FrameLineBreak* br);
 
     void registerInlineBlockAscender(LayoutUnit ascender, FrameBlockBox* box)
     {
@@ -1095,6 +1095,16 @@ public:
         return iter->second;
     }
 
+    bool isLastLineBox() const
+    {
+        return m_isLastLineBox;
+    }
+
+    void markIsLastLineBox()
+    {
+        m_isLastLineBox = true;
+    }
+
     LayoutUnit wordSpacing(FrameBox* box, InlineBoxLayoutParentBox* parentBox);
 
     LayoutUnit m_leftBoundary;
@@ -1113,6 +1123,7 @@ public:
     bool m_isWhiteSpaceAtLast;
     bool m_isSoftHyphenAtLast;
     bool m_canConcatWord;
+    bool m_isLastLineBox;
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;

@@ -652,10 +652,6 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             STARFISH_ASSERT(FrameTableTreeBuilder::isTableWrapperDisplayValue(
                 currentFrame->style()->display()));
         }
-
-        if (current->frame() && current->frame()->isFrameBlockBox()) {
-            current->frame()->asFrameBlockBox()->lineBoxes().clear();
-        }
     }
 
     // display == none

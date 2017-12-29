@@ -3841,11 +3841,7 @@ void StyleResolver::apply(Element* element,
                         cssValues[k].fontWeightValue();
                 }
             } else {
-                STARFISH_ASSERT(
-                    cssValues[k].valueKind() ==
-                    CSSStyleValuePair::ValueKind::FontStyleValueKind);
-                style->m_inheritedStyles.m_fontStyle =
-                    cssValues[k].fontStyleValue();
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
         case CSSStyleValuePair::KeyKind::WordWrap:
@@ -5020,11 +5016,13 @@ void StyleResolver::apply(Element* element,
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 style->setZIndex(parentStyle->zIndex());
+                style->m_zIndexSpecifiedByUser = false;
             } else if (cssValues[k].valueKind() ==
                            CSSStyleValuePair::ValueKind::Initial ||
                        cssValues[k].valueKind() ==
                            CSSStyleValuePair::ValueKind::Auto) {
                 style->setZIndex(0);
+                style->m_zIndexSpecifiedByUser = false;
             } else {
                 style->setZIndex(cssValues[k].int32Value());
                 style->m_zIndexSpecifiedByUser = true;

@@ -265,8 +265,7 @@ public:
         ViewportHeightChanged = 1 << 1,
         ContainerWidthMaybeChanged = 1 << 2,
         ContainerHeightMaybeChanged = 1 << 3,
-        FontSizeChanged = 1 << 4,
-        ChildrenOrSelfChanged = 1 << 5
+        ChildrenOrSelfChanged = 1 << 4
     };
 
     LayoutPredictionStatus()
@@ -274,97 +273,32 @@ public:
     {
     }
 
-    void markViewportWidthChanged()
-    {
-        m_flag |= ViewportWidthChanged;
+#define FLAG_MARKER_CLEARER_GETTER(FLAG, flag) \
+    void mark##FLAG()                          \
+    {                                          \
+        m_flag |= FLAG;                        \
+    }                                          \
+                                               \
+    void clear##FLAG()                         \
+    {                                          \
+        m_flag &= ~FLAG;                       \
+    }                                          \
+                                               \
+    bool flag() const                          \
+    {                                          \
+        return m_flag & FLAG;                  \
     }
 
-    void clearViewportWidthChanged()
-    {
-        m_flag &= ~ViewportWidthChanged;
-    }
+    FLAG_MARKER_CLEARER_GETTER(ViewportWidthChanged, viewportWidthChanged);
+    FLAG_MARKER_CLEARER_GETTER(ViewportHeightChanged, viewportHeightChanged);
+    FLAG_MARKER_CLEARER_GETTER(ContainerWidthMaybeChanged,
+                               containerWidthMaybeChanged);
+    FLAG_MARKER_CLEARER_GETTER(ContainerHeightMaybeChanged,
+                               containerHeightMaybeChanged);
+    FLAG_MARKER_CLEARER_GETTER(ChildrenOrSelfChanged, childrenOrSelfChanged);
+#undef FLAG_MARKER_CLEARER_GETTER
 
-    bool viewportWidthChanged() const
-    {
-        return m_flag & ViewportWidthChanged;
-    }
-
-    void markViewportHeightChanged()
-    {
-        m_flag |= ViewportHeightChanged;
-    }
-
-    void clearViewportHeightChanged()
-    {
-        m_flag &= ~ViewportHeightChanged;
-    }
-
-    bool viewportHeightChanged() const
-    {
-        return m_flag & ViewportHeightChanged;
-    }
-
-    void markContainerWidthMaybeChanged()
-    {
-        m_flag |= ContainerWidthMaybeChanged;
-    }
-
-    void clearContainerWidthMaybeChanged()
-    {
-        m_flag &= ~ContainerWidthMaybeChanged;
-    }
-
-    bool containerWidthMaybeChanged() const
-    {
-        return m_flag & ContainerWidthMaybeChanged;
-    }
-
-    void markContainerHeightMaybeChanged()
-    {
-        m_flag |= ContainerHeightMaybeChanged;
-    }
-
-    void clearContainerHeightMaybeChanged()
-    {
-        m_flag &= ~ContainerHeightMaybeChanged;
-    }
-
-    bool containerHeightMaybeChanged() const
-    {
-        return m_flag & ContainerHeightMaybeChanged;
-    }
-
-    void markFontSizeChanged()
-    {
-        m_flag |= FontSizeChanged;
-    }
-
-    void clearFontSizeChanged()
-    {
-        m_flag &= ~FontSizeChanged;
-    }
-
-    bool fontSizeChanged() const
-    {
-        return m_flag & FontSizeChanged;
-    }
-
-    void markChildrenOrSelfChanged()
-    {
-        m_flag |= ChildrenOrSelfChanged;
-    }
-
-    void clearChildrenOrSelfChanged()
-    {
-        m_flag &= ~ChildrenOrSelfChanged;
-    }
-
-    bool childrenOrSelfChanged() const
-    {
-        return m_flag & ChildrenOrSelfChanged;
-    }
-
-    bool predict(bool isHorizontal, bool isMinMax, Length l);
+    bool predict(bool isPercentInfluenced, bool isAutoInfluenced, Length l);
 
 private:
     uint8_t m_flag;
@@ -374,36 +308,37 @@ class LayoutPredictionContext {
 public:
     LayoutPredictionContext()
     {
-        reset();
     }
 
-    void reset()
+    void removeParent()
     {
-        m_index = SIZE_MAX;
+        m_parents.pop_back();
     }
 
-    void makeState();
+    void makeState(FrameBlockBox* f);
 
-    void nextState()
+    void addParent(FrameBlockBox* f)
     {
-        m_index++;
-    }
-
-    void prevState()
-    {
-        m_index--;
+        m_parents.push_back(f);
     }
 
     bool shouldLayout(Frame* f);
 
     LayoutPredictionStatus& state()
     {
-        return m_states[m_index];
+        return m_states[m_parents.back()];
+    }
+
+    void propagateChildrenChanged()
+    {
+        for (size_t i = 0; i < m_parents.size(); i++) {
+            m_states[m_parents[i]].markChildrenOrSelfChanged();
+        }
     }
 
 private:
-    std::vector<LayoutPredictionStatus> m_states;
-    size_t m_index;
+    std::unordered_map<FrameBlockBox*, LayoutPredictionStatus> m_states;
+    std::vector<FrameBlockBox*> m_parents;
 };
 
 class LayoutContext {
@@ -1498,6 +1433,9 @@ public:
     virtual void layout(LayoutContext& ctx, LayoutWantToResolve resolveWhat)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    virtual void quickLayout(LayoutContext& ctx)
+    {
     }
 
     enum PaintingKind {

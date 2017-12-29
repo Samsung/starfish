@@ -121,6 +121,9 @@ public:
 
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat);
+    virtual void quickLayout(LayoutContext& ctx) override
+    {
+    }
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void layoutInline(LineFormattingContext& ctx);
     void computeIntrinsicSize(LayoutContext& ctx, LayoutUnit& intrinsicWidth,
