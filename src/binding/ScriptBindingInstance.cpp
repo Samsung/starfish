@@ -214,6 +214,13 @@ static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
         }
     }
 
+    uint32_t idx = key->toArrayIndex(state);
+    if (idx != ValueRef::InvalidArrayIndexValue) {
+        Window* result = self->defaultIndexedGetter(idx);
+        if (result != nullptr) {
+            return result->scriptValue();
+        }
+    }
     String* name = toBrowserString(state, key);
     Nullable<ScriptObject> coll = self->defaultNamedGetter(name);
     if (coll.hasValue()) {
