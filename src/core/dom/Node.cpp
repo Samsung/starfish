@@ -1534,7 +1534,10 @@ void Node::setNeedsLayout()
     }
 
     window()->browsingContext()->setNeedsLayout();
-    m_needsLayout = true;
+    Frame* frame = this->frame();
+    if (frame) {
+        frame->propagateMarkNeedsLayout();
+    }
 }
 
 void Node::setNeedsPainting()

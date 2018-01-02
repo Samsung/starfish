@@ -256,6 +256,11 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
                                                  FrameBox* cb)
 {
     STARFISH_ASSERT(cb);
+    if (isEstablishesBlockFormattingContext()) {
+        if (!shouldLayout(ctx, Frame::ResolveAll, cb)) {
+            return;
+        }
+    }
     Length width = style()->width();
     Length height = style()->height();
     LayoutUnit intrinsicWidth, intrinsicHeight;
@@ -352,7 +357,22 @@ void FrameReplaced::layout(LayoutContext& ctx,
         DirectionValue parentDirection =
             blockContainer(this)->style()->direction();
         computeBorderMarginPadding(ctx, parentContentWidth);
+        LayoutUnit oldContentWidth = contentWidth();
+        LayoutUnit oldContentHeight = contentHeight();
+
         computeContentWidthAndHeight(ctx, cb);
+
+        if (oldContentWidth != contentWidth()) {
+            markContentWidthDamaged();
+        } else {
+            clearContentWidthDamaged();
+        }
+
+        if (oldContentHeight != contentHeight()) {
+            markContentHeightDamaged();
+        } else {
+            clearContentHeightDamaged();
+        }
 
         if (isAbsolutePositioned()) {
             HorizontalDataLocToContainingBlock data =
@@ -443,6 +463,8 @@ void FrameReplaced::layout(LayoutContext& ctx,
                 setY(data.m_top - data.m_absY + marginTop());
             }
         }
+
+        clearNeedsLayout();
     }
 }
 

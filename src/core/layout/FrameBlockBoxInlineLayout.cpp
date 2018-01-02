@@ -1291,17 +1291,6 @@ bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes(
     return true;
 }
 
-void FrameInline::predictLayout(LayoutPredictionContext& ctx,
-                                PredictionStage stage)
-{
-    Frame::predictLayout(ctx, stage);
-    Frame* child = firstChild();
-    while (child) {
-        child->predictLayout(ctx, stage);
-        child = child->next();
-    }
-}
-
 void InlineBoxLayoutParentBox::layoutInlineBoxes(LineFormattingContext* ctx,
                                                  LayoutUnit start)
 {
@@ -4142,6 +4131,41 @@ bool FrameText::isSelfCollapsingBlock(LayoutContext& ctx)
     return text()->containsOnlyWhitespace();
 }
 
+struct MBPRestorer {
+    MBPRestorer(FrameBox* b)
+        : m_box(b)
+        , m_hasRareData(b->hasRareData())
+        , m_paddingWidthDamaged(b->paddingWidthDamaged())
+        , m_paddingHeightDamaged(b->paddingHeightDamaged())
+    {
+        if (m_hasRareData) {
+            m_margin = m_box->frameBoxRareData()->m_margin;
+            m_border = m_box->frameBoxRareData()->m_border;
+            m_padding = m_box->frameBoxRareData()->m_padding;
+        }
+    }
+
+    ~MBPRestorer()
+    {
+        if (m_hasRareData) {
+            m_box->frameBoxRareData()->m_margin = m_margin;
+            m_box->frameBoxRareData()->m_border = m_border;
+            m_box->frameBoxRareData()->m_padding = m_padding;
+        }
+
+        m_box->m_flags.m_paddingWidthDamaged = m_paddingWidthDamaged;
+        m_box->m_flags.m_paddingHeightDamaged = m_paddingHeightDamaged;
+    }
+
+    FrameBox* m_box;
+    bool m_hasRareData;
+    bool m_paddingWidthDamaged;
+    bool m_paddingHeightDamaged;
+    LayoutBoxSurroundData m_margin;
+    LayoutBoxSurroundData m_border;
+    LayoutBoxSurroundData m_padding;
+};
+
 void FrameText::computePreferredWidth(PreferredWidthContext& ctx)
 {
     tokenizeText(ctx.layoutContext().starFish(), this, ctx);
@@ -4173,6 +4197,7 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     BoxSizingValue boxSizing = style()->boxSizing();
     LayoutUnit intrinsicWidth, intrinsicHeight, w, h;
     FrameBox* cb = containingBlock(this);
+    MBPRestorer restorer(this);
     computeBorderMarginPadding(ctx.layoutContext(), cb->contentWidth());
     LayoutUnit parentContentWidth, parentContentHeight;
     Length parentHeightLength;
@@ -4254,6 +4279,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     }
 
     FrameBox* cb = containingBlock(this);
+    MBPRestorer restorer(this);
     computeBorderMarginPadding(ctx.layoutContext(), cb->contentWidth());
     Length width = style()->width();
 

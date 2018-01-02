@@ -89,11 +89,13 @@ public:
     bool m_needs;
 };
 
-void FrameBlockBox::computeContentWidth(LayoutContext& ctx,
+void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                                         LayoutUnit containgBlockContentWidth)
 {
-    if (isEstablishesBlockFormattingContext() && !needsLayout()) {
-        return;
+    if (isEstablishesBlockFormattingContext()) {
+        if (!shouldLayout(ctx, Frame::ResolveWidth, cb)) {
+            return;
+        }
     }
 
     if (isFrameTableBox()) {
@@ -151,9 +153,11 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                           style()->height());
     ctx.setMarginInfo(this, &marginInfo);
 
-    if (isEstablishesBlockFormattingContext() && !needsLayout()) {
-        quickLayout(ctx);
-        return;
+    if (isEstablishesBlockFormattingContext()) {
+        if (!shouldLayout(ctx, LayoutWantToResolve::ResolveHeight, cb)) {
+            quickLayout(ctx);
+            return;
+        }
     }
 
     if (isFrameTableBox()) {
@@ -161,8 +165,6 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
     } else if (isFrameFlexibleBox()) {
         asFrameFlexibleBox()->layoutFlex(ctx);
     } else {
-        STARFISH_ASSERT(isAbsolutePositioned() || cb == nullptr);
-
         LayoutUnit contentHeight;
         LayoutUnit parentHeight;
         Length height = style()->height();
@@ -389,66 +391,24 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
     }
 }
 
-void FrameBlockBox::predictLayout(LayoutPredictionContext& ctx,
-                                  PredictionStage stage)
-{
-    bool b = isEstablishesBlockFormattingContext();
-
-    if (b) {
-        if (stage == Collect) {
-            // printf("[Collect] ");
-            ctx.makeState(this);
-        } else {
-            ctx.addParent(this);
-            if (ctx.shouldLayout(this)) {
-                // printf("[Mark] ");
-                markNeedsLayout();
-            } else {
-                // printf("[Mark, Skip layout] ");
-            }
-        }
-        /* if (node()) {
-            node()->dump();
-        } else {
-            printf("Anonymous node");
-        }
-        printf("\n"); */
-    }
-
-    Frame::predictLayout(ctx, stage);
-    Frame* child = firstChild();
-    while (child) {
-        child->predictLayout(ctx, stage);
-        child = child->next();
-    }
-
-    if (b) {
-        if (stage == Collect) {
-            bool childrenOrSelfChanged = ctx.state().childrenOrSelfChanged();
-            if (childrenOrSelfChanged) {
-                ctx.propagateChildrenChanged();
-            }
-        }
-        ctx.removeParent();
-    }
-}
-
 void FrameBlockBox::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
     computePaintingFlags(ctx, resolveWhat);
 
     BlockFormattingContextBlock blockFormattingContextBlock(this, ctx);
+    FrameBox* cb = containingBlock(this);
+    LayoutUnit parentContentWidth = cb->contentWidth();
     // Determine the horizontal margins and the width of this object.
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
-        FrameBox* cb = containingBlock(this);
-        LayoutUnit parentContentWidth = cb->contentWidth();
         DirectionValue parentDirection;
         if (isAbsolutePositioned()) {
             parentDirection = blockContainer(this)->style()->direction();
         } else {
             parentDirection = cb->style()->direction();
         }
+        LayoutUnit oldContentWidth = contentWidth();
+
         computeBorderMarginPadding(ctx, parentContentWidth);
 
         if (isAbsolutePositioned()) {
@@ -465,13 +425,13 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             if (left.isAuto() && right.isAuto()) {
                 if (width.isAuto()) {
                     if (parentDirection == LtrDirectionValue) {
-                        computeContentWidth(ctx, data.m_contentWidth -
-                                                     data.m_absX - x());
+                        computeContentWidth(ctx, cb, data.m_contentWidth -
+                                                         data.m_absX - x());
                     } else {
-                        computeContentWidth(ctx, x() + data.m_absX);
+                        computeContentWidth(ctx, cb, x() + data.m_absX);
                     }
                 } else {
-                    computeContentWidth(ctx, data.m_contentWidth);
+                    computeContentWidth(ctx, cb, data.m_contentWidth);
                 }
 
                 if (parentDirection == LtrDirectionValue) {
@@ -486,7 +446,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                     moveX(-FrameBox::width() - FrameBox::marginRight());
                 }
             } else if (!left.isAuto() && !right.isAuto()) {
-                computeContentWidth(ctx, data.m_contentWidth);
+                computeContentWidth(ctx, cb, data.m_contentWidth);
                 if (width.isAuto()) {
                     setX(data.m_left + FrameBox::marginLeft() - data.m_absX);
                 } else {
@@ -534,10 +494,11 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                 }
             } else {
                 if (width.isAuto()) {
-                    computeContentWidth(ctx, data.m_contentWidth - data.m_left -
-                                                 data.m_right);
+                    computeContentWidth(ctx, cb, data.m_contentWidth -
+                                                     data.m_left -
+                                                     data.m_right);
                 } else {
-                    computeContentWidth(ctx, data.m_contentWidth);
+                    computeContentWidth(ctx, cb, data.m_contentWidth);
                 }
 
                 if (left.isSpecified()) {
@@ -551,10 +512,16 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         } else {
             // 10.3.3 Block-level, non-replaced elements in normal flow
             // 10.3.5 Floating, non-replaced elements
-            computeContentWidth(ctx, parentContentWidth);
+            computeContentWidth(ctx, cb, parentContentWidth);
             if (isNormalFlow() && isBlockLevel()) {
                 computeHorizontalMargin(parentContentWidth, parentDirection);
             }
+        }
+
+        if (oldContentWidth != contentWidth()) {
+            markContentWidthDamaged();
+        } else {
+            clearContentWidthDamaged();
         }
     }
 
@@ -562,12 +529,15 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         return;
     }
 
-    FrameBox* cb = nullptr;
-    if (isAbsolutePositioned()) {
-        cb = containingBlock(this);
-    }
+    LayoutUnit oldContentHeight = contentHeight();
 
     computeContentHeight(ctx, cb);
+
+    if (oldContentHeight != contentHeight()) {
+        markContentHeightDamaged();
+    } else {
+        clearContentHeightDamaged();
+    }
 
     // Now the intrinsic height of the object is known because the children are
     // placed

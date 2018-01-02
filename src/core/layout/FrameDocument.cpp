@@ -72,19 +72,12 @@ void FrameDocument::layout(LayoutContext& ctx,
         STARFISH_ASSERT(firstChild()->isRootElement());
 
         style()->setDirection(firstChild()->style()->direction());
-        LayoutPredictionContext pCtx;
-        pCtx.makeState(this);
-        markNeedsLayout();
         if (ow != w) {
-            pCtx.state().markViewportWidthChanged();
-            pCtx.state().markContainerWidthMaybeChanged();
+            ctx.markViewportWidthDamaged();
         }
         if (oh != h) {
-            pCtx.state().markViewportHeightChanged();
-            pCtx.state().markContainerHeightMaybeChanged();
+            ctx.markViewportHeightDamaged();
         }
-        firstChild()->predictLayout(pCtx, Collect);
-        firstChild()->predictLayout(pCtx, Predict);
         FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
     }
 }

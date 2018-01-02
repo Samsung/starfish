@@ -147,6 +147,10 @@ bool HTTPCache::initFromIndexFileIfPossible()
     }
     dir->close();
 
+    if (table.size() <= 1) {
+        return false;
+    }
+
     // Last line is "\n"
     for (auto row = table.begin(); row != table.end() - 1; row++) {
         GCVector<StringView> columns;

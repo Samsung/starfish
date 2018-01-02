@@ -623,14 +623,12 @@ public:
         return m_flags.m_heightComputed;
     }
 
-    virtual void predictLayout(LayoutPredictionContext& ctx,
-                               PredictionStage stage) override;
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void quickLayout(LayoutContext& ctx) override;
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void layoutInline(LineFormattingContext& ctx);
-    void computeContentWidth(LayoutContext& ctx,
+    void computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                              LayoutUnit containgBlockContentWidth);
     void computeContentHeight(LayoutContext& ctx, LayoutUnit contentHeight);
 
