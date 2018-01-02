@@ -81,7 +81,14 @@ public:
 
     void removeDir() override
     {
-        removeDirectory(m_path->toUTF8NonGCString().data());
+        auto str = m_path->toUTF8NonGCString();
+        removeDirectory(str.data());
+    }
+
+    void clearDir() override
+    {
+        auto str = m_path->toUTF8NonGCString();
+        clearDirectory(str.data());
     }
 
     bool isOpen() override
@@ -124,6 +131,16 @@ public:
 private:
     void removeDirectory(const char* path)
     {
+        clearDirectory(path);
+
+        if (rmdir(path) != 0) {
+            STARFISH_LOG_ERROR("Can`t remove a directory: %s\n", path);
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+    }
+
+    void clearDirectory(const char* path)
+    {
         DIR* dir;
         struct stat statPath, statEntry;
         struct dirent* entry;
@@ -165,15 +182,8 @@ private:
                 STARFISH_ASSERT_NOT_REACHED();
             }
         }
-
-        // remove the devastated directory and close the object of it
-        if (rmdir(path) != 0) {
-            STARFISH_LOG_ERROR("Can`t remove a directory: %s\n", path);
-            STARFISH_ASSERT_NOT_REACHED();
-        }
         closedir(dir);
     }
-
     DIR* m_dir;
 };
 
