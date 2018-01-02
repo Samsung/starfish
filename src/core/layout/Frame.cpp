@@ -92,217 +92,6 @@ FrameBox* containingBlock(Frame* currentFrame)
     }
 }
 
-bool LayoutPredictionStatus::predict(bool isPercentInfluenced,
-                                     bool isAutoInfluenced, Length l)
-{
-    if (l.isFixed() || l.isFontPercent() || l.isInheritableNumber()) {
-        return false;
-    } else if (l.isPercent()) {
-        return isPercentInfluenced;
-    } else if (l.isViewportPercent()) {
-        Length::Type t = l.type();
-        CSSLength::Kind k;
-        if (t == Length::Vw) {
-            return viewportWidthChanged();
-        } else if (t == Length::Vh) {
-            return viewportHeightChanged();
-        } else {
-            return viewportWidthChanged() || viewportHeightChanged();
-        }
-    } else if (l.isAuto()) {
-        return isAutoInfluenced;
-    } else if (l.isCalc()) {
-        GCVector<CalcTerm*>& data = l.calcData()->terms();
-        auto iter = data.begin();
-
-        while (iter != data.end()) {
-            GCVector<CalcValue>& data2 = (*iter)->values();
-            auto iter2 = data2.begin();
-            while (iter2 != data2.end()) {
-                CalcValue& v = *iter2;
-                if (v.type().isLength()) {
-                    Length l2 = v.lengthValue().toLength();
-                    if (predict(isPercentInfluenced, isAutoInfluenced, l2)) {
-                        return true;
-                    }
-                } else if (v.type().isPercentage()) {
-                    Length l2 = Length(Length::Percent, v.percentageValue());
-                    if (predict(isPercentInfluenced, isAutoInfluenced, l2)) {
-                        return true;
-                    }
-                }
-                iter2++;
-            }
-            iter++;
-        }
-
-        return false;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        return false;
-    }
-}
-
-void LayoutPredictionContext::makeState(FrameBlockBox* f)
-{
-    LayoutPredictionStatus state;
-
-    if (m_parents.size() > 0) {
-        auto& lastState = this->state();
-        if (lastState.viewportWidthChanged()) {
-            state.markViewportWidthChanged();
-        }
-
-        if (lastState.viewportHeightChanged()) {
-            state.markViewportHeightChanged();
-        }
-    }
-    addParent(f);
-}
-
-bool LayoutPredictionContext::shouldLayout(Frame* f)
-{
-    auto& state = this->state();
-
-    if (state.childrenOrSelfChanged()) {
-        return true;
-    }
-
-    ComputedStyle* style = f->style();
-    bool containerWidthMayBeChanged =
-        true; // state.containerWidthMaybeChanged();
-    bool containerHeightMayBeChanged =
-        true; // state.containerHeightMaybeChanged();
-    Node* n = f->node();
-    bool percentDontCome = false;
-    bool autoDontComeOrAffect = false;
-    if (style->width().isAuto()) {
-        if (containerWidthMayBeChanged) {
-            return true;
-        }
-
-        BorderData border = style->border();
-        if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                          border.left().width()) ||
-            state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                          border.right().width())) {
-            return true;
-        }
-
-        LengthData padding = style->padding();
-        if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                          padding.left()) ||
-            state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                          padding.right())) {
-            return true;
-        }
-
-        if (f->isAbsolutePositioned() && style->left().isSpecified() &&
-            style->right().isSpecified()) {
-            if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                              style->left()) ||
-                state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                              style->right())) {
-                return true;
-            }
-        }
-    } else {
-        if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                          style->width())) {
-            return true;
-        }
-    }
-
-    if (style->height().isAuto() && f->isAbsolutePositioned() &&
-        style->top().isSpecified() && style->bottom().isSpecified()) {
-        if (containerHeightMayBeChanged) {
-            return true;
-        }
-
-        BorderData border = style->border();
-        if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                          border.top().width()) ||
-            state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                          border.bottom().width())) {
-            return true;
-        }
-
-        LengthData padding = style->padding();
-        if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                          padding.top()) ||
-            state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                          padding.bottom())) {
-            return true;
-        }
-
-        if (state.predict(containerHeightMayBeChanged, autoDontComeOrAffect,
-                          style->top()) ||
-            state.predict(containerHeightMayBeChanged, autoDontComeOrAffect,
-                          style->bottom())) {
-            return true;
-        }
-    } else {
-        if (state.predict(containerHeightMayBeChanged, autoDontComeOrAffect,
-                          style->height())) {
-            return true;
-        }
-    }
-
-    if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                      style->minWidth()) ||
-        state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                      style->maxWidth()) ||
-        state.predict(containerHeightMayBeChanged, autoDontComeOrAffect,
-                      style->minHeight()) ||
-        state.predict(containerHeightMayBeChanged, autoDontComeOrAffect,
-                      style->maxHeight())) {
-        return true;
-    }
-
-    if (f->isFrameTableBox()) {
-        if (state.predict(percentDontCome, autoDontComeOrAffect,
-                          style->horizontalBorderSpacing()) ||
-            state.predict(percentDontCome, autoDontComeOrAffect,
-                          style->verticalBorderSpacing())) {
-            return true;
-        }
-    }
-
-    if (f->isFlexItem()) {
-        FlexBasisData flexBasis = f->style()->flexBasis();
-        if (!flexBasis.isContent()) {
-            FrameFlexibleBox* flexibleBox = f->parent()->asFrameFlexibleBox();
-            bool isPercentInfluenced;
-            if (flexibleBox->isMainAxisInInlineAxis()) {
-                isPercentInfluenced = containerWidthMayBeChanged;
-            } else {
-                isPercentInfluenced = containerHeightMayBeChanged;
-            }
-            if (state.predict(isPercentInfluenced, true, flexBasis.width())) {
-                return true;
-            }
-        }
-    }
-
-    if (state.predict(containerWidthMayBeChanged, autoDontComeOrAffect,
-                      style->textIndent()) ||
-        state.predict(percentDontCome, autoDontComeOrAffect,
-                      style->letterSpacing()) ||
-        state.predict(percentDontCome, autoDontComeOrAffect,
-                      style->wordSpacing())) {
-        return true;
-    }
-
-    if (style->verticalAlign() == NumericVAlignValue) {
-        if (state.predict(false /* lineHeight is calculated above */,
-                          autoDontComeOrAffect, style->verticalAlignLength())) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
     : m_box(box)
 {
@@ -1147,22 +936,17 @@ Frame::Frame(Node* node, ComputedStyle* s)
         isAnonymous = true;
     }
 
-    m_flags.m_needsLayout = true;
     m_flags.m_isAnonymous = isAnonymous;
 
     bool isRootElement = node && node->isHTMLHtmlElement();
-    m_flags.m_isRootElement = isRootElement;
 
     m_flags.m_isLeftMBPCleared = false;
     m_flags.m_isRightMBPCleared = false;
 
     m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
-    m_flags.m_isPositioned = false;
     m_flags.m_isEstablishesStackingContext = isRootElement;
     m_flags.m_needsGraphicsBuffer = false;
     m_flags.m_isNormalFlow = true;
-    m_flags.m_isAbsolutePositioned = false;
-    m_flags.m_isFloating = false;
     m_flags.m_isFrameText = false;
     m_flags.m_heightComputed = false;
     m_flags.m_hasBiggerContentThanFrameWidth = false;
@@ -1178,24 +962,15 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_seenNormalFlowInlineBox = false;
     m_flags.m_seenNormalFlowInlineBlockBox = false;
     m_flags.m_seenNormalFlowInlineReplaced = false;
+    m_flags.m_contentWidthDamaged = false;
+    m_flags.m_paddingWidthDamaged = false;
+    m_flags.m_contentHeightDamaged = false;
+    m_flags.m_paddingHeightDamaged = false;
 
     computeStyleFlags();
-}
 
-void Frame::predictLayout(LayoutPredictionContext& ctx, PredictionStage stage)
-{
-    if (stage == PredictionStage::Collect) {
-        bool ret = needsLayout();
-        clearNeedsLayout();
-
-        if (node()) {
-            ret |= node()->needsLayout();
-            node()->clearNeedsLayout();
-        }
-
-        if (ret) {
-            ctx.state().markChildrenOrSelfChanged();
-        }
+    if (m_flags.m_isEstablishesBlockFormattingContext) {
+        m_flags.m_needsLayout = true;
     }
 }
 
@@ -1279,6 +1054,43 @@ void Frame::computeShouldApplyOverflow()
     }
 }
 
+bool Frame::isRootElement() const
+{
+    return node() && node()->isHTMLHtmlElement();
+}
+
+bool Frame::isPositioned()
+{
+    ComputedStyle* style = this->style();
+    if (!style) {
+        return false;
+    }
+
+    return style->position() != PositionValue::StaticPositionValue;
+}
+
+bool Frame::isAbsolutePositioned()
+{
+    ComputedStyle* style = this->style();
+    if (!style) {
+        return false;
+    }
+
+    PositionValue position = style->position();
+    return position == PositionValue::AbsolutePositionValue ||
+           position == PositionValue::FixedPositionValue;
+}
+
+bool Frame::isFloating()
+{
+    ComputedStyle* style = this->style();
+    if (!style) {
+        return false;
+    }
+
+    return style->floating() != FloatValue::NoneFloatValue;
+}
+
 void Frame::computeStyleFlags()
 {
     computeShouldApplyOverflow();
@@ -1288,22 +1100,19 @@ void Frame::computeStyleFlags()
         return;
     }
 
-    m_flags.m_isPositioned =
-        (style->position() != PositionValue::StaticPositionValue);
-    m_flags.m_isAbsolutePositioned |=
-        (style->position() == PositionValue::AbsolutePositionValue);
-    m_flags.m_isAbsolutePositioned |=
-        (style->position() == PositionValue::FixedPositionValue);
-    m_flags.m_isFloating = (style->floating() != FloatValue::NoneFloatValue);
+    PositionValue position = style->position();
+    bool isAbsolutePositioned =
+        (position == PositionValue::AbsolutePositionValue ||
+         position == PositionValue::FixedPositionValue);
+    bool isFloating = (style->floating() != FloatValue::NoneFloatValue);
 
-    m_flags.m_isNormalFlow = !m_flags.m_isAbsolutePositioned;
-    m_flags.m_isNormalFlow &= !m_flags.m_isFloating;
+    m_flags.m_isNormalFlow = !isAbsolutePositioned;
+    m_flags.m_isNormalFlow &= !isFloating;
 
     // TODO add condition
     m_flags.m_isEstablishesBlockFormattingContext |= (shouldApplyOverflow());
-    m_flags.m_isEstablishesBlockFormattingContext |=
-        m_flags.m_isAbsolutePositioned;
-    m_flags.m_isEstablishesBlockFormattingContext |= m_flags.m_isFloating;
+    m_flags.m_isEstablishesBlockFormattingContext |= isAbsolutePositioned;
+    m_flags.m_isEstablishesBlockFormattingContext |= isFloating;
     m_flags.m_isEstablishesBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
     m_flags.m_isEstablishesBlockFormattingContext |=
@@ -1332,7 +1141,8 @@ void Frame::computeStyleFlags()
     // All positioned descendants with 'z-index: auto' or 'z-index: 0', in
     // tree order. For those with 'z-index: auto', treat the element as if
     // it created a new stacking context.
-    m_flags.m_isEstablishesStackingContext |= m_flags.m_isPositioned;
+    m_flags.m_isEstablishesStackingContext |=
+        (position != PositionValue::StaticPositionValue);
     m_flags.m_isEstablishesStackingContext |= (style->opacity() != 1);
     m_flags.m_isEstablishesStackingContext |= (style->hasTransforms(this));
 
@@ -1579,7 +1389,7 @@ bool Frame::isDocumentElement() const
     return !isAnonymous() && node()->document() == node();
 }
 
-Element* Frame::offsetParent() const
+Element* Frame::offsetParent()
 {
     if (isDocumentElement() ||
         (!isAnonymous() && node()->isHTMLBodyElement())) {
@@ -1667,5 +1477,223 @@ Document* Frame::document()
 {
     STARFISH_ASSERT(node() || parent());
     return isAnonymous() ? parent()->document() : node()->document();
+}
+
+struct LayoutDamager {
+    LayoutDamager()
+        : m_canPercentDamage(false)
+        , m_canAutoDamage(false)
+        , m_canViewportWidthDamage(false)
+        , m_canViewportHeightDamage(false)
+    {
+    }
+
+    bool m_canPercentDamage;
+    bool m_canAutoDamage;
+    bool m_canViewportWidthDamage;
+    bool m_canViewportHeightDamage;
+};
+
+static bool isLayoutDamaged(LayoutDamager damager, Length l)
+{
+    if (l.isFixed() || l.isFontPercent() || l.isInheritableNumber()) {
+        return false;
+    } else if (l.isPercent()) {
+        return damager.m_canPercentDamage;
+    } else if (l.isViewportPercent()) {
+        Length::Type t = l.type();
+        CSSLength::Kind k;
+        if (t == Length::Vw) {
+            return damager.m_canViewportWidthDamage;
+        } else if (t == Length::Vh) {
+            return damager.m_canViewportHeightDamage;
+        } else {
+            return damager.m_canViewportWidthDamage ||
+                   damager.m_canViewportHeightDamage;
+        }
+    } else if (l.isAuto()) {
+        return damager.m_canAutoDamage;
+    } else if (l.isCalc()) {
+        GCVector<CalcTerm*>& data = l.calcData()->terms();
+        auto iter = data.begin();
+
+        while (iter != data.end()) {
+            GCVector<CalcValue>& data2 = (*iter)->values();
+            auto iter2 = data2.begin();
+            while (iter2 != data2.end()) {
+                CalcValue& v = *iter2;
+                if (v.type().isLength()) {
+                    Length l2 = v.lengthValue().toLength();
+                    if (isLayoutDamaged(damager, l2)) {
+                        return true;
+                    }
+                } else if (v.type().isPercentage()) {
+                    Length l2 = Length(Length::Percent, v.percentageValue());
+                    if (isLayoutDamaged(damager, l2)) {
+                        return true;
+                    }
+                }
+                iter2++;
+            }
+            iter++;
+        }
+
+        return false;
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        return false;
+    }
+}
+
+bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
+                         FrameBox* containingBox)
+{
+    if (needsLayout()) {
+        return true;
+    }
+
+    ComputedStyle* style = this->style();
+    Node* node = this->node();
+    LayoutDamager damager;
+    bool containerWidthMayBeChanged = containingBox->contentWidthDamaged();
+    bool containerHeightMayBeChanged = containingBox->contentHeightDamaged();
+    if (isAbsolutePositioned()) {
+        containerWidthMayBeChanged |= containingBox->paddingWidthDamaged();
+        containerHeightMayBeChanged |= containingBox->paddingHeightDamaged();
+    }
+    damager.m_canViewportWidthDamage = ctx.viewportWidthDamaged();
+    damager.m_canViewportHeightDamage = ctx.viewportHeightDamaged();
+
+    if (resolveWhat & LayoutWantToResolve::ResolveWidth) {
+        if (style->width().isAuto()) {
+            if (containerWidthMayBeChanged) {
+                markNeedsLayout();
+                return true;
+            }
+
+            damager.m_canPercentDamage = containerWidthMayBeChanged;
+            damager.m_canAutoDamage = false;
+
+            BorderData border = style->border();
+            if (isLayoutDamaged(damager, border.left().width()) ||
+                isLayoutDamaged(damager, border.right().width())) {
+                markNeedsLayout();
+                return true;
+            }
+
+            LengthData padding = style->padding();
+            if (isLayoutDamaged(damager, padding.left()) ||
+                isLayoutDamaged(damager, padding.right())) {
+                markNeedsLayout();
+                return true;
+            }
+
+            if (isAbsolutePositioned() && style->left().isSpecified() &&
+                style->right().isSpecified()) {
+                if (isLayoutDamaged(damager, style->left()) ||
+                    isLayoutDamaged(damager, style->right())) {
+                    markNeedsLayout();
+                    return true;
+                }
+            }
+        } else {
+            damager.m_canPercentDamage = containerWidthMayBeChanged;
+            damager.m_canAutoDamage = false;
+
+            if (isLayoutDamaged(damager, style->width())) {
+                markNeedsLayout();
+                return true;
+            }
+        }
+
+        damager.m_canPercentDamage = containerWidthMayBeChanged;
+        damager.m_canAutoDamage = false;
+
+        if (isLayoutDamaged(damager, style->minWidth()) ||
+            isLayoutDamaged(damager, style->maxWidth())) {
+            markNeedsLayout();
+            return true;
+        }
+    }
+
+    if (resolveWhat & LayoutWantToResolve::ResolveHeight) {
+        if (style->height().isAuto() && isAbsolutePositioned() &&
+            style->top().isSpecified() && style->bottom().isSpecified()) {
+            if (containerHeightMayBeChanged) {
+                return true;
+            }
+
+            damager.m_canPercentDamage = containerWidthMayBeChanged;
+            damager.m_canAutoDamage = false;
+
+            BorderData border = style->border();
+            if (isLayoutDamaged(damager, border.top().width()) ||
+                isLayoutDamaged(damager, border.bottom().width())) {
+                return true;
+            }
+
+            LengthData padding = style->padding();
+            if (isLayoutDamaged(damager, padding.top()) ||
+                isLayoutDamaged(damager, padding.bottom())) {
+                return true;
+            }
+
+            damager.m_canPercentDamage = containerHeightMayBeChanged;
+
+            if (isLayoutDamaged(damager, style->top()) ||
+                isLayoutDamaged(damager, style->bottom())) {
+                return true;
+            }
+        } else {
+            damager.m_canPercentDamage = containerHeightMayBeChanged;
+            damager.m_canAutoDamage = false;
+
+            if (isLayoutDamaged(damager, style->height())) {
+                return true;
+            }
+        }
+
+        damager.m_canPercentDamage = containerHeightMayBeChanged;
+        damager.m_canAutoDamage = false;
+
+        if (isLayoutDamaged(damager, style->minHeight()) ||
+            isLayoutDamaged(damager, style->maxHeight())) {
+            return true;
+        }
+
+        if (isFrameTableBox()) {
+            damager.m_canPercentDamage = false;
+            damager.m_canAutoDamage = false;
+            if (isLayoutDamaged(damager, style->horizontalBorderSpacing()) ||
+                isLayoutDamaged(damager, style->verticalBorderSpacing())) {
+                return true;
+            }
+        }
+
+        damager.m_canPercentDamage = containerWidthMayBeChanged;
+        damager.m_canAutoDamage = false;
+
+        if (isLayoutDamaged(damager, style->textIndent())) {
+            return true;
+        }
+
+        damager.m_canPercentDamage = false;
+        damager.m_canAutoDamage = false;
+
+        if (isLayoutDamaged(damager, style->letterSpacing()) ||
+            isLayoutDamaged(damager, style->wordSpacing())) {
+            return true;
+        }
+
+        if (style->verticalAlign() == NumericVAlignValue) {
+            damager.m_canPercentDamage = false;
+            damager.m_canAutoDamage = false;
+            if (isLayoutDamaged(damager, style->verticalAlignLength())) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 }

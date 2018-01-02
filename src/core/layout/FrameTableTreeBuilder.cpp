@@ -71,6 +71,9 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
                 c->childNeedsFrameTreeBuild()) {
                 if (c->style()->display() != DisplayValue::NoneDisplayValue) {
                     currentFrame->addChild(c, ctx, force);
+                    if (currentFrame->isEstablishesBlockFormattingContext()) {
+                        currentFrame->markNeedsLayout();
+                    }
                 }
             }
         }
@@ -131,6 +134,9 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
             ctx.setIsInFrameInlineFlow(false);
 
             currentFrame->addChild(current, ctx, force);
+            if (currentFrame->isEstablishesBlockFormattingContext()) {
+                currentFrame->markNeedsLayout();
+            }
         } else if (current->childNeedsFrameTreeBuild()) {
             for (Frame* f = current->frame(); f; f = f->parent()) {
                 if (f->parent() == parent) {
@@ -144,6 +150,9 @@ FrameTableObjectBox* FrameTableTreeBuilder::buildFrameTableTree(
             ctx.setIsInFrameInlineFlow(false);
 
             currentFrame->addChild(current, ctx, force);
+            if (currentFrame->isEstablishesBlockFormattingContext()) {
+                currentFrame->markNeedsLayout();
+            }
         } else {
             // If the frame-tree-building state get here, I think something
             // wrong

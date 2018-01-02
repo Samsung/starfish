@@ -680,6 +680,11 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     }
 
     if (!shouldSkipChildren && (current->childNeedsFrameTreeBuild() || force)) {
+        if (currentFrame->isFrameDocument() ||
+            currentFrame->isEstablishesBlockFormattingContext()) {
+            currentFrame->markNeedsLayout();
+        }
+
         Node* n = current->firstChild();
 
         while (n) {

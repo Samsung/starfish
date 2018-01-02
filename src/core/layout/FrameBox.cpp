@@ -72,6 +72,9 @@ LayoutLocation FrameBox::absolutePointIncludingScroll(FrameBox* top)
 void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
                                           LayoutUnit parentContentWidth)
 {
+    LayoutUnit oldPaddingWidth = paddingWidth();
+    LayoutUnit oldPaddingHeight = paddingHeight();
+
     // padding
     LengthData padding = style()->padding();
     if (padding.left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
@@ -95,6 +98,18 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
             padding.bottom().specifiedValue(parentContentWidth, this));
     } else {
         setPaddingBottom(0);
+    }
+
+    if (oldPaddingWidth != paddingWidth()) {
+        markPaddingWidthDamaged();
+    } else {
+        clearPaddingWidthDamaged();
+    }
+
+    if (oldPaddingHeight != paddingHeight()) {
+        markPaddingHeightDamaged();
+    } else {
+        clearPaddingHeightDamaged();
     }
 
     // border

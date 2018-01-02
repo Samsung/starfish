@@ -258,94 +258,13 @@ struct PreferredWidthValue {
     }
 };
 
-struct LayoutPredictionStatus {
-public:
-    enum Flag {
-        ViewportWidthChanged = 1 << 0,
-        ViewportHeightChanged = 1 << 1,
-        ContainerWidthMaybeChanged = 1 << 2,
-        ContainerHeightMaybeChanged = 1 << 3,
-        ChildrenOrSelfChanged = 1 << 4
-    };
-
-    LayoutPredictionStatus()
-        : m_flag(0)
-    {
-    }
-
-#define FLAG_MARKER_CLEARER_GETTER(FLAG, flag) \
-    void mark##FLAG()                          \
-    {                                          \
-        m_flag |= FLAG;                        \
-    }                                          \
-                                               \
-    void clear##FLAG()                         \
-    {                                          \
-        m_flag &= ~FLAG;                       \
-    }                                          \
-                                               \
-    bool flag() const                          \
-    {                                          \
-        return m_flag & FLAG;                  \
-    }
-
-    FLAG_MARKER_CLEARER_GETTER(ViewportWidthChanged, viewportWidthChanged);
-    FLAG_MARKER_CLEARER_GETTER(ViewportHeightChanged, viewportHeightChanged);
-    FLAG_MARKER_CLEARER_GETTER(ContainerWidthMaybeChanged,
-                               containerWidthMaybeChanged);
-    FLAG_MARKER_CLEARER_GETTER(ContainerHeightMaybeChanged,
-                               containerHeightMaybeChanged);
-    FLAG_MARKER_CLEARER_GETTER(ChildrenOrSelfChanged, childrenOrSelfChanged);
-#undef FLAG_MARKER_CLEARER_GETTER
-
-    bool predict(bool isPercentInfluenced, bool isAutoInfluenced, Length l);
-
-private:
-    uint8_t m_flag;
-};
-
-class LayoutPredictionContext {
-public:
-    LayoutPredictionContext()
-    {
-    }
-
-    void removeParent()
-    {
-        m_parents.pop_back();
-    }
-
-    void makeState(FrameBlockBox* f);
-
-    void addParent(FrameBlockBox* f)
-    {
-        m_parents.push_back(f);
-    }
-
-    bool shouldLayout(Frame* f);
-
-    LayoutPredictionStatus& state()
-    {
-        return m_states[m_parents.back()];
-    }
-
-    void propagateChildrenChanged()
-    {
-        for (size_t i = 0; i < m_parents.size(); i++) {
-            m_states[m_parents[i]].markChildrenOrSelfChanged();
-        }
-    }
-
-private:
-    std::unordered_map<FrameBlockBox*, LayoutPredictionStatus> m_states;
-    std::vector<FrameBlockBox*> m_parents;
-};
-
 class LayoutContext {
 public:
     LayoutContext(StarFish* starFish, FrameDocument* frameDocument)
         : m_starFish(starFish)
         , m_frameDocument(frameDocument)
+        , m_viewportWidthDamaged(false)
+        , m_viewportHeightDamaged(false)
     {
         establishBlockFormattingContext(true, true);
     }
@@ -608,6 +527,26 @@ public:
         return ret;
     }
 
+    void markViewportWidthDamaged()
+    {
+        m_viewportWidthDamaged = true;
+    }
+
+    bool viewportWidthDamaged() const
+    {
+        return m_viewportWidthDamaged;
+    }
+
+    void markViewportHeightDamaged()
+    {
+        m_viewportHeightDamaged = true;
+    }
+
+    bool viewportHeightDamaged() const
+    {
+        return m_viewportHeightDamaged;
+    }
+
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(
@@ -672,9 +611,10 @@ private:
     // TODO move these maps into BlockFormattingContext
     std::unordered_map<FrameBox*, MarginCollapseResult> m_marginCollapseResult;
     std::unordered_map<FrameBlockBox*, MarginInfo*> m_marginInfo;
-
     GCVector<InlineTextBox*> m_inlineTextBoxPool;
     GCVector<InlineNonReplacedBox*> m_inlineNonReplacedBoxPool;
+    bool m_viewportWidthDamaged : 1;
+    bool m_viewportHeightDamaged : 1;
 
     void applyRelativePosition(FrameBox* box);
     void applyRelativePositionInlineCase(Frame* refF, FrameBox* box);
@@ -1448,14 +1388,6 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    enum PredictionStage {
-        Collect,
-        Predict,
-    };
-
-    virtual void predictLayout(LayoutPredictionContext& ctx,
-                               PredictionStage stage);
-
     enum LayoutWantToResolve {
         ResolveWidth = 1,
         ResolveHeight = 1 << 1,
@@ -1549,6 +1481,23 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
+    void propagateMarkNeedsLayout()
+    {
+        Frame* f = this;
+        while (f) {
+            if (f->isEstablishesBlockFormattingContext() ||
+                f->isFrameDocument()) {
+                if (f->needsLayout()) {
+                    break;
+                }
+
+                f->markNeedsLayout();
+            }
+
+            f = f->parent();
+        }
+    }
+
     void markNeedsLayout()
     {
         m_flags.m_needsLayout = true;
@@ -1562,6 +1511,69 @@ public:
     bool needsLayout() const
     {
         return m_flags.m_needsLayout;
+    }
+
+    bool shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
+                      FrameBox* containingBoxs);
+
+    void markContentWidthDamaged()
+    {
+        m_flags.m_contentWidthDamaged = true;
+    }
+
+    void clearContentWidthDamaged()
+    {
+        m_flags.m_contentWidthDamaged = false;
+    }
+
+    bool contentWidthDamaged() const
+    {
+        return m_flags.m_contentWidthDamaged;
+    }
+
+    void markPaddingWidthDamaged()
+    {
+        m_flags.m_paddingWidthDamaged = true;
+    }
+
+    void clearPaddingWidthDamaged()
+    {
+        m_flags.m_paddingWidthDamaged = false;
+    }
+
+    bool paddingWidthDamaged() const
+    {
+        return m_flags.m_paddingWidthDamaged;
+    }
+
+    void markContentHeightDamaged()
+    {
+        m_flags.m_contentHeightDamaged = true;
+    }
+
+    void clearContentHeightDamaged()
+    {
+        m_flags.m_contentHeightDamaged = false;
+    }
+
+    bool contentHeightDamaged() const
+    {
+        return m_flags.m_contentHeightDamaged;
+    }
+
+    void markPaddingHeightDamaged()
+    {
+        m_flags.m_paddingHeightDamaged = true;
+    }
+
+    void clearPaddingHeightDamaged()
+    {
+        m_flags.m_paddingHeightDamaged = false;
+    }
+
+    bool paddingHeightDamaged() const
+    {
+        return m_flags.m_paddingHeightDamaged;
     }
 
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
@@ -1590,20 +1602,14 @@ public:
         return m_flags.m_isEstablishesStackingContext;
     }
 
-    bool isPositioned() const
-    {
-        return m_flags.m_isPositioned;
-    }
+    bool isPositioned();
 
     bool isNormalFlow() const
     {
         return m_flags.m_isNormalFlow;
     }
 
-    bool isRootElement() const
-    {
-        return m_flags.m_isRootElement;
-    }
+    bool isRootElement() const;
 
     bool isLeftMBPCleared() const
     {
@@ -1630,15 +1636,9 @@ public:
         return m_flags.m_needsGraphicsBuffer;
     }
 
-    bool isAbsolutePositioned() const
-    {
-        return m_flags.m_isAbsolutePositioned;
-    }
+    bool isAbsolutePositioned();
 
-    bool isFloating() const
-    {
-        return m_flags.m_isFloating;
-    }
+    bool isFloating();
 
     void markFlexItem();
 
@@ -1732,7 +1732,7 @@ public:
                (style()->display() == DisplayValue::InlineTableDisplayValue);
     }
 
-    Element* offsetParent() const;
+    Element* offsetParent();
     LayoutUnit offsetLeft()
     {
         return adjustedPositionRelativeToOffsetParent().x();
@@ -1817,21 +1817,11 @@ protected:
         // [CSS3COLOR].
         bool m_isEstablishesStackingContext : 1;
 
-        // https://www.w3.org/TR/CSS21/visuren.html#positioning-scheme
-        // 9.3.2
-        // An element is said to be positioned if its 'position' property has a
-        // value other than 'static'. Positioned elements generate positioned
-        // boxes, laid out according to four properties:
-        bool m_isPositioned : 1;
-
         bool m_isNormalFlow : 1;
-        bool m_isRootElement : 1;
 
         bool m_isLeftMBPCleared : 1;
         bool m_isRightMBPCleared : 1;
 
-        bool m_isAbsolutePositioned : 1;
-        bool m_isFloating : 1;
         bool m_isFlexItem : 1;
         bool m_isFrameText : 1;
 
@@ -1859,6 +1849,10 @@ protected:
         bool m_seenNormalFlowInlineBlockBox : 1;
         bool m_seenNormalFlowInlineReplaced : 1;
 
+        bool m_contentWidthDamaged : 1;
+        bool m_paddingWidthDamaged : 1;
+        bool m_contentHeightDamaged : 1;
+        bool m_paddingHeightDamaged : 1;
     } m_flags;
 
     STARFISH_COMPILE_ASSERT(sizeof(FrameFlags) <= sizeof(uint32_t),

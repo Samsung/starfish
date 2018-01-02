@@ -67,6 +67,8 @@ void FrameReplacedIFrame::layout(LayoutContext& ctx,
                 v->browsingContext()->layoutIfNeeds();
             }
         }
+
+        clearNeedsLayout();
     }
 }
 

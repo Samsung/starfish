@@ -91,6 +91,8 @@ enum PaintingInlineStage {
 };
 
 class FrameBox : public Frame {
+    friend struct MBPRestorer;
+
 public:
     FrameBox(Node* node, ComputedStyle* style)
         : Frame(node, style)

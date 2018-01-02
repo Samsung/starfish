@@ -451,15 +451,6 @@ public:
     }
 
     void setNeedsLayout();
-    void clearNeedsLayout()
-    {
-        m_needsLayout = false;
-    }
-
-    bool needsLayout()
-    {
-        return m_needsLayout;
-    }
     void setNeedsPainting();
     void setNeedsComposite();
 
@@ -629,7 +620,6 @@ protected:
     bool m_childNeedsStyleRecalc : 1;
     bool m_needsFrameTreeBuild : 1;
     bool m_childNeedsFrameTreeBuild : 1;
-    bool m_needsLayout : 1;
     // for Element
     bool m_didInlineStyleModifiedAfterAttributeSet : 1;
     bool m_tabIndexWasSetExplicitly : 1;
