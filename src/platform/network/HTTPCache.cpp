@@ -31,16 +31,11 @@
 #include "core/modules/profiling/Profiling.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
-#include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>
+
 #include <linux/fs.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <sys/file.h>
 
 #define INDEX_FILE_NAME "/index.txt"
-#define LOCK_FILE_NAME "/.starfish-lock"
 #define DEFAULT_HTTP_CACHE_SIZE 1024 * 1024 * 50
 #define MAX_ENTRY_FILE_SIZE (DEFAULT_HTTP_CACHE_SIZE * 0.04)
 #define NUM_OF_COL 17
@@ -53,25 +48,23 @@ HTTPCache::HTTPCache(String* cacheDirPath)
     : m_cacheEntryTable()
     , m_cacheDirPath(cacheDirPath)
     , m_indexFilePath(nullptr)
-    , m_lockFilePath(nullptr)
     , m_cacheSizeLimit(DEFAULT_HTTP_CACHE_SIZE)
     , m_currentTotalSizeOfBlocks(0)
-    , m_lockfd(0)
+    , m_lockfd(-1)
     , m_good(false)
 {
     m_indexFilePath = m_cacheDirPath->concat(INDEX_FILE_NAME);
-    m_lockFilePath =
-        m_cacheDirPath->substring(0, m_cacheDirPath->lastIndexOf('/'));
-    m_lockFilePath = m_lockFilePath->concat(LOCK_FILE_NAME);
 
-    if (!lock()) {
-        return;
-    }
-    if (!initFromIndexFileIfPossible()) {
-        init();
-        if (!initCacheDirectory()) {
-            return;
+    if (createOrOpenCacheDir() && lock()) {
+        if (!initFromIndexFileIfPossible()) {
+            STARFISH_LOG_ERROR("[HTTPCache] Failed to init using index\n")
+            init();
+            clearCacheDir();
         }
+    } else {
+        unlock();
+        STARFISH_LOG_ERROR("[HTTPCache] Failed to create(or open) cache dir\n")
+        return;
     }
     m_good = true;
 }
@@ -82,19 +75,45 @@ HTTPCache::~HTTPCache()
 
 bool HTTPCache::lock()
 {
-    auto path = m_lockFilePath->toUTF8NonGCString();
-    return ((m_lockfd = open(path.data(), O_WRONLY | O_CREAT | O_EXCL,
-                             S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) != -1);
+    auto path = m_cacheDirPath->toUTF8NonGCString();
+    if ((m_lockfd = open(path.data(), O_RDONLY)) != -1) {
+        if (flock(m_lockfd, LOCK_EX | LOCK_NB) != -1) {
+            STARFISH_LOG_INFO("[HTTPCache] Lock cache dir\n");
+            return true;
+        }
+    }
+    STARFISH_LOG_ERROR("[HTTPCache] Failed to lock cache dir\n");
+    return false;
 }
 
 void HTTPCache::unlock()
 {
     if (m_lockfd != -1) {
-        close(m_lockfd);
-        auto path = m_lockFilePath->toUTF8NonGCString();
-        unlink(path.data());
-        STARFISH_LOG_INFO("[HTTPCache] unlock .starfish-lock\n")
+        if (flock(m_lockfd, LOCK_UN) != -1) {
+            close(m_lockfd);
+            STARFISH_LOG_INFO("[HTTPCache] Unlock cache dir\n");
+        } else {
+            STARFISH_LOG_ERROR("[HTTPCache] Failed to unlock cache dir\n");
+        }
     }
+}
+
+bool HTTPCache::createOrOpenCacheDir()
+{
+    Directory* dir = Directory::create();
+    if (dir->open(m_cacheDirPath)) {
+        return dir->close();
+    } else {
+        return dir->mkDir();
+    }
+}
+
+void HTTPCache::clearCacheDir()
+{
+    Directory* dir = Directory::create();
+    dir->open(m_cacheDirPath);
+    dir->clearDir();
+    dir->close();
 }
 
 bool HTTPCache::initFromIndexFileIfPossible()
@@ -358,7 +377,7 @@ bool HTTPCache::flush()
 
     if (!check || !isConsistent()) {
         STARFISH_LOG_ERROR("[HTTPCache] Cached entries are corrupted")
-        initCacheDirectory();
+        clearCacheDir();
         return false;
     }
 
@@ -484,25 +503,6 @@ void HTTPCache::expire()
             it++;
         }
     }
-}
-
-bool HTTPCache::initCacheDirectory()
-{
-    STARFISH_ASSERT(isMainThread());
-
-    Directory* dir = Directory::create();
-
-    if (dir->open(m_cacheDirPath)) {
-        dir->removeDir();
-    }
-
-    if (!dir->mkDir()) {
-        STARFISH_LOG_ERROR("[HTTPCache] %s directory create error\n",
-                           m_cacheDirPath->toUTF8NonGCString().data());
-        return false;
-    }
-
-    return dir->close();
 }
 
 void HTTPCache::init()

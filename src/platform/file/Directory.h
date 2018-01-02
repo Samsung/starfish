@@ -36,6 +36,7 @@ public:
     virtual bool mkDir() = 0;
     virtual bool close() = 0;
     virtual void removeDir() = 0;
+    virtual void clearDir() = 0;
     virtual bool isOpen() = 0;
     virtual size_t fileCount() = 0;
 

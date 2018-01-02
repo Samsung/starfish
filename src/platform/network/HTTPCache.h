@@ -59,7 +59,8 @@ public:
 private:
     bool lock();
     void unlock();
-    bool initCacheDirectory();
+    bool createOrOpenCacheDir();
+    void clearCacheDir();
     void init();
     void removeItemInLRUList(String* url);
     HTTPCacheEntryMultiMap::iterator findEntryInCacheEntryTable(String* key);
@@ -74,7 +75,6 @@ private:
     HTTPCacheLRUList m_cacheLRUList;
     String* m_cacheDirPath;
     String* m_indexFilePath;
-    String* m_lockFilePath;
     size_t m_cacheSizeLimit;
     size_t m_currentTotalSizeOfBlocks;
     int m_lockfd;
