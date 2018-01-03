@@ -529,7 +529,7 @@ void Node::setState(NodeState state, DynamicRestyleFlags mask, bool enable)
     } else if (!(m_state & state) == enable) {
         m_state ^= state;
 
-        if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
+        if (isAffectedByDynamicEvent(mask)) {
             setNeedsStyleRecalcIfNeeded();
         } else {
             setNeedsStyleRecalc();
@@ -905,7 +905,10 @@ static void didInsertNode(Node* self, Node* child)
     if (self->isInDocumentScope() &&
         self->document()->doesParticipateInRendering()) {
         notifyNodeInsertedToDocumentTree(self, child);
-        self->setNeedsStyleRecalc();
+        if (self->isAffectedByDynamicEvent(Node::AffectedByEmptyRules)) {
+            self->setNeedsStyleRecalc();
+        }
+        child->setNeedsStyleRecalc();
         self->setChildrenNeedsStyleRecalc();
         child->setNeedsFrameTreeBuild(false);
     }
@@ -1142,6 +1145,9 @@ Node* Node::removeChild(Node* child)
 
     FrameTreeBuilder::clearTree(child);
     setNeedsFrameTreeBuild(true);
+    if (isAffectedByDynamicEvent(Node::AffectedByEmptyRules)) {
+        setNeedsStyleRecalc();
+    }
 
     if (isInDocumentScope() && document()->doesParticipateInRendering()) {
         notifyNodeRemoveFromDocumentTree(child);
@@ -1374,8 +1380,6 @@ void Node::setNeedsFrameTreeBuild(bool canSelfRetain)
         return;
     }
 
-    window()->browsingContext()->setNeedsFrameTreeBuild();
-
     Frame* old = frame();
     if (old) {
         Frame* target;
@@ -1417,12 +1421,22 @@ void Node::setNeedsFrameTreeBuild(bool canSelfRetain)
             node->markChildNeedsFrameTreeBuild();
             node = node->parentNode();
         }
+
+        window()->browsingContext()->setNeedsFrameTreeBuild();
     } else {
         Node* node = this;
         while (node) {
             if (node->frame()) {
                 node->setNeedsFrameTreeBuild(true);
                 break;
+            } else {
+                if (!node->needsStyleRecalc()) {
+                    if (node->style() &&
+                        node->style()->display() ==
+                            DisplayValue::NoneDisplayValue) {
+                        break;
+                    }
+                }
             }
             node = node->parentNode();
         }

@@ -6246,12 +6246,10 @@ bool StyleResolver::checkPseudoClass(Element* element,
 {
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoHover:
-        element->setChildrenOrSiblingsAffectedByDynamicEvent(
-            Node::ChildrenOrSiblingsAffectedByHover);
+        element->setRestyleFlags(Node::ChildrenOrSiblingsAffectedByHover);
         return element->state() & Node::NodeState::NodeStateHovered;
     case CSSSelector::PseudoType::PseudoActive:
-        element->setChildrenOrSiblingsAffectedByDynamicEvent(
-            Node::ChildrenOrSiblingsAffectedByActive);
+        element->setRestyleFlags(Node::ChildrenOrSiblingsAffectedByActive);
         return element->state() & Node::NodeState::NodeStateActive;
     case CSSSelector::PseudoType::PseudoFocus:
 #if defined(STARFISH_ENABLE_BODY_FOCUS_RING)
@@ -6260,15 +6258,14 @@ bool StyleResolver::checkPseudoClass(Element* element,
                 element->document()->browsingContext()) {
                 if (element->document()->activeElement() &&
                     element->document()->activeElement()->isHTMLBodyElement()) {
-                    element->setChildrenOrSiblingsAffectedByDynamicEvent(
+                    element->setRestyleFlags(
                         Node::ChildrenOrSiblingsAffectedByFocus);
                     return true;
                 }
             }
         }
 #endif
-        element->setChildrenOrSiblingsAffectedByDynamicEvent(
-            Node::ChildrenOrSiblingsAffectedByFocus);
+        element->setRestyleFlags(Node::ChildrenOrSiblingsAffectedByFocus);
         return element->state() & Node::NodeState::NodeStateFocused;
     case CSSSelector::PseudoType::PseudoTarget:
         return element->state() & Node::NodeState::NodeStateTarget;
@@ -6296,6 +6293,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
         }
         break;
     case CSSSelector::PseudoType::PseudoEmpty:
+        element->setRestyleFlags(Node::AffectedByEmptyRules);
         return isEmpty(element);
     case CSSSelector::PseudoNthChild:
         if (element->parentElement()) {
