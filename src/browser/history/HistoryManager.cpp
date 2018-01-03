@@ -133,14 +133,8 @@ void HistoryManager::pushState(Document* document, ScriptValue state,
     auto serializedState = Serializer::serialize(document, state);
     ResourceURL* newURL = nullptr;
     if (url.hasValue()) {
-        if (url.getValue()->startsWith("/")) {
-            String* str = ResourceURL::mergeDocumentURIWithURIString(
-                m_webView->mainBrowsingContext()->document(), url.getValue());
-            newURL = new ResourceURL(str);
-        } else {
-            newURL = new ResourceURL(url.getValue());
-        }
-
+        newURL =
+            new ResourceURL(url.getValue(), document->documentURI()->baseURI());
     } else {
         newURL = new ResourceURL(*(currentEntry()->url()));
     }
@@ -156,7 +150,8 @@ void HistoryManager::replaceState(Document* document, ScriptValue state,
 
     ResourceURL* newURL;
     if (url.hasValue()) {
-        newURL = new ResourceURL(url.getValue());
+        newURL =
+            new ResourceURL(url.getValue(), document->documentURI()->baseURI());
     } else {
         newURL = new ResourceURL(*(currentEntry()->url()));
     }

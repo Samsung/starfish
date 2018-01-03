@@ -999,6 +999,18 @@ LayoutUnit LayoutContext::contentHeight(FrameBox* box)
     return iter->second;
 }
 
+void LayoutContext::pushIntoInlineTextBoxPool(InlineTextBox* b)
+{
+    memset(b, 0, sizeof(InlineTextBox));
+    m_inlineTextBoxPool.push_back(b);
+}
+
+void LayoutContext::pushIntoInlineNonReplacedBoxPool(InlineNonReplacedBox* b)
+{
+    memset(b, 0, sizeof(InlineNonReplacedBox));
+    m_inlineNonReplacedBoxPool.push_back(b);
+}
+
 void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
 {
     SkMatrix m = tranformMatrix;

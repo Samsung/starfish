@@ -1078,6 +1078,23 @@ static void removeBoxFromLine(FrameBox* box)
     }
 }
 
+static void collectUselessInlineBoxes(LayoutContext& ctx, FrameBox* f)
+{
+    auto& boxes = f->asInlineBoxLayoutParentBox()->boxes();
+    for (size_t i = 0; i < boxes.size(); i++) {
+        if (boxes[i]->isInlineTextBox()) {
+            ctx.pushIntoInlineTextBoxPool(boxes[i]->asInlineTextBox());
+        } else if (boxes[i]->isInlineBoxLayoutParentBox()) {
+            collectUselessInlineBoxes(ctx, boxes[i]);
+        }
+    }
+
+    if (f->isInlineNonReplacedBox()) {
+        f->asInlineNonReplacedBox()->boxes().clear();
+        ctx.pushIntoInlineNonReplacedBoxPool(f->asInlineNonReplacedBox());
+    }
+}
+
 LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
                                              LayoutContext& ctx, bool forQuick)
     : m_textIndentWidth(0)
@@ -1096,6 +1113,11 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
         m_absPosition.x() + block->paddingLeft() + block->borderLeft();
     m_rightBoundary = m_leftBoundary + block->contentWidth();
     m_lineBoxY = block->paddingTop() + block->borderTop();
+
+    for (size_t i = 0; i < m_block->m_lineBoxes.size(); i++) {
+        collectUselessInlineBoxes(ctx, m_block->m_lineBoxes[i]);
+    }
+
     m_block->m_lineBoxes.clear();
     // m_block.m_lineBoxes.shrink_to_fit();
     resetLineBox();
@@ -1429,7 +1451,7 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
             }
         } else {
             if (first) {
-                first->setText(builder.finalize());
+                first->setText(builder.finalizeToStringView());
                 first->setWidth(totalWidth);
                 builder.clear();
                 first = nullptr;
@@ -1443,7 +1465,7 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
     }
 
     if (first) {
-        first->setText(builder.finalize());
+        first->setText(builder.finalizeToStringView());
         first->setWidth(totalWidth);
     }
 }
@@ -2639,6 +2661,24 @@ void LineFormattingContext::breakLine(FrameLineBreak* br)
     }
 }
 
+void* LineFormattingContext::allocateInlineTextBox()
+{
+    if (m_layoutContext.hasItemInInlineTextBoxPool()) {
+        return m_layoutContext.takeFromInlineTextBoxPool();
+    } else {
+        return InlineTextBox::operator new(sizeof(InlineTextBox));
+    }
+}
+
+void* LineFormattingContext::allocateInlineNonReplacedBox()
+{
+    if (m_layoutContext.hasItemInInlineNonReplacedBoxPool()) {
+        return m_layoutContext.takeFromInlineNonReplacedBoxPool();
+    } else {
+        return InlineNonReplacedBox::operator new(sizeof(InlineNonReplacedBox));
+    }
+}
+
 void LineFormattingContext::generateInlineTextBox(TextToken& token)
 {
     FrameText* f = token.m_frameText;
@@ -2669,8 +2709,8 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
             source = String::emptyString;
             start = end = 0;
         }
-        InlineTextBox* ib =
-            new InlineTextBox(f, TextRun(source, start, end, dir), isFirstLine);
+        InlineTextBox* ib = new (allocateInlineTextBox())
+            InlineTextBox(f, TextRun(source, start, end, dir), isFirstLine);
         ib->setLayoutParent(m_currentLayoutParent);
         ib->setWidth(textWidth);
         ib->setHeight(f->style()->font()->metrics().m_fontHeight);
@@ -2709,7 +2749,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                     }
                 }
 
-                InlineTextBox* ib = new InlineTextBox(
+                InlineTextBox* ib = new (allocateInlineTextBox()) InlineTextBox(
                     f, TextRun(srcTxt, start, end, dir), isFirstLine);
                 ib->setLayoutParent(m_currentLayoutParent);
                 ib->setWidth(style->font()->measureText(
@@ -2729,7 +2769,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                         break;
                     }
                 }
-                InlineTextBox* ib = new InlineTextBox(
+                InlineTextBox* ib = new (allocateInlineTextBox()) InlineTextBox(
                     f, TextRun(srcTxt, end, nextOffset, dir), isFirstLine);
                 ib->setLayoutParent(m_currentLayoutParent);
                 ib->setWidth(style->font()->measureText(
@@ -2746,7 +2786,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
                     break;
                 }
             }
-            InlineTextBox* ib = new InlineTextBox(
+            InlineTextBox* ib = new (allocateInlineTextBox()) InlineTextBox(
                 f, TextRun(srcTxt, offset, nextOffset, dir), isFirstLine);
             ib->setLayoutParent(m_currentLayoutParent);
             ib->setWidth(textWidth);
@@ -2758,7 +2798,7 @@ void LineFormattingContext::generateInlineTextBox(TextToken& token)
         if (m_currentLanguageDirection.isRtlOnly()) {
             dir = CharDirection::Rtl;
         }
-        InlineTextBox* ib = new InlineTextBox(
+        InlineTextBox* ib = new (allocateInlineTextBox()) InlineTextBox(
             f, TextRun(srcTxt, offset, nextOffset, dir), isFirstLine);
         ib->setLayoutParent(m_currentLayoutParent);
         ib->setWidth(textWidth);
@@ -3152,6 +3192,7 @@ void FrameReplaced::layoutInline(LineFormattingContext& ctx)
 
     ctx.insertWord(this);
 
+    setLayoutParent(ctx.m_currentLayoutParent);
     layout(ctx.m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
 
     if (isFloating()) {
@@ -3225,8 +3266,8 @@ void FrameInline::layoutInline(LineFormattingContext& ctx)
         ctx.insertWord(this);
     }
 
-    InlineNonReplacedBox* inlineBox =
-        new InlineNonReplacedBox(&ctx, this, ctx.isFirstLineBox());
+    InlineNonReplacedBox* inlineBox = new (ctx.allocateInlineNonReplacedBox())
+        InlineNonReplacedBox(&ctx, this, ctx.isFirstLineBox());
 
     if (ctx.isWordProcessing()) {
         inlineBox->setLayoutParent(ctx.m_currentLayoutParent);
@@ -3728,12 +3769,13 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
 
     finishLineForInlineNonReplacedBox(br, false);
 
-    InlineNonReplacedBox* newSelf = new InlineNonReplacedBox(this, self, false);
+    InlineNonReplacedBox* newSelf = new (allocateInlineNonReplacedBox())
+        InlineNonReplacedBox(this, self, false);
     FrameBox* parent = self->layoutParent()->asFrameBox();
     InlineNonReplacedBox* current = newSelf;
     while (parent->isInlineNonReplacedBox()) {
-        InlineNonReplacedBox* newInrb = new InlineNonReplacedBox(
-            this, parent->asInlineNonReplacedBox(), false);
+        InlineNonReplacedBox* newInrb = new (allocateInlineNonReplacedBox())
+            InlineNonReplacedBox(this, parent->asInlineNonReplacedBox(), false);
         newInrb->insertInlineBox(current);
         current = newInrb;
         parent = parent->layoutParent()->asFrameBox();

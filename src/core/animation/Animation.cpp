@@ -49,6 +49,11 @@ AnimationTask::AnimationTask(Element* target,
     m_targetPropertyString = targetPropertyString;
 }
 
+void AnimationTask::attachedToElement()
+{
+    m_targetElement->style()->markUsedInAnimator();
+}
+
 void AnimationTask::fireStartEvent()
 {
     TransitionEventInit init;

@@ -1396,7 +1396,9 @@ bool String::isASCIIStringData(const char* str)
 bool String::startsWith(const char* str, bool caseSensitive)
 {
     STARFISH_ASSERT(isASCIIStringData(str));
-    return startsWith(createASCIIString(str), caseSensitive);
+    StringDataOnStackASCII tmpStr(str, strlen(str));
+    bool ret = startsWith(&tmpStr, caseSensitive);
+    return ret;
 }
 
 bool String::startsWith(String* str, bool caseSensitive)
@@ -1427,7 +1429,9 @@ bool String::startsWith(String* str, bool caseSensitive)
 bool String::endsWith(const char* str, bool caseSensitive)
 {
     STARFISH_ASSERT(isASCIIStringData(str));
-    return endsWith(createASCIIString(str), caseSensitive);
+    StringDataOnStackASCII tmpStr(str, strlen(str));
+    bool ret = endsWith(&tmpStr, caseSensitive);
+    return ret;
 }
 
 bool String::endsWith(String* str, bool caseSensitive)
@@ -1915,26 +1919,20 @@ void StringBuilder::appendPiece(char32_t ch)
         m_pieces.push_back(piece);
 }
 
-void StringBuilder::takeBuilder(StringBuilder& src)
+StringView StringBuilder::finalizeToStringView()
 {
-    m_hasASCIIContent = m_hasASCIIContent | src.m_hasASCIIContent;
-    m_contentLength += src.m_contentLength;
-
-    for (size_t i = 0; i < src.m_piecesInlineStorageUsage; i++) {
-        if (m_piecesInlineStorageUsage < STRING_BUILDER_INLINE_STORAGE_MAX) {
-            m_piecesInlineStorage[m_piecesInlineStorageUsage++] =
-                src.m_piecesInlineStorage[i];
-        } else
-            m_pieces.push_back(src.m_piecesInlineStorage[i]);
+    if (m_piecesInlineStorageUsage == 1 &&
+        m_piecesInlineStorage[0].m_type >=
+            StringBuilderPiece::ASCIIStringPiece &&
+        m_piecesInlineStorage[0].m_type <=
+            StringBuilderPiece::UTF32StringStringPieceButASCIIContentPiece) {
+        return StringView(m_piecesInlineStorage[0].m_string,
+                          m_piecesInlineStorage[0].m_start,
+                          m_piecesInlineStorage[0].m_end);
     }
 
-    for (size_t i = 0; i < src.m_pieces.size(); i++) {
-        if (m_piecesInlineStorageUsage < STRING_BUILDER_INLINE_STORAGE_MAX) {
-            m_piecesInlineStorage[m_piecesInlineStorageUsage++] =
-                src.m_pieces[i];
-        } else
-            m_pieces.push_back(src.m_pieces[i]);
-    }
+    String* str = finalize();
+    return StringView(str, 0, str->length());
 }
 
 String* StringBuilder::finalize()
