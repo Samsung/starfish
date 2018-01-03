@@ -2653,7 +2653,31 @@ public:
     {
     }
 
+    void pushIntoComputedStylePool(ComputedStyle* b);
+
+    bool hasItemInComputedStylePool()
+    {
+        return m_computedStylePool.size();
+    }
+
+    void* takeFromComputedStylePool()
+    {
+        void* ret = m_computedStylePool.back();
+#ifndef NDEBUG
+        m_dbg.erase(m_dbg.find((ComputedStyle*)ret));
+#endif
+        m_computedStylePool.pop_back();
+        STARFISH_ASSERT(ret);
+        return ret;
+    }
+
+    void* allocateComputedStyle();
+
     Document* m_document;
+    GCVector<ComputedStyle*> m_computedStylePool;
+#ifndef NDEBUG
+    std::set<ComputedStyle*> m_dbg;
+#endif
 };
 
 class StyleResolver : public DocumentHoldable, public gc {

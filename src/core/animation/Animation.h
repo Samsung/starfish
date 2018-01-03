@@ -163,9 +163,7 @@ public:
     virtual void execute(float progress)
     {
     }
-    virtual void attachedToElement()
-    {
-    }
+    virtual void attachedToElement();
     virtual void detachedFromElement()
     {
     }

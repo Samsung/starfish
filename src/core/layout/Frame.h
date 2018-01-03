@@ -580,6 +580,34 @@ public:
     void registerContentHeight(FrameBox* box, LayoutUnit contentHeight);
     LayoutUnit contentHeight(FrameBox* box);
 
+    void pushIntoInlineTextBoxPool(InlineTextBox* b);
+
+    bool hasItemInInlineTextBoxPool()
+    {
+        return m_inlineTextBoxPool.size();
+    }
+
+    void* takeFromInlineTextBoxPool()
+    {
+        void* ret = m_inlineTextBoxPool.back();
+        m_inlineTextBoxPool.pop_back();
+        return ret;
+    }
+
+    void pushIntoInlineNonReplacedBoxPool(InlineNonReplacedBox* b);
+
+    bool hasItemInInlineNonReplacedBoxPool()
+    {
+        return m_inlineNonReplacedBoxPool.size();
+    }
+
+    void* takeFromInlineNonReplacedBoxPool()
+    {
+        void* ret = m_inlineNonReplacedBoxPool.back();
+        m_inlineNonReplacedBoxPool.pop_back();
+        return ret;
+    }
+
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(
@@ -644,6 +672,9 @@ private:
     // TODO move these maps into BlockFormattingContext
     std::unordered_map<FrameBox*, MarginCollapseResult> m_marginCollapseResult;
     std::unordered_map<FrameBlockBox*, MarginInfo*> m_marginInfo;
+
+    GCVector<InlineTextBox*> m_inlineTextBoxPool;
+    GCVector<InlineNonReplacedBox*> m_inlineNonReplacedBoxPool;
 
     void applyRelativePosition(FrameBox* box);
     void applyRelativePositionInlineCase(Frame* refF, FrameBox* box);

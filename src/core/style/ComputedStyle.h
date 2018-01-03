@@ -417,12 +417,18 @@ class ComputedStyle : public gc {
         m_seenPseudoElementBefore = false;
         m_seenPseudoElementAfter = false;
         m_gotInheritedColor = false;
+        m_usedInAnimator = false;
 
         initNonInheritedStyles();
     }
 
 public:
     ComputedStyle(ComputedStyle* from)
+    {
+        inheritStylesFrom(from);
+    }
+
+    void inheritStylesFrom(ComputedStyle* from)
     {
         m_font = nullptr;
 
@@ -441,6 +447,16 @@ public:
     bool seenViewPortUnitInStyle()
     {
         return m_seenViewPortUnitInStyle;
+    }
+
+    bool usedInAnimator()
+    {
+        return m_usedInAnimator;
+    }
+
+    void markUsedInAnimator()
+    {
+        m_usedInAnimator = true;
     }
 
     DisplayValue originalDisplay()
@@ -2109,6 +2125,10 @@ public:
     }
 
     void* operator new(size_t size);
+    void* operator new(size_t /* size */, void* p)
+    {
+        return p;
+    }
     void* operator new[](size_t size) = delete;
 
 protected:
@@ -2134,6 +2154,7 @@ protected:
     void initNonInheritedStyles()
     {
         m_display = DisplayValue::InlineDisplayValue;
+        m_position = PositionValue::StaticPositionValue;
         m_float = FloatValue::NoneFloatValue;
         m_clear = ClearValue::NoneClearValue;
         m_zIndexSpecifiedByUser = false;
@@ -2186,6 +2207,7 @@ protected:
     bool m_seenPseudoElementAfter : 1;
     bool m_seenPseudoElementFirstLineInherited : 1;
     bool m_gotInheritedColor : 1;
+    bool m_usedInAnimator : 1;
     FloatValue m_float : 2;
     ClearValue m_clear : 2;
     DisplayValue m_display : 5;
@@ -2203,7 +2225,7 @@ protected:
     FlexWrapValue m_flexWrap : 2;
     JustifyContentValue m_justifyContent : 3;
     AlignItemValue m_alignItems : 3;
-    bool m_alignSelfSpecifiedByUser;
+    bool m_alignSelfSpecifiedByUser : 1;
     AlignItemValue m_alignSelf : 3;
     AlignContentValue m_alignContent : 3;
     StyleResolver::PseudoElementType m_pseudoId : 6;

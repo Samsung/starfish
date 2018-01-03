@@ -3484,11 +3484,35 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     return ret;
 }
 
+void StyleResolveContext::pushIntoComputedStylePool(ComputedStyle* b)
+{
+    STARFISH_ASSERT(b);
+    if (!b->usedInAnimator()) {
+        memset(b, 0, sizeof(ComputedStyle));
+        m_computedStylePool.push_back(b);
+#ifndef NDEBUG
+        STARFISH_ASSERT(m_dbg.find(b) == m_dbg.end());
+        m_dbg.insert(b);
+#endif
+    }
+}
+
+void* StyleResolveContext::allocateComputedStyle()
+{
+    if (hasItemInComputedStylePool()) {
+        return takeFromComputedStylePool();
+    } else {
+        return ComputedStyle::operator new(sizeof(ComputedStyle));
+    }
+}
+
 ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
                                            Element* element,
                                            ComputedStyle* parent)
 {
-    ComputedStyle* style = new ComputedStyle(parent);
+    ComputedStyle* style =
+        new (ctx.allocateComputedStyle()) ComputedStyle(parent);
+
     matchAllRules(ctx, element, style, parent);
     style->loadResources(element, element->style());
     style->arrangeStyleValues(parent, element);
@@ -6449,9 +6473,9 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
     Node* child = parentElement->firstChild();
     while (child) {
         if (child->isElement()) {
+            ComputedStyle* oldStyle = child->style();
             bool childIsHiddenBefore =
-                child->style() ? child->style()->display() == NoneDisplayValue
-                               : true;
+                oldStyle ? oldStyle->display() == NoneDisplayValue : true;
             auto damage =
                 resolveElementStyle(ctx, resolver, child->asElement(),
                                     parentElementStyle, inheritedStyleChanged);
@@ -6462,11 +6486,14 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
             } else if (childIsHiddenBefore) {
                 inheritedStyleChanged = true;
             }
-
+            if (oldStyle && oldStyle != child->style()) {
+                ctx.pushIntoComputedStylePool(oldStyle);
+            }
         } else {
             if (inheritedStyleChangedForTextNode || child->needsStyleRecalc()) {
                 if (childTextNodeStyle == nullptr) {
-                    childTextNodeStyle = new ComputedStyle(parentElementStyle);
+                    childTextNodeStyle = new (ctx.allocateComputedStyle())
+                        ComputedStyle(parentElementStyle);
                     childTextNodeStyle->loadResources(parentElement);
                     childTextNodeStyle->arrangeStyleValues(parentElementStyle,
                                                            child);
@@ -6490,12 +6517,14 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
         child = child->nextSibling();
     }
 
+#ifndef NDEBUG
     child = parentElement->firstChild();
     while (child) {
         STARFISH_ASSERT(!child->needsStyleRecalc());
         STARFISH_ASSERT(!child->childNeedsStyleRecalc());
         child = child->nextSibling();
     }
+#endif
 
     parentElement->clearChildNeedsStyleRecalc();
 }

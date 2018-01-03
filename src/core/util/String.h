@@ -926,7 +926,7 @@ public:
 };
 
 #ifndef STRING_BUILDER_INLINE_STORAGE_MAX
-#define STRING_BUILDER_INLINE_STORAGE_MAX 64
+#define STRING_BUILDER_INLINE_STORAGE_MAX 32
 #endif
 
 class StringBuilder {
@@ -993,7 +993,7 @@ public:
         appendPiece(str, s, e);
     }
 
-    void takeBuilder(StringBuilder& src);
+    StringView finalizeToStringView();
     String* finalize();
     void clear()
     {

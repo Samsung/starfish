@@ -84,6 +84,11 @@ public:
         setText(t, 0, t->length());
     }
 
+    void setText(const StringView& t)
+    {
+        setText(t.string(), t.start(), t.end());
+    }
+
     CharDirection charDirection()
     {
         return m_flags.m_direction;
@@ -139,6 +144,10 @@ public:
     }
 
     void* operator new(size_t size);
+    void* operator new(size_t /* size */, void* p)
+    {
+        return p;
+    }
     void* operator new[](size_t size) = delete;
 
 protected:
@@ -429,6 +438,10 @@ public:
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+    void* operator new(size_t /* size */, void* p)
+    {
+        return p;
+    }
 
 protected:
     union {
@@ -932,6 +945,8 @@ public:
 
     bool removeLastLineBoxIfNeeds();
     LayoutUnit contentHeightForBlock();
+    void* allocateInlineTextBox();
+    void* allocateInlineNonReplacedBox();
 
     LineBox* currentLine()
     {
