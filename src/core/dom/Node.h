@@ -151,6 +151,7 @@ public:
         ChildrenAffectedByBackwardPositionalRules = 1 << 9,
         AffectedByFirstChildRules = 1 << 10,
         AffectedByLastChildRules = 1 << 11,
+        AffectedByEmptyRules = 1 << 12,
     };
 
     virtual NodeType nodeType() const = 0;
@@ -351,13 +352,12 @@ public:
 
     virtual Node* clone() = 0;
 
-    bool childrenOrSiblingsAffectedByDynamicEvent(
-        DynamicRestyleFlags mask) const
+    bool isAffectedByDynamicEvent(DynamicRestyleFlags mask) const
     {
         return m_restyleFlags & mask;
     }
 
-    void setChildrenOrSiblingsAffectedByDynamicEvent(DynamicRestyleFlags mask)
+    void setRestyleFlags(DynamicRestyleFlags mask)
     {
         m_restyleFlags |= mask;
     }
