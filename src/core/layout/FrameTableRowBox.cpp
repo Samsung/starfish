@@ -132,7 +132,6 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
 {
     LayoutUnit maxCellHeightSoFar = 0;
-    LayoutUnit maxRowHeightSoFar = 0;
     // 1. We make the second iteration of cells to layout cells
     //    and calculate the width of each cell
     for (Frame* c = firstChild(); c; c = c->next()) {
@@ -146,11 +145,10 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
         }
         ctx.popBlockBoxAligningAtFirstBaseline();
         LayoutUnit cellHeight = cell->height();
-        maxCellHeightSoFar = std::max(maxCellHeightSoFar, cellHeight);
 
         // Cells with rowspan > 1 do not contribute to the height of a row
         if (cell->updatedRowspan() == 1) {
-            maxRowHeightSoFar = std::max(maxRowHeightSoFar, cellHeight);
+            maxCellHeightSoFar = std::max(maxCellHeightSoFar, cellHeight);
         }
     }
 
@@ -158,7 +156,9 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
             FrameTableCellBox* cell = c->asFrameTableCellBox();
-            cell->setHeight(maxCellHeightSoFar);
+            if (maxCellHeightSoFar > cell->height()) {
+                cell->setHeight(maxCellHeightSoFar);
+            }
         }
     }
 
@@ -174,7 +174,7 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
-    setHeight(std::max(maxRowHeightSoFar, specifiedHeight));
+    setHeight(std::max(maxCellHeightSoFar, specifiedHeight));
 
     // layout absolute positioned blocks
     ctx.layoutRegisteredAbsolutePositionedBoxes(this);

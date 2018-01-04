@@ -1104,7 +1104,7 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-012.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-013.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-014.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-015.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-016.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-016.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-017.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-018.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-019.htm
