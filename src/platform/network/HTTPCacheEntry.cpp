@@ -29,14 +29,12 @@ namespace StarFish {
 const char* HTTPCacheEntry::kSeparator = "\037"; // unit separator
 
 HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
-                               HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
-                               int64_t lastModifyFileTime)
+                               HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo)
     : m_url(url)
     , m_cacheControl(cacheControl)
     , m_httpContentInfo(cinfo)
     , m_httpFreshnessInfo(finfo)
-    , m_lastModifyFileTime(lastModifyFileTime)
-    , m_entryFileName(nullptr)
+    , m_entryFileInfo()
     , m_mutex(new Mutex())
     , m_usingCount(0)
     , m_needsRawDataUpdate(false)
@@ -46,11 +44,10 @@ HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
 
 HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
                                HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
-                               int64_t lastModifyFileTime,
-                               String* entryFileName)
-    : HTTPCacheEntry(url, cacheControl, cinfo, finfo, lastModifyFileTime)
+                               EntryFileInfo& einfo)
+    : HTTPCacheEntry(url, cacheControl, cinfo, finfo)
 {
-    m_entryFileName = entryFileName;
+    m_entryFileInfo = einfo;
 }
 
 HTTPCacheEntry::~HTTPCacheEntry()
@@ -62,12 +59,12 @@ HTTPCacheEntry::HTTPCacheEntry(const HTTPCacheEntry& rhs)
     if (this == &rhs) {
         return;
     }
+
     m_url = new ResourceURL(*(rhs.m_url));
     m_cacheControl = rhs.m_cacheControl;
     m_httpContentInfo = rhs.m_httpContentInfo;
     m_httpFreshnessInfo = rhs.m_httpFreshnessInfo;
-    m_lastModifyFileTime = rhs.m_lastModifyFileTime;
-    m_entryFileName = rhs.m_entryFileName;
+    m_entryFileInfo = rhs.m_entryFileInfo;
 
     m_mutex = new Mutex();
     m_usingCount = rhs.m_usingCount;
@@ -97,24 +94,28 @@ void HTTPCacheEntry::setCacheControl(CacheControl& cc)
     m_cacheControl = cc;
 }
 
+void HTTPCacheEntry::setEntryFileInfo(EntryFileInfo& info)
+{
+    Locker<Mutex> locker(*m_mutex);
+    m_entryFileInfo = info;
+}
+
 void HTTPCacheEntry::setEntryFileNameUsingCachePath(String* cachePath)
 {
-    StringBuilder builder;
-    std::string entryKeystr = std::to_string(m_url->urlString()->hashValue());
-    std::string tcnt = std::to_string(longTickCount());
+    Locker<Mutex> locker(*m_mutex);
+    auto newPath = cachePath->toUTF8NonGCString();
 
-    builder.appendString(cachePath);
-    builder.appendString("/");
-    builder.appendString(entryKeystr.data());
-    builder.appendString("_");
-    builder.appendString(tcnt.data());
+    newPath.append("/");
+    newPath.append(std::to_string(m_url->urlString()->hashValue()));
+    newPath.append("_");
+    newPath.append(std::to_string(longTickCount()));
 
-    m_entryFileName = builder.finalize();
+    m_entryFileInfo.entryFilePath = newPath;
 }
 
 bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
 {
-    STARFISH_ASSERT(m_entryFileName != String::emptyString);
+    STARFISH_ASSERT(m_entryFileInfo.entryFilePath.compare("") != 0);
 
     Locker<Mutex> locker(*m_mutex);
     if (rawData.size() == 0) {
@@ -122,25 +123,27 @@ bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
     }
 
     File* out = File::create();
-    if (!out->open(m_entryFileName, File::Write)) {
+    if (!out->open(m_entryFileInfo.entryFilePath, File::Write)) {
         return false;
     }
 
-    size_t writeSize = out->write(rawData.data(), sizeof(char), rawData.size());
-    bool ret = (rawData.size() == writeSize) & (out->flush() == 0);
+    size_t length = out->write(rawData.data(), sizeof(char), rawData.size());
+    bool ret = (rawData.size() == length) & (out->flush() == 0);
 
-    m_lastModifyFileTime = out->lastModifyTime();
+    m_entryFileInfo.lastModificationTime = out->lastModificationTime();
+    m_entryFileInfo.byteLength = length;
 
     return ret & (out->close() == 0);
 }
 
 bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
 {
-    STARFISH_ASSERT(m_entryFileName != String::emptyString);
     Locker<Mutex> locker(*m_mutex);
 
+    STARFISH_ASSERT(m_entryFileInfo.entryFilePath.compare("") != 0);
+
     File* in = File::createInNonGCArea(); // Must free
-    if (!in->open(m_entryFileName, File::Read)) {
+    if (!in->open(m_entryFileInfo.entryFilePath, File::Read)) {
         return false;
     }
 
@@ -209,7 +212,7 @@ String* HTTPCacheEntry::toString() const
     //  maxAge(UINT) contentLanguage(STRING) contentLength(UINT)
     //  contentType(STRING) contentTransferEncoding(STRING) date(UINT) age(UINT)
     //  rquestTime(UINT) responeTime(UINT) lastModified(UINT) Etag(STRING)
-    //  lastModifyFileTime(UINT) entryFileName(STRING)
+    //  entryFilePath(STRING) lastModificationTime(UINT) byteLength(UINT)
 
     StringBuilder builder;
     std::string entryKey =
@@ -279,12 +282,16 @@ String* HTTPCacheEntry::toString() const
                            : "null";
     builder.appendString(etag.data());
     builder.appendString(kSeparator);
-    std::string lastModifyFileTime =
-        std::to_string(copied->m_lastModifyFileTime);
-    builder.appendString(lastModifyFileTime.data());
-    builder.appendString(kSeparator);
 
-    builder.appendString(copied->m_entryFileName);
+    // entry File info
+    builder.appendString(copied->m_entryFileInfo.entryFilePath.data());
+    builder.appendString(kSeparator);
+    std::string lastModificationTime =
+        std::to_string(copied->m_entryFileInfo.lastModificationTime);
+    builder.appendString(lastModificationTime.data());
+    builder.appendString(kSeparator);
+    std::string byteLength = std::to_string(copied->m_entryFileInfo.byteLength);
+    builder.appendString(byteLength.data());
 
     return builder.finalize();
 }
@@ -323,6 +330,22 @@ bool HTTPCacheEntry::needsPropertiesUpdate()
 {
     Locker<Mutex> locker(*m_mutex);
     return m_needsPropertiesUpdate;
+}
+
+bool HTTPCacheEntry::isConsistent()
+{
+    File* file = File::create();
+
+    if (file->open(m_entryFileInfo.entryFilePath, File::Read)) {
+        if (file->lastModificationTime() ==
+                m_entryFileInfo.lastModificationTime &&
+            file->size() == m_entryFileInfo.byteLength) {
+            file->close();
+            return true;
+        }
+    }
+    file->close();
+    return false;
 }
 }
 #endif

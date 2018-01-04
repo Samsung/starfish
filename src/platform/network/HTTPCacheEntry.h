@@ -23,30 +23,33 @@ namespace StarFish {
 class ResourceURL;
 class Mutex;
 
+struct EntryFileInfo {
+    EntryFileInfo()
+        : entryFilePath()
+        , lastModificationTime(-1)
+        , byteLength(0)
+    {
+    }
+
+    std::string entryFilePath;
+    int64_t lastModificationTime;
+    size_t byteLength;
+};
+
 class HTTPCacheEntry : public gc {
 public:
     HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
-                   HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
-                   int64_t lastModifyFileTime);
+                   HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo);
     HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
                    HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo,
-                   int64_t lastModifyFileTime, String* entryFileName);
+                   EntryFileInfo& einfo);
+
     ~HTTPCacheEntry();
     HTTPCacheEntry(const HTTPCacheEntry& rhs);
 
     ResourceURL* url() const
     {
         return m_url;
-    }
-
-    int64_t lastModifyFileTime() const
-    {
-        return m_lastModifyFileTime;
-    }
-
-    String* entryFileName() const
-    {
-        return m_entryFileName;
     }
 
     bool shouldReValidate() const
@@ -95,6 +98,12 @@ public:
     }
     void setHTTPFreshnessInfo(HTTPFreshnessInfo& info);
 
+    EntryFileInfo entryFileInfo() const
+    {
+        return m_entryFileInfo;
+    }
+    void setEntryFileInfo(EntryFileInfo& info);
+
     String* toString() const;
 
     bool operator==(const HTTPCacheEntry& other) const
@@ -117,6 +126,8 @@ public:
     void setNeedsPropertiesUpdate(bool value);
     bool needsPropertiesUpdate();
 
+    bool isConsistent();
+
     static const char* kSeparator;
 
 private:
@@ -124,8 +135,7 @@ private:
     CacheControl m_cacheControl;
     HTTPContentInfo m_httpContentInfo;
     HTTPFreshnessInfo m_httpFreshnessInfo;
-    int64_t m_lastModifyFileTime;
-    String* m_entryFileName;
+    EntryFileInfo m_entryFileInfo;
 
     Mutex* m_mutex;
     size_t m_usingCount;

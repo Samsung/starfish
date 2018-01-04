@@ -38,7 +38,7 @@
 #define INDEX_FILE_NAME "/index.txt"
 #define DEFAULT_HTTP_CACHE_SIZE 1024 * 1024 * 50
 #define MAX_ENTRY_FILE_SIZE (DEFAULT_HTTP_CACHE_SIZE * 0.04)
-#define NUM_OF_COL 17
+#define NUM_OF_COL 18
 
 namespace StarFish {
 
@@ -138,6 +138,15 @@ bool HTTPCache::initFromIndexFileIfPossible()
 
     StringUtils::tokenize(index, "\n", 1, table);
 
+    Directory* dir = Directory::create();
+    if (dir->open(m_cacheDirPath)) {
+        if (dir->fileCount() != (table.size() - 1)) {
+            dir->close();
+            return false;
+        }
+    }
+    dir->close();
+
     // Last line is "\n"
     for (auto row = table.begin(); row != table.end() - 1; row++) {
         GCVector<StringView> columns;
@@ -153,7 +162,8 @@ bool HTTPCache::initFromIndexFileIfPossible()
         // maxAge(UINT) contentLanguage(STRING) contentLength(UINT)
         // contentType(STRING) contentTransferEncoding(STRING) date(UINT)
         // age(UINT) rquestTime(UINT) responeTime(UINT) lastModified(UINT)
-        // Etag(STRING) lastModifyFileTime(UINT) entryFileName(STRING)
+        // Etag(STRING) entryFilePath(STRING) lastModificationTime(UINT)
+        // byteLength(UINT)
 
         auto tempStr = columns[1].toUTF8NonGCString();
         String* urlString = String::fromUTF8(tempStr.data(), tempStr.length());
@@ -188,25 +198,27 @@ bool HTTPCache::initFromIndexFileIfPossible()
         if (!columns[14].equals("null")) {
             finfo.etag = columns[14].toUTF8NonGCString();
         }
-        // 15~16
-        int64_t lmft = String::parseInt64(&columns[15]);
-        tempStr = columns[16].toUTF8NonGCString();
-        String* efn = String::fromUTF8(tempStr.data(), tempStr.length());
+
+        // 15~17
+        EntryFileInfo einfo;
+        einfo.entryFilePath = columns[15].toUTF8NonGCString();
+        einfo.lastModificationTime = String::parseInt64(&columns[16]);
+        einfo.byteLength = String::parseInt64(&columns[17]);
 
         HTTPCacheEntry* newEntry =
-            new HTTPCacheEntry(url, cc, cinfo, finfo, lmft, efn);
+            new HTTPCacheEntry(url, cc, cinfo, finfo, einfo);
+
+        if (!newEntry->isConsistent()) {
+            STARFISH_LOG_ERROR("[HTTPCache] Cached entries are corrupted");
+            return false;
+        }
 
         m_cacheEntryTable.insert(
             std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
 
         m_cacheLRUList.push_back(urlString);
 
-        m_currentTotalSizeOfBlocks += calcBlocksSize(cinfo.contentLength);
-    }
-
-    if (!isConsistent()) {
-        STARFISH_LOG_ERROR("[HTTPCache] Cached entries are corrupted");
-        return false;
+        m_currentTotalSizeOfBlocks += calcBlocksSize(einfo.byteLength);
     }
 
     expire();
@@ -264,7 +276,13 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
 
     extractHTTPCacheEntryProperty(nwd, cc, cinfo, finfo);
 
-    if (cinfo.contentLength > MAX_ENTRY_FILE_SIZE || cinfo.contentLength == 0) {
+    if (cinfo.contentLength == 0) {
+        return;
+    }
+
+    size_t sizeOfBlocks = calcBlocksSize(nwd->request->response().size());
+
+    if (sizeOfBlocks > MAX_ENTRY_FILE_SIZE) {
         return;
     }
 
@@ -272,13 +290,12 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
         return;
     }
 
-    size_t sizeOfBlocks = calcBlocksSize(cinfo.contentLength);
     if (!pruneAsNeededForCacheSpace(sizeOfBlocks)) {
         return;
     }
 
     HTTPCacheEntry* newEntry =
-        new HTTPCacheEntry(nwd->request->url(), cc, cinfo, finfo, 0);
+        new HTTPCacheEntry(nwd->request->url(), cc, cinfo, finfo);
 
     newEntry->setEntryFileNameUsingCachePath(m_cacheDirPath);
 
@@ -303,7 +320,7 @@ void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
         return;
     }
 
-    size_t old = calcBlocksSize(entry->httpContentInfo().contentLength);
+    size_t old = calcBlocksSize(entry->entryFileInfo().byteLength);
     if (entry->needsPropertiesUpdate()) {
         entry->setNeedsPropertiesUpdate(false);
 
@@ -320,8 +337,7 @@ void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
 
     if (entry->needsRawDataUpdate()) {
         entry->setNeedsRawDataUpdate(false);
-        size_t sizeOfBlocks =
-            calcBlocksSize(entry->httpContentInfo().contentLength);
+        size_t sizeOfBlocks = calcBlocksSize(entry->entryFileInfo().byteLength);
         if (!pruneAsNeededForCacheSpace(sizeOfBlocks)) {
             // TODO
             STARFISH_ASSERT_NOT_REACHED();
@@ -421,9 +437,10 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
             }
 
             File* fio = File::create();
-            if (fio->open(cacheEntry->entryFileName(), File::Read)) {
-                HTTPContentInfo info = cacheEntry->httpContentInfo();
-                size_t sizeOfBlock = calcBlocksSize(info.contentLength);
+            if (fio->open(cacheEntry->entryFileInfo().entryFilePath,
+                          File::Read)) {
+                auto info = cacheEntry->entryFileInfo();
+                size_t sizeOfBlock = calcBlocksSize(info.byteLength);
                 fio->removeFile();
                 fio->close();
 
@@ -454,31 +471,20 @@ bool HTTPCache::isConsistent()
 
     if (!dir->open(m_cacheDirPath) ||
         (dir->fileCount()) != m_cacheLRUList.size()) {
-        STARFISH_LOG_ERROR("[HTTPCache] Inconsistent status of directory\n");
+        STARFISH_LOG_ERROR("[HTTPCache] Cache dir status is inconsistent\n");
         dir->close();
         return false;
     }
 
     dir->close();
 
-    for (auto it = m_cacheEntryTable.begin(); it != m_cacheEntryTable.end();
-         it++) {
-        File* file = File::create();
-        file->open(it->second->entryFileName(), File::Read);
-        if (file->isOpen()) {
-            if (file->lastModifyTime() != it->second->lastModifyFileTime() ||
-                file->size() != it->second->httpContentInfo().contentLength) {
-                STARFISH_LOG_ERROR(
-                    "[HTTPCache] Inconsistent status of entry file\n");
-                file->close();
-                return false;
-            }
-        } else {
-            file->close();
-            STARFISH_LOG_ERROR("[HTTPCache] Inconsistent entry FileName\n");
+    for (auto& it : m_cacheEntryTable) {
+        if (!it.second->isConsistent()) {
+            STARFISH_LOG_ERROR("[HTTPCache] Entry status is inconsistent\n");
             return false;
         }
     }
+
     return true;
 }
 
@@ -489,7 +495,7 @@ void HTTPCache::expire()
     for (auto it = m_cacheEntryTable.begin(); it != m_cacheEntryTable.end();) {
         if (it->second->shouldExpire()) {
             File* fio = File::create();
-            fio->open(it->second->entryFileName(), File::Read);
+            fio->open(it->second->entryFileInfo().entryFilePath, File::Read);
 
             if (fio->isOpen()) {
                 fio->removeFile();
