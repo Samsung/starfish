@@ -3,7 +3,7 @@ var win = nw.Window.get();
 document.body.bgColor = 'white';
 var style = document.createElement('style'),
     text = document.createTextNode('* {       '
-        + ' font-family: Ahem !important; '
+        + ' font-family: StarFishAhem !important; '
         + ' }');
     //            text2 = document.createTextNode('html { background-color:white; } ');
     var style2 = document.createElement('style');

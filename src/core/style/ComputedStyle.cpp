@@ -213,7 +213,7 @@ void ComputedStyle::loadFont(Node* consumer)
 #ifdef STARFISH_ENABLE_TEST
     StarFish* sf = consumer->starFish();
     if (g_enablePixelTest) {
-        String* str = String::fromUTF8("Ahem");
+        String* str = String::fromUTF8("StarFishAhem");
         m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight);
     } else {
         if (sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest) {
