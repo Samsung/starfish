@@ -154,11 +154,11 @@ public:
     STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_REFLECT_FN);
 #undef FOR_EACH_REFLECT_FN
 
-#define FOR_EACH_CAST_FN(exportName)           \
-    virtual exportName* as##exportName() const \
-    {                                          \
-        STARFISH_ASSERT(is##exportName());     \
-        return (exportName*)this;              \
+#define FOR_EACH_CAST_FN(exportName)       \
+    exportName* as##exportName() const     \
+    {                                      \
+        STARFISH_ASSERT(is##exportName()); \
+        return (exportName*)this;          \
     }
 
     STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_CAST_FN);

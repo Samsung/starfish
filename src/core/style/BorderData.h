@@ -24,13 +24,11 @@ namespace StarFish {
 
 class ComputedStyle;
 
-class BorderData {
+class BorderData : public gc {
 public:
     BorderData()
     {
     }
-
-    STARFISH_MAKE_STACK_ALLOCATED();
 
     bool hasBorderStyle()
     {

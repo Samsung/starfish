@@ -18,6 +18,7 @@
 #define __StarFishFrameText__
 
 #include "core/layout/Frame.h"
+#include "core/dom/CharacterData.h"
 
 namespace StarFish {
 
@@ -62,7 +63,13 @@ public:
         return ((FrameTextRareData*)m_node);
     }
 
-    String* text();
+    String* text()
+    {
+        if (hasRareData()) {
+            return frameTextRareData()->m_text;
+        }
+        return node()->asCharacterData()->data();
+    }
     void setText(String* text);
 
     void transformText(String* text);

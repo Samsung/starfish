@@ -21,7 +21,7 @@ namespace StarFish {
 
 class ComputedStyle;
 
-class LengthData {
+class LengthData : public gc {
 public:
     LengthData()
         : m_top(Length(Length::Fixed, 0))
@@ -38,8 +38,6 @@ public:
         , m_left(length)
     {
     }
-
-    STARFISH_MAKE_STACK_ALLOCATED();
 
     Length top()
     {

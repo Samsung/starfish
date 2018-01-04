@@ -627,9 +627,9 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
                                       windowSize, this);
         }
 
-        Nullable<BorderData> border = m_rareComputedStyleData->border();
-        if (border.hasValue()) {
-            BorderData* b = m_rareComputedStyleData->ensureBorder();
+        BorderData* border = m_rareComputedStyleData->border();
+        if (border) {
+            BorderData* b = border;
             b->checkComputed(curFontSize, rootFontSize, font, windowSize, this);
             if (!b->top().hasBorderColor()) {
                 b->top().setColor(color());
@@ -645,22 +645,22 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             }
         }
 
-        Nullable<LengthData> padding = m_rareComputedStyleData->padding();
-        if (padding.hasValue()) {
-            m_rareComputedStyleData->ensurePadding()->checkComputed(
-                curFontSize, rootFontSize, font, windowSize, this);
+        LengthData* padding = m_rareComputedStyleData->padding();
+        if (padding) {
+            padding->checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                   this);
         }
 
-        Nullable<LengthData> margin = m_rareComputedStyleData->margin();
-        if (margin.hasValue()) {
-            m_rareComputedStyleData->ensureMargin()->checkComputed(
-                curFontSize, rootFontSize, font, windowSize, this);
+        LengthData* margin = m_rareComputedStyleData->margin();
+        if (margin) {
+            margin->checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                  this);
         }
 
-        Nullable<LengthData> offset = m_rareComputedStyleData->offset();
-        if (offset.hasValue()) {
-            m_rareComputedStyleData->ensureOffset()->checkComputed(
-                curFontSize, rootFontSize, font, windowSize, this);
+        LengthData* offset = m_rareComputedStyleData->offset();
+        if (offset) {
+            offset->checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                  this);
         }
     }
 
@@ -1574,14 +1574,14 @@ bool ComputedStyle::isFourSideBorderStyleValueSolid()
         return false;
     }
 
-    Nullable<BorderData> border = m_rareComputedStyleData->border();
-    if (border.hasValue()) {
-        BorderData b = border.getValue();
-        return (b.top().style() == BorderStyleValue::SolidBorderStyleValue) &&
-               (b.bottom().style() ==
+    BorderData* border = m_rareComputedStyleData->border();
+    if (border) {
+        BorderData* b = border;
+        return (b->top().style() == BorderStyleValue::SolidBorderStyleValue) &&
+               (b->bottom().style() ==
                 BorderStyleValue::SolidBorderStyleValue) &&
-               (b.left().style() == BorderStyleValue::SolidBorderStyleValue) &&
-               (b.right().style() == BorderStyleValue::SolidBorderStyleValue);
+               (b->left().style() == BorderStyleValue::SolidBorderStyleValue) &&
+               (b->right().style() == BorderStyleValue::SolidBorderStyleValue);
     }
 
     return false;

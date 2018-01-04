@@ -96,9 +96,9 @@ class RareComputedStyleData : public gc {
         int32_t m_int32Value;
         float m_floatValue;
         Length m_length;
-        BorderData m_borderData;
-        LengthData m_lengthData;
-        FlexBasisData m_flexBasis;
+        BorderData* m_borderData;
+        LengthData* m_lengthData;
+        FlexBasisData* m_flexBasis;
         StyleTransformDataGroup* m_transforms;
         StyleTransformOrigin* m_transformOrigin;
         StyleTransitionData* m_transition;
@@ -124,17 +124,17 @@ class RareComputedStyleData : public gc {
         {
         }
 
-        RareComputedStyleValue(BorderData borderData)
+        RareComputedStyleValue(BorderData* borderData)
             : m_borderData(borderData)
         {
         }
 
-        RareComputedStyleValue(LengthData lengthData)
+        RareComputedStyleValue(LengthData* lengthData)
             : m_lengthData(lengthData)
         {
         }
 
-        RareComputedStyleValue(FlexBasisData flexBasis)
+        RareComputedStyleValue(FlexBasisData* flexBasis)
             : m_flexBasis(flexBasis)
         {
         }
@@ -254,32 +254,29 @@ public:
     GETTER_VALUE(float, floatValue, flexGrow, FlexGrow);
     GETTER_VALUE(float, floatValue, flexShrink, FlexShrink);
     GETTER_VALUE(float, floatValue, opacity, Opacity);
-    GETTER_VALUE(LengthData, lengthData, margin, Margin);
-    GETTER_VALUE(LengthData, lengthData, padding, Padding);
-    GETTER_VALUE(BorderData, borderData, border, Border);
 
     LengthData* ensureOffset()
     {
         FIND_VALUE(Offset);
 
         if (it == m_styles.end()) {
-            LengthData offset = LengthData(Length());
+            LengthData* offset = new LengthData(Length());
             m_styles.emplace_back(KeyKind::Offset, offset);
-            return &m_styles.back().m_value.m_lengthData;
+            return m_styles.back().m_value.m_lengthData;
         }
 
-        return &(*it).m_value.m_lengthData;
+        return (*it).m_value.m_lengthData;
     }
 
-    Nullable<LengthData> offset()
+    LengthData* offset()
     {
         FIND_VALUE(Offset);
 
         if (it == m_styles.end()) {
-            return Nullable<LengthData>();
+            return nullptr;
         }
 
-        return Nullable<LengthData>((*it).m_value.m_lengthData);
+        return (*it).m_value.m_lengthData;
     }
 
     GETTER_VALUE(Length, length, minWidth, MinWidth);
@@ -287,7 +284,6 @@ public:
     GETTER_VALUE(Length, length, minHeight, MinHeight);
     GETTER_VALUE(Length, length, maxHeight, MaxHeight);
     GETTER_VALUE(Length, length, verticalAlignLength, VerticalAlignLength);
-    GETTER_VALUE(FlexBasisData, flexBasis, flexBasis, FlexBasis);
 
 #undef GETTER_VALUE
 
@@ -316,6 +312,10 @@ public:
         return (*it).m_value.m_##VALUE_NAME;            \
     }
 
+    GETTER_PTR(FlexBasisData, flexBasis, flexBasis, FlexBasis);
+    GETTER_PTR(LengthData, lengthData, margin, Margin);
+    GETTER_PTR(LengthData, lengthData, padding, Padding);
+    GETTER_PTR(BorderData, borderData, border, Border);
     GETTER_PTR(StyleTransformDataGroup, transforms, transforms, Transforms);
     GETTER_PTR(StyleTransformOrigin, transformOrigin, transformOrigin,
                TransformOrigin);
@@ -1145,9 +1145,9 @@ public:
             return b;
         }
 
-        Nullable<BorderData> border = m_rareComputedStyleData->border();
-        if (border.hasValue()) {
-            return border.getValue();
+        BorderData* border = m_rareComputedStyleData->border();
+        if (border) {
+            return *border;
         }
 
         BorderData b = BorderData();
@@ -1359,9 +1359,9 @@ public:
             return LengthData(Length());
         }
 
-        Nullable<LengthData> offset = m_rareComputedStyleData->offset();
-        if (offset.hasValue()) {
-            return offset.getValue();
+        LengthData* offset = m_rareComputedStyleData->offset();
+        if (offset) {
+            return *offset;
         }
 
         return LengthData(Length());
@@ -1382,9 +1382,9 @@ public:
             return LengthData();
         }
 
-        Nullable<LengthData> margin = m_rareComputedStyleData->margin();
-        if (margin.hasValue()) {
-            return margin.getValue();
+        LengthData* margin = m_rareComputedStyleData->margin();
+        if (margin) {
+            return *margin;
         }
 
         return LengthData();
@@ -1396,9 +1396,9 @@ public:
             return LengthData();
         }
 
-        Nullable<LengthData> padding = m_rareComputedStyleData->padding();
-        if (padding.hasValue()) {
-            return padding.getValue();
+        LengthData* padding = m_rareComputedStyleData->padding();
+        if (padding) {
+            return *padding;
         }
 
         return LengthData();
@@ -1827,10 +1827,9 @@ public:
             return FlexBasisData(false);
         }
 
-        Nullable<FlexBasisData> flexBasis =
-            m_rareComputedStyleData->flexBasis();
-        if (flexBasis.hasValue()) {
-            return flexBasis.getValue();
+        FlexBasisData* flexBasis = m_rareComputedStyleData->flexBasis();
+        if (flexBasis) {
+            return *flexBasis;
         }
 
         return FlexBasisData(false);
