@@ -46,6 +46,12 @@ public:
         return open(m_path.data(), mode);
     }
 
+    bool open(const std::string& filePath, FileMode mode)
+    {
+        m_path = filePath;
+        return open(m_path.data(), mode);
+    }
+
     int removeFile()
     {
         close();
@@ -134,7 +140,7 @@ public:
     virtual int close() = 0;
     virtual int eof() = 0;
     virtual int64_t lastAccessTime() = 0;
-    virtual int64_t lastModifyTime() = 0;
+    virtual int64_t lastModificationTime() = 0;
     virtual int64_t lastChangeTime() = 0;
 
 protected:

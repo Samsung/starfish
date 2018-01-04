@@ -114,7 +114,7 @@ public:
         return s.st_atime;
     }
 
-    int64_t lastModifyTime() override
+    int64_t lastModificationTime() override
     {
         struct stat s;
         stat(m_path.data(), &s);
@@ -261,7 +261,7 @@ public:
         return s.st_atime;
     }
 
-    int64_t lastModifyTime() override
+    int64_t lastModificationTime() override
     {
         struct stat s;
         stat(m_path.data(), &s);

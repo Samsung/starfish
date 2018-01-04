@@ -95,6 +95,9 @@ void HTTPTransaction::start()
 
     curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
 
+    // Enable all encoding (zlib, gzip)
+    curl_easy_setopt(m_curl, CURLOPT_ACCEPT_ENCODING, "");
+
     if (m_procCB) {
         curl_easy_setopt(m_curl, CURLOPT_XFERINFOFUNCTION, m_procCB);
     }
