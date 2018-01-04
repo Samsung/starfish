@@ -43,8 +43,6 @@ public:
         }
     }
 
-    STARFISH_MAKE_STACK_ALLOCATED();
-
     bool isContent() const
     {
         return m_type == Content;

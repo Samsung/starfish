@@ -522,6 +522,11 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
     }
 
     if (baseURL->equals(String::emptyString)) {
+        if (!isAbsolute) {
+            url = String::createASCIIString("about:blank");
+            urlLength = url->length();
+            isAbsolute = true;
+        }
         STARFISH_ASSERT(isAbsolute);
     }
 
@@ -549,8 +554,7 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         }
     }
 
-    if (!isAbsolute &&
-        !baseURL->equals(String::createASCIIString("about:blank"))) {
+    if (!isAbsolute && !baseURL->equals("about:blank")) {
         STARFISH_ASSERT(baseURL->contains("://"));
         bool baseEndsWithSlash = baseURL->charAt(baseURL->length() - 1) == '/';
 

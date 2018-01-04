@@ -3003,14 +3003,6 @@ FrameText::FrameText(Node* node, ComputedStyle* style)
     m_flags.m_isFrameText = true;
 }
 
-String* FrameText::text()
-{
-    if (hasRareData()) {
-        return frameTextRareData()->m_text;
-    }
-    return node()->asCharacterData()->data();
-}
-
 void FrameText::setText(String* text)
 {
     STARFISH_ASSERT(text);
