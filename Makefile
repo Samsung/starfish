@@ -754,7 +754,7 @@ install_git_prepush:
 install_pixel_test_dep:
 	$(CXX) -O3 -g3 --std=c++11 -o tool/imgdiff/imgdiff tool/imgdiff/imgdiff.cpp $(shell pkg-config --cflags libpng) $(shell pkg-config --libs libpng)
 	mkdir -p ~/.fonts
-	cp tool/fonts/AHEM____.TTF ~/.fonts/
+	cp tool/fonts/StarFishAhem.ttf ~/.fonts/
 	cp tool/fonts/SamsungOne-300C_v1.0.ttf ~/.fonts/
 	cp tool/fonts/SamsungOne-600C_v1.0.ttf ~/.fonts/
 	fc-cache -fv
