@@ -53,7 +53,7 @@ FrameTableCellBox* RowStruct::physicalCellAtLogicalColumn(size_t id)
         }
     }
 
-    for (size_t i = id; i >= 0; i--) {
+    for (size_t i = id; i <= id; i--) {
         if (i < m_cells.size()) {
             FrameTableCellBox* cell = m_cells[i].cell();
             if (cell->absoluteColumnIndex() <= id) {
@@ -62,7 +62,14 @@ FrameTableCellBox* RowStruct::physicalCellAtLogicalColumn(size_t id)
         }
     }
 
-    STARFISH_ASSERT(false);
+    // A cell does not exist at logical column `id`, when that cell's space
+    // is occupied by a cell with rowspan.
+    // e.g., given column id = 0
+    //
+    // | 0 |   |   |
+    // |   +---+---+
+    // |   | 1 | 2 |
+    // +---+---+---+
     return nullptr;
 }
 
@@ -321,10 +328,12 @@ void FrameTableSectionBox::calCellHeightsWithRowspans()
         for (auto& cellStruct : rowStruct.cells()) {
             FrameTableCellBox* cell = cellStruct.cell();
 
+            // increase the height of the cell if the cell's height
+            // is smaller than the row's height
             if (cell->updatedRowspan() > 1) {
                 LayoutUnit cellHeight =
                     calCellHeightWithRowspan(cell, rowId, colId);
-                cell->setHeight(cellHeight);
+                cell->setHeight(std::max(cell->height(), cellHeight));
             }
 
             colId++;
@@ -402,9 +411,49 @@ void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
         ySoFar += borderSpacing;
     }
 
-    setHeight(ySoFar);
-
     calCellHeightsWithRowspans();
+
+    // A cell's height can be greater than the row's height when the cell
+    // has rowspan > 1. This results from not considering the cell's height
+    // when the row's height is calculated. In this case, table section's
+    // height is increased to include oversized cells, not row's height.
+    //
+    // Blink does not increase the row's height, while Firefox does.
+    // We follow how Blink does (although what Firefox does looks correct)
+    std::vector<LayoutUnit> sumOfCellHeightsSoFar(
+        tableBox()->columnWidths().size(), 0);
+    if (tableBox()->firstSectionBoxInVisualOrder() == this) {
+        for (size_t i = 0; i < sumOfCellHeightsSoFar.size(); i++) {
+            sumOfCellHeightsSoFar[i] += borderSpacing;
+        }
+    }
+
+    // Traverse each column top to bottom, and calculate the sum of cell's
+    // height
+    for (size_t colId = 0; colId < sumOfCellHeightsSoFar.size(); colId++) {
+        size_t rowId = 0;
+        for (auto& rowStruct : grid()) {
+            FrameTableCellBox* cell =
+                rowStruct.physicalCellAtLogicalColumn(colId);
+
+            if (cell && cell->absoluteColumnIndex() == colId) {
+                sumOfCellHeightsSoFar[colId] += cell->height();
+
+                if (rowId < grid().size()) {
+                    sumOfCellHeightsSoFar[colId] += borderSpacing;
+                }
+            }
+
+            rowId++;
+        }
+    }
+
+    LayoutUnit maxSumOfCellHeights = 0;
+    for (auto& sumOfCellHeight : sumOfCellHeightsSoFar) {
+        maxSumOfCellHeights = std::max(maxSumOfCellHeights, sumOfCellHeight);
+    }
+
+    setHeight(std::max(ySoFar, maxSumOfCellHeights));
 }
 
 void FrameTableSectionBox::increaseRowHeightBy(LayoutUnit rowHeightOffset)

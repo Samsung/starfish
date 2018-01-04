@@ -103,7 +103,7 @@ FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)
     if (cell) {
         return cell;
     } else {
-        for (size_t i = id - 1; i >= 0; i--) {
+        for (size_t i = id - 1; i <= id - 1; i--) {
             if (m_cellsInTheFirstRow[i]) {
                 return m_cellsInTheFirstRow[i];
             }
