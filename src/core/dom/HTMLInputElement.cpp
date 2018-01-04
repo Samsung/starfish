@@ -269,14 +269,7 @@ String* HTMLInputElement::visibleValue()
 
 void HTMLInputElement::updateInputboxValue(String* value)
 {
-    if (frame()) {
-        FrameInputBox* box = frame()->asFrameInputBox();
-        STARFISH_ASSERT(box->firstChild());
-        box->firstChild()->asFrameText()->node()->asText()->setData(value);
-        setNeedsLayout();
-    } else {
-        setNeedsFrameTreeBuild(false);
-    }
+    setNeedsFrameTreeBuild(false);
 }
 
 bool HTMLInputElement::shouldUsePlaceholder()
