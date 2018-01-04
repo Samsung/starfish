@@ -280,9 +280,12 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
         hb_buffer_guess_segment_properties(hbBuffer);
         // hb_buffer_set_direction(hbBuffer, HB_DIRECTION_LTR);
         auto buf = run.m_text.bufferAccessData();
-        if (buf.hasASCIIContent) {
+        if (buf.bufferDataKind == StringBufferAccessData::ASCIIData) {
             hb_buffer_add_utf8(hbBuffer, buf.asciiData(), buf.length, 0,
                                buf.length);
+        } else if (buf.bufferDataKind == StringBufferAccessData::BMPData) {
+            hb_buffer_add_utf16(hbBuffer, (const uint16_t*)buf.utf16Data(),
+                                buf.length, 0, buf.length);
         } else {
             hb_buffer_add_utf32(hbBuffer, (const uint32_t*)buf.utf32Data(),
                                 buf.length, 0, buf.length);

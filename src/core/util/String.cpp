@@ -261,6 +261,35 @@ const char* utf32ToUtf8(const char32_t* t, const size_t& len,
     return result;
 }
 
+const char* utf16ToUtf8(const char16_t* t, const size_t& len,
+                        size_t* bufferSize = NULL)
+{
+    unsigned strLength = 0;
+    char buffer[8];
+    for (size_t i = 0; i < len;) {
+        char32_t c;
+        U16_NEXT(t, i, len, c);
+        int length = utf32ToUtf8(c, buffer);
+        strLength += length;
+    }
+
+    char* result = (char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(strLength + 1);
+    if (bufferSize)
+        *bufferSize = strLength + 1;
+    unsigned currentPosition = 0;
+
+    for (size_t i = 0; i < len; i++) {
+        char32_t c;
+        U16_NEXT(t, i, len, c);
+        int length = utf32ToUtf8(c, buffer);
+        memcpy(&result[currentPosition], buffer, length);
+        currentPosition += length;
+    }
+    result[strLength] = 0;
+
+    return result;
+}
+
 UTF8StringDataNonGCStd utf32ToUtf8(const char32_t* str, size_t start,
                                    size_t end, bool ignoreZeroWidthChar)
 {
@@ -356,7 +385,32 @@ StringDataUTF32::StringDataUTF32(const char* src, size_t len)
             data[i++] = c;
         }
     }
-    m_data = SimpleStringBufferHolder<char32_t>(data.takeBuffer(), utf32Length);
+    m_data = SimpleStringBufferHolder<char32_t>(
+        data.takeBuffer(), utf32Length,
+        SimpleStringBufferHolder<char32_t>::TakeBufferValue);
+}
+
+StringDataBMP::StringDataBMP(const char* src, size_t len)
+    : String()
+{
+    size_t utf32Length = utf8ContentLength(src, len);
+    BMPString data;
+    data.resize(utf32Length);
+    const char* end = src + len;
+    size_t i = 0;
+    char32_t c;
+    while (end != src) {
+        if (LIKELY(0 == (src[0] & 0x80))) {
+            data[i++] = src[0];
+            src++;
+        } else {
+            src += utf8ToUtf32(src, end, c);
+            data[i++] = c;
+        }
+    }
+    m_data = SimpleStringBufferHolder<char16_t>(
+        data.takeBuffer(), utf32Length,
+        SimpleStringBufferHolder<char16_t>::TakeBufferValue);
 }
 
 // TODO use BufferAccessData for performance
@@ -417,21 +471,16 @@ bool String::equals(const char* str) const
         return false;
     }
 
-    if (data.hasASCIIContent) {
-        for (size_t i = 0; i < data.length; i++) {
-            if (data.asciiData()[i] != str[i]) {
-                return false;
-            }
-        }
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+        return memcmp(data.asciiData(), str, data.length) == 0;
     } else {
         for (size_t i = 0; i < data.length; i++) {
-            if (data.utf32Data()[i] != (char32_t)str[i]) {
+            if (data.charAt(i) != (char32_t)str[i]) {
                 return false;
             }
         }
+        return true;
     }
-
-    return true;
 }
 
 // TODO use BufferAccessData for performance
@@ -485,11 +534,11 @@ bool String::containsOnlyWhitespace(size_t start, size_t end)
 bool String::containsOnlyASCIIChars() const
 {
     auto data = bufferAccessData();
-    if (data.hasASCIIContent)
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData)
         return true;
 
     for (size_t i = 0; i < data.length; i++) {
-        const char32_t c = data.utf32Data()[i];
+        const char32_t c = data.charAt(i);
         if (c > 127) {
             return false;
         }
@@ -501,7 +550,7 @@ bool String::containsOnlyDigits() const
 {
     auto data = bufferAccessData();
     for (size_t i = 0; i < data.length; i++) {
-        const char32_t c = data.utf32Data()[i];
+        const char32_t c = data.charAt(i);
         if (!isdigit(c)) {
             return false;
         }
@@ -555,9 +604,11 @@ String* String::stripAndCollapseASCIIwhitespace()
 icu::UnicodeString String::toUnicodeString() const
 {
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         return icu::UnicodeString((const char*)data.buffer, data.length,
                                   US_INV);
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        return icu::UnicodeString((const UChar*)data.buffer, data.length);
     } else {
         return icu::UnicodeString::fromUTF32((const UChar32*)data.buffer,
                                              data.length);
@@ -568,12 +619,14 @@ icu::UnicodeString String::toUnicodeString(size_t start, size_t end) const
 {
     auto data = bufferAccessData();
     size_t len = end - start;
-    if (data.hasASCIIContent) {
-        return icu::UnicodeString(((const char*)data.buffer) + start, len,
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+        return icu::UnicodeString((const char*)data.buffer + start, len,
                                   US_INV);
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        return icu::UnicodeString((const UChar*)data.buffer + start, len);
     } else {
         return icu::UnicodeString::fromUTF32(
-            ((const UChar32*)data.buffer) + start, len);
+            (const UChar32*)data.buffer + start, len);
     }
 }
 
@@ -582,8 +635,11 @@ size_t String::hashValue() const
     auto data = bufferAccessData();
     size_t len = data.length;
     size_t hash;
-    if (LIKELY(data.hasASCIIContent)) {
+    if (LIKELY(data.bufferDataKind == StringBufferAccessData::ASCIIData)) {
         auto ptr = (const char*)data.buffer;
+        hash = stringHash(ptr, len);
+    } else if (LIKELY(data.bufferDataKind == StringBufferAccessData::BMPData)) {
+        auto ptr = (const char16_t*)data.buffer;
         hash = stringHash(ptr, len);
     } else {
         auto ptr = (const char32_t*)data.buffer;
@@ -597,40 +653,71 @@ size_t String::hashValue() const
     return hash;
 }
 
+bool isBMP(char32_t ch)
+{
+    return U_IS_BMP(ch);
+}
+
 String* String::fromUTF8(const char* src, size_t len)
 {
-    for (unsigned i = 0; i < len; i++) {
+    bool isAllBMP = true;
+    bool isAllASCII = true;
+    for (unsigned i = 0; i < len;) {
         if (src[i] & 0x80) {
-            return new StringDataUTF32(src, len);
+            isAllASCII = false;
+            char32_t uc;
+            i += utf8ToUtf32(src + i, src + len, uc);
+            if (!isBMP(uc)) {
+                isAllBMP = false;
+                break;
+            }
+        } else {
+            i++;
         }
     }
-    return new StringDataASCII(src, len);
+
+    if (isAllASCII) {
+        return new StringDataASCII(src, len);
+    } else if (isAllBMP) {
+        return new StringDataBMP(src, len);
+    } else {
+        return new StringDataUTF32(src, len);
+    }
 }
 
 String* String::fromUTF8(const char* str)
 {
     const char* p = str;
-    while (*p) {
-        if (*p & 0x80) {
-            return new StringDataUTF32(str, strlen(str));
-        }
-        p++;
-    }
-
-    return new StringDataASCII(str);
+    size_t len = strlen(str);
+    return fromUTF8(str, len);
 }
 
 String* String::fromUTF16(const char16_t* src, size_t len)
 {
     for (unsigned i = 0; i < len; i++) {
         if (src[i] > 127) {
-            UTF32String utf32;
-            for (size_t i = 0; i < len; /* U16_NEXT post-increments */) {
-                char32_t c;
-                U16_NEXT(src, i, len, c);
-                utf32 += c;
+            bool isAllBMP = true;
+            for (size_t i = 0; i < len; i++) {
+                if (U16_IS_LEAD(src[i])) {
+                    isAllBMP = false;
+                    break;
+                }
             }
-            return new StringDataUTF32(std::move(utf32));
+            if (isAllBMP) {
+                BMPString utf32;
+                for (size_t i = 0; i < len; i++) {
+                    utf32 += src[i];
+                }
+                return new StringDataBMP(std::move(utf32));
+            } else {
+                UTF32String utf32;
+                for (size_t i = 0; i < len; /* U16_NEXT post-increments */) {
+                    char32_t c;
+                    U16_NEXT(src, i, len, c);
+                    utf32 += c;
+                }
+                return new StringDataUTF32(std::move(utf32));
+            }
         }
     }
 
@@ -668,6 +755,9 @@ String* String::createUTF32String(char32_t c)
     if (c < 128) {
         char s[2] = { (char)c, '\0' };
         return new StringDataASCII(s);
+    } else if (isBMP(c)) {
+        char16_t s[2] = { (char16_t)c, '\0' };
+        return new StringDataBMP(s);
     }
     char32_t s[2] = { c, '\0' };
     return new StringDataUTF32(s);
@@ -688,13 +778,43 @@ String* String::createASCIIStringFromUTF32Source(const UTF32String& src)
     return new StringDataASCII(std::move(ascii));
 }
 
+String* String::createBMPStringFromUTF32Source(const UTF32String& src)
+{
+#ifndef NDEBUG
+    for (size_t i = 0; i < src.length(); i++) {
+        const char32_t c = src[i];
+        STARFISH_ASSERT(c < 0xffff);
+    }
+#endif
+    BMPString ret;
+    for (size_t i = 0; i < src.length(); i++) {
+        ret.push_back(src[i]);
+    }
+    return new StringDataBMP(std::move(ret));
+}
+
 String* String::createASCIIStringFromUTF32SourceIfPossible(
     const UTF32String& src)
 {
     for (size_t i = 0; i < src.length(); i++) {
         const char32_t c = src[i];
         if (c > 127) {
-            return String::createUTF32String(src);
+            bool isAllBMP = true;
+            for (; i < src.length(); i++) {
+                if (!isBMP(src[i])) {
+                    isAllBMP = false;
+                    break;
+                }
+            }
+            if (isAllBMP) {
+                BMPString utf32;
+                for (size_t i = 0; i < src.length(); i++) {
+                    utf32 += src[i];
+                }
+                return new StringDataBMP(std::move(utf32));
+            } else {
+                return new StringDataUTF32(src);
+            }
         }
     }
     ASCIIString ascii;
@@ -707,8 +827,12 @@ String* String::createASCIIStringFromUTF32SourceIfPossible(
 NullableUTF8String String::toNullableUTF8String()
 {
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         return NullableUTF8String(data.asciiData(), data.length);
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        size_t len = 0;
+        const char* ptr = utf16ToUtf8(data.utf16Data(), data.length, &len);
+        return NullableUTF8String(ptr, len - 1);
     } else {
         size_t len = 0;
         const char* ptr = utf32ToUtf8(data.utf32Data(), data.length, &len);
@@ -744,12 +868,21 @@ String* String::insert(String* str, size_t pos)
 String* String::toUpper()
 {
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
             if (::islower(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), ::toupper);
                 return new StringDataASCII(std::move(str));
+            }
+        }
+        return this;
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        for (size_t i = 0; i < data.length; i++) {
+            if (u_islower(data.utf16Data()[i])) {
+                BMPString str(data.utf16Data(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), u_toupper);
+                return new StringDataBMP(std::move(str));
             }
         }
         return this;
@@ -768,12 +901,21 @@ String* String::toUpper()
 String* String::toASCIIUpper()
 {
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
             if (::islower(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), ::toupper);
                 return new StringDataASCII(std::move(str));
+            }
+        }
+        return this;
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        for (size_t i = 0; i < data.length; i++) {
+            if (::islower(data.utf16Data()[i])) {
+                BMPString str(data.utf16Data(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+                return new StringDataBMP(std::move(str));
             }
         }
         return this;
@@ -792,12 +934,21 @@ String* String::toASCIIUpper()
 String* String::toLower()
 {
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
             if (::isupper(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), ::tolower);
                 return new StringDataASCII(std::move(str));
+            }
+        }
+        return this;
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        for (size_t i = 0; i < data.length; i++) {
+            if (u_isupper(data.utf16Data()[i])) {
+                BMPString str(data.utf16Data(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), u_tolower);
+                return new StringDataBMP(std::move(str));
             }
         }
         return this;
@@ -816,12 +967,21 @@ String* String::toLower()
 String* String::toASCIILower()
 {
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
             if (::isupper(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), ::tolower);
                 return new StringDataASCII(std::move(str));
+            }
+        }
+        return this;
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        for (size_t i = 0; i < data.length; i++) {
+            if (::isupper(data.utf16Data()[i])) {
+                BMPString str(data.utf16Data(), data.length);
+                std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+                return new StringDataBMP(std::move(str));
             }
         }
         return this;
@@ -843,23 +1003,10 @@ String* String::concat(const char c)
         return String::createASCIIString(c);
     }
 
-    auto dataA = bufferAccessData();
-
-    if (dataA.hasASCIIContent) {
-        ASCIIString str;
-        str.reserve(dataA.length + 1);
-        str.append(dataA.asciiData(), dataA.length);
-        str.push_back(c);
-        return new StringDataASCII(std::move(str));
-    } else {
-        UTF32String str;
-        str.resize(dataA.length + 1);
-        for (size_t i = 0; i < dataA.length; i++) {
-            str[i] = dataA.utf32Data()[i];
-        }
-        str[dataA.length] = c;
-        return new StringDataUTF32(std::move(str));
-    }
+    StringBuilder builder;
+    builder.appendString(this);
+    builder.appendChar(c);
+    return builder.finalize();
 }
 
 String* String::concat(const char32_t c)
@@ -867,24 +1014,10 @@ String* String::concat(const char32_t c)
     if (length() == 0) {
         return String::createUTF32String(c);
     }
-
-    auto dataA = bufferAccessData();
-
-    if (dataA.hasASCIIContent) {
-        UTF32String str;
-        str.resize(dataA.length + 1);
-        for (size_t i = 0; i < dataA.length; i++) {
-            str[i] = dataA.asciiData()[i];
-        }
-        str[dataA.length] = c;
-        return new StringDataUTF32(std::move(str));
-    } else {
-        UTF32String str;
-        str.reserve(dataA.length + 1);
-        str.append(dataA.utf32Data());
-        str.push_back(c);
-        return new StringDataUTF32(std::move(str));
-    }
+    StringBuilder builder;
+    builder.appendString(this);
+    builder.appendChar(c);
+    return builder.finalize();
 }
 
 String* String::concat(const char* src)
@@ -897,27 +1030,10 @@ String* String::concat(const char* src)
         return this;
     }
 
-    auto dataA = bufferAccessData();
-
-    if (dataA.hasASCIIContent) {
-        ASCIIString str;
-        str.reserve(dataA.length + srcLen);
-        str.append(dataA.asciiData(), dataA.length);
-        str.append(src, srcLen);
-        return new StringDataASCII(std::move(str));
-    } else {
-        UTF32String str;
-        str.resize(dataA.length + srcLen);
-        for (size_t i = 0; i < dataA.length; i++) {
-            str[i] = dataA.utf32Data()[i];
-        }
-
-        for (size_t i = 0; i < srcLen; i++) {
-            str[i + dataA.length] = src[i];
-        }
-
-        return new StringDataUTF32(std::move(str));
-    }
+    StringBuilder builder;
+    builder.appendString(this);
+    builder.appendString(src);
+    return builder.finalize();
 }
 
 String* String::concat(String* str)
@@ -929,47 +1045,17 @@ String* String::concat(String* str)
         return this;
     }
 
-    auto dataA = bufferAccessData();
-    auto dataB = str->bufferAccessData();
-
-    if (dataA.hasASCIIContent && dataB.hasASCIIContent) {
-        ASCIIString str;
-        str.reserve(dataA.length + dataB.length);
-        str.append(dataA.asciiData(), dataA.length);
-        str.append(dataB.asciiData(), dataB.length);
-        return new StringDataASCII(std::move(str));
-    } else {
-        UTF32String str;
-        str.resize(dataA.length + dataB.length);
-        if (dataA.hasASCIIContent) {
-            for (size_t i = 0; i < dataA.length; i++) {
-                str[i] = dataA.asciiData()[i];
-            }
-        } else {
-            for (size_t i = 0; i < dataA.length; i++) {
-                str[i] = dataA.utf32Data()[i];
-            }
-        }
-
-        if (dataB.hasASCIIContent) {
-            for (size_t i = 0; i < dataB.length; i++) {
-                str[i + dataA.length] = dataB.asciiData()[i];
-            }
-        } else {
-            for (size_t i = 0; i < dataB.length; i++) {
-                str[i + dataA.length] = dataB.utf32Data()[i];
-            }
-        }
-
-        return new StringDataUTF32(std::move(str));
-    }
+    StringBuilder builder;
+    builder.appendString(this);
+    builder.appendString(str);
+    return builder.finalize();
 }
 
 String* String::replaceAll(String* from, String* to)
 {
     auto data = bufferAccessData();
 
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         std::string str = std::string(toUTF8NonGCString());
         std::string from_str = std::string(from->toUTF8NonGCString());
         std::string to_str = std::string(to->toUTF8NonGCString());
@@ -1191,13 +1277,13 @@ UTF8String String::toUTF8String()
     UTF8String result;
 
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         result.append(data.asciiData(), data.length);
     } else {
         result.reserve(data.length);
         for (size_t i = 0; i < data.length; i++) {
             char buffer[16];
-            size_t len = utf32ToUtf8(data.utf32Data()[i], buffer);
+            size_t len = utf32ToUtf8(data.charAt(i), buffer);
             result.append(buffer, len);
         }
     }
@@ -1210,13 +1296,16 @@ UTF32String String::toUTF32String()
     UTF32String result;
 
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         result.reserve(data.length);
         for (size_t i = 0; i < data.length; i++) {
             result.push_back(data.asciiData()[i]);
         }
     } else {
-        result.append(data.utf32Data(), data.length);
+        result.reserve(data.length);
+        for (size_t i = 0; i < data.length; i++) {
+            result.push_back(data.charAt(i));
+        }
     }
 
     return result;
@@ -1250,8 +1339,13 @@ UTF16StringDataNonGCStd String::toUTF16NonGCString(size_t start,
     UTF16StringDataNonGCStd out;
 
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         out.assign(data.asciiData() + start, data.asciiData() + end);
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        out.reserve(end - start);
+        for (size_t i = start; i < end; i++) {
+            out.push_back(data.utf16Data()[i]);
+        }
     } else {
         out.reserve(end - start);
         for (size_t i = start; i < end; i++) {
@@ -1281,7 +1375,7 @@ UTF8StringDataNonGCStd String::toUTF8NonGCString(size_t start, size_t end,
                                                  bool ignoreZeroWidthChar) const
 {
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         UTF8StringDataNonGCStd ret;
         ret.reserve(end - start);
         for (size_t i = start; i < end; i++) {
@@ -1292,6 +1386,18 @@ UTF8StringDataNonGCStd String::toUTF8NonGCString(size_t start, size_t end,
             ret.push_back(ch);
         }
         return ret;
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        UTF8StringDataNonGCStd result;
+        result.reserve(end - start);
+        for (size_t i = start; i < end; i++) {
+            char buffer[16];
+            if (ignoreZeroWidthChar && isZeroWidthChar(data.utf16Data()[i])) {
+                continue;
+            }
+            size_t len = utf32ToUtf8(data.utf16Data()[i], buffer);
+            result.append(buffer, len);
+        }
+        return result;
     } else {
         return utf32ToUtf8(data.utf32Data(), start, end, ignoreZeroWidthChar);
     }
@@ -1300,12 +1406,32 @@ UTF8StringDataNonGCStd String::toUTF8NonGCString(size_t start, size_t end,
 UTF8StringDataNonGCStd String::toUTF8NonGCString() const
 {
     auto data = bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         UTF8StringDataNonGCStd ret(data.asciiData(), data.length);
         return ret;
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        UTF8StringDataNonGCStd result;
+        result.reserve(data.length);
+        for (size_t i = 0; i < data.length; i++) {
+            char buffer[16];
+            size_t len = utf32ToUtf8(data.utf16Data()[i], buffer);
+            result.append(buffer, len);
+        }
+        return result;
     } else {
         return utf32ToUtf8(data.utf32Data(), 0, data.length, false);
     }
+}
+
+static bool bufferEqual(StringBufferAccessData& s, StringBufferAccessData& s1,
+                        const size_t& len)
+{
+    for (size_t i = 0; i < len; i++) {
+        if (s.charAt(i) != s1.charAt(i)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool String::equals(const String* str) const
@@ -1314,20 +1440,13 @@ bool String::equals(const String* str) const
     auto dataB = str->bufferAccessData();
 
     if (dataA.length == dataB.length) {
-        bool aa = dataA.hasASCIIContent;
-        bool bb = dataB.hasASCIIContent;
+        bool aa = dataA.bufferDataKind == StringBufferAccessData::ASCIIData;
+        bool bb = dataB.bufferDataKind == StringBufferAccessData::ASCIIData;
         if (aa && bb) {
             return stringEqual(dataA.asciiData(), dataB.asciiData(),
                                dataA.length);
-        } else if (aa && !bb) {
-            return stringEqual(dataB.utf32Data(), dataA.asciiData(),
-                               dataA.length);
-        } else if (!aa && bb) {
-            return stringEqual(dataA.utf32Data(), dataB.asciiData(),
-                               dataA.length);
         } else {
-            return stringEqual(dataA.utf32Data(), dataB.utf32Data(),
-                               dataA.length);
+            return bufferEqual(dataA, dataB, dataA.length);
         }
     }
     return false;
@@ -1344,11 +1463,12 @@ bool stringEqualWithoutCase(const T* s, const T* s1, const size_t& len)
     return true;
 }
 
-bool stringEqualWithoutCase(const char32_t* s, const char* s1,
-                            const size_t& len)
+static bool bufferEqualWithoutCase(StringBufferAccessData& s,
+                                   StringBufferAccessData& s1,
+                                   const size_t& len)
 {
     for (size_t i = 0; i < len; i++) {
-        if (towlower(s[i]) != towlower((unsigned char)s1[i])) {
+        if (towlower(s.charAt(i)) != towlower(s1.charAt(i))) {
             return false;
         }
     }
@@ -1361,20 +1481,13 @@ bool String::equalsIgnoreCase(const String* str) const
     auto dataB = str->bufferAccessData();
 
     if (dataA.length == dataB.length) {
-        bool aa = dataA.hasASCIIContent;
-        bool bb = dataB.hasASCIIContent;
+        bool aa = dataA.bufferDataKind == StringBufferAccessData::ASCIIData;
+        bool bb = dataB.bufferDataKind == StringBufferAccessData::ASCIIData;
         if (aa && bb) {
             return stringEqualWithoutCase(dataA.asciiData(), dataB.asciiData(),
                                           dataA.length);
-        } else if (aa && !bb) {
-            return stringEqualWithoutCase(dataB.utf32Data(), dataA.asciiData(),
-                                          dataA.length);
-        } else if (!aa && bb) {
-            return stringEqualWithoutCase(dataA.utf32Data(), dataB.asciiData(),
-                                          dataA.length);
         } else {
-            return stringEqualWithoutCase(dataA.utf32Data(), dataB.utf32Data(),
-                                          dataA.length);
+            return bufferEqualWithoutCase(dataA, dataB, dataA.length);
         }
     }
     return false;
@@ -1696,13 +1809,13 @@ size_t String::peekUTF8Buffer(size_t (*cb)(const char* buffer, size_t len,
 {
     auto bufData = bufferAccessData();
     if (bufData.isNullTerminated) {
-        if (bufData.hasASCIIContent) {
+        if (bufData.bufferDataKind == StringBufferAccessData::ASCIIData) {
             return cb(bufData.asciiData(), bufData.length, data);
         } else {
             char* buf = ALLOCA((bufData.length * 6) + 1, char);
             size_t realUsage = 0;
             for (size_t i = 0; i < bufData.length; i++) {
-                char32_t ch = bufData.utf32Data()[i];
+                char32_t ch = bufData.charAt(i);
                 realUsage += utf32ToUtf8(ch, buf + realUsage);
             }
 
@@ -1711,7 +1824,7 @@ size_t String::peekUTF8Buffer(size_t (*cb)(const char* buffer, size_t len,
             return cb(buf, realUsage, data);
         }
     } else {
-        if (bufData.hasASCIIContent) {
+        if (bufData.bufferDataKind == StringBufferAccessData::ASCIIData) {
             char* newBuffer = ALLOCA(bufData.length + 1, char);
             memcpy(newBuffer, bufData.asciiData(), bufData.length);
             newBuffer[bufData.length] = 0;
@@ -1720,7 +1833,7 @@ size_t String::peekUTF8Buffer(size_t (*cb)(const char* buffer, size_t len,
             char* buf = ALLOCA((bufData.length * 6) + 1, char);
             size_t realUsage = 0;
             for (size_t i = 0; i < bufData.length; i++) {
-                char32_t ch = bufData.utf32Data()[i];
+                char32_t ch = bufData.charAt(i);
                 realUsage += utf32ToUtf8(ch, buf + realUsage);
             }
 
@@ -1738,7 +1851,7 @@ size_t String::peekUTF16Buffer(size_t (*cb)(const char16_t* buffer, size_t len,
                                void* data) const
 {
     auto bufData = bufferAccessData();
-    if (bufData.hasASCIIContent) {
+    if (bufData.bufferDataKind == StringBufferAccessData::ASCIIData) {
         char16_t* buf =
             ALLOCA((bufData.length + 1) * sizeof(char16_t), char16_t);
         for (size_t i = 0; i < bufData.length; i++) {
@@ -1751,7 +1864,7 @@ size_t String::peekUTF16Buffer(size_t (*cb)(const char16_t* buffer, size_t len,
             ALLOCA((bufData.length + 1) * 2 * sizeof(char16_t), char16_t);
         size_t realUsage = 0;
         for (size_t i = 0; i < bufData.length; i++) {
-            char32_t ch = bufData.utf32Data()[i];
+            char32_t ch = bufData.charAt(i);
             realUsage += utf32ToUtf16(ch, buf + realUsage);
         }
         buf[realUsage] = 0;
@@ -1833,6 +1946,19 @@ void* StringDataUTF32::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void* StringDataBMP::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(StringDataBMP)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StringDataBMP, m_data));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(StringDataBMP));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void* StringView::operator new(size_t size)
 {
     static bool typeInited = false;
@@ -1853,27 +1979,25 @@ void StringBuilder::appendPiece(String* str, size_t s, size_t e)
         piece.m_string = str;
         piece.m_start = s;
         piece.m_end = e;
+        piece.m_type = StringBuilderPiece::Type::StringPiece;
 
         auto data = str->bufferAccessData();
-        if (!data.hasASCIIContent) {
-            bool hasASCII = true;
-            for (size_t i = s; i < e; i++) {
-                if (((char32_t*)data.buffer)[i] > 127) {
-                    hasASCII = false;
-                    break;
-                }
-            }
 
-            if (!hasASCII) {
-                m_hasASCIIContent = false;
-                piece.m_type = StringBuilderPiece::Type::UTF32StringStringPiece;
+        StringBufferAccessData::BufferDataKind needsKind =
+            StringBufferAccessData::BufferDataKind::ASCIIData;
+        for (size_t i = s; i < e; i++) {
+            char32_t ch = data.charAt(i);
+            if (ch < 127) {
+            } else if (isBMP(ch)) {
+                needsKind = StringBufferAccessData::BufferDataKind::BMPData;
             } else {
-                piece.m_type = StringBuilderPiece::Type::
-                    UTF32StringStringPieceButASCIIContentPiece;
+                needsKind = StringBufferAccessData::BufferDataKind::UTF32Data;
+                break;
             }
+        }
 
-        } else {
-            piece.m_type = StringBuilderPiece::Type::ASCIIStringPiece;
+        if (m_resultBufferKind < needsKind) {
+            m_resultBufferKind = needsKind;
         }
 
         m_contentLength += e - s;
@@ -1908,8 +2032,14 @@ void StringBuilder::appendPiece(char32_t ch)
     piece.m_ch = ch;
     piece.m_type = StringBuilderPiece::Type::Char;
 
-    if (ch > 127) {
-        m_hasASCIIContent = false;
+    if (isBMP(ch)) {
+        if (ch > 127) {
+            if (m_resultBufferKind == StringBufferAccessData::ASCIIData) {
+                m_resultBufferKind = StringBufferAccessData::BMPData;
+            }
+        }
+    } else {
+        m_resultBufferKind = StringBufferAccessData::UTF32Data;
     }
 
     m_contentLength += 1;
@@ -1922,10 +2052,7 @@ void StringBuilder::appendPiece(char32_t ch)
 StringView StringBuilder::finalizeToStringView()
 {
     if (m_piecesInlineStorageUsage == 1 &&
-        m_piecesInlineStorage[0].m_type >=
-            StringBuilderPiece::ASCIIStringPiece &&
-        m_piecesInlineStorage[0].m_type <=
-            StringBuilderPiece::UTF32StringStringPieceButASCIIContentPiece) {
+        m_piecesInlineStorage[0].m_type == StringBuilderPiece::StringPiece) {
         return StringView(m_piecesInlineStorage[0].m_string,
                           m_piecesInlineStorage[0].m_start,
                           m_piecesInlineStorage[0].m_end);
@@ -1941,7 +2068,7 @@ String* StringBuilder::finalize()
         return String::emptyString;
     }
 
-    if (m_hasASCIIContent) {
+    if (m_resultBufferKind == StringBufferAccessData::ASCIIData) {
         ASCIIString ret;
         ret.resize(m_contentLength);
 
@@ -1961,14 +2088,14 @@ String* StringBuilder::finalize()
                 size_t e = piece.m_end;
                 size_t l = e - s;
                 auto accessData = data->bufferAccessData();
-                if (accessData.hasASCIIContent) {
+                if (accessData.bufferDataKind ==
+                    StringBufferAccessData::ASCIIData) {
                     memcpy(&ret[currentLength], (accessData.asciiData()) + s,
                            l);
                     currentLength += l;
                 } else {
-                    char32_t* b = ((char32_t*)accessData.buffer);
                     for (size_t k = s; k < e; k++) {
-                        ret[currentLength++] = b[k];
+                        ret[currentLength++] = accessData.charAt(k);
                     }
                 }
             }
@@ -1989,19 +2116,67 @@ String* StringBuilder::finalize()
                 size_t e = piece.m_end;
                 size_t l = e - s;
                 auto accessData = data->bufferAccessData();
-                if (accessData.hasASCIIContent) {
+                if (accessData.bufferDataKind ==
+                    StringBufferAccessData::ASCIIData) {
                     memcpy(&ret[currentLength], accessData.asciiData() + s, l);
                     currentLength += l;
                 } else {
-                    char32_t* b = ((char32_t*)accessData.buffer);
                     for (size_t k = s; k < e; k++) {
-                        ret[currentLength++] = b[k];
+                        ret[currentLength++] = accessData.charAt(k);
                     }
                 }
             }
         }
 
         return new StringDataASCII(std::move(ret));
+    } else if (m_resultBufferKind == StringBufferAccessData::BMPData) {
+        BMPString ret;
+        ret.resize(m_contentLength);
+
+        size_t currentLength = 0;
+        for (size_t i = 0; i < m_piecesInlineStorageUsage; i++) {
+            const StringBuilderPiece& piece = m_piecesInlineStorage[i];
+            if (piece.m_type == StringBuilderPiece::Char) {
+                ret[currentLength++] = piece.m_ch;
+            } else if (piece.m_type == StringBuilderPiece::ConstChar) {
+                const char* data = piece.m_raw;
+                size_t l = piece.m_end;
+                for (size_t j = 0; j < l; j++) {
+                    ret[currentLength++] = data[j];
+                }
+            } else {
+                String* data = piece.m_string;
+                size_t s = piece.m_start;
+                size_t e = piece.m_end;
+                auto accessData = data->bufferAccessData();
+                for (size_t k = s; k < e; k++) {
+                    ret[currentLength++] = accessData.charAt(k);
+                }
+            }
+        }
+
+        for (size_t i = 0; i < m_pieces.size(); i++) {
+            const StringBuilderPiece& piece = m_pieces[i];
+            if (piece.m_type == StringBuilderPiece::Char) {
+                ret[currentLength++] = piece.m_ch;
+            } else if (piece.m_type == StringBuilderPiece::ConstChar) {
+                const char* data = piece.m_raw;
+                size_t l = piece.m_end;
+                for (size_t j = 0; j < l; j++) {
+                    ret[currentLength++] = data[j];
+                }
+            } else {
+                String* data = piece.m_string;
+                size_t s = piece.m_start;
+                size_t e = piece.m_end;
+                auto accessData = data->bufferAccessData();
+                for (size_t k = s; k < e; k++) {
+                    ret[currentLength++] = accessData.charAt(k);
+                }
+            }
+        }
+
+        return new StringDataBMP(std::move(ret));
     } else {
         UTF32String ret;
         ret.resize(m_contentLength);
@@ -2021,19 +2196,9 @@ String* StringBuilder::finalize()
                 String* data = piece.m_string;
                 size_t s = piece.m_start;
                 size_t e = piece.m_end;
-                size_t l = e - s;
-                if (data->bufferAccessData().hasASCIIContent) {
-                    auto ptr = data->bufferAccessData().asciiData();
-                    ptr += s;
-                    for (size_t j = 0; j < l; j++) {
-                        ret[currentLength++] = ptr[j];
-                    }
-                } else {
-                    auto ptr = data->bufferAccessData().utf32Data();
-                    ptr += s;
-                    for (size_t j = 0; j < l; j++) {
-                        ret[currentLength++] = ptr[j];
-                    }
+                auto accessData = data->bufferAccessData();
+                for (size_t k = s; k < e; k++) {
+                    ret[currentLength++] = accessData.charAt(k);
                 }
             }
         }
@@ -2052,23 +2217,12 @@ String* StringBuilder::finalize()
                 String* data = piece.m_string;
                 size_t s = piece.m_start;
                 size_t e = piece.m_end;
-                size_t l = e - s;
-                if (data->bufferAccessData().hasASCIIContent) {
-                    auto ptr = data->bufferAccessData().asciiData();
-                    ptr += s;
-                    for (size_t j = 0; j < l; j++) {
-                        ret[currentLength++] = ptr[j];
-                    }
-                } else {
-                    auto ptr = data->bufferAccessData().utf32Data();
-                    ptr += s;
-                    for (size_t j = 0; j < l; j++) {
-                        ret[currentLength++] = ptr[j];
-                    }
+                auto accessData = data->bufferAccessData();
+                for (size_t k = s; k < e; k++) {
+                    ret[currentLength++] = accessData.charAt(k);
                 }
             }
         }
-
         return new StringDataUTF32(std::move(ret));
     }
 }

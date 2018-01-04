@@ -381,7 +381,7 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
             }
             m_lineBoxes[i]->quickInlineLayout(&lCtx);
             if (i == m_lineBoxes.size() - 1) {
-                lCtx.computeVerticalProperties(m_lineBoxes[i], nullptr);
+                lCtx.computeVerticalProperties(m_lineBoxes[i], false);
                 lCtx.registerInlineContent(nullptr);
             }
         }

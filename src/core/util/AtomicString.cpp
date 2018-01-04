@@ -68,6 +68,21 @@ AtomicString AtomicString::createAtomicString(StarFish* sf, const char* cStr,
 }
 
 AtomicString AtomicString::createAtomicString(StarFish* sf,
+                                              const char16_t* cStr,
+                                              size_t length)
+{
+    StringDataOnStackBMP str(cStr, length);
+    auto iter = sf->m_atomicStringMap.find(&str);
+    if (sf->m_atomicStringMap.end() == iter) {
+        String* string = new StringDataBMP(cStr, length);
+        sf->m_atomicStringMap.insert(string);
+        return AtomicString(string);
+    } else {
+        return AtomicString(iter.operator*());
+    }
+}
+
+AtomicString AtomicString::createAtomicString(StarFish* sf,
                                               const char32_t* cStr,
                                               size_t length)
 {
@@ -85,7 +100,7 @@ AtomicString AtomicString::createAtomicString(StarFish* sf,
 AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
 {
     auto data = str->bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         char* buf = (char*)alloca(data.length + 1);
         buf[data.length] = 0;
         for (size_t i = 0; i < data.length; i++) {
@@ -96,6 +111,23 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
         auto iter = sf->m_atomicStringMap.find(&str);
         if (sf->m_atomicStringMap.end() == iter) {
             String* string = new StringDataASCII(buf, data.length);
+            sf->m_atomicStringMap.insert(string);
+            return AtomicString(string);
+        } else {
+            return AtomicString(iter.operator*());
+        }
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        char16_t* buf = (char16_t*)alloca((data.length + 1) * sizeof(char16_t));
+        buf[data.length] = 0;
+        for (size_t i = 0; i < data.length; i++) {
+            buf[i] = ::tolower(data.utf16Data()[i]);
+        }
+        StringDataOnStackBMP str(buf, data.length);
+
+        auto iter = sf->m_atomicStringMap.find(&str);
+        if (sf->m_atomicStringMap.end() == iter) {
+            String* string =
+                new StringDataBMP(std::move(BMPString(buf, data.length)));
             sf->m_atomicStringMap.insert(string);
             return AtomicString(string);
         } else {
@@ -172,6 +204,27 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str,
     auto iter = sf->m_atomicStringMap.find(&newStr);
     if (sf->m_atomicStringMap.end() == iter) {
         String* string = new StringDataASCII(buf, length);
+        sf->m_atomicStringMap.insert(string);
+        return AtomicString(string);
+    } else {
+        return AtomicString(iter.operator*());
+    }
+}
+
+AtomicString AtomicString::createAttrAtomicString(StarFish* sf,
+                                                  const char16_t* str,
+                                                  size_t length)
+{
+    char16_t* buf = (char16_t*)alloca((length + 1) * sizeof(char16_t));
+    buf[length] = 0;
+    for (size_t i = 0; i < length; i++) {
+        buf[i] = ::tolower(str[i]);
+    }
+    StringDataOnStackBMP newStr(buf, length);
+
+    auto iter = sf->m_atomicStringMap.find(&newStr);
+    if (sf->m_atomicStringMap.end() == iter) {
+        String* string = new StringDataBMP(buf, length);
         sf->m_atomicStringMap.insert(string);
         return AtomicString(string);
     } else {

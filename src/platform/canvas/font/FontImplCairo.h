@@ -38,11 +38,6 @@ extern FT_Library g_freeTypeInstance;
 
 class FontSelectorImplCairo : public FontSelector {
 public:
-    typedef std::unordered_map<char32_t, std::pair<unsigned, unsigned>>
-        GlyphIndexCachePerFace;
-    std::unordered_map<FT_Face, std::unique_ptr<GlyphIndexCachePerFace>>
-        m_glyphIndexCache;
-
     FontSelectorImplCairo(Document* document,
                           PlatformFontSelector* platformFontData,
                           PlatformFontCache* platformFontCache)

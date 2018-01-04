@@ -63,6 +63,9 @@ typedef BasicString<
 typedef BasicString<
     char32_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char32_t>>
     UTF32String;
+typedef BasicString<
+    char16_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char16_t>>
+    BMPString;
 
 typedef std::basic_string<char, std::char_traits<char>> ASCIIStringDataNonGCStd;
 typedef std::basic_string<char, std::char_traits<char>> UTF8StringDataNonGCStd;
@@ -264,15 +267,27 @@ class StringDataASCII;
 class StringDataUTF32;
 
 struct StringBufferAccessData {
-    bool hasASCIIContent;
+    enum BufferDataKind {
+        ASCIIData,
+        BMPData,
+        UTF32Data,
+    };
+    BufferDataKind bufferDataKind;
     bool isNullTerminated;
     size_t length;
     const void* buffer;
 
+    bool hasASCIIData()
+    {
+        return bufferDataKind == ASCIIData;
+    }
+
     char32_t charAt(size_t idx) const
     {
-        if (hasASCIIContent) {
+        if (bufferDataKind == ASCIIData) {
             return asciiData()[idx];
+        } else if (bufferDataKind == BMPData) {
+            return utf16Data()[idx];
         } else {
             return utf32Data()[idx];
         }
@@ -280,13 +295,21 @@ struct StringBufferAccessData {
 
     const char* asciiData() const
     {
-        STARFISH_ASSERT(hasASCIIContent);
+        STARFISH_ASSERT(bufferDataKind == ASCIIData);
         return (const char*)buffer;
+    }
+
+    // this buffer only contains Basic Multilingual Plane (BMP) codes. so always
+    // (bufferLength == char number)
+    const char16_t* utf16Data() const
+    {
+        STARFISH_ASSERT(bufferDataKind == BMPData);
+        return (const char16_t*)buffer;
     }
 
     const char32_t* utf32Data() const
     {
-        STARFISH_ASSERT(!hasASCIIContent);
+        STARFISH_ASSERT(bufferDataKind == UTF32Data);
         return (const char32_t*)buffer;
     }
 };
@@ -309,6 +332,7 @@ public:
     static String* createUTF32String(const UTF32String& src);
     static String* createUTF32String(char32_t c);
     static String* createASCIIStringFromUTF32Source(const UTF32String& src);
+    static String* createBMPStringFromUTF32Source(const UTF32String& src);
     static String* createASCIIStringFromUTF32SourceIfPossible(
         const UTF32String& src);
 
@@ -339,7 +363,13 @@ public:
     size_t contentLength() const
     {
         auto data = bufferAccessData();
-        return data.hasASCIIContent ? data.length : data.length * 4;
+        if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+            return data.length;
+        } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+            return data.length * 2;
+        } else {
+            return data.length * 4;
+        }
     }
 
     bool equals(const String* src) const;
@@ -620,7 +650,7 @@ public:
     virtual StringBufferAccessData bufferAccessData() const override
     {
         StringBufferAccessData ret;
-        ret.hasASCIIContent = true;
+        ret.bufferDataKind = StringBufferAccessData::ASCIIData;
         ret.isNullTerminated = true;
         ret.buffer = m_data.data();
         ret.length = m_data.length();
@@ -658,7 +688,7 @@ public:
     virtual StringBufferAccessData bufferAccessData() const override
     {
         StringBufferAccessData ret;
-        ret.hasASCIIContent = true;
+        ret.bufferDataKind = StringBufferAccessData::ASCIIData;
         ret.isNullTerminated = true;
         ret.buffer = m_data;
         ret.length = m_length;
@@ -695,7 +725,7 @@ public:
     virtual StringBufferAccessData bufferAccessData() const override
     {
         StringBufferAccessData ret;
-        ret.hasASCIIContent = true;
+        ret.bufferDataKind = StringBufferAccessData::ASCIIData;
         ret.isNullTerminated = true;
         ret.buffer = m_data.data();
         ret.length = m_data.length();
@@ -752,7 +782,7 @@ public:
     virtual StringBufferAccessData bufferAccessData() const override
     {
         StringBufferAccessData ret;
-        ret.hasASCIIContent = false;
+        ret.bufferDataKind = StringBufferAccessData::UTF32Data;
         ret.isNullTerminated = true;
         ret.buffer = m_data.data();
         ret.length = m_data.length();
@@ -764,6 +794,58 @@ public:
 
 protected:
     SimpleStringBufferHolder<char32_t> m_data;
+};
+
+class StringDataBMP : public String {
+public:
+    StringDataBMP(const char16_t* str, size_t len)
+        : String()
+        , m_data(str, len)
+    {
+    }
+
+    StringDataBMP(const char* str, size_t len);
+
+    StringDataBMP(const BMPString& str)
+        : String()
+        , m_data(str.data(), str.length())
+    {
+    }
+
+    StringDataBMP(BMPString&& str)
+        : String()
+    {
+        size_t length = str.length();
+        m_data = SimpleStringBufferHolder<char16_t>(
+            str.takeBuffer(), length,
+            SimpleStringBufferHolder<char16_t>::TakeBufferValue);
+    }
+
+    virtual size_t length() const override
+    {
+        return m_data.length();
+    }
+
+    virtual char32_t charAt(const size_t& idx) const override
+    {
+        return m_data.data()[idx];
+    }
+
+    virtual StringBufferAccessData bufferAccessData() const override
+    {
+        StringBufferAccessData ret;
+        ret.bufferDataKind = StringBufferAccessData::BMPData;
+        ret.isNullTerminated = true;
+        ret.buffer = m_data.data();
+        ret.length = m_data.length();
+        return ret;
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    SimpleStringBufferHolder<char16_t> m_data;
 };
 
 // WARNING: this class does not copy buffer
@@ -790,7 +872,7 @@ public:
     virtual StringBufferAccessData bufferAccessData() const override
     {
         StringBufferAccessData ret;
-        ret.hasASCIIContent = false;
+        ret.bufferDataKind = StringBufferAccessData::UTF32Data;
         ret.isNullTerminated = true;
         ret.buffer = m_data;
         ret.length = m_length;
@@ -799,6 +881,42 @@ public:
 
 protected:
     const char32_t* m_data;
+    size_t m_length;
+};
+
+// WARNING: this class does not copy buffer
+class StringDataOnStackBMP : public String {
+public:
+    StringDataOnStackBMP(const char16_t* str, size_t length)
+        : m_data(str)
+        , m_length(length)
+    {
+    }
+
+    inline void* operator new(size_t size) = delete;
+
+    virtual size_t length() const override
+    {
+        return m_length;
+    }
+
+    virtual char32_t charAt(const size_t& idx) const override
+    {
+        return m_data[idx];
+    }
+
+    virtual StringBufferAccessData bufferAccessData() const override
+    {
+        StringBufferAccessData ret;
+        ret.bufferDataKind = StringBufferAccessData::BMPData;
+        ret.isNullTerminated = true;
+        ret.buffer = m_data;
+        ret.length = m_length;
+        return ret;
+    }
+
+protected:
+    const char16_t* m_data;
     size_t m_length;
 };
 
@@ -881,11 +999,13 @@ public:
     {
         auto srcData = m_string->bufferAccessData();
         StringBufferAccessData data;
-        data.hasASCIIContent = srcData.hasASCIIContent;
+        data.bufferDataKind = srcData.bufferDataKind;
         data.isNullTerminated = false;
         data.length = m_end - m_start;
-        if (srcData.hasASCIIContent) {
+        if (srcData.bufferDataKind == StringBufferAccessData::ASCIIData) {
             data.buffer = ((const char*)srcData.buffer) + m_start;
+        } else if (srcData.bufferDataKind == StringBufferAccessData::BMPData) {
+            data.buffer = ((char16_t*)srcData.buffer) + m_start;
         } else {
             data.buffer = ((char32_t*)srcData.buffer) + m_start;
         }
@@ -926,15 +1046,13 @@ public:
 };
 
 #ifndef STRING_BUILDER_INLINE_STORAGE_MAX
-#define STRING_BUILDER_INLINE_STORAGE_MAX 32
+#define STRING_BUILDER_INLINE_STORAGE_MAX 64
 #endif
 
 class StringBuilder {
     struct StringBuilderPiece {
         enum Type {
-            ASCIIStringPiece,
-            UTF32StringStringPiece,
-            UTF32StringStringPieceButASCIIContentPiece,
+            StringPiece,
             ConstChar,
             Char,
         };
@@ -954,7 +1072,7 @@ class StringBuilder {
 public:
     StringBuilder()
     {
-        m_hasASCIIContent = true;
+        m_resultBufferKind = StringBufferAccessData::BufferDataKind::ASCIIData;
         m_contentLength = 0;
         m_piecesInlineStorageUsage = 0;
     }
@@ -997,14 +1115,14 @@ public:
     String* finalize();
     void clear()
     {
-        m_hasASCIIContent = true;
+        m_resultBufferKind = StringBufferAccessData::BufferDataKind::ASCIIData;
         m_piecesInlineStorageUsage = 0;
         m_contentLength = 0;
         m_pieces.clear();
     }
 
 protected:
-    bool m_hasASCIIContent;
+    StringBufferAccessData::BufferDataKind m_resultBufferKind;
     size_t m_piecesInlineStorageUsage;
     size_t m_contentLength;
     StringBuilderPiece m_piecesInlineStorage[STRING_BUILDER_INLINE_STORAGE_MAX];
@@ -1016,43 +1134,33 @@ class SegmentedSubstring {
 public:
     SegmentedSubstring()
         : m_length(0)
+        , m_cursor(0)
+        , m_accessData(String::emptyString->bufferAccessData())
         , m_doNotExcludeLineNumbers(true)
-        , m_is8Bit(false)
         , m_string(String::emptyString)
     {
-        m_data.string32Ptr = 0;
     }
 
     SegmentedSubstring(String* str)
         : m_length(str->length())
+        , m_cursor(0)
+        , m_accessData(str->bufferAccessData())
         , m_doNotExcludeLineNumbers(true)
         , m_string(str)
     {
-        if (m_length) {
-            auto data = m_string->bufferAccessData();
-
-            if (data.hasASCIIContent) {
-                m_is8Bit = true;
-                m_data.string8Ptr = (const char*)data.buffer;
-            } else {
-                m_is8Bit = false;
-                m_data.string32Ptr = (const char32_t*)data.buffer;
-            }
-        } else {
-            m_is8Bit = false;
-        }
     }
 
     void clear()
     {
+        m_accessData = String::emptyString->bufferAccessData();
+        m_string = String::emptyString;
         m_length = 0;
-        m_data.string32Ptr = 0;
-        m_is8Bit = false;
+        m_cursor = 0;
     }
 
     bool is8Bit()
     {
-        return m_is8Bit;
+        return m_accessData.bufferDataKind == StringBufferAccessData::ASCIIData;
     }
 
     bool excludeLineNumbers() const
@@ -1093,24 +1201,24 @@ public:
 
     char32_t getCurrentChar8()
     {
-        return *m_data.string8Ptr;
+        return m_accessData.asciiData()[m_cursor];
     }
 
     char32_t getCurrentChar32()
     {
-        return m_data.string32Ptr ? *m_data.string32Ptr : 0;
+        return m_accessData.charAt(m_cursor);
     }
 
     char32_t incrementAndGetCurrentChar8()
     {
-        STARFISH_ASSERT(m_data.string8Ptr);
-        return *++m_data.string8Ptr;
+        m_cursor++;
+        return getCurrentChar8();
     }
 
     char32_t incrementAndGetCurrentChar32()
     {
-        STARFISH_ASSERT(m_data.string32Ptr);
-        return *++m_data.string32Ptr;
+        m_cursor++;
+        return getCurrentChar32();
     }
 
     String* currentSubString(unsigned length)
@@ -1121,32 +1229,21 @@ public:
 
     ALWAYS_INLINE char32_t getCurrentChar()
     {
-        STARFISH_ASSERT(m_length);
-        if (is8Bit()) {
-            return getCurrentChar8();
-        }
         return getCurrentChar32();
     }
 
     ALWAYS_INLINE char32_t incrementAndGetCurrentChar()
     {
-        STARFISH_ASSERT(m_length);
-        if (is8Bit()) {
-            return incrementAndGetCurrentChar8();
-        }
         return incrementAndGetCurrentChar32();
     }
 
 public:
-    union {
-        const char* string8Ptr;
-        const char32_t* string32Ptr;
-    } m_data;
     int m_length;
 
 private:
+    size_t m_cursor;
+    StringBufferAccessData m_accessData;
     bool m_doNotExcludeLineNumbers;
-    bool m_is8Bit;
     String* m_string;
 };
 

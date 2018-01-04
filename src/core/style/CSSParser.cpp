@@ -284,11 +284,7 @@ public:
     int read()
     {
         if (LIKELY(m_pos < m_stringBufferData.length)) {
-            if (m_stringBufferData.hasASCIIContent) {
-                return m_stringBufferData.asciiData()[m_pos++];
-            } else {
-                return m_stringBufferData.utf32Data()[m_pos++];
-            }
+            return m_stringBufferData.charAt(m_pos++);
         }
         return -1;
     }
@@ -296,11 +292,7 @@ public:
     int peek()
     {
         if (LIKELY(m_pos < m_stringBufferData.length)) {
-            if (m_stringBufferData.hasASCIIContent) {
-                return m_stringBufferData.asciiData()[m_pos];
-            } else {
-                return m_stringBufferData.utf32Data()[m_pos];
-            }
+            return m_stringBufferData.charAt(m_pos);
         }
         return -1;
     }
@@ -1197,6 +1189,13 @@ String* CSSParser::getStringWithoutQuotationMarks(const CSSTokenString& value)
             [](const char* buf, size_t len, void* data) -> size_t {
                 Sender* sf = (Sender*)data;
                 return (size_t) new StringDataASCII(buf + sf->start, sf->len);
+            },
+            &s);
+    } else if (value.hasBMPContent()) {
+        return (String*)value.peekBMPBuffer(
+            [](const char16_t* buf, size_t len, void* data) -> size_t {
+                Sender* sf = (Sender*)data;
+                return (size_t) new StringDataBMP(buf + sf->start, sf->len);
             },
             &s);
     } else {

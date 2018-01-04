@@ -45,11 +45,18 @@ public:
     static AtomicString createAtomicString(StarFish* sf, const char* str);
     static AtomicString createAtomicString(StarFish* sf, const char* str,
                                            size_t length);
+    // only support bmp chars
+    static AtomicString createAtomicString(StarFish* sf, const char16_t* str,
+                                           size_t length);
     static AtomicString createAtomicString(StarFish* sf, const char32_t* str,
                                            size_t length);
     static AtomicString createAttrAtomicString(StarFish* sf, String* str);
     static AtomicString createAttrAtomicString(StarFish* sf, const char* str);
     static AtomicString createAttrAtomicString(StarFish* sf, const char* str,
+                                               size_t length);
+    // only support bmp chars
+    static AtomicString createAttrAtomicString(StarFish* sf,
+                                               const char16_t* str,
                                                size_t length);
     static AtomicString createAttrAtomicString(StarFish* sf,
                                                const char32_t* str,

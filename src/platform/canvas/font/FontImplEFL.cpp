@@ -196,7 +196,7 @@ public:
         }
 #endif
         auto textObject = ((FontFaceImplEFL*)m_fontFaceList->at(0))->m_text;
-        if (str.originalString()->bufferAccessData().hasASCIIContent) {
+        if (str.originalString()->bufferAccessData().hasASCIIData()) {
             bool isShort = str.length() < 128;
             auto data = str.bufferAccessData();
             char* buf =

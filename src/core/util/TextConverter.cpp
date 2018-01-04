@@ -167,6 +167,7 @@ String* TextConverter::convert(const char* bytes, size_t len,
         m_bufferToConvert.assign(&bytes[0], &bytes[len]);
         UTF32String str;
         bool hasUTFChar = false;
+        bool hasNonBMPChar = false;
         while (true) {
             UChar targetOrg[512];
             UChar* target = targetOrg;
@@ -185,6 +186,9 @@ String* TextConverter::convert(const char* bytes, size_t len,
                 if (c > 127) {
                     hasUTFChar = true;
                 }
+                if (c > 0xffff) {
+                    hasNonBMPChar = true;
+                }
                 str += c;
             }
 
@@ -197,8 +201,11 @@ String* TextConverter::convert(const char* bytes, size_t len,
             }
             err = U_ZERO_ERROR;
         }
-        if (hasUTFChar) {
+        if (hasNonBMPChar) {
             return String::createUTF32String(str);
+        }
+        if (hasUTFChar) {
+            return String::createBMPStringFromUTF32Source(str);
         }
         return String::createASCIIStringFromUTF32Source(str);
     }

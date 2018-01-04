@@ -92,13 +92,16 @@ String* stripLeadingAndTrailingHTMLSpaces(String* string)
         return String::emptyString;
     }
 
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         return stripLeadingAndTrailingHTMLSpaces<char>(string, data.asciiData(),
                                                        length);
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        return stripLeadingAndTrailingHTMLSpaces<char16_t>(
+            string, data.utf16Data(), length);
+    } else {
+        return stripLeadingAndTrailingHTMLSpaces<char32_t>(
+            string, data.utf32Data(), length);
     }
-
-    return stripLeadingAndTrailingHTMLSpaces<char32_t>(string, data.utf32Data(),
-                                                       length);
 }
 /*
 String serializeForNumberType(const Decimal& number)
@@ -252,13 +255,16 @@ bool parseHTMLInteger(const String* string, int& value)
     // Step 2
     auto input = string->bufferAccessData();
     unsigned length = input.length;
-    if (!length || input.hasASCIIContent) {
+    if (!length || input.bufferDataKind == StringBufferAccessData::ASCIIData) {
         return parseHTMLIntegerInternal<char>(
             input.asciiData(), input.asciiData() + length, value);
+    } else if (input.bufferDataKind == StringBufferAccessData::BMPData) {
+        return parseHTMLIntegerInternal<char16_t>(
+            input.utf16Data(), input.utf16Data() + length, value);
+    } else {
+        return parseHTMLIntegerInternal<char32_t>(
+            input.utf32Data(), input.utf32Data() + length, value);
     }
-
-    return parseHTMLIntegerInternal<char32_t>(
-        input.utf32Data(), input.utf32Data() + length, value);
 }
 
 /*

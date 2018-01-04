@@ -1013,9 +1013,10 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir,
             InlineTextBox* itb = box->asInlineTextBox();
             if (itb->charDirection() == CharDirection::Rtl) {
                 const StringView& sv = itb->textRun().m_stringView;
+                auto data = sv.bufferAccessData();
                 bool shouldReplaceString = false;
-                for (size_t j = sv.start(); j < sv.end(); j++) {
-                    char32_t ch = sv.originalString()->charAt(j);
+                for (size_t j = 0; j < data.length; j++) {
+                    char32_t ch = data.charAt(j);
                     if (ch < 128) {
                         if (parenthesisMap[ch]) {
                             shouldReplaceString = true;
@@ -1025,33 +1026,17 @@ void LineFormattingContext::resolveBidi(DirectionValue parentDir,
                 }
 
                 if (shouldReplaceString) {
-                    if (sv.originalString()
-                            ->bufferAccessData()
-                            .hasASCIIContent) {
-                        ASCIIString str;
-                        for (size_t j = sv.start(); j < sv.end(); j++) {
-                            char32_t ch = sv.originalString()->charAt(j);
-                            if (ch < 128) {
-                                if (parenthesisMap[ch]) {
-                                    ch = (char32_t)parenthesisMap[ch];
-                                }
+                    StringBuilder builder;
+                    for (size_t j = 0; j < data.length; j++) {
+                        char32_t ch = data.charAt(j);
+                        if (ch < 128) {
+                            if (parenthesisMap[ch]) {
+                                ch = (char32_t)parenthesisMap[ch];
                             }
-                            str += (char)ch;
                         }
-                        itb->setText(new StringDataASCII(std::move(str)));
-                    } else {
-                        UTF32String str;
-                        for (size_t j = sv.start(); j < sv.end(); j++) {
-                            char32_t ch = sv.originalString()->charAt(j);
-                            if (ch < 128) {
-                                if (parenthesisMap[ch]) {
-                                    ch = (char32_t)parenthesisMap[ch];
-                                }
-                            }
-                            str += ch;
-                        }
-                        itb->setText(new StringDataUTF32(std::move(str)));
+                        builder.appendChar(ch);
                     }
+                    itb->setText(builder.finalize());
                 }
             }
         }
@@ -2915,7 +2900,7 @@ static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
     int32_t next = 0;
 
     StringBufferAccessData data = txt->bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         while ((next = breaker->next()) != icu::BreakIterator::DONE) {
             locs.push_back(next);
         }
@@ -3096,7 +3081,7 @@ String* FrameText::makeCapitalized(String* txt, char32_t prev)
     int32_t next = 0;
 
     StringBufferAccessData data = txt->bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         while ((next = breaker->next()) != icu::BreakIterator::DONE) {
             locs.push_back(next);
         }

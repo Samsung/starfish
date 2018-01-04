@@ -115,8 +115,9 @@ static void unconsumeCharacters(SegmentedString& source,
         source.push(consumedCharacters[0]);
         source.push(consumedCharacters[1]);
     } else {
-        source.prepend(SegmentedString(
-            String::createUTF32String(consumedCharacters.data())));
+        source.prepend(
+            SegmentedString(String::createASCIIStringFromUTF32SourceIfPossible(
+                consumedCharacters)));
     }
 }
 
