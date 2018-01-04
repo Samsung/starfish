@@ -240,8 +240,10 @@ ScriptWrappable* toScriptWrappable(ScriptObject v)
 StringRef* createScriptString(String* str)
 {
     auto data = str->bufferAccessData();
-    if (data.hasASCIIContent) {
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         return StringRef::fromASCII(data.asciiData(), data.length);
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        return StringRef::fromUTF16(data.utf16Data(), data.length);
     } else {
         UTF16StringDataNonGCStd out;
         for (size_t i = 0; i < str->length(); i++) {

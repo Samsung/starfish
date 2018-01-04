@@ -29,6 +29,7 @@ public:
     GatherableString()
     {
         m_hasASCIIContent = true;
+        m_hasBMPContent = true;
         m_length = 0;
         m_externalString = nullptr;
     }
@@ -41,6 +42,7 @@ public:
     void operator=(const GatherableString& src)
     {
         m_hasASCIIContent = src.m_hasASCIIContent;
+        m_hasBMPContent = src.m_hasBMPContent;
         m_length = src.m_length;
         memcpy(m_builtInBuffer, src.m_builtInBuffer,
                sizeof(char32_t) *
@@ -55,6 +57,7 @@ public:
     GatherableString(GatherableString&& src)
     {
         m_hasASCIIContent = src.m_hasASCIIContent;
+        m_hasBMPContent = src.m_hasBMPContent;
         m_length = src.m_length;
         memcpy(m_builtInBuffer, src.m_builtInBuffer,
                sizeof(char32_t) *
@@ -62,6 +65,7 @@ public:
         m_externalString = src.m_externalString;
 
         src.m_hasASCIIContent = true;
+        src.m_hasBMPContent = true;
         src.m_length = 0;
         src.m_externalString = nullptr;
     }
@@ -70,12 +74,16 @@ public:
     {
         m_length = 0;
         m_hasASCIIContent = true;
+        m_hasBMPContent = true;
         m_externalString = nullptr;
     }
 
     void appendChar(char32_t ch)
     {
-        if (ch > 127) {
+        if (ch > 0xffff) {
+            m_hasBMPContent = false;
+            m_hasASCIIContent = false;
+        } else if (ch > 127) {
             m_hasASCIIContent = false;
         }
         if (m_length < InlineStorageSize) {
@@ -132,6 +140,11 @@ public:
         return m_hasASCIIContent;
     }
 
+    bool hasBMPContent() const
+    {
+        return m_hasBMPContent;
+    }
+
     void appendOther(const GatherableString& src)
     {
         for (size_t i = 0; i < src.length(); i++) {
@@ -146,6 +159,9 @@ public:
     size_t peekASCIIBuffer(size_t (*cb)(const char* buffer, size_t len,
                                         void* data),
                            void* data) const;
+    size_t peekBMPBuffer(size_t (*cb)(const char16_t* buffer, size_t len,
+                                      void* data),
+                         void* data) const;
     size_t peekUTF32Buffer(size_t (*cb)(const char32_t* buffer, size_t len,
                                         void* data),
                            void* data) const;
@@ -158,6 +174,7 @@ public:
 
 protected:
     bool m_hasASCIIContent;
+    bool m_hasBMPContent;
     size_t m_length;
     char32_t m_builtInBuffer[InlineStorageSize];
     UTF32String* m_externalString;
@@ -243,6 +260,15 @@ String* GatherableString<InlineStorageSize>::toString() const
         }
 
         return new StringDataASCII(std::move(newStringData));
+    } else if (m_hasBMPContent) {
+        BMPString newStringData;
+        newStringData.resize(length());
+
+        for (size_t i = 0; i < length(); i++) {
+            newStringData[i] = charAt(i);
+        }
+
+        return new StringDataBMP(std::move(newStringData));
     } else {
         UTF32String newStringData;
         newStringData.resize(length());
@@ -263,6 +289,21 @@ size_t GatherableString<InlineStorageSize>::peekASCIIBuffer(
     char* newStringData = ALLOCA(length() + 1, char);
     for (size_t i = 0; i < length(); i++) {
         newStringData[i] = (char)charAt(i);
+    }
+    newStringData[length()] = 0;
+
+    return cb(newStringData, length(), data);
+}
+
+template <unsigned int InlineStorageSize>
+size_t GatherableString<InlineStorageSize>::peekBMPBuffer(
+    size_t (*cb)(const char16_t* buffer, size_t len, void* data),
+    void* data) const
+{
+    STARFISH_ASSERT(hasBMPContent());
+    char16_t* newStringData = ALLOCA(length() + 1, char16_t);
+    for (size_t i = 0; i < length(); i++) {
+        newStringData[i] = (char16_t)charAt(i);
     }
     newStringData[length()] = 0;
 
@@ -320,6 +361,14 @@ AtomicString GatherableString<InlineStorageSize>::toAtomicString(
                     .string();
             },
             sf));
+    } else if (hasBMPContent()) {
+        return AtomicString((String*)peekBMPBuffer(
+            [](const char16_t* buf, size_t len, void* data) -> size_t {
+                StarFish* sf = (StarFish*)data;
+                return (size_t)AtomicString::createAtomicString(sf, buf, len)
+                    .string();
+            },
+            sf));
     } else {
         return AtomicString((String*)peekUTF32Buffer(
             [](const char32_t* buf, size_t len, void* data) -> size_t {
@@ -338,6 +387,15 @@ AtomicString GatherableString<InlineStorageSize>::toAttrAtomicString(
     if (hasASCIIContent()) {
         return AtomicString((String*)peekASCIIBuffer(
             [](const char* buf, size_t len, void* data) -> size_t {
+                StarFish* sf = (StarFish*)data;
+                return (size_t)AtomicString::createAttrAtomicString(sf, buf,
+                                                                    len)
+                    .string();
+            },
+            sf));
+    } else if (hasBMPContent()) {
+        return AtomicString((String*)peekBMPBuffer(
+            [](const char16_t* buf, size_t len, void* data) -> size_t {
                 StarFish* sf = (StarFish*)data;
                 return (size_t)AtomicString::createAttrAtomicString(sf, buf,
                                                                     len)

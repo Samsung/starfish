@@ -89,8 +89,8 @@ bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection)
             }
 
             if (str.length()) {
-                String* tok = new StringDataUTF32(std::move(str));
-                if (!element->hasClassName(tok)) {
+                StringDataOnStackUTF32 tok(str.data(), str.length());
+                if (!element->hasClassName(&tok)) {
                     return false;
                 }
             }

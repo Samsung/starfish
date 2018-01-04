@@ -806,10 +806,14 @@ private:
         cairo_glyph_t* glyphs = nullptr;
         size_t glyphCount = 0;
 
+#define ALLOCA_BIG(bytes, typenameWithoutPointer)                       \
+    (typenameWithoutPointer*)(LIKELY(bytes < 1024 * 10) ? alloca(bytes) \
+                                                        : GC_MALLOC(bytes))
+
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
             auto stringAccessData = sv.bufferAccessData();
-            glyphs = ALLOCA(stringAccessData.length * sizeof(cairo_glyph_t),
-                            cairo_glyph_t);
+            glyphs = ALLOCA_BIG(stringAccessData.length * sizeof(cairo_glyph_t),
+                                cairo_glyph_t);
             for (size_t i = 0; i < stringAccessData.length; i++) {
                 std::pair<std::pair<FontFaceImplCairo*, size_t>,
                           std::pair<unsigned, LayoutUnit>>
