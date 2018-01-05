@@ -37,6 +37,7 @@
 #include "core/extra/Console.h"
 #include "core/style/ComputedStyle.h"
 #include "core/util/LineBreakerIteratorPool.h"
+#include "platform/file/File.h"
 #ifdef STARFISH_ENABLE_HTTPCACHE
 #include "platform/network/HTTPCache.h"
 #endif
@@ -214,7 +215,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                    const char* localStorageFilePath,
                    const char* cookieStoreFilePath,
                    const char* httpCacheDirectorypath,
-                   String* extraUserAgentString)
+                   String* customUserAgentString,
+                   String* builtinPolyfillPathString)
 
     : m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
@@ -235,7 +237,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_enterCount(0)
     , m_screenInfo(info)
     , m_localStorageFilePath(String::fromUTF8(localStorageFilePath))
-    , m_extraUserAgentString(extraUserAgentString)
+    , m_customUserAgentString(customUserAgentString)
+    , m_builtinPolyfillPathString(builtinPolyfillPathString)
 #ifdef STARFISH_ENABLE_HTTPCACHE
     , m_httpCache(nullptr)
 #endif
@@ -473,44 +476,18 @@ void StarFish::exit()
 
 void StarFish::loadHTMLDocument(String* filePath)
 {
-    UTF8StringDataNonGCStd path;
-    if (filePath->startsWith("http")) {
-        path = filePath->toUTF8NonGCString();
-    } else if (filePath->startsWith("about")) {
-        path = filePath->toUTF8NonGCString();
-    } else {
-        UTF8StringDataNonGCStd d = filePath->toUTF8NonGCString();
-        if (d.length() && d[0] == '/') {
-            path = std::string("file://") + d;
+    String* resolvedPath = filePath;
+    if (!filePath->startsWith("http") && !filePath->startsWith("about")) {
+        String* prefix = String::fromUTF8("file://");
+        Nullable<String*> result = File::absolutePath(filePath);
+        if (result.hasValue()) {
+            resolvedPath = prefix->concat(result.getValue());
         } else {
-            UTF8StringDataNonGCStd fileName;
-            if (d.find('/') == std::string::npos) {
-                path = "./";
-                fileName = d;
-            } else {
-                path += d.substr(0, d.find_last_of('/'));
-                fileName = d.substr(d.find_last_of('/') + 1);
-                path += "/";
-            }
-
-            char* p = realpath(path.c_str(), NULL);
-            if (p) {
-                path = p;
-                free(p);
-            }
-            path += "/";
-
-            path = std::string("file://") + path + fileName;
-#ifdef STARFISH_ENABLE_TEST
-            std::string mem_log =
-                fileName.substr(0, fileName.length() - 5) + "_mem.txt";
-            if (g_memLogDump)
-                fp_mem = fopen(mem_log.c_str(), "w");
-#endif
+            // Will navigate to about:blank
+            resolvedPath = prefix->concat(resolvedPath);
         }
     }
-
-    ResourceURL* url = new ResourceURL(String::fromUTF8(path.c_str()));
+    ResourceURL* url = new ResourceURL(resolvedPath);
     m_platformWindow->webView()->navigate(url, HistoryManager::Action::Add,
                                           nullptr);
 }
@@ -668,12 +645,11 @@ void StarFish::removePointerFromRootSet(void* ptr)
 
 String* StarFish::userAgent()
 {
-    String* str = String::createASCIIString(USER_AGENT(STARFISH_NAME, VERSION));
-    if (extraUserAgentString()->length()) {
-        str = str->concat(" ");
-        str = str->concat(extraUserAgentString());
+    String* custom = customUserAgentString();
+    if (custom->length()) {
+        return custom;
     }
-    return str;
+    return String::createASCIIString(USER_AGENT(STARFISH_NAME, VERSION));
 }
 
 #ifndef NDEBUG

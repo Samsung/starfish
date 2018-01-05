@@ -315,4 +315,16 @@ File* File::createInNonGCArea()
 #endif
     return fio;
 }
+
+Nullable<String*> File::absolutePath(String* localPath)
+{
+    UTF8StringDataNonGCStd data = localPath->toUTF8NonGCString();
+    char* resolved = realpath(data.c_str(), NULL);
+    if (resolved) {
+        String* result = String::fromUTF8(resolved);
+        free(resolved);
+        return result;
+    }
+    return nullptr;
+}
 } // namespace StarFish

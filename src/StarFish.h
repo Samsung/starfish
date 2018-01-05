@@ -73,7 +73,8 @@ public:
              const ScreenInfo& info, const char* localStorageFilePath,
              const char* cookieStoreFilePath,
              const char* httpCacheDirectorypath,
-             String* extraUserAgentString = String::emptyString);
+             String* customUserAgentString = String::emptyString,
+             String* builtinPolyfillPathString = String::emptyString);
 
     ~StarFish();
     void run();
@@ -173,9 +174,14 @@ public:
     }
 
 #endif
-    String* extraUserAgentString()
+    String* customUserAgentString()
     {
-        return m_extraUserAgentString;
+        return m_customUserAgentString;
+    }
+
+    String* builtinPolyfillPathString()
+    {
+        return m_builtinPolyfillPathString;
     }
 
     String* userAgent();
@@ -315,7 +321,8 @@ protected:
     size_t m_enterCount;
     ScreenInfo m_screenInfo;
     String* m_localStorageFilePath;
-    String* m_extraUserAgentString;
+    String* m_customUserAgentString;
+    String* m_builtinPolyfillPathString;
 
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     int m_width;
