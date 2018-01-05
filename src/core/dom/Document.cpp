@@ -59,6 +59,7 @@
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/StyleSheetList.h"
 #include "core/style/StyleRule.h"
+#include "platform/file/File.h"
 #include "platform/loader/ImageResource.h"
 #include "core/animation/Animation.h"
 #include "platform/network/NetworkSharedResourceManager.h"
@@ -169,6 +170,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     auto df = new FrameDocument(this);
     setFrame(df);
+    loadBuiltinPolyfill(window->starFish()->builtinPolyfillPathString());
 }
 
 BrowsingContext* Document::browsingContext()
@@ -1351,6 +1353,29 @@ Nullable<HTMLOrSVGScriptElement> Document::currentScript()
     }
     return HTMLOrSVGScriptElement::createSVGScriptElement(
         m_currentScripts.back()->asSVGScriptElement());
+}
+
+void Document::loadBuiltinPolyfill(String* localPath)
+{
+    if (!localPath->length()) {
+        return;
+    }
+    STARFISH_LOG_INFO("Load built-in javascript polyfill\n");
+    File* in = File::create();
+    if (!in->open(localPath, File::FileMode::Read)) {
+        in->close();
+        STARFISH_LOG_INFO("Invalid built-in polyfill path.\n");
+        return;
+    }
+    Nullable<String*> data = in->readAll();
+    in->close();
+    if (!data.hasValue()) {
+        STARFISH_LOG_INFO("Invalid built-in polyfill content.\n");
+        return;
+    }
+    evaluateString(window()->scriptBindingInstance(), data.getValue(),
+                   String::createASCIIString("builtinPolyfill"));
+    STARFISH_LOG_INFO("Built-in polyfill evaluated.\n");
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent

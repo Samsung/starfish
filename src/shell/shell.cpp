@@ -541,7 +541,8 @@ int main(int argc, char* argv[])
     }
 
     std::string screenShot;
-    std::string userAgentExtraString;
+    std::string customUserAgentString;
+    std::string builtinPolyfillPathString;
     int width = 1280, height = 720;
     int x = 0, y = 0;
     float scaleFactor = 1;
@@ -593,8 +594,10 @@ int main(int argc, char* argv[])
             y = std::atoi(argv[i] + strlen("--posY="));
         } else if (strstr(argv[i], "--device-scale-factor=") == argv[i]) {
             scaleFactor = std::atof(argv[i] + strlen("--device-scale-factor="));
-        } else if (strstr(argv[i], "--useragent-extra=") == argv[i]) {
-            userAgentExtraString = argv[i] + strlen("--useragent-extra=");
+        } else if (strstr(argv[i], "--useragent=") == argv[i]) {
+            customUserAgentString = argv[i] + strlen("--useragent=");
+        } else if (strstr(argv[i], "--polyfill=") == argv[i]) {
+            builtinPolyfillPathString = argv[i] + strlen("--polyfill=");
         }
     }
 
@@ -651,7 +654,8 @@ int main(int argc, char* argv[])
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
         width, height, x, y, 1, String::createASCIIString("sans-serif"), info,
         "", "/tmp/StarFish_Cookies.txt", cacheDir.data(),
-        String::fromUTF8(userAgentExtraString.data()));
+        String::fromUTF8(customUserAgentString.data()),
+        String::fromUTF8(builtinPolyfillPathString.data()));
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();

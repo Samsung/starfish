@@ -435,6 +435,8 @@ public:
 
     void setContentLanguage(String* value);
 
+    void loadBuiltinPolyfill(String* localpath);
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers

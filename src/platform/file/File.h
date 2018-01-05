@@ -110,7 +110,7 @@ public:
         size_t expected = size();
 
         out.reserve(expected);
-        if ((out.capacity()) != expected) {
+        if ((out.capacity()) < expected) {
             return false;
         }
 
@@ -142,6 +142,8 @@ public:
     virtual int64_t lastAccessTime() = 0;
     virtual int64_t lastModificationTime() = 0;
     virtual int64_t lastChangeTime() = 0;
+
+    static Nullable<String*> absolutePath(String* localPath);
 
 protected:
     File()
