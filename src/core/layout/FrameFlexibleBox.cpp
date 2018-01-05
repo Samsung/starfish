@@ -91,10 +91,10 @@ void FlexFormattingContext::computeMainSize()
         child = child->next();
     }
 
-    std::sort(orderedFlexItems.begin(), orderedFlexItems.end(),
-              [](FrameBox* a, FrameBox* b) {
-                  return a->style()->order() < b->style()->order();
-              });
+    std::stable_sort(orderedFlexItems.begin(), orderedFlexItems.end(),
+                     [](FrameBox* a, FrameBox* b) {
+                         return a->style()->order() < b->style()->order();
+                     });
 
     auto iter = orderedFlexItems.begin();
 

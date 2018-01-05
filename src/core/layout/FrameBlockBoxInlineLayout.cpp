@@ -4382,7 +4382,6 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                     w += mbpWidth;
                     f = f->next();
                 }
-                w = std::min(ctx.remainingWidth(), w);
                 ctx.updatePreferredWidth(w);
             } else {
                 Frame* f = firstChild();
