@@ -1505,7 +1505,7 @@ void CSSStyleDeclaration::setBorderRadius(const char* value, size_t len,
         return;
     }
     CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, len);
+    tokenizeCSSValue(tokens, value, len, "/", 1);
 
     // {1~4} / {1~4}
     if (tokens.size() < 1 || tokens.size() > 9) {
