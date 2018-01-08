@@ -265,6 +265,7 @@ public:
         , m_frameDocument(frameDocument)
         , m_viewportWidthDamaged(false)
         , m_viewportHeightDamaged(false)
+        , m_isQuickLayout(false)
     {
         establishBlockFormattingContext(true, true);
     }
@@ -547,6 +548,16 @@ public:
         return m_viewportHeightDamaged;
     }
 
+    bool isQuickLayout()
+    {
+        return m_isQuickLayout;
+    }
+
+    void setIsQuickLayout(bool b)
+    {
+        m_isQuickLayout = b;
+    }
+
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(
@@ -615,6 +626,7 @@ private:
     GCVector<InlineNonReplacedBox*> m_inlineNonReplacedBoxPool;
     bool m_viewportWidthDamaged : 1;
     bool m_viewportHeightDamaged : 1;
+    bool m_isQuickLayout : 1;
 
     void applyRelativePosition(FrameBox* box);
     void applyRelativePositionInlineCase(Frame* refF, FrameBox* box);
@@ -1399,6 +1411,10 @@ public:
     }
     virtual void quickLayout(LayoutContext& ctx)
     {
+        clearContentWidthDamaged();
+        clearContentHeightDamaged();
+        clearPaddingWidthDamaged();
+        clearPaddingHeightDamaged();
     }
 
     enum PaintingKind {

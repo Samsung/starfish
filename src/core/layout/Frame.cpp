@@ -720,6 +720,10 @@ void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
 
 void LayoutContext::registerRelativePositionedBox(FrameBox* box, bool dueToSelf)
 {
+    if (m_isQuickLayout) {
+        return;
+    }
+
     FrameBlockBox* cb = containingFrameBlockBox(box);
     m_relativePositionedBoxes.emplace(
         cb, std::vector<std::pair<FrameBox*, bool>>());
@@ -1563,16 +1567,15 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
     }
     damager.m_canViewportWidthDamage = ctx.viewportWidthDamaged();
     damager.m_canViewportHeightDamage = ctx.viewportHeightDamaged();
+    damager.m_canAutoDamage = false;
 
     if (resolveWhat & LayoutWantToResolve::ResolveWidth) {
+        damager.m_canPercentDamage = containerWidthMayBeChanged;
         if (style->width().isAuto()) {
             if (containerWidthMayBeChanged) {
                 markNeedsLayout();
                 return true;
             }
-
-            damager.m_canPercentDamage = containerWidthMayBeChanged;
-            damager.m_canAutoDamage = false;
 
             BorderData border = style->border();
             if (isLayoutDamaged(damager, border.left().width()) ||
@@ -1597,17 +1600,11 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
                 }
             }
         } else {
-            damager.m_canPercentDamage = containerWidthMayBeChanged;
-            damager.m_canAutoDamage = false;
-
             if (isLayoutDamaged(damager, style->width())) {
                 markNeedsLayout();
                 return true;
             }
         }
-
-        damager.m_canPercentDamage = containerWidthMayBeChanged;
-        damager.m_canAutoDamage = false;
 
         if (isLayoutDamaged(damager, style->minWidth()) ||
             isLayoutDamaged(damager, style->maxWidth())) {
@@ -1624,8 +1621,6 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
             }
 
             damager.m_canPercentDamage = containerWidthMayBeChanged;
-            damager.m_canAutoDamage = false;
-
             BorderData border = style->border();
             if (isLayoutDamaged(damager, border.top().width()) ||
                 isLayoutDamaged(damager, border.bottom().width())) {
@@ -1639,23 +1634,18 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
             }
 
             damager.m_canPercentDamage = containerHeightMayBeChanged;
-
             if (isLayoutDamaged(damager, style->top()) ||
                 isLayoutDamaged(damager, style->bottom())) {
                 return true;
             }
         } else {
             damager.m_canPercentDamage = containerHeightMayBeChanged;
-            damager.m_canAutoDamage = false;
-
             if (isLayoutDamaged(damager, style->height())) {
                 return true;
             }
         }
 
         damager.m_canPercentDamage = containerHeightMayBeChanged;
-        damager.m_canAutoDamage = false;
-
         if (isLayoutDamaged(damager, style->minHeight()) ||
             isLayoutDamaged(damager, style->maxHeight())) {
             return true;
@@ -1663,7 +1653,6 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
 
         if (isFrameTableBox()) {
             damager.m_canPercentDamage = false;
-            damager.m_canAutoDamage = false;
             if (isLayoutDamaged(damager, style->horizontalBorderSpacing()) ||
                 isLayoutDamaged(damager, style->verticalBorderSpacing())) {
                 return true;
@@ -1671,15 +1660,11 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
         }
 
         damager.m_canPercentDamage = containerWidthMayBeChanged;
-        damager.m_canAutoDamage = false;
-
         if (isLayoutDamaged(damager, style->textIndent())) {
             return true;
         }
 
         damager.m_canPercentDamage = false;
-        damager.m_canAutoDamage = false;
-
         if (isLayoutDamaged(damager, style->letterSpacing()) ||
             isLayoutDamaged(damager, style->wordSpacing())) {
             return true;
@@ -1687,7 +1672,6 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
 
         if (style->verticalAlign() == NumericVAlignValue) {
             damager.m_canPercentDamage = false;
-            damager.m_canAutoDamage = false;
             if (isLayoutDamaged(damager, style->verticalAlignLength())) {
                 return true;
             }

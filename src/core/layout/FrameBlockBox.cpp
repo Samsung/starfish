@@ -95,6 +95,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
     if (isEstablishesBlockFormattingContext()) {
         if (!shouldLayout(ctx, Frame::ResolveWidth, cb)) {
             return;
+        } else {
+            STARFISH_RELEASE_ASSERT(!ctx.isQuickLayout());
         }
     }
 
@@ -155,8 +157,13 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 
     if (isEstablishesBlockFormattingContext()) {
         if (!shouldLayout(ctx, LayoutWantToResolve::ResolveHeight, cb)) {
+            bool isQuickLayout = ctx.isQuickLayout();
+            ctx.setIsQuickLayout(true);
             quickLayout(ctx);
+            ctx.setIsQuickLayout(isQuickLayout);
             return;
+        } else {
+            STARFISH_RELEASE_ASSERT(!ctx.isQuickLayout());
         }
     }
 
@@ -338,6 +345,10 @@ LayoutRect FrameBlockBox::computeVisibleRectForScroll()
 
 void FrameBlockBox::quickLayout(LayoutContext& ctx)
 {
+    if (!isEstablishesBlockFormattingContext()) {
+        Frame::quickLayout(ctx);
+    }
+
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
@@ -345,33 +356,7 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
                 child->layout(ctx, ResolveAll);
             } else {
                 child->computePaintingFlags(ctx, ResolveAll);
-                if (child->isFrameBlockBox()) {
-                    FrameBlockBox* childBox = child->asFrameBlockBox();
-                    LayoutUnit top =
-                        childBox->paddingTop() + childBox->borderTop();
-                    LayoutUnit bottom =
-                        childBox->paddingBottom() + childBox->borderBottom();
-                    MarginInfo marginInfo(
-                        top, bottom,
-                        child->isEstablishesBlockFormattingContext() ||
-                            child->isFrameDocument(),
-                        child->style()->height());
-                    ctx.setMarginInfo(childBox, &marginInfo);
-                }
                 child->quickLayout(ctx);
-                if (child->isFrameBlockBox()) {
-                    FrameBlockBox* childBox = child->asFrameBlockBox();
-                    ctx.layoutRegisteredRelativePositionedBoxes(childBox);
-                    ctx.layoutRegisteredAbsolutePositionedBoxes(childBox);
-
-                    if (childBox->node() && childBox->node()->parentElement()) {
-                        Node* nd = childBox->node()->parentElement();
-                        if (nd->frame()->isFrameInline() &&
-                            nd->style()->position() == RelativePositionValue) {
-                            ctx.registerRelativePositionedBox(childBox, false);
-                        }
-                    }
-                }
             }
             child = child->next();
         }
@@ -383,11 +368,18 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
             }
             m_lineBoxes[i]->quickInlineLayout(&lCtx);
             if (i == m_lineBoxes.size() - 1) {
+                std::vector<LayoutUnit> vPositions;
+                m_lineBoxes[i]->saveChildrenVerticalPositions(vPositions);
                 lCtx.computeVerticalProperties(m_lineBoxes[i], false);
+                m_lineBoxes[i]->restoreChildrenVerticalPositions(vPositions);
                 lCtx.registerInlineContent(nullptr);
             }
         }
         registerRelativePositionedBoxesAndMarkPaintFlag(ctx);
+    }
+
+    if (!isEstablishesBlockFormattingContext()) {
+        ctx.layoutRegisteredAbsolutePositionedBoxes(this);
     }
 }
 
@@ -401,6 +393,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     LayoutUnit parentContentWidth = cb->contentWidth();
     // Determine the horizontal margins and the width of this object.
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
+        clearContentWidthDamaged();
         DirectionValue parentDirection;
         if (isAbsolutePositioned()) {
             parentDirection = blockContainer(this)->style()->direction();
@@ -529,6 +522,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         return;
     }
 
+    clearContentHeightDamaged();
     LayoutUnit oldContentHeight = contentHeight();
 
     computeContentHeight(ctx, cb);

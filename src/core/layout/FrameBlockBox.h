@@ -235,6 +235,8 @@ public:
     void setLeftMBPs(LineFormattingContext* ctx);
     void setRightMBPs(LineFormattingContext* ctx);
 
+    void saveChildrenVerticalPositions(std::vector<LayoutUnit>& positions);
+    void restoreChildrenVerticalPositions(std::vector<LayoutUnit>& positions);
     void quickInlineLayout(LineFormattingContext* ctx);
 
     virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
