@@ -353,6 +353,8 @@ void FrameReplaced::layout(LayoutContext& ctx,
 
     FrameBox* cb = containingBlock(this);
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
+        clearContentWidthDamaged();
+        clearContentHeightDamaged();
         LayoutUnit parentContentWidth = cb->contentWidth();
         DirectionValue parentDirection =
             blockContainer(this)->style()->direction();

@@ -59,8 +59,6 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
 void FrameTableCellBox::collectCellWidthInfo(
     LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
-    FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
-
     PreferredWidthContext p(ctx, this, LayoutUnit::max());
     p.computePreferredWidth();
     m_minCellWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();

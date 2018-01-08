@@ -747,6 +747,24 @@ void InlineBoxLayoutParentBox::setRightMBPs(LineFormattingContext* ctx)
     }
 }
 
+void InlineBoxLayoutParentBox::saveChildrenVerticalPositions(
+    std::vector<LayoutUnit>& vPositions)
+{
+    vPositions.reserve(m_boxes.size());
+    for (size_t i = 0; i < m_boxes.size(); i++) {
+        vPositions.push_back(m_boxes[i]->y());
+        m_boxes[i]->setY(0);
+    }
+}
+
+void InlineBoxLayoutParentBox::restoreChildrenVerticalPositions(
+    std::vector<LayoutUnit>& vPositions)
+{
+    for (size_t i = 0; i < m_boxes.size(); i++) {
+        m_boxes[i]->setY(vPositions[i]);
+    }
+}
+
 void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
 {
     for (size_t i = 0; i < m_boxes.size(); i++) {
@@ -754,10 +772,16 @@ void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
         if (box->isInlineTextBox()) {
             continue;
         } else if (box->isInlineNonReplacedBox()) {
-            box->asInlineNonReplacedBox()->quickInlineLayout(ctx);
+            InlineNonReplacedBox* inrb = box->asInlineNonReplacedBox();
+            inrb->quickInlineLayout(ctx);
             if (ctx->isLastLineBox()) {
-                ctx->computeVerticalProperties(box->asInlineNonReplacedBox(),
-                                               false);
+                std::vector<LayoutUnit> vPositions;
+                inrb->saveChildrenVerticalPositions(vPositions);
+                ctx->computeVerticalProperties(inrb, false);
+                inrb->setContentHeight(
+                    inrb->style()->font()->metrics().m_ascender -
+                    inrb->style()->font()->metrics().m_descender);
+                inrb->restoreChildrenVerticalPositions(vPositions);
             }
         } else {
             if (box->isAbsolutePositioned()) {
@@ -765,7 +789,6 @@ void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
             } else if (box->isFloating()) {
                 box->layout(ctx->m_layoutContext,
                             LayoutWantToResolve::ResolveAll);
-                ctx->m_layoutContext.registerFloatingBox(box);
             } else if (box->isFrameBlockBox()) {
                 ctx->m_layoutContext.pushInlineBlockBox(box->asFrameBlockBox());
                 box->layout(ctx->m_layoutContext,
