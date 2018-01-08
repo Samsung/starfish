@@ -458,8 +458,8 @@ test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-078.htm
 test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-079.htm
 test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-081.htm
 test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-082.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-083.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-084.htm
+test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-083.htm
+test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-084.htm
 test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-089.htm
 test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-090.htm
 test/cairo/reftest/csswg-test/css21_original/tables/border-spacing-091.htm
@@ -567,8 +567,8 @@ test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-003.htm
 test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-004.htm
 test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-005.htm
 test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-006.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-007.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-008.htm
+test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-007.htm
+test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-008.htm
 test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-009.htm
 test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-010.htm
 test/cairo/reftest/csswg-test/css21_original/tables/empty-cells-011.htm
@@ -631,7 +631,7 @@ test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-003c08.ht
 #test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-003d01.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-003d02.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-003d03.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-003d04.htm
+test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-003d04.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-003d05.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-003d06.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/fixed-table-layout-003e01.htm
@@ -912,10 +912,10 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-122.
 #test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-174.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-175.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-176.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-177.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-178.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-179.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-180.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-177.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-178.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-179.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-180.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-181.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-182.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-183.htm
@@ -924,14 +924,14 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-122.
 #test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-186.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-187.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-188.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-189.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-190.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-191.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-192.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-193.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-194.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-195.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-196.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-189.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-190.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-191.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-192.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-193.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-194.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-195.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-196.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-197.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-198.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-anonymous-objects-199.htm
@@ -956,11 +956,11 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-background-edge-and-bo
 #test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bc-rowgroup-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bc-table-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-cell-001.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-colgroup-001.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-colgroup-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-column-001.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-row-001.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-rowgroup-001.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-table-001.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-row-001.htm # Fails in docker
+test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-rowgroup-001.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-table-001.htm # Fails in docker
 #test/cairo/reftest/csswg-test/css21_original/tables/table-borders-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-borders-002.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-borders-003.htm
@@ -1009,7 +1009,7 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-012.h
 #test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-013.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-014.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-015.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-016.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-016.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-017.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-018.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-019.htm
@@ -1028,27 +1028,27 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-031.h
 test/cairo/reftest/csswg-test/css21_original/tables/table-height-algorithm-032.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-intro-example-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-intro-example-002.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-intro-example-003.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-intro-example-004.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-intro-example-003.htm # border not drawn
+test/cairo/reftest/csswg-test/css21_original/tables/table-intro-example-004.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-001.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-002.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-003.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-004.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-005.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-006.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-007.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-008.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-009.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-010.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-002.htm # border-collapse
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-003.htm # border-collapse
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-004.htm # border-collapse
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-005.htm # border-collapse
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-006.htm # border-collapse
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-007.htm # border-collapse
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-008.htm # border-collapse
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-009.htm # border-collapse
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-010.htm # FIXME
 test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-011.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-example-001.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-layer-transparency-example-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-layout-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-layout-002.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-layout-003.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-layout-applies-to-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-layout-applies-to-002.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layout-applies-to-003.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-layout-applies-to-005.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layout-applies-to-003.htm # Bullet needed
+#test/cairo/reftest/csswg-test/css21_original/tables/table-layout-applies-to-005.htm # FIXME: almost
 test/cairo/reftest/csswg-test/css21_original/tables/table-layout-applies-to-006.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-layout-applies-to-007.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-layout-applies-to-008.htm
@@ -1066,21 +1066,21 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-layout-initial-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-layout-property-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-layout-property-002.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-margin-001.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-margin-002.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-margin-003.htm
+test/cairo/reftest/csswg-test/css21_original/tables/table-margin-002.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-margin-003.htm # FIXME: almost
 test/cairo/reftest/csswg-test/css21_original/tables/table-margin-004.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-organization-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-organization-002.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-percent-width-001.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-percent-width-001.htm # FIXME
 test/cairo/reftest/csswg-test/css21_original/tables/table-row-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-row-group-001.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/tables-001.htm
+test/cairo/reftest/csswg-test/css21_original/tables/tables-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/tables-002.htm
 test/cairo/reftest/csswg-test/css21_original/tables/tables-003.htm
 test/cairo/reftest/csswg-test/css21_original/tables/tables-004.htm
 test/cairo/reftest/csswg-test/css21_original/tables/tables-101.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/tables-102.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-valign-001.htm
+test/cairo/reftest/csswg-test/css21_original/tables/tables-102.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-valign-001.htm # Chrome fails
 #test/cairo/reftest/csswg-test/css21_original/tables/table-valign-002.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-vertical-align-baseline-001.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-vertical-align-baseline-002.htm
@@ -1096,17 +1096,17 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-004.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-005.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-006.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-007.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-008.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-008.htm # RTL
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-009.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-010.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-011.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-012.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-013.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-014.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-015.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-014.htm # RTL
+#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-015.htm # border-collapse
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-016.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-017.htm
-#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-018.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-017.htm # border-collapse
+#test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-018.htm # border-collapse
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-019.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-020.htm
 test/cairo/reftest/csswg-test/css21_original/tables/table-visual-layout-021.htm
