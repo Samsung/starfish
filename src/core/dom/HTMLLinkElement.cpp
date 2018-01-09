@@ -59,7 +59,7 @@ String* HTMLLinkElement::href()
     String* url = getAttributeOrEmpty(starFish()->staticStrings()->m_href);
 
     return ResourceURL::mergeDocumentURIWithURIString(
-        document()->documentURI()->baseURI(), url);
+        document()->baseURL()->baseURI(), url);
 }
 
 void HTMLLinkElement::setHref(String* href)
@@ -109,8 +109,7 @@ ResourceURL* HTMLLinkElement::url()
     if (!url.hasValue()) {
         return nullptr;
     }
-    return new ResourceURL(url.getValue(),
-                           document()->documentURI()->baseURI());
+    return new ResourceURL(url.getValue(), document()->baseURL()->baseURI());
 }
 
 void HTMLLinkElement::didNodeInsertedToDocumentTree()
@@ -204,7 +203,7 @@ void HTMLLinkElement::loadStyleSheet()
     String* urlString =
         getAttributeOrEmpty(starFish()->staticStrings()->m_href);
     ResourceURL* url =
-        new ResourceURL(urlString, document()->documentURI()->baseURI());
+        new ResourceURL(urlString, document()->baseURL()->baseURI());
 
     if (m_styleSheetTextResource) {
         m_styleSheetTextResource->cancel();

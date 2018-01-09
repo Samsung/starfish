@@ -33,6 +33,7 @@
 #include "core/dom/FocusEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/TouchEvent.h"
+#include "core/dom/HTMLBaseElement.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLDocument.h"
@@ -49,6 +50,7 @@
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/WebOrigin.h"
+#include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
 #include "platform/loader/ImageResource.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -85,6 +87,9 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_isFocusRingCacheValid(false)
     , m_window(window)
     , m_documentURI(uri)
+    , m_baseURL(fallbackBaseURL())
+    , m_baseElementURL(nullptr)
+    , m_baseTarget(String::emptyString)
     , m_referrer(nullptr)
     , m_webOrigin(WebOrigin::createDocumentOrigin(uri))
     , m_characterSet(charSet)
@@ -179,7 +184,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     loadBuiltinPolyfill(window->starFish()->builtinPolyfillPathString());
 }
 
-BrowsingContext* Document::browsingContext()
+BrowsingContext* Document::browsingContext() const
 {
     return window()->browsingContext();
 }
@@ -1028,6 +1033,128 @@ String* Document::urlString()
     return m_documentURI->urlString();
 }
 
+Document* Document::parentDocument() const
+{
+    BrowsingContext* parent = browsingContext()->parentBrowsingContext();
+    if (!parent) {
+        return nullptr;
+    }
+    return parent->document();
+}
+
+ResourceURL* Document::fallbackBaseURL() const
+{
+    // 1. If document is an iframe srcdoc document,
+    // then return the document base URL of document's
+    // browsing context's browsing context container's node document.
+    // 2. If document's URL is about:blank, and document's browsing context
+    // has a creator browsing context, then return the creator base URL.
+    // 3. Return document's URL.
+
+    // TODO : handle iframe srcdoc.
+
+    if (documentURI()->isAboutURL()) {
+        if (Document* parent = parentDocument()) {
+            return parent->baseURL();
+        }
+    }
+    return documentURI();
+}
+
+void Document::updateBaseURL()
+{
+    // If there are the HTML BASE elements in the tree, then the base URI is
+    // computed using the value of the href attribute of the first BASE element,
+    // otherwise the value of the documentURI attribute is used.
+    if (m_baseElementURL) {
+        m_baseURL = m_baseElementURL;
+    } else {
+        m_baseURL = fallbackBaseURL();
+    }
+
+    if (!m_baseURL->isValid()) {
+        m_baseURL = ResourceURL::AboutBlankURL();
+    }
+}
+
+ResourceURL* Document::baseURL() const
+{
+    // If there is no base element that has an href attribute in the Document,
+    // then return the Document's fallback base URL.
+    if (m_baseURL) {
+        return m_baseURL;
+    }
+    return ResourceURL::AboutBlankURL();
+}
+
+Element* Document::nextBaseElement(Node* node, Node* root)
+{
+    for (Element* e = Traverse::nextElement(node, root); e;
+         e = Traverse::nextElement(e, root)) {
+        if (e->isHTMLBaseElement()) {
+            return e;
+        }
+    }
+    return nullptr;
+}
+
+void Document::processBaseElement()
+{
+    // Find the first href attribute and the first target attribute in base
+    // elements
+    Element* baseElement = nextBaseElement(this, this);
+    String* href = String::emptyString;
+    String* target = String::emptyString;
+    while (baseElement && (href->isEmpty() || target->isEmpty())) {
+        if (href->isEmpty()) {
+            String* value =
+                baseElement->asHTMLBaseElement()->getAttributeOrEmpty(
+                    starFish()->staticStrings()->m_href);
+            if (!value->isEmpty()) {
+                href = value;
+            }
+        }
+        if (target->isEmpty()) {
+            String* value =
+                baseElement->asHTMLBaseElement()->getAttributeOrEmpty(
+                    starFish()->staticStrings()->m_target);
+            if (!value->isEmpty()) {
+                target = value;
+            }
+        }
+        baseElement = nextBaseElement(baseElement, this);
+    }
+
+    ResourceURL* baseElementURL = nullptr;
+    if (!href->isEmpty()) {
+        baseElementURL = new ResourceURL(href, fallbackBaseURL()->urlString());
+    }
+    if (baseElementURL) {
+        if (baseElementURL->isDataURL()) {
+            starFish()->console()->error(String::createASCIIString(
+                "'data:' URLs may not be used as base URLs for a document."));
+        }
+    }
+
+    bool isSameURL = false;
+    if (!baseElementURL && !m_baseElementURL) {
+        isSameURL = true;
+    } else if (!baseElementURL || !m_baseElementURL) {
+        isSameURL = false;
+    } else {
+        isSameURL = (*baseElementURL == *m_baseElementURL);
+    }
+
+    if (!isSameURL) {
+        m_baseElementURL = baseElementURL;
+        updateBaseURL();
+    }
+
+    if (!target->isEmpty()) {
+        m_baseTarget = target;
+    }
+}
+
 void Document::updateDOMVersion()
 {
     m_domVersion++;
@@ -1038,6 +1165,11 @@ void Document::updateDOMVersion()
 void Document::didNodeInserted(Node* parent, Node* newChild)
 {
     Node::didNodeInserted(parent, newChild);
+
+    if (newChild->isHTMLBaseElement()) {
+        processBaseElement();
+    }
+
     updateDOMVersion();
     window()->invalidateFramesIfNeeded();
 }
@@ -1045,6 +1177,11 @@ void Document::didNodeInserted(Node* parent, Node* newChild)
 void Document::didNodeRemoved(Node* parent, Node* oldChild)
 {
     Node::didNodeRemoved(parent, oldChild);
+
+    if (oldChild->isHTMLBaseElement()) {
+        processBaseElement();
+    }
+
     updateDOMVersion();
     window()->invalidateFramesIfNeeded();
 }

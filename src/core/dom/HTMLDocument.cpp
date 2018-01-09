@@ -18,6 +18,7 @@
 #include "StarFish.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLAnchorElement.h"
+#include "core/dom/HTMLBaseElement.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLBRElement.h"
 #include "core/dom/HTMLButtonElement.h"
@@ -94,6 +95,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLHtmlElement(document);
     } else if (name == str->m_headTagName.localNameAtomic()) {
         return new HTMLHeadElement(document);
+    } else if (name == str->m_baseTagName.localNameAtomic()) {
+        return new HTMLBaseElement(document);
     } else if (name == str->m_styleTagName.localNameAtomic()) {
         return new HTMLStyleElement(document);
     } else if (name == str->m_scriptTagName.localNameAtomic()) {

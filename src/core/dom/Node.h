@@ -228,6 +228,8 @@ public:
         return m_nextSibling;
     }
 
+    String* baseURI() const;
+
     Nullable<String*> nodeValue() const;
     void setNodeValue(Nullable<String*> newVal);
 

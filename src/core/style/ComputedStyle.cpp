@@ -251,7 +251,7 @@ void ComputedStyle::loadBackgroundImage(
         if (!backgroundImage(bgIndex)->equals(String::emptyString)) {
             ResourceURL* u =
                 new ResourceURL(backgroundImage(bgIndex),
-                                consumer->document()->documentURI()->baseURI());
+                                consumer->document()->baseURL()->baseURI());
 
             if (prevComputedStyleValueForReferenceLoadedResources &&
                 prevComputedStyleValueForReferenceLoadedResources
@@ -309,9 +309,8 @@ void ComputedStyle::loadBorderImage(
     StarFish* sf = consumer->starFish();
     BorderData border = this->border();
     if (!border.image().url()->equals(String::emptyString)) {
-        ResourceURL* u =
-            new ResourceURL(border.image().url(),
-                            consumer->document()->documentURI()->baseURI());
+        ResourceURL* u = new ResourceURL(
+            border.image().url(), consumer->document()->baseURL()->baseURI());
 
         bool loaded = false;
 

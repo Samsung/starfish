@@ -667,7 +667,7 @@ bool ResourceURL::isValidPort()
 String* ResourceURL::mergeDocumentURIWithURIString(Document* document,
                                                    String* url)
 {
-    ResourceURL u(url, document->documentURI()->baseURI());
+    ResourceURL u(url, document->baseURL()->baseURI());
     String* ret = u.href();
     return ret;
 }

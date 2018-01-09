@@ -154,6 +154,11 @@ NodeList* Node::childNodes()
     return rareData->m_childNodeList;
 }
 
+String* Node::baseURI() const
+{
+    return document()->baseURL()->urlString();
+}
+
 Nullable<String*> Node::nodeValue() const
 {
     switch (nodeType()) {

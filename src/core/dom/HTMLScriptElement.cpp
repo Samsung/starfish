@@ -173,7 +173,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 getAttributeOrEmpty(starFish()->staticStrings()->m_charset)
                     ->trim();
             TextResource* res = document()->resourceLoader().fetchText(
-                new ResourceURL(url, document()->documentURI()->baseURI()),
+                new ResourceURL(url, document()->baseURL()->baseURI()),
                 charset);
             res->addResourceClient(
                 new ScriptDownloadClient(this, res, forceSync, inParser));
@@ -231,7 +231,7 @@ String* HTMLScriptElement::src()
     }
 
     return ResourceURL::mergeDocumentURIWithURIString(
-        document()->documentURI()->baseURI(), url);
+        document()->baseURL()->baseURI(), url);
 }
 
 void HTMLScriptElement::setSrc(String* src)

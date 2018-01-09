@@ -150,8 +150,7 @@ void Location::setLocation(String* url)
 
 void Location::assign(String* url)
 {
-    ResourceURL* r =
-        new ResourceURL(url, document()->documentURI()->urlString());
+    ResourceURL* r = new ResourceURL(url, document()->baseURL()->urlString());
     if (r->protocolKind() != ResourceURL::UNKNOWN) {
         assign(r);
     }
