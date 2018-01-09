@@ -26,7 +26,7 @@ class MessageLoop;
 class Timer;
 class Window;
 class PlatformWindow;
-class ImageData;
+class NativeImageData;
 class LineBreakIteratorPool;
 class Thread;
 class ThreadPool;

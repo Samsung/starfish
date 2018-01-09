@@ -22,6 +22,7 @@
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLBRElement.h"
 #include "core/dom/HTMLButtonElement.h"
+#include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/HTMLDivElement.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLFieldSetElement.h"
@@ -196,6 +197,11 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLTrackElement(document);
     } else if (name == str->m_sourceTagName.localNameAtomic()) {
         return new HTMLSourceElement(document);
+    }
+#endif
+#ifdef STARFISH_ENABLE_CANVAS
+    else if (name == str->m_canvasTagName.localNameAtomic()) {
+        return new HTMLCanvasElement(document);
     }
 #endif
 

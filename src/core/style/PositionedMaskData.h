@@ -177,7 +177,7 @@ private:
         }
     }
 
-    ImageData* m_maskImage;
+    NativeImageData* m_maskImage;
     unsigned int m_maxLayerSizes;
     unsigned int m_maxLayerImages;
 

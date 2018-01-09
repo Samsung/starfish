@@ -21,7 +21,7 @@
 
 namespace StarFish {
 
-class ImageData;
+class NativeImageData;
 class ImageResource;
 
 class HTMLImageElement : public HTMLElement {
@@ -72,7 +72,7 @@ public:
     String* nameAttr();
     void setNameAttr(String* name);
 
-    ImageData* imageData()
+    NativeImageData* imageData()
     {
         return m_imageData;
     }
@@ -88,7 +88,7 @@ private:
     void unloadImage();
     void loadImage(String* src);
     ImageResource* m_imageResource;
-    ImageData* m_imageData;
+    NativeImageData* m_imageData;
 };
 }
 

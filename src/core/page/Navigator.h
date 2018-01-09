@@ -79,6 +79,11 @@ public:
 
     String* language();
 
+    bool onLine()
+    {
+        return true;
+    }
+
 protected:
     Geolocation* m_geolocation;
 };

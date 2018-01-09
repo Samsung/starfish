@@ -17,10 +17,10 @@
 #include "StarFishConfig.h"
 #include "core/style/BorderImage.h"
 #include "platform/loader/ImageResource.h"
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace StarFish {
-ImageData* BorderImage::imageData()
+NativeImageData* BorderImage::imageData()
 {
     if (!isNull() && data()->m_imageResource) {
         return data()->m_imageResource->imageData();

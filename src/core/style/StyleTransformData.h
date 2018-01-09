@@ -27,7 +27,7 @@
 
 namespace StarFish {
 
-class ImageData;
+class NativeImageData;
 class ComputedStyle;
 
 class StyleTransformData : public gc {

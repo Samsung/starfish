@@ -19,7 +19,7 @@
 
 namespace StarFish {
 
-class ImageData;
+class NativeImageData;
 class PlatformWindow;
 class Canvas;
 class CanvasSurface;
@@ -67,8 +67,8 @@ public:
     virtual void punchHole(const Unit::Rect& rt) = 0;
 
     virtual void drawSurface(CanvasSurface* data, const Unit::Rect& dst) = 0;
-    virtual void drawImage(ImageData* data, const Unit::Rect& dst) = 0;
-    virtual void drawRepeatImage(ImageData* data, const Unit::Rect& dst,
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst) = 0;
+    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat) = 0;
 

@@ -24,7 +24,7 @@
 
 #define PNG_SKIP_SETJMP_CHECK
 
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 #include <cairo.h>
 #include <png.h>
@@ -33,9 +33,9 @@
 
 namespace StarFish {
 
-class ImageDataMISC : public ImageData {
+class NativeImageDataMISC : public NativeImageData {
 public:
-    ImageDataMISC(String* localImageSrc)
+    NativeImageDataMISC(String* localImageSrc)
     {
         auto utf8Data = localImageSrc->toUTF8NonGCString();
         FILE* fp = fopen(utf8Data.data(), "rb");
@@ -44,7 +44,7 @@ public:
         registerFinalizer();
     }
 
-    ImageDataMISC(const char* buf, size_t len)
+    NativeImageDataMISC(const char* buf, size_t len)
     {
         if (buf && len != 0) {
             decodeImage(nullptr, nullptr, buf, len);
@@ -52,7 +52,7 @@ public:
         }
     }
 
-    ImageDataMISC(size_t w, size_t h)
+    NativeImageDataMISC(size_t w, size_t h)
     {
         m_image = (unsigned char*)malloc(w * h * 4);
         m_width = w;
@@ -93,7 +93,7 @@ public:
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
             [](void* obj, void* cd) {
-                ImageDataMISC* self = (ImageDataMISC*)obj;
+                NativeImageDataMISC* self = (NativeImageDataMISC*)obj;
                 if (self->m_imageSurface) {
                     cairo_surface_destroy(self->m_imageSurface);
                 }
@@ -679,27 +679,27 @@ protected:
     cairo_surface_t* m_imageSurface;
 };
 
-ImageData* ImageData::create(String* localImageSrc)
+NativeImageData* NativeImageData::create(String* localImageSrc)
 {
-    ImageData* imageData = new ImageDataMISC(localImageSrc);
+    NativeImageData* imageData = new NativeImageDataMISC(localImageSrc);
     if (imageData->data() == NULL) {
         return NULL;
     }
     return imageData;
 }
 
-ImageData* ImageData::create(const char* buf, size_t len)
+NativeImageData* NativeImageData::create(const char* buf, size_t len)
 {
-    ImageData* imageData = new ImageDataMISC(buf, len);
+    NativeImageData* imageData = new NativeImageDataMISC(buf, len);
     if (imageData->data() == NULL) {
         return NULL;
     }
     return imageData;
 }
 
-ImageData* ImageData::create(size_t width, size_t height)
+NativeImageData* NativeImageData::create(size_t width, size_t height)
 {
-    return new ImageDataMISC(width, height);
+    return new NativeImageDataMISC(width, height);
 }
 }
 

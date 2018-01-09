@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 
 #if defined(PORT_IMAGEDECODER_BACKEND_EFL)
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 #include "platform/file/File.h"
 
 #include <Elementary.h>
@@ -26,11 +26,11 @@ namespace StarFish {
 
 Evas* internalCanvas();
 
-class ImageDataEFL : public ImageData {
+class NativeImageDataEFL : public NativeImageData {
 public:
-    ImageDataEFL(String* localImageSrc)
+    NativeImageDataEFL(String* localImageSrc)
     {
-        // STARFISH_LOG_INFO("ImageDataEFL::ImageDataEFL %s\n",
+        // STARFISH_LOG_INFO("NativeImageDataEFL::NativeImageDataEFL %s\n",
         // localImageSrc->toUTF8NonGCString().data();
         m_image = evas_object_image_add(internalCanvas());
         m_hasTransparentPixel = true;
@@ -54,7 +54,7 @@ public:
         m_image = NULL;
     }
 
-    ImageDataEFL(const char* buf, size_t len)
+    NativeImageDataEFL(const char* buf, size_t len)
     {
         m_image = evas_object_image_add(internalCanvas());
         m_hasTransparentPixel = true;
@@ -78,7 +78,7 @@ public:
         m_image = NULL;
     }
 
-    ImageDataEFL(size_t w, size_t h)
+    NativeImageDataEFL(size_t w, size_t h)
     {
         m_image = evas_object_image_add(internalCanvas());
         m_hasTransparentPixel = true;
@@ -147,7 +147,7 @@ public:
     {
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
-                                           // STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL\n");
+                                           // STARFISH_LOG_INFO("NativeImageDataEFL::~NativeImageDataEFL\n");
                                            Evas_Object* m = (Evas_Object*)cd;
                                            evas_object_hide(m);
                                            evas_object_del(m);
@@ -192,27 +192,27 @@ protected:
     size_t m_height;
 };
 
-ImageData* ImageData::create(String* localImageSrc)
+NativeImageData* NativeImageData::create(String* localImageSrc)
 {
-    ImageData* imageData = new ImageDataEFL(localImageSrc);
+    NativeImageData* imageData = new NativeImageDataEFL(localImageSrc);
     if (imageData->unwrap() == NULL) {
         return NULL;
     }
     return imageData;
 }
 
-ImageData* ImageData::create(const char* buf, size_t len)
+NativeImageData* NativeImageData::create(const char* buf, size_t len)
 {
-    ImageData* imageData = new ImageDataEFL(buf, len);
+    NativeImageData* imageData = new NativeImageDataEFL(buf, len);
     if (imageData->unwrap() == NULL) {
         return NULL;
     }
     return imageData;
 }
 
-ImageData* ImageData::create(size_t width, size_t height)
+NativeImageData* NativeImageData::create(size_t width, size_t height)
 {
-    return new ImageDataEFL(width, height);
+    return new NativeImageDataEFL(width, height);
 }
 }
 

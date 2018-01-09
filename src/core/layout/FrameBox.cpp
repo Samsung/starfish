@@ -27,7 +27,7 @@
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 
@@ -602,7 +602,8 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
             frameBoxRareData()->m_bufferForBorderRadius->height() !=
                 height().toUnsigned()) {
             frameBoxRareData()->m_bufferForBorderRadius =
-                ImageData::create(width().toUnsigned(), height().toUnsigned());
+                NativeImageData::create(width().toUnsigned(),
+                                        height().toUnsigned());
         }
 
         canvas = Canvas::createGenericCanvas(
@@ -624,8 +625,9 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
                     width().toUnsigned() ||
                 frameBoxRareData()->m_bufferForBorderRadius->height() !=
                     height().toUnsigned()) {
-                frameBoxRareData()->m_bufferForBorderRadius = ImageData::create(
-                    width().toUnsigned(), height().toUnsigned());
+                frameBoxRareData()->m_bufferForBorderRadius =
+                    NativeImageData::create(width().toUnsigned(),
+                                            height().toUnsigned());
             }
 
             canvas = Canvas::createGenericCanvas(
@@ -762,7 +764,7 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
 
     for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
         unsigned int idx = style->backgroundLayerSize() - i - 1;
-        ImageData* id = style->backgroundImageData(idx);
+        NativeImageData* id = style->backgroundImageData(idx);
         if (id && id->width() && id->height()) {
             Unit::Rect paintingRect;
             Unit::Rect positioningRect;
@@ -990,7 +992,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
         size_t bSlice =
             border.image().slices().bottom().specifiedValue(height(), this);
 
-        ImageData* imgData = border.image().imageData();
+        NativeImageData* imgData = border.image().imageData();
 
         if (bImgSlice > imgWidth || bImgSlice > imgHeight) {
             bImgSlice = std::min(imgWidth, imgHeight);

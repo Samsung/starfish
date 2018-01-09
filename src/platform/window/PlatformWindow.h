@@ -24,7 +24,7 @@ class Canvas;
 class Compositor;
 class Node;
 class WebView;
-class ImageData;
+class NativeImageData;
 class MouseData;
 class TouchData;
 class KeyboardData;
@@ -126,7 +126,7 @@ protected:
     int m_virtualCursorY;
     int m_virtualCursorSpeed;
     uint64_t m_virtualCursorMoveingLastTimestamp;
-    ImageData* m_virtualCursorImageData;
+    NativeImageData* m_virtualCursorImageData;
 #endif
 };
 }

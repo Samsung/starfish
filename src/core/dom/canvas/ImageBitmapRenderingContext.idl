@@ -1,0 +1,7 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#imagebitmaprenderingcontext
+
+[STARFISH_ENABLE_CANVAS, Exposed=Window]
+interface ImageBitmapRenderingContext {
+    readonly attribute HTMLCanvasElement canvas;
+    [Unimplemented, RaisesException] void transferFromImageBitmap(ImageBitmap? bitmap);
+};

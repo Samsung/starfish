@@ -19,16 +19,16 @@
 #include "core/dom/HTMLImageElement.h"
 #include "core/layout/FrameReplacedImage.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace StarFish {
 void FrameReplacedImage::paintReplaced(Canvas* canvas)
 {
     FrameReplaced::paintReplaced(canvas);
 
-    ImageData* id = node()->asHTMLImageElement()->imageData();
+    NativeImageData* id = node()->asHTMLImageElement()->imageData();
     if (id) {
-        if (id->preserveAspectRatioValue() == ImageData::None) {
+        if (id->preserveAspectRatioValue() == NativeImageData::None) {
             canvas->drawImage(
                 id, Unit::Rect(borderLeft() + paddingLeft(),
                                borderTop() + paddingTop(),
@@ -68,25 +68,25 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
 
             LayoutUnit x, y;
 
-            if (v == ImageData::xMinYMin) {
-            } else if (v == ImageData::xMidYMin) {
+            if (v == NativeImageData::xMinYMin) {
+            } else if (v == NativeImageData::xMidYMin) {
                 x = remainX / 2;
-            } else if (v == ImageData::xMaxYMin) {
+            } else if (v == NativeImageData::xMaxYMin) {
                 x = remainX;
-            } else if (v == ImageData::xMinYMid) {
+            } else if (v == NativeImageData::xMinYMid) {
                 y = remainY / 2;
-            } else if (v == ImageData::xMidYMid) {
+            } else if (v == NativeImageData::xMidYMid) {
                 x = remainX / 2;
                 y = remainY / 2;
-            } else if (v == ImageData::xMaxYMid) {
+            } else if (v == NativeImageData::xMaxYMid) {
                 x = remainX;
                 y = remainY / 2;
-            } else if (v == ImageData::xMinYMax) {
+            } else if (v == NativeImageData::xMinYMax) {
                 y = remainY;
-            } else if (v == ImageData::xMidYMax) {
+            } else if (v == NativeImageData::xMidYMax) {
                 x = remainX / 2;
                 y = remainY;
-            } else if (v == ImageData::xMaxYMax) {
+            } else if (v == NativeImageData::xMaxYMax) {
                 x = remainX;
                 y = remainY;
             }
@@ -100,7 +100,7 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
 IntrinsicSize FrameReplacedImage::intrinsicSize()
 {
     IntrinsicSize result;
-    ImageData* id = node()->asHTMLImageElement()->imageData();
+    NativeImageData* id = node()->asHTMLImageElement()->imageData();
     if (id) {
         result.m_hasAspectRatio = true;
         result.m_isContentExists = true;

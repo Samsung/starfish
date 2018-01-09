@@ -63,7 +63,7 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    ImageData* m_surface;
+    NativeImageData* m_surface;
 };
 }
 

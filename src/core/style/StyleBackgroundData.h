@@ -21,7 +21,7 @@
 
 namespace StarFish {
 
-class ImageData;
+class NativeImageData;
 class ImageResource;
 class ComputedStyle;
 
@@ -135,7 +135,7 @@ public:
         return m_image;
     }
 
-    ImageData* imageData() const;
+    NativeImageData* imageData() const;
 
     ImageResource* imageResource() const
     {
@@ -413,7 +413,7 @@ public:
         return m_layers[layer].bgImage();
     }
 
-    ImageData* bgImageData(unsigned int layer = 0) const
+    NativeImageData* bgImageData(unsigned int layer = 0) const
     {
         if (m_layers.size() <= layer) {
             return nullptr;

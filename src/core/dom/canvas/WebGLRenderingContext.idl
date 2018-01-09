@@ -1,0 +1,4 @@
+// https://www.khronos.org/registry/webgl/specs/latest/1.0/#WebGLRenderingContext
+
+[STARFISH_ENABLE_CANVAS]
+interface WebGLRenderingContext { };

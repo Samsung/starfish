@@ -18,21 +18,21 @@
 
 #if defined(PORT_IMAGEDECODER_BACKEND_MOCK)
 
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace StarFish {
 
-class ImageDataMock : public ImageData {
+class NativeImageDataMock : public NativeImageData {
 public:
-    ImageDataMock(String* localImageSrc)
+    NativeImageDataMock(String* localImageSrc)
     {
     }
 
-    ImageDataMock(const char* buf, size_t len)
+    NativeImageDataMock(const char* buf, size_t len)
     {
     }
 
-    ImageDataMock(size_t w, size_t h)
+    NativeImageDataMock(size_t w, size_t h)
     {
     }
 
@@ -83,27 +83,27 @@ public:
 protected:
 };
 
-ImageData* ImageData::create(String* localImageSrc)
+NativeImageData* NativeImageData::create(String* localImageSrc)
 {
-    ImageData* imageData = new ImageDataMock(localImageSrc);
+    NativeImageData* imageData = new NativeImageDataMock(localImageSrc);
     if (imageData->data() == NULL) {
         return NULL;
     }
     return imageData;
 }
 
-ImageData* ImageData::create(const char* buf, size_t len)
+NativeImageData* NativeImageData::create(const char* buf, size_t len)
 {
-    ImageData* imageData = new ImageDataMock(buf, len);
+    NativeImageData* imageData = new NativeImageDataMock(buf, len);
     if (imageData->data() == NULL) {
         return NULL;
     }
     return imageData;
 }
 
-ImageData* ImageData::create(size_t width, size_t height)
+NativeImageData* NativeImageData::create(size_t width, size_t height)
 {
-    return new ImageDataMock(width, height);
+    return new NativeImageDataMock(width, height);
 }
 }
 

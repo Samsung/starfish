@@ -14,12 +14,12 @@
  *    limitations under the License.
  */
 
-#ifndef __ImageData__
-#define __ImageData__
+#ifndef __NativeImageData__
+#define __NativeImageData__
 
 namespace StarFish {
 
-class ImageData : public gc {
+class NativeImageData : public gc {
 public:
     enum PreserveAspectRatioValue {
         None,
@@ -34,10 +34,10 @@ public:
         xMaxYMax,
     };
 
-    static ImageData* create(
+    static NativeImageData* create(
         String* localImageSrc); // this is only for EFL backend
-    static ImageData* create(const char* buf, size_t len);
-    static ImageData* create(size_t width, size_t height);
+    static NativeImageData* create(const char* buf, size_t len);
+    static NativeImageData* create(size_t width, size_t height);
 
     virtual size_t bufferSize() = 0;
     virtual uint8_t* data() = 0;
@@ -48,7 +48,7 @@ public:
     virtual size_t height() = 0;
     virtual size_t stride() = 0;
     virtual bool hasTransparentPixel() = 0;
-    virtual ~ImageData()
+    virtual ~NativeImageData()
     {
     }
 
@@ -63,7 +63,7 @@ public:
     }
 
 protected:
-    ImageData()
+    NativeImageData()
     {
         m_preserveAspectRatioValue = None;
     }

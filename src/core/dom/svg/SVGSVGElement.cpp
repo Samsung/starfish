@@ -66,14 +66,14 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name, String* old,
 
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     } else if (name == starFish()->staticStrings()->m_preserveAspectRatio) {
-#define SET_PARV(name)                                \
-    else if (value->equals(#name))                    \
-    {                                                 \
-        m_preserveAspectRatioValue = ImageData::name; \
+#define SET_PARV(name)                                      \
+    else if (value->equals(#name))                          \
+    {                                                       \
+        m_preserveAspectRatioValue = NativeImageData::name; \
     }
 
         if (value->equals("none")) {
-            m_preserveAspectRatioValue = ImageData::None;
+            m_preserveAspectRatioValue = NativeImageData::None;
         }
         SET_PARV(xMinYMin)
         SET_PARV(xMidYMin)

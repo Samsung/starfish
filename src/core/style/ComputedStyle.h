@@ -927,7 +927,7 @@ public:
         return background->bgImage(layer);
     }
 
-    ImageData* backgroundImageData(unsigned int layer = 0)
+    NativeImageData* backgroundImageData(unsigned int layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {

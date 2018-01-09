@@ -17,11 +17,11 @@
 #include "StarFishConfig.h"
 #include "platform/loader/ImageResource.h"
 #include "core/style/StyleBackgroundData.h"
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace StarFish {
 
-ImageData* BackgroundLayer::imageData() const
+NativeImageData* BackgroundLayer::imageData() const
 {
     if (m_imageResource) {
         return m_imageResource->imageData();

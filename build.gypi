@@ -73,6 +73,7 @@
             #'STARFISH_ENABLE_TEST',
             'STARFISH_IGNORE_CROSS_ORIGIN',
             'STARFISH_ENABLE_SHELL',
+            # 'STARFISH_ENABLE_CANVAS',
             'TIZEN_DEVICE_API',
             'SIZE_MAX=0xffffffff',
         ],
