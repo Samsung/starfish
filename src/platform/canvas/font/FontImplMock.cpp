@@ -78,7 +78,8 @@ public:
 
 class PlatformFontSelectorImplMock : public PlatformFontSelector {
 public:
-    PlatformFontSelectorImplMock()
+    PlatformFontSelectorImplMock(StarFish* sf)
+        : PlatformFontSelector(sf)
     {
         m_face = new FontFaceImplMock();
     }
@@ -108,7 +109,7 @@ public:
 
 PlatformFontSelector* PlatformFontSelector::create(StarFish* sf)
 {
-    return new PlatformFontSelectorImplMock();
+    return new PlatformFontSelectorImplMock(sf);
 }
 
 PlatformFontCache* PlatformFontCache::create(StarFish* sf)

@@ -63,7 +63,10 @@ public:
     {
         m_element->m_imageResource = nullptr;
         ImageData* imageDataBefore = m_element->imageData();
-        STARFISH_ASSERT(imageData);
+        if (!imageData) {
+            // imageData can be null in mock port
+            return;
+        }
 
         LayoutSize sizeBefore(0, 0);
         LayoutSize sizeNow(imageData->width(), imageData->height());
