@@ -1633,8 +1633,9 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
 
                 if (!aToken->value()->hasASCIIContent()) {
                     auto s = aToken->value()->toString()->toUTF8NonGCString();
-                    STARFISH_LOG_ERROR("CSSParser: Unsupported property: %s\n",
-                                       s.data());
+                    // STARFISH_LOG_ERROR("CSSParser: Unsupported property:
+                    // %s\n",
+                    //                    s.data());
                 } else {
                     struct Sender {
                         bool priority;
@@ -1661,9 +1662,9 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
 #ifndef NDEBUG
                             if (((Sender*)data)->kind ==
                                 CSSStyleKind::Unknown) {
-                                STARFISH_LOG_ERROR(
-                                    "CSSParser: Unsupported property: %s\n",
-                                    name);
+                                // STARFISH_LOG_ERROR(
+                                //     "CSSParser: Unsupported property: %s\n",
+                                //     name);
                             }
 #endif
                             if (((Sender*)data)->kind == CSSStyleKind::Src &&

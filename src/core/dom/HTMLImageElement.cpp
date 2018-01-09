@@ -59,10 +59,10 @@ public:
         updateImage(m_resource->asImageResource()->imageData());
     }
 
-    void updateImage(ImageData* imageData)
+    void updateImage(NativeImageData* imageData)
     {
         m_element->m_imageResource = nullptr;
-        ImageData* imageDataBefore = m_element->imageData();
+        NativeImageData* imageDataBefore = m_element->imageData();
         if (!imageData) {
             // imageData can be null in mock port
             return;

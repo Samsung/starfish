@@ -77,7 +77,7 @@ protected:
 
             size_t w = (int)svgBox->width();
             size_t h = (int)svgBox->height();
-            ImageData* imageData = ImageData::create(w, h);
+            NativeImageData* imageData = NativeImageData::create(w, h);
             imageData->clear();
             Canvas* canvas = Canvas::createGenericCanvas(
                 m_browsingContext->starFish(), imageData->data(),
@@ -114,7 +114,7 @@ void ImageResource::doLoadFile(void* data)
             res->didLoadFailed();
             return;
         }
-        ImageData* id = ImageData::create(filePath);
+        NativeImageData* id = NativeImageData::create(filePath);
         if (!id) {
             res->didLoadFailed();
             return;
@@ -181,16 +181,17 @@ void ImageResource::didLoadFinished()
     }
 #if defined(PORT_CANVAS_BACKEND_EFL)
     if (!m_url->isFileURL()) {
-        m_imageData = ImageData::create(m_resourceRequest->response().data(),
-                                        m_resourceRequest->response().size());
+        m_imageData =
+            NativeImageData::create(m_resourceRequest->response().data(),
+                                    m_resourceRequest->response().size());
         if (!m_imageData) {
             Resource::didLoadFailed();
             return;
         }
     }
 #else
-    m_imageData = ImageData::create(m_resourceRequest->response().data(),
-                                    m_resourceRequest->response().size());
+    m_imageData = NativeImageData::create(m_resourceRequest->response().data(),
+                                          m_resourceRequest->response().size());
     if (!m_imageData) {
         Resource::didLoadFailed();
         return;

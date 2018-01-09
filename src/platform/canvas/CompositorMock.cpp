@@ -111,11 +111,11 @@ public:
     {
     }
 
-    virtual void drawImage(ImageData* data, const Unit::Rect& dst)
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
     {
     }
 
-    virtual void drawRepeatImage(ImageData* data, const Unit::Rect& dst,
+    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat)
     {

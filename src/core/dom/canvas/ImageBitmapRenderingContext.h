@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,17 +14,26 @@
  *    limitations under the License.
  */
 
-#include "StarFishConfig.h"
-#include "core/style/BorderImage.h"
-#include "platform/loader/ImageResource.h"
-#include "core/modules/canvas/image/NativeImageData.h"
+#ifndef __StarFishImageBitmapRenderingContext__
+#define __StarFishImageBitmapRenderingContext__
+
+#ifdef STARFISH_ENABLE_CANVAS
+
+#include "core/dom/canvas/RenderingContext.h"
 
 namespace StarFish {
-NativeImageData* BorderImage::imageData()
-{
-    if (!isNull() && data()->m_imageResource) {
-        return data()->m_imageResource->imageData();
+
+class ImageBitmapRenderingContext : public RenderingContext {
+public:
+    ImageBitmapRenderingContext(HTMLCanvasElement* canvasElement)
+        : RenderingContext(canvasElement)
+    {
     }
-    return NULL;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isImageBitmapRenderingContext() const override;
+};
 }
-}
+
+#endif
+#endif

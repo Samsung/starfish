@@ -1,0 +1,168 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
+
+enum CanvasFillRule { "nonzero", "evenodd" };
+
+[STARFISH_ENABLE_CANVAS, Exposed=Window]
+interface CanvasRenderingContext2D {
+  // back-reference to the canvas
+  readonly attribute HTMLCanvasElement canvas;
+
+  // CanvasState
+  void save(); // push state on state stack
+  void restore(); // pop state stack and restore state
+
+  // CanvasTransform
+  void scale(unrestricted double x, unrestricted double y);
+  void rotate(unrestricted double angle);
+  void translate(unrestricted double x, unrestricted double y);
+  void transform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
+
+  [Unimplemented, NewObject] DOMMatrix getTransform();
+  [Unimplemented] void setTransform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
+  [Unimplemented] void setTransform(optional DOMMatrix2DInit transform);
+  [Unimplemented] void resetTransform();
+
+  // CanvasCompositing
+  attribute unrestricted double globalAlpha; // (default 1.0)
+  attribute DOMString globalCompositeOperation; // (default source-over)
+
+  // CanvasImageSmoothing
+  [Unimplemented] attribute boolean imageSmoothingEnabled; // (default true)
+  [Unimplemented] attribute ImageSmoothingQuality imageSmoothingQuality; // (default low)
+
+  // CanvasFillStrokeStyles
+  [Unimplemented] attribute (DOMString or CanvasGradient or CanvasPattern) strokeStyle; // (default black)
+  attribute (DOMString or CanvasGradient or CanvasPattern) fillStyle; // (default black)
+  CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
+  [Unimplemented] CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
+  [Unimplemented] CanvasPattern? createPattern(CanvasImageSource image, [TreatNullAs=EmptyString] DOMString repetition);
+
+  // CanvasShadowStyles
+  [Unimplemented] attribute unrestricted double shadowOffsetX; // (default 0)
+  [Unimplemented] attribute unrestricted double shadowOffsetY; // (default 0)
+  [Unimplemented] attribute unrestricted double shadowBlur; // (default 0)
+  [Unimplemented] attribute DOMString shadowColor; // (default transparent black)
+
+  // CanvasFilters
+  attribute DOMString filter; // (default "none")
+
+  // CanvasRect
+  [Unimplemented] void clearRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
+  void fillRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
+  [Unimplemented] void strokeRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
+
+  // CanvasDrawPath
+  void beginPath();
+  void fill(optional CanvasFillRule fillRule = "nonzero");
+  void fill(Path2D path, optional CanvasFillRule fillRule = "nonzero");
+  void stroke();
+  [Unimplemented] void stroke(Path2D path);
+  [Unimplemented] void clip(optional CanvasFillRule fillRule = "nonzero");
+  [Unimplemented] void clip(Path2D path, optional CanvasFillRule fillRule = "nonzero");
+  [Unimplemented] void resetClip();
+  [Unimplemented] boolean isPointInPath(unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero");
+  [Unimplemented] boolean isPointInPath(Path2D path, unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero");
+  [Unimplemented] boolean isPointInStroke(unrestricted double x, unrestricted double y);
+  [Unimplemented] boolean isPointInStroke(Path2D path, unrestricted double x, unrestricted double y);
+
+  // CanvasUserInterface
+  [Unimplemented] void drawFocusIfNeeded(Element element);
+  [Unimplemented] void drawFocusIfNeeded(Path2D path, Element element);
+  [Unimplemented] void scrollPathIntoView();
+  [Unimplemented] void scrollPathIntoView(Path2D path);
+
+  // CanvasText
+  [Unimplemented] void fillText(DOMString text, unrestricted double x, unrestricted double y, optional unrestricted double maxWidth);
+  [Unimplemented] void strokeText(DOMString text, unrestricted double x, unrestricted double y, optional unrestricted double maxWidth);
+  [Unimplemented] TextMetrics measureText(DOMString text);
+
+
+  // CanvasDrawImage
+  // NOTE Replace first argument's type of "drawImage" temporarily to implement mock
+  // CanvasImageSource -> any
+  void drawImage(any image, unrestricted double dx, unrestricted double dy);
+  void drawImage(any image, unrestricted double dx, unrestricted double dy, unrestricted double dw, unrestricted double dh);
+  void drawImage(any image, unrestricted double sx, unrestricted double sy, unrestricted double sw, unrestricted double sh, unrestricted double dx, unrestricted double dy, unrestricted double dw, unrestricted double dh);
+
+  // CanvasImageData
+  [Unimplemented] ImageData createImageData(long sw, long sh);
+  [Unimplemented] ImageData createImageData(ImageData imagedata);
+  ImageData getImageData(long sx, long sy, long sw, long sh);
+  [Unimplemented] void putImageData(ImageData imagedata, long dx, long dy);
+  [Unimplemented] void putImageData(ImageData imagedata, long dx, long dy, long dirtyX, long dirtyY, long dirtyWidth, long dirtyHeight);
+
+
+  // CanvasPathDrawingStyles
+  [Unimplemented] attribute unrestricted double lineWidth; // (default 1)
+  [Unimplemented] attribute CanvasLineCap lineCap; // (default "butt")
+  [Unimplemented] attribute CanvasLineJoin lineJoin; // (default "miter")
+  [Unimplemented] attribute unrestricted double miterLimit; // (default 10)
+
+  // dashed lines
+  [Unimplemented] void setLineDash(sequence<unrestricted double> segments); // default empty
+  [Unimplemented] sequence<unrestricted double> getLineDash();
+  [Unimplemented] attribute unrestricted double lineDashOffset;
+
+  // CanvasTextDrawingStyles
+  [Unimplemented] attribute DOMString font; // (default 10px sans-serif)
+  [Unimplemented] attribute CanvasTextAlign textAlign; // (default: "start")
+  [Unimplemented] attribute CanvasTextBaseline textBaseline; // (default: "alphabetic")
+  [Unimplemented] attribute CanvasDirection direction; // (default: "inherit")
+
+  // CanvasPath
+  void closePath();
+  void moveTo(unrestricted double x, unrestricted double y);
+  void lineTo(unrestricted double x, unrestricted double y);
+  [Unimplemented] void quadraticCurveTo(unrestricted double cpx, unrestricted double cpy, unrestricted double x, unrestricted double y);
+  [Unimplemented] void bezierCurveTo(unrestricted double cp1x, unrestricted double cp1y, unrestricted double cp2x, unrestricted double cp2y, unrestricted double x, unrestricted double y);
+  [Unimplemented] void arcTo(unrestricted double x1, unrestricted double y1, unrestricted double x2, unrestricted double y2, unrestricted double radius); 
+  [Unimplemented] void arcTo(unrestricted double x1, unrestricted double y1, unrestricted double x2, unrestricted double y2, unrestricted double radiusX, unrestricted double radiusY, unrestricted double rotation); 
+  void rect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
+  void arc(unrestricted double x, unrestricted double y, unrestricted double radius, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false); 
+  void ellipse(unrestricted double x, unrestricted double y, unrestricted double radiusX, unrestricted double radiusY, unrestricted double rotation, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false);
+};
+
+[STARFISH_ENABLE_CANVAS, Exposed=(Window,Worker)]
+interface CanvasGradient {
+  // opaque object
+  void addColorStop(double offset, DOMString color);
+};
+
+[STARFISH_ENABLE_CANVAS, Exposed=(Window,Worker)]
+interface CanvasPattern {
+  // opaque object
+  [Unimplemented] void setTransform(optional DOMMatrix2DInit transform);
+};
+
+[STARFISH_ENABLE_CANVAS,
+ UnimplementedConstructor(unsigned long sw, unsigned long sh),
+ UnimplementedConstructor(Uint8ClampedArray data, unsigned long sw, optional unsigned long sh),
+ Exposed=(Window,Worker),
+ Serializable]
+interface ImageData {
+  readonly attribute unsigned long width;
+  readonly attribute unsigned long height;
+  readonly attribute Uint8ClampedArray data;
+};
+
+[STARFISH_ENABLE_CANVAS,
+ UnimplementedConstructor,
+ UnimplementedConstructor(Path2D path),
+ UnimplementedConstructor(sequence<Path2D> paths, optional CanvasFillRule fillRule = "nonzero"),
+ UnimplementedConstructor(DOMString d),
+ Exposed=(Window,Worker)]
+interface Path2D {
+  [Unimplemented] void addPath(Path2D path, optional DOMMatrix2DInit transform);
+
+  // CanvasPath
+  void closePath();
+  void moveTo(unrestricted double x, unrestricted double y);
+  void lineTo(unrestricted double x, unrestricted double y);
+  [Unimplemented] void quadraticCurveTo(unrestricted double cpx, unrestricted double cpy, unrestricted double x, unrestricted double y);
+  [Unimplemented] void bezierCurveTo(unrestricted double cp1x, unrestricted double cp1y, unrestricted double cp2x, unrestricted double cp2y, unrestricted double x, unrestricted double y);
+  [Unimplemented] void arcTo(unrestricted double x1, unrestricted double y1, unrestricted double x2, unrestricted double y2, unrestricted double radius); 
+  [Unimplemented] void arcTo(unrestricted double x1, unrestricted double y1, unrestricted double x2, unrestricted double y2, unrestricted double radiusX, unrestricted double radiusY, unrestricted double rotation); 
+  void rect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
+  void arc(unrestricted double x, unrestricted double y, unrestricted double radius, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false); 
+  void ellipse(unrestricted double x, unrestricted double y, unrestricted double radiusX, unrestricted double radiusY, unrestricted double rotation, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false);
+};

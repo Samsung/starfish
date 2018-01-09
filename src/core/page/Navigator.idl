@@ -16,6 +16,11 @@
   [Unimplemented] readonly attribute DOMString[] languages;
 };
 
+[
+  PartialInterface
+] interface NavigatorOnLine {
+  readonly attribute boolean onLine;
+};
 
 interface Navigator {
   // Partial

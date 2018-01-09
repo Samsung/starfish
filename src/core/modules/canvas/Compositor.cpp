@@ -140,7 +140,7 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual void drawImage(ImageData* data, const Unit::Rect& dst)
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
     {
         m_compositor->drawImage(data, dst);
     }
@@ -150,13 +150,13 @@ public:
         m_compositor->drawSurface(data, dst);
     }
 
-    virtual void drawBorderImage(ImageData* data, const Unit::Rect& dst,
+    virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
                                  size_t l, size_t t, size_t r, size_t b,
                                  double scale, bool fill)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    virtual void drawRepeatImage(ImageData* data, const Unit::Rect& dst,
+    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat)
     {

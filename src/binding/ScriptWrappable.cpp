@@ -286,6 +286,11 @@ ScriptValue createScriptValue(ScriptArrayBufferView buffer)
     return ValueRef::create(buffer);
 }
 
+ScriptValue createScriptValue(ScriptUint8ClampedArray array)
+{
+    return ValueRef::create(array);
+}
+
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error)
@@ -474,6 +479,14 @@ ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
     obj->attachBuffer(bufferSrc, len);
     state->destroy();
     return ValueRef::create(obj);
+}
+
+ScriptUint8ClampedArray createEmptyUint8ClampedArray(
+    ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    return Uint8ClampedArrayObjectRef::create(state);
 }
 
 ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData)

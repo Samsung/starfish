@@ -28,7 +28,7 @@ namespace StarFish {
                Length(Length::Fixed, 0), Length(Length::Fixed, 0)))
 #define DEFAULT_VALUE_IMAGE_REPEAT() (StretchValue)
 
-class ImageData;
+class NativeImageData;
 class ImageResource;
 class ComputedStyle;
 
@@ -128,7 +128,7 @@ public:
     {
         return isNull() ? DEFAULT_VALUE_IMAGE_WIDTH() : m_data->m_widths;
     }
-    ImageData* imageData();
+    NativeImageData* imageData();
 
     ImageResource* imageResource()
     {

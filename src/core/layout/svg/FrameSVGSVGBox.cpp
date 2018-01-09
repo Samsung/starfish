@@ -88,8 +88,8 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 
     if (!m_surface || (float)contentWidth() != m_surface->width() ||
         (float)contentHeight() != m_surface->height()) {
-        m_surface =
-            ImageData::create((float)contentWidth(), (float)contentHeight());
+        m_surface = NativeImageData::create((float)contentWidth(),
+                                            (float)contentHeight());
     }
     m_surface->clear();
 

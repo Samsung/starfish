@@ -35,6 +35,7 @@ typedef Escargot::StringRef* ScriptString;
 typedef Escargot::FunctionObjectRef* ScriptFunction;
 typedef Escargot::ArrayBufferObjectRef* ScriptArrayBuffer;
 typedef Escargot::ArrayBufferViewRef* ScriptArrayBufferView;
+typedef Escargot::Uint8ClampedArrayObjectRef* ScriptUint8ClampedArray;
 
 ScriptValue scriptNull();
 ScriptValue scriptUndefined();
@@ -73,6 +74,7 @@ ScriptValue createScriptValue(ScriptObject object);
 ScriptValue createScriptValue(ScriptString s);
 ScriptValue createScriptValue(ScriptArrayBuffer buffer);
 ScriptValue createScriptValue(ScriptArrayBufferView buffer);
+ScriptValue createScriptValue(ScriptUint8ClampedArray array);
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error);
@@ -90,6 +92,8 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            bool* result = nullptr);
 ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
                               size_t len);
+ScriptUint8ClampedArray createEmptyUint8ClampedArray(
+    ScriptBindingInstance* instance);
 ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData);
 double parseDate(ScriptBindingInstance* instance, String* date);
 String* timeToUTCString(ScriptBindingInstance* instance, int64_t time);

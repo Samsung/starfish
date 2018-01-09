@@ -25,7 +25,7 @@
 #include "core/page/Window.h"
 #include "core/modules/canvas/Canvas.h"
 #include "platform/window/VirtualCursor.h"
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/MouseEvent.h"
 #include "core/modules/message_loop/Timer.h"
@@ -247,7 +247,7 @@ void PlatformWindow::paintVirtualCursor(Canvas* canvas)
         m_virtualCursorY = height() / 2;
     }
     if (!m_virtualCursorImageData) {
-        m_virtualCursorImageData = ImageData::create(
+        m_virtualCursorImageData = NativeImageData::create(
             (const char*)g_virtualCursorPNGData, g_virtualCursorPNGDataSize);
     }
 

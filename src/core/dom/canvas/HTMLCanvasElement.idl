@@ -1,0 +1,19 @@
+// https://html.spec.whatwg.org/#the-canvas-element
+
+typedef (CanvasRenderingContext2D or
+         WebGLRenderingContext or
+         ImageBitmapRenderingContext) RenderingContext;
+
+[STARFISH_ENABLE_CANVAS]
+interface HTMLCanvasElement : HTMLElement
+{
+    [RaisesException=Setter, CEReactions] attribute unsigned long width;
+    [RaisesException=Setter, CEReactions] attribute unsigned long height;
+
+    [Unimplemented, RaisesException] DOMString toDataURL(optional DOMString type = null, optional any arguments);
+
+    [Unimplemented, MeasureAs=CanvasToBlob, RaisesException] void toBlob(BlobCallback _callback, optional DOMString type = null, optional any arguments);
+
+    [RaisesException] RenderingContext? getContext(DOMString contextId, any... arguments);
+    [Unimplemented, RaisesException] OffscreenCanvas transferControlToOffscreen();
+};

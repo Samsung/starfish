@@ -1347,7 +1347,7 @@ StyleSheetList* Document::styleSheets()
     return m_styleSheetList;
 }
 
-ImageData* Document::brokenImage()
+NativeImageData* Document::brokenImage()
 {
     if (m_didLoadBrokenImage) {
         return m_brokenImage;

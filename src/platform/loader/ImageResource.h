@@ -18,11 +18,11 @@
 #define __StarFishImageResource__
 
 #include "platform/loader/Resource.h"
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace StarFish {
 
-class ImageData;
+class NativeImageData;
 class MockHTMLIFrameElement;
 
 class ImageResource : public Resource {
@@ -52,7 +52,7 @@ public:
         return true;
     }
 
-    ImageData* imageData()
+    NativeImageData* imageData()
     {
         return m_imageData;
     }
@@ -79,7 +79,7 @@ public:
     static void doLoadFile(void*);
 #endif
 protected:
-    ImageData* m_imageData;
+    NativeImageData* m_imageData;
     MockHTMLIFrameElement* m_mockFrameForSVGDocument;
 };
 }

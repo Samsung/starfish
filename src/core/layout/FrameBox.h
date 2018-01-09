@@ -66,7 +66,7 @@ struct FrameBoxRareData : public gc {
     LayoutBoxSurroundData m_padding, m_border, m_margin;
     StackingContext* m_stackingContext;
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
-    ImageData* m_bufferForBorderRadius;
+    NativeImageData* m_bufferForBorderRadius;
 #endif
 
     FrameBoxRareData(Frame* layoutParent)

@@ -36,7 +36,7 @@ class Element;
 class HTMLBodyElement;
 class HTMLHeadElement;
 class HTMLHtmlElement;
-class ImageData;
+class NativeImageData;
 class Location;
 class ResourceRequest;
 class StyleSheetList;
@@ -358,7 +358,7 @@ public:
         return m_loadedWebFontList;
     }
 
-    ImageData* brokenImage();
+    NativeImageData* brokenImage();
     AnimationExecutor* animationExecutor()
     {
         return m_animationExecutor;
@@ -594,7 +594,7 @@ protected:
     StyleResolver* m_styleResolver;
     DocumentBuilder* m_documentBuilder;
     StyleSheetList* m_styleSheetList;
-    ImageData* m_brokenImage;
+    NativeImageData* m_brokenImage;
     AnimationExecutor* m_animationExecutor;
     ScriptBindingInstance* m_scriptBindingInstance;
     size_t m_domVersion;

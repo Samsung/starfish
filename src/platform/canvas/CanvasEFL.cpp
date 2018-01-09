@@ -20,7 +20,7 @@
 #include "StarFish.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 #include "core/style/UnitHelper.h"
 
 #include <Evas.h>
@@ -1208,7 +1208,7 @@ public:
         }
     }
 
-    void drawImageInner(ImageData* data, const Unit::Rect& dst, size_t l,
+    void drawImageInner(NativeImageData* data, const Unit::Rect& dst, size_t l,
                         size_t t, size_t r, size_t b, double scale, bool fill)
     {
         if (canSkipPainting(dst)) {
@@ -1312,19 +1312,19 @@ public:
         }
     }
 
-    virtual void drawImage(ImageData* data, const Unit::Rect& dst)
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
     {
         drawImageInner(data, dst, 0, 0, 0, 0, 1.0, true);
     }
 
-    virtual void drawBorderImage(ImageData* data, const Unit::Rect& dst,
+    virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
                                  size_t l, size_t t, size_t r, size_t b,
                                  double scale, bool fill)
     {
         drawImageInner(data, dst, l, t, r, b, scale, fill);
     }
 
-    virtual void drawRepeatImage(ImageData* data, const Unit::Rect& dst,
+    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat)
     {
@@ -1925,9 +1925,9 @@ protected:
     unsigned m_height;
     size_t m_imageCount;
     std::vector<Evas_Object*>* m_objList;
-    GCUnorderedMap<ImageData*, std::vector<std::pair<Evas_Object*, bool>>,
-                   std::hash<ImageData*>,
-                   std::equal_to<ImageData*>>* m_prevDrawnImageMap;
+    GCUnorderedMap<NativeImageData*, std::vector<std::pair<Evas_Object*, bool>>,
+                   std::hash<NativeImageData*>,
+                   std::equal_to<NativeImageData*>>* m_prevDrawnImageMap;
     CanvasShadowDataList m_textShadowDataList;
 };
 

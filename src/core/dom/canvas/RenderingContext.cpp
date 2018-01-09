@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,17 +14,20 @@
  *    limitations under the License.
  */
 
+#ifdef STARFISH_ENABLE_CANVAS
+
 #include "StarFishConfig.h"
-#include "core/style/BorderImage.h"
-#include "platform/loader/ImageResource.h"
-#include "core/modules/canvas/image/NativeImageData.h"
+#include "StarFish.h"
+#include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/dom/canvas/RenderingContext.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
-NativeImageData* BorderImage::imageData()
+
+ScriptBindingInstance* RenderingContext::scriptBindingInstance()
 {
-    if (!isNull() && data()->m_imageResource) {
-        return data()->m_imageResource->imageData();
-    }
-    return NULL;
+    return m_canvasElement->document()->scriptBindingInstance();
 }
 }
+
+#endif

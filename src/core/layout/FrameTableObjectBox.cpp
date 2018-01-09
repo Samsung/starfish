@@ -21,7 +21,7 @@
 #include "core/dom/HTMLTHElement.h"
 #include "core/layout/FrameTableObjectBox.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace StarFish {
 

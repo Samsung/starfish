@@ -21,7 +21,7 @@
 
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 #include "platform/window/PlatformWindow.h"
 
 #include <vector>
@@ -307,7 +307,7 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawImage(ImageData* data, const Unit::Rect& dst)
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
     {
         void* imgData = data->data();
         double surfaceWidth = 0, surfaceHeight = 0;
@@ -338,7 +338,7 @@ public:
         cairo_surface_destroy(image);
     }
 
-    virtual void drawRepeatImage(ImageData* data, const Unit::Rect& dst,
+    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat)
     {

@@ -32,7 +32,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Window.h"
 #include "core/modules/message_loop/Timer.h"
-#include "core/modules/canvas/image/ImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 #include "core/inspector/Inspector.h"
 #include "core/extra/Console.h"
 #include "core/style/ComputedStyle.h"
