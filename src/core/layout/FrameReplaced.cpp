@@ -259,6 +259,8 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     if (isEstablishesBlockFormattingContext()) {
         if (!shouldLayout(ctx, Frame::ResolveAll, cb)) {
             return;
+        } else {
+            STARFISH_RELEASE_ASSERT(!ctx.isQuickLayout());
         }
     }
     Length width = style()->width();

@@ -269,7 +269,7 @@ String* HTMLInputElement::visibleValue()
 
 void HTMLInputElement::updateInputboxValue(String* value)
 {
-    setNeedsFrameTreeBuild(false);
+    setNeedsFrameTreeBuild(Node::UpdateFromParent);
 }
 
 bool HTMLInputElement::shouldUsePlaceholder()

@@ -64,7 +64,7 @@ void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old,
 #endif
 
         m_content->load();
-        setNeedsFrameTreeBuild(false);
+        setNeedsFrameTreeBuild(Node::UpdateFromParent);
     }
 }
 
