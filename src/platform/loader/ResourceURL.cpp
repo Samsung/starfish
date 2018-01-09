@@ -350,45 +350,68 @@ bool ResourceURL::isValidURL(String* url)
 
 static String* removingDots(String* origPath)
 {
-    UTF16String str = origPath->toUTF16String();
-    UTF16String dst = origPath->toUTF16String();
+    StringBufferAccessData str = origPath->bufferAccessData();
     size_t pos = 0;
-    size_t dstPos = 0;
-    size_t pathLen = str.length();
+    size_t pathLen = str.length;
     bool removed = false;
 
     STARFISH_ASSERT(str[pos] == '/');
 
     pos++;
-    dstPos++;
 
     while (pos < pathLen) {
         if (str[pos + 0] == '.' && str[pos - 1] == '/') {
             if (pos + 1 == pathLen || str[pos + 1] == '/') {
                 removed = true;
-                pos += 2;
-                continue;
+                break;
             } else if (str[pos + 1] == '.' &&
                        (pos + 2 == pathLen || str[pos + 2] == '/')) {
                 removed = true;
-                pos += 3;
-                if (dstPos > 1) {
-                    dstPos--;
-                }
-                while (dstPos > 0 && dst[dstPos - 1] != '/') {
-                    dstPos--;
-                }
-                continue;
+                break;
             }
         }
-        dst[dstPos] = str[pos];
+        pos++;
+    }
+
+    if (!removed) {
+        return origPath;
+    }
+
+    {
+        UTF8StringDataNonGCStd str = origPath->toUTF8NonGCString();
+        UTF8StringDataNonGCStd dst = origPath->toUTF8NonGCString();
+        size_t pos = 0;
+        size_t dstPos = 0;
+        size_t pathLen = str.length();
+
+        STARFISH_ASSERT(str[pos] == '/');
+
         pos++;
         dstPos++;
-    }
-    if (removed) {
-        return String::fromUTF16(dst.data(), dstPos);
-    } else {
-        return origPath;
+
+        while (pos < pathLen) {
+            if (str[pos + 0] == '.' && str[pos - 1] == '/') {
+                if (pos + 1 == pathLen || str[pos + 1] == '/') {
+                    pos += 2;
+                    continue;
+                } else if (str[pos + 1] == '.' &&
+                           (pos + 2 == pathLen || str[pos + 2] == '/')) {
+                    pos += 3;
+                    if (dstPos > 1) {
+                        dstPos--;
+                    }
+                    while (dstPos > 0 && dst[dstPos - 1] != '/') {
+                        dstPos--;
+                    }
+                    continue;
+                }
+            }
+            dst[dstPos] = str[pos];
+            pos++;
+            dstPos++;
+        }
+
+        return String::fromUTF8(dst.data(), dstPos);
     }
 }
 

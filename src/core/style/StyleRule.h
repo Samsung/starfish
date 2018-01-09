@@ -129,14 +129,24 @@ public:
         return m_styleDeclaration;
     }
 
-    int order()
+    size_t order()
     {
         return m_order;
     }
 
-    void setOrder(int o)
+    void setOrder(size_t o)
     {
         m_order = o;
+    }
+
+    bool isUARule()
+    {
+        return m_isUARule;
+    }
+
+    void setIsUARule(bool b)
+    {
+        m_isUARule = b;
     }
 
     bool hasIdSelector()
@@ -194,7 +204,8 @@ public:
 protected:
     CSSSelectorList m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
-    int m_order;
+    size_t m_order;
+    bool m_isUARule : 1;
     bool m_hasIdSelector : 1;
     bool m_hasClassSelector : 1;
 

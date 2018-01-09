@@ -374,9 +374,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #endif
     m_lineBreakIteratorPool =
         new LineBreakIteratorPool(STARFISH_LINE_BREAK_ITERATOR_POOL_SIZE);
-    String* s = String::emptyString;
-    AtomicString emptyAtom(s);
-    m_atomicStringMap.insert(s);
+    m_atomicStringMap.insert(String::emptyString);
     m_staticStrings = new StaticStrings(this);
     m_messageLoop = new MessageLoop(this);
     m_timer = new Timer(this);

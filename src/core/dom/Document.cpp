@@ -157,6 +157,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     const char* ua =
 #include "core/style/UserAgentStyleSheet.css"
         ;
+    // we assume that there is no important rule in ua-sheet
+    STARFISH_ASSERT(strstr(ua, "important") == 0);
     CSSStyleSheet* userAgentStyleSheet =
         new CSSStyleSheet(this, String::createASCIIString(ua));
     userAgentStyleSheet->parseSheetIfneeds();
@@ -164,7 +166,11 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     userAgentStyleSheet->collectStyleRules(userAgentStyleSheet->childRules(),
                                            webFonts,
                                            userAgentStyleSheet->url());
-    userAgentStyleSheet->sortStyleRulesBySpecificity();
+
+    size_t rules = userAgentStyleSheet->styleRules().size();
+    for (size_t j = 0; j < rules; j++) {
+        userAgentStyleSheet->styleRules()[j].first->setIsUARule(true);
+    }
 
     m_styleResolver->addSheet(userAgentStyleSheet);
 

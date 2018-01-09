@@ -100,7 +100,7 @@ void BrowsingContext::initFlags()
 {
     m_needsStyleRecalc = false;
     m_needsStyleRecalcForWholeDocument = false;
-    m_needsStyleSheetsRecalc = false;
+    m_needsStyleSheetsRecalc = true;
     m_needsFrameTreeBuild = false;
     m_needsLayout = false;
 
@@ -228,7 +228,6 @@ void BrowsingContext::resolveStyleIfNeeds()
             INSTALL_PROFILE_TIMER(starFish(), "parse sheet & collect rules");
 
             m_needsStyleSheetsRecalc = false;
-            CSSStyleSheet* uaSheet = document()->styleResolver().sheets()[0];
             document()->styleResolver().removeAllRules();
 
             auto viewportDependentResult =
@@ -241,44 +240,44 @@ void BrowsingContext::resolveStyleIfNeeds()
             deviceDependentResult->clear();
 
             size_t sheets = document()->styleResolver().sheets().size();
-            size_t offset = 0;
-
             document()->m_webFontList.clear();
+            size_t offset = 0;
+            std::vector<CSSStyleDeclaration*> webFonts;
 
             // We can use non gc vector
             // because CSSStyleSheets has string reference to each
             // CSSStyleDeclaration
-            std::vector<CSSStyleDeclaration*> webFonts;
-            for (size_t i = 1; i < sheets; i++) {
-                CSSStyleSheet* authorSheet =
-                    document()->styleResolver().sheets()[i];
+            for (size_t i = 0; i < sheets; i++) {
+                CSSStyleSheet* sheet = document()->styleResolver().sheets()[i];
 
-                authorSheet->parseSheetIfneeds();
+                if (i > 0) { // i == 0 is UA-sheet
+                    sheet->parseSheetIfneeds();
 
-                const MediaQueryEvaluator& evaluator =
-                    document()->styleResolver().mediaQueryEvaluator();
-                if (authorSheet->mediaQuerySet() &&
-                    !authorSheet->matchesMediaQueries(
-                        evaluator, authorSheet->mediaQuerySet(),
-                        viewportDependentResult, deviceDependentResult)) {
-                    continue;
+                    const MediaQueryEvaluator& evaluator =
+                        document()->styleResolver().mediaQueryEvaluator();
+                    if (sheet->mediaQuerySet() &&
+                        !sheet->matchesMediaQueries(
+                            evaluator, sheet->mediaQuerySet(),
+                            viewportDependentResult, deviceDependentResult)) {
+                        continue;
+                    }
+
+                    sheet->clearStyleRules();
+                    sheet->collectRulesFromImportedSheet(
+                        sheet->importRules(), webFonts, viewportDependentResult,
+                        deviceDependentResult);
+                    sheet->collectStyleRules(
+                        sheet->childRules(), webFonts, sheet->url(),
+                        viewportDependentResult, deviceDependentResult);
                 }
 
-                authorSheet->clearStyleRules();
-                authorSheet->collectRulesFromImportedSheet(
-                    authorSheet->importRules(), webFonts,
-                    viewportDependentResult, deviceDependentResult);
-                authorSheet->collectStyleRules(
-                    authorSheet->childRules(), webFonts, authorSheet->url(),
-                    viewportDependentResult, deviceDependentResult);
-
-                size_t rules = authorSheet->styleRules().size();
+                size_t rules = sheet->styleRules().size();
                 for (size_t j = 0; j < rules; j++) {
-                    authorSheet->styleRules()[j].first->setOrder(j + offset);
+                    sheet->styleRules()[j].first->setOrder(j + offset);
                     document()
                         ->styleResolver()
                         .styleSheetWithStyleRules()
-                        ->addToRuleSet(authorSheet->styleRules()[j]);
+                        ->addToRuleSet(sheet->styleRules()[j]);
                 }
                 offset += rules;
             }
