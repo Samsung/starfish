@@ -397,8 +397,7 @@ void HTMLFormElement::submit(HTMLElement* submitter)
         if (ResourceURL::isValidURL(formAction)) {
             url = new ResourceURL(formAction);
         } else {
-            url = new ResourceURL(formAction,
-                                  document()->documentURI()->baseURI());
+            url = new ResourceURL(formAction, document()->baseURL()->baseURI());
         }
     } else {
         url = document()->documentURI();

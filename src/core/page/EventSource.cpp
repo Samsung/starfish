@@ -202,8 +202,7 @@ EventSource::EventSource(::StarFish::Document* document, String* url,
                                "Cannot open an EventSource to an empty URL.");
     }
 
-    ResourceURL* fullURL =
-        new ResourceURL(url, document->documentURI()->baseURI());
+    ResourceURL* fullURL = new ResourceURL(url, document->baseURL()->baseURI());
     if (!fullURL->isValid()) {
         StringBuilder msg;
         msg.appendString("Cannot open an EventSource to '");

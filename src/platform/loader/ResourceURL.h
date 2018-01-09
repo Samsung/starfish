@@ -70,6 +70,11 @@ public:
         m_isValid = src.m_isValid;
     }
 
+    static ResourceURL* AboutBlankURL()
+    {
+        return new ResourceURL("about:blank");
+    }
+
     static String* mergeDocumentURIWithURIString(Document* document,
                                                  String* url);
     static String* mergeDocumentURIWithURIString(String* documentURI,
@@ -145,6 +150,11 @@ public:
     bool operator==(const ResourceURL& other) const
     {
         return other.urlString()->equals(m_urlString);
+    }
+
+    bool operator!=(const ResourceURL& other) const
+    {
+        return !operator==(other);
     }
 
     String* origin();

@@ -19,7 +19,7 @@ interface Node : EventTarget {
   readonly attribute unsigned short nodeType;
   readonly attribute DOMString nodeName;
 
-  [Unimplemented] readonly attribute DOMString baseURI;
+  readonly attribute DOMString baseURI;
 
   [Unimplemented] readonly attribute boolean isConnected;
   readonly attribute Document? ownerDocument;
@@ -59,4 +59,3 @@ interface Node : EventTarget {
   [CEReactions, RaisesException] Node replaceChild(Node node, Node child);
   [CEReactions, RaisesException] Node removeChild(Node child);
 };
-

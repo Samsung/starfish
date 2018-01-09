@@ -108,7 +108,7 @@ String* HTMLAnchorElement::href()
         getAttribute(starFish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         return (new ResourceURL(hrefAttr.getValue()->trim(),
-                                document()->urlString()))
+                                document()->baseURL()->urlString()))
             ->urlString();
     }
     return String::emptyString;
@@ -125,7 +125,7 @@ String* HTMLAnchorElement::host()
         getAttribute(starFish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         return (new ResourceURL(hrefAttr.getValue()->trim(),
-                                document()->urlString()))
+                                document()->baseURL()->urlString()))
             ->host();
     }
     return String::emptyString;
@@ -138,8 +138,8 @@ void HTMLAnchorElement::setHost(String* host)
     if (!hrefAttr.hasValue()) {
         return;
     }
-    ResourceURL* resourceURL =
-        new ResourceURL(hrefAttr.getValue()->trim(), document()->urlString());
+    ResourceURL* resourceURL = new ResourceURL(
+        hrefAttr.getValue()->trim(), document()->baseURL()->urlString());
     resourceURL = resourceURL->setHost(host);
     setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
 }
@@ -150,7 +150,7 @@ String* HTMLAnchorElement::pathname()
         getAttribute(starFish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         return (new ResourceURL(hrefAttr.getValue()->trim(),
-                                document()->urlString()))
+                                document()->baseURL()->urlString()))
             ->pathname();
     }
     return String::emptyString;
@@ -163,8 +163,8 @@ void HTMLAnchorElement::setPathname(String* path)
     if (!hrefAttr.hasValue()) {
         return;
     }
-    ResourceURL* resourceURL =
-        new ResourceURL(hrefAttr.getValue()->trim(), document()->urlString());
+    ResourceURL* resourceURL = new ResourceURL(
+        hrefAttr.getValue()->trim(), document()->baseURL()->urlString());
     resourceURL = resourceURL->setPathname(path);
     setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
 }
@@ -175,7 +175,7 @@ String* HTMLAnchorElement::protocol()
         getAttribute(starFish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         return (new ResourceURL(hrefAttr.getValue()->trim(),
-                                document()->urlString()))
+                                document()->baseURL()->urlString()))
             ->protocol();
     }
     return String::emptyString;
@@ -188,8 +188,8 @@ void HTMLAnchorElement::setProtocol(String* protocol)
     if (!hrefAttr.hasValue()) {
         return;
     }
-    ResourceURL* resourceURL =
-        new ResourceURL(hrefAttr.getValue()->trim(), document()->urlString());
+    ResourceURL* resourceURL = new ResourceURL(
+        hrefAttr.getValue()->trim(), document()->baseURL()->baseURI());
     resourceURL = resourceURL->setProtocol(protocol);
     setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
 }

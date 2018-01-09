@@ -161,7 +161,7 @@ void HTMLIFrameElement::loadSrc()
 {
     String* s = src();
     if (s->length()) {
-        navigate(new ResourceURL(s, document()->documentURI()->baseURI()),
+        navigate(new ResourceURL(s, document()->baseURL()->baseURI()),
                  HistoryManager::Action::Intact, document()->documentURI());
     } else {
         navigate(new ResourceURL(String::createASCIIString("about:blank")),

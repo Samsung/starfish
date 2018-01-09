@@ -188,7 +188,7 @@ public:
         return m_window;
     }
 
-    BrowsingContext* browsingContext();
+    BrowsingContext* browsingContext() const;
 
     ResourceLoader& resourceLoader()
     {
@@ -281,10 +281,17 @@ public:
 
     String* urlString();
 
-    ResourceURL* documentURI()
+    ResourceURL* documentURI() const
     {
         return m_documentURI;
     }
+
+    Document* parentDocument() const;
+
+    ResourceURL* fallbackBaseURL() const;
+    ResourceURL* baseURL() const;
+    void updateBaseURL();
+    void processBaseElement();
 
     String* origin();
 
@@ -509,11 +516,16 @@ public:
 #undef OVERRIDE
 
 protected:
+    Element* nextBaseElement(Node* node, Node* root);
+
     static inline void fillGCDescriptor(GC_word* desc)
     {
         Node::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_window));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentURI));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_baseURL));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_baseElementURL));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_baseTarget));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_referrer));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webOrigin));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_characterSet));
@@ -565,6 +577,9 @@ protected:
 
     Window* m_window;
     ResourceURL* m_documentURI;
+    ResourceURL* m_baseURL;
+    ResourceURL* m_baseElementURL;
+    String* m_baseTarget;
     ResourceURL* m_referrer;
     WebOrigin* m_webOrigin;
     String* m_characterSet;

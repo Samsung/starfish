@@ -234,7 +234,7 @@ void XMLHttpRequest::open(ResourceRequest::MethodType method, String* url,
                                "InvalidAccessError");
     }
     ResourceURL* resUrl =
-        new ResourceURL(url, document()->documentURI()->baseURI());
+        new ResourceURL(url, document()->baseURL()->baseURI());
     m_resourceRequest->open(method, resUrl, async, document()->documentURI(),
                             userName, password);
     initResponseData();

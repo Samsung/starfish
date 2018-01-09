@@ -1,0 +1,9 @@
+// https://html.spec.whatwg.org/#the-base-element
+// NOTE Using DOMString instead of USVString
+
+[Exposed=Window,
+ HTMLConstructor]
+interface HTMLBaseElement : HTMLElement {
+    [CEReactions] attribute DOMString href;
+    [CEReactions] attribute DOMString target;
+};
