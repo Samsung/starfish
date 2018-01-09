@@ -161,6 +161,9 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             ctx.setIsQuickLayout(true);
             quickLayout(ctx);
             ctx.setIsQuickLayout(isQuickLayout);
+            if (isFrameTableCellBox()) {
+                asFrameTableCellBox()->setActualContentHeight(contentHeight());
+            }
             return;
         } else {
             STARFISH_RELEASE_ASSERT(!ctx.isQuickLayout());

@@ -6444,7 +6444,13 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
-            element->setNeedsFrameTreeBuild(false);
+            if ((element->style() == nullptr ||
+                 (element->style()->display() != NoneDisplayValue &&
+                  element->frame() == nullptr))) {
+                element->markNeedsFrameTreeBuild();
+            } else {
+                element->setNeedsFrameTreeBuild(Node::UpdateFromParent);
+            }
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageLayout) {

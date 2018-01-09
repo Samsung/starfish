@@ -340,6 +340,7 @@ void FrameTreeBuilder::createPseudoElement(
 
         pseudoParentFrame->insertBefore(originalFrameText, remainingFrameText);
         pseudoParentFrame->removeChild(originalFrameText);
+        originalFrameText->setParent(pseudoParentFrame);
     } else if (pseudoElement->isBeforePseudoElement() ||
                pseudoElement->isAfterPseudoElement()) {
         if (!pseudoElement->style()->hasRareComputeStyleData()) {

@@ -132,7 +132,7 @@ String* HTMLFormObject::value()
 void HTMLFormObject::setValue(String* value)
 {
     m_value = value;
-    setNeedsFrameTreeBuild(true);
+    setNeedsFrameTreeBuild(Node::UpdateAtSelf);
 }
 
 String* HTMLFormObject::formEnctype()

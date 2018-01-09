@@ -1577,6 +1577,13 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
                 return true;
             }
 
+            LengthData margin = style->margin();
+            if (isLayoutDamaged(damager, margin.left()) ||
+                isLayoutDamaged(damager, margin.right())) {
+                markNeedsLayout();
+                return true;
+            }
+
             BorderData border = style->border();
             if (isLayoutDamaged(damager, border.left().width()) ||
                 isLayoutDamaged(damager, border.right().width())) {
@@ -1591,10 +1598,14 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
                 return true;
             }
 
-            if (isAbsolutePositioned() && style->left().isSpecified() &&
-                style->right().isSpecified()) {
-                if (isLayoutDamaged(damager, style->left()) ||
-                    isLayoutDamaged(damager, style->right())) {
+            if (isAbsolutePositioned()) {
+                if ((style->left().isSpecified() &&
+                     isLayoutDamaged(damager, style->left())) ||
+                    (style->right().isSpecified() &&
+                     isLayoutDamaged(damager, style->right()))) {
+                    markNeedsLayout();
+                    return true;
+                } else if (style->left().isAuto() && style->right().isAuto()) {
                     markNeedsLayout();
                     return true;
                 }
@@ -1621,6 +1632,13 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
             }
 
             damager.m_canPercentDamage = containerWidthMayBeChanged;
+
+            LengthData margin = style->margin();
+            if (isLayoutDamaged(damager, margin.top()) ||
+                isLayoutDamaged(damager, margin.bottom())) {
+                return true;
+            }
+
             BorderData border = style->border();
             if (isLayoutDamaged(damager, border.top().width()) ||
                 isLayoutDamaged(damager, border.bottom().width())) {

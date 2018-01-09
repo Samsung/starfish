@@ -418,7 +418,14 @@ public:
     // This function sets the dirty flag only for children.
     void setChildrenNeedsStyleRecalc();
 
-    void setNeedsFrameTreeBuild(bool canSelfRetain);
+    enum FrameTreeBuildReason {
+        AppendChild,
+        InsertBefore,
+        RemoveFromParent,
+        UpdateFromParent,
+        UpdateAtSelf,
+    };
+    void setNeedsFrameTreeBuild(FrameTreeBuildReason reason);
 
     void markNeedsFrameTreeBuild()
     {
@@ -450,6 +457,7 @@ public:
         m_childNeedsFrameTreeBuild = false;
     }
 
+    void propagateMarkChildNeedsFrameTreeBuild();
     void setNeedsLayout();
     void setNeedsPainting();
     void setNeedsComposite();
