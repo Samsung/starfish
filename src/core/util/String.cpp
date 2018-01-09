@@ -413,29 +413,28 @@ StringDataBMP::StringDataBMP(const char* src, size_t len)
         SimpleStringBufferHolder<char16_t>::TakeBufferValue);
 }
 
-// TODO use BufferAccessData for performance
 size_t String::indexOf(char32_t ch) const
 {
-    for (size_t i = 0; i < length(); i++) {
-        if (charAt(i) == ch) {
+    auto data = bufferAccessData();
+    for (size_t i = 0; i < data.length; i++) {
+        if (data.charAt(i) == ch) {
             return i;
         }
     }
     return SIZE_MAX;
 }
 
-// TODO use BufferAccessData for performance
 size_t String::lastIndexOf(char32_t ch) const
 {
-    for (size_t i = length(); i > 0; i--) {
-        if (charAt(i - 1) == ch) {
+    auto data = bufferAccessData();
+    for (size_t i = data.length; i > 0; i--) {
+        if (data.charAt(i - 1) == ch) {
             return i - 1;
         }
     }
     return SIZE_MAX;
 }
 
-// TODO use BufferAccessData for performance
 bool String::equalsIgnoreCase(const char* str) const
 {
 #ifndef NDEBUG
@@ -447,12 +446,14 @@ bool String::equalsIgnoreCase(const char* str) const
         }
     }
 #endif
+    auto data = bufferAccessData();
     size_t srcLen = strlen(str);
-    if (srcLen != length()) {
+
+    if (srcLen != data.length) {
         return false;
     }
-    for (size_t i = 0; i < length(); i++) {
-        if (tolower(charAt(i)) != tolower((char32_t)str[i])) {
+    for (size_t i = 0; i < data.length; i++) {
+        if (tolower(data.charAt(i)) != tolower((char32_t)str[i])) {
             return false;
         }
     }
@@ -483,48 +484,48 @@ bool String::equals(const char* str) const
     }
 }
 
-// TODO use BufferAccessData for performance
 bool String::equals(const char32_t* str) const
 {
+    auto data = bufferAccessData();
     size_t srcLen = 0;
     for (; str[srcLen]; srcLen++) {
     }
 
-    if (srcLen != length()) {
+    if (srcLen != data.length) {
         return false;
     }
-    for (size_t i = 0; i < length(); i++) {
-        if (charAt(i) != str[i]) {
+    for (size_t i = 0; i < data.length; i++) {
+        if (data.charAt(i) != str[i]) {
             return false;
         }
     }
     return true;
 }
 
-// TODO use BufferAccessData for performance
 bool String::containsWhitespace(size_t start, size_t end)
 {
+    auto data = bufferAccessData();
     if (end == SIZE_MAX) {
-        end = length();
+        end = data.length;
     }
 
     for (size_t i = start; i < end; i++) {
-        if (isASCIISpace(charAt(i))) {
+        if (isASCIISpace(data.charAt(i))) {
             return true;
         }
     }
     return false;
 }
 
-// TODO use BufferAccessData for performance
 bool String::containsOnlyWhitespace(size_t start, size_t end)
 {
+    auto data = bufferAccessData();
     if (end == SIZE_MAX) {
-        end = length();
+        end = data.length;
     }
 
     for (size_t i = start; i < end; i++) {
-        if (!isASCIISpace(charAt(i))) {
+        if (!isASCIISpace(data.charAt(i))) {
             return false;
         }
     }
@@ -630,7 +631,7 @@ icu::UnicodeString String::toUnicodeString(size_t start, size_t end) const
     }
 }
 
-size_t String::hashValue() const
+size_t String::hashValueSlowCase() const
 {
     auto data = bufferAccessData();
     size_t len = data.length;
@@ -650,6 +651,7 @@ size_t String::hashValue() const
         hash++;
     }
 
+    m_hashValue = hash;
     return hash;
 }
 
@@ -1516,21 +1518,25 @@ bool String::startsWith(const char* str, bool caseSensitive)
 
 bool String::startsWith(String* str, bool caseSensitive)
 {
-    size_t len = length();
-    size_t strLen = str->length();
+    auto dataA = bufferAccessData();
+    auto dataB = str->bufferAccessData();
+
+    size_t len = dataA.length;
+    size_t strLen = dataB.length;
+
     if (strLen > len) {
         return false;
     }
 
     if (caseSensitive) {
         for (size_t i = 0; i < strLen; i++) {
-            if (str->charAt(i) != charAt(i)) {
+            if (dataA.charAt(i) != dataB.charAt(i)) {
                 return false;
             }
         }
     } else {
         for (size_t i = 0; i < strLen; i++) {
-            if (tolower(str->charAt(i)) != tolower(charAt(i))) {
+            if (tolower(dataA.charAt(i)) != tolower(dataB.charAt(i))) {
                 return false;
             }
         }
@@ -1549,8 +1555,11 @@ bool String::endsWith(const char* str, bool caseSensitive)
 
 bool String::endsWith(String* str, bool caseSensitive)
 {
-    size_t len = length();
-    size_t strLen = str->length();
+    auto dataA = bufferAccessData();
+    auto dataB = str->bufferAccessData();
+
+    size_t len = dataA.length;
+    size_t strLen = dataB.length;
 
     if (strLen > len) {
         return false;
@@ -1560,13 +1569,14 @@ bool String::endsWith(String* str, bool caseSensitive)
 
     if (caseSensitive) {
         for (size_t i = 0; i < strLen; i++) {
-            if (str->charAt(i) != charAt(i + startOffset)) {
+            if (dataB.charAt(i) != dataA.charAt(i + startOffset)) {
                 return false;
             }
         }
     } else {
         for (size_t i = 0; i < strLen; i++) {
-            if (tolower(str->charAt(i)) != tolower(charAt(i + startOffset))) {
+            if (tolower(dataB.charAt(i)) !=
+                tolower(dataA.charAt(i + startOffset))) {
                 return false;
             }
         }
@@ -1577,19 +1587,22 @@ bool String::endsWith(String* str, bool caseSensitive)
 
 size_t String::find(String* str, size_t pos)
 {
-    const size_t srcLen = str->length();
-    const size_t dstLen = length();
+    auto srcData = str->bufferAccessData();
+    auto dstData = bufferAccessData();
+
+    const size_t srcLen = srcData.length;
+    const size_t dstLen = dstData.length;
 
     if (srcLen == 0)
         return pos <= dstLen ? pos : SIZE_MAX;
 
     if (srcLen <= dstLen) {
-        char32_t src0 = str->charAt(0);
+        char32_t src0 = srcData.charAt(0);
         for (; pos <= dstLen - srcLen; ++pos) {
-            if (charAt(pos) == src0) {
+            if (dstData.charAt(pos) == src0) {
                 bool same = true;
                 for (size_t k = 1; k < srcLen; k++) {
-                    if (charAt(pos + k) != str->charAt(k)) {
+                    if (dstData.charAt(pos + k) != srcData.charAt(k)) {
                         same = false;
                         break;
                     }
@@ -1605,8 +1618,10 @@ size_t String::find(String* str, size_t pos)
 
 size_t String::find(const char* str, size_t pos)
 {
+    auto dstData = bufferAccessData();
+
     const size_t srcLen = strlen(str);
-    const size_t dstLen = length();
+    const size_t dstLen = dstData.length;
 
     if (srcLen == 0) {
         return pos <= dstLen ? pos : SIZE_MAX;
@@ -1615,10 +1630,10 @@ size_t String::find(const char* str, size_t pos)
     if (srcLen <= dstLen) {
         char32_t src0 = (char32_t)str[0];
         for (; pos <= dstLen - srcLen; ++pos) {
-            if (charAt(pos) == src0) {
+            if (dstData.charAt(pos) == src0) {
                 bool same = true;
                 for (size_t k = 1; k < srcLen; k++) {
-                    if (charAt(pos + k) != (char32_t)str[k]) {
+                    if (dstData.charAt(pos + k) != (char32_t)str[k]) {
                         same = false;
                         break;
                     }
@@ -1634,13 +1649,15 @@ size_t String::find(const char* str, size_t pos)
 
 size_t String::find(const char ch, size_t pos)
 {
+    auto dstData = bufferAccessData();
+
     const size_t srcLen = 1;
-    const size_t dstLen = length();
+    const size_t dstLen = dstData.length;
 
     if (srcLen <= dstLen) {
         char32_t src0 = (char32_t)ch;
         for (; pos <= dstLen - srcLen; ++pos) {
-            if (charAt(pos) == src0) {
+            if (dstData.charAt(pos) == src0) {
                 return pos;
             }
         }

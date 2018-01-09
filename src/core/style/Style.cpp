@@ -5748,7 +5748,7 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
         AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& end,
     CSSSelector::Type type, Element* element, AtomicString elementName,
     AtomicString elementId, const GCVector<AtomicString>& elementClasses,
-    MatchedStyleRules<16>& authorRules, ComputedStyle* ret,
+    MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
     PseudoElementType pseudoElementType)
 {
     for (auto it = begin; it != end; ++it) {
@@ -5775,6 +5775,10 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
                 authorRules.push_back(std::make_pair(rule, url));
                 continue;
             }
+        }
+
+        if (ctx.m_ancestorSelectorFilter.canIgnoreSelector(rule, element)) {
+            continue;
         }
 
         const CSSSelectorList& selectorList = rule->selectorList();
@@ -5817,33 +5821,32 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
     }
 }
 
-void StyleResolver::collectMatchingRulesFromUASheet(
-    std::pair<StyleRule*, ResourceURL*>* rules, unsigned ruleCount,
-    Element* element, AtomicString elementName, AtomicString elementId,
-    const GCVector<AtomicString>& elementClasses,
-    MatchedStyleRules<6>& userAgentRules)
-{
-    for (unsigned int i = 0; i < ruleCount; i++) {
-        StyleRule* rule = rules[i].first;
-        ResourceURL* url = rules[i].second;
-        const CSSSelectorList& selectorList = rule->selectorList();
-        MatchResult result;
-        if (matchSelector(element, elementName, elementId, elementClasses,
-                          selectorList, 0, result) == Match::SelectorMatches) {
-            userAgentRules.push_back(std::make_pair(rule, url));
-        }
-    }
-}
-
 static bool comparingRules(const std::pair<StyleRule*, ResourceURL*>& r1,
                            const std::pair<StyleRule*, ResourceURL*>& r2)
 {
-    if (r1.first->selectorList().specificity() ==
-        r2.first->selectorList().specificity()) {
-        return r1.first->order() < r2.first->order();
+    const auto& a = r1.first;
+    const auto& b = r2.first;
+
+    bool aUA = a->isUARule();
+    bool aUB = b->isUARule();
+
+    if (aUA && aUB) {
+    } else if (aUA) {
+        return true;
+    } else if (aUB) {
+        return false;
     }
-    return r1.first->selectorList().specificity() <
-           r2.first->selectorList().specificity();
+
+    if (a->selectorList().specificity() == b->selectorList().specificity()) {
+        return a->order() < b->order();
+    }
+    return a->selectorList().specificity() < b->selectorList().specificity();
+}
+
+template <typename Iter, typename Func>
+void sortVector(Iter begin, Iter end, Func matchingRule)
+{
+    std::stable_sort(begin, end, matchingRule);
 }
 
 void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
@@ -5854,23 +5857,16 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     AtomicString elementId = element->atomicId();
     const GCVector<AtomicString>& elementClasses = element->classNames();
 
-    MatchedStyleRules<6> userAgentRules;
-    CSSStyleSheet* sheet = m_sheets[0];
-    if (pseudoElementType == PseudoElementType::PseudoElementNone) {
-        collectMatchingRulesFromUASheet(
-            sheet->styleRules().data(), sheet->styleRules().size(), element,
-            elementName, elementId, elementClasses, userAgentRules);
-    }
-
-    MatchedStyleRules<16> authorRules;
-    sheet = styleSheetWithStyleRules();
+    const size_t matchedRulesInlineStorageSize = 32;
+    MatchedStyleRules<matchedRulesInlineStorageSize> matchedRules;
+    CSSStyleSheet* sheet = styleSheetWithStyleRules();
 
     if (element->hasId()) {
         auto& rules = sheet->ruleSet()->idRules();
         auto range = rules.equal_range(elementId);
         collectMatchingRulesFromAuthorSheet(
             ctx, range.first, range.second, CSSSelector::Type::Id, element,
-            elementName, elementId, elementClasses, authorRules, ret,
+            elementName, elementId, elementClasses, matchedRules, ret,
             pseudoElementType);
     }
 
@@ -5881,7 +5877,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
             auto range = rules.equal_range(elementClasses[k]);
             collectMatchingRulesFromAuthorSheet(
                 ctx, range.first, range.second, CSSSelector::Type::Class,
-                element, elementName, elementId, elementClasses, authorRules,
+                element, elementName, elementId, elementClasses, matchedRules,
                 ret, pseudoElementType);
         }
     }
@@ -5891,7 +5887,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         auto range = rules.equal_range(elementName);
         collectMatchingRulesFromAuthorSheet(
             ctx, range.first, range.second, CSSSelector::Type::Tag, element,
-            elementName, elementId, elementClasses, authorRules, ret,
+            elementName, elementId, elementClasses, matchedRules, ret,
             pseudoElementType);
     }
 
@@ -5899,17 +5895,36 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         auto& rules = sheet->ruleSet()->universalRules();
         collectMatchingRulesFromAuthorSheet(
             ctx, rules.begin(), rules.end(), CSSSelector::Type::UnKnown,
-            element, elementName, elementId, elementClasses, authorRules, ret,
+            element, elementName, elementId, elementClasses, matchedRules, ret,
             pseudoElementType);
     }
 
-    if (authorRules.size() != 0) {
-        authorRules.sortVector(comparingRules);
+    auto begin = &matchedRules[0];
+    auto end = matchedRules.data() + matchedRules.size();
+    auto authorSheetBegin = end;
+
+    sortVector(begin, end, comparingRules);
+
+    {
+        auto iter = begin;
+        while (iter != end) {
+            if (!iter->first->isUARule()) {
+                authorSheetBegin = iter;
+                break;
+            }
+            iter++;
+        }
     }
 
-    for (unsigned int i = 0; i < userAgentRules.size(); i++) {
-        apply(element, userAgentRules[i].first->styleDeclaration()->m_cssValues,
-              userAgentRules[i].second, ret, parent, false);
+    // Apply ua-rules
+    // We disallow ua !important rules due to performance now
+    {
+        auto iter = begin;
+        while (iter != authorSheetBegin) {
+            apply(element, iter->first->styleDeclaration()->m_cssValues,
+                  iter->second, ret, parent, false);
+            iter++;
+        }
     }
 
     // Apply presentation attribute's style
@@ -5917,9 +5932,14 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     element->styleForPresentationAttribute(cssValues);
     apply(element, cssValues.data(), nullptr, ret, parent, false);
 
-    for (unsigned int i = 0; i < authorRules.size(); i++) {
-        apply(element, authorRules[i].first->styleDeclaration()->m_cssValues,
-              authorRules[i].second, ret, parent, false);
+    // Apply non-important author-rules
+    {
+        auto iter = authorSheetBegin;
+        while (iter != end) {
+            apply(element, iter->first->styleDeclaration()->m_cssValues,
+                  iter->second, ret, parent, false);
+            iter++;
+        }
     }
 
     // inline style
@@ -5929,14 +5949,14 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
               element->document()->documentURI(), ret, parent, false);
     }
 
-    for (unsigned int i = 0; i < authorRules.size(); i++) {
-        apply(element, authorRules[i].first->styleDeclaration()->m_cssValues,
-              authorRules[i].second, ret, parent, true);
-    }
-
-    for (unsigned int i = 0; i < userAgentRules.size(); i++) {
-        apply(element, userAgentRules[i].first->styleDeclaration()->m_cssValues,
-              userAgentRules[i].second, ret, parent, true);
+    // Apply important author-rules
+    {
+        auto iter = authorSheetBegin;
+        while (iter != end) {
+            apply(element, iter->first->styleDeclaration()->m_cssValues,
+                  iter->second, ret, parent, true);
+            iter++;
+        }
     }
 
     // inline style
@@ -6468,6 +6488,10 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
     ComputedStyle* childTextNodeStyle = nullptr;
     bool inheritedStyleChangedForTextNode = inheritedStyleChanged;
 
+    if (parentElement->isElement()) {
+        ctx.m_ancestorSelectorFilter.pushElement(parentElement->asElement());
+    }
+
     Node* child = parentElement->firstChild();
     while (child) {
         if (child->isElement()) {
@@ -6525,6 +6549,10 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
 #endif
 
     parentElement->clearChildNeedsStyleRecalc();
+
+    if (parentElement->isElement()) {
+        ctx.m_ancestorSelectorFilter.popElement();
+    }
 }
 
 void StyleResolver::resolveDOMStyle(Document* document, bool force)

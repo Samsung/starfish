@@ -1463,7 +1463,7 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
         end->updateRelation(combinator);
 
         if (previousCompoundFlags & HasContentPseudoElement) {
-            end->relationIsAffectedByPseudoContent();
+            end->setRelationIsAffectedByPseudoContent();
         }
         previousCompoundFlags = compoundFlags;
         selectorList->insert(selectorList->begin(), secondSelectorList.begin(),

@@ -21,6 +21,7 @@
 #include "core/style/NamedColors.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/Length.h"
+#include "core/style/AncestorSelectorFilter.h"
 #include "core/util/VectorWithInlineStorage.h"
 
 namespace StarFish {
@@ -2467,6 +2468,12 @@ public:
         return m_type == PseudoClass || m_type == PseudoElement;
     }
 
+    bool isContentPseudoElement() const
+    {
+        return m_type == PseudoElement &&
+               (pseudotype() == PseudoAfter || pseudotype() == PseudoBefore);
+    }
+
     CSSPseudoSelector* asCSSPseudoSelector()
     {
         STARFISH_ASSERT(isPseudoSelector());
@@ -2674,6 +2681,7 @@ public:
     void* allocateComputedStyle();
 
     Document* m_document;
+    AncestorSelectorFilter m_ancestorSelectorFilter;
     GCVector<ComputedStyle*> m_computedStylePool;
 #ifndef NDEBUG
     std::set<ComputedStyle*> m_dbg;
@@ -2768,11 +2776,6 @@ public:
                         const GCVector<AtomicString>& elementClasses,
                         const CSSSelectorList& selectorList, unsigned idx,
                         MatchResult& result, bool isQueryingSelector = false);
-    void collectMatchingRulesFromUASheet(
-        std::pair<StyleRule*, ResourceURL*>* rules, unsigned ruleCount,
-        Element* element, AtomicString elementName, AtomicString elementId,
-        const GCVector<AtomicString>& elementClasses,
-        MatchedStyleRules<6>& authorRules);
     void collectMatchingRulesFromAuthorSheet(
         StyleResolveContext& ctx,
         const GCUnorderedMultiMap<
@@ -2781,7 +2784,7 @@ public:
             AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& end,
         CSSSelector::Type type, Element* element, AtomicString elementName,
         AtomicString elementId, const GCVector<AtomicString>& elementClasses,
-        MatchedStyleRules<16>& authorRules, ComputedStyle* ret,
+        MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
         PseudoElementType pseudoElementType);
 
     const MediaQueryEvaluator& mediaQueryEvaluator();

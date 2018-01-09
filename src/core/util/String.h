@@ -293,6 +293,11 @@ struct StringBufferAccessData {
         }
     }
 
+    char32_t operator[](size_t idx) const
+    {
+        return charAt(idx);
+    }
+
     const char* asciiData() const
     {
         STARFISH_ASSERT(bufferDataKind == ASCIIData);
@@ -491,7 +496,13 @@ public:
         return hash;
     }
 
-    size_t hashValue() const;
+    size_t hashValue() const
+    {
+        if (m_hashValue) {
+            return m_hashValue;
+        }
+        return hashValueSlowCase();
+    }
 
     static String* fromFloat(float f);
     static String* fromInt(int i);
@@ -542,6 +553,13 @@ public:
     }
 
 protected:
+    String()
+    {
+        m_hashValue = 0;
+    }
+
+    size_t hashValueSlowCase() const;
+
     template <typename T>
     static bool stringEqual(const T* s, const T* s1, const size_t& len)
     {
@@ -562,6 +580,9 @@ protected:
     const char* utf8DataSlowCase(bool ignoreZeroWidthChar = false);
 
     bool isASCIIStringData(const char* str);
+
+private:
+    mutable size_t m_hashValue;
 };
 
 template <typename T>

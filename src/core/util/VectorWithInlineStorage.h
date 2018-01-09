@@ -82,6 +82,15 @@ public:
         }
     }
 
+    T* data()
+    {
+        if (m_size <= InlineStorageSize) {
+            return m_inlineStorage;
+        } else {
+            return m_externalStorage.data();
+        }
+    }
+
     size_t size() const
     {
         return m_size;
@@ -91,18 +100,6 @@ public:
     {
         m_size = 0;
         m_externalStorage.clear();
-    }
-
-    template <typename Func>
-    void sortVector(Func matchingRule)
-    {
-        if (m_size <= InlineStorageSize) {
-            std::stable_sort(m_inlineStorage, m_inlineStorage + m_size,
-                             matchingRule);
-        } else {
-            std::stable_sort(m_externalStorage.begin(), m_externalStorage.end(),
-                             matchingRule);
-        }
     }
 
 protected:
