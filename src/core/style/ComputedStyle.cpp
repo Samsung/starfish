@@ -81,8 +81,9 @@ void* ComputedStyle::operator new(size_t size)
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_width));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_height));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(ComputedStyle, m_rareComputedStyleData));
+        GC_set_bit(
+            obj_bitmap,
+            GC_WORD_OFFSET(ComputedStyle, m_rareComputedStyleData.m_styles));
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ComputedStyle));
         typeInited = true;
     }
@@ -115,7 +116,7 @@ StyleTransformDataGroup* ComputedStyle::transforms(Frame* frame)
         return nullptr;
     }
 
-    StyleTransformDataGroup* transforms = m_rareComputedStyleData->transforms();
+    StyleTransformDataGroup* transforms = m_rareComputedStyleData.transforms();
     if (transforms) {
         return transforms;
     }
@@ -520,50 +521,49 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
                                    windowSize.width(), windowSize.height(),
                                    this);
     if (hasRareComputeStyleData()) {
-        Nullable<Length> minWidth = m_rareComputedStyleData->minWidth();
+        Nullable<Length> minWidth = m_rareComputedStyleData.minWidth();
         if (minWidth.hasValue()) {
-            m_rareComputedStyleData->ensureMinWidth()->changeToFixedIfNeeded(
+            m_rareComputedStyleData.ensureMinWidth()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
         }
-        Nullable<Length> maxWidth = m_rareComputedStyleData->maxWidth();
+        Nullable<Length> maxWidth = m_rareComputedStyleData.maxWidth();
         if (maxWidth.hasValue()) {
-            m_rareComputedStyleData->ensureMaxWidth()->changeToFixedIfNeeded(
+            m_rareComputedStyleData.ensureMaxWidth()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
         }
 
-        Nullable<Length> minHeight = m_rareComputedStyleData->minHeight();
+        Nullable<Length> minHeight = m_rareComputedStyleData.minHeight();
         if (minHeight.hasValue()) {
-            m_rareComputedStyleData->ensureMinHeight()->changeToFixedIfNeeded(
+            m_rareComputedStyleData.ensureMinHeight()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
         }
 
-        Nullable<Length> maxHeight = m_rareComputedStyleData->maxHeight();
+        Nullable<Length> maxHeight = m_rareComputedStyleData.maxHeight();
         if (maxHeight.hasValue()) {
-            m_rareComputedStyleData->ensureMaxHeight()->changeToFixedIfNeeded(
+            m_rareComputedStyleData.ensureMaxHeight()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
         }
 
         Nullable<Length> verticalAlignLength =
-            m_rareComputedStyleData->verticalAlignLength();
+            m_rareComputedStyleData.verticalAlignLength();
         if (verticalAlignLength.hasValue()) {
-            m_rareComputedStyleData->ensureVerticalAlignLength()
+            m_rareComputedStyleData.ensureVerticalAlignLength()
                 ->changeToFixedIfNeeded(curFontSize, rootFontSize, font,
                                         windowSize.width(), windowSize.height(),
                                         this);
         }
 
-        OutlineData* outline = m_rareComputedStyleData->outline();
+        OutlineData* outline = m_rareComputedStyleData.outline();
         if (outline) {
             outline->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                    this);
         }
 
-        BorderRadiusData* borderRadius =
-            m_rareComputedStyleData->borderRadius();
+        BorderRadiusData* borderRadius = m_rareComputedStyleData.borderRadius();
         if (borderRadius) {
             borderRadius->m_topLeftHorizontal.changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
@@ -592,7 +592,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         }
 
         StyleTransformDataGroup* transforms =
-            m_rareComputedStyleData->transforms();
+            m_rareComputedStyleData.transforms();
         if (transforms) {
             size_t sz = transforms->size();
             for (size_t i = 0; i < sz; i++) {
@@ -607,7 +607,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         }
 
         StyleTransformOrigin* origin =
-            m_rareComputedStyleData->transformOrigin();
+            m_rareComputedStyleData.transformOrigin();
         if (origin && origin->originValue()) {
             origin->originValue()->getXAxis().changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
@@ -620,13 +620,13 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
                 windowSize.height(), this);
         }
 
-        StyleBackgroundData* background = m_rareComputedStyleData->background();
+        StyleBackgroundData* background = m_rareComputedStyleData.background();
         if (background) {
             background->checkComputed(curFontSize, rootFontSize, font,
                                       windowSize, this);
         }
 
-        BorderData* border = m_rareComputedStyleData->border();
+        BorderData* border = m_rareComputedStyleData.border();
         if (border) {
             BorderData* b = border;
             b->checkComputed(curFontSize, rootFontSize, font, windowSize, this);
@@ -644,19 +644,19 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             }
         }
 
-        LengthData* padding = m_rareComputedStyleData->padding();
+        LengthData* padding = m_rareComputedStyleData.padding();
         if (padding) {
             padding->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                    this);
         }
 
-        LengthData* margin = m_rareComputedStyleData->margin();
+        LengthData* margin = m_rareComputedStyleData.margin();
         if (margin) {
             margin->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                   this);
         }
 
-        LengthData* offset = m_rareComputedStyleData->offset();
+        LengthData* offset = m_rareComputedStyleData.offset();
         if (offset) {
             offset->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                   this);
@@ -1456,7 +1456,7 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
         return matrix;
     }
 
-    StyleTransformDataGroup* transforms = m_rareComputedStyleData->transforms();
+    StyleTransformDataGroup* transforms = m_rareComputedStyleData.transforms();
 
     if (!transforms || !isTransformable) {
         return matrix;
@@ -1531,8 +1531,7 @@ ComputedStyle* ComputedStyle::addCachedPseudoStyle(ComputedStyle* pseudoStyle)
     STARFISH_ASSERT(pseudoStyle->pseudoType() >
                     StyleResolver::PseudoElementType::PseudoElementNone);
 
-    setRareComputedStyleDataIfNeeded();
-    m_rareComputedStyleData->ensureCachedPsuedoStyles()->push_back(pseudoStyle);
+    m_rareComputedStyleData.ensureCachedPsuedoStyles()->push_back(pseudoStyle);
     return pseudoStyle;
 }
 
@@ -1569,11 +1568,11 @@ ComputedStyle* ComputedStyle::pseudoStyle(
 
 bool ComputedStyle::isFourSideBorderStyleValueSolid()
 {
-    if (!m_rareComputedStyleData) {
+    if (!hasRareComputeStyleData()) {
         return false;
     }
 
-    BorderData* border = m_rareComputedStyleData->border();
+    BorderData* border = m_rareComputedStyleData.border();
     if (border) {
         BorderData* b = border;
         return (b->top().style() == BorderStyleValue::SolidBorderStyleValue) &&

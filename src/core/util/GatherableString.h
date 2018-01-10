@@ -89,8 +89,9 @@ public:
         if (m_length < InlineStorageSize) {
             m_builtInBuffer[m_length++] = ch;
         } else {
-            if (!m_externalString)
+            if (!m_externalString) {
                 m_externalString = new UTF32String();
+            }
             m_externalString->push_back(ch);
             m_length++;
         }

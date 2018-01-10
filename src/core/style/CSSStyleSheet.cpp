@@ -70,85 +70,12 @@ CSSStyleSheet::CSSStyleSheet(Node* origin, String* str)
     , m_ruleList(nullptr)
     , m_mediaQuerySet(nullptr)
     , m_mediaWrapper(nullptr)
-    , m_ruleSet(nullptr)
 {
 }
 
 ScriptBindingInstance* CSSStyleSheet::scriptBindingInstance()
 {
     return origin()->scriptBindingInstance();
-}
-
-void CSSStyleSheet::addStyleRule(std::pair<StyleRule*, ResourceURL*> rule)
-{
-    m_styleRules.push_back(rule);
-}
-
-static void extractValuesforSelector(const CSSSelector* selector,
-                                     AtomicString& id, AtomicString& className,
-                                     AtomicString& tagName)
-{
-    switch (selector->type()) {
-    case CSSSelector::Id:
-        id = selector->selectorText();
-        break;
-    case CSSSelector::Class:
-        className = selector->selectorText();
-        break;
-    case CSSSelector::Tag:
-        if (!selector->selectorText().string()->equals("*")) {
-            tagName = selector->selectorText();
-        }
-        break;
-    default:
-        break;
-    }
-}
-
-void CSSStyleSheet::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
-{
-    auto selectorList = rule.first->selectorList();
-
-    AtomicString id;
-    AtomicString className;
-    AtomicString tagName;
-
-    unsigned size = selectorList.size();
-    unsigned i = 0;
-    for (; i < size && selectorList[i]->relation() == CSSSelector::SubSelector;
-         ++i) {
-        extractValuesforSelector(selectorList[i], id, className, tagName);
-    }
-
-    if (i < size) {
-        extractValuesforSelector(selectorList[i], id, className, tagName);
-    }
-
-    if (!id.isEmptyAtomicString()) {
-        rule.first->setIDSelector(true);
-        if (size == 1) {
-            rule.first->setIsSimpleIDSelector(true);
-        }
-        ruleSet()->idRules().insert(std::make_pair(id, rule));
-        return;
-    }
-    if (!className.isEmptyAtomicString()) {
-        rule.first->setClassSelector(true);
-        if (size == 1) {
-            rule.first->setIsSimpleClassSelector(true);
-        }
-        ruleSet()->classRules().insert(std::make_pair(className, rule));
-        return;
-    }
-    if (!tagName.isEmptyAtomicString()) {
-        if (size == 1) {
-            rule.first->setIsSimpleTagSelector(true);
-        }
-        ruleSet()->tagRules().insert(std::make_pair(tagName, rule));
-        return;
-    }
-
-    ruleSet()->universalRules().insert(std::make_pair(AtomicString(), rule));
 }
 
 void CSSStyleSheet::addRule(StyleRuleBase* rule)

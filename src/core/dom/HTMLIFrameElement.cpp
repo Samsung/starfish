@@ -131,9 +131,7 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
         if (m_tabIndex == -1)
             m_tabIndex = 0;
     } else if (name == starFish()->staticStrings()->m_frameborder) {
-        if (frame()) {
-            setNeedsStyleRecalc();
-        }
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     } else if (name == starFish()->staticStrings()->m_name) {
         if (m_browsingContext) {
             m_browsingContext->setName(value);

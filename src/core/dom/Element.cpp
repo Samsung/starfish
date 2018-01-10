@@ -350,6 +350,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
             m_id = AtomicString::createAtomicString(starFish(), value);
         }
         document()->invalidNamedAccessCacheIfNeeded();
+        setNeedsStyleRecalc(StyleChangeReason::IdChange);
     } else if (name == ss->m_class) {
         GCVector<StringView> tokens;
         DOMTokenList::tokenize(value, tokens);
@@ -366,6 +367,8 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
             parent->invalidateNodeListCacheDueToChangeClassNameOfDescendant();
             parent = parent->parentNode();
         }
+
+        setNeedsStyleRecalc(StyleChangeReason::ClassChange);
     } else if (name == ss->m_style) {
         if (attributeCreated) {
             registerInlineStyleCallback();
@@ -377,6 +380,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
             parser.parseStyleDeclaration(value, inlineStyle());
         }
         m_didInlineStyleModifiedAfterAttributeSet = false;
+        setNeedsStyleRecalc(StyleChangeReason::InlineStyleChange);
     } else if (name == ss->m_name) {
         // TODO we should not always invalidate cache
         // according spec,
@@ -394,15 +398,9 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         document()->invalidFocusRingCacheIfNeeded();
     }
 
-    if (name == ss->m_audioTagName || name == ss->m_videoTagName) {
-        // Media elements can have child elements, but they are not visible
-        // elements.
-        setNeedsStyleRecalc();
-    } else {
-        // Style should be recalculated from this node to children because of
-        // combinators. And this is done only if children have combinators that
-        // is partially matched.
-        setNeedsStyleRecalcIfNeeded();
+    if (document()->styleResolver().mayHaveAttrSelectorWithName(
+            name.localNameAtomic())) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     }
 }
 
@@ -1186,7 +1184,7 @@ void Element::registerInlineStyleCallback()
 
 void Element::notifyInlineStyleChanged()
 {
-    setNeedsStyleRecalc();
+    setNeedsStyleRecalc(StyleChangeReason::InlineStyleChange);
     m_didInlineStyleModifiedAfterAttributeSet = true;
     if (hasAttribute(starFish()->staticStrings()->m_style) == SIZE_MAX) {
         m_attributes.push_back(Attribute(starFish()->staticStrings()->m_style,

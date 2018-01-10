@@ -21,11 +21,12 @@
 #include "core/style/NamedColors.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/Length.h"
-#include "core/style/AncestorSelectorFilter.h"
 #include "core/util/VectorWithInlineStorage.h"
+#include "core/util/BloomFilter.h"
 
 namespace StarFish {
 
+class AncestorSelectorFilter;
 class CalcData;
 class ComputedStyle;
 class StyleRule;
@@ -36,6 +37,7 @@ class Element;
 class MediaQuerySet;
 class MediaQueryEvaluator;
 class Node;
+class RuleSet;
 
 class CSSTokenValue : public std::string {
 public:
@@ -2655,11 +2657,8 @@ using MatchedStyleRules = VectorWithInlineStorage<
 class CSSStyleSheet;
 class StyleResolveContext {
 public:
-    StyleResolveContext(Document* document)
-        : m_document(document)
-    {
-    }
-
+    StyleResolveContext(Document* document);
+    ~StyleResolveContext();
     void pushIntoComputedStylePool(ComputedStyle* b);
 
     bool hasItemInComputedStylePool()
@@ -2681,7 +2680,7 @@ public:
     void* allocateComputedStyle();
 
     Document* m_document;
-    AncestorSelectorFilter m_ancestorSelectorFilter;
+    std::unique_ptr<AncestorSelectorFilter> m_ancestorSelectorFilter;
     GCVector<ComputedStyle*> m_computedStylePool;
 #ifndef NDEBUG
     std::set<ComputedStyle*> m_dbg;
@@ -2714,23 +2713,35 @@ public:
                                   // ancestor of the element
     };
 
-    enum CombinatorMatchingResult {
-        CombinatorFails,
-        CombinatorMatchesPartially,
+    // MUST uses same bit with Node::StyleChangeReason
+    enum StyleDamageSource {
+        NoDamage = 0,
+        StyleDamageFromID = 1,
+        StyleDamageFromClass = 1 << 1,
+        StyleDamageFromAttribute = 1 << 2,
+        StyleDamageFromElementState = 1 << 3,
+        StyleDamageFromDOMTree = 1 << 4,
+        StyleDamageFromAll = StyleDamageFromID | StyleDamageFromClass |
+                             StyleDamageFromAttribute |
+                             StyleDamageFromElementState |
+                             StyleDamageFromDOMTree
     };
 
     struct MatchResult {
         MatchResult()
             : pseudoType(PseudoElementNone)
-            , combinatorResult(CombinatorFails)
+            , styleDamageFrom(NoDamage)
+            , seenCombinator(false)
         {
         }
 
         PseudoElementType pseudoType;
-        CombinatorMatchingResult combinatorResult;
+        StyleDamageSource styleDamageFrom;
+        bool seenCombinator;
     };
 
     StyleResolver(Document* document);
+    void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
     void addSheet(CSSStyleSheet* sheet);
     void removeSheet(CSSStyleSheet* sheet)
     {
@@ -2744,14 +2755,12 @@ public:
         return m_sheets;
     }
 
-    CSSStyleSheet* styleSheetWithStyleRules();
-    void removeAllRules()
+    RuleSet* ruleSet()
     {
-        if (!m_styleSheetWithAllRules) {
-            return;
-        }
-        m_styleSheetWithAllRules = nullptr;
+        return m_ruleSet;
     }
+
+    void removeAllRules();
 
     bool usesFirstLineRule() const
     {
@@ -2802,6 +2811,13 @@ public:
     bool mediaQueryAffectedByViewportChange();
     bool mediaQueryAffectedByDeviceChange();
 
+    bool mayHaveAttrSelectorWithName(AtomicString localName)
+    {
+        auto iter = std::find(m_ruleSetAttrFilter.begin(),
+                              m_ruleSetAttrFilter.end(), localName);
+        return iter != m_ruleSetAttrFilter.end();
+    }
+
 protected:
     void resolveChildrenStyle(StyleResolveContext& ctx, StyleResolver* resolver,
                               Node* element, ComputedStyle* elementStyle,
@@ -2842,6 +2858,8 @@ protected:
     MediaQueryEvaluator* m_mediaQueryEvaluator;
     MediaQueryResultList m_viewportDependentMediaQueryResults;
     MediaQueryResultList m_deviceDependentMediaQueryResults;
+    RuleSet* m_ruleSet;
+    GCAtomicVector<AtomicString> m_ruleSetAttrFilter;
 };
 }
 

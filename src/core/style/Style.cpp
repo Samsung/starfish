@@ -36,6 +36,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
+#include "core/style/AncestorSelectorFilter.h"
 #include "core/style/CalcData.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSParser.h"
@@ -3453,16 +3454,8 @@ StyleResolver::StyleResolver(Document* document)
                        DEFAULT_FONT_SIZE)
     , m_usesFirstLineRule(false)
     , m_mediaQueryEvaluator(nullptr)
+    , m_ruleSet(new RuleSet())
 {
-}
-
-CSSStyleSheet* StyleResolver::styleSheetWithStyleRules()
-{
-    if (!m_styleSheetWithAllRules) {
-        m_styleSheetWithAllRules =
-            new CSSStyleSheet(m_document, String::emptyString);
-    }
-    return m_styleSheetWithAllRules;
 }
 
 ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
@@ -3482,6 +3475,16 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
         WhiteSpaceValue::NormalWhiteSpaceValue;
     ret->loadResources(doc);
     return ret;
+}
+
+StyleResolveContext::StyleResolveContext(Document* document)
+    : m_document(document)
+    , m_ancestorSelectorFilter(new AncestorSelectorFilter())
+{
+}
+
+StyleResolveContext::~StyleResolveContext()
+{
 }
 
 void StyleResolveContext::pushIntoComputedStylePool(ComputedStyle* b)
@@ -5098,8 +5101,7 @@ void StyleResolver::apply(Element* element,
 
                         if (dValues[0] != dValues[3] || dValues[1] ||
                             dValues[2]) {
-                            style->setRareComputedStyleDataIfNeeded();
-                            style->m_rareComputedStyleData->ensureTransforms()
+                            style->m_rareComputedStyleData.ensureTransforms()
                                 ->m_hasComplexTransform = true;
                         }
                         break;
@@ -5161,29 +5163,28 @@ void StyleResolver::apply(Element* element,
                         break;
                     case CSSTransformFunction::Kind::Rotate:
                         style->setTransformRotate(dValues[0]);
-                        style->m_rareComputedStyleData->ensureTransforms()
+                        style->m_rareComputedStyleData.ensureTransforms()
                             ->m_hasComplexTransform = true;
                         break;
                     case CSSTransformFunction::Kind::Skew:
                         if (valueSize == 2) {
                             style->setTransformSkew(dValues[0], dValues[1]);
-                            style->m_rareComputedStyleData->ensureTransforms()
+                            style->m_rareComputedStyleData.ensureTransforms()
                                 ->m_hasComplexTransform = true;
                             break;
                         }
                     case CSSTransformFunction::Kind::SkewX:
                         style->setTransformSkew(dValues[0], 0);
-                        style->m_rareComputedStyleData->ensureTransforms()
+                        style->m_rareComputedStyleData.ensureTransforms()
                             ->m_hasComplexTransform = true;
                         break;
                     case CSSTransformFunction::Kind::SkewY:
                         style->setTransformSkew(0, dValues[0]);
-                        style->m_rareComputedStyleData->ensureTransforms()
+                        style->m_rareComputedStyleData.ensureTransforms()
                             ->m_hasComplexTransform = true;
                         break;
                     default:
-                        style->setRareComputedStyleDataIfNeeded();
-                        style->m_rareComputedStyleData->ensureTransforms()
+                        style->m_rareComputedStyleData.ensureTransforms()
                             ->m_hasComplexTransform = true;
                         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                     }
@@ -5319,6 +5320,14 @@ void StyleResolver::apply(Element* element,
                         if (attrValue.hasValue()) {
                             style->setContentText(attrValue.getValue());
                         }
+                        style->m_styleDamageSource =
+                            (StyleDamageSource)(style->m_styleDamageSource |
+                                                StyleDamageFromAttribute);
+
+                        m_ruleSetAttrFilter.push_back(
+                            element->document()
+                                ->createAttributeName(item.attrValue())
+                                .localNameAtomic());
                     } else {
                         STARFISH_RELEASE_ASSERT_NOT_REACHED();
                     }
@@ -5751,16 +5760,13 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
     MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
     PseudoElementType pseudoElementType)
 {
+    bool canUseAncestorSelectorFilter =
+        ctx.m_ancestorSelectorFilter->canUseAncestorSelectorFilter(element);
+
     for (auto it = begin; it != end; ++it) {
         StyleRule* rule = it->second.first;
         ResourceURL* url = it->second.second;
 
-        if (rule->hasIdSelector() && !element->hasId()) {
-            continue;
-        }
-        if (rule->hasClassSelector() && !element->hasClass()) {
-            continue;
-        }
         if (pseudoElementType == PseudoElementType::PseudoElementNone) {
             if (type == CSSSelector::Type::Id && rule->isSimpleIDSelector()) {
                 authorRules.push_back(std::make_pair(rule, url));
@@ -5777,7 +5783,8 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
             }
         }
 
-        if (ctx.m_ancestorSelectorFilter.canIgnoreSelector(rule, element)) {
+        if (canUseAncestorSelectorFilter &&
+            ctx.m_ancestorSelectorFilter->canIgnoreSelector(rule, element)) {
             continue;
         }
 
@@ -5813,10 +5820,13 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
                 authorRules.push_back(std::make_pair(rule, url));
             }
         }
-        if (result.combinatorResult != CombinatorFails) {
+        if (result.seenCombinator) {
             // This is used to determine whether to recalculate the children's
             // style when the attributes of the element is changed.
-            ret->setCombinatorMatchingResult(result.combinatorResult);
+            ret->setStyleDamageSource(result.styleDamageFrom);
+        } else {
+            ret->setStyleDamageSource((StyleDamageSource)(
+                result.styleDamageFrom & StyleDamageFromDOMTree));
         }
     }
 }
@@ -5859,10 +5869,9 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
 
     const size_t matchedRulesInlineStorageSize = 32;
     MatchedStyleRules<matchedRulesInlineStorageSize> matchedRules;
-    CSSStyleSheet* sheet = styleSheetWithStyleRules();
 
     if (element->hasId()) {
-        auto& rules = sheet->ruleSet()->idRules();
+        auto& rules = m_ruleSet->idRules();
         auto range = rules.equal_range(elementId);
         collectMatchingRulesFromAuthorSheet(
             ctx, range.first, range.second, CSSSelector::Type::Id, element,
@@ -5871,7 +5880,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     }
 
     if (element->hasClass()) {
-        auto& rules = sheet->ruleSet()->classRules();
+        auto& rules = m_ruleSet->classRules();
         size_t classLen = elementClasses.size();
         for (unsigned k = 0; k < classLen; k++) {
             auto range = rules.equal_range(elementClasses[k]);
@@ -5883,7 +5892,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     }
 
     {
-        auto& rules = sheet->ruleSet()->tagRules();
+        auto& rules = m_ruleSet->tagRules();
         auto range = rules.equal_range(elementName);
         collectMatchingRulesFromAuthorSheet(
             ctx, range.first, range.second, CSSSelector::Type::Tag, element,
@@ -5892,7 +5901,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     }
 
     {
-        auto& rules = sheet->ruleSet()->universalRules();
+        auto& rules = m_ruleSet->universalRules();
         collectMatchingRulesFromAuthorSheet(
             ctx, rules.begin(), rules.end(), CSSSelector::Type::UnKnown,
             element, elementName, elementId, elementClasses, matchedRules, ret,
@@ -5990,6 +5999,7 @@ StyleResolver::Match StyleResolver::matchSelector(
         match = matchSelector(element, elementName, elementId, elementClasses,
                               selectorList, ++idx, result, isQueryingSelector);
     } else {
+        result.seenCombinator = true;
         match =
             matchForRelation(element, elementName, elementId, elementClasses,
                              selectorList, selector->relation(), ++idx, result);
@@ -6004,10 +6014,6 @@ StyleResolver::Match StyleResolver::matchForRelation(
     unsigned idx, MatchResult& result)
 {
     STARFISH_ASSERT(idx < selectorList.size());
-
-    // This is used to determine whether to recalculate the children's style
-    // when the attributes of the element is changed.
-    result.combinatorResult = CombinatorMatchesPartially;
 
     CSSSelector* selector = selectorList[idx];
     switch (relation) {
@@ -6024,6 +6030,7 @@ StyleResolver::Match StyleResolver::matchForRelation(
             }
             parent = parent->parentElement();
         }
+
         return Match::SelectorFailsCompletely;
     }
     case CSSSelector::RelationType::Child: {
@@ -6091,6 +6098,8 @@ bool StyleResolver::checkOne(Element* element, AtomicString elementName,
 {
     auto selectorType = selector->type();
     if (selectorType == CSSSelector::Type::Class) {
+        result.styleDamageFrom =
+            (StyleDamageSource)(result.styleDamageFrom | StyleDamageFromClass);
         auto txt = selector->selectorText();
         size_t len = elementClasses.size();
         for (unsigned i = 0; i < len; i++) {
@@ -6103,6 +6112,8 @@ bool StyleResolver::checkOne(Element* element, AtomicString elementName,
         return (elementName == selector->selectorText());
     } else if (selectorType == CSSSelector::Type::Id) {
         STARFISH_ASSERT(!selector->selectorText().isEmptyAtomicString());
+        result.styleDamageFrom =
+            (StyleDamageSource)(result.styleDamageFrom | StyleDamageFromID);
         return elementId == selector->selectorText();
     } else {
         switch (selectorType) {
@@ -6115,6 +6126,8 @@ bool StyleResolver::checkOne(Element* element, AtomicString elementName,
         case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
         case CSSSelector::AttributeBegin:   // css3: E[foo^="bar"]
         case CSSSelector::AttributeEnd:     // css3: E[foo$="bar"]
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromAttribute);
             return anyAttributeMatches(element, selector->type(),
                                        selector->asCSSAttributeSelector(),
                                        result);
@@ -6266,75 +6279,84 @@ bool StyleResolver::checkPseudoClass(Element* element,
 {
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoHover:
-        element->setRestyleFlags(Node::ChildrenOrSiblingsAffectedByHover);
+        result.styleDamageFrom = (StyleDamageSource)(
+            result.styleDamageFrom | StyleDamageFromElementState);
         return element->state() & Node::NodeState::NodeStateHovered;
     case CSSSelector::PseudoType::PseudoActive:
-        element->setRestyleFlags(Node::ChildrenOrSiblingsAffectedByActive);
+        result.styleDamageFrom = (StyleDamageSource)(
+            result.styleDamageFrom | StyleDamageFromElementState);
         return element->state() & Node::NodeState::NodeStateActive;
     case CSSSelector::PseudoType::PseudoFocus:
-#if defined(STARFISH_ENABLE_BODY_FOCUS_RING)
-        if (element->isHTMLHtmlElement()) {
-            if (element->document()->webView()->focusedBrowsingContext() ==
-                element->document()->browsingContext()) {
-                if (element->document()->activeElement() &&
-                    element->document()->activeElement()->isHTMLBodyElement()) {
-                    element->setRestyleFlags(
-                        Node::ChildrenOrSiblingsAffectedByFocus);
-                    return true;
-                }
-            }
-        }
-#endif
-        element->setRestyleFlags(Node::ChildrenOrSiblingsAffectedByFocus);
+        result.styleDamageFrom = (StyleDamageSource)(
+            result.styleDamageFrom | StyleDamageFromElementState);
         return element->state() & Node::NodeState::NodeStateFocused;
     case CSSSelector::PseudoType::PseudoTarget:
+        result.styleDamageFrom = (StyleDamageSource)(
+            result.styleDamageFrom | StyleDamageFromElementState);
         return element->state() & Node::NodeState::NodeStateTarget;
     case CSSSelector::PseudoType::PseudoRoot:
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
         return element == element->document()->documentElement();
     case CSSSelector::PseudoType::PseudoFirstChild:
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
         return isFirstChild(element);
     case CSSSelector::PseudoType::PseudoLastChild:
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
         return isLastChild(element);
     case CSSSelector::PseudoType::PseudoFirstOfType:
-        if (element->parentElement()) {
-            return isFirstOfType(element);
-        }
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
+        return element->parentElement() && isFirstOfType(element);
         break;
     case CSSSelector::PseudoType::PseudoLastOfType:
-        if (element->parentElement()) {
-            return isLastOfType(element);
-        }
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
+        return element->parentElement() && isLastOfType(element);
         break;
     case CSSSelector::PseudoType::PseudoOnlyChild:
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
         return isFirstChild(element) && isLastChild(element);
     case CSSSelector::PseudoType::PseudoOnlyOfType:
-        if (element->parentElement()) {
-            return isFirstOfType(element) && isLastOfType(element);
-        }
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
+        return element->parentElement() && isFirstOfType(element) &&
+               isLastOfType(element);
         break;
     case CSSSelector::PseudoType::PseudoEmpty:
-        element->setRestyleFlags(Node::AffectedByEmptyRules);
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
         return isEmpty(element);
     case CSSSelector::PseudoNthChild:
-        if (element->parentElement()) {
-            return selector->matchNth(nthChildIndex(element));
-        }
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
+        return element->parentElement() &&
+               selector->matchNth(nthChildIndex(element));
         break;
     case CSSSelector::PseudoNthOfType:
-        if (element->parentElement()) {
-            return selector->matchNth(nthOfTypeIndex(element));
-        }
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
+        return element->parentElement() &&
+               selector->matchNth(nthOfTypeIndex(element));
         break;
     case CSSSelector::PseudoNthLastChild:
-        if (element->parentElement())
-            return selector->matchNth(nthLastChildIndex(element));
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
+        return element->parentElement() &&
+               selector->matchNth(nthLastChildIndex(element));
         break;
     case CSSSelector::PseudoNthLastOfType:
-        if (element->parentElement()) {
-            return selector->matchNth(nthLastOfTypeIndex(element));
-        }
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
+        return element->parentElement() &&
+               selector->matchNth(nthLastOfTypeIndex(element));
         break;
     case CSSSelector::PseudoType::PseudoLang: {
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromAttribute);
         String* value = element->getLaunguage();
         String* argument = selector->argument();
 
@@ -6351,6 +6373,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
     }
     case CSSSelector::PseudoType::PseudoNot: {
         STARFISH_ASSERT(selector->pseudoSelectorList().size() == 1);
+        result.styleDamageFrom = StyleDamageFromAll;
         AtomicString elementName = element->name().localNameAtomic();
         AtomicString elementId = element->atomicId();
         const GCVector<AtomicString>& elementClasses = element->classNames();
@@ -6358,33 +6381,50 @@ bool StyleResolver::checkPseudoClass(Element* element,
                          selector->pseudoSelectorList()[0], result);
     }
     case CSSSelector::PseudoEnabled: {
-        if (element->isHTMLElement()) {
-            return !element->asHTMLElement()->disabled();
-        }
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromAttribute);
         if (element->isHTMLAnchorElement()) {
-            return element->getAttribute(starFish()->staticStrings()->m_href)
-                .hasValue();
+            if (element->getAttribute(starFish()->staticStrings()->m_href)
+                    .hasValue()) {
+                return true;
+            }
+        } else if (element->isHTMLElement()) {
+            if (!element->asHTMLElement()->disabled()) {
+                return true;
+            }
         }
-        break;
+        return false;
     }
     case CSSSelector::PseudoDisabled: {
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromAttribute);
         if (element->isHTMLElement()) {
-            return element->asHTMLElement()->disabled();
+            if (element->asHTMLElement()->disabled()) {
+                return true;
+            } else {
+                return false;
+            }
         }
-        break;
+        return false;
     }
     case CSSSelector::PseudoChecked: {
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromAttribute);
         if (element->isHTMLElement()) {
             if (element->isHTMLInputElement()) {
                 if (element->asHTMLInputElement()->type()->equals("radio") ||
                     element->asHTMLInputElement()->type()->equals("checkbox")) {
-                    return element->asHTMLInputElement()->checked();
+                    if (element->asHTMLInputElement()->checked()) {
+                        return true;
+                    }
                 }
             } else if (element->isHTMLOptionElement()) {
-                return element->asHTMLOptionElement()->selected();
+                if (element->asHTMLOptionElement()->selected()) {
+                    return true;
+                }
             }
         }
-        break;
+        return false;
     }
     default:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -6495,7 +6535,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
     bool inheritedStyleChangedForTextNode = inheritedStyleChanged;
 
     if (parentElement->isElement()) {
-        ctx.m_ancestorSelectorFilter.pushElement(parentElement->asElement());
+        ctx.m_ancestorSelectorFilter->pushElement(parentElement->asElement());
     }
 
     Node* child = parentElement->firstChild();
@@ -6557,7 +6597,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
     parentElement->clearChildNeedsStyleRecalc();
 
     if (parentElement->isElement()) {
-        ctx.m_ancestorSelectorFilter.popElement();
+        ctx.m_ancestorSelectorFilter->popElement();
     }
 }
 
@@ -6617,6 +6657,84 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
     if (!traverseAndTryAddSheet(m_document, sheet, originFound)) {
         m_sheets.push_back(sheet);
     }
+}
+
+void StyleResolver::removeAllRules()
+{
+    m_ruleSet->clear();
+    m_styleSheetWithAllRules = nullptr;
+    m_ruleSetAttrFilter.clear();
+}
+
+static void extractValuesforSelector(const CSSSelector* selector,
+                                     AtomicString& id, AtomicString& className,
+                                     AtomicString& tagName)
+{
+    switch (selector->type()) {
+    case CSSSelector::Id:
+        id = selector->selectorText();
+        break;
+    case CSSSelector::Class:
+        className = selector->selectorText();
+        break;
+    case CSSSelector::Tag:
+        if (!selector->selectorText().string()->equals("*")) {
+            tagName = selector->selectorText();
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
+{
+    rule.first->initFlagsRelatedWithSelectorList();
+    auto selectorList = rule.first->selectorList();
+
+    AtomicString id;
+    AtomicString className;
+    AtomicString tagName;
+
+    unsigned size = selectorList.size();
+
+    auto relation = selectorList[0]->relation();
+    extractValuesforSelector(selectorList[0], id, className, tagName);
+
+    unsigned i = 1;
+    for (; i < size && relation == CSSSelector::SubSelector; i++) {
+        relation = selectorList[i]->relation();
+        extractValuesforSelector(selectorList[i], id, className, tagName);
+    }
+
+    for (i = 0; i < size; i++) {
+        if (selectorList[i]->isAttributeSelector()) {
+            if (!mayHaveAttrSelectorWithName(selectorList[i]
+                                                 ->asCSSAttributeSelector()
+                                                 ->attribute()
+                                                 .localNameAtomic())) {
+                m_ruleSetAttrFilter.push_back(selectorList[i]
+                                                  ->asCSSAttributeSelector()
+                                                  ->attribute()
+                                                  .localNameAtomic());
+            }
+        }
+    }
+
+    if (!id.isEmptyAtomicString()) {
+        m_ruleSet->idRules().insert(std::make_pair(id, rule));
+        return;
+    }
+    if (!className.isEmptyAtomicString()) {
+        m_ruleSet->classRules().insert(std::make_pair(className, rule));
+        return;
+    }
+    if (!tagName.isEmptyAtomicString()) {
+        m_ruleSet->tagRules().insert(std::make_pair(tagName, rule));
+        return;
+    }
+
+    m_ruleSet->universalRules().insert(std::make_pair(AtomicString(), rule));
 }
 
 const MediaQueryEvaluator& StyleResolver::mediaQueryEvaluator()

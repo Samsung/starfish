@@ -512,38 +512,24 @@ Node* Node::nearestParentElement()
     return t;
 }
 
-void Node::setState(NodeState state, DynamicRestyleFlags mask, bool enable)
+void Node::setState(NodeState state, bool enable)
 {
-    // Node needs to recalculate its style when it is updated by user action
-    // such as focus, hover and active.
-    // Specially, when dynamic pseudo class selectors like :focus, :hover or
-    // :active are combined with combinator selectors like descendant, child
-    // or sibling, the node's child and sibling should be also recalculated
-    // to update style. ex) div:hover > p { ... }
-    // Finally, if dynamic pseudo class selectors are compounded to pseudo
-    // element selectors, the pseudo element should be created through
-    // building frame tree only when the node is updated by user action.
-    // ex) div:hover:first-letter { ... }
-
-    int oldState = m_state;
+    int newState = m_state;
 
     if (state == NodeStateNormal) {
-        m_state = 0;
-        m_restyleFlags = 0;
-
-        setNeedsStyleRecalc();
-    } else if (!(m_state & state) == enable) {
-        m_state ^= state;
-
-        if (isAffectedByDynamicEvent(mask)) {
-            setNeedsStyleRecalcIfNeeded();
+        newState = 0;
+    } else {
+        if (enable) {
+            newState = newState | state;
         } else {
-            setNeedsStyleRecalc();
+            newState = newState & ~state;
         }
     }
 
-    int newState = m_state;
-    if (oldState != newState) {
+    if (m_state != newState) {
+        int oldState = m_state;
+        m_state = newState;
+        setNeedsStyleRecalc(StyleChangeReason::ElementStateChange);
         didStateChanged(oldState, newState);
     }
 }
@@ -898,6 +884,17 @@ static void notifyNodeInsertedToDocumentTree(Node* head, Node* node)
     }
 }
 
+static void setChildrenNeedsStyleRecalc(Node* node)
+{
+    node->setNeedsStyleRecalc(Node::JustNeedsRecalcSelf);
+
+    Node* child = node->firstChild();
+    while (child) {
+        setChildrenNeedsStyleRecalc(child);
+        child = child->nextSibling();
+    }
+}
+
 static void didInsertNode(Node* self, Node* child,
                           Node::FrameTreeBuildReason reason)
 {
@@ -912,11 +909,8 @@ static void didInsertNode(Node* self, Node* child,
     if (self->isInDocumentScope() &&
         self->document()->doesParticipateInRendering()) {
         notifyNodeInsertedToDocumentTree(self, child);
-        if (self->isAffectedByDynamicEvent(Node::AffectedByEmptyRules)) {
-            self->setNeedsStyleRecalc();
-        }
-        child->setNeedsStyleRecalc();
-        self->setChildrenNeedsStyleRecalc();
+        self->setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
+        setChildrenNeedsStyleRecalc(child);
         self->setNeedsFrameTreeBuild(reason);
     }
 }
@@ -1151,9 +1145,7 @@ Node* Node::removeChild(Node* child)
     child->setParentNode(nullptr);
 
     child->setNeedsFrameTreeBuild(Node::RemoveFromParent);
-    if (isAffectedByDynamicEvent(Node::AffectedByEmptyRules)) {
-        setNeedsStyleRecalc();
-    }
+    setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
 
     if (isInDocumentScope() && document()->doesParticipateInRendering()) {
         notifyNodeRemoveFromDocumentTree(child);
@@ -1195,7 +1187,7 @@ Node* Node::parserAppendChild(Node* child)
         parent = parent->parentNode();
     }
 
-    child->setNeedsStyleRecalc();
+    setChildrenNeedsStyleRecalc(child);
     setNeedsFrameTreeBuild(Node::AppendChild);
 
     return child;
@@ -1285,7 +1277,7 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
         notifyNodeInsertedToDocumentTree(this, child);
     }
 
-    child->setNeedsStyleRecalc();
+    setChildrenNeedsStyleRecalc(child);
     setNeedsFrameTreeBuild(Node::InsertBefore);
 }
 
@@ -1567,7 +1559,7 @@ void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
     }
 }
 
-void Node::setNeedsStyleRecalc()
+void Node::setNeedsStyleRecalc(StyleChangeReason reason)
 {
     if (!document()->doesParticipateInRendering()) {
         return;
@@ -1576,93 +1568,67 @@ void Node::setNeedsStyleRecalc()
     if (!m_needsStyleRecalc) {
         m_needsStyleRecalc = true;
     }
-    if (parentNode()) {
-        parentNode()->setChildNeedsStyleRecalc();
-    }
-    window()->browsingContext()->setNeedsStyleRecalc();
-}
-
-void Node::setNeedsStyleRecalcIfNeeded()
-{
-    if (!document()->doesParticipateInRendering()) {
-        return;
-    }
-
-    // current node
-    if (!m_needsStyleRecalc) {
-        m_needsStyleRecalc = true;
-    }
 
     if (parentNode()) {
         parentNode()->setChildNeedsStyleRecalc();
     }
 
-    // siblings
-    setSiblingsNeedsStyleRecalcIfNeeded();
+    if (reason) {
+        // siblings
+        setSiblingsNeedsStyleRecalcIfNeeded(reason);
 
-    // children
-    setChildrenNeedsStyleRecalcIfNeeded();
+        // children
+        setChildrenNeedsStyleRecalcIfNeeded(reason);
+    }
 
     window()->browsingContext()->setNeedsStyleRecalc();
 }
 
-void Node::setSiblingsNeedsStyleRecalcIfNeeded()
+void Node::setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
 {
     Node* node = nextSibling();
     while (node) {
-        if (node->style() &&
-            node->style()->combinatorMatchingResult() ==
-                StyleResolver::CombinatorMatchingResult::
-                    CombinatorMatchesPartially) {
-            node->m_needsStyleRecalc = true;
+        if (node->isElement()) {
+            StyleResolver::StyleDamageSource cmr;
+            if (node->style() && node->style()->styleDamageSource()) {
+                cmr = node->style()->styleDamageSource();
+            } else {
+                cmr = StyleResolver::StyleDamageSource::NoDamage;
+            }
 
-            if (parentNode()) {
-                parentNode()->setChildNeedsStyleRecalc();
+            if (cmr & reason) {
+                node->m_needsStyleRecalc = true;
+                if (node->parentNode()) {
+                    node->parentNode()->setChildNeedsStyleRecalc();
+                }
             }
         }
+
         node = node->nextSibling();
     }
-
-    window()->browsingContext()->setNeedsStyleRecalc();
 }
 
-void Node::setChildrenNeedsStyleRecalcIfNeeded()
+void Node::setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
 {
     Node* child = firstChild();
     while (child) {
-        if (child->style() &&
-            child->style()->combinatorMatchingResult() ==
-                StyleResolver::CombinatorMatchingResult::
-                    CombinatorMatchesPartially) {
-            child->m_needsStyleRecalc = true;
-
-            if (parentNode()) {
-                parentNode()->setChildNeedsStyleRecalc();
+        if (child->isElement()) {
+            StyleResolver::StyleDamageSource cmr;
+            if (child->style() && child->style()->styleDamageSource()) {
+                cmr = child->style()->styleDamageSource();
+            } else {
+                cmr = StyleResolver::StyleDamageSource::NoDamage;
             }
+            if (cmr & reason) {
+                child->m_needsStyleRecalc = true;
+                if (child->parentNode()) {
+                    child->parentNode()->setChildNeedsStyleRecalc();
+                }
+            }
+            child->setChildrenNeedsStyleRecalcIfNeeded(reason);
         }
-        child->setChildrenNeedsStyleRecalcIfNeeded();
         child = child->nextSibling();
     }
-
-    window()->browsingContext()->setNeedsStyleRecalc();
-}
-
-void Node::setChildrenNeedsStyleRecalc()
-{
-    if (!document()->doesParticipateInRendering()) {
-        return;
-    }
-
-    setChildNeedsStyleRecalc();
-
-    Node* child = firstChild();
-    while (child) {
-        child->m_needsStyleRecalc = true;
-        child->setChildrenNeedsStyleRecalc();
-        child = child->nextSibling();
-    }
-
-    window()->browsingContext()->setNeedsStyleRecalc();
 }
 
 void Node::setNeedsLayout()
@@ -1754,7 +1720,7 @@ void Node::didNodeRemoved(Node* parent, Node* oldChild)
 
 void Node::didNodeRemovedFromDocumentTree()
 {
-    setState(NodeStateNormal, DynamicRestyleFlags::NotAffected, false);
+    setState(NodeStateNormal, false);
 }
 
 RareNodeMembers* Node::ensureRareMembers()

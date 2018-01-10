@@ -57,9 +57,7 @@ void HTMLHeadingElement::didAttributeChanged(QualifiedName name, String* old,
                                      attributeRemoved);
 
     if (name == starFish()->staticStrings()->m_align) {
-        if (!old->equals(value)) {
-            setAttribute(starFish()->staticStrings()->m_align, value);
-        }
+        setNeedsStyleRecalc();
     }
 }
 

@@ -1843,7 +1843,8 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
         } else {
             unsigned size = list.size();
             for (unsigned i = 0; i < size; ++i) {
-                rules.push_back(new StyleRule((*list[i]), declarations));
+                rules.push_back(
+                    new StyleRule(std::move(*list[i]), declarations));
             }
         }
         forgetState();

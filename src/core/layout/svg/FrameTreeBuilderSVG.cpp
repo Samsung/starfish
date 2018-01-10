@@ -44,7 +44,7 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
 
     Frame* currentFrame = nullptr;
     if (svgElement->isSVGSVGElement()) {
-        shouldContinue = true;
+        shouldContinue = !parentFrame->isFrameSVGSVGBox();
         currentFrame = new FrameSVGSVGBox(svgElement);
     } else if (svgElement->isSVGRectElement()) {
         shouldContinue = true;

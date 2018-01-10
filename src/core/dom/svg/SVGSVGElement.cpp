@@ -63,6 +63,8 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name, String* old,
                 m_hasViewBox = true;
             }
         }
+
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     } else if (name == starFish()->staticStrings()->m_preserveAspectRatio) {
 #define SET_PARV(name)                                \
     else if (value->equals(#name))                    \

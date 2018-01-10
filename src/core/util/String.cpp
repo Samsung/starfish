@@ -1667,8 +1667,11 @@ size_t String::find(const char ch, size_t pos)
 
 size_t String::find(String* str, size_t pos, bool caseSensitive)
 {
-    const size_t srcLen = str->length();
-    const size_t dstLen = length();
+    auto srcData = str->bufferAccessData();
+    auto dstData = bufferAccessData();
+
+    const size_t srcLen = srcData.length;
+    const size_t dstLen = dstData.length;
 
     if (srcLen == 0) {
         return pos <= dstLen ? pos : SIZE_MAX;
@@ -1676,12 +1679,12 @@ size_t String::find(String* str, size_t pos, bool caseSensitive)
 
     if (caseSensitive) {
         if (srcLen <= dstLen) {
-            char32_t src0 = str->charAt(0);
+            char32_t src0 = srcData.charAt(0);
             for (; pos <= dstLen - srcLen; ++pos) {
-                if (charAt(pos) == src0) {
+                if (dstData.charAt(pos) == src0) {
                     bool same = true;
                     for (size_t k = 1; k < srcLen; k++) {
-                        if (charAt(pos + k) != str->charAt(k)) {
+                        if (dstData.charAt(pos + k) != srcData.charAt(k)) {
                             same = false;
                             break;
                         }
@@ -1694,13 +1697,13 @@ size_t String::find(String* str, size_t pos, bool caseSensitive)
         }
     } else {
         if (srcLen <= dstLen) {
-            char32_t src0 = str->charAt(0);
+            char32_t src0 = tolower(srcData.charAt(0));
             for (; pos <= dstLen - srcLen; ++pos) {
-                if (charAt(pos) == src0) {
+                if ((char32_t)tolower(dstData.charAt(pos)) == src0) {
                     bool same = true;
                     for (size_t k = 1; k < srcLen; k++) {
-                        if (tolower(charAt(pos + k)) !=
-                            tolower(str->charAt(k))) {
+                        if (tolower(dstData.charAt(pos + k)) !=
+                            tolower(srcData.charAt(k))) {
                             same = false;
                             break;
                         }
@@ -1717,60 +1720,17 @@ size_t String::find(String* str, size_t pos, bool caseSensitive)
 
 bool String::contains(const char* str, bool caseSensitive)
 {
-    size_t len = length();
-    size_t strLen = strlen(str);
-
-    if (strLen == 0) {
-        return true;
-    }
-
-    if (caseSensitive) {
-        if (strLen <= len) {
-            char32_t src0 = (char32_t)str[0];
-            size_t pos = 0;
-            for (; pos <= len - strLen; ++pos) {
-                if (charAt(pos) == src0) {
-                    bool same = true;
-                    for (size_t k = 1; k < strLen; k++) {
-                        if (charAt(pos + k) != (char32_t)str[k]) {
-                            same = false;
-                            break;
-                        }
-                    }
-                    if (same) {
-                        return true;
-                    }
-                }
-            }
-        }
-    } else {
-        if (strLen <= len) {
-            char32_t src0 = (char32_t)str[0];
-            size_t pos = 0;
-            for (; pos <= len - strLen; ++pos) {
-                if (charAt(pos) == src0) {
-                    bool same = true;
-                    for (size_t k = 1; k < strLen; k++) {
-                        if (tolower(charAt(pos + k)) != tolower(str[k])) {
-                            same = false;
-                            break;
-                        }
-                    }
-                    if (same) {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-
-    return false;
+    StringDataOnStackASCII tmpStr(str, strlen(str));
+    return contains(&tmpStr, caseSensitive);
 }
 
 bool String::contains(String* str, bool caseSensitive)
 {
-    size_t len = length();
-    size_t strLen = str->length();
+    auto srcData = str->bufferAccessData();
+    auto dstData = bufferAccessData();
+
+    size_t len = dstData.length;
+    size_t strLen = srcData.length;
 
     if (strLen == 0) {
         return true;
@@ -1778,13 +1738,13 @@ bool String::contains(String* str, bool caseSensitive)
 
     if (caseSensitive) {
         if (strLen <= len) {
-            char32_t src0 = str->charAt(0);
+            char32_t src0 = srcData.charAt(0);
             size_t pos = 0;
             for (; pos <= len - strLen; ++pos) {
-                if (charAt(pos) == src0) {
+                if (dstData.charAt(pos) == src0) {
                     bool same = true;
                     for (size_t k = 1; k < strLen; k++) {
-                        if (charAt(pos + k) != str->charAt(k)) {
+                        if (dstData.charAt(pos + k) != srcData.charAt(k)) {
                             same = false;
                             break;
                         }
@@ -1797,14 +1757,14 @@ bool String::contains(String* str, bool caseSensitive)
         }
     } else {
         if (strLen <= len) {
-            char32_t src0 = str->charAt(0);
+            char32_t src0 = tolower(srcData.charAt(0));
             size_t pos = 0;
             for (; pos <= len - strLen; ++pos) {
-                if (charAt(pos) == src0) {
+                if ((char32_t)tolower(dstData.charAt(pos)) == src0) {
                     bool same = true;
                     for (size_t k = 1; k < strLen; k++) {
-                        if (tolower(charAt(pos + k)) !=
-                            tolower(str->charAt(k))) {
+                        if (tolower(dstData.charAt(pos + k)) !=
+                            tolower(srcData.charAt(k))) {
                             same = false;
                             break;
                         }

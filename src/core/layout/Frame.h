@@ -1061,6 +1061,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameSVGSVGBox()
+    {
+        return false;
+    }
+
     virtual bool isFrameSVGBox()
     {
         return false;

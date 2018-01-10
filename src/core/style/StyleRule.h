@@ -110,11 +110,11 @@ protected:
 class StyleRule : public StyleRuleBase {
     friend class StyleResolver;
     friend class CSSStyleSheet;
+    friend class AncestorSelectorFilter;
 
 public:
-    StyleRule(CSSSelector::Type type, AtomicString selectorText);
-
-    StyleRule(CSSSelectorList& selectorList, CSSStyleDeclaration* decl);
+    static const unsigned maximumIdentifierCount = 10;
+    StyleRule(CSSSelectorList&& selectorList, CSSStyleDeclaration* decl);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -149,34 +149,9 @@ public:
         m_isUARule = b;
     }
 
-    bool hasIdSelector()
-    {
-        return m_hasIdSelector;
-    }
-
-    void setIDSelector(bool b)
-    {
-        m_hasIdSelector = b;
-    }
-
-    bool hasClassSelector()
-    {
-        return m_hasClassSelector;
-    }
-
-    void setClassSelector(bool b)
-    {
-        m_hasClassSelector = b;
-    }
-
     bool isSimpleIDSelector()
     {
         return m_isSimpleIDSelector;
-    }
-
-    void setIsSimpleIDSelector(bool b)
-    {
-        m_isSimpleIDSelector = b;
     }
 
     bool isSimpleClassSelector()
@@ -184,21 +159,12 @@ public:
         return m_isSimpleClassSelector;
     }
 
-    void setIsSimpleClassSelector(bool b)
-    {
-        m_isSimpleClassSelector = b;
-    }
-
     bool isSimpleTagSelector()
     {
         return m_isSimpleTagSelector;
     }
 
-    void setIsSimpleTagSelector(bool b)
-    {
-        m_isSimpleTagSelector = b;
-    }
-
+    void initFlagsRelatedWithSelectorList();
     void wrapperTakeSelectorList(CSSSelectorList& selectors);
 
 protected:
@@ -206,12 +172,11 @@ protected:
     CSSStyleDeclaration* m_styleDeclaration;
     size_t m_order;
     bool m_isUARule : 1;
-    bool m_hasIdSelector : 1;
-    bool m_hasClassSelector : 1;
-
     bool m_isSimpleIDSelector : 1;
     bool m_isSimpleClassSelector : 1;
     bool m_isSimpleTagSelector : 1;
+
+    unsigned m_identifierHashes[maximumIdentifierCount];
 };
 
 class StyleRuleGroup : public StyleRuleBase {

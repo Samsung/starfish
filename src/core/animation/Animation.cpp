@@ -178,7 +178,6 @@ TransformAnimationTask::TransformAnimationTask(
           transitionPropertyValueToString(TransitionPropertyTransformValue),
           fromValue, AnimatedValue(), duration, delay, timingFunction)
 {
-    target->style()->setRareComputedStyleDataIfNeeded();
     target->style()->rareComputedStyleData()->ensureTransforms();
 }
 
@@ -193,13 +192,11 @@ void TransformAnimationTask::computeToValue()
     ComputedStyle* style = current->style();
 
     if (!style->hasTransforms()) {
-        style->setRareComputedStyleDataIfNeeded();
         // NOTE
         // having transform is reason of creating StackingContext
         // for rebuilding stacking context, we should give layout damage
         current->setNeedsLayout();
     }
-    style->setRareComputedStyleDataIfNeeded();
     style->rareComputedStyleData()->ensureTransforms()->append(
         StyleTransformData(StyleTransformData::InternalMatrix));
     execute(0);
@@ -225,7 +222,7 @@ void TransformAnimationTask::detachedFromElement()
         StyleTransformData::InternalMatrix) {
         // cleanup
         transforms->removeAt(transforms->size() - 1);
-        current->setNeedsStyleRecalc();
+        current->setNeedsStyleRecalc(Node::JustNeedsRecalcSelf);
         if (transforms->size() == 0) {
             // NOTE
             // having transform is reason of creating StackingContext
