@@ -95,8 +95,6 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
     if (isEstablishesBlockFormattingContext()) {
         if (!shouldLayout(ctx, Frame::ResolveWidth, cb)) {
             return;
-        } else {
-            STARFISH_RELEASE_ASSERT(!ctx.isQuickLayout());
         }
     }
 
@@ -165,8 +163,6 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                 asFrameTableCellBox()->setActualContentHeight(contentHeight());
             }
             return;
-        } else {
-            STARFISH_RELEASE_ASSERT(!ctx.isQuickLayout());
         }
     }
 
