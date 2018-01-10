@@ -566,14 +566,14 @@ void Window::setCSSTarget(Node* n)
 
     m_cssTarget = n;
     if (m_cssTarget) {
-        m_cssTarget->setState(Node::NodeStateTarget, Node::NotAffected, true);
+        m_cssTarget->setState(Node::NodeStateTarget, true);
     }
 }
 
 void Window::releaseCSSTarget()
 {
     if (m_cssTarget) {
-        m_cssTarget->setState(Node::NodeStateTarget, Node::NotAffected, false);
+        m_cssTarget->setState(Node::NodeStateTarget, false);
     }
 }
 

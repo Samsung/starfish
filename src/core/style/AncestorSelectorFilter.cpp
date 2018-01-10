@@ -44,10 +44,10 @@
  */
 
 #include "StarFishConfig.h"
+#include "core/dom/Element.h"
 #include "AncestorSelectorFilter.h"
 #include "core/style/Style.h"
 #include "core/style/StyleRule.h"
-#include "core/dom/Element.h"
 
 namespace StarFish {
 
@@ -109,21 +109,14 @@ static inline void collectDescendantSelectorIdentifierHashes(
     }
 }
 
-bool AncestorSelectorFilter::canIgnoreSelector(StyleRule* rule, Element* e)
+void AncestorSelectorFilter::computeIdentifierHash(StyleRule* rule)
 {
-    if (!m_parentStack.size() ||
-        (Node*)m_parentStack.back().m_element != e->parentNode()) {
-        return false;
-    }
-
     const unsigned maximumIdentifierCount = 10;
 
-    unsigned identifierHashes[maximumIdentifierCount] = {
-        0,
-    };
+    unsigned* identifierHashes = rule->m_identifierHashes;
 
     unsigned* hash = identifierHashes;
-    unsigned* end = identifierHashes + maximumIdentifierCount;
+    unsigned* end = identifierHashes + StyleRule::maximumIdentifierCount;
     auto& selectorList = rule->selectorList();
     size_t selectorListSize = selectorList.size();
     CSSSelector* selector = selectorList[0];
@@ -165,14 +158,5 @@ bool AncestorSelectorFilter::canIgnoreSelector(StyleRule* rule, Element* e)
         relationIsAffectedByPseudoContent =
             selector->relationIsAffectedByPseudoContent();
     }
-
-    for (unsigned n = 0; n < maximumIdentifierCount && identifierHashes[n];
-         ++n) {
-        if (!m_bloomFilter.mayContain(identifierHashes[n])) {
-            return true;
-        }
-    }
-
-    return false;
 }
 }

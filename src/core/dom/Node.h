@@ -98,7 +98,6 @@ protected:
         , m_tabIndexWasSetExplicitly(false)
         , m_hasDirAttribute(false)
         , m_state(NodeStateNormal)
-        , m_restyleFlags(0)
         , m_rareNodeMembers(nullptr)
         , m_nextSibling(nullptr)
         , m_previousSibling(nullptr)
@@ -135,23 +134,6 @@ public:
         DOCUMENT_POSITION_CONTAINS = 0x08,
         DOCUMENT_POSITION_CONTAINED_BY = 0x10,
         DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20,
-    };
-
-    enum DynamicRestyleFlags {
-        NotAffected = 0,
-        ChildrenOrSiblingsAffectedByFocus = 1 << 0,
-        ChildrenOrSiblingsAffectedByHover = 1 << 1,
-        ChildrenOrSiblingsAffectedByActive = 1 << 2,
-        ChildrenOrSiblingsAffectedByDrag = 1 << 3,
-        ChildrenAffectedByFirstChildRules = 1 << 4,
-        ChildrenAffectedByLastChildRules = 1 << 5,
-        ChildrenAffectedByDirectAdjacentRules = 1 << 6,
-        ChildrenAffectedByIndirectAdjacentRules = 1 << 7,
-        ChildrenAffectedByForwardPositionalRules = 1 << 8,
-        ChildrenAffectedByBackwardPositionalRules = 1 << 9,
-        AffectedByFirstChildRules = 1 << 10,
-        AffectedByLastChildRules = 1 << 11,
-        AffectedByEmptyRules = 1 << 12,
     };
 
     virtual NodeType nodeType() const = 0;
@@ -354,31 +336,27 @@ public:
 
     virtual Node* clone() = 0;
 
-    bool isAffectedByDynamicEvent(DynamicRestyleFlags mask) const
-    {
-        return m_restyleFlags & mask;
-    }
-
-    void setRestyleFlags(DynamicRestyleFlags mask)
-    {
-        m_restyleFlags |= mask;
-    }
-
-    bool hasRestyleFlags() const
-    {
-        return m_restyleFlags;
-    }
-
     Node* nearestParentElement();
 
-    void setState(NodeState state, DynamicRestyleFlags mask, bool enable);
+    void setState(NodeState state, bool enable);
 
     int state()
     {
         return m_state;
     }
 
-    void setNeedsStyleRecalc();
+    // MUST uses same bit with StyleResolver::StyleDamageFrom
+    enum StyleChangeReason {
+        JustNeedsRecalcSelf = 0,
+        InlineStyleChange = 0,
+        IdChange = 1,
+        ClassChange = 1 << 1,
+        AttributeChange = 1 << 2,
+        ElementStateChange = 1 << 3,
+        DOMTreeChange = 1 << 4,
+    };
+    void setNeedsStyleRecalc(
+        StyleChangeReason reason = StyleChangeReason::JustNeedsRecalcSelf);
     bool needsStyleRecalc()
     {
         return m_needsStyleRecalc;
@@ -388,11 +366,6 @@ public:
     {
         m_needsStyleRecalc = false;
     }
-
-    // This function is used when the element's attribute and the state of
-    // dynamic pseudo-classes are changed. We should set the dirty flag from
-    // current node to children if needed.
-    void setNeedsStyleRecalcIfNeeded();
 
     void setChildNeedsStyleRecalc()
     {
@@ -416,9 +389,6 @@ public:
     {
         m_childNeedsStyleRecalc = false;
     }
-
-    // This function sets the dirty flag only for children.
-    void setChildrenNeedsStyleRecalc();
 
     enum FrameTreeBuildReason {
         AppendChild,
@@ -605,8 +575,8 @@ private:
     void validatePreinsert(Node* child, Node* childRef);
     void validateReplace(Node* child, Node* childToRemove);
 
-    void setSiblingsNeedsStyleRecalcIfNeeded();
-    void setChildrenNeedsStyleRecalcIfNeeded();
+    void setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
+    void setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
@@ -637,7 +607,6 @@ protected:
     bool m_hasDirAttribute : 1;
 
     int m_state : 8;
-    int m_restyleFlags : 16;
 
     RareNodeMembers* m_rareNodeMembers;
 

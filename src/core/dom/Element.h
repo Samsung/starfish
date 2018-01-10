@@ -332,8 +332,7 @@ public:
 protected:
     void setFocused(bool flag)
     {
-        setState(Node::NodeStateFocused,
-                 Node::ChildrenOrSiblingsAffectedByFocus, flag);
+        setState(Node::NodeStateFocused, flag);
     }
 
     // clientRect is differ with clientBoundingRect.

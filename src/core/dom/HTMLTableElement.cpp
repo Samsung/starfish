@@ -47,9 +47,7 @@ void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
         if (attributeRemoved) {
             m_hasCellPaddingAttribute = false;
         }
-        if (!old->equals(value)) {
-            setAttribute(starFish()->staticStrings()->m_cellpadding, value);
-        }
+        setNeedsStyleRecalc();
     } else if (name == starFish()->staticStrings()->m_cellspacing) {
         if (attributeCreated) {
             m_hasCellSpacingAttribute = true;
@@ -57,13 +55,9 @@ void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
         if (attributeRemoved) {
             m_hasCellSpacingAttribute = false;
         }
-        if (!old->equals(value)) {
-            setAttribute(starFish()->staticStrings()->m_cellspacing, value);
-        }
+        setNeedsStyleRecalc();
     } else if (name == starFish()->staticStrings()->m_width) {
-        if (!old->equals(value)) {
-            setAttribute(starFish()->staticStrings()->m_width, value);
-        }
+        setNeedsStyleRecalc();
     }
 }
 

@@ -87,9 +87,7 @@ public:
     virtual bool isCSSStyleSheet() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    void addStyleRule(std::pair<StyleRule*, ResourceURL*> rule);
     void addRule(StyleRuleBase* rule);
-    void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
 
     ResourceURL* url();
     Node* origin()
@@ -128,10 +126,6 @@ public:
     {
         m_styleRules.clear();
         m_styleRules.shrink_to_fit();
-
-        if (m_ruleSet) {
-            m_ruleSet->clear();
-        }
     }
 
     void setOwnerRule(CSSRule* ownerRule);
@@ -177,14 +171,6 @@ public:
         return m_mediaQuerySet;
     }
 
-    RuleSet* ruleSet()
-    {
-        if (!m_ruleSet) {
-            m_ruleSet = new RuleSet();
-        }
-        return m_ruleSet;
-    }
-
     void setMediaQuerySet(MediaQuerySet* mediaQuerySet);
     MediaList* media();
 
@@ -210,7 +196,6 @@ protected:
     GCVector<StyleRuleImport*> m_importRules;
     GCVector<std::pair<StyleRule*, ResourceURL*>> m_styleRules;
     GCVector<CSSRule*> m_childRuleWrappers;
-    RuleSet* m_ruleSet;
 };
 
 } /* namespace StarFish */

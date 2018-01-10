@@ -362,92 +362,94 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             STARFISH_ASSERT_NOT_REACHED();
         }
     } else if (keyKind >= CSSStyleValuePair::KeyKind::Top &&
-               keyKind <= CSSStyleValuePair::KeyKind::Left && frame &&
-               frame->isFrameBox() && frame->isPositioned()) {
+               keyKind <= CSSStyleValuePair::KeyKind::Right) {
         CSSStyleValuePair t, b, l, r;
         t.setKeyKind(CSSStyleValuePair::KeyKind::Top);
         b.setKeyKind(CSSStyleValuePair::KeyKind::Bottom);
         l.setKeyKind(CSSStyleValuePair::KeyKind::Left);
         r.setKeyKind(CSSStyleValuePair::KeyKind::Right);
+        if (frame && frame->isFrameBox() && frame->isPositioned()) {
+            LayoutContext ctx(
+                m_element->starFish(),
+                m_element->document()->frame()->asFrameDocument());
+            FrameBox* cb = containingBlock(frame);
+            FrameBox* self = frame->asFrameBox();
+            LayoutUnit parentContentWidth = cb->contentWidth();
+            LayoutUnit parentContentHeight = cb->contentHeight();
+            if (frame->isAbsolutePositioned()) {
+                FrameBox* parent = frame->layoutParent()->asFrameBox();
 
-        LayoutContext ctx(m_element->starFish(),
-                          m_element->document()->frame()->asFrameDocument());
-        FrameBox* cb = containingBlock(frame);
-        FrameBox* self = frame->asFrameBox();
-        LayoutUnit parentContentWidth = cb->contentWidth();
-        LayoutUnit parentContentHeight = cb->contentHeight();
-        if (frame->isAbsolutePositioned()) {
-            FrameBox* parent = frame->layoutParent()->asFrameBox();
-
-            LayoutLocation l1, l2;
-            if (cb->isAncestorOf(parent)) {
-                l2 = parent->absolutePoint(cb);
-            } else {
-                l1 = cb->absolutePoint(ctx.frameDocument());
-                l2 = parent->absolutePoint(ctx.frameDocument());
-            }
-
-            if (keyKind == CSSStyleValuePair::KeyKind::Top ||
-                keyKind == CSSStyleValuePair::KeyKind::Bottom) {
-                LayoutUnit absY = self->y() + l2.y() - l1.y() - cb->borderTop();
-                LayoutUnit top = absY - self->marginTop();
-                parentContentHeight += cb->paddingHeight();
-                t.setLengthValue(CSSLength(top));
-                b.setLengthValue(
-                    CSSLength(parentContentHeight - top - self->outerHeight()));
-            } else {
-                LayoutUnit absX =
-                    self->x() + l2.x() - l1.x() - cb->borderLeft();
-                LayoutUnit left = absX - self->marginLeft();
-                parentContentWidth += cb->paddingWidth();
-                l.setLengthValue(CSSLength(left));
-                r.setLengthValue(
-                    CSSLength(parentContentWidth - left - self->outerWidth()));
-            }
-        } else {
-            STARFISH_ASSERT(style->position() == RelativePositionValue);
-            LengthData offset = style->offset();
-
-            if (keyKind == CSSStyleValuePair::KeyKind::Top ||
-                keyKind == CSSStyleValuePair::KeyKind::Bottom) {
-                Length top = offset.top();
-                Length bottom = offset.bottom();
-                if (!top.isAuto() && !bottom.isAuto()) {
-                    t.setLengthValue(CSSLength(
-                        top.specifiedValue(parentContentHeight, self)));
-                    b.setLengthValue(CSSLength(
-                        bottom.specifiedValue(parentContentHeight, self)));
-                } else if (!top.isAuto()) {
-                    t.setLengthValue(CSSLength(
-                        top.specifiedValue(parentContentHeight, self)));
-                    b.setLengthValue(-1 * t.cssLengthValue());
-                } else if (!bottom.isAuto()) {
-                    b.setLengthValue(CSSLength(
-                        bottom.specifiedValue(parentContentHeight, self)));
-                    t.setLengthValue(-1 * b.cssLengthValue());
+                LayoutLocation l1, l2;
+                if (cb->isAncestorOf(parent)) {
+                    l2 = parent->absolutePoint(cb);
                 } else {
-                    t.setLengthValue(CSSLength(0));
-                    b.setLengthValue(CSSLength(0));
+                    l1 = cb->absolutePoint(ctx.frameDocument());
+                    l2 = parent->absolutePoint(ctx.frameDocument());
+                }
+
+                if (keyKind == CSSStyleValuePair::KeyKind::Top ||
+                    keyKind == CSSStyleValuePair::KeyKind::Bottom) {
+                    LayoutUnit absY =
+                        self->y() + l2.y() - l1.y() - cb->borderTop();
+                    LayoutUnit top = absY - self->marginTop();
+                    parentContentHeight += cb->paddingHeight();
+                    t.setLengthValue(CSSLength(top));
+                    b.setLengthValue(CSSLength(parentContentHeight - top -
+                                               self->outerHeight()));
+                } else {
+                    LayoutUnit absX =
+                        self->x() + l2.x() - l1.x() - cb->borderLeft();
+                    LayoutUnit left = absX - self->marginLeft();
+                    parentContentWidth += cb->paddingWidth();
+                    l.setLengthValue(CSSLength(left));
+                    r.setLengthValue(CSSLength(parentContentWidth - left -
+                                               self->outerWidth()));
                 }
             } else {
-                Length left = offset.left();
-                Length right = offset.right();
-                if (!left.isAuto() && !right.isAuto()) {
-                    l.setLengthValue(CSSLength(
-                        left.specifiedValue(parentContentWidth, self)));
-                    r.setLengthValue(CSSLength(
-                        right.specifiedValue(parentContentWidth, self)));
-                } else if (!left.isAuto()) {
-                    l.setLengthValue(CSSLength(
-                        left.specifiedValue(parentContentWidth, self)));
-                    r.setLengthValue(-1 * l.cssLengthValue());
-                } else if (!right.isAuto()) {
-                    r.setLengthValue(CSSLength(
-                        right.specifiedValue(parentContentWidth, self)));
-                    l.setLengthValue(-1 * r.cssLengthValue());
+                STARFISH_ASSERT(style->position() == RelativePositionValue);
+                LengthData offset = style->offset();
+
+                if (keyKind == CSSStyleValuePair::KeyKind::Top ||
+                    keyKind == CSSStyleValuePair::KeyKind::Bottom) {
+                    Length top = offset.top();
+                    Length bottom = offset.bottom();
+                    if (!top.isAuto() && !bottom.isAuto()) {
+                        t.setLengthValue(CSSLength(
+                            top.specifiedValue(parentContentHeight, self)));
+                        b.setLengthValue(CSSLength(
+                            bottom.specifiedValue(parentContentHeight, self)));
+                    } else if (!top.isAuto()) {
+                        t.setLengthValue(CSSLength(
+                            top.specifiedValue(parentContentHeight, self)));
+                        b.setLengthValue(-1 * t.cssLengthValue());
+                    } else if (!bottom.isAuto()) {
+                        b.setLengthValue(CSSLength(
+                            bottom.specifiedValue(parentContentHeight, self)));
+                        t.setLengthValue(-1 * b.cssLengthValue());
+                    } else {
+                        t.setLengthValue(CSSLength(0));
+                        b.setLengthValue(CSSLength(0));
+                    }
                 } else {
-                    l.setLengthValue(CSSLength(0));
-                    r.setLengthValue(CSSLength(0));
+                    Length left = offset.left();
+                    Length right = offset.right();
+                    if (!left.isAuto() && !right.isAuto()) {
+                        l.setLengthValue(CSSLength(
+                            left.specifiedValue(parentContentWidth, self)));
+                        r.setLengthValue(CSSLength(
+                            right.specifiedValue(parentContentWidth, self)));
+                    } else if (!left.isAuto()) {
+                        l.setLengthValue(CSSLength(
+                            left.specifiedValue(parentContentWidth, self)));
+                        r.setLengthValue(-1 * l.cssLengthValue());
+                    } else if (!right.isAuto()) {
+                        r.setLengthValue(CSSLength(
+                            right.specifiedValue(parentContentWidth, self)));
+                        l.setLengthValue(-1 * r.cssLengthValue());
+                    } else {
+                        l.setLengthValue(CSSLength(0));
+                        r.setLengthValue(CSSLength(0));
+                    }
                 }
             }
         }

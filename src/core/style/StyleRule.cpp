@@ -24,6 +24,7 @@
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/StyleRule.h"
 #include "core/style/MediaQuerySet.h"
+#include "core/style/AncestorSelectorFilter.h"
 
 namespace StarFish {
 
@@ -68,34 +69,34 @@ CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
     return rule;
 }
 
-StyleRule::StyleRule(CSSSelector::Type type, AtomicString selectorText)
+StyleRule::StyleRule(CSSSelectorList&& selectorList, CSSStyleDeclaration* decl)
     : StyleRuleBase(StyleRuleBase::STYLE_RULE)
-    , m_styleDeclaration(new CSSStyleDeclaration())
-    , m_order(0)
-    , m_isUARule(false)
-    , m_hasIdSelector(false)
-    , m_hasClassSelector(false)
-    , m_isSimpleIDSelector(false)
-    , m_isSimpleClassSelector(false)
-    , m_isSimpleTagSelector(false)
-{
-    CSSSelector* selector =
-        new CSSSelector(type, CSSSelector::RelationType::None, selectorText);
-    m_selectorList.push_back(selector);
-}
-
-StyleRule::StyleRule(CSSSelectorList& selectorList, CSSStyleDeclaration* decl)
-    : StyleRuleBase(StyleRuleBase::STYLE_RULE)
-    , m_selectorList(selectorList)
+    , m_selectorList(std::move(selectorList))
     , m_styleDeclaration(decl)
     , m_order(0)
     , m_isUARule(false)
-    , m_hasIdSelector(false)
-    , m_hasClassSelector(false)
-    , m_isSimpleIDSelector(false)
-    , m_isSimpleClassSelector(false)
-    , m_isSimpleTagSelector(false)
 {
+    initFlagsRelatedWithSelectorList();
+}
+
+void StyleRule::initFlagsRelatedWithSelectorList()
+{
+    m_isSimpleIDSelector = false;
+    m_isSimpleClassSelector = false;
+    m_isSimpleTagSelector = false;
+
+    unsigned size = m_selectorList.size();
+    if (size == 1) {
+        if (m_selectorList[0]->type() == CSSSelector::Id) {
+            m_isSimpleIDSelector = true;
+        } else if (m_selectorList[0]->type() == CSSSelector::Class) {
+            m_isSimpleClassSelector = true;
+        } else if (m_selectorList[0]->type() == CSSSelector::Tag) {
+            m_isSimpleTagSelector = true;
+        }
+    }
+
+    AncestorSelectorFilter::computeIdentifierHash(this);
 }
 
 void* StyleRule::operator new(size_t size)
@@ -115,6 +116,7 @@ void* StyleRule::operator new(size_t size)
 void StyleRule::wrapperTakeSelectorList(CSSSelectorList& selectors)
 {
     m_selectorList = std::move(selectors);
+    initFlagsRelatedWithSelectorList();
 }
 
 StyleRuleGroup::StyleRuleGroup(RuleType type, GCVector<StyleRuleBase*>& rules)

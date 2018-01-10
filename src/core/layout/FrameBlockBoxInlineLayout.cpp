@@ -1441,6 +1441,8 @@ void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
             StringView sv = textBox->text();
             builder.appendString(sv);
             if (first) {
+                ctx->m_layoutContext.pushIntoInlineTextBoxPool(
+                    (*it)->asInlineTextBox());
                 it = boxes.erase(it);
                 continue;
             } else {

@@ -274,10 +274,8 @@ void BrowsingContext::resolveStyleIfNeeds()
                 size_t rules = sheet->styleRules().size();
                 for (size_t j = 0; j < rules; j++) {
                     sheet->styleRules()[j].first->setOrder(j + offset);
-                    document()
-                        ->styleResolver()
-                        .styleSheetWithStyleRules()
-                        ->addToRuleSet(sheet->styleRules()[j]);
+                    document()->styleResolver().addToRuleSet(
+                        sheet->styleRules()[j]);
                 }
                 offset += rules;
             }
@@ -783,8 +781,7 @@ void BrowsingContext::setFocusedNode(Node* n)
     m_focusedNode = e->asNode();
     m_activeElement = e;
 
-    e->setState(Node::NodeStateFocused, Node::ChildrenOrSiblingsAffectedByFocus,
-                true);
+    e->setState(Node::NodeStateFocused, true);
 
     // focus event
     String* eventType = starFish()->staticStrings()->m_focus.localName();
@@ -821,8 +818,7 @@ void BrowsingContext::releaseFocusedNode(Node* n, bool resetActiveElement)
                 ->m_scrollLeft = 0;
         }
 
-        m_focusedNode->setState(Node::NodeStateFocused,
-                                Node::ChildrenOrSiblingsAffectedByFocus, false);
+        m_focusedNode->setState(Node::NodeStateFocused, false);
 
         Node* relatedTarget = n == m_focusedNode ? nullptr : n;
 
@@ -854,8 +850,7 @@ Element* BrowsingContext::activeElement()
 
 static bool updateEventNodeSet(Document* document, Node* n,
                                GCUnorderedSet<Node*>& set, Node** target,
-                               size_t* version, Node::NodeState state,
-                               Node::DynamicRestyleFlags flag)
+                               size_t* version, Node::NodeState state)
 {
     Node* t = n->nearestParentElement();
     if (*target != n || set.find(t) != set.end() ||
@@ -870,7 +865,7 @@ static bool updateEventNodeSet(Document* document, Node* n,
         while (iter != set.end()) {
             // new(X) old(O)
             if (newSet.find(*iter) == newSet.end()) {
-                (*iter)->setState(state, flag, false);
+                (*iter)->setState(state, false);
             }
             iter++;
         }
@@ -879,7 +874,7 @@ static bool updateEventNodeSet(Document* document, Node* n,
         while (iter != newSet.end()) {
             // new(O) old(X)
             if (set.find(*iter) == set.end()) {
-                (*iter)->setState(state, flag, true);
+                (*iter)->setState(state, true);
             }
             iter++;
         }
@@ -896,8 +891,7 @@ bool BrowsingContext::setActiveNode(Node* n)
 {
     return updateEventNodeSet(
         document(), n, m_activeNodeSet, &m_activeNodeTarget,
-        &m_documentVersionWhenComputingActiveNodeSet, Node::NodeStateActive,
-        Node::ChildrenOrSiblingsAffectedByActive);
+        &m_documentVersionWhenComputingActiveNodeSet, Node::NodeStateActive);
 }
 
 void BrowsingContext::releaseActiveNode()
@@ -908,8 +902,7 @@ void BrowsingContext::releaseActiveNode()
 
     auto iter = m_activeNodeSet.begin();
     while (iter != m_activeNodeSet.end()) {
-        (*iter)->setState(Node::NodeStateActive,
-                          Node::ChildrenOrSiblingsAffectedByActive, false);
+        (*iter)->setState(Node::NodeStateActive, false);
         iter++;
     }
     m_activeNodeSet.clear();
@@ -921,8 +914,7 @@ bool BrowsingContext::setHoveredNode(Node* n)
 {
     return updateEventNodeSet(
         document(), n, m_hoveredNodeSet, &m_hoveredNodeTarget,
-        &m_documentVersionWhenComputingHoveredNodeSet, Node::NodeStateHovered,
-        Node::ChildrenOrSiblingsAffectedByHover);
+        &m_documentVersionWhenComputingHoveredNodeSet, Node::NodeStateHovered);
 }
 
 void BrowsingContext::releaseHoveredNode()
@@ -933,8 +925,7 @@ void BrowsingContext::releaseHoveredNode()
 
     auto iter = m_hoveredNodeSet.begin();
     while (iter != m_hoveredNodeSet.end()) {
-        (*iter)->setState(Node::NodeStateHovered,
-                          Node::ChildrenOrSiblingsAffectedByHover, false);
+        (*iter)->setState(Node::NodeStateHovered, false);
         iter++;
     }
     m_hoveredNodeSet.clear();

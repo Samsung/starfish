@@ -18,6 +18,8 @@
 #define __StarFishAncestorSelectorFilter__
 
 #include "core/util/BloomFilter.h"
+#include "core/style/Style.h"
+#include "core/style/StyleRule.h"
 
 namespace StarFish {
 
@@ -35,7 +37,30 @@ public:
     void pushElement(Element* e);
     void popElement();
 
-    bool canIgnoreSelector(StyleRule* rule, Element* e);
+    static void computeIdentifierHash(StyleRule* rule);
+    ALWAYS_INLINE bool canUseAncestorSelectorFilter(Element* e)
+    {
+        if (!m_parentStack.size() ||
+            (Node*)m_parentStack.back().m_element != e->parentNode()) {
+            return false;
+        }
+        return true;
+    }
+
+    ALWAYS_INLINE bool canIgnoreSelector(StyleRule* rule, Element* e)
+    {
+        STARFISH_ASSERT(canUseAncestorSelectorFilter(e));
+        unsigned* identifierHashes = rule->m_identifierHashes;
+        for (unsigned n = 0;
+             n < StyleRule::maximumIdentifierCount && identifierHashes[n];
+             ++n) {
+            if (!m_bloomFilter.mayContain(identifierHashes[n])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 private:
     struct AncestorStackFrame {
@@ -48,8 +73,7 @@ private:
     };
     std::vector<AncestorStackFrame> m_parentStack;
 
-    static const unsigned bloomFilterKeyBits = 12;
-    BloomFilter<bloomFilterKeyBits> m_bloomFilter;
+    BloomFilter<12> m_bloomFilter;
 };
 }
 

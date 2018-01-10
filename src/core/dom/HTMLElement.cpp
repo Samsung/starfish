@@ -135,6 +135,7 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         } else {
             setAttribute(ss->m_dir, String::emptyString);
         }
+        setNeedsStyleRecalc();
     } else if (name == ss->m_onfocus) {
         setAttributeEventListener(ss->m_focus, value, this);
     } else if (name == ss->m_onblur) {
