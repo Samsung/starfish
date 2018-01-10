@@ -1467,8 +1467,6 @@ void Node::propagateMarkChildNeedsFrameTreeBuild()
         n->markChildNeedsFrameTreeBuild();
         n = n->parentNode();
     }
-
-    window()->browsingContext()->setNeedsFrameTreeBuild();
 }
 
 void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
@@ -1476,6 +1474,8 @@ void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
     if (!document()->doesParticipateInRendering()) {
         return;
     }
+
+    window()->browsingContext()->setNeedsFrameTreeBuild();
 
     Frame* old = frame();
     if (old) {
