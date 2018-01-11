@@ -37,7 +37,7 @@ public:
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     Nullable<String*> defaultNamedGetter(String* key);
-    void defaultNamedSetter(String* key, String* value);
+    bool defaultNamedSetter(String* key, String* value);
     void defaultNamedEnumerator(GCVector<String*>& enums);
 
 private:
