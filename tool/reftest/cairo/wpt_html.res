@@ -22,6 +22,9 @@ test/cairo/reftest/web-platform-tests/html/semantics/grouping-content/the-div-el
 test/cairo/reftest/web-platform-tests/html/semantics/grouping-content/the-p-element/grouping-p.html
 test/cairo/reftest/web-platform-tests/html/semantics/scripting-1/the-script-element/script-languages-01.html
 test/cairo/reftest/web-platform-tests/html/semantics/scripting-1/the-script-element/script-onload-string.html
+test/cairo/reftest/web-platform-tests/html/semantics/document-metadata/the-base-element/base_href_empty.html
+test/cairo/reftest/web-platform-tests/html/semantics/document-metadata/the-base-element/base_href_unspecified.html
+test/cairo/reftest/web-platform-tests/html/semantics/scripting-1/the-script-element/fetch-src/alpha/base.html
 test/cairo/reftest/web-platform-tests/html/webappapis/animation-frames/callback-invoked.html
 test/cairo/reftest/web-platform-tests/html/webappapis/animation-frames/callback-multicalls.html
 test/cairo/reftest/web-platform-tests/html/webappapis/animation-frames/cancel-invoked.html

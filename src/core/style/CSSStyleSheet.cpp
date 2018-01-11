@@ -104,7 +104,7 @@ ResourceURL* CSSStyleSheet::url()
         STARFISH_ASSERT(m_origin->asHTMLLinkElement()->href());
         return m_origin->asHTMLLinkElement()->url();
     }
-    return m_origin->document()->documentURI();
+    return m_origin->document()->baseURL();
 }
 
 void CSSStyleSheet::parseSheetIfneeds()

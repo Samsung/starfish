@@ -1103,30 +1103,26 @@ void Document::processBaseElement()
     // Find the first href attribute and the first target attribute in base
     // elements
     Element* baseElement = nextBaseElement(this, this);
-    String* href = String::emptyString;
-    String* target = String::emptyString;
-    while (baseElement && (href->isEmpty() || target->isEmpty())) {
-        if (href->isEmpty()) {
-            String* value =
-                baseElement->asHTMLBaseElement()->getAttributeOrEmpty(
-                    starFish()->staticStrings()->m_href);
-            if (!value->isEmpty()) {
-                href = value;
-            }
+    String* href = nullptr;
+    String* target = nullptr;
+    while (baseElement && (!href || target->isEmpty())) {
+        if (!href &&
+            baseElement->hasAttribute(starFish()->staticStrings()->m_href) !=
+                SIZE_MAX) {
+            href = baseElement->getAttributeOrEmpty(
+                starFish()->staticStrings()->m_href);
         }
-        if (target->isEmpty()) {
-            String* value =
-                baseElement->asHTMLBaseElement()->getAttributeOrEmpty(
-                    starFish()->staticStrings()->m_target);
-            if (!value->isEmpty()) {
-                target = value;
-            }
+        if (!target &&
+            baseElement->hasAttribute(starFish()->staticStrings()->m_target) !=
+                SIZE_MAX) {
+            target = baseElement->getAttributeOrEmpty(
+                starFish()->staticStrings()->m_target);
         }
         baseElement = nextBaseElement(baseElement, this);
     }
 
     ResourceURL* baseElementURL = nullptr;
-    if (!href->isEmpty()) {
+    if (href) {
         baseElementURL = new ResourceURL(href, fallbackBaseURL()->urlString());
     }
     if (baseElementURL) {
@@ -1150,8 +1146,10 @@ void Document::processBaseElement()
         updateBaseURL();
     }
 
-    if (!target->isEmpty()) {
+    if (!target) {
         m_baseTarget = target;
+    } else {
+        m_baseTarget = String::emptyString;
     }
 }
 

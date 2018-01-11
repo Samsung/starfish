@@ -5955,7 +5955,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     if (pseudoElementType == PseudoElementNone &&
         element->inlineStyleWithoutCreation()) {
         apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
-              element->document()->documentURI(), ret, parent, false);
+              element->document()->baseURL(), ret, parent, false);
     }
 
     // Apply important author-rules
@@ -5972,7 +5972,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     if (pseudoElementType == PseudoElementNone &&
         element->inlineStyleWithoutCreation()) {
         apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
-              element->document()->documentURI(), ret, parent, true);
+              element->document()->baseURL(), ret, parent, true);
     }
 }
 
