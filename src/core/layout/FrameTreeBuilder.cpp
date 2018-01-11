@@ -131,13 +131,40 @@ static FrameBlockBox* wrapWithAnonymouseBlockBox(FrameBlockBox* blockContainer,
     return blockBox;
 }
 
+static void insertFlexItemChild(FrameBlockBox* blockContainer,
+                                Frame* currentFrame, Node* currentNode,
+                                FrameTreeBuilderContext& ctx)
+{
+    bool isBlockChild =
+        currentFrame->isBlockLevel() && !currentFrame->isFrameLineBreak();
+    if (isBlockChild) {
+        blockContainer->appendChild(currentFrame);
+        currentFrame->markFlexItem();
+    } else {
+        Frame* last = blockContainer->lastChild();
+
+        if (last && last->isAnonymous()) {
+            last->appendChild(currentFrame);
+        } else {
+            Frame* f = wrapWithAnonymouseBlockBox(blockContainer, currentNode,
+                                                  currentFrame);
+            f->markFlexItem();
+        }
+    }
+}
+
 void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
                                    Frame* currentFrame, Node* currentNode,
                                    FrameTreeBuilderContext& ctx)
 {
-    bool isBlockChild = currentFrame->isBlockLevel();
+    bool isBlockChild =
+        currentFrame->isBlockLevel() && !currentFrame->isFrameLineBreak();
     if (!blockContainer->firstChild()) {
-        blockContainer->appendChild(currentFrame);
+        if (ctx.isInFrameFlexFlow()) {
+            insertFlexItemChild(blockContainer, currentFrame, currentNode, ctx);
+        } else {
+            blockContainer->appendChild(currentFrame);
+        }
         return;
     }
 
@@ -152,9 +179,14 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
     }
 
     if (blockContainer->hasBlockFlow()) {
+        if (ctx.isInFrameFlexFlow()) {
+            insertFlexItemChild(blockContainer, currentFrame, currentNode, ctx);
+            return;
+        }
+
         if (isBlockChild) {
             // Block... + Block case
-            if (currentFrame->isNormalFlow() || currentFrame->isFlexItem()) {
+            if (currentFrame->isNormalFlow()) {
                 blockContainer->appendChild(currentFrame);
             } else {
                 wrapWithAnonymouseBlockBox(blockContainer, currentNode,
@@ -550,14 +582,6 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         if (!currentFrame->isFrameTableBox()) {
             current->setFrame(currentFrame);
             current->clearNeedsFrameTreeBuild();
-        }
-
-        if (ctx.isInFrameFlexFlow()) {
-            if (currentFrame->isFrameText()) {
-                currentFrame = wrapWithAnonymouseBlockBox(
-                    ctx.currentBlockContainer(), current, currentFrame);
-            }
-            currentFrame->markFlexItem();
         }
 
         if (currentFrame->isNormalFlow()) {
