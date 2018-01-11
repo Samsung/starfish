@@ -116,7 +116,7 @@ Nullable<String*> DOMStringMap::defaultNamedGetter(String* key)
     return Nullable<String*>();
 }
 
-void DOMStringMap::defaultNamedSetter(String* key, String* value)
+bool DOMStringMap::defaultNamedSetter(String* key, String* value)
 {
     STARFISH_ASSERT(m_element);
     if (!isCustomDataPropertyName(key)) {
@@ -124,6 +124,7 @@ void DOMStringMap::defaultNamedSetter(String* key, String* value)
                                DOMException::Code::SYNTAX_ERR);
     }
     m_element->setAttribute(generateAttributeName(key), value);
+    return true;
 }
 
 void DOMStringMap::defaultNamedEnumerator(GCVector<String*>& enums)

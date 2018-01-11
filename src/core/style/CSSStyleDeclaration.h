@@ -144,7 +144,7 @@ public:
     // NOTE Based on IDL,
     // CSSStyleDeclaration has namedGetter, namedEnumerator, namedSetter
     Nullable<String*> defaultNamedGetter(String* name);
-    void defaultNamedSetter(String* name, Nullable<String*> value);
+    bool defaultNamedSetter(String* name, Nullable<String*> value);
     void defaultNamedEnumerator(GCVector<String*>& enums);
 
     const GCAtomicVector<CSSStyleValuePair>& cssValues()

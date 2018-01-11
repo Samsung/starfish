@@ -1192,7 +1192,7 @@ void CSSStyleDeclaration::defaultNamedEnumerator(GCVector<String*>& enums)
 #undef ENUM_ATTR
 }
 
-void CSSStyleDeclaration::defaultNamedSetter(String* name,
+bool CSSStyleDeclaration::defaultNamedSetter(String* name,
                                              Nullable<String*> value)
 {
     auto str = name->toNullableUTF8String();
@@ -1202,7 +1202,7 @@ void CSSStyleDeclaration::defaultNamedSetter(String* name,
         kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
     }
     if (kind == CSSStyleKind::Unknown) {
-        return;
+        return false;
     }
     // Empty string let setter remove its value
     String* valueTo = String::emptyString;
@@ -1233,6 +1233,7 @@ void CSSStyleDeclaration::defaultNamedSetter(String* name,
             return 0;
         },
         &sender);
+    return true;
 }
 
 CSSStyleSheet* StyleRuleCSSStyleDeclaration::parentStyleSheet() const
