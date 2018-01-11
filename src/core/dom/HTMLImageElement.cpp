@@ -103,7 +103,14 @@ void HTMLImageElement::setSrc(String* src)
 
 String* HTMLImageElement::src()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_src);
+    if (hasAttribute(starFish()->staticStrings()->m_src) != SIZE_MAX) {
+        return (new ResourceURL(
+                    getAttributeOrEmpty(starFish()->staticStrings()->m_src),
+                    document()->baseURI()))
+            ->urlString();
+    } else {
+        return String::emptyString;
+    }
 }
 
 unsigned long HTMLImageElement::width()

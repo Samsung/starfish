@@ -310,7 +310,7 @@ test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAreaElement05.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAreaElement06.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAreaElement07.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAreaElement08.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLBaseElement01.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLBaseElement01.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLBaseElement02.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLBodyElement01.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLBodyElement02.html

@@ -23,6 +23,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element)  | media | media query | &lt;style type="text/css" media="screen"&gt;&lt;/style&gt; | |
 |  | type | text/css | &lt;style type="text/css"&gt;&lt;/style&gt; | Only "text/css" type is supported. |
 |  [body](https://www.w3.org/TR/html5/sections.html#the-body-element)  |  |  | &lt;body&gt;SAMSUNG&lt;/body&gt; |  |
+|  [base](https://www.w3.org/TR/html5/document-metadata.html#the-base-element)  |  |  | &lt;base href="http://www.samsung.com/" &gt; |  |
 |  [h1, h2, h3, h4, h5, and h6](https://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements)  | align | left &#124; center &#124; right | &lt;h1 align="center"&gt;&lt;/h1&gt; | The align attribute's value of &lt;h1&gt; to &lt;h6&gt; can be only "left", "center" and "right". The attribute is not supported in HTML5. Use CSS instead. |
 |  [p](https://www.w3.org/TR/html5/grouping-content.html#the-p-element)  |  |  | &lt;p&gt; |  |
 |  [div](https://www.w3.org/TR/html5/grouping-content.html#the-div-element)  |  |  | &lt;div&gt;SAMSUNG&lt;/div&gt; |  |
@@ -325,6 +326,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constructor | Audio(optional DOMString src="") | |
 | [HTMLBodyElement](https://html.spec.whatwg.org/multipage/semantics.html#the-body-element) | interface | HTMLBodyElement | The body element represents the main content of the document. |
 |  | attribute | onload | Fired at the Window when the document has finished loading; fired at an element containing a resource (e.g. img, embed) when its resource has finished loading |
+| [HTMLBaseElement](https://html.spec.whatwg.org/multipage/semantics.html#the-base-element) | interface | HTMLBaseElement | The base element specifies the base URL to use for all relative URLs contained within a document. |
+|  | attribute | href | The base URL to be used throughout the document for relative URL addresses. |
+|  | attribute | target | A name or keyword indicating the default location to display the result when hyperlinks or forms cause navigation |
 | [HTMLButtonElement](https://html.spec.whatwg.org/#the-button-element) | interface | HTMLButtonElement | The button element represents a button labeled by its contents. |
 |  | attribute | disabled | Returns whether the button is disabled. |
 |  | attribute | form | Returns the element's form element, if any, or null otherwise. |

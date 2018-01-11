@@ -165,6 +165,7 @@ test/cairo/reftest/vendor/webkit/dom/html/level2/events/initEvent03.html
 test/cairo/reftest/vendor/webkit/dom/html/level2/events/initEvent04.html
 test/cairo/reftest/vendor/webkit/dom/html/level2/events/initEvent05.html
 test/cairo/reftest/vendor/webkit/dom/html/level2/events/initEvent06.html
+test/cairo/reftest/vendor/webkit/dom/html/level2/html/HTMLBaseElement01.html
 test/cairo/reftest/vendor/webkit/dom/html/level2/html/HTMLDocument05.html
 test/cairo/reftest/vendor/webkit/dom/html/level2/html/HTMLDocument15.html
 test/cairo/reftest/vendor/webkit/dom/html/level2/html/HTMLDocument16.html
