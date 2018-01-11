@@ -563,7 +563,7 @@
                 ],
                 'libraries': [
                     '<!@((pkg-config --silence-errors --libs-only-l libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ) || true)',
-                    'lib/debug/libtuv.a',
+                    'lib/libtuv.a',
                     '-ldali-core',
                     '-ldali-adaptor',
                     '-ldali-toolkit',

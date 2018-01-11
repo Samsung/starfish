@@ -26,6 +26,9 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/page/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
+#include "core/page/WebView.h"
 
 #include <uv.h>
 
@@ -51,6 +54,7 @@ struct IdlerData {
 MessageLoop::MessageLoop(StarFish* sf)
     : StarFishHoldable(sf)
     , m_idlersFromOtherThreadMutex(new Mutex())
+    , m_navigateInvokeIdler(nullptr)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     , m_countingMutex(new Mutex())
     , m_runningThreadCount(0)
@@ -251,34 +255,6 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(
-    BrowsingContext* ctx, void (*fn)(size_t handle, void*, void*), void* data,
-    void* data1)
-{
-    STARFISH_ASSERT(isMainThread());
-    IdlerData* id = new (NoGC) IdlerData;
-    m_idlers.insert((size_t)id);
-    id->m_isMainThreadData = true;
-    id->m_fn = (void (*)(size_t, void*))fn;
-    id->m_data = data;
-    id->m_data1 = data1;
-    id->m_ml = this;
-    id->m_ctx = ctx;
-    id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
-    uv_idle_init(uv_default_loop(), id->m_idler_uv);
-    id->m_idler_uv->data = id;
-    uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
-        id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                   id->m_data1);
-        uv_idle_stop(handle);
-        GC_FREE(id);
-        uv_close((uv_handle_t*)handle, on_close_handle);
-    });
-    return (size_t)id;
-}
-
 void MessageLoop::removeIdler(size_t handle)
 {
     STARFISH_ASSERT(isMainThread());
@@ -319,6 +295,49 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
         }
         iter2++;
     }
+}
+
+struct InvokeNavigateData : public gc {
+    WebView* wv;
+    ResourceURL* url;
+    ResourceURL* referrerURL;
+    uv_idle_t* idler;
+    void** extra;
+
+    static void* operator new(size_t s)
+    {
+        return GC_MALLOC_UNCOLLECTABLE(s);
+    }
+};
+
+void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
+                                 ResourceURL* referrerURL)
+{
+    if (m_navigateInvokeIdler != nullptr) {
+        auto data = ((InvokeNavigateData*)m_navigateInvokeIdler);
+        uv_idle_stop(data->idler);
+        uv_close((uv_handle_t*)data->idler, on_close_handle);
+        delete data;
+    }
+
+    InvokeNavigateData* data = new InvokeNavigateData();
+    m_navigateInvokeIdler = data;
+    data->extra = &m_navigateInvokeIdler;
+    data->wv = wv;
+    data->url = url;
+    data->referrerURL = referrerURL;
+    data->idler = (uv_idle_t*)malloc(sizeof(uv_idle_t));
+    uv_idle_init(uv_default_loop(), data->idler);
+    data->idler->data = data;
+    uv_idle_start(data->idler, [](uv_idle_t* handle) {
+        InvokeNavigateData* data = (InvokeNavigateData*)handle->data;
+        data->wv->navigate(data->url, HistoryManager::Action::Add,
+                           data->referrerURL);
+        *(data->extra) = nullptr;
+        uv_idle_stop(handle);
+        delete data;
+        uv_close((uv_handle_t*)handle, on_close_handle);
+    });
 }
 }
 #endif

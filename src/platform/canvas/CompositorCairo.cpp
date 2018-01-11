@@ -32,13 +32,6 @@
 #include "core/modules/profiling/Profiling.h"
 
 #define CAIRO_FORMAT CAIRO_FORMAT_ARGB32
-// #define STARFISH_ENABLE_TIMER
-
-#ifdef STARFISH_ENABLE_TIMER
-#define INSTALL_PROFILE_TIMER(s) ProfilerTimer _p(s);
-#else
-#define INSTALL_PROFILE_TIMER(s)
-#endif
 
 namespace StarFish {
 

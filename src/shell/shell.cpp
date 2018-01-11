@@ -198,8 +198,8 @@ void* mainShellThread(void* data)
         uv_default_loop(), &g_launcher_handle, [](uv_async_t* handle) {
 
             int flag = 0;
-            int x = 100;
-            int y = 100;
+            int x = 0;
+            int y = 0;
             DaliShellController* app = (DaliShellController*)handle->data;
 
             ScreenInfo info;
@@ -208,10 +208,15 @@ void* mainShellThread(void* data)
             info.availableRect.setWidth(app->m_width);
             info.availableRect.setHeight(app->m_height);
 
+            std::string cacheDir(getenv("HOME"));
+            cacheDir += "/Starfish-cache";
+
             app->m_sf = new StarFish::StarFish(
                 (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", app,
-                app->m_width, app->m_height, x, y, 1, info, "",
-                "/tmp/StarFish_Cookies.txt");
+                app->m_width, app->m_height, x, y, 1,
+                String::createASCIIString("sans-serif"), info, "",
+                "/tmp/StarFish_Cookies.txt", cacheDir.data(),
+                String::emptyString, String::emptyString);
 
 #if defined(STARFISH_TIZEN)
             app->m_sf->registerFrameBuffer(app->m_surface_info1.planes[0].ptr,
@@ -356,7 +361,8 @@ bool DaliShellController::TouchEventHandler(Dali::Actor actor,
             StarFishEnterer enter(m_sf);
             MouseData data(MouseData::MouseButtonValue::LeftButton,
                            MouseData::MouseButtonsValue::LeftButtonDown,
-                           screen.x, screen.y, 0);
+                           screen.x * m_sf->screenInfo().deviceScaleFactor,
+                           screen.y * m_sf->screenInfo().deviceScaleFactor, 0);
             d->data = data;
             m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                 m_sf->platformWindow()->webView()->mainBrowsingContext(),
@@ -372,9 +378,11 @@ bool DaliShellController::TouchEventHandler(Dali::Actor actor,
             m_isMouseLbuttonDown = true;
         } else if (pointState == Dali::PointState::UP) {
             StarFishEnterer enter(m_sf);
-            StarFish::MouseData data(MouseData::MouseButtonValue::NoButton,
-                                     MouseData::MouseButtonsValue::NoButtonDown,
-                                     screen.x, screen.y, 0);
+            StarFish::MouseData data(
+                MouseData::MouseButtonValue::NoButton,
+                MouseData::MouseButtonsValue::NoButtonDown,
+                screen.x * m_sf->screenInfo().deviceScaleFactor,
+                screen.y * m_sf->screenInfo().deviceScaleFactor, 0);
             d->data = data;
             m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                 m_sf->platformWindow()->webView()->mainBrowsingContext(),
@@ -394,7 +402,9 @@ bool DaliShellController::TouchEventHandler(Dali::Actor actor,
                 m_isMouseLbuttonDown
                     ? MouseData::MouseButtonsValue::LeftButtonDown
                     : 0;
-            StarFish::MouseData data(0, buttons, screen.x, screen.y, 0);
+            StarFish::MouseData data(
+                0, buttons, screen.x * m_sf->screenInfo().deviceScaleFactor,
+                screen.y * m_sf->screenInfo().deviceScaleFactor, 0);
 
             d->data = data;
             m_sf->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
@@ -422,7 +432,9 @@ bool DaliShellController::HoverEventHandler(Dali::Actor actor,
     StarFishEnterer enter(m_sf);
     unsigned char buttons =
         m_isMouseLbuttonDown ? MouseData::MouseButtonsValue::LeftButtonDown : 0;
-    StarFish::MouseData data(0, buttons, point.x, point.y, 0);
+    StarFish::MouseData data(0, buttons,
+                             point.x * m_sf->screenInfo().deviceScaleFactor,
+                             point.y * m_sf->screenInfo().deviceScaleFactor, 0);
 
     struct dummy {
         StarFish::StarFish* starfish;
@@ -546,10 +558,7 @@ int main(int argc, char* argv[])
     int width = 1280, height = 720;
     int x = 0, y = 0;
     float scaleFactor = 1;
-#ifdef STARFISH_TIZEN_TV
-    width = 1920;
-    height = 1080;
-#endif
+
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
             flag |= StarFish::enableComputedStyleDump;
@@ -628,9 +637,6 @@ int main(int argc, char* argv[])
 #endif
 
 #if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-    width = 1920;
-    height = 1080;
-
     url = argv[1];
     Application application = Application::New(&argc, &argv);
     DaliShellController shell(application, width, height);

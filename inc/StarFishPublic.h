@@ -25,7 +25,7 @@ extern "C" {
 
 typedef struct StarFishInstance {
     void* m_starfish;
-#ifdef STARFISH_TIZEN_TV
+#ifdef STARFISH_DALI
     void* m_data;
 #endif
 } StarFishInstance;
