@@ -212,6 +212,13 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
                 return;
             }
 
+            if (blockContainer->isAnonymous()) {
+                ctx.setCurrentBlockContainer(
+                    blockContainer->parent()->asFrameBlockBox());
+                FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
+                                              currentFrame, currentNode, ctx);
+                return;
+            }
             // Inline... + Block case
             GCVector<Frame*> backup;
             while (blockContainer->firstChild()) {
@@ -607,19 +614,19 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                     STARFISH_ASSERT(iter != ctx.frameInlineItem().end());
                     FrameInline* in = new FrameInline(nd);
                     if (iter->second->isLeftMBPCleared()) {
-                        in->setLeftMBPCleared();
+                        in->setLeftMBPCleared(true);
                     }
                     if (iter->second->isRightMBPCleared()) {
-                        in->setRightMBPCleared();
+                        in->setRightMBPCleared(true);
                     }
 
                     if (in->style()->direction() ==
                         DirectionValue::LtrDirectionValue) {
-                        in->setLeftMBPCleared();
-                        iter->second->setRightMBPCleared();
+                        in->setLeftMBPCleared(true);
+                        iter->second->setRightMBPCleared(true);
                     } else {
-                        iter->second->setLeftMBPCleared();
-                        in->setRightMBPCleared();
+                        iter->second->setLeftMBPCleared(true);
+                        in->setRightMBPCleared(true);
                     }
 
                     stackedFrameInline.push_back(in);
@@ -672,8 +679,14 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         currentFrame = current->frame();
         if (ComputedStyle::isDisplayTableValueType(
                 currentFrame->style()->display())) {
-            currentFrame =
-                FrameTableTreeBuilder::buildFrameTableTree(current, ctx, force);
+            if (current->childNeedsFrameTreeBuild()) {
+                currentFrame = FrameTableTreeBuilder::buildFrameTableTree(
+                    current, ctx, force);
+            } else {
+                while (!currentFrame->isFrameTableBox()) {
+                    currentFrame = currentFrame->parent();
+                }
+            }
             STARFISH_ASSERT(FrameTableTreeBuilder::isTableWrapperDisplayValue(
                 currentFrame->style()->display()));
         }

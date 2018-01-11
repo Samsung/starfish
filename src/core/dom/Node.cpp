@@ -1124,6 +1124,8 @@ Node* Node::removeChild(Node* child)
                                "Child's parent is not parent.");
     }
 
+    child->setNeedsFrameTreeBuild(Node::RemoveFromParent);
+
     Node* prevChild = child->previousSibling();
     Node* nextChild = child->nextSibling();
 
@@ -1144,9 +1146,7 @@ Node* Node::removeChild(Node* child)
     child->setNextSibling(nullptr);
     child->setParentNode(nullptr);
 
-    child->setNeedsFrameTreeBuild(Node::RemoveFromParent);
     setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
-
     if (isInDocumentScope() && document()->doesParticipateInRendering()) {
         notifyNodeRemoveFromDocumentTree(child);
     }
@@ -1385,38 +1385,99 @@ static void removeChildren(FrameBlockBox* parent)
     }
 }
 
+FrameBlockBox* nearstAnonymouseBlockBox(Frame* f)
+{
+    Frame* p = f->parent();
+    while (!p->isAnonymous()) {
+        p = p->parent();
+    }
+
+    return p->asFrameBlockBox();
+}
+
 static void removeOneChild(FrameBlockBox* parent, Frame* child)
 {
-    if (child->parent() == parent) {
-        parent->removeChild(child);
-    } else {
-        STARFISH_ASSERT(parent->hasBlockFlow());
-        if (child->isFrameInline()) {
-            Frame* f = nullptr;
-            InlineNonReplacedBox* inrb =
-                parent->firstInlineNonReplacedBox(child->asFrameInline());
-            if (inrb) {
-                f = inrb->layoutParent()->layoutParent();
+    if (child->isFrameInline()) {
+        bool hasSplit = false;
+        Node* n = child->node()->firstChild();
+        while (n) {
+            if (n->frame() && n->frame()->isBlockLevel()) {
+                hasSplit = true;
+                break;
             }
-            while (f) {
+            n = n->nextSibling();
+        }
+
+        if (hasSplit) {
+            FrameInline *first = nullptr, *last = nullptr;
+            first = parent->firstFrameInline(child->node());
+            last = parent->lastFrameInline(child->node());
+            FrameBlockBox* firstNearstABB = nearstAnonymouseBlockBox(first);
+            FrameBlockBox* lastNearstABB = nearstAnonymouseBlockBox(last);
+            Frame* firstParent = first->parent();
+            Frame* lastParent = last->parent();
+
+            firstParent->removeChild(first);
+            Frame* f = firstNearstABB->next();
+            while (f != lastNearstABB) {
                 Frame* n = f->next();
                 parent->removeChild(f);
                 f = n;
             }
-        } else if (child->isFrameTableRowBox() ||
-                   child->isFrameTableSectionBox() ||
-                   child->isFrameTableColBox() ||
-                   child->isFrameTableCaptionBox()) {
-            Frame* f = child->parent();
-            while (!f->isFrameTableBox()) {
-                f = f->parent();
+            lastParent->removeChild(last);
+            while (lastParent != parent) {
+                f = lastParent->firstChild();
+                while (f) {
+                    lastParent->removeChild(f);
+                    firstParent->appendChild(f);
+                    f = lastParent->firstChild();
+                }
+                firstParent = firstParent->parent();
+                lastParent = lastParent->parent();
             }
-            parent->removeChild(f);
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            parent->removeChild(lastNearstABB);
+            FrameTreeBuilder::clearTree(child->node());
+            return;
         }
+    } else if (child->isBlockLevel() &&
+               child->node()->parentNode()->frame()->isFrameInline()) {
+        Frame* prevNearstABB = child->previous();
+        Frame* nextNearstABB = child->next();
+        STARFISH_ASSERT(prevNearstABB->isAnonymous() &&
+                        nextNearstABB->isAnonymous());
+
+        parent->removeChild(child);
+        FrameInline* prev =
+            prevNearstABB->firstFrameInline(child->node()->parentNode());
+        FrameInline* next =
+            nextNearstABB->firstFrameInline(child->node()->parentNode());
+        Frame* prevParent = prev->parent();
+        Frame* nextParent = next->parent();
+
+        while (nextParent != parent) {
+            Frame* f = nextParent->firstChild();
+            if (!nextParent->isLeftMBPCleared()) {
+                prevParent->setLeftMBPCleared(false);
+            }
+
+            if (!nextParent->isRightMBPCleared()) {
+                prevParent->setRightMBPCleared(false);
+            }
+
+            while (f) {
+                nextParent->removeChild(f);
+                prevParent->appendChild(f);
+                f = nextParent->firstChild();
+            }
+            prevParent = prevParent->parent();
+            nextParent = nextParent->parent();
+        }
+        parent->removeChild(nextNearstABB);
+        FrameTreeBuilder::clearTree(child->node());
+        return;
     }
 
+    child->parent()->removeChild(child);
     FrameTreeBuilder::clearTree(child->node());
 }
 
@@ -1425,7 +1486,7 @@ static void removeAnonymousBlockBoxesIfNeeded(FrameBlockBox* parent)
     if (parent->hasBlockFlow()) {
         Frame* f = parent->firstChild();
         while (f) {
-            if (!f->isAnonymous()) {
+            if (!f->isAnonymous() || f->isFrameTableBox()) {
                 return;
             }
             f = f->next();
@@ -1436,12 +1497,12 @@ static void removeAnonymousBlockBoxesIfNeeded(FrameBlockBox* parent)
         while (f) {
             Frame* c = f->asFrameBlockBox()->firstChild();
             while (c) {
+                f->removeChild(c);
                 childs.push_back(c);
-                c = c->next();
+                c = f->firstChild();
             }
-            Frame* n = f->next();
             parent->removeChild(f);
-            f = n;
+            f = parent->firstChild();
         }
 
         auto it = childs.begin();
@@ -1471,7 +1532,7 @@ void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
 
     Frame* old = frame();
     if (old) {
-        Frame *target, *child = nullptr;
+        Frame* target;
         if (reason == Node::AppendChild || reason == Node::UpdateAtSelf) {
             target = old;
         } else {
@@ -1482,7 +1543,6 @@ void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
             // STARFISH_ASSERT(old->isFrameDocument());
             target = document()->frame();
         } else {
-            child = old;
             while (target) {
                 if (!target->isAnonymous() && target->isFrameBlockBox() &&
                     !target->isFrameTableRowBox() &&
@@ -1492,9 +1552,6 @@ void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
                     break;
                 }
 
-                if (!target->isAnonymous()) {
-                    child = target;
-                }
                 target = target->parent();
             }
         }
@@ -1502,40 +1559,29 @@ void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
         STARFISH_ASSERT(target);
         FrameBlockBox* targetBlockBox = target->asFrameBlockBox();
         if (reason == Node::AppendChild) {
-            if (targetBlockBox->hasBlockFlow()) {
-                if (target->node() != this) {
-                    removeOneChild(targetBlockBox, child);
-                }
+            if (target->node() != this) {
+                removeChildren(targetBlockBox);
             }
         } else if (reason == Node::RemoveFromParent) {
-            if (targetBlockBox->hasBlockFlow()) {
-                if (target->node() == parentNode()) {
-                    removeOneChild(targetBlockBox, child);
-                    removeAnonymousBlockBoxesIfNeeded(targetBlockBox);
-                    target->propagateMarkNeedsLayout();
-                    window()->browsingContext()->setNeedsLayout();
-                    return;
-                } else {
-                    removeChildren(targetBlockBox);
-                }
+            Frame* frame = this->frame();
+            if (frame->isFrameTableObjectBox()) {
+                removeChildren(targetBlockBox);
             } else {
-                removeOneChild(targetBlockBox, child);
+                removeOneChild(targetBlockBox, frame);
+                removeAnonymousBlockBoxesIfNeeded(targetBlockBox);
                 target->propagateMarkNeedsLayout();
                 window()->browsingContext()->setNeedsLayout();
                 return;
             }
-        } else if (reason == Node::UpdateAtSelf) {
-            removeChildren(targetBlockBox);
         } else {
             removeChildren(targetBlockBox);
         }
-
-        if (reason == Node::AppendChild || reason == Node::InsertBefore ||
-            reason == Node::UpdateAtSelf) {
-            if (target->style()->seenPseudoElementFirstLetter()) {
-                // TODO:
-                target->node()->markNeedsFrameTreeBuild();
-            }
+        ComputedStyle* style = target->style();
+        if (style->seenPseudoElementBefore() ||
+            style->seenPseudoElementBefore() ||
+            style->seenPseudoElementFirstLetter()) {
+            removeChildren(targetBlockBox);
+            target->node()->markNeedsFrameTreeBuild();
         }
 
         target->node()->propagateMarkChildNeedsFrameTreeBuild();
