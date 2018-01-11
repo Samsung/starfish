@@ -38,6 +38,7 @@ public:
 
     Nullable<String*> defaultNamedGetter(String* key);
     bool defaultNamedSetter(String* key, String* value);
+    bool defaultNamedDeleter(String* key);
     void defaultNamedEnumerator(GCVector<String*>& enums);
 
 private:

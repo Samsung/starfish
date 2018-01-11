@@ -134,6 +134,7 @@ public:
     Attr* setAttributeNode(Attr* attrNode);
     Attr* setAttributeNodeNS(Attr* attrNode);
 
+    void removeAttribute(size_t idx);
     void removeAttribute(const AttributeName& name);
     void removeAttribute(String* name);
     void removeAttributeNS(Nullable<String*> ns, String* localName);

@@ -127,6 +127,19 @@ bool DOMStringMap::defaultNamedSetter(String* key, String* value)
     return true;
 }
 
+bool DOMStringMap::defaultNamedDeleter(String* key)
+{
+    size_t size = m_element->attributeCount();
+    for (size_t i = 0; i < size; i++) {
+        String* name = m_element->getAssuredAttributeName(i).localName();
+        if (isSameCustomDataName(name, key)) {
+            m_element->removeAttribute(i);
+            return true;
+        }
+    }
+    return false;
+}
+
 void DOMStringMap::defaultNamedEnumerator(GCVector<String*>& enums)
 {
     STARFISH_ASSERT(m_element);

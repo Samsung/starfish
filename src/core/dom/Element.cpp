@@ -280,21 +280,28 @@ void Element::removeAttribute(const AttributeName& name)
 {
     size_t idx = hasAttribute(name);
     if (idx != SIZE_MAX) {
-        String* v = m_attributes[idx].value();
-        m_attributes.erase(m_attributes.begin() + idx);
-        // Remove Attr if exist
-        size_t attrIdx = hasAttributeNode(name);
-        if (attrIdx != SIZE_MAX) {
-            STARFISH_ASSERT(hasRareMembers());
-            STARFISH_ASSERT(rareMembers()->isRareElementMembers());
-            STARFISH_ASSERT(rareMembers()->asRareElementMembers()->m_attrList);
-            auto l = rareMembers()->asRareElementMembers()->m_attrList;
-            Attr* attrNode = (*l)[attrIdx];
-            attrNode->detachFromElement(v);
-            l->erase(l->begin() + attrIdx);
-        }
-        didAttributeChanged(name.qname(), v, String::emptyString, false, true);
+        removeAttribute(idx);
     }
+}
+
+void Element::removeAttribute(size_t idx)
+{
+    String* v = m_attributes[idx].value();
+    QualifiedName name = m_attributes[idx].name();
+
+    m_attributes.erase(m_attributes.begin() + idx);
+    // Remove Attr if exist
+    size_t attrIdx = hasAttributeNode(name);
+    if (attrIdx != SIZE_MAX) {
+        STARFISH_ASSERT(hasRareMembers());
+        STARFISH_ASSERT(rareMembers()->isRareElementMembers());
+        STARFISH_ASSERT(rareMembers()->asRareElementMembers()->m_attrList);
+        auto l = rareMembers()->asRareElementMembers()->m_attrList;
+        Attr* attrNode = (*l)[attrIdx];
+        attrNode->detachFromElement(v);
+        l->erase(l->begin() + attrIdx);
+    }
+    didAttributeChanged(name, v, String::emptyString, false, true);
 }
 
 void Element::removeAttribute(String* name)
