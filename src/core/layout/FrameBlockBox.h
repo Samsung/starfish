@@ -466,11 +466,11 @@ protected:
         m_flags.m_isCollapsed = false;
         m_flags.m_isFirstLine = isFirstLine;
         if (origin->isLeftMBPCleared()) {
-            setLeftMBPCleared();
+            setLeftMBPCleared(true);
         }
 
         if (origin->isRightMBPCleared()) {
-            setRightMBPCleared();
+            setRightMBPCleared(true);
         }
 
         // recompute style flags

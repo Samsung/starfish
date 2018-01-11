@@ -40,6 +40,23 @@ public:
 
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void layoutInline(LineFormattingContext& ctx);
+    virtual FrameInline* firstFrameInline(Node* n) override
+    {
+        if (n == node()) {
+            return this;
+        }
+
+        return Frame::firstFrameInline(n);
+    }
+
+    virtual FrameInline* lastFrameInline(Node* n) override
+    {
+        if (n == node()) {
+            return this;
+        }
+
+        return Frame::lastFrameInline(n);
+    }
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)

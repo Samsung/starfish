@@ -1456,6 +1456,38 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
+    virtual FrameInline* firstFrameInline(Node* n)
+    {
+        FrameInline* ret = nullptr;
+
+        Frame* child = firstChild();
+        while (child) {
+            if ((ret = child->firstFrameInline(n))) {
+                return ret;
+            }
+
+            child = child->next();
+        }
+
+        return ret;
+    }
+
+    virtual FrameInline* lastFrameInline(Node* n)
+    {
+        FrameInline* ret = nullptr;
+
+        Frame* child = lastChild();
+        while (child) {
+            if ((ret = child->lastFrameInline(n))) {
+                return ret;
+            }
+
+            child = child->previous();
+        }
+
+        return ret;
+    }
+
     virtual void establishesStackingContextIfNeeds()
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -1642,12 +1674,12 @@ public:
         return m_flags.m_isRightMBPCleared;
     }
 
-    void setLeftMBPCleared()
+    void setLeftMBPCleared(bool b)
     {
         m_flags.m_isLeftMBPCleared = true;
     }
 
-    void setRightMBPCleared()
+    void setRightMBPCleared(bool b)
     {
         m_flags.m_isRightMBPCleared = true;
     }
