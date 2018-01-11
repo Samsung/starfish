@@ -449,7 +449,7 @@ public:
                   ->platformWindow()
                   ->webView()
                   ->mainBrowsingContext())) {
-            return true;
+            return;
         }
 
         StarFish::KeyboardData kdata(StarFish::KeyValue::UnidentifiedKey);
@@ -533,6 +533,8 @@ public:
 void starfishCreate_internal(uv_async_t* handle)
 {
     int flag = 0;
+    int x = 100;
+    int y = 100;
     StarFishController* app = (StarFishController*)handle->data;
 
     StarFish::ScreenInfo info;
@@ -541,10 +543,15 @@ void starfishCreate_internal(uv_async_t* handle)
     info.availableRect.setWidth(app->m_width);
     info.availableRect.setHeight(app->m_height);
 
-    StarFish::StarFish* starFish = new (NoGC)
-        StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR",
-                           "Asia/Seoul", nullptr, app->m_width, app->m_height,
-                           app->m_windowX, app->m_windowY, 1, info, "", "");
+    std::string cacheDir(getenv("HOME"));
+    cacheDir += "/Starfish-cache";
+
+    StarFish::StarFish* starFish = new (NoGC) StarFish::StarFish(
+        (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
+        app->m_width, app->m_height, app->m_windowX, app->m_windowY, 1,
+        StarFish::String::createASCIIString("sans-serif"), info, "",
+        "/tmp/StarFish_Cookies.txt", cacheDir.data(),
+        StarFish::String::emptyString, StarFish::String::emptyString);
 
 #if defined(STARFISH_TIZEN)
     starFish->registerFrameBuffer(app->m_surface_info1.planes[0].ptr,

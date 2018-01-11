@@ -24,6 +24,7 @@
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
@@ -129,7 +130,8 @@ public:
     }
 
     virtual void clearResources();
-    virtual Canvas* preparePainting(bool forPainting);
+    virtual Canvas* preparePainting();
+    virtual Compositor* prepareCompositor();
 
     int32_t m_width;
     int32_t m_height;
@@ -147,6 +149,9 @@ public:
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
     int m_offsetYDueToSoftwareKeyboard;
+
+    cairo_surface_t* m_surface;
+    cairo_t* m_cairo;
 };
 
 class CanvasSurfaceDALI : public CanvasSurface {
@@ -229,9 +234,24 @@ public:
         return m_bufferHeight;
     }
 
+    virtual size_t imageWidth()
+    {
+        return m_imageWidth;
+    }
+
+    virtual size_t imageHeight()
+    {
+        return m_imageHeight;
+    }
+
     virtual size_t pixelRatio()
     {
         return m_pixelRatio;
+    }
+
+    virtual size_t bufferStride()
+    {
+        return m_bufferStride;
     }
 
     virtual void clear()
@@ -245,8 +265,11 @@ protected:
     unsigned char* buffer;
     size_t m_width;
     size_t m_height;
+    size_t m_imageWidth;
+    size_t m_imageHeight;
     size_t m_bufferWidth;
     size_t m_bufferHeight;
+    size_t m_bufferStride;
     size_t m_pixelRatio;
 };
 
@@ -298,6 +321,11 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     }
 #endif
 
+    wnd->m_surface = cairo_image_surface_create_for_data(
+        (unsigned char*)wnd->m_internalBuffer, CAIRO_FORMAT_ARGB32, width,
+        height, cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width));
+    wnd->m_cairo = cairo_create(wnd->m_surface);
+
     return wnd;
 }
 
@@ -341,7 +369,7 @@ void WebView::setNeedsRendering()
         id);
 }
 
-Canvas* WindowImplGB::preparePainting(bool forPainting)
+Canvas* WindowImplGB::preparePainting()
 {
 #ifdef STARFISH_ENABLE_TEST
     {
@@ -358,21 +386,38 @@ Canvas* WindowImplGB::preparePainting(bool forPainting)
 #endif
 
     struct dummy {
-        void* image;
+        cairo_t* cairo;
+        cairo_surface_t* surface;
         int w;
         int h;
-        int stride;
     };
 
     dummy* d = new dummy;
-    d->w = m_width;
-    d->h = m_height;
-    d->image = m_internalBuffer;
-    d->stride = m_stride;
+
+    d->cairo = m_cairo;
+    d->surface = m_surface;
+    d->w = width();
+    d->h = height();
+
     Canvas* canvas = Canvas::createDirect(starFish(), d);
     delete d;
 
     return canvas;
+}
+
+Compositor* WindowImplGB::prepareCompositor()
+{
+    struct dummy {
+        cairo_t* cairo;
+        cairo_surface_t* surface;
+        int w;
+        int h;
+    } d;
+    d.cairo = m_cairo;
+    d.surface = m_surface;
+    d.w = width();
+    d.h = height();
+    return Compositor::create(starFish(), &d);
 }
 
 void WindowImplGB::clearResources()
