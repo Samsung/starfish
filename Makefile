@@ -799,24 +799,24 @@ csswg_test_all:
 
 internal_test:
 	cat tool/reftest/efl/internal_unsorted.res | sort -nr | cut -d";" -f2 > tool/reftest/efl/internal.res
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal.res efl -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_manual.res efl --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/efl/internal.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/efl/internal_manual.res efl --font-dep -p$(TEST_NPROCS)
 	rm tool/reftest/efl/internal.res
 
 internal_test_gitlab_prerequisite:
 	./tool/reftest/efl/internal.sh $(div)
 internal_test_part1:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part1.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/efl/internal_part1.res efl -p$(TEST_NPROCS)
 internal_test_part2:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part2.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/efl/internal_part2.res efl -p$(TEST_NPROCS)
 internal_test_part3:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part3.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/efl/internal_part3.res efl -p$(TEST_NPROCS)
 internal_test_part4:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part4.res -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/efl/internal_part4.res -p$(TEST_NPROCS)
 internal_test_part5:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_part5.res efl -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/efl/internal_part5.res efl -p$(TEST_NPROCS)
 internal_test_manual:
-	./tool/drivers/run_test.py internal tool/reftest/efl/internal_manual.res efl --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/efl/internal_manual.res efl --font-dep -p$(TEST_NPROCS)
 
 tct:
 	./StarFish test/tct/index.html
@@ -924,24 +924,24 @@ csswg_test_all_cairo:
 
 internal_test_cairo:
 	cat tool/reftest/cairo/internal_unsorted.res | sort -nr | cut -d";" -f2 > tool/reftest/cairo/internal.res
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_manual.res cairo --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/cairo/internal.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/cairo/internal_manual.res cairo --font-dep -p$(TEST_NPROCS)
 	rm tool/reftest/cairo/internal.res
 
 internal_test_gitlab_prerequisite_cairo:
 	./tool/reftest/cairo/internal.sh $(div)
 internal_test_part1_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part1.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/cairo/internal_part1.res cairo -p$(TEST_NPROCS)
 internal_test_part2_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part2.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/cairo/internal_part2.res cairo -p$(TEST_NPROCS)
 internal_test_part3_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part3.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/cairo/internal_part3.res cairo -p$(TEST_NPROCS)
 internal_test_part4_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part4.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/cairo/internal_part4.res cairo -p$(TEST_NPROCS)
 internal_test_part5_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_part5.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/cairo/internal_part5.res cairo -p$(TEST_NPROCS)
 internal_test_manual_cairo:
-	./tool/drivers/run_test.py internal tool/reftest/cairo/internal_manual.res cairo --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py basic tool/reftest/cairo/internal_manual.res cairo --font-dep -p$(TEST_NPROCS)
 
 dom_conformance_test_cairo:
 	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/dom_conformance_test.res cairo -p$(TEST_NPROCS)
@@ -995,6 +995,8 @@ bidi_test_cairo:
 
 ################################################################################
 
+react_test:
+	./tool/drivers/run_test.py basic tool/reftest/cairo/react.res common -p$(TEST_NPROCS)
 
 test_all:
 	make dom_conformance_test

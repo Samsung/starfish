@@ -69,14 +69,13 @@ def run_default_pixel_test(list, backend, font_dep):
     result = pixeltest.run_parallel(list, backend, nproc, ahem_font=(not font_dep))
     return handle_result(result)
 
-
 tests = {}
 tests["dom_conformance"] = run_dom_conformance_test
 tests["web_platform"] = run_web_platform_test
 tests["vendor_basic"] = run_vendor_basic_test
 tests["vendor_pixel"] = run_vendor_pixel_test
 tests["csswg"] = run_csswg_test
-tests["internal"] = run_default_basic_test
+tests["basic"] = run_default_basic_test
 tests["pixel"] = run_default_pixel_test
 tests["bidi"] = run_bidi_test
 
