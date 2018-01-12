@@ -3,9 +3,9 @@
 interface Storage {
     [RaisesException] readonly attribute unsigned long length;
     [RaisesException] DOMString? key(unsigned long index);
-    // NOTE Remove `getter` keyword from getItem temporarily
-    [RaisesException] DOMString? getItem(DOMString key);
-    [RaisesException] void setItem(DOMString key, DOMString data);
+    [RaisesException] getter DOMString? getItem(DOMString key);
+    [RaisesException] setter void setItem(DOMString key, DOMString data);
     [RaisesException] void removeItem(DOMString key);
     [RaisesException] void clear();
+    [RaisesException] deleter void (DOMString name);
 };

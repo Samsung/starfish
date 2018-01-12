@@ -43,9 +43,11 @@ public:
     unsigned long length();
     Nullable<String*> key(unsigned long index);
     Nullable<String*> getItem(String* key);
-    void setItem(String* key, String* value);
-    void removeItem(String* key);
+    bool setItem(String* key, String* value);
+    bool removeItem(String* key);
     void clear();
+    void defaultNamedEnumerator(GCVector<String*>& enums);
+    bool defaultNamedDeleter(String* key);
 
 private:
     Storage();

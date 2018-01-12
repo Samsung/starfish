@@ -45,14 +45,24 @@ Nullable<String*> Storage::getItem(String* key)
     return m_storageImpl->getItem(key);
 }
 
-void Storage::setItem(String* key, String* value)
+bool Storage::setItem(String* key, String* value)
 {
-    m_storageImpl->setItem(key, value);
+    return m_storageImpl->setItem(key, value);
 }
 
-void Storage::removeItem(String* key)
+void Storage::defaultNamedEnumerator(GCVector<String*>& enums)
 {
-    m_storageImpl->removeItem(key);
+    enums = m_storageImpl->getKeyNames();
+}
+
+bool Storage::defaultNamedDeleter(String* key)
+{
+    return m_storageImpl->removeItem(key);
+}
+
+bool Storage::removeItem(String* key)
+{
+    return m_storageImpl->removeItem(key);
 }
 
 void Storage::clear()
