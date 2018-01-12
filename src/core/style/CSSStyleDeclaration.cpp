@@ -536,6 +536,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::WhiteSpace) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpace);
+        p.setValue(CSSStyleValuePair::ValueData(style->whiteSpace()));
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::FlexBasis) {
         CSSStyleValuePair p;
         FlexBasisData flexBasis = style->flexBasis();

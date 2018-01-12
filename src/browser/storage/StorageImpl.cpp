@@ -76,7 +76,20 @@ Nullable<String*> StorageImpl::getItem(String* key)
     return itr->second;
 }
 
-void StorageImpl::setItem(String* key, String* value)
+GCVector<String*> StorageImpl::getKeyNames()
+{
+    GCVector<String*> ret;
+
+    auto iter = m_map->begin();
+    while (iter != m_map->end()) {
+        ret.push_back(iter->first);
+        iter++;
+    }
+
+    return ret;
+}
+
+bool StorageImpl::setItem(String* key, String* value)
 {
     Nullable<String*> val = getItem(key);
     if (val.hasValue()) {
@@ -90,14 +103,16 @@ void StorageImpl::setItem(String* key, String* value)
     if (m_storageManager) {
         m_storageManager->setItem(m_securityOriginData, key, value);
     }
+    return true;
 }
 
-void StorageImpl::removeItem(String* key)
+bool StorageImpl::removeItem(String* key)
 {
     m_map->erase(key);
     if (m_storageManager) {
         m_storageManager->removeItem(m_securityOriginData, key);
     }
+    return true;
 }
 
 void StorageImpl::clear()

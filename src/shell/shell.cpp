@@ -659,8 +659,8 @@ int main(int argc, char* argv[])
     StarFish::StarFish* sf = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
         width, height, x, y, 1, String::createASCIIString("sans-serif"), info,
-        "", "/tmp/StarFish_Cookies.txt", cacheDir.data(),
-        String::fromUTF8(customUserAgentString.data()),
+        "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
+        cacheDir.data(), String::fromUTF8(customUserAgentString.data()),
         String::fromUTF8(builtinPolyfillPathString.data()));
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
