@@ -66,7 +66,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeC
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChild-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactChildReconciler-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMRoot-test.internal.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/findDOMNode-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/findDOMNode-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildReconcile-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactIdentity-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/escapeTextForBrowser-test.html
