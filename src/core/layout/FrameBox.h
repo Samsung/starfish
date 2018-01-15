@@ -602,6 +602,10 @@ public:
         LayoutContext& ctx, FrameBox* cb);
     VerticalDataLocToContainingBlock computeVerticalDataToContainingBlock(
         LayoutContext& ctx, FrameBox* cb);
+    void moveToStaticPositionForAbsolutedPositionedFlexItemHorizontally(
+        FrameBox* flexItem);
+    void moveToStaticPositionForAbsolutedPositionedFlexItemVertically(
+        FrameBox* flexItem);
 
     LayoutUnit outerWidth() const
     {

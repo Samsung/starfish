@@ -243,6 +243,98 @@ VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
                                             b);
 }
 
+void FrameBox::moveToStaticPositionForAbsolutedPositionedFlexItemHorizontally(
+    FrameBox* flexItem)
+{
+    FrameFlexibleBox* flexibleBox = layoutParent()->asFrameFlexibleBox();
+    LayoutUnit offset;
+    if (flexibleBox->isMainAxisInInlineAxis()) {
+        JustifyContentValue justifyContent =
+            flexibleBox->style()->justifyContent();
+        switch (justifyContent) {
+        case JustifyContentValue::FlexStartJustifyContentValue:
+        case JustifyContentValue::SpaceBetweenJustifyContentValue:
+            break;
+        case JustifyContentValue::CenterJustifyContentValue:
+        case JustifyContentValue::SpaceAroundJustifyContentValue:
+            offset = (flexibleBox->contentWidth() - outerWidth()) / 2;
+            break;
+        case JustifyContentValue::FlexEndJustifyContentValue:
+            offset = flexibleBox->contentWidth() - outerWidth();
+            break;
+        }
+    } else {
+        AlignItemValue alignSelf = style()->alignSelf();
+        switch (alignSelf) {
+        case AlignItemValue::FlexStartAlignItemValue:
+        case AlignItemValue::BaselineAlignItemValue:
+        case AlignItemValue::StretchAlignItemValue:
+            break;
+        case AlignItemValue::CenterAlignItemValue:
+            offset = (flexibleBox->contentWidth() - outerWidth()) / 2;
+            break;
+        case AlignItemValue::FlexEndAlignItemValue:
+            offset = flexibleBox->contentWidth() - outerWidth();
+            break;
+        }
+    }
+
+    if (flexibleBox->isLtrDirection()) {
+        setX(offset + flexibleBox->borderLeft() + flexibleBox->paddingLeft() +
+             FrameBox::marginLeft());
+    } else {
+        setX(flexibleBox->contentWidth() - offset + flexibleBox->borderLeft() +
+             flexibleBox->paddingLeft() - FrameBox::width() -
+             FrameBox::marginRight());
+    }
+}
+
+void FrameBox::moveToStaticPositionForAbsolutedPositionedFlexItemVertically(
+    FrameBox* flexItem)
+{
+    FrameFlexibleBox* flexibleBox = layoutParent()->asFrameFlexibleBox();
+    LayoutUnit offset;
+    if (flexibleBox->isMainAxisInInlineAxis()) {
+        AlignItemValue alignSelf = style()->alignSelf();
+        switch (alignSelf) {
+        case AlignItemValue::FlexStartAlignItemValue:
+        case AlignItemValue::BaselineAlignItemValue:
+        case AlignItemValue::StretchAlignItemValue:
+            break;
+        case AlignItemValue::CenterAlignItemValue:
+            offset = (flexibleBox->contentHeight() - outerHeight()) / 2;
+            break;
+        case AlignItemValue::FlexEndAlignItemValue:
+            offset = flexibleBox->contentHeight() - outerHeight();
+            break;
+        }
+    } else {
+        JustifyContentValue justifyContent =
+            flexibleBox->style()->justifyContent();
+        switch (justifyContent) {
+        case JustifyContentValue::FlexStartJustifyContentValue:
+        case JustifyContentValue::SpaceBetweenJustifyContentValue:
+            break;
+        case JustifyContentValue::CenterJustifyContentValue:
+        case JustifyContentValue::SpaceAroundJustifyContentValue:
+            offset = (flexibleBox->contentHeight() - outerHeight()) / 2;
+            break;
+        case JustifyContentValue::FlexEndJustifyContentValue:
+            offset = flexibleBox->contentHeight() - outerHeight();
+            break;
+        }
+    }
+
+    if (flexibleBox->isTtbDirection()) {
+        setY(offset + flexibleBox->borderTop() + flexibleBox->paddingTop() +
+             FrameBox::marginTop());
+    } else {
+        setY(flexibleBox->contentHeight() - offset + flexibleBox->borderTop() +
+             flexibleBox->paddingTop() - FrameBox::height() -
+             FrameBox::marginBottom());
+    }
+}
+
 void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth,
                                        DirectionValue parentDirection)
 {
@@ -1886,17 +1978,19 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
         if (!underComputingPreferredWidth &&
             layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
             appliedOverflowX() == VisibleOverflow) {
-            if (style->width().isSpecified()) {
-                LayoutUnit width =
-                    style->width().specifiedValue(parentWidth, this);
-                width = contentWidthApplyingBoxSizing(width);
+            if (isFrameReplaced()) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            } else {
+                if (style->width().isSpecified()) {
+                    LayoutUnit width =
+                        style->width().specifiedValue(parentWidth, this);
+                    width = contentWidthApplyingBoxSizing(width);
 
-                minWidth = width;
-            } else if (isFrameReplaced()) {
-                // TODO: calculate transferred size
+                    minWidth = width;
+                }
             }
 
-            PreferredWidthContext p(ctx, this, parentWidth - mbpWidth());
+            PreferredWidthContext p(ctx, this, this, parentWidth - mbpWidth());
             p.computePreferredWidth();
             minWidth = std::min(minWidth, p.preferredMinWidth());
         }
@@ -1944,18 +2038,17 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
 
         if (!layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
             appliedOverflowY() == VisibleOverflow) {
-            if (!(style->height().isAuto() ||
-                  style->height().isDefinite(parentHasFixedValue))) {
-                LayoutUnit height = LayoutUnit(
-                    style->height().specifiedValue(parentHeight, this));
-                height = contentHeightApplyingBoxSizing(height);
-
-                minHeight = height;
-            } else if (isFrameReplaced()) {
-                // TODO: calculate transferred size
+            if (isFrameReplaced()) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            }
+            } else {
+                if (style->height().isDefinite(parentHasFixedValue)) {
+                    LayoutUnit height = LayoutUnit(
+                        style->height().specifiedValue(parentHeight, this));
+                    height = contentHeightApplyingBoxSizing(height);
 
+                    minHeight = height;
+                }
+            }
             minHeight = std::min(minHeight, ctx.contentHeight(this));
         }
 

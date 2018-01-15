@@ -1677,6 +1677,23 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
             }
         }
 
+        if (isFrameTableCellBox()) {
+            VerticalAlignValue verticalAlign = style->verticalAlign();
+            if (verticalAlign == VerticalAlignValue::BottomVAlignValue ||
+                verticalAlign == VerticalAlignValue::MiddleVAlignValue) {
+                return true;
+            }
+        }
+
+        if (isFlexItem()) {
+            if (!layoutParent()
+                     ->asFrameFlexibleBox()
+                     ->isMainAxisInInlineAxis() &&
+                appliedOverflowY() == VisibleOverflow) {
+                return true;
+            }
+        }
+
         damager.m_canPercentDamage = containerWidthMayBeChanged;
         if (isLayoutDamaged(damager, style->textIndent())) {
             return true;

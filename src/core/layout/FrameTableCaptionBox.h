@@ -41,22 +41,8 @@ public:
 
     void layoutWidth(LayoutContext& ctx);
 
-    LayoutUnit minCaptionWidth()
-    {
-        return m_minCaptionWidth;
-    }
-
-    LayoutUnit maxCaptionWidth()
-    {
-        return m_maxCaptionWidth;
-    }
-
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
-
-private:
-    LayoutUnit m_minCaptionWidth;
-    LayoutUnit m_maxCaptionWidth;
 };
 }
 

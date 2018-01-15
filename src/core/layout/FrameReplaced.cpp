@@ -384,25 +384,17 @@ void FrameReplaced::layout(LayoutContext& ctx,
             Length right = offset.right();
 
             if (left.isAuto() && right.isAuto()) {
-                // static location computed in normal flow processing
-                if (parentDirection == LtrDirectionValue) {
-                    moveX(FrameBox::marginLeft());
+                if (isFlexItem()) {
+                    moveToStaticPositionForAbsolutedPositionedFlexItemHorizontally(
+                        this);
                 } else {
-                    // if the 'direction' property of the element establishing
-                    // the static-position containing block is 'ltr' set 'left'
-                    // to the static position, otherwise set 'right' to the
-                    // static position. Then solve for 'left' (if 'direction
-                    // is 'rtl') or 'right' (if 'direction' is 'ltr').
-                    moveX(-FrameBox::width() - FrameBox::marginRight());
+                    if (parentDirection == LtrDirectionValue) {
+                        moveX(FrameBox::marginLeft());
+                    } else {
+                        moveX(-FrameBox::width() - FrameBox::marginRight());
+                    }
                 }
             } else if (!left.isAuto() && !right.isAuto()) {
-                // If at this point both 'margin-left' and 'margin-right'
-                // are still 'auto', solve the equation under the extra
-                // constraint that the two margins must get equal values,
-                // unless this would make them negative, in which case when
-                // the direction of the containing block is 'ltr' ('rtl'),
-                // set 'margin-left' ('margin-right') to zero and solve
-                // for 'margin-right' ('margin-left').
                 computeHorizontalMargin(data.m_contentWidth - data.m_left -
                                             data.m_right,
                                         parentDirection);
@@ -453,7 +445,12 @@ void FrameReplaced::layout(LayoutContext& ctx,
 
             if (top.isAuto() && bottom.isAuto()) {
                 // static location computed in normal flow processing
-                moveY(marginTop());
+                if (isFlexItem()) {
+                    moveToStaticPositionForAbsolutedPositionedFlexItemVertically(
+                        this);
+                } else {
+                    moveY(marginTop());
+                }
             } else if (!top.isAuto() && bottom.isAuto()) {
                 setY(data.m_top - data.m_absY + marginTop());
             } else if (top.isAuto() && !bottom.isAuto()) {

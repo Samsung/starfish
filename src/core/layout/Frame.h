@@ -697,10 +697,11 @@ enum WordType {
 
 class PreferredWidthContext {
 public:
-    PreferredWidthContext(LayoutContext& lc, Frame* frame,
+    PreferredWidthContext(LayoutContext& lc, Frame* frame, Frame* owner,
                           LayoutUnit lastKnownWidth)
         : m_layoutContext(lc)
         , m_frame(frame)
+        , m_owner(owner)
         , m_preferredWidthSoFar(0)
         , m_preferredMinWidthSoFar(0)
         , m_currentLineWidth(0)
@@ -714,6 +715,11 @@ public:
         , m_isPendingWrapLine(false)
         , m_hasAppliedTextIndent(false)
     {
+    }
+
+    Frame* owner() const
+    {
+        return m_owner;
     }
 
     void computePreferredWidth();
@@ -882,6 +888,7 @@ public:
 private:
     LayoutContext& m_layoutContext;
     Frame* m_frame;
+    Frame* m_owner;
     LayoutUnit m_preferredWidthSoFar;
     LayoutUnit m_preferredMinWidthSoFar;
     LayoutUnit m_currentLineWidth;

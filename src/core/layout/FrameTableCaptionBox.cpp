@@ -23,17 +23,27 @@ namespace StarFish {
 
 FrameTableCaptionBox::FrameTableCaptionBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
-    , m_minCaptionWidth(0)
-    , m_maxCaptionWidth(0)
 {
 }
 
 void FrameTableCaptionBox::layoutWidth(LayoutContext& ctx)
 {
-    PreferredWidthContext p(ctx, this, LayoutUnit::max());
-    p.computePreferredWidth();
-    m_minCaptionWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
-    m_maxCaptionWidth = p.preferredWidth() + borderWidth() + paddingWidth();
+    FrameBox* cb = containingBlock(this);
+    LayoutUnit parentContentWidth = cb->contentWidth();
+    computeBorderMarginPadding(ctx, parentContentWidth);
+    LayoutUnit contentWidth;
+    Length width = style()->width();
+    if (width.isAuto()) {
+        PreferredWidthContext p(ctx, this, this,
+                                parentContentWidth - mbpWidth());
+        p.computePreferredWidth();
+        contentWidth = p.preferredWidth();
+    } else {
+        contentWidth = width.specifiedValue(parentContentWidth, this);
+        contentWidth = contentWidthApplyingBoxSizing(contentWidth);
+    }
+
+    applyMinMaxWidthIfNeeds(ctx, contentWidth, parentContentWidth);
 }
 
 void* FrameTableCaptionBox::operator new(size_t size)

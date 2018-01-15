@@ -106,7 +106,6 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
         Length left = offset.left();
         Length right = offset.right();
         Length width = style()->width();
-        BoxSizingValue boxSizing = style()->boxSizing();
         LayoutUnit contentWidth;
 
         if (width.isAuto()) {
@@ -129,7 +128,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                              containgBlockContentWidth - l - r - mbpWidth());
                 contentWidth = w;
             } else {
-                PreferredWidthContext p(ctx, this,
+                PreferredWidthContext p(ctx, this, this,
                                         containgBlockContentWidth - mbpWidth());
                 p.computePreferredWidth();
                 contentWidth = p.preferredWidth();
@@ -159,9 +158,6 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             ctx.setIsQuickLayout(true);
             quickLayout(ctx);
             ctx.setIsQuickLayout(isQuickLayout);
-            if (isFrameTableCellBox()) {
-                asFrameTableCellBox()->setActualContentHeight(contentHeight());
-            }
             return;
         }
     }
@@ -182,10 +178,8 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             contentHeight = layoutInline(ctx);
         }
 
-        // The contentHeight is used when table cell contents are vertically
-        // aligned in the table row.
-        if (isFrameTableCellBox()) {
-            asFrameTableCellBox()->setActualContentHeight(contentHeight);
+        if (isFrameTableCellBox() || isFlexItem()) {
+            ctx.registerContentHeight(this, contentHeight);
         }
 
         if (isAbsolutePositioned()) {
@@ -209,10 +203,6 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         } else {
             computeContentHeight(ctx, contentHeight);
         }
-    }
-
-    if (isFlexItem()) {
-        ctx.registerContentHeight(this, contentHeight());
     }
 }
 
@@ -426,35 +416,21 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                     computeContentWidth(ctx, cb, data.m_contentWidth);
                 }
 
-                if (parentDirection == LtrDirectionValue) {
-                    moveX(FrameBox::marginLeft());
+                if (isFlexItem()) {
+                    moveToStaticPositionForAbsolutedPositionedFlexItemHorizontally(
+                        this);
                 } else {
-                    // if the 'direction' property of the element
-                    // establishing the static-position containing block is
-                    // 'ltr' set 'left' to the static position, otherwise set
-                    // 'right' to the static position. Then solve for 'left'
-                    // (if 'direction is 'rtl') or 'right' (if 'direction' is
-                    // 'ltr').
-                    moveX(-FrameBox::width() - FrameBox::marginRight());
+                    if (parentDirection == LtrDirectionValue) {
+                        moveX(FrameBox::marginLeft());
+                    } else {
+                        moveX(-FrameBox::width() - FrameBox::marginRight());
+                    }
                 }
             } else if (!left.isAuto() && !right.isAuto()) {
                 computeContentWidth(ctx, cb, data.m_contentWidth);
                 if (width.isAuto()) {
                     setX(data.m_left + FrameBox::marginLeft() - data.m_absX);
                 } else {
-                    // If none of the three is 'auto':
-                    // If both 'margin-left' and 'margin-right' are 'auto',
-                    // solve the equation under the extra constraint that the
-                    // two margins get equal values, unless this would make
-                    // them negative, in which case when  direction of the
-                    // containing block is 'ltr' ('rtl'), set 'margin-left'
-                    // ('margin-right') to zero and solve for 'margin-right'
-                    // ('margin-left'). If one of 'margin-left' or
-                    // 'margin-right' is 'auto', solve the equation for that
-                    // value. If the values are over-constrained, ignore the
-                    // value for 'left' (in case the 'direction' property of
-                    // the containing block is 'rtl') or 'right' (in case
-                    // 'direction' is 'ltr') and solve for that value.
                     computeHorizontalMargin(data.m_contentWidth - data.m_left -
                                                 data.m_right,
                                             parentDirection);
@@ -532,10 +508,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         clearContentHeightDamaged();
     }
 
-    // Now the intrinsic height of the object is known because the children are
-    // placed
-
-    // Determine the final height
     if (isAbsolutePositioned()) {
         VerticalDataLocToContainingBlock data =
             computeVerticalDataToContainingBlock(ctx, cb);
@@ -545,16 +517,14 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         Length bottom = offset.bottom();
 
         // 10.6.4 Absolutely positioned, non-replaced elements
-
-        // For absolutely positioned elements, the used values of the vertical
-        // dimensions must satisfy this constraint:
-        // 'top' + 'margin-top' + 'border-top-width' + 'padding-top' + 'height'
-        // + 'padding-bottom' + 'border-bottom-width' + 'margin-bottom' +
-        // 'bottom' = height of containing block
-
         if (top.isAuto() && bottom.isAuto()) {
             // static location computed in normal flow processing
-            moveY(marginTop());
+            if (isFlexItem()) {
+                moveToStaticPositionForAbsolutedPositionedFlexItemVertically(
+                    this);
+            } else {
+                moveY(marginTop());
+            }
         } else if (!top.isAuto() && bottom.isAuto()) {
             setY(data.m_top - data.m_absY + marginTop());
         } else if (top.isAuto() && !bottom.isAuto()) {

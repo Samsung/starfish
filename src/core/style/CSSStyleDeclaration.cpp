@@ -544,14 +544,14 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     } else if (keyKind == CSSStyleValuePair::KeyKind::FlexBasis) {
         CSSStyleValuePair p;
         FlexBasisData flexBasis = style->flexBasis();
-        p.setKeyKind(CSSStyleValuePair::KeyKind::FlexBasis);
         if (flexBasis.isContent()) {
             p.setValueKind(CSSStyleValuePair::ValueKind::FlexBasisValueKind);
             p.setValue(FlexBasisValue::ContentFlexBasisValue);
         } else {
             Length len = flexBasis.width();
-            lengthToCSSStyleValue(len);
+            p = lengthToCSSStyleValue(len);
         }
+        p.setKeyKind(CSSStyleValuePair::KeyKind::FlexBasis);
         addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::TextIndent) {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->textIndent());
