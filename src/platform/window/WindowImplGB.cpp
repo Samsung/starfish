@@ -162,9 +162,13 @@ public:
         m_height = h;
         m_window = (WindowImplGB*)wnd;
 
+        m_bufferStride = m_imageWidth = m_bufferWidth = m_width = SIZE_MAX;
+        m_imageHeight = m_bufferHeight = m_height = SIZE_MAX;
+
         m_bufferWidth = m_width = -1;
         m_bufferHeight = m_height = -1;
         m_pixelRatio = 1;
+        attachNativeBuffer(w, h);
 
         resize(w, h);
         GC_REGISTER_FINALIZER_NO_ORDER(this,
@@ -180,8 +184,41 @@ public:
 
     virtual void detachNativeBuffer()
     {
-        free(buffer);
-        buffer = nullptr;
+        free(m_buffer);
+        m_buffer = nullptr;
+    }
+
+    void attachNativeBuffer(size_t w, size_t h)
+    {
+        if (m_width != w || m_height != h) {
+            m_width = w;
+            m_height = h;
+
+            if ((int)w < m_window->starFish()->screenInfo().rect.width()) {
+                w += STARFISH_CANVAS_SURFACE_MARGIN;
+            }
+            if ((int)h < m_window->starFish()->screenInfo().rect.height()) {
+                h += STARFISH_CANVAS_SURFACE_MARGIN;
+            }
+
+            m_pixelRatio = 1;
+
+            while ((m_width / m_pixelRatio > 20000) ||
+                   (m_height / m_pixelRatio > 20000)) {
+                m_pixelRatio++;
+            }
+
+            m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
+            m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
+
+            m_bufferWidth = std::max((size_t)1, w / m_pixelRatio);
+            m_bufferHeight = std::max((size_t)1, h / m_pixelRatio);
+            m_bufferStride = m_bufferWidth * 4;
+
+            detachNativeBuffer();
+            m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
+                                              sizeof(uint32_t));
+        }
     }
 
     virtual void resize(size_t w, size_t h)
@@ -197,21 +234,22 @@ public:
             m_height = h;
             m_bufferWidth = std::max((size_t)1, m_width / m_pixelRatio);
             m_bufferHeight = std::max((size_t)1, m_height / m_pixelRatio);
+            m_bufferStride = m_bufferWidth * 4;
 
             detachNativeBuffer();
-            buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
-                                            sizeof(uint32_t));
+            m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
+                                              sizeof(uint32_t));
         }
     }
 
     virtual void* unwrap()
     {
-        return (void*)buffer;
+        return (void*)m_buffer;
     }
 
     virtual uint8_t* data()
     {
-        return buffer;
+        return m_buffer;
     }
 
     virtual size_t width()
@@ -257,12 +295,12 @@ public:
     virtual void clear()
     {
         size_t end = m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
-        memset(buffer, 0x00, end);
+        memset(m_buffer, 0x00, end);
     }
 
 protected:
     WindowImplGB* m_window;
-    unsigned char* buffer;
+    unsigned char* m_buffer;
     size_t m_width;
     size_t m_height;
     size_t m_imageWidth;
