@@ -863,9 +863,8 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
                 std::max(maxRowWidthSoFar, c->asFrameBox()->width());
         } else if (c->isFrameTableCaptionBox()) {
             c->asFrameTableCaptionBox()->layoutWidth(ctx);
-            minCaptionWidthSoFar =
-                std::max(minCaptionWidthSoFar,
-                         c->asFrameTableCaptionBox()->minCaptionWidth());
+            minCaptionWidthSoFar = std::max(
+                minCaptionWidthSoFar, c->asFrameTableCaptionBox()->width());
             c->asFrameTableCaptionBox()->setX(
                 c->asFrameTableCaptionBox()->marginLeft());
             if (c->style()->width().isDefinite(false)) {

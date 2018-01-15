@@ -5470,7 +5470,7 @@ void StyleResolver::apply(Element* element,
                     CSSStyleValuePair::ValueKind::Initial ||
                 cssValues[k].valueKind() ==
                     CSSStyleValuePair::ValueKind::Auto) {
-                style->setFlexBasis(FlexBasisData(true));
+                style->setFlexBasis(FlexBasisData(false));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
                 style->setFlexBasis(parentStyle->flexBasis());
@@ -5481,7 +5481,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Length) {
                 Length length = cssValues[k].cssLengthValue().toLength();
                 if (length.isAuto()) {
-                    style->setFlexBasis(FlexBasisData(true));
+                    style->setFlexBasis(FlexBasisData(false));
                 } else {
                     style->setFlexBasis(FlexBasisData(false, length));
                 }
@@ -9454,8 +9454,8 @@ static bool parseFlexShorthand(const CSSTokenVector& tokens,
     }
 
     flexGrow->setValueKind(CSSStyleValuePair::ValueKind::Initial);
-    flexShrink->setValueKind(CSSStyleValuePair::ValueKind::Initial);
-    flexBasis->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    flexShrink->setNumberValue(1);
+    flexBasis->setPercentageValue(0);
 
     bool hasFlexGrow = false, hasFlexShrink = false, hasFlexBasis = false;
     CSSStyleValuePair temp;
@@ -9520,17 +9520,6 @@ void CSSStyleDeclaration::setFlex(const char* str, size_t length,
         flexShrink.setValueKind(CSSStyleValuePair::ValueKind::Number);
         flexShrink.setValue(0);
         flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
-    } else if (CSSPropertyParser::parseNumber(str, 0, &f)) {
-        flexGrow.setFlagImportant(isImportant);
-        flexShrink.setFlagImportant(isImportant);
-        flexBasis.setFlagImportant(isImportant);
-        flexGrow.setValueKind(CSSStyleValuePair::ValueKind::Number);
-        flexGrow.setValue(f);
-        flexShrink.setValueKind(CSSStyleValuePair::ValueKind::Number);
-        flexShrink.setValue(1);
-        flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Percentage);
-        flexBasis.setPercentageValue(0);
         addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
     } else if (parseFlexShorthand(tokens, &flexGrow, &flexShrink, &flexBasis)) {
         flexGrow.setFlagImportant(isImportant);

@@ -64,11 +64,6 @@ public:
         m_absoluteColumnIndex = column;
     }
 
-    void setActualContentHeight(LayoutUnit height)
-    {
-        m_actualContentHeight = height;
-    }
-
     unsigned absoluteColumnIndex()
     {
         return m_absoluteColumnIndex;
@@ -108,7 +103,6 @@ private:
     unsigned m_absoluteColumnIndex; // starts with 0
     LayoutUnit m_minCellWidth;
     LayoutUnit m_maxCellWidth;
-    LayoutUnit m_actualContentHeight;
 
     size_t m_updatedColspan;
     size_t m_updatedRowspan;

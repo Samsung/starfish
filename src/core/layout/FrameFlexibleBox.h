@@ -31,12 +31,14 @@ struct FlexLine {
     LayoutUnit m_lineWidth;
     LayoutUnit m_lineHeight;
     LayoutUnit m_maxAscender;
+    size_t m_normalFlexItemSize;
     bool m_hasAbsolutePositionedBox;
 
     FlexLine()
         : m_lineWidth(0)
         , m_lineHeight(0)
         , m_maxAscender(0)
+        , m_normalFlexItemSize(0)
         , m_hasAbsolutePositionedBox(false)
     {
     }
@@ -92,6 +94,7 @@ private:
     FrameFlexibleBox* m_container;
     bool m_isMainAxisInInlineAxis;
     bool m_isLtrDirection;
+    bool m_isTtbDirection;
     bool m_isSingleLine;
     LayoutUnit m_availableMainSize;
     LayoutUnit m_availableCrossSize;
@@ -126,7 +129,9 @@ public:
     bool isMainAxisInInlineAxis();
     bool isSingleLine();
     bool isLtrDirection();
+    bool isTtbDirection();
 
+    virtual void computePreferredWidth(PreferredWidthContext& ctx);
     void layoutFlex(LayoutContext& ctx);
 };
 }

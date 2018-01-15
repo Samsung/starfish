@@ -911,6 +911,8 @@ csswg_test_manual_cairo:
 	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_manual.res cairo --font-dep -p$(TEST_NPROCS)
 csswg_test_rtl_cairo:
 	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_rtl.res cairo -p$(TEST_NPROCS)
+csswg_test_flex_cairo:
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_flex.res cairo -p$(TEST_NPROCS)
 csswg_test_all_cairo:
 	make csswg_test_css1_cairo
 	make csswg_test_css21_cairo
@@ -920,6 +922,7 @@ csswg_test_all_cairo:
 	make csswg_test_css3_backgrounds_cairo
 	make csswg_test_css3_selectors_cairo
 	make csswg_test_mediaqueries3_cairo
+	make csswg_test_flex_cairo
 	make csswg_test_manual_cairo
 
 internal_test_cairo:

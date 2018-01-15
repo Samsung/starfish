@@ -34,7 +34,6 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     , m_absoluteColumnIndex(0)
     , m_minCellWidth(0)
     , m_maxCellWidth(0)
-    , m_actualContentHeight(0)
     , m_updatedColspan(0)
     , m_updatedRowspan(0)
 {
@@ -59,7 +58,7 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
 void FrameTableCellBox::collectCellWidthInfo(
     LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
-    PreferredWidthContext p(ctx, this, LayoutUnit::max());
+    PreferredWidthContext p(ctx, this, this, LayoutUnit::max());
     p.computePreferredWidth();
     m_minCellWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
     m_maxCellWidth = p.preferredWidth() + borderWidth() + paddingWidth();
@@ -144,13 +143,13 @@ void FrameTableCellBox::applyVerticalAlign(LayoutContext& ctx)
         yPosOffset = 0;
         break;
     case VerticalAlignValue::BottomVAlignValue:
-        yPosOffset = contentHeight() - m_actualContentHeight;
+        yPosOffset = contentHeight() - ctx.contentHeight(this);
         break;
     case VerticalAlignValue::MiddleVAlignValue: {
         LayoutUnit halfCellContentHeight =
             LayoutUnit(contentHeight().toDouble() / 2);
         yPosOffset = halfCellContentHeight.toDouble() -
-                     (m_actualContentHeight.toDouble() / 2);
+                     (ctx.contentHeight(this).toDouble() / 2);
         break;
     }
     case VerticalAlignValue::BaselineVAlignValue:
