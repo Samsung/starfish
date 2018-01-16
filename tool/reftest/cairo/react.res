@@ -32,7 +32,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/Syntheti
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationReconnecting-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationContext-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/ChangeEventPlugin-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMockedComponent-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMockedComponent-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponentNestedState-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMAttribute-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMOption-test.html
@@ -74,10 +74,10 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/quoteAttributeV
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactEventIndependence-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMFiberAsync-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMEventListener-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMountDestruction-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMountDestruction-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/validateDOMNesting-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactTreeTraversal-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactTreeTraversal-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactUpdates-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/refs-destruction-test.html
@@ -88,7 +88,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/quoteAttributeV
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/renderSubtreeIntoContainer-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInvalidARIAHook-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactServerRenderingBrowser-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponentState-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponentState-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/client/__tests__/dangerouslySetInnerHTML-test.html
 # test/cairo/reftest/vendor/react/packages/react-cs-renderer/src/__tests__/ReactNativeCS-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactAsyncClassComponent-test.internal.html
@@ -100,10 +100,10 @@ test/cairo/reftest/vendor/react/packages/react/src/__tests__/onlyChild-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElementClone-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactJSXElementValidator-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactCoffeeScriptClass-test.html
-# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactJSXElement-test.html
+test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactJSXElement-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElement-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/createReactClassIntegration-test.html
-# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactPureComponent-test.html
+test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactPureComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactChildren-test.html
 # test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRendererTraversal-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactES6Class-test.html
