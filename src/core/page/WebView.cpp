@@ -914,12 +914,9 @@ void WebView::assignGraphicsBuffer(CanvasSurface** surfaceHolder,
         for (size_t i = 0;
              i < m_backStackingContextBufferUpWhileReCompsite.size(); i++) {
             size_t savedW =
-                m_backStackingContextBufferUpWhileReCompsite[i]->bufferWidth() *
-                m_backStackingContextBufferUpWhileReCompsite[i]->pixelRatio();
+                m_backStackingContextBufferUpWhileReCompsite[i]->bufferWidth();
             size_t savedH =
-                m_backStackingContextBufferUpWhileReCompsite[i]
-                    ->bufferHeight() *
-                m_backStackingContextBufferUpWhileReCompsite[i]->pixelRatio();
+                m_backStackingContextBufferUpWhileReCompsite[i]->bufferHeight();
 
             if (savedW >= visibleWidth && savedH >= visibleHeight) {
                 size_t areaA = savedW * savedH;
