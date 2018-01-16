@@ -996,6 +996,7 @@ bidi_test_cairo:
 ################################################################################
 
 react_test:
+	cd ./test/cairo/reftest/vendor/react/ && ./generator.py
 	./tool/drivers/run_test.py basic tool/reftest/cairo/react.res common -p$(TEST_NPROCS)
 
 test_all:
