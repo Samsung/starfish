@@ -6510,15 +6510,17 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             element->setNeedsComposite();
         }
 
-        if (element->style() && !style->transitionDuration().isZero() &&
+        ComputedStyle* old_style = element->style();
+        element->setStyle(style);
+
+        if (old_style && !style->transitionDuration().isZero() &&
             (damage != ComputedStyleDamage::ComputedStyleDamageNone)) {
             if (element->webView()->inRendering()) {
-                applyTransition(element, element->style(), style, damagedKeys);
+                applyTransition(element, old_style, style, damagedKeys);
             }
         } else if (element->webView()->inRendering()) {
             element->document()->animationExecutor()->cancelAnimation(element);
         }
-        element->setStyle(style);
         element->clearNeedsStyleRecalc();
     }
 

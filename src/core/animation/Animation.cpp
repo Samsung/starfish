@@ -216,18 +216,20 @@ void TransformAnimationTask::detachedFromElement()
 
     Element* current = targetElement();
     ComputedStyle* style = current->style();
-    auto transforms = style->rareComputedStyleData()->transforms();
+    if (style->hasTransforms()) {
+        auto transforms = style->rareComputedStyleData()->transforms();
 
-    if (transforms->at(transforms->size() - 1).type() ==
-        StyleTransformData::InternalMatrix) {
-        // cleanup
-        transforms->removeAt(transforms->size() - 1);
-        current->setNeedsStyleRecalc(Node::JustNeedsRecalcSelf);
-        if (transforms->size() == 0) {
-            // NOTE
-            // having transform is reason of creating StackingContext
-            // for rebuilding stacking context, we should give layout damage
-            current->setNeedsLayout();
+        if (transforms->at(transforms->size() - 1).type() ==
+            StyleTransformData::InternalMatrix) {
+            // cleanup
+            transforms->removeAt(transforms->size() - 1);
+            current->setNeedsStyleRecalc(Node::JustNeedsRecalcSelf);
+            if (transforms->size() == 0) {
+                // NOTE
+                // having transform is reason of creating StackingContext
+                // for rebuilding stacking context, we should give layout damage
+                current->setNeedsLayout();
+            }
         }
     }
 
