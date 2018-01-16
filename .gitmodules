@@ -6,7 +6,7 @@
 	url = git@github.sec.samsung.net:RS7-webtf/binding_generator.git
 [submodule "test"]
 	path = test
-	url = git@github.sec.samsung.net:RS7-webtf/mwe-tc.git
+	url = git@github.sec.samsung.net:RS7-webtf/lwe-tc.git
 [submodule "tool/gyp"]
 	path = tool/gyp
 	url = git@github.sec.samsung.net:RS7-webtf/gyp.git
