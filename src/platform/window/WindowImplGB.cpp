@@ -213,7 +213,8 @@ public:
 
             m_bufferWidth = std::max((size_t)1, w / m_pixelRatio);
             m_bufferHeight = std::max((size_t)1, h / m_pixelRatio);
-            m_bufferStride = m_bufferWidth * 4;
+            m_bufferStride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
+                                                           m_bufferWidth);
 
             detachNativeBuffer();
             m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
@@ -232,13 +233,12 @@ public:
 
             m_width = w;
             m_height = h;
-            m_bufferWidth = std::max((size_t)1, m_width / m_pixelRatio);
-            m_bufferHeight = std::max((size_t)1, m_height / m_pixelRatio);
-            m_bufferStride = m_bufferWidth * 4;
 
-            detachNativeBuffer();
-            m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
-                                              sizeof(uint32_t));
+            m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
+            m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
+
+            STARFISH_RELEASE_ASSERT(m_imageWidth <= m_bufferWidth);
+            STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
         }
     }
 
