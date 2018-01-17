@@ -416,8 +416,10 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                     computeContentWidth(ctx, cb, data.m_contentWidth);
                 }
 
-                if (isFlexItem()) {
-                    moveToStaticPositionForAbsolutedPositionedFlexItemHorizontally(
+                if (parent()->isAnonymous() &&
+                    parent()->parent()->isFrameFlexibleBox() &&
+                    !parent()->isFlexItem()) {
+                    moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
                         this);
                 } else {
                     if (parentDirection == LtrDirectionValue) {
@@ -519,9 +521,10 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         // 10.6.4 Absolutely positioned, non-replaced elements
         if (top.isAuto() && bottom.isAuto()) {
             // static location computed in normal flow processing
-            if (isFlexItem()) {
-                moveToStaticPositionForAbsolutedPositionedFlexItemVertically(
-                    this);
+            if (parent()->isAnonymous() &&
+                parent()->parent()->isFrameFlexibleBox() &&
+                !parent()->isFlexItem()) {
+                moveToStaticPositionForAbsolutedPositionedBoxVertically(this);
             } else {
                 moveY(marginTop());
             }

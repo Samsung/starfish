@@ -1375,14 +1375,13 @@ void Frame::updateComputedStyle(Node* refNode)
 
 void Frame::markFlexItem()
 {
-    m_flags.m_isFlexItem = true;
     // https://www.w3.org/TR/css-flexbox-1/#painting
     // Flex items paint exactly the same as inline blocks [CSS21], except
     // that order-modified document order is used in place of raw document
     // order, and z-index values other than auto create a stacking context
     // even if position is static.
-    if (!FlexFormattingContext::isAnonymousFlexItemContainingOnlyWhitespace(
-            this)) {
+    if (FlexFormattingContext::doesParticipateInFlexFormattingContext(this)) {
+        m_flags.m_isFlexItem = true;
         m_flags.m_isEstablishesStackingContext = true;
         m_flags.m_isEstablishesBlockFormattingContext = true;
     }

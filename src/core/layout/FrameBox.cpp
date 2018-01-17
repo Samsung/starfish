@@ -243,10 +243,10 @@ VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
                                             b);
 }
 
-void FrameBox::moveToStaticPositionForAbsolutedPositionedFlexItemHorizontally(
+void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
     FrameBox* flexItem)
 {
-    FrameFlexibleBox* flexibleBox = layoutParent()->asFrameFlexibleBox();
+    FrameFlexibleBox* flexibleBox = parent()->parent()->asFrameFlexibleBox();
     LayoutUnit offset;
     if (flexibleBox->isMainAxisInInlineAxis()) {
         JustifyContentValue justifyContent =
@@ -289,10 +289,10 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedFlexItemHorizontally(
     }
 }
 
-void FrameBox::moveToStaticPositionForAbsolutedPositionedFlexItemVertically(
-    FrameBox* flexItem)
+void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxVertically(
+    FrameBox* box)
 {
-    FrameFlexibleBox* flexibleBox = layoutParent()->asFrameFlexibleBox();
+    FrameFlexibleBox* flexibleBox = parent()->parent()->asFrameFlexibleBox();
     LayoutUnit offset;
     if (flexibleBox->isMainAxisInInlineAxis()) {
         AlignItemValue alignSelf = style()->alignSelf();
