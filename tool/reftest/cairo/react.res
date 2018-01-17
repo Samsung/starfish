@@ -45,11 +45,11 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeC
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactStatelessComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInput-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponentDOMMinimalism-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildText-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildText-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMTextComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOM-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationBasic-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactComponentLifeCycle-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactComponentLifeCycle-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactTestUtils-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSelection-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationFragment-test.html
@@ -64,7 +64,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeC
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMount-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationAttributes-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChild-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactChildReconciler-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactChildReconciler-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMRoot-test.internal.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/findDOMNode-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildReconcile-test.html
@@ -80,7 +80,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMountDestr
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactTreeTraversal-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactUpdates-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/refs-destruction-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/refs-destruction-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSVG-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/EventPluginHub-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationForms-test.html
