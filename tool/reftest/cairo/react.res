@@ -24,7 +24,7 @@
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticKeyboardEvent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticEvent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/BeforeInputEventPlugin-test.internal.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/EnterLeaveEventPlugin-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/EnterLeaveEventPlugin-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticClipboardEvent-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticWheelEvent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/getEventKey-test.html
@@ -71,9 +71,9 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/findDOMNode-tes
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactIdentity-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/escapeTextForBrowser-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/quoteAttributeValueForBrowser-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactEventIndependence-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactEventIndependence-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMFiberAsync-test.internal.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMEventListener-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMEventListener-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMountDestruction-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/validateDOMNesting-test.html
