@@ -4377,8 +4377,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
             float maxContentFlexShrinkFraction = 0;
             Frame* f = firstChild();
             while (f) {
-                if (f->isAbsolutePositioned() ||
-                    fCtx.isAnonymousFlexItemContainingOnlyWhitespace(f)) {
+                if (!f->isFlexItem()) {
                     f = f->next();
                     continue;
                 }
@@ -4429,8 +4428,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
             f = firstChild();
             LayoutUnit w;
             while (f) {
-                if (f->isAbsolutePositioned() ||
-                    fCtx.isAnonymousFlexItemContainingOnlyWhitespace(f)) {
+                if (!f->isFlexItem()) {
                     f = f->next();
                     continue;
                 }
@@ -4459,8 +4457,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
             Frame* f = firstChild();
             LayoutUnit w;
             while (f) {
-                if (f->isAbsolutePositioned() ||
-                    fCtx.isAnonymousFlexItemContainingOnlyWhitespace(f)) {
+                if (!f->isFlexItem()) {
                     f = f->next();
                     continue;
                 }

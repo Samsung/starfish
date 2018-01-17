@@ -31,15 +31,11 @@ struct FlexLine {
     LayoutUnit m_lineWidth;
     LayoutUnit m_lineHeight;
     LayoutUnit m_maxAscender;
-    size_t m_normalFlexItemSize;
-    bool m_hasAbsolutePositionedBox;
 
     FlexLine()
         : m_lineWidth(0)
         , m_lineHeight(0)
         , m_maxAscender(0)
-        , m_normalFlexItemSize(0)
-        , m_hasAbsolutePositionedBox(false)
     {
     }
 };
@@ -86,7 +82,7 @@ public:
         return m_isSingleLine;
     }
 
-    static bool isAnonymousFlexItemContainingOnlyWhitespace(Frame* flexItem);
+    static bool doesParticipateInFlexFormattingContext(Frame* flexItem);
     Nullable<LayoutUnit> firstLineBoxYPosition(FrameBox* flexItem) const;
 
 private:

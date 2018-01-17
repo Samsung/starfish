@@ -384,8 +384,10 @@ void FrameReplaced::layout(LayoutContext& ctx,
             Length right = offset.right();
 
             if (left.isAuto() && right.isAuto()) {
-                if (isFlexItem()) {
-                    moveToStaticPositionForAbsolutedPositionedFlexItemHorizontally(
+                if (parent()->isAnonymous() &&
+                    parent()->parent()->isFrameFlexibleBox() &&
+                    !parent()->isFlexItem()) {
+                    moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
                         this);
                 } else {
                     if (parentDirection == LtrDirectionValue) {
@@ -445,8 +447,10 @@ void FrameReplaced::layout(LayoutContext& ctx,
 
             if (top.isAuto() && bottom.isAuto()) {
                 // static location computed in normal flow processing
-                if (isFlexItem()) {
-                    moveToStaticPositionForAbsolutedPositionedFlexItemVertically(
+                if (parent()->isAnonymous() &&
+                    parent()->parent()->isFrameFlexibleBox() &&
+                    !parent()->isFlexItem()) {
+                    moveToStaticPositionForAbsolutedPositionedBoxVertically(
                         this);
                 } else {
                     moveY(marginTop());
