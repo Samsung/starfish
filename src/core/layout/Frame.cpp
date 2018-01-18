@@ -1002,7 +1002,8 @@ void Frame::computePaintingFlags(LayoutContext& ctx,
         }
 
         seenPaintingKind(kind);
-        if (isFrameBlockBox() && !asFrameBlockBox()->hasBlockFlow()) {
+        if (kind != NormalFlowInline && isFrameBlockBox() &&
+            !asFrameBlockBox()->hasBlockFlow()) {
             seenPaintingKind(NormalFlowInline);
         }
     }
@@ -1380,10 +1381,15 @@ void Frame::markFlexItem()
     // that order-modified document order is used in place of raw document
     // order, and z-index values other than auto create a stacking context
     // even if position is static.
+    if (m_flags.m_isFlexItem) {
+        return;
+    }
+
     if (FlexFormattingContext::doesParticipateInFlexFormattingContext(this)) {
         m_flags.m_isFlexItem = true;
-        m_flags.m_isEstablishesStackingContext = true;
+        m_flags.m_isEstablishesStackingContext |= style()->isSpecifiedZIndex();
         m_flags.m_isEstablishesBlockFormattingContext = true;
+        m_flags.m_needsLayout = true;
     }
 }
 

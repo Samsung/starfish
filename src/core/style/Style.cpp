@@ -5407,16 +5407,18 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::AlignSelf:
-            style->m_alignSelfSpecifiedByUser = true;
             if (cssValues[k].valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial ||
                 cssValues[k].valueKind() ==
                     CSSStyleValuePair::ValueKind::Auto) {
+                style->m_alignSelfSpecifiedByUser = false;
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_alignSelfSpecifiedByUser = false;
                 style->m_alignSelf = parentStyle->m_alignSelf;
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::AlignItemValueKind) {
+                style->m_alignSelfSpecifiedByUser = true;
                 style->setAlignSelf(cssValues[k].alignItemValue());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -7213,21 +7215,22 @@ bool CSSStyleValuePair::updateValueUnitBorderWidth(const CSSTokenValue& value)
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_WIDTH)
 #undef UPDATE_VALUE_BORDER_WIDTH
 
-bool CSSStyleValuePair::updateValueNumber(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueNumber(const CSSTokenVector& tokens,
+                                          uint8_t option)
 {
     if (tokens.size() != 1) {
         return false;
     }
 
-    return updateValueUnitNumber(tokens[0]);
+    return updateValueUnitNumber(tokens[0], option);
 }
 
-bool CSSStyleValuePair::updateValueUnitNumber(const CSSTokenValue& token)
+bool CSSStyleValuePair::updateValueUnitNumber(const CSSTokenValue& token,
+                                              uint8_t option)
 {
     float f;
     m_valueKind = CSSStyleValuePair::ValueKind::Number;
-    if (CSSPropertyParser::parseNumber(token.data(),
-                                       CSSPropertyParser::AllowNegative, &f)) {
+    if (CSSPropertyParser::parseNumber(token.data(), option, &f)) {
         m_value.m_floatValue = f;
         return true;
     }
@@ -8047,7 +8050,7 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens)
 
 bool CSSStyleValuePair::updateValueOpacity(const CSSTokenVector& tokens)
 {
-    return updateValueNumber(tokens);
+    return updateValueNumber(tokens, CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueFontWeight(const CSSTokenVector& tokens)
@@ -9011,22 +9014,22 @@ bool CSSStyleValuePair::updateValueAlignContent(const CSSTokenVector& tokens)
 
 bool CSSStyleValuePair::updateValueFlexGrow(const CSSTokenVector& tokens)
 {
-    return updateValueNumber(tokens);
+    return updateValueNumber(tokens, 0);
 }
 
 bool CSSStyleValuePair::updateValueUnitFlexGrow(const CSSTokenValue& value)
 {
-    return updateValueUnitNumber(value);
+    return updateValueUnitNumber(value, 0);
 }
 
 bool CSSStyleValuePair::updateValueFlexShrink(const CSSTokenVector& tokens)
 {
-    return updateValueNumber(tokens);
+    return updateValueNumber(tokens, 0);
 }
 
 bool CSSStyleValuePair::updateValueUnitFlexShrink(const CSSTokenValue& value)
 {
-    return updateValueUnitNumber(value);
+    return updateValueUnitNumber(value, 0);
 }
 
 bool CSSStyleValuePair::updateValueFlexBasis(const CSSTokenVector& tokens)
@@ -9172,7 +9175,9 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                 auto str = parser.parsedString()->toUTF8NonGCString();
                 CSSStyleValuePair ret;
                 if (unit == Number &&
-                    ret.updateValueUnitNumber(CSSTokenValue(str.c_str()))) {
+                    ret.updateValueUnitNumber(
+                        CSSTokenValue(str.c_str()),
+                        CSSPropertyParser::AllowNegative)) {
                     values->emplace_back(ret);
                 } else if (unit == Angle &&
                            ret.updateValueUnitAngleOrCalc(
@@ -9506,9 +9511,9 @@ void CSSStyleDeclaration::setFlex(const char* str, size_t length,
         flexShrink.setFlagImportant(isImportant);
         flexBasis.setFlagImportant(isImportant);
         flexGrow.setValueKind(CSSStyleValuePair::ValueKind::Number);
-        flexGrow.setValue(1);
+        flexGrow.setValue(1.0f);
         flexShrink.setValueKind(CSSStyleValuePair::ValueKind::Number);
-        flexShrink.setValue(1);
+        flexShrink.setValue(1.0f);
         flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
     } else if (STRING_VALUE_IS_NONE()) {
@@ -9516,9 +9521,9 @@ void CSSStyleDeclaration::setFlex(const char* str, size_t length,
         flexShrink.setFlagImportant(isImportant);
         flexBasis.setFlagImportant(isImportant);
         flexGrow.setValueKind(CSSStyleValuePair::ValueKind::Number);
-        flexGrow.setValue(0);
+        flexGrow.setValue(0.0f);
         flexShrink.setValueKind(CSSStyleValuePair::ValueKind::Number);
-        flexShrink.setValue(0);
+        flexShrink.setValue(0.0f);
         flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
     } else if (parseFlexShorthand(tokens, &flexGrow, &flexShrink, &flexBasis)) {

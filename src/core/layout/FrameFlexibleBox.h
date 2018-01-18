@@ -48,6 +48,8 @@ public:
     void computeAvailableSpace(LayoutUnit availableWidth);
 
     LayoutUnit basisSize(FrameBox* flexItem);
+    LayoutUnit sumOfUsedupMainSize(std::vector<FrameBox*>& flexItems,
+                                   std::vector<bool> isFrozens);
     void computeMainSize();
     bool isMainSizeFlexible(FrameBox* flexItem, bool usingGrowFactor);
     void applyFlexFactor();

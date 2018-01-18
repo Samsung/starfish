@@ -111,8 +111,8 @@ void FrameTreeBuilder::clearTree(Node* current)
     }
 }
 
-static FrameBlockBox* createAnonymouseBlockBox(FrameBlockBox* blockContainer,
-                                               Node* node)
+FrameBlockBox* createAnonymouseBlockBox(FrameBlockBox* blockContainer,
+                                        Node* node)
 {
     ComputedStyle* style = new ComputedStyle(blockContainer->style());
     style->setDisplay(DisplayValue::BlockDisplayValue);
@@ -146,18 +146,11 @@ static void insertFlexItemChild(FrameBlockBox* blockContainer,
 
         if (last && last->isAnonymous()) {
             last->appendChild(currentFrame);
-            if (!last->isFlexItem() &&
-                FlexFormattingContext::doesParticipateInFlexFormattingContext(
-                    last->asFrameBox())) {
-                last->markFlexItem();
-            }
+            last->markFlexItem();
         } else {
             Frame* f = wrapWithAnonymouseBlockBox(blockContainer, currentNode,
                                                   currentFrame);
-            if (FlexFormattingContext::doesParticipateInFlexFormattingContext(
-                    f->asFrameBox())) {
-                f->markFlexItem();
-            }
+            f->markFlexItem();
         }
     }
 }
@@ -340,14 +333,13 @@ void FrameTreeBuilder::createPseudoElement(
     }
     pseudoElement->setStyle(pseudoStyle);
 
-    Frame* pseudoFrame;
-    if (pseudoStyle->floating() != FloatValue::NoneFloatValue) {
-        pseudoFrame = new FrameBlockBox(pseudoElement, nullptr);
-    } else {
-        pseudoFrame = new FrameInline(pseudoElement);
-    }
-
     if (pseudoElement->isFirstLetterPseudoElement()) {
+        Frame* pseudoFrame;
+        if (pseudoStyle->floating() != FloatValue::NoneFloatValue) {
+            pseudoFrame = new FrameBlockBox(pseudoElement, nullptr);
+        } else {
+            pseudoFrame = new FrameInline(pseudoElement);
+        }
         Frame* originalFrameText =
             FirstLetterPseudoElement::firstLetterFrameText(pseudoElement);
         pseudoParentFrame->insertBefore(originalFrameText, pseudoFrame);
@@ -387,6 +379,7 @@ void FrameTreeBuilder::createPseudoElement(
             return;
         }
 
+        bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
         DisplayValue contentDisplay = pseudoElement->style()->display();
         DisplayValue parentDisplay = parent->style()->display();
 
@@ -437,6 +430,14 @@ void FrameTreeBuilder::createPseudoElement(
             return;
         }
 
+        if (pseudoFrame->isFrameBlockBox()) {
+            ctx.setCurrentBlockContainer(pseudoFrame->asFrameBlockBox());
+        } else if (pseudoFrame->isFrameInline()) {
+            ctx.setIsInFrameInlineFlow(true);
+            ctx.frameInlineItem().insert(
+                std::make_pair(pseudoElement, pseudoFrame->asFrameInline()));
+        }
+
         // Add content's frame to the pseudo-element.
         ContentDataGroup* content = pseudoElement->style()->content();
         if (content) {
@@ -481,14 +482,18 @@ void FrameTreeBuilder::createPseudoElement(
                         FrameText* contentTextFrame =
                             new FrameText(contentText, contentTextStyle);
                         contentText->setFrame(contentTextFrame);
-                        pseudoFrame->appendChild(contentTextFrame);
+                        insertChild(ctx.currentBlockContainer(),
+                                    contentTextFrame, contentText, ctx);
                     }
                 }
                 iter++;
             }
         }
 
-        ctx.setCurrentBlockContainer(pre);
+        if (pseudoFrame->isFrameBlockBox()) {
+            ctx.setCurrentBlockContainer(pre);
+        }
+        ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
     }
 
     STARFISH_ASSERT(parent->isElement());

@@ -956,7 +956,7 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
     case 9:
         switch (data[0]) {
         case 'a':
-            if (memcmp(data, "AlignSelf", 9) == 0) {
+            if (memcmp(data, "alignSelf", 9) == 0) {
                 return CSSStyleKind::AlignSelf;
             }
             break;

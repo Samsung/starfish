@@ -432,7 +432,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
                          data.m_absX);
                 }
             }
-        } else if (isNormalFlow() && isBlockLevel()) {
+        } else if (isNormalFlow() && isBlockLevel() && !isFlexItem()) {
             computeHorizontalMargin(parentContentWidth, parentDirection);
         }
     }
@@ -550,7 +550,13 @@ void FrameReplaced::paintContent(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
-    if (isFloating()) {
+    if (isFlexItem()) {
+        if (ctx.m_paintingStage == PaintingNormalFlowInline) {
+            paintBackgroundAndBorders(ctx.m_canvas);
+            paintReplaced(ctx.m_canvas);
+            paintOutline(ctx.m_canvas);
+        }
+    } else if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             paintBackgroundAndBorders(ctx.m_canvas);
             paintReplaced(ctx.m_canvas);
@@ -563,7 +569,7 @@ void FrameReplaced::paintContent(PaintingContext& ctx)
             paintReplaced(ctx.m_canvas);
             paintOutline(ctx.m_canvas);
         }
-    } else if (isInlineLevel() || isFlexItem()) {
+    } else if (isInlineLevel()) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline) {
             paintBackgroundAndBorders(ctx.m_canvas);
             paintReplaced(ctx.m_canvas);

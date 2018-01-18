@@ -83,6 +83,35 @@ bool Length::isCalcAndLengthOfType() const
     return isCalc() && calcData()->type().isLength();
 }
 
+bool Length::hasPercent() const
+{
+    if (isPercent()) {
+        return true;
+    }
+
+    if (!isCalc()) {
+        return false;
+    }
+
+    GCVector<CalcTerm*>& data = calcData()->terms();
+    auto iter = data.begin();
+
+    while (iter != data.end()) {
+        GCVector<CalcValue>& data2 = (*iter)->values();
+        auto iter2 = data2.begin();
+        while (iter2 != data2.end()) {
+            CalcValue& v = *iter2;
+            if (v.type().isPercentage()) {
+                return true;
+            }
+            iter2++;
+        }
+        iter++;
+    }
+
+    return false;
+}
+
 bool Length::hasViewportPercent() const
 {
     if (isViewportPercent()) {

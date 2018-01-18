@@ -157,6 +157,7 @@ public:
         return isFixed() || isPercent() || isViewportPercent() || isAuto();
     }
 
+    bool hasPercent() const;
     bool hasViewportPercent() const;
 
     Type type() const
