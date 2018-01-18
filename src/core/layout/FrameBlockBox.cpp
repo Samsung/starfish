@@ -109,12 +109,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
         LayoutUnit contentWidth;
 
         if (width.isAuto()) {
-            if (isNormalFlow() && !isAtomicInlineLevel()) {
-                // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
-                // width of containing block =
-                //     'margin-left' + 'border-left-width' + 'padding-left' +
-                //     'width' + 'padding-right' + 'border-right-width' +
-                //     'margin-right'
+            // TODO: implement width: 'max-content' and 'fit-content'
+            if (isNormalFlow() && !isAtomicInlineLevel() && !isFlexItem()) {
                 contentWidth = std::max(containgBlockContentWidth - mbpWidth(),
                                         LayoutUnit(0));
             } else if (isAbsolutePositioned() && left.isSpecified() &&
@@ -483,7 +479,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             // 10.3.3 Block-level, non-replaced elements in normal flow
             // 10.3.5 Floating, non-replaced elements
             computeContentWidth(ctx, cb, parentContentWidth);
-            if (isNormalFlow() && isBlockLevel()) {
+            if (isNormalFlow() && isBlockLevel() && !isFlexItem()) {
                 computeHorizontalMargin(parentContentWidth, parentDirection);
             }
         }

@@ -92,6 +92,7 @@ enum PaintingInlineStage {
 
 class FrameBox : public Frame {
     friend struct MBPRestorer;
+    friend struct MinMaxWidthHeightRestorer;
 
 public:
     FrameBox(Node* node, ComputedStyle* style)
@@ -593,6 +594,11 @@ public:
         return m_frameRect.width() - paddingWidth() - borderWidth();
     }
 
+    LayoutUnit mbpHeight()
+    {
+        return marginHeight() + borderHeight() + paddingHeight();
+    }
+
     LayoutUnit contentHeight() const
     {
         return m_frameRect.height() - paddingHeight() - borderHeight();
@@ -845,6 +851,41 @@ protected:
 
     // content + padding + border
     LayoutRect m_frameRect;
+};
+
+struct MBPRestorer {
+    MBPRestorer(FrameBox* b)
+        : m_box(b)
+        , m_hasRareData(b->hasRareData())
+        , m_paddingWidthDamaged(b->paddingWidthDamaged())
+        , m_paddingHeightDamaged(b->paddingHeightDamaged())
+    {
+        if (m_hasRareData) {
+            m_margin = m_box->frameBoxRareData()->m_margin;
+            m_border = m_box->frameBoxRareData()->m_border;
+            m_padding = m_box->frameBoxRareData()->m_padding;
+        }
+    }
+
+    ~MBPRestorer()
+    {
+        if (m_hasRareData) {
+            m_box->frameBoxRareData()->m_margin = m_margin;
+            m_box->frameBoxRareData()->m_border = m_border;
+            m_box->frameBoxRareData()->m_padding = m_padding;
+        }
+
+        m_box->m_flags.m_paddingWidthDamaged = m_paddingWidthDamaged;
+        m_box->m_flags.m_paddingHeightDamaged = m_paddingHeightDamaged;
+    }
+
+    FrameBox* m_box;
+    bool m_hasRareData;
+    bool m_paddingWidthDamaged;
+    bool m_paddingHeightDamaged;
+    LayoutBoxSurroundData m_margin;
+    LayoutBoxSurroundData m_border;
+    LayoutBoxSurroundData m_padding;
 };
 }
 

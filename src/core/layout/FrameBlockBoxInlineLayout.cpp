@@ -1369,7 +1369,7 @@ void InlineBoxLayoutParentBox::registerRelativePositionedBoxesAndMarkPaintFlag(
             } else if (childBox->isInlineTextBox()) {
                 seenInlineBox(PaintingInlineStage::PaintingInlineBox);
             } else if (childBox->isAtomicInlineLevel() ||
-                       childBox->isFlexItem() || childBox->isFloating()) {
+                       childBox->isFloating()) {
                 seenInlineBox(PaintingInlineStage::PaintingInlineBlockBox);
             } else if (childBox->isFrameReplaced()) {
                 seenInlineBox(PaintingInlineStage::PaintingInlineReplaced);
@@ -1552,8 +1552,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                 canvas->translate(-dx, -dy);
             }
 
-        } else if (childBox->isAtomicInlineLevel() || childBox->isFlexItem() ||
-                   childBox->isFloating()) {
+        } else if (childBox->isAtomicInlineLevel() || childBox->isFloating()) {
             if (stage == PaintingInlineBlockBox) {
                 STARFISH_ASSERT(childBox->isFrameBlockBox());
                 canvas->save();
@@ -4156,41 +4155,6 @@ bool FrameText::isSelfCollapsingBlock(LayoutContext& ctx)
     return text()->containsOnlyWhitespace();
 }
 
-struct MBPRestorer {
-    MBPRestorer(FrameBox* b)
-        : m_box(b)
-        , m_hasRareData(b->hasRareData())
-        , m_paddingWidthDamaged(b->paddingWidthDamaged())
-        , m_paddingHeightDamaged(b->paddingHeightDamaged())
-    {
-        if (m_hasRareData) {
-            m_margin = m_box->frameBoxRareData()->m_margin;
-            m_border = m_box->frameBoxRareData()->m_border;
-            m_padding = m_box->frameBoxRareData()->m_padding;
-        }
-    }
-
-    ~MBPRestorer()
-    {
-        if (m_hasRareData) {
-            m_box->frameBoxRareData()->m_margin = m_margin;
-            m_box->frameBoxRareData()->m_border = m_border;
-            m_box->frameBoxRareData()->m_padding = m_padding;
-        }
-
-        m_box->m_flags.m_paddingWidthDamaged = m_paddingWidthDamaged;
-        m_box->m_flags.m_paddingHeightDamaged = m_paddingHeightDamaged;
-    }
-
-    FrameBox* m_box;
-    bool m_hasRareData;
-    bool m_paddingWidthDamaged;
-    bool m_paddingHeightDamaged;
-    LayoutBoxSurroundData m_margin;
-    LayoutBoxSurroundData m_border;
-    LayoutBoxSurroundData m_padding;
-};
-
 void FrameText::computePreferredWidth(PreferredWidthContext& ctx)
 {
     tokenizeText(ctx.layoutContext().starFish(), this, ctx);
@@ -4591,7 +4555,11 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
 
     STARFISH_ASSERT(!isPositioned());
 
-    if (isFloating()) {
+    if (isFlexItem()) {
+        if (ctx.m_paintingStage == PaintingNormalFlowInline) {
+            paintBackgroundAndBorders(ctx.m_canvas);
+        }
+    } else if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             paintBackgroundAndBorders(ctx.m_canvas);
         }
@@ -4607,7 +4575,17 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
         ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
     }
 
-    if (isFloating()) {
+    if (isFlexItem()) {
+        if (ctx.m_paintingStage == PaintingNormalFlowInline) {
+            PaintingContext ctx2(ctx.m_canvas);
+            while (ctx2.m_paintingStage != PaintingStageEnd) {
+                paintChildrenWith(ctx2);
+                ctx2.m_paintingStage =
+                    (PaintingStage)(ctx2.m_paintingStage + 1);
+            }
+            paintOutline(ctx.m_canvas);
+        }
+    } else if (isFloating()) {
         if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
             paintChildrenWith(ctx);
             paintOutline(ctx.m_canvas);

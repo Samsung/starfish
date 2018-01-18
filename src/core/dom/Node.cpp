@@ -1477,7 +1477,9 @@ static void removeOneChild(FrameBlockBox* parent, Frame* child)
         return;
     }
 
-    child->parent()->removeChild(child);
+    if (child->parent()) {
+        child->parent()->removeChild(child);
+    }
     FrameTreeBuilder::clearTree(child->node());
 }
 
@@ -1492,23 +1494,37 @@ static void removeAnonymousBlockBoxesIfNeeded(FrameBlockBox* parent)
             f = f->next();
         }
 
-        std::vector<Frame*> childs;
-        f = parent->firstChild();
-        while (f) {
-            Frame* c = f->asFrameBlockBox()->firstChild();
-            while (c) {
-                f->removeChild(c);
-                childs.push_back(c);
-                c = f->firstChild();
+        Frame* newParent;
+        if (parent->isFrameFlexibleBox()) {
+            newParent = parent->firstChild();
+            newParent->markNeedsLayout();
+            if (newParent) {
+                f = newParent->next();
+                if (!newParent->isFlexItem()) {
+                    Frame* c = newParent;
+                    while (c) {
+                        if (c->isFlexItem()) {
+                            newParent->markFlexItem();
+                            break;
+                        }
+                        c = c->next();
+                    }
+                }
             }
-            parent->removeChild(f);
+        } else {
+            newParent = parent;
             f = parent->firstChild();
         }
-
-        auto it = childs.begin();
-        while (it != childs.end()) {
-            parent->appendChild(*it);
-            it++;
+        while (f) {
+            Frame* c = f->firstChild();
+            while (c) {
+                f->removeChild(c);
+                newParent->appendChild(c);
+                c = f->firstChild();
+            }
+            Frame* n = f->next();
+            parent->removeChild(f);
+            f = n;
         }
     }
 }

@@ -995,12 +995,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->m_display != oldStyle->m_display) {
-        damagedKeys[CSSStyleValuePair::KeyKind::Display] = true;
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
-    }
-
     if (newStyle->m_originalDisplay != oldStyle->m_originalDisplay) {
         damagedKeys[CSSStyleValuePair::KeyKind::Display] = true;
         damage = (ComputedStyleDamage)(
