@@ -1072,4 +1072,7 @@ tidy:
 tidy-update:
 	./tool/check_tidy.py -up ./src/
 
+gen_webapi_doc:
+	./docs/generator/run.py src/
+
 .PHONY: clean tct test_pr tidy tidy-update
