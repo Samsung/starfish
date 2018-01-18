@@ -34,3 +34,4 @@ cscope.out
 core # dump
 !src/core
 .*
+autogen_*.html

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<head>
+<meta name='viewport' content='width=device-width, user-scalable=no'>
+<meta charset='utf-8' />
+<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' />
+<link rel='stylesheet' href='./style.css' />
+</head>
+<body>
+<div class='header title'>APIs/DOM</div>
+<div id='extend_mdn_comparison' class='summary'>
+    <div>
+        <input type="checkbox" id="check_mdn_comparison">
+        <label for="check_mdn_comparison">Comparison with MDN WebAPIs list</label>
+    </div>
+</div>
+<div id='summary' class='summary container-fluid'>
+    <div class="row">
+        <div class="summary_box col-sm-5">
+            <div class="summary_content">
+                Total: <span id="summary_total_count">-</span><br>
+                Support: <span id="summary_support_count">-</span><br>
+                <div id="summary_rate_percent">-</div>
+                <span id="summary_timestamp" style="color:grey;">MDN sync: -</span>
+            </div>
+        </div>
+        <div class="summary_box col-sm-6">
+            <div class="summary_content">
+                <div>
+                    <input type="checkbox" id="check_unimpl">
+                    <label for="check_unimpl">Hide unimplemented features</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="check_mdn_exp">
+                    <label for="check_mdn_exp">Hide MDN experimental features</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="check_non_standard">
+                    <label for="check_non_standard">Hide non-standard features</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="check_deprecated">
+                    <label for="check_deprecated">Hide deprecated features</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="check_obsolte">
+                    <label for="check_obsolte">Hide obsolete features</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="dynamic_root"></div>
+<script type='text/javascript' src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+<script id="starfish_data_json" type='application/json'>
+{{ interfaces|jsonify }}
+</script>
+<script type="text/javascript" src="webapi_main.js"></script>
+<script type="text/javascript">
+check_mdn_comparison.checked = false;
+var starfish_data = JSON.parse(starfish_data_json.textContent);
+run(starfish_data);
+
+check_mdn_comparison.onchange = function() {
+    if (check_mdn_comparison.checked) {
+        while (extend_mdn_comparison.firstChild) {
+            extend_mdn_comparison.removeChild(extend_mdn_comparison.firstChild);
+        }
+        while (dynamic_root.firstChild) {
+            dynamic_root.removeChild(dynamic_root.firstChild);
+        }
+        extend_mdn_comparison.textContent = 'Loading...';
+        runWithMDNData(starfish_data);
+        setTimeout(function() {
+            extend_mdn_comparison.parentElement.removeChild(extend_mdn_comparison);
+        }, 1000);
+    }
+}
+</script>
+</body>

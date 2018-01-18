@@ -1,0 +1,103 @@
+body {
+    color: #333333;
+    font-size: 15px;
+}
+.header {
+    color: #555555;
+    background-color: #D9E5FF;
+    padding: 3vmin 1vmin;
+}
+.title {
+	font-size: 6vmin;
+}
+#summary {
+    display: none;
+}
+.summary {
+    background-color: #F6F6F6;
+}
+.summary_item {
+    padding: 5px;
+}
+.summary_title {
+    background-color: #DDDDDD;
+    padding: 6px;
+    font-size: 15px;
+}
+.summary_value {
+    padding: 6px;
+}
+.summary_box {
+    height: 12em;
+    position: relative;
+    padding: 1%;
+    margin: 1% 0 1% 1%;
+    border: solid 1px #BBBBBB;
+    border-radius: 10px;
+}
+.summary_content {
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+#summary_rate_percent {
+    font-size: 8vmin;
+}
+.opener {
+    width: 1em;
+    height: 1em;
+    margin: 0 10px;
+}
+.openeron {
+    transform: rotate(90deg);
+}
+.openeroff {
+    transform: rotate(-90deg);
+}
+.subtitle {
+	padding: 5px;
+	font-size: 18px;
+	color: white;
+	background-color: #4C4C4C;
+    margin: 5px 0;
+}
+.subitem {
+	padding: 5px 5px 5px 20px;
+	font-size: 16px;
+}
+.subtag {
+    font-size: 12px;
+    border: black solid 1px;
+    border-radius: 6px;
+    margin: 0 3px;
+    padding: 0 5px;
+}
+.subtag_unimplemented {
+    border-color: #980000;
+    color: #980000;
+}
+.subtag_flag {
+    border-color: #6799FF;
+    color: #6799FF;
+}
+.subtag_experimental {
+    border-color: #22741C;
+    color: #22741C;
+}
+.subtag_obsolete {
+    border-color: #980000;
+    color: #980000;
+}
+.subtag_deprecated {
+    border-color: #22741C;
+    color: #22741C;
+}
+.subtag_not_standardized {
+    border-color: black;
+    color: black;
+}
+.subtag_partial {
+    border-color: #997000;
+    color: #997000;
+}

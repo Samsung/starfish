@@ -1,0 +1,104 @@
+{% macro sub_item_gen(item) -%}
+    <div class="subitem">
+        {{ item.name }}
+    {% if item.unimplemented %}
+        <span class="subtag subtag_unimplemented">UNIMPLEMENTED</span>
+    {% endif %}
+    {% if item.flags %}
+        {% for flag in item.flags %}
+        <span class="subtag subtag_flag">{{ flag }}</span>
+        {% endfor %}
+    {% endif %}
+    </div>
+{%- endmacro -%}
+
+<!DOCTYPE html>
+<head>
+<meta name="viewport" content="width=device-width, user-scalable=no">
+<meta charset="utf-8" />
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="header">
+<a href="./autogen_webapi_main.html">APIs/DOM </a>>
+<br><span class="title">{{ name }}</span>
+</div>
+<div class="summary container-fluid">
+    <div class="summary_item row">
+        <div class="summary_title col-sm-2">Status</div>
+        <div class="summary_value col-sm-10">{{ 'Partial support' if has_unimplemented else 'Full support' }}</div>
+    </div>
+    {% if parent %}
+    <div class="summary_item row">
+        <div class="summary_title col-sm-2">Parent</div>
+        <div class="summary_value col-sm-10">
+            <a href="./autogen_{{ parent.name }}.html">{{ parent.name }}</a>
+        </div>
+    </div>
+    {% endif%}
+    {% if constructor %}
+    <div class="summary_item row">
+        <div class="summary_title col-sm-2">Constructor</div>
+        <div class="summary_value col-sm-10">{{ '%s %s'|format(constructor.name if constructor.name else name, '(Not supported yet)' if constructor.unimplemented else '') }}</div>
+    </div>
+    {% endif%}
+    {% if flags %}
+    <div class="summary_item row">
+        <div class="summary_title col-sm-2">Flags</div>
+        <div class="summary_value col-sm-10">{% for flag in flags %}{{ '%s%s'|format('' if loop.index == 1 else ', ', flag) }}{% endfor %}</div>
+    </div>
+    {% endif%}
+    <div class="summary_item row">
+        <div class="summary_title col-sm-2">Reference</div>
+        <div class="summary_value col-sm-10"><a href="https://developer.mozilla.org/en-US/docs/Web/API/{{ name }}">MDN Reference</a></div>
+    </div>
+</div>
+{% if attributes %}
+<div id="attribute_section">
+    <div class="subtitle">
+        <img class="opener openeron" src="Icon-arrow-right-white.png"/>Attribute
+    </div>
+    <div>
+    {% for item in attributes %}
+        {{ sub_item_gen(item)|indent(4) }}
+    {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% if functions %}
+<div id="function_section">
+    <div class="subtitle">
+        <img class="opener openeron" src="Icon-arrow-right-white.png"/>Method
+    </div>
+    <div>
+    {% for item in functions %}
+        {{ sub_item_gen(item)|indent(4) }}
+    {% endfor %}
+    </div>
+</div>
+{% endif %}
+<div class="title"></div>
+<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script>
+function handleSection(section) {
+    if (!section) {
+        return;
+    }
+    section.firstElementChild.onclick = function() {
+        var imageIcon = section.firstElementChild.firstElementChild;
+        var sublist = section.firstElementChild.nextElementSibling;
+        if (sublist.style.display == "none") {
+            imageIcon.className = "opener openeron"
+            sublist.style.display = "initial";
+        } else {
+            imageIcon.className = "opener openeroff"
+            sublist.style.display = "none";
+        }
+    }
+}
+handleSection(document.getElementById("constant_section"));
+handleSection(document.getElementById("attribute_section"));
+handleSection(document.getElementById("function_section"));
+</script>
+</body>
