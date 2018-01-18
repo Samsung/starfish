@@ -1,6 +1,6 @@
 # test/cairo/reftest/vendor/react/packages/events/__tests__/ResponderEventPlugin-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/ReactNativeEvents-test.internal.html
-# test/cairo/reftest/vendor/react/packages/react-call-return/src/__tests__/ReactCallReturn-test.html
+test/cairo/reftest/vendor/react/packages/react-call-return/src/__tests__/ReactCallReturn-test.html
 # test/cairo/reftest/vendor/react/packages/react-rt-renderer/src/__tests__/ReactNativeRT-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/createReactNativeComponentClass-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/ReactNativeMount-test.internal.html
@@ -10,16 +10,16 @@
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactPersistent-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactFragment-test.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalErrorHandling-test.html
-# test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalUpdates-test.html
+test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalUpdates-test.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalPerf-test.internal.html
-# test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactTopLevelFragment-test.html
+test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactTopLevelFragment-test.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalScheduling-test.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalTriangle-test.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalSideEffects-test.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactFiberHostContext-test.html
-# test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalReflection-test.html
-# test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactExpiration-test.html
-# test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactTopLevelText-test.html
+test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalReflection-test.html
+test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactExpiration-test.html
+test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactTopLevelText-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SelectEventPlugin-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticKeyboardEvent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticEvent-test.html
@@ -45,7 +45,6 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeC
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactStatelessComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInput-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponentDOMMinimalism-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildText-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMTextComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOM-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationBasic-test.html
@@ -104,11 +103,12 @@ test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactJSXElement-tes
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElement-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/createReactClassIntegration-test.html
 test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactPureComponent-test.html
-# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactChildren-test.html
+test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactChildren-test.html
 # test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRendererTraversal-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactES6Class-test.html
 # test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRenderer-test.html
 # test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactShallowRenderer-test.html
 # ISSUE Infinite loop
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildText-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactRenderDocument-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactServerRenderingHydration.html
