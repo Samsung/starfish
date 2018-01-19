@@ -264,20 +264,7 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
     style->loadResources(parent);
     style->arrangeStyleValues(parentStyle, parent);
 
-    ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
-    bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
-        false,
-    };
-    damage = compareStyle(parentStyle, style, damagedKeys);
-
-    if (style->pseudoType() !=
-            StyleResolver::PseudoElementType::PseudoElementNone &&
-        damage != ComputedStyleDamage::ComputedStyleDamageNone &&
-        damage != ComputedStyleDamage::ComputedStyleDamageInherited) {
-        return style;
-    }
-
-    return nullptr;
+    return style;
 }
 
 Frame* findPseudoFrameForTable(Frame* frame, bool isBefore = true)
