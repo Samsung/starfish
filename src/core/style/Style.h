@@ -714,8 +714,9 @@ enum DirectionValue {
 };
 
 enum BackgroundSizeValue {
-    CoverBackgroundSizeValue,
+    CoverBackgroundSizeValue = 1,
     ContainBackgroundSizeValue,
+    BackgroundSizeValueEnd = ContainBackgroundSizeValue,
 };
 
 enum BackgroundRepeatValue {
