@@ -59,7 +59,11 @@ static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
         }
     }
 
+#if defined(STARFISH_ANDROID)
+    result += "@s:" + String::fromInt(int(size + 0.5f))->toUTF8NonGCString();
+#else
     result += "@s:" + std::to_string(int(size + 0.5f));
+#endif
     result += "@s:";
     result += (style + 'a');
     result += "@w:";

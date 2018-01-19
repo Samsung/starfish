@@ -35,7 +35,12 @@
 #include <clipper.hpp>
 
 #include <cairo.h>
+
+#if defined(STARFISH_ANDROID)
+#include <cairo-ft.h>
+#else
 #include <cairo/cairo-ft.h>
+#endif
 
 #include <hb.h>
 

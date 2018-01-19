@@ -1095,12 +1095,24 @@ String* String::fromFloat(float f)
 
 String* String::fromInt(int i)
 {
+#if defined(STARFISH_ANDROID)
+    char buf[256];
+    snprintf(buf, sizeof(buf), "%d", i);
+    return String::fromUTF8(buf);
+#else
     return String::fromUTF8(std::to_string(i).c_str());
+#endif
 }
 
 String* String::fromInt64(int64_t i)
 {
+#if defined(STARFISH_ANDROID)
+    char buf[256];
+    snprintf(buf, sizeof(buf), "%lld", (long long)i);
+    return String::fromUTF8(buf);
+#else
     return String::fromUTF8(std::to_string(i).c_str());
+#endif
 }
 
 String* String::trim()

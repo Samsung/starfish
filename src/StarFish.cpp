@@ -58,7 +58,7 @@ extern Evas* g_internalCanvas;
 
 #if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
 #include <Ecore.h>
-#else
+#elif !defined(STARFISH_ANDROID)
 #include <Ecore_X.h>
 #endif
 
@@ -260,8 +260,10 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;
 
+#if !defined(STARFISH_ANDROID)
         mallopt(M_MMAP_THRESHOLD, 2048);
         mallopt(M_MMAP_MAX, 1024 * 1024);
+#endif
 
         GC_set_abort_func([](const char* msg) {
             STARFISH_LOG_ERROR("Starfish: GC aborted\n");

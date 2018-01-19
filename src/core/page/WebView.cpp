@@ -762,7 +762,9 @@ bool WebView::rendering(bool force)
                 starFish()->platformWindow()->height(),
                 g_surfaceForScreehShot->bufferStride());
 
+#if !defined(STARFISH_ANDROID)
             cairo_surface_write_to_png(png_buffer, path);
+#endif
             cairo_surface_destroy(png_buffer);
 
             if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
