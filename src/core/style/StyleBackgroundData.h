@@ -26,10 +26,21 @@ class ImageResource;
 class ComputedStyle;
 
 class BackgroundLayer : public gc {
+    friend class StyleBackgroundData;
+
 public:
     union BackgroundSize {
         BackgroundSizeValue m_typeValue;
         LengthSize* m_lengthValue;
+
+        bool hasLengthValue() const
+        {
+            static_assert(BackgroundSizeValueEnd < 4,
+                          "last value of BackgroundSizeValue should be smaller "
+                          "than minium pointer value");
+            return m_lengthValue == 0 ||
+                   (size_t)m_lengthValue > BackgroundSizeValueEnd;
+        }
 
         BackgroundSize()
             : m_lengthValue(nullptr)
@@ -52,7 +63,6 @@ public:
         , m_imageResource(NULL)
         , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
         , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
-        , m_sizeIsLength(true)
         , m_positionX(Length(Length::Percent, 0.0f))
         , m_positionY(Length(Length::Percent, 0.0f))
         , m_attachment(
@@ -68,20 +78,23 @@ public:
 
     void setSize(LengthSize size)
     {
-        m_sizeIsLength = true;
-        if (!m_size.m_lengthValue) {
+        if (!m_size.hasLengthValue()) {
             if (size == LengthSize()) {
+                m_size.m_lengthValue = nullptr;
                 return;
             }
             m_size.m_lengthValue = new LengthSize(size);
         } else {
-            *m_size.m_lengthValue = size;
+            if (m_size.m_lengthValue) {
+                *m_size.m_lengthValue = size;
+            } else {
+                m_size.m_lengthValue = new LengthSize(size);
+            }
         }
     }
 
     void setSize(BackgroundSizeValue size)
     {
-        m_sizeIsLength = false;
         m_size.m_typeValue = size;
     }
 
@@ -162,20 +175,15 @@ public:
         return m_positionY;
     }
 
-    bool sizeIsLength() const
-    {
-        return m_sizeIsLength;
-    }
-
     BackgroundSizeValue sizeTypeValue() const
     {
-        STARFISH_ASSERT(!m_sizeIsLength);
+        STARFISH_ASSERT(!m_size.hasLengthValue());
         return m_size.m_typeValue;
     }
 
     LengthSize sizeLengthValue() const
     {
-        STARFISH_ASSERT(m_sizeIsLength);
+        STARFISH_ASSERT(m_size.hasLengthValue());
         if (m_size.m_lengthValue) {
             return *m_size.m_lengthValue;
         }
@@ -200,7 +208,7 @@ public:
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
                        LayoutSize windowSize, ComputedStyle* cs)
     {
-        if (m_sizeIsLength && m_size.m_lengthValue) {
+        if (m_size.hasLengthValue()) {
             if (m_size.m_lengthValue) {
                 m_size.m_lengthValue->checkComputed(curFontSize, rootFontSize,
                                                     font, windowSize, cs);
@@ -253,8 +261,6 @@ private:
     // background-repeat
     BackgroundRepeatValue m_repeatX : 1;
     BackgroundRepeatValue m_repeatY : 1;
-    // background-size
-    bool m_sizeIsLength : 1;
 
     // background-position
     Length m_positionX;
@@ -450,7 +456,7 @@ public:
         if (m_layers.size() <= layer) {
             return true;
         }
-        return m_layers[layer].sizeIsLength();
+        return m_layers[layer].m_size.hasLengthValue();
     }
 
     BackgroundSizeValue sizeTypeValue(unsigned int layer = 0) const
@@ -459,7 +465,8 @@ public:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
             return BackgroundSizeValue::ContainBackgroundSizeValue;
         }
-        return m_layers[layer].sizeTypeValue();
+        STARFISH_ASSERT(!m_layers[layer].m_size.hasLengthValue());
+        return m_layers[layer].m_size.m_typeValue;
     }
 
     LengthSize sizeLengthValue(unsigned int layer = 0) const
@@ -533,7 +540,7 @@ public:
             while (i < m_layers.size()) {
                 for (unsigned int p = 0;
                      p < m_maxLayerSizes && i < m_layers.size(); p++, i++) {
-                    if (m_layers[p].sizeIsLength()) {
+                    if (m_layers[p].m_size.hasLengthValue()) {
                         m_layers[i].setSize(m_layers[p].sizeLengthValue());
                     } else {
                         m_layers[i].setSize(m_layers[p].sizeTypeValue());
@@ -600,11 +607,11 @@ bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
         return false;
     }
 
-    if (a.m_sizeIsLength != b.m_sizeIsLength) {
+    if (a.m_size.hasLengthValue() != b.m_size.hasLengthValue()) {
         return false;
     }
 
-    if (a.m_sizeIsLength) {
+    if (a.m_size.hasLengthValue()) {
         if (a.sizeLengthValue() != b.sizeLengthValue()) {
             return false;
         }

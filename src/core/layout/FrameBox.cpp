@@ -927,7 +927,7 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
 
             float boxR = positionW / positionH;
             float imgR = id->width() / (float)id->height();
-            if (style->backgroundSizeIsLength()) {
+            if (style->backgroundSizeIsLength(idx)) {
                 LengthSize bgSize = style->backgroundSizeLengthValue(idx);
                 if (bgSize.width().isAuto() && bgSize.height().isAuto()) {
                     imgW = id->width();
