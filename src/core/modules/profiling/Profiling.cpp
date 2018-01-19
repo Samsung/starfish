@@ -18,7 +18,11 @@
 #include "StarFish.h"
 #include "Profiling.h"
 
+#if defined(STARFISH_ANDROID)
+#include <sys/time.h>
+#else
 #include <sys/timeb.h>
+#endif
 
 namespace StarFish {
 
@@ -46,11 +50,14 @@ uint64_t longTickCount()
 
 uint64_t timestamp()
 {
-    struct timeb timer_msec;
     long long int timestamp_msec;
+#if !defined(STARFISH_ANDROID)
+    struct timeb timer_msec;
     ftime(&timer_msec);
     timestamp_msec = ((long long int)timer_msec.time) * 1000ll +
                      (long long int)timer_msec.millitm;
+#else
+#endif
     return timestamp_msec;
 }
 

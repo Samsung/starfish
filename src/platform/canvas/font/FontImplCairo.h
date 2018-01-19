@@ -18,7 +18,13 @@
 #define __FontImplCairo__
 
 #include <cairo.h>
+
+#if defined(STARFISH_ANDROID)
+#include <cairo-ft.h>
+#else
 #include <cairo/cairo-ft.h>
+#endif
+
 #include <fontconfig/fontconfig.h>
 #include <hb.h>
 #include <hb-ft.h>

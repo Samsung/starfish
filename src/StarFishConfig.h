@@ -54,6 +54,13 @@
 #define PORT_COMPOSITOR_BACKEND_EFL
 #define PORT_EVENTLOOP_BACKEND_EFL
 #define PORT_IMAGEDECODER_BACKEND_EFL
+#elif defined(STARFISH_ANDROID)
+#define PORT_WINDOW_BACKEND_GB
+#define PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
+#define PORT_CANVAS_BACKEND_CAIRO
+#define PORT_COMPOSITOR_BACKEND_CAIRO
+#define PORT_EVENTLOOP_BACKEND_LIBUV
+#define PORT_IMAGEDECODER_BACKEND_MISC
 #endif
 
 #include <cstdlib>
@@ -326,7 +333,7 @@ public:
     {
     }
 
-    Nullable(nullptr_t value)
+    Nullable(std::nullptr_t value)
         : m_hasValue(false)
     {
     }

@@ -1640,7 +1640,11 @@ String* CSSStyleValuePair::toString() const
     case CSSStyleValuePair::ValueKind::Number:
         return String::fromFloat(numberValue());
     case CSSStyleValuePair::ValueKind::Int32:
+#if defined(STARFISH_ANDROID)
+        return String::fromInt(int32Value());
+#else
         return String::fromUTF8(std::to_string(int32Value()).c_str());
+#endif
     case CSSStyleValuePair::ValueKind::Angle:
         return angleValue().toString();
     case CSSStyleValuePair::ValueKind::Normal:
