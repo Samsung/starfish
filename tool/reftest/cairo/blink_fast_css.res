@@ -70,3 +70,12 @@ test/cairo/reftest/vendor/blink_original/fast/media/mq-js-media-except-01.html
 test/cairo/reftest/vendor/blink_original/fast/media/mq-js-media-except-02.html
 test/cairo/reftest/vendor/blink_original/fast/media/mq-js-media-except-03.html
 test/cairo/reftest/vendor/blink_original/fast/media/mq-js-media-forward-syntax.html
+test/cairo/reftest/vendor/blink_original/fast/css/object-fit-grow-landscape.html
+test/cairo/reftest/vendor/blink_original/fast/css/object-fit-grow-portrait.html
+test/cairo/reftest/vendor/blink_original/fast/css/object-fit-img.html
+test/cairo/reftest/vendor/blink_original/fast/css/object-fit-shrink.html
+test/cairo/reftest/vendor/blink_original/fast/css/object-position-with-fit-contain.html
+test/cairo/reftest/vendor/blink_original/fast/css/object-position-with-fit-cover.html
+test/cairo/reftest/vendor/blink_original/fast/css/object-fit-img-svg.html
+test/cairo/reftest/vendor/blink_original/fast/css/object-fit-img-svg2.html
+test/cairo/reftest/vendor/blink_original/fast/css/object-position-svg.html

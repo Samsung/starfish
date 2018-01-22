@@ -22,6 +22,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
+#include "core/style/CalcData.h"
 
 namespace StarFish {
 
@@ -242,6 +243,30 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
     return result;
 }
 
+static Nullable<Length> valueToLength(CSSStyleValuePair::ValueKind kind,
+                                      CSSStyleValuePair::ValueData data)
+{
+    if (kind == CSSStyleValuePair::ValueKind::Auto) {
+        return Length();
+    } else if (kind == CSSStyleValuePair::ValueKind::Length) {
+        return data.m_length.toLength();
+    } else if (kind == CSSStyleValuePair::ValueKind::Percentage) {
+        return Length(Length::Percent, data.m_floatValue);
+    } else if (kind == CSSStyleValuePair::ValueKind::Number) {
+        return Length(Length::Fixed, data.m_floatValue);
+    } else if (kind == CSSStyleValuePair::ValueKind::CalcValueKind) {
+        CalcValueType type = data.m_calc->type();
+        if (type.isLength() || type.isPercentage()) {
+            return Length(data.m_calc);
+        } else {
+            return Nullable<Length>();
+        }
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        return Nullable<Length>();
+    }
+}
+
 double FrameSVGBox::resolveLengthFromAttribute(QualifiedName attr)
 {
     double result = 0;
@@ -253,7 +278,12 @@ double FrameSVGBox::resolveLengthFromAttribute(QualifiedName attr)
                 s.data(), CSSPropertyParser::AllowPercent |
                               CSSPropertyParser::AllowWithoutUnit,
                 &pair)) {
-            Length ll = pair.lengthValue();
+            Nullable<Length> value =
+                valueToLength(pair.valueKind(), pair.value());
+            Length ll = Length(Length::Fixed, 0);
+            if (value.hasValue()) {
+                ll = value.getValue();
+            }
             FrameBox* cb = layoutParent()->asFrameBox();
             result = ll.specifiedValue(cb->width(), this);
         }
