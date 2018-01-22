@@ -27,7 +27,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeC
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponentNestedState-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponentState-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponent-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMAttribute-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMAttribute-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponentTree-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMEventListener-test.html
@@ -79,8 +79,8 @@ test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactFra
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalErrorLogging-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalPerf-test.internal.html
 test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalReflection-test.html
-# test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalScheduling-test.html
-# test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalSideEffects-test.html
+test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalScheduling-test.html
+test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalSideEffects-test.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncremental-test.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalTriangle-test.html
 test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactIncrementalUpdates-test.html
@@ -94,7 +94,7 @@ test/cairo/reftest/vendor/react/packages/react/src/__tests__/onlyChild-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactChildren-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactContextValidator-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElementClone-test.html
-# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElement-test.html
+test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElement-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElementValidator-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactES6Class-test.html
 test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactJSXElement-test.html
@@ -102,7 +102,7 @@ test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactJSXElement-tes
 test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactPureComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactShallowRenderer-test.html
 # test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRenderer-test.html
-# test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRendererTraversal-test.html
+test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRendererTraversal-test.html
 # PASS, but takes a long time
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildText-test.html
 # ISSUE Infinite loop
