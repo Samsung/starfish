@@ -866,6 +866,14 @@ enum UnicodeBidiValue {
     IsolateUnicodeBidiValue,
 };
 
+enum ObjectFitValue {
+    FillObjectFitValue,
+    ContainObjectFitValue,
+    CoverObjectFitValue,
+    NoneObjectFitValue,
+    ScaledownObjectFitValue,
+};
+
 enum TransitionPropertyValue {
     TransitionPropertyAllValue,
     TransitionPropertyBackgroundColorValue,
@@ -1038,6 +1046,8 @@ class CSSStyleDeclaration;
     F(Transform, transform, "transform")                                     \
     F(TransformOrigin, transformOrigin, "transform-origin")                  \
     F(Visibility, visibility, "visibility")                                  \
+    F(ObjectFit, objectFit, "object-fit")                                    \
+    F(ObjectPosition, objectPosition, "object-position")                     \
     F(OverflowX, overflowX, "overflow-x")                                    \
     F(OverflowY, overflowY, "overflow-y")                                    \
     F(ZIndex, zIndex, "z-index")                                             \
@@ -1324,7 +1334,11 @@ public:
         FillRuleValueKind,
 
         // text-transform
-        TextTransformValueKind
+        TextTransformValueKind,
+
+        // object-fit
+        ObjectFitValueKind,
+        ObjectPositionValueKind
     };
 
     CSSStyleValuePair()
@@ -1455,6 +1469,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == WhiteSpaceValueKind);
         return m_value.m_whiteSpace;
+    }
+
+    ObjectFitValue objectFitValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == ObjectFitValueKind);
+        return m_value.m_objectFit;
     }
 
     UnicodeBidiValue unicodeBidiValue() const
@@ -1786,6 +1806,7 @@ public:
         CalcData* m_calc;
         TextTransformValue m_textTransform;
         MaskSizeValue m_maskSize;
+        ObjectFitValue m_objectFit;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -1989,6 +2010,10 @@ public:
         }
         ValueData(MaskSizeValue v)
             : m_maskSize(v)
+        {
+        }
+        ValueData(ObjectFitValue v)
+            : m_objectFit(v)
         {
         }
     };

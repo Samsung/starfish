@@ -1023,6 +1023,25 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         rColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderRightColor);
         rColor.setColorValue(style->border().right().color());
         addValuePair(rColor);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::ObjectPosition) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::ObjectPosition);
+
+        if (!style->hasObjectSizing()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* vals =
+                new ValueList(ValueList::Separator::SpaceSeparator);
+            CSSStyleValuePair x =
+                lengthToCSSStyleValue(style->objectPositionX());
+            vals->emplace_back(x.valueKind(), x.value());
+            CSSStyleValuePair y =
+                lengthToCSSStyleValue(style->objectPositionY());
+            vals->emplace_back(y.valueKind(), y.value());
+            p.setValue(vals);
+        }
+        addValuePair(p);
     }
 #define ADD_VALUE_PAIR(KEY, VALUE, GETTER)                   \
     else if (keyKind == CSSStyleValuePair::KeyKind::KEY)     \
@@ -1062,6 +1081,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     ADD_VALUE_PAIR(FlexGrow, Number, flexGrow)
     ADD_VALUE_PAIR(FlexShrink, Number, flexShrink)
     ADD_VALUE_PAIR(FillOpacity, Number, fillOpacity)
+    ADD_VALUE_PAIR(ObjectFit, ObjectFitValueKind, objectFit)
 #undef ADD_VALUE_PAIR
 #define ADD_COLOR_PAIR(KEY, GETTER)                                    \
     else if (keyKind == CSSStyleValuePair::KeyKind::KEY)               \

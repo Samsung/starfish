@@ -538,6 +538,54 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
     }
 }
 
+LayoutRect FrameReplaced::computeObjectFit(const LayoutUnit& w,
+                                           const LayoutUnit& h)
+{
+    LayoutRect contentRect =
+        LayoutRect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+                   contentWidth(), contentHeight());
+    if (style()->objectSizing() == ObjectSizingData()) {
+        return contentRect;
+    }
+
+    LayoutSize intrinsicSize = LayoutSize(w, h);
+    if (!intrinsicSize.width() || !intrinsicSize.height()) {
+        return contentRect;
+    }
+
+    LayoutRect rect = contentRect;
+    ObjectFitValue objectFit = style()->objectFit();
+    switch (objectFit) {
+    case ObjectFitValue::ContainObjectFitValue:
+    case ObjectFitValue::ScaledownObjectFitValue:
+    case ObjectFitValue::CoverObjectFitValue:
+        rect.setSize(rect.size().fitToAspectRatio(
+            intrinsicSize, objectFit == ObjectFitValue::CoverObjectFitValue
+                               ? GrowAspectRatioFit
+                               : ShrinkAspectRatioFit));
+        if (objectFit != ObjectFitValue::ScaledownObjectFitValue ||
+            rect.width() <= intrinsicSize.width()) {
+            break;
+        }
+    case ObjectFitValue::NoneObjectFitValue:
+        rect.setSize(intrinsicSize);
+        break;
+    case ObjectFitValue::FillObjectFitValue:
+        break;
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    LayoutUnit offsetX = style()->objectPositionX().specifiedValue(
+        contentRect.width() - rect.width(), this);
+    LayoutUnit offsetY = style()->objectPositionY().specifiedValue(
+        contentRect.height() - rect.height(), this);
+    rect.setX(rect.x() + offsetX);
+    rect.setY(rect.y() + offsetY);
+
+    return rect;
+}
+
 void FrameReplaced::paintContent(PaintingContext& ctx)
 {
     if (canSkipPaintingStage(ctx)) {

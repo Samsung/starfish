@@ -25,15 +25,26 @@ namespace StarFish {
 void FrameReplacedImage::paintReplaced(Canvas* canvas)
 {
     FrameReplaced::paintReplaced(canvas);
-
     NativeImageData* id = node()->asHTMLImageElement()->imageData();
     if (id) {
         if (id->preserveAspectRatioValue() == NativeImageData::None) {
-            canvas->drawImage(
-                id, Unit::Rect(borderLeft() + paddingLeft(),
-                               borderTop() + paddingTop(),
-                               width() - borderWidth() - paddingWidth(),
-                               height() - borderHeight() - paddingHeight()));
+            Unit::Rect frameRect = Unit::Rect(
+                borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+                width() - borderWidth() - paddingWidth(),
+                height() - borderHeight() - paddingHeight());
+
+            if (style()->hasObjectSizing()) {
+                canvas->save();
+                canvas->clip(frameRect);
+                LayoutRect imgRect =
+                    computeObjectFit(id->width(), id->height());
+                canvas->drawImage(id, Unit::Rect(imgRect.x(), imgRect.y(),
+                                                 imgRect.width(),
+                                                 imgRect.height()));
+                canvas->restore();
+            } else {
+                canvas->drawImage(id, frameRect);
+            }
         } else {
             canvas->translate(borderLeft() + paddingLeft(),
                               borderTop() + paddingTop());

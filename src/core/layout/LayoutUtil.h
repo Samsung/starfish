@@ -134,6 +134,8 @@ static const int kFixedPointDenominator = 64;
 const int intMaxForLayoutUnit = INT_MAX / kFixedPointDenominator;
 const int intMinForLayoutUnit = INT_MIN / kFixedPointDenominator;
 
+enum AspectRatioFit { ShrinkAspectRatioFit, GrowAspectRatioFit };
+
 class LayoutUnit {
 public:
     LayoutUnit()
@@ -1057,6 +1059,21 @@ public:
         return !operator==(src);
     }
 
+    LayoutSize fitToAspectRatio(const LayoutSize& aspectRatio,
+                                AspectRatioFit fit) const
+    {
+        float heightScale = height().toFloat() / aspectRatio.height().toFloat();
+        float widthScale = width().toFloat() / aspectRatio.width().toFloat();
+
+        if ((widthScale > heightScale) != (fit == GrowAspectRatioFit)) {
+            return LayoutSize(height() * aspectRatio.width() /
+                                  aspectRatio.height(),
+                              height());
+        }
+        return LayoutSize(width(),
+                          width() * aspectRatio.height() / aspectRatio.width());
+    }
+
 protected:
     LayoutUnit m_width, m_height;
 };
@@ -1178,6 +1195,10 @@ public:
     void setHeight(LayoutUnit height)
     {
         m_size.setHeight(height);
+    }
+    void setSize(const LayoutSize& size)
+    {
+        m_size = size;
     }
 
     bool isEmpty() const
