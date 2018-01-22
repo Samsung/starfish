@@ -83,7 +83,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/refs-destructio
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSVG-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/EventPluginHub-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationForms-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/DOMPropertyOperations-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/DOMPropertyOperations-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/renderSubtreeIntoContainer-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInvalidARIAHook-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactServerRenderingBrowser-test.html
