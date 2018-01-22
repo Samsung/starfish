@@ -5,7 +5,7 @@ import argparse
 
 nproc = None
 
-def handle_result(result):
+def default_result_summarizer(result):
     from basics.utils import PColors
     (pass_cnt, fail_cnt) = result
     summary = "Total: " + str(pass_cnt + fail_cnt)
@@ -20,65 +20,71 @@ def run_dom_conformance_test(list, backend, font_dep):
     import basics.starfish_basic_test as basictest
     from tests.dom_conformance_test import tc_handler
     result = basictest.run_parallel(list, nproc, tc_handler=tc_handler)
-    return handle_result(result)
+    return default_result_summarizer(result)
 
-# Vendor Tests
+# Vendor Test (text based)
 def run_vendor_basic_test(list, backend, font_dep):
     import basics.starfish_basic_test as basictest
     from tests.vendor_test import tc_handler
     result = basictest.run_parallel(list, nproc, tc_handler=tc_handler)
-    return handle_result(result)
+    return default_result_summarizer(result)
 
+# Vendor Test (pixel based)
 def run_vendor_pixel_test(list, backend, font_dep):
     import basics.starfish_pixel_test as pixeltest
     from tests.vendor_test import exp_img_namer
-    result = pixeltest.run_parallel(list, nproc, ahem_font=(not font_dep),
+    result = pixeltest.run_parallel(list, backend, nproc, ahem_font=(not font_dep),
                                     expected_namer=exp_img_namer)
-    return handle_result(result)
+    return default_result_summarizer(result)
 
-# Web Platform Tests
-def run_web_platform_test(list, backend, font_dep):
-    import basics.starfish_basic_test as basictest
-    from tests.wpt_test import tc_handler
-    result = basictest.run_parallel(list, nproc, tc_handler=tc_handler)
-    return handle_result(result)
-
-# CSSWG Tests
+# CSSWG Test
 def run_csswg_test(list, backend, font_dep):
     import basics.starfish_pixel_test as pixeltest
     from tests.csswg_test import get_exp_img_namer
     result = pixeltest.run_parallel(list, backend, nproc, ahem_font=(not font_dep),
                                     expected_namer=get_exp_img_namer(font_dep, backend))
-    return handle_result(result)
+    return default_result_summarizer(result)
 
-# Bidi Tests
+# Bidi Test
 def run_bidi_test(list, backend, font_dep):
     import basics.starfish_pixel_test as pixeltest
     result = pixeltest.run_parallel(list, backend, nproc, ahem_font=(not font_dep),
                                     width=900, height=900)
-    return handle_result(result)
+    return default_result_summarizer(result)
 
-# Internal Tests
+# Default test style (text based)
+# > Internal Test
 def run_default_basic_test(list, backend, font_dep):
     import basics.starfish_basic_test as basictest
     result = basictest.run_parallel(list, nproc, regression=font_dep)
-    return handle_result(result)
+    return default_result_summarizer(result)
 
+# Default test style (pixel based)
 def run_default_pixel_test(list, backend, font_dep):
     import basics.starfish_pixel_test as pixeltest
     result = pixeltest.run_parallel(list, backend, nproc, ahem_font=(not font_dep))
-    return handle_result(result)
+    return default_result_summarizer(result)
+
+# Multi result style
+# > Web Platform Test
+# > React Test
+def run_multi_results_basic_test(list, backend, font_dep):
+    import basics.starfish_basic_test as basictest
+    from tests.multi_results_test import tc_handler, result_handler, result_summarizer
+    result = basictest.run_parallel(list, nproc, tc_handler=tc_handler, result_handler=result_handler)
+    return result_summarizer(result)
 
 tests = {}
+# Named tests
 tests["dom_conformance"] = run_dom_conformance_test
-tests["web_platform"] = run_web_platform_test
 tests["vendor_basic"] = run_vendor_basic_test
 tests["vendor_pixel"] = run_vendor_pixel_test
 tests["csswg"] = run_csswg_test
+tests["bidi"] = run_bidi_test
+# General tests
 tests["basic"] = run_default_basic_test
 tests["pixel"] = run_default_pixel_test
-tests["bidi"] = run_bidi_test
-
+tests["multi_basic"] = run_multi_results_basic_test
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
