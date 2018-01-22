@@ -1,3 +1,4 @@
+test/cairo/reftest/vendor/blink/fast/css/parsing-object-fit.html
 test/cairo/reftest/vendor/blink/fast/dom/Attr/access-after-element-destruction.html
 test/cairo/reftest/vendor/blink/fast/dom/background-shorthand-csstext.html
 test/cairo/reftest/vendor/blink/fast/dom/body-frameset-event-handlers.html

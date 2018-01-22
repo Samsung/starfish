@@ -31,7 +31,7 @@ public:
         : SVGElement(document)
         , m_hasViewBox(false)
         , m_viewBox(0, 0, 0, 0)
-        , m_preserveAspectRatioValue(NativeImageData::xMidYMid)
+        , m_preserveAspectRatioValue(NativeImageData::None)
     {
     }
 
