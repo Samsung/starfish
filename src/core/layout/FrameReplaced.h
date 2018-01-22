@@ -94,6 +94,8 @@ public:
         return (FrameReplacedIFrame*)this;
     }
 
+    LayoutRect computeObjectFit(const LayoutUnit& w, const LayoutUnit& h);
+
     void applyMinMaxWidthAndHeightIfNeeds(LayoutContext& ctx, LayoutUnit width,
                                           LayoutUnit height,
                                           LayoutUnit parentWidth,

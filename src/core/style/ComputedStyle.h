@@ -32,7 +32,7 @@
 #include "core/style/ShadowData.h"
 #include "core/style/PositionedMaskData.h"
 #include "core/style/OutlineData.h"
-
+#include "core/style/ObjectSizingData.h"
 #include "core/animation/Animation.h"
 
 namespace StarFish {
@@ -90,6 +90,7 @@ class RareComputedStyleData : public gc {
         PositionedMask,
         CachedPsuedoStyles,
         Background,
+        ObjectSizing,
     };
 
     union RareComputedStyleValue {
@@ -108,6 +109,7 @@ class RareComputedStyleData : public gc {
         PositionedMaskData* m_positionedMask;
         GCVector<ComputedStyle*>* m_pseudoStyles;
         StyleBackgroundData* m_background;
+        ObjectSizingData* m_objectSizing;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -181,6 +183,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(StyleBackgroundData* background)
             : m_background(background)
+        {
+        }
+
+        RareComputedStyleValue(ObjectSizingData* objSizing)
+            : m_objectSizing(objSizing)
         {
         }
     };
@@ -328,6 +335,7 @@ public:
     GETTER_PTR(GCVector<ComputedStyle*>, pseudoStyles, cachedPsuedoStyles,
                CachedPsuedoStyles);
     GETTER_PTR(StyleBackgroundData, background, background, Background);
+    GETTER_PTR(ObjectSizingData, objectSizing, objectSizing, ObjectSizing);
 
 #undef GETTER_PTR
 
@@ -1151,6 +1159,15 @@ public:
         return m_rareComputedStyleData.transformOrigin() != nullptr;
     }
 
+    bool hasObjectSizing()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return false;
+        }
+
+        return m_rareComputedStyleData.objectSizing() != nullptr;
+    }
+
 #define SET_BORDER_COLOR(UPOS, LPOS, ...)                               \
     void setBorder##UPOS##Color(Unit::Color color)                      \
     {                                                                   \
@@ -1454,6 +1471,46 @@ public:
         }
 
         return BorderRadiusData();
+    }
+
+    ObjectSizingData objectSizing()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return ObjectSizingData();
+        }
+
+        ObjectSizingData* objectSizing = m_rareComputedStyleData.objectSizing();
+        if (objectSizing) {
+            return *objectSizing;
+        }
+        return ObjectSizingData();
+    }
+
+    ObjectFitValue objectFit()
+    {
+        return objectSizing().objectFit();
+    }
+
+    void setObjectFit(const ObjectFitValue& v)
+    {
+        auto s = rareComputedStyleData()->ensureObjectSizing();
+        s->setObjectFit(v);
+    }
+
+    Length objectPositionX()
+    {
+        return objectSizing().offsetX();
+    }
+
+    Length objectPositionY()
+    {
+        return objectSizing().offsetY();
+    }
+
+    void setObjectPosition(const Length& x, const Length& y)
+    {
+        auto s = rareComputedStyleData()->ensureObjectSizing();
+        s->setObjectPosition(x, y);
     }
 
     void setBorderTopLeftRadius(const Length& v, const Length& v2)

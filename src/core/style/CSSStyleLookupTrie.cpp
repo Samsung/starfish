@@ -260,6 +260,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Mask-Image
         // Max-Height
         // Min-Height
+        // Object-fit
         // Overflow-X
         // Overflow-Y
         // Visibility
@@ -307,6 +308,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             break;
         case 'o':
+            if (memcmp(data, "object-fit", 10) == 0) {
+                return CSSStyleKind::ObjectFit;
+            }
             if (memcmp(data, "overflow-x", 10) == 0) {
                 return CSSStyleKind::OverflowX;
             }
@@ -561,6 +565,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Collapse
         // Justify-Content
         // Background-Clip
+        // Object-position
         switch (data[0]) {
         case 'j':
             if (memcmp(data, "justify-content", 15) == 0) {
@@ -583,6 +588,10 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::BorderCollapse;
             }
             break;
+        case 'o':
+            if (memcmp(data, "object-position", 15) == 0) {
+                return CSSStyleKind::ObjectPosition;
+            }
         }
         break;
     case 16:
@@ -1004,6 +1013,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             break;
         case 'o':
+            if (memcmp(data, "objectFit", 9) == 0) {
+                return CSSStyleKind::ObjectFit;
+            }
             if (memcmp(data, "overflowX", 9) == 0) {
                 return CSSStyleKind::OverflowX;
             }
@@ -1244,6 +1256,10 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::BorderCollapse;
             }
             break;
+        case 'o':
+            if (memcmp(data, "objectPosition", 14) == 0) {
+                return CSSStyleKind::ObjectPosition;
+            }
         }
         break;
     case 15:

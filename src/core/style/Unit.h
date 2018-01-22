@@ -177,6 +177,18 @@ namespace Unit {
             m_size = newMaxPoint - newLocation;
         }
 
+        bool operator==(const Rect& r) const
+        {
+            return m_location.x() == r.m_location.x() &&
+                   m_location.y() == r.m_location.y() &&
+                   m_size.width() == r.m_size.width() &&
+                   m_size.height() == r.m_size.height();
+        }
+        bool operator!=(const Rect& r) const
+        {
+            return !this->operator==(r);
+        }
+
     private:
         Location m_location;
         Size m_size;

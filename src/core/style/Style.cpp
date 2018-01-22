@@ -1834,6 +1834,21 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::ObjectFitValueKind:
+        switch (objectFitValue()) {
+        case FillObjectFitValue:
+            return String::fromUTF8("fill");
+        case ContainObjectFitValue:
+            return String::fromUTF8("contain");
+        case CoverObjectFitValue:
+            return String::fromUTF8("cover");
+        case NoneObjectFitValue:
+            return String::fromUTF8("none");
+        case ScaledownObjectFitValue:
+            return String::fromUTF8("scale-down");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     case CSSStyleValuePair::ValueKind::BackgroundSizeValueKind:
         switch (backgroundSizeValue()) {
         case CoverBackgroundSizeValue:
@@ -5595,6 +5610,78 @@ void StyleResolver::apply(Element* element,
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
+        case CSSStyleValuePair::KeyKind::ObjectFit:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setObjectFit(ObjectFitValue::FillObjectFitValue);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setObjectFit(parentStyle->objectFit());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::ObjectFitValueKind) {
+                style->setObjectFit(cssValues[k].objectFitValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::ObjectPosition:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->setObjectPosition(parentStyle->objectPositionX(),
+                                         parentStyle->objectPositionY());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->setObjectPosition(Length(Length::Percent, 0.5f),
+                                         Length(Length::Percent, 0.5f));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::ValueListKind) {
+                ValueList* list = cssValues[k].multiValue();
+                Length x, y;
+
+                x = Length(Length::Percent, 0.5f);
+                y = Length(Length::Percent, 0.5f);
+
+                for (unsigned int i = 0; i < std::min(list->size(), (size_t)2);
+                     i++) {
+                    const CSSStyleValuePair& item = (*list)[i];
+                    if (item.valueKind() ==
+                        CSSStyleValuePair::ValueKind::SideValueKind) {
+                        if (item.sideValue() == SideValue::LeftSideValue) {
+                            x = Length(Length::Percent, 0.0f);
+                        } else if (item.sideValue() ==
+                                   SideValue::RightSideValue) {
+                            x = Length(Length::Percent, 1.0f);
+                        } else if (item.sideValue() ==
+                                   SideValue::CenterSideValue) {
+                        } else if (item.sideValue() ==
+                                   SideValue::TopSideValue) {
+                            y = Length(Length::Percent, 0.0f);
+                        } else if (item.sideValue() ==
+                                   SideValue::BottomSideValue) {
+                            y = Length(Length::Percent, 1.0f);
+                        }
+                    } else {
+                        if (i == 0) {
+                            Nullable<Length> nX = convertValueToLength(
+                                item.valueKind(), item.value());
+                            if (nX.hasValue()) {
+                                x = nX.getValue();
+                            }
+                        } else {
+                            Nullable<Length> nY = convertValueToLength(
+                                item.valueKind(), item.value());
+                            if (nY.hasValue()) {
+                                y = nY.getValue();
+                            }
+                        }
+                    }
+                }
+
+                style->setObjectPosition(x, y);
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
         case CSSStyleValuePair::KeyKind::OutlineWidth:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
@@ -6923,6 +7010,110 @@ bool CSSStyleValuePair::updateValueWhiteSpace(const CSSTokenVector& tokens)
     } else {
         return false;
     }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueObjectFit(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::ObjectFitValueKind;
+    if (STRING_VALUE_IS_STRING("fill")) {
+        m_value.m_objectFit = ObjectFitValue::FillObjectFitValue;
+    } else if (STRING_VALUE_IS_STRING("contain")) {
+        m_value.m_objectFit = ObjectFitValue::ContainObjectFitValue;
+    } else if (STRING_VALUE_IS_STRING("cover")) {
+        m_value.m_objectFit = ObjectFitValue::CoverObjectFitValue;
+    } else if (STRING_VALUE_IS_STRING("none")) {
+        m_value.m_objectFit = ObjectFitValue::NoneObjectFitValue;
+    } else if (STRING_VALUE_IS_STRING("scale-down")) {
+        m_value.m_objectFit = ObjectFitValue::ScaledownObjectFitValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueObjectPosition(const CSSTokenVector& tokens)
+{
+    //  [ left | center | right | top | bottom | <percentage> | <length> ] |
+    //  [ left | center | right | <percentage> | <length> ]
+    //  [ top | center | bottom | <percentage> | <length> ] <length>? |
+    //  [ center | [ left | right ] ] && [ center | [ top | bottom ] ] <length>?
+
+    if (tokens.size() != 1 && tokens.size() != 2) {
+        return false;
+    }
+
+    if (tokens.size() == 2) {
+        const CSSTokenValue& f = tokens[0];
+        const CSSTokenValue& s = tokens[1];
+        if ((f.equals("left") && s.equals("right")) ||
+            (f.equals("right") && s.equals("left")) ||
+            (f.equals("top") && s.equals("bottom")) ||
+            (f.equals("bottom") && s.equals("top")))
+            return false;
+    }
+
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+
+    CSSStyleValuePair xPair(CSSStyleValuePair::ValueKind::SideValueKind,
+                            SideValue::CenterSideValue);
+    CSSStyleValuePair yPair(CSSStyleValuePair::ValueKind::SideValueKind,
+                            SideValue::CenterSideValue);
+
+    uint8_t option =
+        CSSPropertyParser::AllowPercent | CSSPropertyParser::AllowNegative;
+    for (unsigned int i = 0; i < std::min(tokens.size(), (size_t)2); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (STRING_VALUE_IS_STRING("left")) {
+            xPair.setValue(SideValue::LeftSideValue);
+        } else if (STRING_VALUE_IS_STRING("right")) {
+            xPair.setValue(SideValue::RightSideValue);
+        } else if (STRING_VALUE_IS_STRING("center")) {
+        } else if (STRING_VALUE_IS_STRING("top")) {
+            yPair.setValue(SideValue::TopSideValue);
+        } else if (STRING_VALUE_IS_STRING("bottom")) {
+            yPair.setValue(SideValue::BottomSideValue);
+        } else {
+            if (i == 0) {
+                xPair.setValueKind(CSSStyleValuePair::ValueKind::None);
+            } else {
+                yPair.setValueKind(CSSStyleValuePair::ValueKind::None);
+            }
+
+            if (tokens.size() == 2) {
+                if (i == 0) {
+                    if (tokens[1].equals("left") || tokens[1].equals("right")) {
+                        return false;
+                    }
+                } else {
+                    if (tokens[0].equals("top") || tokens[0].equals("bottom")) {
+                        return false;
+                    }
+                }
+            }
+
+            CSSStyleValuePair ret;
+            if (!ret.updateValueUnitLengthOrCalc(value, option)) {
+                return false;
+            }
+            values->push_back(ret);
+        }
+    }
+
+    if (xPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+        values->push_back(xPair);
+    }
+    if (yPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+        values->push_back(yPair);
+    }
+
+    m_value.m_multiValue = values;
     return true;
 }
 
