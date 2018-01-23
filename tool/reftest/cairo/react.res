@@ -1,10 +1,14 @@
+# test/cairo/reftest/vendor/react/packages/events/__tests__/accumulateInto-test.internal.html
+# test/cairo/reftest/vendor/react/packages/events/__tests__/EventPluginRegistry-test.internal.html
+# test/cairo/reftest/vendor/react/packages/events/__tests__/ResponderEventPlugin-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-art/src/__tests__/ReactART-test.html
 test/cairo/reftest/vendor/react/packages/react-call-return/src/__tests__/ReactCallReturn-test.html
-# test/cairo/reftest/vendor/react/packages/react-cs-renderer/src/__tests__/ReactNativeCS-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/client/__tests__/dangerouslySetInnerHTML-test.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/client/__tests__/getNodeForCharacterOffset-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/BeforeInputEventPlugin-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/ChangeEventPlugin-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/EnterLeaveEventPlugin-test.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/FallbackCompositionState-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/getEventKey-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SelectEventPlugin-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SimpleEventPlugin-test.html
@@ -33,6 +37,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMAttribu
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMEventListener-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMFiberAsync-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMFiber-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMIframe-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInput-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInvalidARIAHook-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMOption-test.html
@@ -69,9 +74,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChild
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/refs-destruction-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/refs-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/renderSubtreeIntoContainer-test.html
-# test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/createReactNativeComponentClass-test.internal.html
-# test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/ReactNativeEvents-test.internal.html
-# test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/ReactNativeMount-test.internal.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/validateDOMNesting-test.internal.html
 test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactExpiration-test.html
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactFiberHostContext-test.html
 test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactFragment-test.html
@@ -87,7 +90,6 @@ test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactInc
 # test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactPersistent-test.internal.html
 test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactTopLevelFragment-test.html
 test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactTopLevelText-test.html
-# test/cairo/reftest/vendor/react/packages/react-rt-renderer/src/__tests__/ReactNativeRT-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/createReactClassIntegration-test.html
 test/cairo/reftest/vendor/react/packages/react/src/__tests__/onlyChild-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactAsyncClassComponent-test.internal.html
@@ -96,14 +98,33 @@ test/cairo/reftest/vendor/react/packages/react/src/__tests__/onlyChild-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElementClone-test.html
 test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElement-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElementValidator-test.html
-# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactES6Class-test.html
 test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactJSXElement-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactJSXElementValidator-test.html
 test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactPureComponent-test.html
 # test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactShallowRenderer-test.html
 # test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRenderer-test.html
 test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRendererTraversal-test.html
+# test/cairo/reftest/vendor/react/packages/shared/__tests__/ReactDOMFrameScheduling-test.html
+# test/cairo/reftest/vendor/react/packages/shared/__tests__/ReactErrorUtils-test.internal.html
+# test/cairo/reftest/vendor/react/packages/shared/__tests__/reactProdInvariant-test.internal.html
+# test/cairo/reftest/vendor/react/scripts/error-codes/__tests__/invertObject-test.html
+# test/cairo/reftest/vendor/react/scripts/error-codes/__tests__/replace-invariant-error-codes-test.html
+# test/cairo/reftest/vendor/react/scripts/rollup/plugins/__tests__/wrap-warning-with-env-check-test.html
+# test/cairo/reftest/vendor/react/scripts/shared/__tests__/evalToString-test.html
 # PASS, but takes a long time
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildText-test.html
-# ISSUE Infinite loop
+# ISSUE: Infinite loop
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactRenderDocument-test.html
+# Skip: Type Script, Coffee Script, ESLint, ES6 class tests, react-native related tests
+# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactClassEquivalence-test.html
+# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactCoffeeScriptClass-test.html
+# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactTypeScriptClass-test.html
+# test/cairo/reftest/vendor/react/packages/react-cs-renderer/src/__tests__/ReactNativeCS-test.internal.html
+# test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/createReactNativeComponentClass-test.internal.html
+# test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/ReactNativeAttributePayload-test.html
+# test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/ReactNativeEvents-test.internal.html
+# test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/ReactNativeMount-test.internal.html
+# test/cairo/reftest/vendor/react/packages/react-rt-renderer/src/__tests__/ReactNativeRT-test.internal.html
+# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactES6Class-test.html
+# test/cairo/reftest/vendor/react/scripts/eslint-rules/__tests__/no-primitive-constructors-test.internal.html
+# test/cairo/reftest/vendor/react/scripts/eslint-rules/__tests__/warning-and-invariant-args-test.internal.hmtl
