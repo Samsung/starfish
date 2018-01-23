@@ -265,6 +265,11 @@ public:
     void load()
     {
         Document* document = m_builder.document();
+
+        if (m_htmlSource->isEmpty()) {
+            m_htmlSource = createBlankHTMLSource();
+        }
+
         m_builder.m_parser = m_parser =
             new HTMLParser(document->starFish(), document, m_htmlSource);
         m_parser->startParse();
@@ -276,6 +281,13 @@ protected:
     HTMLDocumentBuilder& m_builder;
     HTMLParser* m_parser;
     String* m_htmlSource;
+
+private:
+    String* createBlankHTMLSource()
+    {
+        return String::createASCIIString(
+            "<html><head></head><body></body></html>");
+    }
 };
 
 void HTMLDocumentBuilder::build(ResourceURL* url, ResourceURL* referrerURL)
@@ -283,8 +295,14 @@ void HTMLDocumentBuilder::build(ResourceURL* url, ResourceURL* referrerURL)
     m_resource = m_document->resourceLoader().fetch(url);
     m_resource->addResourceClient(new HTMLResourceClient(m_resource, *this));
 #ifndef STARFISH_TIZEN_WEARABLE
-    m_resource->request(Resource::ResourceRequestSyncLevel::NeverSync,
-                        referrerURL, true);
+    if (url->urlString()->isEmpty() ||
+        url->urlString()->equals("about:blank")) {
+        m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
+                            referrerURL, true);
+    } else {
+        m_resource->request(Resource::ResourceRequestSyncLevel::NeverSync,
+                            referrerURL, true);
+    }
 #else
     m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
                         referrerURL);
