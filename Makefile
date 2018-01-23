@@ -19,9 +19,10 @@ SHELL:=/bin/bash
 OUTPUT:=bin
 TIZEN_DEVICE_API=
 LTO=
-BACKEND=EFL
+#BACKEND=EFL
 #BACKEND=EFL_CAIRO
 #BACKEND=DALI
+BACKEND=ANDROID
 ifeq ($(OS),Linux)
   NPROCS:=$(shell grep -c ^processor /proc/cpuinfo)
   SHELL:=/bin/bash
@@ -48,7 +49,7 @@ DOMPARSER_SUPPORT=false
 WASU_SUPPORT=false
 
 # binding generator
-BINDING_GENERATOR_SUPPORT=true
+BINDING_GENERATOR_SUPPORT=false
 
 $(info goal... $(MAKECMDGOALS))
 
@@ -118,6 +119,9 @@ else ifneq (,$(findstring tizen_obs_emulator,$(MAKECMDGOALS)))
   HOST=tizen_obs
   ARCH=x64
   TIZEN_ARCH=x86_64
+else ifneq (,$(findstring android,$(MAKECMDGOALS)))
+  HOST=android
+  ARCH=arm
 endif
 
 ifneq (,$(findstring exe,$(MAKECMDGOALS)))
@@ -140,7 +144,10 @@ else ifeq ($(HOST), tizen_obs)
   OUTDIR=out/tizen_obs/$(ARCH)/$(TYPE)/$(MODE)
 else ifneq (,$(findstring tizen,$(HOST)))
   OUTDIR=out/tizen_$(TIZEN_VERSION)/$(ARCH)/$(TYPE)/$(MODE)
+else ifneq (,$(findstring android,$(HOST)))
+  OUTDIR=out/android/$(ARCH)/$(TYPE)/$(MODE)
 endif
+
 
 ifneq (,$(findstring tizen,$(HOST)))
   #LTO=1
@@ -177,7 +184,7 @@ $(info build dir... $(OUTDIR))
 ################################################################################
 
 # common flags
-CXXFLAGS += -std=c++0x -g3
+CXXFLAGS += -std=c++11 -g0
 CXXFLAGS += -fno-math-errno -Isrc/ -Iinc/
 CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
@@ -196,7 +203,7 @@ else ifeq ($(BACKEND), EFL_CAIRO)
 else ifeq ($(BACKEND), DALI)
 	CXXFLAGS += -DSTARFISH_DALI
 endif
-LDFLAGS += -lpthread -lcurl
+LDFLAGS += -lcurl
 
 # fixme
 # this causes
@@ -583,7 +590,26 @@ else ifneq (,$(findstring tizen,$(HOST)))
   endif
 
   LIB = liblightweight-web-engine.so
+else ifneq (,$(findstring android,$(HOST)))
+  CXX=$(ANDROID_NDK_STANDALONE)/bin/arm-linux-androideabi-gcc
+  CC=$(ANDROID_NDK_STANDALONE)/bin/arm-linux-androideabi-gcc
+  STRIP=$(ANDROID_NDK_STANDALONE)/bin/arm-linux-androideabi-strip
+  ANDROID_BUILD_DEPS=$(PWD)/build_deps/android/SM-N950N_armv-7a_7.1.1/
+  CXXFLAGS += -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -O2 -fPIE
+  LDFLAGS += -march=armv7-a -Wl,--fix-cortex-a8
+  CXXFLAGS += -I$(ANDROID_BUILD_DEPS)/include
+  CXXFLAGS += -I$(ANDROID_BUILD_DEPS)/include/cairo
+  CXXFLAGS += -I$(ANDROID_BUILD_DEPS)/include/freetype
+  CXXFLAGS += -I$(ANDROID_BUILD_DEPS)/include/harfbuzz
+  CXXFLAGS += -I$(ANDROID_BUILD_DEPS)/include/fontconfig
+  CXXFLAGS += -I$(ANDROID_BUILD_DEPS)/include/cairo
+
+  LDFLAGS += -fPIE -pie
+  LDFLAGS += -L$(ANDROID_BUILD_DEPS)/lib
+  LDFLAGS += -lcairo -lft2 -lfontconfig -lpixman -ljpeg -lstdc++ -lm -luv -lgif -lharfbuzz -lharfbuzz-icu -licuuc -licui18n -ljpeg -Lthird_party/escargot/ -lescargot -lz -lpng -ljpeg-turbo
+  CXXFLAGS += -DSTARFISH_ANDROID
 endif
+
 
 ifeq ($(LTO), 1)
   LDFLAGS += $(CXXFLAGS) # for LTO, CXXFLAGS should be duplicated in LDFLAGS
@@ -684,6 +710,12 @@ tizen3_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
 	cp -f $< .
 tizen3_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $<.strip ./$(LIB)
+
+android.lib.release: $(OUTDIR)/$(LIB)
+	cp -f $<.strip ./$(LIB)
+android.exe.release: $(OUTDIR)/$(BIN)
+	cp -f $<.strip ./$(BIN)
+
 
 DEPENDENCY_MAKEFILE = Makefile $(ESCARGOT_SRC_ROOT)/build/Flags.mk
 
