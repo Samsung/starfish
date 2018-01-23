@@ -62,7 +62,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactEventIndep
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactIdentity-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMockedComponent-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMountDestruction-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMount-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMount-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildReconcile-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChild-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactServerRenderingBrowser-test.html
