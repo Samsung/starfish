@@ -5660,6 +5660,86 @@ void StyleResolver::apply(Element* element,
                                    SideValue::BottomSideValue) {
                             y = Length(Length::Percent, 1.0f);
                         }
+                    } else if (item.valueKind() ==
+                               CSSStyleValuePair::ValueKind::ValuePairKind) {
+                        const CSSStyleValuePair& first =
+                            item.pairValue()->first();
+                        const CSSStyleValuePair& second =
+                            item.pairValue()->second();
+                        if (first.valueKind() ==
+                            CSSStyleValuePair::ValueKind::SideValueKind) {
+                            if (i == 0) {
+                                if (first.sideValue() ==
+                                    SideValue::LeftSideValue) {
+                                    Nullable<Length> nX = convertValueToLength(
+                                        second.valueKind(), second.value());
+                                    if (nX.hasValue()) {
+                                        x = nX.getValue();
+                                    }
+                                } else if (first.sideValue() ==
+                                           SideValue::RightSideValue) {
+                                    CalcData* data = new CalcData();
+                                    CalcValue val;
+                                    CalcTerm* term1 = new CalcTerm();
+                                    if (second.valueKind() ==
+                                        CSSStyleValuePair::ValueKind::
+                                            Percentage) {
+                                        val.setType(CalcValueType::Percentage);
+                                        val.setValue(-1 *
+                                                     second.percentageValue());
+                                    } else {
+                                        val.setType(CalcValueType::Length);
+                                        val.setValue(-1 *
+                                                     second.cssLengthValue());
+                                    }
+                                    term1->appendValue(val);
+
+                                    CalcTerm* term2 = new CalcTerm();
+                                    val.setType(CalcValueType::Percentage);
+                                    val.setValue(1.0f);
+                                    term2->appendValue(val);
+
+                                    data->appendTerm(term1);
+                                    data->appendTerm(term2);
+                                    x = Length(data);
+                                }
+                            } else {
+                                if (first.sideValue() ==
+                                    SideValue::TopSideValue) {
+                                    Nullable<Length> nY = convertValueToLength(
+                                        second.valueKind(), second.value());
+                                    if (nY.hasValue()) {
+                                        y = nY.getValue();
+                                    }
+                                } else if (first.sideValue() ==
+                                           SideValue::BottomSideValue) {
+                                    CalcData* data = new CalcData();
+                                    CalcValue val;
+                                    CalcTerm* term1 = new CalcTerm();
+                                    if (second.valueKind() ==
+                                        CSSStyleValuePair::ValueKind::
+                                            Percentage) {
+                                        val.setType(CalcValueType::Percentage);
+                                        val.setValue(-1 *
+                                                     second.percentageValue());
+                                    } else {
+                                        val.setType(CalcValueType::Length);
+                                        val.setValue(-1 *
+                                                     second.cssLengthValue());
+                                    }
+                                    term1->appendValue(val);
+
+                                    CalcTerm* term2 = new CalcTerm();
+                                    val.setType(CalcValueType::Percentage);
+                                    val.setValue(1.0f);
+                                    term2->appendValue(val);
+
+                                    data->appendTerm(term1);
+                                    data->appendTerm(term2);
+                                    y = Length(data);
+                                }
+                            }
+                        }
                     } else {
                         if (i == 0) {
                             Nullable<Length> nX = convertValueToLength(
@@ -7037,84 +7117,261 @@ bool CSSStyleValuePair::updateValueObjectFit(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueObjectPosition(const CSSTokenVector& tokens)
+static bool isPositionValue(const CSSTokenVector& tokens, unsigned int idx,
+                            bool& isXAxis, bool& isYAxis,
+                            CSSStyleValuePair& result)
 {
-    //  [ left | center | right | top | bottom | <percentage> | <length> ] |
-    //  [ left | center | right | <percentage> | <length> ]
-    //  [ top | center | bottom | <percentage> | <length> ] <length>? |
-    //  [ center | [ left | right ] ] && [ center | [ top | bottom ] ] <length>?
-
-    if (tokens.size() != 1 && tokens.size() != 2) {
+    if (tokens.size() <= idx) {
         return false;
     }
-
-    if (tokens.size() == 2) {
-        const CSSTokenValue& f = tokens[0];
-        const CSSTokenValue& s = tokens[1];
-        if ((f.equals("left") && s.equals("right")) ||
-            (f.equals("right") && s.equals("left")) ||
-            (f.equals("top") && s.equals("bottom")) ||
-            (f.equals("bottom") && s.equals("top")))
+    const CSSTokenValue& value = tokens[idx];
+    result.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+    if (STRING_VALUE_IS_STRING("left")) {
+        if (isXAxis) {
             return false;
+        }
+        result.setValue(SideValue::LeftSideValue);
+        isXAxis = true;
+    } else if (STRING_VALUE_IS_STRING("right")) {
+        if (isXAxis) {
+            return false;
+        }
+        result.setValue(SideValue::RightSideValue);
+        isXAxis = true;
+    } else if (STRING_VALUE_IS_STRING("center")) {
+        result.setValue(SideValue::CenterSideValue);
+    } else if (STRING_VALUE_IS_STRING("top")) {
+        if (isYAxis) {
+            return false;
+        }
+        result.setValue(SideValue::TopSideValue);
+        isYAxis = true;
+    } else if (STRING_VALUE_IS_STRING("bottom")) {
+        if (isYAxis) {
+            return false;
+        }
+        result.setValue(SideValue::BottomSideValue);
+        isYAxis = true;
+    } else {
+        uint8_t option =
+            CSSPropertyParser::AllowPercent | CSSPropertyParser::AllowNegative;
+        return result.updateValueUnitLengthOrCalc(value, option);
     }
+    return true;
+}
 
-    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+static bool isSideTokenValue(const CSSTokenValue& value)
+{
+    return value.equals("left") || value.equals("right") ||
+           value.equals("center") || value.equals("top") ||
+           value.equals("bottom");
+}
 
-    CSSStyleValuePair xPair(CSSStyleValuePair::ValueKind::SideValueKind,
-                            SideValue::CenterSideValue);
-    CSSStyleValuePair yPair(CSSStyleValuePair::ValueKind::SideValueKind,
-                            SideValue::CenterSideValue);
+static bool isVerticalValue(const CSSStyleValuePair& value)
+{
+    if (!value.isSideValueKind()) {
+        return false;
+    }
+    return value.sideValue() == SideValue::TopSideValue ||
+           value.sideValue() == SideValue::BottomSideValue;
+}
 
-    uint8_t option =
-        CSSPropertyParser::AllowPercent | CSSPropertyParser::AllowNegative;
-    for (unsigned int i = 0; i < std::min(tokens.size(), (size_t)2); i++) {
-        const CSSTokenValue& value = tokens[i];
-        if (STRING_VALUE_IS_STRING("left")) {
-            xPair.setValue(SideValue::LeftSideValue);
-        } else if (STRING_VALUE_IS_STRING("right")) {
-            xPair.setValue(SideValue::RightSideValue);
-        } else if (STRING_VALUE_IS_STRING("center")) {
-        } else if (STRING_VALUE_IS_STRING("top")) {
-            yPair.setValue(SideValue::TopSideValue);
-        } else if (STRING_VALUE_IS_STRING("bottom")) {
-            yPair.setValue(SideValue::BottomSideValue);
-        } else {
-            if (i == 0) {
-                xPair.setValueKind(CSSStyleValuePair::ValueKind::None);
-            } else {
-                yPair.setValueKind(CSSStyleValuePair::ValueKind::None);
-            }
+static bool isCenterValue(const CSSStyleValuePair& value)
+{
+    if (!value.isSideValueKind()) {
+        return false;
+    }
+    return value.sideValue() == SideValue::CenterSideValue;
+}
 
-            if (tokens.size() == 2) {
-                if (i == 0) {
-                    if (tokens[1].equals("left") || tokens[1].equals("right")) {
-                        return false;
-                    }
-                } else {
-                    if (tokens[0].equals("top") || tokens[0].equals("bottom")) {
-                        return false;
-                    }
-                }
-            }
+static bool isHorizontalValue(const CSSStyleValuePair& value)
+{
+    if (!value.isSideValueKind()) {
+        return false;
+    }
+    return value.sideValue() == SideValue::LeftSideValue ||
+           value.sideValue() == SideValue::RightSideValue;
+}
 
-            CSSStyleValuePair ret;
-            if (!ret.updateValueUnitLengthOrCalc(value, option)) {
+static bool updatePositionValue(const CSSStyleValuePair& value,
+                                CSSStyleValuePair& xPair,
+                                CSSStyleValuePair& yPair)
+{
+    bool isYValue = isVerticalValue(value);
+    xPair = value;
+    yPair.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+    yPair.setValue(SideValue::CenterSideValue);
+    if (isYValue) {
+        std::swap(xPair, yPair);
+    }
+    return true;
+}
+
+static bool updatePositionValue(const CSSStyleValuePair& value1,
+                                const CSSStyleValuePair& value2,
+                                CSSStyleValuePair& xPair,
+                                CSSStyleValuePair& yPair)
+{
+    bool isXY = isHorizontalValue(value1) || isVerticalValue(value2) ||
+                !value1.isSideValueKind() || !value2.isSideValueKind();
+    bool isYX = isVerticalValue(value1) || isHorizontalValue(value2);
+
+    if (isXY && isYX) {
+        return false;
+    }
+    xPair = value1;
+    yPair = value2;
+    if (isYX) {
+        std::swap(xPair, yPair);
+    }
+    return true;
+}
+
+static bool updatePositionValue(const GCVector<CSSStyleValuePair>& values,
+                                CSSStyleValuePair& xPair,
+                                CSSStyleValuePair& yPair)
+{
+    CSSStyleValuePair center;
+    for (unsigned int i = 0; i < values.size(); i++) {
+        CSSStyleValuePair current = values[i];
+
+        if (current.valueKind() == CSSStyleValuePair::ValueKind::None) {
+            break;
+        }
+
+        if (!current.isSideValueKind()) {
+            return false;
+        }
+
+        SideValue id = current.sideValue();
+
+        if (isCenterValue(current)) {
+            if (center.isSideValueKind()) {
                 return false;
             }
-            values->push_back(ret);
+            center = current;
+            continue;
+        }
+
+        CSSStyleValuePair result;
+        if (i + 1 < values.size() &&
+            values[i + 1].valueKind() != CSSStyleValuePair::ValueKind::None &&
+            !values[i + 1].isSideValueKind()) {
+            CSSStyleValuePair second = values[++i];
+            ValuePair* pair = new ValuePair(current, second);
+            result.setValuePair(pair);
+        } else {
+            result = current;
+        }
+
+        if (isHorizontalValue(current)) {
+            if (xPair.valueKind() != CSSStyleValuePair::ValueKind::None) {
+                return false;
+            }
+            xPair = result;
+        } else {
+            STARFISH_ASSERT(isVerticalValue(current));
+            if (yPair.valueKind() != CSSStyleValuePair::ValueKind::None) {
+                return false;
+            }
+            yPair = result;
         }
     }
 
-    if (xPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-        values->push_back(xPair);
-    }
-    if (yPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-        values->push_back(yPair);
+    if (center.isSideValueKind()) {
+        if (xPair.valueKind() != CSSStyleValuePair::ValueKind::None &&
+            yPair.valueKind() != CSSStyleValuePair::ValueKind::None) {
+            return false;
+        }
+        if (xPair.valueKind() == CSSStyleValuePair::ValueKind::None) {
+            xPair.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+            xPair.setValue(SideValue::CenterSideValue);
+        } else {
+            yPair.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+            yPair.setValue(SideValue::CenterSideValue);
+        }
     }
 
-    m_value.m_multiValue = values;
     return true;
+}
+
+bool CSSStyleValuePair::updateValueObjectPosition(const CSSTokenVector& tokens)
+{
+    CSSStyleValuePair xPair;
+    CSSStyleValuePair yPair;
+
+    if (updateValueObjectPosition(tokens, xPair, yPair)) {
+        m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+        m_value.m_multiValue =
+            new ValueList(ValueList::Separator::SpaceSeparator);
+        m_value.m_multiValue->push_back(xPair);
+        m_value.m_multiValue->push_back(yPair);
+        return true;
+    }
+    return false;
+}
+bool CSSStyleValuePair::updateValueObjectPosition(const CSSTokenVector& tokens,
+                                                  CSSStyleValuePair& xPair,
+                                                  CSSStyleValuePair& yPair)
+{
+    if (tokens.size() < 0 || tokens.size() > 4) {
+        return false;
+    }
+
+    bool isXAxis = false;
+    bool isYAxis = false;
+
+    CSSStyleValuePair value1;
+    bool ret = isPositionValue(tokens, 0, isXAxis, isYAxis, value1);
+    if (!ret) {
+        return false;
+    }
+
+    CSSStyleValuePair value2;
+    ret = isPositionValue(tokens, 1, isXAxis, isYAxis, value2);
+    if (!ret) {
+        return updatePositionValue(value1, xPair, yPair);
+    }
+
+    CSSStyleValuePair value3;
+    ret = false;
+    if (value1.isSideValueKind() &&
+        ((value2.isSideValueKind()) != isSideTokenValue(tokens[2])) &&
+        (!isCenterValue(value2.isSideValueKind() ? value2 : value1))) {
+        ret = isPositionValue(tokens, 2, isXAxis, isYAxis, value3);
+    }
+
+    if (!ret) {
+        if (isYAxis && !value2.isSideValueKind()) {
+            return updatePositionValue(value1, xPair, yPair);
+        }
+        return updatePositionValue(value1, value2, xPair, yPair);
+    }
+
+    CSSStyleValuePair value4;
+    ret = false;
+    if (value3.isSideValueKind() && !isCenterValue(value3) &&
+        !isSideTokenValue(tokens[3])) {
+        ret = isPositionValue(tokens, 3, isXAxis, isYAxis, value4);
+    }
+
+    if (!ret) {
+        if (tokens.size() < 3) {
+            if (isYAxis && !value2.isSideValueKind()) {
+                return updatePositionValue(value1, xPair, yPair);
+            }
+            return updatePositionValue(value1, value2, xPair, yPair);
+        }
+    }
+
+    CSSStyleValuePair value5;
+    GCVector<CSSStyleValuePair> values;
+    values.push_back(value1);
+    values.push_back(value2);
+    values.push_back(value3);
+    values.push_back(value4);
+
+    return updatePositionValue(values, xPair, yPair);
 }
 
 bool CSSStyleValuePair::updateValueWordSpacing(const CSSTokenVector& tokens)

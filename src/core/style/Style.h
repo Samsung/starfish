@@ -953,6 +953,7 @@ enum TextTransformValue {
 };
 
 class ValueList;
+class ValuePair;
 class FontFaceSrcData;
 class CSSStyleDeclaration;
 
@@ -1236,6 +1237,7 @@ public:
 
 class CSSStyleValuePair : public gc {
     friend class ValueList;
+    friend class ValuePair;
 
 public:
     enum KeyKind {
@@ -1283,6 +1285,7 @@ public:
         WhiteSpaceValueKind,
 
         ValueListKind,
+        ValuePairKind,
 
         // Background
         BackgroundSizeValueKind,
@@ -1349,6 +1352,14 @@ public:
     {
     }
 
+    CSSStyleValuePair(const CSSStyleValuePair& o)
+        : m_keyKind(o.m_keyKind)
+        , m_valueKind(o.m_valueKind)
+        , m_flagImportant(o.m_flagImportant)
+        , m_value(o.m_value)
+    {
+    }
+
     KeyKind keyKind() const
     {
         return m_keyKind;
@@ -1369,6 +1380,11 @@ public:
     void setValueKind(ValueKind kind)
     {
         m_valueKind = kind;
+    }
+
+    bool isSideValueKind() const
+    {
+        return m_valueKind == SideValueKind;
     }
 
     bool flagImportant() const
@@ -1605,6 +1621,12 @@ public:
         return m_value.m_multiValue;
     }
 
+    ValuePair* pairValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == ValuePairKind);
+        return m_value.m_pairValue;
+    }
+
     OverflowValue overflowValue() const
     {
         STARFISH_ASSERT(m_valueKind == OverflowValueKind);
@@ -1780,6 +1802,7 @@ public:
         BorderStyleValue m_borderStyle;
         BorderWidthValue m_borderWidth;
         ValueList* m_multiValue;
+        ValuePair* m_pairValue;
         FontFaceSrcData* m_fontFaceSrcData;
         OverflowValue m_overflow;
         VisibilityValue m_visibility;
@@ -1908,6 +1931,10 @@ public:
             : m_multiValue(v)
         {
         }
+        ValueData(ValuePair* v)
+            : m_pairValue(v)
+        {
+        }
         ValueData(FontFaceSrcData* v)
             : m_fontFaceSrcData(v)
         {
@@ -2019,7 +2046,8 @@ public:
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
-        : m_valueKind(kind)
+        : m_keyKind(KeyKind::Empty)
+        , m_valueKind(kind)
         , m_flagImportant(false)
         , m_value(value)
     {
@@ -2040,6 +2068,8 @@ public:
             return m_value.m_calc;
         case FontFaceSrcDataValueKind:
             return m_value.m_fontFaceSrcData;
+        case ValuePairKind:
+            return m_value.m_pairValue;
         default:
             return nullptr;
         }
@@ -2154,6 +2184,12 @@ public:
         m_value.m_multiValue = val;
     }
 
+    void setValuePair(ValuePair* val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::ValuePairKind;
+        m_value.m_pairValue = val;
+    }
+
     void setFontFaceSrcData(FontFaceSrcData* val)
     {
         m_valueKind = CSSStyleValuePair::ValueKind::FontFaceSrcDataValueKind;
@@ -2219,6 +2255,9 @@ public:
     bool updateValueUnitWordSpacing(const CSSTokenValue& value);
 
     bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit);
+    bool updateValueObjectPosition(const CSSTokenVector& tokens,
+                                   CSSStyleValuePair& xPair,
+                                   CSSStyleValuePair& yPair);
 
 protected:
     KeyKind m_keyKind : 8;
@@ -2258,6 +2297,54 @@ protected:
     }
     GCAtomicVector<CSSStyleValuePair> m_data;
     GCUnorderedSet<void*> m_pointerRooter;
+};
+
+class ValuePair : public gc {
+public:
+    ValuePair(const CSSStyleValuePair& first, const CSSStyleValuePair& second)
+        : m_first(first)
+        , m_second(second)
+    {
+    }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(ValuePair)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ValuePair, m_first));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ValuePair, m_second));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ValuePair));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+    const CSSStyleValuePair& first()
+    {
+        return m_first;
+    }
+
+    const CSSStyleValuePair& second()
+    {
+        return m_second;
+    }
+
+    String* toString()
+    {
+        StringBuilder builder;
+        builder.appendString(m_first.toString());
+        builder.appendChar(' ');
+        builder.appendString(m_second.toString());
+
+        return builder.finalize();
+    }
+
+private:
+    CSSStyleValuePair m_first;
+    CSSStyleValuePair m_second;
 };
 
 class ValueList : protected GCAtomicVector<CSSStyleValuePair> {

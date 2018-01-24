@@ -221,7 +221,8 @@ public:
             return m_data.m_timeData.toString();
         } else if (m_type.isPercentage()) {
             StringBuilder builder;
-            builder.appendString(String::fromFloat(m_data.m_numberData));
+            builder.appendString(
+                String::fromFloat(m_data.m_numberData * 100.f));
             builder.appendChar('%');
             return builder.finalize();
         }
@@ -635,6 +636,8 @@ public:
     String* toString()
     {
         StringBuilder builder;
+
+        builder.appendString(String::createASCIIString("calc("));
         auto it = m_terms.begin();
         builder.appendString((*it)->toString());
         it++;
@@ -643,17 +646,19 @@ public:
             String* r = (*it)->toString();
 
             if (r->charAt(0) == '-') {
-                builder.appendChar('-');
+                builder.appendString(String::createASCIIString("- "));
+                builder.appendString(r->substring(1, r->length() - 1));
+            } else if (r->charAt(0) == '+') {
+                builder.appendString(String::createASCIIString("+ "));
+                builder.appendString(r->substring(1, r->length() - 1));
             } else {
-                builder.appendChar('+');
+                builder.appendString(String::createASCIIString("+ "));
+                builder.appendString(r);
             }
-
-            builder.appendString(String::spaceString);
-            builder.appendString(r->substring(1, r->length() - 1));
 
             it++;
         }
-
+        builder.appendChar(')');
         return builder.finalize();
     }
 
