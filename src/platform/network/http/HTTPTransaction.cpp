@@ -62,6 +62,9 @@ void HTTPTransaction::start()
     STARFISH_ASSERT(m_curl);
     STARFISH_ASSERT(curlsh);
 
+#ifdef STARFISH_IGNORE_SSL_VERIFYPEER
+    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
+#endif
 #ifdef STARFISH_ENABLE_TEST
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
     const char* verbose = getenv("NETWORK_LOG_VERBOSE");

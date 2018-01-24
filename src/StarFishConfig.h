@@ -59,7 +59,7 @@
 #define PORT_GRAPHIC_BACKEND_ANDROID
 #define PORT_CANVAS_BACKEND_CAIRO
 #define PORT_COMPOSITOR_BACKEND_CAIRO
-#define PORT_EVENTLOOP_BACKEND_LIBUV
+#define PORT_EVENTLOOP_BACKEND_ANDROID
 #define PORT_IMAGEDECODER_BACKEND_MISC
 #endif
 
@@ -216,6 +216,12 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #define STARFISH_LOG_INFO(...) \
     dlog_print(DLOG_INFO, STARFISH_NAME, __VA_ARGS__);
 #endif
+#ifdef STARFISH_ANDROID
+#include <android/log.h>
+#undef STARFISH_LOG_INFO
+#define STARFISH_LOG_INFO(...) \
+    __android_log_print(ANDROID_LOG_INFO, STARFISH_NAME, __VA_ARGS__);
+#endif
 
 #define STARFISH_LOG_ERROR(...) fprintf(stderr, __VA_ARGS__);
 #ifdef STARFISH_TIZEN
@@ -224,6 +230,12 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #define STARFISH_LOG_ERROR(...) \
     dlog_print(DLOG_ERROR, STARFISH_NAME, __VA_ARGS__);
 #endif
+#ifdef STARFISH_ANDROID
+#include <android/log.h>
+#undef STARFISH_LOG_INFO
+#define STARFISH_LOG_INFO(...) \
+    __android_log_print(ANDROID_LOG_ERROR, STARFISH_NAME, __VA_ARGS__);
+#endif
 
 #define STARFISH_LOG_WARN(...) fprintf(stderr, __VA_ARGS__);
 #ifdef STARFISH_TIZEN
@@ -231,6 +243,12 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #include <dlog.h>
 #define STARFISH_LOG_WARN(...) \
     dlog_print(DLOG_WARN, STARFISH_NAME, __VA_ARGS__);
+#endif
+#ifdef STARFISH_ANDROID
+#include <android/log.h>
+#undef STARFISH_LOG_INFO
+#define STARFISH_LOG_INFO(...) \
+    __android_log_print(ANDROID_LOG_WARN, STARFISH_NAME, __VA_ARGS__);
 #endif
 
 #define STARFISH_CRASH STARFISH_RELEASE_ASSERT_NOT_REACHED
