@@ -21,28 +21,16 @@
 
 namespace StarFish {
 
-class FrameTreeBuilderContext;
-class FrameTableTreeBuilder;
 // FrameTableObjectBox is an abstract class where
 // common table-related methods are implemented
 
 class FrameTableObjectBox : public FrameBlockBox {
-    friend class FrameTableTreeBuilder;
-
 public:
     FrameTableObjectBox(Node* node, ComputedStyle* style);
     virtual const char* name() = 0;
     virtual bool isFrameTableObjectBox()
     {
         return true;
-    }
-    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
-                          bool force) = 0;
-
-protected:
-    virtual void initFrameTableObjectBoxStateIfNeeds(bool force)
-    {
-        return;
     }
 };
 }

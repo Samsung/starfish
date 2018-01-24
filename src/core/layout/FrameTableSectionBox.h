@@ -21,7 +21,6 @@
 
 namespace StarFish {
 
-class FrameTreeBuilderContext;
 class FrameTableBox;
 class FrameTableRowBox;
 class FrameTableCellBox;
@@ -95,8 +94,6 @@ public:
     void applyVerticalAlign(LayoutContext& ctx);
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
-    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
-                          bool force);
 
     virtual const char* name()
     {

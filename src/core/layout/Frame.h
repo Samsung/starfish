@@ -558,6 +558,17 @@ public:
         m_isQuickLayout = b;
     }
 
+    bool didResetTable(FrameTableBox* table)
+    {
+        auto it = m_didResetTables.find(table);
+        return it != m_didResetTables.end();
+    }
+
+    void markDidResetTable(FrameTableBox* table)
+    {
+        m_didResetTables[table] = true;
+    }
+
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(
@@ -622,6 +633,7 @@ private:
     // TODO move these maps into BlockFormattingContext
     std::unordered_map<FrameBox*, MarginCollapseResult> m_marginCollapseResult;
     std::unordered_map<FrameBlockBox*, MarginInfo*> m_marginInfo;
+    std::unordered_map<FrameTableBox*, bool> m_didResetTables;
     GCVector<InlineTextBox*> m_inlineTextBoxPool;
     GCVector<InlineNonReplacedBox*> m_inlineNonReplacedBoxPool;
     bool m_viewportWidthDamaged : 1;
@@ -1741,6 +1753,14 @@ public:
         return (display == DisplayValue::BlockDisplayValue) ||
                (display == DisplayValue::ListItemDisplayValue) ||
                (display == DisplayValue::TableDisplayValue) ||
+               (display == DisplayValue::TableCaptionDisplayValue) ||
+               (display == DisplayValue::TableRowDisplayValue) ||
+               (display == DisplayValue::TableRowGroupDisplayValue) ||
+               (display == DisplayValue::TableCellDisplayValue) ||
+               (display == DisplayValue::TableColumnDisplayValue) ||
+               (display == DisplayValue::TableColumnGroupDisplayValue) ||
+               (display == DisplayValue::TableFooterGroupDisplayValue) ||
+               (display == DisplayValue::TableHeaderGroupDisplayValue) ||
                (display == DisplayValue::FlexDisplayValue);
     }
 

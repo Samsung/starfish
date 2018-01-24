@@ -15,17 +15,9 @@
  */
 
 #include "StarFishConfig.h"
-#include "core/dom/Node.h"
-#include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLTDElement.h"
-#include "core/dom/HTMLTHElement.h"
-#include "core/layout/FrameBlockBoxInlineLayout.h"
-#include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameTableRowBox.h"
-#include "core/layout/FrameTableSectionBox.h"
-#include "core/layout/FrameText.h"
-#include "core/layout/FrameTreeBuilder.h"
 
 namespace StarFish {
 

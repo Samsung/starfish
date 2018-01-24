@@ -25,7 +25,6 @@
 #include "core/layout/FrameTableColBox.h"
 #include "core/layout/FrameTableRowBox.h"
 #include "core/layout/FrameTableSectionBox.h"
-#include "core/layout/FrameTreeBuilder.h"
 #include "core/style/CSSParser.h"
 
 namespace StarFish {
@@ -33,9 +32,6 @@ namespace StarFish {
 FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
     , m_tableRect(0, 0, 0, 0)
-    , m_thead(nullptr)
-    , m_tfoot(nullptr)
-    , m_candidateTableContentWidth(0)
 {
 }
 
@@ -58,14 +54,10 @@ void* FrameTableBox::operator new(size_t size)
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_lastChild));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_lineBoxes));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_captions));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_colObjects));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_columnWidths));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(FrameTableBox, m_cellsInTheFirstRow));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_colBoxes));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_thead));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_tfoot));
 
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableBox));
         typeInited = true;
@@ -114,8 +106,55 @@ FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)
     }
 }
 
+void FrameTableBox::resetIfNeeds(LayoutContext& ctx)
+{
+    if (ctx.didResetTable(this)) {
+        return;
+    }
+    ctx.markDidResetTable(this);
+
+    Frame* sectionChild = firstChild();
+    while (sectionChild) {
+        if (sectionChild->isFrameTableSectionBox()) {
+            FrameTableSectionBox* section =
+                sectionChild->asFrameTableSectionBox();
+            section->grid().clear();
+            Frame* rowChild = section->firstChild();
+            while (rowChild) {
+                if (rowChild->isFrameTableRowBox()) {
+                    FrameTableRowBox* row = rowChild->asFrameTableRowBox();
+                    row->setRowIndex(section->grid().size());
+                    row->setLastAbsoluteColumnIndex(0);
+                    RowStruct rowStruct(row);
+
+                    Frame* cellChild = row->firstChild();
+                    while (cellChild) {
+                        if (cellChild->isFrameTableCellBox()) {
+                            FrameTableCellBox* cell =
+                                cellChild->asFrameTableCellBox();
+                            cell->setAbsoluteColumnIndex(
+                                row->lastAbsoluteColumnIndex());
+                            row->setLastAbsoluteColumnIndex(
+                                row->lastAbsoluteColumnIndex() +
+                                cell->colspan());
+                            rowStruct.cells().push_back(CellStruct(cell));
+                        }
+                        cellChild = cellChild->next();
+                    }
+
+                    section->grid().push_back(rowStruct);
+                }
+                rowChild = rowChild->next();
+            }
+        }
+        sectionChild = sectionChild->next();
+    }
+}
+
 void FrameTableBox::calCellWidth(LayoutContext& ctx)
 {
+    resetIfNeeds(ctx);
+
     for (int i = 0; i < 2; i++) {
         // 0. Calculate absoluteColumnIndex for cells
         for (Frame* c = firstChild(); c; c = c->next()) {
@@ -251,10 +290,6 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     }
 
     LayoutUnit tableContentWidth = tableWidth - borderWidth() - paddingWidth();
-
-    if (hasTableWidth) {
-        m_candidateTableContentWidth = tableContentWidth;
-    }
 
     // The values from <col> have higher priority
     for (auto& col : m_columnWidths) {
@@ -885,8 +920,25 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
     // any table sections.
     LayoutUnit tableContentWidth = maxRowWidthSoFar;
     tableContentWidth = std::max(tableContentWidth, minCaptionWidthSoFar);
-    tableContentWidth =
-        std::max(tableContentWidth, m_candidateTableContentWidth);
+
+    Length width = style()->width();
+    if (!width.isAuto()) {
+        LayoutUnit tableWidth;
+        if (width.isDefinite(false)) {
+            LayoutUnit unused;
+            tableWidth = width.specifiedValue(unused, this);
+            if (!isAnonymous() && !node()->isHTMLTableElement()) {
+                tableWidth += borderWidth() + paddingWidth();
+            }
+        } else if (width.isPercent()) {
+            tableWidth = width.percentValue(ctx.parentContentWidth(this));
+        } else if (width.isCalc()) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
+
+        tableContentWidth = std::max(
+            tableContentWidth, tableWidth - borderWidth() - paddingWidth());
+    }
 
     setWidth(tableContentWidth + paddingWidth() + borderWidth());
 }
@@ -903,14 +955,24 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     LayoutUnit ySoFar = 0;
 
     // 1. place captions with caption-side: top
-    for (auto& caption : m_captions) {
-        if (caption->style()->captionSide() ==
-            CaptionSideValue::TopCaptionSideValue) {
-            caption->setWidth(width() - caption->marginWidth());
-            caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
-            caption->setY(ySoFar + caption->marginTop());
-            ySoFar += caption->height() + caption->marginHeight();
+    Frame* child = firstChild();
+    while (child) {
+        if (child->isFrameTableCaptionBox()) {
+            FrameTableCaptionBox* caption = child->asFrameTableCaptionBox();
+            if (caption->style()->captionSide() ==
+                CaptionSideValue::TopCaptionSideValue) {
+                LayoutUnit oldWidth = caption->width();
+                caption->setWidth(width() - caption->marginWidth());
+                if (caption->width() != oldWidth) {
+                    caption->markNeedsLayout();
+                }
+                caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+                caption->setY(ySoFar + caption->marginTop());
+                ySoFar += caption->height() + caption->marginHeight();
+            }
         }
+
+        child = child->next();
     }
 
     // 2. place table sections
@@ -923,19 +985,21 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     ySoFar += borderTop();
     ySoFar += paddingTop();
     LayoutUnit xPosOfSection = borderLeft() + paddingLeft();
+    FrameTableSectionBox* thead = this->thead();
+    FrameTableSectionBox* tfoot = this->tfoot();
 
     // 2-1. place the first table header section
-    if (m_thead) {
-        m_thead->asFrameBox()->setX(xPosOfSection);
-        m_thead->asFrameTableSectionBox()->layoutHeight(ctx);
-        m_thead->asFrameBox()->setY(ySoFar);
-        ySoFar += m_thead->asFrameBox()->height();
+    if (thead) {
+        thead->asFrameBox()->setX(xPosOfSection);
+        thead->asFrameTableSectionBox()->layoutHeight(ctx);
+        thead->asFrameBox()->setY(ySoFar);
+        ySoFar += thead->asFrameBox()->height();
     }
 
     // 2-2. place table-row-group and the rest
     // "table-header/footer-group" sections
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSectionBox() && (c != m_thead) && (c != m_tfoot)) {
+        if (c->isFrameTableSectionBox() && (c != thead) && (c != tfoot)) {
             c->asFrameBox()->setX(xPosOfSection);
             c->asFrameTableSectionBox()->layoutHeight(ctx);
             c->asFrameBox()->setY(ySoFar);
@@ -945,11 +1009,11 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
 
     // 2-3. place the first table footer section
     // Similar logic as the table-header-group applies to table-footer-group.
-    if (m_tfoot) {
-        m_tfoot->asFrameBox()->setX(xPosOfSection);
-        m_tfoot->asFrameTableSectionBox()->layoutHeight(ctx);
-        m_tfoot->asFrameBox()->setY(ySoFar);
-        ySoFar += m_tfoot->asFrameBox()->height();
+    if (tfoot) {
+        tfoot->asFrameBox()->setX(xPosOfSection);
+        tfoot->asFrameTableSectionBox()->layoutHeight(ctx);
+        tfoot->asFrameBox()->setY(ySoFar);
+        ySoFar += tfoot->asFrameBox()->height();
     }
 
     ySoFar += paddingBottom();
@@ -997,14 +1061,24 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     m_tableRect.setHeight(sectionHeight);
 
     // 3. place captions with caption-side: bottom
-    for (auto& caption : m_captions) {
-        if (caption->style()->captionSide() ==
-            CaptionSideValue::BottomCaptionSideValue) {
-            caption->setWidth(width() - caption->marginWidth());
-            caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
-            caption->setY(ySoFar + caption->marginTop());
-            ySoFar += caption->height() + caption->marginHeight();
+    child = firstChild();
+    while (child) {
+        if (child->isFrameTableCaptionBox()) {
+            FrameTableCaptionBox* caption = child->asFrameTableCaptionBox();
+            if (caption->style()->captionSide() ==
+                CaptionSideValue::BottomCaptionSideValue) {
+                LayoutUnit oldWidth = caption->width();
+                caption->setWidth(width() - caption->marginWidth());
+                if (oldWidth != caption->width()) {
+                    caption->markNeedsLayout();
+                }
+                caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+                caption->setY(ySoFar + caption->marginTop());
+                ySoFar += caption->height() + caption->marginHeight();
+            }
         }
+
+        child = child->next();
     }
     setHeight(ySoFar);
 
@@ -1170,40 +1244,41 @@ Unit::Rect FrameTableBox::makeRect(BoxValue box)
 // And if there is no row in the section, the section is an empty section.
 FrameTableSectionBox* FrameTableBox::firstNonEmptySectionBoxInVisualOrder()
 {
-    if (m_thead && m_thead->grid().size()) {
-        return m_thead;
+    FrameTableSectionBox* thead = this->thead();
+    if (thead && thead->grid().size()) {
+        return thead;
     }
 
+    FrameTableSectionBox* tfoot = this->tfoot();
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c != m_tfoot && c->isFrameTableSectionBox() &&
+        if (c != tfoot && c->isFrameTableSectionBox() &&
             c->asFrameTableSectionBox()->grid().size()) {
             return c->asFrameTableSectionBox();
         }
     }
 
-    if (m_tfoot && m_tfoot->grid().size()) {
-        return m_tfoot;
+    if (tfoot && tfoot->grid().size()) {
+        return tfoot;
     }
     return nullptr;
 }
 
 FrameTableSectionBox* FrameTableBox::firstSectionBoxInVisualOrder()
 {
-    if (m_thead) {
-        return m_thead;
+    FrameTableSectionBox* thead = this->thead();
+    if (thead) {
+        return thead;
     }
 
+    FrameTableSectionBox* tfoot = this->tfoot();
+
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c != m_tfoot && c->isFrameTableSectionBox()) {
+        if (c != tfoot && c->isFrameTableSectionBox()) {
             return c->asFrameTableSectionBox();
         }
     }
 
-    if (m_tfoot) {
-        return m_tfoot;
-    }
-
-    return nullptr;
+    return tfoot;
 }
 
 // -----------------------------------------------------------------------------
@@ -1268,49 +1343,32 @@ LayoutUnit FrameTableBox::calBaseline(LayoutContext& ctx)
 
 FrameTableColBox* FrameTableBox::columnAtAbsoluteColumnIndex(unsigned index)
 {
-    if (m_colObjects.size() == 0) {
-        return nullptr;
-    }
-
+    Frame* child = firstChild();
     unsigned l = 0, r = 0;
-    for (auto colGroup : m_colObjects) {
-        if (colGroup->firstChild() == nullptr) {
-            STARFISH_ASSERT(colGroup->isFrameTableColBox());
-            r = l + colGroup->span();
-            if (l <= index && index < r) {
-                return colGroup;
-            }
-            l = r;
-        } else {
-            for (Frame* p = colGroup->firstChild(); p; p = p->next()) {
-                STARFISH_ASSERT(p->isFrameTableColBox());
-                r = l + p->asFrameTableColBox()->span();
+    while (child) {
+        if (child->isFrameTableColBox()) {
+            FrameTableColBox* colGroup = child->asFrameTableColBox();
+            if (colGroup->firstChild() == nullptr) {
+                r = l + colGroup->span();
                 if (l <= index && index < r) {
-                    return p->asFrameTableColBox();
+                    return colGroup;
                 }
                 l = r;
+            } else {
+                for (Frame* p = colGroup->firstChild(); p; p = p->next()) {
+                    STARFISH_ASSERT(p->isFrameTableColBox());
+                    r = l + p->asFrameTableColBox()->span();
+                    if (l <= index && index < r) {
+                        return p->asFrameTableColBox();
+                    }
+                    l = r;
+                }
             }
         }
+
+        child = child->next();
     }
+
     return nullptr;
-}
-
-void FrameTableBox::initFrameTableObjectBoxStateIfNeeds(bool force)
-{
-    STARFISH_ASSERT(node());
-    for (Node* c = node()->firstChild(); c && !force; c = c->nextSibling()) {
-        if (c->needsFrameTreeBuild()) {
-            force = true;
-            break;
-        }
-    }
-
-    if (force) {
-        m_tableRect = LayoutRect(0, 0, 0, 0);
-        m_thead = nullptr;
-        m_tfoot = nullptr;
-        m_candidateTableContentWidth = 0;
-    }
-    return;
 }
 }

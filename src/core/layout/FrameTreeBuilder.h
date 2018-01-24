@@ -29,6 +29,7 @@ class FrameBlockBox;
 class FrameInline;
 class FrameTableCaptionBox;
 class FrameTableCellBox;
+class FrameTableObjectBox;
 class Node;
 class StyleResolver;
 class SVGElement;
@@ -39,16 +40,20 @@ public:
     FrameTreeBuilderContext(FrameBlockBox* currentBlockContainer);
     void setCurrentBlockContainer(FrameBlockBox* blockContainer);
     FrameBlockBox* currentBlockContainer();
+    void setLastAnonymousTableObjectParent(FrameTableObjectBox* parent);
+    FrameTableObjectBox* lastAnonymousTableObjectParent();
     std::unordered_map<Node*, FrameInline*>& frameInlineItem();
     bool isInFrameInlineFlow() const;
     void setIsInFrameInlineFlow(bool b);
     bool isInFrameFlexFlow() const;
     void setIsInFrameFlexFlow(bool b);
+    bool isInFrameTableFlow() const;
 
 protected:
     bool m_isInFrameInlineFlow;
     bool m_isInFrameFlexFlow;
     FrameBlockBox* m_currentBlockContainer;
+    FrameTableObjectBox* m_lastAnonymousTableObjectParent;
     std::unordered_map<Node*, FrameInline*, std::hash<Node*>,
                        std::equal_to<Node*>>
         m_frameInlineItem;
@@ -84,8 +89,15 @@ private:
                               bool force);
     static Frame* buildTree(Node* current, FrameTreeBuilderContext& ctx,
                             bool force);
-    static void insertChild(FrameBlockBox* frameBlockBox, Frame* currentFrame,
+    static void insertChild(FrameBlockBox* blockContainer, Frame* currentFrame,
                             Node* currentNode, FrameTreeBuilderContext& ctx);
+    static void insertFlexItemChild(FrameBlockBox* blockContainer,
+                                    Frame* currentFrame, Node* currentNode,
+                                    FrameTreeBuilderContext& ctx);
+    static void insertTableObjectChild(
+        FrameBlockBox* blockContainer,
+        FrameTableObjectBox* lastAnonymousTableObjectParent,
+        Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx);
 };
 }
 

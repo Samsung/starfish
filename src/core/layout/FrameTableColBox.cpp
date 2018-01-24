@@ -15,11 +15,8 @@
  */
 
 #include "StarFishConfig.h"
-#include "core/dom/Node.h"
 #include "core/dom/HTMLTableColElement.h"
-#include "core/dom/HTMLTableColGroupElement.h"
 #include "core/layout/FrameTableColBox.h"
-#include "core/layout/FrameTreeBuilder.h"
 
 namespace StarFish {
 

@@ -21,14 +21,10 @@
 
 namespace StarFish {
 
-class FrameTreeBuilderContext;
-
 class FrameTableCaptionBox : public FrameTableObjectBox {
 public:
     FrameTableCaptionBox(Node* node, ComputedStyle* style);
 
-    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
-                          bool force);
     virtual const char* name()
     {
         return "FrameTableCaption";

@@ -35,6 +35,10 @@
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableRowBox.h"
 #include "core/layout/FrameTableSectionBox.h"
+#include "core/layout/FrameTableCellBox.h"
+#include "core/layout/FrameTableColBox.h"
+#include "core/layout/FrameTableCaptionBox.h"
+#include "core/layout/FrameTableObjectBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/FrameInputBox.h"
 #include "core/layout/FrameSelectBox.h"
@@ -46,7 +50,6 @@
 #include "core/layout/FrameReplacedIFrame.h"
 #include "core/layout/FrameReplacedObject.h"
 #include "core/layout/FrameLineBreak.h"
-#include "core/layout/FrameTableTreeBuilder.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
 
 namespace StarFish {
@@ -57,6 +60,7 @@ FrameTreeBuilderContext::FrameTreeBuilderContext(
 {
     m_isInFrameInlineFlow = false;
     m_isInFrameFlexFlow = false;
+    m_lastAnonymousTableObjectParent = nullptr;
     setCurrentBlockContainer(currentBlockContainer);
 }
 
@@ -70,6 +74,17 @@ void FrameTreeBuilderContext::setCurrentBlockContainer(
 FrameBlockBox* FrameTreeBuilderContext::currentBlockContainer()
 {
     return m_currentBlockContainer;
+}
+
+void FrameTreeBuilderContext::setLastAnonymousTableObjectParent(
+    FrameTableObjectBox* parent)
+{
+    m_lastAnonymousTableObjectParent = parent;
+}
+
+FrameTableObjectBox* FrameTreeBuilderContext::lastAnonymousTableObjectParent()
+{
+    return m_lastAnonymousTableObjectParent;
 }
 
 std::unordered_map<Node*, FrameInline*>&
@@ -98,6 +113,12 @@ void FrameTreeBuilderContext::setIsInFrameFlexFlow(bool b)
     m_isInFrameFlexFlow = b;
 }
 
+bool FrameTreeBuilderContext::isInFrameTableFlow() const
+{
+    return m_currentBlockContainer->isFrameTableObjectBox() ||
+           m_lastAnonymousTableObjectParent != nullptr;
+}
+
 void FrameTreeBuilder::clearTree(Node* current)
 {
     current->markNeedsFrameTreeBuild();
@@ -111,29 +132,32 @@ void FrameTreeBuilder::clearTree(Node* current)
     }
 }
 
-FrameBlockBox* createAnonymouseBlockBox(FrameBlockBox* blockContainer,
-                                        Node* node)
+template <typename T>
+static T* createAnonymousBlockBox(FrameBlockBox* blockContainer, Node* node,
+                                  DisplayValue display)
 {
     ComputedStyle* style = new ComputedStyle(blockContainer->style());
-    style->setDisplay(DisplayValue::BlockDisplayValue);
+    style->setDisplay(display);
     style->loadResources(node);
     style->arrangeStyleValues(blockContainer->style(), node);
 
-    return new FrameBlockBox(nullptr, style);
+    return new T(nullptr, style);
 }
 
-static FrameBlockBox* wrapWithAnonymouseBlockBox(FrameBlockBox* blockContainer,
-                                                 Node* node, Frame* frame)
+template <typename T>
+static T* wrapWithAnonymousBlockBox(FrameBlockBox* blockContainer, Node* node,
+                                    DisplayValue display, Frame* frame)
 {
-    FrameBlockBox* blockBox = createAnonymouseBlockBox(blockContainer, node);
+    T* blockBox = createAnonymousBlockBox<T>(blockContainer, node, display);
     blockBox->appendChild(frame);
     blockContainer->appendChild(blockBox);
     return blockBox;
 }
 
-static void insertFlexItemChild(FrameBlockBox* blockContainer,
-                                Frame* currentFrame, Node* currentNode,
-                                FrameTreeBuilderContext& ctx)
+void FrameTreeBuilder::insertFlexItemChild(FrameBlockBox* blockContainer,
+                                           Frame* currentFrame,
+                                           Node* currentNode,
+                                           FrameTreeBuilderContext& ctx)
 {
     bool isFlexItem = currentFrame->isBlockLevel() &&
                       !currentFrame->isFrameLineBreak() &&
@@ -148,46 +172,219 @@ static void insertFlexItemChild(FrameBlockBox* blockContainer,
             last->appendChild(currentFrame);
             last->markFlexItem();
         } else {
-            Frame* f = wrapWithAnonymouseBlockBox(blockContainer, currentNode,
-                                                  currentFrame);
+            Frame* f = wrapWithAnonymousBlockBox<FrameBlockBox>(
+                blockContainer, currentNode, DisplayValue::BlockDisplayValue,
+                currentFrame);
             f->markFlexItem();
         }
     }
+}
+
+void FrameTreeBuilder::insertTableObjectChild(
+    FrameBlockBox* blockContainer,
+    FrameTableObjectBox* lastAnonymousTableObjectParent, Frame* currentFrame,
+    Node* currentNode, FrameTreeBuilderContext& ctx)
+{
+    Frame* parent = blockContainer;
+    bool useParent = false;
+    if (currentFrame->isFrameTableCellBox()) {
+        if (parent->isFrameTableRowBox()) {
+            useParent = true;
+        } else if (lastAnonymousTableObjectParent) {
+            parent = lastAnonymousTableObjectParent;
+            while (!parent->isFrameTableBox() &&
+                   !parent->isFrameTableRowBox()) {
+                parent = lastAnonymousTableObjectParent->parent();
+            }
+            if (parent->isFrameTableRowBox() && parent->isAnonymous()) {
+                useParent = true;
+            }
+        }
+
+        if (!useParent) {
+            parent = createAnonymousBlockBox<FrameTableRowBox>(
+                blockContainer, currentNode,
+                DisplayValue::TableRowDisplayValue);
+            insertTableObjectChild(blockContainer,
+                                   lastAnonymousTableObjectParent, parent,
+                                   currentNode, ctx);
+        }
+    } else if (currentFrame->isFrameTableRowBox()) {
+        if (parent->isFrameTableSectionBox()) {
+            useParent = true;
+        } else if (lastAnonymousTableObjectParent) {
+            parent = lastAnonymousTableObjectParent;
+            while (!parent->isFrameTableBox() &&
+                   !parent->isFrameTableSectionBox()) {
+                parent = parent->parent();
+            }
+            if (parent->isFrameTableSectionBox() && parent->isAnonymous()) {
+                useParent = true;
+            }
+        }
+
+        if (!useParent) {
+            parent = createAnonymousBlockBox<FrameTableSectionBox>(
+                blockContainer, currentNode,
+                DisplayValue::TableRowGroupDisplayValue);
+            insertTableObjectChild(blockContainer,
+                                   lastAnonymousTableObjectParent, parent,
+                                   currentNode, ctx);
+        }
+    } else if ((currentFrame->isFrameTableColBox() &&
+                currentFrame->style()->display() ==
+                    DisplayValue::TableColumnDisplayValue)) {
+        if (parent->isFrameTableColBox()) {
+            useParent = true;
+            STARFISH_RELEASE_ASSERT(parent->style()->display() ==
+                                    DisplayValue::TableColumnGroupDisplayValue);
+        } else if (lastAnonymousTableObjectParent) {
+            parent = lastAnonymousTableObjectParent;
+            while (!parent->isFrameTableBox() &&
+                   !parent->isFrameTableColBox()) {
+                parent = parent->parent();
+            }
+            if (parent->isFrameTableColBox() && parent->isAnonymous()) {
+                useParent = true;
+                STARFISH_RELEASE_ASSERT(
+                    parent->style()->display() ==
+                    DisplayValue::TableColumnGroupDisplayValue);
+            }
+        }
+
+        if (!useParent) {
+            parent = createAnonymousBlockBox<FrameTableColBox>(
+                blockContainer, currentNode,
+                DisplayValue::TableColumnGroupDisplayValue);
+            insertTableObjectChild(blockContainer,
+                                   lastAnonymousTableObjectParent, parent,
+                                   currentNode, ctx);
+        }
+    } else if ((currentFrame->isFrameTableColBox() &&
+                currentFrame->style()->display() ==
+                    DisplayValue::TableColumnGroupDisplayValue) ||
+               currentFrame->isFrameTableCaptionBox() ||
+               currentFrame->isFrameTableSectionBox()) {
+        if (parent->isFrameTableBox()) {
+            useParent = true;
+        } else if (lastAnonymousTableObjectParent) {
+            parent = lastAnonymousTableObjectParent;
+            while (!parent->isFrameTableBox()) {
+                parent = parent->parent();
+            }
+            if (parent->isFrameTableBox() && parent->isAnonymous()) {
+                useParent = true;
+            }
+        }
+
+        if (!useParent) {
+            if (ctx.isInFrameInlineFlow()) {
+                parent = createAnonymousBlockBox<FrameTableBox>(
+                    blockContainer, currentNode,
+                    DisplayValue::InlineTableDisplayValue);
+            } else {
+                parent = createAnonymousBlockBox<FrameTableBox>(
+                    blockContainer, currentNode,
+                    DisplayValue::TableDisplayValue);
+            }
+            insertChild(blockContainer, parent, currentNode, ctx);
+        }
+    } else {
+        if (parent->isFrameTableCellBox()) {
+            useParent = true;
+        } else if (lastAnonymousTableObjectParent) {
+            parent = lastAnonymousTableObjectParent;
+            if (!parent->isFrameTableCellBox()) {
+                while (!parent->isFrameTableBox() &&
+                       !parent->isFrameTableCellBox()) {
+                    parent = parent->parent();
+                }
+            }
+            if (parent->isFrameTableCellBox() && parent->isAnonymous()) {
+                useParent = true;
+            }
+        }
+
+        if (!useParent) {
+            parent = createAnonymousBlockBox<FrameTableCellBox>(
+                blockContainer, currentNode,
+                DisplayValue::TableCellDisplayValue);
+            insertTableObjectChild(blockContainer,
+                                   lastAnonymousTableObjectParent, parent,
+                                   currentNode, ctx);
+        }
+    }
+    parent->appendChild(currentFrame);
 }
 
 void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
                                    Frame* currentFrame, Node* currentNode,
                                    FrameTreeBuilderContext& ctx)
 {
-    if (!blockContainer->firstChild()) {
-        if (ctx.isInFrameFlexFlow()) {
-            insertFlexItemChild(blockContainer, currentFrame, currentNode, ctx);
+    if (ctx.isInFrameTableFlow()) {
+        FrameTableObjectBox* tableParent = nullptr;
+        if (blockContainer->isFrameTableObjectBox()) {
+            tableParent = blockContainer->asFrameTableObjectBox();
         } else {
-            blockContainer->appendChild(currentFrame);
+            tableParent = ctx.lastAnonymousTableObjectParent();
         }
-        return;
+        if (tableParent && !tableParent->isFrameTableCellBox() &&
+            !tableParent->isFrameTableCaptionBox()) {
+            if (currentFrame->isFrameText() &&
+                currentFrame->asFrameText()->text()->containsOnlyWhitespace()) {
+                return;
+            }
+        }
     }
 
     bool isNormalFlowBlockChild = currentFrame->isBlockLevel() &&
                                   !currentFrame->isFrameLineBreak() &&
                                   currentFrame->isNormalFlow();
 
-    if (!isNormalFlowBlockChild) {
-        DisplayValue display = currentNode->parentNode()->style()->display();
-        if (display == InlineDisplayValue ||
-            display == InlineListItemDisplayValue) {
-            auto iter = ctx.frameInlineItem().find(currentNode->parentNode());
-            iter->second->appendChild(currentFrame);
-            return;
+    if (ctx.isInFrameInlineFlow() && !isNormalFlowBlockChild) {
+        auto iter = ctx.frameInlineItem().find(currentNode->parentNode());
+        iter->second->appendChild(currentFrame);
+        return;
+    } else if (ctx.isInFrameFlexFlow()) {
+        insertFlexItemChild(blockContainer, currentFrame, currentNode, ctx);
+        return;
+    } else if (currentFrame->isFrameTableObjectBox() &&
+               !currentFrame->isFrameTableBox()) {
+        insertTableObjectChild(blockContainer,
+                               ctx.lastAnonymousTableObjectParent(),
+                               currentFrame, currentNode, ctx);
+        return;
+    } else {
+        if (blockContainer->isFrameTableObjectBox()) {
+            if (!blockContainer->isFrameTableCellBox() &&
+                !blockContainer->isFrameTableCaptionBox()) {
+                if (blockContainer->isFrameTableColBox()) {
+                    if (blockContainer->style()->display() ==
+                        DisplayValue::TableColumnGroupDisplayValue) {
+                        if (!(currentFrame->isFrameTableColBox() &&
+                              currentFrame->style()->display() ==
+                                  DisplayValue::TableColumnDisplayValue)) {
+                            return;
+                        }
+                    } else {
+                        return;
+                    }
+                }
+
+                insertTableObjectChild(blockContainer,
+                                       ctx.lastAnonymousTableObjectParent(),
+                                       currentFrame, currentNode, ctx);
+                return;
+            }
         }
     }
 
-    if (blockContainer->hasBlockFlow()) {
-        if (ctx.isInFrameFlexFlow()) {
-            insertFlexItemChild(blockContainer, currentFrame, currentNode, ctx);
-            return;
-        }
+    if (!blockContainer->firstChild()) {
+        blockContainer->appendChild(currentFrame);
+        return;
+    }
 
+    if (blockContainer->hasBlockFlow()) {
         if (isNormalFlowBlockChild) {
             // Block... + Block case
             blockContainer->appendChild(currentFrame);
@@ -198,8 +395,9 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
             STARFISH_ASSERT(last);
 
             if (!last->isAnonymous() || last->isFrameTableBox()) {
-                wrapWithAnonymouseBlockBox(blockContainer, currentNode,
-                                           currentFrame);
+                wrapWithAnonymousBlockBox<FrameBlockBox>(
+                    blockContainer, currentNode,
+                    DisplayValue::BlockDisplayValue, currentFrame);
             } else {
                 last->appendChild(currentFrame);
             }
@@ -214,16 +412,13 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
                 return;
             }
             // Inline... + Block case
-            GCVector<Frame*> backup;
-            while (blockContainer->firstChild()) {
-                backup.push_back(blockContainer->firstChild());
-                blockContainer->removeChild(blockContainer->firstChild());
-            }
-
-            FrameBox* blockBox =
-                createAnonymouseBlockBox(blockContainer, currentNode);
-            for (unsigned i = 0; i < backup.size(); i++) {
-                blockBox->appendChild(backup[i]);
+            FrameBox* blockBox = createAnonymousBlockBox<FrameBlockBox>(
+                blockContainer, currentNode, DisplayValue::BlockDisplayValue);
+            Frame* child = blockContainer->firstChild();
+            while (child) {
+                blockContainer->removeChild(child);
+                blockBox->appendChild(child);
+                child = blockContainer->firstChild();
             }
 
             blockContainer->appendChild(blockBox);
@@ -366,121 +561,7 @@ void FrameTreeBuilder::createPseudoElement(
             return;
         }
 
-        bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
-        DisplayValue contentDisplay = pseudoElement->style()->display();
-        DisplayValue parentDisplay = parent->style()->display();
-
-        // Create pseudo-element's frame.
-        Frame* pseudoFrame = nullptr;
-        if (ctx.currentBlockContainer()->isFrameTableBox()) {
-            FrameTableBox* tableFrame =
-                ctx.currentBlockContainer()->asFrameTableBox();
-            tableFrame->addChild(pseudoElement, ctx, true);
-            pseudoFrame = findPseudoFrameForTable(
-                tableFrame, pseudoElement->isBeforePseudoElement());
-        } else if (ctx.currentBlockContainer()->isFrameTableRowBox()) {
-            FrameTableRowBox* tableRowFrame =
-                ctx.currentBlockContainer()->asFrameTableRowBox();
-            tableRowFrame->addChild(pseudoElement, ctx, true);
-            pseudoFrame = findPseudoFrameForTable(
-                tableRowFrame, pseudoElement->isBeforePseudoElement());
-        } else if (ComputedStyle::isDisplayTableValueType(parentDisplay) &&
-                   !(ctx.currentBlockContainer()->isFrameTableCaptionBox() ||
-                     ctx.currentBlockContainer()->isFrameTableCellBox())) {
-            // Table has its own frame tree builder. FrameTreeBuilder::buildTree
-            // is called to generate frames that is not related to the table in
-            // FrameTableCellBox and FrameTableCaptionBox. Thus, duplicated
-            // frames for the pseudo-element can be created.
-            return;
-        } else {
-            pseudoFrame = buildTree(pseudoElement, ctx, true);
-        }
-
-        // If the content's display is a table-related value, we have to find
-        // the frame for the pseudo-element. Because table has its own frame
-        // tree builder and it returns the entire table frames.
-        FrameBlockBox* pre = ctx.currentBlockContainer();
-        if (contentDisplay == DisplayValue::TableDisplayValue ||
-            contentDisplay == DisplayValue::InlineTableDisplayValue ||
-            contentDisplay == DisplayValue::TableRowGroupDisplayValue ||
-            contentDisplay == DisplayValue::TableHeaderGroupDisplayValue ||
-            contentDisplay == DisplayValue::TableFooterGroupDisplayValue ||
-            contentDisplay == DisplayValue::TableRowDisplayValue) {
-            pseudoFrame = findPseudoFrameForTable(pseudoFrame);
-            ctx.setCurrentBlockContainer(pseudoFrame->asFrameBlockBox());
-        } else if (contentDisplay == DisplayValue::TableCaptionDisplayValue ||
-                   contentDisplay == DisplayValue::TableCellDisplayValue) {
-            pseudoFrame = findPseudoFrameForTable(pseudoFrame);
-        } else if (contentDisplay == DisplayValue::TableColumnDisplayValue ||
-                   contentDisplay ==
-                       DisplayValue::TableColumnGroupDisplayValue) {
-            return;
-        }
-
-        if (pseudoFrame->isFrameBlockBox()) {
-            ctx.setCurrentBlockContainer(pseudoFrame->asFrameBlockBox());
-        } else if (pseudoFrame->isFrameInline()) {
-            ctx.setIsInFrameInlineFlow(true);
-            ctx.frameInlineItem().insert(
-                std::make_pair(pseudoElement, pseudoFrame->asFrameInline()));
-        }
-
-        // Add content's frame to the pseudo-element.
-        ContentDataGroup* content = pseudoElement->style()->content();
-        if (content) {
-            auto iter = content->begin();
-            while (iter != content->end()) {
-                if (iter->isText()) {
-                    ComputedStyle* contentTextStyle =
-                        new ComputedStyle(pseudoStyle);
-                    contentTextStyle->setDisplay(
-                        DisplayValue::InlineDisplayValue);
-                    contentTextStyle->loadResources(pseudoElement);
-                    contentTextStyle->arrangeStyleValues(contentTextStyle,
-                                                         pseudoElement);
-
-                    Text* contentText =
-                        new Text(parent->document(), iter->text()->text());
-                    contentText->setStyle(contentTextStyle);
-                    contentText->setParentNode(pseudoElement);
-                    contentText->clearNeedsStyleRecalc();
-
-                    if (contentDisplay == DisplayValue::TableDisplayValue ||
-                        contentDisplay ==
-                            DisplayValue::InlineTableDisplayValue) {
-                        STARFISH_ASSERT(pseudoFrame->isFrameTableBox());
-                        pseudoFrame->asFrameTableBox()->addChild(contentText,
-                                                                 ctx, true);
-                    } else if (contentDisplay ==
-                                   DisplayValue::TableRowGroupDisplayValue ||
-                               contentDisplay ==
-                                   DisplayValue::TableHeaderGroupDisplayValue ||
-                               contentDisplay ==
-                                   DisplayValue::TableFooterGroupDisplayValue) {
-                        STARFISH_ASSERT(pseudoFrame->isFrameTableSectionBox());
-                        pseudoFrame->asFrameTableSectionBox()->addChild(
-                            contentText, ctx, true);
-                    } else if (contentDisplay ==
-                               DisplayValue::TableRowDisplayValue) {
-                        STARFISH_ASSERT(pseudoFrame->isFrameTableRowBox());
-                        pseudoFrame->asFrameTableRowBox()->addChild(contentText,
-                                                                    ctx, true);
-                    } else {
-                        FrameText* contentTextFrame =
-                            new FrameText(contentText, contentTextStyle);
-                        contentText->setFrame(contentTextFrame);
-                        insertChild(ctx.currentBlockContainer(),
-                                    contentTextFrame, contentText, ctx);
-                    }
-                }
-                iter++;
-            }
-        }
-
-        if (pseudoFrame->isFrameBlockBox()) {
-            ctx.setCurrentBlockContainer(pre);
-        }
-        ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
+        buildTree(pseudoElement, ctx, true);
     }
 
     STARFISH_ASSERT(parent->isElement());
@@ -512,12 +593,6 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
         return new FrameReplacedObject(current);
     } else if (current->isSVGSVGElement()) {
         return FrameTreeBuilder::buildSVGFrameTree(current->asSVGSVGElement());
-    } else if (ComputedStyle::isDisplayTableValueType(display)) {
-        Frame* f =
-            FrameTableTreeBuilder::buildFrameTableTree(current, ctx, force);
-        STARFISH_ASSERT(FrameTableTreeBuilder::isTableWrapperDisplayValue(
-            f->style()->display()));
-        return f;
     } else if (current->isHTMLInputElement()) {
         return FrameInputBox::buildFrameTree(current, ctx, force);
     } else if (current->isHTMLSelectElement()) {
@@ -529,6 +604,22 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
     } else if (display == DisplayValue::FlexDisplayValue ||
                display == DisplayValue::InlineFlexDisplayValue) {
         return new FrameFlexibleBox(current, nullptr);
+    } else if (display == DisplayValue::TableDisplayValue ||
+               display == DisplayValue::InlineTableDisplayValue) {
+        return new FrameTableBox(current, nullptr);
+    } else if (display == DisplayValue::TableCaptionDisplayValue) {
+        return new FrameTableCaptionBox(current, nullptr);
+    } else if (display == DisplayValue::TableHeaderGroupDisplayValue ||
+               display == DisplayValue::TableRowGroupDisplayValue ||
+               display == DisplayValue::TableFooterGroupDisplayValue) {
+        return new FrameTableSectionBox(current, nullptr);
+    } else if (display == DisplayValue::TableRowDisplayValue) {
+        return new FrameTableRowBox(current, nullptr);
+    } else if (display == DisplayValue::TableColumnGroupDisplayValue ||
+               display == DisplayValue::TableColumnDisplayValue) {
+        return new FrameTableColBox(current, nullptr);
+    } else if (display == DisplayValue::TableCellDisplayValue) {
+        return new FrameTableCellBox(current, nullptr);
     } else {
         if (display == DisplayValue::BlockDisplayValue ||
             display == DisplayValue::InlineBlockDisplayValue ||
@@ -578,13 +669,14 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             return nullptr;
         }
 
-        if (!currentFrame->isFrameTableBox()) {
-            current->setFrame(currentFrame);
-            current->clearNeedsFrameTreeBuild();
-        }
+        current->setFrame(currentFrame);
+        current->clearNeedsFrameTreeBuild();
 
         if (currentFrame->isNormalFlow()) {
-            if (currentFrame->isBlockLevel() && ctx.isInFrameInlineFlow()) {
+            if ((currentFrame->isBlockLevel() &&
+                 (!currentFrame->isFrameTableObjectBox() ||
+                  currentFrame->isFrameTableBox())) &&
+                ctx.isInFrameInlineFlow()) {
                 // divide block. when comes Inline.. + Block(normal flow)
                 didSplitBlock = true;
 
@@ -645,45 +737,50 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                     currentFrame->asFrameText()->text());
             }
         }
-
-        STARFISH_ASSERT(currentFrame->parent());
     } else {
         currentFrame = current->frame();
-        if (ComputedStyle::isDisplayTableValueType(
-                currentFrame->style()->display())) {
-            if (current->childNeedsFrameTreeBuild()) {
-                currentFrame = FrameTableTreeBuilder::buildFrameTableTree(
-                    current, ctx, force);
-            } else {
-                while (!currentFrame->isFrameTableBox()) {
-                    currentFrame = currentFrame->parent();
-                }
-            }
-            STARFISH_ASSERT(FrameTableTreeBuilder::isTableWrapperDisplayValue(
-                currentFrame->style()->display()));
-        }
     }
 
     // display == none
-    if (!currentFrame) {
+    if (!currentFrame || !currentFrame->parent()) {
         return nullptr;
     }
 
+    Frame* parent = currentFrame->parent();
     bool shouldSkipChildren =
         (currentFrame->isFrameReplaced() || currentFrame->isFrameLineBreak() ||
-         currentFrame->isFrameInputBox() || currentFrame->isFrameTableBox());
+         currentFrame->isFrameInputBox() || currentFrame->isFrameText() ||
+         (currentFrame->isFrameTableColBox() &&
+          current->style()->display() ==
+              DisplayValue::TableColumnDisplayValue) ||
+         current->isBeforePseudoElement() || current->isAfterPseudoElement());
 
     FrameBlockBox* back = ctx.currentBlockContainer();
+    FrameTableObjectBox* lastAnonymousTableObject = nullptr;
+    if (parent->isFrameTableObjectBox() && parent->isAnonymous()) {
+        lastAnonymousTableObject = parent->asFrameTableObjectBox();
+        if (currentFrame->isFrameTableObjectBox()) {
+            ctx.setLastAnonymousTableObjectParent(nullptr);
+        } else {
+            ctx.setLastAnonymousTableObjectParent(lastAnonymousTableObject);
+        }
+    } else {
+        ctx.setLastAnonymousTableObjectParent(nullptr);
+    }
 
     if (currentFrame->isFrameBlockBox()) {
         ctx.setCurrentBlockContainer(currentFrame->asFrameBlockBox());
-    } else if (currentFrame->isFrameInline()) {
+    }
+
+    if (currentFrame->isFrameInline()) {
         ctx.setIsInFrameInlineFlow(true);
         ctx.frameInlineItem().insert(
             std::make_pair(current, currentFrame->asFrameInline()));
+    } else {
+        ctx.setIsInFrameInlineFlow(false);
     }
 
-    if (needsCreatePseudoElement && !currentFrame->isFrameTableBox()) {
+    if (needsCreatePseudoElement) {
         createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
             ctx);
@@ -693,6 +790,14 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         if (currentFrame->isFrameDocument() ||
             currentFrame->isEstablishesBlockFormattingContext()) {
             currentFrame->markNeedsLayout();
+            if (currentFrame->isFrameTableCellBox() ||
+                currentFrame->isFrameTableCaptionBox()) {
+                Frame* p = currentFrame->parent();
+                while (!p->isFrameTableBox()) {
+                    p = p->parent();
+                }
+                p->markNeedsLayout();
+            }
         }
 
         Node* n = current->firstChild();
@@ -703,17 +808,44 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         }
 
         current->clearChildNeedsFrameTreeBuild();
+    } else if (current->isBeforePseudoElement() ||
+               current->isAfterPseudoElement()) {
+        ContentDataGroup* content = current->style()->content();
+        if (content) {
+            auto iter = content->begin();
+            while (iter != content->end()) {
+                if (iter->isText()) {
+                    ComputedStyle* contentTextStyle =
+                        new ComputedStyle(current->style());
+                    contentTextStyle->setDisplay(
+                        DisplayValue::InlineDisplayValue);
+                    contentTextStyle->loadResources(current);
+                    contentTextStyle->arrangeStyleValues(contentTextStyle,
+                                                         current);
+
+                    Text* contentText =
+                        new Text(current->document(), iter->text()->text());
+                    contentText->setStyle(contentTextStyle);
+                    contentText->setParentNode(current);
+                    contentText->clearNeedsStyleRecalc();
+                    buildTree(contentText, ctx, force);
+                }
+                iter++;
+            }
+        }
     }
 
-    if (needsCreatePseudoElement && !currentFrame->isFrameTableBox()) {
+    if (needsCreatePseudoElement) {
         createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
     }
 
+    if (lastAnonymousTableObject) {
+        ctx.setLastAnonymousTableObjectParent(lastAnonymousTableObject);
+    }
+
     if (currentFrame->isFrameBlockBox()) {
         ctx.setCurrentBlockContainer(back);
-    } else if (currentFrame->isFrameInline()) {
-        ctx.setIsInFrameInlineFlow(false);
     }
 
     if (didSplitBlock) {
@@ -723,8 +855,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             if (i == stackedFrameInline.size()) {
                 STARFISH_ASSERT(ctx.currentBlockContainer()->hasBlockFlow());
 
-                FrameBlockBox* blockBox = createAnonymouseBlockBox(
-                    ctx.currentBlockContainer(), current);
+                FrameBlockBox* blockBox =
+                    createAnonymousBlockBox<FrameBlockBox>(
+                        ctx.currentBlockContainer(), current,
+                        DisplayValue::BlockDisplayValue);
 
                 ctx.currentBlockContainer()->appendChild(blockBox);
                 blockBox->appendChild(in);
@@ -738,7 +872,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
 
     ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
 
-    if (needsCreatePseudoElement && !currentFrame->isFrameTableBox()) {
+    if (needsCreatePseudoElement) {
         createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
             ctx);

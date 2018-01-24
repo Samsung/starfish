@@ -21,8 +21,6 @@
 
 namespace StarFish {
 
-class FrameTreeBuilderContext;
-
 // The FrameTableColBox is for <col> and <colgroup>
 // In the specification, <col> and <colgroup> are very similar
 // The only difference is that <col> should not have children
@@ -36,12 +34,15 @@ public:
         return "FrameTableColBox";
     }
 
+    virtual bool isFrameTableCellBox()
+    {
+        return false;
+    }
+
     virtual bool isFrameTableColBox()
     {
         return true;
     }
-    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
-                          bool force);
     unsigned span();
 
 private:
