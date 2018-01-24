@@ -50,15 +50,9 @@ uint64_t longTickCount()
 
 uint64_t timestamp()
 {
-    long long int timestamp_msec;
-#if !defined(STARFISH_ANDROID)
-    struct timeb timer_msec;
-    ftime(&timer_msec);
-    timestamp_msec = ((long long int)timer_msec.time) * 1000ll +
-                     (long long int)timer_msec.millitm;
-#else
-#endif
-    return timestamp_msec;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
 ProfilerTimer::~ProfilerTimer()

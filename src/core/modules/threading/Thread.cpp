@@ -99,22 +99,25 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
         &m_currentUnjoined->m_tid, NULL,
         [](void* data) -> void* {
             ThreadData* d = (ThreadData*)data;
-            Locker<Mutex> l(*d->m_thread->m_mutex);
-            auto ret = d->m_fn(d->m_data);
+            void* ret;
+            {
+                Locker<Mutex> l(*d->m_thread->m_mutex);
+                ret = d->m_fn(d->m_data);
 #ifdef STARFISH_MESSAGELOOP_DEBUG
-            d->m_messageLoop->decreaseRunningThreadCount();
+                d->m_messageLoop->decreaseRunningThreadCount();
 #endif
-            if (d->m_thread->m_alive) {
-                d->m_thread->m_alive = false;
-                d->m_joinHandle =
-                    d->m_messageLoop->addIdlerWithNoGCRootingInOtherThread(
-                        nullptr,
-                        [](size_t handle, void* data) {
-                            ThreadData* d = (ThreadData*)data;
-                            d->m_thread->finishUnjoined();
-                        },
-                        d);
-            } // else: joinIfNeeds() called while thread running
+                if (d->m_thread->m_alive) {
+                    d->m_thread->m_alive = false;
+                    d->m_joinHandle =
+                        d->m_messageLoop->addIdlerWithNoGCRootingInOtherThread(
+                            nullptr,
+                            [](size_t handle, void* data) {
+                                ThreadData* d = (ThreadData*)data;
+                                d->m_thread->finishUnjoined();
+                            },
+                            d);
+                } // else: joinIfNeeds() called while thread running
+            }
             pthread_exit(ret);
         },
         m_currentUnjoined);

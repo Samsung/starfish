@@ -184,7 +184,7 @@ $(info build dir... $(OUTDIR))
 ################################################################################
 
 # common flags
-CXXFLAGS += -std=c++11 -g0
+CXXFLAGS += -std=c++11 -g3
 CXXFLAGS += -fno-math-errno -Isrc/ -Iinc/
 CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
@@ -224,9 +224,6 @@ else ifeq ($(ARCH), arm)
     CXXFLAGS += -mthumb
   else
     CXXFLAGS += -march=armv7-a -mthumb
-  endif
-  ifeq ($(MODE), debug)
-    CXXFLAGS += -DSTARFISH_ENABLE_TEST
   endif
 endif
 
@@ -434,6 +431,9 @@ else ifeq ($(HOST), tizen_obs)
 else ifneq (,$(findstring tizen,$(HOST)))
   JSLIBS = $(ESCARGOT_LIB_ROOT)/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/interpreter/$(MODE)/libescargot.a
   GCLIBS = $(ESCARGOT_LIB_ROOT)/third_party/bdwgc/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/$(MODE).shared/.libs/libgc.a
+else ifneq (,$(findstring android,$(HOST)))
+  JSLIBS = $(ESCARGOT_LIB_ROOT)/out/android/arm/interpreter/$(MODE)/libescargot.a
+  GCLIBS = $(ESCARGOT_LIB_ROOT)/third_party/GCutil/bdwgc/out/android/arm/$(MODE).shared/.libs/libgc.a
 endif
 
 # deviceapi
@@ -594,8 +594,8 @@ else ifneq (,$(findstring android,$(HOST)))
   CXX=$(ANDROID_NDK_STANDALONE)/bin/arm-linux-androideabi-gcc
   CC=$(ANDROID_NDK_STANDALONE)/bin/arm-linux-androideabi-gcc
   STRIP=$(ANDROID_NDK_STANDALONE)/bin/arm-linux-androideabi-strip
-  ANDROID_BUILD_DEPS=$(PWD)/build_deps/android/SM-N950N_armv-7a_7.1.1/
-  CXXFLAGS += -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -O2 -fPIE
+  ANDROID_BUILD_DEPS=$(PWD)/android_utils/build_deps/android/SM-N950N_armv-7a_7.1.1/
+  CXXFLAGS += -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -fPIC -g3
   LDFLAGS += -march=armv7-a -Wl,--fix-cortex-a8
   CXXFLAGS += -I$(ANDROID_BUILD_DEPS)/include
   CXXFLAGS += -I$(ANDROID_BUILD_DEPS)/include/cairo
@@ -604,10 +604,10 @@ else ifneq (,$(findstring android,$(HOST)))
   CXXFLAGS += -I$(ANDROID_BUILD_DEPS)/include/fontconfig
   CXXFLAGS += -I$(ANDROID_BUILD_DEPS)/include/cairo
 
-  LDFLAGS += -fPIE -pie
+  LDFLAGS += -fPIC
   LDFLAGS += -L$(ANDROID_BUILD_DEPS)/lib
-  LDFLAGS += -lcairo -lft2 -lfontconfig -lpixman -ljpeg -lstdc++ -lm -luv -lgif -lharfbuzz -lharfbuzz-icu -licuuc -licui18n -ljpeg -Lthird_party/escargot/ -lescargot -lz -lpng -ljpeg-turbo
-  CXXFLAGS += -DSTARFISH_ANDROID
+  LDFLAGS += -lcairo -lft2 -lfontconfig -lpixman -ljpeg -lstdc++ -lm -luv -lgif -lharfbuzz -lharfbuzz-icu -licuuc -licui18n -ljpeg -lz -lpng -ljpeg-turbo -llog -ljnigraphics
+  CXXFLAGS += -DSTARFISH_ANDROID -DSTARFISH_IGNORE_SSL_VERIFYPEER
 endif
 
 
@@ -714,6 +714,10 @@ tizen3_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 android.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $<.strip ./$(LIB)
 android.exe.release: $(OUTDIR)/$(BIN)
+	cp -f $<.strip ./$(BIN)
+android.lib.debug: $(OUTDIR)/$(LIB)
+	cp -f $<.strip ./$(LIB)
+android.exe.debug: $(OUTDIR)/$(BIN)
 	cp -f $<.strip ./$(BIN)
 
 

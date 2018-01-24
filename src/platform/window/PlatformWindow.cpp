@@ -266,7 +266,9 @@ void PlatformWindow::onResize()
         m_virtualCursorY = height() - 10;
     }
 #endif
-    webView()->mainBrowsingContext()->window()->resize(width(), height());
+    if (webView()->mainBrowsingContext()) {
+        webView()->mainBrowsingContext()->window()->resize(width(), height());
+    }
 }
 
 #define IDLE_TIMER_TIMEOUT 1500

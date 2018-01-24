@@ -1,0 +1,13 @@
+0. clone android_utils
+1. need to set ANDROID_NDK_STANDALONE(android_utils/ndk) in env
+ex) export ANDROID_NDK_STANDALONE=/home/ksh8281/work/android/ndk/
+2. download build_deps - git clone <git_build_deps>
+3. move to escargot.
+  a. cd third_party/escargot/
+  b. ./build_third_party_android_nothread.sh
+  c. android.interpreter.release.static -j8
+  d. cd -
+4. build starfish
+  a. binding_generator/scripts/starfish_code_generator.py src/ src/binding/
+  b. make android.lib.release -j8
+5. copy into android project folder

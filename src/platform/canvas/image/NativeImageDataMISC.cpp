@@ -334,9 +334,15 @@ private:
                     m_hasTransparentPixel = true;
                 }
 
+#ifdef STARFISH_ANDROID
+                *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
+                    data[y * rowbytes + x + 2], data[y * rowbytes + x + 1],
+                    data[y * rowbytes + x], data[y * rowbytes + x + 3]);
+#else
                 *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
                     data[y * rowbytes + x], data[y * rowbytes + x + 1],
                     data[y * rowbytes + x + 2], data[y * rowbytes + x + 3]);
+#endif
             }
         }
 
@@ -372,9 +378,13 @@ private:
 
         m_image = (unsigned char*)malloc(dstSize);
 
+#ifdef STARFISH_ANDROID
+        tjDecompress2(dHandle, buf, size, (unsigned char*)m_image, scaledWidth,
+                      0, scaledHeight, TJPF_RGBA, 0);
+#else
         tjDecompress2(dHandle, buf, size, (unsigned char*)m_image, scaledWidth,
                       0, scaledHeight, TJPF_BGRA, 0);
-
+#endif
         m_width = scaledWidth;
         m_height = scaledHeight;
         m_stride = m_width * 4;
@@ -607,16 +617,30 @@ private:
             for (unsigned long w = 0; w < m_width; w++) {
                 colorMapEntry = &colorMap->Colors[gifRow[w]];
 #ifdef GIF_LIB_VERSION
+#ifdef STARFISH_ANDROID
+                *buffer++ = colorMapEntry->Red;
+                *buffer++ = colorMapEntry->Green;
+                *buffer++ = colorMapEntry->Blue;
+                *buffer++ = 255;
+#else
                 *buffer++ = colorMapEntry->Blue;
                 *buffer++ = colorMapEntry->Green;
                 *buffer++ = colorMapEntry->Red;
                 *buffer++ = 255;
+#endif
 #else
                 if (ti == NO_TRANSPARENT_COLOR) {
+#ifdef STARFISH_ANDROID
+                    *buffer++ = colorMapEntry->Red;
+                    *buffer++ = colorMapEntry->Green;
+                    *buffer++ = colorMapEntry->Blue;
+                    *buffer++ = 255;
+#else
                     *buffer++ = colorMapEntry->Blue;
                     *buffer++ = colorMapEntry->Green;
                     *buffer++ = colorMapEntry->Red;
                     *buffer++ = 255;
+#endif
                 } else {
                     *buffer++ = 0;
                     *buffer++ = 0;
