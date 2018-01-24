@@ -1,4 +1,4 @@
-# test/cairo/reftest/vendor/react/packages/events/__tests__/accumulateInto-test.internal.html
+test/cairo/reftest/vendor/react/packages/events/__tests__/accumulateInto-test.internal.html
 # test/cairo/reftest/vendor/react/packages/events/__tests__/EventPluginRegistry-test.internal.html
 # test/cairo/reftest/vendor/react/packages/events/__tests__/ResponderEventPlugin-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-art/src/__tests__/ReactART-test.html
@@ -106,7 +106,7 @@ test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactPureComponent-
 test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRendererTraversal-test.html
 # test/cairo/reftest/vendor/react/packages/shared/__tests__/ReactDOMFrameScheduling-test.html
 # test/cairo/reftest/vendor/react/packages/shared/__tests__/ReactErrorUtils-test.internal.html
-# test/cairo/reftest/vendor/react/packages/shared/__tests__/reactProdInvariant-test.internal.html
+test/cairo/reftest/vendor/react/packages/shared/__tests__/reactProdInvariant-test.internal.html
 # test/cairo/reftest/vendor/react/scripts/error-codes/__tests__/invertObject-test.html
 # test/cairo/reftest/vendor/react/scripts/error-codes/__tests__/replace-invariant-error-codes-test.html
 # test/cairo/reftest/vendor/react/scripts/rollup/plugins/__tests__/wrap-warning-with-env-check-test.html
