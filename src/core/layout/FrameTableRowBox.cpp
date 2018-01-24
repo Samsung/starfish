@@ -15,14 +15,10 @@
  */
 
 #include "StarFishConfig.h"
-#include "core/dom/Node.h"
-#include "core/dom/HTMLTableCellElement.h"
-#include "core/layout/FrameDocument.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameTableRowBox.h"
 #include "core/layout/FrameTableSectionBox.h"
-#include "core/layout/FrameTreeBuilder.h"
 #include "core/modules/canvas/Canvas.h"
 
 namespace StarFish {
@@ -101,6 +97,7 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
             cell->setX(xSoFar);
 
             LayoutUnit cellWidth = 0;
+            LayoutUnit oldWidth = cell->width();
             if (cell->updatedColspan() > 1) {
                 // The cell width has been set in
                 // FrameTableBox::calCellWidthsWithColspans() already
@@ -113,6 +110,9 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
                 cell->setWidth(cellWidth);
             }
 
+            if (oldWidth != cell->width()) {
+                cell->markNeedsLayout();
+            }
             cell->asFrameTableCellBox()->layoutWidth(ctx);
             xSoFar += cellWidth;
 

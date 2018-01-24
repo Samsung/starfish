@@ -21,7 +21,6 @@
 
 namespace StarFish {
 
-class FrameTreeBuilderContext;
 class FrameTableCellBox;
 class ColSizeStruct;
 
@@ -52,9 +51,6 @@ public:
         return m_baseline;
     }
 
-    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
-                          bool force);
-
     FrameTableSectionBox* sectionBox()
     {
         return parent()->asFrameTableSectionBox();
@@ -74,6 +70,16 @@ public:
     unsigned rowIndex()
     {
         return m_rowIndex;
+    }
+
+    void setLastAbsoluteColumnIndex(unsigned lastAbsoluteColumnIndex)
+    {
+        m_lastAbsoluteColumnIndex = lastAbsoluteColumnIndex;
+    }
+
+    unsigned lastAbsoluteColumnIndex() const
+    {
+        return m_lastAbsoluteColumnIndex;
     }
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);

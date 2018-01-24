@@ -87,8 +87,6 @@ public:
     FrameTableBox(Node* node, ComputedStyle* style);
 
     virtual void computePreferredWidth(PreferredWidthContext& ctx);
-    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
-                          bool force);
     virtual const char* name()
     {
         return "FrameTable";
@@ -117,11 +115,6 @@ public:
 
     FrameTableCellBox* cellInTheFirstRowAt(unsigned id);
 
-    GCVector<FrameTableColBox*>& colObjects()
-    {
-        return m_colObjects;
-    }
-
     LayoutRect tableRect()
     {
         return m_tableRect;
@@ -141,6 +134,7 @@ public:
 
     bool isCellWidthAuto(unsigned i);
 
+    virtual void resetIfNeeds(LayoutContext& ctx);
     virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
     {
         fn(this);
@@ -151,11 +145,38 @@ public:
         }
     }
 
+    FrameTableSectionBox* thead() const
+    {
+        Frame* child = firstChild();
+
+        while (child) {
+            if (child->style()->display() ==
+                DisplayValue::TableHeaderGroupDisplayValue) {
+                return child->asFrameTableSectionBox();
+            }
+            child = child->next();
+        }
+
+        return nullptr;
+    }
+
+    FrameTableSectionBox* tfoot() const
+    {
+        Frame* child = firstChild();
+
+        while (child) {
+            if (child->style()->display() ==
+                DisplayValue::TableFooterGroupDisplayValue) {
+                return child->asFrameTableSectionBox();
+            }
+            child = child->next();
+        }
+
+        return nullptr;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
-
-protected:
-    virtual void initFrameTableObjectBoxStateIfNeeds(bool force) override;
 
 private:
     void calCellWidth(LayoutContext& ctx);
@@ -209,10 +230,6 @@ private:
     // Border and background is drawn around FrameTableSections not FrameTable
     // Keep track of FrameTableSections for border and background
     LayoutRect m_tableRect;
-
-    FrameTableSectionBox* m_thead;
-    FrameTableSectionBox* m_tfoot;
-    LayoutUnit m_candidateTableContentWidth;
 };
 }
 

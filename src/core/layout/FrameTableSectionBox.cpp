@@ -16,12 +16,10 @@
 
 #include "StarFishConfig.h"
 #include "core/dom/Node.h"
-#include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameTableColBox.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableRowBox.h"
 #include "core/layout/FrameTableSectionBox.h"
-#include "core/layout/FrameTreeBuilder.h"
 #include "core/modules/canvas/Canvas.h"
 
 namespace StarFish {
@@ -29,11 +27,6 @@ namespace StarFish {
 RowStruct::RowStruct(FrameTableRowBox* tableRow)
     : m_tableRow(tableRow)
 {
-    for (Frame* cell = tableRow->firstChild(); cell; cell = cell->next()) {
-        if (cell->isFrameTableCellBox()) {
-            m_cells.push_back(CellStruct(cell->asFrameTableCellBox()));
-        }
-    }
 }
 
 unsigned RowStruct::logicalColumnSize()

@@ -1385,7 +1385,7 @@ static void removeChildren(FrameBlockBox* parent)
     }
 }
 
-FrameBlockBox* nearstAnonymouseBlockBox(Frame* f)
+FrameBlockBox* nearstAnonymousBlockBox(Frame* f)
 {
     Frame* p = f->parent();
     while (!p->isAnonymous()) {
@@ -1412,8 +1412,8 @@ static void removeOneChild(FrameBlockBox* parent, Frame* child)
             FrameInline *first = nullptr, *last = nullptr;
             first = parent->firstFrameInline(child->node());
             last = parent->lastFrameInline(child->node());
-            FrameBlockBox* firstNearstABB = nearstAnonymouseBlockBox(first);
-            FrameBlockBox* lastNearstABB = nearstAnonymouseBlockBox(last);
+            FrameBlockBox* firstNearstABB = nearstAnonymousBlockBox(first);
+            FrameBlockBox* lastNearstABB = nearstAnonymousBlockBox(last);
             Frame* firstParent = first->parent();
             Frame* lastParent = last->parent();
 
@@ -1478,7 +1478,30 @@ static void removeOneChild(FrameBlockBox* parent, Frame* child)
     }
 
     if (child->parent()) {
+        Frame* p = child->parent();
         child->parent()->removeChild(child);
+        if (p->isFrameTableObjectBox() && p->isAnonymous()) {
+            while (p->isFrameTableObjectBox() && p->isAnonymous()) {
+                if (p->firstChild() == nullptr) {
+                    Frame* n = p->parent();
+                    if (n) {
+                        n->removeChild(p);
+                        p = n;
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            if (p->isFrameTableObjectBox()) {
+                while (p && !p->isFrameTableBox()) {
+                    p = p->parent();
+                }
+                if (p) {
+                    p->markNeedsLayout();
+                }
+            }
+        }
     }
     FrameTreeBuilder::clearTree(child->node());
 }
@@ -1515,16 +1538,23 @@ static void removeAnonymousBlockBoxesIfNeeded(FrameBlockBox* parent)
             newParent = parent;
             f = parent->firstChild();
         }
+        std::vector<Frame*> children;
         while (f) {
+            children.push_back(f);
+            f = f->next();
+        }
+
+        auto it = children.begin();
+        while (it != children.end()) {
+            Frame* f = *it;
             Frame* c = f->firstChild();
             while (c) {
                 f->removeChild(c);
                 newParent->appendChild(c);
                 c = f->firstChild();
             }
-            Frame* n = f->next();
             parent->removeChild(f);
-            f = n;
+            it++;
         }
     }
 }
@@ -1560,11 +1590,7 @@ void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
             target = document()->frame();
         } else {
             while (target) {
-                if (!target->isAnonymous() && target->isFrameBlockBox() &&
-                    !target->isFrameTableRowBox() &&
-                    !target->isFrameTableSectionBox() &&
-                    !target->isFrameTableColBox() &&
-                    !target->isFrameTableCaptionBox()) {
+                if (!target->isAnonymous() && target->isFrameBlockBox()) {
                     break;
                 }
 
@@ -1579,16 +1605,11 @@ void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
                 removeChildren(targetBlockBox);
             }
         } else if (reason == Node::RemoveFromParent) {
-            Frame* frame = this->frame();
-            if (frame->isFrameTableObjectBox()) {
-                removeChildren(targetBlockBox);
-            } else {
-                removeOneChild(targetBlockBox, frame);
-                removeAnonymousBlockBoxesIfNeeded(targetBlockBox);
-                target->propagateMarkNeedsLayout();
-                window()->browsingContext()->setNeedsLayout();
-                return;
-            }
+            removeOneChild(targetBlockBox, frame());
+            removeAnonymousBlockBoxesIfNeeded(targetBlockBox);
+            target->propagateMarkNeedsLayout();
+            window()->browsingContext()->setNeedsLayout();
+            return;
         } else {
             removeChildren(targetBlockBox);
         }

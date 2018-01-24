@@ -22,7 +22,6 @@
 namespace StarFish {
 
 class ComputedStyle;
-class FrameTreeBuilderContext;
 class Node;
 
 class FrameTableCellBox : public FrameTableObjectBox {
@@ -55,9 +54,6 @@ public:
     {
         return true;
     }
-
-    virtual void addChild(Node* child, FrameTreeBuilderContext& ctx,
-                          bool force);
 
     void setAbsoluteColumnIndex(unsigned column)
     {
