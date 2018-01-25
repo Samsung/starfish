@@ -294,6 +294,24 @@ void FrameTreeBuilder::insertTableObjectChild(
     parent->appendChild(currentFrame);
 }
 
+static bool isIgnorableWhiteSpace(Frame* parent, Frame* child)
+{
+    bool containOnlyWhiteSpace =
+        child->isFrameText() &&
+        child->asFrameText()->text()->containsOnlyWhitespace();
+    if (parent) {
+        if (parent->isFrameTableObjectBox() && !parent->isFrameTableCellBox() &&
+            !parent->isFrameTableCaptionBox()) {
+            return containOnlyWhiteSpace;
+        } else if (!parent->firstChild()) {
+            return containOnlyWhiteSpace && child->shouldIgnoreNewlineChar();
+        } else {
+            return false;
+        }
+    }
+    return containOnlyWhiteSpace && child->shouldIgnoreNewlineChar();
+}
+
 void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
                                    Frame* currentFrame, Node* currentNode,
                                    FrameTreeBuilderContext& ctx)
@@ -305,12 +323,8 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
         } else {
             tableParent = ctx.lastAnonymousTableObjectParent();
         }
-        if (tableParent && !tableParent->isFrameTableCellBox() &&
-            !tableParent->isFrameTableCaptionBox()) {
-            if (currentFrame->isFrameText() &&
-                currentFrame->asFrameText()->text()->containsOnlyWhitespace()) {
-                return;
-            }
+        if (isIgnorableWhiteSpace(tableParent, currentFrame)) {
+            return;
         }
     }
 
@@ -356,8 +370,7 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
         }
     }
 
-    if (!blockContainer->firstChild()) {
-        blockContainer->appendChild(currentFrame);
+    if (isIgnorableWhiteSpace(blockContainer, currentFrame)) {
         return;
     }
 
@@ -372,6 +385,10 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
             STARFISH_ASSERT(last);
 
             if (!last->isAnonymous() || last->isFrameTableBox()) {
+                if (isIgnorableWhiteSpace(nullptr, currentFrame)) {
+                    return;
+                }
+
                 wrapWithAnonymousBlockBox<FrameBlockBox>(
                     blockContainer, currentNode,
                     DisplayValue::BlockDisplayValue, currentFrame);
@@ -380,7 +397,7 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
             }
         }
     } else {
-        if (isNormalFlowBlockChild) {
+        if (blockContainer->firstChild() && isNormalFlowBlockChild) {
             // Inline... + Block case
             FrameBox* blockBox = createAnonymousBlockBox<FrameBlockBox>(
                 blockContainer, currentNode, DisplayValue::BlockDisplayValue);
@@ -731,14 +748,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     FrameTableObjectBox* lastAnonymousTableObject = nullptr;
     if (parent->isFrameTableObjectBox() && parent->isAnonymous()) {
         lastAnonymousTableObject = parent->asFrameTableObjectBox();
-        if (currentFrame->isFrameTableObjectBox()) {
-            ctx.setLastAnonymousTableObjectParent(nullptr);
-        } else {
-            ctx.setLastAnonymousTableObjectParent(lastAnonymousTableObject);
-        }
-    } else {
-        ctx.setLastAnonymousTableObjectParent(nullptr);
     }
+    ctx.setLastAnonymousTableObjectParent(nullptr);
 
     if (currentFrame->isFrameBlockBox()) {
         ctx.setCurrentBlockContainer(currentFrame->asFrameBlockBox());

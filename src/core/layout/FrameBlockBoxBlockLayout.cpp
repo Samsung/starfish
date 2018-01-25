@@ -31,7 +31,6 @@ static std::pair<LayoutUnit, LayoutUnit> estimateLogicalPosition(
         return std::make_pair(0, 0);
     }
 
-    ctx.setMarginCollapseResult(f->asFrameBox(), MarginCollapseResult());
     LayoutUnit posTop = marginInfo->positiveMargin(),
                negTop = marginInfo->negativeMargin();
 
@@ -54,21 +53,21 @@ static std::pair<LayoutUnit, LayoutUnit> estimateLogicalPosition(
 
     LayoutUnit topPosition = posTop - negTop;
 
+    MarginCollapseResult r;
     if (marginInfo->canCollapseWithMarginTop()) {
         marginInfo->setMaxPositiveMarginTop(posTop);
         marginInfo->setMaxNegativeMarginTop(negTop);
     } else {
-        MarginCollapseResult r = ctx.marginCollapseResult(f->asFrameBox());
         r.m_advanceY += topPosition;
-        ctx.setMarginCollapseResult(f->asFrameBox(), r);
     }
+    ctx.setMarginCollapseResult(f->asFrameBox(), r);
 
     return std::make_pair(posTop, negTop);
 }
 
 static void marginCollapse(Frame* f, LayoutContext& ctx, MarginInfo* marginInfo,
-                           bool isSelfCollapsing, LayoutUnit posTop,
-                           LayoutUnit negTop)
+                           bool isSelfCollapsing, bool clearAffected,
+                           LayoutUnit posTop, LayoutUnit negTop)
 {
     ctx.setMaxMarginTop(0, 0);
 
@@ -83,8 +82,14 @@ static void marginCollapse(Frame* f, LayoutContext& ctx, MarginInfo* marginInfo,
         ctx.setMaxMarginBottom(0, 0);
     }
 
-    if (marginInfo->atTopSideOfBlock() && !isSelfCollapsing) {
-        marginInfo->setAtTopSideOfBlock(false);
+    if (marginInfo->atTopSideOfBlock()) {
+        if (isSelfCollapsing) {
+            if (clearAffected) {
+                marginInfo->setAtTopSideOfBlock(false);
+            }
+        } else {
+            marginInfo->setAtTopSideOfBlock(false);
+        }
     }
 }
 
@@ -330,8 +335,8 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
         }
 
-        marginCollapse(child, ctx, marginInfo, isSelfCollapsing, tops.first,
-                       tops.second);
+        marginCollapse(child, ctx, marginInfo, isSelfCollapsing, clearAffected,
+                       tops.first, tops.second);
 
         if (isSelfCollapsing) {
             // ------------- <- containing block (CB)
