@@ -33,7 +33,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeC
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponent-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMAttribute-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponent-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponentTree-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponentTree-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMEventListener-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMFiberAsync-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMFiber-test.html
