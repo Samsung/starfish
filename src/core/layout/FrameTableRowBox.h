@@ -62,26 +62,6 @@ public:
         return true;
     }
 
-    void setRowIndex(unsigned rowIndex)
-    {
-        m_rowIndex = rowIndex;
-    }
-
-    unsigned rowIndex()
-    {
-        return m_rowIndex;
-    }
-
-    void setLastAbsoluteColumnIndex(unsigned lastAbsoluteColumnIndex)
-    {
-        m_lastAbsoluteColumnIndex = lastAbsoluteColumnIndex;
-    }
-
-    unsigned lastAbsoluteColumnIndex() const
-    {
-        return m_lastAbsoluteColumnIndex;
-    }
-
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
     void* operator new(size_t size);
@@ -90,9 +70,6 @@ public:
 private:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
-
-    unsigned m_rowIndex;
-    unsigned m_lastAbsoluteColumnIndex;
     LayoutUnit m_baseline;
 };
 }

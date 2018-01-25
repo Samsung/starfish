@@ -123,20 +123,17 @@ void FrameTableBox::resetIfNeeds(LayoutContext& ctx)
             while (rowChild) {
                 if (rowChild->isFrameTableRowBox()) {
                     FrameTableRowBox* row = rowChild->asFrameTableRowBox();
-                    row->setRowIndex(section->grid().size());
-                    row->setLastAbsoluteColumnIndex(0);
                     RowStruct rowStruct(row);
 
                     Frame* cellChild = row->firstChild();
+                    unsigned lastAbsoluteColumnIndex = 0;
                     while (cellChild) {
                         if (cellChild->isFrameTableCellBox()) {
                             FrameTableCellBox* cell =
                                 cellChild->asFrameTableCellBox();
                             cell->setAbsoluteColumnIndex(
-                                row->lastAbsoluteColumnIndex());
-                            row->setLastAbsoluteColumnIndex(
-                                row->lastAbsoluteColumnIndex() +
-                                cell->colspan());
+                                lastAbsoluteColumnIndex);
+                            lastAbsoluteColumnIndex += cell->colspan();
                             rowStruct.cells().push_back(CellStruct(cell));
                         }
                         cellChild = cellChild->next();

@@ -25,8 +25,6 @@ namespace StarFish {
 
 FrameTableRowBox::FrameTableRowBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
-    , m_rowIndex(0)
-    , m_lastAbsoluteColumnIndex(0)
 {
 }
 
