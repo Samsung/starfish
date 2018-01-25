@@ -180,140 +180,117 @@ void FrameTreeBuilder::insertFlexItemChild(FrameBlockBox* blockContainer,
     }
 }
 
+static bool isProperTableChild(Frame* child, Frame* parent)
+{
+    if (parent->isFrameTableBox()) {
+        return (child->isFrameTableColBox() &&
+                child->style()->display() ==
+                    DisplayValue::TableColumnGroupDisplayValue) ||
+               child->isFrameTableCaptionBox() ||
+               child->isFrameTableSectionBox();
+    } else if (parent->isFrameTableColBox() &&
+               parent->style()->display() ==
+                   DisplayValue::TableColumnGroupDisplayValue) {
+        return child->isFrameTableColBox() &&
+               child->style()->display() ==
+                   DisplayValue::TableColumnDisplayValue;
+    } else if (parent->isFrameTableSectionBox()) {
+        return child->isFrameTableRowBox();
+    } else if (parent->isFrameTableRowBox()) {
+        return child->isFrameTableCellBox();
+    } else if (parent->isFrameTableCaptionBox() ||
+               parent->isFrameTableCellBox()) {
+        return !child->isFrameTableObjectBox() || child->isFrameTableBox();
+    } else {
+        return false;
+    }
+}
+
+static FrameTableObjectBox* findProperAnonymousTableObjectParent(
+    Frame* child, Frame* lastAnonymousTableObjectParent)
+{
+    Frame* parent = lastAnonymousTableObjectParent;
+    while (!parent->isFrameTableBox() && parent->isAnonymous()) {
+        if (isProperTableChild(child, parent)) {
+            return parent->asFrameTableObjectBox();
+        }
+        parent = parent->parent();
+    }
+
+    if (parent->isFrameTableBox() && parent->isAnonymous()) {
+        if (isProperTableChild(child, parent)) {
+            return parent->asFrameTableObjectBox();
+        }
+    }
+    return nullptr;
+}
+
+FrameTableObjectBox* FrameTreeBuilder::createAnonymousTableObjectParent(
+    FrameBlockBox* blockContainer,
+    FrameTableObjectBox* lastAnonymousTableObjectParent, Frame* currentFrame,
+    Node* currentNode, FrameTreeBuilderContext& ctx)
+{
+    Frame* parent = nullptr;
+    if ((currentFrame->isFrameTableColBox() &&
+         currentFrame->style()->display() ==
+             DisplayValue::TableColumnGroupDisplayValue) ||
+        currentFrame->isFrameTableCaptionBox() ||
+        currentFrame->isFrameTableSectionBox()) {
+        if (ctx.isInFrameInlineFlow()) {
+            parent = createAnonymousBlockBox<FrameTableBox>(
+                blockContainer, currentNode,
+                DisplayValue::InlineTableDisplayValue);
+        } else {
+            parent = createAnonymousBlockBox<FrameTableBox>(
+                blockContainer, currentNode, DisplayValue::TableDisplayValue);
+        }
+    } else if ((currentFrame->isFrameTableColBox() &&
+                currentFrame->style()->display() ==
+                    DisplayValue::TableColumnDisplayValue)) {
+        parent = createAnonymousBlockBox<FrameTableColBox>(
+            blockContainer, currentNode,
+            DisplayValue::TableColumnGroupDisplayValue);
+    } else if (currentFrame->isFrameTableRowBox()) {
+        parent = createAnonymousBlockBox<FrameTableSectionBox>(
+            blockContainer, currentNode,
+            DisplayValue::TableRowGroupDisplayValue);
+    } else if (currentFrame->isFrameTableCellBox()) {
+        parent = createAnonymousBlockBox<FrameTableRowBox>(
+            blockContainer, currentNode, DisplayValue::TableRowDisplayValue);
+    } else {
+        parent = createAnonymousBlockBox<FrameTableCellBox>(
+            blockContainer, currentNode, DisplayValue::TableCellDisplayValue);
+    }
+
+    if (parent->isFrameTableBox()) {
+        insertChild(blockContainer, parent, currentNode, ctx);
+    } else {
+        insertTableObjectChild(blockContainer, lastAnonymousTableObjectParent,
+                               parent, currentNode, ctx);
+    }
+
+    return parent->asFrameTableObjectBox();
+}
+
 void FrameTreeBuilder::insertTableObjectChild(
     FrameBlockBox* blockContainer,
     FrameTableObjectBox* lastAnonymousTableObjectParent, Frame* currentFrame,
     Node* currentNode, FrameTreeBuilderContext& ctx)
 {
-    Frame* parent = blockContainer;
-    bool useParent = false;
-    if (currentFrame->isFrameTableCellBox()) {
-        if (parent->isFrameTableRowBox()) {
-            useParent = true;
-        } else if (lastAnonymousTableObjectParent) {
-            parent = lastAnonymousTableObjectParent;
-            while (!parent->isFrameTableBox() &&
-                   !parent->isFrameTableRowBox()) {
-                parent = lastAnonymousTableObjectParent->parent();
-            }
-            if (parent->isFrameTableRowBox() && parent->isAnonymous()) {
-                useParent = true;
-            }
-        }
-
-        if (!useParent) {
-            parent = createAnonymousBlockBox<FrameTableRowBox>(
-                blockContainer, currentNode,
-                DisplayValue::TableRowDisplayValue);
-            insertTableObjectChild(blockContainer,
-                                   lastAnonymousTableObjectParent, parent,
-                                   currentNode, ctx);
-        }
-    } else if (currentFrame->isFrameTableRowBox()) {
-        if (parent->isFrameTableSectionBox()) {
-            useParent = true;
-        } else if (lastAnonymousTableObjectParent) {
-            parent = lastAnonymousTableObjectParent;
-            while (!parent->isFrameTableBox() &&
-                   !parent->isFrameTableSectionBox()) {
-                parent = parent->parent();
-            }
-            if (parent->isFrameTableSectionBox() && parent->isAnonymous()) {
-                useParent = true;
-            }
-        }
-
-        if (!useParent) {
-            parent = createAnonymousBlockBox<FrameTableSectionBox>(
-                blockContainer, currentNode,
-                DisplayValue::TableRowGroupDisplayValue);
-            insertTableObjectChild(blockContainer,
-                                   lastAnonymousTableObjectParent, parent,
-                                   currentNode, ctx);
-        }
-    } else if ((currentFrame->isFrameTableColBox() &&
-                currentFrame->style()->display() ==
-                    DisplayValue::TableColumnDisplayValue)) {
-        if (parent->isFrameTableColBox()) {
-            useParent = true;
-            STARFISH_RELEASE_ASSERT(parent->style()->display() ==
-                                    DisplayValue::TableColumnGroupDisplayValue);
-        } else if (lastAnonymousTableObjectParent) {
-            parent = lastAnonymousTableObjectParent;
-            while (!parent->isFrameTableBox() &&
-                   !parent->isFrameTableColBox()) {
-                parent = parent->parent();
-            }
-            if (parent->isFrameTableColBox() && parent->isAnonymous()) {
-                useParent = true;
-                STARFISH_RELEASE_ASSERT(
-                    parent->style()->display() ==
-                    DisplayValue::TableColumnGroupDisplayValue);
-            }
-        }
-
-        if (!useParent) {
-            parent = createAnonymousBlockBox<FrameTableColBox>(
-                blockContainer, currentNode,
-                DisplayValue::TableColumnGroupDisplayValue);
-            insertTableObjectChild(blockContainer,
-                                   lastAnonymousTableObjectParent, parent,
-                                   currentNode, ctx);
-        }
-    } else if ((currentFrame->isFrameTableColBox() &&
-                currentFrame->style()->display() ==
-                    DisplayValue::TableColumnGroupDisplayValue) ||
-               currentFrame->isFrameTableCaptionBox() ||
-               currentFrame->isFrameTableSectionBox()) {
-        if (parent->isFrameTableBox()) {
-            useParent = true;
-        } else if (lastAnonymousTableObjectParent) {
-            parent = lastAnonymousTableObjectParent;
-            while (!parent->isFrameTableBox()) {
-                parent = parent->parent();
-            }
-            if (parent->isFrameTableBox() && parent->isAnonymous()) {
-                useParent = true;
-            }
-        }
-
-        if (!useParent) {
-            if (ctx.isInFrameInlineFlow()) {
-                parent = createAnonymousBlockBox<FrameTableBox>(
-                    blockContainer, currentNode,
-                    DisplayValue::InlineTableDisplayValue);
-            } else {
-                parent = createAnonymousBlockBox<FrameTableBox>(
-                    blockContainer, currentNode,
-                    DisplayValue::TableDisplayValue);
-            }
-            insertChild(blockContainer, parent, currentNode, ctx);
-        }
-    } else {
-        if (parent->isFrameTableCellBox()) {
-            useParent = true;
-        } else if (lastAnonymousTableObjectParent) {
-            parent = lastAnonymousTableObjectParent;
-            if (!parent->isFrameTableCellBox()) {
-                while (!parent->isFrameTableBox() &&
-                       !parent->isFrameTableCellBox()) {
-                    parent = parent->parent();
-                }
-            }
-            if (parent->isFrameTableCellBox() && parent->isAnonymous()) {
-                useParent = true;
-            }
-        }
-
-        if (!useParent) {
-            parent = createAnonymousBlockBox<FrameTableCellBox>(
-                blockContainer, currentNode,
-                DisplayValue::TableCellDisplayValue);
-            insertTableObjectChild(blockContainer,
-                                   lastAnonymousTableObjectParent, parent,
-                                   currentNode, ctx);
-        }
+    Frame* parent = nullptr;
+    if (isProperTableChild(currentFrame, blockContainer)) {
+        parent = blockContainer;
+    } else if (lastAnonymousTableObjectParent) {
+        parent = findProperAnonymousTableObjectParent(
+            currentFrame, lastAnonymousTableObjectParent);
     }
+
+    if (!parent) {
+        parent = createAnonymousTableObjectParent(
+            blockContainer, lastAnonymousTableObjectParent, currentFrame,
+            currentNode, ctx);
+    }
+
     parent->appendChild(currentFrame);
 }
 
@@ -404,13 +381,6 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
         }
     } else {
         if (isNormalFlowBlockChild) {
-            if (blockContainer->isAnonymous()) {
-                ctx.setCurrentBlockContainer(
-                    blockContainer->parent()->asFrameBlockBox());
-                FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
-                                              currentFrame, currentNode, ctx);
-                return;
-            }
             // Inline... + Block case
             FrameBox* blockBox = createAnonymousBlockBox<FrameBlockBox>(
                 blockContainer, currentNode, DisplayValue::BlockDisplayValue);
@@ -727,8 +697,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         }
 
         if (!currentFrame->parent()) {
-            FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
-                                          currentFrame, current, ctx);
+            FrameBlockBox* oldBlockContainer = ctx.currentBlockContainer();
+            FrameTreeBuilder::insertChild(oldBlockContainer, currentFrame,
+                                          current, ctx);
+            STARFISH_ASSERT(oldBlockContainer == ctx.currentBlockContainer());
 
             if (currentFrame->isFrameText() &&
                 currentFrame->style()->textTransform() !=
@@ -741,7 +713,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         currentFrame = current->frame();
     }
 
-    // display == none
+    // display is none or current that can't be inserted
     if (!currentFrame || !currentFrame->parent()) {
         return nullptr;
     }
@@ -862,7 +834,6 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
 
                 ctx.currentBlockContainer()->appendChild(blockBox);
                 blockBox->appendChild(in);
-                ctx.setCurrentBlockContainer(blockBox);
             } else {
                 prev->appendChild(in);
             }

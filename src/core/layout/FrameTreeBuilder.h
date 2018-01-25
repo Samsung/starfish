@@ -98,6 +98,10 @@ private:
         FrameBlockBox* blockContainer,
         FrameTableObjectBox* lastAnonymousTableObjectParent,
         Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx);
+    static FrameTableObjectBox* createAnonymousTableObjectParent(
+        FrameBlockBox* blockContainer,
+        FrameTableObjectBox* lastAnonymousTableObjectParent,
+        Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx);
 };
 }
 
