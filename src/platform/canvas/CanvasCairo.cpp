@@ -250,7 +250,11 @@ public:
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_color = clr_;
+#ifdef STARFISH_ANDROID
+        cairo_set_source_rgba(m_canvas, clr_.B(), clr_.G(), clr_.R(), clr_.A());
+#else
         cairo_set_source_rgba(m_canvas, clr_.R(), clr_.G(), clr_.B(), clr_.A());
+#endif
     }
 
     virtual void setVisible(bool visible)
@@ -954,12 +958,21 @@ private:
         if (lastState().m_textDecorationData.hasUnderLine()) {
             cairo_set_line_width(canvas, lineWidth);
             if (!shadow) {
+#ifdef STARFISH_ANDROID
+                cairo_set_source_rgba(
+                    canvas,
+                    lastState().m_textDecorationData.underLineColor().B(),
+                    lastState().m_textDecorationData.underLineColor().G(),
+                    lastState().m_textDecorationData.underLineColor().R(),
+                    lastState().m_textDecorationData.underLineColor().A());
+#else
                 cairo_set_source_rgba(
                     canvas,
                     lastState().m_textDecorationData.underLineColor().R(),
                     lastState().m_textDecorationData.underLineColor().G(),
                     lastState().m_textDecorationData.underLineColor().B(),
                     lastState().m_textDecorationData.underLineColor().A());
+#endif
             }
             float y = face->underline_position / (float)fc->m_unitsPerEM *
                           intSize / 72 +
@@ -972,12 +985,21 @@ private:
         if (lastState().m_textDecorationData.hasLineThrough()) {
             cairo_set_line_width(canvas, lineWidth);
             if (!shadow) {
+#ifdef STARFISH_ANDROID
                 cairo_set_source_rgba(
                     canvas,
                     lastState().m_textDecorationData.lineThroughColor().R(),
                     lastState().m_textDecorationData.lineThroughColor().G(),
                     lastState().m_textDecorationData.lineThroughColor().B(),
                     lastState().m_textDecorationData.lineThroughColor().A());
+#else
+                cairo_set_source_rgba(
+                    canvas,
+                    lastState().m_textDecorationData.lineThroughColor().B(),
+                    lastState().m_textDecorationData.lineThroughColor().G(),
+                    lastState().m_textDecorationData.lineThroughColor().R(),
+                    lastState().m_textDecorationData.lineThroughColor().A());
+#endif
             }
             float y =
                 (lastState().m_font->metrics().m_ascender) -
@@ -1017,9 +1039,13 @@ private:
                 ceil(rect.height().toFloat() + radiusOffset));
 
             canvas = cairo_create(surfaceForBlur);
-
+#ifdef STARFISH_ANDROID
+            cairo_set_source_rgba(canvas, color.B(), color.G(), color.R(),
+                                  color.A());
+#else
             cairo_set_source_rgba(canvas, color.R(), color.G(), color.B(),
                                   color.A());
+#endif
         } else {
             canvas = m_canvas;
         }
