@@ -496,6 +496,7 @@ public:
     bool canFloatCollapseWithMarginTop(size_t idx);
 
     bool checkIfThisIsFirstLineCandidate(FrameBlockBox* blockBox);
+    void registerFirstLineCandidate(FrameBlockBox* blockBox);
 
     void registerContentHeight(FrameBox* box, LayoutUnit contentHeight);
     LayoutUnit contentHeight(FrameBox* box);
@@ -838,6 +839,11 @@ public:
     bool isPendingWrapLine() const
     {
         return m_isPendingWrapLine;
+    }
+
+    bool hasAppliedTextIndent() const
+    {
+        return m_hasAppliedTextIndent;
     }
 
     bool isFirstLineBox() const

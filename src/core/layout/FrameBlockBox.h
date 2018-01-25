@@ -651,7 +651,7 @@ public:
     virtual bool hasBlockFlow()
     {
         if (!firstChild()) {
-            return true;
+            return false;
         }
         Frame* child = firstChild();
         return (child->isBlockLevel() && child->isNormalFlow());
@@ -1139,6 +1139,7 @@ public:
     bool m_isSoftHyphenAtLast;
     bool m_canConcatWord;
     bool m_isLastLineBox;
+    bool m_isFirstLineCandidate;
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;

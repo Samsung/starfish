@@ -1174,10 +1174,6 @@ bool FrameFlexibleBox::isTtbDirection()
 
 void FrameFlexibleBox::layoutFlex(LayoutContext& ctx)
 {
-    if (!isNecessaryBlockBox()) {
-        return;
-    }
-
     FlexFormattingContext flexFormattingContext(ctx, this, contentWidth());
 
     flexFormattingContext.layoutMain();

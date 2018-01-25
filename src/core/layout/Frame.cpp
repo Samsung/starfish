@@ -758,10 +758,20 @@ void LayoutContext::layoutRegisteredRelativePositionedBoxes(
 
 bool LayoutContext::checkIfThisIsFirstLineCandidate(FrameBlockBox* blockBox)
 {
-    if (!blockBox->isNecessaryBlockBox()) {
-        return false;
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    auto& firstLineCandidates = c.m_firstLineCandidates;
+    Frame* parent = blockBox->parent();
+
+    auto it = firstLineCandidates->find(parent);
+    if (it == firstLineCandidates->end()) {
+        return true;
     }
 
+    return (*it).second == blockBox;
+}
+
+void LayoutContext::registerFirstLineCandidate(FrameBlockBox* blockBox)
+{
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     auto& firstLineCandidates = c.m_firstLineCandidates;
     Frame* parent = blockBox->parent();
@@ -769,10 +779,7 @@ bool LayoutContext::checkIfThisIsFirstLineCandidate(FrameBlockBox* blockBox)
     auto it = firstLineCandidates->find(parent);
     if (it == firstLineCandidates->end()) {
         (*firstLineCandidates)[parent] = blockBox;
-        return true;
     }
-
-    return (*it).second == blockBox;
 }
 
 void LayoutContext::registerContentHeight(FrameBox* box,

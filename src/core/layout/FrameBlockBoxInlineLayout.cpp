@@ -1110,6 +1110,7 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     , m_block(block)
     , m_layoutContext(ctx)
     , m_isLastLineBox(false)
+    , m_isFirstLineCandidate(false)
     , m_inlineBoxIndex(0)
 {
     if (forQuick) {
@@ -1129,8 +1130,8 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     m_block->m_lineBoxes.clear();
     // m_block.m_lineBoxes.shrink_to_fit();
     resetLineBox();
-    if ((!block->isAnonymous() && !block->hasBlockFlow()) ||
-        ctx.checkIfThisIsFirstLineCandidate(block)) {
+    if (!block->isAnonymous() || ctx.checkIfThisIsFirstLineCandidate(block)) {
+        m_isFirstLineCandidate = true;
         Length textIndent = block->style()->textIndent();
         FrameBox* cb = containingBlock(block);
         m_textIndentWidth =
@@ -1149,6 +1150,10 @@ void LineFormattingContext::registerInlineContent(FrameLineBreak* br)
         }
     }
     if (hasNormalFlowContent) {
+        if (m_isFirstLineCandidate) {
+            m_layoutContext.registerFirstLineCandidate(m_block);
+            m_isFirstLineCandidate = false;
+        }
         m_layoutContext.registerLineBoxAscender(m_block, back, ascender(back));
     }
 }
@@ -3801,13 +3806,8 @@ bool LineFormattingContext::removeLastLineBoxIfNeeds()
 LayoutUnit LineFormattingContext::contentHeightForBlock()
 {
     if (m_block->isFrameInputBox()) {
-        STARFISH_ASSERT(m_block->firstChild()->isFrameText());
-        LayoutUnit fontHeight = m_block->firstChild()
-                                    ->asFrameText()
-                                    ->style()
-                                    ->font()
-                                    ->metrics()
-                                    .m_fontHeight;
+        LayoutUnit fontHeight =
+            m_block->style()->font()->metrics().m_fontHeight;
         return fontHeight;
     }
 
@@ -4291,15 +4291,21 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             }
             ctx.updatePreferredWidth(w);
         } else {
-            LayoutUnit textIndentWidth = LayoutUnit(0);
-            if ((!isAnonymous() && !hasBlockFlow()) ||
-                ctx.layoutContext().checkIfThisIsFirstLineCandidate(this)) {
+            bool isFirstLineCandidate =
+                !isAnonymous() ||
+                ctx.layoutContext().checkIfThisIsFirstLineCandidate(this);
+            if (isFirstLineCandidate) {
                 Length textIndent = style()->textIndent();
-                textIndentWidth =
+                LayoutUnit textIndentWidth =
                     textIndent.specifiedValue(ctx.remainingWidth(), this);
+                ctx.setTextIndentWidth(textIndentWidth);
             }
-            ctx.setTextIndentWidth(textIndentWidth);
             ctx.computePreferredWidthInline(this);
+            if (isFirstLineCandidate) {
+                if (ctx.hasAppliedTextIndent()) {
+                    ctx.layoutContext().registerFirstLineCandidate(this);
+                }
+            }
             ctx.finishLine(false);
         }
     }
