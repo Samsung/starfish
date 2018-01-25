@@ -42,7 +42,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMIframe-
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInvalidARIAHook-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMOption-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMRoot-test.internal.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSelection-test.internal.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSelection-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSelect-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationAttributes-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationBasic-test.html
