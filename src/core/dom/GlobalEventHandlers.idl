@@ -28,7 +28,7 @@ interface GlobalEventHandlers {
   // FIXME: onerror should be type of OnErrorEventHandler
   attribute EventHandler onerror;
   attribute EventHandler onfocus;
-  [Unimplemented] attribute EventHandler oninput;
+  attribute EventHandler oninput;
   [Unimplemented] attribute EventHandler oninvalid;
   attribute EventHandler onkeydown;
   attribute EventHandler onkeypress;
@@ -59,7 +59,7 @@ interface GlobalEventHandlers {
   [Unimplemented] attribute EventHandler onselect;
   [Unimplemented] attribute EventHandler onshow;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onstalled;
-  [Unimplemented] attribute EventHandler onsubmit;
+  attribute EventHandler onsubmit;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onsuspend;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler ontimeupdate;
   [Unimplemented] attribute EventHandler ontoggle;
