@@ -104,27 +104,27 @@ test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactPureComponent-
 # test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactShallowRenderer-test.html
 # test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRenderer-test.html
 test/cairo/reftest/vendor/react/packages/react-test-renderer/src/__tests__/ReactTestRendererTraversal-test.html
-# test/cairo/reftest/vendor/react/packages/shared/__tests__/ReactDOMFrameScheduling-test.html
+test/cairo/reftest/vendor/react/packages/shared/__tests__/ReactDOMFrameScheduling-test.html # node environment test is ignored
 # test/cairo/reftest/vendor/react/packages/shared/__tests__/ReactErrorUtils-test.internal.html
 test/cairo/reftest/vendor/react/packages/shared/__tests__/reactProdInvariant-test.internal.html
-# test/cairo/reftest/vendor/react/scripts/error-codes/__tests__/invertObject-test.html
-# test/cairo/reftest/vendor/react/scripts/error-codes/__tests__/replace-invariant-error-codes-test.html
-# test/cairo/reftest/vendor/react/scripts/rollup/plugins/__tests__/wrap-warning-with-env-check-test.html
-# test/cairo/reftest/vendor/react/scripts/shared/__tests__/evalToString-test.html
+test/cairo/reftest/vendor/react/scripts/error-codes/__tests__/invertObject-test.html
+test/cairo/reftest/vendor/react/scripts/shared/__tests__/evalToString-test.html
 # PASS, but takes a long time
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildText-test.html
 # ISSUE: Infinite loop
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactRenderDocument-test.html
 # Skip: Type Script, Coffee Script, ESLint, ES6 class tests, react-native related tests
-# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactClassEquivalence-test.html
-# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactCoffeeScriptClass-test.html
-# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactTypeScriptClass-test.html
+# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactClassEquivalence-test.html # Coffee script, Type script
+# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactCoffeeScriptClass-test.html # Coffee script
+# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactTypeScriptClass-test.html # Type script
 # test/cairo/reftest/vendor/react/packages/react-cs-renderer/src/__tests__/ReactNativeCS-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/createReactNativeComponentClass-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/ReactNativeAttributePayload-test.html
 # test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/ReactNativeEvents-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-native-renderer/src/__tests__/ReactNativeMount-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-rt-renderer/src/__tests__/ReactNativeRT-test.internal.html
-# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactES6Class-test.html
-# test/cairo/reftest/vendor/react/scripts/eslint-rules/__tests__/no-primitive-constructors-test.internal.html
-# test/cairo/reftest/vendor/react/scripts/eslint-rules/__tests__/warning-and-invariant-args-test.internal.hmtl
+# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactES6Class-test.html # ES6 Class
+# test/cairo/reftest/vendor/react/scripts/eslint-rules/__tests__/no-primitive-constructors-test.internal.html # ESLint
+# test/cairo/reftest/vendor/react/scripts/eslint-rules/__tests__/warning-and-invariant-args-test.internal.hmtl # ESLint
+# test/cairo/reftest/vendor/react/scripts/error-codes/__tests__/replace-invariant-error-codes-test.html # transform test using babel-core
+# test/cairo/reftest/vendor/react/scripts/rollup/plugins/__tests__/wrap-warning-with-env-check-test.html # transform test using babel-core
