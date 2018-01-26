@@ -41,7 +41,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMIframe-
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInput-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInvalidARIAHook-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMOption-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMRoot-test.internal.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMRoot-test.internal.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSelection-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSelect-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationAttributes-test.html
@@ -63,7 +63,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactIdentity-t
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMockedComponent-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMountDestruction-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMount-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildReconcile-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildReconcile-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChild-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactServerRenderingBrowser-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactServerRendering-test.html
@@ -92,7 +92,7 @@ test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactTop
 test/cairo/reftest/vendor/react/packages/react-reconciler/src/__tests__/ReactTopLevelText-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/createReactClassIntegration-test.html
 test/cairo/reftest/vendor/react/packages/react/src/__tests__/onlyChild-test.html
-# test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactAsyncClassComponent-test.internal.html
+test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactAsyncClassComponent-test.internal.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactChildren-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactContextValidator-test.html
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactElementClone-test.html
