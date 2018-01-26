@@ -17,7 +17,7 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/Syntheti
 # test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticKeyboardEvent-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticWheelEvent-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/CSSPropertyOperations-test.html
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/DOMPropertyOperations-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/DOMPropertyOperations-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/escapeTextForBrowser-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/EventPluginHub-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/findDOMNode-test.html
