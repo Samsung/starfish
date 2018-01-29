@@ -1015,6 +1015,8 @@ vendor_test_blink_fast_etc_cairo:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc_manual.res cairo --font-dep -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_table.res cairo -p$(TEST_NPROCS)
+vendor_test_blink_css3_cairo:
+	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_css3.res cairo -p$(TEST_NPROCS)
 vendor_test_gecko_layout_cairo:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/gecko_layout.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/gecko_layout_manual.res cairo --font-dep -p$(TEST_NPROCS)
@@ -1053,6 +1055,7 @@ test_all:
 	make vendor_test_blink_fast_html
 	make vendor_test_blink_fast_css
 	make vendor_test_blink_fast_etc
+	make_vendor_text_blink_css3_cairo
 	make vendor_test_gecko_layout
 	make vendor_test_webkit_fast_dom
 	make vendor_test_webkit_fast_html
