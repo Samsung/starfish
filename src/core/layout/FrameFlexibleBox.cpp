@@ -723,7 +723,7 @@ void FlexFormattingContext::computeCrossSize()
     }
     STARFISH_ASSERT(m_availableCrossSize != intMaxForLayoutUnit);
 
-    if (m_isSingleLine) {
+    if (lines == 1) {
         for (size_t i = 0; i < lines; i++) {
             FlexLine& flexLine = m_flexLines[i];
             if (m_isMainAxisInInlineAxis) {

@@ -85,7 +85,7 @@ struct FrameBoxRareData : public gc {
 
 enum PaintingInlineStage {
     PaintingInlineBox,
-    PaintingInlineBlockBox,
+    PaintingAtomicInlineBoxButInlineReplaced,
     PaintingInlineReplaced,
     PaintingInlineStageEnd
 };

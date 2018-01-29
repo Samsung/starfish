@@ -110,11 +110,13 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
 
         if (width.isAuto()) {
             // TODO: implement width: 'max-content' and 'fit-content'
-            if (isNormalFlow() && !isAtomicInlineLevel() && !isFlexItem()) {
+            if (isNormalFlow() && !isAtomicInlineLevel() && !isFlexItem() &&
+                !(node() && node()->isHTMLButtonElement())) {
                 contentWidth = std::max(containgBlockContentWidth - mbpWidth(),
                                         LayoutUnit(0));
             } else if (isAbsolutePositioned() && left.isSpecified() &&
-                       right.isSpecified()) {
+                       right.isSpecified() &&
+                       !(node() && node()->isHTMLButtonElement())) {
                 LayoutUnit l =
                     left.specifiedValue(containgBlockContentWidth, this);
                 LayoutUnit r =
