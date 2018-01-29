@@ -273,7 +273,8 @@ public:
     {
         if (stage == PaintingInlineStage::PaintingInlineBox) {
             m_flags.m_seenNormalFlowInlineBox = true;
-        } else if (stage == PaintingInlineStage::PaintingInlineBlockBox) {
+        } else if (stage == PaintingInlineStage::
+                                PaintingAtomicInlineBoxButInlineReplaced) {
             m_flags.m_seenNormalFlowInlineBlockBox = true;
         } else {
             STARFISH_ASSERT(stage ==

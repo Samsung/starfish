@@ -1375,7 +1375,8 @@ void InlineBoxLayoutParentBox::registerRelativePositionedBoxesAndMarkPaintFlag(
                 seenInlineBox(PaintingInlineStage::PaintingInlineBox);
             } else if (childBox->isAtomicInlineLevel() ||
                        childBox->isFloating()) {
-                seenInlineBox(PaintingInlineStage::PaintingInlineBlockBox);
+                seenInlineBox(PaintingInlineStage::
+                                  PaintingAtomicInlineBoxButInlineReplaced);
             } else if (childBox->isFrameReplaced()) {
                 seenInlineBox(PaintingInlineStage::PaintingInlineReplaced);
             } else {
@@ -1480,7 +1481,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
 {
     if (stage == PaintingInlineBox && !m_flags.m_seenNormalFlowInlineBox) {
         return;
-    } else if (stage == PaintingInlineBlockBox &&
+    } else if (stage == PaintingAtomicInlineBoxButInlineReplaced &&
                !m_flags.m_seenNormalFlowInlineBlockBox) {
         return;
     } else if (stage == PaintingInlineReplaced &&
@@ -1536,13 +1537,14 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
         } else if (childBox->isInlineTextBox()) {
             childBox->paintInlineContent(canvas, stage, dx, dy);
         } else if (childBox->isFrameReplaced()) {
-            if (stage == PaintingInlineBlockBox && childBox->isFloating()) {
+            if (stage == PaintingAtomicInlineBoxButInlineReplaced &&
+                childBox->isFloating()) {
                 PaintingContext ctx(canvas);
                 ctx.m_paintingStage = PaintingNonPositionedFloats;
                 canvas->translate(dx, dy);
                 childBox->paintContent(ctx);
                 canvas->translate(-dx, -dy);
-            } else if (stage == PaintingInlineBlockBox &&
+            } else if (stage == PaintingAtomicInlineBoxButInlineReplaced &&
                        childBox->isAtomicInlineLevel()) { // inline-block
                 PaintingContext ctx(canvas);
                 ctx.m_paintingStage = PaintingNormalFlowInline;
@@ -1558,7 +1560,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
             }
 
         } else if (childBox->isAtomicInlineLevel() || childBox->isFloating()) {
-            if (stage == PaintingInlineBlockBox) {
+            if (stage == PaintingAtomicInlineBoxButInlineReplaced) {
                 STARFISH_ASSERT(childBox->isFrameBlockBox());
                 canvas->save();
 

@@ -1783,10 +1783,11 @@ public:
 
     bool isAtomicInlineLevel()
     {
-        return (isFrameReplaced()) ||
-               (style()->display() == DisplayValue::InlineBlockDisplayValue) ||
-               (style()->display() == DisplayValue::InlineTableDisplayValue) ||
-               (style()->display() == DisplayValue::InlineFlexDisplayValue);
+        if (!isInlineLevel()) {
+            return false;
+        }
+
+        return !isInlineBox() && !isFrameInline() && !isFrameText();
     }
 
     bool canBeContainingBlockOfAbsolutePositionedBox(Frame* child)
