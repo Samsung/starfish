@@ -1611,13 +1611,14 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
             }
 
             if (isAbsolutePositioned()) {
-                if ((style->left().isSpecified() &&
-                     isLayoutDamaged(damager, style->left())) ||
-                    (style->right().isSpecified() &&
-                     isLayoutDamaged(damager, style->right()))) {
+                LengthData offset = style->offset();
+                if ((offset.left().isSpecified() &&
+                     isLayoutDamaged(damager, offset.left())) ||
+                    (offset.right().isSpecified() &&
+                     isLayoutDamaged(damager, offset.right()))) {
                     markNeedsLayout();
                     return true;
-                } else if (style->left().isAuto() && style->right().isAuto()) {
+                } else if (offset.left().isAuto() && offset.right().isAuto()) {
                     markNeedsLayout();
                     return true;
                 }
@@ -1637,8 +1638,9 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
     }
 
     if (resolveWhat & LayoutWantToResolve::ResolveHeight) {
+        LengthData offset = style->offset();
         if (style->height().isAuto() && isAbsolutePositioned() &&
-            style->top().isSpecified() && style->bottom().isSpecified()) {
+            offset.top().isSpecified() && offset.bottom().isSpecified()) {
             if (containerHeightMayBeChanged) {
                 return true;
             }
@@ -1664,8 +1666,8 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
             }
 
             damager.m_canPercentDamage = containerHeightMayBeChanged;
-            if (isLayoutDamaged(damager, style->top()) ||
-                isLayoutDamaged(damager, style->bottom())) {
+            if (isLayoutDamaged(damager, offset.top()) ||
+                isLayoutDamaged(damager, offset.bottom())) {
                 return true;
             }
         } else {

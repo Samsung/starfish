@@ -160,6 +160,18 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         }
     }
 
+    if (style()->position() == PositionValue::RelativePositionValue) {
+        ctx.registerRelativePositionedBox(this, true);
+    }
+
+    if (node() && node()->parentElement()) {
+        Node* nd = node()->parentElement();
+        if (nd->frame()->isFrameInline() &&
+            nd->style()->position() == RelativePositionValue) {
+            ctx.registerRelativePositionedBox(this, false);
+        }
+    }
+
     if (isFrameTableBox()) {
         asFrameTableBox()->layoutTable(ctx);
     } else if (isFrameFlexibleBox()) {
@@ -536,8 +548,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                                   data.m_bottom);
             setY(data.m_top - data.m_absY + marginTop());
         }
-    } else if (style()->position() == PositionValue::RelativePositionValue) {
-        ctx.registerRelativePositionedBox(this, true);
     }
 
     // layout absolute positioned blocks
@@ -545,14 +555,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
 
     // layout relative positioned blocks
     ctx.layoutRegisteredRelativePositionedBoxes(this);
-
-    if (node() && node()->parentElement()) {
-        Node* nd = node()->parentElement();
-        if (nd->frame()->isFrameInline() &&
-            nd->style()->position() == RelativePositionValue) {
-            ctx.registerRelativePositionedBox(this, false);
-        }
-    }
 
     if (m_flags.m_hasBiggerContentThanFrameWidth) {
         frameBlockBoxRareData()->m_scrollWidth = 0;
