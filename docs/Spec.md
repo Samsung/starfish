@@ -928,7 +928,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | border-top-width | medium &#124; thin &#124; thick &#124; &lt;length&gt;	| Sets the width of the top border. | |
 | | border-width | &lt;border-width&gt; | Sets the width of the four borders (shorthand). | |
 | | border-image-source | &lt;image&gt; &#124; none | The path to the image is to be used as a border. | |
-| | border-image-slice | &lt;number&gt; fill | How to slice the border image. &lt;number&gt; value can take only one value and initial value is 0 (not 100%). | |
+| | border-image-slice | &lt;number&gt; fill | How to slice the border image. &lt;number&gt; value can take only one value and initial value is 100. | |
 | | border-image-width | &lt;length&gt; &#124; &lt;number&gt;	| Width of the border image. &lt;number&gt; value represents multiples of the corresponding border-top-width. | |
 | | border-radius | &lt;length-percentage&gt;{1,4} [ / &lt;length-percentage&gt;{1,4} ]?	| define the radii of a quarter ellipse that defines the shape of the corner of the outer border edge | |
 | | border-top-left-radius, border-top-right-radius, border-bottom-right-radius, border-bottom-left-radius | &lt;length-percentage&gt;{1,2} | define the radii of a quarter ellipse that defines the shape of the corner of the outer border edge | |
