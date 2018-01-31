@@ -61,7 +61,7 @@ test/cairo/reftest/vendor/blink/fast/dom/getElementsByClassName/array/001.html
 test/cairo/reftest/vendor/blink/fast/dom/getElementsByClassName/array/002.html
 test/cairo/reftest/vendor/blink/fast/dom/getElementsByClassName/array/003.html
 test/cairo/reftest/vendor/blink/fast/dom/getElementsByClassName/array/004.html
-test/cairo/reftest/vendor/blink/fast/dom/HTMLCollection/HTMLCollection-namedItem-invalidate-no-crash.html
+# test/cairo/reftest/vendor/blink/fast/dom/HTMLCollection/HTMLCollection-namedItem-invalidate-no-crash.html # Other browsers also failed
 test/cairo/reftest/vendor/blink/fast/dom/htmlcollection-length-after-item.html
 test/cairo/reftest/vendor/blink/fast/dom/html-collections-named-getter-mandatory-arg.html
 test/cairo/reftest/vendor/blink/fast/dom/HTMLLinkElement/link-onload2.html

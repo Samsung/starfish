@@ -23,6 +23,7 @@ namespace StarFish {
 
 class BrowsingContext;
 class Document;
+class ErrorEventInit;
 class History;
 class HTMLCollection;
 class Location;
@@ -328,6 +329,8 @@ public:
     }
     String* name();
     void setName(String* name);
+
+    void dispatchErrorEvent(ErrorEventInit& errorInfo);
 
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);

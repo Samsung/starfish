@@ -60,7 +60,7 @@ test/efl/reftest/vendor/blink/fast/dom/getElementsByClassName/array/001.html
 test/efl/reftest/vendor/blink/fast/dom/getElementsByClassName/array/002.html
 test/efl/reftest/vendor/blink/fast/dom/getElementsByClassName/array/003.html
 test/efl/reftest/vendor/blink/fast/dom/getElementsByClassName/array/004.html
-test/efl/reftest/vendor/blink/fast/dom/HTMLCollection/HTMLCollection-namedItem-invalidate-no-crash.html
+# test/efl/reftest/vendor/blink/fast/dom/HTMLCollection/HTMLCollection-namedItem-invalidate-no-crash.html # Other browsers also failed
 test/efl/reftest/vendor/blink/fast/dom/htmlcollection-length-after-item.html
 test/efl/reftest/vendor/blink/fast/dom/html-collections-named-getter-mandatory-arg.html
 test/efl/reftest/vendor/blink/fast/dom/HTMLLinkElement/link-onload2.html

@@ -21,6 +21,7 @@
 
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/ErrorEvent.h"
 #include "core/dom/HTMLAnchorElement.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLIFrameElement.h"
@@ -575,6 +576,16 @@ void Window::releaseCSSTarget()
     if (m_cssTarget) {
         m_cssTarget->setState(Node::NodeStateTarget, false);
     }
+}
+
+void Window::dispatchErrorEvent(ErrorEventInit& errorInfo)
+{
+    // TODO Invoking attribute listener(onerror) should differ
+    // ErrorEventInit errorInfo(message, filename, lineno, colno, errorScript);
+    Event* errorEvent = new ErrorEvent(
+        document(), starFish()->staticStrings()->m_error.localName(),
+        errorInfo);
+    dispatchEventByUA(errorEvent);
 }
 
 DEFINE_EVENT_LISTENER(Window, abort);

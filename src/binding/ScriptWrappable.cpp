@@ -19,6 +19,7 @@
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
+#include "core/dom/ErrorEvent.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -312,12 +313,21 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
     sb->destroy();
     if (!result.error->isEmpty()) {
         error = true;
-        STARFISH_LOG_ERROR(
-            "Uncaught %s\n",
-            toBrowserString(instance, ValueRef::create(result.error))
-                ->toUTF8NonGCString()
-                .data());
+        // Dispatch error event to window
+        ErrorEventInit errorInfo;
+        errorInfo.setMessage(toBrowserString(instance, result.error));
+        if (result.stackTraceData.size() > 0) {
+            size_t lastIndex = result.stackTraceData.size() - 1;
+            errorInfo.setFilename(toBrowserString(
+                instance,
+                ValueRef::create(result.stackTraceData[lastIndex].fileName)));
+            errorInfo.setLineno(result.stackTraceData[lastIndex].loc.line);
+            errorInfo.setColno(result.stackTraceData[lastIndex].loc.column);
+        }
+        instance->ownerWindow()->dispatchErrorEvent(errorInfo);
 
+        STARFISH_LOG_ERROR("Uncaught %s\n",
+                           errorInfo.message()->toUTF8NonGCString().data());
         for (size_t i = 0; i < result.stackTraceData.size(); i++) {
             STARFISH_LOG_ERROR(
                 "at %s(%d:%d)\n",
@@ -364,11 +374,24 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
         });
         sb->destroy();
         if (!sbresult.error->isEmpty()) {
-            STARFISH_LOG_ERROR(
-                "Uncaught %s\n",
-                toBrowserString(instance, ValueRef::create(sbresult.error))
-                    ->toUTF8NonGCString()
-                    .data());
+            // Dispatch error event to window
+            ErrorEventInit errorInfo;
+            errorInfo.setMessage(toBrowserString(instance, sbresult.error));
+            if (sbresult.stackTraceData.size() > 0) {
+                size_t lastIndex = sbresult.stackTraceData.size() - 1;
+                errorInfo.setFilename(toBrowserString(
+                    instance,
+                    ValueRef::create(
+                        sbresult.stackTraceData[lastIndex].fileName)));
+                errorInfo.setLineno(
+                    sbresult.stackTraceData[lastIndex].loc.line);
+                errorInfo.setColno(
+                    sbresult.stackTraceData[lastIndex].loc.column);
+            }
+            instance->ownerWindow()->dispatchErrorEvent(errorInfo);
+
+            STARFISH_LOG_ERROR("Uncaught %s\n",
+                               errorInfo.message()->toUTF8NonGCString().data());
             for (size_t i = 0; i < sbresult.stackTraceData.size(); i++) {
                 STARFISH_LOG_ERROR(
                     "at %s(%d:%d)\n",
@@ -445,10 +468,21 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 
     sb->destroy();
     if (!sbresult.error->isEmpty()) {
+        // Dispatch error event to window
+        ErrorEventInit errorInfo;
+        errorInfo.setMessage(toBrowserString(instance, sbresult.error));
+        if (sbresult.stackTraceData.size() > 0) {
+            size_t lastIndex = sbresult.stackTraceData.size() - 1;
+            errorInfo.setFilename(toBrowserString(
+                instance,
+                ValueRef::create(sbresult.stackTraceData[lastIndex].fileName)));
+            errorInfo.setLineno(sbresult.stackTraceData[lastIndex].loc.line);
+            errorInfo.setColno(sbresult.stackTraceData[lastIndex].loc.column);
+        }
+        instance->ownerWindow()->dispatchErrorEvent(errorInfo);
+
         STARFISH_LOG_ERROR("Uncaught %s\n",
-                           toBrowserString(instance, sbresult.error)
-                               ->toUTF8NonGCString()
-                               .data());
+                           errorInfo.message()->toUTF8NonGCString().data());
         for (size_t i = 0; i < sbresult.stackTraceData.size(); i++) {
             STARFISH_LOG_ERROR(
                 "at %s(%d:%d)\n",
