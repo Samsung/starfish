@@ -28,4 +28,4 @@ test/efl/reftest/web-platform-tests/html/webappapis/animation-frames/cancel-invo
 test/efl/reftest/web-platform-tests/html/webappapis/animation-frames/same-dispatch-time.html
 test/efl/reftest/web-platform-tests/html/webappapis/scripting/events/body-onload.html
 test/efl/reftest/web-platform-tests/html/webappapis/scripting/events/event-handler-javascript.html
-test/efl/reftest/web-platform-tests/html/webappapis/scripting/processing-model-2/addEventListener.html
+# test/efl/reftest/web-platform-tests/html/webappapis/scripting/processing-model-2/addEventListener.html # Other browsers also failed

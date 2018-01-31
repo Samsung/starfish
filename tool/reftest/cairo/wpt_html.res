@@ -31,4 +31,4 @@ test/cairo/reftest/web-platform-tests/html/webappapis/animation-frames/cancel-in
 test/cairo/reftest/web-platform-tests/html/webappapis/animation-frames/same-dispatch-time.html
 test/cairo/reftest/web-platform-tests/html/webappapis/scripting/events/body-onload.html
 test/cairo/reftest/web-platform-tests/html/webappapis/scripting/events/event-handler-javascript.html
-test/cairo/reftest/web-platform-tests/html/webappapis/scripting/processing-model-2/addEventListener.html
+# test/cairo/reftest/web-platform-tests/html/webappapis/scripting/processing-model-2/addEventListener.html # Other browsers also failed
