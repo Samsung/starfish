@@ -324,6 +324,7 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
             errorInfo.setLineno(result.stackTraceData[lastIndex].loc.line);
             errorInfo.setColno(result.stackTraceData[lastIndex].loc.column);
         }
+        errorInfo.setError(result.error);
         instance->ownerWindow()->dispatchErrorEvent(errorInfo);
 
         STARFISH_LOG_ERROR("Uncaught %s\n",
@@ -388,6 +389,7 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
                 errorInfo.setColno(
                     sbresult.stackTraceData[lastIndex].loc.column);
             }
+            errorInfo.setError(sbresult.error);
             instance->ownerWindow()->dispatchErrorEvent(errorInfo);
 
             STARFISH_LOG_ERROR("Uncaught %s\n",
@@ -479,6 +481,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
             errorInfo.setLineno(sbresult.stackTraceData[lastIndex].loc.line);
             errorInfo.setColno(sbresult.stackTraceData[lastIndex].loc.column);
         }
+        errorInfo.setError(sbresult.error);
         instance->ownerWindow()->dispatchErrorEvent(errorInfo);
 
         STARFISH_LOG_ERROR("Uncaught %s\n",
