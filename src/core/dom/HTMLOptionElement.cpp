@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLSelectElement.h"
@@ -42,9 +43,16 @@ HTMLOptionElement::HTMLOptionElement(Document* document, String* text,
     , m_selectedness(false)
     , m_drawOptionBox(false)
 {
+    if (!text->equals(String::emptyString)) {
+        setTextContent(text);
+    }
+    if (!value->equals(String::emptyString)) {
+        setValue(value);
+    }
+
     if (defaultSelected) {
-        setSelected(true);
-        m_dirtiness = false;
+        setAttribute(starFish()->staticStrings()->m_selected,
+                     String::emptyString);
     }
     if (selected) {
         m_selectedness = true;
@@ -69,6 +77,7 @@ QualifiedName HTMLOptionElement::name()
     return starFish()->staticStrings()->m_optionTagName;
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-selected
 bool HTMLOptionElement::selected()
 {
     return m_selectedness;
@@ -76,28 +85,98 @@ bool HTMLOptionElement::selected()
 
 void HTMLOptionElement::setSelected(bool selected)
 {
-    setSelectedAttributeValue(selected);
-}
+    if (disabled()) {
+        return;
+    }
 
-String* HTMLOptionElement::selectedAttributeValue()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_selected);
-}
-
-void HTMLOptionElement::setSelectedAttributeValue(bool selected)
-{
     if (selected) {
         setAttribute(starFish()->staticStrings()->m_selected,
-                     String::createASCIIString("true"));
+                     String::emptyString);
     } else {
         removeAttribute(starFish()->staticStrings()->m_selected);
     }
+
+    m_selectedness = selected;
     m_dirtiness = true;
+
+    HTMLSelectElement* select = selectElement();
+    if (select) {
+        select->reset(this);
+    }
 }
 
-void HTMLOptionElement::setInternalSelected(bool selected)
+bool HTMLOptionElement::hasSelectedAttribute()
 {
-    m_selectedness = selected;
+    // selected is a boolean attribute
+    Nullable<String*> val =
+        getAttribute(starFish()->staticStrings()->m_selected);
+    return val.hasValue();
+}
+
+bool HTMLOptionElement::dirtiness()
+{
+    return m_dirtiness;
+}
+
+void HTMLOptionElement::setDirtiness(bool dirtiness)
+{
+    m_dirtiness = dirtiness;
+}
+
+bool HTMLOptionElement::selectedness()
+{
+    return m_selectedness;
+}
+
+void HTMLOptionElement::setSelectedness(bool selectedness)
+{
+    m_selectedness = selectedness;
+}
+
+// The value IDL attribute, on getting, must return the element's value.
+// On setting, the element's value content attribute must be set to the new
+// value.
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-value
+String* HTMLOptionElement::value()
+{
+    String* val = getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+    if (val->equals(String::emptyString)) {
+        return text();
+    }
+    return val;
+}
+
+void HTMLOptionElement::setValue(String* value)
+{
+    setAttribute(starFish()->staticStrings()->m_value, value);
+}
+
+HTMLSelectElement* HTMLOptionElement::selectElement()
+{
+    for (Node* p = parentNode(); p; p = p->parentNode()) {
+        if (p->isHTMLIFrameElement() || p->isHTMLFormElement()) {
+            break;
+        }
+        if (p->isHTMLSelectElement()) {
+            return p->asHTMLSelectElement();
+        }
+    }
+
+    return nullptr;
+}
+
+String* HTMLOptionElement::text()
+{
+    Nullable<String*> value = textContent();
+    if (value.hasValue()) {
+        return value.getValue();
+    }
+    return String::emptyString;
+}
+
+void HTMLOptionElement::setText(String* value)
+{
+    setTextContent(value);
 }
 
 void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,

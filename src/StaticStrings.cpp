@@ -202,6 +202,9 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_selected =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "selected"));
+    m_multiple =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "multiple"));
     m_alt = QualifiedName(AtomicString::emptyAtomicString(),
                           AtomicString::createAtomicString(sf, "alt"));
     m_scrolling =

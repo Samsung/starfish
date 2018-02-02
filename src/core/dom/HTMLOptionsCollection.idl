@@ -1,0 +1,12 @@
+// https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#htmloptionscollection
+
+[Exposed=Window]
+interface HTMLOptionsCollection : HTMLCollection {
+  // inherits item(), namedItem()
+  [CEReactions] attribute unsigned long length; // shadows inherited length
+  [Unimplemented, CEReactions] setter void (unsigned long index, HTMLOptionElement? option);
+  [Unimplemented, CEReactions] void add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null);
+  [Unimplemented, CEReactions] void remove(long index);
+  attribute long selectedIndex;
+};
+

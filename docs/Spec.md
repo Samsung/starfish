@@ -460,12 +460,19 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | form | Returns the element's form owner, or null if there is not one. |
 |  | attribute | name | Returns the name of the select element. |
 |  | attribute | selectedOptions | Returns an HTMLCollection that contains options that have their selectedness set to true. |
+|  | attribute | options | Returns an HTMLOptionsCollection containing all options rooted at this select node |
+|  | attribute | selectedIndex | Returns the index of the first selected item, if any, or −1 if there is no selected item. Can be set, to change the selection. |
+|  | attribute | value | Returns the value of the first selected item, if any, or the empty string if there is no selected item. Can be set, to change the selection. |
 | [HTMLOptionElement](https://html.spec.whatwg.org/#htmloptionelement) | interface | HTMLOptionElement | The option element represents an option in a select element or as part of a list of suggestions in a datalist element. |
 |  | attribute | disabled | Returns whether the option element is disabled. |
 |  | attribute | form | Returns the element's form owner, or null if there is not one. |
 |  | attribute | selected | Returns true if the element's selectedness is true, or false otherwise. |
 |  | attribute | value | Returns the value of the option element. |
+|  | attribute | text | Same as textContent, except that spaces are collapsed and script elements are skipped. |
 | [HTMLOptGroupElement](https://html.spec.whatwg.org/#htmloptgroupelement) | interface | HTMLOptGroupElement | The optgroup element represents a group of option elements with a common label. |
+| [HTMLOptionsCollection](https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection) | interface | HTMLOptionsCollection | The HTMLOptionsCollection interface is used for collections of option elements. It is always rooted on a select element and has attributes and methods that manipulate that element's descendants. |
+|  | attribute | length | Returns the number of elements in the collection. |
+|  | attribute | selectedIndex | Returns the index of the first selected item, if any, or −1 if there is no selected item. Can be set, to change the selection. |
 | [HTMLSourceElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSourceElement) | interface | HTMLSourceElement | The HTMLSourceElement interface provides special properties for manipulating <source> elements. |
 |  | attribute | src | DOMString reflecting the src HTML attribute, containing the URL for the media resource. (Note: Current version of HTMLSourceElement considers only media element related case, not picture case.) |
 |  | attribute | type | DOMString reflecting the type HTML attribute, containing the type of the media resource. |

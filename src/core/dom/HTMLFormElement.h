@@ -149,6 +149,11 @@ private:
                     ResourceRequest::EncodeType encodeType,
                     ResourceRequest::MethodType methodType);
     void clearPlannedNavigationTask();
+    bool isFormAssociatedElement(Node* node);
+    void computeFormAssociatedElements(Node* parent,
+                                       GCVector<HTMLFormObject*>& list);
+    bool isSubmittableElement(Node* node);
+    bool isButton(HTMLFormObject* node);
 
     HTMLFormControlsCollection* m_elements;
 

@@ -23,6 +23,7 @@ namespace StarFish {
 
 class HTMLOptionElement;
 class HTMLCollection;
+class HTMLOptionsCollection;
 
 class HTMLSelectElement : public HTMLFormObject {
 public:
@@ -37,6 +38,14 @@ public:
 
     virtual void didNodeInserted(Node* parent, Node* newChild) override;
 
+    virtual String* value();
+    virtual void setValue(String* value);
+
+    size_t selectedIndex();
+    void setSelectedIndex(size_t index);
+
+    HTMLOptionsCollection* options();
+
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 
@@ -46,11 +55,16 @@ public:
     // Other methods
     HTMLOptionElement* firstOptionElement();
     HTMLOptionElement* firstSelectedOptionElement();
+    void computeListOfOptionElements(Node* c,
+                                     GCVector<HTMLOptionElement*>& list);
 
     bool supportsFocus() const override;
 
+    void reset(HTMLOptionElement* resetFrom);
+
 private:
     HTMLCollection* m_selectedOptions;
+    HTMLOptionsCollection* m_options;
 };
 }
 

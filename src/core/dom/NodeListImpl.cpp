@@ -262,6 +262,14 @@ bool isSelectedOption(Node* node, void* data, GCVector<Node*>* collection)
     return false;
 }
 
+bool isOptionElement(Node* node, void* data, GCVector<Node*>* collection)
+{
+    if (node->isHTMLOptionElement()) {
+        return true;
+    }
+    return false;
+}
+
 void NodeListImpl::getherDescendant(GCVector<Node*>* collection,
                                     Node* root) const
 {

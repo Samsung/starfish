@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLCollection__
-#define __StarFishHTMLCollection__
+#ifndef __StarFishHTMLOptionsCollection__
+#define __StarFishHTMLOptionsCollection__
 
+#include "core/dom/HTMLCollection.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/NodeListImpl.h"
@@ -26,26 +27,22 @@ namespace StarFish {
 class Node;
 class Element;
 
-class HTMLCollection : public ScriptWrappable {
+class HTMLOptionsCollection : public HTMLCollection {
 public:
-    HTMLCollection(Node* root, NodeListImpl::FilterFunctionType filterType,
-                   void* data, bool canCache = false);
+    HTMLOptionsCollection(Node* root,
+                          NodeListImpl::FilterFunctionType filterType,
+                          void* data, bool canCache = false);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLCollection() const;
+    virtual bool isHTMLOptionsCollection() const;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     size_t length() const;
-    virtual Element* item(unsigned long index);
-    virtual Element* namedItem(String* name);
-    NodeListImpl& getNodeListImpl()
-    {
-        return m_nodeListImpl;
-    }
+    void setLength(size_t value);
 
-protected:
-    NodeListImpl m_nodeListImpl;
+    int selectedIndex();
+    void setSelectedIndex(int index);
 };
 }
 

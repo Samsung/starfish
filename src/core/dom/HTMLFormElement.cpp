@@ -23,6 +23,8 @@
 #include "core/dom/Event.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLButtonElement.h"
+#include "core/dom/HTMLSelectElement.h"
+#include "core/dom/HTMLOptionElement.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/HTMLFormControlsCollection.h"
 #include "core/dom/HTMLFieldSetElement.h"
@@ -455,6 +457,7 @@ void HTMLFormElement::submitData(ResourceURL* url,
     auto fn = [](size_t handle, void* data1, void* data2) {
         HTMLFormElement* formElement = (HTMLFormElement*)data1;
         DocumentURL* urlToOpen = (DocumentURL*)data2;
+        // force open
         formElement->document()->window()->location()->assign(urlToOpen);
         formElement->clearPlannedNavigationTask();
     };
@@ -502,68 +505,127 @@ Element* HTMLFormElement::defaultNamedGetter(String* name)
     return m_elements->namedItem(name);
 }
 
-// https://www.w3.org/TR/html5/forms.html#constructing-the-form-data-set
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-form-data-set
 GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
     HTMLElement* submitter)
 {
-    GCVector<Element*> inputNodes;
-    Traverse::collectDescendants(
-        inputNodes, asNode(),
-        [this, submitter](Node* node) -> bool {
-            // TODO: datalist and object are not supported
-            if (node->isHTMLInputElement() || node->isHTMLButtonElement()) {
-                HTMLFormObject* inputNode = node->asHTMLFormObject();
-
-                if (inputNode->disabled()) {
-                    return false;
-                }
-                if ((inputNode->type()->equals("submit") ||
-                     inputNode->type()->equals("button") ||
-                     inputNode->type()->equals("reset") ||
-                     inputNode->type()->equals("image")) &&
-                    (inputNode != submitter)) {
-                    return false;
-                }
-                if (node->isHTMLInputElement()) {
-                    if (inputNode->type()->equals("checkbox") &&
-                        (!inputNode->asHTMLInputElement()->checked())) {
-                        return false;
-                    }
-                    if (inputNode->type()->equals("radio") &&
-                        (!inputNode->asHTMLInputElement()->checked())) {
-                        return false;
-                    }
-                }
-                if (!inputNode->type()->equals("image") &&
-                    (inputNode->domName()->isEmpty())) {
-                    return false;
-                }
-
-                return true;
-            }
-            return false;
-        },
-        false);
-
     GCVector<FormDataSetItem*>* formDataSet =
         new (GC) GCVector<FormDataSetItem*>();
-    for (Element* node : inputNodes) {
-        if (node->isHTMLInputElement()) {
-            HTMLInputElement* inputNode = node->asHTMLInputElement();
-            String* val = inputNode->value();
 
-            if (inputNode->type()->equals("checkbox") ||
-                inputNode->type()->equals("radio")) {
-                if (val->equals(String::emptyString)) {
-                    val = String::createASCIIString("on");
+    // 1-3
+    GCVector<HTMLFormObject*> list;
+    computeFormAssociatedElements(this, list);
+    for (Node* c : list) {
+        // TODO: HTML object and textarea are not supported
+        if (isSubmittableElement(c)) {
+            HTMLFormObject* field = c->asHTMLFormObject();
+
+            // 3.1
+            // datalist is not supported
+            if (field->disabled()) {
+                continue;
+            } else if ((field != submitter) && isButton(field)) {
+                continue;
+            } else if (field->isHTMLInputElement()) {
+                if (field->type()->equals("checkbox") &&
+                    (!field->asHTMLInputElement()->checked())) {
+                    continue;
+                } else if (field->type()->equals("radio") &&
+                           (!field->asHTMLInputElement()->checked())) {
+                    continue;
                 }
+            } else if (!field->isHTMLInputElement() &&
+                       field->type()->equals("image") &&
+                       (field->domName()->isEmpty())) {
+                continue;
             }
 
-            formDataSet->push_back(new FormDataSetItem(inputNode->domName(),
-                                                       val, inputNode->type()));
+            // 3.2, 3.3
+            if (field->isHTMLInputElement() && field->type()->equals("image")) {
+                // TODO
+                continue;
+            }
+
+            // 3.4-3.10
+            if (field->isHTMLSelectElement()) {
+                GCVector<HTMLOptionElement*> optionElements;
+                field->asHTMLSelectElement()->computeListOfOptionElements(
+                    field, optionElements);
+                for (HTMLOptionElement* opt : optionElements) {
+                    if (!opt->disabled() && opt->selected()) {
+                        formDataSet->push_back(new FormDataSetItem(
+                            opt->domName(), opt->value(), opt->type()));
+                    }
+                }
+            } else if (field->isHTMLInputElement()) {
+                HTMLInputElement* inputNode = field->asHTMLInputElement();
+                String* val = inputNode->value();
+
+                if (inputNode->type()->equals("checkbox") ||
+                    inputNode->type()->equals("radio")) {
+                    if (val->equals(String::emptyString)) {
+                        val = String::createASCIIString("on");
+                    }
+                    formDataSet->push_back(new FormDataSetItem(
+                        inputNode->domName(), val, inputNode->type()));
+                }
+            } else if (false) {
+                // TODO: file upload, object
+            } else {
+                formDataSet->push_back(new FormDataSetItem(
+                    field->domName(), field->value(), field->type()));
+            }
         }
     }
 
     return formDataSet;
+}
+
+void HTMLFormElement::computeFormAssociatedElements(
+    Node* parent, GCVector<HTMLFormObject*>& list)
+{
+    for (Node* c = parent->firstChild(); c; c = c->nextSibling()) {
+        if (c->isHTMLIFrameElement()) {
+            continue;
+        }
+
+        if (isFormAssociatedElement(c)) {
+            list.push_back(c->asHTMLFormObject());
+        } else {
+            computeFormAssociatedElements(c, list);
+        }
+    }
+}
+
+bool HTMLFormElement::isFormAssociatedElement(Node* node)
+{
+    if (node->isHTMLButtonElement() || node->isHTMLFieldSetElement() ||
+        node->isHTMLInputElement() || node->isHTMLObjectElement() ||
+        /*node->isHTMLOutputElement() ||*/ node->isHTMLSelectElement() ||
+        node->isHTMLTextAreaElement() || node->isHTMLImageElement()) {
+        return true;
+    }
+
+    return false;
+}
+
+bool HTMLFormElement::isSubmittableElement(Node* node)
+{
+    // TODO: object and textarea
+    if (node->isHTMLButtonElement() || node->isHTMLInputElement() ||
+        node->isHTMLSelectElement()) {
+        return true;
+    }
+    return false;
+}
+
+bool HTMLFormElement::isButton(HTMLFormObject* node)
+{
+    if (node->type()->equals("submit") || node->type()->equals("button") ||
+        node->type()->equals("reset") || node->type()->equals("image")) {
+        return true;
+    }
+
+    return false;
 }
 }

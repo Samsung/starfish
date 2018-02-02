@@ -30,6 +30,7 @@ bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection);
 bool isFormElements(Node* node, void* data, GCVector<Node*>* collection);
+bool isOptionElement(Node* node, void* data, GCVector<Node*>* collection);
 bool isSelectedOption(Node* node, void* data, GCVector<Node*>* collection);
 
 class NodeListImpl : public gc {
@@ -43,6 +44,7 @@ public:
         NamedAccessFilter,
         TableRowsFilter,
         FormElementsFiliter,
+        OptionElementFilter,
         SelectedOptionsFilter,
     };
 
@@ -75,6 +77,9 @@ public:
             break;
         case FormElementsFiliter:
             m_filter = isFormElements;
+            break;
+        case OptionElementFilter:
+            m_filter = isOptionElement;
             break;
         case SelectedOptionsFilter:
             m_filter = isSelectedOption;

@@ -47,15 +47,26 @@ public:
     virtual QualifiedName name();
 
     // Interface Option
-    bool selected();
-    void setSelected(bool selected);
-    String* selectedAttributeValue();
-    void setSelectedAttributeValue(bool selected);
-    void setInternalSelected(bool selected);
+    virtual String* value();
+    virtual void setValue(String* value);
+    String* text();
+    void setText(String* value);
 
     // Other methods
     void didAttributeChanged(QualifiedName name, String* old, String* val,
                              bool attributeCreated, bool attributeRemoved);
+    HTMLSelectElement* selectElement();
+
+    bool selected();
+    void setSelected(bool selected);
+
+    bool dirtiness();
+    void setDirtiness(bool dirtiness);
+
+    bool selectedness();
+    void setSelectedness(bool selectedness);
+
+    bool hasSelectedAttribute();
 
 private:
     bool m_dirtiness;
