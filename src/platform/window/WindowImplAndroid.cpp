@@ -44,13 +44,12 @@
 
 struct WindowGlue {
     JNIEnv* m_env;
-    jweak m_obj;
+    jclass m_clazz;
     jmethodID m_startTimer;
     jmethodID m_cancelTimer;
     jmethodID m_requestRender;
     WindowGlue()
     {
-        m_obj = 0;
         m_startTimer = m_requestRender = 0;
     }
 } g_WindowGlue;
@@ -59,7 +58,7 @@ JavaVM* g_jvm;
 static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
                             const char signature[])
 {
-    jmethodID m = env->GetMethodID(clazz, name, signature);
+    jmethodID m = env->GetStaticMethodID(clazz, name, signature);
     if (!m)
         LOGE("Could not find Java method %s\n", name);
     return m;
@@ -74,11 +73,14 @@ Java_android_sec_com_lightweightwebengine_MainActivity_initStarFish(
         "%p",
         env, thiz);
 
+    if (g_jvm) {
+        return;
+    }
     env->GetJavaVM(&g_jvm);
     jclass clazz =
         env->FindClass("android/sec/com/lightweightwebengine/MainActivity");
+    g_WindowGlue.m_clazz = (jclass)env->NewGlobalRef(clazz);
     g_WindowGlue.m_env = env;
-    g_WindowGlue.m_obj = env->NewWeakGlobalRef(thiz);
     g_WindowGlue.m_startTimer = GetJMethod(env, clazz, "startTimer", "(III)I");
     g_WindowGlue.m_cancelTimer = GetJMethod(env, clazz, "cancelTimer", "(I)V");
     g_WindowGlue.m_requestRender =
@@ -107,76 +109,96 @@ Java_android_sec_com_lightweightwebengine_MainActivity_serviceQueueTimer(
 int startTimer(int ms, TimerCallback pointer, void* data)
 {
     JNIEnv* env = g_WindowGlue.m_env;
-    if (!StarFish::isMainThread()) {
-        // double check it's all ok
-        int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-        if (getEnvStat == JNI_EDETACHED) {
-            // std::cout << "GetEnv: not attached" << std::endl;
-            // LOGE("GetEnv: not attached");
-            if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-                // std::cout << "Failed to attach" << std::endl;
-                LOGE("Failed to attach");
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
-        } else if (getEnvStat == JNI_OK) {
-            //
-        } else if (getEnvStat == JNI_EVERSION) {
-            LOGE("GetEnv: version not supported");
+
+    // double check it's all ok
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        // std::cout << "GetEnv: not attached" << std::endl;
+        // LOGE("GetEnv: not attached");
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            // std::cout << "Failed to attach" << std::endl;
+            LOGE("Failed to attach");
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    } else if (getEnvStat == JNI_OK) {
+        //
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    if (!env || !g_WindowGlue.m_startTimer || !g_WindowGlue.m_obj) {
+    if (!env || !g_WindowGlue.m_startTimer) {
         LOGE("signalQueueTimer error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    if (env->IsSameObject(g_WindowGlue.m_obj, NULL)) {
-        LOGE("ERROR: The JNI WeakRef to the Window is invalid");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
 
-    int ret = env->CallIntMethod(g_WindowGlue.m_obj, g_WindowGlue.m_startTimer,
-                                 ms, (long)pointer, (long)data);
-
-    if (!StarFish::isMainThread()) {
-        if (env->ExceptionCheck()) {
-            env->ExceptionDescribe();
-        }
-
-        g_jvm->DetachCurrentThread();
-    }
+    int ret = env->CallStaticIntMethod(g_WindowGlue.m_clazz,
+                                       g_WindowGlue.m_startTimer, ms,
+                                       (long)pointer, (long)data);
 
     return ret;
 }
 
 void cancelTimer(int uid)
 {
-    // LOGE("cancelTimer");
     JNIEnv* env = g_WindowGlue.m_env;
-    if (!env || !g_WindowGlue.m_cancelTimer || !g_WindowGlue.m_obj) {
-        LOGE("signalQueueTimer error");
+
+    // double check it's all ok
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        // std::cout << "GetEnv: not attached" << std::endl;
+        // LOGE("GetEnv: not attached");
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            // std::cout << "Failed to attach" << std::endl;
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+        //
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    if (env->IsSameObject(g_WindowGlue.m_obj, NULL)) {
-        LOGE("ERROR: The JNI WeakRef to the Window is invalid");
+
+    // LOGE("cancelTimer");
+    if (!env || !g_WindowGlue.m_cancelTimer) {
+        LOGE("cancel error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    env->CallVoidMethod(g_WindowGlue.m_obj, g_WindowGlue.m_cancelTimer, uid);
+
+    env->CallStaticVoidMethod(g_WindowGlue.m_clazz, g_WindowGlue.m_cancelTimer,
+                              uid);
 }
 
 void requestRender()
 {
-    // LOGE("requestRender");
     JNIEnv* env = g_WindowGlue.m_env;
-    if (!env || !g_WindowGlue.m_requestRender || !g_WindowGlue.m_obj) {
+
+    // double check it's all ok
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        // std::cout << "GetEnv: not attached" << std::endl;
+        // LOGE("GetEnv: not attached");
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            // std::cout << "Failed to attach" << std::endl;
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+        //
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    // LOGE("requestRender");
+    if (!env || !g_WindowGlue.m_requestRender) {
         LOGE("reuqest render error");
         return;
     }
-    if (env->IsSameObject(g_WindowGlue.m_obj, NULL)) {
-        LOGE("ERROR: The JNI WeakRef to the Window is invalid");
-        return;
-    }
-    env->CallVoidMethod(g_WindowGlue.m_obj, g_WindowGlue.m_requestRender);
+
+    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
+                              g_WindowGlue.m_requestRender);
 }
 
 using namespace StarFish;
@@ -203,6 +225,14 @@ Java_android_sec_com_lightweightwebengine_MainActivity_initWebView(JNIEnv* env,
         "", nullptr);
 
     return (jlong)starfish;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_android_sec_com_lightweightwebengine_MainActivity_removeWebView(
+    JNIEnv* env, jobject thiz, jlong sf)
+{
+    StarFish::StarFish* starfish = (StarFish::StarFish*)sf;
+    delete starfish;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -251,6 +281,8 @@ public:
         m_renderingIdlerData = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
+        m_lastMouseX = m_lastMouseY = 0;
+        m_isMouseLbuttonDown = false;
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -589,4 +621,67 @@ Java_android_sec_com_lightweightwebengine_MainActivity_rendering(JNIEnv* env,
 
     AndroidBitmap_unlockPixels(env, bitmap);
 }
+
+extern "C" JNIEXPORT void JNICALL
+Java_android_sec_com_lightweightwebengine_MainActivity_dispatchMouseDown(
+    JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
+{
+    StarFish::StarFish* starfish = (StarFish::StarFish*)data;
+    WindowImplAndroid* sf = (WindowImplAndroid*)starfish->platformWindow();
+    StarFishEnterer enter(sf->starFish());
+    MouseData mdata(MouseData::MouseButtonValue::LeftButton,
+                    MouseData::MouseButtonsValue::LeftButtonDown,
+                    x * sf->starFish()->screenInfo().deviceScaleFactor,
+                    y * sf->starFish()->screenInfo().deviceScaleFactor, 1);
+    sf->dispatchMouseEvent(PlatformWindow::MouseEventDown, mdata);
+    sf->m_isMouseLbuttonDown = true;
+
+    LOGE("Mouse down=%f %f", x, y);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_android_sec_com_lightweightwebengine_MainActivity_dispatchMouseMove(
+    JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
+{
+    StarFish::StarFish* starfish = (StarFish::StarFish*)data;
+    WindowImplAndroid* sf = (WindowImplAndroid*)starfish->platformWindow();
+
+    StarFishEnterer enter(sf->starFish());
+    unsigned char buttons = sf->m_isMouseLbuttonDown
+                                ? MouseData::MouseButtonsValue::LeftButtonDown
+                                : 0;
+    MouseData mdata(0, buttons,
+                    x * sf->starFish()->screenInfo().deviceScaleFactor,
+                    y * sf->starFish()->screenInfo().deviceScaleFactor, 0);
+    sf->dispatchMouseEvent(PlatformWindow::MouseEventMove, mdata);
+
+    LOGE("Mouse move=%f %f", x, y);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_android_sec_com_lightweightwebengine_MainActivity_dispatchMouseUp(
+    JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
+{
+    StarFish::StarFish* starfish = (StarFish::StarFish*)data;
+    WindowImplAndroid* sf = (WindowImplAndroid*)starfish->platformWindow();
+
+    StarFishEnterer enter(sf->starFish());
+    MouseData mdata(MouseData::MouseButtonValue::NoButton,
+                    MouseData::MouseButtonsValue::NoButtonDown,
+                    x * sf->starFish()->screenInfo().deviceScaleFactor,
+                    y * sf->starFish()->screenInfo().deviceScaleFactor, 1);
+    sf->dispatchMouseEvent(PlatformWindow::MouseEventUp, mdata);
+    sf->m_isMouseLbuttonDown = false;
+
+    LOGE("Mouse up=%f %f", x, y);
+}
+
+extern "C" JNIEXPORT bool JNICALL
+Java_android_sec_com_lightweightwebengine_MainActivity_goHistoryBack(
+    JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
+{
+    StarFish::StarFish* starfish = (StarFish::StarFish*)data;
+    return starfish->platformWindow()->webView()->historyManager()->go(-1);
+}
+
 #endif
