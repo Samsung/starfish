@@ -31,7 +31,7 @@ public:
         , m_filename(String::emptyString)
         , m_lineno(0)
         , m_colno(0)
-        , m_error(nullptr)
+        , m_error(scriptUndefined())
     {
     }
     String* message()
