@@ -2,43 +2,41 @@
 
 [HTMLConstructor]
 interface HTMLTextAreaElement : HTMLElement {
-    /*
-    [Unimplemeneted, CEReactions] attribute DOMString autocomplete;
-    [Unimplemeneted, CEReactions] attribute boolean autofocus;
-    [Unimplemeneted, CEReactions] attribute unsigned long cols;
-    [Unimplemeneted, CEReactions] attribute DOMString dirName;
-    [Unimplemeneted, CEReactions] attribute boolean disabled;
-    [Unimplemeneted] readonly attribute HTMLFormElement? form;
-    [Unimplemeneted, CEReactions] attribute DOMString inputMode;
-    [Unimplemeneted, CEReactions] attribute long maxLength;
-    [Unimplemeneted, CEReactions] attribute long minLength;
-    [Unimplemeneted, CEReactions] attribute DOMString name;
-    [Unimplemeneted, CEReactions] attribute DOMString placeholder;
-    [Unimplemeneted, CEReactions] attribute boolean readOnly;
-    [Unimplemeneted, CEReactions] attribute boolean required;
-    [Unimplemeneted, CEReactions] attribute unsigned long rows;
-    [Unimplemeneted, CEReactions] attribute DOMString wrap;
+    [Unimplemented, CEReactions] attribute DOMString autocomplete;
+    [Unimplemented, CEReactions] attribute boolean autofocus;
+    [Unimplemented, CEReactions] attribute unsigned long cols;
+    [Unimplemented, CEReactions] attribute DOMString dirName;
+    [Unimplemented, CEReactions] attribute boolean disabled;
+    [Unimplemented] readonly attribute HTMLFormElement? form;
+    [Unimplemented, CEReactions] attribute DOMString inputMode;
+    [Unimplemented, CEReactions] attribute long maxLength;
+    [Unimplemented, CEReactions] attribute long minLength;
+    [Unimplemented, CEReactions] attribute DOMString name;
+    [Unimplemented, CEReactions] attribute DOMString placeholder;
+    [Unimplemented, CEReactions] attribute boolean readOnly;
+    [Unimplemented, CEReactions] attribute boolean required;
+    [Unimplemented, CEReactions] attribute unsigned long rows;
+    [Unimplemented, CEReactions] attribute DOMString wrap;
 
-    [Unimplemeneted] readonly attribute DOMString type;
-    [Unimplemeneted, CEReactions] attribute DOMString defaultValue;
-    [Unimplemeneted, CEReactions] attribute [TreatNullAs=EmptyString] DOMString value;
-    [Unimplemeneted] readonly attribute unsigned long textLength;
+    [Unimplemented] readonly attribute DOMString type;
+    [Unimplemented, CEReactions] attribute DOMString defaultValue;
+    [TreatNullAs=EmptyString, CEReactions] attribute DOMString value;
+    [Unimplemented] readonly attribute unsigned long textLength;
 
-    [Unimplemeneted] readonly attribute boolean willValidate;
-    [Unimplemeneted] readonly attribute ValidityState validity;
-    [Unimplemeneted] readonly attribute DOMString validationMessage;
-    [Unimplemeneted] boolean checkValidity();
-    [Unimplemeneted] boolean reportValidity();
-    [Unimplemeneted] void setCustomValidity(DOMString error);
+    [Unimplemented] readonly attribute boolean willValidate;
+    [Unimplemented] readonly attribute ValidityState validity;
+    [Unimplemented] readonly attribute DOMString validationMessage;
+    [Unimplemented] boolean checkValidity();
+    [Unimplemented] boolean reportValidity();
+    [Unimplemented] void setCustomValidity(DOMString error);
 
-    [Unimplemeneted] readonly attribute NodeList labels;
+    [Unimplemented] readonly attribute NodeList labels;
 
-    [Unimplemeneted] void select();
-    [Unimplemeneted] attribute unsigned long selectionStart;
-    [Unimplemeneted] attribute unsigned long selectionEnd;
-    [Unimplemeneted] attribute DOMString selectionDirection;
-    [Unimplemeneted] void setRangeText(DOMString replacement);
-    [Unimplemeneted] void setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
-    [Unimplemeneted] void setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
-    */
+    [Unimplemented] void select();
+    [Unimplemented] attribute unsigned long selectionStart;
+    [Unimplemented] attribute unsigned long selectionEnd;
+    [Unimplemented] attribute DOMString selectionDirection;
+    [Unimplemented] void setRangeText(DOMString replacement);
+    [Unimplemented] void setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
+    [Unimplemented] void setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
 };
