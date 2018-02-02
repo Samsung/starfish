@@ -13,7 +13,7 @@ interface HTMLSelectElement : HTMLElement {
 
     readonly attribute DOMString type;
 
-    [Unimplemented, SameObject] readonly attribute HTMLOptionsCollection options;
+    [SameObject] readonly attribute HTMLOptionsCollection options;
     [Unimplemented, CEReactions] attribute unsigned long length;
     [Unimplemented] getter Element? item(unsigned long index);
     [Unimplemented] HTMLOptionElement? namedItem(DOMString name);
@@ -23,8 +23,8 @@ interface HTMLSelectElement : HTMLElement {
     [Unimplemented, CEReactions] setter void (unsigned long index, HTMLOptionElement? option);
 
     [SameObject] readonly attribute HTMLCollection selectedOptions;
-    [Unimplemented] attribute long selectedIndex;
-    [Unimplemented] attribute DOMString value;
+    attribute long selectedIndex;
+    attribute DOMString value;
 
     [Unimplemented] readonly attribute boolean willValidate;
     [Unimplemented] readonly attribute ValidityState validity;

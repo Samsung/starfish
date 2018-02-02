@@ -19,16 +19,22 @@
 
 #include "core/dom/HTMLSelectElement.h"
 
+#include "core/dom/Event.h"
+#include "core/dom/Document.h"
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/HTMLOptionsCollection.h"
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/BrowsingContext.h"
 
 namespace StarFish {
 
 HTMLSelectElement::HTMLSelectElement(Document* document)
     : HTMLFormObject(document)
     , m_selectedOptions(nullptr)
+    , m_options(nullptr)
 {
 }
 
@@ -51,16 +57,80 @@ QualifiedName HTMLSelectElement::name()
     return starFish()->staticStrings()->m_selectTagName;
 }
 
+String* HTMLSelectElement::value()
+{
+    HTMLOptionElement* firstOptionNode = nullptr;
+    GCVector<HTMLOptionElement*> list;
+    computeListOfOptionElements(this, list);
+    for (Node* c : list) {
+        HTMLOptionElement* opt = c->asHTMLOptionElement();
+        if (opt->selected()) {
+            firstOptionNode = opt;
+            break;
+        }
+    }
+
+    if (firstOptionNode) {
+        HTMLOptionElement* opt = firstOptionNode->asHTMLOptionElement();
+        return opt->value();
+    } else {
+        return String::emptyString;
+    }
+}
+
+void HTMLSelectElement::setValue(String* value)
+{
+    GCVector<HTMLOptionElement*> list;
+    computeListOfOptionElements(this, list);
+    for (Node* c : list) {
+        HTMLOptionElement* opt = c->asHTMLOptionElement();
+        opt->setSelected(false);
+    }
+
+    for (Node* c : list) {
+        HTMLOptionElement* opt = c->asHTMLOptionElement();
+        if (opt->value()->equals(value)) {
+            opt->setSelected(true);
+            break;
+        }
+    }
+
+    setNeedsFrameTreeBuild(Node::UpdateAtSelf);
+
+    auto fn = [](size_t handle, void* data) {
+        HTMLSelectElement* element = (HTMLSelectElement*)data;
+        String* eventType =
+            element->starFish()->staticStrings()->m_change.localName();
+        Event* e =
+            new Event(element->document(), eventType, EventInit(true, false));
+        element->EventTarget::dispatchEventByUA(element, e);
+    };
+    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
+                                        this);
+}
+
 HTMLOptionElement* HTMLSelectElement::firstOptionElement()
 {
-    Node* firstOptionNode = Traverse::findDescendant(this, [](Node* d) {
-        if (d->isHTMLOptionElement()) {
-            return true;
-        }
-        return false;
-    });
+    GCVector<HTMLOptionElement*> list;
+    computeListOfOptionElements(this, list);
 
-    return firstOptionNode ? firstOptionNode->asHTMLOptionElement() : nullptr;
+    if (list.empty()) {
+        return nullptr;
+    }
+
+    return list[0];
+}
+
+void HTMLSelectElement::computeListOfOptionElements(
+    Node* parent, GCVector<HTMLOptionElement*>& list)
+{
+    for (Node* c = parent->firstChild(); c; c = c->nextSibling()) {
+        if (c->isHTMLOptionElement()) {
+            list.push_back(c->asHTMLOptionElement());
+        } else if (c->isHTMLOptGroupElement()) {
+            computeListOfOptionElements(c, list);
+        }
+    }
 }
 
 HTMLCollection* HTMLSelectElement::ensureSelectedOptions()
@@ -78,11 +148,90 @@ HTMLCollection* HTMLSelectElement::selectedOptions()
     if (selectedOptions->length() < 1) {
         HTMLOptionElement* option = firstOptionElement();
         if (option != nullptr && option->selected() != true) {
-            option->setInternalSelected(true);
+            option->setSelectedness(true);
             selectedOptions->getNodeListImpl().invalidateCache();
         }
     }
     return selectedOptions;
+}
+
+HTMLOptionsCollection* HTMLSelectElement::options()
+{
+    if (!m_options) {
+        m_options = new HTMLOptionsCollection(
+            this, NodeListImpl::OptionElementFilter, nullptr, false);
+    }
+
+    return m_options;
+}
+
+size_t HTMLSelectElement::selectedIndex()
+{
+    GCVector<HTMLOptionElement*> list;
+    computeListOfOptionElements(this, list);
+
+    for (size_t i = 0; i < list.size(); i++) {
+        HTMLOptionElement* opt = list[i];
+
+        if (opt->selected()) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void HTMLSelectElement::setSelectedIndex(size_t index)
+{
+    GCVector<HTMLOptionElement*> list;
+    computeListOfOptionElements(this, list);
+
+    for (HTMLOptionElement* opt : list) {
+        opt->setSelectedness(false);
+    }
+
+    for (size_t i = 0; i < list.size(); i++) {
+        HTMLOptionElement* opt = list[i];
+        if (i == index) {
+            opt->setSelectedness(true);
+            opt->setDirtiness(true);
+        }
+    }
+}
+
+void HTMLSelectElement::reset(HTMLOptionElement* resetFrom)
+{
+    Nullable<String*> val =
+        getAttribute(starFish()->staticStrings()->m_multiple);
+    GCVector<HTMLOptionElement*> list;
+    computeListOfOptionElements(this, list);
+
+    if (!val.hasValue()) {
+        // single selection
+        // TODO: Consider display size
+        int selectedOptions = 0;
+        for (HTMLOptionElement* opt : list) {
+            if (opt->selected()) {
+                selectedOptions++;
+            }
+        }
+
+        if (selectedOptions == 0) {
+            for (HTMLOptionElement* opt : list) {
+                if (opt->selected() && !opt->disabled()) {
+                    opt->setSelectedness(true);
+                }
+            }
+        } else {
+            for (HTMLOptionElement* opt : list) {
+                if (opt != resetFrom) {
+                    opt->setSelectedness(false);
+                }
+            }
+        }
+    } else {
+        // Todo
+    }
 }
 
 void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)
@@ -96,7 +245,7 @@ void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)
                 HTMLOptionElement* option = firstOptionElement();
                 if (option != nullptr && option->selected() != true) {
                     selectedOptions->getNodeListImpl().invalidateCache();
-                    option->setInternalSelected(true);
+                    option->setSelectedness(true);
                 }
             }
         } else {
@@ -105,11 +254,11 @@ void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)
                 if (element->isHTMLOptionElement() &&
                     element->asHTMLOptionElement() != newElement) {
                     HTMLOptionElement* option = element->asHTMLOptionElement();
-                    String* str =
-                        option->selectedAttributeValue()->toASCIILower();
-                    if (!str->equals("selected") && option->selected()) {
+                    bool hasSelected = option->hasSelectedAttribute();
+
+                    if (hasSelected && option->selected()) {
                         selectedOptions->getNodeListImpl().invalidateCache();
-                        option->setInternalSelected(false);
+                        option->setSelectedness(false);
                     }
                 }
                 element = element->nextElementSibling();

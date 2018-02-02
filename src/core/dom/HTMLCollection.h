@@ -37,7 +37,7 @@ public:
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     size_t length() const;
-    Element* item(unsigned long index);
+    virtual Element* item(unsigned long index);
     virtual Element* namedItem(String* name);
     NodeListImpl& getNodeListImpl()
     {
