@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 
 #include "core/dom/Document.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "HistoryManager.h"
 #include "core/page/WebView.h"
 #include "platform/loader/ResourceURL.h"
@@ -26,14 +27,14 @@
 namespace StarFish {
 
 HistoryManager::HistoryManager(WebView* webView)
-    : m_ower(HistoryManagerOwner::OwnerIsWebView)
+    : m_owner(HistoryManagerOwner::OwnerIsWebView)
     , m_webView(webView)
     , m_curEntry(m_historyEntries.end())
 {
 }
 
 HistoryManager::HistoryManager(HTMLIFrameElement* element)
-    : m_ower(HistoryManagerOwner::OwnerIsHTMLIFrame)
+    : m_owner(HistoryManagerOwner::OwnerIsHTMLIFrame)
     , m_iframe(element)
     , m_curEntry(m_historyEntries.end())
 {
@@ -70,12 +71,12 @@ void HistoryManager::replace(Document* document, ResourceURL* url)
     }
 }
 
-void HistoryManager::go(int delta)
+bool HistoryManager::go(int delta)
 {
     STARFISH_ASSERT(delta != 0);
 
     if (m_historyEntries.size() == 0) {
-        return;
+        return false;
     }
 
     int count = delta;
@@ -103,13 +104,24 @@ void HistoryManager::go(int delta)
 
     if (count != 0) {
         // delta is out of range
-        return;
+        return false;
     }
 
     m_curEntry = itr;
-    m_webView->navigate(
-        currentEntry()->url(), Intact,
-        m_webView->mainBrowsingContext()->document()->documentURI());
+
+    switch (m_owner) {
+    case OwnerIsWebView:
+        m_webView->navigate(
+            currentEntry()->url(), Intact,
+            m_webView->mainBrowsingContext()->document()->documentURI());
+        break;
+    case OwnerIsHTMLIFrame:
+        m_iframe->navigate(
+            currentEntry()->url(), Intact,
+            m_iframe->browsingContext()->document()->documentURI());
+        break;
+    }
+    return true;
 }
 
 uint32_t HistoryManager::length()

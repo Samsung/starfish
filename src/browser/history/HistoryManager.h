@@ -74,7 +74,7 @@ public:
     static HistoryManager* create(WebView* webView);
     static HistoryManager* create(HTMLIFrameElement* iframe);
 
-    void go(int delta);
+    bool go(int delta);
     uint32_t length();
     void pushState(Document* document, ScriptValue state, String* title,
                    Nullable<String*> url);
@@ -96,7 +96,7 @@ private:
         OwnerIsWebView,
         OwnerIsHTMLIFrame,
     };
-    HistoryManagerOwner m_ower;
+    HistoryManagerOwner m_owner;
 
     union {
         WebView* m_webView;
