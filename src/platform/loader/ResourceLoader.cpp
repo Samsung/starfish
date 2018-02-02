@@ -491,6 +491,9 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
             [](size_t handle, void* data) {
                 Document* doc = (Document*)data;
                 doc->setReadyState(DocumentReadyStateComplete);
+                if (!doc->doesParticipateInRendering()) {
+                    return;
+                }
                 String* eventType =
                     doc->starFish()->staticStrings()->m_load.localName();
                 Event* e = new Event(doc, eventType, EventInit(false, false));

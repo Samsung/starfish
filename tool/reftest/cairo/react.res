@@ -109,10 +109,9 @@ test/cairo/reftest/vendor/react/packages/shared/__tests__/ReactErrorUtils-test.i
 test/cairo/reftest/vendor/react/packages/shared/__tests__/reactProdInvariant-test.internal.html
 test/cairo/reftest/vendor/react/scripts/error-codes/__tests__/invertObject-test.html
 test/cairo/reftest/vendor/react/scripts/shared/__tests__/evalToString-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactRenderDocument-test.html
 # PASS, but takes a long time
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildText-test.html
-# ISSUE: Infinite loop
-# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactRenderDocument-test.html
 # Skip: Type Script, Coffee Script, ESLint, ES6 class tests, react-native related tests
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactClassEquivalence-test.html # Coffee script, Type script
 # test/cairo/reftest/vendor/react/packages/react/src/__tests__/ReactCoffeeScriptClass-test.html # Coffee script
