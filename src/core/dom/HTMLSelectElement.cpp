@@ -349,6 +349,61 @@ HTMLOptionElement* HTMLSelectElement::firstSelectedOptionElement()
     return nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#send-select-update-notifications
+void HTMLSelectElement::fireSelectUpdateNotification()
+{
+    // input event
+    auto fn1 = [](size_t handle, void* data) {
+        HTMLSelectElement* element = (HTMLSelectElement*)data;
+        String* eventType =
+            element->starFish()->staticStrings()->m_input.localName();
+        Event* e =
+            new Event(element->document(), eventType, EventInit(true, false));
+        element->EventTarget::dispatchEventByUA(element, e);
+    };
+    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn1,
+                                        this);
+
+    // change event
+    auto fn2 = [](size_t handle, void* data) {
+        HTMLSelectElement* element = (HTMLSelectElement*)data;
+        String* eventType =
+            element->starFish()->staticStrings()->m_change.localName();
+        Event* e =
+            new Event(element->document(), eventType, EventInit(true, false));
+        element->EventTarget::dispatchEventByUA(element, e);
+    };
+    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn2,
+                                        this);
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element
+bool HTMLSelectElement::handleDefaultEvent(Event* event)
+{
+    if (HTMLElement::handleDefaultEvent(event)) {
+        return true;
+    }
+
+    if (isDisabled()) {
+        // Don't do anything. Just propagate.
+        return false;
+    }
+
+    if (event->isMouseEvent() || event->isTouchEvent()) {
+        if (event->type()->equalsIgnoreCase("click")) {
+            if (event->target()->isHTMLOptionElement()) {
+                HTMLOptionElement* option =
+                    event->target()->asHTMLOptionElement();
+                if (option->selectElement() == this) {
+                    fireSelectUpdateNotification();
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 bool HTMLSelectElement::supportsFocus() const
 {
     return true;

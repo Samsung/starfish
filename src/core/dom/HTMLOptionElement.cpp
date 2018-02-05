@@ -17,8 +17,10 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
+#include "core/dom/Event.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLOptionElement.h"
+#include "core/dom/HTMLOptGroupElement.h"
 #include "core/dom/HTMLSelectElement.h"
 
 namespace StarFish {
@@ -89,13 +91,6 @@ void HTMLOptionElement::setSelected(bool selected)
         return;
     }
 
-    if (selected) {
-        setAttribute(starFish()->staticStrings()->m_selected,
-                     String::emptyString);
-    } else {
-        removeAttribute(starFish()->staticStrings()->m_selected);
-    }
-
     m_selectedness = selected;
     m_dirtiness = true;
 
@@ -151,6 +146,25 @@ void HTMLOptionElement::setValue(String* value)
     setAttribute(starFish()->staticStrings()->m_value, value);
 }
 
+bool HTMLOptionElement::isDisabled()
+{
+    if (disabled()) {
+        return true;
+    }
+
+    for (Node* p = parentNode(); p; p = p->parentNode()) {
+        if (p->isHTMLFormElement() || p->isHTMLIFrameElement()) {
+            break;
+        } else if (p->isHTMLOptGroupElement()) {
+            if (p->asHTMLOptGroupElement()->disabled()) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 HTMLSelectElement* HTMLOptionElement::selectElement()
 {
     for (Node* p = parentNode(); p; p = p->parentNode()) {
@@ -179,20 +193,44 @@ void HTMLOptionElement::setText(String* value)
     setTextContent(value);
 }
 
+bool HTMLOptionElement::handleDefaultEvent(Event* event)
+{
+    if (HTMLElement::handleDefaultEvent(event)) {
+        return true;
+    }
+
+    if (isDisabled()) {
+        return false;
+    }
+
+    if (event->isMouseEvent() || event->isTouchEvent()) {
+        if (event->type()->equalsIgnoreCase("click")) {
+            HTMLSelectElement* select = selectElement();
+
+            if (select) {
+                if (select->multiple()) {
+                    // toggle for in multiple mode
+                    if (selected()) {
+                        setSelected(false);
+                    } else {
+                        setSelected(true);
+                    }
+                } else {
+                    // single selection only
+                    setSelected(true);
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
                                             String* val, bool attributeCreated,
                                             bool attributeRemoved)
 {
     HTMLFormObject::didAttributeChanged(name, old, val, attributeCreated,
                                         attributeRemoved);
-
-    // TODO: should implement according to whether m_multiple is true or not.
-    if (name == starFish()->staticStrings()->m_selected) {
-        if (attributeCreated && !m_dirtiness) {
-            m_selectedness = true;
-        } else if (attributeRemoved && !m_dirtiness) {
-            m_selectedness = false;
-        }
-    }
 }
 }

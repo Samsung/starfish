@@ -71,12 +71,11 @@ public:
     String* value();
     void setValue(String* value);
 
-    bool disabled();
-    void setDisabled(bool disabled);
+    virtual bool disabled();
+    virtual void setDisabled(bool disabled);
 
     // Other method
     HTMLFormElement* form();
-    HTMLFieldSetElement* fieldSet();
     HTMLSelectElement* select();
     virtual bool isHTMLFormObject() const override
     {
@@ -91,6 +90,8 @@ protected:
     HTMLFormObject(Document* document, bool supportTabIndex = true);
     void fireSubmitEvent();
 
+    virtual bool isDisabled();
+
     static inline void fillGCDescriptor(GC_word* desc)
     {
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormObject, m_value));
@@ -100,9 +101,7 @@ protected:
 private:
     Node* findAncestor(Node* ancestorToFind, Node* fromThisNode);
     String* m_value;
-    bool m_disabled;
     bool m_supportTabIndex;
-    int32_t m_maxlength;
 };
 
 class HTMLFormElement : public HTMLFormObject {
