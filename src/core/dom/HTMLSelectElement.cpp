@@ -155,6 +155,78 @@ HTMLCollection* HTMLSelectElement::selectedOptions()
     return selectedOptions;
 }
 
+String* HTMLSelectElement::type()
+{
+    if (multiple()) {
+        return String::createASCIIString("select-one");
+    } else {
+        return String::createASCIIString("select-multiple");
+    }
+}
+
+bool HTMLSelectElement::multiple()
+{
+    Nullable<String*> val =
+        getAttribute(starFish()->staticStrings()->m_multiple);
+    return val.hasValue();
+}
+
+void HTMLSelectElement::setMultiple(bool multiple)
+{
+    if (multiple) {
+        setAttribute(starFish()->staticStrings()->m_multiple,
+                     String::emptyString);
+    } else {
+        removeAttribute(starFish()->staticStrings()->m_multiple);
+    }
+}
+
+bool HTMLSelectElement::required()
+{
+    Nullable<String*> val =
+        getAttribute(starFish()->staticStrings()->m_required);
+    return val.hasValue();
+}
+
+void HTMLSelectElement::setRequired(bool required)
+{
+    if (required) {
+        setAttribute(starFish()->staticStrings()->m_required,
+                     String::emptyString);
+    } else {
+        removeAttribute(starFish()->staticStrings()->m_required);
+    }
+}
+
+int HTMLSelectElement::size()
+{
+    String* size = getAttributeOrEmpty(starFish()->staticStrings()->m_size);
+    if (size->equals(String::emptyString)) {
+        return String::parseInt(size);
+    }
+
+    return 0;
+}
+
+void HTMLSelectElement::setSize(int size)
+{
+    if (size > 0) {
+        setAttribute(starFish()->staticStrings()->m_size,
+                     String::fromInt(size));
+    }
+}
+
+int HTMLSelectElement::displaySize()
+{
+    int s = size();
+    if (s > 0) {
+        return s;
+    }
+
+    // https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element
+    return multiple() ? 4 : 1;
+}
+
 HTMLOptionsCollection* HTMLSelectElement::options()
 {
     if (!m_options) {
@@ -208,7 +280,6 @@ void HTMLSelectElement::reset(HTMLOptionElement* resetFrom)
 
     if (!val.hasValue()) {
         // single selection
-        // TODO: Consider display size
         int selectedOptions = 0;
         for (HTMLOptionElement* opt : list) {
             if (opt->selected()) {
@@ -216,13 +287,14 @@ void HTMLSelectElement::reset(HTMLOptionElement* resetFrom)
             }
         }
 
-        if (selectedOptions == 0) {
+        if (displaySize() == 1 && selectedOptions == 0) {
             for (HTMLOptionElement* opt : list) {
                 if (opt->selected() && !opt->disabled()) {
                     opt->setSelectedness(true);
+                    break;
                 }
             }
-        } else {
+        } else if (selectedOptions >= 2) {
             for (HTMLOptionElement* opt : list) {
                 if (opt != resetFrom) {
                     opt->setSelectedness(false);
