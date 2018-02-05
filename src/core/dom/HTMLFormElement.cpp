@@ -28,6 +28,7 @@
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/HTMLFormControlsCollection.h"
 #include "core/dom/HTMLFieldSetElement.h"
+#include "core/dom/HTMLLabelElement.h"
 #include "core/dom/HTMLLegendElement.h"
 #include "core/dom/Node.h"
 #include "platform/loader/ResourceURL.h"
@@ -68,7 +69,6 @@ HTMLFormElement::HTMLFormElement(Document* document)
 HTMLFormObject::HTMLFormObject(Document* document, bool supportTabIndex)
     : HTMLElement(document)
     , m_value(String::emptyString)
-    , m_disabled(false)
     , m_supportTabIndex(supportTabIndex)
 {
     if (m_supportTabIndex) {
@@ -179,19 +179,54 @@ void HTMLFormObject::setFormAction(String* formAction)
 
 bool HTMLFormObject::disabled()
 {
-    if (m_disabled) {
+    Nullable<String*> val =
+        getAttribute(starFish()->staticStrings()->m_disabled);
+    if (val.hasValue()) {
+        return val.getValue();
+    }
+
+    return false;
+}
+
+void HTMLFormObject::setDisabled(bool disabled)
+{
+    if (disabled) {
+        setAttribute(starFish()->staticStrings()->m_disabled,
+                     String::emptyString);
+    } else {
+        removeAttribute(starFish()->staticStrings()->m_disabled);
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#attr-fe-disabled
+bool HTMLFormObject::isDisabled()
+{
+    if (disabled() && (isHTMLButtonElement() || isHTMLInputElement() ||
+                       isHTMLSelectElement() || isHTMLTextAreaElement())) {
         return true;
     }
 
-    if (!isHTMLFormElement()) {
-        HTMLFieldSetElement* fieldSetNode = fieldSet();
-        if (fieldSetNode && fieldSetNode->disabled()) {
-            Node* firstChild = fieldSetNode->firstChild();
-            if (firstChild && firstChild->isHTMLLegendElement() &&
-                findAncestor(firstChild, this)) {
-                return false;
+    HTMLFieldSetElement* fieldSet = nullptr;
+    for (Node* p = parentNode(); p; p = p->parentNode()) {
+        if (p->isHTMLIFrameElement() || p->isHTMLFormElement()) {
+            break;
+        } else if (p->isHTMLFieldSetElement()) {
+            if (p->asHTMLFieldSetElement()->disabled()) {
+                HTMLLabelElement* firstLabel = nullptr;
+                for (Node* c = p->firstChild(); c; c = c->nextSibling()) {
+                    if (c->isHTMLLabelElement()) {
+                        firstLabel = c->asHTMLLabelElement();
+                        break;
+                    }
+                }
+
+                if (!firstLabel) {
+                    return true;
+                }
+                if (!findAncestor(firstLabel, this)) {
+                    return true;
+                }
             }
-            return true;
         }
     }
 
@@ -201,20 +236,13 @@ bool HTMLFormObject::disabled()
 Node* HTMLFormObject::findAncestor(Node* ancestorToFind, Node* fromThisNode)
 {
     for (Node* p = fromThisNode->parentNode(); p; p = p->parentNode()) {
-        if (p == nullptr) {
-            break;
-        } else if (p->isHTMLIFrameElement()) {
+        if (p->isHTMLIFrameElement() || p->isHTMLFormElement()) {
             return nullptr;
         } else if (p == ancestorToFind) {
             return p;
         }
     }
     return nullptr;
-}
-
-void HTMLFormObject::setDisabled(bool disabled)
-{
-    m_disabled = disabled;
 }
 
 void HTMLFormObject::fireSubmitEvent()
@@ -263,20 +291,6 @@ HTMLFormElement* HTMLFormObject::form()
             return nullptr;
         } else if (p->isHTMLFormElement()) {
             return p->asHTMLFormElement();
-        }
-    }
-    return nullptr;
-}
-
-HTMLFieldSetElement* HTMLFormObject::fieldSet()
-{
-    for (Node* p = parentNode(); p; p = p->parentNode()) {
-        if (p == nullptr) {
-            break;
-        } else if (p->isHTMLIFrameElement()) {
-            return nullptr;
-        } else if (p->isHTMLFieldSetElement()) {
-            return p->asHTMLFieldSetElement();
         }
     }
     return nullptr;
@@ -611,9 +625,8 @@ bool HTMLFormElement::isFormAssociatedElement(Node* node)
 
 bool HTMLFormElement::isSubmittableElement(Node* node)
 {
-    // TODO: object and textarea
     if (node->isHTMLButtonElement() || node->isHTMLInputElement() ||
-        node->isHTMLSelectElement()) {
+        node->isHTMLSelectElement() || node->isHTMLTextAreaElement()) {
         return true;
     }
     return false;

@@ -287,7 +287,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
         return true;
     }
 
-    if (disabled()) {
+    if (isDisabled()) {
         return false;
     }
 

@@ -53,6 +53,7 @@ public:
     void setText(String* value);
 
     // Other methods
+    bool handleDefaultEvent(Event* event);
     void didAttributeChanged(QualifiedName name, String* old, String* val,
                              bool attributeCreated, bool attributeRemoved);
     HTMLSelectElement* selectElement();
@@ -65,6 +66,8 @@ public:
 
     bool selectedness();
     void setSelectedness(bool selectedness);
+
+    bool isDisabled();
 
     bool hasSelectedAttribute();
 

@@ -474,6 +474,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | value | Returns the value of the option element. |
 |  | attribute | text | Same as textContent, except that spaces are collapsed and script elements are skipped. |
 | [HTMLOptGroupElement](https://html.spec.whatwg.org/#htmloptgroupelement) | interface | HTMLOptGroupElement | The optgroup element represents a group of option elements with a common label. |
+|  | attribute | disabled | Whether the form control is disabled. |
 | [HTMLOptionsCollection](https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection) | interface | HTMLOptionsCollection | The HTMLOptionsCollection interface is used for collections of option elements. It is always rooted on a select element and has attributes and methods that manipulate that element's descendants. |
 |  | attribute | length | Returns the number of elements in the collection. |
 |  | attribute | selectedIndex | Returns the index of the first selected item, if any, or −1 if there is no selected item. Can be set, to change the selection. |

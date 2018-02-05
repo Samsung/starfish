@@ -3,7 +3,7 @@
 [Exposed=Window,
  HTMLConstructor]
  interface HTMLOptGroupElement : HTMLElement {
-     [Unimplemented, CEReactions] attribute boolean disabled;
+     [CEReactions] attribute boolean disabled;
      [Unimplemented, CEReactions] attribute DOMString label;
  };
 

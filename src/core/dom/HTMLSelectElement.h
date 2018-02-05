@@ -66,6 +66,9 @@ public:
     void computeListOfOptionElements(Node* c,
                                      GCVector<HTMLOptionElement*>& list);
 
+    void fireSelectUpdateNotification();
+    bool handleDefaultEvent(Event* event);
+
     bool supportsFocus() const override;
 
     void reset(HTMLOptionElement* resetFrom);
