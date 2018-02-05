@@ -260,9 +260,6 @@ public:
     int32_t innerWidth();
     int32_t innerHeight();
 
-    int32_t width();
-    int32_t height();
-
     float devicePixelRatio();
 
     double scrollX();

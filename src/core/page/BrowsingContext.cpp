@@ -519,8 +519,8 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
     }
 
     if (m_hasRootElementBackground || m_hasBodyElementBackground) {
-        LayoutRect colorRect(0, 0, document()->window()->width(),
-                             document()->window()->height());
+        LayoutRect colorRect(0, 0, document()->window()->innerWidth(),
+                             document()->window()->innerHeight());
         if (m_hasRootElementBackground) {
             HTMLHtmlElement* root = document()->rootElement();
             FrameBox::paintBackground(canvas, nullptr, root);

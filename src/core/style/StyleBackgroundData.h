@@ -95,6 +95,8 @@ public:
 
     void setSize(BackgroundSizeValue size)
     {
+        // force set length value to nullptr to to clean all of union data area
+        m_size.m_lengthValue = nullptr;
         m_size.m_typeValue = size;
     }
 
