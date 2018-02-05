@@ -54,7 +54,7 @@ uint32_t Screen::pixelDepth() const
 float Screen::devicePixelRatio() const
 {
     // TODO: consider page zoom factor.
-    return starFish()->screenInfo().devicePixelRatio;
+    return starFish()->screenInfo().deviceScaleFactor;
 }
 
 bool Screen::isMonochrome() const

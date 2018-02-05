@@ -54,8 +54,8 @@ void* FrameDocument::operator new(size_t size)
 void FrameDocument::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
-    int w = node()->asDocument()->window()->width();
-    int h = node()->asDocument()->window()->height();
+    int w = node()->asDocument()->window()->innerWidth();
+    int h = node()->asDocument()->window()->innerHeight();
     int ow = 0, oh = 0;
     if (style()->width().isFixed()) {
         ow = style()->width().fixed();

@@ -25,8 +25,6 @@ struct ScreenInfo {
     // pixels.
     float deviceScaleFactor;
 
-    float devicePixelRatio;
-
     // The screen depth in bits per pixel
     int depth;
 
@@ -65,7 +63,6 @@ struct ScreenInfo {
 
     ScreenInfo()
         : deviceScaleFactor(1)
-        , devicePixelRatio(1)
         , depth(24)
         , depthPerComponent(8)
         , isMonochrome(false)
@@ -79,7 +76,6 @@ struct ScreenInfo {
     bool operator==(const ScreenInfo& other) const
     {
         return this->deviceScaleFactor == other.deviceScaleFactor &&
-               this->devicePixelRatio == other.devicePixelRatio &&
                this->depth == other.depth &&
                this->depthPerComponent == other.depthPerComponent &&
                this->isMonochrome == other.isMonochrome &&

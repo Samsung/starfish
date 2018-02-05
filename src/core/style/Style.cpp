@@ -5765,7 +5765,7 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::OutlineWidth:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
-                style->setOutlineWidth(Length(Length::Fixed, 3));
+                style->setOutlineWidth(Length(Length::Vw, 2));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
                 style->setOutlineWidth(parentStyle->outlineWidth());

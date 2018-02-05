@@ -1977,7 +1977,7 @@ public:
     Length outlineWidth()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
-            return Length(Length::Fixed, 3);
+            return Length(Length::Vw, 2);
         }
 
         OutlineData* outline = m_rareComputedStyleData.outline();
@@ -1985,7 +1985,7 @@ public:
             return outline->border().width();
         }
 
-        return Length(Length::Fixed, 3);
+        return Length(Length::Vw, 2);
     }
 
     void setOutlineWidth(Length v)

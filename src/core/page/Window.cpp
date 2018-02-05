@@ -319,21 +319,17 @@ Screen* Window::screen()
 
 int32_t Window::innerWidth()
 {
-    return width();
+    if (browsingContext()->isTopLevelBrowsingContext()) {
+        return m_width / screen()->devicePixelRatio();
+    }
+    return m_width;
 }
 
 int32_t Window::innerHeight()
 {
-    return height();
-}
-
-int32_t Window::width()
-{
-    return m_width;
-}
-
-int32_t Window::height()
-{
+    if (browsingContext()->isTopLevelBrowsingContext()) {
+        return m_height / screen()->devicePixelRatio();
+    }
     return m_height;
 }
 

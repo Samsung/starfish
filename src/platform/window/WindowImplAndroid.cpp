@@ -204,25 +204,30 @@ void requestRender()
 using namespace StarFish;
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_android_sec_com_lightweightwebengine_MainActivity_initWebView(JNIEnv* env,
-                                                                   jobject thiz,
-                                                                   jint w,
-                                                                   jint h)
+Java_android_sec_com_lightweightwebengine_MainActivity_initWebView(
+    JNIEnv* env, jobject thiz, jint w, jint h, jfloat devicePixelRatio,
+    jstring jua)
 {
     ScreenInfo info;
     info.rect.setWidth(w);
     info.rect.setHeight(h);
     info.availableRect.setWidth(w);
     info.availableRect.setHeight(h);
+    info.deviceScaleFactor = devicePixelRatio;
 
     const char* locale = "ko-KR";
     const char* timezoneID = "Asia/Seoul";
     float defaultFontSizeMultiplier = 1;
 
+    const char* cstr = env->GetStringUTFChars(jua, NULL);
+    String* ua = String::fromUTF8(cstr);
+
     StarFish::StarFish* starfish = new (NoGC) StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)0, locale, timezoneID, nullptr, w, h, 0,
-        0, defaultFontSizeMultiplier, String::fromUTF8("sans-serif"), info, "",
-        "", nullptr);
+        0, defaultFontSizeMultiplier, String::fromUTF8("Roboto"), info, "", "",
+        nullptr, ua);
+
+    env->ReleaseStringUTFChars(jua, cstr);
 
     return (jlong)starfish;
 }
@@ -321,7 +326,13 @@ public:
         m_surface = cairo_image_surface_create_for_data(
             (unsigned char*)g_androidBitmapAddress, CAIRO_FORMAT_ARGB32,
             g_androidBitmapWidth, g_androidBitmapHeight, m_stride);
+
+        cairo_surface_set_device_scale(
+            m_surface, m_starFish->screenInfo().deviceScaleFactor,
+            m_starFish->screenInfo().deviceScaleFactor);
+
         m_cairo = cairo_create(m_surface);
+
         bool ret = PlatformWindow::rendering();
 
         cairo_destroy(m_cairo);
@@ -631,8 +642,8 @@ Java_android_sec_com_lightweightwebengine_MainActivity_dispatchMouseDown(
     StarFishEnterer enter(sf->starFish());
     MouseData mdata(MouseData::MouseButtonValue::LeftButton,
                     MouseData::MouseButtonsValue::LeftButtonDown,
-                    x * sf->starFish()->screenInfo().deviceScaleFactor,
-                    y * sf->starFish()->screenInfo().deviceScaleFactor, 1);
+                    x / sf->starFish()->screenInfo().deviceScaleFactor,
+                    y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
     sf->dispatchMouseEvent(PlatformWindow::MouseEventDown, mdata);
     sf->m_isMouseLbuttonDown = true;
 
@@ -651,8 +662,8 @@ Java_android_sec_com_lightweightwebengine_MainActivity_dispatchMouseMove(
                                 ? MouseData::MouseButtonsValue::LeftButtonDown
                                 : 0;
     MouseData mdata(0, buttons,
-                    x * sf->starFish()->screenInfo().deviceScaleFactor,
-                    y * sf->starFish()->screenInfo().deviceScaleFactor, 0);
+                    x / sf->starFish()->screenInfo().deviceScaleFactor,
+                    y / sf->starFish()->screenInfo().deviceScaleFactor, 0);
     sf->dispatchMouseEvent(PlatformWindow::MouseEventMove, mdata);
 
     LOGE("Mouse move=%f %f", x, y);
@@ -668,8 +679,8 @@ Java_android_sec_com_lightweightwebengine_MainActivity_dispatchMouseUp(
     StarFishEnterer enter(sf->starFish());
     MouseData mdata(MouseData::MouseButtonValue::NoButton,
                     MouseData::MouseButtonsValue::NoButtonDown,
-                    x * sf->starFish()->screenInfo().deviceScaleFactor,
-                    y * sf->starFish()->screenInfo().deviceScaleFactor, 1);
+                    x / sf->starFish()->screenInfo().deviceScaleFactor,
+                    y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
     sf->dispatchMouseEvent(PlatformWindow::MouseEventUp, mdata);
     sf->m_isMouseLbuttonDown = false;
 

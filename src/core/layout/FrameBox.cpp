@@ -838,8 +838,9 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
         if (rootOrBodyelement) {
             Window* window = rootOrBodyelement->window();
             FrameDocument* doc = window->document()->frame()->asFrameDocument();
-            paintingRect = Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
-                                      window->width(), window->height());
+            paintingRect =
+                Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
+                           window->innerWidth(), window->innerHeight());
         } else {
             unsigned int idx = style->backgroundLayerSize() - 1;
             paintingRect = box->makeRect(style->backgroundClip(idx));
@@ -866,8 +867,9 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                 Window* window = rootOrBodyelement->window();
                 FrameDocument* doc =
                     window->document()->frame()->asFrameDocument();
-                paintingRect = Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
-                                          window->width(), window->height());
+                paintingRect =
+                    Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
+                               window->innerWidth(), window->innerHeight());
             }
 
             if (attachment == FixedBackgroundAttachmentValue) {

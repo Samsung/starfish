@@ -156,7 +156,7 @@ float Length::specifiedValue(LayoutUnit parentLength, Node* n) const
         return fixed();
     } else if (isViewportPercent()) {
         Window* w = n->window();
-        return viewportPercentValue(w->width(), w->height());
+        return viewportPercentValue(w->innerWidth(), w->innerHeight());
     } else if (isPercent()) {
         return percentValue(parentLength);
     } else if (isFontPercent()) {
@@ -194,7 +194,7 @@ float Length::specifiedFontValue(Element* e)
         return percentValue(fixedParentFontSize);
     } else if (isViewportPercent()) {
         Window* w = e->window();
-        return viewportPercentValue(w->width(), w->height());
+        return viewportPercentValue(w->innerWidth(), w->innerHeight());
     } else if (isFontPercent()) {
         return fontPercentValue(e, true);
     } else {

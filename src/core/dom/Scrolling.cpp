@@ -169,7 +169,7 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
         LayoutUnit scrollMovableArea = frame->height() - frame->borderHeight();
         LayoutUnit scrollBarHeight =
             scrollMovableArea * (frame->height() / frame->scrollHeight());
-        LayoutUnit scrollBarWidth = STARFISH_SCROLLBAR_THICKNESS *
+        LayoutUnit scrollBarWidth = STARFISH_SCROLLBAR_THICKNESS /
                                     frame->node()->window()->devicePixelRatio();
         if (hasHorizontalScroll) {
             scrollMovableArea -= scrollBarWidth;
@@ -196,7 +196,7 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
                                  (frame->scrollWidth() - frame->width()));
         LayoutUnit scrollMovableArea = frame->width() - frame->borderWidth();
         LayoutUnit scrollBarHeight =
-            STARFISH_SCROLLBAR_THICKNESS *
+            STARFISH_SCROLLBAR_THICKNESS /
             frame->node()->window()->devicePixelRatio();
         LayoutUnit scrollBarWidth = (frame->width() - frame->borderWidth()) *
                                     (frame->width() / frame->scrollWidth());

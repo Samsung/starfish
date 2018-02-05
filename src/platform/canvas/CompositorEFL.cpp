@@ -15,6 +15,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "StarFish.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/Canvas.h"
 
@@ -27,16 +28,21 @@ Canvas* createCanvasEFL(StarFish* starfish, CanvasSurface* data);
 
 class CompositorEFL : public Compositor {
     Canvas* m_canvas;
+    StarFish* m_starfish;
 
 public:
     CompositorEFL(StarFish* starfish, void* data)
     {
+        m_starfish = starfish;
         m_canvas = createCanvasDirectEFL(starfish, data);
+        resetMatrixAndClip();
     }
 
     CompositorEFL(StarFish* starfish, CanvasSurface* data)
     {
+        m_starfish = starfish;
         m_canvas = createCanvasEFL(starfish, data);
+        resetMatrixAndClip();
     }
 
     ~CompositorEFL()
@@ -94,6 +100,9 @@ public:
     virtual void resetMatrixAndClip()
     {
         m_canvas->resetMatrixAndClip();
+
+        m_canvas->scale(m_starfish->screenInfo().deviceScaleFactor,
+                        m_starfish->screenInfo().deviceScaleFactor);
     }
 
     // reset transform clip

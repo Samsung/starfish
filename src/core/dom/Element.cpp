@@ -597,7 +597,7 @@ void Element::scrollIntoView(bool alignToTop)
         }
 
         if (remainSpaceToScrollEnd) {
-            remainSpaceToScrollEnd -= window()->height();
+            remainSpaceToScrollEnd -= window()->innerHeight();
             window()->scrollTo(window()->scrollX(),
                                window()->scrollY() + remainSpaceToScrollEnd);
         }
