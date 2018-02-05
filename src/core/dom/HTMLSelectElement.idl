@@ -6,10 +6,10 @@ interface HTMLSelectElement : HTMLElement {
     [Unimplemented, CEReactions] attribute boolean autofocus;
     [CEReactions] attribute boolean disabled;
     readonly attribute HTMLFormElement? form;
-    [Unimplemented, CEReactions] attribute boolean multiple;
+    [CEReactions] attribute boolean multiple;
     [CEReactions,Rename=domName] attribute DOMString name;
-    [Unimplemented, CEReactions] attribute boolean required;
-    [Unimplemented, CEReactions] attribute unsigned long size;
+    [CEReactions] attribute boolean required;
+    [CEReactions] attribute unsigned long size;
 
     readonly attribute DOMString type;
 

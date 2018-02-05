@@ -463,6 +463,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | options | Returns an HTMLOptionsCollection containing all options rooted at this select node |
 |  | attribute | selectedIndex | Returns the index of the first selected item, if any, or −1 if there is no selected item. Can be set, to change the selection. |
 |  | attribute | value | Returns the value of the first selected item, if any, or the empty string if there is no selected item. Can be set, to change the selection. |
+|  | attribute | type | Returns "select-multiple" if the element has a multiple attribute, and "select-one" otherwise. |
+|  | attribute | multiple | Whether to allow multiple values |
+|  | attribute | required | Whether the control is required for form submission |
+|  | attribute | size | Size of the control |
 | [HTMLOptionElement](https://html.spec.whatwg.org/#htmloptionelement) | interface | HTMLOptionElement | The option element represents an option in a select element or as part of a list of suggestions in a datalist element. |
 |  | attribute | disabled | Returns whether the option element is disabled. |
 |  | attribute | form | Returns the element's form owner, or null if there is not one. |

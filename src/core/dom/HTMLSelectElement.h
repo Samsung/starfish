@@ -44,6 +44,14 @@ public:
     size_t selectedIndex();
     void setSelectedIndex(size_t index);
 
+    String* type();
+    bool multiple();
+    void setMultiple(bool multiple);
+    bool required();
+    void setRequired(bool required);
+    int size();
+    void setSize(int size);
+
     HTMLOptionsCollection* options();
 
     /* 4.4 Interface Node */
@@ -61,6 +69,8 @@ public:
     bool supportsFocus() const override;
 
     void reset(HTMLOptionElement* resetFrom);
+
+    int displaySize();
 
 private:
     HTMLCollection* m_selectedOptions;
