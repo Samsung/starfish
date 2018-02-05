@@ -57,11 +57,13 @@ namespace StarFish {
 
 String* Element::tagName()
 {
-    if (document()->isXMLDocument()) {
-        return localName();
-    } else {
+    // https://www.w3.org/TR/dom/#dom-element-tagname
+    if (namespaceURI().hasValue() &&
+        namespaceURI().getValue()->equals(HTML_NAMESPACE) &&
+        document()->isHTMLDocument()) {
         return localName()->toASCIIUpper();
     }
+    return localName();
 }
 
 Nullable<String*> Element::namespaceURI()
