@@ -26,13 +26,15 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/quoteAttributeV
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactBrowserEventEmitter-test.internal.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactChildReconciler-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactComponentLifeCycle-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactComponent-test.html
+#test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactComponent-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactComponent-test_modified.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponentDOMMinimalism-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponentNestedState-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponentState-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactCompositeComponent-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMAttribute-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponent-test.html
+#test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponent-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponent-test_modified.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMComponentTree-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMEventListener-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMFiberAsync-test.internal.html
