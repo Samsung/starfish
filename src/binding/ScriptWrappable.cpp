@@ -292,6 +292,16 @@ ScriptValue createScriptValue(ScriptUint8ClampedArray array)
     return ValueRef::create(array);
 }
 
+ScriptValue createScriptValue(uint32_t value)
+{
+    return ValueRef::create((unsigned long)value);
+}
+
+ScriptValue createScriptValue(String* value)
+{
+    return ValueRef::create(createScriptString(value));
+}
+
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error)

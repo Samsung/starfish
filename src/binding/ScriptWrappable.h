@@ -75,6 +75,10 @@ ScriptValue createScriptValue(ScriptString s);
 ScriptValue createScriptValue(ScriptArrayBuffer buffer);
 ScriptValue createScriptValue(ScriptArrayBufferView buffer);
 ScriptValue createScriptValue(ScriptUint8ClampedArray array);
+
+ScriptValue createScriptValue(uint32_t value);
+ScriptValue createScriptValue(String* value);
+
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error);

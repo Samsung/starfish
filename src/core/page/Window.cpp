@@ -576,8 +576,6 @@ void Window::releaseCSSTarget()
 
 void Window::dispatchErrorEvent(ErrorEventInit& errorInfo)
 {
-    // TODO Invoking attribute listener(onerror) should differ
-    // ErrorEventInit errorInfo(message, filename, lineno, colno, errorScript);
     Event* errorEvent = new ErrorEvent(
         document(), starFish()->staticStrings()->m_error.localName(),
         errorInfo);

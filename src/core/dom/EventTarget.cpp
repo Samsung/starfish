@@ -20,7 +20,7 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
 #include "core/dom/EventTarget.h"
-#include "core/dom/Event.h"
+#include "core/dom/ErrorEvent.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 
@@ -41,20 +41,49 @@ ScriptValue EventListener::scriptValue() const
     return m_listener;
 }
 
+enum ErrorArgumentSequence {
+    ERROR_ARG_MESSAGE,
+    ERROR_ARG_SRC,
+    ERROR_ARG_LINENO,
+    ERROR_ARG_COLNO,
+    ERROR_ARG_ERROR,
+    ERROR_ARG_SIZE
+};
+
+enum DefaultArgumentSequence { DEFAULT_ARG_EVENT, DEFAULT_ARG_SIZE };
+
 ScriptValue EventListener::call(Event* event)
 {
     ScriptValue listenerFunc = scriptValue();
     if (isCallableScriptValue(listenerFunc) ||
         isObjectScriptValue(listenerFunc)) {
-        ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
+        // Prepare arguments
+        ScriptValue* argv;
+        size_t argc = 0;
+        if (event->isErrorEvent() && isAttribute()) {
+            argc = ERROR_ARG_SIZE;
+            argv = (ScriptValue*)alloca(sizeof(ScriptValue) * argc);
+            ErrorEvent* errorEvent = event->asErrorEvent();
+            argv[ERROR_ARG_MESSAGE] = createScriptValue(errorEvent->message());
+            argv[ERROR_ARG_SRC] = createScriptValue(errorEvent->filename());
+            argv[ERROR_ARG_LINENO] = createScriptValue(errorEvent->lineno());
+            argv[ERROR_ARG_COLNO] = createScriptValue(errorEvent->colno());
+            argv[ERROR_ARG_ERROR] = errorEvent->error();
+        } else {
+            argc = DEFAULT_ARG_SIZE;
+            argv = (ScriptValue*)alloca(sizeof(ScriptValue) * argc);
+            argv[DEFAULT_ARG_EVENT] = event->scriptValue();
+        }
+
+        // Call
         ScriptValue value;
         if (isCallableScriptValue(listenerFunc)) {
             value = callScriptFunction(event->scriptBindingInstance(),
-                                       listenerFunc, argv, 1,
+                                       listenerFunc, argv, argc,
                                        event->currentTarget()->scriptValue());
         } else {
             value = callHandleEventFunction(
-                event->scriptBindingInstance(), listenerFunc, argv, 1,
+                event->scriptBindingInstance(), listenerFunc, argv, argc,
                 event->currentTarget()->scriptValue());
         }
 
