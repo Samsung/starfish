@@ -4453,43 +4453,25 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
     LayoutUnit borderSpacing =
         style()->horizontalBorderSpacing().specifiedValue(unused, this);
 
-    LayoutUnit parentContentWidth =
-        ctx.layoutContext().parentContentWidth(this);
     LayoutUnit tablePreferredWidth = 0;
     LayoutUnit tablePreferredMinWidth = 0;
     Length width = style()->width();
-    if (width.isAuto()) {
+    if (width.isDefinite(false)) {
+        LayoutUnit unused;
+        tablePreferredWidth = width.specifiedValue(unused, this);
+        if (!isAnonymous() && node()->isHTMLTableElement()) {
+            tablePreferredWidth -= borderWidth() + paddingWidth();
+        }
+        tablePreferredMinWidth = tablePreferredWidth;
+    } else {
         calCellWidth(ctx.layoutContext());
         tablePreferredWidth += borderSpacing;
         tablePreferredMinWidth += borderSpacing;
-
         for (auto& col : columnWidths()) {
-            if (isCellWidthAuto(col.id)) {
-                tablePreferredWidth += col.maxCellWidth;
-                tablePreferredMinWidth += col.minCellWidth;
-            } else {
-                tablePreferredWidth += col.cellWidth;
-                tablePreferredMinWidth += col.cellWidth;
-            }
-
+            tablePreferredWidth += col.maxCellWidth;
+            tablePreferredMinWidth += col.minCellWidth;
             tablePreferredWidth += borderSpacing;
             tablePreferredMinWidth += borderSpacing;
-        }
-    } else {
-        // TODO: consider box-sizing and min-max width
-        if (width.isDefinite(false)) {
-            LayoutUnit unused;
-            tablePreferredWidth = width.specifiedValue(unused, this);
-            if (!isAnonymous() && node()->isHTMLTableElement()) {
-                tablePreferredWidth -= borderWidth() + paddingWidth();
-            }
-            tablePreferredMinWidth = tablePreferredWidth;
-        } else if (width.isPercent()) {
-            LayoutUnit tableWidth = width.percentValue(parentContentWidth);
-            tableWidth -= borderWidth() + paddingWidth();
-            tablePreferredWidth = tablePreferredMinWidth = tableWidth;
-        } else if (width.isCalc()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
     }
 
