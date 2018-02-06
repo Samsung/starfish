@@ -410,6 +410,24 @@ void ComputedStyle::blockify(Node* current, bool force)
                 break;
             }
         }
+
+        if (current->isHTMLInputElement() || current->isHTMLButtonElement()) {
+            switch (m_display) {
+            case DisplayValue::InlineDisplayValue:
+            case DisplayValue::InlineTableDisplayValue:
+            case DisplayValue::InlineListItemDisplayValue:
+            case DisplayValue::TableRowGroupDisplayValue:
+            case DisplayValue::TableColumnDisplayValue:
+            case DisplayValue::TableColumnGroupDisplayValue:
+            case DisplayValue::TableHeaderGroupDisplayValue:
+            case DisplayValue::TableFooterGroupDisplayValue:
+            case DisplayValue::TableRowDisplayValue:
+            case DisplayValue::TableCellDisplayValue:
+            case DisplayValue::TableCaptionDisplayValue:
+                m_display = DisplayValue::InlineBlockDisplayValue;
+                break;
+            }
+        }
     }
 }
 

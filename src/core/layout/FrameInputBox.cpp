@@ -71,8 +71,13 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         pseudoStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
         textElement->setStyle(pseudoStyle);
 
-        Text* textNode =
-            new Text(current->document(), inputNode->visibleValue());
+        String* visibleValue = inputNode->visibleValue();
+        if (visibleValue->length() == 0) {
+            // replace emptyString to spaceString for preventing shrink linebox
+            // height
+            visibleValue = String::createUTF32String(0x202F);
+        }
+        Text* textNode = new Text(current->document(), visibleValue);
         textNode->setParentNode(textElement);
         ComputedStyle* textStyle = createInputElementStyleFrom(textElement);
         textNode->setStyle(textStyle);
@@ -130,7 +135,7 @@ void FrameInputBox::layout(LayoutContext& ctx,
         if (lineBoxes().size() > 0) {
             LineBox* lb = *lineBoxes().begin();
             LayoutUnit availableHeight = contentHeight() - lb->height();
-            lb->setY(availableHeight / 2);
+            lb->setY(availableHeight / 2 + paddingTop() + borderTop());
         }
     }
 
