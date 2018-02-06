@@ -20,6 +20,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLInputElement.h"
 #include "core/dom/PseudoElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/svg/SVGSVGElement.h"
@@ -41,6 +42,7 @@
 #include "core/layout/FrameTableObjectBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/FrameInputBox.h"
+#include "core/layout/FrameButtonBox.h"
 #include "core/layout/FrameSelectBox.h"
 #include "core/layout/FrameOptGroupBox.h"
 #include "core/layout/FrameOptionBox.h"
@@ -580,6 +582,8 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
         return new FrameReplacedObject(current);
     } else if (current->isSVGSVGElement()) {
         return FrameTreeBuilder::buildSVGFrameTree(current->asSVGSVGElement());
+    } else if (current->isHTMLButtonElement()) {
+        return new FrameButtonBox(current, nullptr);
     } else if (current->isHTMLInputElement()) {
         return FrameInputBox::buildFrameTree(current, ctx, force);
     } else if (current->isHTMLSelectElement()) {

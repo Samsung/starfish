@@ -3807,12 +3807,6 @@ bool LineFormattingContext::removeLastLineBoxIfNeeds()
 
 LayoutUnit LineFormattingContext::contentHeightForBlock()
 {
-    if (m_block->isFrameInputBox()) {
-        LayoutUnit fontHeight =
-            m_block->style()->font()->metrics().m_fontHeight;
-        return fontHeight;
-    }
-
     LayoutUnit top = m_block->paddingTop() + m_block->borderTop();
     LayoutUnit bottom;
     LayoutUnit height;
