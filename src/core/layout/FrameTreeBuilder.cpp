@@ -914,9 +914,32 @@ void dump(Frame* frm, unsigned depth)
     }
 }
 
+void dumpText(Frame* frm, StringBuilder* result)
+{
+    if (frm->isFrameText()) {
+        result->appendString(
+            frm->asFrameText()->text()->stripAndCollapseASCIIwhitespace());
+    }
+    result->appendString(String::createASCIIString("\n"));
+    Frame* f = frm->firstChild();
+    while (f) {
+        dumpText(f, result);
+        f = f->next();
+    }
+}
+
 void FrameTreeBuilder::dumpFrameTree(Document* document, unsigned depth)
 {
     dump(document->frame(), depth);
 }
+
+String* FrameTreeBuilder::dumpFrameTreeAsText(Document* document,
+                                              unsigned depth)
+{
+    StringBuilder result;
+    dumpText(document->frame(), &result);
+    return result.finalize();
+}
+
 #endif
 }

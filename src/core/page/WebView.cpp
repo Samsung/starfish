@@ -754,6 +754,29 @@ bool WebView::rendering(bool force)
 
 #if defined(STARFISH_ENABLE_TEST)
     {
+        if (g_fireOnloadEvent &&
+            starFish()->TestCompatibleMode() ==
+                StarFishTestCompatibleMode::ChromiumLayout) {
+            if (g_enableDumpAsText && !g_DumpAsText_Async) {
+                fprintf(stdout, "#READY\n");
+
+                StringBuilder outStr;
+                outStr.appendString(
+                    String::createASCIIString("Content-Type: text/plain\n"));
+                outStr.appendString(FrameTreeBuilder::dumpFrameTreeAsText(
+                    m_topLevelBrowsingContext->document(), 0));
+                fprintf(stdout, "%s\n",
+                        outStr.finalize()->toUTF8NonGCString().c_str());
+                fprintf(stdout, "#EOF\n");
+                fprintf(stdout, "#EOF\n");
+                fprintf(stdout, "#EOF\n");
+
+                fprintf(stderr, "#EOF\n");
+                g_enableDumpAsText = false;
+                exit(0);
+            }
+        }
+
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
             cairo_surface_t* png_buffer;

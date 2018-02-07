@@ -96,11 +96,15 @@ void Initialize_CursorMod() // Initialize cursor module
 }
 
 #endif
+
 namespace StarFish {
 
 #ifdef STARFISH_ENABLE_TEST
 bool g_enablePixelTest = false;
 bool g_memLogDump = false;
+bool g_enableDumpAsText = false;
+bool g_DumpAsText_Async = false;
+
 FILE* fp_mem = NULL;
 static double process_mem_usage()
 {
@@ -247,6 +251,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #endif
     , m_initialFontFamilyDatas(new (GC_MALLOC(sizeof(FontFamilyData) * 2))
                                    FontFamilyData[2]{ 1, defaultFontName })
+#ifdef STARFISH_ENABLE_TEST
+    , m_testCompatibleMode(StarFishTestCompatibleMode::Normal)
+#endif
 {
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     m_width = w;

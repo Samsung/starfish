@@ -139,6 +139,7 @@
         ],
         'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',],
         'main_file' : 'src/shell/shell.cpp',
+        'test_runner_file' : 'src/shell/testRunner.cpp',
         'variables': {
             'variables': {
                 'component%': 'static_library',

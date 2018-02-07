@@ -545,6 +545,11 @@ int main(int argc, char* argv[])
     ecore_app_args_set(argc, (const char**)argv);
 #endif
 
+#ifdef STARFISH_ENABLE_TEST
+    StarFishTestCompatibleMode testCompatibleMode =
+        StarFishTestCompatibleMode::Normal;
+#endif
+
     int flag = 0;
 
     if (argc == 1) {
@@ -607,6 +612,10 @@ int main(int argc, char* argv[])
             customUserAgentString = argv[i] + strlen("--useragent=");
         } else if (strstr(argv[i], "--polyfill=") == argv[i]) {
             builtinPolyfillPathString = argv[i] + strlen("--polyfill=");
+        } else if (strstr(argv[i], "--enable-chromium-test") == argv[i]) {
+#ifdef STARFISH_ENABLE_TEST
+            testCompatibleMode = StarFishTestCompatibleMode::ChromiumLayout;
+#endif
         }
     }
 
@@ -662,6 +671,10 @@ int main(int argc, char* argv[])
         "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
         cacheDir.data(), String::fromUTF8(customUserAgentString.data()),
         String::fromUTF8(builtinPolyfillPathString.data()));
+
+#ifdef STARFISH_ENABLE_TEST
+    sf->setTestCompatibleMode(testCompatibleMode);
+#endif
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();
