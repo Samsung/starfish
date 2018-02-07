@@ -21,16 +21,17 @@ namespace StarFish {
 
 StaticStrings::StaticStrings(StarFish* sf)
     : m_starFish(sf)
+    // https://infra.spec.whatwg.org/#namespaces
     , m_xhtmlNamespaceURI(
           AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml"))
-    // https://infra.spec.whatwg.org/#xml-namespace
     , m_xmlNamespaceURI(AtomicString::createAtomicString(
           sf, "http://www.w3.org/XML/1998/namespace"))
-    // https://infra.spec.whatwg.org/#xmlns-namespace
     , m_xmlnsNamespaceURI(
           AtomicString::createAtomicString(sf, "http://www.w3.org/2000/xmlns/"))
     , m_svgNamespaceURI(
           AtomicString::createAtomicString(sf, "http://www.w3.org/2000/svg"))
+    , m_mathmlNamespaceURI(AtomicString::createAtomicString(
+          sf, "http://www.w3.org/1998/Math/MathML"))
     , m_xml(AtomicString::createAtomicString(sf, "xml"))
     , m_xmlns(AtomicString::createAtomicString(sf, "xmlns"))
     , m_documentLocalName(AtomicString::createAtomicString(sf, "#document"))
@@ -52,6 +53,12 @@ StaticStrings::StaticStrings(StarFish* sf)
         m_svgNamespaceURI, AtomicString::createAtomicString(sf, #name));
     STARFISH_ENUM_SVG_TAG_NAMES(DEFINE_SVG_LOCAL_NAMES)
 #undef DEFINE_SVG_LOCAL_NAMES
+
+#define DEFINE_MATHML_LOCAL_NAMES(name)      \
+    m_mathml##name##TagName = QualifiedName( \
+        m_mathmlNamespaceURI, AtomicString::createAtomicString(sf, #name));
+    STARFISH_ENUM_MATHML_TAG_NAMES(DEFINE_MATHML_LOCAL_NAMES)
+#undef DEFINE_MATHML_LOCAL_NAMES
 
     m_firstChildSelector = AtomicString::createAtomicString(sf, "first-child");
     m_firstOfTypeSelector =

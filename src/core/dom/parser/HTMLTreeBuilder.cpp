@@ -973,15 +973,14 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         m_tree.insertHTMLElement(token);
         return;
     }
-    /*
-    if (token->name() == MathMLNames::mathTag.localName()) {
+    if (token->name() == s->m_mathmlmathTagName) {
         m_tree.reconstructTheActiveFormattingElements();
-        adjustMathMLAttributes(token);
-        adjustForeignAttributes(token);
-        m_tree.insertForeignElement(token, MathMLNames::mathmlNamespaceURI);
+        // TODO
+        // adjustMathMLAttributes(token);
+        // adjustForeignAttributes(token);
+        m_tree.insertForeignElement(token, s->m_mathmlNamespaceURI);
         return;
     }
-    */
     if (token->name() == s->m_svgsvgTagName) {
         m_tree.reconstructTheActiveFormattingElements();
         // TODO
