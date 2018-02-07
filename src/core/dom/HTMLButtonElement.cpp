@@ -26,7 +26,7 @@
 namespace StarFish {
 
 HTMLButtonElement::HTMLButtonElement(Document* document)
-    : HTMLFormObject(document)
+    : HTMLFormControl(document)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
@@ -37,7 +37,7 @@ void* HTMLButtonElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLButtonElement)] = { 0 };
-        HTMLFormObject::fillGCDescriptor(desc);
+        HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLButtonElement));
         typeInited = true;
     }
@@ -54,7 +54,7 @@ QualifiedName HTMLButtonElement::name()
     return starFish()->staticStrings()->m_buttonTagName;
 }
 
-String* HTMLButtonElement::type() const
+String* HTMLButtonElement::type()
 {
     String* typeAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_type);
     typeAttr = typeAttr->toASCIILower();
@@ -90,10 +90,5 @@ bool HTMLButtonElement::handleDefaultEvent(Event* event)
     }
 
     return false;
-}
-
-bool HTMLButtonElement::supportsFocus() const
-{
-    return true;
 }
 }

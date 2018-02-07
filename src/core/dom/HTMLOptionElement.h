@@ -25,7 +25,7 @@ namespace StarFish {
 class FrameOptionBox;
 class FrameSelectBox;
 
-class HTMLOptionElement : public HTMLFormObject {
+class HTMLOptionElement : public HTMLFormControl {
     friend FrameOptionBox;
     friend FrameSelectBox;
 

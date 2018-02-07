@@ -32,7 +32,7 @@
 namespace StarFish {
 
 HTMLSelectElement::HTMLSelectElement(Document* document)
-    : HTMLFormObject(document)
+    : HTMLFormControl(document)
     , m_selectedOptions(nullptr)
     , m_options(nullptr)
 {
@@ -45,7 +45,7 @@ void* HTMLSelectElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLSelectElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLSelectElement, m_selectedOptions));
-        HTMLFormObject::fillGCDescriptor(desc);
+        HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLSelectElement));
         typeInited = true;
     }
@@ -162,40 +162,8 @@ String* HTMLSelectElement::type()
     } else {
         return String::createASCIIString("select-multiple");
     }
-}
 
-bool HTMLSelectElement::multiple()
-{
-    Nullable<String*> val =
-        getAttribute(starFish()->staticStrings()->m_multiple);
-    return val.hasValue();
-}
-
-void HTMLSelectElement::setMultiple(bool multiple)
-{
-    if (multiple) {
-        setAttribute(starFish()->staticStrings()->m_multiple,
-                     String::emptyString);
-    } else {
-        removeAttribute(starFish()->staticStrings()->m_multiple);
-    }
-}
-
-bool HTMLSelectElement::required()
-{
-    Nullable<String*> val =
-        getAttribute(starFish()->staticStrings()->m_required);
-    return val.hasValue();
-}
-
-void HTMLSelectElement::setRequired(bool required)
-{
-    if (required) {
-        setAttribute(starFish()->staticStrings()->m_required,
-                     String::emptyString);
-    } else {
-        removeAttribute(starFish()->staticStrings()->m_required);
-    }
+    return String::emptyString;
 }
 
 int HTMLSelectElement::size()
@@ -402,10 +370,5 @@ bool HTMLSelectElement::handleDefaultEvent(Event* event)
     }
 
     return false;
-}
-
-bool HTMLSelectElement::supportsFocus() const
-{
-    return true;
 }
 }

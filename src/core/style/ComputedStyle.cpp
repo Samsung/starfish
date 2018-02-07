@@ -426,6 +426,8 @@ void ComputedStyle::blockify(Node* current, bool force)
             case DisplayValue::TableCaptionDisplayValue:
                 m_display = DisplayValue::InlineBlockDisplayValue;
                 break;
+            default:
+                break;
             }
         }
     }

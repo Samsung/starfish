@@ -22,10 +22,10 @@
 
 namespace StarFish {
 
-class HTMLTextAreaElement : public HTMLFormObject {
+class HTMLTextAreaElement : public HTMLFormControl {
 public:
     HTMLTextAreaElement(Document* document)
-        : HTMLFormObject(document)
+        : HTMLFormControl(document)
     {
     }
 
@@ -38,8 +38,6 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
-
-    bool supportsFocus() const override;
 };
 }
 

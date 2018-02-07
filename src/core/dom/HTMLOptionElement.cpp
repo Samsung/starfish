@@ -40,7 +40,7 @@ HTMLOptionElement::HTMLOptionElement(Document* document, String* text,
 HTMLOptionElement::HTMLOptionElement(Document* document, String* text,
                                      String* value, bool defaultSelected,
                                      bool selected)
-    : HTMLFormObject(document)
+    : HTMLFormControl(document)
     , m_dirtiness(false)
     , m_selectedness(false)
     , m_drawOptionBox(false)
@@ -67,7 +67,7 @@ void* HTMLOptionElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLOptionElement)] = { 0 };
-        HTMLFormObject::fillGCDescriptor(desc);
+        HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLOptionElement));
         typeInited = true;
     }
@@ -230,7 +230,7 @@ void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
                                             String* val, bool attributeCreated,
                                             bool attributeRemoved)
 {
-    HTMLFormObject::didAttributeChanged(name, old, val, attributeCreated,
-                                        attributeRemoved);
+    HTMLFormControl::didAttributeChanged(name, old, val, attributeCreated,
+                                         attributeRemoved);
 }
 }

@@ -26,7 +26,7 @@ void* HTMLTextAreaElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLTextAreaElement)] = { 0 };
-        HTMLFormObject::fillGCDescriptor(desc);
+        HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLTextAreaElement));
         typeInited = true;
     }
@@ -36,10 +36,5 @@ void* HTMLTextAreaElement::operator new(size_t size)
 QualifiedName HTMLTextAreaElement::name()
 {
     return starFish()->staticStrings()->m_textareaTagName;
-}
-
-bool HTMLTextAreaElement::supportsFocus() const
-{
-    return true;
 }
 }

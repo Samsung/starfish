@@ -47,14 +47,11 @@ public:
     ResourceRequest::MethodType m_method;
 };
 
-class HTMLFormObject : public HTMLElement {
+class HTMLFormControl : public HTMLElement {
 public:
     // Common method for Form-related nodes
     virtual String* domName();
     virtual void setDomName(String* name);
-
-    virtual String* type() const;
-    virtual void setType(String* type);
 
     String* formEnctype();
     void setFormEnctype(String* enctype);
@@ -68,8 +65,15 @@ public:
     String* formAction();
     void setFormAction(String* formAction);
 
-    String* value();
-    void setValue(String* value);
+    virtual String* type();
+    virtual void setType(String* type);
+    virtual bool required();
+    virtual void setRequired(bool required);
+    virtual bool multiple();
+    virtual void setMultiple(bool multiple);
+
+    virtual String* value();
+    virtual void setValue(String* value);
 
     virtual bool disabled();
     virtual void setDisabled(bool disabled);
@@ -77,6 +81,9 @@ public:
     // Other method
     HTMLFormElement* form();
     HTMLSelectElement* select();
+
+    virtual bool supportsFocus();
+
     virtual bool isHTMLFormObject() const override
     {
         return true;
@@ -87,24 +94,25 @@ public:
                                      bool attributeRemoved) override;
 
 protected:
-    HTMLFormObject(Document* document, bool supportTabIndex = true);
+    HTMLFormControl(Document* document, bool supportTabIndex = true);
     void fireSubmitEvent();
 
     virtual bool isDisabled();
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
-        GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormObject, m_value));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormControl, m_value));
         HTMLElement::fillGCDescriptor(desc);
     }
 
+    String* m_value;
+
 private:
     Node* findAncestor(Node* ancestorToFind, Node* fromThisNode);
-    String* m_value;
     bool m_supportTabIndex;
 };
 
-class HTMLFormElement : public HTMLFormObject {
+class HTMLFormElement : public HTMLFormControl {
 public:
     HTMLFormElement(Document* document);
 
@@ -150,9 +158,9 @@ private:
     void clearPlannedNavigationTask();
     bool isFormAssociatedElement(Node* node);
     void computeFormAssociatedElements(Node* parent,
-                                       GCVector<HTMLFormObject*>& list);
+                                       GCVector<HTMLFormControl*>& list);
     bool isSubmittableElement(Node* node);
-    bool isButton(HTMLFormObject* node);
+    bool isButton(HTMLFormControl* node);
 
     HTMLFormControlsCollection* m_elements;
 

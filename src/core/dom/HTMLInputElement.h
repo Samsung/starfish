@@ -21,7 +21,7 @@
 
 namespace StarFish {
 class Event;
-class HTMLInputElement : public HTMLFormObject {
+class HTMLInputElement : public HTMLFormControl {
     const int DEFAULT_SIZE = 20;
     const int CARET_THICKNESS = 2;
     friend class FrameInputBox;
@@ -44,8 +44,11 @@ public:
     virtual QualifiedName name();
 
     // 4.10 Interface Input
+    String* type() override;
     bool checked();
     void setChecked(bool checked);
+    bool defaultChecked();
+    void setDefaultChecked(bool checked);
 
     String* placeholder();
     void setPlaceholder(String* target);
@@ -55,8 +58,8 @@ public:
 
     // Other methods
     bool handleDefaultEvent(Event* event) override;
-    bool canHaveValue() const;
-    bool supportsFocus() const override;
+    bool canHaveValue();
+    bool supportsFocus() override;
 
     LayoutUnit caretThickness() const;
     LayoutLocation& currentCaretLayoutLocation()
@@ -71,13 +74,15 @@ public:
     static String* checkboxTickSymbol();
 
     String* visibleValue();
-    bool isEditableType() const;
+    bool isEditableType();
 
     bool firstDefaultValue();
     void setFirstDefaultValue(bool firstDefaultValue);
 
     String* defaultValue();
     void setDefaultValue(String* defaultValue);
+    String* value() override;
+    void setValue(String* value) override;
 
     int32_t maxLength();
     void setMaxLength(int32_t maxlength);
@@ -85,11 +90,12 @@ public:
 protected:
 private:
     void toggleChecked();
-    bool isSizableType() const;
+    bool isSizableType();
     void updateInputboxValue(String* value);
     bool shouldUsePlaceholder();
 
-    bool m_checked;
+    bool m_checkness;
+    bool m_dirtiness;
 
     bool m_shouldDrawCaret;
     size_t m_caretBlinkingIntervalId;

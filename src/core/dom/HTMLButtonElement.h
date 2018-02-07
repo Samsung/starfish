@@ -21,7 +21,7 @@
 
 namespace StarFish {
 
-class HTMLButtonElement : public HTMLFormObject {
+class HTMLButtonElement : public HTMLFormControl {
 public:
     HTMLButtonElement(Document* document);
 
@@ -38,11 +38,10 @@ public:
     virtual QualifiedName name();
 
     // 4.10.6 Interface Button
-    String* type() const override;
+    String* type() override;
 
     // Other methods
     bool handleDefaultEvent(Event* event) override;
-    bool supportsFocus() const override;
 };
 }
 

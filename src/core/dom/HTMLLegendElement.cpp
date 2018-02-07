@@ -26,7 +26,7 @@ void* HTMLLegendElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLLegendElement)] = { 0 };
-        HTMLFormObject::fillGCDescriptor(desc);
+        HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLLegendElement));
         typeInited = true;
     }

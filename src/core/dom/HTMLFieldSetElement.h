@@ -21,10 +21,10 @@
 
 namespace StarFish {
 
-class HTMLFieldSetElement : public HTMLFormObject {
+class HTMLFieldSetElement : public HTMLFormControl {
 public:
     HTMLFieldSetElement(Document* document)
-        : HTMLFormObject(document, false)
+        : HTMLFormControl(document, false)
     {
     }
 
@@ -37,7 +37,7 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
-    virtual String* type() const override;
+    virtual String* type() override;
 };
 }
 
