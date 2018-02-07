@@ -25,7 +25,7 @@ class HTMLOptionElement;
 class HTMLCollection;
 class HTMLOptionsCollection;
 
-class HTMLSelectElement : public HTMLFormObject {
+class HTMLSelectElement : public HTMLFormControl {
 public:
     HTMLSelectElement(Document* document);
 
@@ -44,11 +44,7 @@ public:
     size_t selectedIndex();
     void setSelectedIndex(size_t index);
 
-    String* type();
-    bool multiple();
-    void setMultiple(bool multiple);
-    bool required();
-    void setRequired(bool required);
+    String* type() override;
     int size();
     void setSize(int size);
 
@@ -68,8 +64,6 @@ public:
 
     void fireSelectUpdateNotification();
     bool handleDefaultEvent(Event* event);
-
-    bool supportsFocus() const override;
 
     void reset(HTMLOptionElement* resetFrom);
 

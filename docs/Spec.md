@@ -389,11 +389,14 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | name | Returns the name of the input element. |
 |  | attribute | type | Returns the type of the input element. |
 |  | attribute | value | Returns the value of the input element. |
+|  | attribute | defaultChecked | Returns / Sets the default state of a radio button or checkbox as originally specified in HTML that created this object. |
 |  | attribute | checked | Returns  the checkedness of the input element. |
 |  | attribute | disabled | Returns whether the input element is disabled. |
 |  | attribte  | form | Returns the element's form owner, or null if there is not one. |
 |  | attribute | size | Returns the number of characters that, in a visual rendering. |
 |  | attribute | placeholder | Returns a short hint that describes the expected value of an input field. |
+|  | attribute | multiple | Returns / Sets the element's multiple attribute, indicating whether more than one value is possible (e.g., multiple files). |
+|  | attribute | required | Returns / Sets the element's required attribute, indicating that the user must fill in a value before submitting a form. |
 | [HTMLIFrameElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element) | interface | HTMLIFrameElement |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the frame in CSS pixels. |

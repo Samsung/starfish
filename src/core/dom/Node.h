@@ -31,7 +31,7 @@ class DOMTokenList;
 class Element;
 class Frame;
 class HTMLCollection;
-class HTMLFormObject;
+class HTMLFormControl;
 class NodeList;
 class RareNodeMembers;
 class RareElementMembers;
@@ -565,10 +565,10 @@ public:
         return false;
     }
 
-    HTMLFormObject* asHTMLFormObject()
+    HTMLFormControl* asHTMLFormObject()
     {
         STARFISH_ASSERT(isHTMLFormObject());
-        return reinterpret_cast<HTMLFormObject*>(this);
+        return reinterpret_cast<HTMLFormControl*>(this);
     }
 
 private:

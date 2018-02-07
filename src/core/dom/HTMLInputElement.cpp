@@ -39,8 +39,9 @@ namespace StarFish {
 static const int INITIAL_MAXLENGTH = 524288;
 
 HTMLInputElement::HTMLInputElement(Document* document)
-    : HTMLFormObject(document)
-    , m_checked(false)
+    : HTMLFormControl(document)
+    , m_checkness(false)
+    , m_dirtiness(false)
     , m_shouldDrawCaret(false)
     , m_caretBlinkingIntervalId(SIZE_MAX)
     , m_currentCaretPosition(0)
@@ -58,7 +59,7 @@ void* HTMLInputElement::operator new(size_t size)
         GC_word desc[GC_BITMAP_SIZE(HTMLInputElement)] = { 0 };
         GC_set_bit(desc,
                    GC_WORD_OFFSET(HTMLInputElement, m_currentEditingText));
-        HTMLFormObject::fillGCDescriptor(desc);
+        HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLInputElement));
         typeInited = true;
     }
@@ -70,7 +71,7 @@ QualifiedName HTMLInputElement::name()
     return starFish()->staticStrings()->m_inputTagName;
 }
 
-bool HTMLInputElement::canHaveValue() const
+bool HTMLInputElement::canHaveValue()
 {
     String* typeString = type();
     if (typeString->equals("")) {
@@ -98,20 +99,67 @@ bool HTMLInputElement::canHaveValue() const
     return false;
 }
 
-bool HTMLInputElement::checked()
+String* HTMLInputElement::type()
 {
-    return m_checked;
+    String* typeAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    typeAttr = typeAttr->toASCIILower();
+
+    if (typeAttr->equals("hidden") || typeAttr->equals("text") ||
+        typeAttr->equals("search") || typeAttr->equals("tel") ||
+        typeAttr->equals("url") || typeAttr->equals("email") ||
+        typeAttr->equals("password") || typeAttr->equals("date") ||
+        typeAttr->equals("month") || typeAttr->equals("week") ||
+        typeAttr->equals("time") || typeAttr->equals("datetime-local") ||
+        typeAttr->equals("number") || typeAttr->equals("range") ||
+        typeAttr->equals("color") || typeAttr->equals("checkbox") ||
+        typeAttr->equals("radio") || typeAttr->equals("file") ||
+        typeAttr->equals("submit") || typeAttr->equals("image") ||
+        typeAttr->equals("reset") || typeAttr->equals("button")) {
+        return typeAttr;
+    }
+
+    return starFish()->staticStrings()->m_text.localName();
 }
 
 String* HTMLInputElement::defaultValue()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_defaultValue);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_value);
 }
 
 void HTMLInputElement::setDefaultValue(String* defaultValue)
 {
-    setAttribute(starFish()->staticStrings()->m_defaultValue, defaultValue);
     setAttribute(starFish()->staticStrings()->m_value, defaultValue);
+    m_dirtiness = true;
+}
+
+String* HTMLInputElement::value()
+{
+    if (!m_dirtiness) {
+        return defaultValue();
+    }
+
+    return HTMLFormControl::value();
+}
+
+// TODO:
+// https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
+void HTMLInputElement::setValue(String* val)
+{
+    String* oldValue = value();
+    m_value = val;
+    m_dirtiness = true;
+
+    if (type()->equals("date") || type()->equals("month") ||
+        type()->equals("week") || type()->equals("time") ||
+        type()->equals("datetime-local")) {
+        // TODO
+    } else if (type()->equals("number") || type()->equals("range")) {
+        // TODO
+    }
+
+    if (!oldValue->equals(val) && m_currentCaretPosition > 0) {
+        m_currentCaretPosition = val->length();
+    }
 }
 
 String* HTMLInputElement::checkboxTickSymbol()
@@ -149,13 +197,35 @@ void HTMLInputElement::toggleChecked()
                                         this);
 }
 
+bool HTMLInputElement::defaultChecked()
+{
+    Nullable<String*> val =
+        getAttribute(starFish()->staticStrings()->m_checked);
+
+    return val.hasValue();
+}
+
+void HTMLInputElement::setDefaultChecked(bool checked)
+{
+    if (checked) {
+        setAttribute(starFish()->staticStrings()->m_checked,
+                     String::emptyString);
+    } else {
+        removeAttribute(starFish()->staticStrings()->m_checked);
+    }
+}
+
+bool HTMLInputElement::checked()
+{
+    return m_checkness;
+}
+
 void HTMLInputElement::setChecked(bool checked)
 {
-    if (m_checked == checked) {
-        return;
-    }
-    m_checked = checked;
-    updateInputboxValue(m_checked ? checkboxTickSymbol() : String::emptyString);
+    m_checkness = checked;
+    m_dirtiness = true;
+    updateInputboxValue(m_checkness ? checkboxTickSymbol()
+                                    : String::emptyString);
 }
 
 uint32_t HTMLInputElement::size()
@@ -185,7 +255,7 @@ void HTMLInputElement::setSize(String* sizeStr)
     }
 }
 
-bool HTMLInputElement::isSizableType() const
+bool HTMLInputElement::isSizableType()
 {
     String* typeString = type();
     if (typeString->equals("text")) {
@@ -217,8 +287,8 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* val, bool attributeCreated,
                                            bool attributeRemoved)
 {
-    HTMLFormObject::didAttributeChanged(name, old, val, attributeCreated,
-                                        attributeRemoved);
+    HTMLFormControl::didAttributeChanged(name, old, val, attributeCreated,
+                                         attributeRemoved);
 
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
@@ -228,7 +298,16 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
         }
 
         if (name == starFish()->staticStrings()->m_value) {
-            setValue(val);
+            // https://html.spec.whatwg.org/multipage/input.html#attr-input-value
+            if (!m_dirtiness) {
+                if (attributeCreated) {
+                    m_value = val;
+                } else if (attributeRemoved) {
+                    m_value = String::emptyString;
+                }
+                m_dirtiness = true;
+            }
+
             // TODO: fire correct inputevent
             // TODO: we should fire this event in handleDefaultEvent
             InputEvent* event =
@@ -419,7 +498,7 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
     }
 }
 
-bool HTMLInputElement::supportsFocus() const
+bool HTMLInputElement::supportsFocus()
 {
     return !type()->equals("hidden");
 }
@@ -429,7 +508,7 @@ LayoutUnit HTMLInputElement::caretThickness() const
     return LayoutUnit(CARET_THICKNESS / window()->devicePixelRatio());
 }
 
-bool HTMLInputElement::isEditableType() const
+bool HTMLInputElement::isEditableType()
 {
     String* typeString = type();
     if (typeString->equals("text")) {

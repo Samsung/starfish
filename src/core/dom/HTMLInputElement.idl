@@ -6,7 +6,7 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented, CEReactions] attribute DOMString alt;
     [Unimplemented, CEReactions] attribute DOMString autocomplete;
     [Unimplemented, CEReactions] attribute boolean autofocus;
-    [Unimplemented, CEReactions] attribute boolean defaultChecked;
+    [CEReactions] attribute boolean defaultChecked;
     attribute boolean checked;
     [Unimplemented, CEReactions] attribute DOMString dirName;
     [CEReactions] attribute boolean disabled;
@@ -25,12 +25,12 @@ interface HTMLInputElement : HTMLElement {
     [RaisesException, CEReactions] attribute long maxLength;
     [Unimplemented, CEReactions] attribute DOMString min;
     [Unimplemented, CEReactions] attribute long minLength;
-    [Unimplemented, CEReactions] attribute boolean multiple;
+    [CEReactions] attribute boolean multiple;
     [CEReactions, Rename=domName] attribute DOMString name;
     [Unimplemented, CEReactions] attribute DOMString pattern;
     [CEReactions] attribute DOMString placeholder;
     [Unimplemented, CEReactions] attribute boolean readOnly;
-    [Unimplemented, CEReactions] attribute boolean required;
+    [CEReactions] attribute boolean required;
     // FIXME: later size should be implemented RaisesException=Setter
     [CEReactions, Custom=Setter] attribute unsigned long size;
     [Unimplemented, CEReactions] attribute USVString src;

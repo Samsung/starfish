@@ -22,10 +22,10 @@
 
 namespace StarFish {
 
-class HTMLLegendElement : public HTMLFormObject {
+class HTMLLegendElement : public HTMLFormControl {
 public:
     HTMLLegendElement(Document* document)
-        : HTMLFormObject(document)
+        : HTMLFormControl(document)
     {
     }
 

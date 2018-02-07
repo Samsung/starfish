@@ -59,14 +59,14 @@ FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
 }
 
 HTMLFormElement::HTMLFormElement(Document* document)
-    : HTMLFormObject(document, false)
+    : HTMLFormControl(document, false)
     , m_elements(nullptr)
     , m_plannedNavigationTaskId((size_t)-1)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
 
-HTMLFormObject::HTMLFormObject(Document* document, bool supportTabIndex)
+HTMLFormControl::HTMLFormControl(Document* document, bool supportTabIndex)
     : HTMLElement(document)
     , m_value(String::emptyString)
     , m_supportTabIndex(supportTabIndex)
@@ -77,107 +77,112 @@ HTMLFormObject::HTMLFormObject(Document* document, bool supportTabIndex)
     }
 }
 
-String* HTMLFormObject::domName()
+String* HTMLFormControl::domName()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
 }
 
-void HTMLFormObject::setDomName(String* name)
+void HTMLFormControl::setDomName(String* name)
 {
     setAttribute(starFish()->staticStrings()->m_name, name);
 }
 
-String* HTMLFormObject::type() const
+String* HTMLFormControl::type()
 {
-    String* typeAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_type);
-    typeAttr = typeAttr->toASCIILower();
-
-    if (typeAttr->equals("text")) {
-        return typeAttr;
-    } else if (typeAttr->equals("email")) {
-        return typeAttr;
-    } else if (typeAttr->equals("number")) {
-        return typeAttr;
-    } else if (typeAttr->equals("password")) {
-        return typeAttr;
-    } else if (typeAttr->equals("url")) {
-        return typeAttr;
-    } else if (typeAttr->equals("tel")) {
-        return typeAttr;
-    } else if (typeAttr->equals("search")) {
-        return typeAttr;
-    } else if (typeAttr->equals("checkbox")) {
-        return typeAttr;
-    } else if (typeAttr->equals("button")) {
-        return typeAttr;
-    } else if (typeAttr->equals("radio")) {
-        return typeAttr;
-    } else if (typeAttr->equals("submit")) {
-        return typeAttr;
-    } else if (typeAttr->equals("hidden")) {
-        return typeAttr;
-    }
-
-    return starFish()->staticStrings()->m_text.localName();
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
 }
 
-void HTMLFormObject::setType(String* type)
+void HTMLFormControl::setType(String* type)
 {
     setAttribute(starFish()->staticStrings()->m_type, type);
 }
 
-String* HTMLFormObject::value()
+String* HTMLFormControl::value()
 {
     return m_value;
 }
 
-void HTMLFormObject::setValue(String* value)
+void HTMLFormControl::setValue(String* value)
 {
     m_value = value;
     setNeedsFrameTreeBuild(Node::UpdateAtSelf);
 }
 
-String* HTMLFormObject::formEnctype()
+String* HTMLFormControl::formEnctype()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_formEnctype);
 }
 
-void HTMLFormObject::setFormEnctype(String* enctype)
+void HTMLFormControl::setFormEnctype(String* enctype)
 {
     setAttribute(starFish()->staticStrings()->m_formEnctype, enctype);
 }
 
-String* HTMLFormObject::formMethod()
+String* HTMLFormControl::formMethod()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_formMethod);
 }
 
-void HTMLFormObject::setFormMethod(String* method)
+void HTMLFormControl::setFormMethod(String* method)
 {
     setAttribute(starFish()->staticStrings()->m_formMethod, method);
 }
 
-String* HTMLFormObject::formTarget()
+String* HTMLFormControl::formTarget()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_formTarget);
 }
 
-void HTMLFormObject::setFormTarget(String* target)
+void HTMLFormControl::setFormTarget(String* target)
 {
     setAttribute(starFish()->staticStrings()->m_formTarget, target);
 }
 
-String* HTMLFormObject::formAction()
+String* HTMLFormControl::formAction()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_formAction);
 }
 
-void HTMLFormObject::setFormAction(String* formAction)
+void HTMLFormControl::setFormAction(String* formAction)
 {
     setAttribute(starFish()->staticStrings()->m_formAction, formAction);
 }
 
-bool HTMLFormObject::disabled()
+bool HTMLFormControl::required()
+{
+    Nullable<String*> val =
+        getAttribute(starFish()->staticStrings()->m_required);
+    return val.hasValue();
+}
+
+void HTMLFormControl::setRequired(bool required)
+{
+    if (required) {
+        setAttribute(starFish()->staticStrings()->m_required,
+                     String::emptyString);
+    } else {
+        removeAttribute(starFish()->staticStrings()->m_required);
+    }
+}
+
+bool HTMLFormControl::multiple()
+{
+    Nullable<String*> val =
+        getAttribute(starFish()->staticStrings()->m_multiple);
+    return val.hasValue();
+}
+
+void HTMLFormControl::setMultiple(bool multiple)
+{
+    if (multiple) {
+        setAttribute(starFish()->staticStrings()->m_multiple,
+                     String::emptyString);
+    } else {
+        removeAttribute(starFish()->staticStrings()->m_multiple);
+    }
+}
+
+bool HTMLFormControl::disabled()
 {
     Nullable<String*> val =
         getAttribute(starFish()->staticStrings()->m_disabled);
@@ -188,7 +193,7 @@ bool HTMLFormObject::disabled()
     return false;
 }
 
-void HTMLFormObject::setDisabled(bool disabled)
+void HTMLFormControl::setDisabled(bool disabled)
 {
     if (disabled) {
         setAttribute(starFish()->staticStrings()->m_disabled,
@@ -199,7 +204,7 @@ void HTMLFormObject::setDisabled(bool disabled)
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#attr-fe-disabled
-bool HTMLFormObject::isDisabled()
+bool HTMLFormControl::isDisabled()
 {
     if (disabled() && (isHTMLButtonElement() || isHTMLInputElement() ||
                        isHTMLSelectElement() || isHTMLTextAreaElement())) {
@@ -233,7 +238,7 @@ bool HTMLFormObject::isDisabled()
     return false;
 }
 
-Node* HTMLFormObject::findAncestor(Node* ancestorToFind, Node* fromThisNode)
+Node* HTMLFormControl::findAncestor(Node* ancestorToFind, Node* fromThisNode)
 {
     for (Node* p = fromThisNode->parentNode(); p; p = p->parentNode()) {
         if (p->isHTMLIFrameElement() || p->isHTMLFormElement()) {
@@ -245,7 +250,7 @@ Node* HTMLFormObject::findAncestor(Node* ancestorToFind, Node* fromThisNode)
     return nullptr;
 }
 
-void HTMLFormObject::fireSubmitEvent()
+void HTMLFormControl::fireSubmitEvent()
 {
     auto fn = [](size_t handle, void* data) {
         Node* node = (Node*)data;
@@ -259,20 +264,14 @@ void HTMLFormObject::fireSubmitEvent()
                                         this);
 }
 
-void HTMLFormObject::didAttributeChanged(QualifiedName name, String* old,
-                                         String* val, bool attributeCreated,
-                                         bool attributeRemoved)
+void HTMLFormControl::didAttributeChanged(QualifiedName name, String* old,
+                                          String* val, bool attributeCreated,
+                                          bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
                                      attributeRemoved);
 
     if (name == starFish()->staticStrings()->m_disabled) {
-        if (attributeCreated) {
-            setDisabled(true);
-        } else if (attributeRemoved) {
-            setDisabled(false);
-        }
-
         document()->invalidFocusRingCacheIfNeeded();
     } else if (m_supportTabIndex &&
                name == starFish()->staticStrings()->m_tabindex) {
@@ -282,12 +281,10 @@ void HTMLFormObject::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-HTMLFormElement* HTMLFormObject::form()
+HTMLFormElement* HTMLFormControl::form()
 {
     for (Node* p = parentNode(); p; p = p->parentNode()) {
-        if (p == nullptr) {
-            break;
-        } else if (p->isHTMLIFrameElement()) {
+        if (p->isHTMLIFrameElement()) {
             return nullptr;
         } else if (p->isHTMLFormElement()) {
             return p->asHTMLFormElement();
@@ -296,18 +293,9 @@ HTMLFormElement* HTMLFormObject::form()
     return nullptr;
 }
 
-HTMLSelectElement* HTMLFormObject::select()
+bool HTMLFormControl::supportsFocus()
 {
-    for (Node* p = parentNode(); p; p = p->parentNode()) {
-        if (p == nullptr) {
-            break;
-        } else if (p->isHTMLIFrameElement()) {
-            return nullptr;
-        } else if (p->isHTMLSelectElement()) {
-            return p->asHTMLSelectElement();
-        }
-    }
-    return nullptr;
+    return true;
 }
 
 void* HTMLFormElement::operator new(size_t size)
@@ -317,7 +305,7 @@ void* HTMLFormElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLFormElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormElement, m_elements));
-        HTMLFormObject::fillGCDescriptor(desc);
+        HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLFormElement));
         typeInited = true;
     }
@@ -394,7 +382,7 @@ void HTMLFormElement::submit(HTMLElement* submitter)
 {
     GCVector<FormDataSetItem*>* formDataSet = createFormDataSet(submitter);
     String* formAction = String::emptyString;
-    HTMLFormObject* inputNode = nullptr;
+    HTMLFormControl* inputNode = nullptr;
     if (submitter &&
         (submitter->isHTMLInputElement() || submitter->isHTMLButtonElement())) {
         inputNode = submitter->asHTMLFormObject();
@@ -527,12 +515,12 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
         new (GC) GCVector<FormDataSetItem*>();
 
     // 1-3
-    GCVector<HTMLFormObject*> list;
+    GCVector<HTMLFormControl*> list;
     computeFormAssociatedElements(this, list);
     for (Node* c : list) {
         // TODO: HTML object and textarea are not supported
         if (isSubmittableElement(c)) {
-            HTMLFormObject* field = c->asHTMLFormObject();
+            HTMLFormControl* field = c->asHTMLFormObject();
 
             // 3.1
             // datalist is not supported
@@ -596,7 +584,7 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
 }
 
 void HTMLFormElement::computeFormAssociatedElements(
-    Node* parent, GCVector<HTMLFormObject*>& list)
+    Node* parent, GCVector<HTMLFormControl*>& list)
 {
     for (Node* c = parent->firstChild(); c; c = c->nextSibling()) {
         if (c->isHTMLIFrameElement()) {
@@ -632,7 +620,7 @@ bool HTMLFormElement::isSubmittableElement(Node* node)
     return false;
 }
 
-bool HTMLFormElement::isButton(HTMLFormObject* node)
+bool HTMLFormElement::isButton(HTMLFormControl* node)
 {
     if (node->type()->equals("submit") || node->type()->equals("button") ||
         node->type()->equals("reset") || node->type()->equals("image")) {

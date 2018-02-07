@@ -26,7 +26,7 @@ void* HTMLFieldSetElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLFieldSetElement)] = { 0 };
-        HTMLFormObject::fillGCDescriptor(desc);
+        HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLFieldSetElement));
         typeInited = true;
     }
@@ -38,7 +38,7 @@ QualifiedName HTMLFieldSetElement::name()
     return starFish()->staticStrings()->m_fieldsetTagName;
 }
 
-String* HTMLFieldSetElement::type() const
+String* HTMLFieldSetElement::type()
 {
     return String::createASCIIString("fieldset");
 }

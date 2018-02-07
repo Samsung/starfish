@@ -22,10 +22,10 @@
 
 namespace StarFish {
 
-class HTMLOptGroupElement : public HTMLFormObject {
+class HTMLOptGroupElement : public HTMLFormControl {
 public:
     HTMLOptGroupElement(Document* document)
-        : HTMLFormObject(document)
+        : HTMLFormControl(document)
     {
     }
 
