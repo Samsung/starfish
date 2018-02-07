@@ -492,5 +492,11 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
     context->setVirtualIdentifierCallback(virtualIdentifierCallback);
 
     state->destroy();
+#ifdef STARFISH_ENABLE_TEST
+    if (ownerWindow()->starFish()->TestCompatibleMode() ==
+        StarFishTestCompatibleMode::Normal) {
+        evaluateString(this, String::fromUTF8("delete this.testRunner"));
+    }
+#endif
 }
 }

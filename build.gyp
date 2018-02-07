@@ -40,6 +40,7 @@
            ['component!="executable"', {
                'sources!' : [
                    '<(main_file)',
+                   '<(test_runner_file)',
                ],
            }],
        ],

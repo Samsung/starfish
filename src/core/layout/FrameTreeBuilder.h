@@ -82,6 +82,7 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     // debug function
     static void dumpFrameTree(Document* document, unsigned depth);
+    static String* dumpFrameTreeAsText(Document* document, unsigned depth);
 #endif
 
 private:

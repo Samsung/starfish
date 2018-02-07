@@ -56,6 +56,13 @@ enum StarFishDeviceKind {
     deviceKindUseTouchScreen = 1 << 0,
 };
 
+#ifdef STARFISH_ENABLE_TEST
+enum StarFishTestCompatibleMode {
+    Normal = 0,
+    ChromiumLayout,
+};
+#endif
+
 void addGCCollectionListener(void (*fn)(GC_EventType));
 
 // you must call delete
@@ -281,6 +288,18 @@ public:
     }
 #endif
 
+#ifdef STARFISH_ENABLE_TEST
+    void setTestCompatibleMode(StarFishTestCompatibleMode mode)
+    {
+        m_testCompatibleMode = mode;
+    }
+
+    StarFishTestCompatibleMode TestCompatibleMode()
+    {
+        return (StarFishTestCompatibleMode)m_testCompatibleMode;
+    }
+#endif
+
 protected:
     void enter();
     void exit();
@@ -348,7 +367,9 @@ protected:
 #endif
     GCUnorderedMap<String*, float> m_profilingRecods;
     FontFamilyData* m_initialFontFamilyDatas;
-
+#ifdef STARFISH_ENABLE_TEST
+    unsigned int m_testCompatibleMode;
+#endif
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);
 };
@@ -373,6 +394,8 @@ protected:
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_enablePixelTest;
 extern bool g_memLogDump;
+extern bool g_enableDumpAsText;
+extern bool g_DumpAsText_Async;
 #endif
 }
 
