@@ -27,33 +27,33 @@ class WebView;
 class NativeImageData;
 class MouseData;
 class TouchData;
-class KeyboardData;
+class PlatformKeyEventData;
+
+enum class TouchEventKind {
+    TouchEventStart,
+    TouchEventMove,
+    TouchEventEnd,
+    TouchEventCancel
+};
+
+enum class MouseEventKind {
+    MouseEventDown,
+    MouseEventMove,
+    MouseEventUp,
+    MouseEventEnter,
+    MouseEventOut
+};
+
+enum class KeyEventKind { KeyEventDown, KeyEventPress, KeyEventUp };
+
+enum class CompositionEventKind {
+    CompositionEventStart,
+    CompositionEventUpdate,
+    CompositionEventEnd,
+};
 
 class PlatformWindow : public gc {
 public:
-    enum TouchEventKind {
-        TouchEventStart,
-        TouchEventMove,
-        TouchEventEnd,
-        TouchEventCancel
-    };
-
-    enum KeyEventKind { KeyEventDown, KeyEventPress, KeyEventUp };
-
-    enum MouseEventKind {
-        MouseEventDown,
-        MouseEventMove,
-        MouseEventUp,
-        MouseEventEnter,
-        MouseEventOut
-    };
-
-    enum CompositionEventKind {
-        CompositionEventStart,
-        CompositionEventUpdate,
-        CompositionEventEnd,
-    };
-
     virtual ~PlatformWindow();
 
     static PlatformWindow* create(StarFish* starFish, void* win, int width,
@@ -83,7 +83,7 @@ public:
     void dispatchMouseWheelEvent(
         float screenX, float screenY, int z,
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
-    void dispatchKeyEvent(KeyEventKind kind, KeyboardData data);
+    void dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData data);
     void dispatchCompositionEvent(CompositionEventKind kind, String* data);
 
     bool rendering();

@@ -22,7 +22,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
-#include "core/dom/KeyboardEvent.h"
+#include "platform/event/PlatformKeyEventData.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -844,33 +844,36 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
     return KeyValue::UnidentifiedKey;
 }
 
-static void setModifiersToKeyboardData(Ecore_Event_Key* d, KeyboardData& k)
+static void setModifiersToPlatformKeyEventData(Ecore_Event_Key* d,
+                                               PlatformKeyEventData& k)
 {
     if (d->modifiers == 1 || d->keycode == 50 || d->keycode == 62) {
-        k.setShiftKey();
+        k.setShiftKey(true);
     } else if (d->modifiers == 2 || d->keycode == 37) {
-        k.setCtrlKey();
+        k.setCtrlKey(true);
     } else if (d->modifiers == 4 || d->keycode == 64) {
-        k.setAltKey();
+        k.setAltKey(true);
     }
 }
 
-static void setModifiersToKeyboardData(Evas_Modifier* d, KeyboardData& k)
+static void setModifiersToPlatformKeyEventData(Evas_Modifier* d,
+                                               PlatformKeyEventData& k)
 {
     if ((evas_key_modifier_is_set(d, "Shift_L") == EINA_TRUE) ||
         (evas_key_modifier_is_set(d, "Shift_R") == EINA_TRUE)) {
-        k.setShiftKey();
+        k.setShiftKey(true);
     } else if ((evas_key_modifier_is_set(d, "Control_L") == EINA_TRUE) ||
                (evas_key_modifier_is_set(d, "Control_R") == EINA_TRUE)) {
-        k.setCtrlKey();
+        k.setCtrlKey(true);
     } else if ((evas_key_modifier_is_set(d, "Alt_L") == EINA_TRUE) ||
                (evas_key_modifier_is_set(d, "Alt_R") == EINA_TRUE)) {
-        k.setAltKey();
+        k.setAltKey(true);
     }
 }
 
-static void setRepeatToKeyboardData(WindowImplEFL* window, uint32_t timestamp,
-                                    KeyboardData& k)
+static void setRepeatToPlatformKeyEventData(WindowImplEFL* window,
+                                            uint32_t timestamp,
+                                            PlatformKeyEventData& k)
 {
     if (!window->m_isKeyDown) {
         window->m_lastKeyPressedTimestamp = timestamp;
@@ -878,7 +881,7 @@ static void setRepeatToKeyboardData(WindowImplEFL* window, uint32_t timestamp,
     }
 
     if (timestamp - window->m_lastKeyPressedTimestamp < REPEAT_DURATION) {
-        k.setRepeat();
+        k.setRepeat(true);
     }
 }
 
@@ -999,7 +1002,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                     d->x / sf->starFish()->screenInfo().deviceScaleFactor,
                     d->y / sf->starFish()->screenInfo().deviceScaleFactor,
                     sf->m_clickedCount);
-                sf->dispatchMouseEvent(PlatformWindow::MouseEventDown, mdata);
+                sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
                 sf->m_isMouseLbuttonDown = true;
             }
             return EINA_TRUE;
@@ -1020,7 +1023,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                     d->x / sf->starFish()->screenInfo().deviceScaleFactor,
                     d->y / sf->starFish()->screenInfo().deviceScaleFactor,
                     sf->m_clickedCount);
-                sf->dispatchMouseEvent(PlatformWindow::MouseEventUp, mdata);
+                sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
                 sf->m_isMouseLbuttonDown = false;
             }
             return EINA_TRUE;
@@ -1056,7 +1059,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 0, buttons,
                 d->x / sf->starFish()->screenInfo().deviceScaleFactor,
                 d->y / sf->starFish()->screenInfo().deviceScaleFactor, 0);
-            sf->dispatchMouseEvent(PlatformWindow::MouseEventMove, mdata);
+            sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
             return EINA_TRUE;
         },
         wnd);
@@ -1078,12 +1081,12 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             }
 #endif
             auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
-            KeyboardData kdata(keyValue);
-            setRepeatToKeyboardData(sf, d->timestamp, kdata);
-            setModifiersToKeyboardData(d, kdata);
+            PlatformKeyEventData pkdata(keyValue);
+            setRepeatToPlatformKeyEventData(sf, d->timestamp, pkdata);
+            setModifiersToPlatformKeyEventData(d, pkdata);
             StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
-            sf->dispatchKeyEvent(PlatformWindow::KeyEventPress, kdata);
+            sf->dispatchKeyEvent(KeyEventKind::KeyEventDown, pkdata);
+            sf->dispatchKeyEvent(KeyEventKind::KeyEventPress, pkdata);
             sf->m_isKeyDown = true;
 
 #ifdef STARFISH_TIZEN_TV
@@ -1113,10 +1116,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             }
 #endif
             auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
-            KeyboardData kdata(keyValue);
-            setModifiersToKeyboardData(d, kdata);
+            PlatformKeyEventData kdata(keyValue);
+            setModifiersToPlatformKeyEventData(d, kdata);
             StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);
+            sf->dispatchKeyEvent(KeyEventKind::KeyEventUp, kdata);
             sf->m_isKeyDown = false;
             return EINA_TRUE;
         },
@@ -1162,7 +1165,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             ev->canvas.x / sf->starFish()->screenInfo().deviceScaleFactor,
             ev->canvas.y / sf->starFish()->screenInfo().deviceScaleFactor,
             sf->m_clickedCount);
-        sf->dispatchMouseEvent(PlatformWindow::MouseEventDown, mdata);
+        sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
         sf->m_isMouseLbuttonDown = true;
         return;
     };
@@ -1188,7 +1191,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                         ((WindowImplEFL*)sf)->m_lastMouseY /
                             sf->starFish()->screenInfo().deviceScaleFactor,
                         0);
-        sf->dispatchMouseEvent(PlatformWindow::MouseEventMove, mdata);
+        sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
 
         return;
     };
@@ -1207,7 +1210,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                         ((WindowImplEFL*)sf)->m_lastMouseY /
                             sf->starFish()->screenInfo().deviceScaleFactor,
                         sf->m_clickedCount);
-        sf->dispatchMouseEvent(PlatformWindow::MouseEventUp, mdata);
+        sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
         sf->m_isMouseLbuttonDown = false;
 
         return;
@@ -1227,7 +1230,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                         ((WindowImplEFL*)sf)->m_lastMouseY /
                             sf->starFish()->screenInfo().deviceScaleFactor,
                         sf->m_clickedCount);
-        sf->dispatchMouseEvent(PlatformWindow::MouseEventUp, mdata);
+        sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
     };
     evas_object_smart_callback_add(wnd->m_dummyBox, "clicked",
                                    wnd->m_mobileClickEventHandler, wnd);
@@ -1325,8 +1328,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             char* commit_str = (char*)event_info;
             WindowImplEFL* self = (WindowImplEFL*)data;
             STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_COMMIT %s\n", commit_str);
-            self->dispatchCompositionEvent(PlatformWindow::CompositionEventEnd,
-                                           String::fromUTF8(commit_str));
+            self->dispatchCompositionEvent(
+                CompositionEventKind::CompositionEventEnd,
+                String::fromUTF8(commit_str));
         },
         wnd);
 
@@ -1352,7 +1356,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             WindowImplEFL* self = (WindowImplEFL*)data;
             STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_PREEDIT_START\n");
             self->dispatchCompositionEvent(
-                PlatformWindow::CompositionEventStart, String::emptyString);
+                CompositionEventKind::CompositionEventStart,
+                String::emptyString);
         },
         wnd);
 
@@ -1369,7 +1374,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                               cursor_pos);
             if (str) {
                 self->dispatchCompositionEvent(
-                    PlatformWindow::CompositionEventUpdate,
+                    CompositionEventKind::CompositionEventUpdate,
                     String::fromUTF8(str));
                 free(str);
             }
@@ -1424,11 +1429,11 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                             WindowImplEFL* self = (WindowImplEFL*)data;
                             StarFishEnterer enter(self->m_starFish);
                             KeyValue kv = KeyValue::EnterKey;
-                            KeyboardData kdata(kv);
-                            self->dispatchKeyEvent(PlatformWindow::KeyEventDown,
-                                                   kdata);
-                            self->dispatchKeyEvent(PlatformWindow::KeyEventUp,
-                                                   kdata);
+                            PlatformKeyEventData pkdata(kv);
+                            self->dispatchKeyEvent(KeyEventKind::KeyEventDown,
+                                                   pkdata);
+                            self->dispatchKeyEvent(KeyEventKind::KeyEventUp,
+                                                   pkdata);
                             self->hideSoftwareKeyboardIfPossible();
                         },
                         self);
@@ -1450,15 +1455,15 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                           EINA_TRUE) ||
                              (evas_key_modifier_is_set(
                                   ev->modifiers, "Shift_R") == EINA_TRUE));
-            KeyboardData kdata(keyValue);
-            setRepeatToKeyboardData(self, ev->timestamp, kdata);
-            setModifiersToKeyboardData(ev->modifiers, kdata);
+            PlatformKeyEventData kdata(keyValue);
+            setRepeatToPlatformKeyEventData(self, ev->timestamp, kdata);
+            setModifiersToPlatformKeyEventData(ev->modifiers, kdata);
             StarFishEnterer enter(self->m_starFish);
-            self->dispatchKeyEvent(PlatformWindow::KeyEventDown, kdata);
-            self->dispatchKeyEvent(PlatformWindow::KeyEventPress, kdata);
+            self->dispatchKeyEvent(KeyEventKind::KeyEventDown, kdata);
+            self->dispatchKeyEvent(KeyEventKind::KeyEventPress, kdata);
             self->m_isKeyDown = true;
 
-            if (tryFilter && !kdata.isASCIIVisibleChar()) {
+            if (tryFilter && !String::isASCIIPrintableKey(kdata.keyValue())) {
                 Ecore_IMF_Event_Key_Down ecore_ev;
                 ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
                 ecore_imf_context_filter_event(self->m_imfContext,
@@ -1502,10 +1507,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                           EINA_TRUE) ||
                              (evas_key_modifier_is_set(
                                   ev->modifiers, "Shift_R") == EINA_TRUE));
-            KeyboardData kdata(keyValue);
-            setModifiersToKeyboardData(ev->modifiers, kdata);
+            PlatformKeyEventData kdata(keyValue);
+            setModifiersToPlatformKeyEventData(ev->modifiers, kdata);
             StarFishEnterer enter(self->m_starFish);
-            self->dispatchKeyEvent(PlatformWindow::KeyEventUp, kdata);
+            self->dispatchKeyEvent(KeyEventKind::KeyEventUp, kdata);
             self->m_isKeyDown = false;
         },
         wnd);
@@ -1932,5 +1937,5 @@ void WindowImplEFL::clearResources()
     m_objectList.clear();
     m_objectList.shrink_to_fit();
 }
-}
+} // namespace StarFish
 #endif

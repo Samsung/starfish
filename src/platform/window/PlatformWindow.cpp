@@ -26,7 +26,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "platform/window/VirtualCursor.h"
 #include "core/modules/canvas/image/NativeImageData.h"
-#include "core/dom/KeyboardEvent.h"
+#include "platform/event/PlatformKeyEventData.h"
 #include "core/dom/MouseEvent.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/profiling/Profiling.h"
@@ -99,7 +99,8 @@ void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
         screenX, screenY, z, isVerticalWheelEvent);
 }
 
-void PlatformWindow::dispatchKeyEvent(KeyEventKind kind, KeyboardData data)
+void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
+                                      PlatformKeyEventData data)
 {
     STARFISH_LOG_INFO("PlatformWindow::dispatchKeyEvent %d\n",
                       (int)data.keyValue());

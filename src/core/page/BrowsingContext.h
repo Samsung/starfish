@@ -19,7 +19,6 @@
 
 #include "binding/StarFishHoldable.h"
 #include "browser/history/HistoryManager.h"
-#include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
 
@@ -39,7 +38,13 @@ class HTMLMediaElement;
 #endif
 class MouseData;
 class TouchData;
-class KeyboardData;
+class PlatformKeyEventData;
+class Canvas;
+
+enum class TouchEventKind;
+enum class KeyEventKind;
+enum class MouseEventKind;
+enum class CompositionEventKind;
 
 class BrowsingContext : public gc, public StarFishHoldable {
     friend class PlatformWindow;
@@ -153,23 +158,20 @@ public:
     void unmarkHasPendingStyleSheet();
 
     bool isInnerIFrameEvent(Node* targetNode, double& posX, double& posY);
-    void handleActiveAndFocus(PlatformWindow::MouseEventKind kind,
-                              Node* targetNode, double posX, double posY);
-    void handleHover(PlatformWindow::MouseEventKind kind, Node* targetNode,
+    void handleActiveAndFocus(MouseEventKind kind, Node* targetNode,
+                              double posX, double posY);
+    void handleHover(MouseEventKind kind, Node* targetNode,
                      unsigned char button, unsigned char buttons, double posX,
                      double posY);
 
-    bool dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
-                            TouchData* touches, size_t touchCount);
-    bool dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
-                            MouseData data);
+    bool dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
+                            size_t touchCount);
+    bool dispatchMouseEvent(MouseEventKind kind, MouseData data);
     bool dispatchMouseWheelEvent(
         float screenX, float screenY, int z,
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
-    void dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
-                          KeyboardData& data);
-    void dispatchCompositionEvent(PlatformWindow::CompositionEventKind kind,
-                                  String* data);
+    void dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData& data);
+    void dispatchCompositionEvent(CompositionEventKind kind, String* data);
 
     bool setActiveNode(Node* n);
     void releaseActiveNode();

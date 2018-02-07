@@ -37,6 +37,7 @@
 #include "core/dom/EventTarget.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
+#include "platform/event/PlatformKeyEventData.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/CompositionEvent.h"
 #include "core/page/Location.h"
@@ -980,25 +981,24 @@ bool BrowsingContext::isInnerIFrameEvent(Node* targetNode, double& posX,
     return false;
 }
 
-void BrowsingContext::handleActiveAndFocus(PlatformWindow::MouseEventKind kind,
+void BrowsingContext::handleActiveAndFocus(MouseEventKind kind,
                                            Node* targetNode, double posX,
                                            double posY)
 {
-    if (kind == PlatformWindow::MouseEventDown) { // TouchEventStart
+    if (kind == MouseEventKind::MouseEventDown) { // TouchEventStart
         m_touchDownPoint = Unit::Location(posX, posY);
         setActiveNode(targetNode);
         setFocusedNode(targetNode);
-    } else if (kind == PlatformWindow::MouseEventUp) { // TouchEventEnd
+    } else if (kind == MouseEventKind::MouseEventUp) { // TouchEventEnd
         releaseActiveNode();
     }
 }
 
-void BrowsingContext::handleHover(PlatformWindow::MouseEventKind kind,
-                                  Node* targetNode, unsigned char button,
-                                  unsigned char buttons, double posX,
-                                  double posY)
+void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
+                                  unsigned char button, unsigned char buttons,
+                                  double posX, double posY)
 {
-    if (kind != PlatformWindow::MouseEventMove) {
+    if (kind != MouseEventKind::MouseEventMove) {
         return;
     }
 
@@ -1026,7 +1026,7 @@ void BrowsingContext::handleHover(PlatformWindow::MouseEventKind kind,
     }
 }
 
-bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
+bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
                                          TouchData* touches, size_t count)
 {
     if (!m_isRunning) {
@@ -1035,8 +1035,8 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
 
     if (m_globalPointingEventListener.size()) {
         float x, y;
-        if (kind == PlatformWindow::TouchEventKind::TouchEventStart ||
-            kind == PlatformWindow::TouchEventKind::TouchEventMove) {
+        if (kind == TouchEventKind::TouchEventStart ||
+            kind == TouchEventKind::TouchEventMove) {
             x = touches[0].screenX();
             y = touches[0].screenY();
         } else {
@@ -1044,10 +1044,10 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
             y = std::numeric_limits<float>::quiet_NaN();
         }
         Node::GlobalPointingEventKind newKind;
-        if (kind == PlatformWindow::TouchEventKind::TouchEventStart) {
+        if (kind == TouchEventKind::TouchEventStart) {
             newKind =
                 Node::GlobalPointingEventKind::GlobalPointingEventKindDown;
-        } else if (kind == PlatformWindow::TouchEventKind::TouchEventMove) {
+        } else if (kind == TouchEventKind::TouchEventMove) {
             newKind =
                 Node::GlobalPointingEventKind::GlobalPointingEventKindMove;
         } else {
@@ -1063,13 +1063,13 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
             }
         }
 
-        if (kind == PlatformWindow::TouchEventKind::TouchEventEnd) {
+        if (kind == TouchEventKind::TouchEventEnd) {
             releaseActiveNode();
         }
         return true;
     }
 
-    if (kind == PlatformWindow::TouchEventCancel) {
+    if (kind == TouchEventKind::TouchEventCancel) {
         releaseActiveNode();
         releaseHoveredNode();
         return false;
@@ -1082,7 +1082,7 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
     // - Decide representative target (= first non-empty target).
     // - Check whether touch position moved away from original position
     //   to release active nodes.
-    bool checkRelease = kind == PlatformWindow::TouchEventMove &&
+    bool checkRelease = kind == TouchEventKind::TouchEventMove &&
                         (starFish()->deviceKind() & deviceKindUseTouchScreen);
     Node* targetNode = nullptr;
     double targetX = 0;
@@ -1110,8 +1110,8 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
     double newX = targetX;
     double newY = targetY;
     if (isInnerIFrameEvent(targetNode, newX, newY)) {
-        handleActiveAndFocus((PlatformWindow::MouseEventKind)kind, targetNode,
-                             targetX, targetY);
+        handleActiveAndFocus((MouseEventKind)kind, targetNode, targetX,
+                             targetY);
 
         TouchData newData(newX, newY);
         if (targetNode->asHTMLIFrameElement()
@@ -1125,7 +1125,7 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
     // Dispatch events
     String* name = String::emptyString;
     switch (kind) {
-    case PlatformWindow::TouchEventStart: {
+    case TouchEventKind::TouchEventStart: {
         // Dispatch touchstart event
         name = starFish()->staticStrings()->m_touchstart.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
@@ -1134,7 +1134,7 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
-    case PlatformWindow::TouchEventMove: {
+    case TouchEventKind::TouchEventMove: {
         // Dispatch touchmove event
         name = starFish()->staticStrings()->m_touchmove.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
@@ -1143,7 +1143,7 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
-    case PlatformWindow::TouchEventEnd: {
+    case TouchEventKind::TouchEventEnd: {
         Node* t = targetNode->nearestParentElement();
         if (m_activeNodeTarget == targetNode) {
             // Dispatch click event
@@ -1166,27 +1166,25 @@ bool BrowsingContext::dispatchTouchEvent(PlatformWindow::TouchEventKind kind,
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     // Handle properties
-    handleActiveAndFocus((PlatformWindow::MouseEventKind)kind, targetNode,
-                         targetX, targetY);
+    handleActiveAndFocus((MouseEventKind)kind, targetNode, targetX, targetY);
     return returnValue;
 }
 
-bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
-                                         MouseData data)
+bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
     if (!m_isRunning) {
         return false;
     }
     // MouseEventEnter/MouseEventOut are not supported yet
-    if (kind >= PlatformWindow::MouseEventEnter) {
+    if (kind >= MouseEventKind::MouseEventEnter) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return false;
     }
 
     if (m_globalPointingEventListener.size()) {
         float x, y;
-        if (kind == PlatformWindow::MouseEventDown ||
-            kind == PlatformWindow::MouseEventMove) {
+        if (kind == MouseEventKind::MouseEventDown ||
+            kind == MouseEventKind::MouseEventMove) {
             x = data.screenX();
             y = data.screenY();
         } else {
@@ -1194,10 +1192,10 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
             y = std::numeric_limits<float>::quiet_NaN();
         }
         Node::GlobalPointingEventKind newKind;
-        if (kind == PlatformWindow::MouseEventDown) {
+        if (kind == MouseEventKind::MouseEventDown) {
             newKind =
                 Node::GlobalPointingEventKind::GlobalPointingEventKindDown;
-        } else if (kind == PlatformWindow::MouseEventMove) {
+        } else if (kind == MouseEventKind::MouseEventMove) {
             newKind =
                 Node::GlobalPointingEventKind::GlobalPointingEventKindMove;
         } else {
@@ -1213,7 +1211,7 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
             }
         }
 
-        if (kind == PlatformWindow::MouseEventUp) {
+        if (kind == MouseEventKind::MouseEventUp) {
             releaseActiveNode();
         }
         return true;
@@ -1255,21 +1253,21 @@ bool BrowsingContext::dispatchMouseEvent(PlatformWindow::MouseEventKind kind,
     Node* t = targetNode->nearestParentElement();
     t = t ? t : document();
     switch (kind) {
-    case PlatformWindow::MouseEventDown: {
+    case MouseEventKind::MouseEventDown: {
         // Dispatch mousedown event
         name = starFish()->staticStrings()->m_mousedown.localName();
         Event* e = createMouseEvent(document(), name, data);
         returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
-    case PlatformWindow::MouseEventMove: {
+    case MouseEventKind::MouseEventMove: {
         // Dispatch mousemove event
         name = starFish()->staticStrings()->m_mousemove.localName();
         Event* e = createMouseEvent(document(), name, data);
         returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
-    case PlatformWindow::MouseEventUp: {
+    case MouseEventKind::MouseEventUp: {
         // Dispatch mouseup event
         name = starFish()->staticStrings()->m_mouseup.localName();
         Event* mouseup = createMouseEvent(document(), name, data);
@@ -1382,8 +1380,8 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
     return window()->scrollTo(sx, sy);
 }
 
-void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
-                                       KeyboardData& data)
+void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
+                                       PlatformKeyEventData& pkdata)
 {
     // Set target
     // 1) currently focused element if possible
@@ -1403,18 +1401,18 @@ void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
             if (target->asHTMLIFrameElement()->frame()) {
                 target->asHTMLIFrameElement()
                     ->browsingContext()
-                    ->dispatchKeyEvent(kind, data);
+                    ->dispatchKeyEvent(kind, pkdata);
             }
         }
         return;
     }
     // Dispatch event
     String* eventType = String::emptyString;
-    if (kind == PlatformWindow::KeyEventKind::KeyEventUp) {
+    if (kind == KeyEventKind::KeyEventUp) {
         eventType = starFish()->staticStrings()->m_keyup.localName();
         setKeydownEventDefaultPrevented(false);
-    } else if (kind == PlatformWindow::KeyEventKind::KeyEventPress) {
-        if (!data.isASCIIVisibleChar()) {
+    } else if (kind == KeyEventKind::KeyEventPress) {
+        if (!String::isASCIIPrintableKey(pkdata.keyValue())) {
             return;
         } else if (keydownEventDefaultPrevented()) {
             return;
@@ -1425,14 +1423,15 @@ void BrowsingContext::dispatchKeyEvent(PlatformWindow::KeyEventKind kind,
         // kind == KeyEventKind::KeyEventDown
         eventType = starFish()->staticStrings()->m_keydown.localName();
     }
-    KeyboardEvent* e = new KeyboardEvent(document(), eventType, data);
+    KeyboardEventInit kinitData(pkdata);
+    KeyboardEvent* e = new KeyboardEvent(document(), eventType, kinitData);
     e->setBubbles(true);
     e->setCancelable(true);
     e->setView(document()->window());
     document()->window()->dispatchEventByUA(target, e);
 
     if (!e->defaultPrevented()) {
-        if (kind == PlatformWindow::KeyEventKind::KeyEventDown) {
+        if (kind == KeyEventKind::KeyEventDown) {
             if (e->keyValue() == KeyValue::TabKey) {
                 if (e->shiftKey()) {
                     focusNavigation(false);
@@ -1524,8 +1523,8 @@ void BrowsingContext::focusNavigation(bool forward)
     }
 }
 
-void BrowsingContext::dispatchCompositionEvent(
-    PlatformWindow::CompositionEventKind kind, String* data)
+void BrowsingContext::dispatchCompositionEvent(CompositionEventKind kind,
+                                               String* data)
 {
     // Set target
     // 1) currently focused element if possible
@@ -1557,24 +1556,22 @@ void BrowsingContext::dispatchCompositionEvent(
 
     // Dispatch event
     String* eventType = String::emptyString;
-    if (kind == PlatformWindow::CompositionEventKind::CompositionEventStart) {
+    if (kind == CompositionEventKind::CompositionEventStart) {
         eventType = starFish()->staticStrings()->m_compositionstart.localName();
-    } else if (kind ==
-               PlatformWindow::CompositionEventKind::CompositionEventUpdate) {
+    } else if (kind == CompositionEventKind::CompositionEventUpdate) {
         if (compositionStartEventDefaultPrevented()) {
             return;
         }
         eventType =
             starFish()->staticStrings()->m_compositionupdate.localName();
     } else {
-        STARFISH_ASSERT(
-            kind == PlatformWindow::CompositionEventKind::CompositionEventEnd);
+        STARFISH_ASSERT(kind == CompositionEventKind::CompositionEventEnd);
         eventType = starFish()->staticStrings()->m_compositionend.localName();
         setCompositionStartEventDefeaultPrevented(false);
     }
     CompositionEvent* e = new CompositionEvent(document(), eventType, data);
     e->setBubbles(true);
-    if (kind == PlatformWindow::CompositionEventKind::CompositionEventStart) {
+    if (kind == CompositionEventKind::CompositionEventStart) {
         e->setCancelable(true);
     } else {
         e->setCancelable(false);

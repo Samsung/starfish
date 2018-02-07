@@ -21,50 +21,53 @@ namespace StarFish {
 
 EventModifierInit::EventModifierInit()
     : UIEventInit()
-    , m_ctrlKey(false)
-    , m_shiftKey(false)
-    , m_altKey(false)
-    , m_metaKey(false)
+    , m_eventModifierData()
+{
+}
+
+EventModifierInit::EventModifierInit(EventModifierData& emdata)
+    : UIEventInit()
+    , m_eventModifierData(emdata)
 {
 }
 
 bool EventModifierInit::ctrlKey() const
 {
-    return m_ctrlKey;
+    return m_eventModifierData.ctrlKey();
 }
 
 void EventModifierInit::setCtrlKey(bool ctrlKey)
 {
-    m_ctrlKey = ctrlKey;
+    m_eventModifierData.setCtrlKey(ctrlKey);
 }
 
 bool EventModifierInit::shiftKey() const
 {
-    return m_shiftKey;
+    return m_eventModifierData.shiftKey();
 }
 
 void EventModifierInit::setShiftKey(bool shiftKey)
 {
-    m_shiftKey = shiftKey;
+    m_eventModifierData.setShiftKey(shiftKey);
 }
 
 bool EventModifierInit::altKey() const
 {
-    return m_altKey;
+    return m_eventModifierData.altKey();
 }
 
 void EventModifierInit::setAltKey(bool altKey)
 {
-    m_altKey = altKey;
+    m_eventModifierData.setAltKey(altKey);
 }
 
 bool EventModifierInit::metaKey() const
 {
-    return m_metaKey;
+    return m_eventModifierData.metaKey();
 }
 
 void EventModifierInit::setMetaKey(bool metaKey)
 {
-    m_metaKey = metaKey;
+    m_eventModifierData.setMetaKey(metaKey);
 }
 }
