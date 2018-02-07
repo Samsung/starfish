@@ -87,6 +87,20 @@ void FrameTableCellBox::layoutWidth(LayoutContext& ctx)
 void FrameTableCellBox::layoutHeight(LayoutContext& ctx)
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+
+    if (hasBiggerContentThanFrameHeight()) {
+        auto visibleRect = computeVisibleRectForScroll(true);
+        LayoutUnit cellContentHeight = visibleRect.height();
+        if (visibleRect.y() < 0) {
+            cellContentHeight += visibleRect.y();
+        }
+
+        LayoutUnit h = cellContentHeight - (height() - borderHeight());
+        if (h > 0) {
+            // expand height if table cell is smaller than content of cell
+            setHeight(contentHeight() + paddingHeight() + borderHeight() + h);
+        }
+    }
 }
 
 bool FrameTableCellBox::emptyContent()

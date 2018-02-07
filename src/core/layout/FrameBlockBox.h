@@ -558,7 +558,7 @@ public:
         if (m_flags.m_hasBiggerContentThanFrameWidth) {
             return frameBlockBoxRareData()->m_scrollWidth;
         } else {
-            return width();
+            return width() - borderWidth();
         }
     }
 
@@ -570,7 +570,7 @@ public:
         if (m_flags.m_hasBiggerContentThanFrameHeight) {
             return frameBlockBoxRareData()->m_scrollHeight;
         } else {
-            return height();
+            return height() - borderHeight();
         }
     }
 
@@ -692,7 +692,8 @@ public:
         return m_flags.m_hasBiggerContentThanFrameHeight;
     }
 
-    LayoutRect computeVisibleRectForScroll();
+    LayoutRect computeVisibleRectForScroll(
+        bool isForSpecialValueForTableCell = false);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

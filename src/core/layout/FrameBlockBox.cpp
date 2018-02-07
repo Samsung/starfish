@@ -322,12 +322,14 @@ void LayoutContext::applyRelativePositionInlineCase(Frame* origin,
     }
 }
 
-LayoutRect FrameBlockBox::computeVisibleRectForScroll()
+LayoutRect FrameBlockBox::computeVisibleRectForScroll(
+    bool isForSpecialValueForTableCell)
 {
     LayoutRect visibleRect = LayoutRect(0, 0, width(), height());
     SkMatrix loc = SkMatrix::I();
     Frame::ComputeVisibleRectContext vctx(
         Frame::ComputeVisibleRectContext::Scrolling, nullptr, loc, visibleRect);
+    vctx.isForSpecialValueForTableCell = isForSpecialValueForTableCell;
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
