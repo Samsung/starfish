@@ -168,6 +168,8 @@ namespace StarFish {
     F(style)                           \
     F(script)
 
+#define STARFISH_ENUM_MATHML_TAG_NAMES(F) F(math)
+
 class StaticStrings : public gc {
     friend class QualifiedName;
     friend class AtomicString;
@@ -179,6 +181,7 @@ public:
     AtomicString m_xmlNamespaceURI;
     AtomicString m_xmlnsNamespaceURI;
     AtomicString m_svgNamespaceURI;
+    AtomicString m_mathmlNamespaceURI;
     AtomicString m_xml;
     AtomicString m_xmlns;
     AtomicString m_documentLocalName;
@@ -225,6 +228,11 @@ public:
 #define DEFINE_SVG_LOCAL_NAMES(name) QualifiedName m_svg##name##TagName;
     STARFISH_ENUM_SVG_TAG_NAMES(DEFINE_SVG_LOCAL_NAMES)
 #undef DEFINE_SVG_LOCAL_NAMES
+
+// MathML Tag Names
+#define DEFINE_MATHML_LOCAL_NAMES(name) QualifiedName m_mathml##name##TagName;
+    STARFISH_ENUM_MATHML_TAG_NAMES(DEFINE_MATHML_LOCAL_NAMES)
+#undef DEFINE_MATHML_LOCAL_NAMES
 
     // Attribute Names
     QualifiedName m_id;
