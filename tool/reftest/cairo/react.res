@@ -46,12 +46,18 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMOption-
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMRoot-test.internal.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSelection-test.internal.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSelect-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationAttributes-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationBasic-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationContext-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationElements-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationForms-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationFragment-test.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationAttributes-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationAttributes-test_modified.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationBasic-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationBasic-test_modified.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationContext-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationContext-test_modified.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationElements-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationElements-test_modified.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationForms-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationForms-test_modified.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationFragment-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationFragment-test_modified.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationReconnecting-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMServerIntegrationRefs-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMSVG-test.html
