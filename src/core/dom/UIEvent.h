@@ -18,6 +18,7 @@
 #define __StarFishUIEvent__
 
 #include "Event.h"
+#include "core/event/EventModifierData.h"
 
 namespace StarFish {
 
@@ -70,7 +71,7 @@ struct EventModifierInit : UIEventInit {
     STARFISH_MAKE_STACK_ALLOCATED()
 public:
     EventModifierInit();
-
+    EventModifierInit(EventModifierData& emdata);
     bool ctrlKey() const;
     void setCtrlKey(bool ctrlKey);
 
@@ -84,22 +85,7 @@ public:
     void setMetaKey(bool metaKey);
 
 private:
-    bool m_ctrlKey;
-    bool m_shiftKey;
-    bool m_altKey;
-    bool m_metaKey;
-
-    // TODO Implement
-    // bool m_modifierAltGraph;
-    // bool m_modifierCapsLock;
-    // bool m_modifierFn;
-    // bool m_modifierFnLock;
-    // bool m_modifierHyper;
-    // bool m_modifierNumLock;
-    // bool m_modifierScrollLock;
-    // bool m_modifierSuper;
-    // bool m_modifierSymbol;
-    // bool m_modifierSymbolLock;
+    EventModifierData m_eventModifierData;
 };
 
 class UIEvent : public Event {

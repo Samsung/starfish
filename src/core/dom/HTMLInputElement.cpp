@@ -32,6 +32,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/layout/FrameInputBox.h"
+#include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
 
@@ -521,7 +522,8 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                         isUseful = true;
                     }
                 } else {
-                    if (event->asKeyboardEvent()->isASCIIVisibleChar() &&
+                    if (String::isASCIIPrintableKey(
+                            event->asKeyboardEvent()->keyValue()) &&
                         m_currentCaretPosition < (size_t)maxLength()) {
                         char key = (char)event->asKeyboardEvent()->keyValue();
                         value = value->concat(key);

@@ -489,9 +489,9 @@ void Window::simulateClick(float x, float y)
 {
     TouchData data(x, y);
     m_starFish->platformWindow()->dispatchTouchEvent(
-        PlatformWindow::TouchEventStart, &data, 1);
+        TouchEventKind::TouchEventStart, &data, 1);
     m_starFish->platformWindow()->dispatchTouchEvent(
-        PlatformWindow::TouchEventEnd, &data, 1);
+        TouchEventKind::TouchEventEnd, &data, 1);
 }
 
 void Window::simulateVisibilitychange(bool show)
