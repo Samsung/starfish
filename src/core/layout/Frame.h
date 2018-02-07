@@ -1522,6 +1522,7 @@ public:
         enum ComputePurpose { Scrolling, GraphicsBuffer };
         ComputePurpose purpose;
         bool ignoreTransformOnce;
+        bool isForSpecialValueForTableCell;
         StackingContext* sourceStackingContext;
         SkMatrix& tranformMatrix;
         LayoutRect& result;
@@ -1533,6 +1534,7 @@ public:
                                   SkMatrix& tranformMatrix, LayoutRect& result)
             : purpose(purpose)
             , ignoreTransformOnce(purpose == GraphicsBuffer ? true : false)
+            , isForSpecialValueForTableCell(false)
             , sourceStackingContext(sourceStackingContext)
             , tranformMatrix(tranformMatrix)
             , result(result)

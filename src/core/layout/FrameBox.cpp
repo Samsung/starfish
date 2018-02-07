@@ -1940,6 +1940,15 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         }
     }
 
+    if (ctx.isForSpecialValueForTableCell &&
+        ctx.purpose == Frame::ComputeVisibleRectContext::Scrolling &&
+        isFrameFlexibleBox()) {
+        if (cs->height().isDefinite(true)) {
+            ctx.uniteRect(r);
+            return false;
+        }
+    }
+
     ctx.uniteRect(r);
 
     return ret;
