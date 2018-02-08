@@ -282,6 +282,8 @@ public:
     QualifiedName m_formMethod;
     QualifiedName m_formTarget;
     QualifiedName m_checked;
+    QualifiedName m_checkbox;
+    QualifiedName m_radio;
     QualifiedName m_text;
     QualifiedName m_placeholder;
     QualifiedName m_selected;

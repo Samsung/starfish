@@ -93,9 +93,13 @@ private:
     bool isSizableType();
     void updateInputboxValue(String* value);
     bool shouldUsePlaceholder();
+    void fireEventUserInteraction(QualifiedName& type, bool bubbles,
+                                  bool cancelable) override;
+
+    bool m_dirtiness;
 
     bool m_checkness;
-    bool m_dirtiness;
+    bool m_dirtyCheckness;
 
     bool m_shouldDrawCaret;
     size_t m_caretBlinkingIntervalId;

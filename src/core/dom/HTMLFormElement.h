@@ -78,13 +78,12 @@ public:
     virtual bool disabled();
     virtual void setDisabled(bool disabled);
 
-    // Other method
-    HTMLFormElement* form();
-    HTMLSelectElement* select();
+    virtual HTMLFormElement* form();
 
+    // Other method
     virtual bool supportsFocus();
 
-    virtual bool isHTMLFormObject() const override
+    virtual bool isHTMLFormControl() const override
     {
         return true;
     }
@@ -97,7 +96,14 @@ protected:
     HTMLFormControl(Document* document, bool supportTabIndex = true);
     void fireSubmitEvent();
 
+    virtual void fireEventUserInteraction(QualifiedName& type, bool bubbles,
+                                          bool cancelable);
+
     virtual bool isDisabled();
+
+    HTMLFormElement* formOwner();
+    HTMLSelectElement* select();
+    virtual bool isButton(HTMLFormControl* node);
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -160,7 +166,6 @@ private:
     void computeFormAssociatedElements(Node* parent,
                                        GCVector<HTMLFormControl*>& list);
     bool isSubmittableElement(Node* node);
-    bool isButton(HTMLFormControl* node);
 
     HTMLFormControlsCollection* m_elements;
 

@@ -96,17 +96,8 @@ void HTMLSelectElement::setValue(String* value)
     }
 
     setNeedsFrameTreeBuild(Node::UpdateAtSelf);
-
-    auto fn = [](size_t handle, void* data) {
-        HTMLSelectElement* element = (HTMLSelectElement*)data;
-        String* eventType =
-            element->starFish()->staticStrings()->m_change.localName();
-        Event* e =
-            new Event(element->document(), eventType, EventInit(true, false));
-        element->EventTarget::dispatchEventByUA(element, e);
-    };
-    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
-                                        this);
+    fireEventUserInteraction(starFish()->staticStrings()->m_change, true,
+                             false);
 }
 
 HTMLOptionElement* HTMLSelectElement::firstOptionElement()
@@ -320,29 +311,9 @@ HTMLOptionElement* HTMLSelectElement::firstSelectedOptionElement()
 // https://html.spec.whatwg.org/multipage/form-elements.html#send-select-update-notifications
 void HTMLSelectElement::fireSelectUpdateNotification()
 {
-    // input event
-    auto fn1 = [](size_t handle, void* data) {
-        HTMLSelectElement* element = (HTMLSelectElement*)data;
-        String* eventType =
-            element->starFish()->staticStrings()->m_input.localName();
-        Event* e =
-            new Event(element->document(), eventType, EventInit(true, false));
-        element->EventTarget::dispatchEventByUA(element, e);
-    };
-    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn1,
-                                        this);
-
-    // change event
-    auto fn2 = [](size_t handle, void* data) {
-        HTMLSelectElement* element = (HTMLSelectElement*)data;
-        String* eventType =
-            element->starFish()->staticStrings()->m_change.localName();
-        Event* e =
-            new Event(element->document(), eventType, EventInit(true, false));
-        element->EventTarget::dispatchEventByUA(element, e);
-    };
-    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn2,
-                                        this);
+    fireEventUserInteraction(starFish()->staticStrings()->m_input, true, false);
+    fireEventUserInteraction(starFish()->staticStrings()->m_change, true,
+                             false);
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element

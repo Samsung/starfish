@@ -560,14 +560,14 @@ public:
         return true;
     }
 
-    virtual bool isHTMLFormObject() const
+    virtual bool isHTMLFormControl() const
     {
         return false;
     }
 
     HTMLFormControl* asHTMLFormObject()
     {
-        STARFISH_ASSERT(isHTMLFormObject());
+        STARFISH_ASSERT(isHTMLFormControl());
         return reinterpret_cast<HTMLFormControl*>(this);
     }
 
