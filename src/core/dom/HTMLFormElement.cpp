@@ -281,7 +281,22 @@ void HTMLFormControl::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
+bool HTMLFormControl::isButton(HTMLFormControl* node)
+{
+    if (node->type()->equals("submit") || node->type()->equals("button") ||
+        node->type()->equals("reset") || node->type()->equals("image")) {
+        return true;
+    }
+
+    return false;
+}
+
 HTMLFormElement* HTMLFormControl::form()
+{
+    return formOwner();
+}
+
+HTMLFormElement* HTMLFormControl::formOwner()
 {
     for (Node* p = parentNode(); p; p = p->parentNode()) {
         if (p->isHTMLIFrameElement()) {
@@ -355,6 +370,22 @@ String* HTMLFormElement::action()
 void HTMLFormElement::setAction(String* action)
 {
     setAttribute(starFish()->staticStrings()->m_action, action);
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#user-interaction-task-source
+void HTMLFormControl::fireEventUserInteraction(QualifiedName& eventType,
+                                               bool bubbles, bool cancelable)
+{
+    Event* e = new Event(document(), eventType.localName(),
+                         EventInit(bubbles, cancelable));
+
+    auto fn = [](size_t handle, void* data, void* data1) {
+        EventTarget* element = (EventTarget*)data;
+        Event* e = (Event*)data1;
+        element->EventTarget::dispatchEventByUA(element, e);
+    };
+    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn, this,
+                                        e);
 }
 
 bool HTMLFormElement::handleDefaultEvent(Event* event)
@@ -617,16 +648,6 @@ bool HTMLFormElement::isSubmittableElement(Node* node)
         node->isHTMLSelectElement() || node->isHTMLTextAreaElement()) {
         return true;
     }
-    return false;
-}
-
-bool HTMLFormElement::isButton(HTMLFormControl* node)
-{
-    if (node->type()->equals("submit") || node->type()->equals("button") ||
-        node->type()->equals("reset") || node->type()->equals("image")) {
-        return true;
-    }
-
     return false;
 }
 }

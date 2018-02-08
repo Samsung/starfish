@@ -201,6 +201,11 @@ StaticStrings::StaticStrings(StarFish* sf)
                       AtomicString::createAtomicString(sf, "formTarget"));
     m_checked = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "checked"));
+    m_checkbox =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "checkbox"));
+    m_radio = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "radio"));
     m_text = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "text"));
     m_placeholder =

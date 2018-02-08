@@ -40,15 +40,15 @@ static const int INITIAL_MAXLENGTH = 524288;
 
 HTMLInputElement::HTMLInputElement(Document* document)
     : HTMLFormControl(document)
-    , m_checkness(false)
     , m_dirtiness(false)
+    , m_checkness(false)
+    , m_dirtyCheckness(false)
     , m_shouldDrawCaret(false)
     , m_caretBlinkingIntervalId(SIZE_MAX)
     , m_currentCaretPosition(0)
     , m_currentEditingText(String::emptyString)
     , m_maxlength(INITIAL_MAXLENGTH)
 {
-    setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
 
 void* HTMLInputElement::operator new(size_t size)
@@ -132,6 +132,7 @@ void HTMLInputElement::setDefaultValue(String* defaultValue)
     m_dirtiness = true;
 }
 
+// IDL attribute
 String* HTMLInputElement::value()
 {
     if (!m_dirtiness) {
@@ -160,6 +161,8 @@ void HTMLInputElement::setValue(String* val)
     if (!oldValue->equals(val) && m_currentCaretPosition > 0) {
         m_currentCaretPosition = val->length();
     }
+
+    fireEventUserInteraction(starFish()->staticStrings()->m_input, true, false);
 }
 
 String* HTMLInputElement::checkboxTickSymbol()
@@ -184,17 +187,6 @@ void HTMLInputElement::toggleChecked()
     } else {
         setChecked(true);
     }
-
-    auto fn = [](size_t handle, void* data) {
-        HTMLInputElement* element = (HTMLInputElement*)data;
-        String* eventType =
-            element->starFish()->staticStrings()->m_change.localName();
-        Event* e =
-            new Event(element->document(), eventType, EventInit(true, false));
-        element->EventTarget::dispatchEventByUA(element, e);
-    };
-    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
-                                        this);
 }
 
 bool HTMLInputElement::defaultChecked()
@@ -213,19 +205,33 @@ void HTMLInputElement::setDefaultChecked(bool checked)
     } else {
         removeAttribute(starFish()->staticStrings()->m_checked);
     }
+    m_dirtyCheckness = true;
 }
 
+// IDL attribute
 bool HTMLInputElement::checked()
 {
+    if (!m_dirtyCheckness) {
+        defaultChecked();
+    }
     return m_checkness;
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#radio-button-state-(type=radio)
 void HTMLInputElement::setChecked(bool checked)
 {
     m_checkness = checked;
-    m_dirtiness = true;
+    m_dirtyCheckness = true;
     updateInputboxValue(m_checkness ? checkboxTickSymbol()
                                     : String::emptyString);
+
+    if (type()->equals(starFish()->staticStrings()->m_checkbox.localName()) ||
+        type()->equals(starFish()->staticStrings()->m_radio.localName())) {
+        fireEventUserInteraction(starFish()->staticStrings()->m_input, true,
+                                 false);
+        fireEventUserInteraction(starFish()->staticStrings()->m_change, true,
+                                 false);
+    }
 }
 
 uint32_t HTMLInputElement::size()
@@ -274,6 +280,17 @@ bool HTMLInputElement::isSizableType()
     return false;
 }
 
+void HTMLInputElement::fireEventUserInteraction(QualifiedName& eventType,
+                                                bool bubbles, bool cancelable)
+{
+    if (!isButton(this) && !type()->equals("hidden") &&
+        (eventType == starFish()->staticStrings()->m_input ||
+         eventType == starFish()->staticStrings()->m_change)) {
+        HTMLFormControl::fireEventUserInteraction(eventType, bubbles,
+                                                  cancelable);
+    }
+}
+
 String* HTMLInputElement::obscurePhrase(String* phrase)
 {
     StringBuilder sb;
@@ -300,12 +317,11 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
         if (name == starFish()->staticStrings()->m_value) {
             // https://html.spec.whatwg.org/multipage/input.html#attr-input-value
             if (!m_dirtiness) {
-                if (attributeCreated) {
-                    m_value = val;
-                } else if (attributeRemoved) {
-                    m_value = String::emptyString;
+                if (attributeRemoved) {
+                    setValue(String::emptyString);
+                } else { // created or updated
+                    setValue(val);
                 }
-                m_dirtiness = true;
             }
 
             // TODO: fire correct inputevent
@@ -320,8 +336,12 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
             dispatchEventByUA(event);
         }
     } else if (name == starFish()->staticStrings()->m_checked) {
-        if (val->equals("checked") || val->equals(String::emptyString)) {
-            setChecked(true);
+        if (!m_dirtyCheckness) {
+            if (attributeCreated) {
+                setChecked(true);
+            } else if (attributeRemoved) {
+                setChecked(false);
+            }
         }
     }
 }

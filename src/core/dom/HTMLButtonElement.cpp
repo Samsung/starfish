@@ -78,7 +78,7 @@ bool HTMLButtonElement::handleDefaultEvent(Event* event)
 
     if (event->isMouseEvent() || event->isTouchEvent()) {
         if (event->type()->equalsIgnoreCase("click")) {
-            if (form()) {
+            if (formOwner()) {
                 if (type()->equals("submit")) {
                     fireSubmitEvent();
                 } else if (type()->equals("reset")) {
