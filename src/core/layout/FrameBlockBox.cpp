@@ -110,13 +110,23 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
 
         if (width.isAuto()) {
             // TODO: implement width: 'max-content' and 'fit-content'
-            if (isNormalFlow() && !isAtomicInlineLevel() && !isFlexItem() &&
+            bool shouldComputeWithNormalBlockWidthRule =
+                isNormalFlow() && !isAtomicInlineLevel();
+            if (isFlexItem() && !isAtomicInlineLevel()) {
+                STARFISH_ASSERT(cb->isFrameFlexibleBox());
+                shouldComputeWithNormalBlockWidthRule =
+                    (cb->style()->flexDirection() ==
+                         FlexDirectionValue::ColumnFlexDirectionValue ||
+                     cb->style()->flexDirection() ==
+                         FlexDirectionValue::ColumnReverseFlexDirectionValue) &&
+                    cb->style()->flexWrap() ==
+                        FlexWrapValue::NoWrapFlexWrapValue &&
+                    cb->style()->alignItems() == StretchAlignItemValue;
+            }
+
+            if (isAbsolutePositioned() && left.isSpecified() &&
+                right.isSpecified() &&
                 !(node() && node()->isHTMLButtonElement())) {
-                contentWidth = std::max(containgBlockContentWidth - mbpWidth(),
-                                        LayoutUnit(0));
-            } else if (isAbsolutePositioned() && left.isSpecified() &&
-                       right.isSpecified() &&
-                       !(node() && node()->isHTMLButtonElement())) {
                 LayoutUnit l =
                     left.specifiedValue(containgBlockContentWidth, this);
                 LayoutUnit r =
@@ -125,6 +135,9 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                     std::max(LayoutUnit(0),
                              containgBlockContentWidth - l - r - mbpWidth());
                 contentWidth = w;
+            } else if (shouldComputeWithNormalBlockWidthRule) {
+                contentWidth = std::max(containgBlockContentWidth - mbpWidth(),
+                                        LayoutUnit(0));
             } else {
                 PreferredWidthContext p(ctx, this, this,
                                         containgBlockContentWidth - mbpWidth());

@@ -166,7 +166,9 @@ public:
         }
         cairo_reset_clip(m_canvas);
         cairo_identity_matrix(m_canvas);
-        cairo_rectangle(m_canvas, 0, 0, m_width, m_height);
+        cairo_rectangle(m_canvas, 0, 0,
+                        m_width / m_starfish->screenInfo().deviceScaleFactor,
+                        m_height / m_starfish->screenInfo().deviceScaleFactor);
         cairo_fill(m_canvas);
         cairo_restore(m_canvas);
     }
