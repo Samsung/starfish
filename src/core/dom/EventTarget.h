@@ -150,6 +150,24 @@ public:
         return false;
     }
 
+    // https://dom.spec.whatwg.org/#eventtarget-activation-behavior
+    virtual void activationBehavior()
+    {
+    }
+
+    virtual bool hasActivationBehavior()
+    {
+        return false;
+    }
+
+    virtual void legacyPreActivationBehavior()
+    {
+    }
+
+    virtual void legacyCanceledActivationBehavior()
+    {
+    }
+
     void setAttributeEventListener(const QualifiedName& eventTypeName,
                                    EventListener* l)
     {

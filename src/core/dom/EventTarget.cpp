@@ -237,12 +237,24 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // given, and the object to which event is dispatched otherwise.
     event->setTarget(origin);
 
+    // https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
+    // Let isActivationEvent be true, if event is a MouseEvent object and
+    // event’s type attribute is "click", and false otherwise.
+    bool isActivationEvent =
+        (event->isMouseEvent() &&
+         event->type() == starFish()->staticStrings()->m_click.localName());
+    EventTarget* activationTarget = nullptr;
+
     // 4. If event's target attribute value is participating in a tree, let
     // event path be a static ordered list of all its ancestors in tree order,
     // and let event path be the empty list otherwise.
     GCVector<EventTarget*> eventPath;
     EventTarget* eventTarget = origin;
     while (eventTarget) {
+        if (isActivationEvent && !activationTarget &&
+            eventTarget->hasActivationBehavior()) {
+            activationTarget = eventTarget;
+        }
         if (eventTarget->isNode()) {
             Node* node = eventTarget->asNode();
             if (node->isHTMLElement()) {
@@ -266,6 +278,14 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // 6. For each object in event path, invoke its event listeners with event
     // event, as long as event's stop propagation flag is unset.
     event->setEventPhase(Event::CAPTURING_PHASE);
+
+    // If activationTarget is non-null and activationTarget has
+    // legacy-pre-activation behavior, then run activationTarget’s
+    // legacy-pre-activation behavior.
+    if (activationTarget) {
+        activationTarget->legacyPreActivationBehavior();
+    }
+
     for (size_t i = eventPath.size(); i > 1; i--) {
         if (event->stopPropagationValue()) {
             break;
@@ -389,6 +409,21 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
 
     // 11. Initialize event's eventPhase attribute to NONE.
     event->setEventPhase(Event::NONE);
+
+    // If activationTarget is non-null, then:
+    // 1) If event’s canceled flag is unset, then run activationTarget’s
+    //    activation behavior with event.
+    // 2) Otherwise, if activationTarget has legacy-canceled-activation
+    //    behavior, then run activationTarget’s legacy-canceled-activation
+    //    behavior.
+    if (activationTarget) {
+        // NOTE canceled flag -> defaultPrevented
+        if (!event->defaultPrevented()) {
+            activationTarget->activationBehavior();
+        } else {
+            activationTarget->legacyCanceledActivationBehavior();
+        }
+    }
 
     // 12. Initialize event's currentTarget attribute to null.
     event->setCurrentTarget(nullptr);
