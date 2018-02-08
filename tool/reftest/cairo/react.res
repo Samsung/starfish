@@ -1,7 +1,8 @@
 test/cairo/reftest/vendor/react/packages/events/__tests__/accumulateInto-test.internal.html
 test/cairo/reftest/vendor/react/packages/events/__tests__/EventPluginRegistry-test.internal.html
 test/cairo/reftest/vendor/react/packages/events/__tests__/ResponderEventPlugin-test.internal.html
-test/cairo/reftest/vendor/react/packages/react-art/src/__tests__/ReactART-test.html
+# test/cairo/reftest/vendor/react/packages/react-art/src/__tests__/ReactART-test.html
+test/cairo/reftest/vendor/react/packages/react-art/src/__tests__/ReactART-test_modified.html
 test/cairo/reftest/vendor/react/packages/react-call-return/src/__tests__/ReactCallReturn-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/client/__tests__/dangerouslySetInnerHTML-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/client/__tests__/getNodeForCharacterOffset-test.html
