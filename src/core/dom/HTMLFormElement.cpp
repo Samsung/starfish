@@ -373,8 +373,8 @@ void HTMLFormElement::setAction(String* action)
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#user-interaction-task-source
-void HTMLFormControl::fireEventUserInteraction(QualifiedName& eventType,
-                                               bool bubbles, bool cancelable)
+void HTMLFormControl::queueEvent(QualifiedName& eventType, bool bubbles,
+                                 bool cancelable)
 {
     Event* e = new Event(document(), eventType.localName(),
                          EventInit(bubbles, cancelable));
@@ -386,6 +386,14 @@ void HTMLFormControl::fireEventUserInteraction(QualifiedName& eventType,
     };
     starFish()->messageLoop()->addIdler(document()->browsingContext(), fn, this,
                                         e);
+}
+
+void HTMLFormControl::fireEvent(QualifiedName& eventType, bool bubbles,
+                                bool cancelable)
+{
+    Event* e = new Event(document(), eventType.localName(),
+                         EventInit(bubbles, cancelable));
+    EventTarget::dispatchEventByUA(this, e);
 }
 
 bool HTMLFormElement::handleDefaultEvent(Event* event)

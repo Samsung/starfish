@@ -26,6 +26,8 @@
 #include "core/dom/InputEvent.h"
 #include "core/dom/CompositionEvent.h"
 #include "core/dom/HTMLFormElement.h"
+#include "core/dom/NodeList.h"
+#include "core/dom/NodeListImpl.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -129,7 +131,6 @@ String* HTMLInputElement::defaultValue()
 void HTMLInputElement::setDefaultValue(String* defaultValue)
 {
     setAttribute(starFish()->staticStrings()->m_value, defaultValue);
-    m_dirtiness = true;
 }
 
 // IDL attribute
@@ -150,6 +151,15 @@ void HTMLInputElement::setValue(String* val)
     m_value = val;
     m_dirtiness = true;
 
+    sanitizeValue();
+
+    if (!oldValue->equals(val) && m_currentCaretPosition > 0) {
+        m_currentCaretPosition = val->length();
+    }
+}
+
+void HTMLInputElement::sanitizeValue()
+{
     if (type()->equals("date") || type()->equals("month") ||
         type()->equals("week") || type()->equals("time") ||
         type()->equals("datetime-local")) {
@@ -157,12 +167,6 @@ void HTMLInputElement::setValue(String* val)
     } else if (type()->equals("number") || type()->equals("range")) {
         // TODO
     }
-
-    if (!oldValue->equals(val) && m_currentCaretPosition > 0) {
-        m_currentCaretPosition = val->length();
-    }
-
-    fireEventUserInteraction(starFish()->staticStrings()->m_input, true, false);
 }
 
 String* HTMLInputElement::checkboxTickSymbol()
@@ -205,7 +209,6 @@ void HTMLInputElement::setDefaultChecked(bool checked)
     } else {
         removeAttribute(starFish()->staticStrings()->m_checked);
     }
-    m_dirtyCheckness = true;
 }
 
 // IDL attribute
@@ -225,13 +228,55 @@ void HTMLInputElement::setChecked(bool checked)
     updateInputboxValue(m_checkness ? checkboxTickSymbol()
                                     : String::emptyString);
 
-    if (type()->equals(starFish()->staticStrings()->m_checkbox.localName()) ||
-        type()->equals(starFish()->staticStrings()->m_radio.localName())) {
-        fireEventUserInteraction(starFish()->staticStrings()->m_input, true,
-                                 false);
-        fireEventUserInteraction(starFish()->staticStrings()->m_change, true,
-                                 false);
+    if (type()->equals("radio") && m_checkness) {
+        resetRadioButtons();
     }
+}
+
+void HTMLInputElement::resetRadioButtons()
+{
+    GCVector<HTMLInputElement*>* list = radioButtonGroup();
+    if (!list) {
+        return;
+    }
+
+    for (HTMLInputElement* input : *list) {
+        if (input != this) {
+            input->m_checkness = false;
+        }
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#radio-button-group
+GCVector<HTMLInputElement*>* HTMLInputElement::radioButtonGroup()
+{
+    String* name = getAttributeOrEmpty(starFish()->staticStrings()->m_name);
+    if (name->equals(String::emptyString)) {
+        return nullptr;
+    }
+
+    GCVector<HTMLInputElement*>* radioButtonGroup =
+        new GCVector<HTMLInputElement*>();
+
+    HTMLFormElement* form = formOwner(); // It is ok when form is null
+
+    NodeList* nodeList = document()->getElementsByName(name);
+    NodeListImpl& listImpl = nodeList->getNodeListImpl();
+    GCVector<Node*> list;
+    listImpl.getherDescendant(&list, listImpl.root());
+
+    for (Node* n : list) {
+        if (n->isHTMLInputElement()) {
+            HTMLInputElement* input = n->asHTMLInputElement();
+            if (input->type()->equals("radio") &&
+                (form == input->formOwner()) &&
+                (document() == input->document())) {
+                radioButtonGroup->push_back(input);
+            }
+        }
+    }
+
+    return radioButtonGroup;
 }
 
 uint32_t HTMLInputElement::size()
@@ -261,6 +306,53 @@ void HTMLInputElement::setSize(String* sizeStr)
     }
 }
 
+bool HTMLInputElement::hasActivationBehavior()
+{
+    if (type()->equals("checkbox") || type()->equals("radio") ||
+        type()->equals("file") || type()->equals("submit") ||
+        type()->equals("image") || type()->equals("reset") ||
+        type()->equals("button")) {
+        return true;
+    }
+
+    return false;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:activation-behaviour
+void HTMLInputElement::activationBehavior()
+{
+    // TODO: check "apply" and mutability
+    if (type()->equals("hidden")) {
+        return;
+    }
+
+    if (type()->equals("checkbox") || type()->equals("radio")) {
+        fireEvent(starFish()->staticStrings()->m_input, true, false);
+        fireEvent(starFish()->staticStrings()->m_change, true, false);
+    } else if (type()->equals("file")) {
+    } else if (type()->equals("submit")) {
+    } else if (type()->equals("image")) {
+    } else if (type()->equals("reset")) {
+    } else if (type()->equals("button")) {
+    }
+}
+
+void HTMLInputElement::legacyPreActivationBehavior()
+{
+    if (type()->equals("checkbox")) {
+        m_checkness = !m_checkness;
+    } else if (type()->equals("radio")) {
+        // TODO
+    }
+}
+
+void HTMLInputElement::legacyCanceledActivationBehavior()
+{
+    if (type()->equals("radio")) {
+        // TODO
+    }
+}
+
 bool HTMLInputElement::isSizableType()
 {
     String* typeString = type();
@@ -278,17 +370,6 @@ bool HTMLInputElement::isSizableType()
         return true;
     }
     return false;
-}
-
-void HTMLInputElement::fireEventUserInteraction(QualifiedName& eventType,
-                                                bool bubbles, bool cancelable)
-{
-    if (!isButton(this) && !type()->equals("hidden") &&
-        (eventType == starFish()->staticStrings()->m_input ||
-         eventType == starFish()->staticStrings()->m_change)) {
-        HTMLFormControl::fireEventUserInteraction(eventType, bubbles,
-                                                  cancelable);
-    }
 }
 
 String* HTMLInputElement::obscurePhrase(String* phrase)
@@ -318,10 +399,11 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
             // https://html.spec.whatwg.org/multipage/input.html#attr-input-value
             if (!m_dirtiness) {
                 if (attributeRemoved) {
-                    setValue(String::emptyString);
+                    m_value = String::emptyString;
                 } else { // created or updated
-                    setValue(val);
+                    m_value = val;
                 }
+                sanitizeValue();
             }
 
             // TODO: fire correct inputevent
@@ -338,10 +420,14 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     } else if (name == starFish()->staticStrings()->m_checked) {
         if (!m_dirtyCheckness) {
             if (attributeCreated) {
-                setChecked(true);
+                m_checkness = true;
             } else if (attributeRemoved) {
-                setChecked(false);
+                m_checkness = false;
             }
+        }
+    } else if (name == starFish()->staticStrings()->m_name) {
+        if (type()->equals("radio") && checked()) {
+            resetRadioButtons();
         }
     }
 }

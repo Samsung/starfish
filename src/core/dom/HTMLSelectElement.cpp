@@ -45,6 +45,7 @@ void* HTMLSelectElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLSelectElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLSelectElement, m_selectedOptions));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLSelectElement, m_options));
         HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLSelectElement));
         typeInited = true;
@@ -95,9 +96,9 @@ void HTMLSelectElement::setValue(String* value)
         }
     }
 
+    fireEvent(starFish()->staticStrings()->m_change, true, false);
+
     setNeedsFrameTreeBuild(Node::UpdateAtSelf);
-    fireEventUserInteraction(starFish()->staticStrings()->m_change, true,
-                             false);
 }
 
 HTMLOptionElement* HTMLSelectElement::firstOptionElement()
@@ -311,9 +312,8 @@ HTMLOptionElement* HTMLSelectElement::firstSelectedOptionElement()
 // https://html.spec.whatwg.org/multipage/form-elements.html#send-select-update-notifications
 void HTMLSelectElement::fireSelectUpdateNotification()
 {
-    fireEventUserInteraction(starFish()->staticStrings()->m_input, true, false);
-    fireEventUserInteraction(starFish()->staticStrings()->m_change, true,
-                             false);
+    queueEvent(starFish()->staticStrings()->m_input, true, false);
+    queueEvent(starFish()->staticStrings()->m_change, true, false);
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element
