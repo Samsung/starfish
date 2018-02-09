@@ -112,7 +112,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
             // TODO: implement width: 'max-content' and 'fit-content'
             bool shouldComputeWithNormalBlockWidthRule =
                 isNormalFlow() && !isAtomicInlineLevel();
-            if (isFlexItem() && !isAtomicInlineLevel()) {
+            if (isFlexItem()) {
                 STARFISH_ASSERT(cb->isFrameFlexibleBox());
                 shouldComputeWithNormalBlockWidthRule =
                     (cb->style()->flexDirection() ==
