@@ -46,11 +46,13 @@ HTMLInputElement::HTMLInputElement(Document* document)
     , m_dirtiness(false)
     , m_checkness(false)
     , m_dirtyCheckness(false)
+    , m_previousCheckness(false)
     , m_shouldDrawCaret(false)
     , m_caretBlinkingIntervalId(SIZE_MAX)
     , m_currentCaretPosition(0)
     , m_currentEditingText(String::emptyString)
     , m_maxlength(INITIAL_MAXLENGTH)
+    , m_previousCheckedRadioButton(nullptr)
 {
 }
 
@@ -226,12 +228,11 @@ void HTMLInputElement::setChecked(bool checked)
 {
     m_checkness = checked;
     m_dirtyCheckness = true;
-    updateInputboxValue(m_checkness ? checkboxTickSymbol()
-                                    : String::emptyString);
 
     if (type()->equals("radio") && m_checkness) {
         resetRadioButtons();
     }
+    setNeedsFrameTreeBuild(Node::UpdateFromParent);
 }
 
 void HTMLInputElement::resetRadioButtons()
@@ -319,6 +320,33 @@ bool HTMLInputElement::hasActivationBehavior()
     return false;
 }
 
+HTMLInputElement* HTMLInputElement::getCurrentCheckedRadioButton()
+{
+    GCVector<HTMLInputElement*>* list = radioButtonGroup();
+    if (list) {
+        for (HTMLInputElement* input : *list) {
+            if (input->checked()) {
+                return input;
+            }
+        }
+    }
+    return nullptr;
+}
+
+bool HTMLInputElement::isInSameRadioButtonGroup(HTMLInputElement* other)
+{
+    STARFISH_ASSERT(other->type()->equals("radio"));
+    GCVector<HTMLInputElement*>* list = radioButtonGroup();
+    if (list) {
+        for (HTMLInputElement* input : *list) {
+            if (input == other) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#the-input-element:activation-behaviour
 void HTMLInputElement::activationBehavior()
 {
@@ -330,30 +358,42 @@ void HTMLInputElement::activationBehavior()
     if (type()->equals("checkbox") || type()->equals("radio")) {
         fireEvent(starFish()->staticStrings()->m_input, true, false);
         fireEvent(starFish()->staticStrings()->m_change, true, false);
+        m_dirtyCheckness = true;
     } else if (type()->equals("file")) {
     } else if (type()->equals("submit")) {
     } else if (type()->equals("image")) {
     } else if (type()->equals("reset")) {
     } else if (type()->equals("button")) {
     }
+    setNeedsFrameTreeBuild(Node::UpdateFromParent);
 }
 
 void HTMLInputElement::legacyPreActivationBehavior()
 {
     if (type()->equals("checkbox")) {
+        m_previousCheckness = m_checkness;
         m_checkness = !m_checkness;
-    } else if (type()->equals("radio")) {
-        // TODO
+    } else if (type()->equals("radio") && !checked()) {
+        m_previousCheckedRadioButton = getCurrentCheckedRadioButton();
+        if (m_previousCheckedRadioButton) {
+            m_previousCheckedRadioButton->m_checkness = false;
+        }
+        m_checkness = true;
     }
 }
 
 void HTMLInputElement::legacyCanceledActivationBehavior()
 {
     if (type()->equals("checkbox")) {
-        m_checkness = !m_checkness;
+        m_checkness = m_previousCheckness;
     } else if (type()->equals("radio")) {
-        // TODO
+        if (m_previousCheckedRadioButton &&
+            isInSameRadioButtonGroup(m_previousCheckedRadioButton)) {
+            m_previousCheckedRadioButton->m_checkness = true;
+        }
+        m_checkness = false;
     }
+    setNeedsFrameTreeBuild(Node::UpdateFromParent);
 }
 
 bool HTMLInputElement::isSizableType()
@@ -394,8 +434,7 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
         if (name == starFish()->staticStrings()->m_type || !old->equals(val)) {
-            String* textToDisplay = visibleValue();
-            updateInputboxValue(textToDisplay);
+            setNeedsFrameTreeBuild(Node::UpdateFromParent);
         }
 
         if (name == starFish()->staticStrings()->m_value) {
@@ -453,11 +492,6 @@ String* HTMLInputElement::visibleValue()
     }
 
     return val;
-}
-
-void HTMLInputElement::updateInputboxValue(String* value)
-{
-    setNeedsFrameTreeBuild(Node::UpdateFromParent);
 }
 
 bool HTMLInputElement::shouldUsePlaceholder()
@@ -594,7 +628,7 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
                 },
                 500, this);
             starFish()->platformWindow()->showSoftwareKeyboardIfPossible();
-            updateInputboxValue(value);
+            setNeedsFrameTreeBuild(Node::UpdateFromParent);
         } else if (oldGotFocus && !newGotFocus) {
             starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
             m_shouldDrawCaret = false;

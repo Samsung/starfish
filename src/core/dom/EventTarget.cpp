@@ -241,7 +241,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // Let isActivationEvent be true, if event is a MouseEvent object and
     // event’s type attribute is "click", and false otherwise.
     bool isActivationEvent =
-        event->isMouseEvent() && event->type()->equals("click");
+        event->isUIEvent() && event->type()->equals("click");
     EventTarget* activationTarget = nullptr;
 
     // 4. If event's target attribute value is participating in a tree, let

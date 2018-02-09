@@ -7,7 +7,8 @@ test/cairo/reftest/vendor/react/packages/react-call-return/src/__tests__/ReactCa
 test/cairo/reftest/vendor/react/packages/react-dom/src/client/__tests__/dangerouslySetInnerHTML-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/client/__tests__/getNodeForCharacterOffset-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/BeforeInputEventPlugin-test.internal.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/ChangeEventPlugin-test.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/ChangeEventPlugin-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/ChangeEventPlugin-test_modified.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/EnterLeaveEventPlugin-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/FallbackCompositionState-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/getEventKey-test.html
@@ -17,7 +18,8 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/Syntheti
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticEvent-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticKeyboardEvent-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticWheelEvent-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/CSSPropertyOperations-test.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/CSSPropertyOperations-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/CSSPropertyOperations-test_modified.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/DOMPropertyOperations-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/escapeTextForBrowser-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/EventPluginHub-test.html
