@@ -914,18 +914,58 @@ void dump(Frame* frm, unsigned depth)
     }
 }
 
-void dumpText(Frame* frm, StringBuilder* result)
+bool isNeedsTabBeforeNode(Node* node)
 {
-    if (frm->isFrameText()) {
-        result->appendString(
-            frm->asFrameText()->text()->stripAndCollapseASCIIwhitespace());
+    Frame* f = node->frame();
+    if (f && (!f->isFrameTableCellBox() ||
+              f->asFrameTableCellBox()->absoluteColumnIndex() <= 0))
+        return false;
+    return true;
+}
+
+bool isNeedsNewlinesBeforeNode(Node* node)
+{
+    if (node->isHTMLParagraphElement() || node->isHTMLDivElement() ||
+        node->isHTMLOListElement() || node->isHTMLLIElement() ||
+        node->isHTMLUListElement() || node->isHTMLBRElement()) {
+        return true;
     }
-    result->appendString(String::createASCIIString("\n"));
-    Frame* f = frm->firstChild();
-    while (f) {
-        dumpText(f, result);
-        f = f->next();
+
+    Frame* f = node->frame();
+    if (node->isHTMLOptionElement() || node->isHTMLOptGroupElement())
+        return false;
+
+    if (!f || f->isFrameTableCellBox())
+        return false;
+
+    return !f->isFrameInline() && !node->isHTMLBodyElement() &&
+           f->isFrameBlockBox() && f->asFrameBlockBox()->hasBlockFlow();
+}
+
+String* dumpText(Node* node, bool* lastTextNode)
+{
+    String* result = String::emptyString;
+    if (isNeedsTabBeforeNode(node) && *lastTextNode) {
+        result = result->concat('\t');
+    } else if (isNeedsNewlinesBeforeNode(node) && *lastTextNode) {
+        result = result->concat('\n');
     }
+
+    if (node->isText() &&
+        node->parentNode()->style()->visibility() ==
+            VisibilityValue::VisibleVisibilityValue &&
+        node->parentNode()->parentNode()->style()->display() !=
+            DisplayValue::NoneDisplayValue) {
+        result = result->concat(
+            node->asText()->wholeText()->stripAndCollapseASCIIwhitespace());
+        *lastTextNode = true;
+    }
+    Node* child = node->firstChild();
+    while (child) {
+        result = result->concat(dumpText(child, lastTextNode));
+        child = child->nextSibling();
+    }
+    return result;
 }
 
 void FrameTreeBuilder::dumpFrameTree(Document* document, unsigned depth)
@@ -936,9 +976,8 @@ void FrameTreeBuilder::dumpFrameTree(Document* document, unsigned depth)
 String* FrameTreeBuilder::dumpFrameTreeAsText(Document* document,
                                               unsigned depth)
 {
-    StringBuilder result;
-    dumpText(document->frame(), &result);
-    return result.finalize();
+    bool lastTextNode = false;
+    return dumpText(document, &lastTextNode);
 }
 
 #endif
