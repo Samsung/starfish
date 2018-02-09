@@ -87,14 +87,21 @@ public:
     int32_t maxLength();
     void setMaxLength(int32_t maxlength);
 
+    bool hasActivationBehavior() override;
+    void activationBehavior() override;
+    void legacyPreActivationBehavior() override;
+    void legacyCanceledActivationBehavior() override;
+
 protected:
 private:
     void toggleChecked();
     bool isSizableType();
     void updateInputboxValue(String* value);
     bool shouldUsePlaceholder();
-    void fireEventUserInteraction(QualifiedName& type, bool bubbles,
-                                  bool cancelable) override;
+    void sanitizeValue();
+
+    GCVector<HTMLInputElement*>* radioButtonGroup();
+    void resetRadioButtons();
 
     bool m_dirtiness;
 
