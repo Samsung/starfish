@@ -348,7 +348,9 @@ void HTMLInputElement::legacyPreActivationBehavior()
 
 void HTMLInputElement::legacyCanceledActivationBehavior()
 {
-    if (type()->equals("radio")) {
+    if (type()->equals("checkbox")) {
+        m_checkness = !m_checkness;
+    } else if (type()->equals("radio")) {
         // TODO
     }
 }
@@ -480,9 +482,6 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
         if (event->type()->equalsIgnoreCase("click")) {
             if (type()->equals("submit")) {
                 fireSubmitEvent();
-                return true;
-            } else if (type()->equals("checkbox")) {
-                toggleChecked();
                 return true;
             } else if (shouldUsePlaceholder()) {
                 setValue(String::emptyString);
