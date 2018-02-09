@@ -1087,6 +1087,11 @@ ResourceURL* Document::baseURL() const
     return ResourceURL::AboutBlankURL();
 }
 
+void Document::setBaseURL(ResourceURL* newURL)
+{
+    m_baseURL = newURL;
+}
+
 Element* Document::nextBaseElement(Node* node, Node* root)
 {
     for (Element* e = Traverse::nextElement(node, root); e;

@@ -248,6 +248,7 @@ public:
             ResourceURL* newURL =
                 new ResourceURL(m_resource->resourceRequest()->lastLocation());
             m_builder.document()->setDocumentURI(newURL);
+            m_builder.document()->setBaseURL(newURL);
             m_builder.document()
                 ->window()
                 ->history()

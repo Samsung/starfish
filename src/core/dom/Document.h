@@ -285,11 +285,16 @@ public:
     {
         return m_documentURI;
     }
+    void setDocumentURI(ResourceURL* newURL)
+    {
+        m_documentURI = newURL;
+    }
 
     Document* parentDocument() const;
 
     ResourceURL* fallbackBaseURL() const;
     ResourceURL* baseURL() const;
+    void setBaseURL(ResourceURL* newURL);
     void updateBaseURL();
     void processBaseElement();
 
@@ -303,11 +308,6 @@ public:
     void setWebOrigin(WebOrigin* webOrigin)
     {
         m_webOrigin = webOrigin;
-    }
-
-    void setDocumentURI(ResourceURL* newURL)
-    {
-        m_documentURI = newURL;
     }
 
     Location* location();
