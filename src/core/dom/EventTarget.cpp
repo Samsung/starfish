@@ -241,8 +241,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // Let isActivationEvent be true, if event is a MouseEvent object and
     // event’s type attribute is "click", and false otherwise.
     bool isActivationEvent =
-        (event->isMouseEvent() &&
-         event->type() == starFish()->staticStrings()->m_click.localName());
+        event->isMouseEvent() && event->type()->equals("click");
     EventTarget* activationTarget = nullptr;
 
     // 4. If event's target attribute value is participating in a tree, let
@@ -380,8 +379,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     }
 
     if (event->defaultPrevented()) {
-        if (event->type() ==
-            starFish()->staticStrings()->m_keydown.localName()) {
+        if (event->type()->equals("keydown")) {
             document()->browsingContext()->setKeydownEventDefaultPrevented(
                 true);
         } else if (event->type() ==
@@ -398,7 +396,6 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     if (!event->defaultPrevented()) {
         for (size_t i = 0; i < eventPath.size(); i++) {
             if (eventPath[i]->handleDefaultEvent(event)) {
-                event->preventDefault();
                 break;
             }
         }
