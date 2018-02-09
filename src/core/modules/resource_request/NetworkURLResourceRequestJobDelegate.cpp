@@ -380,6 +380,9 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
         HTTPHeaderMap::kUserAgent,
         m_orgProxy->starFish()->userAgent()->toUTF8NonGCString().data());
 
+    headers.setHeader(HTTPHeaderMap::kHost,
+                      m_orgProxy->url()->host()->toUTF8NonGCString().data());
+
     headers.setHeader(HTTPHeaderMap::kUpgradeInsecureRequests, "1");
 
     if (!m_orgProxy->m_document->documentURI()->isNetworkURL()) {
