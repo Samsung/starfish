@@ -96,17 +96,19 @@ protected:
 private:
     void toggleChecked();
     bool isSizableType();
-    void updateInputboxValue(String* value);
     bool shouldUsePlaceholder();
     void sanitizeValue();
 
     GCVector<HTMLInputElement*>* radioButtonGroup();
     void resetRadioButtons();
+    HTMLInputElement* getCurrentCheckedRadioButton();
+    bool isInSameRadioButtonGroup(HTMLInputElement* other);
 
     bool m_dirtiness;
 
     bool m_checkness;
     bool m_dirtyCheckness;
+    bool m_previousCheckness;
 
     bool m_shouldDrawCaret;
     size_t m_caretBlinkingIntervalId;
@@ -114,6 +116,7 @@ private:
     LayoutLocation m_currentCaretLayoutLocation;
     String* m_currentEditingText;
     int32_t m_maxlength;
+    HTMLInputElement* m_previousCheckedRadioButton;
 };
 }
 
