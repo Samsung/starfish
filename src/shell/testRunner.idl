@@ -1,4 +1,4 @@
-[Exposed=Window]
+[Exposed=Window,STARFISH_ENABLE_TEST]
 interface testRunner {
   static void dumpAsText();
   static void waitUntilDone();
