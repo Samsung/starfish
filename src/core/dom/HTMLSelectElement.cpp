@@ -98,7 +98,7 @@ void HTMLSelectElement::setValue(String* value)
 
     fireEvent(starFish()->staticStrings()->m_change, true, false);
 
-    setNeedsFrameTreeBuild(Node::UpdateAtSelf);
+    setNeedsFrameTreeBuild();
 }
 
 HTMLOptionElement* HTMLSelectElement::firstOptionElement()

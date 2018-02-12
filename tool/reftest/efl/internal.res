@@ -206,6 +206,7 @@ test/efl/internal-test/css/table/table_auto_09.html
 test/efl/internal-test/css/table/table_fixed_22.html
 test/efl/internal-test/css/table/table_auto_10.html
 test/efl/internal-test/css/clear/linebox-relayout.html
+test/efl/internal-test/css/url/url-invalid.html
 test/efl/internal-test/css/border/starting_unprocessed_mbp.html
 test/efl/internal-test/css/position2/replaced-left-margin-auto-right-margin-fixed-width-fixed.html
 test/efl/internal-test/css/table/table_auto_08.html

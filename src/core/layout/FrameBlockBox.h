@@ -699,7 +699,7 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    void paintInlineContent(Canvas* canvas);
+    virtual void paintInlineContent(Canvas* canvas);
     void updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
                                            OverflowValue overflowY);
     void updateScrollWidthAndHeightIfNeeds();

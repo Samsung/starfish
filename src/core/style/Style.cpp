@@ -6657,13 +6657,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
-            if ((element->style() == nullptr ||
-                 (element->style()->display() != NoneDisplayValue &&
-                  element->frame() == nullptr))) {
-                element->markNeedsFrameTreeBuild();
-            } else {
-                element->setNeedsFrameTreeBuild(Node::UpdateFromParent);
-            }
+            element->setNeedsFrameTreeBuild();
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageLayout) {
@@ -6732,6 +6726,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
             if (oldStyle && oldStyle != child->style()) {
                 ctx.pushIntoComputedStylePool(oldStyle);
             }
+
         } else {
             if (inheritedStyleChangedForTextNode || child->needsStyleRecalc()) {
                 if (childTextNodeStyle == nullptr) {

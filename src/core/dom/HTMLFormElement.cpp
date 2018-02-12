@@ -105,7 +105,7 @@ String* HTMLFormControl::value()
 void HTMLFormControl::setValue(String* value)
 {
     m_value = value;
-    setNeedsFrameTreeBuild(Node::UpdateAtSelf);
+    setNeedsFrameTreeBuild();
 }
 
 String* HTMLFormControl::formEnctype()

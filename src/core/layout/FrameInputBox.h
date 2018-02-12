@@ -43,9 +43,11 @@ public:
 
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
-    void paintContent(PaintingContext& ctx);
+    virtual void paintContent(PaintingContext& ctx) override;
 
-private:
+protected:
+    void paintCarret(Canvas* canvas);
+    virtual void paintInlineContent(Canvas* canvas) override;
     static ComputedStyle* createInputElementStyleFrom(Node* parent);
 };
 }

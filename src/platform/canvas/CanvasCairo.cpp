@@ -401,9 +401,7 @@ public:
             double y1, y2;
             cairo_clip_extents(m_canvas, &x1, &y1, &x2, &y2);
             LayoutRect c(x1, y1, x2 - x1, y2 - y1);
-            if (c.contains(rt.x(), rt.y()) || c.contains(rt.maxX(), rt.y()) ||
-                c.contains(rt.x(), rt.maxY()) ||
-                c.contains(rt.maxX(), rt.maxY())) {
+            if (c.intersects(rt)) {
             } else {
                 return;
             }

@@ -478,18 +478,6 @@ private:
 #endif
     }
 
-    static int getGifTransparentIndex(GifFileType* gif)
-    {
-#ifdef GIF_LIB_VERSION
-        return 0;
-#else
-        GraphicsControlBlock first_gcb;
-        memset(&first_gcb, 0, sizeof(first_gcb));
-        DGifSavedExtensionToGCB(gif, 0, &first_gcb);
-        return first_gcb.TransparentColor;
-#endif
-    }
-
     void readGIFFileOrBufferedInput(String* localImageSrc,
                                     const char* bufferedInput)
     {
@@ -551,6 +539,7 @@ private:
             memcpy(screenBuffer[i], screenBuffer[0], size);
         }
 
+        int transparentIndex = -1;
         do {
             DGifGetRecordType(gifFile, &recordType);
             switch (recordType) {
@@ -582,6 +571,12 @@ private:
                 GifByteType* extension = nullptr;
                 DGifGetExtension(gifFile, &extCode, &extension);
                 while (extension != nullptr) {
+                    if (extension[0] == 4) {
+                        const int flags = extension[1];
+                        if ((flags & 0x01)) {
+                            transparentIndex = extension[4];
+                        }
+                    }
                     DGifGetExtensionNext(gifFile, &extension);
                 }
             } break;
@@ -605,7 +600,6 @@ private:
         }
 
         // Convert GIF to RGBA
-        int ti = getGifTransparentIndex(gifFile);
         GifRowType gifRow;
         GifColorType* colorMapEntry = nullptr;
         GifByteType* buffer = nullptr;
@@ -616,39 +610,26 @@ private:
             gifRow = screenBuffer[h];
             for (unsigned long w = 0; w < m_width; w++) {
                 colorMapEntry = &colorMap->Colors[gifRow[w]];
-#ifdef GIF_LIB_VERSION
-#ifdef STARFISH_ANDROID
-                *buffer++ = colorMapEntry->Red;
-                *buffer++ = colorMapEntry->Green;
-                *buffer++ = colorMapEntry->Blue;
-                *buffer++ = 255;
-#else
-                *buffer++ = colorMapEntry->Blue;
-                *buffer++ = colorMapEntry->Green;
-                *buffer++ = colorMapEntry->Red;
-                *buffer++ = 255;
-#endif
-#else
-                if (ti == NO_TRANSPARENT_COLOR) {
-#ifdef STARFISH_ANDROID
-                    *buffer++ = colorMapEntry->Red;
-                    *buffer++ = colorMapEntry->Green;
-                    *buffer++ = colorMapEntry->Blue;
-                    *buffer++ = 255;
-#else
-                    *buffer++ = colorMapEntry->Blue;
-                    *buffer++ = colorMapEntry->Green;
-                    *buffer++ = colorMapEntry->Red;
-                    *buffer++ = 255;
-#endif
-                } else {
+
+                if (gifRow[w] == transparentIndex) {
                     *buffer++ = 0;
                     *buffer++ = 0;
                     *buffer++ = 0;
                     *buffer++ = 0;
                     m_hasTransparentPixel = true;
-                }
+                } else {
+#ifdef STARFISH_ANDROID
+                    *buffer++ = colorMapEntry->Red;
+                    *buffer++ = colorMapEntry->Green;
+                    *buffer++ = colorMapEntry->Blue;
+                    *buffer++ = 255;
+#else
+                    *buffer++ = colorMapEntry->Blue;
+                    *buffer++ = colorMapEntry->Green;
+                    *buffer++ = colorMapEntry->Red;
+                    *buffer++ = 255;
 #endif
+                }
             }
         }
 

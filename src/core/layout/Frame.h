@@ -1340,6 +1340,14 @@ public:
         return frameTreeItemModel()->m_lastChild;
     }
 
+    bool hasChildren() const
+    {
+        if (frameTreeItemModel() && frameTreeItemModel()->m_firstChild) {
+            return true;
+        }
+        return false;
+    }
+
     void appendChild(Frame* newChild)
     {
         STARFISH_ASSERT(newChild->parent() == nullptr);
