@@ -218,7 +218,7 @@ void HTMLInputElement::setDefaultChecked(bool checked)
 bool HTMLInputElement::checked()
 {
     if (!m_dirtyCheckness) {
-        defaultChecked();
+        return defaultChecked();
     }
     return m_checkness;
 }
@@ -358,7 +358,6 @@ void HTMLInputElement::activationBehavior()
     if (type()->equals("checkbox") || type()->equals("radio")) {
         fireEvent(starFish()->staticStrings()->m_input, true, false);
         fireEvent(starFish()->staticStrings()->m_change, true, false);
-        m_dirtyCheckness = true;
     } else if (type()->equals("file")) {
     } else if (type()->equals("submit")) {
     } else if (type()->equals("image")) {
@@ -373,12 +372,14 @@ void HTMLInputElement::legacyPreActivationBehavior()
     if (type()->equals("checkbox")) {
         m_previousCheckness = m_checkness;
         m_checkness = !m_checkness;
+        m_dirtyCheckness = true;
     } else if (type()->equals("radio") && !checked()) {
         m_previousCheckedRadioButton = getCurrentCheckedRadioButton();
         if (m_previousCheckedRadioButton) {
             m_previousCheckedRadioButton->m_checkness = false;
         }
         m_checkness = true;
+        m_dirtyCheckness = true;
     }
 }
 
