@@ -541,8 +541,8 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
             if (event->isKeyboardEvent() &&
                 event->type()->equalsIgnoreCase("keydown")) {
                 bool isUseful = false;
-                if (event->asKeyboardEvent()->keyValue() ==
-                    KeyValue::BackspaceKey) {
+                switch (event->asKeyboardEvent()->keyValue()) {
+                case KeyValue::BackspaceKey: {
                     if (value->length()) {
                         if (m_currentCaretPosition > 0) {
                             StringBuilder sb;
@@ -556,7 +556,24 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                         }
                         isUseful = true;
                     }
-                } else {
+                } break;
+                case KeyValue::DeleteKey: {
+                    if (value->length()) {
+                        if (m_currentCaretPosition >= 0 &&
+                            m_currentCaretPosition < value->length()) {
+                            StringBuilder sb;
+                            sb.appendSubString(value, 0,
+                                               m_currentCaretPosition);
+                            sb.appendSubString(value,
+                                               m_currentCaretPosition + 1,
+                                               value->length());
+                            value = sb.finalize();
+                            m_shouldDrawCaret = true;
+                        }
+                        isUseful = true;
+                    }
+                } break;
+                default: {
                     if (String::isASCIIPrintableKey(
                             event->asKeyboardEvent()->keyValue()) &&
                         m_currentCaretPosition < (size_t)maxLength()) {
@@ -566,7 +583,9 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                         m_shouldDrawCaret = true;
                         isUseful = true;
                     }
+                } break;
                 }
+
                 if (isUseful) {
                     if (!value->equals(oldValue)) {
                         setAttribute(starFish()->staticStrings()->m_value,

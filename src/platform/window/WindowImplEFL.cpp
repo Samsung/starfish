@@ -712,6 +712,8 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
         return KeyValue::BackspaceKey;
     } else if (strcmp("Escape", ecoreKeyString) == 0) {
         return KeyValue::EscapeKey;
+    } else if (strcmp("Delete", ecoreKeyString) == 0) {
+        return KeyValue::DeleteKey;
     } else if (strcmp("minus", ecoreKeyString) == 0) {
         if (isShiftPressed) {
             return KeyValue::UnderScoreMarkKey;
