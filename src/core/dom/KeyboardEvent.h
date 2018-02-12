@@ -116,21 +116,20 @@ class KeyboardEvent : public UIEvent {
 public:
     KeyboardEvent(Document* document)
         : UIEvent(document)
-        , m_keyboardEventInit()
     {
     }
 
     KeyboardEvent(Document* document, String* eventType)
         : UIEvent(document, eventType)
-        , m_keyboardEventInit()
     {
     }
 
     KeyboardEvent(Document* document, String* eventType,
                   KeyboardEventInit& init)
-        : UIEvent(document, eventType)
-        , m_keyboardEventInit(init)
+        : UIEvent(document, eventType, init)
     {
+        m_eventModifierData = init.m_eventModifierData;
+        m_keyboardEventData = init.m_keyboardEventData;
     }
 
     virtual void init(ScriptBindingInstance* instance,
@@ -139,30 +138,34 @@ public:
 
     String* key() const
     {
-        return m_keyboardEventInit.key();
+        return m_keyboardEventData.key();
     }
 
     String* code() const
     {
-        return m_keyboardEventInit.code();
+        return m_keyboardEventData.code();
     }
 
     bool ctrlKey() const
     {
-        return m_keyboardEventInit.ctrlKey();
+        return m_eventModifierData.ctrlKey();
     }
+
     bool shiftKey() const
     {
-        return m_keyboardEventInit.shiftKey();
+        return m_eventModifierData.shiftKey();
     }
+
     bool altKey() const
     {
-        return m_keyboardEventInit.altKey();
+        return m_eventModifierData.altKey();
     }
+
     bool metaKey() const
     {
-        return m_keyboardEventInit.metaKey();
+        return m_eventModifierData.metaKey();
     }
+
     bool repeat() const
     {
 #ifndef NDEBUG
@@ -171,25 +174,26 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 #endif
 #endif
-        return m_keyboardEventInit.repeat();
+        return m_keyboardEventData.repeat();
     }
 
     uint32_t keyCode() const
     {
         if (type()->equals(String::createASCIIString("keydown"))) {
-            return m_keyboardEventInit.virtualKeyCode();
+            return m_keyboardEventData.virtualKeyCode();
         }
-        return m_keyboardEventInit.keyCode();
+        return m_keyboardEventData.keyCode();
     }
 
     // Not in IDL.
     KeyValue keyValue() const
     {
-        return m_keyboardEventInit.keyValue();
+        return m_keyboardEventData.keyValue();
     }
 
 private:
-    KeyboardEventInit m_keyboardEventInit;
+    EventModifierData m_eventModifierData;
+    KeyboardEventData m_keyboardEventData;
 };
 } // namespace StarFish
 
