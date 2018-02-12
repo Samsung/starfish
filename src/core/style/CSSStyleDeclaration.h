@@ -200,9 +200,43 @@ public:
     }
 
 protected:
+    class MutablePropertyValue : public gc {
+    public:
+        MutablePropertyValue(String* name, String* value)
+            : m_name(name)
+            , m_value(value)
+        {
+        }
+
+        String* name()
+        {
+            return m_name;
+        }
+
+        String* value()
+        {
+            return m_value;
+        }
+
+        void setName(String* name)
+        {
+            m_name = name;
+        }
+
+        void setValue(String* value)
+        {
+            m_value = value;
+        }
+
+    private:
+        String* m_name;
+        String* m_value;
+    };
+
     void rootPointerValueIfExists(CSSStyleValuePair v);
 
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
+    GCVector<MutablePropertyValue> m_cssCustomValues;
     GCUnorderedSet<void*> m_pointerRooter;
     Element* m_element;
 };
