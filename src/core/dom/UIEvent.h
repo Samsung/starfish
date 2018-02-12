@@ -69,6 +69,9 @@ private:
 // https://w3c.github.io/uievents/#dictdef-eventmodifierinit
 struct EventModifierInit : UIEventInit {
     STARFISH_MAKE_STACK_ALLOCATED()
+    friend class KeyboardEvent;
+    friend class MouseEvent;
+
 public:
     EventModifierInit();
     EventModifierInit(EventModifierData& emdata);

@@ -11,7 +11,8 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/BeforeIn
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/ChangeEventPlugin-test_modified.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/EnterLeaveEventPlugin-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/FallbackCompositionState-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/getEventKey-test.html
+#test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/getEventKey-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/getEventKey-test_modified.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SelectEventPlugin-test.internal.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SimpleEventPlugin-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/events/__tests__/SyntheticClipboardEvent-test.html
