@@ -1127,6 +1127,13 @@ String* CSSStyleDeclaration::getPropertyValue(String* name)
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(MATCH_KEY)
 #undef MATCH_KEY
     default:
+        for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
+            MutablePropertyValue customProperty = m_cssCustomValues[i];
+            if (customProperty.name()->equals(name)) {
+                val = customProperty.value();
+                break;
+            }
+        }
         break;
     }
     return val;
@@ -1136,16 +1143,27 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
                                       String* prior)
 {
     bool isImportant = false;
+    auto str = name->toNullableUTF8String();
+    CSSStyleKind kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
+
     if (prior->length() > 0) {
         if (prior->equalsIgnoreCase("important")) {
             isImportant = true;
         } else {
+            if (kind == CSSStyleKind::Unknown) {
+                for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
+                    MutablePropertyValue property = m_cssCustomValues[i];
+                    if (property.name()->equals(name)) {
+                        property.setValue(value);
+                        return;
+                    }
+                }
+                MutablePropertyValue custom(name, value);
+                m_cssCustomValues.push_back(custom);
+            }
             return;
         }
     }
-
-    auto str = name->toNullableUTF8String();
-    CSSStyleKind kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
 
     struct Sender {
         CSSStyleDeclaration* self;
