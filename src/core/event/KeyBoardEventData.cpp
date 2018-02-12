@@ -50,6 +50,8 @@ String* keyValueToKey(KeyValue v)
         return String::createASCIIString("ArrowRight");
     } else if (v == MinusMarkKey) {
         return String::createASCIIString("-");
+    } else if (v == DeleteKey) {
+        return String::createASCIIString("Delete");
     } else {
         if (v == UnidentifiedKey) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -98,6 +100,8 @@ String* keyValueToCode(KeyValue v)
         return String::createASCIIString("ArrowRight");
     } else if (v == MinusMarkKey) {
         return String::createASCIIString("Minus");
+    } else if (v == DeleteKey) {
+        return String::createASCIIString("Delete");
     } else {
         if (v == UnidentifiedKey) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -146,6 +150,8 @@ uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode)
         } else {
             return 45;
         }
+    } else if (v == DeleteKey) {
+        return 46;
     }
 #ifdef STARFISH_TIZEN_TV
     else if (v == TVVolumeUpKey) {
