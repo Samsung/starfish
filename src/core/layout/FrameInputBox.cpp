@@ -77,9 +77,13 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
             // height
             visibleValue = String::createUTF32String(0x202F);
         }
+
         Text* textNode = new Text(current->document(), visibleValue);
         textNode->setParentNode(textElement);
         ComputedStyle* textStyle = createInputElementStyleFrom(textElement);
+        if (inputNode->type()->equalsIgnoreCase("checkbox")) {
+            textStyle->setTextAlign(TextAlignValue::CenterTextAlignValue);
+        }
         textNode->setStyle(textStyle);
 
         FrameText* frameText = new FrameText(textNode, textStyle);
@@ -192,6 +196,32 @@ void FrameInputBox::layout(LayoutContext& ctx,
     }
 }
 
+void FrameInputBox::paintCarret(Canvas* canvas)
+{
+    HTMLInputElement* e = node()->asHTMLInputElement();
+    size_t cPos = e->m_currentCaretPosition;
+    if (!e->m_shouldDrawCaret) {
+        return;
+    }
+
+    LayoutUnit caretThickness = e->caretThickness();
+    LayoutUnit x, y;
+    x = e->currentCaretLayoutLocation().x();
+    y = e->currentCaretLayoutLocation().y();
+    canvas->save();
+    canvas->clip(makeRect(BoxValue::ContentBoxBoxValue));
+    canvas->setColor(node()->style()->color());
+    canvas->drawRect(LayoutRect(x - scrollLeft(), y, caretThickness,
+                                style()->font()->metrics().m_fontHeight));
+    canvas->restore();
+}
+
+void FrameInputBox::paintInlineContent(Canvas* canvas)
+{
+    FrameBlockBox::paintInlineContent(canvas);
+    paintCarret(canvas);
+}
+
 void FrameInputBox::paintContent(PaintingContext& ctx)
 {
     if (canSkipPaintingStage(ctx)) {
@@ -201,24 +231,7 @@ void FrameInputBox::paintContent(PaintingContext& ctx)
     FrameBlockBox::paintContent(ctx);
 
     if (ctx.m_paintingStage == PaintingStage::PaintingNormalFlowInline) {
-        HTMLInputElement* e = node()->asHTMLInputElement();
-        size_t cPos = e->m_currentCaretPosition;
-
-        if (!e->m_shouldDrawCaret) {
-            return;
-        }
-
-        LayoutUnit caretThickness = e->caretThickness();
-        LayoutUnit x, y;
-        x = e->currentCaretLayoutLocation().x();
-        y = e->currentCaretLayoutLocation().y();
-        ctx.m_canvas->save();
-        ctx.m_canvas->clip(makeRect(BoxValue::ContentBoxBoxValue));
-        ctx.m_canvas->setColor(node()->style()->color());
-        ctx.m_canvas->drawRect(
-            LayoutRect(x - scrollLeft(), y, caretThickness,
-                       style()->font()->metrics().m_fontHeight));
-        ctx.m_canvas->restore();
+        paintCarret(ctx.m_canvas);
     }
 }
 }

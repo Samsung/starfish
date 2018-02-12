@@ -428,7 +428,7 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                 bool n = newStyle->seenPseudoElement(
                     (StyleResolver::PseudoElementType)i);
                 if (o != n) {
-                    setNeedsFrameTreeBuild(Node::UpdateFromParent);
+                    setNeedsFrameTreeBuild();
                 }
                 if (o && n) {
                     ComputedStyle* ocs = oldStyle->pseudoStyle(
@@ -440,7 +440,7 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                     };
                     if (compareStyle(ocs, ncs, damagedKeys) !=
                         ComputedStyleDamageNone) {
-                        setNeedsFrameTreeBuild(Node::UpdateFromParent);
+                        setNeedsFrameTreeBuild();
                     }
                 }
             }

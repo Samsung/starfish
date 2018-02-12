@@ -561,6 +561,10 @@ int main(int argc, char* argv[])
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
     int width = 1280, height = 720;
+#ifdef STARFISH_TIZEN_TV
+    width = 1920;
+    height = 1080;
+#endif
     int x = 0, y = 0;
     float scaleFactor = 1;
 

@@ -470,7 +470,8 @@ void WebView::layoutIfNeeds()
         {
             INSTALL_PROFILE_TIMER(starFish(),
                                   "computeStackingContextProperties");
-            if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
+            if (m_topLevelBrowsingContext->document()->frame()->firstChild() &&
+                m_rootStackingContext) {
                 m_rootStackingContext->computeStackingContextProperties();
             }
             m_needsComputeStackingContextProperties = false;

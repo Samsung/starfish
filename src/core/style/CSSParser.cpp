@@ -1134,7 +1134,7 @@ CSSSelector::Type CSSParser::getAttributeMatch(RefPtr<CSSToken> token)
 
 CSSSelector::AttributeMatchType CSSParser::getAttributeFlags()
 {
-    if (!lookAhead(false, true)->isIdent()) {
+    if (!lookAhead(true, true)->isIdent()) {
         return CSSSelector::CaseSensitive;
     }
     RefPtr<CSSToken> flag = getToken(true, true);
@@ -1288,7 +1288,7 @@ CSSSelector* CSSParser::getIdSelector()
 CSSSelector* CSSParser::getSimpleSelector()
 {
     RefPtr<CSSToken> token = currentToken();
-    CSSSelector* selector;
+    CSSSelector* selector = nullptr;
     if (token->isSymbol('#')) {
         selector = getIdSelector();
     } else if (token->isSymbol('.')) {

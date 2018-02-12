@@ -390,14 +390,7 @@ public:
         m_childNeedsStyleRecalc = false;
     }
 
-    enum FrameTreeBuildReason {
-        AppendChild,
-        InsertBefore,
-        RemoveFromParent,
-        UpdateFromParent,
-        UpdateAtSelf,
-    };
-    void setNeedsFrameTreeBuild(FrameTreeBuildReason reason);
+    void setNeedsFrameTreeBuild();
 
     void markNeedsFrameTreeBuild()
     {

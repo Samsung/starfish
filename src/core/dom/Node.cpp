@@ -895,8 +895,7 @@ static void setChildrenNeedsStyleRecalc(Node* node)
     }
 }
 
-static void didInsertNode(Node* self, Node* child,
-                          Node::FrameTreeBuildReason reason)
+static void didInsertNode(Node* self, Node* child)
 {
     child->setParentNode(self);
 
@@ -911,7 +910,9 @@ static void didInsertNode(Node* self, Node* child,
         notifyNodeInsertedToDocumentTree(self, child);
         self->setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
         setChildrenNeedsStyleRecalc(child);
-        self->setNeedsFrameTreeBuild(reason);
+        if (!child->isElement()) {
+            child->setNeedsFrameTreeBuild();
+        }
     }
 }
 
@@ -952,7 +953,7 @@ Node* Node::appendChild(Node* child)
     }
     m_lastChild = child;
 
-    didInsertNode(this, child, Node::AppendChild);
+    didInsertNode(this, child);
 
     return child;
 }
@@ -1004,7 +1005,7 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     child->setPreviousSibling(prev);
     child->setNextSibling(childRef);
 
-    didInsertNode(this, child, Node::InsertBefore);
+    didInsertNode(this, child);
 
     return child;
 }
@@ -1124,7 +1125,7 @@ Node* Node::removeChild(Node* child)
                                "Child's parent is not parent.");
     }
 
-    child->setNeedsFrameTreeBuild(Node::RemoveFromParent);
+    child->setNeedsFrameTreeBuild();
 
     Node* prevChild = child->previousSibling();
     Node* nextChild = child->nextSibling();
@@ -1188,7 +1189,9 @@ Node* Node::parserAppendChild(Node* child)
     }
 
     setChildrenNeedsStyleRecalc(child);
-    setNeedsFrameTreeBuild(Node::AppendChild);
+    if (!child->isElement()) {
+        child->setNeedsFrameTreeBuild();
+    }
 
     return child;
 }
@@ -1278,7 +1281,9 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     }
 
     setChildrenNeedsStyleRecalc(child);
-    setNeedsFrameTreeBuild(Node::InsertBefore);
+    if (!child->isElement()) {
+        child->setNeedsFrameTreeBuild();
+    }
 }
 
 void Node::parserTakeAllChildrenFrom(Node* oldParent)
@@ -1568,7 +1573,7 @@ void Node::propagateMarkChildNeedsFrameTreeBuild()
     }
 }
 
-void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
+void Node::setNeedsFrameTreeBuild()
 {
     if (!document()->doesParticipateInRendering()) {
         return;
@@ -1578,64 +1583,41 @@ void Node::setNeedsFrameTreeBuild(Node::FrameTreeBuildReason reason)
 
     Frame* old = frame();
     if (old) {
-        Frame* target;
-        if (reason == Node::AppendChild || reason == Node::UpdateAtSelf) {
-            target = old;
+        Frame* parent = old->parent();
+        if (!parent) {
+            parent = document()->frame();
         } else {
-            target = old->parent();
-        }
-
-        if (!target) {
-            // STARFISH_ASSERT(old->isFrameDocument());
-            target = document()->frame();
-        } else {
-            while (target) {
-                if (!target->isAnonymous() && target->isFrameBlockBox()) {
+            while (parent) {
+                if (!parent->isAnonymous() &&
+                    (parent->isBlockLevel() || parent->isFrameTableCellBox())) {
                     break;
                 }
-
-                target = target->parent();
+                parent = parent->parent();
             }
         }
 
-        STARFISH_ASSERT(target);
-        FrameBlockBox* targetBlockBox = target->asFrameBlockBox();
-        if (reason == Node::AppendChild) {
-            if (target->node() != this) {
-                removeChildren(targetBlockBox);
-            }
-        } else if (reason == Node::RemoveFromParent) {
-            removeOneChild(targetBlockBox, frame());
-            removeAnonymousBlockBoxesIfNeeded(targetBlockBox);
-            target->propagateMarkNeedsLayout();
-            window()->browsingContext()->setNeedsLayout();
-            return;
-        } else {
-            removeChildren(targetBlockBox);
-        }
-        ComputedStyle* style = target->style();
-        if (style->seenPseudoElementBefore() ||
-            style->seenPseudoElementBefore() ||
-            style->seenPseudoElementFirstLetter()) {
-            removeChildren(targetBlockBox);
-            target->node()->markNeedsFrameTreeBuild();
+        STARFISH_ASSERT(parent);
+        while (parent->firstChild()) {
+            parent->removeChild(parent->firstChild());
         }
 
-        target->node()->propagateMarkChildNeedsFrameTreeBuild();
+        Node* node = parent->node()->firstChild();
+        while (node) {
+            FrameTreeBuilder::clearTree(node);
+            node = node->nextSibling();
+        }
+
+        node = parent->node();
+        while (node) {
+            node->markChildNeedsFrameTreeBuild();
+            node = node->parentNode();
+        }
     } else {
         Node* node = this;
         while (node) {
             if (node->frame()) {
-                node->setNeedsFrameTreeBuild(Node::UpdateFromParent);
+                node->setNeedsFrameTreeBuild();
                 break;
-            } else {
-                if (!node->needsStyleRecalc()) {
-                    if (node->style() &&
-                        node->style()->display() ==
-                            DisplayValue::NoneDisplayValue) {
-                        break;
-                    }
-                }
             }
             node = node->parentNode();
         }
