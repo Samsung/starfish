@@ -76,6 +76,8 @@ public:
     {
         return true;
     }
+
+    int tabIndex() const override;
 };
 
 class SVGNamedElement : public SVGElement {
