@@ -227,6 +227,14 @@ void SVGElement::styleForPresentationAttribute(
     }
 }
 
+int SVGElement::tabIndex() const
+{
+    if (supportsFocus()) {
+        return Element::tabIndex();
+    }
+    return -1;
+}
+
 void* SVGNamedElement::operator new(size_t size)
 {
     static bool typeInited = false;
