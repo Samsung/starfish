@@ -228,58 +228,6 @@
             },
         },
         {
-            'target_name': 'av.x64.release',
-            'type': 'none',
-            'copies': [
-                {
-                    'files': [
-                        'third_party/libav/out/linux/x64/release/libavcodec/libavcodec.so',
-                        'third_party/libav/out/linux/x64/release/libavcodec/libavcodec.so.56',
-                        'third_party/libav/out/linux/x64/release/libavformat/libavformat.so',
-                        'third_party/libav/out/linux/x64/release/libavformat/libavformat.so.56',
-                        'third_party/libav/out/linux/x64/release/libavutil/libavutil.so',
-                        'third_party/libav/out/linux/x64/release/libavutil/libavutil.so.54',
-                    ],
-                    'destination': '<(PRODUCT_DIR)/../release/lib',
-                },
-            ],
-            'direct_dependent_settings': {
-                'include_dirs': [
-                    'third_party/libav/out/linux/x64/release',
-                    'third_party/libav',
-                ],
-                'libraries': [
-                    'lib/libavcodec.so lib/libavformat.so lib/libavutil.so',
-                ],
-            },
-        },
-        {
-            'target_name': 'av.x64.debug',
-            'type': 'none',
-            'copies': [
-                {
-                    'files': [
-                        'third_party/libav/out/linux/x64/debug/libavcodec/libavcodec.so',
-                        'third_party/libav/out/linux/x64/debug/libavcodec/libavcodec.so.56',
-                        'third_party/libav/out/linux/x64/debug/libavformat/libavformat.so',
-                        'third_party/libav/out/linux/x64/debug/libavformat/libavformat.so.56',
-                        'third_party/libav/out/linux/x64/debug/libavutil/libavutil.so',
-                        'third_party/libav/out/linux/x64/debug/libavutil/libavutil.so.54',
-                    ],
-                    'destination': '<(PRODUCT_DIR)/../debug/lib',
-                },
-            ],
-            'direct_dependent_settings': {
-                'include_dirs': [
-                    'third_party/libav/out/linux/x64/debug',
-                    'third_party/libav',
-                ],
-                'libraries': [
-                    'lib/libavcodec.so lib/libavformat.so lib/libavutil.so',
-                ],
-            },
-        },
-        {
             'target_name': 'zmq.x64.debug',
             'type': 'none',
             'copies': [

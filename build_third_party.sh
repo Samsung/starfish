@@ -334,18 +334,6 @@ fi
 
 
 cd $CU
-cd third_party/libav/
-rm -rf ./out
-#build_av_for_linux
-
-if [ -z "$TIZEN_SDK_HOME" ]; then
-    echo "Do not build for Tizen"
-else
-    echo "TIZEN_SDK_HOME env is ...""$TIZEN_SDK_HOME"
-#    build_av_for_tizen
-fi
-
-cd $CU
 
 
 ./build_gc.sh

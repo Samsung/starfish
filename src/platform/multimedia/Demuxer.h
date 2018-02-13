@@ -53,7 +53,6 @@ public:
     static Demuxer* createDemuxer(String* mimeTypeOfContainer);
     static Demuxer* createWebMDemuxer();
     static Demuxer* createMP4Demuxer();
-    static Demuxer* createFFmpegDemuxer();
     virtual bool findStreamPacket(DemuxerSource* source) = 0;
     virtual bool findStreamInfo(DemuxerSource* source, String* formatHint) = 0;
 
