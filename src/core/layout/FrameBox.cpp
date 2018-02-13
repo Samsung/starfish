@@ -2001,7 +2001,9 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
                 }
             }
 
-            PreferredWidthContext p(ctx, this, this, parentWidth - mbpWidth());
+            PreferredWidthMainContext mainContext;
+            PreferredWidthContext p(ctx, mainContext, this, this,
+                                    parentWidth - mbpWidth());
             p.computePreferredWidth();
             minWidth = std::min(minWidth, p.preferredMinWidth());
         }

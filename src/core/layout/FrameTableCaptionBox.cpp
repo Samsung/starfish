@@ -33,7 +33,8 @@ void FrameTableCaptionBox::layoutWidth(LayoutContext& ctx)
     LayoutUnit contentWidth;
     Length width = style()->width();
     if (width.isAuto()) {
-        PreferredWidthContext p(ctx, this, this,
+        PreferredWidthMainContext mainContext;
+        PreferredWidthContext p(ctx, mainContext, this, this,
                                 parentContentWidth - mbpWidth());
         p.computePreferredWidth();
         contentWidth = p.preferredWidth();

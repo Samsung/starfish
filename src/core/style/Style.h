@@ -631,10 +631,10 @@ enum FloatValue {
 };
 
 enum ClearValue {
-    NoneClearValue,
-    LeftClearValue,
-    RightClearValue,
-    BothClearValue
+    NoneClearValue = 0,
+    LeftClearValue = 1,
+    RightClearValue = 1 << 1,
+    BothClearValue = 1 | (1 << 1),
 };
 
 // flex

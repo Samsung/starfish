@@ -708,11 +708,18 @@ enum WordType {
     General,
 };
 
+struct PreferredWidthMainContext {
+    LayoutUnit m_floatLeftWidth;
+    LayoutUnit m_floatRightWidth;
+};
+
 class PreferredWidthContext {
 public:
-    PreferredWidthContext(LayoutContext& lc, Frame* frame, Frame* owner,
-                          LayoutUnit lastKnownWidth)
+    PreferredWidthContext(LayoutContext& lc,
+                          PreferredWidthMainContext& mainContext, Frame* frame,
+                          Frame* owner, LayoutUnit lastKnownWidth)
         : m_layoutContext(lc)
+        , m_mainContext(mainContext)
         , m_frame(frame)
         , m_owner(owner)
         , m_preferredWidthSoFar(0)
@@ -740,6 +747,11 @@ public:
     LayoutContext& layoutContext()
     {
         return m_layoutContext;
+    }
+
+    PreferredWidthMainContext& mainContext()
+    {
+        return m_mainContext;
     }
 
     void updatePreferredWidth(LayoutUnit r)
@@ -905,6 +917,7 @@ public:
 
 private:
     LayoutContext& m_layoutContext;
+    PreferredWidthMainContext& m_mainContext;
     Frame* m_frame;
     Frame* m_owner;
     LayoutUnit m_preferredWidthSoFar;
