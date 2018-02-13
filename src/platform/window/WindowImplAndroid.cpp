@@ -644,7 +644,7 @@ Java_android_sec_com_lightweightwebengine_MainActivity_dispatchMouseDown(
                     MouseData::MouseButtonsValue::LeftButtonDown,
                     x / sf->starFish()->screenInfo().deviceScaleFactor,
                     y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
-    sf->dispatchMouseEvent(PlatformWindow::MouseEventDown, mdata);
+    sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
     sf->m_isMouseLbuttonDown = true;
 
     LOGE("Mouse down=%f %f", x, y);
@@ -664,7 +664,7 @@ Java_android_sec_com_lightweightwebengine_MainActivity_dispatchMouseMove(
     MouseData mdata(0, buttons,
                     x / sf->starFish()->screenInfo().deviceScaleFactor,
                     y / sf->starFish()->screenInfo().deviceScaleFactor, 0);
-    sf->dispatchMouseEvent(PlatformWindow::MouseEventMove, mdata);
+    sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
 
     LOGE("Mouse move=%f %f", x, y);
 }
@@ -681,7 +681,7 @@ Java_android_sec_com_lightweightwebengine_MainActivity_dispatchMouseUp(
                     MouseData::MouseButtonsValue::NoButtonDown,
                     x / sf->starFish()->screenInfo().deviceScaleFactor,
                     y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
-    sf->dispatchMouseEvent(PlatformWindow::MouseEventUp, mdata);
+    sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
     sf->m_isMouseLbuttonDown = false;
 
     LOGE("Mouse up=%f %f", x, y);
