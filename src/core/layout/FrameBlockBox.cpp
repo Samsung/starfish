@@ -139,8 +139,10 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                 contentWidth = std::max(containgBlockContentWidth - mbpWidth(),
                                         LayoutUnit(0));
             } else {
-                PreferredWidthContext p(ctx, this, this,
+                PreferredWidthMainContext mainContext;
+                PreferredWidthContext p(ctx, mainContext, this, this,
                                         containgBlockContentWidth - mbpWidth());
+
                 p.computePreferredWidth();
                 contentWidth = p.preferredWidth();
             }

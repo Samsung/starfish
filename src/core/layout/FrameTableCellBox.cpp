@@ -50,7 +50,8 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
 void FrameTableCellBox::collectCellWidthInfo(
     LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
-    PreferredWidthContext p(ctx, this, this, LayoutUnit::max());
+    PreferredWidthMainContext mainContext;
+    PreferredWidthContext p(ctx, mainContext, this, this, LayoutUnit::max());
     p.computePreferredWidth();
     m_minCellWidth = p.preferredMinWidth() + borderWidth() + paddingWidth();
     m_maxCellWidth = p.preferredWidth() + borderWidth() + paddingWidth();

@@ -4097,9 +4097,22 @@ std::pair<LayoutUnit, LayoutUnit>
 PreferredWidthContext::preferredWidthsWithNewContext(Frame* f)
 {
     LayoutUnit mbpWidth = this->mbpWidth(f);
-    PreferredWidthContext newCtx(m_layoutContext, f, m_owner,
+    PreferredWidthContext newCtx(m_layoutContext, mainContext(), f, m_owner,
                                  m_remainingWidth - mbpWidth);
     newCtx.computePreferredWidth();
+
+    if (f->style()->clear() & ClearValue::LeftClearValue) {
+        mainContext().m_floatLeftWidth = 0;
+    }
+    if (f->style()->clear() & ClearValue::RightClearValue) {
+        mainContext().m_floatRightWidth = 0;
+    }
+
+    if (f->style()->floating() & FloatValue::LeftFloatValue) {
+        mainContext().m_floatLeftWidth += (newCtx.preferredWidth() + mbpWidth);
+    } else if (f->style()->floating() & FloatValue::RightFloatValue) {
+        mainContext().m_floatRightWidth += (newCtx.preferredWidth() + mbpWidth);
+    }
 
     return std::make_pair(newCtx.preferredWidth() + mbpWidth,
                           newCtx.preferredMinWidth() + mbpWidth);
@@ -4281,7 +4294,30 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
             while (f) {
                 auto widths =
                     ctx.preferredWidthsWithNewContext(f->asFrameBox());
-                w = std::max(w, widths.first);
+
+                if (f->isEstablishesBlockFormattingContext()) {
+                    if (f->isNormalFlow()) {
+                        if (f->style()->clear() & ClearValue::LeftClearValue) {
+                            ctx.mainContext().m_floatLeftWidth = 0;
+                        }
+                        if (f->style()->clear() & ClearValue::RightClearValue) {
+                            ctx.mainContext().m_floatRightWidth = 0;
+                        }
+                        w = std::max(w,
+                                     widths.first +
+                                         ctx.mainContext().m_floatLeftWidth +
+                                         ctx.mainContext().m_floatRightWidth);
+                    } else {
+                        w = std::max(w, widths.first);
+                    }
+                } else {
+                    if (!f->isAnonymous() && f->isNormalFlow()) {
+                        ctx.mainContext().m_floatLeftWidth = 0;
+                        ctx.mainContext().m_floatRightWidth = 0;
+                    }
+                    w = std::max(w, widths.first);
+                }
+
                 ctx.updatePreferredMinWidth(widths.second);
                 f = f->next();
             }
