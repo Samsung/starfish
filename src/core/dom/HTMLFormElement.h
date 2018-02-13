@@ -88,9 +88,16 @@ public:
         return true;
     }
 
+    bool isAutofocusable();
+
+    bool autofocus();
+
+    void setAutofocus(bool autofocus);
+
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* val, bool attributeCreated,
                                      bool attributeRemoved) override;
+    virtual void didNodeInsertedToDocumentTree() override;
 
 protected:
     HTMLFormControl(Document* document, bool supportTabIndex = true);

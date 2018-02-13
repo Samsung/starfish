@@ -41,6 +41,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     , m_cdataSectionLocalName(
           AtomicString::createAtomicString(sf, "#cdata-section"))
     , m_commentLocalName(AtomicString::createAtomicString(sf, "#comment"))
+    , m_true(AtomicString::createAtomicString(sf, "true"))
+    , m_false(AtomicString::createAtomicString(sf, "false"))
 {
 #define DEFINE_HTML_LOCAL_NAMES(name)  \
     m_##name##TagName = QualifiedName( \
@@ -228,6 +230,10 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_frameborder =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "frameborder"));
+
+    m_autofocus =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "autofocus"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

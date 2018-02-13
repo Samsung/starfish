@@ -190,6 +190,9 @@ public:
     AtomicString m_cdataSectionLocalName;
     AtomicString m_commentLocalName;
 
+    AtomicString m_true;
+    AtomicString m_false;
+
     // Pseudo Selector Name Tokens
     AtomicString m_firstChildSelector;
     AtomicString m_firstOfTypeSelector;
@@ -292,6 +295,7 @@ public:
     QualifiedName m_alt;
     QualifiedName m_scrolling;
     QualifiedName m_frameborder;
+    QualifiedName m_autofocus;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

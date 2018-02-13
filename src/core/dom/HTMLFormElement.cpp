@@ -281,6 +281,58 @@ void HTMLFormControl::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
+bool HTMLFormControl::isAutofocusable()
+{
+    return hasAttribute(starFish()->staticStrings()->m_autofocus) &&
+           supportsFocus();
+}
+
+bool HTMLFormControl::autofocus()
+{
+    Nullable<String*> val =
+        getAttribute(starFish()->staticStrings()->m_autofocus);
+
+    if (!val.hasValue()) {
+        return false;
+    }
+
+    if (val == starFish()->staticStrings()->m_false) {
+        return false;
+    }
+
+    return true;
+}
+
+void HTMLFormControl::setAutofocus(bool autofocus)
+{
+    if (autofocus) {
+        setAttribute(starFish()->staticStrings()->m_autofocus,
+                     starFish()->staticStrings()->m_true);
+    } else {
+        setAttribute(starFish()->staticStrings()->m_autofocus,
+                     starFish()->staticStrings()->m_false);
+    }
+}
+
+void HTMLFormControl::didNodeInsertedToDocumentTree()
+{
+    HTMLElement::didNodeInsertedToDocumentTree();
+
+    // https://www.w3.org/TR/html5/editing.html#focusing-steps
+    if (isAutofocusable()) {
+        starFish()->messageLoop()->addIdler(
+            document()->browsingContext(),
+            [](size_t handle, void* data) {
+                HTMLFormControl* element = (HTMLFormControl*)data;
+                if (!element->document()->browsingContext()->focusedNode()) {
+                    element->document()->browsingContext()->setFocusedNode(
+                        element);
+                }
+            },
+            this);
+    }
+}
+
 bool HTMLFormControl::isButton(HTMLFormControl* node)
 {
     if (node->type()->equals("submit") || node->type()->equals("button") ||
@@ -310,7 +362,7 @@ HTMLFormElement* HTMLFormControl::formOwner()
 
 bool HTMLFormControl::supportsFocus()
 {
-    return true;
+    return false;
 }
 
 void* HTMLFormElement::operator new(size_t size)
