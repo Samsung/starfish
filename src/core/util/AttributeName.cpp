@@ -30,11 +30,10 @@ AttributeName::AttributeName(Document* document, String* qualifiedName,
                              MatchType type)
     : m_type(type)
     , m_qname(AtomicString::emptyAtomicString(),
-              (type == MatchName && !document->isXMLDocument())
-                  ? AtomicString::createAttrAtomicString(document->starFish(),
-                                                         qualifiedName)
-                  : AtomicString::createAtomicString(document->starFish(),
-                                                     qualifiedName))
+              (type == MatchName) ? AtomicString::createAttrAtomicString(
+                                        document->starFish(), qualifiedName)
+                                  : AtomicString::createAtomicString(
+                                        document->starFish(), qualifiedName))
 {
 }
 

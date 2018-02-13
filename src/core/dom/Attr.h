@@ -64,8 +64,8 @@ public:
 
     Nullable<String*> namespaceURI()
     {
-        auto v = m_name.prefix();
-        if (v.hasValue()) {
+        auto v = m_name.namespaceURI();
+        if (v.hasValue() && !v.getValue().isEmptyAtomicString()) {
             return v.getValue().string();
         } else {
             return Nullable<String*>();
