@@ -23,7 +23,8 @@ class AttributeName {
     STARFISH_MAKE_STACK_ALLOCATED()
 public:
     enum MatchType {
-        MatchName, /* Match name */
+        MatchName, /* Match name in the HTML namespace and its node document is
+                      an HTML document */
         MatchNS,   /* Match namespace and localname */
         MatchAll   /* Match all (internal use) */
     };

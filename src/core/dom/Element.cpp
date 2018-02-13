@@ -55,12 +55,20 @@
 
 namespace StarFish {
 
+static bool isInHTMLNamespaceAndHTMLDocument(Element* e)
+{
+    if (e->namespaceURI().hasValue() &&
+        e->namespaceURI().getValue()->equals(HTML_NAMESPACE) &&
+        e->document()->isHTMLDocument()) {
+        return true;
+    }
+    return false;
+}
+
 String* Element::tagName()
 {
     // https://www.w3.org/TR/dom/#dom-element-tagname
-    if (namespaceURI().hasValue() &&
-        namespaceURI().getValue()->equals(HTML_NAMESPACE) &&
-        document()->isHTMLDocument()) {
+    if (isInHTMLNamespaceAndHTMLDocument(this)) {
         return localName()->toASCIIUpper();
     }
     return localName();
@@ -108,7 +116,10 @@ size_t Element::hasAttribute(const AttributeName& name) const
 
 bool Element::hasAttribute(String* name)
 {
-    AttributeName attrName(document(), name);
+    auto matchType = isInHTMLNamespaceAndHTMLDocument(this)
+                         ? AttributeName::MatchName
+                         : AttributeName::MatchNS;
+    AttributeName attrName(document(), name, matchType);
     return hasAttribute(attrName) != SIZE_MAX;
 }
 
@@ -144,7 +155,10 @@ Nullable<String*> Element::getAttribute(const AttributeName& name) const
 
 Nullable<String*> Element::getAttribute(String* name)
 {
-    AttributeName attrName(document(), name);
+    auto matchType = isInHTMLNamespaceAndHTMLDocument(this)
+                         ? AttributeName::MatchName
+                         : AttributeName::MatchNS;
+    AttributeName attrName(document(), name, matchType);
     return getAttribute(attrName);
 }
 
@@ -214,7 +228,10 @@ void Element::setAttribute(String* name, String* value)
         throw new DOMException(document(),
                                DOMException::Code::INVALID_CHARACTER_ERR);
     }
-    setAttribute(AttributeName(document(), name), value);
+    auto matchType = isInHTMLNamespaceAndHTMLDocument(this)
+                         ? AttributeName::MatchName
+                         : AttributeName::MatchNS;
+    setAttribute(AttributeName(document(), name, matchType), value);
 }
 
 void Element::setAttributeNS(Nullable<String*> ns, String* qualifiedName,
