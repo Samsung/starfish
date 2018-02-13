@@ -28,11 +28,7 @@ Demuxer* Demuxer::createDemuxer(String* mimeTypeOfContainer)
     } else if (mimeTypeOfContainer->contains("webm", false)) {
         return Demuxer::createWebMDemuxer();
     } else {
-#ifdef STARFISH_ENABLE_FFMPEG_DEMUXER
-        return Demuxer::createFFmpegDemuxer();
-#else
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
-#endif
     }
 }
 }

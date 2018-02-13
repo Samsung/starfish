@@ -144,13 +144,11 @@
             'variables': {
                 'component%': 'static_library',
                 'backend%': 'efl_cairo',
-                'enable_ffmpeg_demuxer%': 'false',
                 'platform%': 'linux',
                 'deplib%': 'shared_library',
             },
             'component%':'<(component)',
             'backend%': '<(backend)',
-            'enable_ffmpeg_demuxer%': '<(enable_ffmpeg_demuxer)',
             'platform%': '<(platform)',
             'cflags_extra%': [],
             'deplib%': '<(deplib)',
@@ -266,7 +264,6 @@
         'backend%': '<(backend)',
         'platform%': '<(platform)',
         'deplib%': '<(deplib)',
-        'enable_ffmpeg_demuxer%': '<(enable_ffmpeg_demuxer)',
         'include_dirs_extra%': '<(include_dirs_extra)',
         'sources_extra%': '<(sources_extra)',
         'libraries_extra%': '<(libraries_extra)',
@@ -419,17 +416,6 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_headless_cairo.tizen',
-                ],
-            }],
-            ['enable_ffmpeg_demuxer=="true"', {
-                'defines_extra': [
-                    'STARFISH_ENABLE_FFMPEG_DEMUXER',
-                ],
-                'deps_debug_extra': [
-                    './build.dep.gyp:av.x64.debug',
-                ],
-                'deps_release_extra': [
-                    './build.dep.gyp:av.x64.release',
                 ],
             }],
         ],
