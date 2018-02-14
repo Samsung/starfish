@@ -70,6 +70,8 @@ class FrameTreeBuilder {
 public:
     static void buildFrameTree(Document* document);
     static void clearTree(Node* current);
+    static void needsFrameTreeBuildFromChildrenOfThisFrame(Frame* f);
+    static Frame* findNearestBlock(Frame* f);
 
     static void createPseudoElement(Node* parent,
                                     StyleResolver::PseudoElementType pseudoId,

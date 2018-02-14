@@ -232,7 +232,7 @@ void HTMLInputElement::setChecked(bool checked)
     if (type()->equals("radio") && m_checkness) {
         resetRadioButtons();
     }
-    setNeedsFrameTreeBuild();
+    setNeedsFrameTreeBuildWithoutSelf();
 }
 
 void HTMLInputElement::resetRadioButtons()
@@ -364,7 +364,7 @@ void HTMLInputElement::activationBehavior()
     } else if (type()->equals("reset")) {
     } else if (type()->equals("button")) {
     }
-    setNeedsFrameTreeBuild();
+    setNeedsFrameTreeBuildWithoutSelf();
 }
 
 void HTMLInputElement::legacyPreActivationBehavior()
@@ -394,7 +394,7 @@ void HTMLInputElement::legacyCanceledActivationBehavior()
         }
         m_checkness = false;
     }
-    setNeedsFrameTreeBuild();
+    setNeedsFrameTreeBuildWithoutSelf();
 }
 
 bool HTMLInputElement::isSizableType()
@@ -435,7 +435,7 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     if (name == starFish()->staticStrings()->m_type ||
         name == starFish()->staticStrings()->m_value) {
         if (name == starFish()->staticStrings()->m_type || !old->equals(val)) {
-            setNeedsFrameTreeBuild();
+            setNeedsFrameTreeBuildWithoutSelf();
         }
 
         if (name == starFish()->staticStrings()->m_value) {
@@ -449,7 +449,7 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
                 sanitizeValue();
             }
 
-            setNeedsFrameTreeBuild();
+            setNeedsFrameTreeBuildWithoutSelf();
 
             // TODO: fire correct inputevent
             // TODO: we should fire this event in handleDefaultEvent
@@ -650,7 +650,7 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
                 },
                 500, this);
             starFish()->platformWindow()->showSoftwareKeyboardIfPossible();
-            setNeedsFrameTreeBuild();
+            setNeedsFrameTreeBuildWithoutSelf();
         } else if (oldGotFocus && !newGotFocus) {
             starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
             m_shouldDrawCaret = false;

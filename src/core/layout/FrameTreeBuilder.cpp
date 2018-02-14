@@ -134,6 +134,42 @@ void FrameTreeBuilder::clearTree(Node* current)
     }
 }
 
+void FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(Frame* f)
+{
+    Frame* parent = f;
+    while (parent->firstChild()) {
+        parent->removeChild(parent->firstChild());
+    }
+
+    Node* node = f->node()->firstChild();
+    while (node) {
+        FrameTreeBuilder::clearTree(node);
+        node = node->nextSibling();
+    }
+
+    node = parent->node();
+    while (node) {
+        node->markChildNeedsFrameTreeBuild();
+        node = node->parentNode();
+    }
+}
+
+Frame* FrameTreeBuilder::findNearestBlock(Frame* f)
+{
+    if (!f) {
+        return nullptr;
+    } else {
+        while (f) {
+            if (!f->isAnonymous() &&
+                (f->isBlockLevel() || f->isFrameTableCellBox())) {
+                break;
+            }
+            f = f->parent();
+        }
+        return f;
+    }
+}
+
 template <typename T>
 static T* createAnonymousBlockBox(FrameBlockBox* blockContainer, Node* node,
                                   DisplayValue display)
