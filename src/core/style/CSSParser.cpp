@@ -310,7 +310,8 @@ public:
     bool startsWithIdent(char32_t aFirstChar, char32_t aSecondChar)
     {
         return isIdentStart(aFirstChar) ||
-               (aFirstChar == '-' && isIdentStart(aSecondChar));
+               (aFirstChar == '-' && isIdentStart(aSecondChar)) ||
+               (aFirstChar == '-' && aSecondChar == '-');
     }
 
     bool isIdent(char32_t code)
@@ -631,10 +632,6 @@ public:
             return parseURL(c);
         }
 
-        if (startsWithIdent(c, peek())) {
-            return parseIdent(c);
-        }
-
         if (c == '@') {
             int nextChar = read();
             if (nextChar != -1) {
@@ -669,6 +666,10 @@ public:
                 pushback();
             }
             pushback();
+        }
+
+        if (startsWithIdent(c, peek())) {
+            return parseIdent(c);
         }
 
         if (c == '.' || c == '+' || c == '-') {
