@@ -3,11 +3,11 @@
 [HTMLConstructor]
 interface HTMLTextAreaElement : HTMLElement {
     [Unimplemented, CEReactions] attribute DOMString autocomplete;
-    [Unimplemented, CEReactions] attribute boolean autofocus;
+    [CEReactions, Reflect] attribute boolean autofocus;
     [Unimplemented, CEReactions] attribute unsigned long cols;
     [Unimplemented, CEReactions] attribute DOMString dirName;
     [Unimplemented, CEReactions] attribute boolean disabled;
-    [Unimplemented] readonly attribute HTMLFormElement? form;
+    readonly attribute HTMLFormElement? form;
     [Unimplemented, CEReactions] attribute DOMString inputMode;
     [Unimplemented, CEReactions] attribute long maxLength;
     [Unimplemented, CEReactions] attribute long minLength;

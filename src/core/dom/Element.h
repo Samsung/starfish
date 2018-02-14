@@ -115,28 +115,36 @@ public:
         return m_attributes[t].value();
     }
 
+protected:
     size_t hasAttribute(const AttributeName& name) const;
+    size_t hasAttributeNode(const AttributeName& name);
+    Nullable<String*> getAttribute(const AttributeName& name) const;
+    Attr* getAttributeNode(const AttributeName& name);
+    void setAttribute(const AttributeName& name, String* value);
+    void removeAttribute(const AttributeName& name);
+
+public:
     bool hasAttribute(String* qualifiedName);
+    size_t hasAttribute(const QualifiedName& qualifiedName) const;
     bool hasAttributeNS(Nullable<String*> ns, String* localName);
 
-    Nullable<String*> getAttribute(const AttributeName& name) const;
     Nullable<String*> getAttribute(String* qualifiedName);
+    Nullable<String*> getAttribute(const QualifiedName& qualifiedName) const;
     Nullable<String*> getAttributeNS(Nullable<String*> ns, String* localName);
-    Attr* getAttributeNode(const AttributeName& name);
     Attr* getAttributeNode(String* qualifiedName);
     Attr* getAttributeNodeNS(Nullable<String*> ns, String* localName);
-    String* getAttributeOrEmpty(const AttributeName& name) const;
+    String* getAttributeOrEmpty(const QualifiedName& qualifiedName) const;
 
-    void setAttribute(const AttributeName& name, String* value);
     void setAttribute(String* qualifiedName, String* value);
+    void setAttribute(const QualifiedName& qualifiedName, String* value);
     void setAttributeNS(Nullable<String*> ns, String* qualifiedName,
                         String* value);
     Attr* setAttributeNode(Attr* attrNode);
     Attr* setAttributeNodeNS(Attr* attrNode);
 
     void removeAttribute(size_t idx);
-    void removeAttribute(const AttributeName& name);
     void removeAttribute(String* name);
+    void removeAttribute(const QualifiedName& name);
     void removeAttributeNS(Nullable<String*> ns, String* localName);
     Attr* removeAttributeNode(Attr* attr);
 
@@ -228,8 +236,6 @@ public:
     {
         return (RareElementMembers*)m_rareNodeMembers;
     }
-
-    size_t hasAttributeNode(const AttributeName& name);
 
     Attr* attr(QualifiedName name);
     Attr* ensureAttr(QualifiedName name);

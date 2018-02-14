@@ -65,6 +65,31 @@ static bool isInHTMLNamespaceAndHTMLDocument(Element* e)
     return false;
 }
 
+static AttributeName properAttributeName(Element* e, String* name)
+{
+    if (isInHTMLNamespaceAndHTMLDocument(e)) {
+        return AttributeName(QualifiedName(AtomicString::emptyAtomicString(),
+                                           AtomicString::createAttrAtomicString(
+                                               e->starFish(), name)),
+                             AttributeName::MatchName);
+    }
+    return AttributeName(
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(e->starFish(), name)),
+        AttributeName::MatchName);
+}
+
+static AttributeName properAttributeNameNS(Element* e, Nullable<String*> ns,
+                                           String* name)
+{
+    return AttributeName(
+        QualifiedName(ns.hasValue() ? AtomicString::createAtomicString(
+                                          e->starFish(), ns.getValue())
+                                    : AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(e->starFish(), name)),
+        AttributeName::MatchNS);
+}
+
 String* Element::tagName()
 {
     // https://www.w3.org/TR/dom/#dom-element-tagname
@@ -114,19 +139,19 @@ size_t Element::hasAttribute(const AttributeName& name) const
     return SIZE_MAX;
 }
 
-bool Element::hasAttribute(String* name)
+size_t Element::hasAttribute(const QualifiedName& name) const
 {
-    auto matchType = isInHTMLNamespaceAndHTMLDocument(this)
-                         ? AttributeName::MatchName
-                         : AttributeName::MatchNS;
-    AttributeName attrName(document(), name, matchType);
-    return hasAttribute(attrName) != SIZE_MAX;
+    return hasAttribute(AttributeName(name, AttributeName::MatchName));
 }
 
-bool Element::hasAttributeNS(Nullable<String*> ns, String* localName)
+bool Element::hasAttribute(String* name)
 {
-    AttributeName attrName(document(), ns, localName, AttributeName::MatchNS);
-    return hasAttribute(attrName) != SIZE_MAX;
+    return hasAttribute(properAttributeName(this, name)) != SIZE_MAX;
+}
+
+bool Element::hasAttributeNS(Nullable<String*> ns, String* name)
+{
+    return hasAttribute(properAttributeNameNS(this, ns, name)) != SIZE_MAX;
 }
 
 size_t Element::hasAttributeNode(const AttributeName& name)
@@ -153,20 +178,21 @@ Nullable<String*> Element::getAttribute(const AttributeName& name) const
     return Nullable<String*>(m_attributes[idx].value());
 }
 
+Nullable<String*> Element::getAttribute(
+    const QualifiedName& qualifiedName) const
+{
+    return getAttribute(AttributeName(qualifiedName, AttributeName::MatchName));
+}
+
 Nullable<String*> Element::getAttribute(String* name)
 {
-    auto matchType = isInHTMLNamespaceAndHTMLDocument(this)
-                         ? AttributeName::MatchName
-                         : AttributeName::MatchNS;
-    AttributeName attrName(document(), name, matchType);
-    return getAttribute(attrName);
+    return getAttribute(properAttributeName(this, name));
 }
 
 Nullable<String*> Element::getAttributeNS(Nullable<String*> ns,
                                           String* localName)
 {
-    AttributeName attrName(document(), ns, localName, AttributeName::MatchNS);
-    return getAttribute(attrName);
+    return getAttribute(properAttributeNameNS(this, ns, localName));
 }
 
 Attr* Element::getAttributeNode(const AttributeName& name)
@@ -180,21 +206,19 @@ Attr* Element::getAttributeNode(const AttributeName& name)
     return ensureAttr(attribute.name());
 }
 
-Attr* Element::getAttributeNode(String* qualifiedName)
+Attr* Element::getAttributeNode(String* name)
 {
-    AttributeName attrName(document(), qualifiedName);
-    return getAttributeNode(attrName);
+    return getAttributeNode(properAttributeName(this, name));
 }
 
-Attr* Element::getAttributeNodeNS(Nullable<String*> ns, String* localName)
+Attr* Element::getAttributeNodeNS(Nullable<String*> ns, String* name)
 {
-    AttributeName attrName(document(), ns, localName, AttributeName::MatchNS);
-    return getAttributeNode(attrName);
+    return getAttributeNode(properAttributeNameNS(this, ns, name));
 }
 
-String* Element::getAttributeOrEmpty(const AttributeName& name) const
+String* Element::getAttributeOrEmpty(const QualifiedName& qualifiedName) const
 {
-    Nullable<String*> result = getAttribute(name);
+    Nullable<String*> result = getAttribute(qualifiedName);
     if (result.hasValue()) {
         return result.getValue();
     }
@@ -222,16 +246,18 @@ void Element::setAttribute(const AttributeName& name, String* value)
     }
 }
 
+void Element::setAttribute(const QualifiedName& name, String* value)
+{
+    setAttribute(AttributeName(name, AttributeName::MatchName), value);
+}
+
 void Element::setAttribute(String* name, String* value)
 {
     if (!QualifiedName::checkNameProductionRule(name)) {
         throw new DOMException(document(),
                                DOMException::Code::INVALID_CHARACTER_ERR);
     }
-    auto matchType = isInHTMLNamespaceAndHTMLDocument(this)
-                         ? AttributeName::MatchName
-                         : AttributeName::MatchNS;
-    setAttribute(AttributeName(document(), name, matchType), value);
+    setAttribute(properAttributeName(this, name), value);
 }
 
 void Element::setAttributeNS(Nullable<String*> ns, String* qualifiedName,
@@ -249,8 +275,10 @@ Attr* Element::setAttributeNode(Attr* newAttr)
     if (!rareMembers->m_attrList) {
         rareMembers->m_attrList = new (GC) GCVector<Attr*>();
     }
+    AttributeName attrName =
+        AttributeName(newAttr->qname(), AttributeName::MatchAll);
 
-    size_t attrIdx = hasAttributeNode(newAttr->qname());
+    size_t attrIdx = hasAttributeNode(attrName);
     Attr* oldAttr =
         attrIdx == SIZE_MAX ? nullptr : (*rareMembers->m_attrList)[attrIdx];
     if (oldAttr == newAttr) {
@@ -264,7 +292,7 @@ Attr* Element::setAttributeNode(Attr* newAttr)
                                "attribute nodes must be explicitly cloned.");
     }
 
-    size_t idx = hasAttribute(newAttr->qname());
+    size_t idx = hasAttribute(attrName);
     String* oldValue = String::emptyString;
     String* newValue = newAttr->value();
     if (idx != SIZE_MAX) {
@@ -295,14 +323,6 @@ Attr* Element::setAttributeNodeNS(Attr* attrNode)
     return setAttributeNode(attrNode);
 }
 
-void Element::removeAttribute(const AttributeName& name)
-{
-    size_t idx = hasAttribute(name);
-    if (idx != SIZE_MAX) {
-        removeAttribute(idx);
-    }
-}
-
 void Element::removeAttribute(size_t idx)
 {
     String* v = m_attributes[idx].value();
@@ -310,7 +330,8 @@ void Element::removeAttribute(size_t idx)
 
     m_attributes.erase(m_attributes.begin() + idx);
     // Remove Attr if exist
-    size_t attrIdx = hasAttributeNode(name);
+    size_t attrIdx =
+        hasAttributeNode(AttributeName(name, AttributeName::MatchAll));
     if (attrIdx != SIZE_MAX) {
         STARFISH_ASSERT(hasRareMembers());
         STARFISH_ASSERT(rareMembers()->isRareElementMembers());
@@ -323,14 +344,27 @@ void Element::removeAttribute(size_t idx)
     didAttributeChanged(name, v, String::emptyString, false, true);
 }
 
+void Element::removeAttribute(const AttributeName& name)
+{
+    size_t idx = hasAttribute(name);
+    if (idx != SIZE_MAX) {
+        removeAttribute(idx);
+    }
+}
+
+void Element::removeAttribute(const QualifiedName& name)
+{
+    removeAttribute(AttributeName(name, AttributeName::MatchName));
+}
+
 void Element::removeAttribute(String* name)
 {
-    removeAttribute(AttributeName(document(), name));
+    removeAttribute(properAttributeName(this, name));
 }
 
 void Element::removeAttributeNS(Nullable<String*> ns, String* localName)
 {
-    removeAttribute(AttributeName(document(), ns, localName));
+    removeAttribute(properAttributeNameNS(this, ns, localName));
 }
 
 Attr* Element::removeAttributeNode(Attr* attr)
@@ -341,8 +375,9 @@ Attr* Element::removeAttributeNode(Attr* attr)
             document(), DOMException::NOT_FOUND_ERR,
             "The node provided is owned by another element.");
     }
-    STARFISH_ASSERT(hasAttribute(attr->qname()) != SIZE_MAX);
-    removeAttribute(attr->qname());
+    AttributeName attrName(attr->qname(), AttributeName::MatchAll);
+    STARFISH_ASSERT(hasAttribute(attrName) != SIZE_MAX);
+    removeAttribute(attrName);
 
     return attr;
 }

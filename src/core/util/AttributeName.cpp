@@ -26,27 +26,6 @@ AttributeName::AttributeName(const QualifiedName& name, MatchType type)
 {
 }
 
-AttributeName::AttributeName(Document* document, String* qualifiedName,
-                             MatchType type)
-    : m_type(type)
-    , m_qname(AtomicString::emptyAtomicString(),
-              (type == MatchName) ? AtomicString::createAttrAtomicString(
-                                        document->starFish(), qualifiedName)
-                                  : AtomicString::createAtomicString(
-                                        document->starFish(), qualifiedName))
-{
-}
-
-AttributeName::AttributeName(Document* document, Nullable<String*> ns,
-                             String* localName, MatchType type)
-    : m_type(type)
-    , m_qname(ns.hasValue() ? AtomicString::createAtomicString(
-                                  document->starFish(), ns.getValue())
-                            : AtomicString::emptyAtomicString(),
-              AtomicString::createAtomicString(document->starFish(), localName))
-{
-}
-
 bool AttributeName::equals(const QualifiedName& other) const
 {
     switch (m_type) {

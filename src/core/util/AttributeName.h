@@ -29,11 +29,9 @@ public:
         MatchAll   /* Match all (internal use) */
     };
 
-    AttributeName(const QualifiedName& name, MatchType type = MatchAll);
-    AttributeName(Document* document, String* qualifiedName,
-                  MatchType type = MatchName);
-    AttributeName(Document* document, Nullable<String*> ns, String* localName,
-                  MatchType type = MatchNS);
+    explicit AttributeName(const QualifiedName& name,
+                           MatchType type = MatchAll);
+
     bool isNamespaceAware() const
     {
         return m_type == MatchNS || m_type == MatchAll;

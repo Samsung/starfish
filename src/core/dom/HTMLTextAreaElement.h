@@ -38,6 +38,11 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
+
+    HTMLFormElement* form()
+    {
+        return formOwner();
+    }
 };
 }
 
