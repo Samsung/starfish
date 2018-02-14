@@ -910,9 +910,6 @@ static void didInsertNode(Node* self, Node* child)
         notifyNodeInsertedToDocumentTree(self, child);
         self->setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
         setChildrenNeedsStyleRecalc(child);
-        if (!child->isElement()) {
-            child->setNeedsFrameTreeBuild();
-        }
     }
 }
 
@@ -1116,281 +1113,7 @@ void notifyNodeRemoveFromDocumentTree(Node* node)
     }
 }
 
-Node* Node::removeChild(Node* child)
-{
-    STARFISH_ASSERT(child);
-
-    if (child->parentNode() != this) {
-        throw new DOMException(document(), DOMException::NOT_FOUND_ERR,
-                               "Child's parent is not parent.");
-    }
-
-    child->setNeedsFrameTreeBuild();
-
-    Node* prevChild = child->previousSibling();
-    Node* nextChild = child->nextSibling();
-
-    if (nextChild) {
-        nextChild->setPreviousSibling(prevChild);
-    }
-    if (prevChild) {
-        prevChild->setNextSibling(nextChild);
-    }
-    if (m_firstChild == child) {
-        m_firstChild = nextChild;
-    }
-    if (m_lastChild == child) {
-        m_lastChild = prevChild;
-    }
-
-    child->setPreviousSibling(nullptr);
-    child->setNextSibling(nullptr);
-    child->setParentNode(nullptr);
-
-    setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
-    if (isInDocumentScope() && document()->doesParticipateInRendering()) {
-        notifyNodeRemoveFromDocumentTree(child);
-    }
-
-    Node* parent = this;
-    while (parent) {
-        parent->didNodeRemoved(this, child);
-        parent = parent->parentNode();
-    }
-
-    return child;
-}
-
-Node* Node::parserAppendChild(Node* child)
-{
-    STARFISH_ASSERT(child);
-    STARFISH_ASSERT(child->parentNode() == nullptr);
-    STARFISH_ASSERT(child->nextSibling() == nullptr);
-    STARFISH_ASSERT(child->previousSibling() == nullptr);
-
-    if (m_lastChild) {
-        child->setPreviousSibling(m_lastChild);
-        m_lastChild->setNextSibling(child);
-    } else {
-        m_firstChild = child;
-    }
-    m_lastChild = child;
-
-    child->setParentNode(this);
-
-    if (isInDocumentScope()) {
-        notifyNodeInsertedToDocumentTree(this, child);
-    }
-
-    Node* parent = this;
-    while (parent) {
-        parent->didNodeInserted(this, child);
-        parent = parent->parentNode();
-    }
-
-    setChildrenNeedsStyleRecalc(child);
-    if (!child->isElement()) {
-        child->setNeedsFrameTreeBuild();
-    }
-
-    return child;
-}
-
-void Node::parserRemoveChild(Node* child)
-{
-    Node* prevChild = child->previousSibling();
-    Node* nextChild = child->nextSibling();
-
-    if (nextChild) {
-        nextChild->setPreviousSibling(prevChild);
-    }
-    if (prevChild) {
-        prevChild->setNextSibling(nextChild);
-    }
-    if (m_firstChild == child) {
-        m_firstChild = nextChild;
-    }
-    if (m_lastChild == child) {
-        m_lastChild = prevChild;
-    }
-
-    child->setPreviousSibling(nullptr);
-    child->setNextSibling(nullptr);
-    child->setParentNode(nullptr);
-
-    if (isInDocumentScope()) {
-        notifyNodeRemoveFromDocumentTree(child);
-    }
-
-    Node* parent = this;
-    while (parent) {
-        parent->didNodeRemoved(this, child);
-        parent = parent->parentNode();
-    }
-}
-
-void Node::parserInsertBefore(Node* child, Node* childRef)
-{
-    STARFISH_ASSERT(child);
-
-    if (childRef == nullptr) {
-        appendChild(child);
-        return;
-    }
-
-    STARFISH_ASSERT(childRef->parentNode() == this);
-    if (childRef->previousSibling() == child || childRef == child) {
-        // nothing to do
-        return;
-    }
-
-    if (child == childRef) {
-        return;
-    }
-    if (child->parentNode()) {
-        child->parentNode()->removeChild(child);
-    }
-
-    STARFISH_ASSERT(child->parentNode() == nullptr);
-    STARFISH_ASSERT(child->nextSibling() == nullptr);
-    STARFISH_ASSERT(child->previousSibling() == nullptr);
-
-    Node* prev = childRef->previousSibling();
-    childRef->setPreviousSibling(child);
-    STARFISH_ASSERT(m_lastChild != prev);
-    if (prev) {
-        STARFISH_ASSERT(m_firstChild != childRef);
-        prev->setNextSibling(child);
-    } else {
-        STARFISH_ASSERT(m_firstChild == childRef);
-        m_firstChild = child;
-    }
-
-    child->setParentNode(this);
-    child->setPreviousSibling(prev);
-    child->setNextSibling(childRef);
-
-    Node* parent = this;
-    while (parent) {
-        parent->didNodeInserted(this, child);
-        parent = parent->parentNode();
-    }
-
-    if (isInDocumentScope()) {
-        notifyNodeInsertedToDocumentTree(this, child);
-    }
-
-    setChildrenNeedsStyleRecalc(child);
-    if (!child->isElement()) {
-        child->setNeedsFrameTreeBuild();
-    }
-}
-
-void Node::parserTakeAllChildrenFrom(Node* oldParent)
-{
-    while (Node* child = oldParent->firstChild()) {
-        oldParent->parserRemoveChild(child);
-        parserAppendChild(child);
-    }
-}
-
-HTMLCollection* Node::getElementsByTagName(String* name)
-{
-    return getElementsByTagName(document()->createAttributeName(name));
-}
-
-HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
-{
-    RareNodeMembers* rareData = ensureRareMembers();
-    ActiveHTMLCollectionList* activeLists =
-        rareData->ensureActiveHtmlCollectionListForTagName();
-    HTMLCollection* list = rareData->hasQueryInActiveHtmlCollectionList(
-        activeLists, qualifiedName.localName());
-    if (list) {
-        return list;
-    }
-
-    list = new HTMLCollection(this, NodeListImpl::TagNameFilter,
-                              new QualifiedName(qualifiedName), true);
-    rareData->putActiveHtmlCollectionListWithQuery(
-        activeLists, qualifiedName.localName(), list);
-    return list;
-}
-
-HTMLCollection* Node::getElementsByClassName(String* classNames)
-{
-    RareNodeMembers* rareData = ensureRareMembers();
-    ActiveHTMLCollectionList* activeLists =
-        rareData->ensureActiveHtmlCollectionListForClassName();
-    HTMLCollection* list =
-        rareData->hasQueryInActiveHtmlCollectionList(activeLists, classNames);
-    if (list) {
-        return list;
-    }
-
-    list = new HTMLCollection(this, NodeListImpl::ClassNamesFilter, classNames,
-                              true);
-    rareData->putActiveHtmlCollectionListWithQuery(activeLists, classNames,
-                                                   list);
-    return list;
-}
-
-void Node::parseSelector(GCVector<CSSSelectorList*>& selectorListContainer,
-                         String* selectors)
-{
-    if (selectors->equals(String::emptyString)) {
-        throw new DOMException(document(), DOMException::SYNTAX_ERR,
-                               "Failed to execute 'querySelector' on "
-                               "'Document': The provided selector is empty.");
-    }
-
-    CSSParser parser(document());
-    RefPtr<CSSToken> token = parser.makeToken(selectors);
-
-    GCVector<StyleRuleBase*> nullVec;
-    parser.parseStyleRule(token, nullVec,
-                          CSSParser::AllowedRulesType::RegularRules,
-                          &selectorListContainer, true);
-
-    if (selectorListContainer.size() < 1) {
-        throw new DOMException(document(), DOMException::SYNTAX_ERR,
-                               "Failed to execute 'querySelector' on "
-                               "'Document': The provided selector is invalid.");
-    }
-}
-
-Element* Node::querySelector(String* selectors)
-{
-    GCVector<CSSSelectorList*> selectorListContainer;
-    parseSelector(selectorListContainer, selectors);
-
-    SelectorQuery selectorQuery(selectorListContainer);
-    return selectorQuery.queryFirst(*this);
-}
-
-NodeList* Node::querySelectorAll(String* selectors)
-{
-    GCVector<CSSSelectorList*> selectorListContainer;
-    parseSelector(selectorListContainer, selectors);
-
-    SelectorQuery selectorQuery(selectorListContainer);
-    return selectorQuery.queryAll(*this);
-}
-
-static void removeChildren(FrameBlockBox* parent)
-{
-    while (parent->firstChild()) {
-        parent->removeChild(parent->firstChild());
-    }
-
-    Node* node = parent->node()->firstChild();
-    while (node) {
-        FrameTreeBuilder::clearTree(node);
-        node = node->nextSibling();
-    }
-}
-
-FrameBlockBox* nearstAnonymousBlockBox(Frame* f)
+static FrameBlockBox* nearstAnonymousBlockBox(Frame* f)
 {
     Frame* p = f->parent();
     while (!p->isAnonymous()) {
@@ -1564,6 +1287,289 @@ static void removeAnonymousBlockBoxesIfNeeded(FrameBlockBox* parent)
     }
 }
 
+Node* Node::removeChild(Node* child)
+{
+    STARFISH_ASSERT(child);
+
+    if (child->parentNode() != this) {
+        throw new DOMException(document(), DOMException::NOT_FOUND_ERR,
+                               "Child's parent is not parent.");
+    }
+
+    Frame* old = child->frame();
+    if (old) {
+        Frame* target = old->parent();
+        target = FrameTreeBuilder::findNearestBlock(target);
+        if (target == nullptr) {
+            target = document()->frame();
+        }
+        STARFISH_ASSERT(target);
+        FrameBlockBox* targetBlockBox = target->asFrameBlockBox();
+        removeOneChild(targetBlockBox, old);
+        removeAnonymousBlockBoxesIfNeeded(targetBlockBox);
+        target->propagateMarkNeedsLayout();
+        window()->browsingContext()->setNeedsLayout();
+    } else {
+        child->setNeedsFrameTreeBuild();
+    }
+
+    Node* prevChild = child->previousSibling();
+    Node* nextChild = child->nextSibling();
+
+    if (nextChild) {
+        nextChild->setPreviousSibling(prevChild);
+    }
+    if (prevChild) {
+        prevChild->setNextSibling(nextChild);
+    }
+    if (m_firstChild == child) {
+        m_firstChild = nextChild;
+    }
+    if (m_lastChild == child) {
+        m_lastChild = prevChild;
+    }
+
+    child->setPreviousSibling(nullptr);
+    child->setNextSibling(nullptr);
+    child->setParentNode(nullptr);
+
+    setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
+    if (isInDocumentScope() && document()->doesParticipateInRendering()) {
+        notifyNodeRemoveFromDocumentTree(child);
+    }
+
+    Node* parent = this;
+    while (parent) {
+        parent->didNodeRemoved(this, child);
+        parent = parent->parentNode();
+    }
+
+    return child;
+}
+
+Node* Node::parserAppendChild(Node* child)
+{
+    STARFISH_ASSERT(child);
+    STARFISH_ASSERT(child->parentNode() == nullptr);
+    STARFISH_ASSERT(child->nextSibling() == nullptr);
+    STARFISH_ASSERT(child->previousSibling() == nullptr);
+
+    if (m_lastChild) {
+        child->setPreviousSibling(m_lastChild);
+        m_lastChild->setNextSibling(child);
+    } else {
+        m_firstChild = child;
+    }
+    m_lastChild = child;
+
+    child->setParentNode(this);
+
+    if (isInDocumentScope()) {
+        notifyNodeInsertedToDocumentTree(this, child);
+    }
+
+    Node* parent = this;
+    while (parent) {
+        parent->didNodeInserted(this, child);
+        parent = parent->parentNode();
+    }
+
+    setChildrenNeedsStyleRecalc(child);
+
+    return child;
+}
+
+void Node::parserRemoveChild(Node* child)
+{
+    Node* prevChild = child->previousSibling();
+    Node* nextChild = child->nextSibling();
+
+    if (nextChild) {
+        nextChild->setPreviousSibling(prevChild);
+    }
+    if (prevChild) {
+        prevChild->setNextSibling(nextChild);
+    }
+    if (m_firstChild == child) {
+        m_firstChild = nextChild;
+    }
+    if (m_lastChild == child) {
+        m_lastChild = prevChild;
+    }
+
+    child->setPreviousSibling(nullptr);
+    child->setNextSibling(nullptr);
+    child->setParentNode(nullptr);
+
+    if (isInDocumentScope()) {
+        notifyNodeRemoveFromDocumentTree(child);
+    }
+
+    Node* parent = this;
+    while (parent) {
+        parent->didNodeRemoved(this, child);
+        parent = parent->parentNode();
+    }
+}
+
+void Node::parserInsertBefore(Node* child, Node* childRef)
+{
+    STARFISH_ASSERT(child);
+
+    if (childRef == nullptr) {
+        appendChild(child);
+        return;
+    }
+
+    STARFISH_ASSERT(childRef->parentNode() == this);
+    if (childRef->previousSibling() == child || childRef == child) {
+        // nothing to do
+        return;
+    }
+
+    if (child == childRef) {
+        return;
+    }
+    if (child->parentNode()) {
+        child->parentNode()->removeChild(child);
+    }
+
+    STARFISH_ASSERT(child->parentNode() == nullptr);
+    STARFISH_ASSERT(child->nextSibling() == nullptr);
+    STARFISH_ASSERT(child->previousSibling() == nullptr);
+
+    Node* prev = childRef->previousSibling();
+    childRef->setPreviousSibling(child);
+    STARFISH_ASSERT(m_lastChild != prev);
+    if (prev) {
+        STARFISH_ASSERT(m_firstChild != childRef);
+        prev->setNextSibling(child);
+    } else {
+        STARFISH_ASSERT(m_firstChild == childRef);
+        m_firstChild = child;
+    }
+
+    child->setParentNode(this);
+    child->setPreviousSibling(prev);
+    child->setNextSibling(childRef);
+
+    Node* parent = this;
+    while (parent) {
+        parent->didNodeInserted(this, child);
+        parent = parent->parentNode();
+    }
+
+    if (isInDocumentScope()) {
+        notifyNodeInsertedToDocumentTree(this, child);
+    }
+
+    setChildrenNeedsStyleRecalc(child);
+}
+
+void Node::parserTakeAllChildrenFrom(Node* oldParent)
+{
+    while (Node* child = oldParent->firstChild()) {
+        oldParent->parserRemoveChild(child);
+        parserAppendChild(child);
+    }
+}
+
+HTMLCollection* Node::getElementsByTagName(String* name)
+{
+    return getElementsByTagName(document()->createAttributeName(name));
+}
+
+HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
+{
+    RareNodeMembers* rareData = ensureRareMembers();
+    ActiveHTMLCollectionList* activeLists =
+        rareData->ensureActiveHtmlCollectionListForTagName();
+    HTMLCollection* list = rareData->hasQueryInActiveHtmlCollectionList(
+        activeLists, qualifiedName.localName());
+    if (list) {
+        return list;
+    }
+
+    list = new HTMLCollection(this, NodeListImpl::TagNameFilter,
+                              new QualifiedName(qualifiedName), true);
+    rareData->putActiveHtmlCollectionListWithQuery(
+        activeLists, qualifiedName.localName(), list);
+    return list;
+}
+
+HTMLCollection* Node::getElementsByClassName(String* classNames)
+{
+    RareNodeMembers* rareData = ensureRareMembers();
+    ActiveHTMLCollectionList* activeLists =
+        rareData->ensureActiveHtmlCollectionListForClassName();
+    HTMLCollection* list =
+        rareData->hasQueryInActiveHtmlCollectionList(activeLists, classNames);
+    if (list) {
+        return list;
+    }
+
+    list = new HTMLCollection(this, NodeListImpl::ClassNamesFilter, classNames,
+                              true);
+    rareData->putActiveHtmlCollectionListWithQuery(activeLists, classNames,
+                                                   list);
+    return list;
+}
+
+void Node::parseSelector(GCVector<CSSSelectorList*>& selectorListContainer,
+                         String* selectors)
+{
+    if (selectors->equals(String::emptyString)) {
+        throw new DOMException(document(), DOMException::SYNTAX_ERR,
+                               "Failed to execute 'querySelector' on "
+                               "'Document': The provided selector is empty.");
+    }
+
+    CSSParser parser(document());
+    RefPtr<CSSToken> token = parser.makeToken(selectors);
+
+    GCVector<StyleRuleBase*> nullVec;
+    parser.parseStyleRule(token, nullVec,
+                          CSSParser::AllowedRulesType::RegularRules,
+                          &selectorListContainer, true);
+
+    if (selectorListContainer.size() < 1) {
+        throw new DOMException(document(), DOMException::SYNTAX_ERR,
+                               "Failed to execute 'querySelector' on "
+                               "'Document': The provided selector is invalid.");
+    }
+}
+
+Element* Node::querySelector(String* selectors)
+{
+    GCVector<CSSSelectorList*> selectorListContainer;
+    parseSelector(selectorListContainer, selectors);
+
+    SelectorQuery selectorQuery(selectorListContainer);
+    return selectorQuery.queryFirst(*this);
+}
+
+NodeList* Node::querySelectorAll(String* selectors)
+{
+    GCVector<CSSSelectorList*> selectorListContainer;
+    parseSelector(selectorListContainer, selectors);
+
+    SelectorQuery selectorQuery(selectorListContainer);
+    return selectorQuery.queryAll(*this);
+}
+
+static void removeChildren(FrameBlockBox* parent)
+{
+    while (parent->firstChild()) {
+        parent->removeChild(parent->firstChild());
+    }
+
+    Node* node = parent->node()->firstChild();
+    while (node) {
+        FrameTreeBuilder::clearTree(node);
+        node = node->nextSibling();
+    }
+}
+
 void Node::propagateMarkChildNeedsFrameTreeBuild()
 {
     Node* n = this;
@@ -1583,43 +1589,78 @@ void Node::setNeedsFrameTreeBuild()
 
     Frame* old = frame();
     if (old) {
-        Frame* parent = old->parent();
-        if (!parent) {
-            parent = document()->frame();
-        } else {
-            while (parent) {
-                if (!parent->isAnonymous() &&
-                    (parent->isBlockLevel() || parent->isFrameTableCellBox())) {
+        Frame* blockParent = FrameTreeBuilder::findNearestBlock(old->parent());
+        if (!blockParent) {
+            blockParent = document()->frame();
+        }
+
+        STARFISH_ASSERT(blockParent);
+        FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(
+            blockParent);
+    } else {
+        if (isElement()) {
+            if (parentElement() && parentElement()->frame()) {
+                Frame* blockParent = FrameTreeBuilder::findNearestBlock(
+                    parentElement()->frame());
+                if (blockParent) {
+                    FrameTreeBuilder::
+                        needsFrameTreeBuildFromChildrenOfThisFrame(blockParent);
+                    return;
+                }
+            }
+
+            markNeedsFrameTreeBuild();
+            Node* node = parentNode();
+            while (node) {
+                if (node->childNeedsFrameTreeBuild()) {
                     break;
                 }
-                parent = parent->parent();
+                node->markChildNeedsFrameTreeBuild();
+                node = node->parentNode();
             }
         }
+    }
+}
 
-        STARFISH_ASSERT(parent);
-        while (parent->firstChild()) {
-            parent->removeChild(parent->firstChild());
+void Node::setNeedsFrameTreeBuildWithoutSelf()
+{
+    if (!document()->doesParticipateInRendering()) {
+        return;
+    }
+
+    window()->browsingContext()->setNeedsFrameTreeBuild();
+
+    Frame* old = frame();
+    if (old) {
+        Frame* blockParent = FrameTreeBuilder::findNearestBlock(old);
+        if (!blockParent) {
+            blockParent = document()->frame();
         }
 
-        Node* node = parent->node()->firstChild();
-        while (node) {
-            FrameTreeBuilder::clearTree(node);
-            node = node->nextSibling();
-        }
-
-        node = parent->node();
-        while (node) {
-            node->markChildNeedsFrameTreeBuild();
-            node = node->parentNode();
-        }
+        STARFISH_ASSERT(blockParent);
+        FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(
+            blockParent);
     } else {
-        Node* node = this;
-        while (node) {
-            if (node->frame()) {
-                node->setNeedsFrameTreeBuild();
-                break;
+        if (isElement()) {
+            if (parentElement() && parentElement()->frame()) {
+                Frame* blockParent = FrameTreeBuilder::findNearestBlock(
+                    parentElement()->frame());
+                if (blockParent) {
+                    FrameTreeBuilder::
+                        needsFrameTreeBuildFromChildrenOfThisFrame(blockParent);
+                    return;
+                }
             }
-            node = node->parentNode();
+
+            markNeedsFrameTreeBuild();
+            Node* node = parentNode();
+            while (node) {
+                if (node->childNeedsFrameTreeBuild()) {
+                    break;
+                }
+                node->markChildNeedsFrameTreeBuild();
+                node = node->parentNode();
+            }
         }
     }
 }

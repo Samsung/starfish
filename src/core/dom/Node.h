@@ -391,6 +391,7 @@ public:
     }
 
     void setNeedsFrameTreeBuild();
+    void setNeedsFrameTreeBuildWithoutSelf();
 
     void markNeedsFrameTreeBuild()
     {

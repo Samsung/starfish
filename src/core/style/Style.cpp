@@ -6657,7 +6657,23 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
-            element->setNeedsFrameTreeBuild();
+            if (style->display() != DisplayValue::NoneDisplayValue &&
+                element->frame() == nullptr && element->parentElement() &&
+                element->parentElement()->lastChild() == element) {
+                // special path for Node::appendChild
+                element->markNeedsFrameTreeBuild();
+                Node* node = element->parentNode();
+                while (node) {
+                    if (node->childNeedsFrameTreeBuild()) {
+                        break;
+                    }
+                    node->markChildNeedsFrameTreeBuild();
+                    node = node->parentNode();
+                }
+                element->window()->browsingContext()->setNeedsFrameTreeBuild();
+            } else {
+                element->setNeedsFrameTreeBuild();
+            }
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageLayout) {
@@ -6739,6 +6755,27 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                 child->setStyle(childTextNodeStyle);
                 child->clearNeedsStyleRecalc();
                 child->clearChildNeedsStyleRecalc();
+
+                if (!child->frame()) {
+                    Frame* frame = nullptr;
+
+                    Node* nd = child->parentNode();
+                    while (nd) {
+                        if (nd->frame()) {
+                            break;
+                        }
+                        nd = nd->parentNode();
+                    }
+
+                    frame = FrameTreeBuilder::findNearestBlock(frame);
+                    if (!frame) {
+                        frame = child->document()->frame();
+                    }
+
+                    window()->browsingContext()->setNeedsFrameTreeBuild();
+                    FrameTreeBuilder::
+                        needsFrameTreeBuildFromChildrenOfThisFrame(frame);
+                }
             }
         }
         STARFISH_ASSERT(!child->needsStyleRecalc());
