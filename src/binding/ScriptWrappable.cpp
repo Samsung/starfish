@@ -109,6 +109,11 @@ StarFish* fetchStarFish(ContextRef* ctx)
     return window->starFish();
 }
 
+StaticStrings* fetchStaticStrings(ContextRef* ctx)
+{
+    return fetchStarFish(ctx)->staticStrings();
+}
+
 String* toBrowserString(ExecutionStateRef* state, ValueRef* v)
 {
     return toBrowserString(state, v->toString(state));
