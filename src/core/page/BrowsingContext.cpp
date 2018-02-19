@@ -1423,6 +1423,12 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
         // kind == KeyEventKind::KeyEventDown
         eventType = starFish()->staticStrings()->m_keydown.localName();
     }
+
+    if (kind != KeyEventKind::KeyEventPress) {
+        // For keydown or keyup events, the value of charCode is 0.
+        pkdata.setCharCode(0);
+    }
+
     KeyboardEventInit kinitData(pkdata);
     KeyboardEvent* e = new KeyboardEvent(document(), eventType, kinitData);
     e->setBubbles(true);

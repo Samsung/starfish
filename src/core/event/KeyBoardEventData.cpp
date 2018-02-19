@@ -196,4 +196,17 @@ uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode)
         return 0;
     }
 }
+
+// Return the Unicode reference number
+// This implementation for charCode, but it is deprecated. So we implemented it
+// to a minimum.
+uint32_t keyValueToCharCode(KeyValue v)
+{
+    // 32 ~ 126 are equal to ASCII values.
+    if (32 <= v && v <= 126) {
+        return keyValueToKeyCode(v);
+    } else {
+        return 0;
+    }
+}
 } // namespace StarFish
