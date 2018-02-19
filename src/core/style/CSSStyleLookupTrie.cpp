@@ -803,6 +803,10 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         break;
     }
 
+    // https://www.w3.org/TR/css-variables-1/#defining-variables
+    if (length >= 2 && data[0] == '-' && data[1] == '-')
+        return CSSStyleKind::CustomProperty;
+
     return CSSStyleKind::Unknown;
 }
 

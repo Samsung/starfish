@@ -125,6 +125,35 @@ CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
     return newStyle;
 }
 
+String* CSSStyleDeclaration::customProperty(String* key)
+{
+    String* val = String::emptyString;
+
+    for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
+        MutablePropertyValue customProperty = m_cssCustomValues[i];
+        if (customProperty.name()->equals(key)) {
+            val = customProperty.value();
+            break;
+        }
+    }
+
+    return val;
+}
+
+void CSSStyleDeclaration::setCustomProperty(String* key, String* value,
+                                            size_t len)
+{
+    for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
+        MutablePropertyValue property = m_cssCustomValues[i];
+        if (property.name()->equals(key)) {
+            property.setValue(value);
+            return;
+        }
+    }
+    MutablePropertyValue custom(key, value);
+    m_cssCustomValues.push_back(custom);
+}
+
 #define DEFINE_ATTRIBUTE_GETTER(name, ...)                                    \
     String* CSSStyleDeclaration::name()                                       \
     {                                                                         \
@@ -169,6 +198,7 @@ FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_GETTER)
         CSSStyleValuePair ret;                                                \
         if (ret.updateVarValue(value, tokens)) {                              \
             ret.setFlagImportant(isImportant);                                \
+            ret.setTemporaryKeyKind(CSSStyleValuePair::KeyKind::name);        \
             addCSSValuePair(CSSStyleValuePair::KeyKind::VarValue, ret);       \
             return;                                                           \
         }                                                                     \
@@ -1132,13 +1162,7 @@ String* CSSStyleDeclaration::getPropertyValue(String* name)
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(MATCH_KEY)
 #undef MATCH_KEY
     default:
-        for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
-            MutablePropertyValue customProperty = m_cssCustomValues[i];
-            if (customProperty.name()->equals(name)) {
-                val = customProperty.value();
-                break;
-            }
-        }
+        val = customProperty(name);
         break;
     }
     return val;
@@ -1155,16 +1179,8 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
         if (prior->equalsIgnoreCase("important")) {
             isImportant = true;
         } else {
-            if (kind == CSSStyleKind::Unknown) {
-                for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
-                    MutablePropertyValue property = m_cssCustomValues[i];
-                    if (property.name()->equals(name)) {
-                        property.setValue(value);
-                        return;
-                    }
-                }
-                MutablePropertyValue custom(name, value);
-                m_cssCustomValues.push_back(custom);
+            if (kind == CSSStyleKind::CustomProperty) {
+                setCustomProperty(name, value, str.m_bufferSize);
             }
             return;
         }

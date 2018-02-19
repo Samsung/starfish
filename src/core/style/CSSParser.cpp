@@ -1646,6 +1646,7 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                         bool priority;
                         bool allowSrcProperty;
                         CSSStyleKind kind;
+                        String* key;
                         CSSTokenString* value;
                         CSSStyleDeclaration* declaration;
                     } sender;
@@ -1664,6 +1665,12 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                                 name[i] = tolower(name[i]);
                             }
                             ((Sender*)data)->kind = lookupCSSStyle(name, len);
+
+                            if (((Sender*)data)->kind ==
+                                CSSStyleKind::CustomProperty) {
+                                ((Sender*)data)->key =
+                                    String::createASCIIString(name);
+                            }
 #ifndef NDEBUG
                             if (((Sender*)data)->kind ==
                                 CSSStyleKind::Unknown) {
@@ -1688,7 +1695,14 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                                         CSSStyleKind kind =
                                             ((Sender*)data)->kind;
 
-                                        if (false) {
+                                        if (kind ==
+                                            CSSStyleKind::CustomProperty) {
+                                            // https://www.w3.org/TR/css-variables-1/
+                                            String* key = ((Sender*)data)->key;
+                                            declaration->setCustomProperty(
+                                                key, String::createASCIIString(
+                                                         value),
+                                                len);
                                         }
 #define SET_ATTR(name, nameLower, nameCSSCase)        \
     else if (kind == CSSStyleKind::name)              \

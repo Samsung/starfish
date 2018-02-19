@@ -44,6 +44,7 @@ class MediaQuerySet;
 class MediaQueryEvaluator;
 class Node;
 class RuleSet;
+class MutablePropertyValue;
 
 class CSSTokenValue : public std::string {
 public:
@@ -1361,6 +1362,7 @@ public:
 
     CSSStyleValuePair()
         : m_keyKind(KeyKind::Empty)
+        , m_temporaryKeyKind(KeyKind::Empty)
         , m_valueKind(ValueKind::None)
         , m_flagImportant(false)
         , m_value(0.0f)
@@ -1369,6 +1371,7 @@ public:
 
     CSSStyleValuePair(const CSSStyleValuePair& o)
         : m_keyKind(o.m_keyKind)
+        , m_temporaryKeyKind(o.m_temporaryKeyKind)
         , m_valueKind(o.m_valueKind)
         , m_flagImportant(o.m_flagImportant)
         , m_value(o.m_value)
@@ -1383,6 +1386,16 @@ public:
     void setKeyKind(KeyKind kind)
     {
         m_keyKind = kind;
+    }
+
+    KeyKind temporaryKeyKind() const
+    {
+        return m_temporaryKeyKind;
+    }
+
+    void setTemporaryKeyKind(KeyKind kind)
+    {
+        m_temporaryKeyKind = kind;
     }
 
     String* keyName() const;
@@ -2064,6 +2077,7 @@ public:
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
         : m_keyKind(KeyKind::Empty)
+        , m_temporaryKeyKind(KeyKind::Empty)
         , m_valueKind(kind)
         , m_flagImportant(false)
         , m_value(value)
@@ -2278,6 +2292,7 @@ public:
 
 protected:
     KeyKind m_keyKind : 8;
+    KeyKind m_temporaryKeyKind : 8;
     ValueKind m_valueKind : 8;
     bool m_flagImportant : 1;
     ValueData m_value;
@@ -2300,6 +2315,11 @@ public:
     }
 
     const GCAtomicVector<CSSStyleValuePair>& data()
+    {
+        return m_data;
+    }
+
+    GCAtomicVector<CSSStyleValuePair>& mutableData()
     {
         return m_data;
     }
@@ -2953,8 +2973,8 @@ protected:
                               Node* element, ComputedStyle* elementStyle,
                               bool inheritedStyleChanged = false);
 
-    void apply(Element* element,
-               const GCAtomicVector<CSSStyleValuePair>& cssValues,
+    void apply(Element* element, GCAtomicVector<CSSStyleValuePair>& cssValues,
+               GCVector<MutablePropertyValue>& cssCustomValues,
                ResourceURL* origin, ComputedStyle* style,
                ComputedStyle* parentStyle, bool isImportant = false);
 
