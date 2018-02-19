@@ -132,6 +132,16 @@ public:
         return m_keyboardEventData.keyCode();
     }
 
+    uint32_t charCode() const
+    {
+        return m_keyboardEventData.charCode();
+    }
+
+    void setCharCode(uint32_t charCode)
+    {
+        return m_keyboardEventData.setCharCode(charCode);
+    }
+
     uint32_t virtualKeyCode() const
     {
         return m_keyboardEventData.virtualKeyCode();

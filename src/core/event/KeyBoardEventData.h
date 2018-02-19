@@ -241,6 +241,7 @@ enum KeyValue {
 String* keyValueToKey(KeyValue v);
 String* keyValueToCode(KeyValue v);
 uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode = false);
+uint32_t keyValueToCharCode(KeyValue v);
 
 class KeyboardEventData {
     STARFISH_MAKE_STACK_ALLOCATED()
@@ -253,6 +254,7 @@ public:
         , m_repeat(false)
         , m_isComposing(false)
         , m_keyCode(keyValueToKeyCode(value))
+        , m_charCode(keyValueToCharCode(value))
         , m_virtualKeyCode(keyValueToKeyCode(value, true))
     {
     }
@@ -317,6 +319,21 @@ public:
         return m_keyCode;
     }
 
+    void setKeyCode(uint32_t keyCode)
+    {
+        m_keyCode = keyCode;
+    }
+
+    uint32_t charCode() const
+    {
+        return m_charCode;
+    }
+
+    void setCharCode(uint32_t charCode)
+    {
+        m_charCode = charCode;
+    }
+
     uint32_t virtualKeyCode() const
     {
         return m_virtualKeyCode;
@@ -330,6 +347,7 @@ private:
     bool m_repeat;
     bool m_isComposing;
     uint32_t m_keyCode;
+    uint32_t m_charCode;
     uint32_t m_virtualKeyCode;
 };
 } // namespace StarFish

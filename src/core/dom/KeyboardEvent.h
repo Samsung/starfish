@@ -92,12 +92,27 @@ public:
         m_keyboardEventData.setIsComposing(isComposing);
     }
 
-    // Belows are not in IDL.
     uint32_t keyCode() const
     {
         return m_keyboardEventData.keyCode();
     }
 
+    void setKeyCode(uint32_t keyCode)
+    {
+        m_keyboardEventData.setKeyCode(keyCode);
+    }
+
+    uint32_t charCode() const
+    {
+        return m_keyboardEventData.charCode();
+    }
+
+    void setCharCode(uint32_t charCode)
+    {
+        m_keyboardEventData.setCharCode(charCode);
+    }
+
+    // Belows are not in IDL.
     uint32_t virtualKeyCode() const
     {
         return m_keyboardEventData.virtualKeyCode();
@@ -179,10 +194,16 @@ public:
 
     uint32_t keyCode() const
     {
-        if (type()->equals(String::createASCIIString("keydown"))) {
+        if (m_keyboardEventData.keyValue() != KeyValue::UnidentifiedKey &&
+            type()->equals(String::createASCIIString("keydown"))) {
             return m_keyboardEventData.virtualKeyCode();
         }
         return m_keyboardEventData.keyCode();
+    }
+
+    uint32_t charCode() const
+    {
+        return m_keyboardEventData.charCode();
     }
 
     // Not in IDL.
