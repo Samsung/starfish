@@ -3458,6 +3458,7 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
                 m_cssValues[i].setValueKind(ret.valueKind());
                 m_cssValues[i].setValue(ret.value());
                 m_cssValues[i].setFlagImportant(ret.flagImportant());
+                m_cssValues[i].setTemporaryKeyKind(ret.temporaryKeyKind());
                 rootPointerValueIfExists(ret);
                 notifyNeedsStyleRecalc();
             }
@@ -3589,7 +3590,8 @@ ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
 }
 
 void StyleResolver::apply(Element* element,
-                          const GCAtomicVector<CSSStyleValuePair>& cssValues,
+                          GCAtomicVector<CSSStyleValuePair>& cssValues,
+                          GCVector<MutablePropertyValue>& cssCustomValues,
                           ResourceURL* origin, ComputedStyle* style,
                           ComputedStyle* parentStyle, bool isImportant)
 {
@@ -3601,6 +3603,57 @@ void StyleResolver::apply(Element* element,
 #ifdef STARFISH_ENABLE_CSS_VARIABLE
         if (cssValues[k].keyKind() == CSSStyleValuePair::KeyKind::VarValue) {
             // TODO: Define the new value againe.
+            size_t len = cssValues[k].stringValue()->length();
+            CSSTokenVector tokens;
+            if (UNLIKELY(cssValues[k].temporaryKeyKind() ==
+                         CSSStyleValuePair::KeyKind::Content)) {
+                CSSStyleDeclaration::tokenizeCSSValue(
+                    tokens,
+                    cssValues[k].stringValue()->toUTF8NonGCString().data(), len,
+                    "", 0, true);
+            } else {
+                CSSStyleDeclaration::tokenizeCSSValue(
+                    tokens,
+                    cssValues[k].stringValue()->toUTF8NonGCString().data(), len,
+                    ",", 1);
+            }
+
+            for (size_t i = 0; i < tokens.size(); i++) {
+                CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
+                CSSTokenValue token(tokens[i]);
+                variablesSyntaxBuilder.build(token);
+                if (variablesSyntaxBuilder.isValid()) {
+                    // Replace a old style with a new style coverted with the
+                    // syntax builder.
+                    tokens[i] = CSSTokenValue(
+                        variablesSyntaxBuilder.generateStyle(cssCustomValues));
+                }
+            }
+
+#define SET_CASES(name, ...)                                                  \
+    case CSSStyleValuePair::KeyKind::name:                                    \
+        if (CSSStyleValuePair::KeyKind::name ==                               \
+            CSSStyleValuePair::KeyKind::VarValue) {                           \
+            break;                                                            \
+        }                                                                     \
+                                                                              \
+        if (ret.updateValueCommon(tokens) || ret.updateValue##name(tokens)) { \
+            ret.setKeyKind(CSSStyleValuePair::KeyKind::name);                 \
+        }                                                                     \
+        break;
+
+            CSSStyleValuePair ret;
+            switch (cssValues[k].temporaryKeyKind()) {
+                FOR_EACH_STYLE_ATTRIBUTE_BASIC(SET_CASES)
+            case CSSStyleValuePair::KeyKind::Empty:
+                break;
+            default:
+                break;
+            }
+
+            cssValues[k].setKeyKind(ret.keyKind());
+            cssValues[k].setValueKind(ret.valueKind());
+            cssValues[k].setValue(ret.value());
         }
 #endif
 
@@ -6290,6 +6343,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         auto iter = begin;
         while (iter != authorSheetBegin) {
             apply(element, iter->first->styleDeclaration()->m_cssValues,
+                  iter->first->styleDeclaration()->m_cssCustomValues,
                   iter->second, ret, parent, false);
             iter++;
         }
@@ -6298,13 +6352,16 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     // Apply presentation attribute's style
     CSSStyleValuePairVectorHolder cssValues;
     element->styleForPresentationAttribute(cssValues);
-    apply(element, cssValues.data(), nullptr, ret, parent, false);
+    // FIXME : clean up to remove this vector called by empty.
+    GCVector<MutablePropertyValue> empty;
+    apply(element, cssValues.mutableData(), empty, nullptr, ret, parent, false);
 
     // Apply non-important author-rules
     {
         auto iter = authorSheetBegin;
         while (iter != end) {
             apply(element, iter->first->styleDeclaration()->m_cssValues,
+                  iter->first->styleDeclaration()->m_cssCustomValues,
                   iter->second, ret, parent, false);
             iter++;
         }
@@ -6314,6 +6371,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     if (pseudoElementType == PseudoElementNone &&
         element->inlineStyleWithoutCreation()) {
         apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
+              element->inlineStyleWithoutCreation()->m_cssCustomValues,
               element->document()->baseURL(), ret, parent, false);
     }
 
@@ -6322,6 +6380,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         auto iter = authorSheetBegin;
         while (iter != end) {
             apply(element, iter->first->styleDeclaration()->m_cssValues,
+                  iter->first->styleDeclaration()->m_cssCustomValues,
                   iter->second, ret, parent, true);
             iter++;
         }
@@ -6331,6 +6390,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     if (pseudoElementType == PseudoElementNone &&
         element->inlineStyleWithoutCreation()) {
         apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
+              element->inlineStyleWithoutCreation()->m_cssCustomValues,
               element->document()->baseURL(), ret, parent, true);
     }
 }

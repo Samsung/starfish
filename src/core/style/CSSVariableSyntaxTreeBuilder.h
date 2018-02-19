@@ -107,10 +107,7 @@ public:
 
     void buildTree(VariableContainer*, CSSTokenValue&);
 
-    void generateStyle()
-    {
-        // TODO: Generate new style with the variable map and syntax trees.
-    }
+    CSSTokenValue generateStyle(GCVector<MutablePropertyValue>&);
 
     void dump();
 
@@ -120,6 +117,7 @@ public:
     }
 
 private:
+    const CSSTokenValue* m_data;
     bool m_valid;
     GCVector<VariableContainer> m_variableContainers;
 };

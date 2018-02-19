@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "core/style/CSSVariableSyntaxTreeBuilder.h"
+#include "core/style/CSSStyleDeclaration.h"
 
 namespace StarFish {
 
@@ -218,6 +219,83 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
     if (contexts.size() != 0) {
         m_valid = false;
     }
+}
+
+CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
+    GCVector<MutablePropertyValue>& cssCustomValues)
+{
+    struct Context {
+        Context(Block* b, size_t i)
+            : block(b)
+            , index(i)
+        {
+        }
+
+        Block* block;
+        size_t index;
+    };
+
+    CSSTokenValue ret;
+    for (size_t i = 0; i < m_variableContainers.size(); i++) {
+        VariableContainer* container = &m_variableContainers[i];
+        VariableBlock* parent = (VariableBlock*)container->m_root;
+        GCVector<Context> contexts;
+        contexts.push_back(Context(parent, 0));
+        bool isFind = false;
+        String* findValue = nullptr;
+
+        while (contexts.size()) {
+            Context* c = &contexts.back();
+            VariableBlock* parent = (VariableBlock*)c->block;
+
+            for (size_t j = c->index; j < parent->variables.size(); j++) {
+                Block* block = parent->variables[j];
+                c->index++;
+                if (block->isVariable()) {
+                    Variable* variable = (Variable*)block;
+                    String* key =
+                        String::createASCIIString(variable->m_value.c_str());
+
+                    for (size_t k = 0; k < cssCustomValues.size(); k++) {
+                        MutablePropertyValue customProperty =
+                            cssCustomValues[k];
+                        if (customProperty.name()->equals(key)) {
+                            findValue = customProperty.value();
+                            isFind = true;
+                        }
+                    }
+
+                    if (isFind) {
+                        break;
+                    }
+
+                } else if (block->isRawValue()) {
+                } else if (block->isVariableBlock()) {
+                    VariableBlock* variableBlock = (VariableBlock*)block;
+                    contexts.push_back(Context(variableBlock, 0));
+                }
+            }
+
+            if (isFind) {
+                break;
+            }
+
+            if (c->index == parent->variables.size() &&
+                parent == contexts.back().block) {
+                contexts.pop_back();
+            }
+        }
+
+        if (findValue) {
+            // FIXME : To support the full style with variableContainers
+            // such as 'rgb(100, var(--foo1), var(--foo2))'.
+            // Before that, we should solve a issue(#1132).
+            ret = CSSTokenValue(findValue->toUTF8NonGCString().data());
+            break;
+        }
+    }
+
+    return ret;
 }
 
 void CSSVariableSyntaxTreeBuilder::dump()

@@ -25,6 +25,7 @@ namespace StarFish {
 
 enum CSSStyleKind {
     Unknown,
+    CustomProperty,
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_CSS_STYLE_KIND)
 };
 
