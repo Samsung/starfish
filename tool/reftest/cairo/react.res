@@ -78,7 +78,8 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMount-test
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChildReconcile-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactMultiChild-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactServerRenderingBrowser-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactServerRendering-test.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactServerRendering-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactServerRendering-test_modified.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactStatelessComponent-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactTestUtils-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactTreeTraversal-test.internal.html

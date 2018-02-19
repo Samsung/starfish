@@ -24,6 +24,7 @@ namespace StarFish {
 class Document;
 class Element;
 class Serializable;
+class StaticStrings;
 class Transferable;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
@@ -53,6 +54,7 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
 StarFish* fetchStarFish(Escargot::ContextRef* context);
 Window* fetchWindow(Escargot::ContextRef* context);
 Document* fetchDocument(Escargot::ContextRef* context);
+StaticStrings* fetchStaticStrings(Escargot::ContextRef* context);
 
 String* toBrowserString(ScriptBindingInstance* instance, Escargot::ValueRef* v,
                         bool* result = nullptr);
