@@ -167,6 +167,11 @@ FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_GETTER)
             tokenizeCSSValue(tokens, value, len, ",", 1);                     \
         }                                                                     \
         CSSStyleValuePair ret;                                                \
+        if (ret.updateVarValue(value, tokens)) {                              \
+            ret.setFlagImportant(isImportant);                                \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::VarValue, ret);       \
+            return;                                                           \
+        }                                                                     \
         if (ret.updateValueCommon(tokens) || ret.updateValue##name(tokens)) { \
             ret.setFlagImportant(isImportant);                                \
             addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);           \

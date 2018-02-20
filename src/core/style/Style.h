@@ -1247,6 +1247,7 @@ public:
 #undef ADD_CSS_KEYKIND
             FontKeyKindStart = FontSize,
         FontKeyKindEnd = FontFamily,
+        VarValue,
         KeyKindSize,
     };
     // font related properties must be followed end of this enum(KeyKind)
@@ -1396,6 +1397,8 @@ public:
     {
         m_flagImportant = isImportant;
     }
+
+    bool updateVarValue(const char*, const CSSTokenVector&);
 
     bool updateValueCommon(const CSSTokenVector& tokens);
 

@@ -373,6 +373,24 @@ String* CSSStyleValuePair::keyName() const
     }
 }
 
+bool CSSStyleValuePair::updateVarValue(const char* str,
+                                       const CSSTokenVector& tokens)
+{
+#ifdef STARFISH_ENABLE_CSS_VARIABLE
+    for (size_t i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& token = tokens[i];
+        if (token.startsWith("var")) {
+            // TODO: Check Syntax.
+            m_value.m_stringValue = String::createASCIIString(str);
+            m_keyKind = CSSStyleValuePair::KeyKind::VarValue;
+            m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
+            return true;
+        }
+    }
+#endif
+    return false;
+}
+
 bool CSSStyleValuePair::updateValueCommon(const CSSTokenVector& tokens)
 {
     // NOTE: set common value (e.g. initial, inherit, "")
@@ -3550,6 +3568,12 @@ void StyleResolver::apply(Element* element,
         if (isImportant != cssValues[k].flagImportant()) {
             continue;
         }
+
+#ifdef STARFISH_ENABLE_CSS_VARIABLE
+        if (cssValues[k].keyKind() == CSSStyleValuePair::KeyKind::VarValue) {
+            // TODO: Define the new value againe.
+        }
+#endif
 
         switch (cssValues[k].keyKind()) {
         case CSSStyleValuePair::KeyKind::Display:
