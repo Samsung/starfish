@@ -69,8 +69,14 @@ static inline void setAttributes(Element* element, AtomicHTMLToken* token)
     if (!scriptingContentIsAllowed(parserContentPolicy))
         element->stripScriptingAttributes(token->attributes());*/
     for (size_t i = 0; i < token->attributes().size(); i++) {
-        element->setAttribute(token->attributes()[i].name(),
-                              token->attributes()[i].value());
+        if (token->attributes()[i].name().namespaceURI().hasValue()) {
+            element->setAttribute(AttributeName(token->attributes()[i].name(),
+                                                AttributeName::MatchNS),
+                                  token->attributes()[i].value());
+        } else {
+            element->setAttribute(token->attributes()[i].name(),
+                                  token->attributes()[i].value());
+        }
     }
 }
 

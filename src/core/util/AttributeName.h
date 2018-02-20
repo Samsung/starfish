@@ -36,7 +36,9 @@ public:
     {
         return m_type == MatchNS || m_type == MatchAll;
     }
-    bool equals(const QualifiedName& other) const;
+
+    bool isMatch(const QualifiedName& qname) const;
+
     QualifiedName qname() const
     {
         return m_qname;

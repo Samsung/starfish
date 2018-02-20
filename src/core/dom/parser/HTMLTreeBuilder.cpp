@@ -659,6 +659,23 @@ static void adjustForeignAttributes(AtomicHTMLToken* token)
 }
 */
 
+void adjustForeignAttributes(AtomicHTMLToken* token)
+{
+    auto starfish = token->starFish();
+    for (unsigned i = 0; i < token->attributes().size(); ++i) {
+        Attribute& tokenAttribute = token->attributes()[i];
+        if (tokenAttribute.name().localName()->equals("xlink:href")) {
+            AtomicString prefix, nsURI, localName;
+            prefix = AtomicString::createAtomicString(starfish, "xlink");
+            nsURI = AtomicString::createAtomicString(
+                starfish, "http://www.w3.org/1999/xlink");
+            localName = AtomicString::createAtomicString(starfish, "href");
+            QualifiedName qname = QualifiedName(prefix, nsURI, localName);
+            tokenAttribute.setName(qname);
+        }
+    }
+}
+
 static void adjustSVGAttributes(AtomicHTMLToken* token)
 {
     // adjustAttributes<SVGNames::getSVGAttrs, SVGNames::SVGAttrsCount>(token);
@@ -977,7 +994,7 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         m_tree.reconstructTheActiveFormattingElements();
         // TODO
         // adjustMathMLAttributes(token);
-        // adjustForeignAttributes(token);
+        adjustForeignAttributes(token);
         m_tree.insertForeignElement(token, s->m_mathmlNamespaceURI);
         return;
     }
@@ -985,7 +1002,7 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken* token)
         m_tree.reconstructTheActiveFormattingElements();
         // TODO
         adjustSVGAttributes(token);
-        // adjustForeignAttributes(token);
+        adjustForeignAttributes(token);
         m_tree.insertForeignElement(token, s->m_svgNamespaceURI);
         return;
     }
@@ -3064,7 +3081,7 @@ void HTMLTreeBuilder::processTokenInForeignContent(AtomicHTMLToken* token)
             // adjustSVGTagNameCase(token);
             adjustSVGAttributes(token);
         }
-        // adjustForeignAttributes(token);
+        adjustForeignAttributes(token);
         m_tree.insertForeignElement(token, currentNamespace);
         break;
     }

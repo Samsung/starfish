@@ -21,10 +21,12 @@ namespace StarFish {
 
 class Attribute;
 class Element;
+class AtomicHTMLToken;
 
 typedef String* (*AttributeValueGetter)(Element* element,
                                         const Attribute* const attr);
 
+extern void adjustForeignAttributes(AtomicHTMLToken* token);
 class AttributeRareData : public gc {
 public:
     AttributeRareData(Element* e)
@@ -79,12 +81,19 @@ public:
         setupAttributeRareData(element);
         m_rareData->m_getter = getter;
     }
+    friend void adjustForeignAttributes(AtomicHTMLToken* token);
 
 private:
     void setupAttributeRareData(Element* element) const
     {
         m_rareData = new AttributeRareData(element);
     }
+
+    void setName(QualifiedName& name)
+    {
+        m_name = name;
+    }
+
     QualifiedName m_name;
     String* m_value;
     mutable AttributeRareData* m_rareData;
