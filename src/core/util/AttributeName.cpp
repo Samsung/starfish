@@ -26,18 +26,18 @@ AttributeName::AttributeName(const QualifiedName& name, MatchType type)
 {
 }
 
-bool AttributeName::equals(const QualifiedName& other) const
+bool AttributeName::isMatch(const QualifiedName& qname) const
 {
     switch (m_type) {
     case MatchType::MatchName:
-        if (UNLIKELY(other.hasPrefix())) {
-            return m_qname.toString()->equals(other.toString());
+        if (UNLIKELY(qname.hasPrefix())) {
+            return m_qname.toString()->equals(qname.toString());
         }
-        return m_qname.equalsLocalName(other);
+        return m_qname.equalsLocalName(qname);
     case MatchType::MatchNS:
-        return m_qname.equalsNamespace(other) && m_qname.equalsLocalName(other);
+        return m_qname.equalsNamespace(qname) && m_qname.equalsLocalName(qname);
     case MatchType::MatchAll:
-        return m_qname == other;
+        return m_qname == qname;
     }
     return false;
 }

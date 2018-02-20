@@ -132,7 +132,7 @@ String* Element::localName()
 size_t Element::hasAttribute(const AttributeName& name) const
 {
     for (size_t i = 0; i < m_attributes.size(); i++) {
-        if (name.equals(m_attributes[i].name())) {
+        if (name.isMatch(m_attributes[i].name())) {
             return i;
         }
     }
@@ -161,7 +161,7 @@ size_t Element::hasAttributeNode(const AttributeName& name)
         GCVector<Attr*>* l = rareMembers()->asRareElementMembers()->m_attrList;
         size_t len = l->size();
         for (size_t i = 0; i < len; i++) {
-            if (name.equals((*l)[i]->qname())) {
+            if (name.isMatch((*l)[i]->qname())) {
                 return i;
             }
         }

@@ -120,7 +120,6 @@ protected:
     size_t hasAttributeNode(const AttributeName& name);
     Nullable<String*> getAttribute(const AttributeName& name) const;
     Attr* getAttributeNode(const AttributeName& name);
-    void setAttribute(const AttributeName& name, String* value);
     void removeAttribute(const AttributeName& name);
 
 public:
@@ -134,6 +133,8 @@ public:
     Attr* getAttributeNode(String* qualifiedName);
     Attr* getAttributeNodeNS(Nullable<String*> ns, String* localName);
     String* getAttributeOrEmpty(const QualifiedName& qualifiedName) const;
+
+    void setAttribute(const AttributeName& name, String* value);
 
     void setAttribute(String* qualifiedName, String* value);
     void setAttribute(const QualifiedName& qualifiedName, String* value);
