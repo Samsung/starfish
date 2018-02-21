@@ -24,6 +24,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     // https://infra.spec.whatwg.org/#namespaces
     , m_xhtmlNamespaceURI(
           AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml"))
+    , m_xlinkNamespaceURI(
+          AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xlink"))
     , m_xmlNamespaceURI(AtomicString::createAtomicString(
           sf, "http://www.w3.org/XML/1998/namespace"))
     , m_xmlnsNamespaceURI(
@@ -32,6 +34,7 @@ StaticStrings::StaticStrings(StarFish* sf)
           AtomicString::createAtomicString(sf, "http://www.w3.org/2000/svg"))
     , m_mathmlNamespaceURI(AtomicString::createAtomicString(
           sf, "http://www.w3.org/1998/Math/MathML"))
+    , m_xlink(AtomicString::createAtomicString(sf, "xlink"))
     , m_xml(AtomicString::createAtomicString(sf, "xml"))
     , m_xmlns(AtomicString::createAtomicString(sf, "xmlns"))
     , m_documentLocalName(AtomicString::createAtomicString(sf, "#document"))
@@ -564,5 +567,28 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_compositionend =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "compositionend"));
+
+    m_xlinkType = QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                                AtomicString::createAtomicString(sf, "type"));
+    m_xlinkHref = QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                                AtomicString::createAtomicString(sf, "href"));
+    m_xlinkRole = QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                                AtomicString::createAtomicString(sf, "role"));
+    m_xlinkArcrole =
+        QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                      AtomicString::createAtomicString(sf, "arcrole"));
+    m_xlinkTitle = QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                                 AtomicString::createAtomicString(sf, "title"));
+    m_xlinkShow = QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                                AtomicString::createAtomicString(sf, "show"));
+    m_xlinkActuate =
+        QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                      AtomicString::createAtomicString(sf, "actuate"));
+    m_xlinkLabel = QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                                 AtomicString::createAtomicString(sf, "label"));
+    m_xlinkFrom = QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                                AtomicString::createAtomicString(sf, "from"));
+    m_xlinkTo = QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                              AtomicString::createAtomicString(sf, "to"));
 }
 }
