@@ -274,7 +274,10 @@ public:
     QualifiedName m_defaultValue;
     QualifiedName m_title;
     QualifiedName m_align;
+    QualifiedName m_max;
     QualifiedName m_maxlength;
+    QualifiedName m_min;
+    QualifiedName m_step;
     QualifiedName m_tabindex;
     QualifiedName m_formAction;
     QualifiedName m_action;

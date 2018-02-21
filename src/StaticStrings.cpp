@@ -175,9 +175,15 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_defaultValue =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "defaultValue"));
+    m_max = QualifiedName(AtomicString::emptyAtomicString(),
+                          AtomicString::createAtomicString(sf, "max"));
     m_maxlength =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "maxlength"));
+    m_min = QualifiedName(AtomicString::emptyAtomicString(),
+                          AtomicString::createAtomicString(sf, "min"));
+    m_step = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "step"));
     m_tabindex =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "tabindex"));

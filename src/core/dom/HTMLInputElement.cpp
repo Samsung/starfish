@@ -51,6 +51,10 @@ HTMLInputElement::HTMLInputElement(Document* document)
     , m_caretBlinkingIntervalId(SIZE_MAX)
     , m_currentCaretPosition(0)
     , m_currentEditingText(String::emptyString)
+    , m_defaultMinimum(0)
+    , m_defaultMaximum(0)
+    , m_defaultStep(0)
+    , m_stepScaleFactor(0)
     , m_maxlength(INITIAL_MAXLENGTH)
     , m_previousCheckedRadioButton(nullptr)
 {
@@ -140,6 +144,11 @@ void HTMLInputElement::setDefaultValue(String* defaultValue)
 String* HTMLInputElement::value()
 {
     if (!m_dirtiness) {
+        if (type()->equals("range")) {
+            double val = defaultValueForRangeType();
+            return String::fromDouble(val);
+        }
+
         return defaultValue();
     }
 
@@ -167,8 +176,74 @@ void HTMLInputElement::sanitizeValue()
         type()->equals("week") || type()->equals("time") ||
         type()->equals("datetime-local")) {
         // TODO
-    } else if (type()->equals("number") || type()->equals("range")) {
+    } else if (type()->equals("range")) {
+        double val;
+        if (!String::validDouble(m_value)) {
+            val = defaultValueForRangeType();
+        } else {
+            val = String::parseDouble(m_value);
+            if (sufferingFromStepMismatch(val)) {
+                double stepVal;
+                allowedValueStep(&stepVal);
+                val = roundValueToMultiplesOfSteps(val, stepVal);
+            }
+        }
+        m_value = String::fromDouble(val);
+    } else if (type()->equals("number")) {
         // TODO
+    }
+}
+
+double HTMLInputElement::defaultValueForRangeType()
+{
+    double val = 0;
+    String* valAttr = defaultValue();
+    if (!valAttr->equals(String::emptyString) && String::validDouble(valAttr)) {
+        val = String::parseDouble(valAttr);
+    } else {
+        double min = minimum();
+        double max = maximum();
+        if (max < min) {
+            val = min;
+        } else {
+            val = min + ((max - min) / 2);
+        }
+    }
+
+    double stepVal;
+    bool hasAllowedValueStep = allowedValueStep(&stepVal);
+    if (!hasAllowedValueStep || !sufferingFromStepMismatch(val)) {
+        return val;
+    }
+
+    // Suffering from step mismatch
+    return roundValueToMultiplesOfSteps(val, stepVal);
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#attr-input-step
+bool HTMLInputElement::sufferingFromStepMismatch(double val)
+{
+    double stepVal;
+    if (allowedValueStep(&stepVal)) {
+        if (remainder(stepBase() - val, stepVal) != 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+double HTMLInputElement::roundValueToMultiplesOfSteps(double val,
+                                                      double stepVal)
+{
+    int multiplier = val / stepVal;
+    int smaller = stepVal * multiplier;
+    int bigger = stepVal * (multiplier + 1);
+
+    if (val - smaller < bigger - val) {
+        return smaller;
+    } else {
+        return bigger;
     }
 }
 
@@ -432,36 +507,32 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLFormControl::didAttributeChanged(name, old, val, attributeCreated,
                                          attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_type ||
-        name == starFish()->staticStrings()->m_value) {
-        if (name == starFish()->staticStrings()->m_type || !old->equals(val)) {
-            setNeedsFrameTreeBuildWithoutSelf();
-        }
-
-        if (name == starFish()->staticStrings()->m_value) {
-            // https://html.spec.whatwg.org/multipage/input.html#attr-input-value
-            if (!m_dirtiness) {
-                if (attributeRemoved) {
-                    m_value = String::emptyString;
-                } else { // created or updated
-                    m_value = val;
-                }
-                sanitizeValue();
+    if (name == starFish()->staticStrings()->m_type) {
+        setDefaultBookkeepingValues();
+        setNeedsFrameTreeBuild();
+    } else if (name == starFish()->staticStrings()->m_value) {
+        // https://html.spec.whatwg.org/multipage/input.html#attr-input-value
+        if (!m_dirtiness) {
+            if (attributeRemoved) {
+                m_value = String::emptyString;
+            } else { // created or updated
+                m_value = val;
             }
-
-            setNeedsFrameTreeBuildWithoutSelf();
-
-            // TODO: fire correct inputevent
-            // TODO: we should fire this event in handleDefaultEvent
-            InputEvent* event =
-                new InputEvent(document(), String::createASCIIString("input"));
-            event->setCancelable(false);
-            event->setBubbles(true);
-            event->setComposed(true);
-            event->setData(val);
-            event->setInputType(String::createASCIIString("insertText"));
-            dispatchEventByUA(event);
+            sanitizeValue();
         }
+
+        setNeedsFrameTreeBuild();
+
+        // TODO: fire correct inputevent
+        // TODO: we should fire this event in handleDefaultEvent
+        InputEvent* event =
+            new InputEvent(document(), String::createASCIIString("input"));
+        event->setCancelable(false);
+        event->setBubbles(true);
+        event->setComposed(true);
+        event->setData(val);
+        event->setInputType(String::createASCIIString("insertText"));
+        dispatchEventByUA(event);
     } else if (name == starFish()->staticStrings()->m_checked) {
         if (!m_dirtyCheckness) {
             if (attributeCreated) {
@@ -707,6 +778,26 @@ void HTMLInputElement::styleForPresentationAttribute(
     }
 }
 
+String* HTMLInputElement::max()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_max);
+}
+
+void HTMLInputElement::setMax(String* max)
+{
+    setAttribute(starFish()->staticStrings()->m_max, max);
+}
+
+String* HTMLInputElement::min()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_min);
+}
+
+void HTMLInputElement::setMin(String* min)
+{
+    setAttribute(starFish()->staticStrings()->m_min, min);
+}
+
 int32_t HTMLInputElement::maxLength()
 {
     int32_t result = 0;
@@ -735,6 +826,87 @@ void HTMLInputElement::setMaxLength(int32_t maxlength)
     } else {
         setAttribute(starFish()->staticStrings()->m_maxlength,
                      String::fromInt(maxlength));
+    }
+}
+
+double HTMLInputElement::minimum()
+{
+    String* minAttr = min();
+    if (minAttr->equals(String::emptyString) || !String::validDouble(minAttr)) {
+        return m_defaultMinimum;
+    } else {
+        return String::parseDouble(minAttr);
+    }
+}
+
+double HTMLInputElement::maximum()
+{
+    String* maxAttr = max();
+    if (maxAttr->equals(String::emptyString) || !String::validDouble(maxAttr)) {
+        return m_defaultMaximum;
+    } else {
+        return String::parseDouble(maxAttr);
+    }
+}
+
+String* HTMLInputElement::step()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_step);
+}
+
+void HTMLInputElement::setStep(String* step)
+{
+    setAttribute(starFish()->staticStrings()->m_step, step);
+}
+
+bool HTMLInputElement::allowedValueStep(double* ret)
+{
+    String* stepVal = step();
+    if (stepVal->equals(String::emptyString)) {
+        *ret = m_defaultStep * m_stepScaleFactor;
+        return true;
+    } else if (stepVal->toASCIILower()->equals("any")) {
+        // no allowed value step
+        return false;
+    }
+
+    double val = String::parseDouble(stepVal);
+    if (val <= 0) {
+        *ret = m_defaultStep * m_stepScaleFactor;
+    }
+
+    *ret = val * m_stepScaleFactor;
+    return true;
+}
+
+double HTMLInputElement::stepBase()
+{
+    String* minAttr = min();
+    if (!minAttr->equals(String::emptyString) && String::validDouble(minAttr)) {
+        return String::parseDouble(minAttr);
+    }
+
+    String* val = defaultValue();
+    if (!val->equals(String::emptyString) && String::validDouble(val)) {
+        return String::parseDouble(val);
+    }
+
+    // https://html.spec.whatwg.org/multipage/input.html#week-state-(type=week):concept-input-step-default-base
+    if (type()->equals("week")) {
+        return -259200000;
+    }
+
+    return 0;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):concept-input-value-default-range
+void HTMLInputElement::setDefaultBookkeepingValues()
+{
+    if (type()->equals("range")) {
+        m_defaultMinimum = 0;
+        m_defaultMaximum = 100;
+        m_defaultStep = 1;
+        m_stepScaleFactor = 1;
     }
 }
 }
