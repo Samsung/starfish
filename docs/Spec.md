@@ -397,6 +397,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | placeholder | Returns a short hint that describes the expected value of an input field. |
 |  | attribute | multiple | Returns / Sets the element's multiple attribute, indicating whether more than one value is possible (e.g., multiple files). |
 |  | attribute | required | Returns / Sets the element's required attribute, indicating that the user must fill in a value before submitting a form. |
+|  | attribute | min | minimum value |
+|  | attribute | max | maximum value |
+|  | attribute | step | Granularity to be matched by the form control's value |
 | [HTMLIFrameElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element) | interface | HTMLIFrameElement |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the frame in CSS pixels. |

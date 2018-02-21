@@ -1093,6 +1093,13 @@ String* String::fromFloat(float f)
     return String::fromUTF8(buf);
 }
 
+String* String::fromDouble(double d)
+{
+    char buf[256];
+    snprintf(buf, sizeof(buf), "%g", d);
+    return String::fromUTF8(buf);
+}
+
 String* String::fromInt(int i)
 {
 #if defined(STARFISH_ANDROID)
@@ -1906,6 +1913,28 @@ double String::parseDouble(String* s)
             return 0;
         },
         &ret);
+    return ret;
+}
+
+bool String::validDouble(String* s)
+{
+    bool ret;
+    s->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            for (size_t i = 0; i < len; i++) {
+                char c = buf[i];
+                if (!(String::isASCIIDigit(c) || (c == '.') || (c == 'e') ||
+                      (c == '+') || (c == '-'))) {
+                    *((bool*)data) = false;
+                    return 0;
+                }
+            }
+
+            *((bool*)data) = true;
+            return 0;
+        },
+        &ret);
+
     return ret;
 }
 

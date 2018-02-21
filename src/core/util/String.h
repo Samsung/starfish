@@ -345,6 +345,7 @@ public:
     static int64_t parseInt64(String* s);
     static float parseFloat(String* s);
     static double parseDouble(String* s);
+    static bool validDouble(String* s);
 
     virtual size_t length() const = 0;
     virtual char32_t charAt(const size_t& idx) const = 0;
@@ -505,6 +506,7 @@ public:
     }
 
     static String* fromFloat(float f);
+    static String* fromDouble(double d);
     static String* fromInt(int i);
     static String* fromInt64(int64_t i);
 

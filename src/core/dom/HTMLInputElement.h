@@ -84,8 +84,16 @@ public:
     String* value() override;
     void setValue(String* value) override;
 
+    String* max();
+    void setMax(String* max);
+    String* min();
+    void setMin(String* min);
+
     int32_t maxLength();
     void setMaxLength(int32_t maxlength);
+
+    String* step();
+    void setStep(String* step);
 
     bool hasActivationBehavior() override;
     void activationBehavior() override;
@@ -104,6 +112,15 @@ private:
     HTMLInputElement* getCurrentCheckedRadioButton();
     bool isInSameRadioButtonGroup(HTMLInputElement* other);
 
+    double minimum();
+    double maximum();
+    bool allowedValueStep(double* ret);
+    double stepBase();
+    double defaultValueForRangeType();
+    bool sufferingFromStepMismatch(double val);
+    double roundValueToMultiplesOfSteps(double val, double stepVal);
+    void setDefaultBookkeepingValues();
+
     bool m_dirtiness;
 
     bool m_checkness;
@@ -115,7 +132,14 @@ private:
     size_t m_currentCaretPosition;
     LayoutLocation m_currentCaretLayoutLocation;
     String* m_currentEditingText;
+
+    int32_t m_defaultMinimum;
+    int32_t m_defaultMaximum;
+    int32_t m_defaultStep;
+    int32_t m_stepScaleFactor;
+
     int32_t m_maxlength;
+
     HTMLInputElement* m_previousCheckedRadioButton;
 };
 }

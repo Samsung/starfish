@@ -21,9 +21,9 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented] attribute boolean indeterminate;
     [Unimplemented, CEReactions] attribute DOMString inputMode;
     [Unimplemented] readonly attribute HTMLElement? list;
-    [Unimplemented, CEReactions] attribute DOMString max;
+    [CEReactions] attribute DOMString max;
     [RaisesException, CEReactions] attribute long maxLength;
-    [Unimplemented, CEReactions] attribute DOMString min;
+    [CEReactions] attribute DOMString min;
     [Unimplemented, CEReactions] attribute long minLength;
     [CEReactions] attribute boolean multiple;
     [CEReactions, Rename=domName] attribute DOMString name;
@@ -34,7 +34,7 @@ interface HTMLInputElement : HTMLElement {
     // FIXME: later size should be implemented RaisesException=Setter
     [CEReactions, Custom=Setter] attribute unsigned long size;
     [Unimplemented, CEReactions] attribute USVString src;
-    [Unimplemented, CEReactions] attribute DOMString step;
+    [CEReactions] attribute DOMString step;
     [CEReactions] attribute DOMString type;
     [CEReactions] attribute DOMString defaultValue;
     [TreatNullAs=EmptyString, CEReactions] attribute DOMString value;

@@ -43,7 +43,8 @@ test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMEventLi
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMFiberAsync-test.internal.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMFiber-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMIframe-test.html
-test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInput-test.html
+# test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInput-test.html
+test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInput-test_modified.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMInvalidARIAHook-test.html
 test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMOption-test.html
 # test/cairo/reftest/vendor/react/packages/react-dom/src/__tests__/ReactDOMRoot-test.internal.html
