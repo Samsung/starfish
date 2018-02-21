@@ -78,6 +78,47 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
     return result;
 }
 
+void FrameSVGSVGBox::layout(LayoutContext& ctx,
+                            Frame::LayoutWantToResolve resolveWhat)
+{
+    FrameReplaced::layout(ctx, resolveWhat);
+
+    if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
+        LayoutUnit orgWidth = contentWidth();
+        LayoutUnit orgHeight = contentHeight();
+
+        m_svgScale = 1;
+        m_viewBox = Nullable<Unit::Rect>();
+
+        if (node()->asSVGSVGElement()->hasViewBox()) {
+            Unit::Rect rt = node()->asSVGSVGElement()->viewBox();
+            float sx = rt.width() / contentWidth();
+            float sy = rt.height() / contentHeight();
+            float s = std::min(sx, sy);
+            if (s == 0 || std::isnan(s)) {
+            } else {
+                setWidth(s * contentWidth());
+                setHeight(s * contentHeight());
+                m_svgScale = s;
+                m_viewBox = Nullable<Unit::Rect>(rt);
+            }
+        }
+
+        Frame* f = firstChild();
+        while (f) {
+            f->asFrameSVGBox()->resolvePosition(ctx);
+            f->asFrameSVGBox()->moveX(borderLeft() + paddingLeft());
+            f->asFrameSVGBox()->moveY(borderTop() + paddingTop());
+            f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+
+            f = f->next();
+        }
+
+        setContentWidth(orgWidth);
+        setContentHeight(orgHeight);
+    }
+}
+
 void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 {
 #if defined(PORT_CANVAS_BACKEND_EFL)

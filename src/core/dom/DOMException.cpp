@@ -75,8 +75,36 @@ DOMException::DOMException(Document* document, Code code, const char* message)
     , m_code(code)
     , m_name(String::emptyString)
 {
-    if (!message) {
-        message = s_descriptions[code];
+    if (code < SCRIPT_ERROR) {
+        if (!message) {
+            message = s_descriptions[code];
+        }
+    } else {
+        if (!message) {
+            message = "";
+        }
+
+        if (code == SCRIPT_ERROR) {
+            overrideScriptObject(scriptTypeError(scriptBindingInstance(),
+                                                 String::fromUTF8(message)));
+        } else if (code == SCRIPT_EVAL_ERR) {
+            overrideScriptObject(scriptEvalError(scriptBindingInstance(),
+                                                 String::fromUTF8(message)));
+        } else if (code == SCRIPT_RANGE_ERR) {
+            overrideScriptObject(scriptRangeError(scriptBindingInstance(),
+                                                  String::fromUTF8(message)));
+        } else if (code == SCRIPT_REFERENCE_ERR) {
+            overrideScriptObject(scriptReferenceError(
+                scriptBindingInstance(), String::fromUTF8(message)));
+        } else if (code == SCRIPT_TYPE_ERR) {
+            overrideScriptObject(scriptTypeError(scriptBindingInstance(),
+                                                 String::fromUTF8(message)));
+        } else if (code == SCRIPT_URI_ERR) {
+            overrideScriptObject(scriptURIError(scriptBindingInstance(),
+                                                String::fromUTF8(message)));
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     }
     m_message = String::fromUTF8(message);
 }

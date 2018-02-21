@@ -681,6 +681,23 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             offset->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                   this);
         }
+
+#define TO_FIXED(name, name2)                                           \
+    Nullable<Length> name = m_rareComputedStyleData.name();             \
+    if (name.hasValue()) {                                              \
+        m_rareComputedStyleData.ensure##name2()->changeToFixedIfNeeded( \
+            curFontSize, rootFontSize, font, windowSize.width(),        \
+            windowSize.height(), this);                                 \
+    }
+
+        TO_FIXED(x, X);
+        TO_FIXED(y, Y);
+        TO_FIXED(cx, CX);
+        TO_FIXED(cy, CY);
+        TO_FIXED(rx, RX);
+        TO_FIXED(ry, RY);
+
+#undef TO_FIXED
     }
 
     if (textShadow().size()) {

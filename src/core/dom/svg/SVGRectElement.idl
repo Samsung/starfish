@@ -1,10 +1,10 @@
 // https://www.w3.org/TR/SVG11/shapes.html#InterfaceSVGRectElement
 // TODO implement SVGTests, SVGLangSpace, SVGExternalResourcesRequired, SVGStylable, SVGTransformable 
 interface SVGRectElement : SVGElement {
-  [Unimplemented] readonly attribute SVGAnimatedLength x;
-  [Unimplemented] readonly attribute SVGAnimatedLength y;
-  [Unimplemented] readonly attribute SVGAnimatedLength width;
-  [Unimplemented] readonly attribute SVGAnimatedLength height;
-  [Unimplemented] readonly attribute SVGAnimatedLength rx;
-  [Unimplemented] readonly attribute SVGAnimatedLength ry;
+  readonly attribute SVGAnimatedLength x;
+  readonly attribute SVGAnimatedLength y;
+  readonly attribute SVGAnimatedLength width;
+  readonly attribute SVGAnimatedLength height;
+  readonly attribute SVGAnimatedLength rx;
+  readonly attribute SVGAnimatedLength ry;
 };

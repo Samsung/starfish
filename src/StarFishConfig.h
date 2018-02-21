@@ -232,8 +232,8 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #endif
 #ifdef STARFISH_ANDROID
 #include <android/log.h>
-#undef STARFISH_LOG_INFO
-#define STARFISH_LOG_INFO(...) \
+#undef STARFISH_LOG_ERROR
+#define STARFISH_LOG_ERROR(...) \
     __android_log_print(ANDROID_LOG_ERROR, STARFISH_NAME, __VA_ARGS__);
 #endif
 
@@ -246,8 +246,8 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #endif
 #ifdef STARFISH_ANDROID
 #include <android/log.h>
-#undef STARFISH_LOG_INFO
-#define STARFISH_LOG_INFO(...) \
+#undef STARFISH_LOG_WARN
+#define STARFISH_LOG_WARN(...) \
     __android_log_print(ANDROID_LOG_WARN, STARFISH_NAME, __VA_ARGS__);
 #endif
 

@@ -48,13 +48,12 @@ public:
         INVALID_NODE_TYPE_ERR = 24,
         DATA_CLONE_ERR = 25,
 
-        SIMPLE_EXCEPTION = 100,
-        ERROR = 101,
-        EVAL_ERR = 102,
-        RANGE_ERR = 103,
-        REFERENCE_ERR = 104,
-        TYPE_ERR = 105,
-        URI_ERR = 106,
+        SCRIPT_ERROR = 101,
+        SCRIPT_EVAL_ERR = 102,
+        SCRIPT_RANGE_ERR = 103,
+        SCRIPT_REFERENCE_ERR = 104,
+        SCRIPT_TYPE_ERR = 105,
+        SCRIPT_URI_ERR = 106,
     };
 
     DOMException(Document* document, Code code, const char* message = nullptr);

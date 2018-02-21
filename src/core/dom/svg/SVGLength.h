@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,34 +14,32 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishSVGPolylineElement__
-#define __StarFishSVGPolylineElement__
+#ifndef __StarFishSVGLength__
+#define __StarFishSVGLength__
 
-#include "core/dom/svg/SVGElement.h"
+#include "binding/DocumentHoldable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace StarFish {
 
-class SVGPolylineElement : public SVGElement {
+class SVGElement;
+
+class SVGLength : public ScriptWrappable {
 public:
-    SVGPolylineElement(Document* document)
-        : SVGElement(document)
-    {
-    }
+    SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isSVGPolylineElement() const override;
+    virtual bool isSVGLength() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance();
 
-    virtual QualifiedName name();
+    unsigned short unitType();
+    float value();
+    void setValue(float v);
 
-    virtual bool needsGeometryAttributes()
-    {
-        return false;
-    }
-
-    virtual void didAttributeChanged(QualifiedName name, String* old,
-                                     String* value, bool attributeCreated,
-                                     bool attributeRemoved) override;
+protected:
+    SVGElement* m_sourceElement;
+    QualifiedName m_targetAttribute;
 };
 }
 

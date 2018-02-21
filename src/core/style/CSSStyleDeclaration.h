@@ -75,6 +75,7 @@ public:
     String* FlexFlow();
     String* Flex();
     String* Outline();
+    String* D();
 #define DECLARE_ATTRIBUTE_GETTER(name, ...) String* name();
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(DECLARE_ATTRIBUTE_GETTER)
 #undef DECLARE_ATTRIBUTE_GETTER
@@ -112,6 +113,7 @@ public:
     void setFlexFlow(const char* value, size_t len, bool isImportant);
     void setFlex(const char* value, size_t len, bool isImportant);
     void setOutline(const char* value, size_t len, bool isImportant);
+    void setD(const char* value, size_t len, bool isImportant);
 
 #define DECLARE_ATTRIBUTE_SETTER(name, ...) \
     void set##name(const char* value, size_t len, bool isImportant);

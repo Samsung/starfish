@@ -57,6 +57,66 @@ bool scriptValueAsBoolean(ScriptValue v)
     return v->asBoolean();
 }
 
+ScriptObject scriptError(ScriptBindingInstance* instance, String* msg)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    auto ret =
+        ErrorObjectRef::create(state, ErrorObjectRef::None, toJSString(msg));
+    state->destroy();
+    return ret;
+}
+
+ScriptObject scriptEvalError(ScriptBindingInstance* instance, String* msg)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    auto ret = ErrorObjectRef::create(state, ErrorObjectRef::EvalError,
+                                      toJSString(msg));
+    state->destroy();
+    return ret;
+}
+
+ScriptObject scriptRangeError(ScriptBindingInstance* instance, String* msg)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    auto ret = ErrorObjectRef::create(state, ErrorObjectRef::RangeError,
+                                      toJSString(msg));
+    state->destroy();
+    return ret;
+}
+
+ScriptObject scriptReferenceError(ScriptBindingInstance* instance, String* msg)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    auto ret = ErrorObjectRef::create(state, ErrorObjectRef::ReferenceError,
+                                      toJSString(msg));
+    state->destroy();
+    return ret;
+}
+
+ScriptObject scriptTypeError(ScriptBindingInstance* instance, String* msg)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    auto ret = ErrorObjectRef::create(state, ErrorObjectRef::TypeError,
+                                      toJSString(msg));
+    state->destroy();
+    return ret;
+}
+
+ScriptObject scriptURIError(ScriptBindingInstance* instance, String* msg)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    auto ret = ErrorObjectRef::create(state, ErrorObjectRef::URIError,
+                                      toJSString(msg));
+    state->destroy();
+    return ret;
+}
+
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
     ExecutionStateRef* state, ObjectRef* obj, StringRef* propertyName,
     ScriptNativeFunctionPointer getter, ScriptNativeFunctionPointer setter,
@@ -147,15 +207,6 @@ String* toBrowserString(ExecutionStateRef* state, StringRef* v)
 {
     std::string s = v->toStdUTF8String();
     String* newStr = String::fromUTF8(s.data(), s.length());
-    // NOTE: input string contains whitecharacters as is, i.e., "\n" is stored
-    // as '\','n'
-    // The right way is, input string should already have '\n', and white spaces
-    // should be removed from here.
-    // For time being, we simply remove "\n" and other whitespaces strings.
-    // newStr = newStr->replaceAll(String::fromUTF8("\n"), String::spaceString);
-    // newStr = newStr->replaceAll(String::fromUTF8("\t"), String::spaceString);
-    // newStr = newStr->replaceAll(String::fromUTF8("\f"), String::spaceString);
-    // newStr = newStr->replaceAll(String::fromUTF8("\r"), String::spaceString);
     return newStr;
 }
 
@@ -174,14 +225,6 @@ ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
         ErrorObjectRef::create(state, ErrorObjectRef::Code::TypeError, msg);
     state->throwException(ValueRef::create(err));
     return Escargot::ValueRef::createUndefined();
-}
-
-void throwJSTypeErrorException(ExecutionStateRef* state, String* message)
-{
-    StringRef* msg = toJSString(message);
-    ObjectRef* err =
-        ErrorObjectRef::create(state, ErrorObjectRef::Code::TypeError, msg);
-    state->throwException(ValueRef::create(err));
 }
 
 ScriptWrappable::ScriptWrappable(void* extraPointerData)

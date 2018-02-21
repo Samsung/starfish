@@ -25,4 +25,30 @@ QualifiedName SVGRectElement::name()
 {
     return starFish()->staticStrings()->m_svgrectTagName;
 }
+
+void SVGRectElement::didAttributeChanged(QualifiedName name, String* old,
+                                         String* value, bool attributeCreated,
+                                         bool attributeRemoved)
+{
+    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
+                                    attributeRemoved);
+
+    StaticStrings* ss = starFish()->staticStrings();
+    if (ss->m_rx == name) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsPainting();
+    } else if (ss->m_ry == name) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsPainting();
+    }
+}
+
+void SVGRectElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    SVGElement::styleForPresentationAttribute(cssValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(r, R);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(rx, RX);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(ry, RY);
+}
 }

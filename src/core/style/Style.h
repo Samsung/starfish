@@ -1068,6 +1068,13 @@ class CSSStyleDeclaration;
     F(FillRule, fillRule, "fill-rule")                                       \
     F(Stroke, stroke, "stroke")                                              \
     F(StrokeWidth, strokeWidth, "stroke-width")                              \
+    F(X, x, "x")                                                             \
+    F(Y, y, "y")                                                             \
+    F(R, r, "r")                                                             \
+    F(RX, rx, "rx")                                                          \
+    F(RY, ry, "ry")                                                          \
+    F(CX, cx, "cx")                                                          \
+    F(CY, cy, "cy")                                                          \
     F(FlexDirection, flexDirection, "flex-direction")                        \
     F(FlexWrap, flexWrap, "flex-wrap")                                       \
     F(Order, order, "order")                                                 \
@@ -1101,6 +1108,7 @@ class CSSStyleDeclaration;
 // sticky properties
 #define FOR_EACH_STYLE_ATTRIBUTE(F)          \
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)        \
+    F(D, d, "d")                             \
     F(FontFamily, fontFamily, "font-family") \
     F(Src, src, "src")
 

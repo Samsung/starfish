@@ -648,14 +648,14 @@ void SourceBuffer::remove(double start, double end)
     double duration = m_parentMediaSource->duration();
     if (std::isnan(duration)) {
         throw new DOMException(
-            document(), DOMException::TYPE_ERR,
+            document(), DOMException::SCRIPT_TYPE_ERR,
             "If Duration is NaN, can not execute remove method");
     }
 
     // If start is negative or greater than duration, then throw a TypeError
     // exception and abort these steps.
     if (start < 0 || start > duration) {
-        throw new DOMException(document(), DOMException::TYPE_ERR,
+        throw new DOMException(document(), DOMException::SCRIPT_TYPE_ERR,
                                "when executing remove, start must be greater "
                                "than zero and smaller than duration");
     }
@@ -663,7 +663,7 @@ void SourceBuffer::remove(double start, double end)
     // If end is less than or equal to start or end equals NaN, then throw a
     // TypeError exception and abort these steps.
     if (end <= start || std::isnan(end)) {
-        throw new DOMException(document(), DOMException::TYPE_ERR,
+        throw new DOMException(document(), DOMException::SCRIPT_TYPE_ERR,
                                "when executing remove, end must be greater "
                                "than start and not NaN");
     }
@@ -1328,7 +1328,7 @@ void SourceBuffer::setAppendWindowStart(double timeStamp)
     // appendWindowEnd then throw a TypeError exception and abort these steps.
     if (timeStamp < 0 || timeStamp >= m_appendWindowEnd) {
         throw new DOMException(
-            document(), DOMException::TYPE_ERR,
+            document(), DOMException::SCRIPT_TYPE_ERR,
             "appendWindowStart should be between 0 and appendWindowEnd");
     }
 
@@ -1357,7 +1357,7 @@ void SourceBuffer::setAppendWindowEnd(double timeStamp)
     // If the new value equals NaN, then throw a TypeError and abort these
     // steps.
     if (std::isnan(timeStamp)) {
-        throw new DOMException(document(), DOMException::TYPE_ERR,
+        throw new DOMException(document(), DOMException::SCRIPT_TYPE_ERR,
                                "appendWindowEnd should not be NaN");
     }
 
@@ -1365,7 +1365,7 @@ void SourceBuffer::setAppendWindowEnd(double timeStamp)
     // TypeError exception and abort these steps.
     if (timeStamp <= m_appendWindowStart) {
         throw new DOMException(
-            document(), DOMException::TYPE_ERR,
+            document(), DOMException::SCRIPT_TYPE_ERR,
             "appendWindowEnd should be greater than appendWindowStart");
     }
 

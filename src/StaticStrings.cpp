@@ -280,6 +280,12 @@ StaticStrings::StaticStrings(StarFish* sf)
                         AtomicString::createAtomicString(sf, "x"));
     m_y = QualifiedName(AtomicString::emptyAtomicString(),
                         AtomicString::createAtomicString(sf, "y"));
+    m_r = QualifiedName(AtomicString::emptyAtomicString(),
+                        AtomicString::createAtomicString(sf, "r"));
+    m_rx = QualifiedName(AtomicString::emptyAtomicString(),
+                         AtomicString::createAtomicString(sf, "rx"));
+    m_ry = QualifiedName(AtomicString::emptyAtomicString(),
+                         AtomicString::createAtomicString(sf, "ry"));
     m_transform =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "transform"));
@@ -296,8 +302,6 @@ StaticStrings::StaticStrings(StarFish* sf)
                          AtomicString::createAtomicString(sf, "cx"));
     m_cy = QualifiedName(AtomicString::emptyAtomicString(),
                          AtomicString::createAtomicString(sf, "cy"));
-    m_r = QualifiedName(AtomicString::emptyAtomicString(),
-                        AtomicString::createAtomicString(sf, "r"));
 
     m_xmlBase = QualifiedName(AtomicString::createAtomicString(sf, "xml"),
                               AtomicString::emptyAtomicString(),

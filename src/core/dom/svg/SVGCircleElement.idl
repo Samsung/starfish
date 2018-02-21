@@ -1,3 +1,6 @@
 // https://www.w3.org/TR/SVG11/shapes.html#InterfaceSVGCircleElement
 interface SVGCircleElement : SVGElement {
+  readonly attribute SVGAnimatedLength r;
+  readonly attribute SVGAnimatedLength rx;
+  readonly attribute SVGAnimatedLength ry;
 };

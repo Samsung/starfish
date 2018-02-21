@@ -57,7 +57,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
     // If type is an empty string then throw a TypeError exception and abort
     // these steps.
     if (type->equals(String::emptyString)) {
-        throw new DOMException(document(), DOMException::TYPE_ERR,
+        throw new DOMException(document(), DOMException::SCRIPT_TYPE_ERR,
                                "Unsupport type");
     }
 
@@ -270,7 +270,7 @@ void MediaSource::setDuration(double d, bool checkCurrentDuration)
     // If the value being set is negative or NaN then throw a TypeError
     // exception and abort these steps.
     if (d < 0 || std::isnan(d)) {
-        throw new DOMException(document(), DOMException::TYPE_ERR,
+        throw new DOMException(document(), DOMException::SCRIPT_TYPE_ERR,
                                "duration must be postive and not NaN.");
     }
 

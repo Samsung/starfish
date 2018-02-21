@@ -22,6 +22,28 @@ namespace StarFish {
 CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
 {
     switch (length) {
+    case 1:
+        if (memcmp(data, "x", 1) == 0) {
+            return CSSStyleKind::X;
+        } else if (memcmp(data, "y", 1) == 0) {
+            return CSSStyleKind::Y;
+        } else if (memcmp(data, "d", 1) == 0) {
+            return CSSStyleKind::D;
+        } else if (memcmp(data, "r", 1) == 0) {
+            return CSSStyleKind::R;
+        }
+        break;
+    case 2:
+        if (memcmp(data, "cx", 2) == 0) {
+            return CSSStyleKind::CX;
+        } else if (memcmp(data, "cy", 2) == 0) {
+            return CSSStyleKind::CY;
+        } else if (memcmp(data, "rx", 2) == 0) {
+            return CSSStyleKind::RX;
+        } else if (memcmp(data, "ry", 2) == 0) {
+            return CSSStyleKind::RY;
+        }
+        break;
     case 3:
         // Top
         // Src
