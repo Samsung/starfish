@@ -178,10 +178,12 @@ public:
     StaticStrings(StarFish* sf);
     StarFish* m_starFish;
     AtomicString m_xhtmlNamespaceURI;
+    AtomicString m_xlinkNamespaceURI;
     AtomicString m_xmlNamespaceURI;
     AtomicString m_xmlnsNamespaceURI;
     AtomicString m_svgNamespaceURI;
     AtomicString m_mathmlNamespaceURI;
+    AtomicString m_xlink;
     AtomicString m_xml;
     AtomicString m_xmlns;
     AtomicString m_documentLocalName;
@@ -430,6 +432,17 @@ public:
     QualifiedName m_compositionstart;
     QualifiedName m_compositionupdate;
     QualifiedName m_compositionend;
+    // xlink attribute names
+    QualifiedName m_xlinkType;
+    QualifiedName m_xlinkHref;
+    QualifiedName m_xlinkRole;
+    QualifiedName m_xlinkArcrole;
+    QualifiedName m_xlinkTitle;
+    QualifiedName m_xlinkShow;
+    QualifiedName m_xlinkActuate;
+    QualifiedName m_xlinkLabel;
+    QualifiedName m_xlinkFrom;
+    QualifiedName m_xlinkTo;
 
 protected:
 };

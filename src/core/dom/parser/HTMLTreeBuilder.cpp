@@ -661,17 +661,29 @@ static void adjustForeignAttributes(AtomicHTMLToken* token)
 
 void adjustForeignAttributes(AtomicHTMLToken* token)
 {
-    auto starfish = token->starFish();
+    auto ss = token->starFish()->staticStrings();
     for (unsigned i = 0; i < token->attributes().size(); ++i) {
         Attribute& tokenAttribute = token->attributes()[i];
-        if (tokenAttribute.name().localName()->equals("xlink:href")) {
-            AtomicString prefix, nsURI, localName;
-            prefix = AtomicString::createAtomicString(starfish, "xlink");
-            nsURI = AtomicString::createAtomicString(
-                starfish, "http://www.w3.org/1999/xlink");
-            localName = AtomicString::createAtomicString(starfish, "href");
-            QualifiedName qname = QualifiedName(prefix, nsURI, localName);
-            tokenAttribute.setName(qname);
+        if (tokenAttribute.name().localName()->equals("xlink:type")) {
+            tokenAttribute.setName(ss->m_xlinkType);
+        } else if (tokenAttribute.name().localName()->equals("xlink:href")) {
+            tokenAttribute.setName(ss->m_xlinkHref);
+        } else if (tokenAttribute.name().localName()->equals("xlink:role")) {
+            tokenAttribute.setName(ss->m_xlinkRole);
+        } else if (tokenAttribute.name().localName()->equals("xlink:arcrole")) {
+            tokenAttribute.setName(ss->m_xlinkArcrole);
+        } else if (tokenAttribute.name().localName()->equals("xlink:title")) {
+            tokenAttribute.setName(ss->m_xlinkTitle);
+        } else if (tokenAttribute.name().localName()->equals("xlink:show")) {
+            tokenAttribute.setName(ss->m_xlinkShow);
+        } else if (tokenAttribute.name().localName()->equals("xlink:actuate")) {
+            tokenAttribute.setName(ss->m_xlinkActuate);
+        } else if (tokenAttribute.name().localName()->equals("xlink:label")) {
+            tokenAttribute.setName(ss->m_xlinkLabel);
+        } else if (tokenAttribute.name().localName()->equals("xlink:from")) {
+            tokenAttribute.setName(ss->m_xlinkFrom);
+        } else if (tokenAttribute.name().localName()->equals("xlink:to")) {
+            tokenAttribute.setName(ss->m_xlinkTo);
         }
     }
 }
