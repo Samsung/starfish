@@ -29,12 +29,18 @@ void FrameSVGCircleBox::paintSVG(PaintingContext& ctx)
 {
     FrameBox* cb = layoutParent()->asFrameBox();
 
-    double cx =
-        resolveLengthFromAttribute(node()->starFish()->staticStrings()->m_cx);
-    double cy =
-        resolveLengthFromAttribute(node()->starFish()->staticStrings()->m_cy);
-    double r =
-        resolveLengthFromAttribute(node()->starFish()->staticStrings()->m_r);
+    double cx = 0;
+    if (style()->cx().isSpecified()) {
+        cx = style()->cx().specifiedValue(cb->width(), this);
+    }
+    double cy = 0;
+    if (style()->cy().isSpecified()) {
+        cy = style()->cy().specifiedValue(cb->height(), this);
+    }
+    double r = 0;
+    if (style()->r().isSpecified()) {
+        r = style()->r().specifiedValue(cb->width(), this);
+    }
 
     ctx.m_canvas->arc(cx, cy, r, 0.0, 2 * M_PI);
 

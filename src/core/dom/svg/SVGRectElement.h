@@ -40,6 +40,20 @@ public:
     {
         return true;
     }
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
+
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues) override;
+
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(rx);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(ry);
 };
 }
 

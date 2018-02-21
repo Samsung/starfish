@@ -45,30 +45,39 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
 
     if (needsGeometryAttributes()) {
         if (ss->m_x == name) {
+            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsLayout();
         } else if (ss->m_y == name) {
+            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsLayout();
         } else if (ss->m_width == name) {
+            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsLayout();
         } else if (ss->m_height == name) {
+            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsLayout();
         }
     }
 
     if (needsFillAttributes()) {
         if (ss->m_fill == name) {
+            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsPainting();
         } else if (ss->m_fillOpacity == name) {
+            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsPainting();
         } else if (ss->m_fillRule == name) {
+            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsPainting();
         }
     }
 
     if (needsStrokeAttributes()) {
         if (ss->m_stroke == name) {
+            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsPainting();
         } else if (ss->m_strokeWidth == name) {
+            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsPainting();
         }
     }
@@ -111,30 +120,11 @@ void SVGElement::styleForPresentationAttribute(
     Element::styleForPresentationAttribute(cssValues);
     CSSStyleValuePair pair;
 
-    String* width = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
-    if (width->length()) {
-        pair.setKeyKind(CSSStyleValuePair::Width);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::Length);
-        auto s = width->toUTF8NonGCString();
-        if (CSSPropertyParser::parseLength(
-                s.data(), CSSPropertyParser::AllowPercent |
-                              CSSPropertyParser::AllowWithoutUnit,
-                &pair)) {
-            cssValues.push_back(pair);
-        }
-    }
-
-    String* height = getAttributeOrEmpty(starFish()->staticStrings()->m_height);
-    if (height->length()) {
-        pair.setKeyKind(CSSStyleValuePair::Height);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::Length);
-        auto s = height->toUTF8NonGCString();
-        if (CSSPropertyParser::parseLength(
-                s.data(), CSSPropertyParser::AllowPercent |
-                              CSSPropertyParser::AllowWithoutUnit,
-                &pair)) {
-            cssValues.push_back(pair);
-        }
+    if (needsGeometryAttributes()) {
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(x, X);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(y, Y);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(width, Width);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(height, Height);
     }
 
     if (needsFillAttributes()) {

@@ -25,4 +25,18 @@ QualifiedName SVGPolylineElement::name()
 {
     return starFish()->staticStrings()->m_svgpolylineTagName;
 }
+
+void SVGPolylineElement::didAttributeChanged(QualifiedName name, String* old,
+                                             String* value,
+                                             bool attributeCreated,
+                                             bool attributeRemoved)
+{
+    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
+                                    attributeRemoved);
+    StaticStrings* ss = starFish()->staticStrings();
+
+    if (ss->m_points == name) {
+        setNeedsPainting();
+    }
+}
 }

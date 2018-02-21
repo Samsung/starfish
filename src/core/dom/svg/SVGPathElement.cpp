@@ -18,11 +18,46 @@
 #include "StarFish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGPathElement.h"
+#include "core/style/CSSStyleDeclaration.h"
 
 namespace StarFish {
 
 QualifiedName SVGPathElement::name()
 {
     return starFish()->staticStrings()->m_svgpathTagName;
+}
+
+void SVGPathElement::didAttributeChanged(QualifiedName name, String* old,
+                                         String* value, bool attributeCreated,
+                                         bool attributeRemoved)
+{
+    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
+                                    attributeRemoved);
+    StaticStrings* ss = starFish()->staticStrings();
+
+    if (ss->m_d == name) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsPainting();
+    }
+}
+
+void SVGPathElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    SVGElement::styleForPresentationAttribute(cssValues);
+
+    String* d = getAttributeOrEmpty(starFish()->staticStrings()->m_d);
+    CSSStyleDeclaration decl;
+    auto buf = d->toUTF8NonGCString();
+    decl.setD(buf.data(), buf.length(), false);
+    if (decl.hasCSSValuePair(CSSStyleValuePair::KeyKind::D)) {
+        cssValues.push_back(decl.cssValues()[0]);
+    } else if (d->length()) {
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::D);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        pair.setStringValue(d);
+        cssValues.push_back(pair);
+    }
 }
 }

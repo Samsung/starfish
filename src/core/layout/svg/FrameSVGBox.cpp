@@ -82,6 +82,8 @@ void FrameSVGBox::layout(LayoutContext& ctx,
         }
     }
 
+    layoutSVG();
+
     Frame* f = firstChild();
     while (f) {
         f->asFrameSVGBox()->resolvePosition(ctx);
@@ -94,38 +96,15 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
 {
     if (node()->asSVGElement()->needsGeometryAttributes()) {
         FrameBox* cb = layoutParent()->asFrameBox();
+        auto styleX = style()->x();
         LayoutUnit xResult;
-        String* x = node()->asElement()->getAttributeOrEmpty(
-            node()->starFish()->staticStrings()->m_x);
-        if (x->length()) {
-            auto s = x->toUTF8NonGCString();
-            CSSStyleValuePair pair;
-            if (CSSPropertyParser::parseLength(
-                    s.data(), CSSPropertyParser::AllowPercent |
-                                  CSSPropertyParser::AllowWithoutUnit,
-                    &pair)) {
-                Length ll = pair.lengthValue();
-                xResult = ll.specifiedValue(cb->width(), this);
-            }
-        }
-
-        setX(xResult);
-
+        if (styleX.isSpecified())
+            xResult = styleX.specifiedValue(cb->width(), this);
+        auto styleY = style()->y();
         LayoutUnit yResult;
-        String* y = node()->asElement()->getAttributeOrEmpty(
-            node()->starFish()->staticStrings()->m_y);
-        if (y->length()) {
-            auto s = y->toUTF8NonGCString();
-            CSSStyleValuePair pair;
-            if (CSSPropertyParser::parseLength(
-                    s.data(), CSSPropertyParser::AllowPercent |
-                                  CSSPropertyParser::AllowWithoutUnit,
-                    &pair)) {
-                Length ll = pair.lengthValue();
-                yResult = ll.specifiedValue(cb->height(), this);
-            }
-        }
-
+        if (styleY.isSpecified())
+            yResult = styleY.specifiedValue(cb->height(), this);
+        setX(xResult);
         setY(yResult);
     }
 }
@@ -237,55 +216,6 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
             mode = Mode::WaitCoordsX;
 
             result.push_back(std::make_pair(x, y));
-        }
-    }
-
-    return result;
-}
-
-static Nullable<Length> valueToLength(CSSStyleValuePair::ValueKind kind,
-                                      CSSStyleValuePair::ValueData data)
-{
-    if (kind == CSSStyleValuePair::ValueKind::Auto) {
-        return Length();
-    } else if (kind == CSSStyleValuePair::ValueKind::Length) {
-        return data.m_length.toLength();
-    } else if (kind == CSSStyleValuePair::ValueKind::Percentage) {
-        return Length(Length::Percent, data.m_floatValue);
-    } else if (kind == CSSStyleValuePair::ValueKind::Number) {
-        return Length(Length::Fixed, data.m_floatValue);
-    } else if (kind == CSSStyleValuePair::ValueKind::CalcValueKind) {
-        CalcValueType type = data.m_calc->type();
-        if (type.isLength() || type.isPercentage()) {
-            return Length(data.m_calc);
-        } else {
-            return Nullable<Length>();
-        }
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        return Nullable<Length>();
-    }
-}
-
-double FrameSVGBox::resolveLengthFromAttribute(QualifiedName attr)
-{
-    double result = 0;
-    String* str = node()->asElement()->getAttributeOrEmpty(attr);
-    if (str->length()) {
-        auto s = str->toUTF8NonGCString();
-        CSSStyleValuePair pair;
-        if (CSSPropertyParser::parseLength(
-                s.data(), CSSPropertyParser::AllowPercent |
-                              CSSPropertyParser::AllowWithoutUnit,
-                &pair)) {
-            Nullable<Length> value =
-                valueToLength(pair.valueKind(), pair.value());
-            Length ll = Length(Length::Fixed, 0);
-            if (value.hasValue()) {
-                ll = value.getValue();
-            }
-            FrameBox* cb = layoutParent()->asFrameBox();
-            result = ll.specifiedValue(cb->width(), this);
         }
     }
 

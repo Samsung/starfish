@@ -49,10 +49,9 @@ ALWAYS_INLINE static void paintArgSegment(Canvas* canvas, double xc, double yc,
 }
 
 // http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
-static void paintPathArcCommand(Canvas* canvas, double x1, double y1, double rx,
-                                double ry, double xAxisRotation,
-                                bool isLargeArc, bool isPositiveSweep,
-                                double x2, double y2)
+void paintPathArcCommand(Canvas* canvas, double x1, double y1, double rx,
+                         double ry, double xAxisRotation, bool isLargeArc,
+                         bool isPositiveSweep, double x2, double y2)
 {
     if (x1 == x2 && y1 == y2) {
         return;
@@ -156,7 +155,7 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
 {
     FrameBox* cb = layoutParent()->asFrameBox();
     Element* e = node()->asElement();
-    String* d = e->getAttributeOrEmpty(e->starFish()->staticStrings()->m_d);
+    String* d = style()->d();
     if (d->length()) {
         auto utf8Str = d->toUTF8NonGCString();
         CSSTokenVector tokensInput;

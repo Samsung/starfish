@@ -3379,8 +3379,9 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
             hasSepChar = true;
         }
 
-        if (!inParenthesis && !inQuotes &&
-            (String::isSpaceOrNewline(data[i]) || hasSepChar)) {
+        if ((!inParenthesis && !inQuotes &&
+             (String::isSpaceOrNewline(data[i]) || hasSepChar)) ||
+            (data[i] == '(' && hasSepChar) || (data[i] == ')' && hasSepChar)) {
             str.pop_back();
             bool onlyWhiteSpace = true;
             for (size_t i = 0; i < str.length(); i++) {
@@ -5627,11 +5628,144 @@ void StyleResolver::apply(Element* element,
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
                 style->setStrokeWidth(parentStyle->strokeWidth());
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setStrokeWidth(length.getValue());
+                } else {
+                    style->setStrokeWidth(Length());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::X:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setX(Length(Length::Fixed, 0));
             } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                style->setStrokeWidth(cssValues[k].lengthValue());
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setX(parentStyle->x());
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setX(length.getValue());
+                } else {
+                    style->setX(Length());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::Y:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setY(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setY(parentStyle->y());
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setY(length.getValue());
+                } else {
+                    style->setY(Length());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::R:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setR(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setR(parentStyle->r());
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setR(length.getValue());
+                } else {
+                    style->setR(Length());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::D:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->setD(parentStyle->d());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::StringValueKind) {
+                style->setD(cssValues[k].stringValue());
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::CX:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setCX(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setCX(parentStyle->cx());
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setCX(length.getValue());
+                } else {
+                    style->setCX(Length());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::CY:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setCY(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setCY(parentStyle->cy());
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setCY(length.getValue());
+                } else {
+                    style->setCY(Length());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::RX:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setRX(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setRX(parentStyle->rx());
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setRX(length.getValue());
+                } else {
+                    style->setRX(Length());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::RY:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Initial) {
+                style->setRY(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setRY(parentStyle->ry());
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setRY(length.getValue());
+                } else {
+                    style->setRY(Length());
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::ObjectFit:
@@ -9779,6 +9913,101 @@ bool CSSStyleValuePair::updateValueStrokeWidth(const CSSTokenVector& tokens)
                        CSSPropertyParser::ParserOption::AllowWithoutUnit);
 }
 
+bool CSSStyleValuePair::updateValueX(const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueY(const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueR(const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueRX(const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueRY(const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueCX(const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueCY(const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
+{
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::D);
+        return;
+    }
+
+    if (VALUE_IS_INHERIT()) {
+        CSSStyleValuePair pair;
+        pair.setFlagImportant(isImportant);
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::D);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::D, pair);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, "()", 2, true);
+
+    // path, (, "data", )
+    if (tokens.size() != 4) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::D);
+        return;
+    }
+    if (tokens[0] != "path" || tokens[1] != "(" || tokens[3] != ")" ||
+        tokens[2].length() < 2) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::D);
+        return;
+    }
+    if ((tokens[2][0] == '"' && tokens[2].back() == '"') ||
+        (tokens[2][0] == '\'' && tokens[2].back() == '\'')) {
+    } else {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::D);
+        return;
+    }
+
+    // TODO validate path data
+    CSSStyleValuePair pair;
+    pair.setFlagImportant(isImportant);
+    pair.setKeyKind(CSSStyleValuePair::KeyKind::D);
+    pair.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+    pair.setStringValue(
+        String::fromUTF8(tokens[2].data() + 1, tokens[2].length() - 1));
+    addCSSValuePair(CSSStyleValuePair::KeyKind::D, pair);
+}
+
+String* CSSStyleDeclaration::D()
+{
+    for (unsigned i = 0; i < m_cssValues.size(); i++) {
+        if (m_cssValues[i].keyKind() == CSSStyleValuePair::KeyKind::D) {
+            StringBuilder sb;
+            sb.appendString("path('");
+            sb.appendString(m_cssValues[i].toString());
+            sb.appendString(")");
+            return sb.finalize();
+        }
+    }
+    return String::emptyString;
+}
+
 bool CSSStyleValuePair::updateValueOutlineColor(const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
@@ -9840,6 +10069,9 @@ void CSSStyleDeclaration::setOutline(const char* value, size_t length,
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor, v);
     } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
+        width.setFlagImportant(isImportant);
+        style.setFlagImportant(isImportant);
+        color.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth, width);
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle, style);
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor, color);

@@ -44,6 +44,13 @@ ScriptValue scriptStringToScriptValue(ScriptString s);
 bool scriptValueIsBoolean(ScriptValue v);
 bool scriptValueAsBoolean(ScriptValue v);
 
+ScriptObject scriptError(ScriptBindingInstance*, String* msg);
+ScriptObject scriptEvalError(ScriptBindingInstance*, String* msg);
+ScriptObject scriptRangeError(ScriptBindingInstance*, String* msg);
+ScriptObject scriptReferenceError(ScriptBindingInstance*, String* msg);
+ScriptObject scriptTypeError(ScriptBindingInstance*, String* msg);
+ScriptObject scriptURIError(ScriptBindingInstance*, String* msg);
+
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
     Escargot::ExecutionStateRef* state, Escargot::ObjectRef* obj,
     Escargot::StringRef* propertyName,
@@ -68,8 +75,6 @@ ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
                                        Escargot::ValueRef* thisValue,
                                        size_t argc, Escargot::ValueRef** argv,
                                        bool isNewExpression);
-void throwJSTypeErrorException(Escargot::ExecutionStateRef* state,
-                               String* message);
 
 ScriptString createScriptString(String* str);
 ScriptValue createScriptValue(ScriptObject object);
@@ -234,6 +239,10 @@ public:
     }
 
 protected:
+    void overrideScriptObject(ScriptObject obj)
+    {
+        m_object = obj;
+    }
     Escargot::ObjectRef* m_object;
 };
 

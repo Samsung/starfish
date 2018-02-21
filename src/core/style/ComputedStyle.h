@@ -91,11 +91,20 @@ class RareComputedStyleData : public gc {
         CachedPsuedoStyles,
         Background,
         ObjectSizing,
+        X,
+        Y,
+        CX,
+        CY,
+        RX,
+        RY,
+        R,
+        D,
     };
 
     union RareComputedStyleValue {
         int32_t m_int32Value;
         float m_floatValue;
+        String* m_stringValue;
         Length m_length;
         BorderData* m_borderData;
         LengthData* m_lengthData;
@@ -118,6 +127,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(float floatValue)
             : m_floatValue(floatValue)
+        {
+        }
+
+        RareComputedStyleValue(String* stringValue)
+            : m_stringValue(stringValue)
         {
         }
 
@@ -261,6 +275,7 @@ public:
     GETTER_VALUE(float, floatValue, flexGrow, FlexGrow);
     GETTER_VALUE(float, floatValue, flexShrink, FlexShrink);
     GETTER_VALUE(float, floatValue, opacity, Opacity);
+    GETTER_VALUE(String*, stringValue, d, D);
 
     LengthData* ensureOffset()
     {
@@ -291,6 +306,13 @@ public:
     GETTER_VALUE(Length, length, minHeight, MinHeight);
     GETTER_VALUE(Length, length, maxHeight, MaxHeight);
     GETTER_VALUE(Length, length, verticalAlignLength, VerticalAlignLength);
+    GETTER_VALUE(Length, length, x, X);
+    GETTER_VALUE(Length, length, y, Y);
+    GETTER_VALUE(Length, length, r, R);
+    GETTER_VALUE(Length, length, cx, CX);
+    GETTER_VALUE(Length, length, cy, CY);
+    GETTER_VALUE(Length, length, rx, RX);
+    GETTER_VALUE(Length, length, ry, RY);
 
 #undef GETTER_VALUE
 
@@ -1099,6 +1121,158 @@ public:
     bool isSpecifiedZIndex()
     {
         return m_zIndexSpecifiedByUser;
+    }
+
+    String* d()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return String::emptyString;
+        }
+
+        Nullable<String*> d = m_rareComputedStyleData.d();
+        if (d.hasValue()) {
+            return d.getValue();
+        }
+
+        return String::emptyString;
+    }
+
+    void setD(String* d)
+    {
+        *m_rareComputedStyleData.ensureD() = d;
+    }
+
+    Length x()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> x = m_rareComputedStyleData.x();
+        if (x.hasValue()) {
+            return x.getValue();
+        }
+
+        return Length();
+    }
+
+    void setX(Length x)
+    {
+        *m_rareComputedStyleData.ensureX() = x;
+    }
+
+    Length y()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> y = m_rareComputedStyleData.y();
+        if (y.hasValue()) {
+            return y.getValue();
+        }
+
+        return Length();
+    }
+
+    void setY(Length y)
+    {
+        *m_rareComputedStyleData.ensureY() = y;
+    }
+
+    Length r()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> r = m_rareComputedStyleData.r();
+        if (r.hasValue()) {
+            return r.getValue();
+        }
+
+        return Length();
+    }
+
+    void setR(Length r)
+    {
+        *m_rareComputedStyleData.ensureR() = r;
+    }
+
+    Length cx()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> x = m_rareComputedStyleData.cx();
+        if (x.hasValue()) {
+            return x.getValue();
+        }
+
+        return Length();
+    }
+
+    void setCX(Length x)
+    {
+        *m_rareComputedStyleData.ensureCX() = x;
+    }
+
+    Length cy()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> y = m_rareComputedStyleData.cy();
+        if (y.hasValue()) {
+            return y.getValue();
+        }
+
+        return Length();
+    }
+
+    void setCY(Length y)
+    {
+        *m_rareComputedStyleData.ensureCY() = y;
+    }
+
+    Length rx()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> x = m_rareComputedStyleData.rx();
+        if (x.hasValue()) {
+            return x.getValue();
+        }
+
+        return Length();
+    }
+
+    void setRX(Length x)
+    {
+        *m_rareComputedStyleData.ensureRX() = x;
+    }
+
+    Length ry()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> y = m_rareComputedStyleData.ry();
+        if (y.hasValue()) {
+            return y.getValue();
+        }
+
+        return Length();
+    }
+
+    void setRY(Length y)
+    {
+        *m_rareComputedStyleData.ensureRY() = y;
     }
 
     StyleBackgroundData* background()

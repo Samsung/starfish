@@ -17,9 +17,40 @@
 #ifndef __StarFishSVGElement__
 #define __StarFishSVGElement__
 
+#include "StarFish.h"
 #include "core/dom/Element.h"
-#include "core/style/Style.h"
 #include "core/util/AttributeName.h"
+#include "core/dom/svg/SVGAnimatedLength.h"
+#include "core/style/Style.h"
+#include "core/style/CSSParser.h"
+#include "core/style/CSSStyleDeclaration.h"
+
+// TODO implement animVal
+#define STARFISH_SVG_ANIMATED_LENGTH_GETTER(attrName)                       \
+    SVGAnimatedLength* attrName()                                           \
+    {                                                                       \
+        SVGLength* baseVal =                                                \
+            new SVGLength(this, starFish()->staticStrings()->m_##attrName); \
+        return new SVGAnimatedLength(document(), baseVal, baseVal);         \
+    }
+
+#define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2)         \
+    {                                                                   \
+        CSSStyleValuePair pair;                                         \
+        String* name =                                                  \
+            getAttributeOrEmpty(starFish()->staticStrings()->m_##name); \
+        if (name->length()) {                                           \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::name2);         \
+            pair.setValueKind(CSSStyleValuePair::ValueKind::Length);    \
+            auto s = name->toUTF8NonGCString();                         \
+            if (CSSPropertyParser::parseLength(                         \
+                    s.data(), CSSPropertyParser::AllowPercent |         \
+                                  CSSPropertyParser::AllowWithoutUnit,  \
+                    &pair)) {                                           \
+                cssValues.push_back(pair);                              \
+            }                                                           \
+        }                                                               \
+    }
 
 namespace StarFish {
 

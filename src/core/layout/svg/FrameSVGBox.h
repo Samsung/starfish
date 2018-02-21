@@ -43,6 +43,9 @@ public:
     void resolvePosition(LayoutContext& ctx);
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
+    virtual void layoutSVG()
+    {
+    }
     virtual void paintContent(PaintingContext& ctx);
     virtual void paintSVG(PaintingContext& ctx)
     {
@@ -50,7 +53,7 @@ public:
 
     static std::vector<std::pair<double, double>> parsePointsFromString(
         String* str);
-    double resolveLengthFromAttribute(QualifiedName attr);
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
