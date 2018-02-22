@@ -69,7 +69,9 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
     svgElement->clearNeedsFrameTreeBuild();
 
     if (shouldContinue) {
-        parentFrame->appendChild(currentFrame);
+        if (!svgElement->isSVGSVGElement()) {
+            parentFrame->appendChild(currentFrame);
+        }
         svgElement->setFrame(currentFrame);
 
         Element* e = svgElement->firstElementChild();

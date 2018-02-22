@@ -661,8 +661,12 @@ void FlexFormattingContext::computeCrossSize()
             }
             if (m_isMainAxisInInlineAxis) {
                 MainSizeFixer fixer(flexItem, m_isMainAxisInInlineAxis);
-                flexItem->layout(m_layoutContext,
-                                 Frame::LayoutWantToResolve::ResolveHeight);
+                auto resolveWhat = Frame::LayoutWantToResolve::ResolveHeight;
+                if (flexItem->isFrameReplaced()) {
+                    // height of FrameReplaced is computed at ResolveWidth
+                    resolveWhat = Frame::LayoutWantToResolve::ResolveAll;
+                }
+                flexItem->layout(m_layoutContext, resolveWhat);
             }
             if (shouldAlignAtFirstBaseline) {
                 auto it = m_layoutContext.firstLineAscender(
