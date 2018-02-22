@@ -52,6 +52,9 @@
 #include "core/style/StyleRule.h"
 #include "platform/window/PlatformWindow.h"
 #include "core/style/ShadowData.h"
+#ifdef STARFISH_ENABLE_CSS_VARIABLE
+#include "core/style/CSSVariableSyntaxTreeBuilder.h"
+#endif
 
 namespace StarFish {
 
@@ -373,19 +376,33 @@ String* CSSStyleValuePair::keyName() const
     }
 }
 
+static bool isValidVariables(const CSSTokenVector& tokens)
+{
+#ifdef STARFISH_ENABLE_CSS_VARIABLE
+    for (size_t k = 0; k < tokens.size(); k++) {
+        CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
+        CSSTokenValue token(tokens[k]);
+        variablesSyntaxBuilder.build(token);
+
+        if (!variablesSyntaxBuilder.isValid())
+            return false;
+    }
+
+    return true;
+#else
+    return false;
+#endif
+}
+
 bool CSSStyleValuePair::updateVarValue(const char* str,
                                        const CSSTokenVector& tokens)
 {
 #ifdef STARFISH_ENABLE_CSS_VARIABLE
-    for (size_t i = 0; i < tokens.size(); i++) {
-        const CSSTokenValue& token = tokens[i];
-        if (token.startsWith("var")) {
-            // TODO: Check Syntax.
-            m_value.m_stringValue = String::createASCIIString(str);
-            m_keyKind = CSSStyleValuePair::KeyKind::VarValue;
-            m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-            return true;
-        }
+    if (isValidVariables(tokens)) {
+        m_value.m_stringValue = String::createASCIIString(str);
+        m_keyKind = CSSStyleValuePair::KeyKind::VarValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
+        return true;
     }
 #endif
     return false;
