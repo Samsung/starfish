@@ -89,7 +89,7 @@ public:
     bool rendering();
     void pause();
     void resume();
-    void close();
+    virtual void close();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     void paintVirtualCursor(Canvas* canvas);
