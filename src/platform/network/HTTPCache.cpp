@@ -384,7 +384,7 @@ void HTTPCache::extractHTTPCacheEntryProperty(NetworkURLWorkerData* nwd,
 bool HTTPCache::flush()
 {
     STARFISH_ASSERT(isMainThread());
-
+    STARFISH_LOG_INFO("HTTPCache::flush()\n");
     bool check = true;
 
     expire();

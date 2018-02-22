@@ -245,6 +245,7 @@ NetworkSharedResourceManager* NetworkSharedResourceManager::getInstance()
 void NetworkSharedResourceManager::close()
 {
     STARFISH_ASSERT(instance);
+    STARFISH_LOG_INFO("NetworkSharedResourceManager::close()\n");
     delete instance;
     instance = nullptr;
 }

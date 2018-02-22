@@ -60,6 +60,10 @@ public:
         return m_alive;
     }
     void finishUnjoined();
+    void stop();
+
+private:
+    static void cleanupHandler(void* data);
 
 protected:
     volatile bool m_alive;
