@@ -219,6 +219,14 @@ public:
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
+    virtual void setNeedsFastAntialias()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void setNeedsGoodQualityAntialias()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
 
     virtual void* unwrap() = 0;
 };

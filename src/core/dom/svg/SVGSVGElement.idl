@@ -1,10 +1,11 @@
 // https://www.w3.org/TR/SVG/struct.html#InterfaceSVGSVGElement
 // TODO inherit SVGTests, SVGLangSpace, SVGExternalResourcesRequired, SVGStylable, SVGLocatable, SVGFitToViewBox, SVGZoomAndPan, DocumentEvent, ViewCSS, DocumentCSS
 interface SVGSVGElement : SVGElement {
-  [Unimplemented] readonly attribute SVGAnimatedLength x;
-  [Unimplemented] readonly attribute SVGAnimatedLength y;
-  [Unimplemented] readonly attribute SVGAnimatedLength width;
-  [Unimplemented] readonly attribute SVGAnimatedLength height;
+  readonly attribute SVGAnimatedLength x;
+  readonly attribute SVGAnimatedLength y;
+  readonly attribute SVGAnimatedLength width;
+  readonly attribute SVGAnimatedLength height;
+  [Reflect] attribute DOMString viewBox;
   [Unimplemented] attribute DOMString contentScriptType;
   [Unimplemented] attribute DOMString contentStyleType;
   [Unimplemented] readonly attribute SVGRect viewport;

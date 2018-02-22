@@ -67,6 +67,11 @@ public:
         return m_preserveAspectRatioValue;
     }
 
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
+
 protected:
     bool m_hasViewBox;
     Unit::Rect m_viewBox;

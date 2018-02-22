@@ -133,7 +133,7 @@ Frame* FrameDocument::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 {
     STARFISH_ASSERT(stage == HitTestStageEnd);
     STARFISH_ASSERT(firstChild() == lastChild());
-    if (!firstChild()) {
+    if (!firstChild() || !firstChild()->asFrameBox()->stackingContext()) {
         return nullptr;
     }
 
