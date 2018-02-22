@@ -220,10 +220,16 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
             } else if (width.isAuto()) {
                 if (hasAspectRatio && newWidth > newHeight) {
                     newWidth = newHeight * (w / h);
+                } else if (hasAspectRatio && width.isAuto() &&
+                           height.isAuto()) {
+                    newHeight = newWidth * (h / w);
                 }
             } else if (height.isAuto()) {
                 if (hasAspectRatio && newWidth < newHeight) {
                     newHeight = newWidth * (h / w);
+                } else if (hasAspectRatio && width.isAuto() &&
+                           height.isAuto()) {
+                    newWidth = newHeight * (w / h);
                 }
             }
         } else {
