@@ -26,7 +26,7 @@ namespace StarFish {
 void TTS::init()
 {
 #ifdef STARFISH_ENABLE_TEST
-    m_isTTSEnabled = false;
+    m_isTTSEnabled = true;
     if (m_isTTSEnabled) {
         String* text = String::createASCIIString("Hi, I am StarFish");
         speech(text);

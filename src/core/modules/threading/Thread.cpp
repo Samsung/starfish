@@ -99,10 +99,10 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
         &m_currentUnjoined->m_tid, NULL,
         [](void* data) -> void* {
             ThreadData* d = (ThreadData*)data;
-            void* ret;
+            pthread_cleanup_push(Thread::cleanupHandler, data);
             {
                 Locker<Mutex> l(*d->m_thread->m_mutex);
-                ret = d->m_fn(d->m_data);
+                void* ret = d->m_fn(d->m_data);
 #ifdef STARFISH_MESSAGELOOP_DEBUG
                 d->m_messageLoop->decreaseRunningThreadCount();
 #endif
@@ -118,7 +118,8 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
                             d);
                 } // else: joinIfNeeds() called while thread running
             }
-            pthread_exit(ret);
+            pthread_cleanup_pop(0);
+            pthread_exit(((void*)0));
         },
         m_currentUnjoined);
     if (retValue == 0) {
@@ -127,9 +128,31 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
+
 void Thread::joinIfNeeds()
 {
     STARFISH_ASSERT(isMainThread());
     finishUnjoined();
 }
+
+void Thread::stop()
+{
+    STARFISH_ASSERT(isMainThread());
+    if (!m_currentUnjoined) {
+        return;
+    }
+
+    Locker<Mutex> l(*m_mutex);
+    void* res;
+    pthread_cancel(m_currentUnjoined->m_tid);
+
+    return;
 }
+
+void Thread::cleanupHandler(void* data)
+{
+    STARFISH_LOG_INFO("Thread::cleanupHandler\n");
+    ThreadData* td = (ThreadData*)data;
+    td->m_thread->joinIfNeeds();
+}
+} // namespace StarFish

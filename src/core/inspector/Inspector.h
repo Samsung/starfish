@@ -24,19 +24,27 @@ namespace StarFish {
 
 class Inspector : public gc {
 public:
-    Inspector(StarFish* starFish, uint32_t portNumber);
+    Inspector(StarFish* starFish);
     ~Inspector();
 
     void sendInfoMessage(String* m);
     void sendErrorMessage(String* m);
     void sendWarnMessage(String* m);
     void sendDebugMessage(String* m);
+    void run(uint32_t port);
+    void stop();
+
+private:
+    static void* worker(void* data);
+    static void commandEvaluator(size_t, void* data);
 
 protected:
     StarFish* m_starFish;
-    zmq::context_t m_zmqContext;
-    zmq::socket_t m_zmqSocket;
+    zmq::context_t* m_zmqContext;
+    zmq::socket_t* m_zmqSocket;
     Thread* m_ioThread;
+    std::string m_addr;
+    bool m_isRunning;
 };
 }
 

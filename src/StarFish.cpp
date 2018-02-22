@@ -472,6 +472,7 @@ StarFish::~StarFish()
     delete m_platformFontSelector;
 
     joinAllActiveThread();
+
     NetworkSharedResourceManager::close();
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (m_httpCache) {
@@ -550,6 +551,7 @@ void StarFish::addActiveThread(Thread* thread)
 void StarFish::joinAllActiveThread()
 {
     STARFISH_ASSERT(isMainThread());
+    STARFISH_LOG_INFO("StarFish::joinAllActiveThread()\n");
     // NOTE: Iterate copied list.
     //       joinIfNeeds() may modify m_activeThreadList.
     GCVector<Thread*> copies = m_activeThreadList;
@@ -588,7 +590,8 @@ String* StarFish::evaluate(String* s)
 void StarFish::setupInspector(uint32_t portNumber)
 {
     STARFISH_ASSERT(m_inspector == nullptr);
-    m_inspector = new Inspector(this, portNumber);
+    m_inspector = new Inspector(this);
+    m_inspector->run(portNumber);
 }
 #endif
 
