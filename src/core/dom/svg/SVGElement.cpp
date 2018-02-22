@@ -81,6 +81,34 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
             setNeedsPainting();
         }
     }
+
+    if (needsPreserveAspectRatioValue()) {
+        if (name == starFish()->staticStrings()->m_preserveAspectRatio) {
+#define SET_PARV(name)                                      \
+    else if (value->equals(#name))                          \
+    {                                                       \
+        m_preserveAspectRatioValue = NativeImageData::name; \
+    }
+
+            if (value->equals("none")) {
+                m_preserveAspectRatioValue = NativeImageData::None;
+            }
+            SET_PARV(xMinYMin)
+            SET_PARV(xMidYMin)
+            SET_PARV(xMaxYMin)
+            SET_PARV(xMinYMid)
+            SET_PARV(xMidYMid)
+            SET_PARV(xMaxYMid)
+            SET_PARV(xMinYMax)
+            SET_PARV(xMidYMax)
+            SET_PARV(xMaxYMax)
+            else
+            {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
+#undef SET_PARV
+        }
+    }
 }
 
 String* SVGElement::xmlbase()

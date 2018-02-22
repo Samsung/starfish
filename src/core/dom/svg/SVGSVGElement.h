@@ -31,7 +31,6 @@ public:
         : SVGElement(document)
         , m_hasViewBox(false)
         , m_viewBox(0, 0, 0, 0)
-        , m_preserveAspectRatioValue(NativeImageData::None)
     {
     }
 
@@ -51,6 +50,11 @@ public:
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 
+    virtual bool needsPreserveAspectRatioValue()
+    {
+        return true;
+    }
+
     bool hasViewBox() const
     {
         return m_hasViewBox;
@@ -62,11 +66,6 @@ public:
         return m_viewBox;
     }
 
-    NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
-    {
-        return m_preserveAspectRatioValue;
-    }
-
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
@@ -75,7 +74,6 @@ public:
 protected:
     bool m_hasViewBox;
     Unit::Rect m_viewBox;
-    NativeImageData::PreserveAspectRatioValue m_preserveAspectRatioValue;
 };
 }
 

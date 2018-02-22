@@ -24,6 +24,7 @@
 #include "core/style/Style.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 // TODO implement animVal
 #define STARFISH_SVG_ANIMATED_LENGTH_GETTER(attrName)                       \
@@ -31,7 +32,7 @@
     {                                                                       \
         SVGLength* baseVal =                                                \
             new SVGLength(this, starFish()->staticStrings()->m_##attrName); \
-        return new SVGAnimatedLength(document(), baseVal, baseVal);         \
+        return new SVGAnimatedLength(document(), baseVal, nullptr);         \
     }
 
 #define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2)         \
@@ -60,6 +61,8 @@ class SVGElement : public Element {
 public:
     SVGElement(Document* document)
         : Element(document)
+        , m_preserveAspectRatioValue(
+              NativeImageData::PreserveAspectRatioValue::None)
     {
     }
 
@@ -108,7 +111,20 @@ public:
         return true;
     }
 
+    virtual bool needsPreserveAspectRatioValue()
+    {
+        return false;
+    }
+
     int tabIndex() const override;
+
+    NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
+    {
+        return m_preserveAspectRatioValue;
+    }
+
+protected:
+    NativeImageData::PreserveAspectRatioValue m_preserveAspectRatioValue;
 };
 
 class SVGNamedElement : public SVGElement {

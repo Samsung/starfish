@@ -25,6 +25,7 @@
 #include "core/layout/svg/FrameSVGPolygonBox.h"
 #include "core/layout/svg/FrameSVGPolylineBox.h"
 #include "core/layout/svg/FrameSVGCircleBox.h"
+#include "core/layout/svg/FrameSVGImageBox.h"
 
 namespace StarFish {
 
@@ -64,6 +65,9 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
     } else if (svgElement->isSVGCircleElement()) {
         shouldContinue = true;
         currentFrame = new FrameSVGCircleBox(svgElement);
+    } else if (svgElement->isSVGImageElement()) {
+        shouldContinue = true;
+        currentFrame = new FrameSVGImageBox(svgElement);
     }
 
     svgElement->clearNeedsFrameTreeBuild();

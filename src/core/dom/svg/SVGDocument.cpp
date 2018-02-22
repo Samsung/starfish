@@ -23,6 +23,7 @@
 #include "core/dom/svg/SVGPolygonElement.h"
 #include "core/dom/svg/SVGPolylineElement.h"
 #include "core/dom/svg/SVGCircleElement.h"
+#include "core/dom/svg/SVGImageElement.h"
 #include "core/dom/svg/SVGStyleElement.h"
 #include "StarFish.h"
 
@@ -46,6 +47,8 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGPolygonElement(document);
     } else if (str->m_svgpolylineTagName == localName) {
         return new SVGPolylineElement(document);
+    } else if (str->m_svgimageTagName == localName) {
+        return new SVGImageElement(document);
     } else if (str->m_svgstyleTagName == localName) {
         return new SVGStyleElement(document);
     } else {
