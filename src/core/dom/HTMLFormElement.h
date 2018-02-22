@@ -75,7 +75,7 @@ public:
     virtual String* value();
     virtual void setValue(String* value);
 
-    virtual bool disabled();
+    virtual bool disabled() const;
     virtual void setDisabled(bool disabled);
 
     virtual HTMLFormElement* form();
@@ -87,6 +87,13 @@ public:
     {
         return true;
     }
+
+    virtual void reset()
+    {
+    }
+
+    int32_t maxLength();
+    void setMaxLength(int32_t maxlength);
 
     bool isAutofocusable();
 

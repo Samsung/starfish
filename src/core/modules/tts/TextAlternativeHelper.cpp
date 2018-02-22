@@ -24,6 +24,7 @@
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLSelectElement.h"
+#include "core/dom/HTMLTextEditable.h"
 #include "core/dom/Node.h"
 #include "core/dom/Text.h"
 #include "core/modules/tts/TextAlternativeHelper.h"
@@ -288,6 +289,9 @@ bool TextAlternativeHelper::appendFromEmbeddedControlIfNeeds(Node* node)
             value = node->asElement()->getAttributeOrEmpty(
                 starFish()->staticStrings()->m_value);
         }
+    } else if (node->isHTMLTextEditable()) {
+        // TODO input | textarea -> HTMLTextEditable
+        value = node->asHTMLTextEditable()->textValue();
     } else if (node->isHTMLSelectElement()) {
         HTMLOptionElement* oe = node->asElement()
                                     ->asHTMLSelectElement()
@@ -316,6 +320,11 @@ bool TextAlternativeHelper::isEmbeddedControl(Node* node)
         } else {
             return node->asHTMLInputElement()->isEditableType();
         }
+    }
+
+    if (node->isHTMLTextEditable()) {
+        // TODO input | textarea -> HTMLTextEditable
+        return true;
     }
 
     // If the embedded control is a menu, use the text alternative of the

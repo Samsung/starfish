@@ -89,9 +89,6 @@ public:
     String* min();
     void setMin(String* min);
 
-    int32_t maxLength();
-    void setMaxLength(int32_t maxlength);
-
     String* step();
     void setStep(String* step);
 

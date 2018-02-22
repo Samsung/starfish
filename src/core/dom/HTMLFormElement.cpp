@@ -20,6 +20,7 @@
 #include "core/dom/HTMLFormElement.h"
 
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLButtonElement.h"
@@ -182,7 +183,7 @@ void HTMLFormControl::setMultiple(bool multiple)
     }
 }
 
-bool HTMLFormControl::disabled()
+bool HTMLFormControl::disabled() const
 {
     Nullable<String*> val =
         getAttribute(starFish()->staticStrings()->m_disabled);
@@ -363,6 +364,37 @@ HTMLFormElement* HTMLFormControl::formOwner()
 bool HTMLFormControl::supportsFocus()
 {
     return false;
+}
+
+int32_t HTMLFormControl::maxLength()
+{
+    int32_t result = 0;
+    Nullable<String*> maxLengthStr =
+        getAttribute(starFish()->staticStrings()->m_maxlength);
+
+    if (!maxLengthStr.hasValue()) {
+        result = -1;
+    } else {
+        result = String::parseInt(maxLengthStr.getValue());
+        if (result < 0) {
+            result = -1;
+        }
+    }
+    return result;
+}
+
+void HTMLFormControl::setMaxLength(int32_t maxlength)
+{
+    if (maxlength < 0) {
+        COMPOSE_MESSAGE(reason, NOT_POSITIVE,
+                        String::fromInt(maxlength)->toUTF8NonGCString().data());
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "maxLength",
+                        "HTMLFormControl", reason);
+        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+    } else {
+        setAttribute(starFish()->staticStrings()->m_maxlength,
+                     String::fromInt(maxlength));
+    }
 }
 
 void* HTMLFormElement::operator new(size_t size)
