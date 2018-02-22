@@ -32,6 +32,7 @@ class Element;
 class Frame;
 class HTMLCollection;
 class HTMLFormControl;
+class HTMLTextEditable;
 class NodeList;
 class RareNodeMembers;
 class RareElementMembers;
@@ -563,6 +564,17 @@ public:
     {
         STARFISH_ASSERT(isHTMLFormControl());
         return reinterpret_cast<HTMLFormControl*>(this);
+    }
+
+    virtual bool isHTMLTextEditable() const
+    {
+        return false;
+    }
+
+    HTMLTextEditable* asHTMLTextEditable() const
+    {
+        STARFISH_ASSERT(isHTMLTextEditable());
+        return (HTMLTextEditable*)this;
     }
 
 private:

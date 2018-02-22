@@ -23,6 +23,7 @@
 #include "core/dom/ErrorEvent.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
 namespace StarFish {
 
@@ -205,6 +206,16 @@ bool EventTarget::dispatchEventByUA(EventTarget* origin, Event* event,
     event->setIsTrusted(true);
     return onlyTarget ? dispatchEventForTarget(origin, event)
                       : dispatchEvent(origin, event);
+}
+
+void EventTarget::dispatchEventIdleTimeByUA(Event* event)
+{
+    starFish()->messageLoop()->addIdler(
+        document()->browsingContext(),
+        [](size_t handle, void* data0, void* data1) {
+            ((Node*)data0)->dispatchEventByUA((Event*)data1);
+        },
+        this, event);
 }
 
 // This method should only be called by JS binding

@@ -17,32 +17,43 @@
 #ifndef __StarFishHTMLTextAreaElement__
 #define __StarFishHTMLTextAreaElement__
 
-#include "core/dom/HTMLElement.h"
-#include "core/dom/HTMLFormElement.h"
+#include "core/dom/HTMLTextEditable.h"
 
 namespace StarFish {
 
-class HTMLTextAreaElement : public HTMLFormControl {
+class HTMLTextAreaElement : public HTMLTextEditable {
 public:
-    HTMLTextAreaElement(Document* document)
-        : HTMLFormControl(document)
-    {
-    }
+    HTMLTextAreaElement(Document* document);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isHTMLTextAreaElement() const override;
+    void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
+    void didNodeInserted(Node* parent, Node* newChild) override;
+    void didAttributeChanged(QualifiedName name, String* old, String* val,
+                             bool attributeCreated,
+                             bool attributeRemoved) override;
+    void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues) override;
+    void reset() override;
+    bool supportsFocus() const override;
+    bool isHTMLTextAreaElement() const override;
+    QualifiedName name() override;
+    Node* clone() override;
+    String* type() override;
+    String* value() override;
 
-    /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    String* apiValue();
+    void setApiValue(String* value);
 
-    HTMLFormElement* form()
-    {
-        return formOwner();
-    }
+    String* defaultValue();
+    void setDefaultValue(String* value);
+
+    uint32_t cols();
+    void setCols(uint32_t value);
+
+    uint32_t rows();
+    void setRows(uint32_t value);
 };
 }
 

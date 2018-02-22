@@ -144,6 +144,7 @@ public:
     bool dispatchEventByUA(Event* event);
     bool dispatchEventByUA(EventTarget* origin, Event* event,
                            bool onlyTarget = false);
+    void dispatchEventIdleTimeByUA(Event* event);
 
     virtual bool handleDefaultEvent(Event* event)
     {

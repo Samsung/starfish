@@ -153,6 +153,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                       AtomicString::createAtomicString(sf, "designMode"));
     m_lang = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "lang"));
+    m_cols = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "cols"));
     m_colspan = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "colspan"));
     m_cellspacing =
@@ -163,6 +165,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                       AtomicString::createAtomicString(sf, "cellpadding"));
     m_char = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "char"));
+    m_rows = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "rows"));
     m_rowspan = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "rowspan"));
     m_bgColor = QualifiedName(AtomicString::emptyAtomicString(),
@@ -302,11 +306,15 @@ StaticStrings::StaticStrings(StarFish* sf)
                          AtomicString::createAtomicString(sf, "cx"));
     m_cy = QualifiedName(AtomicString::emptyAtomicString(),
                          AtomicString::createAtomicString(sf, "cy"));
+    m_dirname = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "dirname"));
+    m_readonly =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "readonly"));
 
     m_xmlBase = QualifiedName(AtomicString::createAtomicString(sf, "xml"),
                               AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "base"));
-
     m_ariaHidden =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "aria-hidden"));

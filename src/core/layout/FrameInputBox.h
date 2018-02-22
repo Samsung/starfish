@@ -45,8 +45,11 @@ public:
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void paintContent(PaintingContext& ctx) override;
 
+    void layoutForTextEditable(LayoutContext& ctx,
+                               Frame::LayoutWantToResolve resolveWhat);
+
 protected:
-    void paintCarret(Canvas* canvas);
+    void paintCaret(Canvas* canvas);
     virtual void paintInlineContent(Canvas* canvas) override;
     static ComputedStyle* createInputElementStyleFrom(Node* parent);
 };

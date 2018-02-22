@@ -68,6 +68,8 @@ void* HTMLInputElement::operator new(size_t size)
         GC_word desc[GC_BITMAP_SIZE(HTMLInputElement)] = { 0 };
         GC_set_bit(desc,
                    GC_WORD_OFFSET(HTMLInputElement, m_currentEditingText));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLInputElement,
+                                        m_previousCheckedRadioButton));
         HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLInputElement));
         typeInited = true;
@@ -796,37 +798,6 @@ String* HTMLInputElement::min()
 void HTMLInputElement::setMin(String* min)
 {
     setAttribute(starFish()->staticStrings()->m_min, min);
-}
-
-int32_t HTMLInputElement::maxLength()
-{
-    int32_t result = 0;
-    String* maxLengthStr =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_maxlength);
-
-    if (maxLengthStr->equals(String::emptyString)) {
-        result = -1;
-    } else {
-        result = String::parseInt(maxLengthStr);
-        if (result < 0) {
-            result = -1;
-        }
-    }
-    return result;
-}
-
-void HTMLInputElement::setMaxLength(int32_t maxlength)
-{
-    if (maxlength < 0) {
-        COMPOSE_MESSAGE(reason, NOT_POSITIVE,
-                        String::fromInt(maxlength)->toUTF8NonGCString().data());
-        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "maxLength",
-                        "HTMLInputElement", reason);
-        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
-    } else {
-        setAttribute(starFish()->staticStrings()->m_maxlength,
-                     String::fromInt(maxlength));
-    }
 }
 
 double HTMLInputElement::minimum()

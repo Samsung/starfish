@@ -620,7 +620,8 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
         return FrameTreeBuilder::buildSVGFrameTree(current->asSVGSVGElement());
     } else if (current->isHTMLButtonElement()) {
         return new FrameButtonBox(current, nullptr);
-    } else if (current->isHTMLInputElement()) {
+    } else if (current->isHTMLInputElement() ||
+               current->isHTMLTextAreaElement()) {
         return FrameInputBox::buildFrameTree(current, ctx, force);
     } else if (current->isHTMLSelectElement()) {
         return new FrameSelectBox(current, nullptr);

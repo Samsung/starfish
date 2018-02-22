@@ -262,10 +262,12 @@ public:
     QualifiedName m_contentEditable;
     QualifiedName m_designMode;
     QualifiedName m_lang;
+    QualifiedName m_cols;
     QualifiedName m_colspan;
     QualifiedName m_cellspacing;
     QualifiedName m_cellpadding;
     QualifiedName m_char;
+    QualifiedName m_rows;
     QualifiedName m_rowspan;
     QualifiedName m_bgColor;
     QualifiedName m_span;
@@ -328,6 +330,8 @@ public:
     QualifiedName m_points;
     QualifiedName m_cx;
     QualifiedName m_cy;
+    QualifiedName m_dirname;
+    QualifiedName m_readonly;
     // xml:base
     QualifiedName m_xmlBase;
     // WAI-ARIA

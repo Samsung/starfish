@@ -4,23 +4,23 @@
 interface HTMLTextAreaElement : HTMLElement {
     [Unimplemented, CEReactions] attribute DOMString autocomplete;
     [CEReactions, Reflect] attribute boolean autofocus;
-    [Unimplemented, CEReactions] attribute unsigned long cols;
-    [Unimplemented, CEReactions] attribute DOMString dirName;
-    [Unimplemented, CEReactions] attribute boolean disabled;
+    [CEReactions] attribute unsigned long cols;
+    [CEReactions, Reflect] attribute DOMString dirName;
+    [CEReactions, Reflect] attribute boolean disabled;
     readonly attribute HTMLFormElement? form;
     [Unimplemented, CEReactions] attribute DOMString inputMode;
-    [Unimplemented, CEReactions] attribute long maxLength;
-    [Unimplemented, CEReactions] attribute long minLength;
-    [Unimplemented, CEReactions] attribute DOMString name;
-    [Unimplemented, CEReactions] attribute DOMString placeholder;
-    [Unimplemented, CEReactions] attribute boolean readOnly;
-    [Unimplemented, CEReactions] attribute boolean required;
-    [Unimplemented, CEReactions] attribute unsigned long rows;
+    [CEReactions, RaisesExceptio=Setter] attribute long maxLength;
+    [Unimplemented, CEReactions, RaisesExceptio=Setter] attribute long minLength;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString placeholder;
+    [CEReactions, Reflect] attribute boolean readOnly;
+    [CEReactions, Reflect] attribute boolean required;
+    [CEReactions] attribute unsigned long rows;
     [Unimplemented, CEReactions] attribute DOMString wrap;
 
-    [Unimplemented] readonly attribute DOMString type;
-    [Unimplemented, CEReactions] attribute DOMString defaultValue;
-    [TreatNullAs=EmptyString, CEReactions] attribute DOMString value;
+    readonly attribute DOMString type;
+    [CEReactions] attribute DOMString defaultValue;
+    [TreatNullAs=EmptyString, CEReactions, Rename=apiValue] attribute DOMString value;
     [Unimplemented] readonly attribute unsigned long textLength;
 
     [Unimplemented] readonly attribute boolean willValidate;
