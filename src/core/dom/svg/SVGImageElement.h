@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,23 +14,24 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishSVGSVGElement__
-#define __StarFishSVGSVGElement__
+#ifndef __StarFishSVGImageElement__
+#define __StarFishSVGImageElement__
 
 #include "core/dom/svg/SVGElement.h"
-#include "core/modules/canvas/image/NativeImageData.h"
-
-#define STARFISH_DEFAULT_SVG_WIDTH 300
-#define STARFISH_DEFAULT_SVG_HEIGHT 150
 
 namespace StarFish {
 
-class SVGSVGElement : public SVGElement {
+class SVGSVGElement;
+class ImageResource;
+
+class SVGImageElement : public SVGElement {
+    friend class SVGImageDownloadClient;
+
 public:
-    SVGSVGElement(Document* document)
+    SVGImageElement(Document* document)
         : SVGElement(document)
-        , m_hasViewBox(false)
-        , m_viewBox(0, 0, 0, 0)
+        , m_imageResource(nullptr)
+        , m_imageData(nullptr)
     {
     }
 
@@ -39,9 +40,19 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isSVGSVGElement() const override;
+    virtual bool isSVGImageElement() const override;
 
     virtual QualifiedName name();
+
+    virtual bool needsGeometryAttributes()
+    {
+        return true;
+    }
+
+    virtual bool needsPreserveAspectRatioValue()
+    {
+        return true;
+    }
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
@@ -50,30 +61,21 @@ public:
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 
-    virtual bool needsPreserveAspectRatioValue()
-    {
-        return true;
-    }
-
-    bool hasViewBox() const
-    {
-        return m_hasViewBox;
-    }
-
-    Unit::Rect viewBox() const
-    {
-        STARFISH_ASSERT(m_hasViewBox);
-        return m_viewBox;
-    }
-
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
 
+    NativeImageData* imageData()
+    {
+        return m_imageData;
+    }
+
 protected:
-    bool m_hasViewBox;
-    Unit::Rect m_viewBox;
+    void unloadImage();
+    void loadImage(String* src);
+    ImageResource* m_imageResource;
+    NativeImageData* m_imageData;
 };
 }
 
