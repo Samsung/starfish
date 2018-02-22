@@ -610,8 +610,8 @@ int main(int argc, char* argv[])
             x = std::atoi(argv[i] + strlen("--posX="));
         } else if (strstr(argv[i], "--posY=") == argv[i]) {
             y = std::atoi(argv[i] + strlen("--posY="));
-        } else if (strstr(argv[i], "--device-scale-factor=") == argv[i]) {
-            scaleFactor = std::atof(argv[i] + strlen("--device-scale-factor="));
+        } else if (strstr(argv[i], "--device-pixel-ratio=") == argv[i]) {
+            scaleFactor = std::atof(argv[i] + strlen("--device-pixel-ratio="));
         } else if (strstr(argv[i], "--useragent=") == argv[i]) {
             customUserAgentString = argv[i] + strlen("--useragent=");
         } else if (strstr(argv[i], "--polyfill=") == argv[i]) {

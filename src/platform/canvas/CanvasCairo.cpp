@@ -1101,6 +1101,15 @@ private:
         }
     }
 
+    virtual void setNeedsFastAntialias()
+    {
+        cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_FAST);
+    }
+    virtual void setNeedsGoodQualityAntialias()
+    {
+        cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_GOOD);
+    }
+
 protected:
     StarFish* m_starfish;
     std::vector<CanvasStateCairo> m_state;

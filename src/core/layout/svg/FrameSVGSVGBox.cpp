@@ -51,7 +51,7 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
 {
     IntrinsicSize result;
     result.m_isContentExists = true;
-    result.m_hasAspectRatio = true;
+    result.m_hasAspectRatio = false;
 
     LayoutUnit width = STARFISH_DEFAULT_SVG_WIDTH;
     LayoutUnit height = STARFISH_DEFAULT_SVG_HEIGHT;
@@ -59,18 +59,22 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
     if (style()->width().isFixed() && style()->height().isFixed()) {
         width = style()->width().fixed();
         height = style()->height().fixed();
+        result.m_hasAspectRatio = true;
     } else if (style()->width().isFixed()) {
         width = style()->width().fixed();
         height = style()->width().fixed();
+        result.m_hasAspectRatio = true;
     } else if (style()->height().isFixed()) {
         width = style()->height().fixed();
         height = style()->height().fixed();
+        result.m_hasAspectRatio = true;
     } else {
         if (node()->asSVGSVGElement()->hasViewBox()) {
             width = STARFISH_DEFAULT_SVG_WIDTH;
             height = STARFISH_DEFAULT_SVG_WIDTH *
                      node()->asSVGSVGElement()->viewBox().height() /
                      node()->asSVGSVGElement()->viewBox().width();
+            result.m_hasAspectRatio = true;
         }
     }
 
@@ -121,6 +125,7 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
 
 void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 {
+    canvas->setNeedsGoodQualityAntialias();
 #if defined(PORT_CANVAS_BACKEND_EFL)
     Canvas* outerCanvas = canvas;
     outerCanvas->save();
@@ -203,5 +208,6 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 
     canvas->restore();
 #endif
+    canvas->setNeedsFastAntialias();
 }
 }

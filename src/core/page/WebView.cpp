@@ -450,7 +450,7 @@ void WebView::layoutIfNeeds()
     }
     m_didLayoutCallbacks.clear();
 
-    if (didLayout) {
+    if (didLayout || !m_rootStackingContext) {
         m_topLevelBrowsingContext->document()
             ->frame()
             ->establishesStackingContextIfNeeds();
@@ -643,7 +643,8 @@ bool WebView::rendering(bool force)
         // painting
         Canvas* canvas = nullptr;
 
-        if (mainBrowsingContext()->document()->frame()->firstChild()) {
+        if (m_rootStackingContext &&
+            mainBrowsingContext()->document()->frame()->firstChild()) {
             m_needsComposite = m_rootStackingContext->needsGraphicsBuffer();
         } else {
             m_needsComposite = false;
@@ -659,7 +660,7 @@ bool WebView::rendering(bool force)
                                   -mainFrame->scrollTop());
                 mainBrowsingContext()->paintWindowBackground(canvas);
 
-                if (mainFrame->firstChild()) {
+                if (mainFrame->firstChild() && m_rootStackingContext) {
                     canvas->save();
                     canvas->translate(
                         mainFrame->firstChild()->asFrameBox()->x(),

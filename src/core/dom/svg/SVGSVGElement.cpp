@@ -65,6 +65,11 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name, String* old,
         }
 
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsLayout();
+    } else if (name == starFish()->staticStrings()->m_width) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+    } else if (name == starFish()->staticStrings()->m_height) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     } else if (name == starFish()->staticStrings()->m_preserveAspectRatio) {
 #define SET_PARV(name)                                      \
     else if (value->equals(#name))                          \
