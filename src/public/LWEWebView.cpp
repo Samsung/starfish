@@ -1,0 +1,197 @@
+/*
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+#include "StarFishConfig.h"
+#include "StarFish.h"
+
+#include "LWEWebView.h"
+
+#define TO_STARFISH(ptr) ((StarFish::StarFish*)ptr)
+
+namespace LWE {
+
+Settings::Settings(std::string default_ua, std::string ua)
+    : m_defaultUserAgent(default_ua)
+    , m_UserAgent(ua)
+{
+}
+
+std::string Settings::GetDefaultUserAgent()
+{
+    return m_defaultUserAgent;
+}
+
+std::string Settings::GetUserAgentString()
+{
+    return m_UserAgent;
+}
+
+void Settings::SetUserAgentString(std::string ua)
+{
+    m_UserAgent = ua;
+}
+
+ResourceError::ResourceError(int code, std::string description)
+    : m_errorCode(code)
+    , m_description(description)
+{
+}
+
+int ResourceError::GetErrorCode()
+{
+    return m_errorCode;
+}
+
+std::string ResourceError::GetDescription()
+{
+    return m_description;
+}
+
+WebView* WebView::Create()
+{
+    // elm_init(0, 0);
+    // elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
+
+    std::string screenShot;
+    std::string customUserAgentString;
+    std::string builtinPolyfillPathString;
+    int width = 1280, height = 720;
+    int x = 0, y = 0;
+    int flag = 0;
+    float scaleFactor = 1;
+
+    StarFish::ScreenInfo info;
+    info.rect.setWidth(width);
+    info.rect.setHeight(height);
+    info.availableRect.setWidth(width);
+    info.availableRect.setHeight(height);
+    info.deviceScaleFactor = scaleFactor;
+
+    std::string cacheDir(getenv("HOME"));
+    cacheDir += "/Starfish-cache";
+    StarFish::StarFish* starfish = new StarFish::StarFish(
+        (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
+        width, height, x, y, 1,
+        StarFish::String::createASCIIString("sans-serif"), info,
+        "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
+        cacheDir.data(),
+        StarFish::String::fromUTF8(customUserAgentString.data()),
+        StarFish::String::fromUTF8(builtinPolyfillPathString.data()));
+
+    return new WebView(starfish);
+}
+
+WebView::WebView(void* starFish)
+    : m_starfish(starFish)
+{
+}
+
+Settings WebView::GetSettings()
+{
+    STARFISH_ASSERT(m_starfish);
+    std::string ua = TO_STARFISH(m_starfish)->userAgent()->toUTF8NonGCString();
+    return Settings(ua, ua);
+}
+
+void WebView::LoadURL(std::string url)
+{
+    STARFISH_ASSERT(m_starfish);
+    TO_STARFISH(m_starfish)
+        ->loadHTMLDocument(StarFish::String::fromUTF8(url.data()));
+}
+
+std::string WebView::GetURL()
+{
+    STARFISH_ASSERT(m_starfish);
+    return std::string();
+}
+
+void WebView::LoadData(std::string data)
+{
+    STARFISH_ASSERT(m_starfish);
+}
+
+void WebView::Reload()
+{
+    STARFISH_ASSERT(m_starfish);
+}
+
+void WebView::StopLoading()
+{
+    STARFISH_ASSERT(m_starfish);
+}
+
+void WebView::GoBack()
+{
+    STARFISH_ASSERT(m_starfish);
+}
+
+void WebView::GoForward()
+{
+    STARFISH_ASSERT(m_starfish);
+}
+
+bool WebView::CanGoBack()
+{
+    STARFISH_ASSERT(m_starfish);
+    return false;
+}
+
+bool WebView::CanGoForward()
+{
+    STARFISH_ASSERT(m_starfish);
+    return false;
+}
+
+void WebView::AddJavaScriptInterface(std::string exposedObjectName,
+                                     std::string jsFunctionName,
+                                     std::string (*cb)(std::string))
+{
+    STARFISH_ASSERT(m_starfish);
+}
+
+std::string WebView::EvaluateJavaScript(std::string script)
+{
+    STARFISH_ASSERT(m_starfish);
+    return std::string();
+}
+
+void WebView::ClearHistory()
+{
+    STARFISH_ASSERT(m_starfish);
+}
+
+void WebView::Destroy()
+{
+    STARFISH_ASSERT(m_starfish);
+}
+
+void WebView::SetSettings(LWE::Settings setttings)
+{
+    STARFISH_ASSERT(m_starfish);
+}
+
+void WebView::RemoveJavascriptInterface(std::string exposedObjectName,
+                                        std::string jsFunctionName)
+{
+    STARFISH_ASSERT(m_starfish);
+}
+
+void WebView::SetWebViewClient(LWE::WebViewClient* client)
+{
+    m_webViewClient = client;
+}
+}
