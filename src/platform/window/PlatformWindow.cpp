@@ -71,6 +71,8 @@ void PlatformWindow::resume()
 
 void PlatformWindow::close()
 {
+    STARFISH_LOG_INFO("PlatformWindow::close()\n");
+    clearResources();
     if (m_idleCleanerTimerID != SIZE_MAX) {
         starFish()->timer()->removeTimer(m_idleCleanerTimerID);
     }

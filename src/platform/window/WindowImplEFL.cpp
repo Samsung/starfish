@@ -83,8 +83,8 @@ Evas* internalCanvas()
     STARFISH_RELEASE_ASSERT(g_internalCanvas);
     return g_internalCanvas;
 }
-
 static int g_totalCanvasSurfaceEFLSize;
+static PlatformWindow* g_currentWnd = nullptr;
 
 class WindowImplEFL : public PlatformWindow {
 public:
@@ -161,26 +161,27 @@ public:
         return (height)-m_offsetYDueToSoftwareKeyboard;
     }
 
-    virtual void resizeTo(int w, int h)
+    virtual void resizeTo(int w, int h) override
     {
         evas_object_resize(m_window, w, h);
     }
 
-    virtual void* unwrap()
+    virtual void* unwrap() override
     {
         return (void*)m_window;
     }
 
-    virtual void clearResources();
-    virtual Canvas* preparePainting();
-    virtual Compositor* prepareCompositor();
+    virtual void clearResources() override;
+    virtual Canvas* preparePainting() override;
+    virtual Compositor* prepareCompositor() override;
 
-    virtual void showSoftwareKeyboardIfPossible()
+    virtual void showSoftwareKeyboardIfPossible() override
     {
         evas_object_focus_set(m_mainBox, EINA_TRUE);
         m_softKeyboardOrigin = webView()->focusedNode();
     }
-    virtual void hideSoftwareKeyboardIfPossible()
+
+    virtual void hideSoftwareKeyboardIfPossible() override
     {
         starFish()->messageLoop()->addIdler(
             nullptr,
@@ -215,12 +216,19 @@ public:
         }
     }
 
-    virtual bool isIMEEnabledNow()
+    virtual bool isIMEEnabledNow() override
     {
         return evas_object_focus_get(m_mainBox) == EINA_TRUE;
     }
 
-    virtual void onIdle()
+    virtual void close() override
+    {
+        STARFISH_LOG_INFO("WindowImplEFL::close()\n");
+        PlatformWindow::close();
+        g_currentWnd = nullptr;
+    }
+
+    virtual void onIdle() override
     {
         PlatformWindow::onIdle();
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
@@ -317,10 +325,6 @@ m_lastRenderingTime > 1000)) {
     uint64_t m_lastRenderingTime;
     int m_offsetYDueToSoftwareKeyboard;
 };
-
-#if defined(STARFISH_TIZEN_TV)
-static WindowImplEFL* g_currentWnd = nullptr;
-#endif
 
 #if defined(PORT_COMPOSITOR_BACKEND_EFL)
 
@@ -910,9 +914,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                        int height)
 {
     auto wnd = new WindowImplEFL(sf);
-#if defined(STARFISH_TIZEN_TV)
     g_currentWnd = wnd;
-#endif
+
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
@@ -1631,16 +1634,16 @@ void WebView::setNeedsRendering()
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {
         ecore_animator_del(wnd->m_renderingAnimator);
+        wnd->m_renderingAnimator = nullptr;
     }
 
     wnd->m_renderingAnimator = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
-#if defined(STARFISH_TIZEN_TV)
             if (g_currentWnd != wnd) {
+                STARFISH_LOG_INFO("An invalid animator callback was called.\n")
                 return ECORE_CALLBACK_CANCEL;
             }
-#endif
 
             if (!wnd->m_canRendering) {
                 return ECORE_CALLBACK_RENEW;
@@ -1939,5 +1942,6 @@ void WindowImplEFL::clearResources()
     m_objectList.clear();
     m_objectList.shrink_to_fit();
 }
+
 } // namespace StarFish
 #endif
