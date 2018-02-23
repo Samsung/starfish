@@ -75,6 +75,9 @@ public:
     static HistoryManager* create(HTMLIFrameElement* iframe);
 
     bool go(int delta);
+    bool canGo(int delta);
+    void clear();
+
     uint32_t length();
     void pushState(Document* document, ScriptValue state, String* title,
                    Nullable<String*> url);
@@ -91,6 +94,7 @@ private:
     HistoryManager(WebView* webView);
     HistoryManager(HTMLIFrameElement* iframe);
     void addHistoryEntry(HistoryEntry* entry);
+    bool checkHistoryEntry(int delta, bool changeCurrentEntry);
 
     enum HistoryManagerOwner {
         OwnerIsWebView,

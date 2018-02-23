@@ -51,6 +51,8 @@ public:
     void back();
     void forward();
     void go(int delta);
+    bool canGoBack();
+    bool canGoForward();
 
     void pushState(ScriptValue state, String* title, Nullable<String*> url);
     void replaceState(ScriptValue state, String* title, Nullable<String*> url);

@@ -57,6 +57,16 @@ void History::go(int delta)
     }
 }
 
+bool History::canGoBack()
+{
+    return historyManager()->canGo(-1);
+}
+
+bool History::canGoForward()
+{
+    return historyManager()->canGo(1);
+}
+
 uint32_t History::length()
 {
     return historyManager()->length();

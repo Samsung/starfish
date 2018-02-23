@@ -21,6 +21,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/multimedia/Demuxer.h"
 #include "StarFishPublic.h"
+#include "LWEWebView.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include <pthread.h>
@@ -676,6 +677,8 @@ int main(int argc, char* argv[])
         cacheDir.data(), String::fromUTF8(customUserAgentString.data()),
         String::fromUTF8(builtinPolyfillPathString.data()));
 
+    LWE::WebView* webView = LWE::WebView::Create(sf);
+
 #ifdef STARFISH_ENABLE_TEST
     sf->setTestCompatibleMode(testCompatibleMode);
 #endif
@@ -683,7 +686,7 @@ int main(int argc, char* argv[])
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();
 #endif
-    sf->loadHTMLDocument(String::createASCIIString(argv[1]));
+    webView->LoadURL(std::string(argv[1]));
 
 #if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_SHELL)
     pthread_t t;
@@ -738,7 +741,9 @@ int main(int argc, char* argv[])
 #endif
 
     sf->run();
-    delete sf;
+    webView->Destroy();
+    delete webView;
+    webView = nullptr;
     sf = nullptr;
 #endif
 

@@ -63,6 +63,8 @@ public:
 class WebView {
 public:
 	static WebView* Create();
+	static WebView* Create(void* starFish);
+
 	Settings GetSettings();
 	void LoadURL(std::string url);
 	std::string GetURL();

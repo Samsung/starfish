@@ -18,8 +18,29 @@
 #include "StarFish.h"
 
 #include "LWEWebView.h"
+#include "platform/window/PlatformWindow.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
+#include "core/page/WebView.h"
+#include "core/page/History.h"
+#include "core/page/Location.h"
 
 #define TO_STARFISH(ptr) ((StarFish::StarFish*)ptr)
+#define TO_HISTORY(ptr)         \
+    ((StarFish::StarFish*)ptr)  \
+        ->platformWindow()      \
+        ->webView()             \
+        ->mainBrowsingContext() \
+        ->window()              \
+        ->history()
+
+#define TO_LOCATION(ptr)        \
+    ((StarFish::StarFish*)ptr)  \
+        ->platformWindow()      \
+        ->webView()             \
+        ->mainBrowsingContext() \
+        ->window()              \
+        ->location()
 
 namespace LWE {
 
@@ -94,6 +115,11 @@ WebView* WebView::Create()
     return new WebView(starfish);
 }
 
+WebView* WebView::Create(void* starFish)
+{
+    return new WebView(starFish);
+}
+
 WebView::WebView(void* starFish)
     : m_starfish(starFish)
 {
@@ -116,7 +142,7 @@ void WebView::LoadURL(std::string url)
 std::string WebView::GetURL()
 {
     STARFISH_ASSERT(m_starfish);
-    return std::string();
+    return TO_LOCATION(m_starfish)->url()->urlString()->toUTF8NonGCString();
 }
 
 void WebView::LoadData(std::string data)
@@ -127,6 +153,7 @@ void WebView::LoadData(std::string data)
 void WebView::Reload()
 {
     STARFISH_ASSERT(m_starfish);
+    TO_LOCATION(m_starfish)->reload();
 }
 
 void WebView::StopLoading()
@@ -137,23 +164,25 @@ void WebView::StopLoading()
 void WebView::GoBack()
 {
     STARFISH_ASSERT(m_starfish);
+    TO_HISTORY(m_starfish)->back();
 }
 
 void WebView::GoForward()
 {
     STARFISH_ASSERT(m_starfish);
+    TO_HISTORY(m_starfish)->forward();
 }
 
 bool WebView::CanGoBack()
 {
     STARFISH_ASSERT(m_starfish);
-    return false;
+    return TO_HISTORY(m_starfish)->canGoBack();
 }
 
 bool WebView::CanGoForward()
 {
     STARFISH_ASSERT(m_starfish);
-    return false;
+    return TO_HISTORY(m_starfish)->canGoForward();
 }
 
 void WebView::AddJavaScriptInterface(std::string exposedObjectName,
@@ -166,17 +195,25 @@ void WebView::AddJavaScriptInterface(std::string exposedObjectName,
 std::string WebView::EvaluateJavaScript(std::string script)
 {
     STARFISH_ASSERT(m_starfish);
-    return std::string();
+    return TO_STARFISH(m_starfish)
+        ->evaluate(StarFish::String::createASCIIString(script.c_str()))
+        ->toUTF8NonGCString();
 }
 
 void WebView::ClearHistory()
 {
     STARFISH_ASSERT(m_starfish);
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->webView()
+        ->historyManager()
+        ->clear();
 }
 
 void WebView::Destroy()
 {
     STARFISH_ASSERT(m_starfish);
+    delete TO_STARFISH(m_starfish);
 }
 
 void WebView::SetSettings(LWE::Settings setttings)
