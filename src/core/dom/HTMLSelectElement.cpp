@@ -249,7 +249,7 @@ void HTMLSelectElement::reset(HTMLOptionElement* resetFrom)
 
         if (displaySize() == 1 && selectedOptions == 0) {
             for (HTMLOptionElement* opt : list) {
-                if (opt->selected() && !opt->disabled()) {
+                if (opt->defaultSelected() && !opt->disabled()) {
                     opt->setSelectedness(true);
                     break;
                 }
@@ -268,7 +268,7 @@ void HTMLSelectElement::reset(HTMLOptionElement* resetFrom)
 
 void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)
 {
-    if (newChild->isHTMLOptionElement()) {
+    if (newChild->isHTMLOptionElement() && !multiple()) {
         HTMLOptionElement* newElement = newChild->asHTMLOptionElement();
         HTMLCollection* selectedOptions = ensureSelectedOptions();
 
@@ -286,9 +286,7 @@ void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)
                 if (element->isHTMLOptionElement() &&
                     element->asHTMLOptionElement() != newElement) {
                     HTMLOptionElement* option = element->asHTMLOptionElement();
-                    bool hasSelected = option->hasSelectedAttribute();
-
-                    if (hasSelected && option->selected()) {
+                    if (option->selected()) {
                         selectedOptions->getNodeListImpl().invalidateCache();
                         option->setSelectedness(false);
                     }

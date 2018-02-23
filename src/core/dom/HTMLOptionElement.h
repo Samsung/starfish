@@ -69,7 +69,7 @@ public:
 
     bool isDisabled();
 
-    bool hasSelectedAttribute();
+    bool defaultSelected();
 
 private:
     bool m_dirtiness;
