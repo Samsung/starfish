@@ -4,7 +4,7 @@ Release:       0
 Summary:       Lightweight Web Engine
 Source:        %{name}-%{version}.tar.gz
 Group:         Development/Libraries
-License:       Apache-2.0 and LGPL-2.1+ and BSD-2.0 and ICU and BSL-1.0 and MIT and MPL-1.1
+License:       Apache-2.0 and LGPL-2.1+ and BSD-2-Clause and BSD-3-Clause and BSL-1.0 and MIT
 
 # RPM ref: http://backreference.org/2011/09/17/some-tips-on-rpm-conditional-macros/
 
