@@ -100,14 +100,6 @@ void HTMLOptionElement::setSelected(bool selected)
     }
 }
 
-bool HTMLOptionElement::hasSelectedAttribute()
-{
-    // selected is a boolean attribute
-    Nullable<String*> val =
-        getAttribute(starFish()->staticStrings()->m_selected);
-    return val.hasValue();
-}
-
 bool HTMLOptionElement::dirtiness()
 {
     return m_dirtiness;
@@ -193,6 +185,13 @@ void HTMLOptionElement::setText(String* value)
     setTextContent(value);
 }
 
+bool HTMLOptionElement::defaultSelected()
+{
+    Nullable<String*> val =
+        getAttribute(starFish()->staticStrings()->m_selected);
+    return val.hasValue();
+}
+
 bool HTMLOptionElement::handleDefaultEvent(Event* event)
 {
     if (HTMLElement::handleDefaultEvent(event)) {
@@ -232,5 +231,15 @@ void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLFormControl::didAttributeChanged(name, old, val, attributeCreated,
                                          attributeRemoved);
+    if (name == starFish()->staticStrings()->m_selected && !m_dirtiness) {
+        // Setting`selected` attribute can affect selectness only when
+        // its dirtiness flag is false.
+        setSelectedness(!attributeRemoved);
+        HTMLSelectElement* select = selectElement();
+        if (select) {
+            select->reset(this);
+        }
+        return;
+    }
 }
 }

@@ -8,7 +8,7 @@ interface HTMLOptionElement : HTMLElement {
   [CEReactions] attribute boolean disabled;
   readonly attribute HTMLFormElement? form;
   [Unimplemented, CEReactions] attribute DOMString label;
-  [Unimplemented, CEReactions] attribute boolean defaultSelected;
+  [CEReactions, Reflect=selected] attribute boolean defaultSelected;
   attribute boolean selected;
   [CEReactions] attribute DOMString value;
 
