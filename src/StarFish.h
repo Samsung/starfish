@@ -186,6 +186,11 @@ public:
         return m_customUserAgentString;
     }
 
+    void setCustomUserAgentString(String* customUserAgentString)
+    {
+        m_customUserAgentString = customUserAgentString;
+    }
+
     String* builtinPolyfillPathString()
     {
         return m_builtinPolyfillPathString;
