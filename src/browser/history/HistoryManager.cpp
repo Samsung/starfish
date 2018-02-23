@@ -71,7 +71,7 @@ void HistoryManager::replace(Document* document, ResourceURL* url)
     }
 }
 
-bool HistoryManager::go(int delta)
+bool HistoryManager::checkHistoryEntry(int delta, bool changeCurrentEntry)
 {
     STARFISH_ASSERT(delta != 0);
 
@@ -107,21 +107,41 @@ bool HistoryManager::go(int delta)
         return false;
     }
 
-    m_curEntry = itr;
+    if (changeCurrentEntry)
+        m_curEntry = itr;
 
-    switch (m_owner) {
-    case OwnerIsWebView:
-        m_webView->navigate(
-            currentEntry()->url(), Intact,
-            m_webView->mainBrowsingContext()->document()->documentURI());
-        break;
-    case OwnerIsHTMLIFrame:
-        m_iframe->navigate(
-            currentEntry()->url(), Intact,
-            m_iframe->browsingContext()->document()->documentURI());
-        break;
-    }
     return true;
+}
+
+bool HistoryManager::go(int delta)
+{
+    if (checkHistoryEntry(delta, true)) {
+        switch (m_owner) {
+        case OwnerIsWebView:
+            m_webView->navigate(
+                currentEntry()->url(), Intact,
+                m_webView->mainBrowsingContext()->document()->documentURI());
+            break;
+        case OwnerIsHTMLIFrame:
+            m_iframe->navigate(
+                currentEntry()->url(), Intact,
+                m_iframe->browsingContext()->document()->documentURI());
+            break;
+        }
+        return true;
+    }
+    return false;
+}
+
+bool HistoryManager::canGo(int delta)
+{
+    return checkHistoryEntry(delta, false);
+}
+
+void HistoryManager::clear()
+{
+    m_historyEntries.clear();
+    m_curEntry = m_historyEntries.end();
 }
 
 uint32_t HistoryManager::length()
