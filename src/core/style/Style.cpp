@@ -3380,12 +3380,17 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
 {
     CSSTokenValue str;
     bool inParenthesis = false;
+    size_t numberOfnesting = 0;
     bool inQuotes = false;
     bool isWhiteSpaceState = false;
     for (size_t i = 0; i < length; i++) {
         if (data[i] == '(') {
             inParenthesis = true;
+            numberOfnesting++;
         } else if (data[i] == ')') {
+            if (numberOfnesting) {
+                numberOfnesting--;
+            }
         } else if (data[i] == '"' || data[i] == '\'') {
             inQuotes = !inQuotes;
         }
@@ -3420,11 +3425,11 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                 }
             }
 
-            if (!onlyWhiteSpace) {
+            if (!onlyWhiteSpace && !numberOfnesting) {
                 tokens.push_back(CSSTokenValue(std::move(str)));
             }
             isWhiteSpaceState = true;
-            if (hasSepChar) {
+            if (hasSepChar && !numberOfnesting) {
                 tokens.push_back(CSSTokenValue(std::string(data + i, 1)));
             }
         } else if ((inParenthesis && data[i] == ')') || i == length - 1) {
@@ -3439,7 +3444,9 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                     std::transform(str.begin(), str.end(), str.begin(),
                                    ::tolower);
                 }
-                tokens.push_back(std::move(str));
+                if (!numberOfnesting) {
+                    tokens.push_back(std::move(str));
+                }
             }
             inParenthesis = false;
             isWhiteSpaceState = true;
