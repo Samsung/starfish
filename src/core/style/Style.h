@@ -702,7 +702,8 @@ enum TextAlignValue {
     EndTextAlignValue,
     LeftTextAlignValue,
     RightTextAlignValue,
-    CenterTextAlignValue
+    CenterTextAlignValue,
+    StarFishCenterTextAlignValue,
 };
 
 // transform-origin, background-position

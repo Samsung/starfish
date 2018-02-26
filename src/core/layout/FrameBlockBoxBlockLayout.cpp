@@ -161,8 +161,6 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             ctx.marginCollapseResult(child->asFrameBox()).m_advanceY;
 
         LengthData margin = child->style()->margin();
-        Length marginLeft = margin.left();
-        Length marginRight = margin.right();
         floatAffected = false;
         clearAffected = false;
 

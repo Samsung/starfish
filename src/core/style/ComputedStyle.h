@@ -666,8 +666,17 @@ public:
         return (verticalAlign() == VerticalAlignValue::NumericVAlignValue);
     }
 
+    TextAlignValue orignalTextAlign()
+    {
+        return m_inheritedStyles.m_textAlign;
+    }
+
     TextAlignValue textAlign()
     {
+        if (m_inheritedStyles.m_textAlign ==
+            TextAlignValue::StarFishCenterTextAlignValue) {
+            return TextAlignValue::CenterTextAlignValue;
+        }
         return m_inheritedStyles.m_textAlign;
     }
 

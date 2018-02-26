@@ -343,6 +343,18 @@ void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth,
     Length marginRight = margin.right();
     LayoutUnit remainingWidth = parentContentWidth - width();
 
+    if (remainingWidth > 0 && !isAbsolutePositioned() &&
+        style()->orignalTextAlign() ==
+            TextAlignValue::StarFishCenterTextAlignValue) {
+        LayoutUnit dX;
+        dX += FrameBox::marginLeft();
+        dX -= FrameBox::marginRight();
+        dX /= 2;
+        setMarginLeft(remainingWidth / 2 + dX);
+        setMarginRight(remainingWidth / 2 + dX);
+        return;
+    }
+
     if (marginLeft.isAuto() && marginRight.isAuto()) {
         if (remainingWidth > 0) {
             setMarginLeft(remainingWidth / 2);
