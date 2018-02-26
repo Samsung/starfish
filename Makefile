@@ -834,10 +834,8 @@ csswg_test_all:
 	make csswg_test_manual
 
 internal_test:
-	cat tool/reftest/efl/internal_unsorted.res | sort -nr | cut -d";" -f2 > tool/reftest/efl/internal.res
 	./tool/drivers/run_test.py basic tool/reftest/efl/internal.res common -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py basic tool/reftest/efl/internal_manual.res common --font-dep -p$(TEST_NPROCS)
-	rm tool/reftest/efl/internal.res
 
 internal_test_gitlab_prerequisite:
 	./tool/reftest/efl/internal.sh $(div)
@@ -962,10 +960,8 @@ csswg_test_all_cairo:
 	make csswg_test_manual_cairo
 
 internal_test_cairo:
-	cat tool/reftest/cairo/internal_unsorted.res | sort -nr | cut -d";" -f2 > tool/reftest/cairo/internal.res
 	./tool/drivers/run_test.py basic tool/reftest/cairo/internal.res common -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py basic tool/reftest/cairo/internal_manual.res common --font-dep -p$(TEST_NPROCS)
-	rm tool/reftest/cairo/internal.res
 
 internal_test_gitlab_prerequisite_cairo:
 	./tool/reftest/cairo/internal.sh $(div)
