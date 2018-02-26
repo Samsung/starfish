@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishSVGRectElement__
-#define __StarFishSVGRectElement__
+#ifndef __StarFishSVGTextElement__
+#define __StarFishSVGTextElement__
 
 #include "core/dom/svg/SVGElement.h"
 
@@ -23,25 +23,19 @@ namespace StarFish {
 
 class SVGSVGElement;
 
-class SVGRectElement : public SVGElement {
+class SVGTextElement : public SVGElement {
 public:
-    SVGRectElement(Document* document)
+    SVGTextElement(Document* document)
         : SVGElement(document)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isSVGRectElement() const override;
+    virtual bool isSVGTextElement() const override;
 
     virtual QualifiedName name();
-
     virtual bool needsGeometryAttributes()
-    {
-        return true;
-    }
-
-    virtual bool needsSizingAttributes()
     {
         return true;
     }
@@ -52,13 +46,6 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
-
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(rx);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(ry);
 };
 }
 

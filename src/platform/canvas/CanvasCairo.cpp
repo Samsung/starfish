@@ -676,18 +676,32 @@ public:
     }
     virtual void stroke()
     {
+        if (!lastState().m_visible) {
+            cairo_close_path(m_canvas);
+            return;
+        }
         cairo_stroke(m_canvas);
     }
     virtual void strokePreserve()
     {
+        if (!lastState().m_visible) {
+            return;
+        }
         cairo_stroke_preserve(m_canvas);
     }
     virtual void fill()
     {
+        if (!lastState().m_visible) {
+            cairo_close_path(m_canvas);
+            return;
+        }
         cairo_fill(m_canvas);
     }
     virtual void fillPreserve()
     {
+        if (!lastState().m_visible) {
+            return;
+        }
         cairo_fill_preserve(m_canvas);
     }
     virtual void clipPath()

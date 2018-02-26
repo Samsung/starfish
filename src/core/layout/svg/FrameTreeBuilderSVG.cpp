@@ -18,6 +18,7 @@
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/svg/SVGElement.h"
+#include "core/dom/Text.h"
 
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/layout/svg/FrameSVGRectBox.h"
@@ -26,6 +27,8 @@
 #include "core/layout/svg/FrameSVGPolylineBox.h"
 #include "core/layout/svg/FrameSVGCircleBox.h"
 #include "core/layout/svg/FrameSVGImageBox.h"
+#include "core/layout/svg/FrameSVGTextBox.h"
+#include "core/layout/FrameBlockBox.h"
 
 namespace StarFish {
 
@@ -42,10 +45,12 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
     }
 
     bool shouldContinue = false;
+    bool shouldVisitChild = false;
 
     Frame* currentFrame = nullptr;
     if (svgElement->isSVGSVGElement()) {
         shouldContinue = !parentFrame->isFrameSVGSVGBox();
+        shouldVisitChild = true;
         currentFrame = new FrameSVGSVGBox(svgElement);
     } else if (svgElement->isSVGRectElement()) {
         shouldContinue = true;
@@ -53,6 +58,7 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
     } else if (svgElement->isSVGGElement()) {
         shouldContinue = true;
         currentFrame = new FrameSVGBox(svgElement);
+        shouldVisitChild = true;
     } else if (svgElement->isSVGPathElement()) {
         shouldContinue = true;
         currentFrame = new FrameSVGPathBox(svgElement);
@@ -68,6 +74,30 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
     } else if (svgElement->isSVGImageElement()) {
         shouldContinue = true;
         currentFrame = new FrameSVGImageBox(svgElement);
+    } else if (svgElement->isSVGTextElement()) {
+        shouldContinue = true;
+        auto txt = svgElement->textContent();
+        String* content = String::emptyString;
+        if (txt.hasValue()) {
+            content = txt.getValue();
+        }
+        currentFrame = new FrameSVGTextBox(svgElement);
+
+        ComputedStyle* style = new ComputedStyle(svgElement->style());
+        style->setDisplay(DisplayValue::BlockDisplayValue);
+        style->loadResources(svgElement);
+        style->arrangeStyleValues(svgElement->style(), svgElement);
+        style->setWhiteSpace(WhiteSpaceValue::NoWrapWhiteSpaceValue);
+        FrameBlockBox* box = new FrameBlockBox(nullptr, style);
+        currentFrame->appendChild(box);
+
+        Text* textNode = new Text(svgElement->document(), content);
+        ComputedStyle* textStyle = new ComputedStyle(style);
+        textStyle->loadResources(svgElement);
+        textStyle->arrangeStyleValues(svgElement->style(), svgElement);
+        textNode->setStyle(textStyle);
+
+        box->appendChild(new FrameText(textNode, textStyle));
     }
 
     svgElement->clearNeedsFrameTreeBuild();
@@ -78,11 +108,13 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
         }
         svgElement->setFrame(currentFrame);
 
-        Element* e = svgElement->firstElementChild();
-        while (e) {
-            if (e->isSVGElement())
-                buildSVGFrameTree(e->asSVGElement());
-            e = e->nextElementSibling();
+        if (shouldVisitChild) {
+            Element* e = svgElement->firstElementChild();
+            while (e) {
+                if (e->isSVGElement())
+                    buildSVGFrameTree(e->asSVGElement());
+                e = e->nextElementSibling();
+            }
         }
 
         svgElement->clearChildNeedsFrameTreeBuild();

@@ -50,7 +50,11 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
         } else if (ss->m_y == name) {
             setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsLayout();
-        } else if (ss->m_width == name) {
+        }
+    }
+
+    if (needsSizingAttributes()) {
+        if (ss->m_width == name) {
             setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
             setNeedsLayout();
         } else if (ss->m_height == name) {

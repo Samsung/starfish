@@ -1,0 +1,5 @@
+// https://www.w3.org/TR/SVG11/struct.html#InterfaceSVGTextElement
+interface SVGTextElement : SVGElement {
+  [Unimplemented] readonly attribute SVGAnimatedLengthList x;
+  [Unimplemented] readonly attribute SVGAnimatedLengthList y;
+};

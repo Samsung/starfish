@@ -165,6 +165,7 @@ namespace StarFish {
     F(polyline)                        \
     F(ellipse)                         \
     F(image)                           \
+    F(text)                            \
     F(style)                           \
     F(script)
 
@@ -313,6 +314,8 @@ public:
     QualifiedName m_label;
     QualifiedName m_srclang;
 #endif
+    QualifiedName m_dirname;
+    QualifiedName m_readonly;
     QualifiedName m_fill;
     QualifiedName m_fillRule;
     QualifiedName m_fillOpacity;
@@ -330,8 +333,8 @@ public:
     QualifiedName m_points;
     QualifiedName m_cx;
     QualifiedName m_cy;
-    QualifiedName m_dirname;
-    QualifiedName m_readonly;
+    QualifiedName m_fontDashFamily;
+    QualifiedName m_fontDashSize;
     // xml:base
     QualifiedName m_xmlBase;
     // WAI-ARIA

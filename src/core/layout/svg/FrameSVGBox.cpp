@@ -86,8 +86,10 @@ void FrameSVGBox::layout(LayoutContext& ctx,
 
     Frame* f = firstChild();
     while (f) {
-        f->asFrameSVGBox()->resolvePosition(ctx);
-        f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+        if (f->isFrameSVGBox()) {
+            f->asFrameSVGBox()->resolvePosition(ctx);
+            f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+        }
         f = f->next();
     }
 }

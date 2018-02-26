@@ -1584,6 +1584,8 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 (border.top().color() == border.right().color()) &&
                 (border.right().color() == border.bottom().color()) &&
                 (border.bottom().color() == border.left().color())) {
+                canvas->setColor(border.top().color());
+#ifdef PORT_GRAPHIC_BACKEND_EFL
                 // Draw solid borders fast around the given rect
                 // when all 4 colors are the same.
                 //    _______________
@@ -1594,8 +1596,6 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 //   |_|___________|_|
                 //   |_______________|
                 //
-
-                canvas->setColor(border.top().color());
 
                 // top
                 canvas->drawRect(
@@ -1616,7 +1616,28 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 canvas->drawRect(LayoutRect(rect.x(), rect.y() + borderTop(),
                                             borderLeft(),
                                             rect.height() - borderHeight()));
+#else
+                canvas->beginPath();
 
+                canvas->moveTo(rect.x().floor(), rect.y().floor());
+                canvas->lineTo(rect.maxX().floor(), rect.y().floor());
+                canvas->lineTo(rect.maxX().floor(), rect.maxY().floor());
+                canvas->lineTo(rect.x().floor(), rect.maxY().floor());
+                canvas->lineTo(rect.x().floor(), rect.y().floor());
+
+                canvas->lineTo((rect.x() + borderLeft()).floor(),
+                               (rect.y() + borderTop()).floor());
+                canvas->lineTo((rect.x() + borderLeft()).floor(),
+                               (rect.maxY() - borderBottom()).floor());
+                canvas->lineTo((rect.maxX() - borderRight()).floor(),
+                               (rect.maxY() - borderBottom()).floor());
+                canvas->lineTo((rect.maxX() - borderRight()).floor(),
+                               (rect.y() + borderTop()).floor());
+                canvas->lineTo((rect.x() + borderLeft()).floor(),
+                               (rect.y() + borderTop()).floor());
+                canvas->lineTo(rect.x().floor(), rect.y().floor());
+                canvas->fill();
+#endif
             } else {
                 // Draw trapezium-like borders around the given rect
                 //    _______________
