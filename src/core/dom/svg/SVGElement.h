@@ -96,6 +96,11 @@ public:
         return false;
     }
 
+    virtual bool needsSizingAttributes()
+    {
+        return false;
+    }
+
     virtual bool needsFillAttributes()
     {
         return true;

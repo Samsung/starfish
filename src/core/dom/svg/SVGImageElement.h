@@ -49,6 +49,11 @@ public:
         return true;
     }
 
+    virtual bool needsSizingAttributes()
+    {
+        return true;
+    }
+
     virtual bool needsPreserveAspectRatioValue()
     {
         return true;

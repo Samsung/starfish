@@ -41,6 +41,11 @@ public:
         return true;
     }
 
+    virtual bool needsSizingAttributes()
+    {
+        return true;
+    }
+
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
