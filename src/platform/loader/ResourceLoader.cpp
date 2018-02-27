@@ -133,12 +133,18 @@ public:
     {
         ResourceClient::didLoadFailed();
         clearAlive();
+        int errorCode = 1;
+        resource()->loader()->document()->starFish()->callWebViewHandler(
+            std::string("OnReceivedError"), resource()->url()->urlString(),
+            errorCode);
     }
 
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
         clearAlive();
+        resource()->loader()->document()->starFish()->callWebViewHandler(
+            std::string("OnLoadResource"), resource()->url()->urlString());
     }
 
     virtual void didLoadCanceled()
@@ -503,6 +509,9 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                     doc->browsingContext()
                         ->sourceElement()
                         ->childBrowsingContextLoaded();
+                } else {
+                    doc->starFish()->callWebViewHandler(
+                        std::string("OnPageFinished"), doc->urlString());
                 }
 #ifdef STARFISH_ENABLE_TEST
                 g_fireOnloadEvent = true;

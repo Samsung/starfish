@@ -294,5 +294,38 @@ void WebView::RemoveJavascriptInterface(std::string exposedObjectName,
 void WebView::SetWebViewClient(LWE::WebViewClient* client)
 {
     m_webViewClient = client;
+
+    TO_STARFISH(m_starfish)
+        ->registerWebViewHandler(
+            std::string("OnReceivedError"),
+            [this](StarFish::String* url, int errorCode) -> void {
+                // make error description
+                this->m_webViewClient->OnReceivedError(
+                    this, ResourceError(errorCode, std::string()));
+            });
+
+    TO_STARFISH(m_starfish)
+        ->registerWebViewHandler(
+            std::string("OnPageFinished"),
+            [this](StarFish::String* url, int errorCode) -> void {
+                this->m_webViewClient->OnPageFinished(this,
+                                                      url->toUTF8NonGCString());
+            });
+
+    TO_STARFISH(m_starfish)
+        ->registerWebViewHandler(
+            std::string("OnPageStarted"),
+            [this](StarFish::String* url, int errorCode) -> void {
+                this->m_webViewClient->OnPageStarted(this,
+                                                     url->toUTF8NonGCString());
+            });
+
+    TO_STARFISH(m_starfish)
+        ->registerWebViewHandler(
+            std::string("OnLoadResource"),
+            [this](StarFish::String* url, int errorCode) -> void {
+                this->m_webViewClient->OnLoadResource(this,
+                                                      url->toUTF8NonGCString());
+            });
 }
 }
