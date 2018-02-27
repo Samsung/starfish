@@ -1181,6 +1181,7 @@ void InlineBoxLayoutParentBox::computeVisibleRect(
     Frame::ComputeVisibleRectContext& ctx)
 {
     FrameBox::ComputeVisibleRectContextFragment f(ctx, this);
+    tryUniteVisibleRect(ctx);
     for (size_t i = 0; i < m_boxes.size(); i++) {
         m_boxes[i]->computeVisibleRect(ctx);
     }
@@ -1231,7 +1232,7 @@ static bool isCollapsibleWhiteSpace(FrameBox* box)
 
     if (box->isInlineTextBox()) {
         const TextRun& run = box->asInlineTextBox()->textRun();
-        return run.m_stringView.originalString() == String::spaceString;
+        return run.m_stringView.originalString()->equals(String::spaceString);
     }
 
     return false;
@@ -1245,7 +1246,7 @@ static bool isForcedNewLine(FrameBox* box)
 
     if (box->isInlineTextBox()) {
         const TextRun& run = box->asInlineTextBox()->textRun();
-        return run.m_stringView.originalString() == String::emptyString;
+        return run.m_stringView.originalString()->equals(String::emptyString);
     }
 
     return false;
@@ -2614,7 +2615,19 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
     STARFISH_ASSERT(m_word.isEmpty());
 
     if (isForcedNewLine(box)) {
-        m_isPendingBreakLine = true;
+        if (box->shouldPreserveWhiteSpaces() && box->shouldWrapLines()) {
+            if (m_isPendingBreakLine) {
+                breakLine(nullptr);
+            } else {
+                if (m_currentLayoutParent->boxes().size() == 0) {
+                    m_isPendingBreakLine = true;
+                } else {
+                    breakLine(nullptr);
+                }
+            }
+        } else {
+            m_isPendingBreakLine = true;
+        }
     } else {
         if (!dontBreakLine(box, box->outerWidth())) {
             if (isCollapsibleWhiteSpace(box)) {

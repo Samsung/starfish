@@ -245,3 +245,4 @@ test/cairo/internal-test/css/fontSize/font_size_with_viewport_percent.html
 test/cairo/internal-test/css/float/preferred-width-with-overflowhidden.html
 test/cairo/internal-test/cookie/cookie-internal-test-1.html
 test/cairo/internal-test/cookie/cookie-internal-test-2.html
+test/cairo/internal-test/css/overflow/scroll-width-height.html

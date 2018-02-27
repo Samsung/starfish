@@ -638,10 +638,10 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
         new (GC) GCVector<FormDataSetItem*>();
 
     // 1-3
-    GCVector<HTMLFormControl*> list;
+    GCVector<HTMLElement*> list;
     computeFormAssociatedElements(this, list);
     for (Node* c : list) {
-        // TODO: HTML object and textarea are not supported
+        // TODO: HTML object is not supported
         if (isSubmittableElement(c)) {
             HTMLFormControl* field = c->asHTMLFormObject();
 
@@ -707,7 +707,7 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
 }
 
 void HTMLFormElement::computeFormAssociatedElements(
-    Node* parent, GCVector<HTMLFormControl*>& list)
+    Node* parent, GCVector<HTMLElement*>& list)
 {
     for (Node* c = parent->firstChild(); c; c = c->nextSibling()) {
         if (c->isHTMLIFrameElement()) {
@@ -715,7 +715,7 @@ void HTMLFormElement::computeFormAssociatedElements(
         }
 
         if (isFormAssociatedElement(c)) {
-            list.push_back(c->asHTMLFormObject());
+            list.push_back(c->asHTMLElement());
         } else {
             computeFormAssociatedElements(c, list);
         }

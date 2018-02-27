@@ -855,7 +855,18 @@ void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
         }
     }
 
+    auto prevValue = result;
     result.unite(tmp);
+
+    if (ComputePurpose::Scrolling == purpose) {
+        if (prevValue.maxX() != result.maxX()) {
+            result.setWidth(result.width() + sourceFrameBox->paddingRight());
+        }
+
+        if (prevValue.maxY() != result.maxY()) {
+            result.setHeight(result.height() + sourceFrameBox->paddingBottom());
+        }
+    }
 }
 
 Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(

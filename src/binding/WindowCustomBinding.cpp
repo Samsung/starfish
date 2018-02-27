@@ -379,6 +379,8 @@ static ValueRef* simulateVisibilitychangeFunction(ExecutionStateRef* state,
     return scriptUndefined();
 }
 
+static bool gotTestAssert = false;
+
 static ValueRef* testAssertFunction(ExecutionStateRef* state,
                                     ValueRef* thisValue, size_t argc,
                                     ValueRef** argv, bool isNewExpression)
@@ -405,6 +407,7 @@ static ValueRef* testAssertFunction(ExecutionStateRef* state,
             customExit(-1, window);
         }
     }
+    gotTestAssert = true;
     return scriptUndefined();
 }
 
@@ -429,6 +432,12 @@ static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
                                     ValueRef* thisValue, size_t argc,
                                     ValueRef** argv, bool isNewExpression)
 {
+    if (gotTestAssert) {
+        GENERATE_WINDOW();
+        puts("[PASS]");
+        STARFISH_LOG_ERROR("%s\n", "[PASS]");
+        customExit(0, window);
+    }
     const char* hide = getenv("HIDE_WINDOW");
     if ((hide && strlen(hide))) {
         ::exit(0);

@@ -165,10 +165,12 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
     if (hasVerticalScroll) {
         canvas->setColor(Unit::Color(64, 64, 64, 192));
         float scrollMoveRatio = ((float)frame->scrollTop() /
-                                 (frame->scrollHeight() - frame->height()));
+                                 (frame->scrollHeight() -
+                                  (frame->height() - frame->borderHeight())));
         LayoutUnit scrollMovableArea = frame->height() - frame->borderHeight();
         LayoutUnit scrollBarHeight =
-            scrollMovableArea * (frame->height() / frame->scrollHeight());
+            scrollMovableArea *
+            ((frame->height() - frame->borderHeight()) / frame->scrollHeight());
         LayoutUnit scrollBarWidth = STARFISH_SCROLLBAR_THICKNESS /
                                     frame->node()->window()->devicePixelRatio();
         if (hasHorizontalScroll) {
@@ -192,14 +194,16 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
     }
     if (hasHorizontalScroll) {
         canvas->setColor(Unit::Color(64, 64, 64, 192));
-        float scrollMoveRatio = ((float)frame->scrollLeft() /
-                                 (frame->scrollWidth() - frame->width()));
+        float scrollMoveRatio =
+            ((float)frame->scrollLeft() /
+             (frame->scrollWidth() - (frame->width() - frame->borderWidth())));
         LayoutUnit scrollMovableArea = frame->width() - frame->borderWidth();
         LayoutUnit scrollBarHeight =
             STARFISH_SCROLLBAR_THICKNESS /
             frame->node()->window()->devicePixelRatio();
-        LayoutUnit scrollBarWidth = (frame->width() - frame->borderWidth()) *
-                                    (frame->width() / frame->scrollWidth());
+        LayoutUnit scrollBarWidth =
+            scrollMovableArea *
+            ((frame->width() - frame->borderWidth()) / frame->scrollWidth());
         if (hasVerticalScroll) {
             scrollMovableArea -= scrollBarHeight;
         }
