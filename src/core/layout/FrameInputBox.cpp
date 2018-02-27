@@ -252,7 +252,7 @@ void FrameInputBox::layoutForTextEditable(
             STARFISH_ASSERT(lastEndIndex < caret);
             STARFISH_ASSERT(!textEditable->ignoreLineBreaks());
             x = paddingLeft() + borderLeft();
-            y = lastY + fontHeight;
+            y = lastY;
         }
     }
     textEditable->currentCaretLayoutLocation().setX(x);

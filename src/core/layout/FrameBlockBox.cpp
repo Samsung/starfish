@@ -340,10 +340,12 @@ void LayoutContext::applyRelativePositionInlineCase(Frame* origin,
 LayoutRect FrameBlockBox::computeVisibleRectForScroll(
     bool isForSpecialValueForTableCell)
 {
-    LayoutRect visibleRect = LayoutRect(0, 0, width(), height());
+    LayoutRect visibleRect =
+        LayoutRect(borderLeft(), borderTop(), contentWidth() + paddingWidth(),
+                   contentHeight() + paddingHeight());
     SkMatrix loc = SkMatrix::I();
     Frame::ComputeVisibleRectContext vctx(
-        Frame::ComputeVisibleRectContext::Scrolling, nullptr, loc, visibleRect);
+        Frame::ComputeVisibleRectContext::Scrolling, this, loc, visibleRect);
     vctx.isForSpecialValueForTableCell = isForSpecialValueForTableCell;
     if (hasBlockFlow()) {
         Frame* child = firstChild();
@@ -356,6 +358,7 @@ LayoutRect FrameBlockBox::computeVisibleRectForScroll(
             m_lineBoxes[i]->computeVisibleRect(vctx);
         }
     }
+
     return visibleRect;
 }
 
@@ -600,6 +603,10 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     if (overflowX >= AutoOverflow) {
         LayoutUnit* u;
         if (node()->isElement()) {
+            if (!node()->asElement()->ensureRareElementMembers()->m_scrolling) {
+                node()->asElement()->ensureRareElementMembers()->m_scrolling =
+                    new Scrolling(node()->asElement());
+            }
             u = &node()->asElement()->ensureRareElementMembers()->m_scrollLeft;
         } else {
             STARFISH_ASSERT(node()->isDocument());
@@ -621,6 +628,10 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     if (overflowY >= AutoOverflow) {
         LayoutUnit* u;
         if (node()->isElement()) {
+            if (!node()->asElement()->ensureRareElementMembers()->m_scrolling) {
+                node()->asElement()->ensureRareElementMembers()->m_scrolling =
+                    new Scrolling(node()->asElement());
+            }
             u = &node()->asElement()->ensureRareElementMembers()->m_scrollTop;
         } else {
             STARFISH_ASSERT(node()->isDocument());
@@ -672,7 +683,7 @@ void FrameBlockBox::updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
             scrollWidth += visibleRect.x();
         }
 
-        if (scrollWidth > width()) {
+        if (scrollWidth > contentWidth() + paddingWidth()) {
             m_flags.m_hasBiggerContentThanFrameWidth = true;
             ensureFrameBoxRareData();
             frameBlockBoxRareData()->m_scrollWidth = scrollWidth;
@@ -683,7 +694,7 @@ void FrameBlockBox::updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
             scrollHeight += visibleRect.y();
         }
 
-        if (scrollHeight > height()) {
+        if (scrollHeight > contentHeight() + paddingHeight()) {
             m_flags.m_hasBiggerContentThanFrameHeight = true;
             ensureFrameBoxRareData();
             frameBlockBoxRareData()->m_scrollHeight = scrollHeight;

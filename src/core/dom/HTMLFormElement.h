@@ -178,7 +178,7 @@ private:
     void clearPlannedNavigationTask();
     bool isFormAssociatedElement(Node* node);
     void computeFormAssociatedElements(Node* parent,
-                                       GCVector<HTMLFormControl*>& list);
+                                       GCVector<HTMLElement*>& list);
     bool isSubmittableElement(Node* node);
 
     HTMLFormControlsCollection* m_elements;

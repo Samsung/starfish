@@ -1931,7 +1931,7 @@ LayoutRect FrameBox::frameVisibleRect()
 
     ComputedStyle* cs = style();
     // TODO add box-shadow size into visibleRect when box-shadow implemented
-    if (cs->outlineStyle() != BorderStyleValue::NoneBorderStyleValue) {
+    if (cs && cs->outlineStyle() != BorderStyleValue::NoneBorderStyleValue) {
         LayoutUnit t = outlineThickness();
         r.setX(r.x() - t);
         r.setY(r.y() - t);
@@ -1950,14 +1950,14 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         return false;
     }
 
-    if (style()->visibility() == HiddenVisibilityValue) {
+    ComputedStyle* cs = style();
+    if (cs && cs->visibility() == HiddenVisibilityValue) {
         return true;
     }
 
     bool ret = !shouldApplyOverflow();
     LayoutRect r = frameVisibleRect();
 
-    ComputedStyle* cs = style();
     // TODO consider box-shadow here visibleRect when box-shadow implemented
     if (ctx.purpose == Frame::ComputeVisibleRectContext::GraphicsBuffer &&
         isFrameBlockBox()) {

@@ -692,8 +692,11 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
         return;
     }
 
-    if (s > scrollWidth() - frame()->asFrameBlockBox()->width().toUnsigned()) {
-        s = scrollWidth() - frame()->asFrameBlockBox()->width().toUnsigned();
+    auto scrollMax = (frame()->asFrameBlockBox()->width() -
+                      frame()->asFrameBlockBox()->borderWidth())
+                         .toUnsigned();
+    if (s > scrollWidth() - scrollMax) {
+        s = scrollWidth() - scrollMax;
     }
 
     if (s < 0) {
@@ -755,9 +758,11 @@ void Element::setScrollTop(double s, bool layoutIfNeeds)
         return;
     }
 
-    if (s >
-        scrollHeight() - frame()->asFrameBlockBox()->height().toUnsigned()) {
-        s = scrollHeight() - frame()->asFrameBlockBox()->height().toUnsigned();
+    auto scrollMax = (frame()->asFrameBlockBox()->height() -
+                      frame()->asFrameBlockBox()->borderHeight())
+                         .toUnsigned();
+    if (s > scrollHeight() - scrollMax) {
+        s = scrollHeight() - scrollMax;
     }
 
     if (s < 0) {

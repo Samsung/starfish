@@ -1545,6 +1545,7 @@ public:
         bool ignoreTransformOnce;
         bool isForSpecialValueForTableCell;
         StackingContext* sourceStackingContext;
+        FrameBox* sourceFrameBox;
         SkMatrix& tranformMatrix;
         LayoutRect& result;
         std::vector<std::tuple<LayoutRect, bool, bool>>
@@ -1557,6 +1558,20 @@ public:
             , ignoreTransformOnce(purpose == GraphicsBuffer ? true : false)
             , isForSpecialValueForTableCell(false)
             , sourceStackingContext(sourceStackingContext)
+            , sourceFrameBox(nullptr)
+            , tranformMatrix(tranformMatrix)
+            , result(result)
+        {
+        }
+
+        ComputeVisibleRectContext(ComputePurpose purpose,
+                                  FrameBox* sourceFrameBox,
+                                  SkMatrix& tranformMatrix, LayoutRect& result)
+            : purpose(purpose)
+            , ignoreTransformOnce(purpose == GraphicsBuffer ? true : false)
+            , isForSpecialValueForTableCell(false)
+            , sourceStackingContext(nullptr)
+            , sourceFrameBox(sourceFrameBox)
             , tranformMatrix(tranformMatrix)
             , result(result)
         {
