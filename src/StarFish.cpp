@@ -63,6 +63,7 @@ THE SOFTWARE.
 #include "core/style/ComputedStyle.h"
 #include "core/util/LineBreakerIteratorPool.h"
 #include "platform/file/File.h"
+#include "LWEWebView.h"
 #ifdef STARFISH_ENABLE_HTTPCACHE
 #include "platform/network/HTTPCache.h"
 #endif
@@ -699,4 +700,48 @@ size_t StarFish::countPointersInRootSet(void* ptr)
     }
 }
 #endif
+
+void StarFish::registerWebViewHandler(const std::string& handlerName,
+                                      std::function<void(String*, int)> handler)
+{
+    auto it = m_lwe_webview_handlers.find(handlerName);
+    if (it == m_lwe_webview_handlers.end()) {
+        m_lwe_webview_handlers.insert(std::make_pair(handlerName, handler));
+    } else {
+        it->second = handler;
+    }
+}
+
+void StarFish::callWebViewHandler(const std::string& handlerName, String* url,
+                                  int error_code)
+{
+    struct dummy {
+        std::string handlerName;
+        StarFish* starFish;
+        String* url;
+        int errorCode;
+    };
+    dummy* d = new dummy;
+    d->handlerName = handlerName;
+    d->starFish = this;
+    d->url = url;
+    d->errorCode = error_code;
+    messageLoop()->addIdler(
+        nullptr,
+        [](size_t, void* data) {
+            struct dummy {
+                std::string handlerName;
+                StarFish* starFish;
+                String* url;
+                int errorCode;
+            };
+            dummy* d = (dummy*)data;
+            auto it = d->starFish->m_lwe_webview_handlers.find(d->handlerName);
+            if (it != d->starFish->m_lwe_webview_handlers.end()) {
+                (it->second)(d->url, d->errorCode);
+            }
+            delete d;
+        },
+        d);
+}
 }

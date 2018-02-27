@@ -19,7 +19,6 @@
 
 #include "platform/public/ScreenInfo.h"
 #include "StaticStrings.h"
-
 namespace StarFish {
 
 class MessageLoop;
@@ -304,6 +303,10 @@ public:
         return (StarFishTestCompatibleMode)m_testCompatibleMode;
     }
 #endif
+    void registerWebViewHandler(const std::string& handlerName,
+                                std::function<void(String*, int)> handler);
+    void callWebViewHandler(const std::string& handlerName, String* url,
+                            int error_code = 0);
 
 protected:
     void enter();
@@ -375,6 +378,9 @@ protected:
 #ifdef STARFISH_ENABLE_TEST
     unsigned int m_testCompatibleMode;
 #endif
+    std::unordered_map<std::string, std::function<void(String*, int)>>
+        m_lwe_webview_handlers;
+
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);
 };

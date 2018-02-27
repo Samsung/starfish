@@ -51,12 +51,10 @@ private:
 class WebViewClient
 {
 public:
-    virtual std::string OnLoadResource(WebView* view,std::string url){
-		return std::string();
-	}
-    virtual void OnReceivedError(WebView* view, ResourceError error){}
+	virtual void OnReceivedError(WebView* view, ResourceError error){}
 	virtual void OnPageFinished(WebView* view, std::string url){}
 	virtual void OnPageStarted(WebView* view, std::string url){}
+	virtual void OnLoadResource(WebView* view,std::string url){}
 };
 
 

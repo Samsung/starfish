@@ -117,6 +117,8 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
     }
     m_topLevelBrowsingContext = BrowsingContext::create(starFish(), this);
     m_topLevelBrowsingContext->open(url, type, referrerURL);
+    starFish()->callWebViewHandler(std::string("OnPageStarted"),
+                                   url->urlString());
 }
 
 bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
