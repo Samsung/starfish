@@ -1633,6 +1633,7 @@ void WebView::setNeedsRendering()
 #else
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {
+        ecore_animator_freeze(wnd->m_renderingAnimator);
         ecore_animator_del(wnd->m_renderingAnimator);
         wnd->m_renderingAnimator = nullptr;
     }
@@ -1928,6 +1929,7 @@ Compositor* WindowImplEFL::prepareCompositor()
 void WindowImplEFL::clearResources()
 {
     if (m_renderingAnimator) {
+        ecore_animator_freeze(m_renderingAnimator);
         ecore_animator_del(m_renderingAnimator);
     }
 
