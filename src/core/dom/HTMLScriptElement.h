@@ -60,6 +60,9 @@ public:
     String* text();
     void setText(String* s);
 
+    bool async();
+    void setAsync(bool b);
+
     virtual void didCharacterDataModified(String* before, String* after);
     virtual void didNodeInserted(Node* parent, Node* newChild);
     virtual void didAttributeChanged(QualifiedName name, String* old,

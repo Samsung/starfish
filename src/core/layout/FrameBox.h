@@ -812,9 +812,9 @@ public:
         return false;
     }
 
-protected:
     void applyBorderRadiusClippingIfNeeds(Canvas* canvas);
 
+protected:
     bool hasRareData() const
     {
         size_t* ptr = (size_t*)m_layoutParent;

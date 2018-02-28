@@ -304,6 +304,8 @@ public:
     QualifiedName m_scrolling;
     QualifiedName m_frameborder;
     QualifiedName m_autofocus;
+    QualifiedName m_async;
+    QualifiedName m_defer;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;
