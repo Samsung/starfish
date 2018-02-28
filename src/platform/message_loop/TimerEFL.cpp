@@ -112,6 +112,7 @@ void Timer::removeTimer(size_t reqID)
     auto handlerData = m_timeoutHandler.find(reqID);
     if (handlerData != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
+        ecore_timer_freeze(td->m_timerID);
         ecore_timer_del(td->m_timerID);
         GC_FREE(td);
         m_timeoutHandler.erase(handlerData);
@@ -188,6 +189,7 @@ void Timer::removeWindowAnimator(size_t reqID)
 
     if (handlerData != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
+        ecore_animator_freeze((Ecore_Animator*)td->m_timerID);
         ecore_animator_del((Ecore_Animator*)td->m_timerID);
         GC_FREE(td);
         m_requestAnimationFrameHandler.erase(handlerData);
@@ -202,6 +204,7 @@ void Timer::removeGenericAnimator(size_t reqID)
 
     if (handlerData != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)handlerData->second;
+        ecore_animator_freeze((Ecore_Animator*)ad->m_timerID);
         ecore_animator_del((Ecore_Animator*)ad->m_timerID);
         GC_FREE(ad);
         m_animationHandler.erase(handlerData);
@@ -215,6 +218,7 @@ void Timer::clear(BrowsingContext* ctx)
         TimeoutData* td = (TimeoutData*)timerIter->second;
         if ((td->m_window && td->m_window->browsingContext() == ctx) ||
             ctx == nullptr) {
+            ecore_timer_freeze(td->m_timerID);
             ecore_timer_del(td->m_timerID);
             GC_FREE(td);
             timerIter = m_timeoutHandler.erase(timerIter);
@@ -228,6 +232,7 @@ void Timer::clear(BrowsingContext* ctx)
         TimeoutData* td = (TimeoutData*)aniIter->second;
         if ((td->m_window && td->m_window->browsingContext() == ctx) ||
             ctx == nullptr) {
+            ecore_animator_freeze((Ecore_Animator*)td->m_timerID);
             ecore_animator_del((Ecore_Animator*)td->m_timerID);
             GC_FREE(td);
             aniIter = m_requestAnimationFrameHandler.erase(aniIter);
@@ -241,6 +246,7 @@ void Timer::clear(BrowsingContext* ctx)
         AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
         if ((ad->m_window && ad->m_window->browsingContext() == ctx) ||
             ctx == nullptr) {
+            ecore_animator_freeze((Ecore_Animator*)ad->m_timerID);
             ecore_animator_del((Ecore_Animator*)ad->m_timerID);
             GC_FREE(ad);
             aniIter2 = m_animationHandler.erase(aniIter2);

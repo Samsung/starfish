@@ -266,6 +266,7 @@ void MessageLoop::removeIdler(size_t handle)
     }
     IdlerData* id = (IdlerData*)handle;
     removeIderFromList(m_idlers, id);
+    ecore_animator_freeze(id->m_idler);
     ecore_animator_del(id->m_idler);
     GC_FREE(id);
 }
@@ -287,6 +288,7 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
         if (id->m_ctx == ctx || ctx == nullptr) {
+            ecore_animator_freeze(id->m_idler);
             ecore_animator_del(id->m_idler);
             iter = m_idlers.erase(iter);
             GC_FREE(id);

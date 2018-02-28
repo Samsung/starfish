@@ -309,6 +309,7 @@ void WebView::setNeedsRendering()
 
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {
+        ecore_animator_freeze(wnd->m_renderingAnimator);
         ecore_animator_del(wnd->m_renderingAnimator);
     }
 
@@ -335,6 +336,7 @@ Compositor* WindowImplEFLHeadLess::prepareCompositor()
 void WindowImplEFLHeadLess::clearResources()
 {
     if (m_renderingAnimator) {
+        ecore_animator_freeze(m_renderingAnimator);
         ecore_animator_del(m_renderingAnimator);
     }
 }
