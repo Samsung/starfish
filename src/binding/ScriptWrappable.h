@@ -37,6 +37,7 @@ typedef Escargot::FunctionObjectRef* ScriptFunction;
 typedef Escargot::ArrayBufferObjectRef* ScriptArrayBuffer;
 typedef Escargot::ArrayBufferViewRef* ScriptArrayBufferView;
 typedef Escargot::Uint8ClampedArrayObjectRef* ScriptUint8ClampedArray;
+typedef Escargot::ExecutionStateRef* ScriptExecutionState;
 
 ScriptValue scriptNull();
 ScriptValue scriptUndefined();
@@ -70,6 +71,7 @@ String* toBrowserString(Escargot::ExecutionStateRef* state,
 String* toBrowserString(Escargot::ExecutionStateRef* state,
                         Escargot::StringRef* v);
 ScriptString toJSString(String* v);
+ScriptObject toCalleeObject(Escargot::ExecutionStateRef* state);
 
 ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
                                        Escargot::ValueRef* thisValue,
@@ -105,6 +107,15 @@ ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
                               size_t len);
 ScriptUint8ClampedArray createEmptyUint8ClampedArray(
     ScriptBindingInstance* instance);
+
+void registerJavaScriptNativeInterface(
+    ScriptBindingInstance* instance, String* exposedObjectName,
+    String* jsFunctionName, void* scriptObject,
+    Escargot::ScriptNativeFunctionPointer scriptNativeFunctionPointer);
+void unregisterJavaScriptNativeInterface(ScriptBindingInstance* instance,
+                                         String* exposedObjectName,
+                                         String* jsFunctionName);
+
 ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData);
 double parseDate(ScriptBindingInstance* instance, String* date);
 String* timeToUTCString(ScriptBindingInstance* instance, int64_t time);
@@ -236,6 +247,11 @@ public:
     virtual Transferable* toTransferable() const
     {
         return nullptr;
+    }
+
+    virtual bool isJavaScriptNativeHandler() const
+    {
+        return false;
     }
 
 protected:

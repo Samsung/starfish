@@ -25,7 +25,7 @@ namespace LWE
 {
 
 class WebView;
-class Settings 
+class STARFISH_EXPORT Settings 
 {
 public:
 	Settings(std::string default_ua,std::string ua);
@@ -37,7 +37,7 @@ private:
 	std::string m_UserAgent;
 };
 
-class ResourceError 
+class STARFISH_EXPORT ResourceError 
 {
 public:
     ResourceError(int code,std::string description);
@@ -48,7 +48,7 @@ private:
 	std::string m_description;
 };
 
-class WebViewClient
+class STARFISH_EXPORT WebViewClient
 {
 public:
 	virtual void OnReceivedError(WebView* view, ResourceError error){}
@@ -58,7 +58,7 @@ public:
 };
 
 
-class WebView {
+class STARFISH_EXPORT WebView {
 public:
 	static WebView* Create();
 	static WebView* Create(void* starFish);
