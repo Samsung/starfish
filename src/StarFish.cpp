@@ -715,6 +715,10 @@ void StarFish::registerWebViewHandler(const std::string& handlerName,
 void StarFish::callWebViewHandler(const std::string& handlerName, String* url,
                                   int error_code)
 {
+    auto it = m_lwe_webview_handlers.find(handlerName);
+    if (it == m_lwe_webview_handlers.end()) {
+        return;
+    }
     struct dummy {
         std::string handlerName;
         StarFish* starFish;
