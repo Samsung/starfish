@@ -153,7 +153,8 @@ cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
 %files
 %manifest %{name}.manifest
 %{_libdir}/*.so
-%license LICENSE LICENSE.BSL-1.0 LICENSE.LGPL-2.1+ LICENSE.MPL-1.1 LICENSE.BSD-2.0 LICENSE.ICU LICENSE.MIT
+%license LICENSE LICENSE.LGPL-2.1+ LICENSE.BSD-2-Clause LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT
+
 
 %files devel
 %{_includedir}
