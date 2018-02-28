@@ -145,6 +145,7 @@ cp -r ./tizen_wearable_build/out/release/lightweight-web-engine.tizen_wearable %
 mkdir -p %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishPublic.h %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishExport.h %{buildroot}%{_includedir}/%{name}/
+cp inc/LWEWebView.h %{buildroot}%{_includedir}/%{name}/
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
 cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/

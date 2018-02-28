@@ -25,6 +25,10 @@
 #include "core/page/History.h"
 #include "core/page/Location.h"
 #include "core/dom/Document.h"
+#include "binding/ScriptWrappable.h"
+#include "JavaScriptNativeHandler.h"
+
+#include <EscargotPublic.h>
 
 #define TO_STARFISH(ptr) ((StarFish::StarFish*)ptr)
 #define TO_HISTORY(ptr)         \
@@ -51,7 +55,42 @@
         ->document()            \
         ->resourceLoader()
 
+#define TO_SCRIPT_BINDING_INSTANCE(ptr) \
+    ((StarFish::StarFish*)ptr)          \
+        ->platformWindow()              \
+        ->webView()                     \
+        ->mainBrowsingContext()         \
+        ->window()                      \
+        ->scriptBindingInstance()
+
 namespace LWE {
+
+static StarFish::ScriptValue nativeCallbackFunction(
+    StarFish::ScriptExecutionState state, StarFish::ScriptValue thisValue,
+    size_t argc, StarFish::ScriptValue* argv, bool isNewExpression)
+{
+    auto callee = StarFish::toCalleeObject(state);
+    if (callee) {
+        void* data = callee->extraData();
+        if (data) {
+            StarFish::ScriptWrappable* w = (StarFish::ScriptWrappable*)data;
+            if (w->isJavaScriptNativeHandler()) {
+                StarFish::JavaScriptNativeHandler* jsNhandler =
+                    (StarFish::JavaScriptNativeHandler*)w;
+                StarFish::String* result = StarFish::String::emptyString;
+                StarFish::String* param = StarFish::String::emptyString;
+                if (argc > 0) {
+                    StarFish::ScriptValue arg0 = argv[0];
+                    param = StarFish::toBrowserString(state, arg0);
+                }
+                result = jsNhandler->callNativeHandler(param);
+                return StarFish::createScriptValue(
+                    StarFish::createScriptString(result));
+            }
+        }
+    }
+    return StarFish::scriptUndefined();
+}
 
 Settings::Settings(std::string default_ua, std::string ua)
     : m_defaultUserAgent(default_ua)
@@ -251,6 +290,17 @@ void WebView::AddJavaScriptInterface(std::string exposedObjectName,
                                      std::string (*cb)(std::string))
 {
     STARFISH_ASSERT(m_starfish);
+
+    StarFish::String* objectName =
+        StarFish::String::fromUTF8(exposedObjectName.c_str());
+    StarFish::String* functionName =
+        StarFish::String::fromUTF8(jsFunctionName.c_str());
+
+    StarFish::registerJavaScriptNativeInterface(
+        TO_SCRIPT_BINDING_INSTANCE(m_starfish), objectName, functionName,
+        new StarFish::JavaScriptNativeHandler(TO_STARFISH(m_starfish),
+                                              functionName, cb),
+        nativeCallbackFunction);
 }
 
 std::string WebView::EvaluateJavaScript(std::string script)
@@ -289,6 +339,13 @@ void WebView::RemoveJavascriptInterface(std::string exposedObjectName,
                                         std::string jsFunctionName)
 {
     STARFISH_ASSERT(m_starfish);
+    StarFish::String* objectName =
+        StarFish::String::fromUTF8(exposedObjectName.c_str());
+    StarFish::String* functionName =
+        StarFish::String::fromUTF8(jsFunctionName.c_str());
+
+    StarFish::unregisterJavaScriptNativeInterface(
+        TO_SCRIPT_BINDING_INSTANCE(m_starfish), objectName, functionName);
 }
 
 void WebView::SetWebViewClient(LWE::WebViewClient* client)

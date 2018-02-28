@@ -215,6 +215,15 @@ StringRef* toJSString(String* v)
     return createScriptString(v);
 }
 
+ScriptObject toCalleeObject(Escargot::ExecutionStateRef* state)
+{
+    auto callee = state->resolveCallee();
+    if (callee) {
+        return callee->asObject();
+    }
+    return nullptr;
+}
+
 ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
                                        Escargot::ValueRef* thisValue,
                                        size_t argc, Escargot::ValueRef** argv,
@@ -582,6 +591,61 @@ ScriptUint8ClampedArray createEmptyUint8ClampedArray(
     ContextRef* ctx = instance->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(ctx);
     return Uint8ClampedArrayObjectRef::create(state);
+}
+
+void registerJavaScriptNativeInterface(
+    ScriptBindingInstance* instance, String* exposedObjectName,
+    String* jsFunctionName, void* scriptObject,
+    Escargot::ScriptNativeFunctionPointer scriptNativeFunctionPointer)
+{
+    ContextRef* context = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(context);
+    GlobalObjectRef* globalObject = context->globalObject();
+
+    ObjectRef* targetObject = nullptr;
+    auto key = ValueRef::create(toJSString(exposedObjectName));
+    if (globalObject->hasOwnProperty(state, key)) {
+        targetObject = globalObject->getOwnProperty(state, key)->asObject();
+    } else {
+        targetObject = ObjectRef::create(state);
+        globalObject->defineDataProperty(
+            state, ValueRef::create(toJSString(exposedObjectName)),
+            ValueRef::create(targetObject), false, false, true);
+    }
+
+    StringRef* nativeCallbackString = toJSString(jsFunctionName);
+    FunctionObjectRef* nativeCallbackESFn = FunctionObjectRef::create(
+        state, FunctionObjectRef::NativeFunctionInfo(
+                   AtomicStringRef::create(
+                       context, jsFunctionName->toUTF8NonGCString().data()),
+                   scriptNativeFunctionPointer, 1, nullptr, true, false));
+
+    nativeCallbackESFn->setExtraData(scriptObject);
+    targetObject->defineDataProperty(
+        state, Escargot::ValueRef::create(nativeCallbackString),
+        Escargot::ValueRef::create(nativeCallbackESFn), false, false, true);
+    state->destroy();
+}
+void unregisterJavaScriptNativeInterface(ScriptBindingInstance* instance,
+                                         String* exposedObjectName,
+                                         String* jsFunctionName)
+{
+    ContextRef* context = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(context);
+    GlobalObjectRef* globalObject = context->globalObject();
+
+    auto key = ValueRef::create(toJSString(exposedObjectName));
+    if (globalObject->hasOwnProperty(state, key)) {
+        ObjectRef* targetObject =
+            globalObject->getOwnProperty(state, key)->asObject();
+        auto nativeCallbackName = ValueRef::create(toJSString(jsFunctionName));
+        if (targetObject->hasOwnProperty(state, nativeCallbackName)) {
+            targetObject->deleteOwnProperty(state, nativeCallbackName);
+        }
+    }
+    // TODO : delete global object when there is no callback in that object
+
+    state->destroy();
 }
 
 ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData)
