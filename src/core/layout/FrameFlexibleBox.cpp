@@ -749,9 +749,8 @@ void FlexFormattingContext::computeCrossSize()
 
         if (m_isMainAxisInInlineAxis) {
             MainSizeFixer fixer(flexItem, true);
-            style->setHeight(
-                Length(Length::Fixed,
-                       flexLine.m_lineHeight - flexItem->marginHeight()));
+            style->setHeight(Length(Length::Fixed, flexLine.m_lineHeight -
+                                                       flexItem->mbpHeight()));
             flexItem->markNeedsLayout();
             flexItem->layout(m_layoutContext,
                              Frame::LayoutWantToResolve::ResolveHeight);
@@ -759,7 +758,7 @@ void FlexFormattingContext::computeCrossSize()
         } else {
             MainSizeFixer fixer(flexItem, false);
             style->setWidth(Length(Length::Fixed, flexLine.m_lineHeight -
-                                                      flexItem->marginWidth()));
+                                                      flexItem->mbpWidth()));
             flexItem->markNeedsLayout();
             flexItem->layout(m_layoutContext,
                              Frame::LayoutWantToResolve::ResolveAll);
