@@ -64,11 +64,10 @@ static bool isJavaScriptType(const char* type)
 class ScriptDownloadClient : public ResourceClient {
 public:
     ScriptDownloadClient(HTMLScriptElement* script, Resource* res,
-                         bool forceSync, bool inParser)
+                         bool shouldResumeParsing)
         : ResourceClient(res)
         , m_element(script)
-        , m_forceSync(forceSync)
-        , m_inParser(inParser)
+        , m_shouldResumeParsing(shouldResumeParsing)
     {
     }
 
@@ -103,8 +102,10 @@ public:
                 ->toASCIILower()
                 ->contains("javascript")) {
             String* text = m_resource->asTextResource()->text();
+            m_element->document()->appendCurrentScript(m_element);
             evaluateString(m_element->window()->scriptBindingInstance(), text,
                            ResourceClient::resource()->url()->urlString());
+            m_element->document()->popCurrentScript();
         }
         didScriptLoaded();
     }
@@ -112,22 +113,19 @@ public:
     void didScriptLoaded()
     {
         m_element->m_didScriptExecuted = true;
-        if (m_inParser && !m_forceSync) {
+        if (m_shouldResumeParsing) {
             m_element->document()->resumeDocumentParsing();
         }
     }
 
 protected:
     HTMLScriptElement* m_element;
-    bool m_forceSync;
-    bool m_inParser;
+    bool m_shouldResumeParsing;
 };
 
 bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
 {
-    document()->appendCurrentScript(this);
     bool result = executeScriptImpl(forceSync, inParser);
-    document()->popCurrentScript();
     return result;
 }
 
@@ -156,9 +154,11 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             }
             String* script = text();
             m_isAlreadyStarted = true;
+            document()->appendCurrentScript(this);
             evaluateString(
                 window()->scriptBindingInstance(), script,
                 String::createASCIIString("HTMLScriptElement innerText"));
+            document()->popCurrentScript();
             m_didScriptExecuted = true;
             return false;
         } else {
@@ -175,14 +175,19 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             TextResource* res = document()->resourceLoader().fetchText(
                 new ResourceURL(url, document()->baseURL()->baseURI()),
                 charset);
+            bool shouldResumeParsing = inParser && !forceSync && !async();
             res->addResourceClient(
-                new ScriptDownloadClient(this, res, forceSync, inParser));
+                new ScriptDownloadClient(this, res, shouldResumeParsing));
             res->addResourceClient(new ElementResourceClient(this, res, true));
             res->request(forceSync
                              ? Resource::ResourceRequestSyncLevel::AlwaysSync
                              : Resource::ResourceRequestSyncLevel::NeverSync,
                          document()->documentURI(), true);
-            return true;
+            if (async()) {
+                return false;
+            } else {
+                return true;
+            }
         }
     }
     return false;
@@ -278,6 +283,20 @@ void HTMLScriptElement::setText(String* s)
         firstChild()->asText()->setData(s);
     } else {
         setTextContent(s);
+    }
+}
+
+bool HTMLScriptElement::async()
+{
+    return hasAttribute(starFish()->staticStrings()->m_async) != SIZE_MAX;
+}
+
+void HTMLScriptElement::setAsync(bool b)
+{
+    if (b) {
+        setAttribute(starFish()->staticStrings()->m_async, String::emptyString);
+    } else {
+        removeAttribute(starFish()->staticStrings()->m_async);
     }
 }
 

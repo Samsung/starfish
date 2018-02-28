@@ -548,6 +548,11 @@ public:
                                       b->width() - b->borderWidth(),
                                       b->height() - b->borderHeight());
                         canvas->clip(rt);
+                        if (b->style()->hasBorderRadius()) {
+                            canvas->translate(dx, dy);
+                            b->applyBorderRadiusClippingIfNeeds(canvas);
+                            canvas->translate(-dx, -dy);
+                        }
                     }
 
                     if (overflowOrScroll.second) {
@@ -1166,6 +1171,7 @@ void StackingContext::paintStackingContext(
 
     if (!hasStackingBuffer && owner()->shouldApplyOverflow()) {
         canvas->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
+        m_owner->applyBorderRadiusClippingIfNeeds(canvas);
         if (m_owner->isFrameBlockBox()) {
             canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
                               -m_owner->asFrameBlockBox()->scrollTop());

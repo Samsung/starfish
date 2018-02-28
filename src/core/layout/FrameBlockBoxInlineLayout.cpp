@@ -1526,6 +1526,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                 clipRect.setX(clipRect.x() + dx);
                 clipRect.setY(clipRect.y() + dy);
                 canvas->clip(clipRect);
+                childBox->applyBorderRadiusClippingIfNeeds(canvas);
             }
 
             childBox->paintInlineContent(canvas, stage, dx, dy);
@@ -1590,6 +1591,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                     canvas->save();
                     canvas->clip(
                         childBox->makeRect(BoxValue::PaddingBoxBoxValue));
+                    childBox->applyBorderRadiusClippingIfNeeds(canvas);
                     canvas->translate(
                         -childBox->asFrameBlockBox()->scrollLeft(),
                         -childBox->asFrameBlockBox()->scrollTop());
@@ -4605,6 +4607,7 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
     if (overflowApplied) {
         ctx.m_canvas->save();
         ctx.m_canvas->clip(makeRect(BoxValue::PaddingBoxBoxValue));
+        applyBorderRadiusClippingIfNeeds(ctx.m_canvas);
         ctx.m_canvas->translate(-scrollLeft(), -scrollTop());
     }
 
