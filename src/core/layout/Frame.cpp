@@ -975,7 +975,6 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_hasBiggerContentThanFrameHeight = false;
     m_flags.m_needsToComputeScrollVisbleRect = false;
     m_flags.m_isFirstLine = false;
-    m_flags.m_isRunningTransformAnimation = false;
     m_flags.m_shouldApplyOverflow = false;
     m_flags.m_seenNormalFlowBlockChild = false;
     m_flags.m_seenNonPositionedFloats = false;
@@ -1739,5 +1738,25 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
     }
 
     return false;
+}
+
+bool Frame::isRunningTransformAnimation()
+{
+    if (isAnonymous()) {
+        return false;
+    }
+    return node()->isRunningTransformAnimation();
+}
+
+void Frame::markRunningTransformAnimation()
+{
+    STARFISH_ASSERT(node());
+    node()->markRunningTransformAnimation();
+}
+
+void Frame::clearRunningTransformAnimation()
+{
+    STARFISH_ASSERT(node());
+    node()->isRunningTransformAnimation();
 }
 }

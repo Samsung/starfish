@@ -1,4 +1,4 @@
-#http://10.113.63.233:7000/xmlhttprequest-gc.html
+#http://10.113.111.47:7000/xmlhttprequest-gc.html
 #test/cairo/reftest/vendor/webkit/fast/block/positioning/removing-inside-relpositioned-inline-crash.html
 #test/cairo/reftest/vendor/webkit/fast/block/positioning/crash-when-transform-is-removed.html
 #test/cairo/reftest/vendor/webkit/fast/events/dispatchEvent-crash.html

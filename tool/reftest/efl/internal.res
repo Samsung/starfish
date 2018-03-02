@@ -118,7 +118,7 @@ test/efl/internal-test/css/width/rtl-image-element-width-static.html
 test/efl/internal-test/css/width/ltr-image-element-width-static.html
 test/efl/internal-test/css/background/background_shorthand_invalid.html
 test/efl/internal-test/xhr/responseText_after_abort.html
-http://10.113.63.233:7000/cookie/cookie-internal-test-3.html
+http://10.113.111.47:7000/cookie/cookie-internal-test-3.html
 test/efl/internal-test/css/float/float-internal-test-8.html
 test/efl/internal-test/css/display/block-inline-basic.html
 test/efl/internal-test/css/float/float-internal-test-9.html

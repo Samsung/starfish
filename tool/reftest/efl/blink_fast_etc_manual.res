@@ -1,4 +1,4 @@
-http://10.113.63.233:7000/xmlhttprequest-gc.html
+http://10.113.111.47:7000/xmlhttprequest-gc.html
 test/efl/reftest/vendor/blink/fast/block/positioning/removing-inside-relpositioned-inline-crash.html
 test/efl/reftest/vendor/blink/fast/images/2-comp.html
 test/efl/reftest/vendor/blink/fast/images/do-not-paint-below-image-baseline.html

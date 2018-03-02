@@ -98,6 +98,7 @@ protected:
         , m_didInlineStyleModifiedAfterAttributeSet(false)
         , m_tabIndexWasSetExplicitly(false)
         , m_hasDirAttribute(false)
+        , m_isRunningTransformAnimation(false)
         , m_state(NodeStateNormal)
         , m_rareNodeMembers(nullptr)
         , m_nextSibling(nullptr)
@@ -577,6 +578,21 @@ public:
         return (HTMLTextEditable*)this;
     }
 
+    bool isRunningTransformAnimation()
+    {
+        return m_isRunningTransformAnimation;
+    }
+
+    void markRunningTransformAnimation()
+    {
+        m_isRunningTransformAnimation = true;
+    }
+
+    void clearRunningTransformAnimation()
+    {
+        m_isRunningTransformAnimation = false;
+    }
+
 private:
     void validatePreinsert(Node* child, Node* childRef);
     void validateReplace(Node* child, Node* childToRemove);
@@ -611,6 +627,8 @@ protected:
     bool m_tabIndexWasSetExplicitly : 1;
     // for HTMLElelement
     bool m_hasDirAttribute : 1;
+    // for animation
+    bool m_isRunningTransformAnimation;
 
     int m_state : 8;
 
