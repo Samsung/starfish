@@ -284,34 +284,21 @@ void HTMLFormControl::didAttributeChanged(QualifiedName name, String* old,
 
 bool HTMLFormControl::isAutofocusable()
 {
-    return hasAttribute(starFish()->staticStrings()->m_autofocus) &&
-           supportsFocus();
+    return autofocus() && supportsFocus();
 }
 
 bool HTMLFormControl::autofocus()
 {
-    Nullable<String*> val =
-        getAttribute(starFish()->staticStrings()->m_autofocus);
-
-    if (!val.hasValue()) {
-        return false;
-    }
-
-    if (val == starFish()->staticStrings()->m_false) {
-        return false;
-    }
-
-    return true;
+    return hasAttribute(starFish()->staticStrings()->m_autofocus) != SIZE_MAX;
 }
 
 void HTMLFormControl::setAutofocus(bool autofocus)
 {
     if (autofocus) {
         setAttribute(starFish()->staticStrings()->m_autofocus,
-                     starFish()->staticStrings()->m_true);
+                     String::emptyString);
     } else {
-        setAttribute(starFish()->staticStrings()->m_autofocus,
-                     starFish()->staticStrings()->m_false);
+        removeAttribute(starFish()->staticStrings()->m_autofocus);
     }
 }
 
