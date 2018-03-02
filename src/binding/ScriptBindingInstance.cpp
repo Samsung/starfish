@@ -77,10 +77,10 @@ void ScriptBindingInstance::close()
         m_scriptContext->vmInstance()->clearCachesRelatedWithContext();
     }
 #ifdef TIZEN_DEVICE_API
-    m_deviceAPI = nullptr;
     DeviceAPI::close(m_scriptContext);
 #endif
-    m_scriptContext->destroy();
+    m_scriptContext->clearRelatedQueuedPromiseJobs();
+    m_scriptContext->setVirtualIdentifierCallback(nullptr);
 }
 
 static String* toBrowserStringForConsole(ExecutionStateRef* state,

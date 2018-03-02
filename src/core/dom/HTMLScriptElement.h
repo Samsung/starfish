@@ -23,6 +23,7 @@ namespace StarFish {
 
 class HTMLScriptElement : public HTMLElement {
     friend class ScriptDownloadClient;
+    friend class DeferredScriptDownloadClient;
 
 public:
     HTMLScriptElement(Document* document)
@@ -62,6 +63,9 @@ public:
 
     bool async();
     void setAsync(bool b);
+
+    bool defer();
+    void setDefer(bool b);
 
     virtual void didCharacterDataModified(String* before, String* after);
     virtual void didNodeInserted(Node* parent, Node* newChild);

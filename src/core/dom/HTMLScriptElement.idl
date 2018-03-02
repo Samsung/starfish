@@ -8,7 +8,7 @@ interface HTMLScriptElement : HTMLElement {
   [Unimplemented, CEReactions] attribute boolean noModule;
   [CEReactions] attribute DOMString charset;
   [CEReactions] attribute boolean async;
-  [Unimplemented, CEReactions] attribute boolean defer;
+  [CEReactions] attribute boolean defer;
   [Unimplemented, CEReactions] attribute DOMString? crossOrigin;
   [CEReactions] attribute DOMString text;
   [Unimplemented, CEReactions] attribute DOMString nonce;
