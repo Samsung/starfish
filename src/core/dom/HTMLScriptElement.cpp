@@ -41,11 +41,11 @@ void* HTMLScriptElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-static bool isJavaScriptType(const char* type)
+static bool isJavaScriptType(const char* type, size_t len)
 {
     if (strcmp("", type) == 0) {
         return true;
-    } else if (strcmp("text/javascript", type) == 0) {
+    } else if (len == 15 && memcmp("text/javascript", type, 15) == 0) {
         return true;
     } else if (strcmp("application/javascript", type) == 0) {
         return true;
@@ -57,9 +57,90 @@ static bool isJavaScriptType(const char* type)
         return true;
     } else if (strcmp("text/ecmascript", type) == 0) {
         return true;
+    } else if (strcmp("text/plain", type) == 0) {
+        return true;
+    } else if (strcmp("text/html", type) == 0) {
+        return true;
     }
     return false;
 }
+
+class DeferredScriptDownloadClient : public ResourceClient {
+public:
+    DeferredScriptDownloadClient(HTMLScriptElement* script, Resource* res)
+        : ResourceClient(res)
+        , m_isLoaded(false)
+        , m_successToLoad(false)
+        , m_responseMIMEType(String::emptyString)
+        , m_element(script)
+    {
+        m_element->document()->m_deferredScriptElements.push_back(
+            std::make_pair(m_element, this));
+    }
+
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+        m_isLoaded = true;
+        didScriptLoaded();
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        m_successToLoad = true;
+        m_isLoaded = true;
+        m_responseMIMEType = m_resource->resourceRequest()->responseMimeType();
+
+        auto& deferredScriptElements =
+            m_element->document()->m_deferredScriptElements;
+        while (deferredScriptElements.size() &&
+               deferredScriptElements.begin()->second->m_isLoaded) {
+            auto client = deferredScriptElements.begin()->second;
+            auto s =
+                client->m_responseMIMEType->toASCIILower()->toUTF8NonGCString();
+            if (isJavaScriptType(s.data(), s.length())) {
+                String* text = client->m_resource->asTextResource()->text();
+                client->m_element->document()->appendCurrentScript(
+                    client->m_element);
+                evaluateString(
+                    client->m_element->window()->scriptBindingInstance(), text,
+                    ResourceClient::resource()->url()->urlString());
+                client->m_element->document()->popCurrentScript();
+            }
+            deferredScriptElements.erase(deferredScriptElements.begin());
+        }
+        didScriptLoaded();
+    }
+
+    void didScriptLoaded()
+    {
+        m_element->m_didScriptExecuted = true;
+        if (!m_successToLoad) {
+            size_t pos = 0;
+            while (true) {
+                if (m_element->document()
+                        ->m_deferredScriptElements[pos]
+                        .second == this) {
+                    break;
+                }
+                pos++;
+            }
+
+            m_element->document()->m_deferredScriptElements.erase(pos);
+        }
+
+        if (m_element->document()->m_deferredScriptElements.size() == 0 &&
+            m_element->document()->documentBuilder() == nullptr) {
+            m_element->document()->notifyDomContentLoaded();
+        }
+    }
+
+    bool m_isLoaded;
+    bool m_successToLoad;
+    String* m_responseMIMEType;
+    HTMLScriptElement* m_element;
+};
 
 class ScriptDownloadClient : public ResourceClient {
 public:
@@ -84,23 +165,7 @@ public:
                      ->responseMimeType()
                      ->toASCIILower()
                      ->toUTF8NonGCString();
-        if (isJavaScriptType(s.data()) ||
-            m_resource->resourceRequest()
-                ->responseMimeType()
-                ->toASCIILower()
-                ->equals("text/plain") ||
-            m_resource->resourceRequest()
-                ->responseMimeType()
-                ->toASCIILower()
-                ->equals("text/html") ||
-            m_resource->resourceRequest()
-                ->responseMimeType()
-                ->toASCIILower()
-                ->equals("application/json") ||
-            m_resource->resourceRequest()
-                ->responseMimeType()
-                ->toASCIILower()
-                ->contains("javascript")) {
+        if (isJavaScriptType(s.data(), s.length())) {
             String* text = m_resource->asTextResource()->text();
             m_element->document()->appendCurrentScript(m_element);
             evaluateString(m_element->window()->scriptBindingInstance(), text,
@@ -142,7 +207,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
         if (typeStr.hasValue()) {
             auto utf8Data =
                 typeStr.getValue()->toASCIILower()->toUTF8NonGCString();
-            if (!isJavaScriptType(utf8Data.data())) {
+            if (!isJavaScriptType(utf8Data.data(), utf8Data.length())) {
                 return false;
             }
         }
@@ -175,15 +240,20 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             TextResource* res = document()->resourceLoader().fetchText(
                 new ResourceURL(url, document()->baseURL()->baseURI()),
                 charset);
-            bool shouldResumeParsing = inParser && !forceSync && !async();
-            res->addResourceClient(
-                new ScriptDownloadClient(this, res, shouldResumeParsing));
+            if (!async() && defer()) {
+                res->addResourceClient(
+                    new DeferredScriptDownloadClient(this, res));
+            } else {
+                bool shouldResumeParsing = inParser && !forceSync && !async();
+                res->addResourceClient(
+                    new ScriptDownloadClient(this, res, shouldResumeParsing));
+            }
             res->addResourceClient(new ElementResourceClient(this, res, true));
             res->request(forceSync
                              ? Resource::ResourceRequestSyncLevel::AlwaysSync
                              : Resource::ResourceRequestSyncLevel::NeverSync,
                          document()->documentURI(), true);
-            if (async()) {
+            if (async() || defer()) {
                 return false;
             } else {
                 return true;
@@ -297,6 +367,20 @@ void HTMLScriptElement::setAsync(bool b)
         setAttribute(starFish()->staticStrings()->m_async, String::emptyString);
     } else {
         removeAttribute(starFish()->staticStrings()->m_async);
+    }
+}
+
+bool HTMLScriptElement::defer()
+{
+    return hasAttribute(starFish()->staticStrings()->m_defer) != SIZE_MAX;
+}
+
+void HTMLScriptElement::setDefer(bool b)
+{
+    if (b) {
+        setAttribute(starFish()->staticStrings()->m_defer, String::emptyString);
+    } else {
+        removeAttribute(starFish()->staticStrings()->m_defer);
     }
 }
 

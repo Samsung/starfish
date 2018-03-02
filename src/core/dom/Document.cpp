@@ -531,7 +531,7 @@ void Document::resumeDocumentParsing()
             this);
 }
 
-void Document::notifyDomContentLoaded()
+void Document::endDocumentParsing()
 {
     if (m_pendingDocumentParsingIdlerHandle != SIZE_MAX) {
         window()->starFish()->messageLoop()->removeIdler(
@@ -539,6 +539,13 @@ void Document::notifyDomContentLoaded()
         m_pendingDocumentParsingIdlerHandle = SIZE_MAX;
     }
     m_documentBuilder = nullptr;
+}
+
+void Document::notifyDomContentLoaded()
+{
+    if (m_deferredScriptElements.size()) {
+        return;
+    }
 
     if (!m_domContentLoadedFired) {
         m_resourceLoader->notifyEndParseDocument();

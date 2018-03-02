@@ -47,6 +47,7 @@ class Window;
 class BrowsingContext;
 class AnimationExecutor;
 class DOMImplementation;
+class DeferredScriptDownloadClient;
 
 /* VisibilityState */
 enum VisibilityState {
@@ -80,6 +81,7 @@ class Document : public Node {
     friend class ResourceLoader;
     friend class BrowsingContext;
     friend class FontSelector;
+    friend class DeferredScriptDownloadClient;
 
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
@@ -332,6 +334,7 @@ public:
 
     // method for script element
     void resumeDocumentParsing();
+    void endDocumentParsing();
     void notifyDomContentLoaded();
 
     DocumentBuilder* documentBuilder()
@@ -607,6 +610,8 @@ protected:
     // each element has strong reference by DOM tree already
     size_t m_pendingDocumentParsingIdlerHandle;
     String* m_contentLanguage;
+    GCVector<std::pair<HTMLScriptElement*, DeferredScriptDownloadClient*>>
+        m_deferredScriptElements;
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif
