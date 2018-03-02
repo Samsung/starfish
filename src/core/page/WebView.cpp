@@ -439,6 +439,7 @@ void WebView::clearBlobURLStore()
 
 void WebView::layoutIfNeeds()
 {
+    INSTALL_PROFILE_TIMER(starFish(), "WebView::rendering::layoutIfNeeds");
     bool didLayout = m_topLevelBrowsingContext->layoutIfNeeds();
 
     for (size_t i = 0; i < m_browsingContextsNeedsLayout.size(); i++) {

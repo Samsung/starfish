@@ -1770,20 +1770,9 @@ public:
         return m_flags.m_isAnonymous;
     }
 
-    bool isRunningTransformAnimation()
-    {
-        return m_flags.m_isRunningTransformAnimation;
-    }
-
-    void markRunningTransformAnimation()
-    {
-        m_flags.m_isRunningTransformAnimation = true;
-    }
-
-    void clearRunningTransformAnimation()
-    {
-        m_flags.m_isRunningTransformAnimation = false;
-    }
+    bool isRunningTransformAnimation();
+    void markRunningTransformAnimation();
+    void clearRunningTransformAnimation();
 
     bool isBlockLevel(bool originally = false)
     {
@@ -1949,8 +1938,6 @@ protected:
 
         bool m_isFlexItem : 1;
         bool m_isFrameText : 1;
-
-        bool m_isRunningTransformAnimation : 1;
 
         bool m_seenNormalFlowBlockChild : 1;
         bool m_seenNonPositionedFloats : 1;

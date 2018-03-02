@@ -215,15 +215,16 @@ void TransformAnimationTask::detachedFromElement()
     AnimationTask::detachedFromElement();
 
     Element* current = targetElement();
+    current->setNeedsStyleRecalc(Node::JustNeedsRecalcSelf);
+    current->webView()->setNeedsComputeStackingContextProperties();
+
     ComputedStyle* style = current->style();
     if (style->hasTransforms()) {
         auto transforms = style->rareComputedStyleData()->transforms();
-
         if (transforms->at(transforms->size() - 1).type() ==
             StyleTransformData::InternalMatrix) {
             // cleanup
             transforms->removeAt(transforms->size() - 1);
-            current->setNeedsStyleRecalc(Node::JustNeedsRecalcSelf);
             if (transforms->size() == 0) {
                 // NOTE
                 // having transform is reason of creating StackingContext

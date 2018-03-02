@@ -1,4 +1,4 @@
-http://10.113.63.233:7000/xmlhttprequest-recursive-sync-event.html
+http://10.113.111.47:7000/xmlhttprequest-recursive-sync-event.html
 test/efl/reftest/vendor/blink/fast/animation/request-animation-frame-callback-id.html
 test/efl/reftest/vendor/blink/fast/backgrounds/obscured-background-child-style-change.html
 test/efl/reftest/vendor/blink/fast/backgrounds/root-background-display-none-no-crash.html
