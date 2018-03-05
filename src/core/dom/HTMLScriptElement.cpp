@@ -43,25 +43,26 @@ void* HTMLScriptElement::operator new(size_t size)
 
 static bool isJavaScriptType(const char* type, size_t len)
 {
-    if (strcmp("", type) == 0) {
+    if (len == 0) {
         return true;
-    } else if (len == 15 && memcmp("text/javascript", type, 15) == 0) {
-        return true;
-    } else if (strcmp("application/javascript", type) == 0) {
-        return true;
-    } else if (strcmp("application/x-javascript", type) == 0) {
-        return true;
-    } else if (strcmp("application/octet-stream", type) == 0) {
-        return true;
-    } else if (strcmp("application/ecmascript", type) == 0) {
-        return true;
-    } else if (strcmp("text/ecmascript", type) == 0) {
-        return true;
-    } else if (strcmp("text/plain", type) == 0) {
-        return true;
-    } else if (strcmp("text/html", type) == 0) {
+    } else if (len == (sizeof("text/javascript") - 1) &&
+               memcmp("text/javascript", type,
+                      (sizeof("text/javascript") - 1)) == 0) {
         return true;
     }
+#define ALLOW_TYPE(ctype)                                   \
+    else if (len >= (sizeof(ctype) - 1) &&                  \
+             memcmp(ctype, type, (sizeof(ctype) - 1)) == 0) \
+    {                                                       \
+        return true;                                        \
+    }
+    ALLOW_TYPE("application/javascript")
+    ALLOW_TYPE("application/x-javascript")
+    ALLOW_TYPE("application/octet-stream")
+    ALLOW_TYPE("application/ecmascript")
+    ALLOW_TYPE("text/ecmascript")
+    ALLOW_TYPE("text/plain")
+    ALLOW_TYPE("text/html")
     return false;
 }
 
