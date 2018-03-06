@@ -358,6 +358,10 @@ public:
     QualifiedName m_onmousemove;
     QualifiedName m_mouseout;
     QualifiedName m_onmouseout;
+    QualifiedName m_mouseenter;
+    QualifiedName m_onmouseenter;
+    QualifiedName m_mouseleave;
+    QualifiedName m_onmouseleave;
     QualifiedName m_mouseover;
     QualifiedName m_onmouseover;
     QualifiedName m_mouseup;

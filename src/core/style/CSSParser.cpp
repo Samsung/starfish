@@ -1857,6 +1857,13 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
         }
     }
 
+    if (isQueryingSelector) {
+        if (!getToken(true, false)->isNull()) {
+            sList->clear();
+            return ParseResult::Failed;
+        }
+    }
+
     if (valid) {
         if (isQueryingSelector) {
             sList->assign(list.begin(), list.end());

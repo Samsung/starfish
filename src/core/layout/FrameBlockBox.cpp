@@ -599,11 +599,11 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         overflowY = OverflowValue::AutoOverflow;
     }
 
-    if (overflowX >= AutoOverflow || overflowY >= AutoOverflow) {
+    if (overflowX >= HiddenOverflow || overflowY >= HiddenOverflow) {
         updateScrollWidthAndHeightIfNeeds(overflowX, overflowY);
     }
 
-    if (overflowX >= AutoOverflow) {
+    if (overflowX >= HiddenOverflow) {
         LayoutUnit* u;
         if (node()->isElement()) {
             if (!node()->asElement()->ensureRareElementMembers()->m_scrolling) {
@@ -628,7 +628,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         }
     }
 
-    if (overflowY >= AutoOverflow) {
+    if (overflowY >= HiddenOverflow) {
         LayoutUnit* u;
         if (node()->isElement()) {
             if (!node()->asElement()->ensureRareElementMembers()->m_scrolling) {
@@ -816,12 +816,6 @@ bool FrameBlockBox::isSelfCollapsingBlock(LayoutContext& ctx)
 Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                           HitTestStage s)
 {
-    if (shouldApplyOverflow()) {
-        if (FrameBox::hitTest(x, y, HitTestStageEnd) == nullptr) {
-            return nullptr;
-        }
-    }
-
     Frame* result = nullptr;
     if (hasBlockFlow()) {
         Frame* child = lastChild();

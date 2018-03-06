@@ -1010,21 +1010,56 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
         Node* newTarget = m_hoveredNodeTarget;
         if (newTarget != oldTarget) {
             Node* newElement = newTarget->nearestParentElement();
-            Node* oldElement = nullptr;
-            if (oldTarget) {
+            Node* oldElement =
+                oldTarget ? oldTarget->nearestParentElement() : nullptr;
+
+            if (newElement && newElement->isElement()) {
+                MouseData data(button, buttons, posX, posY, 0, oldElement);
+                Element* enterTarget = newElement->asElement();
+                while (enterTarget) {
+                    Event* e = createMouseEvent(
+                        document(),
+                        starFish()->staticStrings()->m_mouseenter.localName(),
+                        data);
+                    e->setCancelable(false);
+                    e->setBubbles(false);
+                    enterTarget->dispatchEventByUA(newElement, e, true);
+                    enterTarget = enterTarget->parentElement();
+                }
+            }
+
+            {
+                String* name =
+                    starFish()->staticStrings()->m_mouseover.localName();
+                MouseData data(button, buttons, posX, posY, 0, oldElement);
+                Event* e = createMouseEvent(document(), name, data);
+                document()->window()->dispatchEventByUA(
+                    newElement ? newElement : document(), e);
+            }
+
+            {
                 String* name =
                     starFish()->staticStrings()->m_mouseout.localName();
                 MouseData data(button, buttons, posX, posY, 0, newElement);
                 Event* e = createMouseEvent(document(), name, data);
-                oldElement = oldTarget->nearestParentElement();
                 document()->window()->dispatchEventByUA(
                     oldElement ? oldElement : document(), e);
             }
-            String* name = starFish()->staticStrings()->m_mouseover.localName();
-            MouseData data(button, buttons, posX, posY, 0, oldElement);
-            Event* e = createMouseEvent(document(), name, data);
-            document()->window()->dispatchEventByUA(
-                newElement ? newElement : document(), e);
+
+            if (oldElement && oldElement->isElement()) {
+                MouseData data(button, buttons, posX, posY, 0, newElement);
+                Element* leaveTarget = oldElement->asElement();
+                while (leaveTarget) {
+                    Event* e = createMouseEvent(
+                        document(),
+                        starFish()->staticStrings()->m_mouseleave.localName(),
+                        data);
+                    e->setCancelable(false);
+                    e->setBubbles(false);
+                    leaveTarget->dispatchEventByUA(oldElement, e, true);
+                    leaveTarget = leaveTarget->parentElement();
+                }
+            }
         }
     }
 }
