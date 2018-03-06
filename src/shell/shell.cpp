@@ -761,10 +761,6 @@ int main(int argc, char* argv[])
 #endif
 
     GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
 
     return 0;
 }

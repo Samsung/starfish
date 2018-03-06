@@ -4128,62 +4128,83 @@ void StyleResolver::apply(Element* element,
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
-                ValueList* list = cssValues[k].multiValue();
+                ValueList* shadows = cssValues[k].multiValue();
                 style->setTextShadow(ShadowDataList());
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
+
+                for (size_t i = 0; i < shadows->size(); i++) {
                     STARFISH_ASSERT(
-                        item.valueKind() ==
+                        (*shadows)[i].valueKind() ==
                         CSSStyleValuePair::ValueKind::ValueListKind);
-                    ValueList* vl = item.multiValue();
-                    Length offsetX, offsetY, radius;
-                    Unit::Color color;
-                    bool hasColor = true;
-                    // offsetX, offsetY
-                    offsetX = vl->at(0).lengthValue();
-                    offsetY = vl->at(1).lengthValue();
-                    if (vl->size() == 2) {
-                        hasColor = false;
-                    } else if (vl->size() == 3) {
-                        //  + radius or color
-                        if (vl->at(2).valueKind() ==
-                            CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                            color = NamedColor::namedColorToColor(
-                                vl->at(2).namedColorValue());
-                        } else if (vl->at(2).valueKind() ==
-                                   CSSStyleValuePair::ValueKind::
-                                       ColorValueKind) {
-                            color = vl->at(2).colorValue();
-                        } else {
-                            radius = vl->at(2).lengthValue();
-                            hasColor = false;
-                        }
-                    } else if (vl->size() == 4) {
-                        // + raidus and color
-                        radius = vl->at(2).lengthValue();
-                        if (vl->at(3).valueKind() ==
-                            CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                            color = NamedColor::namedColorToColor(
-                                vl->at(3).namedColorValue());
-                        } else if (vl->at(3).valueKind() ==
-                                   CSSStyleValuePair::ValueKind::
-                                       ColorValueKind) {
-                            color = vl->at(3).colorValue();
-                        } else {
-                            STARFISH_ASSERT_NOT_REACHED();
-                        }
-                    } else {
-                        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                    }
+
+                    ValueList* shadow = (*shadows)[i].multiValue();
                     ShadowData sd;
-                    sd.setOffsetX(offsetX);
-                    sd.setOffsetY(offsetY);
-                    sd.setRadius(radius);
-                    if (hasColor) {
-                        sd.setColor(color);
+                    for (size_t j = 0; j < shadow->size(); j++) {
+                        switch ((*shadow)[j].valueKind()) {
+                        case CSSStyleValuePair::ValueKind::ValueListKind: {
+                            sd.setLengths((*shadow)[j].multiValue());
+                        } break;
+                        case CSSStyleValuePair::ValueKind::
+                            NamedColorValueKind: {
+                            Unit::Color color = NamedColor::namedColorToColor(
+                                (*shadow)[j].namedColorValue());
+                            sd.setColor(color);
+                        } break;
+                        case CSSStyleValuePair::ValueKind::ColorValueKind: {
+                            Unit::Color color = (*shadow)[j].colorValue();
+                            sd.setColor(color);
+                        } break;
+                        case CSSStyleValuePair::ValueKind::StringValueKind: {
+                            sd.setInset();
+                        } break;
+                        default:
+                            STARFISH_ASSERT_NOT_REACHED();
+                            break;
+                        }
                     }
                     style->addTextShadow(sd);
                 }
+            }
+        } break;
+        case CSSStyleValuePair::KeyKind::BoxShadow: {
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::ValueListKind) {
+                ValueList* shadows = cssValues[k].multiValue();
+                style->setBoxShadow(ShadowDataList());
+
+                for (size_t i = 0; i < shadows->size(); i++) {
+                    STARFISH_ASSERT(
+                        (*shadows)[i].valueKind() ==
+                        CSSStyleValuePair::ValueKind::ValueListKind);
+
+                    ValueList* shadow = (*shadows)[i].multiValue();
+                    ShadowData sd;
+                    for (size_t j = 0; j < shadow->size(); j++) {
+                        switch ((*shadow)[j].valueKind()) {
+                        case CSSStyleValuePair::ValueKind::ValueListKind: {
+                            sd.setLengths((*shadow)[j].multiValue());
+                        } break;
+                        case CSSStyleValuePair::ValueKind::
+                            NamedColorValueKind: {
+                            Unit::Color color = NamedColor::namedColorToColor(
+                                (*shadow)[j].namedColorValue());
+                            sd.setColor(color);
+                        } break;
+                        case CSSStyleValuePair::ValueKind::ColorValueKind: {
+                            Unit::Color color = (*shadow)[j].colorValue();
+                            sd.setColor(color);
+                        } break;
+                        case CSSStyleValuePair::ValueKind::StringValueKind: {
+                            sd.setInset();
+                        } break;
+                        default:
+                            STARFISH_ASSERT_NOT_REACHED();
+                            break;
+                        }
+                    }
+                    style->addBoxShadow(sd);
+                }
+            } else {
+                style->setBoxShadow(ShadowDataList());
             }
         } break;
         case CSSStyleValuePair::KeyKind::Direction:
@@ -9071,10 +9092,9 @@ bool CSSStyleValuePair::updateValuePosition(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTextShadow(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
+                                          bool boxShadow)
 {
-    // none | [ <length>{2,3} && <color>? ]#
-    // initial : none
     if (tokens.size() < 1) {
         return false;
     }
@@ -9093,85 +9113,128 @@ bool CSSStyleValuePair::updateValueTextShadow(const CSSTokenVector& tokens)
         return true;
     } else {
         m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+
         setValueList(new ValueList(ValueList::Separator::CommaSeparator));
         uint8_t option = CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowWithoutUnit;
-        for (size_t i = 0, len = 1; i < tokens.size(); i++, len++) {
-            if (len >= 1 &&
-                (i == (tokens.size() - 1) || tokens[i].equals(","))) {
-                // shadow has offsetX, offsetY, blur radius, color
-                size_t j = i;
-                if (tokens[j].equals(",")) {
-                    j -= 1;
-                    len -= 1;
-                }
-                if (len <= 1) {
-                    return false;
-                }
 
-                CSSStyleValuePair shadow;
-                shadow.setValueList(
-                    new ValueList(ValueList::Separator::SpaceSeparator));
+        // Value : none | <shadow>#
+        // <shadow> = <color>? && <length>{2,4} && inset?
+        // 1st <length> =  horizontal offset
+        // 2nd <lennth> =  vertical offset
+        // 3rd <length> =  blur radius
+        // 4th <length> = spread distance
 
-                const CSSTokenValue& v1 = tokens[j];
-                const CSSTokenValue& v2 = tokens[j - 1];
+        size_t lengthSizeLimit = 0;
+        size_t shadowSizeLimit = 0;
+        if (boxShadow) {
+            lengthSizeLimit = 4;
+            shadowSizeLimit = lengthSizeLimit + 2;
+        } else {
+            lengthSizeLimit = 3;
+            shadowSizeLimit = lengthSizeLimit + 1;
+        }
 
-                if (len == 2) {
-                    CSSStyleValuePair offsetX, offsetY;
-                    if (offsetX.updateValueUnitLengthOrCalc(v2, option) &&
-                        offsetY.updateValueUnitLengthOrCalc(v1, option)) {
-                        shadow.multiValue()->push_back(offsetX);
-                        shadow.multiValue()->push_back(offsetY);
-                    } else {
+        bool isValid = false;
+        for (size_t i = 0; i < tokens.size();) {
+            if (tokens[i].equals(",")) {
+                i++;
+                isValid = false;
+                continue;
+            }
+
+            bool hasInset = false;
+            bool hasColor = false;
+            bool didParseLength = false;
+
+            CSSStyleValuePair shadow;
+            shadow.setValueList(
+                new ValueList(ValueList::Separator::SpaceSeparator));
+
+            size_t j = i;
+            size_t currentShadowSize = 0;
+
+            while ((j < tokens.size() && !tokens[j].equals(",")) &&
+                   currentShadowSize < shadowSizeLimit) {
+                CSSStyleValuePair temp;
+
+                if (temp.updateValueUnitLength(tokens[j], option)) {
+                    if (didParseLength) {
                         return false;
                     }
-                } else if (len == 3) {
-                    const CSSTokenValue& v3 = tokens[j - 2];
-                    CSSStyleValuePair colorOrRadius, offsetX, offsetY;
-                    if ((offsetX.updateValueUnitLengthOrCalc(v3, option) &&
-                         offsetY.updateValueUnitLengthOrCalc(v2, option) &&
-                         colorOrRadius.updateValueUnitColor(v1)) ||
-                        (colorOrRadius.updateValueUnitColor(v3) &&
-                         offsetX.updateValueUnitLengthOrCalc(v2, option) &&
-                         offsetY.updateValueUnitLengthOrCalc(v1, option)) ||
-                        (offsetX.updateValueUnitLengthOrCalc(v3, option) &&
-                         offsetY.updateValueUnitLengthOrCalc(v2, option) &&
-                         colorOrRadius.updateValueUnitLengthOrCalc(v1, 0))) {
-                        shadow.multiValue()->push_back(offsetX);
-                        shadow.multiValue()->push_back(offsetY);
-                        shadow.multiValue()->push_back(colorOrRadius);
-                    } else {
+                    didParseLength = true;
+                    CSSStyleValuePair lengths;
+                    lengths.setValueList(
+                        new ValueList(ValueList::Separator::SpaceSeparator));
+
+                    CSSStyleValuePair length;
+                    size_t len2 = 1;
+                    for (; (j < tokens.size()) && (len2 <= lengthSizeLimit) &&
+                           length.updateValueUnitLength(tokens[j], option);
+                         j++, len2++) {
+                        std::string str = tokens[j];
+                        printf("BBR] current tokens : %s\n", str.data());
+                        lengths.multiValue()->push_back(length);
+                        currentShadowSize++;
+                    }
+
+                    if (lengths.multiValue()->size() < 2) {
                         return false;
                     }
-                } else if (len == 4) {
-                    const CSSTokenValue& v3 = tokens[j - 2];
-                    const CSSTokenValue& v4 = tokens[j - 3];
-                    CSSStyleValuePair color, offsetX, offsetY, radius;
-                    if ((offsetX.updateValueUnitLengthOrCalc(v4, option) &&
-                         offsetY.updateValueUnitLengthOrCalc(v3, option) &&
-                         radius.updateValueUnitLengthOrCalc(v2, 0) &&
-                         color.updateValueUnitColor(v1)) ||
-                        (color.updateValueUnitColor(v4) &&
-                         offsetX.updateValueUnitLengthOrCalc(v3, option) &&
-                         offsetY.updateValueUnitLengthOrCalc(v2, option) &&
-                         radius.updateValueUnitLengthOrCalc(v1, 0))) {
-                        shadow.multiValue()->push_back(offsetX);
-                        shadow.multiValue()->push_back(offsetY);
-                        shadow.multiValue()->push_back(radius);
-                        shadow.multiValue()->push_back(color);
-                    } else {
+
+                    shadow.multiValue()->push_back(lengths);
+
+                } else if (temp.updateValueUnitColor(tokens[j])) {
+                    // color
+                    if (hasColor) {
                         return false;
                     }
+                    shadow.multiValue()->push_back(temp);
+                    hasColor = true;
+                    currentShadowSize++;
+                    j++;
+
+                } else if (tokens[j].equals("inset")) {
+                    if (hasInset || !boxShadow) {
+                        return false;
+                    }
+                    temp.setValueKind(
+                        CSSStyleValuePair::ValueKind::StringValueKind);
+                    temp.setStringValue(String::fromUTF8(tokens[j].data()));
+                    hasInset = true;
+                    currentShadowSize++;
+                    j++;
                 } else {
                     return false;
                 }
-                multiValue()->push_back(shadow);
-                len = 0;
             }
+
+            if (!didParseLength) {
+                return false;
+            }
+
+            multiValue()->push_back(shadow);
+            isValid = true;
+            i = j;
         }
-        return true;
+        return isValid;
     }
     return false;
+}
+
+bool CSSStyleValuePair::updateValueTextShadow(const CSSTokenVector& tokens)
+{
+    // none | [ <offset-x> <offset-y> <blur-radius>? && <color>? ]#
+    // initial : none
+    return updateValueShadow(tokens, false);
+}
+
+bool CSSStyleValuePair::updateValueBoxShadow(const CSSTokenVector& tokens)
+{
+    //  none | [inset? && [ <offset-x> <offset-y> <blur-radius>?
+    //  <spread-radius>? <color>? ] ]#
+    // initial : none
+    return updateValueShadow(tokens, true);
 }
 
 bool CSSStyleValuePair::updateValueTextDecoration(const CSSTokenVector& tokens)

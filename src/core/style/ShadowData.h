@@ -23,17 +23,22 @@
 namespace StarFish {
 class CanvasShadowData;
 class CanvasShadowDataList;
+class ValueList;
 class ShadowData : public gc {
 public:
     ShadowData()
         : m_hasColor(false)
+        , m_inset(false)
     {
     }
+
+    void setLengths(ValueList* lengths);
 
     Length offsetX()
     {
         return m_offsetX;
     }
+
     void setOffsetX(Length offsetX)
     {
         m_offsetX = offsetX;
@@ -43,6 +48,7 @@ public:
     {
         return m_offsetY;
     }
+
     void setOffsetY(Length offsetY)
     {
         m_offsetY = offsetY;
@@ -52,6 +58,7 @@ public:
     {
         return m_radius;
     }
+
     void setRadius(Length radius)
     {
         m_radius = radius;
@@ -61,14 +68,21 @@ public:
     {
         return m_color;
     }
+
     void setColor(Unit::Color color)
     {
         m_hasColor = true;
         m_color = color;
     }
+
     bool hasColor()
     {
         return m_hasColor;
+    }
+
+    void setInset()
+    {
+        m_inset = true;
     }
 
     CanvasShadowData toCanvasShadowData(Frame* owner);
@@ -94,6 +108,8 @@ public:
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ShadowData, m_offsetX));
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ShadowData, m_offsetY));
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ShadowData, m_radius));
+            GC_set_bit(obj_bitmap,
+                       GC_WORD_OFFSET(ShadowData, m_spreadDistance));
             descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ShadowData));
             typeInited = true;
         }
@@ -109,8 +125,10 @@ private:
     Length m_offsetX;
     Length m_offsetY;
     Length m_radius;
+    Length m_spreadDistance;
     Unit::Color m_color;
     bool m_hasColor;
+    bool m_inset;
 };
 
 class ShadowDataList : public GCVector<ShadowData> {
