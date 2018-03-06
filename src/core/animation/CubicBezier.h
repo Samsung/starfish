@@ -14,16 +14,6 @@
  *    limitations under the License.
  */
 
-// This is conversion of bezier-easing project
-// I tried to save as much as possible from the original contents.
-// Here is original file header information
-
-/**
- * https://github.com/gre/bezier-easing
- * BezierEasing - use bezier curve for transition easing function
- * by Gaëtan Renaudeau 2014 - 2015 – MIT License
- */
-
 #ifndef __StarFishCubicBezier__
 #define __StarFishCubicBezier__
 
@@ -31,18 +21,9 @@
 
 namespace StarFish {
 
-// These values are established by empiricism with tests (tradeoff: performance
-// VS precision)
-#define NEWTON_ITERATIONS 4
-#define NEWTON_MIN_SLOPE 0.001
-#define SUBDIVISION_PRECISION 0.0000001
-#define SUBDIVISION_MAX_ITERATIONS 10
-#define kSplineTableSize 11
-#define kSampleStepSize 1.0 / (kSplineTableSize - 1.0)
-
 class CubicBeizer : public AnimationTimingFunction {
 public:
-    CubicBeizer(float mX1, float mY1, float mX2, float mY2);
+    CubicBeizer(float X1, float Y1, float X2, float Y2);
     float getValue(float x);
 
     static void* operator new(size_t size)
@@ -51,20 +32,9 @@ public:
     }
 
 private:
-    float getTForX(float aX);
-    float A(float aA1, float aA2);
-    float B(float aA1, float aA2);
-    float C(float aA1);
-    float calcBezier(float aT, float aA1, float aA2);
-    float getSlope(float aT, float aA1, float aA2);
-    float binarySubdivide(float aX, float aA, float aB, float mX1, float mX2);
-    float newtonRaphsonIterate(float aX, float aGuessT, float mX1, float mX2);
-
-    float m_mX1;
-    float m_mY1;
-    float m_mX2;
-    float m_mY2;
-    float m_sampleValues[kSplineTableSize];
+    float m_coff1;
+    float m_coff2;
+    float m_coff3;
 };
 }
 #endif
