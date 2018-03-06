@@ -24,6 +24,7 @@ License:       LGPL-2.1+ and Apache-2.0 and BSD-2-Clause and BSD-3-Clause and BS
 
 # build requirements
 BuildRequires: make
+BuildRequires: cmake
 BuildRequires: ninja
 BuildRequires: web-widget-js
 BuildRequires: web-widget-js-devel
@@ -71,6 +72,9 @@ lightweight-web-engine development headers
 %setup -q
 
 %build
+cd third_party/libtuv
+make
+cd -
 %if "%{tizen_platform}" == "tv"
 mkdir -p tizen_tv_build
 cd tizen_tv_build

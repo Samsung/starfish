@@ -347,3 +347,9 @@ make x64.interpreter.debug.static -j$NUMPROC
 make install_header_to_include
 
 cd -
+
+cd third_party/libtuv
+make clean
+make -j$NUMPROC
+
+cd -

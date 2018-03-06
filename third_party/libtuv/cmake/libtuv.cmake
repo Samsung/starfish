@@ -50,7 +50,7 @@ set(LIB_TUV_INCDIRS
 
 # build tuv library
 set(TARGETLIBNAME tuv)
-add_library(${TARGETLIBNAME} ${LIB_TUV_SRCFILES})
+add_library(${TARGETLIBNAME} SHARED ${LIB_TUV_SRCFILES})
 target_include_directories(${TARGETLIBNAME} SYSTEM PRIVATE ${TARGET_INC})
 target_include_directories(${TARGETLIBNAME} PUBLIC ${LIB_TUV_INCDIRS})
 set_target_properties(${TARGETLIBNAME} PROPERTIES

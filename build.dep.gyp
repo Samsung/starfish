@@ -511,7 +511,7 @@
                 ],
                 'libraries': [
                     '<!@((pkg-config --silence-errors --libs-only-l libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ) || true)',
-                    'lib/libtuv.a',
+                    '-Llib -ltuv',
                     '-ldali-core',
                     '-ldali-adaptor',
                     '-ldali-toolkit',
@@ -530,7 +530,7 @@
                 ],
                 'libraries': [
                     '<!@((pkg-config --silence-errors --libs-only-l dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ) || true)',
-                    'lib/tizen/release/libtuv.a',
+                    '-Llib/tizen/release -ltuv',
                     '-ldali-core',
                     '-ldali-adaptor',
                     '-ldali-toolkit',
@@ -543,7 +543,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
+                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.so',
                     ],
                     'destination': '<(PRODUCT_DIR)/../debug/lib',
                 },
@@ -555,7 +555,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
+                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.so',
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib',
                 },
@@ -567,7 +567,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/arm-tizen/debug/lib/libtuv.a',
+                        'third_party/libtuv/build/armv7l-linux/debug/lib/libtuv.so',
                     ],
                     'destination': '<(PRODUCT_DIR)/../debug/lib/tizen',
                 },
@@ -579,7 +579,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/arm-tizen/debug/lib/libtuv.a',
+                        'third_party/libtuv/build/armv7l-linux/debug/lib/libtuv.so',
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
                 },
