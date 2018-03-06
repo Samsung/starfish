@@ -373,6 +373,18 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_onmouseover =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "onmouseover"));
+    m_mouseenter =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "mouseenter"));
+    m_onmouseenter =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onmouseenter"));
+    m_mouseleave =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "mouseleave"));
+    m_onmouseleave =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "onmouseleave"));
     m_mouseup = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "mouseup"));
     m_onmouseup =

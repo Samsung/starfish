@@ -602,6 +602,8 @@ DEFINE_EVENT_LISTENER(Window, mousedown);
 DEFINE_EVENT_LISTENER(Window, mousemove);
 DEFINE_EVENT_LISTENER(Window, mouseover);
 DEFINE_EVENT_LISTENER(Window, mouseout);
+DEFINE_EVENT_LISTENER(Window, mouseenter);
+DEFINE_EVENT_LISTENER(Window, mouseleave);
 DEFINE_EVENT_LISTENER(Window, mouseup);
 DEFINE_EVENT_LISTENER(Window, progress);
 DEFINE_EVENT_LISTENER(Window, resize);

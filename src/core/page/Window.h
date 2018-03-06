@@ -374,8 +374,8 @@ public:
     // DECLARE_EVENT_LISTENER(loadend);
     DECLARE_EVENT_LISTENER(loadstart);
     DECLARE_EVENT_LISTENER(mousedown);
-    // DECLARE_EVENT_LISTENER(mouseenter);
-    // DECLARE_EVENT_LISTENER(mouseleave);
+    DECLARE_EVENT_LISTENER(mouseenter);
+    DECLARE_EVENT_LISTENER(mouseleave);
     DECLARE_EVENT_LISTENER(mousemove);
     DECLARE_EVENT_LISTENER(mouseout);
     DECLARE_EVENT_LISTENER(mouseover);
