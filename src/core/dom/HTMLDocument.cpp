@@ -191,19 +191,49 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
     } else if (name == str->m_optgroupTagName.localNameAtomic()) {
         return new HTMLOptGroupElement(document);
     }
+#define DEFINE_KNOWN_ELEMENT(tagName)                               \
+    else if (name == str->m_##tagName##TagName.localNameAtomic())   \
+    {                                                               \
+        return new HTMLKnownElement(                                \
+            document, str->m_##tagName##TagName.localNameAtomic()); \
+    }
+    DEFINE_KNOWN_ELEMENT(center)
+    DEFINE_KNOWN_ELEMENT(i)
+    DEFINE_KNOWN_ELEMENT(cite)
+    DEFINE_KNOWN_ELEMENT(em)
+    DEFINE_KNOWN_ELEMENT(var)
+    DEFINE_KNOWN_ELEMENT(address)
+    DEFINE_KNOWN_ELEMENT(article)
+    DEFINE_KNOWN_ELEMENT(aside)
+    DEFINE_KNOWN_ELEMENT(details)
+    DEFINE_KNOWN_ELEMENT(footer)
+    DEFINE_KNOWN_ELEMENT(header)
+    DEFINE_KNOWN_ELEMENT(hgroup)
+    DEFINE_KNOWN_ELEMENT(main)
+    DEFINE_KNOWN_ELEMENT(nav)
+    DEFINE_KNOWN_ELEMENT(section)
+    DEFINE_KNOWN_ELEMENT(summary)
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    else if (name == str->m_videoTagName.localNameAtomic()) {
+    else if (name == str->m_videoTagName.localNameAtomic())
+    {
         return new HTMLVideoElement(document);
-    } else if (name == str->m_audioTagName.localNameAtomic()) {
+    }
+    else if (name == str->m_audioTagName.localNameAtomic())
+    {
         return new HTMLAudioElement(document);
-    } else if (name == str->m_trackTagName.localNameAtomic()) {
+    }
+    else if (name == str->m_trackTagName.localNameAtomic())
+    {
         return new HTMLTrackElement(document);
-    } else if (name == str->m_sourceTagName.localNameAtomic()) {
+    }
+    else if (name == str->m_sourceTagName.localNameAtomic())
+    {
         return new HTMLSourceElement(document);
     }
 #endif
 #ifdef STARFISH_ENABLE_CANVAS
-    else if (name == str->m_canvasTagName.localNameAtomic()) {
+    else if (name == str->m_canvasTagName.localNameAtomic())
+    {
         return new HTMLCanvasElement(document);
     }
 #endif
