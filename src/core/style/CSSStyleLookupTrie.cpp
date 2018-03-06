@@ -276,6 +276,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     case 10:
         // Background
         // Border-Top
+        // Box-Shadow
         // Box-Sizing
         // Font-Style
         // Flex-Basis
@@ -297,6 +298,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "border-top", 10) == 0) {
                 return CSSStyleKind::BorderTop;
+            }
+            if (memcmp(data, "box-shadow", 10) == 0) {
+                return CSSStyleKind::BoxShadow;
             }
             if (memcmp(data, "box-sizing", 10) == 0) {
                 return CSSStyleKind::BoxSizing;

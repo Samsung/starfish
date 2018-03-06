@@ -75,6 +75,7 @@ class RareComputedStyleData : public gc {
         FlexShrink,
         Opacity,
         Border,
+        BoxShadow,
         Padding,
         Margin,
         Offset,
@@ -122,6 +123,7 @@ class RareComputedStyleData : public gc {
         GCVector<ComputedStyle*>* m_pseudoStyles;
         StyleBackgroundData* m_background;
         ObjectSizingData* m_objectSizing;
+        ShadowDataList* m_boxShadowDataList;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -205,6 +207,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(ObjectSizingData* objSizing)
             : m_objectSizing(objSizing)
+        {
+        }
+
+        RareComputedStyleValue(ShadowDataList* boxShadow)
+            : m_boxShadowDataList(boxShadow)
         {
         }
     };
@@ -361,6 +368,7 @@ public:
                CachedPsuedoStyles);
     GETTER_PTR(StyleBackgroundData, background, background, Background);
     GETTER_PTR(ObjectSizingData, objectSizing, objectSizing, ObjectSizing);
+    GETTER_PTR(ShadowDataList, boxShadowDataList, boxShadow, BoxShadow);
 
 #undef GETTER_PTR
 
@@ -736,6 +744,31 @@ public:
             return m_inheritedStyles.m_rareData->m_textShadowDataList;
         }
         return InheritedStylesRareData().m_textShadowDataList;
+    }
+
+    void addBoxShadow(ShadowData& shadow)
+    {
+        m_rareComputedStyleData.ensureBoxShadow()->push_back(shadow);
+    }
+
+    void setBoxShadow(ShadowDataList val)
+    {
+        if (val != boxShadow()) {
+            (*m_rareComputedStyleData.ensureBoxShadow()) = val;
+        }
+    }
+
+    ShadowDataList boxShadow()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return ShadowDataList();
+        }
+        ShadowDataList* shadowDataList = m_rareComputedStyleData.boxShadow();
+        if (shadowDataList) {
+            return *shadowDataList;
+        }
+
+        return ShadowDataList();
     }
 
     TextDecorationValue textDecoration()

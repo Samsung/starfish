@@ -722,6 +722,25 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             }
         }
     }
+
+    if (boxShadow().size()) {
+        for (auto shadow : (*m_rareComputedStyleData.boxShadow())) {
+            if (!shadow.offsetX().isComputed()) {
+                auto v = shadow.offsetX();
+                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                        windowSize.width(), windowSize.height(),
+                                        this);
+                shadow.setOffsetX(v);
+            }
+            if (!shadow.offsetY().isComputed()) {
+                auto v = shadow.offsetY();
+                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                        windowSize.width(), windowSize.height(),
+                                        this);
+                shadow.setOffsetY(v);
+            }
+        }
+    }
 }
 
 static AnimationTimingFunction* getTimingFunction(ComputedStyle* style)

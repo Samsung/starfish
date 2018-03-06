@@ -20,8 +20,24 @@
 #include "StarFishConfig.h"
 #include "ShadowData.h"
 #include "core/modules/canvas/CanvasShadowData.h"
+#include "core/style/Style.h"
 
 namespace StarFish {
+
+void ShadowData::setLengths(ValueList* lengths)
+{
+    STARFISH_ASSERT(2 <= lengths->size() && lengths->size() <= 4);
+
+    m_offsetX = (*lengths)[0].lengthValue();
+    m_offsetY = (*lengths)[1].lengthValue();
+
+    if (3 <= lengths->size()) {
+        m_radius = (*lengths)[2].lengthValue();
+    }
+    if (4 == lengths->size()) {
+        m_spreadDistance = (*lengths)[3].lengthValue();
+    }
+}
 
 CanvasShadowData ShadowData::toCanvasShadowData(Frame* owner)
 {

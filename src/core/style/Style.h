@@ -1070,6 +1070,7 @@ class CSSStyleDeclaration;
     F(TransitionTimingFunction, transitionTimingFunction,                    \
       "transitionTimingFunction")                                            \
     F(TransitionDelay, transitionDelay, "transitionDelay")                   \
+    F(BoxShadow, boxShadow, "box-shadow")                                    \
     F(BoxSizing, boxSizing, "box-sizing")                                    \
     F(Fill, fill, "fill")                                                    \
     F(FillOpacity, fillOpacity, "fill-opacity")                              \
@@ -2290,6 +2291,7 @@ public:
     bool updateValueObjectPosition(const CSSTokenVector& tokens,
                                    CSSStyleValuePair& xPair,
                                    CSSStyleValuePair& yPair);
+    bool updateValueShadow(const CSSTokenVector& tokens, bool boxShadow);
 
 protected:
     KeyKind m_keyKind : 8;
