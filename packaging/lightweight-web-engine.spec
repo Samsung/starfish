@@ -4,7 +4,7 @@ Release:       0
 Summary:       Lightweight Web Engine
 Source:        %{name}-%{version}.tar.gz
 Group:         Development/Libraries
-License:       Apache-2.0 and LGPL-2.1+ and BSD-2-Clause and BSD-3-Clause and BSL-1.0 and MIT
+License:       LGPL-2.1+ and Apache-2.0 and BSD-2-Clause and BSD-3-Clause and BSL-1.0 and MIT
 
 # RPM ref: http://backreference.org/2011/09/17/some-tips-on-rpm-conditional-macros/
 
@@ -153,7 +153,7 @@ cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
 %files
 %manifest %{name}.manifest
 %{_libdir}/*.so
-%license LICENSE LICENSE.LGPL-2.1+ LICENSE.BSD-2-Clause LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT
+%license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-2-Clause LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT
 
 
 %files devel
