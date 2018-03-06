@@ -393,6 +393,26 @@ bool HTMLElement::isContentEditable()
     return isEditinghost(this) || isEditable(this);
 }
 
+HTMLKnownElement::HTMLKnownElement(Document* document, AtomicString localName)
+    : HTMLElement(document)
+    , m_name(document->starFish()->staticStrings()->m_xhtmlNamespaceURI,
+             localName)
+{
+}
+
+void* HTMLKnownElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLKnownElement)] = { 0 };
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLKnownElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 DEFINE_EVENT_LISTENER(HTMLElement, abort);
 DEFINE_EVENT_LISTENER(HTMLElement, blur);
 DEFINE_EVENT_LISTENER(HTMLElement, click);

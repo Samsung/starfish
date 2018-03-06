@@ -9173,7 +9173,6 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
                            length.updateValueUnitLength(tokens[j], option);
                          j++, len2++) {
                         std::string str = tokens[j];
-                        printf("BBR] current tokens : %s\n", str.data());
                         lengths.multiValue()->push_back(length);
                         currentShadowSize++;
                     }

@@ -40,17 +40,33 @@ void FrameButtonBox::layout(LayoutContext& ctx,
     if (resolveWhat & Frame::ResolveHeight) {
         if (!hasBlockFlow()) {
             if (lineBoxes().size() > 0) {
+                bool shouldRealignContent = true;
                 LayoutUnit lineBoxesHeight;
                 for (size_t i = 0; i < lineBoxes().size(); i++) {
                     lineBoxesHeight += lineBoxes()[i]->height();
-                }
-                LayoutUnit availableHeight = contentHeight() - lineBoxesHeight;
 
-                LayoutUnit d;
-                for (size_t i = 0; i < lineBoxes().size(); i++) {
-                    lineBoxes()[i]->setY(availableHeight / 2 + paddingTop() +
-                                         borderTop() + d);
-                    d += lineBoxes()[i]->height();
+                    LineBox* lb = lineBoxes()[i];
+                    for (size_t j = 0; j < lb->boxes().size(); j++) {
+                        // only text boxes are allowed with re-align
+                        if (!lb->boxes()[j]->isInlineTextBox()) {
+                            shouldRealignContent = false;
+                            break;
+                        }
+                    }
+
+                    if (!shouldRealignContent) {
+                        break;
+                    }
+                }
+                if (shouldRealignContent) {
+                    LayoutUnit availableHeight =
+                        contentHeight() - lineBoxesHeight;
+                    LayoutUnit d;
+                    for (size_t i = 0; i < lineBoxes().size(); i++) {
+                        lineBoxes()[i]->setY(availableHeight / 2 +
+                                             paddingTop() + borderTop() + d);
+                        d += lineBoxes()[i]->height();
+                    }
                 }
             }
         }

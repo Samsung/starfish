@@ -182,6 +182,23 @@ protected:
         Element::fillGCDescriptor(desc);
     }
 };
+
+class HTMLKnownElement : public HTMLElement {
+public:
+    HTMLKnownElement(Document* document, AtomicString localName);
+
+    /* 4.4 Interface Node */
+    virtual QualifiedName name()
+    {
+        return m_name;
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    QualifiedName m_name;
+};
 }
 
 #endif
