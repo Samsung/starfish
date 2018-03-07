@@ -530,7 +530,7 @@
                 ],
                 'libraries': [
                     '<!@((pkg-config --silence-errors --libs-only-l dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ) || true)',
-                    '-Llib/tizen/release -ltuv',
+                    '-Llib/tizen -ltuv',
                     '-ldali-core',
                     '-ldali-adaptor',
                     '-ldali-toolkit',

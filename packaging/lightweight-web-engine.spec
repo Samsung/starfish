@@ -127,16 +127,19 @@ mkdir -p %{buildroot}%{_libdir}
 
 %if "%{tizen_platform}" == "tv"
 cp -r ./tizen_tv_build/out/release/lib/liblightweight-web-engine.tizen_tv.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+cp -r ./tizen_tv_build/out/release/lib/tizen/libtuv.so %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_bindir}
 cp -r ./tizen_tv_build/out/release/lightweight-web-engine.tizen_tv %{buildroot}%{_bindir}/%{bin}
 %endif
 %if "%{tizen_platform}" == "headless"
 cp -r ./tizen_headless_build/out/release/lib/liblightweight-web-engine.tizen_headless.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+cp -r ./tizen_headless_build/out/release/lib/tizen/libtuv.so %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_bindir}
 cp -r ./tizen_headless_build/out/release/lightweight-web-engine.tizen_headless %{buildroot}%{_bindir}/%{bin}
 %endif
 %if "%{tizen_platform}" == "mobile"
 cp -r ./tizen_mobile_build/out/release/lib/liblightweight-web-engine.tizen.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+cp -r ./tizen_mobile_build/out/release/lib/tizen/libtuv.so %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_bindir}
 cp -r ./tizen_mobile_build/out/release/lightweight-web-engine.tizen %{buildroot}%{_bindir}/%{bin}
 %endif
