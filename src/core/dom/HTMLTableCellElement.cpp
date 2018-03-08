@@ -84,9 +84,16 @@ uint32_t HTMLTableCellElement::colSpan()
     Nullable<String*> colSpan =
         getAttribute(starFish()->staticStrings()->m_colspan);
     if (colSpan.hasValue()) {
-        int colSpanInt = String::parseInt(colSpan.getValue());
-        return colSpanInt <= 0 ? 1 : (uint32_t)colSpanInt;
+        int colSpanVal = String::parseInt(colSpan.getValue());
+        if (colSpanVal < 1) {
+            return 1;
+        }
+        if (colSpanVal > MAX_COLSPAN) {
+            return MAX_COLSPAN;
+        }
+        return colSpanVal;
     }
+
     return 1;
 }
 
@@ -101,9 +108,16 @@ uint32_t HTMLTableCellElement::rowSpan()
     Nullable<String*> rowSpan =
         getAttribute(starFish()->staticStrings()->m_rowspan);
     if (rowSpan.hasValue()) {
-        int rowSpanInt = String::parseInt(rowSpan.getValue());
-        return rowSpanInt <= 0 ? 1 : (uint32_t)rowSpanInt;
+        int rowSpanVal = String::parseInt(rowSpan.getValue());
+        if (rowSpanVal < 1) {
+            return 1;
+        }
+        if (rowSpanVal > MAX_ROWSPAN) {
+            return MAX_ROWSPAN;
+        }
+        return rowSpanVal;
     }
+
     return 1;
 }
 

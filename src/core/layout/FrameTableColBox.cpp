@@ -28,25 +28,38 @@ FrameTableColBox::FrameTableColBox(Node* node, ComputedStyle* style)
 {
 }
 
-unsigned FrameTableColBox::span()
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-negative-integers
+// https://html.spec.whatwg.org/multipage/tables.html#forming-a-table
+uint32_t FrameTableColBox::span()
 {
-    uint32_t ret = 0;
-
-    if (!(node() && node()->isHTMLElement())) {
-        return ret;
+    if (!node()) {
+        return 1;
+    }
+    if (!node()->isHTMLElement()) {
+        return 1;
     }
 
     HTMLElement* e = node()->asHTMLElement();
     if (e->isHTMLTableColElement()) {
-        ret = e->asHTMLTableColElement()->span();
+        return e->asHTMLTableColElement()->span();
     }
+
     // span is only accepted when HTML element is either <col> or <colGroup>,
     // hence it is not applied when used in other elements.
     // e.g., <div style="display: table-column" span="2">
     // In this case, we ignore the span value
+    return 1;
+}
 
-    // If span is not defined, use 1 as the default value
-    return ret <= 0 ? 1 : ret;
+bool FrameTableColBox::hasChildColBox()
+{
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableColBox()) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void FrameTableColBox::layout(LayoutContext& ctx,

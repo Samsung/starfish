@@ -41,6 +41,7 @@ public:
         return true;
     }
 
+    bool hasChildCells();
     void collectCellWidthInfo(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
@@ -73,6 +74,7 @@ public:
 private:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
+
     LayoutUnit m_baseline;
 };
 }

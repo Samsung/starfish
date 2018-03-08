@@ -56,6 +56,17 @@ void* FrameTableRowBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+bool FrameTableRowBox::hasChildCells()
+{
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableCellBox()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void FrameTableRowBox::collectCellWidthInfo(LayoutContext& ctx)
 {
     // We traverse the cells first to calculate min/max cell width

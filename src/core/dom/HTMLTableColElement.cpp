@@ -35,8 +35,19 @@ void HTMLTableColElement::setSpan(uint32_t span)
 
 uint32_t HTMLTableColElement::span()
 {
-    String* spanAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_span);
-    return String::parseInt(spanAttr);
+    Nullable<String*> span = getAttribute(starFish()->staticStrings()->m_span);
+    if (span.hasValue()) {
+        int spanVal = String::parseInt(span.getValue());
+        if (spanVal < 1) {
+            return 1;
+        }
+        if (spanVal > 1000) {
+            return 1000;
+        }
+        return spanVal;
+    }
+
+    return 1;
 }
 
 String* HTMLTableColElement::ch()
