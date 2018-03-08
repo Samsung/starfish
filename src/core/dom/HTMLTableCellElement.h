@@ -28,6 +28,9 @@ class HTMLTableElement;
 
 class HTMLTableCellElement : public HTMLElement {
 public:
+    static const int MAX_COLSPAN = 1000;
+    static const int MAX_ROWSPAN = 65534;
+
     HTMLTableCellElement(Document* document)
         : HTMLElement(document)
     {

@@ -48,6 +48,79 @@ class FrameTreeBuilderContext;
 // Table has its own table layout algorithm, that has minimum interaction
 // with the existing box layout algorithm.
 
+class Cell : public gc {
+    friend class FrameTableBox;
+
+public:
+    Cell(int x, int y, int width, int height)
+        : m_slotX(x)
+        , m_slotY(y)
+        , m_width(width)
+        , m_height(height)
+    {
+    }
+
+private:
+    size_t m_slotX;
+    size_t m_slotY;
+    size_t m_width;
+    size_t m_height;
+};
+
+class Row : public gc {
+    friend class FrameTableBox;
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(Row)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Row, m_cells));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(Row));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new[](size_t size) = delete;
+
+private:
+    // represents a row of cells
+    GCVector<Cell*> m_cells;
+};
+
+class ColGroup : public gc {
+    friend class FrameTableBox;
+
+public:
+    ColGroup(int x)
+        : m_slotX(x)
+        , m_slotWidth(1)
+    {
+    }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(ColGroup)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ColGroup, m_column));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ColGroup));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new[](size_t size) = delete;
+
+private:
+    size_t m_slotX; // slotY = 0 by definition
+    size_t m_slotWidth;
+    GCVector<Cell*> m_column;
+};
+
 class ColSizeStruct {
 public:
     ColSizeStruct()
@@ -182,6 +255,11 @@ public:
     void* operator new[](size_t size) = delete;
 
 private:
+    GCVector<Row*>* formingATable();
+    void processRow(FrameTableRowBox* rowBox, GCVector<Row*>* table,
+                    size_t& yCurrent, size_t& xWidtht, size_t& yHeight);
+    bool isSlotOccupied(GCVector<Row*>* table, size_t x, size_t y);
+
     void calCellWidth(LayoutContext& ctx);
     void calCellWidthsWithColspans();
     void layoutWidth(LayoutContext& ctx);

@@ -219,18 +219,15 @@ size_t FrameTableCellBox::colspan()
     }
 
     HTMLElement* e = node()->asHTMLElement();
-    // Use 1 as the default value
-    uint32_t colspan = 1;
-
     if (e->isHTMLTableCellElement()) {
-        colspan = e->asHTMLTableCellElement()->colSpan();
-    } else {
-        // colspan is only accepted when HTML element is either <td> or <th>,
-        // hence it is not applied when used in other elements.
-        // e.g., <div style="display: table-cell" colspan="2">
-        // In this case, we ignore the colspan value
+        return e->asHTMLTableCellElement()->colSpan();
     }
-    return colspan;
+
+    // colspan is only accepted when HTML element is either <td> or <th>,
+    // hence it is not applied when used in other elements.
+    // e.g., <div style="display: table-cell" colspan="2">
+    // In this case, we ignore the colspan value
+    return 1;
 }
 
 size_t FrameTableCellBox::rowspan()
@@ -240,18 +237,15 @@ size_t FrameTableCellBox::rowspan()
     }
 
     HTMLElement* e = node()->asHTMLElement();
-    // Use 1 as the default value
-    uint32_t rowspan = 1;
-
     if (e->isHTMLTableCellElement()) {
-        rowspan = e->asHTMLTableCellElement()->rowSpan();
-    } else {
-        // rowspan is only accepted when HTML element is either <td> or <th>,
-        // hence it is not applied when used in other elements.
-        // e.g., <div style="display: table-cell" rowspan="2">
-        // In this case, we ignore the rowspan value
+        return e->asHTMLTableCellElement()->rowSpan();
     }
-    return rowspan;
+
+    // rowspan is only accepted when HTML element is either <td> or <th>,
+    // hence it is not applied when used in other elements.
+    // e.g., <div style="display: table-cell" rowspan="2">
+    // In this case, we ignore the rowspan value
+    return 1;
 }
 
 size_t FrameTableCellBox::updatedColspan()

@@ -46,7 +46,9 @@ public:
     {
         return true;
     }
-    unsigned span();
+
+    uint32_t span();
+    bool hasChildColBox();
 
 private:
     virtual void layout(LayoutContext& ctx,
