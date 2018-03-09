@@ -1672,8 +1672,10 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                                     String::createASCIIString(name);
                             }
 #ifndef NDEBUG
+                            // ignore vendor prefix & CSS Custom Variables
                             if (((Sender*)data)->kind ==
-                                CSSStyleKind::Unknown) {
+                                    CSSStyleKind::Unknown &&
+                                len && name[0] != '-') {
                                 STARFISH_LOG_ERROR(
                                     "CSSParser: Unsupported property: %s\n",
                                     name);
