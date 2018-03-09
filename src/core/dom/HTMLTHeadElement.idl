@@ -1,0 +1,5 @@
+// https://html.spec.whatwg.org/multipage/tables.html#the-thead-element
+
+[HTMLConstructor]
+interface HTMLTHeadElement : HTMLTableSectionElement {
+};

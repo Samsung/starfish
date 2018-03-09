@@ -1,0 +1,5 @@
+//https://html.spec.whatwg.org/multipage/tables.html#the-tr-element:the-th-element
+
+[HTMLConstructor]
+interface HTMLTHElement : HTMLTableCellElement {
+};

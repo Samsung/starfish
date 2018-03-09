@@ -20,6 +20,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLTableColElement.h"
+#include "core/dom/HTMLTableCellElement.h"
 
 namespace StarFish {
 
@@ -41,8 +42,8 @@ uint32_t HTMLTableColElement::span()
         if (spanVal < 1) {
             return 1;
         }
-        if (spanVal > 1000) {
-            return 1000;
+        if (spanVal > HTMLTableCellElement::MAX_COLSPAN) {
+            return HTMLTableCellElement::MAX_COLSPAN;
         }
         return spanVal;
     }

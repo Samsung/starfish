@@ -1,0 +1,5 @@
+// https://html.spec.whatwg.org/multipage/tables.html#the-tfoot-element
+
+[HTMLConstructor]
+interface HTMLTFootElement : HTMLTableSectionElement {
+};

@@ -31,6 +31,10 @@ public:
     {
     }
 
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isHTMLTFootElement() const override;
+
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 };

@@ -36,6 +36,15 @@ FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     m_updatedRowspan = rowspan();
 }
 
+bool FrameTableCellBox::isHTMLTHElement()
+{
+    if (node() && node()->isHTMLTHElement()) {
+        return true;
+    }
+
+    return false;
+}
+
 // In CSS, the width of a cell refers to the content width, which excludes the
 // border and padding, e.g., <td style="width: 100px">
 //
