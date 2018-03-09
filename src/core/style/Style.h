@@ -27,6 +27,7 @@
 #include "core/style/NamedColors.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/Length.h"
+#include "core/style/RectData.h"
 #include "core/util/VectorWithInlineStorage.h"
 #include "core/util/BloomFilter.h"
 
@@ -1117,7 +1118,9 @@ class CSSStyleDeclaration;
     F(FontStyle, fontStyle, "font-style")                                    \
     F(ListStylePosition, listStylePosition, "list-style-position")           \
     F(ListStyleImage, listStyleImage, "list-style-image")                    \
-    F(ListStyleType, listStyleType, "list-style-type")
+    F(ListStyleType, listStyleType, "list-style-type")                       \
+    F(Clip, clip, "clip")
+
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)
 // This order is used by CSSParser::parseFontFaceRule
@@ -1372,6 +1375,9 @@ public:
 
         ListStylePositionValueKind,
         ListStyleCounterValueKind,
+
+        // rect for clip
+        RectValueKind
     };
 
     CSSStyleValuePair()
@@ -1832,6 +1838,12 @@ public:
         return m_value.m_stringValue;
     }
 
+    RectData* clip() const
+    {
+        STARFISH_ASSERT(m_valueKind == RectValueKind);
+        return m_value.m_rect;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1887,6 +1899,7 @@ public:
         MaskSizeValue m_maskSize;
         ObjectFitValue m_objectFit;
         ListStylePositionValue m_listStylePosition;
+        RectData* m_rect;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2100,8 +2113,14 @@ public:
             : m_objectFit(v)
         {
         }
+
         ValueData(ListStylePositionValue v)
             : m_listStylePosition(v)
+        {
+        }
+
+        ValueData(RectData* v)
+            : m_rect(v)
         {
         }
     };
@@ -2132,6 +2151,8 @@ public:
             return m_value.m_fontFaceSrcData;
         case ValuePairKind:
             return m_value.m_pairValue;
+        case RectValueKind:
+            return m_value.m_rect;
         default:
             return nullptr;
         }
@@ -2256,6 +2277,12 @@ public:
     {
         m_valueKind = CSSStyleValuePair::ValueKind::FontFaceSrcDataValueKind;
         m_value.m_fontFaceSrcData = val;
+    }
+
+    void setClipData(RectData* val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::RectValueKind;
+        m_value.m_rect = val;
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \

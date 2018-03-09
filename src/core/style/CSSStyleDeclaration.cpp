@@ -1080,6 +1080,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValue(vals);
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::Clip) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Clip);
+        if (style->clip()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::RectValueKind);
+            p.setValue(style->clip());
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
     }
 #define ADD_VALUE_PAIR(KEY, VALUE, GETTER)                   \
     else if (keyKind == CSSStyleValuePair::KeyKind::KEY)     \

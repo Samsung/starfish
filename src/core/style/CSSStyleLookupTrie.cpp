@@ -62,6 +62,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Flex
         // Left
         // Fill
+        // Clip
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font", 4) == 0) {
@@ -77,6 +78,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'l':
             if (memcmp(data, "left", 4) == 0) {
                 return CSSStyleKind::Left;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "clip", 4) == 0) {
+                return CSSStyleKind::Clip;
             }
             break;
         }
@@ -844,6 +850,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'l':
             if (memcmp(data, "left", 4) == 0) {
                 return CSSStyleKind::Left;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "clip", 4) == 0) {
+                return CSSStyleKind::Clip;
             }
             break;
         }
