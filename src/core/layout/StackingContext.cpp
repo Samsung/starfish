@@ -1204,6 +1204,14 @@ void StackingContext::paintStackingContext(
     }
 
     if (needsPainting) {
+        CanvasStateRestorer r(canvas, this, m_owner);
+        if (m_owner->isAbsolutePositioned() && m_owner->style()->clip()) {
+            RectData* rect = m_owner->style()->clip();
+            canvas->clip(Unit::Rect(
+                rect->left().numberData(), rect->top().numberData(),
+                rect->right().numberData(), rect->bottom().numberData()));
+        }
+
         m_owner->paintStackingContextContent(canvas);
     }
 

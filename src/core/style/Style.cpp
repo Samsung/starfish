@@ -2243,6 +2243,12 @@ String* CSSStyleValuePair::toString() const
         }
     case CSSStyleValuePair::ValueKind::ListStyleCounterValueKind:
         return listStyleCounterValue();
+    case CSSStyleValuePair::ValueKind::RectValueKind:
+        if (m_valueKind == CSSStyleValuePair::ValueKind::RectValueKind) {
+            return clip()->toString();
+        }
+
+        return String::fromUTF8("auto");
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -6190,7 +6196,12 @@ void StyleResolver::apply(Element* element,
             STARFISH_RELEASE_ASSERT_NOT_REACHED();                            \
         }                                                                     \
         break;
-
+        case CSSStyleValuePair::KeyKind::Clip:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::RectValueKind) {
+                style->setClip(cssValues[k].clip());
+            }
+            break;
             BORDER_RADIUS_APPLY(TopLeft, topLeft, Horizontal, Vertical)
             BORDER_RADIUS_APPLY(TopRight, topRight, Horizontal, Vertical)
             BORDER_RADIUS_APPLY(BottomRight, bottomRight, Horizontal, Vertical)
@@ -8735,6 +8746,91 @@ bool CSSStyleValuePair::updateValueVerticalAlign(const CSSTokenVector& tokens)
                                            CSSPropertyParser::AllowNegative |
                                                CSSPropertyParser::AllowPercent);
     }
+    return true;
+}
+
+static bool parseRectFunctionPart(const CSSTokenValue& s, size_t* ret,
+                                  GCVector<String*>& units)
+{
+    auto ss = s.trim();
+    CSSPropertyParser parser((char*)ss.data(), ss.length());
+
+    bool hasPoint = false;
+    parser.consumeWhitespaces();
+    if (!parser.consumeNumber(&hasPoint)) {
+        return false;
+    }
+
+    float number = parser.parsedNumber();
+
+    parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
+
+    String* str = parser.parsedString();
+
+    if (!CSSPropertyParser::isLengthUnit(str)) {
+        return false;
+    }
+
+    *ret = number;
+    units.push_back(str);
+
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueClip(const CSSTokenVector& tokens)
+{
+    // https://www.w3.org/TR/css-masking-1/#clip-property
+    if (tokens.size() != 1)
+        return false;
+
+    CSSTokenValue str = tokens[0];
+
+    if (str.equals("auto")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+    } else {
+        // rect
+        bool maybeRect = str.startsWith("rect(");
+
+        if (!maybeRect)
+            return false;
+
+        size_t s1 = str.indexOf('(');
+        size_t s2 = str.indexOf(')');
+
+        if (s1 == SIZE_MAX || s2 != str.length() - 1 || s1 >= s2) {
+            return false;
+        }
+
+        CSSTokenValue sub = str.substring(s1 + 1, s2 - s1 - 1);
+
+        std::vector<CSSTokenValue> v;
+        sub.split(',', v);
+
+        size_t size = v.size();
+
+        if (size != 4) {
+            v.clear();
+            sub.split(' ', v);
+            size = v.size();
+            if (size != 4) {
+                return false;
+            }
+        }
+
+        size_t value[4];
+        GCVector<String*> units;
+        for (size_t i = 0; i < size; i++) {
+            if (!parseRectFunctionPart(v[i], &value[i], units)) {
+                return false;
+            }
+        }
+
+        setClipData(new RectData(CSSLength(units[0], value[0]).toLength(),
+                                 CSSLength(units[1], value[1]).toLength(),
+                                 CSSLength(units[2], value[2]).toLength(),
+                                 CSSLength(units[3], value[3]).toLength()));
+    }
+
     return true;
 }
 

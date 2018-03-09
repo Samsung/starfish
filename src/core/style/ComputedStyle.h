@@ -104,6 +104,7 @@ class RareComputedStyleData : public gc {
         RY,
         R,
         D,
+        Clip
     };
 
     union RareComputedStyleValue {
@@ -125,6 +126,7 @@ class RareComputedStyleData : public gc {
         StyleBackgroundData* m_background;
         ObjectSizingData* m_objectSizing;
         ShadowDataList* m_boxShadowDataList;
+        RectData* m_clip;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -213,6 +215,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(ShadowDataList* boxShadow)
             : m_boxShadowDataList(boxShadow)
+        {
+        }
+
+        RareComputedStyleValue(RectData* rect)
+            : m_clip(rect)
         {
         }
     };
@@ -370,6 +377,7 @@ public:
     GETTER_PTR(StyleBackgroundData, background, background, Background);
     GETTER_PTR(ObjectSizingData, objectSizing, objectSizing, ObjectSizing);
     GETTER_PTR(ShadowDataList, boxShadowDataList, boxShadow, BoxShadow);
+    GETTER_PTR(RectData, clip, clip, Clip);
 
 #undef GETTER_PTR
 
@@ -525,6 +533,11 @@ public:
     void setPosition(PositionValue p)
     {
         m_position = p;
+    }
+
+    void setClip(RectData* r)
+    {
+        *m_rareComputedStyleData.ensureClip() = *r;
     }
 
     FloatValue floating()
@@ -2071,6 +2084,12 @@ public:
         }
 
         return nullptr;
+    }
+
+    RectData* clip()
+    {
+        RectData* rect = m_rareComputedStyleData.clip();
+        return rect;
     }
 
     void clearContent()

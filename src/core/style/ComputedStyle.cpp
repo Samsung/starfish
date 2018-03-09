@@ -744,6 +744,33 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             }
         }
     }
+
+    RectData* rect = m_rareComputedStyleData.clip();
+    if (rect) {
+        if (!rect->top().isComputed()) {
+            rect->top().changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                              windowSize.width(),
+                                              windowSize.height(), this);
+        }
+
+        if (!rect->right().isComputed()) {
+            rect->right().changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                                windowSize.width(),
+                                                windowSize.height(), this);
+        }
+
+        if (!rect->bottom().isComputed()) {
+            rect->bottom().changeToFixedIfNeeded(curFontSize, rootFontSize,
+                                                 font, windowSize.width(),
+                                                 windowSize.height(), this);
+        }
+
+        if (!rect->left().isComputed()) {
+            rect->left().changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                               windowSize.width(),
+                                               windowSize.height(), this);
+        }
+    }
 }
 
 static AnimationTimingFunction* getTimingFunction(ComputedStyle* style)
@@ -1500,6 +1527,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->clip() != oldStyle->clip()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Clip] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     return damage;
