@@ -496,7 +496,7 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
         if (a.second.isAuto()) {
             intrinsicWidth = s.m_intrinsicContentSize.width();
             intrinsicHeight = s.m_intrinsicContentSize.height();
-        } else if (a.second.isDefinite(false)) {
+        } else if (a.second.isDefinite(false) && !a.first.isDefinite(false)) {
             LayoutUnit unused;
             intrinsicHeight = a.second.specifiedValue(unused, this);
             if (s.m_hasAspectRatio) {
@@ -504,6 +504,10 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
             } else {
                 intrinsicWidth = b.width();
             }
+        } else if (a.second.isDefinite(false) && a.first.isDefinite(false)) {
+            LayoutUnit unused;
+            intrinsicHeight = a.second.specifiedValue(unused, this);
+            intrinsicWidth = a.first.specifiedValue(unused, this);
         } else {
             STARFISH_ASSERT(a.second.isPercent() || a.second.isCalc());
             if (parentContentHeight.isFixed()) {

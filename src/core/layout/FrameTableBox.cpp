@@ -380,6 +380,30 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             // available spaces among cells. The extra space for each cell
             // is proportional to the width of each cell.
             if (cellsWithAutoWidths.empty()) {
+                bool shouldUseContentWidth = false;
+                if (tableLayoutFixed) {
+                    bool isEveryCellHasNonPercentageWidth = true;
+                    LayoutUnit sumSoFar;
+                    for (auto& col : m_columnWidths) {
+                        LayoutUnit specifiedWidth = 0;
+                        FrameTableCellBox* cellBox = cellFromFirstRowOrColGroup(
+                            tableLayoutFixed, col.id);
+                        Length width = cellBox->style()->width();
+
+                        if (width.isDefinite(false)) {
+                            LayoutUnit unused;
+                            sumSoFar += width.specifiedValue(unused, this);
+                        } else {
+                            isEveryCellHasNonPercentageWidth = false;
+                        }
+                    }
+                    if (isEveryCellHasNonPercentageWidth &&
+                        availableWidth <= sumOfAdjustedSpecifiedCellWidths) {
+                        sumOfSpecifiedCellWidths = sumSoFar;
+                        shouldUseContentWidth = true;
+                    }
+                }
+
                 for (auto& col : m_columnWidths) {
                     FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
                     Length width =
@@ -391,7 +415,10 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                         LayoutUnit unused;
                         LayoutUnit cellWidth =
                             width.specifiedValue(unused, this);
-                        cellWidth += cell->borderWidth() + cell->paddingWidth();
+                        if (!shouldUseContentWidth) {
+                            cellWidth +=
+                                cell->borderWidth() + cell->paddingWidth();
+                        }
 
                         LayoutUnit newCellWidth =
                             LayoutUnit(cellWidth.toDouble() /
