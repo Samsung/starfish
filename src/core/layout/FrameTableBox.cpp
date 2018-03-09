@@ -36,6 +36,7 @@ FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
     , m_tableRect(0, 0, 0, 0)
 {
+    m_table = new Table();
 }
 
 void* FrameTableBox::operator new(size_t size)
@@ -57,6 +58,7 @@ void* FrameTableBox::operator new(size_t size)
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_lastChild));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_lineBoxes));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_table));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_captions));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_colObjects));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_columnWidths));
@@ -93,22 +95,21 @@ void FrameTableBox::layoutTable(LayoutContext& ctx)
 // https://html.spec.whatwg.org/multipage/tables.html#forming-a-table
 // We run the algorithm on a table frame tree, so that we do not need to worry
 // about HTML and CSS tables.
-GCVector<Row*>* FrameTableBox::formingATable()
+void FrameTableBox::formingATable()
 {
     // 1-4
     size_t xWidth = 0;
     size_t yHeight = 0;
     std::vector<FrameTableSectionBox*> tfootSectionBoxes;
-    GCVector<Row*>* table = new GCVector<Row*>();
+    m_table->clear();
 
     // 5
     if (firstChild() == nullptr) {
-        return table;
+        return;
     }
 
     // 6-9: Generate ColGroups if exist
     FrameTableCaptionBox* firstCaption = nullptr;
-    GCVector<ColGroup*>* colGroups = new GCVector<ColGroup*>();
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCaptionBox() && !firstCaption) {
             firstCaption = c->asFrameTableCaptionBox();
@@ -134,7 +135,7 @@ GCVector<Row*>* FrameTableBox::formingATable()
                 colGroup->m_slotWidth = span;
                 xWidth += span;
             }
-            colGroups->push_back(colGroup);
+            m_table->m_colGroups.push_back(colGroup);
         }
     }
 
@@ -143,8 +144,7 @@ GCVector<Row*>* FrameTableBox::formingATable()
     GCVector<Cell*>* downwardGrowingCells = new GCVector<Cell*>();
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableRowBox()) {
-            processRow(c->asFrameTableRowBox(), table, yCurrent, xWidth,
-                       yHeight);
+            processRow(c->asFrameTableRowBox(), yCurrent, xWidth, yHeight);
         } else if (c->style()->display() ==
                    DisplayValue::TableFooterGroupDisplayValue) {
             tfootSectionBoxes.push_back(c->asFrameTableSectionBox());
@@ -155,8 +155,8 @@ GCVector<Row*>* FrameTableBox::formingATable()
             size_t yStart = yHeight;
             for (Frame* tr = c->firstChild(); tr; tr = tr->next()) {
                 if (tr->isFrameTableRowBox()) {
-                    processRow(tr->asFrameTableRowBox(), table, yCurrent,
-                               xWidth, yHeight);
+                    processRow(tr->asFrameTableRowBox(), yCurrent, xWidth,
+                               yHeight);
                     if (yHeight > yStart) {
                         // TODO: form a new row group
                         // This part can be skipped if a row group is not needed
@@ -171,17 +171,15 @@ GCVector<Row*>* FrameTableBox::formingATable()
     for (FrameTableSectionBox* tfoot : tfootSectionBoxes) {
         size_t yStart = yHeight;
         for (Frame* tr = tfoot->firstChild(); tr; tr = tr->next()) {
-            processRow(tr->asFrameTableRowBox(), table, yCurrent, xWidth,
-                       yHeight);
+            processRow(tr->asFrameTableRowBox(), yCurrent, xWidth, yHeight);
         }
     }
-
-    return table;
+    m_table->m_width = xWidth;
+    m_table->m_height = yHeight;
 }
 
-void FrameTableBox::processRow(FrameTableRowBox* rowBox, GCVector<Row*>* table,
-                               size_t& yCurrent, size_t& xWidth,
-                               size_t& yHeight)
+void FrameTableBox::processRow(FrameTableRowBox* rowBox, size_t& yCurrent,
+                               size_t& xWidth, size_t& yHeight)
 {
     // 1-4
     if (yHeight == yCurrent) {
@@ -195,13 +193,12 @@ void FrameTableBox::processRow(FrameTableRowBox* rowBox, GCVector<Row*>* table,
     }
     // 5-18
     Row* row = new Row();
-    table->push_back(row);
+    m_table->m_rows.push_back(row);
     for (Frame* c = rowBox->firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
             FrameTableCellBox* cell = c->asFrameTableCellBox();
 
-            while (xCurrent < xWidth &&
-                   isSlotOccupied(table, xCurrent, yCurrent)) {
+            while (xCurrent < xWidth && isSlotOccupied(xCurrent, yCurrent)) {
                 xCurrent++;
             }
 
@@ -224,45 +221,112 @@ void FrameTableBox::processRow(FrameTableRowBox* rowBox, GCVector<Row*>* table,
                 yHeight = yCurrent + rowspan;
             }
 
-            Cell* newCell = new Cell(xCurrent, yCurrent, colspan, rowspan);
+            Cell* newCell =
+                new Cell(cell, xCurrent, yCurrent, colspan, rowspan);
             row->m_cells.push_back(newCell);
             xCurrent += colspan;
 
-            // TODO: 13 Assigning header cells
+            // 13 Assigning header cells
+            if (cell->isHTMLTHElement()) {
+                // TODO: TH is not supported yet
+                // assigningHeaderCells(newCell);
+            }
         }
     }
     yCurrent++;
 }
 
-// https://html.spec.whatwg.org/multipage/tables.html#table-processing-model
-// To reduce memory usage, we do not explicitly create slots for a table.
-// Instead, we calculate whether a cell created so far occupies the given slot
-bool FrameTableBox::isSlotOccupied(GCVector<Row*>* table, size_t x, size_t y)
+Cell* FrameTableBox::cellAtSlot(size_t x, size_t y)
 {
-    if (y < table->size()) {
+    if (y < m_table->m_rows.size()) {
         // 1. We check whether a cell occupies the given slot.
-        Row* row = (*table)[y];
+        Row* row = m_table->m_rows[y];
         if (x < row->m_cells.size()) {
             Cell* cell = row->m_cells[x];
             if ((cell->m_slotX == x) && (cell->m_slotY == y)) {
-                return true;
+                return cell;
             }
         }
     }
 
     // 3. We check the entire cells in the table
-    for (size_t i = y; i < table->size(); i--) {
-        Row* row = (*table)[i];
+    for (size_t i = y; i < m_table->m_rows.size(); i--) {
+        Row* row = m_table->m_rows[y];
         for (size_t j = 0; j < row->m_cells.size(); j++) {
             Cell* cell = row->m_cells[j];
             if ((cell->m_slotX <= x && x < cell->m_slotX + cell->m_width) &&
                 (cell->m_slotY <= y && y < cell->m_slotY + cell->m_height)) {
-                return true;
+                return cell;
             }
         }
     }
 
-    return false;
+    return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/tables.html#table-processing-model
+// To reduce memory usage, we do not explicitly create slots for a table.
+// Instead, we calculate whether a cell created so far occupies the given slot
+bool FrameTableBox::isSlotOccupied(size_t x, size_t y)
+{
+    return cellAtSlot(x, y) != nullptr ? true : false;
+}
+
+// https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-assigning-header-cells
+void FrameTableBox::assigningHeaderCells(Cell* principalCell)
+{
+    GCVector<Cell*> headers;
+    size_t principalX = principalCell->m_slotX;
+    size_t principalY = principalCell->m_slotY;
+    size_t principalWidth = principalCell->m_width;
+    size_t principalHeight = principalCell->m_height;
+
+    // if principal cell does not have a headers attribute specified
+    for (size_t y = principalY; y < principalY + principalHeight; y++) {
+        scanningAndAssigningHeaderCells(principalCell, headers, -1, 0);
+    }
+
+    for (size_t x = principalX; x < principalX + principalWidth; x++) {
+        scanningAndAssigningHeaderCells(principalCell, headers, 0, -1);
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/tables.html#internal-algorithm-for-scanning-and-assigning-header-cells
+void FrameTableBox::scanningAndAssigningHeaderCells(Cell* principalCell,
+                                                    GCVector<Cell*>& headers,
+                                                    int deltaX, int deltaY)
+{
+    GCVector<Cell*> opaqueHeaders;
+
+    bool inHeaderBlock = false;
+    GCVector<Cell*> headersFromCurrentHeaderBlock;
+    if ((principalCell->m_cellBox->isHTMLTHElement())) {
+        inHeaderBlock = true;
+        headersFromCurrentHeaderBlock.push_back(principalCell);
+    }
+
+    for (size_t x = principalCell->m_slotX, y = principalCell->m_slotY;
+         (x <= principalCell->m_slotX) && (y <= principalCell->m_slotY);
+         x += deltaX, y += deltaY) {
+        // TODO: If there is no cell covering slot (x, y), or if there is more
+        // than one cell covering slot (x, y), skip it.
+        Cell* curCell = cellAtSlot(x, y);
+        if (!curCell) {
+            continue;
+        }
+
+        if (curCell->m_cellBox->isHTMLTHElement()) {
+            inHeaderBlock = true;
+            headersFromCurrentHeaderBlock.push_back(curCell);
+            // TODO: traverse top and left direction and look for th element
+        } else if (!curCell->m_cellBox->isHTMLTHElement() && inHeaderBlock) {
+            inHeaderBlock = false;
+            opaqueHeaders.insert(opaqueHeaders.end(),
+                                 headersFromCurrentHeaderBlock.begin(),
+                                 headersFromCurrentHeaderBlock.end());
+            headersFromCurrentHeaderBlock.clear();
+        }
+    }
 }
 
 FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)

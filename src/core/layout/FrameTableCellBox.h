@@ -58,6 +58,8 @@ public:
         return true;
     }
 
+    bool isHTMLTHElement();
+
     void setAbsoluteColumnIndex(unsigned column)
     {
         m_absoluteColumnIndex = column;

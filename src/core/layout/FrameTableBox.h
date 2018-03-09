@@ -52,15 +52,32 @@ class Cell : public gc {
     friend class FrameTableBox;
 
 public:
-    Cell(int x, int y, int width, int height)
-        : m_slotX(x)
+    Cell(FrameTableCellBox* cellBox, int x, int y, int width, int height)
+        : m_cellBox(cellBox)
+        , m_slotX(x)
         , m_slotY(y)
         , m_width(width)
         , m_height(height)
     {
     }
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(Cell)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Cell, m_cellBox));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(Cell));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new[](size_t size) = delete;
+
 private:
+    FrameTableCellBox* m_cellBox;
     size_t m_slotX;
     size_t m_slotY;
     size_t m_width;
@@ -119,6 +136,46 @@ private:
     size_t m_slotX; // slotY = 0 by definition
     size_t m_slotWidth;
     GCVector<Cell*> m_column;
+};
+
+class Table : public gc {
+    friend class FrameTableBox;
+
+public:
+    Table()
+        : m_width(0)
+        , m_height(0)
+    {
+    }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(Table)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Table, m_rows));
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Table, m_colGroups));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(Table));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+    void clear()
+    {
+        m_width = 0;
+        m_height = 0;
+        m_rows.clear();
+        m_colGroups.clear();
+    }
+
+private:
+    size_t m_width;
+    size_t m_height;
+    GCVector<Row*> m_rows; // contains all rows in correct visual order
+    GCVector<ColGroup*> m_colGroups;
 };
 
 class ColSizeStruct {
@@ -255,10 +312,15 @@ public:
     void* operator new[](size_t size) = delete;
 
 private:
-    GCVector<Row*>* formingATable();
-    void processRow(FrameTableRowBox* rowBox, GCVector<Row*>* table,
-                    size_t& yCurrent, size_t& xWidtht, size_t& yHeight);
-    bool isSlotOccupied(GCVector<Row*>* table, size_t x, size_t y);
+    void formingATable();
+    void processRow(FrameTableRowBox* rowBox, size_t& yCurrent, size_t& xWidtht,
+                    size_t& yHeight);
+    Cell* cellAtSlot(size_t x, size_t y);
+    bool isSlotOccupied(size_t x, size_t y);
+    void assigningHeaderCells(Cell* principalCell);
+    void scanningAndAssigningHeaderCells(Cell* principalCell,
+                                         GCVector<Cell*>& headers, int deltaX,
+                                         int deltaY);
 
     void calCellWidth(LayoutContext& ctx);
     void calCellWidthsWithColspans();
@@ -300,6 +362,8 @@ private:
 
     template <typename Func>
     void forEachRowStruct(Func filter);
+
+    Table* m_table;
 
     GCVector<FrameTableCaptionBox*> m_captions;
     GCVector<FrameTableColBox*> m_colObjects;
