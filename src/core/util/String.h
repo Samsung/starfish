@@ -327,6 +327,7 @@ public:
     static String* const spaceString;
     static String* const initialString;
     static String* const inheritString;
+    static String* const unsetString;
 
     static String* fromUTF8(const char* src);
     static String* fromUTF8(const char* src, size_t len);

@@ -1,0 +1,48 @@
+/*
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+#include "StarFishConfig.h"
+#include "core/style/ListStyleData.h"
+#include "core/style/StyleRuleCounterStyle.h"
+
+namespace StarFish {
+
+String* ListStyleData::type()
+{
+    if (m_counterStyle) {
+        return m_counterStyle->name();
+    }
+    return String::createASCIIString("disc");
+}
+
+void ListStyleData::setType(String* v)
+{
+    auto counter =
+        new StyleRuleCounterStyle(v, StyleRuleCounterStyle::CyclicSystem);
+    counter->setSuffix(String::spaceString);
+    counter->addSymbol(v);
+    m_counterStyle = counter;
+}
+
+void ListStyleData::setType(StyleRuleCounterStyle* v)
+{
+    STARFISH_ASSERT(v);
+    m_counterStyle = v;
+}
+} /* namespace StarFish */

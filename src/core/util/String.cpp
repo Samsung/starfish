@@ -56,6 +56,7 @@ String* const String::inheritString =
     String::createASCIIStringWithNoGC("inherit");
 String* const String::initialString =
     String::createASCIIStringWithNoGC("initial");
+String* const String::unsetString = String::createASCIIStringWithNoGC("unset");
 
 static size_t utf8ContentLength(const char* UTF8, size_t len)
 {

@@ -960,6 +960,11 @@ enum TextTransformValue {
     LowercaseTextTransformValue,
 };
 
+enum ListStylePositionValue {
+    ListStylePositionOutside, // Default
+    ListStylePositionInside,
+};
+
 class ValueList;
 class ValuePair;
 class FontFaceSrcData;
@@ -1109,7 +1114,10 @@ class CSSStyleDeclaration;
     F(MaskSize, maskSize, "mask-size")                                       \
     F(FontSize, fontSize, "font-size")                                       \
     F(FontWeight, fontWeight, "font-weight")                                 \
-    F(FontStyle, fontStyle, "font-style")
+    F(FontStyle, fontStyle, "font-style")                                    \
+    F(ListStylePosition, listStylePosition, "list-style-position")           \
+    F(ListStyleImage, listStyleImage, "list-style-image")                    \
+    F(ListStyleType, listStyleType, "list-style-type")
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)
 // This order is used by CSSParser::parseFontFaceRule
@@ -1273,6 +1281,7 @@ public:
     enum ValueKind {
         Initial,
         Inherit,
+        Unset,
         Length,
         Percentage,
         Auto,
@@ -1359,7 +1368,10 @@ public:
 
         // object-fit
         ObjectFitValueKind,
-        ObjectPositionValueKind
+        ObjectPositionValueKind,
+
+        ListStylePositionValueKind,
+        ListStyleCounterValueKind,
     };
 
     CSSStyleValuePair()
@@ -1808,6 +1820,18 @@ public:
         return m_value.m_maskSize;
     }
 
+    ListStylePositionValue listStylePositionValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == ListStylePositionValueKind);
+        return m_value.m_listStylePosition;
+    }
+
+    String* listStyleCounterValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == ListStyleCounterValueKind);
+        return m_value.m_stringValue;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1862,6 +1886,7 @@ public:
         TextTransformValue m_textTransform;
         MaskSizeValue m_maskSize;
         ObjectFitValue m_objectFit;
+        ListStylePositionValue m_listStylePosition;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2073,6 +2098,10 @@ public:
         }
         ValueData(ObjectFitValue v)
             : m_objectFit(v)
+        {
+        }
+        ValueData(ListStylePositionValue v)
+            : m_listStylePosition(v)
         {
         }
     };

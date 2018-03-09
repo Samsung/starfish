@@ -32,6 +32,7 @@
 #include "core/style/StyleTransformOrigin.h"
 #include "core/style/StyleTransitionData.h"
 #include "core/style/StylePaintData.h"
+#include "core/style/ListStyleData.h"
 #include "core/style/ShadowData.h"
 #include "core/style/PositionedMaskData.h"
 #include "core/style/OutlineData.h"
@@ -409,6 +410,7 @@ class ComputedStyle : public gc {
 
         TextTransformValue m_textTransform;
         ShadowDataList m_textShadowDataList;
+        ListStyleData m_listStyleData;
 
         InheritedStylesRareData()
         {
@@ -2307,6 +2309,45 @@ public:
         }
 
         return MaskSizeValue::ContainMaskSizeValue;
+    }
+
+    ListStyleData listStyleData()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_listStyleData;
+        }
+        return ListStyleData();
+    }
+
+    String* listStyleType()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_listStyleData.type();
+        }
+        return ListStyleData().type();
+    }
+
+    void setListStyleType(String* v)
+    {
+        ensureRareData()->m_listStyleData.setType(v);
+    }
+
+    void setListStyleType(StyleRuleCounterStyle* v)
+    {
+        ensureRareData()->m_listStyleData.setType(v);
+    }
+
+    ListStylePositionValue listStylePosition()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_listStyleData.position();
+        }
+        return ListStyleData().position();
+    }
+
+    void setListStylePosition(ListStylePositionValue v)
+    {
+        ensureRareData()->m_listStyleData.setPosition(v);
     }
 
     bool seenPseudoElementFirstLine() const

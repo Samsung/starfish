@@ -1669,6 +1669,8 @@ String* CSSStyleValuePair::toString() const
         return String::initialString;
     case CSSStyleValuePair::ValueKind::Inherit:
         return String::inheritString;
+    case CSSStyleValuePair::ValueKind::Unset:
+        return String::unsetString;
     case CSSStyleValuePair::ValueKind::Length:
         return cssLengthValue().toString();
     case CSSStyleValuePair::ValueKind::CalcValueKind:
@@ -2230,6 +2232,17 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::ListStylePositionValueKind:
+        switch (listStylePositionValue()) {
+        case ListStylePositionOutside:
+            return String::fromUTF8("outside");
+        case ListStylePositionInside:
+            return String::fromUTF8("inside");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::ListStyleCounterValueKind:
+        return listStyleCounterValue();
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -6183,6 +6196,21 @@ void StyleResolver::apply(Element* element,
             BORDER_RADIUS_APPLY(BottomRight, bottomRight, Horizontal, Vertical)
             BORDER_RADIUS_APPLY(BottomLeft, bottomLeft, Horizontal, Vertical)
 
+        case CSSStyleValuePair::KeyKind::ListStylePosition:
+            if (cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Inherit ||
+                cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset) {
+                style->setListStylePosition(parentStyle->listStylePosition());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->setListStylePosition(
+                    ListStylePositionValue::ListStylePositionOutside);
+            } else {
+                style->setListStylePosition(
+                    cssValues[k].listStylePositionValue());
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -10471,6 +10499,43 @@ bool CSSStyleValuePair::updateValueMaskImage(const CSSTokenVector& tokens)
 bool CSSStyleValuePair::updateValueMaskSize(const CSSTokenVector& tokens)
 {
     // TODO:
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueListStyleType(const CSSTokenVector& tokens)
+{
+    // TODO:
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueListStyleImage(const CSSTokenVector& tokens)
+{
+    // TODO:
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueListStylePosition(
+    const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_STRING("unset")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Unset;
+        return true;
+    }
+    m_valueKind = CSSStyleValuePair::ValueKind::ListStylePositionValueKind;
+    if (STRING_VALUE_IS_STRING("inside")) {
+        m_value.m_listStylePosition =
+            ListStylePositionValue::ListStylePositionInside;
+        return true;
+    }
+    if (STRING_VALUE_IS_STRING("outside")) {
+        m_value.m_listStylePosition =
+            ListStylePositionValue::ListStylePositionOutside;
+        return true;
+    }
     return false;
 }
 

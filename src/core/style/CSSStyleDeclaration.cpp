@@ -1120,6 +1120,9 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     ADD_VALUE_PAIR(FlexShrink, Number, flexShrink)
     ADD_VALUE_PAIR(FillOpacity, Number, fillOpacity)
     ADD_VALUE_PAIR(ObjectFit, ObjectFitValueKind, objectFit)
+    ADD_VALUE_PAIR(ListStylePosition, ListStylePositionValueKind,
+                   listStylePosition)
+    ADD_VALUE_PAIR(ListStyleType, StringValueKind, listStyleType)
 #undef ADD_VALUE_PAIR
 #define ADD_COLOR_PAIR(KEY, GETTER)                                    \
     else if (keyKind == CSSStyleValuePair::KeyKind::KEY)               \

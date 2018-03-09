@@ -61,6 +61,9 @@ void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
                                   m_textShadowDataList));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
+                                  m_listStyleData.m_counterStyle));
         descr = GC_make_descriptor(
             obj_bitmap, GC_WORD_LEN(ComputedStyle::InheritedStylesRareData));
         typeInited = true;
@@ -1488,6 +1491,15 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damagedKeys[CSSStyleValuePair::KeyKind::TextShadow] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->listStyleData() != oldStyle->listStyleData()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::ListStyleType] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::ListStyleImage] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::ListStylePosition] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     return damage;
