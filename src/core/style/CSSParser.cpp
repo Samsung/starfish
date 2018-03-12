@@ -929,7 +929,7 @@ CSSSelector* CSSParser::getPseudoSelector()
         return nullptr;
     }
 
-    getToken(false, true);
+    getToken(true, true);
 
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoNot: {
