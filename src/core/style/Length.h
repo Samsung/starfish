@@ -43,6 +43,7 @@ public:
         Ex,
         Em,
         Rem,
+        Ch,
         Vw,
         Vh,
         Vmin,
@@ -140,7 +141,7 @@ public:
 
     bool isFontPercent() const
     {
-        return Ex <= m_type && m_type <= Rem;
+        return Ex <= m_type && m_type <= Ch;
     }
 
     bool isInheritableNumber() const

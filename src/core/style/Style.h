@@ -202,7 +202,7 @@ enum UnitType {
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
 class CSSLength {
 public:
-    enum Kind { PX, EM, EX, IN, CM, MM, PT, PC, VW, VH, VMIN, VMAX, REM };
+    enum Kind { PX, EM, EX, IN, CM, MM, PT, PC, VW, VH, VMIN, VMAX, REM, CH };
 
     CSSLength(float f)
     {
@@ -244,6 +244,8 @@ public:
             m_kind = VMAX;
         } else if (unit->equals("rem")) {
             m_kind = REM;
+        } else if (unit->equals("ch")) {
+            m_kind = CH;
         }
 
         m_value = f;
@@ -287,6 +289,8 @@ public:
             return Length(Length::Vmax, m_value);
         } else if (m_kind == REM) { // font-relative length
             return Length(Length::Rem, m_value);
+        } else if (m_kind == CH) { // font-relative length
+            return Length(Length::Ch, m_value);
         }
 
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -322,6 +326,8 @@ public:
             return String::fromUTF8(stdStr.append("vmax").c_str());
         } else if (m_kind == REM) {
             return String::fromUTF8(stdStr.append("rem").c_str());
+        } else if (m_kind == CH) {
+            return String::fromUTF8(stdStr.append("ch").c_str());
         }
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

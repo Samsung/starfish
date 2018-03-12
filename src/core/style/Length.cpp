@@ -213,6 +213,10 @@ float Length::fontPercentValue(LayoutUnit curFontSize, LayoutUnit rootFontSize,
         return fontPercent() * curFontSize;
     } else if (m_type == Ex) {
         return fontPercent() * curFontSize * font->metrics().m_xheightRate;
+    } else if (m_type == Ch) {
+        LayoutUnit size =
+            font->measureText(StringView(String::createUTF32String(U'\u0030')));
+        return fontPercent() * size.toDouble();
     } else {
         STARFISH_ASSERT(m_type == Rem);
         return fontPercent() * rootFontSize;
