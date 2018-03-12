@@ -45,10 +45,6 @@ extern bool g_fireOnloadEvent;
 #define STARFISH_RESOURCE_CACHE_SIZE 1024 * 1024 * 4
 #endif
 
-#ifndef STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL
-#define STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL 3
-#endif
-
 namespace StarFish {
 
 ResourceLoader::ResourceLoader(Document* document)
@@ -56,7 +52,7 @@ ResourceLoader::ResourceLoader(Document* document)
     , m_isDocumentInOpenState(false)
     , m_pendingResourceCountWhileDocumentOpening(0)
     , m_resourceCacheSize(0)
-    , m_lastCachePruneTime(0)
+    , m_downloadedResourceContentSize(0)
 {
 }
 
@@ -182,6 +178,8 @@ public:
     {
         ResourceClient::didLoadFinished();
         m_resource->loader()->m_resourceCacheSize += m_resource->contentSize();
+        m_resource->loader()->m_downloadedResourceContentSize +=
+            m_resource->contentSize();
     }
 
     virtual void didLoadCanceled()
@@ -278,9 +276,10 @@ void ResourceLoader::cachePruning()
     // STARFISH_LOG_INFO("ResourceLoader - CacheSize %dKB\n",
     // (int)m_resourceCacheSize / 1024);
 
-    if (m_resourceCacheSize > STARFISH_RESOURCE_CACHE_SIZE &&
-        ((tickCount() - m_lastCachePruneTime) >
-         (STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL * 1000))) {
+    if (m_resourceCacheSize > (STARFISH_RESOURCE_CACHE_SIZE * 0.75) &&
+        m_downloadedResourceContentSize >
+            (STARFISH_RESOURCE_CACHE_SIZE * 0.5)) {
+        m_downloadedResourceContentSize = 0;
         size_t removedSize = 0;
 
         std::unordered_set<std::string> currentUsingResourcePaths;
@@ -312,18 +311,16 @@ void ResourceLoader::cachePruning()
         }
 
         // remove old resources
-        if (m_resourceCacheSize > STARFISH_RESOURCE_CACHE_SIZE * 0.75) {
+        if (m_resourceCacheSize > STARFISH_RESOURCE_CACHE_SIZE * 0.5) {
             auto iter = m_imageResourceCacheLRUList.begin();
             size_t currentTick = tickCount();
             while (m_imageResourceCacheLRUList.size() &&
-                   removedSize < STARFISH_RESOURCE_CACHE_SIZE * 0.5) {
+                   removedSize < STARFISH_RESOURCE_CACHE_SIZE * 0.25) {
                 Resource* res = (*iter);
                 auto utf8Data = res->url()->urlString()->toUTF8NonGCString();
                 auto iter2 = m_imageResourceCache.find(utf8Data.data());
                 if (m_imageResourceCache.end() != iter2 &&
-                    res->state() == Resource::State::Finished &&
-                    ((currentTick - iter2->second.m_lastUsedTime) >
-                     (STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL * 1000))) {
+                    res->state() == Resource::State::Finished) {
                     size_t siz = res->contentSize();
                     m_resourceCacheSize -= siz;
                     removedSize += siz;
@@ -333,7 +330,37 @@ void ResourceLoader::cachePruning()
             }
         }
 
-        m_lastCachePruneTime = tickCount();
+        auto& globalImages = NativeImageData::everyNativeImageInstances();
+        for (size_t i = 0; i < globalImages.size(); i++) {
+            globalImages[i]->m_isSeenByGC = false;
+        }
+        GC_gcollect();
+        GC_disable();
+        GC_enumerate_reachable_objects_inner(
+            [](void* obj, size_t bytes, void* cd) {
+                size_t size;
+                int kind = GC_get_kind_and_size(obj, &size);
+                STARFISH_ASSERT(size == bytes);
+
+                int srcKind = (int)(size_t)cd;
+                if (kind == srcKind) {
+                    void* ptr = GC_USR_PTR_FROM_BASE(obj);
+                    ((NativeImageData*)ptr)->m_isSeenByGC = true;
+                }
+            },
+            (void*)(size_t)NativeImageData::nativeImageDataGCKind());
+        GC_enable();
+
+        for (size_t i = 0; i < globalImages.size(); i++) {
+            if (!globalImages[i]->m_isSeenByGC) {
+                if (*(int*)globalImages[i]) {
+                    delete globalImages[i];
+                } else {
+                    globalImages.erase(globalImages.begin() + i);
+                }
+                i--;
+            }
+        }
         STARFISH_LOG_INFO(
             "ResourceLoader::cachePruning - prune %dKB current cache size is "
             "%dKB\n",

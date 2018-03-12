@@ -442,6 +442,9 @@ StarFish::~StarFish()
 #if defined(STARFISH_ENABLE_INSPECTOR)
     delete m_inspector;
 #endif
+#if defined(PORT_CANVAS_BACKEND_EFL) || defined(PORT_IMAGEDECODER_BACKEND_EFL)
+    g_internalCanvas = nullptr;
+#endif
     if (m_platformWindow) {
         close();
         delete m_platformWindow;

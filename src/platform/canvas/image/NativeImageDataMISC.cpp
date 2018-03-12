@@ -38,20 +38,26 @@ namespace StarFish {
 
 class NativeImageDataMISC : public NativeImageData {
 public:
+    void* operator new(size_t size)
+    {
+        return GC_GENERIC_MALLOC(sizeof(NativeImageDataMISC),
+                                 NativeImageData::nativeImageDataGCKind());
+    }
+
     NativeImageDataMISC(String* localImageSrc)
     {
         auto utf8Data = localImageSrc->toUTF8NonGCString();
         FILE* fp = fopen(utf8Data.data(), "rb");
         decodeImage(fp, localImageSrc, nullptr, 0);
         fclose(fp);
-        registerFinalizer();
+        initInternalSurface();
     }
 
     NativeImageDataMISC(const char* buf, size_t len)
     {
         if (buf && len != 0) {
             decodeImage(nullptr, nullptr, buf, len);
-            registerFinalizer();
+            initInternalSurface();
         }
     }
 
@@ -62,7 +68,7 @@ public:
         m_height = h;
         m_stride = w * 4;
         m_hasTransparentPixel = true;
-        registerFinalizer();
+        initInternalSurface();
     }
 
     virtual uint8_t* data()
@@ -86,23 +92,21 @@ public:
         }
     }
 
-    void registerFinalizer()
+    virtual void disposeNativeImageData()
+    {
+        if (m_imageSurface) {
+            cairo_surface_destroy(m_imageSurface);
+        }
+        free(m_image);
+    }
+
+    void initInternalSurface()
     {
         if (m_width && m_height) {
             m_imageSurface = cairo_image_surface_create_for_data(
                 (unsigned char*)m_image, CAIRO_FORMAT_ARGB32, m_width, m_height,
                 m_stride);
         }
-        GC_REGISTER_FINALIZER_NO_ORDER(
-            this,
-            [](void* obj, void* cd) {
-                NativeImageDataMISC* self = (NativeImageDataMISC*)obj;
-                if (self->m_imageSurface) {
-                    cairo_surface_destroy(self->m_imageSurface);
-                }
-                free(self->m_image);
-            },
-            NULL, NULL, NULL);
     }
 
     virtual void* internalSurface()
