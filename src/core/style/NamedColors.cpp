@@ -286,6 +286,8 @@ bool NamedColor::parseNamedColor(const char* str, size_t length,
         } else if (length == 9) {
             MATCH(rosybrown);
             MATCH(royalblue);
+        } else if (length == 13) {
+            MATCH(rebeccapurple);
         }
         break;
     case 's':
