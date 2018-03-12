@@ -23,6 +23,40 @@
 
 namespace StarFish {
 
+const StyleRuleCounterStyle* StyleRuleCounterStyle::getKnownCounter(
+    String* name)
+{
+    if (name->equalsIgnoreCase("disc")) {
+        return getDiscCounter();
+    }
+    // TODO
+    // circle
+    // square
+    // decimal
+    // decimal-leading-zero
+    // lower-roman
+    // upper-roman
+    // lower-greek
+    // lower-latin
+    // upper-latin
+    // armenian
+    // georgian
+    // lower-alpha
+    // upper-alpha
+    return nullptr;
+}
+
+const StyleRuleCounterStyle* StyleRuleCounterStyle::getNoneCounter()
+{
+    STARFISH_ASSERT(isMainThread());
+    static StyleRuleCounterStyle* counter;
+    if (counter == nullptr) {
+        counter = new (NoGC) StyleRuleCounterStyle(
+            String::emptyString, StyleRuleCounterStyle::NoneSystem);
+    }
+    return counter;
+}
+
 const StyleRuleCounterStyle* StyleRuleCounterStyle::getDiscCounter()
 {
     STARFISH_ASSERT(isMainThread());

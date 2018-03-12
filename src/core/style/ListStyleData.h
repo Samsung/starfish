@@ -26,6 +26,7 @@
 namespace StarFish {
 
 class ComputedStyle;
+class ImageResource;
 
 class ListStyleData : public gc {
     friend ComputedStyle;
@@ -33,7 +34,9 @@ class ListStyleData : public gc {
 public:
     ListStyleData()
         : m_position(ListStylePositionValue::ListStylePositionOutside)
-        , m_counterStyle(nullptr)
+        , m_counterStyle(StyleRuleCounterStyle::getDiscCounter())
+        , m_image(String::emptyString)
+        , m_imageResource(nullptr)
     {
     }
 
@@ -47,9 +50,35 @@ public:
         m_position = v;
     }
 
-    String* type();
+    const StyleRuleCounterStyle* typeData() const
+    {
+        STARFISH_ASSERT(m_counterStyle);
+        return m_counterStyle;
+    }
+
+    String* type() const;
     void setType(String* v);
-    void setType(StyleRuleCounterStyle* v);
+    void setType(const StyleRuleCounterStyle* v);
+
+    String* image() const
+    {
+        return m_image;
+    }
+
+    ImageResource* imageResource() const
+    {
+        return m_imageResource;
+    }
+
+    void setImage(String* v)
+    {
+        m_image = v;
+    }
+
+    void setImageResource(ImageResource* v)
+    {
+        m_imageResource = v;
+    }
 
     friend inline bool operator==(const ListStyleData& a,
                                   const ListStyleData& b);
@@ -59,17 +88,21 @@ public:
 private:
     ListStylePositionValue m_position;
     const StyleRuleCounterStyle* m_counterStyle;
+    String* m_image;
+    ImageResource* m_imageResource;
 };
 
 bool operator==(const ListStyleData& a, const ListStyleData& b)
 {
+    if (!a.m_image->equals(b.m_image)) {
+        return false;
+    }
     if (a.m_position != b.m_position) {
         return false;
     }
-    if (a.m_counterStyle) {
-        return a.m_counterStyle->equals(b.m_counterStyle);
-    }
-    return !b.m_counterStyle;
+    STARFISH_ASSERT(a.m_counterStyle);
+    STARFISH_ASSERT(b.m_counterStyle);
+    return a.m_counterStyle->equals(b.m_counterStyle);
 }
 
 bool operator!=(const ListStyleData& a, const ListStyleData& b)

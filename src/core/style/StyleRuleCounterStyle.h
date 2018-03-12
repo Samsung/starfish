@@ -27,6 +27,7 @@ class Document;
 class StyleRuleCounterStyle : public gc {
 public:
     enum System {
+        NoneSystem,
         CyclicSystem,
         FixedSystem,
         SymbolicSystem,
@@ -79,10 +80,15 @@ public:
         }
     }
 
+    static const StyleRuleCounterStyle* getKnownCounter(String* name);
+    static const StyleRuleCounterStyle* getNoneCounter();
     static const StyleRuleCounterStyle* getDiscCounter();
 
     String* name() const
     {
+        if (m_system == NoneSystem) {
+            return String::createASCIIString("none");
+        }
         return m_name;
     }
 
@@ -160,6 +166,7 @@ public:
     {
         if (m_lowerBound == kUninitializedRangeValue) {
             switch (m_system) {
+            case NoneSystem:
             case CyclicSystem:
             case NumericSystem:
             case FixedSystem:
@@ -192,6 +199,7 @@ public:
     {
         if (m_upperBound == kUninitializedRangeValue) {
             switch (m_system) {
+            case NoneSystem:
             case CyclicSystem:
             case NumericSystem:
             case FixedSystem:
