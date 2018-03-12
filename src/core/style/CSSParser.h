@@ -100,7 +100,7 @@ public:
             str->equals("in") || str->equals("cm") || str->equals("mm") ||
             str->equals("pt") || str->equals("pc") || str->equals("vw") ||
             str->equals("vh") || str->equals("vmin") || str->equals("vmax") ||
-            str->equals("rem")) {
+            str->equals("rem") || str->equals("ch")) {
             return true;
         }
         return false;
