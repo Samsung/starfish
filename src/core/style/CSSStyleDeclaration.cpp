@@ -1090,6 +1090,17 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::ListStyleImage) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleImage);
+        const ListStyleData& listStyle = style->listStyleData();
+        if (listStyle.image()->length() == 0) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
+            p.setValue(listStyle.image());
+        }
+        addValuePair(p);
     }
 #define ADD_VALUE_PAIR(KEY, VALUE, GETTER)                   \
     else if (keyKind == CSSStyleValuePair::KeyKind::KEY)     \

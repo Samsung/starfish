@@ -2140,6 +2140,7 @@ public:
         case UrlValueKind:
         case StringValueKind:
         case Attr:
+        case ListStyleCounterValueKind:
             return m_value.m_stringValue;
         case ValueListKind:
             return m_value.m_multiValue;

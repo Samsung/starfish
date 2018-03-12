@@ -722,7 +722,7 @@ public:
     void setTextIndent(Length val)
     {
         if (!val.isFixed() || val != textIndent()) {
-            ensureRareData()->m_textIndent = val;
+            ensureInheritedRareData()->m_textIndent = val;
         }
     }
 
@@ -737,19 +737,19 @@ public:
     void setTextTransform(TextTransformValue val)
     {
         if (val != textTransform()) {
-            ensureRareData()->m_textTransform = val;
+            ensureInheritedRareData()->m_textTransform = val;
         }
     }
 
     void addTextShadow(ShadowData& shadow)
     {
-        ensureRareData()->m_textShadowDataList.push_back(shadow);
+        ensureInheritedRareData()->m_textShadowDataList.push_back(shadow);
     }
 
     void setTextShadow(ShadowDataList val)
     {
         if (val != textShadow()) {
-            ensureRareData()->m_textShadowDataList = val;
+            ensureInheritedRareData()->m_textShadowDataList = val;
         }
     }
 
@@ -834,7 +834,7 @@ public:
     void setWordSpacing(Length val)
     {
         if (!val.isFixed() || val != wordSpacing()) {
-            ensureRareData()->m_wordSpacing = val;
+            ensureInheritedRareData()->m_wordSpacing = val;
         }
     }
 
@@ -1638,7 +1638,7 @@ public:
     void setLetterSpacing(Length len)
     {
         if (!len.isFixed() || letterSpacing() != len)
-            ensureRareData()->m_letterSpacing = len;
+            ensureInheritedRareData()->m_letterSpacing = len;
     }
 
     VisibilityValue visibility()
@@ -1783,6 +1783,10 @@ public:
         Node* consumer,
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
             nullptr);
+    void loadListStyleImage(
+        Node* consumer,
+        ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
+            nullptr);
     void loadResources(
         Node* consumer,
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
@@ -1824,7 +1828,7 @@ public:
     void setHorizontalBorderSpacing(Length v)
     {
         if (!v.isFixed() || v != horizontalBorderSpacing())
-            ensureRareData()->m_horizontalBorderSpacing = v;
+            ensureInheritedRareData()->m_horizontalBorderSpacing = v;
     }
 
     Length verticalBorderSpacing()
@@ -1838,7 +1842,7 @@ public:
     void setVerticalBorderSpacing(Length v)
     {
         if (!v.isFixed() || v != verticalBorderSpacing())
-            ensureRareData()->m_verticalBorderSpacing = v;
+            ensureInheritedRareData()->m_verticalBorderSpacing = v;
     }
 
     StylePaintData fill()
@@ -1852,7 +1856,7 @@ public:
     void setFill(StylePaintData v)
     {
         if (v != fill())
-            ensureRareData()->m_fill = v;
+            ensureInheritedRareData()->m_fill = v;
     }
 
     FillRuleValue fillRule()
@@ -1866,7 +1870,7 @@ public:
     void setFillRule(FillRuleValue v)
     {
         if (v != fillRule())
-            ensureRareData()->m_fillRule = v;
+            ensureInheritedRareData()->m_fillRule = v;
     }
 
     float fillOpacity()
@@ -1880,7 +1884,7 @@ public:
     void setFillOpacity(float v)
     {
         if (v != fillOpacity())
-            ensureRareData()->m_fillOpacity = v;
+            ensureInheritedRareData()->m_fillOpacity = v;
     }
 
     StylePaintData stroke()
@@ -1894,7 +1898,7 @@ public:
     void setStroke(StylePaintData v)
     {
         if (v != stroke())
-            ensureRareData()->m_stroke = v;
+            ensureInheritedRareData()->m_stroke = v;
     }
 
     Length strokeWidth()
@@ -1908,7 +1912,7 @@ public:
     void setStrokeWidth(Length v)
     {
         if (!v.isFixed() || v != strokeWidth())
-            ensureRareData()->m_strokeWidth = v;
+            ensureInheritedRareData()->m_strokeWidth = v;
     }
 
     BorderCollapseValue borderCollapse()
@@ -2330,7 +2334,7 @@ public:
         return MaskSizeValue::ContainMaskSizeValue;
     }
 
-    ListStyleData listStyleData()
+    const ListStyleData listStyleData()
     {
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_listStyleData;
@@ -2340,20 +2344,32 @@ public:
 
     String* listStyleType()
     {
-        if (m_inheritedStyles.m_rareData) {
-            return m_inheritedStyles.m_rareData->m_listStyleData.type();
-        }
-        return ListStyleData().type();
+        return listStyleData().type();
     }
 
     void setListStyleType(String* v)
     {
-        ensureRareData()->m_listStyleData.setType(v);
+        ensureInheritedRareData()->m_listStyleData.setType(v);
     }
 
-    void setListStyleType(StyleRuleCounterStyle* v)
+    void setListStyleType(const StyleRuleCounterStyle* v)
     {
-        ensureRareData()->m_listStyleData.setType(v);
+        ensureInheritedRareData()->m_listStyleData.setType(v);
+    }
+
+    String* listStyleImage()
+    {
+        return listStyleData().image();
+    }
+
+    void setListStyleImage(String* v)
+    {
+        ensureInheritedRareData()->m_listStyleData.setImage(v);
+    }
+
+    void setListStyleImage(ImageResource* v)
+    {
+        ensureInheritedRareData()->m_listStyleData.setImageResource(v);
     }
 
     ListStylePositionValue listStylePosition()
@@ -2366,7 +2382,7 @@ public:
 
     void setListStylePosition(ListStylePositionValue v)
     {
-        ensureRareData()->m_listStyleData.setPosition(v);
+        ensureInheritedRareData()->m_listStyleData.setPosition(v);
     }
 
     bool seenPseudoElementFirstLine() const
@@ -2401,7 +2417,7 @@ protected:
     ComputedStyle* addCachedPseudoStyle(ComputedStyle* pseudoStyle);
     void removeCachedPseudoStyle(StyleResolver::PseudoElementType pid);
 
-    InheritedStylesRareData* ensureRareData()
+    InheritedStylesRareData* ensureInheritedRareData()
     {
         if (m_inheritedStyles.m_isRareDataAllocated) {
             return m_inheritedStyles.m_rareData;

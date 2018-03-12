@@ -6207,6 +6207,49 @@ void StyleResolver::apply(Element* element,
             BORDER_RADIUS_APPLY(BottomRight, bottomRight, Horizontal, Vertical)
             BORDER_RADIUS_APPLY(BottomLeft, bottomLeft, Horizontal, Vertical)
 
+        case CSSStyleValuePair::KeyKind::ListStyleType:
+            if (cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Inherit ||
+                cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset) {
+                style->setListStyleType(
+                    parentStyle->listStyleData().typeData());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::None) {
+                style->setListStyleType(
+                    StyleRuleCounterStyle::getNoneCounter());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->setListStyleType(
+                    StyleRuleCounterStyle::getDiscCounter());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::
+                           ListStyleCounterValueKind) {
+                String* counterName = cssValues[k].listStyleCounterValue();
+                auto counterStyle =
+                    StyleRuleCounterStyle::getKnownCounter(counterName);
+                if (counterStyle) {
+                    style->setListStyleType(counterStyle);
+                } else {
+                    style->setListStyleType(counterName);
+                }
+            } else {
+                style->setListStyleType(cssValues[k].stringValue());
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::ListStyleImage:
+            if (cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Inherit ||
+                cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset) {
+                style->setListStyleImage(parentStyle->listStyleData().image());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::None) {
+                style->setListStyleImage(String::emptyString);
+            } else {
+                style->setListStyleImage(cssValues[k].urlValue(origin));
+            }
+            break;
         case CSSStyleValuePair::KeyKind::ListStylePosition:
             if (cssValues[k].valueKind() ==
                     CSSStyleValuePair::ValueKind::Inherit ||
@@ -10600,14 +10643,39 @@ bool CSSStyleValuePair::updateValueMaskSize(const CSSTokenVector& tokens)
 
 bool CSSStyleValuePair::updateValueListStyleType(const CSSTokenVector& tokens)
 {
-    // TODO:
-    return false;
+    if (tokens.size() != 1) {
+        return false;
+    }
+    const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_NONE()) {
+        m_valueKind = CSSStyleValuePair::ValueKind::None;
+    } else if (STRING_VALUE_IS_STRING("unset")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Unset;
+    } else if (CSSPropertyParser::parseContentString(
+                   value.data(), value.length(), &(m_value.m_stringValue))) {
+        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
+    } else {
+        m_value.m_stringValue = String::fromUTF8(value.data(), value.length());
+        m_valueKind = CSSStyleValuePair::ValueKind::ListStyleCounterValueKind;
+    }
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueListStyleImage(const CSSTokenVector& tokens)
 {
-    // TODO:
-    return false;
+    if (tokens.size() != 1) {
+        return false;
+    }
+    const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_NONE()) {
+        m_valueKind = CSSStyleValuePair::ValueKind::None;
+        return true;
+    }
+    if (STRING_VALUE_IS_STRING("unset")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Unset;
+        return true;
+    }
+    return CSSPropertyParser::parseUrl(value.data(), this);
 }
 
 bool CSSStyleValuePair::updateValueListStylePosition(

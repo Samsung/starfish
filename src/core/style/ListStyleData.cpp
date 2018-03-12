@@ -23,12 +23,9 @@
 
 namespace StarFish {
 
-String* ListStyleData::type()
+String* ListStyleData::type() const
 {
-    if (m_counterStyle) {
-        return m_counterStyle->name();
-    }
-    return String::createASCIIString("disc");
+    return m_counterStyle->name();
 }
 
 void ListStyleData::setType(String* v)
@@ -40,7 +37,7 @@ void ListStyleData::setType(String* v)
     m_counterStyle = counter;
 }
 
-void ListStyleData::setType(StyleRuleCounterStyle* v)
+void ListStyleData::setType(const StyleRuleCounterStyle* v)
 {
     STARFISH_ASSERT(v);
     m_counterStyle = v;

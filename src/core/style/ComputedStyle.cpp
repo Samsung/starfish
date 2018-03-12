@@ -64,6 +64,12 @@ void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
                                   m_listStyleData.m_counterStyle));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
+                                  m_listStyleData.m_image));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
+                                  m_listStyleData.m_imageResource));
         descr = GC_make_descriptor(
             obj_bitmap, GC_WORD_LEN(ComputedStyle::InheritedStylesRareData));
         typeInited = true;
@@ -366,6 +372,54 @@ void ComputedStyle::loadBorderImage(
     }
 }
 
+void ComputedStyle::loadListStyleImage(
+    Node* consumer,
+    ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
+{
+    StarFish* sf = consumer->starFish();
+    const ListStyleData& listStyle = listStyleData();
+    if (!listStyle.image()->length() > 0) {
+        ResourceURL* u = new ResourceURL(
+            listStyle.image(), consumer->document()->baseURL()->baseURI());
+        bool loaded = false;
+        if (prevComputedStyleValueForReferenceLoadedResources) {
+            const ListStyleData& prevListStyle =
+                prevComputedStyleValueForReferenceLoadedResources
+                    ->listStyleData();
+            ImageResource* prevRes = prevListStyle.imageResource();
+            if (prevRes && *prevRes->url() == *u) {
+                consumer->document()
+                    ->resourceLoader()
+                    .notifyImageResourceActiveState(prevRes);
+                setListStyleImage(prevRes);
+                loaded = true;
+            }
+        }
+        if (!loaded) {
+            ImageResource* res =
+                consumer->document()->resourceLoader().fetchImage(u);
+            res->markThisResourceIsDoesNotAffectWindowOnLoad();
+            res->addResourceClient(
+                new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(
+                    res, consumer->document()));
+#ifdef STARFISH_ENABLE_TEST
+            bool enableRegressionTest =
+                sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+            res->request(
+                (g_enablePixelTest || enableRegressionTest)
+                    ? Resource::ResourceRequestSyncLevel::AlwaysSync
+                    : Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
+                consumer->document()->documentURI(), true);
+#else
+            res->request(
+                Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
+                consumer->document()->documentURI(), true);
+#endif
+            setListStyleImage(res);
+        }
+    }
+}
+
 void ComputedStyle::loadResources(
     Node* consumer,
     ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
@@ -374,6 +428,8 @@ void ComputedStyle::loadResources(
                         prevComputedStyleValueForReferenceLoadedResources);
     loadBorderImage(consumer,
                     prevComputedStyleValueForReferenceLoadedResources);
+    loadListStyleImage(consumer,
+                       prevComputedStyleValueForReferenceLoadedResources);
     loadFont(consumer);
 }
 
