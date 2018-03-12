@@ -330,6 +330,7 @@ public:
         return !m_id.isEmptyAtomicString();
     }
 
+    String* getDir();
     String* getLaunguage();
 
     const GCVector<Attribute>& attributesVector()

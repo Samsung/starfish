@@ -957,6 +957,7 @@ String* CSSSelectorList::selectorText(CSSSelectorList* list, unsigned idx,
                 str.appendChar(')');
                 break;
             }
+            case CSSSelector::PseudoDir:
             case CSSSelector::PseudoLang:
                 str.appendChar('(');
                 str.appendString(pcs->argument());
@@ -1154,6 +1155,8 @@ CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(StarFish* sf,
         return CSSSelector::PseudoType::PseudoBefore;
     } else if (name == sstrs->m_afterSelector) {
         return CSSSelector::PseudoType::PseudoAfter;
+    } else if (name == sstrs->m_dirPSelector) {
+        return CSSSelector::PseudoType::PseudoDir;
     } else if (name == sstrs->m_langPSelector) {
         return CSSSelector::PseudoType::PseudoLang;
     } else if (name == sstrs->m_notPSelector) {
@@ -1258,6 +1261,7 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
         case PseudoIndeterminate:
         case PseudoInvalid:
     */
+    case PseudoDir:
     case PseudoLang:
     case PseudoLastChild:
     case PseudoLastOfType:
@@ -6841,12 +6845,10 @@ bool StyleResolver::checkPseudoClass(Element* element,
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         return element->parentElement() && isFirstOfType(element);
-        break;
     case CSSSelector::PseudoType::PseudoLastOfType:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         return element->parentElement() && isLastOfType(element);
-        break;
     case CSSSelector::PseudoType::PseudoOnlyChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
@@ -6856,7 +6858,6 @@ bool StyleResolver::checkPseudoClass(Element* element,
                                                      StyleDamageFromDOMTree);
         return element->parentElement() && isFirstOfType(element) &&
                isLastOfType(element);
-        break;
     case CSSSelector::PseudoType::PseudoEmpty:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
@@ -6866,25 +6867,32 @@ bool StyleResolver::checkPseudoClass(Element* element,
                                                      StyleDamageFromDOMTree);
         return element->parentElement() &&
                selector->matchNth(nthChildIndex(element));
-        break;
     case CSSSelector::PseudoNthOfType:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         return element->parentElement() &&
                selector->matchNth(nthOfTypeIndex(element));
-        break;
     case CSSSelector::PseudoNthLastChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         return element->parentElement() &&
                selector->matchNth(nthLastChildIndex(element));
-        break;
     case CSSSelector::PseudoNthLastOfType:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         return element->parentElement() &&
                selector->matchNth(nthLastOfTypeIndex(element));
-        break;
+    case CSSSelector::PseudoType::PseudoDir: {
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromAttribute);
+        String* value = element->getDir();
+        String* argument = selector->argument();
+        if (value->equals(argument) ||
+            (value->equals(String::emptyString) && argument->equals("ltr"))) {
+            return true;
+        }
+        return false;
+    }
     case CSSSelector::PseudoType::PseudoLang: {
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromAttribute);

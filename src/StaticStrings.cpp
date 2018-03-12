@@ -94,6 +94,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_targetSelector = AtomicString::createAtomicString(sf, "target");
     m_beforeSelector = AtomicString::createAtomicString(sf, "before");
     m_afterSelector = AtomicString::createAtomicString(sf, "after");
+    m_dirPSelector = AtomicString::createAtomicString(sf, "dir(");
     m_langPSelector = AtomicString::createAtomicString(sf, "lang(");
     m_notPSelector = AtomicString::createAtomicString(sf, "not(");
     m_selectionSelector = AtomicString::createAtomicString(sf, "selection");
