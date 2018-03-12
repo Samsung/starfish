@@ -573,18 +573,44 @@ public:
                 return false;
             }
 
-            CSSTokenValue sub = str.substring(s1 + 1, s2 - s1 - 1);
+            CSSTokenValue sub = str.substring(s1 + 1, s2 - s1 - 1).trim();
+            size_t commaPos = sub.indexOf(',');
+            size_t slashPos = sub.indexOf('/');
+
             std::vector<CSSTokenValue> v;
-            sub.split(',', v);
+            if ((0 < commaPos) && (commaPos < sub.size())) {
+                // functional syntax
+                sub.split(',', v);
+            } else if ((0 < slashPos) && (slashPos < sub.size())) {
+                // whitespace syntax
+                std::vector<CSSTokenValue> s;
+                std::vector<CSSTokenValue> rgbVals;
+                sub.split('/', s);
+                s[0].trim().split(' ', rgbVals);
+                for (size_t i = 0; i < rgbVals.size(); i++) {
+                    v.push_back(rgbVals[i]);
+                }
+                CSSTokenValue alpha = s[1].trim();
+                if (alpha.size() > 0) {
+                    v.push_back(alpha);
+                }
+            } else {
+                return false;
+            }
+
             size_t size = v.size();
-            if (!(maybeRGBA && size == 4) && !(maybeRGB && size == 3)) {
+            if (!((maybeRGBA && size == 4) ||
+                  (maybeRGB && (size == 3 || size == 4)))) {
                 return false;
             }
 
             bool isPercent = false, shouldPercent = false;
             unsigned char parsed[4];
-            for (size_t i = 0; i < size; i++) {
-                if (!parseColorFunctionPart(v[i], (i == 3), &parsed[i],
+            bool hasAlpha = (size == 4);
+
+            // parse rgb
+            for (size_t i = 0; i < 3; i++) {
+                if (!parseColorFunctionPart(v[i], false, &parsed[i],
                                             &isPercent)) {
                     return false;
                 }
@@ -594,12 +620,20 @@ public:
                     return false;
                 }
             }
+
+            // parse alpha if exists
+            if (hasAlpha &&
+                !parseColorFunctionPart(v[3], true, &parsed[3], &isPercent)) {
+                return false;
+            }
+
             pair->setColorValue(Unit::Color(parsed[0], parsed[1], parsed[2],
-                                            maybeRGBA ? parsed[3] : 255));
+                                            hasAlpha ? parsed[3] : 255));
         } else if (maybeCode) {
             const char* s = str.data();
             const unsigned len = str.length();
-            if (!(len == 7 || len == 4)) {
+
+            if (!(len == 9 || len == 7 || len == 5 || len == 4)) {
                 return false;
             }
             for (unsigned i = 1; i < len; i++) {
@@ -609,10 +643,20 @@ public:
                     return false;
                 }
             }
-            if (len == 7) {
+
+            if (len == 9) {
+                unsigned int r, g, b, a;
+                sscanf(s, "#%02x%02x%02x%02x", &r, &g, &b, &a);
+                pair->setColorValue(Unit::Color(r, g, b, a));
+            } else if (len == 7) {
                 unsigned int r, g, b;
                 sscanf(s, "#%02x%02x%02x", &r, &g, &b);
                 pair->setColorValue(Unit::Color(r, g, b, 255));
+            } else if (len == 5) {
+                unsigned int r, g, b, a;
+                sscanf(s, "#%01x%01x%01x%01x", &r, &g, &b, &a);
+                pair->setColorValue(
+                    Unit::Color(r * 17, g * 17, b * 17, a * 17));
             } else if (len == 4) {
                 unsigned int r, g, b;
                 sscanf(s, "#%01x%01x%01x", &r, &g, &b);
