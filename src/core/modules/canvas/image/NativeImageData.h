@@ -23,6 +23,8 @@
 namespace StarFish {
 
 class NativeImageData : public gc {
+    friend class ResourceLoader;
+
 public:
     enum PreserveAspectRatioValue {
         None,
@@ -36,6 +38,9 @@ public:
         xMidYMax,
         xMaxYMax,
     };
+
+    static int nativeImageDataGCKind();
+    static std::vector<NativeImageData*>& everyNativeImageInstances();
 
     static NativeImageData* create(
         String* localImageSrc); // this is only for EFL backend
@@ -51,8 +56,13 @@ public:
     virtual size_t height() = 0;
     virtual size_t stride() = 0;
     virtual bool hasTransparentPixel() = 0;
+    virtual void disposeNativeImageData()
+    {
+    }
     virtual ~NativeImageData()
     {
+        auto& r = everyNativeImageInstances();
+        r.erase(std::find(r.begin(), r.end(), this));
     }
 
     PreserveAspectRatioValue preserveAspectRatioValue()
@@ -65,13 +75,27 @@ public:
         m_preserveAspectRatioValue = v;
     }
 
+    void* operator new(size_t size) = delete;
+    void* operator new[](size_t size) = delete;
+
 protected:
     NativeImageData()
     {
+        m_isSeenByGC = false;
         m_preserveAspectRatioValue = None;
+        everyNativeImageInstances().push_back(this);
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           NativeImageData* self =
+                                               (NativeImageData*)obj;
+                                           self->disposeNativeImageData();
+                                           self->~NativeImageData();
+                                       },
+                                       NULL, NULL, NULL);
     }
 
-    PreserveAspectRatioValue m_preserveAspectRatioValue;
+    bool m_isSeenByGC : 1;
+    PreserveAspectRatioValue m_preserveAspectRatioValue : 4;
 };
 }
 

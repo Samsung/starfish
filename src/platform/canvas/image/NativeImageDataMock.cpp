@@ -27,6 +27,12 @@ namespace StarFish {
 
 class NativeImageDataMock : public NativeImageData {
 public:
+    void* operator new(size_t size)
+    {
+        return GC_GENERIC_MALLOC(sizeof(NativeImageDataMock),
+                                 NativeImageData::nativeImageDataGCKind());
+    }
+
     NativeImageDataMock(String* localImageSrc)
     {
     }

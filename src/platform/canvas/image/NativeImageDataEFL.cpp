@@ -25,12 +25,20 @@
 
 #include <Elementary.h>
 
+extern Evas* g_internalCanvas;
+
 namespace StarFish {
 
 Evas* internalCanvas();
 
 class NativeImageDataEFL : public NativeImageData {
 public:
+    void* operator new(size_t size)
+    {
+        return GC_GENERIC_MALLOC(sizeof(NativeImageDataEFL),
+                                 NativeImageData::nativeImageDataGCKind());
+    }
+
     NativeImageDataEFL(String* localImageSrc)
     {
         // STARFISH_LOG_INFO("NativeImageDataEFL::NativeImageDataEFL %s\n",
@@ -48,8 +56,6 @@ public:
             if (w >= 0 && h >= 0) {
                 m_width = w;
                 m_height = h;
-                // isThereTransparentPixel();
-                reigsterFinalizer();
                 return;
             }
         }
@@ -72,8 +78,6 @@ public:
             if (w >= 0 && h >= 0) {
                 m_width = w;
                 m_height = h;
-                // isThereTransparentPixel();
-                reigsterFinalizer();
                 return;
             }
         }
@@ -99,8 +103,6 @@ public:
                                 EVAS_COLORSPACE_ARGB8888);
         m_width = w;
         m_height = h;
-
-        reigsterFinalizer();
     }
 
     virtual void clear()
@@ -146,16 +148,12 @@ public:
         }
     }
 
-    void reigsterFinalizer()
+    virtual void disposeNativeImageData()
     {
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           // STARFISH_LOG_INFO("NativeImageDataEFL::~NativeImageDataEFL\n");
-                                           Evas_Object* m = (Evas_Object*)cd;
-                                           evas_object_hide(m);
-                                           evas_object_del(m);
-                                       },
-                                       m_image, NULL, NULL);
+        if (g_internalCanvas && m_image) {
+            evas_object_hide(m_image);
+            evas_object_del(m_image);
+        }
     }
 
     virtual void* unwrap()

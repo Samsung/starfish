@@ -114,7 +114,9 @@
 #include <cwchar>
 #include <numeric>
 
+#define ESCARGOT // for use additional functions in GCttil
 #include <GCUtil.h>
+#undef ESCARGOT
 
 template <const int siz>
 inline void __attribute__((optimize("O0"))) clearStack()

@@ -109,7 +109,8 @@ private:
     GCUnorderedMap<UTF8String, ResourceCacheData> m_imageResourceCache;
     GCVector<Resource*> m_imageResourceCacheLRUList;
     size_t m_resourceCacheSize;
-    uint64_t m_lastCachePruneTime;
+    uint64_t m_downloadedResourceContentSize; // This variable actually contains
+                                              // content size of Resource.
 };
 }
 
