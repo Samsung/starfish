@@ -222,6 +222,7 @@ public:
     AtomicString m_targetSelector;
     AtomicString m_beforeSelector;
     AtomicString m_afterSelector;
+    AtomicString m_dirPSelector;
     AtomicString m_langPSelector;
     AtomicString m_notPSelector;
     AtomicString m_selectionSelector;

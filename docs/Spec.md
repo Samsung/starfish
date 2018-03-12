@@ -1059,12 +1059,13 @@ This section describes the complete list of supported HTML tags and attributes b
 | | | :enabled | input:enabled | Selects every enabled <input> element |
 | | | :focus | input:focus | Selects the input element which has focus |
 | | | :target | #news:target | Selects the current active #news element (clicked on a URL containing that anchor name) |
-| | | :lang(language) | p:lang(it) | Selects every \<p\> element with a lang attribute equal to "it" (Italian) |
+| | | :dir() | :dir(rtl) | Selects any element with right-to-left text |
+| | | :lang() | p:lang(it) | Selects every \<p\> element with a lang attribute equal to "it" (Italian) |
 | | | :root | :root | Selects the document's root element |
-| | | :nth-child(n) | p:nth-child(2) | Selects every \<p\> element that is the second child of its parent |
-| | | :nth-last-child(n) | p:nth-last-child(2) | Selects every \<p\> element that is the second child of its parent, counting from the last child |
-| | | :nth-of-type(n) | p:nth-of-type(2) | Selects every \<p\> element that is the second \<p\> element of its parent |
-| | | :nth-last-of-type(n) | p:nth-last-of-type(2) | 	Selects every \<p\> element that is the second \<p\> element of its parent, counting from the last child |
+| | | :nth-child() | p:nth-child(2) | Selects every \<p\> element that is the second child of its parent |
+| | | :nth-last-child() | p:nth-last-child(2) | Selects every \<p\> element that is the second child of its parent, counting from the last child |
+| | | :nth-of-type() | p:nth-of-type(2) | Selects every \<p\> element that is the second \<p\> element of its parent |
+| | | :nth-last-of-type() | p:nth-last-of-type(2) | 	Selects every \<p\> element that is the second \<p\> element of its parent, counting from the last child |
 | | | :first-child | p:first-child | Selects every \<p\> element that is the first child of its parent |
 | | | :last-child | p:last-child | Selects every \<p\> element that is the last child of its parent |
 | | | :first-of-type | p:first-of-type | Selects every \<p\> element that is the first \<p\> element of its parent |
@@ -1075,10 +1076,10 @@ This section describes the complete list of supported HTML tags and attributes b
 | | | ::first-letter | p::first-letter | Selects the first letter of every \<p\> element |
 | | | ::before | p::before | Insert something before the content of each \<p\> element |
 | | | ::after | p::after | Insert something after the content of each \<p\> element |
-| | Combinators | selector1 selector2 | div p | Selects all \<p\> elements inside \<div\> elements |
-| | | selector1 > selector2 | div > p | Selects all \<p\> elements that are immediate children of a \<div\> element |
-| | | selector1 + selector2 | div + p | Selects all \<p\> elements that are placed immediately after \<div\> elements |
-| | | selector1 ~ selector2 | div ~ p | Selects all \<p\> elements that are siblings of \<div\> elements |
+| | Descendant Combinator | selector1 selector2 | div p | Selects all \<p\> elements inside \<div\> elements |
+| | Child Combinator | selector1 > selector2 | div > p | Selects all \<p\> elements that are immediate children of a \<div\> element |
+| | Next-sibling Combinator | selector1 + selector2 | div + p | Selects all \<p\> elements that are placed immediately after \<div\> elements |
+| | Subsequent-sibling Combinator | selector1 ~ selector2 | div ~ p | Selects all \<p\> elements that are siblings of \<div\> elements |
 
 ## Additional Supported APIs
 

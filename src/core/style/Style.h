@@ -2644,6 +2644,7 @@ public:
         PseudoTarget,
         PseudoBefore,
         PseudoAfter,
+        PseudoDir,
         PseudoLang,
         PseudoNot,
         PseudoSelection

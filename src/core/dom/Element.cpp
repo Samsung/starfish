@@ -1286,6 +1286,22 @@ void Element::dumpStyle()
 }
 #endif
 
+String* Element::getDir()
+{
+    Node* n = this;
+    String* value = String::emptyString;
+
+    do {
+        if (n->isElement()) {
+            value = n->asElement()->getAttributeOrEmpty(
+                n->starFish()->staticStrings()->m_dir);
+        }
+        n = n->parentNode();
+    } while (n && value->equals(String::emptyString));
+
+    return value;
+}
+
 String* Element::getLaunguage()
 {
     Node* n = this;

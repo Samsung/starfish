@@ -954,6 +954,7 @@ CSSSelector* CSSParser::getPseudoSelector()
 
         return selector;
     }
+    case CSSSelector::PseudoDir:
     case CSSSelector::PseudoLang: {
         RefPtr<CSSToken> token = currentToken();
         if (!token->isIdent()) {
