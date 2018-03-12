@@ -378,7 +378,7 @@ void ComputedStyle::loadListStyleImage(
 {
     StarFish* sf = consumer->starFish();
     const ListStyleData& listStyle = listStyleData();
-    if (!listStyle.image()->length() > 0) {
+    if (!(listStyle.image()->length() > 0)) {
         ResourceURL* u = new ResourceURL(
             listStyle.image(), consumer->document()->baseURL()->baseURI());
         bool loaded = false;
