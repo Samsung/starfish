@@ -1117,7 +1117,12 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
     // cross size is auto and not definite, in this calculation use fit-content
     // as the flex item’s cross size.
 
+    FrameBox* containingBlockOfFlexItem = containingBlock(flexItem);
+    LayoutUnit oldContainingBlockWidth =
+        containingBlockOfFlexItem->contentWidth();
+
     if (isMainAxisInInlineAxis) {
+        containingBlockOfFlexItem->setContentWidth(availableMainSize);
         Length oldWidth = flexItem->style()->width(), width;
         if (flexBasis.isWidth()) {
             if (flexBasis.width().isAuto()) {
@@ -1131,6 +1136,7 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
         flexItem->style()->setWidth(oldWidth);
         basisSize = flexItem->contentWidth();
     } else {
+        containingBlockOfFlexItem->setContentWidth(availableCrossSize);
         flexItem->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
         Length oldHeight = flexItem->style()->height(), height;
         if (flexBasis.isWidth()) {
@@ -1145,6 +1151,8 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
         flexItem->style()->setHeight(oldHeight);
         basisSize = flexItem->contentHeight();
     }
+
+    containingBlockOfFlexItem->setContentWidth(oldContainingBlockWidth);
 
     return basisSize;
 }
