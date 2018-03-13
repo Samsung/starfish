@@ -124,14 +124,6 @@ public:
     {
     }
 
-    virtual void setTextShadowData(CanvasShadowDataList& list)
-    {
-    }
-
-    virtual void clearTextShadowData()
-    {
-    }
-
     virtual void punchHole(const Unit::Rect& rt)
     {
     }

@@ -22,6 +22,8 @@
 
 namespace StarFish {
 
+class CanvasShadowData;
+
 class NativeImageData : public gc {
     friend class ResourceLoader;
 

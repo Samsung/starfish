@@ -94,6 +94,8 @@ public:
     static Canvas* create(StarFish* starfish, CanvasSurface* data);
     static Canvas* createGenericCanvas(StarFish* starfish, void* data, size_t w,
                                        size_t h);
+    static Canvas* createGenericCanvas(StarFish* starfish,
+                                       NativeImageData* data);
 
     virtual ~Canvas()
     {
@@ -126,8 +128,6 @@ public:
     virtual void mergeTextDecorationData(ComputedStyle* style) = 0;
     virtual TextDecorationData textDecorationData() = 0;
     virtual void setTextDecorationData(TextDecorationData d) = 0;
-    virtual void setTextShadowData(CanvasShadowDataList& list) = 0;
-    virtual void clearTextShadowData() = 0;
     virtual void drawRect(const Unit::Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,

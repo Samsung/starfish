@@ -66,15 +66,31 @@ public:
 class CanvasCairo : public Canvas {
     void initFromBuffer(void* buffer, int width, int height, int stride)
     {
+        m_width = width;
+        m_height = height;
+
         m_surface = cairo_image_surface_create_for_data(
-            (unsigned char*)buffer, CAIRO_FORMAT, width, height, stride);
+            (unsigned char*)buffer, CAIRO_FORMAT, m_width, m_height, stride);
         cairo_surface_set_device_scale(
             m_surface, m_starfish->screenInfo().deviceScaleFactor,
             m_starfish->screenInfo().deviceScaleFactor);
         m_canvas = cairo_create(m_surface);
-        m_width = width;
-        m_height = height;
     }
+
+    void initFromNativeImageData(NativeImageData* data)
+    {
+        m_width = data->width();
+        m_height = data->height();
+
+        m_surface = cairo_image_surface_create_for_data(
+            (unsigned char*)data->data(), CAIRO_FORMAT, data->width(),
+            data->height(), data->stride());
+        cairo_surface_set_device_scale(
+            m_surface, m_starfish->screenInfo().deviceScaleFactor,
+            m_starfish->screenInfo().deviceScaleFactor);
+        m_canvas = cairo_create(m_surface);
+    }
+
     void init()
     {
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_FAST);
@@ -129,6 +145,20 @@ public:
         initFromBuffer(data->data(), data->bufferWidth(), data->bufferHeight(),
                        data->bufferStride());
 
+        init();
+        save();
+    }
+
+    CanvasCairo(StarFish* starfish, NativeImageData* data)
+    {
+        m_shouldDestroyCairo = true;
+        m_shouldDestroySurface = false;
+        m_starfish = starfish;
+        m_canvas = nullptr;
+        m_surface = nullptr;
+        {
+            initFromNativeImageData(data);
+        }
         init();
         save();
     }
@@ -290,16 +320,6 @@ public:
         lastState().m_textDecorationData = d;
     }
 
-    virtual void setTextShadowData(CanvasShadowDataList& list)
-    {
-        m_textShadowDataList = list;
-    }
-
-    virtual void clearTextShadowData()
-    {
-        m_textShadowDataList.clear();
-    }
-
     virtual void punchHole(const Unit::Rect& rt)
     {
         STARFISH_ASSERT(m_canvas);
@@ -394,26 +414,17 @@ public:
         LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
 
-        if (m_textShadowDataList.size() == 0) {
-            double x1, x2;
-            double y1, y2;
-            cairo_clip_extents(m_canvas, &x1, &y1, &x2, &y2);
-            LayoutRect c(x1, y1, x2 - x1, y2 - y1);
-            if (c.intersects(rt)) {
-            } else {
-                return;
-            }
+#ifdef STARFISH_ENABLE_TEST
+        if (g_enablePixelTest) {
+            drawAhemBoxCairo(m_canvas, rt, sv, rt.x(), rt.y());
+        } else {
+            drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y());
+            drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
         }
-
-        if (m_textShadowDataList.size()) {
-            for (auto& sd : m_textShadowDataList) {
-                cairo_save(m_canvas);
-                drawTextInner(rt, sv, &sd);
-                cairo_restore(m_canvas);
-            }
-        }
-
-        drawTextInner(rt, sv);
+#else
+        drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y());
+        drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
+#endif
     }
 
     void drawImageCairo(cairo_surface_t* localSurface, const Unit::Rect& dst,
@@ -476,6 +487,7 @@ public:
             return;
         }
 
+        m_drawnImages.push_back(data);
         size_t surfaceWidth = data->width(), surfaceHeight = data->height();
 
         bool surfaceWasCreated = false;
@@ -958,8 +970,7 @@ private:
     }
     void drawTextDecorationCairo(cairo_t* canvas, LayoutRect rect,
                                  const StringView& sv, LayoutUnit dx,
-                                 LayoutUnit dy,
-                                 CanvasShadowData* shadow = nullptr)
+                                 LayoutUnit dy)
     {
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
         FontFaceImplCairo* fc = (FontFaceImplCairo*)f->fontFaceList()[0];
@@ -972,23 +983,21 @@ private:
             face->underline_thickness / (float)fc->m_unitsPerEM * intSize;
         if (lastState().m_textDecorationData.hasUnderLine()) {
             cairo_set_line_width(canvas, lineWidth);
-            if (!shadow) {
+
 #ifdef STARFISH_ANDROID
-                cairo_set_source_rgba(
-                    canvas,
-                    lastState().m_textDecorationData.underLineColor().B(),
-                    lastState().m_textDecorationData.underLineColor().G(),
-                    lastState().m_textDecorationData.underLineColor().R(),
-                    lastState().m_textDecorationData.underLineColor().A());
+            cairo_set_source_rgba(
+                canvas, lastState().m_textDecorationData.underLineColor().B(),
+                lastState().m_textDecorationData.underLineColor().G(),
+                lastState().m_textDecorationData.underLineColor().R(),
+                lastState().m_textDecorationData.underLineColor().A());
 #else
-                cairo_set_source_rgba(
-                    canvas,
-                    lastState().m_textDecorationData.underLineColor().R(),
-                    lastState().m_textDecorationData.underLineColor().G(),
-                    lastState().m_textDecorationData.underLineColor().B(),
-                    lastState().m_textDecorationData.underLineColor().A());
+            cairo_set_source_rgba(
+                canvas, lastState().m_textDecorationData.underLineColor().R(),
+                lastState().m_textDecorationData.underLineColor().G(),
+                lastState().m_textDecorationData.underLineColor().B(),
+                lastState().m_textDecorationData.underLineColor().A());
 #endif
-            }
+
             float y = face->underline_position / (float)fc->m_unitsPerEM *
                           intSize / 72 +
                       intSize;
@@ -999,23 +1008,21 @@ private:
 
         if (lastState().m_textDecorationData.hasLineThrough()) {
             cairo_set_line_width(canvas, lineWidth);
-            if (!shadow) {
+
 #ifdef STARFISH_ANDROID
-                cairo_set_source_rgba(
-                    canvas,
-                    lastState().m_textDecorationData.lineThroughColor().R(),
-                    lastState().m_textDecorationData.lineThroughColor().G(),
-                    lastState().m_textDecorationData.lineThroughColor().B(),
-                    lastState().m_textDecorationData.lineThroughColor().A());
+            cairo_set_source_rgba(
+                canvas, lastState().m_textDecorationData.lineThroughColor().R(),
+                lastState().m_textDecorationData.lineThroughColor().G(),
+                lastState().m_textDecorationData.lineThroughColor().B(),
+                lastState().m_textDecorationData.lineThroughColor().A());
 #else
-                cairo_set_source_rgba(
-                    canvas,
-                    lastState().m_textDecorationData.lineThroughColor().B(),
-                    lastState().m_textDecorationData.lineThroughColor().G(),
-                    lastState().m_textDecorationData.lineThroughColor().R(),
-                    lastState().m_textDecorationData.lineThroughColor().A());
+            cairo_set_source_rgba(
+                canvas, lastState().m_textDecorationData.lineThroughColor().R(),
+                lastState().m_textDecorationData.lineThroughColor().G(),
+                lastState().m_textDecorationData.lineThroughColor().B(),
+                lastState().m_textDecorationData.lineThroughColor().A());
 #endif
-            }
+
             float y =
                 (lastState().m_font->metrics().m_ascender) -
                 intSize * (lastState().m_font->metrics().m_xheightRate) / 2;
@@ -1027,92 +1034,6 @@ private:
 
         cairo_translate(canvas, -dx, -dy);
     }
-    void drawTextInner(LayoutRect rect, const StringView& sv,
-                       CanvasShadowData* shadow = nullptr)
-    {
-        LayoutUnit xx = rect.x(), yy = rect.y();
-        cairo_t* canvas = nullptr;
-        cairo_surface_t* surfaceForBlur = nullptr;
-        float radiusOffset = 0.0f;
-
-        if (shadow) {
-            Unit::Color color;
-            if (shadow->radius()) {
-                radiusOffset = shadow->radius();
-                radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
-                radiusOffset *= 2;
-            }
-            if (shadow->hasColor()) {
-                color = shadow->color();
-            } else {
-                color = lastState().m_color;
-            }
-
-            surfaceForBlur = cairo_surface_create_similar(
-                cairo_get_target(m_canvas), CAIRO_CONTENT_COLOR_ALPHA,
-                ceil(rect.width().toFloat() + radiusOffset),
-                ceil(rect.height().toFloat() + radiusOffset));
-
-            canvas = cairo_create(surfaceForBlur);
-#ifdef STARFISH_ANDROID
-            cairo_set_source_rgba(canvas, color.B(), color.G(), color.R(),
-                                  color.A());
-#else
-            cairo_set_source_rgba(canvas, color.R(), color.G(), color.B(),
-                                  color.A());
-#endif
-        } else {
-            canvas = m_canvas;
-        }
-
-        if (radiusOffset > 0.0f) {
-            xx = xx + ceil(radiusOffset / 2);
-            yy = yy + ceil(radiusOffset / 2);
-        }
-
-        LayoutUnit dx = xx;
-        LayoutUnit dy = yy;
-
-#ifdef STARFISH_ENABLE_TEST
-        if (g_enablePixelTest) {
-            drawAhemBoxCairo(canvas, rect, sv, dx, dy);
-        } else {
-            drawGlyphsCairo(canvas, rect, sv, dx, dy);
-            drawTextDecorationCairo(canvas, rect, sv, dx, dy, shadow);
-        }
-#else
-        drawGlyphsCairo(canvas, rect, sv, dx, dy);
-        drawTextDecorationCairo(canvas, rect, sv, dx, dy, shadow);
-#endif
-        if (shadow) {
-            if (shadow->radius()) {
-                int width = cairo_image_surface_get_width(surfaceForBlur);
-                int height = cairo_image_surface_get_height(surfaceForBlur);
-                int stride = cairo_image_surface_get_stride(surfaceForBlur);
-                cairo_format_t format =
-                    cairo_image_surface_get_format(surfaceForBlur);
-                unsigned char* data =
-                    cairo_image_surface_get_data(surfaceForBlur);
-
-                if (data && format == CAIRO_FORMAT) {
-                    ShadowBlur sb(data, width, height, stride);
-                    sb.process(shadow->radius());
-                    cairo_surface_mark_dirty(surfaceForBlur);
-                }
-            }
-
-            cairo_set_source_surface(m_canvas, surfaceForBlur,
-                                     shadow->offsetX() - ceil(radiusOffset / 2),
-                                     shadow->offsetY() -
-                                         ceil(radiusOffset / 2));
-            cairo_translate(m_canvas, dx, dy);
-            cairo_paint(m_canvas);
-            cairo_translate(m_canvas, -dx, -dy);
-            cairo_surface_destroy(surfaceForBlur);
-            cairo_destroy(canvas);
-        }
-    }
-
     virtual void setNeedsFastAntialias()
     {
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_FAST);
@@ -1125,11 +1046,11 @@ private:
 protected:
     StarFish* m_starfish;
     std::vector<CanvasStateCairo> m_state;
+    GCVector<NativeImageData*> m_drawnImages;
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
     unsigned m_width;
     unsigned m_height;
-    CanvasShadowDataList m_textShadowDataList;
 
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;
@@ -1151,6 +1072,11 @@ Canvas* Canvas::createGenericCanvas(StarFish* starfish, void* data, size_t w,
                                     size_t h)
 {
     return new CanvasCairo(starfish, data, w, h, w * 4);
+}
+
+Canvas* Canvas::createGenericCanvas(StarFish* starfish, NativeImageData* data)
+{
+    return new CanvasCairo(starfish, data);
 }
 }
 

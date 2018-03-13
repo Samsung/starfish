@@ -23,6 +23,7 @@
 #include "core/style/Unit.h"
 
 namespace StarFish {
+
 class ShadowBlur {
 public:
     ShadowBlur(uint8_t* source, const size_t& width, const size_t& height,

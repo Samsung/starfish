@@ -24,8 +24,9 @@ namespace StarFish {
 
 class CanvasShadowData {
 public:
-    CanvasShadowData(float& offsetX, float& offsetY, float& radius,
-                     Unit::Color& color, bool& hasColor)
+    CanvasShadowData(const float& offsetX, const float& offsetY,
+                     const float& radius, const Unit::Color& color,
+                     const bool& hasColor)
         : m_offsetX(offsetX)
         , m_offsetY(offsetY)
         , m_radius(radius)

@@ -713,16 +713,6 @@ public:
         lastState().m_textDecorationData = d;
     }
 
-    virtual void setTextShadowData(CanvasShadowDataList& list)
-    {
-        m_textShadowDataList = list;
-    }
-
-    virtual void clearTextShadowData()
-    {
-        m_textShadowDataList.clear();
-    }
-
     void drawEvasRect(int xx, int yy, int ww, int hh, const Unit::Rect& rt,
                       bool isHole = false)
     {

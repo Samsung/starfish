@@ -31,6 +31,8 @@
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/util/LineBreakerIteratorPool.h"
+#include "core/modules/canvas/ShadowBlur.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace StarFish {
 
@@ -4702,17 +4704,64 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
         canvas->setFont(s->font());
         canvas->setColor(s->color());
 
-        CanvasShadowDataList list =
-            s->textShadow().toCanvasShadowDataList(this);
-        bool hasShadow = list.size() ? true : false;
+        bool hasShadow = s->textShadow().size() ? true : false;
+
         if (hasShadow) {
-            canvas->setTextShadowData(list);
+            canvas->save();
+            size_t width = (size_t)contentWidth().ceil();
+            size_t height = (size_t)(ceil(s->font()->metrics().m_fontHeight));
+            canvas->translate(dx, dy);
+
+            CanvasShadowDataList list =
+                s->textShadow().toCanvasShadowDataList(this);
+            ComputedStyle* s = style();
+            for (auto& shadow : list) {
+                float radiusOffset = 0.0f;
+                if (shadow.radius()) {
+                    radiusOffset = shadow.radius();
+                    radiusOffset =
+                        std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
+                    radiusOffset *= 2;
+                }
+                NativeImageData* nativeImage = NativeImageData::create(
+                    width + ceil(radiusOffset), height + ceil(radiusOffset));
+                Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
+                                                         nativeImage);
+                cv->clearColor(Unit::Color(0, 0, 0, 0));
+                cv->setFont(s->font());
+                auto tdc = canvas->textDecorationData();
+                if (shadow.hasColor()) {
+                    cv->setColor(shadow.color());
+                    tdc.setUnderLineColor(shadow.color());
+                    tdc.setLineThroughColor(shadow.color());
+                } else {
+                    cv->setColor(s->color());
+                }
+                cv->setTextDecorationData(tdc);
+                cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
+                cv->drawText(0, 0, contentWidth(), text());
+
+                ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                              nativeImage->height(), nativeImage->stride());
+                sb.process(shadow.radius());
+
+                delete cv;
+
+                Unit::Rect rect(0, 0, nativeImage->width(),
+                                nativeImage->height());
+                float offset = ceil(radiusOffset / 2);
+                canvas->translate(-offset + shadow.offsetX(),
+                                  -offset + shadow.offsetY());
+                canvas->drawImage(nativeImage, rect);
+                canvas->translate(offset - shadow.offsetX(),
+                                  offset - shadow.offsetY());
+            }
+            list.clear();
+
+            canvas->restore();
         }
 
         canvas->drawText(dx, dy, contentWidth(), text());
-        if (hasShadow) {
-            canvas->clearTextShadowData();
-        }
     }
 }
 
