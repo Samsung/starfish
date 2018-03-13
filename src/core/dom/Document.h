@@ -22,6 +22,7 @@
 
 #include "core/dom/Node.h"
 #include "platform/loader/ResourceLoader.h"
+#include "core/util/BloomFilter.h"
 #include "core/style/Style.h"
 #include "core/style/WebFont.h"
 #include "binding/HTMLScriptElementOrSVGScriptElementUnion.h"
@@ -350,7 +351,8 @@ public:
 
     ScriptWrappable* defaultNamedGetter(String* name);
     HTMLCollection* namedAccess(String* name);
-    void invalidNamedAccessCacheIfNeeded();
+    void invalidNamedAccessCacheIfNeeded(String* name, bool isNameAppeared,
+                                         bool isNameDisappared);
     void invalidFocusRingCacheIfNeeded();
 
     const GCAtomicVector<Element*>& focusRing();
@@ -615,6 +617,7 @@ protected:
     String* m_contentLanguage;
     GCVector<std::pair<HTMLScriptElement*, DeferredScriptDownloadClient*>>
         m_deferredScriptElements;
+    BloomFilter<12> m_nameIdFilter;
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif

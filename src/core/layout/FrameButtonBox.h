@@ -41,8 +41,7 @@ public:
         return true;
     }
 
-    virtual void layout(LayoutContext& ctx,
-                        Frame::LayoutWantToResolve resolveWhat) override;
+    virtual void inlineLayoutAdditionalPath(LayoutContext& ctx);
 };
 }
 
