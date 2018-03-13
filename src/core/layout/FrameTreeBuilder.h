@@ -49,12 +49,15 @@ public:
     bool isInFrameInlineFlow() const;
     void setIsInFrameInlineFlow(bool b);
     bool isInFrameFlexFlow() const;
+    bool isInFrameGridFlow() const;
     void setIsInFrameFlexFlow(bool b);
+    void setIsInFrameGridFlow(bool b);
     bool isInFrameTableFlow() const;
 
 protected:
     bool m_isInFrameInlineFlow;
     bool m_isInFrameFlexFlow;
+    bool m_isInFrameGridFlow;
     FrameBlockBox* m_currentBlockContainer;
     FrameTableObjectBox* m_lastAnonymousTableObjectParent;
     std::unordered_map<Node*, FrameInline*, std::hash<Node*>,
@@ -98,6 +101,9 @@ private:
     static void insertChild(FrameBlockBox* blockContainer, Frame* currentFrame,
                             Node* currentNode, FrameTreeBuilderContext& ctx);
     static void insertFlexItemChild(FrameBlockBox* blockContainer,
+                                    Frame* currentFrame, Node* currentNode,
+                                    FrameTreeBuilderContext& ctx);
+    static void insertGridItemChild(FrameBlockBox* blockContainer,
                                     Frame* currentFrame, Node* currentNode,
                                     FrameTreeBuilderContext& ctx);
     static void insertTableObjectChild(

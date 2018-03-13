@@ -23,6 +23,7 @@
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameFlexibleBox.h"
+#include "core/layout/FrameGridBox.h"
 #include "core/layout/FrameInline.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCellBox.h"
@@ -194,6 +195,8 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         asFrameTableBox()->layoutTable(ctx);
     } else if (isFrameFlexibleBox()) {
         asFrameFlexibleBox()->layoutFlex(ctx);
+    } else if (isFrameGridBox()) {
+        asFrameGridBox()->layoutGrid(ctx);
     } else {
         LayoutUnit contentHeight;
         LayoutUnit parentHeight;
