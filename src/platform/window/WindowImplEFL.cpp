@@ -180,8 +180,26 @@ public:
 
     virtual void showSoftwareKeyboardIfPossible() override
     {
-        evas_object_focus_set(m_mainBox, EINA_TRUE);
-        m_softKeyboardOrigin = webView()->focusedNode();
+        if (ecore_imf_input_panel_hide() == EINA_FALSE) {
+            starFish()->messageLoop()->addIdler(
+                nullptr,
+                [](size_t a, void* data) {
+                    WindowImplEFL* self = ((WindowImplEFL*)data);
+                    evas_object_focus_set(self->m_mainBox, EINA_TRUE);
+                    self->m_softKeyboardOrigin = self->webView()->focusedNode();
+                },
+                this);
+            webView()->mainBrowsingContext()->window()->clearTimeout(
+                m_keyboardTimeoutId);
+        } else {
+            m_keyboardTimeoutId =
+                webView()->mainBrowsingContext()->window()->setTimeout(
+                    [](Window* window, void* data) {
+                        WindowImplEFL* self = ((WindowImplEFL*)data);
+                        self->showSoftwareKeyboardIfPossible();
+                    },
+                    100, this);
+        }
     }
 
     virtual void hideSoftwareKeyboardIfPossible() override
@@ -191,7 +209,6 @@ public:
             [](size_t a, void* data) {
                 WindowImplEFL* self = ((WindowImplEFL*)data);
                 evas_object_focus_set(self->m_mainBox, EINA_FALSE);
-                ecore_imf_context_hide(self->m_imfContext);
             },
             this);
     }
@@ -201,7 +218,6 @@ public:
         int x, y, w, h;
         ecore_imf_context_input_panel_geometry_get(m_imfContext, &x, &y, &w,
                                                    &h);
-
         if (h != m_offsetYDueToSoftwareKeyboard) {
             m_offsetYDueToSoftwareKeyboard = h;
             onResize();
@@ -238,16 +254,16 @@ public:
 // leave code block for future
 // drop screen buffer for cairo when we can use efl software backend
 /*
-auto tick = tickCount();
-if (!m_inRendering && m_canvasAdpaterSurface && m_isEvasFlushed && (tick -
-m_lastRenderingTime > 1000)) {
-    STARFISH_LOG_INFO("drop screen buffer for cairo");
-    cairo_destroy(m_canvasAdpaterCairo);
-    cairo_surface_destroy(m_canvasAdpaterSurface);
-    m_canvasAdpaterCairo = nullptr;
-    m_canvasAdpaterSurface = nullptr;
-}
-*/
+ auto tick = tickCount();
+ if (!m_inRendering && m_canvasAdpaterSurface && m_isEvasFlushed && (tick -
+ m_lastRenderingTime > 1000)) {
+ STARFISH_LOG_INFO("drop screen buffer for cairo");
+ cairo_destroy(m_canvasAdpaterCairo);
+ cairo_surface_destroy(m_canvasAdpaterSurface);
+ m_canvasAdpaterCairo = nullptr;
+ m_canvasAdpaterSurface = nullptr;
+ }
+ */
 #endif
     }
 
@@ -327,6 +343,7 @@ m_lastRenderingTime > 1000)) {
     uint32_t m_lastKeyPressedTimestamp;
     uint64_t m_lastRenderingTime;
     int m_offsetYDueToSoftwareKeyboard;
+    size_t m_keyboardTimeoutId;
 };
 
 #if defined(PORT_COMPOSITOR_BACKEND_EFL)
@@ -1338,7 +1355,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_COMMIT %s\n", commit_str);
             self->dispatchCompositionEvent(
                 CompositionEventKind::CompositionEventEnd,
-                String::fromUTF8(commit_str));
+                String::fromUTF8(commit_str), self->m_softKeyboardOrigin);
         },
         wnd);
 
@@ -1365,7 +1382,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_PREEDIT_START\n");
             self->dispatchCompositionEvent(
                 CompositionEventKind::CompositionEventStart,
-                String::emptyString);
+                String::emptyString, self->m_softKeyboardOrigin);
         },
         wnd);
 
@@ -1383,7 +1400,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             if (str) {
                 self->dispatchCompositionEvent(
                     CompositionEventKind::CompositionEventUpdate,
-                    String::fromUTF8(str));
+                    String::fromUTF8(str), self->m_softKeyboardOrigin);
                 free(str);
             }
         },
@@ -1544,10 +1561,14 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             Ecore_IMF_Context* ctx = self->m_imfContext;
             Ecore_IMF_Event_Key_Down ev;
 
-            ecore_imf_evas_event_key_down_wrap((Evas_Event_Key_Down*)event_info,
-                                               &ev);
-            // ecore_imf_context_reset(ctx);
-            ecore_imf_context_focus_out(ctx);
+            if (ecore_imf_context_input_panel_state_get(ctx) ==
+                ECORE_IMF_INPUT_PANEL_STATE_SHOW) {
+                ecore_imf_evas_event_key_down_wrap(
+                    (Evas_Event_Key_Down*)event_info, &ev);
+                // ecore_imf_context_reset(ctx);
+                ecore_imf_context_focus_out(ctx);
+                ecore_imf_context_hide(ctx);
+            }
         },
         wnd);
 

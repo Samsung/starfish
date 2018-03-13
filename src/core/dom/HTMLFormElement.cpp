@@ -316,6 +316,8 @@ void HTMLFormControl::didNodeInsertedToDocumentTree()
             [](size_t handle, void* data) {
                 HTMLFormControl* element = (HTMLFormControl*)data;
                 if (!element->document()->browsingContext()->focusedNode()) {
+                    element->document()->browsingContext()->setActiveNode(
+                        element);
                     element->document()->browsingContext()->setFocusedNode(
                         element);
                 }

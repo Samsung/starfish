@@ -233,9 +233,10 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
 }
 
 void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
-                                              String* data)
+                                              String* data, Node* node)
 {
-    webView()->mainBrowsingContext()->dispatchCompositionEvent(kind, data);
+    webView()->mainBrowsingContext()->dispatchCompositionEvent(kind, data,
+                                                               node);
 }
 
 bool PlatformWindow::rendering()
