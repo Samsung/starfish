@@ -30,6 +30,7 @@
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameFlexibleBox.h"
+#include "core/layout/FrameGridBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
 #include "core/style/CalcData.h"
@@ -1409,6 +1410,18 @@ void Frame::markFlexItem()
         m_flags.m_isFlexItem = true;
         m_flags.m_isEstablishesStackingContext |= style()->isSpecifiedZIndex();
         m_flags.m_isEstablishesBlockFormattingContext = true;
+        m_flags.m_needsLayout = true;
+    }
+}
+
+void Frame::markGridItem()
+{
+    if (m_flags.m_isGridItem) {
+        return;
+    }
+
+    if (GridFormattingContext::doesParticipateInGridFormattingContext(this)) {
+        m_flags.m_isGridItem = true;
         m_flags.m_needsLayout = true;
     }
 }

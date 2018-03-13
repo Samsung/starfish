@@ -33,6 +33,7 @@ class Frame;
 class FrameBox;
 class FrameBlockBox;
 class FrameFlexibleBox;
+class FrameGridBox;
 class FrameInline;
 class FrameLineBreak;
 class FrameReplaced;
@@ -1017,6 +1018,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameGridBox()
+    {
+        return false;
+    }
+
     virtual bool isFrameDocument()
     {
         return false;
@@ -1161,6 +1167,12 @@ public:
     {
         STARFISH_ASSERT(isFrameFlexibleBox());
         return (FrameFlexibleBox*)this;
+    }
+
+    FrameGridBox* asFrameGridBox()
+    {
+        STARFISH_ASSERT(isFrameGridBox());
+        return (FrameGridBox*)this;
     }
 
     FrameInline* asFrameInline()
@@ -1761,9 +1773,16 @@ public:
 
     void markFlexItem();
 
+    void markGridItem();
+
     bool isFlexItem() const
     {
         return m_flags.m_isFlexItem;
+    }
+
+    bool isGridItem() const
+    {
+        return m_flags.m_isGridItem;
     }
 
     bool isDocumentElement() const;
@@ -1797,7 +1816,8 @@ public:
                (display == DisplayValue::TableColumnGroupDisplayValue) ||
                (display == DisplayValue::TableFooterGroupDisplayValue) ||
                (display == DisplayValue::TableHeaderGroupDisplayValue) ||
-               (display == DisplayValue::FlexDisplayValue);
+               (display == DisplayValue::FlexDisplayValue) ||
+               (display == DisplayValue::GridDisplayValue);
     }
 
     bool isInlineLevel()
@@ -1940,6 +1960,7 @@ protected:
         bool m_isRightMBPCleared : 1;
 
         bool m_isFlexItem : 1;
+        bool m_isGridItem : 1;
         bool m_isFrameText : 1;
 
         bool m_seenNormalFlowBlockChild : 1;

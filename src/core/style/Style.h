@@ -628,6 +628,7 @@ enum DisplayValue {
     TableCaptionDisplayValue,
     FlexDisplayValue,
     InlineFlexDisplayValue,
+    GridDisplayValue,
     NoneDisplayValue,
 };
 
