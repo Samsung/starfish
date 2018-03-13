@@ -1568,13 +1568,18 @@ void BrowsingContext::focusNavigation(bool forward)
 }
 
 void BrowsingContext::dispatchCompositionEvent(CompositionEventKind kind,
-                                               String* data)
+                                               String* data, Node* node)
 {
     // Set target
     // 1) currently focused element if possible
     // or 2) body element if possible
     // or 3) root element
-    Node* target = m_focusedNode;
+    Node* target;
+    if (node) {
+        target = node;
+    } else {
+        target = m_focusedNode;
+    }
     if (!target) {
         if (document()->body()) {
             target = document()->body();
