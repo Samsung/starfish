@@ -85,7 +85,7 @@ public:
         m_inset = true;
     }
 
-    CanvasShadowData toCanvasShadowData(Frame* owner);
+    CanvasShadowData toCanvasShadowData(Frame* owner) const;
 
     bool operator==(const ShadowData& o)
     {
@@ -133,7 +133,7 @@ private:
 
 class ShadowDataList : public GCVector<ShadowData> {
 public:
-    CanvasShadowDataList toCanvasShadowDataList(Frame* owner);
+    CanvasShadowDataList toCanvasShadowDataList(Frame* owner) const;
 
     bool operator==(const ShadowDataList& o)
     {

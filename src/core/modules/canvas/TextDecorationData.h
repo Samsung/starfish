@@ -69,6 +69,16 @@ public:
         return m_lineThroughColor;
     }
 
+    void setUnderLineColor(Unit::Color color)
+    {
+        m_underLineColor = color;
+    }
+
+    void setLineThroughColor(Unit::Color color)
+    {
+        m_lineThroughColor = color;
+    }
+
 private:
     bool m_hasUnderLine;
     bool m_hasLineThrough;

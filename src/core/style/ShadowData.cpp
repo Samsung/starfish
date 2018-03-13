@@ -39,7 +39,7 @@ void ShadowData::setLengths(ValueList* lengths)
     }
 }
 
-CanvasShadowData ShadowData::toCanvasShadowData(Frame* owner)
+CanvasShadowData ShadowData::toCanvasShadowData(Frame* owner) const
 {
     STARFISH_ASSERT(owner);
     LayoutUnit unused;
@@ -53,7 +53,7 @@ CanvasShadowData ShadowData::toCanvasShadowData(Frame* owner)
     return ret;
 }
 
-CanvasShadowDataList ShadowDataList::toCanvasShadowDataList(Frame* owner)
+CanvasShadowDataList ShadowDataList::toCanvasShadowDataList(Frame* owner) const
 {
     STARFISH_ASSERT(owner);
 
