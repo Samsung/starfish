@@ -138,20 +138,6 @@ void Thread::joinIfNeeds()
     finishUnjoined();
 }
 
-void Thread::stop()
-{
-    STARFISH_ASSERT(isMainThread());
-    if (!m_currentUnjoined) {
-        return;
-    }
-
-    Locker<Mutex> l(*m_mutex);
-    void* res;
-    pthread_cancel(m_currentUnjoined->m_tid);
-
-    return;
-}
-
 void Thread::cleanupHandler(void* data)
 {
     STARFISH_LOG_INFO("Thread::cleanupHandler\n");

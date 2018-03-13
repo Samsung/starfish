@@ -1560,19 +1560,6 @@ NodeList* Node::querySelectorAll(String* selectors)
     return selectorQuery.queryAll(*this);
 }
 
-static void removeChildren(FrameBlockBox* parent)
-{
-    while (parent->firstChild()) {
-        parent->removeChild(parent->firstChild());
-    }
-
-    Node* node = parent->node()->firstChild();
-    while (node) {
-        FrameTreeBuilder::clearTree(node);
-        node = node->nextSibling();
-    }
-}
-
 void Node::propagateMarkChildNeedsFrameTreeBuild()
 {
     Node* n = this;

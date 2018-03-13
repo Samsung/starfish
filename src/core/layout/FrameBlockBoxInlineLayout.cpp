@@ -2638,7 +2638,8 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
             if (isCollapsibleWhiteSpace(box)) {
                 m_isPendingBreakLine = true;
             } else {
-                if (!m_canConcatWord && isWord(box)) {
+                if (!m_canConcatWord && isWord(box) &&
+                    box->asInlineTextBox()->text().length() > 1) {
                     InlineTextBox* box2 =
                         splitInlineTextBox(box->asInlineTextBox());
                     insertInlineBox(box2);
@@ -4707,6 +4708,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
         if (hasShadow) {
             canvas->setTextShadowData(list);
         }
+
         canvas->drawText(dx, dy, contentWidth(), text());
         if (hasShadow) {
             canvas->clearTextShadowData();

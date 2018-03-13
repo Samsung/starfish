@@ -683,6 +683,10 @@ public:
         }
     }
 
+    virtual void inlineLayoutAdditionalPath(LayoutContext& ctx)
+    {
+    }
+
     bool hasBiggerContentThanFrameWidth()
     {
         updateScrollWidthAndHeightIfNeeds();

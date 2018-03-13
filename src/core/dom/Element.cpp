@@ -413,7 +413,22 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         } else {
             m_id = AtomicString::createAtomicString(starFish(), value);
         }
-        document()->invalidNamedAccessCacheIfNeeded();
+        if (attributeCreated) {
+            if (value->length()) {
+                document()->invalidNamedAccessCacheIfNeeded(value, true, false);
+            }
+        } else if (attributeRemoved) {
+            if (old->length()) {
+                document()->invalidNamedAccessCacheIfNeeded(old, false, true);
+            }
+        } else {
+            if (old->length()) {
+                document()->invalidNamedAccessCacheIfNeeded(old, false, true);
+            }
+            if (value->length()) {
+                document()->invalidNamedAccessCacheIfNeeded(value, true, false);
+            }
+        }
         setNeedsStyleRecalc(StyleChangeReason::IdChange);
     } else if (name == ss->m_class) {
         GCVector<StringView> tokens;
@@ -450,7 +465,22 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         // according spec,
         // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
         // only few html elements are affected by name attribute changing
-        document()->invalidNamedAccessCacheIfNeeded();
+        if (attributeCreated) {
+            if (value->length()) {
+                document()->invalidNamedAccessCacheIfNeeded(value, true, false);
+            }
+        } else if (attributeRemoved) {
+            if (old->length()) {
+                document()->invalidNamedAccessCacheIfNeeded(old, false, true);
+            }
+        } else {
+            if (old->length()) {
+                document()->invalidNamedAccessCacheIfNeeded(old, false, true);
+            }
+            if (value->length()) {
+                document()->invalidNamedAccessCacheIfNeeded(value, true, false);
+            }
+        }
     } else if (name == ss->m_tabindex) {
         int tabIndex = 0;
         if (!value->isEmpty() && parseHTMLInteger(value, tabIndex)) {

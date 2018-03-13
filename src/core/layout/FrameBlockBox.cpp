@@ -546,6 +546,10 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         clearContentHeightDamaged();
     }
 
+    if (!hasBlockFlow() && !isFrameFlexibleBox() && !isFrameTableBox()) {
+        inlineLayoutAdditionalPath(ctx);
+    }
+
     if (isAbsolutePositioned()) {
         VerticalDataLocToContainingBlock data =
             computeVerticalDataToContainingBlock(ctx, cb);

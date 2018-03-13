@@ -348,7 +348,7 @@ Document* Document::open(String* type, String* replaceInput)
     // TODO If document's iframe load in progress flag is set, then set
     // document's mute iframe load flag.
 
-    invalidNamedAccessCacheIfNeeded();
+    invalidNamedAccessCacheIfNeeded(String::emptyString, false, false);
     // Create a new HTML parser and associate it with document. This is a
     // script-created parser
     // (meaning that it can be closed by the document.open() and
@@ -1171,7 +1171,6 @@ void Document::processBaseElement()
 void Document::updateDOMVersion()
 {
     m_domVersion++;
-    invalidNamedAccessCacheIfNeeded();
     invalidFocusRingCacheIfNeeded();
 }
 
@@ -1201,6 +1200,10 @@ void Document::didNodeRemoved(Node* parent, Node* oldChild)
 
 HTMLCollection* Document::namedAccess(String* name)
 {
+    if (!m_nameIdFilter.mayContain(name)) {
+        return nullptr;
+    }
+
     for (size_t i = 0; i < m_namedAccessActiveHTMLCollectionList.size(); i++) {
         if (m_namedAccessActiveHTMLCollectionList[i].first->equals(name)) {
             return m_namedAccessActiveHTMLCollectionList[i].second;
@@ -1330,8 +1333,18 @@ const GCAtomicVector<Element*>& Document::focusRing()
     return m_focusRingCache;
 }
 
-void Document::invalidNamedAccessCacheIfNeeded()
+void Document::invalidNamedAccessCacheIfNeeded(String* name,
+                                               bool isNameAppeared,
+                                               bool isNameDisappared)
 {
+    if (isNameAppeared) {
+        m_nameIdFilter.add(name);
+    }
+
+    if (isNameDisappared) {
+        m_nameIdFilter.remove(name);
+    }
+
     for (size_t i = 0; i < m_namedAccessActiveHTMLCollectionList.size(); i++) {
         m_namedAccessActiveHTMLCollectionList[i]
             .second->getNodeListImpl()

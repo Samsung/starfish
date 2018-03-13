@@ -286,7 +286,7 @@ void Inspector::stop()
     if (m_zmqContext) {
         delete m_zmqContext;
     }
-    m_ioThread->stop();
+    m_ioThread->joinIfNeeds();
 }
 } // namespace StarFish
 #endif

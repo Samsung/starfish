@@ -63,7 +63,6 @@ public:
         return m_alive;
     }
     void finishUnjoined();
-    void stop();
 
 private:
     static void cleanupHandler(void* data);
