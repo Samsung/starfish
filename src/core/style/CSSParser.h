@@ -559,14 +559,70 @@ public:
         return true;
     }
 
+    static bool parseFloat(const CSSTokenValue& s, double* ret)
+    {
+        auto ss = s.trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+
+        bool hasPoint = false;
+        parser.consumeWhitespaces();
+        if (!parser.consumeNumber(&hasPoint)) {
+            return false;
+        }
+
+        float number = parser.parsedNumber();
+
+        parser.consumeWhitespaces();
+        if (!parser.isEnd()) {
+            return false;
+        }
+
+        *ret = number;
+        return true;
+    }
+
+    static bool parsePercent(const CSSTokenValue& s, double* ret)
+    {
+        auto ss = s.trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+
+        bool hasPoint = false;
+        parser.consumeWhitespaces();
+        if (!parser.consumeNumber(&hasPoint)) {
+            return false;
+        }
+
+        float number = parser.parsedNumber();
+        bool percent = false;
+        if (parser.consumeIfNext('%')) {
+            percent = true;
+        }
+        if (!percent) {
+            return false;
+        }
+
+        parser.consumeWhitespaces();
+        if (!parser.isEnd()) {
+            return false;
+        }
+
+        number = number < 0 ? 0 : number;
+        number = number > 100 ? 100 : number;
+
+        *ret = number;
+        return true;
+    }
+
     static bool parseNonNamedColor(const CSSTokenValue& str,
                                    CSSStyleValuePair* pair)
     {
         bool maybeRGBA = str.startsWith("rgba(");
         bool maybeRGB = str.startsWith("rgb(");
         bool maybeCode = str.startsWith("#");
+        bool maybeHSL = str.startsWith("hsl(");
+        bool maybeHSLA = str.startsWith("hsla(");
 
-        if (maybeRGBA || maybeRGB) {
+        if (maybeRGBA || maybeRGB || maybeHSL || maybeHSLA) {
             size_t s1 = str.indexOf('(');
             size_t s2 = str.indexOf(')');
             if (s1 == SIZE_MAX || s2 != str.length() - 1 || s1 >= s2) {
@@ -599,36 +655,70 @@ public:
             }
 
             size_t size = v.size();
-            if (!((maybeRGBA && size == 4) ||
-                  (maybeRGB && (size == 3 || size == 4)))) {
+            if (!((maybeRGBA && (size == 4)) ||
+                  (maybeRGB && (size == 3 || size == 4)) ||
+                  (maybeHSL && (size == 3 || size == 4)) ||
+                  (maybeHSLA && (size == 4)))) {
                 return false;
             }
 
-            bool isPercent = false, shouldPercent = false;
-            unsigned char parsed[4];
             bool hasAlpha = (size == 4);
+            if (maybeRGB || maybeRGBA) {
+                unsigned char parsed[4];
+                bool isPercent = false, shouldPercent = false;
 
-            // parse rgb
-            for (size_t i = 0; i < 3; i++) {
-                if (!parseColorFunctionPart(v[i], false, &parsed[i],
+                // parse rgb
+                for (size_t i = 0; i < 3; i++) {
+                    if (!parseColorFunctionPart(v[i], false, &parsed[i],
+                                                &isPercent)) {
+                        return false;
+                    }
+                    if (i == 0) {
+                        shouldPercent = isPercent;
+                    } else if (shouldPercent != isPercent) {
+                        return false;
+                    }
+                }
+
+                // parse alpha if exists
+                if (hasAlpha &&
+                    !parseColorFunctionPart(v[3], true, &parsed[3],
                                             &isPercent)) {
                     return false;
                 }
-                if (i == 0) {
-                    shouldPercent = isPercent;
-                } else if (shouldPercent != isPercent) {
+
+                pair->setColorValue(Unit::Color(parsed[0], parsed[1], parsed[2],
+                                                hasAlpha ? parsed[3] : 255));
+            } else { // HSL or HSLA
+                // parse hue in angle
+                double hue = 0;
+                if (!parseFloat(v[0], &hue)) {
                     return false;
                 }
-            }
 
-            // parse alpha if exists
-            if (hasAlpha &&
-                !parseColorFunctionPart(v[3], true, &parsed[3], &isPercent)) {
-                return false;
-            }
+                // parse saturation and luminance in percentage
+                double saturation = 0, luminance = 0;
+                if (!parsePercent(v[1], &saturation)) {
+                    return false;
+                }
+                if (!parsePercent(v[2], &luminance)) {
+                    return false;
+                }
 
-            pair->setColorValue(Unit::Color(parsed[0], parsed[1], parsed[2],
-                                            hasAlpha ? parsed[3] : 255));
+                // parse alpha if exists
+                unsigned char alpha = 0;
+                bool _isPercent;
+                if (hasAlpha &&
+                    !parseColorFunctionPart(v[3], true, &alpha, &_isPercent)) {
+                    return false;
+                }
+
+                unsigned char r, g, b;
+                // floats are rounded to int if given
+                pair->setColorValue(Unit::Color::fromHsla(
+                    round(hue) / 360, round(saturation) / 100,
+                    round(luminance) / 100, hasAlpha ? alpha : 255));
+            }
         } else if (maybeCode) {
             const char* s = str.data();
             const unsigned len = str.length();
