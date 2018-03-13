@@ -590,7 +590,7 @@ void LayoutContext::registerLineBoxAscender(FrameBlockBox* blockBox,
         auto& lineBoxAscenders = (*c.m_lineBoxAscenders);
         if (blockBox->style()->verticalAlign() == BaselineVAlignValue ||
             blockBox->style()->verticalAlign() == NumericVAlignValue) {
-            if (blockBox->isFrameFlexibleBox() ||
+            if (blockBox->isFrameFlexibleBox() || blockBox->isFrameGridBox() ||
                 blockBox->isFrameTableCellBox()) {
                 auto iter = lineBoxAscenders.find(blockBox);
                 if (iter == lineBoxAscenders.end()) {

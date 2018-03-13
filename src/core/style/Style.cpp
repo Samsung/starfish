@@ -1752,6 +1752,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("inline-flex");
         case DisplayValue::GridDisplayValue:
             return String::fromUTF8("grid");
+        case DisplayValue::InlineGridDisplayValue:
+            return String::fromUTF8("inline-grid");
         case DisplayValue::NoneDisplayValue:
             return String::fromUTF8("none");
         default:
@@ -7840,6 +7842,8 @@ bool CSSStyleValuePair::updateValueDisplay(const CSSTokenVector& tokens)
         m_value.m_display = DisplayValue::InlineFlexDisplayValue;
     } else if (STRING_VALUE_IS_STRING("grid")) {
         m_value.m_display = DisplayValue::GridDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("inline-grid")) {
+        m_value.m_display = DisplayValue::InlineGridDisplayValue;
     } else if (STRING_VALUE_IS_STRING("none")) {
         m_value.m_display = DisplayValue::NoneDisplayValue;
     } else {
