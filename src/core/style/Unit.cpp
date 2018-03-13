@@ -25,16 +25,39 @@ namespace Unit {
     String* Color::toString() const
     {
         char buf[256];
-        if (m_a == 255) {
-            snprintf(buf, sizeof(buf), "rgb(%d, %d, %d)", m_r, m_g, m_b);
-        } else {
-            float a = (float)m_a / 255;
-            if (a > 0.05) {
-                snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, %.1f)", m_r, m_g,
-                         m_b, a);
+        if (m_isHsl) {
+            double hVal = 0, sVal = 0, lVal = 0;
+            toHsl(&hVal, &sVal, &lVal);
+            // floats are rounded to int
+            int h = (int)round(hVal * 360);
+            int s = (int)round(sVal * 100);
+            int l = (int)round(lVal * 100);
+
+            if (m_a == 255) {
+                snprintf(buf, sizeof(buf), "hsl(%d, %d%%, %d%%)", h, s, l);
             } else {
-                snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, 0)", m_r, m_g,
-                         m_b);
+                float a = (float)m_a / 255;
+                if (a > 0.05) {
+                    snprintf(buf, sizeof(buf), "hsla(%d, %d%%, %d%%, %.1f)", h,
+                             s, l, a);
+                } else {
+                    snprintf(buf, sizeof(buf), "hsla(%d, %d%%, %d%%, 0)", h, s,
+                             l);
+                }
+            }
+        } else {
+            // rgb
+            if (m_a == 255) {
+                snprintf(buf, sizeof(buf), "rgb(%d, %d, %d)", m_r, m_g, m_b);
+            } else {
+                float a = (float)m_a / 255;
+                if (a > 0.05) {
+                    snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, %.1f)", m_r,
+                             m_g, m_b, a);
+                } else {
+                    snprintf(buf, sizeof(buf), "rgba(%d, %d, %d, 0)", m_r, m_g,
+                             m_b);
+                }
             }
         }
 

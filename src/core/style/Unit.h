@@ -287,6 +287,7 @@ namespace Unit {
             , m_g(0)
             , m_b(0)
             , m_a(0)
+            , m_isHsl(false)
         {
         }
         Color(unsigned char r, unsigned char g, unsigned char b,
@@ -295,6 +296,7 @@ namespace Unit {
             , m_g(g)
             , m_b(b)
             , m_a(a)
+            , m_isHsl(false)
         {
         }
 
@@ -365,7 +367,93 @@ namespace Unit {
                          mul * B() * 255.0, m_a);
         }
 
+        static double hue2rgb(double p, double q, double t)
+        {
+            if (t < 0) {
+                t++;
+            }
+            if (t > 1) {
+                t--;
+            }
+            if (t < 1 / 6.0) {
+                return p + (q - p) * 6 * t;
+            }
+            if (t < 1 / 2.0) {
+                return q;
+            }
+            if (t < 2 / 3.0) {
+                return p + (q - p) * (2 / 3.0 - t) * 6;
+            }
+            return p;
+        }
+
+        static Color fromHsla(double h, double s, double l, unsigned char a)
+        {
+            double rVal = 0, gVal = 0, bVal = 0;
+
+            if (s == 0) {
+                rVal = gVal = bVal = l;
+            } else {
+                double q = l < 0.5f ? l * (1 + s) : l + s - l * s;
+                double p = 2 * l - q;
+                rVal = hue2rgb(p, q, h + 1 / 3.0);
+                gVal = hue2rgb(p, q, h);
+                bVal = hue2rgb(p, q, h - 1 / 3.0);
+            }
+
+            unsigned char r = (unsigned char)round(rVal * 255);
+            unsigned char g = (unsigned char)round(gVal * 255);
+            unsigned char b = (unsigned char)round(bVal * 255);
+
+            Color c = Color(r, g, b, a);
+            c.m_isHsl = true;
+            return c;
+        }
+
+        double max3(double x, double y, double z) const
+        {
+            return std::max(std::max(x, y), z);
+        }
+
+        double min3(double x, double y, double z) const
+        {
+            return std::min(std::min(x, y), z);
+        }
+
+        void toHsl(double* h, double* s, double* l) const
+        {
+            double r = m_r / 255.0;
+            double g = m_g / 255.0;
+            double b = m_b / 255.0;
+
+            double max = max3(r, g, b);
+            double min = min3(r, g, b);
+            double hVal = 0, sVal = 0, lVal = (max + min) / 2;
+
+            if (max == min) {
+                hVal = sVal = 0;
+            } else {
+                double d = max - min;
+                sVal = lVal > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+                if (max == r) {
+                    hVal = (g - b) / d + (g < b ? 6 : 0);
+                } else if (max == g) {
+                    hVal = (b - r) / d + 2;
+                } else { // b
+                    hVal = (r - g) / d + 4;
+                }
+
+                hVal = hVal / 6;
+            }
+
+            *h = hVal;
+            *s = sVal;
+            *l = lVal;
+        }
+
         unsigned char m_r, m_g, m_b, m_a;
+        bool m_isHsl;
     };
 } // namespace Unit
 } // namespace StarFish
