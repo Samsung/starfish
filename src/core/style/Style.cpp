@@ -8826,7 +8826,7 @@ static bool parseRectFunctionPart(const CSSTokenValue& s, size_t* ret,
 
     String* str = parser.parsedString();
 
-    if (!CSSPropertyParser::isLengthUnit(str)) {
+    if (str->length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
         return false;
     }
 

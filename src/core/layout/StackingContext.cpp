@@ -558,6 +558,19 @@ public:
                         }
                     }
 
+                    if (b->isAbsolutePositioned()) {
+                        RectData* rect = b->style()->clip();
+                        if (rect) {
+                            canvas->translate(dx, dy);
+                            canvas->clip(
+                                Unit::Rect(rect->left().numberData(),
+                                           rect->top().numberData(),
+                                           rect->right().numberData(),
+                                           rect->bottom().numberData()));
+                            canvas->translate(-dx, -dy);
+                        }
+                    }
+
                     if (overflowOrScroll.second) {
                         dx += -b->asFrameBlockBox()->scrollLeft();
                         dy += -b->asFrameBlockBox()->scrollTop();
@@ -1141,6 +1154,15 @@ void StackingContext::paintStackingContext(
     } else {
         canvas->setVisible(true);
     }
+
+    if (owner()->isAbsolutePositioned()) {
+        RectData* rect = owner()->style()->clip();
+        if (rect) {
+            canvas->clip(Unit::Rect(
+                rect->left().numberData(), rect->top().numberData(),
+                rect->right().numberData(), rect->bottom().numberData()));
+        }
+    }
     // Within each stacking context, the following layers are painted in
     // back-to-front order:
     // the background and borders of the element forming the stacking context.
@@ -1204,14 +1226,6 @@ void StackingContext::paintStackingContext(
     }
 
     if (needsPainting) {
-        CanvasStateRestorer r(canvas, this, m_owner);
-        if (m_owner->isAbsolutePositioned() && m_owner->style()->clip()) {
-            RectData* rect = m_owner->style()->clip();
-            canvas->clip(Unit::Rect(
-                rect->left().numberData(), rect->top().numberData(),
-                rect->right().numberData(), rect->bottom().numberData()));
-        }
-
         m_owner->paintStackingContextContent(canvas);
     }
 
