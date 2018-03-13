@@ -25,6 +25,7 @@
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/page/Window.h"
+#include "core/extra/MimeType.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/loader/ElementResourceClient.h"
@@ -48,10 +49,6 @@ static bool isJavaScriptType(const char* type, size_t len)
 {
     if (len == 0) {
         return true;
-    } else if (len == (sizeof("text/javascript") - 1) &&
-               memcmp("text/javascript", type,
-                      (sizeof("text/javascript") - 1)) == 0) {
-        return true;
     }
 #define ALLOW_TYPE(ctype)                                   \
     else if (len >= (sizeof(ctype) - 1) &&                  \
@@ -59,6 +56,7 @@ static bool isJavaScriptType(const char* type, size_t len)
     {                                                       \
         return true;                                        \
     }
+    ALLOW_TYPE("text/javascript")
     ALLOW_TYPE("application/javascript")
     ALLOW_TYPE("application/x-javascript")
     ALLOW_TYPE("application/octet-stream")
@@ -211,6 +209,12 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
         if (typeStr.hasValue()) {
             auto utf8Data =
                 typeStr.getValue()->toASCIILower()->toUTF8NonGCString();
+
+            auto mime = MimeType::parseFromString(typeStr.getValue());
+            if (!mime.isValid() || mime.hasParameter()) {
+                return false;
+            }
+
             if (!isJavaScriptType(utf8Data.data(), utf8Data.length())) {
                 return false;
             }
