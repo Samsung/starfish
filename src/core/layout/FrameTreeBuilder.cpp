@@ -665,7 +665,8 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
     } else if (display == DisplayValue::FlexDisplayValue ||
                display == DisplayValue::InlineFlexDisplayValue) {
         return new FrameFlexibleBox(current, nullptr);
-    } else if (display == DisplayValue::GridDisplayValue) {
+    } else if (display == DisplayValue::GridDisplayValue ||
+               display == DisplayValue::InlineGridDisplayValue) {
         return new FrameGridBox(current, nullptr);
     } else if (display == DisplayValue::TableDisplayValue ||
                display == DisplayValue::InlineTableDisplayValue) {

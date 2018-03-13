@@ -1828,7 +1828,8 @@ public:
                (display == DisplayValue::InlineListItemDisplayValue) ||
                (display == DisplayValue::InlineBlockDisplayValue) ||
                (display == DisplayValue::InlineTableDisplayValue) ||
-               (display == DisplayValue::InlineFlexDisplayValue);
+               (display == DisplayValue::InlineFlexDisplayValue) ||
+               (display == DisplayValue::InlineGridDisplayValue);
     }
 
     bool isAtomicInlineLevel()

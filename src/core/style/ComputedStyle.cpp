@@ -455,6 +455,9 @@ void ComputedStyle::blockify(Node* current, bool force)
             case DisplayValue::InlineFlexDisplayValue:
                 m_display = DisplayValue::FlexDisplayValue;
                 break;
+            case DisplayValue::InlineGridDisplayValue:
+                m_display = DisplayValue::GridDisplayValue;
+                break;
             case DisplayValue::InlineListItemDisplayValue:
             case DisplayValue::InlineDisplayValue:
             case DisplayValue::TableRowGroupDisplayValue:
