@@ -171,6 +171,8 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     // TODO : Do not use libur libcurl error codes
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK);
 
+    Locker<Mutex> locker(*nwd->request->m_mutex);
+
     if (nwd->isAborted) {
     } else if (nwd->httpTransaction->res() == 0) {
         if (nwd->isRedirected) {
