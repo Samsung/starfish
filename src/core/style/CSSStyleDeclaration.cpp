@@ -612,6 +612,22 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         fs.setLengthValue(CSSLength(CSSLength::PX, style->fixedFontSize()));
 
         addValuePair(fs);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::LetterSpacing) {
+        CSSStyleValuePair fs;
+        fs.setKeyKind(CSSStyleValuePair::KeyKind::LetterSpacing);
+
+        fs.setLengthValue(
+            CSSLength(CSSLength::PX, style->letterSpacing().fixed()));
+
+        addValuePair(fs);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::WordSpacing) {
+        CSSStyleValuePair fs;
+        fs.setKeyKind(CSSStyleValuePair::KeyKind::WordSpacing);
+
+        fs.setLengthValue(
+            CSSLength(CSSLength::PX, style->wordSpacing().fixed()));
+
+        addValuePair(fs);
     } else if (keyKind == CSSStyleValuePair::KeyKind::MinWidth) {
         CSSStyleValuePair minW;
         minW.setKeyKind(CSSStyleValuePair::KeyKind::MinWidth);

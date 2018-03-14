@@ -561,6 +561,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Flex-Direction
         // Outline-Offset
         // text-transform
+        // letter-spacing
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-spacing", 14) == 0) {
@@ -590,6 +591,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 't':
             if (memcmp(data, "text-transform", 14) == 0) {
                 return CSSStyleKind::TextTransform;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "letter-spacing", 14) == 0) {
+                return CSSStyleKind::LetterSpacing;
             }
             break;
         }
@@ -1267,6 +1273,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 't':
             if (memcmp(data, "textTransform", 13) == 0) {
                 return CSSStyleKind::TextTransform;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "letterSpacing", 13) == 0) {
+                return CSSStyleKind::LetterSpacing;
             }
             break;
         }

@@ -4370,6 +4370,28 @@ void StyleResolver::apply(Element* element,
                 }
             }
             break;
+        case CSSStyleValuePair::KeyKind::LetterSpacing:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->setLetterSpacing(parentStyle->wordSpacing());
+            } else if (cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::Initial ||
+                       cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::Normal) {
+                style->setLetterSpacing(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::Length ||
+                       cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::CalcValueKind) {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setLetterSpacing(length.getValue());
+                } else {
+                    style->setLetterSpacing(Length(Length::Fixed, 0));
+                }
+            }
+            break;
 
         case CSSStyleValuePair::KeyKind::BackgroundColor:
             if (cssValues[k].valueKind() ==
@@ -7231,19 +7253,18 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                     Node* nd = child->parentNode();
                     while (nd) {
                         if (nd->frame()) {
+                            frame = nd->frame();
                             break;
                         }
                         nd = nd->parentNode();
                     }
 
                     frame = FrameTreeBuilder::findNearestBlock(frame);
-                    if (!frame) {
-                        frame = child->document()->frame();
+                    if (frame) {
+                        window()->browsingContext()->setNeedsFrameTreeBuild();
+                        FrameTreeBuilder::
+                            needsFrameTreeBuildFromChildrenOfThisFrame(frame);
                     }
-
-                    window()->browsingContext()->setNeedsFrameTreeBuild();
-                    FrameTreeBuilder::
-                        needsFrameTreeBuildFromChildrenOfThisFrame(frame);
                 }
             }
         }
@@ -7887,6 +7908,24 @@ bool CSSStyleValuePair::updateValueWordSpacing(const CSSTokenVector& tokens)
 bool CSSStyleValuePair::updateValueUnitWordSpacing(const CSSTokenValue& value)
 {
     // <normal> | length | initial | inherit
+    float result = 0.f;
+    if (STRING_VALUE_IS_STRING("normal")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Normal;
+        return true;
+    } else {
+        return updateValueUnitLengthOrCalc(value,
+                                           CSSPropertyParser::AllowNegative);
+    }
+}
+
+bool CSSStyleValuePair::updateValueLetterSpacing(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    // <normal> | length | initial | inherit
+    const CSSTokenValue& value = tokens[0];
     float result = 0.f;
     if (STRING_VALUE_IS_STRING("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;

@@ -94,6 +94,7 @@ protected:
         m_weight = m_style = 0;
         m_size = 0;
         m_spaceWidth = 0;
+        m_letterSpacing = 0;
         m_fontFaceList = nullptr;
     }
 
@@ -127,6 +128,11 @@ public:
     int intSize()
     {
         return int(size() + 0.5f);
+    }
+
+    float letterSpacing()
+    {
+        return m_letterSpacing;
     }
 
     char style()
@@ -200,6 +206,7 @@ protected:
     char m_style;
     float m_size;
     float m_spaceWidth;
+    float m_letterSpacing;
 };
 
 class PlatformFontSelector : public gc {
@@ -254,11 +261,13 @@ class FontSelector : public DocumentHoldable, public gc {
 public:
 #if !defined(PORT_CANVAS_BACKEND_EFL)
     Font* loadFont(String* familyNameArray[], size_t familyNameArraySize,
-                   float size, char style = 0, char weight = 4);
+                   float size, char style = 0, char weight = 4,
+                   float letterSpacing = 0);
 #else
     virtual Font* loadFont(String* familyNameArray[],
                            size_t familyNameArraySize, float size,
-                           char style = 0, char weight = 4);
+                           char style = 0, char weight = 4,
+                           float letterSpacing = 0);
 #endif
 
     PlatformFontSelector* platformFontSelector()

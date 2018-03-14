@@ -1127,7 +1127,8 @@ class CSSStyleDeclaration;
     F(ListStylePosition, listStylePosition, "list-style-position")           \
     F(ListStyleImage, listStyleImage, "list-style-image")                    \
     F(ListStyleType, listStyleType, "list-style-type")                       \
-    F(Clip, clip, "clip")
+    F(Clip, clip, "clip")                                                    \
+    F(LetterSpacing, letterSpacing, "letter-spacing")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)

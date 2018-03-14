@@ -821,7 +821,7 @@ private:
                             cairo_fill(canvas);
                         }
                     }
-                    xx += h;
+                    xx += h + lastState().m_font->letterSpacing();
                 }
             }
         }
@@ -841,12 +841,14 @@ private:
         cairo_translate(canvas, dx, fontMetrics.m_ascender + dy);
         cairo_glyph_t* glyphs = nullptr;
         size_t glyphCount = 0;
+        LayoutUnit letterSpacing = f->letterSpacing();
 
 #define ALLOCA_BIG(bytes, typenameWithoutPointer)                       \
     (typenameWithoutPointer*)(LIKELY(bytes < 1024 * 10) ? alloca(bytes) \
                                                         : GC_MALLOC(bytes))
 
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
+            LayoutUnit letterSpacingValueSoFar;
             auto stringAccessData = sv.bufferAccessData();
             glyphs = ALLOCA_BIG(stringAccessData.length * sizeof(cairo_glyph_t),
                                 cairo_glyph_t);
@@ -876,11 +878,12 @@ private:
                         cairo_set_font_size(canvas, size);
                     }
                     glyphs[glyphCount].index = g.second.first;
-                    glyphs[glyphCount].x = xBias;
+                    glyphs[glyphCount].x = xBias + letterSpacingValueSoFar;
                     glyphs[glyphCount].y = 0;
                     glyphCount++;
                     STARFISH_ASSERT(glyphCount <= sv.length());
-                    xBias += g.second.second;
+                    letterSpacingValueSoFar += letterSpacingValueSoFar;
+                    xBias += g.second.second + letterSpacing;
                 } else {
                     if (true) { // skip webfont enabled
                         if (f->seenUnresolvedWebFontIndex() != SIZE_MAX) {
@@ -895,7 +898,7 @@ private:
                                     f->spaceWidth(), fontMetrics.m_fontHeight);
                     cairo_stroke(canvas);
                     cairo_restore(canvas);
-                    xBias += f->spaceWidth();
+                    xBias += f->spaceWidth() + letterSpacing;
                 }
             }
         } else {
@@ -914,6 +917,7 @@ private:
             for (size_t i = 0; i < runs.size(); i++) {
                 FontCairoTextRun& run = runs[i];
 
+                LayoutUnit letterSpacingValueSoFar;
                 if (run.m_ftFace == nullptr) {
                     if (/* skip webfont enabled*/ f
                             ->seenUnresolvedWebFontIndex() != SIZE_MAX) {
@@ -950,8 +954,10 @@ private:
 
                         for (size_t j = 0; j < run.m_glyphs.size(); j++) {
                             glyphs[glyphCount].index = run.m_glyphs[j];
-                            glyphs[glyphCount].x =
-                                run.m_glyphPositions[j].x() + xBias;
+                            glyphs[glyphCount].x = run.m_glyphPositions[j].x() +
+                                                   xBias +
+                                                   letterSpacingValueSoFar;
+                            letterSpacingValueSoFar += letterSpacing;
                             glyphs[glyphCount].y = run.m_glyphPositions[j].y();
                             STARFISH_ASSERT(glyphCount < glyphAllocCount);
                             glyphCount++;
@@ -959,7 +965,7 @@ private:
                     }
                 }
 
-                xBias += run.m_runWidth;
+                xBias += (run.m_runWidth + letterSpacingValueSoFar);
             }
         }
         if (glyphCount) {

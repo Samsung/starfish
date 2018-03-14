@@ -39,7 +39,8 @@ static UTF8StringDataNonGCStd mergeStyleWeightWithString(
 
 static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
                                                size_t len, float size,
-                                               char style, char weight)
+                                               char style, char weight,
+                                               float letterSpacing)
 {
     UTF8StringDataNonGCStd result;
     result.reserve(128);
@@ -62,11 +63,8 @@ static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
         }
     }
 
-#if defined(STARFISH_ANDROID)
     result += "@s:" + String::fromInt(int(size + 0.5f))->toUTF8NonGCString();
-#else
-    result += "@s:" + std::to_string(int(size + 0.5f));
-#endif
+    result += "@ls:" + String::fromFloat(letterSpacing)->toUTF8NonGCString();
     result += "@s:";
     result += (style + 'a');
     result += "@w:";
@@ -169,10 +167,10 @@ FontFace* FontSelector::loadFromPlatform(const UTF8StringDataNonGCStd& fm,
 
 Font* FontSelector::loadFont(String* familyNameArray[],
                              size_t familyNameArraySize, float size, char style,
-                             char weight)
+                             char weight, float letterSpacing)
 {
     auto cacheFontName = mergeFamilyNames(familyNameArray, familyNameArraySize,
-                                          size, style, weight);
+                                          size, style, weight, letterSpacing);
     auto iter = m_fontCache.find(cacheFontName);
     if (iter != m_fontCache.end()) {
         return iter->second;
@@ -182,6 +180,7 @@ Font* FontSelector::loadFont(String* familyNameArray[],
     result->m_style = style;
     result->m_weight = weight;
     result->m_size = size;
+    result->m_letterSpacing = letterSpacing;
 
     auto cacheFontListName =
         mergeFamilyNames(familyNameArray, familyNameArraySize, style, weight);

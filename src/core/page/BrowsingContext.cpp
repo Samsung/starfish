@@ -1294,21 +1294,27 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     case MouseEventKind::MouseEventDown: {
         // Dispatch mousedown event
         name = starFish()->staticStrings()->m_mousedown.localName();
-        Event* e = createMouseEvent(document(), name, data);
+        MouseData downData(data);
+        downData.setRelatedTarget(nullptr);
+        Event* e = createMouseEvent(document(), name, downData);
         returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
     case MouseEventKind::MouseEventMove: {
         // Dispatch mousemove event
         name = starFish()->staticStrings()->m_mousemove.localName();
-        Event* e = createMouseEvent(document(), name, data);
+        MouseData mvData(data);
+        mvData.setRelatedTarget(nullptr);
+        Event* e = createMouseEvent(document(), name, mvData);
         returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
     }
     case MouseEventKind::MouseEventUp: {
         // Dispatch mouseup event
         name = starFish()->staticStrings()->m_mouseup.localName();
-        Event* mouseup = createMouseEvent(document(), name, data);
+        MouseData upData(data);
+        upData.setRelatedTarget(nullptr);
+        Event* mouseup = createMouseEvent(document(), name, upData);
         returnValue = !document()->window()->dispatchEventByUA(t, mouseup);
 
         if (m_activeNodeTarget == t) {

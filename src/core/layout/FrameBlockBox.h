@@ -1152,6 +1152,7 @@ public:
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;
+    int m_lastLineHasFloatValue;
 
     // we don't need gc_allocater here
     // frame tree has strong reference already

@@ -1117,6 +1117,7 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     , m_isLastLineBox(false)
     , m_isFirstLineCandidate(false)
     , m_inlineBoxIndex(0)
+    , m_lastLineHasFloatValue(0)
 {
     if (forQuick) {
         return;
@@ -1785,20 +1786,20 @@ void LineFormattingContext::insertAbsolutePositionedBoxes()
 void LineFormattingContext::layoutLineBox(LayoutUnit yDiff, LayoutUnit height)
 {
     LineBox* lineBox = currentLine();
-    int hasFloat = HasNone;
+    m_lastLineHasFloatValue = HasNone;
     std::pair<LayoutUnit, LayoutUnit> boundaries =
         m_layoutContext.horizontalBoundaryBetweenFloatingBoxes(
             m_absPosition.y() + m_lineBoxY + yDiff, height, m_leftBoundary,
             m_rightBoundary);
     if (boundaries.first > m_leftBoundary) {
-        hasFloat |= HasLeft;
+        m_lastLineHasFloatValue |= HasLeft;
         m_lineBoxX = boundaries.first - m_absPosition.x();
     } else {
         m_lineBoxX = m_leftBoundary - m_absPosition.x();
     }
 
     if (m_rightBoundary > boundaries.second) {
-        hasFloat |= HasRight;
+        m_lastLineHasFloatValue |= HasRight;
         m_lineBoxWidth = boundaries.second - m_leftBoundary;
     } else {
         m_lineBoxWidth = m_rightBoundary - m_leftBoundary;
@@ -1810,13 +1811,13 @@ void LineFormattingContext::layoutLineBox(LayoutUnit yDiff, LayoutUnit height)
     lineBox->setWidth(m_lineBoxWidth);
 
     if (m_floatingBoxLayoutContexts.size() == 0) {
-        m_floatingBoxLayoutContexts.emplace_back(hasFloat, yDiff, m_lineBoxX,
-                                                 m_lineBoxWidth);
+        m_floatingBoxLayoutContexts.emplace_back(m_lastLineHasFloatValue, yDiff,
+                                                 m_lineBoxX, m_lineBoxWidth);
     } else {
         if (m_floatingBoxLayoutContexts[m_floatingBoxLayoutContexts.size() - 1]
                 .m_y < yDiff) {
             m_floatingBoxLayoutContexts.emplace_back(
-                hasFloat, yDiff, m_lineBoxX, m_lineBoxWidth);
+                m_lastLineHasFloatValue, yDiff, m_lineBoxX, m_lineBoxWidth);
         }
     }
 }
@@ -2647,14 +2648,20 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
                     insertInlineBox(box2);
                 }
                 breakLine(nullptr);
-                tryInsertInlineBox(box);
+
+                if (!canInsertToLineBox(box, box->outerWidth()) &&
+                    m_lastLineHasFloatValue == HasFloat::HasNone) {
+                    insertInlineBox(box);
+                    markInlineBoxIndex(box);
+                } else {
+                    tryInsertInlineBox(box);
+                }
             }
             return;
         }
     }
 
     insertInlineBox(box);
-
     markInlineBoxIndex(box);
 }
 

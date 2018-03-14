@@ -374,6 +374,7 @@ LayoutUnit FontImplCairo::measureText(const StringView& str)
                 result += spaceWidth();
             }
         }
+        result += m_letterSpacing * str.length();
         return result;
     }
 
@@ -382,6 +383,8 @@ LayoutUnit FontImplCairo::measureText(const StringView& str)
         FontCairoTextRun& run = runs[i];
         result += run.m_runWidth;
     }
+
+    result += m_letterSpacing * str.length();
 
     return result;
 }
@@ -402,7 +405,6 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
 
     if (((FontFaceImplCairo*)(FontImplCairo*)f->fontFaceList()[0])
             ->m_supportsKerning) {
-        // TODO multiply devicePixelRatio if it implemented
         if (f->size() >= 48) {
             return false;
         }

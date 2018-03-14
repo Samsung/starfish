@@ -206,7 +206,8 @@ void ComputedStyle::loadFont(Node* consumer)
         ComputedStyle* parentStyle = consumer->parentNode()->style();
         if (parentStyle->fixedFontSize() == fixedFontSize &&
             parentStyle->fontStyle() == fontStyle() &&
-            parentStyle->fontWeight() == this->fontWeight()) {
+            parentStyle->fontWeight() == this->fontWeight() &&
+            parentStyle->letterSpacing() == letterSpacing()) {
             if (parentStyle->fontFamily()[0].m_length ==
                 fontFamily()[0].m_length) {
                 size_t len = fontFamily()[0].m_length;
@@ -223,15 +224,19 @@ void ComputedStyle::loadFont(Node* consumer)
         }
     }
 
+    float letterSpacing = this->letterSpacing().fixed();
+
 #ifdef STARFISH_ENABLE_TEST
     StarFish* sf = consumer->starFish();
     if (g_enablePixelTest) {
         String* str = String::fromUTF8("StarFishAhem");
-        m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight);
+        m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight,
+                              letterSpacing);
     } else {
         if (sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest) {
             String* str = String::fromUTF8("SamsungOne");
-            m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight);
+            m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight,
+                                  letterSpacing);
         } else {
             if (canUseParentFont) {
                 m_font = parentNodeFont;
@@ -239,7 +244,7 @@ void ComputedStyle::loadFont(Node* consumer)
                 m_font = fs->loadFont(
                     (String**)&m_inheritedStyles.m_fontFamilyDatas[1],
                     m_inheritedStyles.m_fontFamilyDatas[0].m_length,
-                    fixedFontSize, style, fontWeight);
+                    fixedFontSize, style, fontWeight, letterSpacing);
             }
         }
     }
@@ -249,7 +254,7 @@ void ComputedStyle::loadFont(Node* consumer)
     } else {
         m_font = fs->loadFont((String**)&m_inheritedStyles.m_fontFamilyDatas[1],
                               m_inheritedStyles.m_fontFamilyDatas[0].m_length,
-                              fixedFontSize, style, fontWeight);
+                              fixedFontSize, style, fontWeight, letterSpacing);
     }
 #endif
 }
@@ -1024,8 +1029,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     if (newStyle->letterSpacing() != oldStyle->letterSpacing()) {
-        // TODO
-        // damagedKeys[CSSStyleValuePair::KeyKind::LetterSpacing] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::LetterSpacing] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
