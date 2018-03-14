@@ -646,7 +646,22 @@ void unregisterJavaScriptNativeInterface(ScriptBindingInstance* instance,
             targetObject->deleteOwnProperty(state, nativeCallbackName);
         }
     }
-    // TODO : delete global object when there is no callback in that object
+    state->destroy();
+}
+
+void unregisterJavaScriptNativeInterface(ScriptBindingInstance* instance,
+                                         String* exposedObjectName)
+{
+    ContextRef* context = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(context);
+    GlobalObjectRef* globalObject = context->globalObject();
+
+    auto key = ValueRef::create(toJSString(exposedObjectName));
+    if (globalObject->hasOwnProperty(state, key)) {
+        ObjectRef* targetObject =
+            globalObject->getOwnProperty(state, key)->asObject();
+        globalObject->deleteOwnProperty(state, key);
+    }
 
     state->destroy();
 }

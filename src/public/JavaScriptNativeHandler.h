@@ -27,7 +27,7 @@ class StarFishHoldable;
 class JavaScriptNativeHandler : public ScriptWrappable,
                                 public StarFishHoldable {
 public:
-    typedef std::string (*NativeFunctionPtr)(std::string param);
+    typedef std::function<std::string(std::string)> NativeFunctionPtr;
     JavaScriptNativeHandler(StarFish* starFish, String* functionName,
                             NativeFunctionPtr nativeCallback);
     virtual void init(ScriptBindingInstance* instance,

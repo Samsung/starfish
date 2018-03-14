@@ -33,6 +33,12 @@ JavaScriptNativeHandler::JavaScriptNativeHandler(
     , m_name(functionName)
     , m_callback(nativeCallback)
 {
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            ((JavaScriptNativeHandler*)obj)->~JavaScriptNativeHandler();
+        },
+        NULL, NULL, NULL);
 }
 
 String* JavaScriptNativeHandler::callNativeHandler(String* param)
