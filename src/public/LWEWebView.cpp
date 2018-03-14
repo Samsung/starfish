@@ -337,7 +337,7 @@ bool WebView::CanGoForward()
 
 void WebView::AddJavaScriptInterface(std::string exposedObjectName,
                                      std::string jsFunctionName,
-                                     std::string (*cb)(std::string))
+                                     std::function<std::string(std::string)> cb)
 {
     STARFISH_ASSERT(m_starfish);
 
@@ -879,6 +879,91 @@ Java_com_samsung_android_mobileservice_lwe_WebView_ClearHistory(JNIEnv* env,
 {
     LWE::WebView* webView = (LWE::WebView*)data;
     webView->ClearHistory();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_addJavascriptInterface(
+    JNIEnv* env, jobject thiz, jlong wv, jstring objName, jstring funtionName,
+    jobject instance)
+{
+    const char* nativeString1 = env->GetStringUTFChars(objName, 0);
+    std::string objNameString = std::string(nativeString1);
+    env->ReleaseStringUTFChars(objName, nativeString1);
+
+    const char* nativeString2 = env->GetStringUTFChars(funtionName, 0);
+    std::string functionNameString = std::string(nativeString2);
+    env->ReleaseStringUTFChars(funtionName, nativeString2);
+
+    jobject callback_obj = env->NewGlobalRef(instance);
+    jclass clz = env->GetObjectClass(callback_obj);
+    jmethodID callback_methodID = env->GetMethodID(
+        clz, nativeString2, "(Ljava/lang/String;)Ljava/lang/String;");
+
+    std::shared_ptr<_jobject> javaObjectRef(callback_obj, [](jobject ref) {
+        JNIEnv* env = g_WindowGlue.m_env;
+
+        int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+        if (getEnvStat == JNI_EDETACHED) {
+            if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        } else if (getEnvStat == JNI_OK) {
+        } else if (getEnvStat == JNI_EVERSION) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        if (!env) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        env->DeleteGlobalRef(ref);
+    });
+
+    std::function<std::string(std::string)> NB =
+        [javaObjectRef, callback_obj, clz,
+         callback_methodID](std::string param) -> std::string {
+
+        JNIEnv* env = g_WindowGlue.m_env;
+
+        int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+        if (getEnvStat == JNI_EDETACHED) {
+            if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        } else if (getEnvStat == JNI_OK) {
+        } else if (getEnvStat == JNI_EVERSION) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        if (!env) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        jstring result = (jstring)env->CallObjectMethod(
+            callback_obj, callback_methodID, env->NewStringUTF(param.c_str()));
+
+        const char* nativeString3 = env->GetStringUTFChars(result, 0);
+        std::string resultStr = std::string(nativeString3);
+        env->ReleaseStringUTFChars(result, nativeString3);
+
+        return resultStr;
+    };
+
+    LWE::WebView* webView = (LWE::WebView*)wv;
+    webView->AddJavaScriptInterface(objNameString, functionNameString, NB);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_removeJavascriptInterface(
+    JNIEnv* env, jobject thiz, jlong wv, jstring objName)
+{
+    const char* nativeString = env->GetStringUTFChars(objName, 0);
+    StarFish::String* objectName = StarFish::String::fromUTF8(nativeString);
+    env->ReleaseStringUTFChars(objName, nativeString);
+
+    LWE::WebView* webView = (LWE::WebView*)wv;
+    StarFish::StarFish* starFish =
+        (StarFish::StarFish*)webView->getInternalPtr();
+
+    STARFISH_ASSERT(starFish);
+    StarFish::unregisterJavaScriptNativeInterface(
+        TO_SCRIPT_BINDING_INSTANCE(starFish), objectName);
 }
 
 extern "C" JNIEXPORT void JNICALL

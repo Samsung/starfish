@@ -118,6 +118,8 @@ void registerJavaScriptNativeInterface(
 void unregisterJavaScriptNativeInterface(ScriptBindingInstance* instance,
                                          String* exposedObjectName,
                                          String* jsFunctionName);
+void unregisterJavaScriptNativeInterface(ScriptBindingInstance* instance,
+                                         String* exposedObjectName);
 
 ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData);
 double parseDate(ScriptBindingInstance* instance, String* date);

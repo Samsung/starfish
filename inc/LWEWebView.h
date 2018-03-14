@@ -76,7 +76,7 @@ public:
 	void GoForward();
 	bool CanGoBack();
 	bool CanGoForward();
-	void AddJavaScriptInterface(std::string exposedObjectName, std::string jsFunctionName, std::string (*cb)(std::string));
+	void AddJavaScriptInterface(std::string exposedObjectName, std::string jsFunctionName, std::function<std::string(std::string)> cb);
 	std::string EvaluateJavaScript(std::string script);
 	void ClearHistory();
 	void Destroy();
