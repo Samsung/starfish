@@ -680,7 +680,7 @@ enum AlignItemValue {
     FlexEndAlignItemValue,
     CenterAlignItemValue,
     BaselineAlignItemValue,
-    StretchAlignItemValue
+    StretchAlignItemValue,
 };
 
 enum AlignContentValue {
