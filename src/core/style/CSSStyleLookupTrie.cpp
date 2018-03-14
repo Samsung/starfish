@@ -1132,6 +1132,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "textIndent", 10) == 0) {
                 return CSSStyleKind::TextIndent;
             }
+            if (memcmp(data, "textShadow", 10) == 0) {
+                return CSSStyleKind::TextShadow;
+            }
             break;
         }
         break;

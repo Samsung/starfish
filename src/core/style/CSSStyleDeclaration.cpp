@@ -1101,6 +1101,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValue(listStyle.image());
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::TextShadow) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 #define ADD_VALUE_PAIR(KEY, VALUE, GETTER)                   \
     else if (keyKind == CSSStyleValuePair::KeyKind::KEY)     \
