@@ -9383,11 +9383,7 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
     if (tokens.size() == 1) {
         const CSSTokenValue& t = tokens[0];
         const char* value = t.data();
-        if (VALUE_IS_INHERIT()) {
-            m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        } else if (VALUE_IS_INITIAL()) {
-            m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-        } else if (VALUE_IS_NONE()) {
+        if (VALUE_IS_NONE()) {
             m_valueKind = CSSStyleValuePair::ValueKind::None;
         } else {
             return false;
