@@ -28,6 +28,7 @@
 #include "core/style/NamedColors.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/Length.h"
+#include "core/style/GridLength.h"
 #include "core/style/RectData.h"
 #include "core/util/VectorWithInlineStorage.h"
 #include "core/util/BloomFilter.h"
@@ -1144,7 +1145,9 @@ class CSSStyleDeclaration;
     F(ListStyleType, listStyleType, "list-style-type")                       \
     F(Clip, clip, "clip")                                                    \
     F(LetterSpacing, letterSpacing, "letter-spacing")                        \
-    F(UserSelect, userSelect, "user-select")
+    F(UserSelect, userSelect, "user-select")                                 \
+    F(GridTemplateColumns, gridTemplateColumns, "grid-template-columns")     \
+    F(GridTemplateRows, gridTemplateRows, "grid-template-rows")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)
@@ -1407,6 +1410,9 @@ public:
 
         // user-select
         UserSelectValueKind,
+
+        // grid
+        GridTemplateUnits,
     };
 
     CSSStyleValuePair()
@@ -1885,6 +1891,12 @@ public:
         return m_value.m_userSelect;
     }
 
+    GCVector<GridLength>* gridTemplateUnits() const
+    {
+        STARFISH_ASSERT(m_valueKind == GridTemplateUnits);
+        return m_value.m_gridTemplateUnits;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1943,6 +1955,7 @@ public:
         ListStylePositionValue m_listStylePosition;
         UserSelectValue m_userSelect;
         RectData* m_rect;
+        GCVector<GridLength>* m_gridTemplateUnits;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2175,6 +2188,11 @@ public:
             : m_rect(v)
         {
         }
+
+        ValueData(GCVector<GridLength>* v)
+            : m_gridTemplateUnits(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2206,6 +2224,8 @@ public:
             return m_value.m_pairValue;
         case RectValueKind:
             return m_value.m_rect;
+        case GridTemplateUnits:
+            return m_value.m_gridTemplateUnits;
         default:
             return nullptr;
         }
@@ -2342,6 +2362,12 @@ public:
     {
         m_valueKind = CSSStyleValuePair::ValueKind::RectValueKind;
         m_value.m_rect = val;
+    }
+
+    void setGridTemplateUnits(GCVector<GridLength>* val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::GridTemplateUnits;
+        m_value.m_gridTemplateUnits = val;
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \

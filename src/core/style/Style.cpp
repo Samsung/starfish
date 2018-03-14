@@ -2430,6 +2430,8 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
+    case CSSStyleValuePair::ValueKind::GridTemplateUnits:
+        return GridLength::toStringWithGridLengths(gridTemplateUnits());
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -6700,6 +6702,17 @@ void StyleResolver::apply(Element* element,
                 style->setUserSelect(cssValues[k].userSelectValue());
                 break;
             }
+        case CSSStyleValuePair::KeyKind::GridTemplateColumns:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::GridTemplateUnits) {
+                style->setGridTemplateColumns(cssValues[k].gridTemplateUnits());
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::GridTemplateRows:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::GridTemplateUnits) {
+                style->setGridTemplateRows(cssValues[k].gridTemplateUnits());
+            }
             break;
         case CSSStyleValuePair::KeyKind::Empty:
             break;
@@ -9385,6 +9398,80 @@ bool CSSStyleValuePair::updateValueClip(const CSSTokenVector& tokens)
                                  CSSLength(units[2], value[2]).toLength(),
                                  CSSLength(units[3], value[3]).toLength()));
     }
+
+    return true;
+}
+
+static bool parseGridTemplateColumnsAndRows(const CSSTokenVector& tokens,
+                                            GCVector<GridLength>* v)
+{
+    for (size_t i = 0; i < tokens.size(); i++) {
+        auto ss = tokens[i].trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+
+        bool hasPoint = false;
+        parser.consumeWhitespaces();
+        if (!parser.consumeNumber(&hasPoint)) {
+            return false;
+        }
+
+        float number = parser.parsedNumber();
+        parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
+        String* str = parser.parsedString();
+        if (str->length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
+            return false;
+        }
+
+        // TODO : Add the GridLine, GridArea and Repeat
+        // Create GridLength and push back into vector.
+        GridLength g(CSSLength(str, number).toLength());
+        v->push_back(g);
+    }
+
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueGridTemplateColumns(
+    const CSSTokenVector& tokens)
+{
+    if (!tokens.size())
+        return false;
+
+    if (tokens.size() == 1 && tokens[0].equals("none")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::None;
+        return true;
+    }
+
+    GCVector<GridLength>* v = new GCVector<GridLength>();
+    ValueList* v1 = new ValueList(ValueList::Separator::SpaceSeparator);
+
+    if (!parseGridTemplateColumnsAndRows(tokens, v)) {
+        return false;
+    }
+
+    setGridTemplateUnits(v);
+
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueGridTemplateRows(
+    const CSSTokenVector& tokens)
+{
+    if (!tokens.size())
+        return false;
+
+    if (tokens.size() == 1 && tokens[0].equals("none")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::None;
+        return true;
+    }
+
+    GCVector<GridLength>* v = new GCVector<GridLength>();
+
+    if (!parseGridTemplateColumnsAndRows(tokens, v)) {
+        return false;
+    }
+
+    setGridTemplateUnits(v);
 
     return true;
 }

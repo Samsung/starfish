@@ -719,6 +719,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Right-Style
         // Border-Right-Width
         // Border-Right-Color
+        // Grid-Template-Rows
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-image-slice", 18) == 0) {
@@ -735,6 +736,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "border-right-color", 18) == 0) {
                 return CSSStyleKind::BorderRightColor;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "grid-template-rows", 18) == 0) {
+                return CSSStyleKind::GridTemplateRows;
             }
             break;
         }
@@ -795,6 +801,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // background-position-x
         // background-position-y
         // background-attachment
+        // Grid-Template-Columns
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background-position-x", 21) == 0) {
@@ -805,6 +812,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "background-attachment", 21) == 0) {
                 return CSSStyleKind::BackgroundAttachment;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "grid-template-columns", 21) == 0) {
+                return CSSStyleKind::GridTemplateColumns;
             }
             break;
         }
@@ -1415,6 +1427,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::BorderRightColor;
             }
             break;
+        case 'g':
+            if (memcmp(data, "gridTemplateRows", 16) == 0) {
+                return CSSStyleKind::GridTemplateRows;
+            }
+            break;
         }
         break;
     case 17:
@@ -1479,6 +1496,10 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::BorderTopLeftRadius;
             }
             break;
+        case 'g':
+            if (memcmp(data, "gridTemplateColumns", 19) == 0) {
+                return CSSStyleKind::GridTemplateColumns;
+            }
         }
         break;
     case 20:

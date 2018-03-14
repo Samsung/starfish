@@ -848,6 +848,32 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
                                                windowSize.height(), this);
         }
     }
+
+    GCVector<GridLength>* columns =
+        m_rareComputedStyleData.gridTemplateColumns();
+
+    if (columns) {
+        for (size_t i = 0; i < columns->size(); i++) {
+            if ((*columns)[i].isLength() &&
+                !(*columns)[i].length().isComputed()) {
+                (*columns)[i].mutableLength().changeToFixedIfNeeded(
+                    curFontSize, rootFontSize, font, windowSize.width(),
+                    windowSize.height(), this);
+            }
+        }
+    }
+
+    GCVector<GridLength>* rows = m_rareComputedStyleData.gridTemplateRows();
+
+    if (columns) {
+        for (size_t i = 0; i < rows->size(); i++) {
+            if ((*rows)[i].isLength() && !(*rows)[i].length().isComputed()) {
+                (*rows)[i].mutableLength().changeToFixedIfNeeded(
+                    curFontSize, rootFontSize, font, windowSize.width(),
+                    windowSize.height(), this);
+            }
+        }
+    }
 }
 
 static AnimationTimingFunction* getTimingFunction(ComputedStyle* style)
@@ -1615,6 +1641,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damagedKeys[CSSStyleValuePair::KeyKind::UserSelect] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->gridTemplateColumns() != oldStyle->gridTemplateColumns()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::GridTemplateColumns] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->gridTemplateRows() != oldStyle->gridTemplateRows()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::GridTemplateRows] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     return damage;
