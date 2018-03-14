@@ -1182,6 +1182,26 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             }
         }
         addValuePair(shadows);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridTemplateColumns) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateColumns);
+        if (style->gridTemplateColumns()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::GridTemplateUnits);
+            p.setGridTemplateUnits(style->gridTemplateColumns());
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridTemplateRows) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateRows);
+        if (style->gridTemplateRows()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::GridTemplateUnits);
+            p.setGridTemplateUnits(style->gridTemplateRows());
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        }
+        addValuePair(p);
     }
 #define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
     else if (keyKind ==                                                       \

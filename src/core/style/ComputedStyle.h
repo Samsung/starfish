@@ -105,7 +105,11 @@ class RareComputedStyleData : public gc {
         R,
         D,
         Clip,
-        UserSelect
+        UserSelect,
+
+        // Grid
+        GridTemplateColumns,
+        GridTemplateRows,
     };
 
     union RareComputedStyleValue {
@@ -129,6 +133,7 @@ class RareComputedStyleData : public gc {
         ShadowDataList* m_boxShadowDataList;
         RectData* m_clip;
         UserSelectValue m_userSelect;
+        GCVector<GridLength>* m_gridTemplateUnits;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -227,6 +232,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(UserSelectValue v)
             : m_userSelect(v)
+        {
+        }
+
+        RareComputedStyleValue(GCVector<GridLength>* gridTemplate)
+            : m_gridTemplateUnits(gridTemplate)
         {
         }
     };
@@ -386,6 +396,10 @@ public:
     GETTER_PTR(ObjectSizingData, objectSizing, objectSizing, ObjectSizing);
     GETTER_PTR(ShadowDataList, boxShadowDataList, boxShadow, BoxShadow);
     GETTER_PTR(RectData, clip, clip, Clip);
+    GETTER_PTR(GCVector<GridLength>, gridTemplateUnits, gridTemplateColumns,
+               GridTemplateColumns);
+    GETTER_PTR(GCVector<GridLength>, gridTemplateUnits, gridTemplateRows,
+               GridTemplateRows);
 
 #undef GETTER_PTR
 
@@ -566,6 +580,16 @@ public:
     void setClip(RectData* r)
     {
         *m_rareComputedStyleData.ensureClip() = *r;
+    }
+
+    void setGridTemplateColumns(GCVector<GridLength>* gridTemplate)
+    {
+        *m_rareComputedStyleData.ensureGridTemplateColumns() = *gridTemplate;
+    }
+
+    void setGridTemplateRows(GCVector<GridLength>* gridTemplate)
+    {
+        *m_rareComputedStyleData.ensureGridTemplateRows() = *gridTemplate;
     }
 
     FloatValue floating()
@@ -2132,6 +2156,20 @@ public:
     {
         RectData* rect = m_rareComputedStyleData.clip();
         return rect;
+    }
+
+    GCVector<GridLength>* gridTemplateColumns()
+    {
+        GCVector<GridLength>* gridTemplate =
+            m_rareComputedStyleData.gridTemplateColumns();
+        return gridTemplate;
+    }
+
+    GCVector<GridLength>* gridTemplateRows()
+    {
+        GCVector<GridLength>* gridTemplate =
+            m_rareComputedStyleData.gridTemplateRows();
+        return gridTemplate;
     }
 
     void clearContent()
