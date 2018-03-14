@@ -1759,6 +1759,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::PositionValueKind:
         switch (positionValue()) {
         case PositionValue::StaticPositionValue:
@@ -1772,6 +1773,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::FloatValueKind:
         switch (floatValue()) {
         case FloatValue::LeftFloatValue:
@@ -1783,6 +1785,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::ClearValueKind:
         switch (clearValue()) {
         case ClearValue::LeftClearValue:
@@ -1796,6 +1799,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::VerticalAlignValueKind:
         switch (verticalAlignValue()) {
         case VerticalAlignValue::BaselineVAlignValue:
@@ -1819,9 +1823,11 @@ String* CSSStyleValuePair::toString() const
             // FIXED: NumericVAlignValue cannot be here. (only used in
             // ComputedStyle)
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            break;
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::TextAlignValueKind:
         switch (textAlignValue()) {
         case TextAlignValue::StartTextAlignValue:
@@ -1839,6 +1845,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::TextTransformValueKind:
         switch (textTransformValue()) {
         case TextTransformValue::NoneTextTransformValue:
@@ -1868,6 +1875,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::DirectionValueKind:
         switch (directionValue()) {
         case LtrDirectionValue:
@@ -1877,6 +1885,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::WhiteSpaceValueKind:
         switch (whiteSpaceValue()) {
         case NormalWhiteSpaceValue:
@@ -1892,6 +1901,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::ObjectFitValueKind:
         switch (objectFitValue()) {
         case FillObjectFitValue:
@@ -1907,6 +1917,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::BackgroundSizeValueKind:
         switch (backgroundSizeValue()) {
         case CoverBackgroundSizeValue:
@@ -1914,6 +1925,7 @@ String* CSSStyleValuePair::toString() const
         case ContainBackgroundSizeValue:
             return String::fromUTF8("contain");
         }
+        break;
     case CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind:
         switch (backgroundRepeatValue()) {
         case RepeatRepeatValue:
@@ -1923,6 +1935,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::BackgroundAttachmentValueKind:
         switch (backgroundAttachmentValue()) {
         case ScrollBackgroundAttachmentValue:
@@ -1934,6 +1947,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::BoxValueKind:
         switch (boxValue()) {
         case BorderBoxBoxValue:
@@ -1945,6 +1959,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::FontSizeValueKind:
         switch (fontSizeValue()) {
         case FontSizeValue::XXSmallFontSizeValue:
@@ -1968,6 +1983,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::FontStyleValueKind:
         switch (fontStyleValue()) {
         case FontStyleValue::NormalFontStyleValue:
@@ -1979,6 +1995,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::FontWeightValueKind:
         switch (fontWeightValue()) {
         case FontWeightValue::NormalFontWeightValue:
@@ -2010,6 +2027,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::WordWrapValueKind:
         switch (wordWrapValue()) {
         case WordWrapValue::NormalWordWrapValue:
@@ -2019,6 +2037,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::BorderStyleValueKind:
         switch (borderStyleValue()) {
         case BorderStyleValue::NoneBorderStyleValue:
@@ -2034,6 +2053,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::BorderWidthValueKind:
         switch (borderWidthValue()) {
         case BorderWidthValue::ThinBorderWidthValue:
@@ -2045,6 +2065,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::OverflowValueKind:
         switch (overflowValue()) {
         case OverflowValue::VisibleOverflow:
@@ -2058,6 +2079,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::TextDecorationValueKind:
         switch (textDecorationValue()) {
         case TextDecorationValue::NoneTextDecorationValue:
@@ -2073,6 +2095,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::VisibilityValueKind:
         switch (visibilityValue()) {
         case VisibilityValue::VisibleVisibilityValue:
@@ -2082,6 +2105,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::UnicodeBidiValueKind:
         switch (unicodeBidiValue()) {
         case NormalUnicodeBidiValue:
@@ -2093,6 +2117,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::TransformFunctions:
         return transformValue()->toString();
     case CSSStyleValuePair::ValueKind::ValueListKind: {
@@ -2126,6 +2151,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::BoxSizingValueKind:
         switch (boxSizingValue()) {
         case ContentBoxBoxSizingValue:
@@ -2135,6 +2161,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::FlexDirectionValueKind:
         switch (flexDirectionValue()) {
         case RowFlexDirectionValue:
@@ -2148,6 +2175,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::FlexWrapValueKind:
         switch (flexWrapValue()) {
         case NoWrapFlexWrapValue:
@@ -2159,6 +2187,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::JustifyContentValueKind:
         switch (justifyContentValue()) {
         case FlexStartJustifyContentValue:
@@ -2174,6 +2203,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::AlignItemValueKind:
         switch (alignItemValue()) {
         case FlexStartAlignItemValue:
@@ -2189,6 +2219,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::AlignContentValueKind:
         switch (alignContentValue()) {
         case FlexStartAlignContentValue:
@@ -2201,9 +2232,12 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("space-around");
         case StretchAlignContentValue:
             return String::fromUTF8("stretch");
+        case CenterAlignContentValue:
+            return String::fromUTF8("center");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::FlexBasisValueKind:
         switch (FlexBasisValue()) {
         case ContentFlexBasisValue:
@@ -2211,6 +2245,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::TableLayoutValueKind:
         switch (tableLayoutValue()) {
         case TableLayoutValue::AutoTableLayoutValue:
@@ -2220,6 +2255,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::FillRuleValueKind:
         switch (fillRuleValue()) {
         case FillRuleNonZero:
@@ -2229,6 +2265,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::FontFaceSrcDataValueKind:
         return fontFaceSrcDataValue()->toString();
     case CSSStyleValuePair::ValueKind::MaskSizeValueKind:
@@ -2240,6 +2277,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::ListStylePositionValueKind:
         switch (listStylePositionValue()) {
         case ListStylePositionOutside:
@@ -2249,14 +2287,44 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::ListStyleCounterValueKind:
         return listStyleCounterValue();
     case CSSStyleValuePair::ValueKind::RectValueKind:
         if (m_valueKind == CSSStyleValuePair::ValueKind::RectValueKind) {
             return clip()->toString();
         }
-
         return String::fromUTF8("auto");
+    case CSSStyleValuePair::ValueKind::BorderCollapseValueKind:
+        switch (borderCollapseValue()) {
+        case SeparateBorderCollapseValue:
+            return String::fromUTF8("separate");
+        case CollapseBorderCollapseValue:
+            return String::fromUTF8("collapse");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
+    case CSSStyleValuePair::ValueKind::CaptionSideValueKind:
+        switch (captionSideValue()) {
+        case TopCaptionSideValue:
+            return String::fromUTF8("top");
+        case BottomCaptionSideValue:
+            return String::fromUTF8("bottom");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
+    case CSSStyleValuePair::ValueKind::EmptyCellsValueKind:
+        switch (emptyCellsValue()) {
+        case ShowEmptyCellsValue:
+            return String::fromUTF8("show");
+        case HideEmptyCellsValue:
+            return String::fromUTF8("hide");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
