@@ -37,6 +37,21 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
+
+    int32_t start();
+    void setStart(int32_t v);
+
+    void didNodeInserted(Node* parent, Node* newChild) override
+    {
+        HTMLElement::didNodeInserted(parent, newChild);
+        setNeedsFrameTreeBuildWithoutSelf();
+    }
+
+    void didNodeRemoved(Node* parent, Node* oldChild) override
+    {
+        HTMLElement::didNodeRemoved(parent, oldChild);
+        setNeedsFrameTreeBuildWithoutSelf();
+    }
 };
 }
 

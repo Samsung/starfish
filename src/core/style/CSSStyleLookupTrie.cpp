@@ -607,6 +607,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Justify-Content
         // Background-Clip
         // Object-position
+        // List-Style-Type
         switch (data[0]) {
         case 'j':
             if (memcmp(data, "justify-content", 15) == 0) {
@@ -629,10 +630,16 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::BorderCollapse;
             }
             break;
+        case 'l':
+            if (memcmp(data, "list-style-type", 15) == 0) {
+                return CSSStyleKind::ListStyleType;
+            }
+            break;
         case 'o':
             if (memcmp(data, "object-position", 15) == 0) {
                 return CSSStyleKind::ObjectPosition;
             }
+            break;
         }
         break;
     case 16:
@@ -642,6 +649,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Top-Color
         // Border-Top-Style
         // Border-Top-Width
+        // List-Style-Image
         switch (data[0]) {
         case 't':
             if (memcmp(data, "transform-origin", 16) == 0) {
@@ -664,6 +672,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "border-top-width", 16) == 0) {
                 return CSSStyleKind::BorderTopWidth;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "list-style-image", 16) == 0) {
+                return CSSStyleKind::ListStyleImage;
             }
             break;
         }
@@ -728,6 +741,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Bottom-Width
         // Border-Bottom-Color
         // Background-Position
+        // List-Style-Position
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background-repeat-x", 19) == 0) {
@@ -750,6 +764,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "border-bottom-color", 19) == 0) {
                 return CSSStyleKind::BorderBottomColor;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "list-style-position", 19) == 0) {
+                return CSSStyleKind::ListStylePosition;
             }
             break;
         case 't':
@@ -1279,6 +1298,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             break;
         case 'l':
+            if (memcmp(data, "listStyleType", 13) == 0) {
+                return CSSStyleKind::ListStyleType;
+            }
             if (memcmp(data, "letterSpacing", 13) == 0) {
                 return CSSStyleKind::LetterSpacing;
             }
@@ -1290,6 +1312,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'j':
             if (memcmp(data, "justifyContent", 14) == 0) {
                 return CSSStyleKind::JustifyContent;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "listStyleImage", 14) == 0) {
+                return CSSStyleKind::ListStyleImage;
             }
             break;
         case 't':
@@ -1395,6 +1422,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "borderBottomColor", 17) == 0) {
                 return CSSStyleKind::BorderBottomColor;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "listStylePosition", 17) == 0) {
+                return CSSStyleKind::ListStylePosition;
             }
             break;
         }

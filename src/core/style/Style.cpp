@@ -6524,22 +6524,19 @@ void StyleResolver::apply(Element* element,
                     parentStyle->listStyleData().typeData());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->setListStyleType(
-                    StyleRuleCounterStyle::getNoneCounter());
+                style->setListStyleType(CounterStyle::getNoneCounter());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
-                style->setListStyleType(
-                    StyleRuleCounterStyle::getDiscCounter());
+                style->setListStyleType(CounterStyle::getDiscCounter());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::
                            ListStyleCounterValueKind) {
                 String* counterName = cssValues[k].listStyleCounterValue();
-                auto counterStyle =
-                    StyleRuleCounterStyle::getKnownCounter(counterName);
+                auto counterStyle = CounterStyle::getKnownCounter(counterName);
                 if (counterStyle) {
                     style->setListStyleType(counterStyle);
                 } else {
-                    style->setListStyleType(counterName);
+                    style->setListStyleType(CounterStyle::getDecimalCounter());
                 }
             } else {
                 style->setListStyleType(cssValues[k].stringValue());

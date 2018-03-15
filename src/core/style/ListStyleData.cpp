@@ -19,7 +19,7 @@
 
 #include "StarFishConfig.h"
 #include "core/style/ListStyleData.h"
-#include "core/style/StyleRuleCounterStyle.h"
+#include "core/style/CounterStyle.h"
 
 namespace StarFish {
 
@@ -30,14 +30,17 @@ String* ListStyleData::type() const
 
 void ListStyleData::setType(String* v)
 {
-    auto counter =
-        new StyleRuleCounterStyle(v, StyleRuleCounterStyle::CyclicSystem);
+    auto counter = new CounterStyle(v, CounterStyle::CyclicSystem);
     counter->setSuffix(String::spaceString);
-    counter->addSymbol(v);
+
+    GCVector<String*> symbols;
+    symbols.push_back(v);
+    counter->setSymbols(symbols);
+
     m_counterStyle = counter;
 }
 
-void ListStyleData::setType(const StyleRuleCounterStyle* v)
+void ListStyleData::setType(const CounterStyle* v)
 {
     STARFISH_ASSERT(v);
     m_counterStyle = v;

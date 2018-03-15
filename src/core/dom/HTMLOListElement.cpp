@@ -26,4 +26,18 @@ QualifiedName HTMLOListElement::name()
 {
     return starFish()->staticStrings()->m_olTagName;
 }
+
+int32_t HTMLOListElement::start()
+{
+    Nullable<String*> v = getAttribute(starFish()->staticStrings()->m_start);
+    if (v.hasValue()) {
+        return String::parseInt(v.getValue());
+    }
+    return 1;
+}
+
+void HTMLOListElement::setStart(int32_t v)
+{
+    setAttribute(starFish()->staticStrings()->m_start, String::fromInt(v));
+}
 }

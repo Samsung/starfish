@@ -6,6 +6,6 @@ interface HTMLOListElement : HTMLElement {
 
   // https://html.spec.whatwg.org/#HTMLOListElement-partial
   [Unimplemented,CEReactions] attribute boolean reversed;
-  [Unimplemented,CEReactions] attribute long start;
+  [CEReactions] attribute long start;
   [Unimplemented,CEReactions] attribute DOMString type;
 };

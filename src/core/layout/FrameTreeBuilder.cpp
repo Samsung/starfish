@@ -24,6 +24,7 @@
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLInputElement.h"
+#include "core/dom/HTMLOListElement.h"
 #include "core/dom/PseudoElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/svg/SVGSVGElement.h"
@@ -533,16 +534,65 @@ Frame* findPseudoFrameForTable(Frame* frame, bool isBefore = true)
     return pseudoFrame;
 }
 
+static ComputedStyle* createStyleForCounter(Node* from)
+{
+    ComputedStyle* counterStyle = new ComputedStyle(from->style());
+    counterStyle->loadResources(from, from->style());
+    counterStyle->arrangeStyleValues(from->style(), from);
+    counterStyle->setDisplay(DisplayValue::InlineDisplayValue);
+    return counterStyle;
+}
+
+void FrameTreeBuilder::createInsideCounterElementIfNeeds(
+    Node* parent, FrameTreeBuilderContext& ctx)
+{
+    DisplayValue display = parent->style()->display();
+    if (display != DisplayValue::ListItemDisplayValue) {
+        return;
+    }
+    if (!parent->style()->hasVisibleListCounter()) {
+        return;
+    }
+    if (parent->style()->listStylePosition() !=
+        ListStylePositionValue::ListStylePositionInside) {
+        return;
+    }
+    Frame* parentFrame = parent->frame();
+    if (!parentFrame) {
+        return;
+    }
+
+    // Set Counter
+    // NOTE Each list item can have different counters
+    int32_t index = ctx.getAndIncreaseCountIndex();
+    STARFISH_ASSERT(parent->style()->listStyleData().typeData()->valid());
+    String* label =
+        parent->style()->listStyleData().typeData()->generateLabel(index);
+
+    // Generate text style
+    ComputedStyle* textStyle = createStyleForCounter(parent);
+    textStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
+
+    // Generate text node
+    // TODO Remove newline in label
+    Text* textNode = new Text(parent->document(), label);
+    textNode->setParentNode(parent);
+    textNode->setStyle(textStyle);
+
+    // Generate frame and append
+    textNode->setFrame(new FrameText(textNode, textNode->style()));
+    parentFrame->appendChild(textNode->frame());
+}
+
 void FrameTreeBuilder::createPseudoElement(
     Node* parent, StyleResolver::PseudoElementType pseudoId,
     FrameTreeBuilderContext& ctx)
 {
     if (!parent->isElement() || parent->isPseudoElement()) {
         return;
-    } else {
-        if (!parent->style()->seenPseudoElement(pseudoId)) {
-            return;
-        }
+    }
+    if (!parent->style()->seenPseudoElement(pseudoId)) {
+        return;
     }
 
     PseudoElement* pseudoElement =
@@ -715,6 +765,12 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     GCVector<FrameInline*> stackedFrameInline;
     Frame* currentFrame;
 
+    if (current->isHTMLOListElement()) {
+        ctx.openCountingContext(current->asHTMLOListElement()->start());
+    } else if (current->isHTMLUListElement()) {
+        ctx.openCountingContext();
+    }
+
     if (ctx.isInFrameFlexFlow()) {
         if (!current->isCharacterData() && current->style()) {
             current->style()->blockify(current, true);
@@ -841,6 +897,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     }
 
     if (needsCreatePseudoElement) {
+        createInsideCounterElementIfNeeds(current, ctx);
         createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
             ctx);
@@ -937,6 +994,9 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             ctx);
     }
 
+    if (current->isHTMLOListElement() || current->isHTMLUListElement()) {
+        ctx.closeCountingContext();
+    }
     return currentFrame;
 }
 

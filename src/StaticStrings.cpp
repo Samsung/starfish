@@ -321,6 +321,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_fontDashSize =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "font-size"));
+    m_start = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "start"));
     m_dirname = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "dirname"));
     m_readonly =
