@@ -2070,6 +2070,10 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("outset");
         case BorderStyleValue::DoubleBorderStyleValue:
             return String::fromUTF8("double");
+        case BorderStyleValue::GrooveBorderStyleValue:
+            return String::fromUTF8("groove");
+        case BorderStyleValue::RidgeBorderStyleValue:
+            return String::fromUTF8("ridge");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -7552,6 +7556,10 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
         m_value.m_borderStyle = BorderStyleValue::DottedBorderStyleValue;
     } else if (STRING_VALUE_IS_STRING("double")) {
         m_value.m_borderStyle = BorderStyleValue::DoubleBorderStyleValue;
+    } else if (STRING_VALUE_IS_STRING("groove")) {
+        m_value.m_borderStyle = BorderStyleValue::GrooveBorderStyleValue;
+    } else if (STRING_VALUE_IS_STRING("ridge")) {
+        m_value.m_borderStyle = BorderStyleValue::RidgeBorderStyleValue;
     } else {
         return false;
     }

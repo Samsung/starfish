@@ -811,6 +811,8 @@ enum BorderStyleValue {
     DoubleBorderStyleValue,
     InsetBorderStyleValue,
     OutsetBorderStyleValue,
+    GrooveBorderStyleValue,
+    RidgeBorderStyleValue,
 };
 
 enum BorderWidthValue {
