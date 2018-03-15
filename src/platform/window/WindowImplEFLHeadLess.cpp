@@ -108,7 +108,7 @@ public:
         PlatformWindow::onIdle();
     }
 
-    bool rendering()
+    virtual bool rendering() override
     {
         m_inRendering = true;
         bool ret = PlatformWindow::rendering();
