@@ -37,9 +37,12 @@ class Node;
 class StyleResolver;
 class SVGElement;
 class PseudoElement;
+class CounterLabelBuilder;
 
 class FrameTreeBuilderContext {
 public:
+    STARFISH_MAKE_STACK_ALLOCATED()
+
     FrameTreeBuilderContext(FrameBlockBox* currentBlockContainer);
     void setCurrentBlockContainer(FrameBlockBox* blockContainer);
     FrameBlockBox* currentBlockContainer();
@@ -54,6 +57,24 @@ public:
     void setIsInFrameGridFlow(bool b);
     bool isInFrameTableFlow() const;
 
+    void openCountingContext(int32_t start = 1)
+    {
+        m_countIndice.push_back(start);
+    }
+
+    void closeCountingContext()
+    {
+        m_countIndice.pop_back();
+    }
+
+    int32_t getAndIncreaseCountIndex()
+    {
+        if (!m_countIndice.size()) {
+            return 0;
+        }
+        return m_countIndice.back()++;
+    }
+
 protected:
     bool m_isInFrameInlineFlow;
     bool m_isInFrameFlexFlow;
@@ -63,6 +84,7 @@ protected:
     std::unordered_map<Node*, FrameInline*, std::hash<Node*>,
                        std::equal_to<Node*>>
         m_frameInlineItem;
+    GCAtomicVector<int32_t> m_countIndice;
 };
 
 class FrameTreeBuilder {
@@ -82,6 +104,8 @@ public:
     static void createPseudoElement(Node* parent,
                                     StyleResolver::PseudoElementType pseudoId,
                                     FrameTreeBuilderContext& ctx);
+    static void createInsideCounterElementIfNeeds(Node* parent,
+                                                  FrameTreeBuilderContext& ctx);
     static ComputedStyle* pseudoStyleForElementInternal(
         Node* node, StyleResolver::PseudoElementType pseudoId,
         ComputedStyle* parentStyle);

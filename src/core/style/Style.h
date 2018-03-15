@@ -2928,6 +2928,7 @@ public:
         PseudoElementAfter,
         PseudoElementFirstLineInherited,
         PseudoElementFormOnly,
+        PseudoElementCounter,
     };
 
     enum Match {

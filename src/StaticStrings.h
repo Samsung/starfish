@@ -342,6 +342,7 @@ public:
     QualifiedName m_cy;
     QualifiedName m_fontDashFamily;
     QualifiedName m_fontDashSize;
+    QualifiedName m_start;
     // xml:base
     QualifiedName m_xmlBase;
     // WAI-ARIA

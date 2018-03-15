@@ -2342,6 +2342,11 @@ public:
         return ListStyleData();
     }
 
+    bool hasVisibleListCounter()
+    {
+        return listStyleData().typeData()->system() != CounterStyle::NoneSystem;
+    }
+
     String* listStyleType()
     {
         return listStyleData().type();
@@ -2352,7 +2357,7 @@ public:
         ensureInheritedRareData()->m_listStyleData.setType(v);
     }
 
-    void setListStyleType(const StyleRuleCounterStyle* v)
+    void setListStyleType(const CounterStyle* v)
     {
         ensureInheritedRareData()->m_listStyleData.setType(v);
     }

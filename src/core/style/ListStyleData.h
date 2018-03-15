@@ -21,7 +21,7 @@
 #define __StarFishListStyleData__
 
 #include "core/style/Style.h"
-#include "core/style/StyleRuleCounterStyle.h"
+#include "core/style/CounterStyle.h"
 
 namespace StarFish {
 
@@ -34,13 +34,13 @@ class ListStyleData : public gc {
 public:
     ListStyleData()
         : m_position(ListStylePositionValue::ListStylePositionOutside)
-        , m_counterStyle(StyleRuleCounterStyle::getDiscCounter())
+        , m_counterStyle(CounterStyle::getDiscCounter())
         , m_image(String::emptyString)
         , m_imageResource(nullptr)
     {
     }
 
-    ListStylePositionValue position()
+    ListStylePositionValue position() const
     {
         return m_position;
     }
@@ -50,7 +50,7 @@ public:
         m_position = v;
     }
 
-    const StyleRuleCounterStyle* typeData() const
+    const CounterStyle* typeData() const
     {
         STARFISH_ASSERT(m_counterStyle);
         return m_counterStyle;
@@ -58,7 +58,7 @@ public:
 
     String* type() const;
     void setType(String* v);
-    void setType(const StyleRuleCounterStyle* v);
+    void setType(const CounterStyle* v);
 
     String* image() const
     {
@@ -87,7 +87,7 @@ public:
 
 private:
     ListStylePositionValue m_position;
-    const StyleRuleCounterStyle* m_counterStyle;
+    const CounterStyle* m_counterStyle;
     String* m_image;
     ImageResource* m_imageResource;
 };
