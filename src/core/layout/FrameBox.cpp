@@ -1780,6 +1780,41 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                        rect.y() + borderTop()),
                         LayoutLocation(rect.x() + borderLeft(),
                                        rect.y() + borderTop()));
+                } else if ((border.top().style() ==
+                            BorderStyleValue::GrooveBorderStyleValue) ||
+                           (border.top().style() ==
+                            BorderStyleValue::RidgeBorderStyleValue)) {
+                    if ((border.top().style() ==
+                         BorderStyleValue::GrooveBorderStyleValue)) {
+                        canvas->setColor(border.top().color().getDarkerColor());
+                    } else {
+                        canvas->setColor(border.top().color());
+                    }
+                    canvas->drawRect(
+                        LayoutLocation(rect.x(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width() -
+                                           (borderRight() / 2),
+                                       rect.y() + (borderTop() / 2)),
+                        LayoutLocation(rect.x() + (borderLeft() / 2),
+                                       rect.y() + (borderTop() / 2)));
+
+                    if ((border.top().style() ==
+                         BorderStyleValue::GrooveBorderStyleValue)) {
+                        canvas->setColor(border.top().color());
+                    } else {
+                        canvas->setColor(border.top().color().getDarkerColor());
+                    }
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + (borderLeft() / 2),
+                                       rect.y() + (borderTop() / 2)),
+                        LayoutLocation(rect.x() + rect.width() -
+                                           (borderRight() / 2),
+                                       rect.y() + (borderTop() / 2)),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + borderTop()));
                 } else if ((border.top().style() !=
                             BorderStyleValue::HiddenBorderStyleValue)) {
                     canvas->drawRect(
@@ -1862,6 +1897,45 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                         LayoutLocation(
                             rect.x() + rect.width() - borderRight() * 2 / 3,
                             rect.y() + rect.height() - borderBottom() * 2 / 3),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()));
+                } else if ((border.right().style() ==
+                            BorderStyleValue::GrooveBorderStyleValue) ||
+                           (border.right().style() ==
+                            BorderStyleValue::RidgeBorderStyleValue)) {
+                    if ((border.right().style() ==
+                         BorderStyleValue::GrooveBorderStyleValue)) {
+                        canvas->setColor(border.top().color());
+                    } else {
+                        canvas->setColor(border.top().color().getDarkerColor());
+                    }
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + rect.width() -
+                                           borderRight() / 2,
+                                       rect.y() + borderTop() / 2),
+                        LayoutLocation(rect.x() + rect.width(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(
+                            rect.x() + rect.width() - borderRight() / 2,
+                            rect.y() + rect.height() - borderBottom() / 2));
+
+                    if ((border.right().style() ==
+                         BorderStyleValue::GrooveBorderStyleValue)) {
+                        canvas->setColor(border.top().color().getDarkerColor());
+                    } else {
+                        canvas->setColor(border.top().color());
+                    }
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + rect.width() -
+                                           borderRight() / 2,
+                                       rect.y() + borderTop() / 2),
+                        LayoutLocation(
+                            rect.x() + rect.width() - borderRight() / 2,
+                            rect.y() + rect.height() - borderBottom() / 2),
                         LayoutLocation(rect.x() + rect.width() - borderRight(),
                                        rect.y() + rect.height() -
                                            borderBottom()));
@@ -1952,6 +2026,46 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                         LayoutLocation(rect.x() + borderLeft() * 2 / 3,
                                        rect.y() + rect.height() -
                                            borderBottom() * 2 / 3));
+                } else if ((border.bottom().style() ==
+                            BorderStyleValue::GrooveBorderStyleValue) ||
+                           (border.bottom().style() ==
+                            BorderStyleValue::RidgeBorderStyleValue)) {
+                    if ((border.bottom().style() ==
+                         BorderStyleValue::GrooveBorderStyleValue)) {
+                        canvas->setColor(border.top().color());
+                    } else {
+                        canvas->setColor(border.top().color().getDarkerColor());
+                    }
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + borderLeft() / 2,
+                                       rect.y() + rect.height() -
+                                           borderBottom() / 2),
+                        LayoutLocation(
+                            rect.x() + rect.width() - borderRight() / 2,
+                            rect.y() + rect.height() - borderBottom() / 2),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x(), rect.y() + rect.height()));
+
+                    if ((border.bottom().style() ==
+                         BorderStyleValue::GrooveBorderStyleValue)) {
+                        canvas->setColor(border.top().color().getDarkerColor());
+                    } else {
+                        canvas->setColor(border.top().color());
+                    }
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(
+                            rect.x() + rect.width() - borderRight() / 2,
+                            rect.y() + rect.height() - borderBottom() / 2),
+                        LayoutLocation(rect.x() + borderLeft() / 2,
+                                       rect.y() + rect.height() -
+                                           borderBottom() / 2));
                 } else if ((border.bottom().style() !=
                             BorderStyleValue::HiddenBorderStyleValue)) {
                     canvas->drawRect(
@@ -2029,6 +2143,41 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                         LayoutLocation(rect.x() + borderLeft() * 2 / 3,
                                        rect.y() + rect.height() -
                                            borderBottom() * 2 / 3));
+                } else if ((border.bottom().style() ==
+                            BorderStyleValue::GrooveBorderStyleValue) ||
+                           (border.bottom().style() ==
+                            BorderStyleValue::RidgeBorderStyleValue)) {
+                    if ((border.bottom().style() ==
+                         BorderStyleValue::GrooveBorderStyleValue)) {
+                        canvas->setColor(border.top().color().getDarkerColor());
+                    } else {
+                        canvas->setColor(border.top().color());
+                    }
+                    canvas->drawRect(
+                        LayoutLocation(rect.x(), rect.y()),
+                        LayoutLocation(rect.x() + borderLeft() / 2,
+                                       rect.y() + borderTop() / 2),
+                        LayoutLocation(rect.x() + borderLeft() / 2,
+                                       rect.y() + rect.height() -
+                                           borderBottom() / 2),
+                        LayoutLocation(rect.x(), rect.y() + rect.height()));
+
+                    if ((border.bottom().style() ==
+                         BorderStyleValue::GrooveBorderStyleValue)) {
+                        canvas->setColor(border.top().color());
+                    } else {
+                        canvas->setColor(border.top().color().getDarkerColor());
+                    }
+                    canvas->drawRect(LayoutLocation(rect.x() + borderLeft() / 2,
+                                                    rect.y() + borderTop() / 2),
+                                     LayoutLocation(rect.x() + borderLeft(),
+                                                    rect.y() + borderTop()),
+                                     LayoutLocation(rect.x() + borderLeft(),
+                                                    rect.y() + rect.height() -
+                                                        borderBottom()),
+                                     LayoutLocation(rect.x() + borderLeft() / 2,
+                                                    rect.y() + rect.height() -
+                                                        borderBottom() / 2));
                 } else if ((border.left().style() !=
                             BorderStyleValue::HiddenBorderStyleValue)) {
                     canvas->drawRect(
