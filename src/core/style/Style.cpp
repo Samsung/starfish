@@ -2052,14 +2052,20 @@ String* CSSStyleValuePair::toString() const
         switch (borderStyleValue()) {
         case BorderStyleValue::NoneBorderStyleValue:
             return String::fromUTF8("none");
+        case BorderStyleValue::HiddenBorderStyleValue:
+            return String::fromUTF8("hidden");
         case BorderStyleValue::SolidBorderStyleValue:
             return String::fromUTF8("solid");
         case BorderStyleValue::DashedBorderStyleValue:
             return String::fromUTF8("dashed");
+        case BorderStyleValue::DottedBorderStyleValue:
+            return String::fromUTF8("dotted");
         case BorderStyleValue::InsetBorderStyleValue:
             return String::fromUTF8("inset");
         case BorderStyleValue::OutsetBorderStyleValue:
             return String::fromUTF8("outset");
+        case BorderStyleValue::DoubleBorderStyleValue:
+            return String::fromUTF8("double");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -7523,6 +7529,8 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
     m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
     if (STRING_VALUE_IS_STRING("none")) {
         m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
+    } else if (STRING_VALUE_IS_STRING("hidden")) {
+        m_value.m_borderStyle = BorderStyleValue::HiddenBorderStyleValue;
     } else if (STRING_VALUE_IS_STRING("solid")) {
         m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
     } else if (STRING_VALUE_IS_STRING("dashed")) {
@@ -7531,6 +7539,10 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
         m_value.m_borderStyle = BorderStyleValue::InsetBorderStyleValue;
     } else if (STRING_VALUE_IS_STRING("outset")) {
         m_value.m_borderStyle = BorderStyleValue::OutsetBorderStyleValue;
+    } else if (STRING_VALUE_IS_STRING("dotted")) {
+        m_value.m_borderStyle = BorderStyleValue::DottedBorderStyleValue;
+    } else if (STRING_VALUE_IS_STRING("double")) {
+        m_value.m_borderStyle = BorderStyleValue::DoubleBorderStyleValue;
     } else {
         return false;
     }

@@ -1013,6 +1013,60 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
     }
 }
 
+void FrameBox::paintDottedLine(Canvas* canvas, const LayoutLocation& p1,
+                               const LayoutLocation& p2,
+                               const LayoutLocation& p3,
+                               const LayoutLocation& p4,
+                               const LayoutLocation& p5,
+                               const LayoutLocation& p6, BoxSide side)
+{
+    // This is chromium's style for dotted.
+    double squares[] = { 1.0, 1.0 };
+    int nsquare = sizeof(squares) / sizeof(squares[0]);
+    double offset = 0.0;
+
+    LayoutUnit x1, x2, y1, y2;
+    LayoutUnit width;
+    if (side == TopSide) {
+        width = borderTop();
+        x1 = p2.x();
+        y1 = p2.y() + width / 2;
+        x2 = p4.x();
+        y2 = p4.y() + width / 2;
+    } else if (side == RightSide) {
+        width = borderRight();
+        x1 = p2.x() - width / 2;
+        y1 = p2.y();
+        x2 = p4.x() - width / 2;
+        y2 = p4.y();
+    } else if (side == BottomSide) {
+        width = borderBottom();
+        x1 = p2.x();
+        y1 = p2.y() - width / 2;
+        x2 = p4.x();
+        y2 = p4.y() - width / 2;
+    } else {
+        width = borderLeft();
+        x1 = p2.x() + width / 2;
+        y1 = p2.y();
+        x2 = p4.x() + width / 2;
+        y2 = p4.y();
+    }
+
+    squares[0] *= width.toDouble();
+    squares[1] *= width.toDouble();
+
+    canvas->drawRect(p1, p2, p3, p3);
+    canvas->save();
+    canvas->setDash(squares, nsquare, offset);
+    canvas->setStrokeWidth(width.toFloat());
+    canvas->moveTo(x1.toDouble(), y1.toDouble());
+    canvas->lineTo(x2.toDouble(), y2.toDouble());
+    canvas->stroke();
+    canvas->restore();
+    canvas->drawRect(p4, p5, p6, p6);
+}
+
 void FrameBox::paintDashedLine(Canvas* canvas, const LayoutLocation& p1,
                                const LayoutLocation& p2,
                                const LayoutLocation& p3,
@@ -1692,7 +1746,42 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                         LayoutLocation(rect.x() + rect.width() - borderRight(),
                                        rect.y() + borderTop()),
                         TopSide);
-                } else {
+                } else if ((border.top().style() ==
+                            BorderStyleValue::DottedBorderStyleValue)) {
+                    paintDottedLine(
+                        canvas, LayoutLocation(rect.x(), rect.y()),
+                        LayoutLocation(rect.x() + borderLeft(), rect.y()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y()),
+                        LayoutLocation(rect.x() + rect.width(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + borderTop()),
+                        TopSide);
+                } else if ((border.top().style() ==
+                            BorderStyleValue::DoubleBorderStyleValue)) {
+                    canvas->drawRect(
+                        LayoutLocation(rect.x(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width() -
+                                           (borderRight() / 3),
+                                       rect.y() + (borderTop() / 3)),
+                        LayoutLocation(rect.x() + (borderLeft() / 3),
+                                       rect.y() + (borderTop() / 3)));
+
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + (borderLeft() * 2 / 3),
+                                       rect.y() + (borderTop() * 2 / 3)),
+                        LayoutLocation(rect.x() + rect.width() -
+                                           (borderRight() * 2 / 3),
+                                       rect.y() + (borderTop() * 2 / 3)),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + borderTop()));
+                } else if ((border.top().style() !=
+                            BorderStyleValue::HiddenBorderStyleValue)) {
                     canvas->drawRect(
                         LayoutLocation(rect.x(), rect.y()),
                         LayoutLocation(rect.x() + rect.width(), rect.y()),
@@ -1733,7 +1822,51 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                        rect.y() + rect.height() -
                                            borderBottom()),
                         RightSide);
-                } else {
+                } else if ((border.right().style() ==
+                            BorderStyleValue::DottedBorderStyleValue)) {
+                    paintDottedLine(
+                        canvas,
+                        LayoutLocation(rect.x() + rect.width(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        RightSide);
+                } else if ((border.right().style() ==
+                            BorderStyleValue::DoubleBorderStyleValue)) {
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + rect.width() -
+                                           borderRight() / 3,
+                                       rect.y() + borderTop() / 3),
+                        LayoutLocation(rect.x() + rect.width(), rect.y()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(
+                            rect.x() + rect.width() - borderRight() / 3,
+                            rect.y() + rect.height() - borderBottom() / 3));
+
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + rect.width() -
+                                           borderRight() * 2 / 3,
+                                       rect.y() + borderTop() * 2 / 3),
+                        LayoutLocation(
+                            rect.x() + rect.width() - borderRight() * 2 / 3,
+                            rect.y() + rect.height() - borderBottom() * 2 / 3),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()));
+                } else if ((border.right().style() !=
+                            BorderStyleValue::HiddenBorderStyleValue)) {
                     canvas->drawRect(
                         LayoutLocation(rect.x() + rect.width() - borderRight(),
                                        rect.y() + borderTop()),
@@ -1775,7 +1908,52 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                        rect.y() + rect.height() -
                                            borderBottom()),
                         BottomSide);
-                } else {
+                } else if (border.bottom().style() ==
+                           BorderStyleValue::DottedBorderStyleValue) {
+                    paintDottedLine(
+                        canvas,
+                        LayoutLocation(rect.x(), rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        BottomSide);
+                } else if ((border.bottom().style() ==
+                            BorderStyleValue::DoubleBorderStyleValue)) {
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + borderLeft() / 3,
+                                       rect.y() + rect.height() -
+                                           borderBottom() / 3),
+                        LayoutLocation(
+                            rect.x() + rect.width() - borderRight() / 3,
+                            rect.y() + rect.height() - borderBottom() / 3),
+                        LayoutLocation(rect.x() + rect.width(),
+                                       rect.y() + rect.height()),
+                        LayoutLocation(rect.x(), rect.y() + rect.height()));
+
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(rect.x() + rect.width() - borderRight(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(
+                            rect.x() + rect.width() - borderRight() * 2 / 3,
+                            rect.y() + rect.height() - borderBottom() * 2 / 3),
+                        LayoutLocation(rect.x() + borderLeft() * 2 / 3,
+                                       rect.y() + rect.height() -
+                                           borderBottom() * 2 / 3));
+                } else if ((border.bottom().style() !=
+                            BorderStyleValue::HiddenBorderStyleValue)) {
                     canvas->drawRect(
                         LayoutLocation(rect.x() + borderLeft(),
                                        rect.y() + rect.height() -
@@ -1815,7 +1993,44 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                        rect.y() + rect.height() -
                                            borderBottom()),
                         LeftSide);
-                } else {
+                } else if (border.left().style() ==
+                           BorderStyleValue::DottedBorderStyleValue) {
+                    paintDottedLine(
+                        canvas, LayoutLocation(rect.x(), rect.y()),
+                        LayoutLocation(rect.x(), rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x(), rect.y() + rect.height() -
+                                                     borderBottom()),
+                        LayoutLocation(rect.x(), rect.y() + rect.height()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LeftSide);
+                } else if ((border.bottom().style() ==
+                            BorderStyleValue::DoubleBorderStyleValue)) {
+                    canvas->drawRect(
+                        LayoutLocation(rect.x(), rect.y()),
+                        LayoutLocation(rect.x() + borderLeft() / 3,
+                                       rect.y() + borderTop() / 3),
+                        LayoutLocation(rect.x() + borderLeft() / 3,
+                                       rect.y() + rect.height() -
+                                           borderBottom() / 3),
+                        LayoutLocation(rect.x(), rect.y() + rect.height()));
+
+                    canvas->drawRect(
+                        LayoutLocation(rect.x() + borderLeft() * 2 / 3,
+                                       rect.y() + borderTop() * 2 / 3),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + borderTop()),
+                        LayoutLocation(rect.x() + borderLeft(),
+                                       rect.y() + rect.height() -
+                                           borderBottom()),
+                        LayoutLocation(rect.x() + borderLeft() * 2 / 3,
+                                       rect.y() + rect.height() -
+                                           borderBottom() * 2 / 3));
+                } else if ((border.left().style() !=
+                            BorderStyleValue::HiddenBorderStyleValue)) {
                     canvas->drawRect(
                         LayoutLocation(rect.x(), rect.y()),
                         LayoutLocation(rect.x() + borderLeft(),
