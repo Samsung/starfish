@@ -126,6 +126,15 @@ bool HTMLTextAreaElement::supportsFocus() const
     return isMutable();
 }
 
+bool HTMLTextAreaElement::isPlaceholderVisible()
+{
+    if (!placeholder()->equals(String::emptyString) &&
+        value()->equals(String::emptyString)) {
+        return true;
+    }
+    return false;
+}
+
 void HTMLTextAreaElement::reset()
 {
     // The reset algorithm for textarea elements is to set the dirty value flag

@@ -737,6 +737,11 @@ void HTMLInputElement::didStateChanged(int oldState, int newState)
     }
 }
 
+bool HTMLInputElement::isPlaceholderVisible()
+{
+    return shouldUsePlaceholder();
+}
+
 bool HTMLInputElement::supportsFocus()
 {
     return !type()->equals("hidden");

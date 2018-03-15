@@ -75,6 +75,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_lastOfTypeSelector = AtomicString::createAtomicString(sf, "last-of-type");
     m_onlyChildSelector = AtomicString::createAtomicString(sf, "only-child");
     m_onlyOfTypeSelector = AtomicString::createAtomicString(sf, "only-of-type");
+    m_placeholderShownSelector =
+        AtomicString::createAtomicString(sf, "placeholder-shown");
     m_emptySelector = AtomicString::createAtomicString(sf, "empty");
     m_firstLineSelector = AtomicString::createAtomicString(sf, "first-line");
     m_firstLetterSelector =

@@ -206,6 +206,7 @@ public:
     AtomicString m_lastOfTypeSelector;
     AtomicString m_onlyChildSelector;
     AtomicString m_onlyOfTypeSelector;
+    AtomicString m_placeholderShownSelector;
     AtomicString m_emptySelector;
     AtomicString m_firstLineSelector;
     AtomicString m_firstLetterSelector;

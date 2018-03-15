@@ -1133,6 +1133,8 @@ CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(StarFish* sf,
         return CSSSelector::PseudoType::PseudoOnlyChild;
     } else if (name == sstrs->m_onlyOfTypeSelector) {
         return CSSSelector::PseudoType::PseudoOnlyOfType;
+    } else if (name == sstrs->m_placeholderShownSelector) {
+        return CSSSelector::PseudoType::PseudoPlaceholderShown;
     } else if (name == sstrs->m_emptySelector) {
         return CSSSelector::PseudoType::PseudoEmpty;
     } else if (name == sstrs->m_firstLineSelector) {
@@ -1289,7 +1291,9 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
     case PseudoOnlyOfType:
     /*
         case PseudoOptional:
-        case PseudoPlaceholderShown:
+    */
+    case PseudoPlaceholderShown:
+    /*
         case PseudoOutOfRange:
         case PseudoPastCue:
         case PseudoReadOnly:
@@ -6989,6 +6993,11 @@ bool StyleResolver::checkPseudoClass(Element* element,
                                                      StyleDamageFromDOMTree);
         return element->parentElement() && isFirstOfType(element) &&
                isLastOfType(element);
+    case CSSSelector::PseudoType::PseudoPlaceholderShown:
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromAttribute);
+        return element->isHTMLElement() && element->isHTMLFormControl() &&
+               element->asHTMLFormObject()->isPlaceholderVisible();
     case CSSSelector::PseudoType::PseudoEmpty:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);

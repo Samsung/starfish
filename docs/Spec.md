@@ -1055,8 +1055,9 @@ This section describes the complete list of supported HTML tags and attributes b
 | | | [att*=val] | a[href*="w3schools"] | Selects every \<a\> element whose href attribute value contains the substring "w3schools" |
 | | Pseudo-classes | :hover | a:hover | Selects links on mouse over |
 | | | :active | a:active | Selects the active link |
-| | | :disabled | input:disabled | Selects every disabled <input> element |
-| | | :enabled | input:enabled | Selects every enabled <input> element |
+| | | :disabled | input:disabled | Selects every disabled \<input\> element |
+| | | :enabled | input:enabled | Selects every enabled \<input\> element |
+| | | :placeholder-shown | :placeholder-shown | Selects any \<input\> or \<textarea\> element that is currently displaying placeholder text. |
 | | | :focus | input:focus | Selects the input element which has focus |
 | | | :target | #news:target | Selects the current active #news element (clicked on a URL containing that anchor name) |
 | | | :dir() | :dir(rtl) | Selects any element with right-to-left text |
