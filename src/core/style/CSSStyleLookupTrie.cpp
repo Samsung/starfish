@@ -1026,6 +1026,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "boxSizing", 9) == 0) {
                 return CSSStyleKind::BoxSizing;
             }
+            if (memcmp(data, "boxShadow", 9) == 0) {
+                return CSSStyleKind::BoxShadow;
+            }
             break;
         case 't':
             if (memcmp(data, "transform", 9) == 0) {

@@ -9538,6 +9538,7 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
                     temp.setValueKind(
                         CSSStyleValuePair::ValueKind::StringValueKind);
                     temp.setStringValue(String::fromUTF8(tokens[j].data()));
+                    shadow.multiValue()->push_back(temp);
                     hasInset = true;
                     currentShadowSize++;
                     j++;
