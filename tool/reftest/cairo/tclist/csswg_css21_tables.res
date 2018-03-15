@@ -16,7 +16,7 @@ test/cairo/reftest/csswg-test/css21_original/tables/border-collapse-002.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/border-collapse-applies-to-002.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/border-collapse-applies-to-003.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/border-collapse-applies-to-005.htm
-test/cairo/reftest/csswg-test/css21_original/tables/border-collapse-applies-to-006.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/border-collapse-applies-to-006.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/border-collapse-applies-to-007.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/border-collapse-applies-to-008.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/border-collapse-applies-to-009.htm

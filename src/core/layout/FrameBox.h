@@ -679,6 +679,10 @@ public:
                          const LayoutLocation& p2, const LayoutLocation& p3,
                          const LayoutLocation& p4, const LayoutLocation& p5,
                          const LayoutLocation& p6, BoxSide side);
+    void paintDottedLine(Canvas* canvas, const LayoutLocation& p1,
+                         const LayoutLocation& p2, const LayoutLocation& p3,
+                         const LayoutLocation& p4, const LayoutLocation& p5,
+                         const LayoutLocation& p6, BoxSide side);
 
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
