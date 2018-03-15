@@ -43,6 +43,8 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
     virtual void didStateChanged(int oldState, int newState) override;
+    bool isPlaceholderVisible() override;
+
     // 4.4 Interface Node
     virtual QualifiedName name();
 

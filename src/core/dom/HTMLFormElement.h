@@ -109,6 +109,8 @@ public:
                                      bool attributeRemoved) override;
     virtual void didNodeInsertedToDocumentTree() override;
 
+    virtual bool isPlaceholderVisible();
+
 protected:
     HTMLFormControl(Document* document, bool supportTabIndex = true);
     void fireSubmitEvent();

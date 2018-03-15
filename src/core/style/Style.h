@@ -2640,6 +2640,7 @@ public:
         PseudoLastOfType,
         PseudoOnlyChild,
         PseudoOnlyOfType,
+        PseudoPlaceholderShown,
         PseudoFirstLine,
         PseudoFirstLetter,
         PseudoNthChild,

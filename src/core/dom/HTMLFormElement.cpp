@@ -326,6 +326,11 @@ void HTMLFormControl::didNodeInsertedToDocumentTree()
     }
 }
 
+bool HTMLFormControl::isPlaceholderVisible()
+{
+    return false;
+}
+
 bool HTMLFormControl::isButton(HTMLFormControl* node)
 {
     if (node->type()->equals("submit") || node->type()->equals("button") ||

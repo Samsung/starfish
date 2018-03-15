@@ -41,6 +41,8 @@ public:
     void reset() override;
     bool supportsFocus() const override;
     bool isHTMLTextAreaElement() const override;
+    bool isPlaceholderVisible() override;
+
     QualifiedName name() override;
     Node* clone() override;
     String* type() override;
