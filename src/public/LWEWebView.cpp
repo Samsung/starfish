@@ -30,8 +30,55 @@
 #include "core/dom/Document.h"
 #include "binding/ScriptWrappable.h"
 #include "JavaScriptNativeHandler.h"
+#include "core/modules/threading/Thread.h"
+#include "core/dom/MouseEvent.h"
+#include "core/dom/KeyboardEvent.h"
 
 #include <EscargotPublic.h>
+
+#ifdef PORT_WINDOW_BACKEND_ANDROID
+#include <jni.h>
+#include <android/log.h>
+#include <android/bitmap.h>
+
+#define LOG_TAG "StarFish"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+
+struct WindowGlue {
+    JNIEnv* m_env;
+    jclass m_clazz;
+    jmethodID m_startTimer;
+    jmethodID m_cancelTimer;
+    jmethodID m_requestRender;
+    jmethodID m_onLoadResource;
+    jmethodID m_onReceivedError;
+    jmethodID m_onPageFinished;
+    jmethodID m_onPageStarted;
+    LWE::WebViewClient* m_webViewClient;
+    WindowGlue()
+    {
+        m_startTimer = m_requestRender = 0;
+    }
+} g_WindowGlue;
+JavaVM* g_jvm;
+
+typedef bool (*TimerCallback)(int uid, void* data);
+int startTimer(int ms, TimerCallback pointer, void* data);
+void cancelTimer(int uid);
+
+void callOnLoadResourceHandler(const char* url);
+void callOnReceivedError(int errorCode, bool canGoBack, bool canGoForward);
+void callOnPageFinished(const char* url, bool canGoBack, bool canGoForward);
+void callOnPageStarted(const char* url, bool canGoBack, bool canGoForward);
+
+extern unsigned char* g_androidBitmapAddress;
+extern size_t g_androidBitmapWidth;
+extern size_t g_androidBitmapHeight;
+extern size_t g_androidBitmapStride;
+
+#endif
 
 #define TO_STARFISH(ptr) ((StarFish::StarFish*)ptr)
 #define TO_HISTORY(ptr)         \
@@ -388,4 +435,571 @@ void WebView::SetWebViewClient(LWE::WebViewClient* client)
                                                       url->toUTF8NonGCString());
             });
 }
+
+void* WebView::getInternalPtr()
+{
+    return m_starfish;
 }
+}
+
+#ifdef PORT_WINDOW_BACKEND_ANDROID
+
+using namespace StarFish;
+
+static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
+                            const char signature[])
+{
+    jmethodID m = env->GetStaticMethodID(clazz, name, signature);
+    if (!m) {
+        LOGE("Could not find Java method %s\n", name);
+    }
+    return m;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
+                                                        jobject thiz)
+{
+    LOGI(
+        "Java_com_samsung_android_mobileservice_lwe_WebView_init called %p "
+        "%p",
+        env, thiz);
+
+    if (g_jvm) {
+        return;
+    }
+    env->GetJavaVM(&g_jvm);
+    jclass clazz =
+        env->FindClass("com/samsung/android/mobileservice/lwe/WebView");
+    g_WindowGlue.m_clazz = (jclass)env->NewGlobalRef(clazz);
+    g_WindowGlue.m_env = env;
+    g_WindowGlue.m_startTimer = GetJMethod(env, clazz, "startTimer", "(III)I");
+    g_WindowGlue.m_cancelTimer = GetJMethod(env, clazz, "cancelTimer", "(I)V");
+    g_WindowGlue.m_requestRender =
+        GetJMethod(env, clazz, "requestRender", "()V");
+
+    g_WindowGlue.m_onLoadResource =
+        GetJMethod(env, clazz, "onLoadResource", "(Ljava/lang/String;)V");
+    g_WindowGlue.m_onReceivedError =
+        GetJMethod(env, clazz, "onReceivedError", "(IZZ)V");
+    g_WindowGlue.m_onPageFinished =
+        GetJMethod(env, clazz, "onPageFinished", "(Ljava/lang/String;ZZ)V");
+    g_WindowGlue.m_onPageStarted =
+        GetJMethod(env, clazz, "onPageStarted", "(Ljava/lang/String;ZZ)V");
+
+    env->DeleteLocalRef(clazz);
+
+    LOGI("Java_com_samsung_android_mobileservice_lwe_WebView_init call end");
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_serviceQueueTimer(
+    JNIEnv* env, jobject thiz, jint uid, jint fn, jint data)
+{
+    STARFISH_RELEASE_ASSERT(StarFish::isMainThread());
+    TimerCallback tc = (TimerCallback)fn;
+    bool ret = (*tc)(uid, (void*)data);
+    return ret;
+}
+
+void callOnLoadResourceHandler(const char* url)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    LOGE("OnLoadResource");
+    if (!env || !g_WindowGlue.m_onLoadResource) {
+        LOGE("OnLoadResource error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    jstring jstr = env->NewStringUTF(url);
+    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
+                              g_WindowGlue.m_onLoadResource, jstr);
+}
+
+void callOnReceivedError(int errorCode, bool canGoBack, bool canGoForward)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    LOGE("OnReceivedError");
+    if (!env || !g_WindowGlue.m_onReceivedError) {
+        LOGE("OnPageStarted error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    jint jint1 = errorCode;
+    jboolean jboolean1 = canGoBack;
+    jboolean jboolean2 = canGoForward;
+    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
+                              g_WindowGlue.m_onReceivedError, jint1, jboolean1,
+                              jboolean2);
+}
+void callOnPageFinished(const char* url, bool canGoBack, bool canGoForward)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    LOGE("OnPageFinished");
+    if (!env || !g_WindowGlue.m_onPageFinished) {
+        LOGE("OnPageFinished error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    jstring jstr = env->NewStringUTF(url);
+    jboolean jboolean1 = canGoBack;
+    jboolean jboolean2 = canGoForward;
+    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
+                              g_WindowGlue.m_onPageFinished, jstr, jboolean1,
+                              jboolean2);
+}
+void callOnPageStarted(const char* url, bool canGoBack, bool canGoForward)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    LOGE("OnPageStarted");
+    if (!env || !g_WindowGlue.m_onPageStarted) {
+        LOGE("OnPageStarted error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    jstring jstr = env->NewStringUTF(url);
+    jboolean jboolean1 = canGoBack;
+    jboolean jboolean2 = canGoForward;
+
+    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
+                              g_WindowGlue.m_onPageStarted, jstr, jboolean1,
+                              jboolean2);
+}
+
+int startTimer(int ms, TimerCallback pointer, void* data)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+
+    // double check it's all ok
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        // std::cout << "GetEnv: not attached" << std::endl;
+        // LOGE("GetEnv: not attached");
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            // std::cout << "Failed to attach" << std::endl;
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_startTimer) {
+        LOGE("signalQueueTimer error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    int ret = env->CallStaticIntMethod(g_WindowGlue.m_clazz,
+                                       g_WindowGlue.m_startTimer, ms,
+                                       (long)pointer, (long)data);
+
+    return ret;
+}
+
+void cancelTimer(int uid)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+
+    // double check it's all ok
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        // std::cout << "GetEnv: not attached" << std::endl;
+        // LOGE("GetEnv: not attached");
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            // std::cout << "Failed to attach" << std::endl;
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    // LOGE("cancelTimer");
+    if (!env || !g_WindowGlue.m_cancelTimer) {
+        LOGE("cancel error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    env->CallStaticVoidMethod(g_WindowGlue.m_clazz, g_WindowGlue.m_cancelTimer,
+                              uid);
+}
+
+void requestRender()
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+
+    // double check it's all ok
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        // std::cout << "GetEnv: not attached" << std::endl;
+        // LOGE("GetEnv: not attached");
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            // std::cout << "Failed to attach" << std::endl;
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    // LOGE("requestRender");
+    if (!env || !g_WindowGlue.m_requestRender) {
+        LOGE("reuqest render error");
+        return;
+    }
+
+    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
+                              g_WindowGlue.m_requestRender);
+}
+
+extern "C" JNIEXPORT jlong JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_Create(
+    JNIEnv* env, jobject thiz, jint w, jint h, jfloat devicePixelRatio,
+    jstring jua)
+{
+    ScreenInfo info;
+    info.rect.setWidth(w);
+    info.rect.setHeight(h);
+    info.availableRect.setWidth(w);
+    info.availableRect.setHeight(h);
+    info.deviceScaleFactor = devicePixelRatio;
+
+    const char* locale = "ko-KR";
+    const char* timezoneID = "Asia/Seoul";
+    float defaultFontSizeMultiplier = 1;
+
+    const char* cstr = env->GetStringUTFChars(jua, NULL);
+    String* ua = String::fromUTF8(cstr);
+
+    StarFish::StarFish* starfish = new (NoGC) StarFish::StarFish(
+        (StarFish::StarFishStartUpFlag)0, locale, timezoneID, nullptr, w, h, 0,
+        0, defaultFontSizeMultiplier, String::fromUTF8("Roboto"), info, "", "",
+        nullptr, ua);
+
+    env->ReleaseStringUTFChars(jua, cstr);
+
+    LWE::WebView* webView = LWE::WebView::Create(starfish);
+
+    class AndroidWebViewClient : public LWE::WebViewClient {
+        virtual void OnReceivedError(LWE::WebView* view,
+                                     LWE::ResourceError error) override
+        {
+            callOnReceivedError(error.GetErrorCode(), view->CanGoBack(),
+                                view->CanGoBack());
+        }
+        virtual void OnPageFinished(LWE::WebView* view,
+                                    std::string url) override
+        {
+            callOnPageFinished(url.c_str(), view->CanGoBack(),
+                               view->CanGoBack());
+        }
+        virtual void OnPageStarted(LWE::WebView* view, std::string url) override
+        {
+            callOnPageStarted(url.c_str(), view->CanGoBack(),
+                              view->CanGoBack());
+        }
+        virtual void OnLoadResource(LWE::WebView* view,
+                                    std::string url) override
+        {
+            callOnLoadResourceHandler(url.c_str());
+        }
+    };
+    AndroidWebViewClient* client = new AndroidWebViewClient();
+    webView->SetWebViewClient(client);
+    g_WindowGlue.m_webViewClient = client;
+
+    return (jlong)webView;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_Destroy(JNIEnv* env,
+                                                           jobject thiz,
+                                                           jlong wv)
+{
+    LWE::WebView* webView = (LWE::WebView*)wv;
+    webView->Destroy();
+    delete g_WindowGlue.m_webViewClient;
+    g_WindowGlue.m_webViewClient = nullptr;
+    delete webView;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_resizeWebView(JNIEnv* env,
+                                                                 jobject thiz,
+                                                                 jlong sf,
+                                                                 jint w, jint h)
+{
+    LWE::WebView* webView = (LWE::WebView*)sf;
+    ((StarFish::StarFish*)webView->getInternalPtr())
+        ->platformWindow()
+        ->resizeTo(w, h);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_loadUrl(JNIEnv* env,
+                                                           jobject thiz,
+                                                           jlong wv,
+                                                           jstring url)
+{
+    const char* nativeString = env->GetStringUTFChars(url, 0);
+    std::string urlString = std::string(nativeString);
+    env->ReleaseStringUTFChars(url, nativeString);
+
+    LWE::WebView* webView = (LWE::WebView*)wv;
+    webView->LoadURL(urlString);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_loadData(JNIEnv* env,
+                                                            jobject thiz,
+                                                            jlong wv,
+                                                            jstring data)
+{
+    const char* nativeString = env->GetStringUTFChars(data, 0);
+    std::string dataString = std::string(nativeString);
+    env->ReleaseStringUTFChars(data, nativeString);
+
+    LWE::WebView* webView = (LWE::WebView*)wv;
+    webView->LoadData(dataString);
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_EvaluateJavaScript(
+    JNIEnv* env, jobject thiz, jlong wv, jstring data)
+{
+    const char* nativeString = env->GetStringUTFChars(data, 0);
+    std::string dataString = std::string(nativeString);
+    env->ReleaseStringUTFChars(data, nativeString);
+
+    LWE::WebView* webView = (LWE::WebView*)wv;
+    std::string result = webView->EvaluateJavaScript(dataString);
+    jstring jstr = env->NewStringUTF(result.c_str());
+    return jstr;
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_getDefaultUserAgent(
+    JNIEnv* env, jobject thiz)
+{
+    std::string result = USER_AGENT(STARFISH_NAME, VERSION);
+    jstring jstr = env->NewStringUTF(result.c_str());
+    return jstr;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_GoBack(JNIEnv* env,
+                                                          jobject thiz,
+                                                          jlong data)
+{
+    LWE::WebView* webView = (LWE::WebView*)data;
+    webView->GoBack();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_GoForward(JNIEnv* env,
+                                                             jobject thiz,
+                                                             jlong data)
+{
+    LWE::WebView* webView = (LWE::WebView*)data;
+    webView->GoForward();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_Reload(JNIEnv* env,
+                                                          jobject thiz,
+                                                          jlong data)
+{
+    LWE::WebView* webView = (LWE::WebView*)data;
+    webView->Reload();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_StopLoading(JNIEnv* env,
+                                                               jobject thiz,
+                                                               jlong data)
+{
+    LWE::WebView* webView = (LWE::WebView*)data;
+    webView->StopLoading();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_ClearHistory(JNIEnv* env,
+                                                                jobject thiz,
+                                                                jlong data)
+{
+    LWE::WebView* webView = (LWE::WebView*)data;
+    webView->ClearHistory();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_rendering(JNIEnv* env,
+                                                             jobject thiz,
+                                                             jlong wv,
+                                                             jobject bitmap)
+{
+    LWE::WebView* webView = (LWE::WebView*)wv;
+
+    int ret;
+    AndroidBitmapInfo info;
+    if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+        return;
+    }
+
+    if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        LOGE("Bitmap format is not RGBA_8888 !");
+        return;
+    }
+
+    void* pixels;
+    if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
+        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+    }
+
+    g_androidBitmapAddress = (unsigned char*)pixels;
+    g_androidBitmapWidth = info.width;
+    g_androidBitmapHeight = info.height;
+    g_androidBitmapStride = info.stride;
+
+    ((StarFish::StarFish*)webView->getInternalPtr())
+        ->platformWindow()
+        ->rendering();
+
+    AndroidBitmap_unlockPixels(env, bitmap);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_setUserAgentString(
+    JNIEnv* env, jobject thiz, jlong wv, jstring userAgent)
+{
+    const char* nativeString = env->GetStringUTFChars(userAgent, 0);
+    StarFish::String* uaString = StarFish::String::fromUTF8(nativeString);
+    env->ReleaseStringUTFChars(userAgent, nativeString);
+
+    LWE::WebView* webView = (LWE::WebView*)wv;
+    ((StarFish::StarFish*)webView->getInternalPtr())
+        ->setCustomUserAgentString(uaString);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_setCacheMode(JNIEnv* env,
+                                                                jobject thiz,
+                                                                jlong wv,
+                                                                jint mode)
+{
+    LWE::WebView* webView = (LWE::WebView*)wv;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_dispatchMouseDown(
+    JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
+{
+    LWE::WebView* webView = (LWE::WebView*)data;
+    PlatformWindow* sf =
+        (PlatformWindow*)((StarFish::StarFish*)webView->getInternalPtr())
+            ->platformWindow();
+    StarFishEnterer enter(sf->starFish());
+    MouseData mdata(MouseData::MouseButtonValue::LeftButton,
+                    MouseData::MouseButtonsValue::LeftButtonDown,
+                    x / sf->starFish()->screenInfo().deviceScaleFactor,
+                    y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
+    sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
+    // sf->m_isMouseLbuttonDown = true;
+
+    LOGE("Mouse down=%f %f", x, y);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_dispatchMouseMove(
+    JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
+{
+    LWE::WebView* webView = (LWE::WebView*)data;
+    PlatformWindow* sf =
+        (PlatformWindow*)((StarFish::StarFish*)webView->getInternalPtr())
+            ->platformWindow();
+
+    StarFishEnterer enter(sf->starFish());
+    // unsigned char buttons = sf->m_isMouseLbuttonDown
+    //                       ?
+    //                       MouseData::MouseButtonsValue::LeftButtonDown
+    //                       : 0;
+    unsigned char buttons = MouseData::MouseButtonsValue::LeftButtonDown;
+    MouseData mdata(0, buttons,
+                    x / sf->starFish()->screenInfo().deviceScaleFactor,
+                    y / sf->starFish()->screenInfo().deviceScaleFactor, 0);
+    sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
+
+    LOGE("Mouse move=%f %f", x, y);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_dispatchMouseUp(
+    JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
+{
+    LWE::WebView* webView = (LWE::WebView*)data;
+    PlatformWindow* sf =
+        (PlatformWindow*)((StarFish::StarFish*)webView->getInternalPtr())
+            ->platformWindow();
+
+    StarFishEnterer enter(sf->starFish());
+    MouseData mdata(MouseData::MouseButtonValue::NoButton,
+                    MouseData::MouseButtonsValue::NoButtonDown,
+                    x / sf->starFish()->screenInfo().deviceScaleFactor,
+                    y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
+    sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
+    // sf->m_isMouseLbuttonDown = false;
+
+    LOGE("Mouse up=%f %f", x, y);
+}
+
+#endif

@@ -267,7 +267,7 @@ public:
 #endif
     }
 
-    bool rendering()
+    virtual bool rendering() override
     {
         m_isEvasFlushed = false;
         m_inRendering = true;

@@ -83,6 +83,10 @@ public:
 	void SetSettings(Settings setttings);
 	void RemoveJavascriptInterface(std::string exposedObjectName, std::string jsFunctionName);
 	void SetWebViewClient(WebViewClient* client);
+
+	// Internal API
+	void* getInternalPtr();
+
 protected:
 	WebView(void* starFish);
 
@@ -90,6 +94,10 @@ private:
 	void* m_starfish;
 	WebViewClient* m_webViewClient;
 };
-
 }
+
+#ifdef PORT_WINDOW_BACKEND_ANDROID
+	void requestRender();
+#endif
+
 #endif

@@ -90,7 +90,7 @@ public:
     void dispatchCompositionEvent(CompositionEventKind kind, String* data,
                                   Node* node = nullptr);
 
-    bool rendering();
+    virtual bool rendering();
     void pause();
     void resume();
     virtual void close();
