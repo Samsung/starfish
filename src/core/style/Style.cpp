@@ -967,12 +967,13 @@ String* CSSSelectorList::selectorText(CSSSelectorList* list, unsigned idx,
             }
             case CSSSelector::PseudoDir:
             case CSSSelector::PseudoLang:
-                str.appendChar('(');
                 str.appendString(pcs->argument());
                 str.appendChar(')');
                 break;
             case CSSSelector::PseudoNot:
                 STARFISH_ASSERT(pcs->pseudoSelectorList().size() > 0);
+                str.appendString(pcs->pseudoSelectorList().selectorText());
+                str.appendChar(')');
                 break;
             default:
                 break;
