@@ -1051,6 +1051,7 @@ class CSSStyleDeclaration;
     F(Clear, clear, "clear")                                                 \
     F(BorderImageSlice, borderImageSlice, "border-image-slice")              \
     F(BorderImageSource, borderImageSource, "border-image-source")           \
+    F(BorderImageRepeat, borderImageRepeat, "border-image-repeat")           \
     F(BorderImageWidth, borderImageWidth, "border-image-width")              \
     F(BorderTopColor, borderTopColor, "border-top-color")                    \
     F(BorderRightColor, borderRightColor, "border-right-color")              \
@@ -1347,6 +1348,7 @@ public:
 
         BorderStyleValueKind,
         BorderWidthValueKind,
+        BorderImageRepeatValueKind,
 
         // table
         BorderCollapseValueKind,
@@ -1562,6 +1564,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == UnicodeBidiValueKind);
         return m_value.m_unicodeBidi;
+    }
+
+    BorderImageRepeatValue borderImageRepeatValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == BorderImageRepeatValueKind);
+        return m_value.m_borderImageRepeat;
     }
 
     BorderStyleValue borderStyleValue() const
@@ -1882,6 +1890,7 @@ public:
         BoxValue m_box;
         BackgroundRepeatValue m_backgroundRepeat;
         BackgroundAttachmentValue m_backgroundAttachment;
+        BorderImageRepeatValue m_borderImageRepeat;
         BorderStyleValue m_borderStyle;
         BorderWidthValue m_borderWidth;
         ValueList* m_multiValue;
@@ -2002,6 +2011,10 @@ public:
         }
         ValueData(BackgroundAttachmentValue v)
             : m_backgroundAttachment(v)
+        {
+        }
+        ValueData(BorderImageRepeatValue v)
+            : m_borderImageRepeat(v)
         {
         }
         ValueData(BorderStyleValue v)
@@ -2263,6 +2276,12 @@ public:
         m_valueKind =
             CSSStyleValuePair::ValueKind::BackgroundAttachmentValueKind;
         m_value.m_backgroundAttachment = val;
+    }
+
+    void setBorderImageRepeatValue(BorderImageRepeatValue val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::BorderImageRepeatValueKind;
+        m_value.m_borderImageRepeat = val;
     }
 
     void setBorderStyleValue(BorderStyleValue val)

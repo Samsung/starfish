@@ -2046,6 +2046,19 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::BorderImageRepeatValueKind:
+        switch (borderImageRepeatValue()) {
+        case BorderImageRepeatValue::StretchValue:
+            return String::fromUTF8("stretch");
+        case BorderImageRepeatValue::RepeatValue:
+            return String::fromUTF8("repeat");
+        case BorderImageRepeatValue::RoundValue:
+            return String::fromUTF8("round");
+        case BorderImageRepeatValue::SpaceValue:
+            return String::fromUTF8("space");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
         break;
     case CSSStyleValuePair::ValueKind::OverflowValueKind:
         switch (overflowValue()) {
@@ -4940,6 +4953,36 @@ void StyleResolver::apply(Element* element,
                 STARFISH_ASSERT(CSSStyleValuePair::ValueKind::UrlValueKind ==
                                 cssValues[k].valueKind());
                 style->setBorderImageSource(cssValues[k].urlValue(origin));
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::BorderImageRepeat:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                BorderImage borderImage = parentStyle->border().image();
+                style->setBorderImageRepeatX(borderImage.repeatX());
+                style->setBorderImageRepeatY(borderImage.repeatY());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->setBorderImageRepeatX(
+                    BorderImageRepeatValue::StretchValue);
+                style->setBorderImageRepeatY(
+                    BorderImageRepeatValue::StretchValue);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::ValueListKind) {
+                ValueList* list = cssValues[k].multiValue();
+                if (list->size() == 1) {
+                    style->setBorderImageRepeatX(
+                        (*list)[0].borderImageRepeatValue());
+                    style->setBorderImageRepeatY(
+                        (*list)[0].borderImageRepeatValue());
+                } else if (list->size() == 2) {
+                    style->setBorderImageRepeatX(
+                        (*list)[0].borderImageRepeatValue());
+                    style->setBorderImageRepeatY(
+                        (*list)[1].borderImageRepeatValue());
+                }
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
         case CSSStyleValuePair::KeyKind::BorderImageWidth:
@@ -8314,6 +8357,38 @@ bool CSSStyleValuePair::updateValueContent(const CSSTokenVector& tokens)
     }
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     m_value.m_multiValue = values;
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueBorderImageRepeat(
+    const CSSTokenVector& tokens)
+{
+    size_t len = tokens.size();
+    if (len < 1 || len > 2) {
+        return false;
+    }
+    ValueList* values = new ValueList(ValueList::SpaceSeparator);
+    for (size_t i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        CSSStyleValuePair pair;
+        if (STRING_VALUE_IS_STRING("stretch")) {
+            pair.setBorderImageRepeatValue(
+                BorderImageRepeatValue::StretchValue);
+        } else if (STRING_VALUE_IS_STRING("repeat")) {
+            pair.setBorderImageRepeatValue(BorderImageRepeatValue::RepeatValue);
+        } else if (STRING_VALUE_IS_STRING("round")) {
+            pair.setBorderImageRepeatValue(BorderImageRepeatValue::RoundValue);
+        } else if (STRING_VALUE_IS_STRING("space")) {
+            pair.setBorderImageRepeatValue(BorderImageRepeatValue::SpaceValue);
+        } else {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            return false;
+        }
+        values->push_back(pair);
+    }
+
+    setValueList(values);
+
     return true;
 }
 
