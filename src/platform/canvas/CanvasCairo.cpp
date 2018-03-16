@@ -451,7 +451,10 @@ public:
         cairo_matrix_init_identity(&matrix);
         cairo_matrix_scale(&matrix, surfaceWidth / ww, surfaceHeight / hh);
         cairo_pattern_set_matrix(resizePattern, &matrix);
-        cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_FAST);
+        cairo_pattern_set_filter(resizePattern, cairo_get_antialias(m_canvas) >=
+                                                        CAIRO_ANTIALIAS_GOOD
+                                                    ? CAIRO_FILTER_GOOD
+                                                    : CAIRO_FILTER_FAST);
         cairo_pattern_set_extend(resizePattern, CAIRO_EXTEND_PAD);
 
         cairo_set_source(m_canvas, resizePattern);
@@ -520,6 +523,49 @@ public:
         cairo_surface_destroy(image);
     }
 
+    ///////////////////////////////////////////
+    // data: 원본 이미지
+    // src : 원본 이미지에서 Clip할 영역
+    // dst : canvas에 그려질 영역
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
+                           const Unit::Rect& dst, bool xRepeat, bool yRepeat)
+    {
+        cairo_save(m_canvas);
+        if (!lastState().m_visible) {
+            return;
+        }
+
+        bool surfaceWasCreated = false;
+        cairo_surface_t* srcImage = (cairo_surface_t*)data->internalSurface();
+        if (!srcImage) {
+            surfaceWasCreated = true;
+            srcImage = cairo_image_surface_create_for_data(
+                (unsigned char*)data->data(), CAIRO_FORMAT, data->width(),
+                data->height(), data->stride());
+        }
+
+        cairo_surface_t* image = srcImage;
+        if (src.x() || src.y() || src.width() != data->width() ||
+            src.height() != data->height()) {
+            image = cairo_surface_create_for_rectangle(
+                srcImage, src.x(), src.y(), src.width(), src.height());
+        }
+
+        if (xRepeat || yRepeat) {
+            drawRepeatImageCairo(image, dst, src.width(), src.height(), xRepeat,
+                                 yRepeat);
+        } else {
+            drawImageCairo(image, dst, src.width(), src.height());
+        }
+        if (surfaceWasCreated) {
+            cairo_surface_destroy(srcImage);
+        }
+        if (srcImage != image) {
+            cairo_surface_destroy(image);
+        }
+        cairo_restore(m_canvas);
+    }
+
     virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
                                  size_t l, size_t t, size_t r, size_t b,
                                  double scale, bool fill)
@@ -527,6 +573,73 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         drawImage(data, dst);
         return;
+    }
+
+    virtual void drawRepeatImageCairo(cairo_surface_t* localSurface,
+                                      const Unit::Rect& dst, float imageWidth,
+                                      float imageHeight, bool xRepeat,
+                                      bool yRepeat)
+    {
+        if (!lastState().m_visible) {
+            return;
+        }
+
+        INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::drawRepeatImage");
+
+        cairo_save(m_canvas);
+        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
+        ww = dst.width();
+        hh = dst.height();
+
+        float x = 0.0, y = 0.0;
+        if (xRepeat) {
+            x = (dst.x() - floor(dst.x() / imageWidth) * imageWidth) -
+                imageWidth;
+        }
+        if (yRepeat) {
+            y = (dst.y() - floor(dst.y() / imageHeight) * imageHeight) -
+                imageHeight;
+        }
+        xx = dst.x();
+        yy = dst.y();
+
+        cairo_pattern_t* pattern;
+        cairo_matrix_t matrix;
+
+        cairo_surface_t* image = localSurface;
+
+        x = 0.0;
+        y = 0.0;
+        double surfaceWidth = imageWidth, surfaceHeight = imageHeight;
+        if (surfaceWidth && surfaceHeight) {
+            pattern = cairo_pattern_create_for_surface(image);
+
+            // TODO:border-image-slice/border-image-width
+            cairo_matrix_init_scale(&matrix, (float)20 / 15, (float)20 / 15);
+            cairo_matrix_translate(&matrix, -x, -y);
+
+            cairo_pattern_set_matrix(pattern, &matrix);
+            cairo_pattern_set_filter(pattern, cairo_get_antialias(m_canvas) >=
+                                                      CAIRO_ANTIALIAS_GOOD
+                                                  ? CAIRO_FILTER_GOOD
+                                                  : CAIRO_FILTER_FAST);
+            cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
+
+            cairo_translate(m_canvas, xx, yy);
+            cairo_set_source(m_canvas, pattern);
+
+            cairo_rectangle(m_canvas, 0, 0, ww, hh);
+
+            if (lastState().m_opacity < 1) {
+                cairo_clip(m_canvas);
+                cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
+            } else {
+                cairo_fill(m_canvas);
+            }
+
+            cairo_pattern_destroy(pattern);
+        }
+        cairo_restore(m_canvas);
     }
 
     virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,

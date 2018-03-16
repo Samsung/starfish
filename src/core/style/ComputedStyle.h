@@ -1502,7 +1502,7 @@ public:
         m_rareComputedStyleData.ensureBorder()->image().setUrl(url);
     }
 
-    void setBorderImageSlices(LengthBox slices)
+    void setBorderImageSlices(BorderImageLengthBox slices)
     {
         m_rareComputedStyleData.ensureBorder()->image().setSlices(slices);
     }
