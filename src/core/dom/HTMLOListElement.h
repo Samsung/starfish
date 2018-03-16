@@ -20,14 +20,14 @@
 #ifndef __StarFishHTMLOListElement__
 #define __StarFishHTMLOListElement__
 
-#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLListContainer.h"
 
 namespace StarFish {
 
-class HTMLOListElement : public HTMLElement {
+class HTMLOListElement : public HTMLListContainer {
 public:
     HTMLOListElement(Document* document)
-        : HTMLElement(document)
+        : HTMLListContainer(document)
     {
     }
 
@@ -37,21 +37,6 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
-
-    int32_t start();
-    void setStart(int32_t v);
-
-    void didNodeInserted(Node* parent, Node* newChild) override
-    {
-        HTMLElement::didNodeInserted(parent, newChild);
-        setNeedsFrameTreeBuildWithoutSelf();
-    }
-
-    void didNodeRemoved(Node* parent, Node* oldChild) override
-    {
-        HTMLElement::didNodeRemoved(parent, oldChild);
-        setNeedsFrameTreeBuildWithoutSelf();
-    }
 };
 }
 

@@ -286,6 +286,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Box-Sizing
         // Font-Style
         // Flex-Basis
+        // List-Style
         // Text-Align
         // Transition
         // Margin-Top
@@ -315,6 +316,14 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'f':
             if (memcmp(data, "font-style", 10) == 0) {
                 return CSSStyleKind::FontStyle;
+            }
+            if (memcmp(data, "flex-basis", 10) == 0) {
+                return CSSStyleKind::FlexBasis;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "list-style", 10) == 0) {
+                return CSSStyleKind::ListStyle;
             }
             if (memcmp(data, "flex-basis", 10) == 0) {
                 return CSSStyleKind::FlexBasis;
@@ -1096,6 +1105,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "flexBasis", 9) == 0) {
                 return CSSStyleKind::FlexBasis;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "listStyle", 9) == 0) {
+                return CSSStyleKind::ListStyle;
             }
             break;
         case 'm':

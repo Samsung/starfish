@@ -104,8 +104,10 @@ public:
     static void createPseudoElement(Node* parent,
                                     StyleResolver::PseudoElementType pseudoId,
                                     FrameTreeBuilderContext& ctx);
-    static void createInsideCounterElementIfNeeds(Node* parent,
-                                                  FrameTreeBuilderContext& ctx);
+    static void createInsideCounterIfNeeds(Node* parent,
+                                           FrameTreeBuilderContext& ctx);
+    static void createOutsideCounterIfNeeds(Node* parent,
+                                            FrameTreeBuilderContext& ctx);
     static ComputedStyle* pseudoStyleForElementInternal(
         Node* node, StyleResolver::PseudoElementType pseudoId,
         ComputedStyle* parentStyle);

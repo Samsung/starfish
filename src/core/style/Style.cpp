@@ -11327,41 +11327,175 @@ bool CSSStyleValuePair::updateValueMaskSize(const CSSTokenVector& tokens)
     return false;
 }
 
+String* CSSStyleDeclaration::ListStyle()
+{
+    String* t = ListStyleType();
+    String* p = ListStylePosition();
+    String* i = ListStyleImage();
+
+    if (!t->length() || !p->length() || !i->length()) {
+        return String::emptyString;
+    }
+
+    bool isTGlobal = (t == String::initialString) ||
+                     (t == String::inheritString) || (t == String::unsetString);
+    bool isPGlobal = (p == String::initialString) ||
+                     (p == String::inheritString) || (p == String::unsetString);
+    bool isIGlobal = (i == String::initialString) ||
+                     (i == String::inheritString) || (i == String::unsetString);
+
+    if (isTGlobal && isPGlobal && isIGlobal) {
+        if (t == p && p == i) {
+            // e.g. initial initial initial -> intial
+            // e.g. inherit inherit inherit -> inherit
+            // e.g. unset unset unset -> unset
+            return t;
+        }
+        return String::emptyString;
+    }
+
+    // Sequence: position image type
+    StringBuilder builder;
+    builder.appendString(p);
+    builder.appendString(String::spaceString);
+    builder.appendString(i);
+    builder.appendString(String::spaceString);
+    builder.appendString(t);
+    return builder.finalize();
+}
+
+static bool parseListStyleType(const CSSTokenValue& value,
+                               CSSStyleValuePair* pair)
+{
+    String* parsed = String::emptyString;
+    if (STRING_VALUE_IS_NONE()) {
+        pair->setValueKind(CSSStyleValuePair::None);
+    } else if (CSSPropertyParser::parseContentString(value.data(),
+                                                     value.length(), &parsed)) {
+        pair->setValueKind(CSSStyleValuePair::StringValueKind);
+        pair->setValue(parsed);
+    } else {
+        pair->setValueKind(CSSStyleValuePair::ListStyleCounterValueKind);
+        pair->setValue(String::fromUTF8(value.data(), value.length()));
+    }
+    return true;
+}
+
+static bool parseListStylePosition(const CSSTokenValue& value,
+                                   CSSStyleValuePair* pair)
+{
+    pair->setValueKind(CSSStyleValuePair::ListStylePositionValueKind);
+    if (STRING_VALUE_IS_STRING("inside")) {
+        pair->setValue(ListStylePositionValue::ListStylePositionInside);
+        return true;
+    }
+    if (STRING_VALUE_IS_STRING("outside")) {
+        pair->setValue(ListStylePositionValue::ListStylePositionOutside);
+        return true;
+    }
+    return false;
+}
+
+static bool parseListStyleImage(const CSSTokenValue& value,
+                                CSSStyleValuePair* pair)
+{
+    if (STRING_VALUE_IS_NONE()) {
+        pair->setValueKind(CSSStyleValuePair::None);
+        return true;
+    }
+    return CSSPropertyParser::parseUrl(value.data(), pair);
+}
+
+static bool parseListStyleShorhand(const CSSTokenVector& tokens,
+                                   CSSStyleValuePair* type,
+                                   CSSStyleValuePair* position,
+                                   CSSStyleValuePair* image)
+{
+    size_t size = tokens.size();
+    if (size == 1 && tokens[0].equals("none")) {
+        type->setValueKind(CSSStyleValuePair::None);
+        image->setValueKind(CSSStyleValuePair::None);
+        position->setValueKind(CSSStyleValuePair::ListStylePositionValueKind);
+        position->setValue(ListStylePositionValue::ListStylePositionOutside);
+        return true;
+    }
+    if (size != 3) {
+        return false;
+    }
+    bool foundType = false, foundPos = false, foundImg = false;
+    size_t noneCount = 0;
+    // NOTE Consider corner cases
+    //   none none inside       (O)
+    //   url(...) inside inside (O)
+    //   none url(...) inside   (O)
+    for (size_t i = 0; i < size; i++) {
+        const CSSTokenValue& token = tokens[i];
+        if (!foundPos && parseListStylePosition(token, position)) {
+            foundPos = true;
+            continue;
+        }
+        if (!foundImg && parseListStyleImage(token, image)) {
+            if (image->valueKind() != CSSStyleValuePair::None) {
+                foundImg = true;
+            } else {
+                noneCount++;
+            }
+            continue;
+        }
+        // NOTE parseListStyleType() return always true
+        if (!foundType && parseListStyleType(token, type)) {
+            foundType = true;
+            continue;
+        }
+        return false;
+    }
+    if (!foundImg && noneCount > 0) {
+        noneCount--;
+        image->setValueKind(CSSStyleValuePair::None);
+        foundImg = true;
+    }
+    if (!foundType && noneCount > 0) {
+        noneCount--;
+        type->setValueKind(CSSStyleValuePair::None);
+        foundType = true;
+    }
+    return foundPos && foundImg && foundType;
+}
+
+void CSSStyleDeclaration::setListStyle(const char* value, size_t len,
+                                       bool isImportant)
+{
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleImage);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, ",", 1);
+    CSSStyleValuePair c, t, p, i;
+    if (c.updateValueCommon(tokens)) {
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType, c);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition, c);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleImage, c);
+    } else if (parseListStyleShorhand(tokens, &t, &p, &i)) {
+        t.setFlagImportant(isImportant);
+        p.setFlagImportant(isImportant);
+        i.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType, t);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition, p);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleImage, i);
+    }
+}
+
 bool CSSStyleValuePair::updateValueListStyleType(const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
     }
-    const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_NONE()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::None;
-    } else if (STRING_VALUE_IS_STRING("unset")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Unset;
-    } else if (CSSPropertyParser::parseContentString(
-                   value.data(), value.length(), &(m_value.m_stringValue))) {
-        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-    } else {
-        m_value.m_stringValue = String::fromUTF8(value.data(), value.length());
-        m_valueKind = CSSStyleValuePair::ValueKind::ListStyleCounterValueKind;
-    }
-    return true;
-}
-
-bool CSSStyleValuePair::updateValueListStyleImage(const CSSTokenVector& tokens)
-{
-    if (tokens.size() != 1) {
-        return false;
-    }
-    const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_NONE()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::None;
-        return true;
-    }
-    if (STRING_VALUE_IS_STRING("unset")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Unset;
-        return true;
-    }
-    return CSSPropertyParser::parseUrl(value.data(), this);
+    return parseListStyleType(tokens[0], this);
 }
 
 bool CSSStyleValuePair::updateValueListStylePosition(
@@ -11370,23 +11504,15 @@ bool CSSStyleValuePair::updateValueListStylePosition(
     if (tokens.size() != 1) {
         return false;
     }
-    const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("unset")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Unset;
-        return true;
+    return parseListStylePosition(tokens[0], this);
+}
+
+bool CSSStyleValuePair::updateValueListStyleImage(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
     }
-    m_valueKind = CSSStyleValuePair::ValueKind::ListStylePositionValueKind;
-    if (STRING_VALUE_IS_STRING("inside")) {
-        m_value.m_listStylePosition =
-            ListStylePositionValue::ListStylePositionInside;
-        return true;
-    }
-    if (STRING_VALUE_IS_STRING("outside")) {
-        m_value.m_listStylePosition =
-            ListStylePositionValue::ListStylePositionOutside;
-        return true;
-    }
-    return false;
+    return parseListStyleImage(tokens[0], this);
 }
 
 bool CSSStyleValuePair::updateValueUserSelect(const CSSTokenVector& tokens)
