@@ -174,6 +174,62 @@ namespace StarFish {
 
 #define STARFISH_ENUM_MATHML_TAG_NAMES(F) F(math)
 
+#define STARFISH_ENUM_PSEUDO_SELECTORS(F)                      \
+    F(Active, active, "active")                                \
+    F(After, after, "after")                                   \
+    F(AnyLink, anyLink, "any-link")                            \
+    F(Before, before, "before")                                \
+    F(Blank, blank, "blank")                                   \
+    F(Checked, checked, "checked")                             \
+    F(Current, current, "current")                             \
+    F(Default, default, "default")                             \
+    F(Dir, dir, "dir(")                                        \
+    F(Disabled, disabled, "disabled")                          \
+    F(Drop, drop, "drop")                                      \
+    F(Empty, empty, "empty")                                   \
+    F(Enabled, enabled, "enabled")                             \
+    F(FirstChild, firstChild, "first-child")                   \
+    F(FirstLetter, firstLetter, "first-letter")                \
+    F(FirstLine, firstLine, "first-line")                      \
+    F(FirstOfType, firstOfType, "first-of-type")               \
+    F(Focus, focus, "focus")                                   \
+    F(FocusVisible, focusVisible, "focus-visible")             \
+    F(FocusWithin, focusWithin, "focus-within")                \
+    F(Future, future, "future")                                \
+    F(Hover, hover, "hover")                                   \
+    F(InRange, inRange, "in-range")                            \
+    F(Indeterminate, indeterminate, "indeterminate")           \
+    F(Invalid, invalid, "invalid")                             \
+    F(Lang, lang, "lang(")                                     \
+    F(LastChild, lastChild, "last-child")                      \
+    F(LastOfType, lastOfType, "last-of-type")                  \
+    F(Link, link, "link")                                      \
+    F(LocalLink, localLink, "local-link")                      \
+    F(Not, not, "not(")                                        \
+    F(NthChild, nthChild, "nth-child(")                        \
+    F(NthLastChild, nthLastChild, "nth-last-child(")           \
+    F(NthLastOfType, nthLastOfType, "nth-last-of-type(")       \
+    F(NthOfType, nthOfType, "nth-of-type(")                    \
+    F(OnlyChild, onlyChild, "only-child")                      \
+    F(OnlyOfType, onlyOfType, "only-of-type")                  \
+    F(Optional, optional, "optional")                          \
+    F(OutOfRange, outOfRange, "out-of-range")                  \
+    F(Past, past, "past")                                      \
+    F(Paused, paused, "paused")                                \
+    F(PlaceholderShown, placeholderShown, "placeholder-shown") \
+    F(Playing, playing, "playing")                             \
+    F(ReadOnly, readOnly, "read-only")                         \
+    F(ReadWrite, readWrite, "read-write")                      \
+    F(Required, required, "required")                          \
+    F(Root, root, "root")                                      \
+    F(Scope, scope, "scope")                                   \
+    F(Selection, selection, "selection")                       \
+    F(Target, target, "target")                                \
+    F(TargetWithin, targetWithin, "target-within")             \
+    F(UserInvalid, userInvalid, "user-invalid")                \
+    F(Valid, valid, "valid")                                   \
+    F(Visited, visited, "visited")
+
 class StaticStrings : public gc {
     friend class QualifiedName;
     friend class AtomicString;
@@ -199,36 +255,11 @@ public:
     AtomicString m_true;
     AtomicString m_false;
 
-    // Pseudo Selector Name Tokens
-    AtomicString m_firstChildSelector;
-    AtomicString m_firstOfTypeSelector;
-    AtomicString m_lastChildSelector;
-    AtomicString m_lastOfTypeSelector;
-    AtomicString m_onlyChildSelector;
-    AtomicString m_onlyOfTypeSelector;
-    AtomicString m_placeholderShownSelector;
-    AtomicString m_emptySelector;
-    AtomicString m_firstLineSelector;
-    AtomicString m_firstLetterSelector;
-    AtomicString m_nthChildPSelector;
-    AtomicString m_nthLastChildPSelector;
-    AtomicString m_nthOfTypePSelector;
-    AtomicString m_nthLastOfTypePSelector;
-    AtomicString m_linkSelector;
-    AtomicString m_hoverSelector;
-    AtomicString m_focusSelector;
-    AtomicString m_activeSelector;
-    AtomicString m_enabledSelector;
-    AtomicString m_disabledSelector;
-    AtomicString m_targetSelector;
-    AtomicString m_beforeSelector;
-    AtomicString m_afterSelector;
-    AtomicString m_dirPSelector;
-    AtomicString m_langPSelector;
-    AtomicString m_notPSelector;
-    AtomicString m_selectionSelector;
-    AtomicString m_rootSelector;
-    AtomicString m_checkedSelector;
+// Pseudo Selectors
+#define DEFINE_PSEUDO_SELECTORS(name, nameLower, ...) \
+    AtomicString m_##nameLower##Selector;
+    STARFISH_ENUM_PSEUDO_SELECTORS(DEFINE_PSEUDO_SELECTORS)
+#undef DEFINE_PSEUDO_SELECTORS
 
 // HTML Tag Names
 #define DEFINE_HTML_LOCAL_NAMES(name) QualifiedName m_##name##TagName;
