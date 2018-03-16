@@ -36,6 +36,7 @@ class Frame;
 class HTMLCollection;
 class HTMLFormControl;
 class HTMLTextEditable;
+class HTMLListContainer;
 class NodeList;
 class RareNodeMembers;
 class RareElementMembers;
@@ -579,6 +580,17 @@ public:
     {
         STARFISH_ASSERT(isHTMLTextEditable());
         return (HTMLTextEditable*)this;
+    }
+
+    virtual bool isHTMLListContainer() const
+    {
+        return false;
+    }
+
+    HTMLListContainer* asHTMLListContainer() const
+    {
+        STARFISH_ASSERT(isHTMLListContainer());
+        return (HTMLListContainer*)this;
     }
 
     bool isRunningTransformAnimation()

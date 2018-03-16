@@ -1414,6 +1414,23 @@ public:
         nextChild->frameTreeItemModel()->m_previous = newChild;
     }
 
+    void prependChild(Frame* newChild)
+    {
+        STARFISH_ASSERT(!newChild->parent());
+        STARFISH_ASSERT(!newChild->previous());
+        STARFISH_ASSERT(!newChild->next());
+
+        Frame* oldFirst = firstChild();
+        frameTreeItemModel()->m_firstChild = newChild;
+        newChild->setParent(this);
+        if (oldFirst) {
+            oldFirst->frameTreeItemModel()->m_previous = newChild;
+            newChild->frameTreeItemModel()->m_next = oldFirst;
+        } else {
+            frameTreeItemModel()->m_lastChild = newChild;
+        }
+    }
+
     void removeChild(Frame* oldChild)
     {
         STARFISH_ASSERT(oldChild);

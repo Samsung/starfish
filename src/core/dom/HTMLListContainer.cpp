@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -19,11 +19,20 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
-#include "core/dom/HTMLOListElement.h"
+#include "core/dom/HTMLListContainer.h"
 
 namespace StarFish {
-QualifiedName HTMLOListElement::name()
+int32_t HTMLListContainer::start()
 {
-    return starFish()->staticStrings()->m_olTagName;
+    Nullable<String*> v = getAttribute(starFish()->staticStrings()->m_start);
+    if (v.hasValue()) {
+        return String::parseInt(v.getValue());
+    }
+    return 1;
+}
+
+void HTMLListContainer::setStart(int32_t v)
+{
+    setAttribute(starFish()->staticStrings()->m_start, String::fromInt(v));
 }
 }

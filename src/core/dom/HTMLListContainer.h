@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,26 +17,39 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLOListElement__
-#define __StarFishHTMLOListElement__
+#ifndef __StarFishHTMLListContainer__
+#define __StarFishHTMLListContainer__
 
-#include "core/dom/HTMLListContainer.h"
+#include "core/dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLOListElement : public HTMLListContainer {
+class HTMLListContainer : public HTMLElement {
 public:
-    HTMLOListElement(Document* document)
-        : HTMLListContainer(document)
+    HTMLListContainer(Document* document)
+        : HTMLElement(document)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isHTMLOListElement() const override;
+    virtual bool isHTMLListContainer() const override
+    {
+        return true;
+    }
 
-    /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    int32_t start();
+    void setStart(int32_t v);
+
+    virtual void didNodeInserted(Node* parent, Node* newChild) override
+    {
+        HTMLElement::didNodeInserted(parent, newChild);
+        setNeedsFrameTreeBuildWithoutSelf();
+    }
+
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override
+    {
+        HTMLElement::didNodeRemoved(parent, oldChild);
+        setNeedsFrameTreeBuildWithoutSelf();
+    }
 };
 }
 

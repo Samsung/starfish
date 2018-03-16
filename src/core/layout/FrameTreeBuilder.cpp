@@ -24,7 +24,7 @@
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLInputElement.h"
-#include "core/dom/HTMLOListElement.h"
+#include "core/dom/HTMLListContainer.h"
 #include "core/dom/PseudoElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/svg/SVGSVGElement.h"
@@ -543,8 +543,90 @@ static ComputedStyle* createStyleForCounter(Node* from)
     return counterStyle;
 }
 
-void FrameTreeBuilder::createInsideCounterElementIfNeeds(
-    Node* parent, FrameTreeBuilderContext& ctx)
+static FrameBlockBox* findOutsideCounterAttachableFrameBlockBox(Frame* root)
+{
+    if (!root->isAbsolutePositioned() && root->isFrameBlockBox() &&
+        !root->asFrameBlockBox()->hasBlockFlow() && root->hasChildren()) {
+        return root->asFrameBlockBox();
+    }
+    Frame* f = root->firstChild();
+    while (f) {
+        FrameBlockBox* subresult = findOutsideCounterAttachableFrameBlockBox(f);
+        if (subresult) {
+            return subresult;
+        }
+        f = f->next();
+    }
+    return nullptr;
+}
+
+void FrameTreeBuilder::createOutsideCounterIfNeeds(Node* parent,
+                                                   FrameTreeBuilderContext& ctx)
+{
+    DisplayValue display = parent->style()->display();
+    if (display != DisplayValue::ListItemDisplayValue) {
+        return;
+    }
+    if (!parent->style()->hasVisibleListCounter()) {
+        return;
+    }
+    if (parent->style()->listStylePosition() !=
+        ListStylePositionValue::ListStylePositionOutside) {
+        return;
+    }
+
+    // Create counter element and frame
+    Frame* parentFrame = parent->frame();
+    if (!parentFrame) {
+        return;
+    }
+    int32_t index = ctx.getAndIncreaseCountIndex();
+    STARFISH_ASSERT(parent->style()->listStyleData().typeData()->valid());
+    String* label =
+        parent->style()->listStyleData().typeData()->generateLabel(index);
+    LayoutUnit indent = parent->style()->font()->measureText(label);
+
+    // Generate style for PseudoElement
+    ComputedStyle* pseudoStyle = createStyleForCounter(parent);
+    pseudoStyle->setWidth(Length(Length::Fixed, 0));
+    pseudoStyle->setTextIndent(Length(Length::Fixed, -indent.toFloat()));
+    pseudoStyle->setDisplay(DisplayValue::InlineBlockDisplayValue);
+
+    // Generate pseudo element
+    PseudoElement* pseudoElement = new PseudoElement(
+        parent->document(),
+        StyleResolver::PseudoElementType::PseudoElementCounter);
+    pseudoElement->setStyle(pseudoStyle);
+    pseudoElement->setParentNode(parent);
+    pseudoElement->setFrame(new FrameBlockBox(pseudoElement, nullptr));
+
+    // Generate style for Text
+    ComputedStyle* textStyle = createStyleForCounter(pseudoElement);
+    textStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
+
+    // Generate text node
+    Text* textNode = new Text(parent->document(), label);
+    textNode->setParentNode(pseudoElement);
+    textNode->setStyle(textStyle);
+    textNode->setFrame(new FrameText(textNode, nullptr));
+    pseudoElement->frame()->appendChild(textNode->frame());
+
+    // Append frame
+    FrameBlockBox* t = findOutsideCounterAttachableFrameBlockBox(parentFrame);
+    if (t) {
+        t->prependChild(pseudoElement->frame());
+    } else {
+        STARFISH_ASSERT(parentFrame->isFrameBlockBox());
+        FrameBlockBox* wrapper = createAnonymousBlockBox<FrameBlockBox>(
+            parentFrame->asFrameBlockBox(), parent,
+            DisplayValue::BlockDisplayValue);
+        wrapper->appendChild(pseudoElement->frame());
+        parentFrame->prependChild(wrapper);
+    }
+}
+
+void FrameTreeBuilder::createInsideCounterIfNeeds(Node* parent,
+                                                  FrameTreeBuilderContext& ctx)
 {
     DisplayValue display = parent->style()->display();
     if (display != DisplayValue::ListItemDisplayValue) {
@@ -562,8 +644,6 @@ void FrameTreeBuilder::createInsideCounterElementIfNeeds(
         return;
     }
 
-    // Set Counter
-    // NOTE Each list item can have different counters
     int32_t index = ctx.getAndIncreaseCountIndex();
     STARFISH_ASSERT(parent->style()->listStyleData().typeData()->valid());
     String* label =
@@ -765,10 +845,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     GCVector<FrameInline*> stackedFrameInline;
     Frame* currentFrame;
 
-    if (current->isHTMLOListElement()) {
-        ctx.openCountingContext(current->asHTMLOListElement()->start());
-    } else if (current->isHTMLUListElement()) {
-        ctx.openCountingContext();
+    if (current->isHTMLListContainer()) {
+        ctx.openCountingContext(current->asHTMLListContainer()->start());
     }
 
     if (ctx.isInFrameFlexFlow()) {
@@ -897,7 +975,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     }
 
     if (needsCreatePseudoElement) {
-        createInsideCounterElementIfNeeds(current, ctx);
+        createInsideCounterIfNeeds(current, ctx);
         createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
             ctx);
@@ -992,9 +1070,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
             ctx);
+        createOutsideCounterIfNeeds(current, ctx);
     }
 
-    if (current->isHTMLOListElement() || current->isHTMLUListElement()) {
+    if (current->isHTMLListContainer()) {
         ctx.closeCountingContext();
     }
     return currentFrame;

@@ -1186,7 +1186,8 @@ class CSSStyleDeclaration;
     F(TransitionTransitionDuration, transitionTransitionDuration,    \
       "transitionDuration")                                          \
     F(FlexFlow, flexFlow, "flex-flow")                               \
-    F(Flex, flex, "flex")
+    F(Flex, flex, "flex")                                            \
+    F(ListStyle, listStyle, "list-style")
 
 #define GEN_FOURSIDE(F) \
     F(Top, top)         \
