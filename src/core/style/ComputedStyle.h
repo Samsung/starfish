@@ -520,6 +520,26 @@ public:
         return m_display;
     }
 
+    bool hasBlockLikeDisplay()
+    {
+        switch (display()) {
+        case BlockDisplayValue:
+        case ListItemDisplayValue:
+        case InlineListItemDisplayValue:
+        case InlineBlockDisplayValue:
+        case TableDisplayValue:
+        case InlineTableDisplayValue:
+        case TableCellDisplayValue:
+        case FlexDisplayValue:
+        case InlineFlexDisplayValue:
+        case GridDisplayValue:
+        case InlineGridDisplayValue:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     void setDisplay(DisplayValue v)
     {
         m_display = v;
@@ -1693,7 +1713,7 @@ public:
                display == DisplayValue::TableCaptionDisplayValue;
     }
 
-    void loadFont(Node* consumer);
+    void loadFont(Node* consumer, bool respectLetterSpacing = false);
     bool hasBorderRadius()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {

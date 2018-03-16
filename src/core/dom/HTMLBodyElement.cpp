@@ -42,8 +42,9 @@ void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,
                                               ComputedStyle* newStyle)
 {
     HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
-    if (!newStyle->backgroundColor().isTransparent() ||
-        !newStyle->backgroundImage()->equals(String::emptyString)) {
+    if (newStyle &&
+        (!newStyle->backgroundColor().isTransparent() ||
+         !newStyle->backgroundImage()->equals(String::emptyString))) {
         document()->browsingContext()->m_hasBodyElementBackground = true;
     } else {
         document()->browsingContext()->m_hasBodyElementBackground = false;
