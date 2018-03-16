@@ -28,19 +28,22 @@ namespace LWE
 {
 
 class WebView;
-class STARFISH_EXPORT Settings 
+class STARFISH_EXPORT Settings
 {
 public:
 	Settings(std::string default_ua,std::string ua);
 	std::string GetDefaultUserAgent();
 	std::string GetUserAgentString();
+	int GetCacheMode();
 	void SetUserAgentString(std::string ua);
+	void SetCacheMode(int mode);
 private:
+	int m_cacheMode;
 	std::string m_defaultUserAgent;
 	std::string m_UserAgent;
 };
 
-class STARFISH_EXPORT ResourceError 
+class STARFISH_EXPORT ResourceError
 {
 public:
     ResourceError(int code,std::string description);
@@ -83,6 +86,7 @@ public:
 	void SetSettings(Settings setttings);
 	void RemoveJavascriptInterface(std::string exposedObjectName, std::string jsFunctionName);
 	void SetWebViewClient(WebViewClient* client);
+	void ClearCache();
 
 	// Internal API
 	void* getInternalPtr();

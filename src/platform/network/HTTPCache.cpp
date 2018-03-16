@@ -55,6 +55,7 @@ HTTPCache::HTTPCache(String* cacheDirPath)
     , m_currentTotalSizeOfBlocks(0)
     , m_lockfd(-1)
     , m_good(false)
+    , m_cacheMode(LOAD_DEFAULT)
 {
     m_indexFilePath = m_cacheDirPath->concat(INDEX_FILE_NAME);
 
@@ -111,6 +112,10 @@ bool HTTPCache::createOrOpenCacheDir()
     }
 }
 
+void HTTPCache::clear()
+{
+    clearCacheDir();
+}
 void HTTPCache::clearCacheDir()
 {
     Directory* dir = Directory::create();
@@ -236,6 +241,10 @@ HTTPCacheEntryMultiMap::iterator HTTPCache::get(ResourceURL* url)
 {
     STARFISH_ASSERT(isMainThread());
 
+    if (m_cacheMode == LOAD_NO_CACHE) {
+        return m_cacheEntryTable.end();
+    }
+
     String* item = url->urlString();
 
     auto entryItr = findEntryInCacheEntryTable(item);
@@ -268,7 +277,7 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
 {
     STARFISH_ASSERT(isMainThread());
 
-    if (nwd->cachedEntry) {
+    if (nwd->cachedEntry || m_cacheMode == LOAD_NO_CACHE) {
         return;
     }
 
@@ -322,6 +331,10 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
 
 void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
 {
+    if (m_cacheMode == LOAD_NO_CACHE) {
+        return;
+    }
+
     if (findEntryInCacheEntryTable(entry->url()->urlString()) == end()) {
         put(nwd);
         return;

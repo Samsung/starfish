@@ -33,6 +33,7 @@
 #include "core/modules/threading/Thread.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
+#include "platform/network/HTTPCache.h"
 
 #include <EscargotPublic.h>
 
@@ -143,7 +144,8 @@ static StarFish::ScriptValue nativeCallbackFunction(
 }
 
 Settings::Settings(std::string default_ua, std::string ua)
-    : m_defaultUserAgent(default_ua)
+    : m_cacheMode(StarFish::HTTPCache::LOAD_DEFAULT)
+    , m_defaultUserAgent(default_ua)
     , m_UserAgent(ua)
 {
 }
@@ -161,6 +163,15 @@ std::string Settings::GetUserAgentString()
 void Settings::SetUserAgentString(std::string ua)
 {
     m_UserAgent = ua;
+}
+
+int Settings::GetCacheMode()
+{
+    return m_cacheMode;
+}
+void Settings::SetCacheMode(int mode)
+{
+    m_cacheMode = mode;
 }
 
 ResourceError::ResourceError(int code, std::string description)
@@ -226,8 +237,12 @@ WebView::WebView(void* starFish)
 Settings WebView::GetSettings()
 {
     STARFISH_ASSERT(m_starfish);
-    std::string ua = TO_STARFISH(m_starfish)->userAgent()->toUTF8NonGCString();
-    return Settings(USER_AGENT(STARFISH_NAME, VERSION), ua);
+    Settings result(USER_AGENT(STARFISH_NAME, VERSION),
+                    TO_STARFISH(m_starfish)->userAgent()->toUTF8NonGCString());
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    result.SetCacheMode(TO_STARFISH(m_starfish)->httpCache()->cacheMode());
+#endif
+    return result;
 }
 
 void WebView::LoadURL(std::string url)
@@ -383,6 +398,11 @@ void WebView::SetSettings(LWE::Settings setttings)
     TO_STARFISH(m_starfish)
         ->setCustomUserAgentString(
             StarFish::String::fromUTF8(setttings.GetUserAgentString().c_str()));
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    TO_STARFISH(m_starfish)
+        ->httpCache()
+        ->setCacheMode(setttings.GetCacheMode());
+#endif
 }
 
 void WebView::RemoveJavascriptInterface(std::string exposedObjectName,
@@ -434,6 +454,14 @@ void WebView::SetWebViewClient(LWE::WebViewClient* client)
                 this->m_webViewClient->OnLoadResource(this,
                                                       url->toUTF8NonGCString());
             });
+}
+
+void WebView::ClearCache()
+{
+    STARFISH_ASSERT(m_starfish);
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    TO_STARFISH(m_starfish)->httpCache()->clear();
+#endif
 }
 
 void* WebView::getInternalPtr()
