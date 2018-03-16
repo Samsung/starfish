@@ -559,28 +559,6 @@ public:
         return true;
     }
 
-    static bool parseFloat(const CSSTokenValue& s, double* ret)
-    {
-        auto ss = s.trim();
-        CSSPropertyParser parser((char*)ss.data(), ss.length());
-
-        bool hasPoint = false;
-        parser.consumeWhitespaces();
-        if (!parser.consumeNumber(&hasPoint)) {
-            return false;
-        }
-
-        float number = parser.parsedNumber();
-
-        parser.consumeWhitespaces();
-        if (!parser.isEnd()) {
-            return false;
-        }
-
-        *ret = number;
-        return true;
-    }
-
     static bool parsePercent(const CSSTokenValue& s, double* ret)
     {
         auto ss = s.trim();
@@ -690,11 +668,18 @@ public:
                 pair->setColorValue(Unit::Color(parsed[0], parsed[1], parsed[2],
                                                 hasAlpha ? parsed[3] : 255));
             } else { // HSL or HSLA
-                // parse hue in angle
+                // parse hue in angle. <number> | <angle>
                 double hue = 0;
-                if (!parseFloat(v[0], &hue)) {
+                CSSStyleValuePair p;
+                p.setValueKind(CSSStyleValuePair::ValueKind::Angle);
+                uint8_t option = 0;
+                option |= CSSPropertyParser::AllowNegative;
+                option |= CSSPropertyParser::AllowWithoutUnit;
+                if (!parseAngle(v[0].data(), option, &p)) {
                     return false;
                 }
+                hue = p.angleValue().toDegreeValue();
+                hue = (((((int)round(hue)) % 360) + 360) % 360);
 
                 // parse saturation and luminance in percentage
                 double saturation = 0, luminance = 0;
@@ -716,8 +701,8 @@ public:
                 unsigned char r, g, b;
                 // floats are rounded to int if given
                 pair->setColorValue(Unit::Color::fromHsla(
-                    round(hue) / 360, round(saturation) / 100,
-                    round(luminance) / 100, hasAlpha ? alpha : 255));
+                    hue / 360, round(saturation) / 100, round(luminance) / 100,
+                    hasAlpha ? alpha : 255));
             }
         } else if (maybeCode) {
             const char* s = str.data();
