@@ -27,7 +27,11 @@ class ValueList;
 class ShadowData : public gc {
 public:
     ShadowData()
-        : m_hasColor(false)
+        : m_offsetX(Length::Fixed, 0)
+        , m_offsetY(Length::Fixed, 0)
+        , m_radius(Length::Fixed, 0)
+        , m_spreadDistance(Length::Fixed, 0)
+        , m_hasColor(false)
         , m_inset(false)
     {
     }

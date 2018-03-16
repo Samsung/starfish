@@ -45,10 +45,8 @@ CanvasShadowData ShadowData::toCanvasShadowData(Frame* owner) const
     LayoutUnit unused;
     float offsetX = m_offsetX.specifiedValue(unused, owner);
     float offsetY = m_offsetY.specifiedValue(unused, owner);
-    float radius = 0.0f;
-    if (m_radius.isFixed() && m_radius.fixed()) {
-        radius = m_radius.fixed();
-    }
+    float radius = m_radius.specifiedValue(unused, owner);
+
     CanvasShadowData ret(offsetX, offsetY, radius, m_color, m_hasColor);
     return ret;
 }

@@ -1118,7 +1118,50 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::TextShadow) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        CSSStyleValuePair shadows;
+        shadows.setKeyKind(CSSStyleValuePair::KeyKind::TextShadow);
+        if (!style->textShadow().size()) {
+            shadows.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else {
+            shadows.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+            shadows.setValueList(
+                new ValueList(ValueList::Separator::CommaSeparator));
+
+            for (auto& sd : style->textShadow()) {
+                CSSStyleValuePair s;
+                s.setValueList(
+                    new ValueList(ValueList::Separator::SpaceSeparator));
+                {
+                    CSSStyleValuePair color;
+                    if (sd.hasColor()) {
+                        color.setColorValue(sd.color());
+                    } else {
+                        color.setColorValue(style->color());
+                    }
+                    s.multiValue()->emplace_back(color.valueKind(),
+                                                 color.value());
+                }
+
+                CSSStyleValuePair lengths;
+                lengths.setValueList(
+                    new ValueList(ValueList::Separator::SpaceSeparator));
+
+                CSSStyleValuePair l1 = lengthToCSSStyleValue(sd.offsetX());
+                lengths.multiValue()->emplace_back(l1.valueKind(), l1.value());
+
+                CSSStyleValuePair l2 = lengthToCSSStyleValue(sd.offsetY());
+                lengths.multiValue()->emplace_back(l2.valueKind(), l2.value());
+
+                CSSStyleValuePair l3 = lengthToCSSStyleValue(sd.radius());
+                lengths.multiValue()->emplace_back(l3.valueKind(), l3.value());
+
+                s.multiValue()->emplace_back(lengths.valueKind(),
+                                             lengths.value());
+
+                shadows.multiValue()->emplace_back(s.valueKind(), s.value());
+            }
+        }
+        addValuePair(shadows);
     }
 #define ADD_VALUE_PAIR(KEY, VALUE, GETTER)                   \
     else if (keyKind == CSSStyleValuePair::KeyKind::KEY)     \
