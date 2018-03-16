@@ -148,6 +148,12 @@ public:
         m_compositor->drawImage(data, dst);
     }
 
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
+                           const Unit::Rect& dst, bool xRepeat, bool yRepeat)
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
     virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst)
     {
         m_compositor->drawSurface(data, dst);

@@ -1310,6 +1310,12 @@ public:
         drawImageInner(data, dst, 0, 0, 0, 0, 1.0, true);
     }
 
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
+                           const Unit::Rect& dst, bool xRepeat, bool yRepeat)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
                                  size_t l, size_t t, size_t r, size_t b,
                                  double scale, bool fill)

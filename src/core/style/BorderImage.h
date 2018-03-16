@@ -26,9 +26,8 @@
 namespace StarFish {
 
 #define DEFAULT_VALUE_IMAGE_WIDTH() (BorderImageLengthBox(1.0))
-#define DEFAULT_VALUE_IMAGE_SLICE()                                    \
-    (LengthBox(Length(Length::Fixed, 100), Length(Length::Fixed, 100), \
-               Length(Length::Fixed, 100), Length(Length::Fixed, 100)))
+#define DEFAULT_VALUE_IMAGE_SLICE() \
+    (BorderImageLengthBox(Length(Length::Percent, 1.0)))
 #define DEFAULT_VALUE_IMAGE_REPEAT() (StretchValue)
 
 class NativeImageData;
@@ -93,7 +92,7 @@ public:
     // TODO: Need Image Data Structure
     String* m_url;                 // [border-image-source]
     bool m_sliceFill;              // [border-image-slice]
-    LengthBox m_slices;            // [border-image-slice]
+    BorderImageLengthBox m_slices; // [border-image-slice]
     BorderImageLengthBox m_widths; // [border-image-width]
     ImageResource* m_imageResource;
 };
@@ -111,7 +110,7 @@ public:
     {
         return isNull() ? String::emptyString : m_data->m_url;
     }
-    LengthBox slices()
+    BorderImageLengthBox slices()
     {
         return isNull() ? DEFAULT_VALUE_IMAGE_SLICE() : m_data->m_slices;
     }
@@ -145,7 +144,7 @@ public:
     {
         data()->m_url = url;
     }
-    void setSlices(const LengthBox& slices)
+    void setSlices(const BorderImageLengthBox& slices)
     {
         data()->m_slices = slices;
     }

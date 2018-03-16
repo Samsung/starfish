@@ -922,21 +922,42 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSlice);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList();
+        ValueList* vals = new ValueList(ValueList::Separator::SpaceSeparator);
         BorderData border = style->border();
-        LengthBox box = border.image().slices();
+        BorderImageLengthBox box = border.image().slices();
 
-        CSSStyleValuePair t = lengthToCSSStyleValue(box.top());
-        vals->emplace_back(t.valueKind(), t.value());
-
-        CSSStyleValuePair r = lengthToCSSStyleValue(box.right());
-        vals->emplace_back(r.valueKind(), r.value());
-
-        CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom());
-        vals->emplace_back(b.valueKind(), b.value());
-
-        CSSStyleValuePair l = lengthToCSSStyleValue(box.left());
-        vals->emplace_back(l.valueKind(), l.value());
+        if (box.top().isLength()) {
+            CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
+            vals->emplace_back(t.valueKind(), t.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.top().number());
+        }
+        if (box.right().isLength()) {
+            CSSStyleValuePair r = lengthToCSSStyleValue(box.right().length());
+            vals->emplace_back(r.valueKind(), r.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.right().number());
+        }
+        if (box.bottom().isLength()) {
+            CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom().length());
+            vals->emplace_back(b.valueKind(), b.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.bottom().number());
+        }
+        if (box.left().isLength()) {
+            CSSStyleValuePair l = lengthToCSSStyleValue(box.left().length());
+            vals->emplace_back(l.valueKind(), l.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.left().number());
+        }
+        if (border.image().sliceFill()) {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::StringValueKind,
+                               String::fromUTF8("fill"));
+        }
 
         p.setValue(vals);
         addValuePair(p);

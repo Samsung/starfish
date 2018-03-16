@@ -4995,58 +4995,80 @@ void StyleResolver::apply(Element* element,
                  CSSStyleValuePair::ValueKind::Initial) ||
                 (cssValues[k].valueKind() ==
                  CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBorderImageSlices(LengthBox(0));
+                style->setBorderImageSlices(
+                    BorderImageLengthBox(Length(Length::Percent, 1.0)));
+                style->setBorderImageSliceFill(false);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
-                // TODO: Prevent parentStyle->surround() from creating object
-                // for this
-                style->setBorderImageSliceFromOther(parentStyle);
+                style->setBorderImageSlices(
+                    parentStyle->border().image().slices());
+                style->setBorderImageSliceFill(
+                    parentStyle->border().image().sliceFill());
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
-                Length top, right, bottom, left;
-                ValueList* l = cssValues[k].multiValue();
-                unsigned int size = l->size();
-                if ((*l)[size - 1].valueKind() ==
+                BorderImageLength t, r, b, l;
+                ValueList* values = cssValues[k].multiValue();
+                unsigned int size = values->size();
+                if ((*values)[size - 1].valueKind() ==
                     CSSStyleValuePair::ValueKind::StringValueKind) {
                     style->setBorderImageSliceFill(true);
                     size--;
                 }
-                Nullable<Length> nTop =
-                    convertValueToLength((*l)[0].valueKind(), (*l)[0].value());
-                if (nTop.hasValue()) {
-                    top = nTop.getValue();
-                }
 
+                if ((*values)[0].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Number) {
+                    t.setValue((*values)[0].numberValue());
+                } else {
+                    Nullable<Length> nTop = convertValueToLength(
+                        (*values)[0].valueKind(), (*values)[0].value());
+                    if (nTop.hasValue()) {
+                        t = nTop.getValue();
+                    }
+                }
                 if (size > 1) {
-                    Nullable<Length> nRight = convertValueToLength(
-                        (*l)[1].valueKind(), (*l)[1].value());
-                    if (nRight.hasValue()) {
-                        right = nRight.getValue();
+                    if ((*values)[1].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Number) {
+                        r.setValue((*values)[1].numberValue());
+                    } else {
+                        Nullable<Length> nRight = convertValueToLength(
+                            (*values)[1].valueKind(), (*values)[1].value());
+                        if (nRight.hasValue()) {
+                            r = nRight.getValue();
+                        }
                     }
                 } else {
-                    right = top;
+                    r = t;
                 }
                 if (size > 2) {
-                    Nullable<Length> nBottom = convertValueToLength(
-                        (*l)[2].valueKind(), (*l)[2].value());
-                    if (nBottom.hasValue()) {
-                        bottom = nBottom.getValue();
+                    if ((*values)[2].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Number) {
+                        b.setValue((*values)[2].numberValue());
+                    } else {
+                        Nullable<Length> nBottom = convertValueToLength(
+                            (*values)[2].valueKind(), (*values)[2].value());
+                        if (nBottom.hasValue()) {
+                            b = nBottom.getValue();
+                        }
                     }
                 } else {
-                    bottom = top;
+                    b = t;
                 }
                 if (size > 3) {
-                    Nullable<Length> nLeft = convertValueToLength(
-                        (*l)[3].valueKind(), (*l)[3].value());
-                    if (nLeft.hasValue()) {
-                        left = nLeft.getValue();
+                    if ((*values)[3].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Number) {
+                        l.setValue((*values)[3].numberValue());
+                    } else {
+                        Nullable<Length> nLeft = convertValueToLength(
+                            (*values)[3].valueKind(), (*values)[3].value());
+                        if (nLeft.hasValue()) {
+                            l = nLeft.getValue();
+                        }
                     }
                 } else {
-                    left = right;
+                    l = r;
                 }
-                style->setBorderImageSlices(
-                    LengthBox(top, right, bottom, left));
+                style->setBorderImageSlices(BorderImageLengthBox(l, r, t, b));
             }
             break;
         case CSSStyleValuePair::KeyKind::BorderImageSource:
@@ -9163,36 +9185,55 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueBorderImageSlice(
     const CSSTokenVector& tokens)
 {
-    // number && fill?
-    if (tokens.size() != 1 && tokens.size() != 2) {
+    // [<number> | <percentage>]{1,4} && fill?
+    size_t size = tokens.size();
+    if (size < 1 || size > 5) {
         return false;
     }
 
+    CSSStyleValuePair fill;
+    bool isFill = false;
+    if (tokens[size - 1].equals("fill")) {
+        if (size == 1) {
+            return false;
+        }
+        isFill = true;
+        fill = CSSStyleValuePair(CSSStyleValuePair::ValueKind::StringValueKind,
+                                 String::fromUTF8("fill"));
+        size--;
+    }
+
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    m_value.m_multiValue = new ValueList(ValueList::Separator::SpaceSeparator);
-    bool isNum = false, isFill = false;
+    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+
     float result = 0.f;
-    for (unsigned int i = 0; i < tokens.size(); i++) {
-        if (tokens[i].equals("fill")) {
-            if (!isFill) {
-                isFill = true;
-            } else {
+    for (unsigned int i = 0; i < size; i++) {
+        CSSTokenValue value = tokens[i];
+        if (value.equals("fill")) {
+            return false;
+        } else if (CSSPropertyParser::parseNumber(value.data(), 0, &result)) {
+            values->push_back(CSSStyleValuePair(
+                CSSStyleValuePair::ValueKind::Number, (float)result));
+        } else {
+            CSSStyleValuePair ret;
+            if (!ret.updateValueUnitLengthOrCalc(
+                    value, CSSPropertyParser::AllowPercent)) {
                 return false;
             }
-            m_value.m_multiValue->emplace_back(
-                CSSStyleValuePair::ValueKind::StringValueKind,
-                String::fromUTF8("fill"));
-        } else if (CSSPropertyParser::parseNumber(tokens[i].data(), 0,
-                                                  &result)) {
-            isNum = true;
-            m_value.m_multiValue->emplace_back(
-                CSSStyleValuePair::ValueKind::Number, (float)result);
-        } else {
-            return false;
+            if (ret.valueKind() != CSSStyleValuePair::ValueKind::Percentage) {
+                return false;
+            }
+            values->push_back(ret);
         }
     }
 
-    return isNum;
+    if (isFill) {
+        values->push_back(fill);
+    }
+
+    m_value.m_multiValue = values;
+
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueFontSize(const CSSTokenVector& tokens)

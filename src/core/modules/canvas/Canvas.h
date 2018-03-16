@@ -142,6 +142,9 @@ public:
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& dst) = 0;
     virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst) = 0;
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
+                           const Unit::Rect& dst, bool xRepeat,
+                           bool yRepeat) = 0;
     virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
                                  size_t l, size_t t, size_t r, size_t b,
                                  double scale, bool fill) = 0;

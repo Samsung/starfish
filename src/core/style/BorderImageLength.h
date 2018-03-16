@@ -99,6 +99,16 @@ public:
         }
     }
 
+    float specifiedSliceValue(LayoutUnit parentLength, Frame* f)
+    {
+        STARFISH_ASSERT(isSpecified());
+        if (isLength()) {
+            return length().specifiedValue(parentLength, f);
+        } else {
+            return number();
+        }
+    }
+
     String* dumpString()
     {
         if (m_type == LengthType) {

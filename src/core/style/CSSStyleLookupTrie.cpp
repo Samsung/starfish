@@ -754,13 +754,13 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     case 19:
         // Background-Repeat-X
         // Background-Repeat-Y
+        // Border-Image-Repeat
         // Border-Image-Source
         // Border-Bottom-Style
         // Border-Bottom-Width
         // Border-Bottom-Color
         // Background-Position
         // List-Style-Position
-        // border-image-repeat
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background-repeat-x", 19) == 0) {
@@ -771,6 +771,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "background-position", 19) == 0) {
                 return CSSStyleKind::BackgroundPosition;
+            }
+            if (memcmp(data, "border-image-repeat", 19) == 0) {
+                return CSSStyleKind::BorderImageRepeat;
             }
             if (memcmp(data, "border-image-source", 19) == 0) {
                 return CSSStyleKind::BorderImageSource;
@@ -783,9 +786,6 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "border-bottom-color", 19) == 0) {
                 return CSSStyleKind::BorderBottomColor;
-            }
-            if (memcmp(data, "border-image-repeat", 19) == 0) {
-                return CSSStyleKind::BorderImageRepeat;
             }
             break;
         case 'l':
@@ -1454,6 +1454,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "backgroundRepeatY", 17) == 0) {
                 return CSSStyleKind::BackgroundRepeatY;
             }
+            if (memcmp(data, "borderImageRepeat", 17) == 0) {
+                return CSSStyleKind::BorderImageRepeat;
+            }
             if (memcmp(data, "borderImageSource", 17) == 0) {
                 return CSSStyleKind::BorderImageSource;
             }
@@ -1465,9 +1468,6 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "borderBottomColor", 17) == 0) {
                 return CSSStyleKind::BorderBottomColor;
-            }
-            if (memcmp(data, "borderImageRepeat", 17) == 0) {
-                return CSSStyleKind::BorderImageRepeat;
             }
             break;
         case 'l':
