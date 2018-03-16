@@ -29,6 +29,13 @@ class File;
 
 class HTTPCache : public gc {
 public:
+    // cache mode
+    static const int LOAD_DEFAULT = -1;
+    static const int LOAD_NORMAL = 0;
+    static const int LOAD_CACHE_ELSE_NETWORK = 1;
+    static const int LOAD_NO_CACHE = 2;
+    static const int LOAD_CACHE_ONLY = 3;
+
     static Nullable<HTTPCache*> create(String* cacheDirPath)
     {
         HTTPCache* newObject = new HTTPCache(cacheDirPath);
@@ -51,6 +58,20 @@ public:
     void expire();
     bool pruneAsNeededForCacheSpace(const size_t reserve);
     bool isConsistent();
+    void clear();
+    void setCacheMode(int mode)
+    {
+        if (mode == LOAD_DEFAULT || mode == LOAD_NO_CACHE) {
+            m_cacheMode = mode;
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+    }
+
+    int cacheMode()
+    {
+        return m_cacheMode;
+    }
 
     bool good()
     {
@@ -82,6 +103,7 @@ private:
     size_t m_currentTotalSizeOfBlocks;
     int m_lockfd;
     bool m_good;
+    int m_cacheMode;
 };
 }
 #endif
