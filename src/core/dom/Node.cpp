@@ -1817,6 +1817,7 @@ void Node::didNodeRemoved(Node* parent, Node* oldChild)
 void Node::didNodeRemovedFromDocumentTree()
 {
     setState(NodeStateNormal, false);
+    setFrame(nullptr);
 }
 
 RareNodeMembers* Node::ensureRareMembers()

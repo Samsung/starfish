@@ -1183,6 +1183,78 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(shadows);
     }
+#define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
+    else if (keyKind ==                                                       \
+             CSSStyleValuePair::KeyKind::Border##Name1Name2##Radius)          \
+    {                                                                         \
+        CSSStyleValuePair p;                                                  \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Border##Name1Name2##Radius); \
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);          \
+        ValueList* valueList = new ValueList(ValueList::SpaceSeparator);      \
+        if (style->hasBorderRadius()) {                                       \
+            if (style->borderRadius().m_##name1Name2##Vertical ==             \
+                style->borderRadius().m_##name1Name2##Horizontal) {           \
+                CSSStyleValuePair pair;                                       \
+                if (style->borderRadius()                                     \
+                        .m_##name1Name2##Vertical.isPercent()) {              \
+                    pair.setValueKind(                                        \
+                        CSSStyleValuePair::ValueKind::Percentage);            \
+                    pair.setPercentageValue(                                  \
+                        style->borderRadius()                                 \
+                            .m_##name1Name2##Vertical.percent());             \
+                } else {                                                      \
+                    pair.setValueKind(CSSStyleValuePair::ValueKind::Length);  \
+                    pair.setLengthValue(                                      \
+                        CSSLength(style->borderRadius()                       \
+                                      .m_##name1Name2##Vertical.fixed()));    \
+                }                                                             \
+                valueList->pushBack(pair);                                    \
+            } else {                                                          \
+                CSSStyleValuePair pair;                                       \
+                if (style->borderRadius()                                     \
+                        .m_##name1Name2##Horizontal.isPercent()) {            \
+                    pair.setValueKind(                                        \
+                        CSSStyleValuePair::ValueKind::Percentage);            \
+                    pair.setPercentageValue(                                  \
+                        style->borderRadius()                                 \
+                            .m_##name1Name2##Horizontal.percent());           \
+                } else {                                                      \
+                    pair.setValueKind(CSSStyleValuePair::ValueKind::Length);  \
+                    pair.setLengthValue(                                      \
+                        CSSLength(style->borderRadius()                       \
+                                      .m_##name1Name2##Horizontal.fixed()));  \
+                }                                                             \
+                valueList->pushBack(pair);                                    \
+                if (style->borderRadius()                                     \
+                        .m_##name1Name2##Vertical.isPercent()) {              \
+                    pair.setValueKind(                                        \
+                        CSSStyleValuePair::ValueKind::Percentage);            \
+                    pair.setPercentageValue(                                  \
+                        style->borderRadius()                                 \
+                            .m_##name1Name2##Vertical.percent());             \
+                } else {                                                      \
+                    pair.setValueKind(CSSStyleValuePair::ValueKind::Length);  \
+                    pair.setLengthValue(                                      \
+                        CSSLength(style->borderRadius()                       \
+                                      .m_##name1Name2##Vertical.fixed()));    \
+                }                                                             \
+                valueList->pushBack(pair);                                    \
+            }                                                                 \
+        } else {                                                              \
+            CSSStyleValuePair pair;                                           \
+            pair.setValueKind(CSSStyleValuePair::ValueKind::Length);          \
+            pair.setLengthValue(CSSLength(0.f));                              \
+            valueList->pushBack(pair);                                        \
+        }                                                                     \
+        p.setValueList(valueList);                                            \
+        addValuePair(p);                                                      \
+    }
+
+    ADD_VALUE_PAIR_BORDER_RADIUS(TopLeft, topLeft)
+    ADD_VALUE_PAIR_BORDER_RADIUS(BottomLeft, bottomLeft)
+    ADD_VALUE_PAIR_BORDER_RADIUS(TopRight, topRight)
+    ADD_VALUE_PAIR_BORDER_RADIUS(BottomRight, bottomRight)
+
 #define ADD_VALUE_PAIR(KEY, VALUE, GETTER)                   \
     else if (keyKind == CSSStyleValuePair::KeyKind::KEY)     \
     {                                                        \

@@ -504,7 +504,7 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
     Node::didComputedStyleChanged(oldStyle, newStyle);
 
     Frame* frame = Element::frame();
-    if (frame) {
+    if (frame && newStyle) {
         if (!needsFrameTreeBuild()) {
             for (int i = StyleResolver::PseudoElementFirstLine;
                  i <= StyleResolver::PseudoElementAfter; i++) {

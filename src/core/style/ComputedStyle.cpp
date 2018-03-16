@@ -153,7 +153,7 @@ public:
     Document* m_document;
 };
 
-void ComputedStyle::loadFont(Node* consumer)
+void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
 {
     m_inheritedStyles.m_fontSize =
         Length(Length::Fixed,
@@ -224,19 +224,22 @@ void ComputedStyle::loadFont(Node* consumer)
         }
     }
 
-    float letterSpacing = this->letterSpacing().fixed();
+    float fixedLetterSpacing = 0;
+    if (respectLetterSpacing || letterSpacing().isFixed()) {
+        fixedLetterSpacing = letterSpacing().fixed();
+    }
 
 #ifdef STARFISH_ENABLE_TEST
     StarFish* sf = consumer->starFish();
     if (g_enablePixelTest) {
         String* str = String::fromUTF8("StarFishAhem");
         m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight,
-                              letterSpacing);
+                              fixedLetterSpacing);
     } else {
         if (sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest) {
             String* str = String::fromUTF8("SamsungOne");
             m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight,
-                                  letterSpacing);
+                                  fixedLetterSpacing);
         } else {
             if (canUseParentFont) {
                 m_font = parentNodeFont;
@@ -244,7 +247,7 @@ void ComputedStyle::loadFont(Node* consumer)
                 m_font = fs->loadFont(
                     (String**)&m_inheritedStyles.m_fontFamilyDatas[1],
                     m_inheritedStyles.m_fontFamilyDatas[0].m_length,
-                    fixedFontSize, style, fontWeight, letterSpacing);
+                    fixedFontSize, style, fontWeight, fixedLetterSpacing);
             }
         }
     }
@@ -252,9 +255,10 @@ void ComputedStyle::loadFont(Node* consumer)
     if (canUseParentFont) {
         m_font = parentNodeFont;
     } else {
-        m_font = fs->loadFont((String**)&m_inheritedStyles.m_fontFamilyDatas[1],
-                              m_inheritedStyles.m_fontFamilyDatas[0].m_length,
-                              fixedFontSize, style, fontWeight, letterSpacing);
+        m_font =
+            fs->loadFont((String**)&m_inheritedStyles.m_fontFamilyDatas[1],
+                         m_inheritedStyles.m_fontFamilyDatas[0].m_length,
+                         fixedFontSize, style, fontWeight, fixedLetterSpacing);
     }
 #endif
 }
@@ -555,11 +559,13 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
 {
     Window* w = current->window();
     LayoutSize windowSize(w->innerWidth(), w->innerHeight());
-    if (!letterSpacing().isComputed()) {
+
+    if (!letterSpacing().isFixed()) {
         auto v = letterSpacing();
         v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
                                 windowSize.width(), windowSize.height(), this);
         setLetterSpacing(v);
+        loadFont(current, true);
     }
 
     if (!lineHeight().isComputed()) {

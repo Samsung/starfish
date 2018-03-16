@@ -2393,9 +2393,13 @@ bool LineFormattingContext::hasFloatingBoxAlreadyInLineBox(Frame* f)
 // is shouldWrapLines.
 bool LineFormattingContext::dontBreakLine(FrameBox* box, LayoutUnit width)
 {
+    bool wrapLine = box->shouldWrapLines();
+    if (box->isFloating()) {
+        wrapLine = true;
+    }
     return (!hasFloatingBoxAlreadyInLineBox(box) && m_currentLineWidth == 0 &&
             !(isWord(box) && !m_canConcatWord)) ||
-           !box->shouldWrapLines() || canInsertToLineBox(box, width);
+           !wrapLine || canInsertToLineBox(box, width);
 }
 
 void LineFormattingContext::handleSoftHyphenate(bool hyphenateOnLine)

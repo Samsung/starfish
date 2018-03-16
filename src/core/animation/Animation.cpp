@@ -208,9 +208,7 @@ void TransformAnimationTask::computeToValue()
 void TransformAnimationTask::attachedToElement()
 {
     AnimationTask::attachedToElement();
-    if (targetElement()->frame()) {
-        targetElement()->frame()->markRunningTransformAnimation();
-    }
+    targetElement()->markRunningTransformAnimation();
 }
 
 void TransformAnimationTask::detachedFromElement()
@@ -222,7 +220,7 @@ void TransformAnimationTask::detachedFromElement()
     current->webView()->setNeedsComputeStackingContextProperties();
 
     ComputedStyle* style = current->style();
-    if (style->hasTransforms()) {
+    if (style && style->hasTransforms()) {
         auto transforms = style->rareComputedStyleData()->transforms();
         if (transforms->at(transforms->size() - 1).type() ==
             StyleTransformData::InternalMatrix) {
@@ -236,10 +234,7 @@ void TransformAnimationTask::detachedFromElement()
             }
         }
     }
-
-    if (targetElement()->frame()) {
-        targetElement()->frame()->clearRunningTransformAnimation();
-    }
+    targetElement()->clearRunningTransformAnimation();
 }
 
 void TransformAnimationTask::execute(float progress)

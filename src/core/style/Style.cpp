@@ -1340,14 +1340,108 @@ String* CSSStyleDeclaration::BorderLeft()
     return BorderString(width, false, style, false, color, false);
 }
 
+static void mergeBordeRadiusString(StringBuilder& sb, String* tl, String* tr,
+                                   String* br, String* bl)
+{
+    if (tl->equals(tr) && tr->equals(br) && br->equals(bl)) {
+        sb.appendString(tl);
+    } else if (tl->equals(br) && tr->equals(bl)) {
+        sb.appendString(tl);
+        sb.appendChar(' ');
+        sb.appendString(tr);
+    } else if (tr->equals(bl)) {
+        sb.appendString(tl);
+        sb.appendChar(' ');
+        sb.appendString(tr);
+        sb.appendChar(' ');
+        sb.appendString(br);
+    } else {
+        sb.appendString(tl);
+        sb.appendChar(' ');
+        sb.appendString(tr);
+        sb.appendChar(' ');
+        sb.appendString(br);
+        sb.appendChar(' ');
+        sb.appendString(bl);
+    }
+}
+
 String* CSSStyleDeclaration::BorderRadius()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    String* tl = String::emptyString;
-    String* tr = String::emptyString;
-    String* br = String::emptyString;
-    String* bl = String::emptyString;
-    return String::emptyString;
+    String* tl = BorderTopLeftRadius();
+    String* tr = BorderTopRightRadius();
+    String* br = BorderBottomRightRadius();
+    String* bl = BorderBottomLeftRadius();
+
+    size_t stl = tl->indexOf(' ');
+    size_t str = tr->indexOf(' ');
+    size_t sbr = br->indexOf(' ');
+    size_t sbl = bl->indexOf(' ');
+
+    bool needsSlash = (stl != SIZE_MAX) || (str != SIZE_MAX) ||
+                      (sbr != SIZE_MAX) || (sbl != SIZE_MAX);
+    StringBuilder sb;
+
+    if (needsSlash) {
+        String* tl2;
+        if (stl != SIZE_MAX) {
+            tl2 = tl->substring(0, stl);
+        } else {
+            tl2 = tl;
+        }
+
+        String* tr2;
+        if (str != SIZE_MAX) {
+            tr2 = tr->substring(0, str);
+        } else {
+            tr2 = tr;
+        }
+
+        String* br2;
+        if (sbr != SIZE_MAX) {
+            br2 = br->substring(0, sbr);
+        } else {
+            br2 = br;
+        }
+
+        String* bl2;
+        if (sbl != SIZE_MAX) {
+            bl2 = bl->substring(0, sbl);
+        } else {
+            bl2 = bl;
+        }
+        mergeBordeRadiusString(sb, tl2, tr2, br2, bl2);
+        sb.appendString(" / ");
+
+        if (stl != SIZE_MAX) {
+            tl2 = tl->substring(stl + 1, tl->length() - (stl + 1));
+        } else {
+            tl2 = tl;
+        }
+
+        if (str != SIZE_MAX) {
+            tr2 = tr->substring(str + 1, tr->length() - (str + 1));
+        } else {
+            tr2 = tr;
+        }
+
+        if (sbr != SIZE_MAX) {
+            br2 = br->substring(sbr + 1, br->length() - (sbr + 1));
+        } else {
+            br2 = br;
+        }
+
+        if (sbl != SIZE_MAX) {
+            bl2 = bl->substring(sbl + 1, bl->length() - (sbl + 1));
+        } else {
+            bl2 = bl;
+        }
+        mergeBordeRadiusString(sb, tl2, tr2, br2, bl2);
+    } else {
+        mergeBordeRadiusString(sb, tl, tr, br, bl);
+    }
+
+    return sb.finalize();
 }
 
 static bool parseBorderShorthand(const CSSTokenVector& tokens,
@@ -7319,7 +7413,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             false,
         };
 
-        if (!element->style()) {
+        if (!element->style() || !element->frame()) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageInherited |
                 ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
@@ -7333,19 +7427,22 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
             if (style->display() != DisplayValue::NoneDisplayValue &&
-                element->frame() == nullptr && element->parentElement() &&
-                element->parentElement()->lastChild() == element) {
+                element->frame() == nullptr && element->parentElement()) {
                 // special path for Node::appendChild
-                element->markNeedsFrameTreeBuild();
-                Node* node = element->parentNode();
-                while (node) {
-                    if (node->childNeedsFrameTreeBuild()) {
+
+                Element* e = element->parentElement();
+                while (e) {
+                    if (e->style()->hasBlockLikeDisplay()) {
                         break;
                     }
-                    node->markChildNeedsFrameTreeBuild();
-                    node = node->parentNode();
+                    e = e->parentElement();
                 }
-                element->window()->browsingContext()->setNeedsFrameTreeBuild();
+
+                if (e && e->frame() && !e->frame()->isFrameDocument()) {
+                    e->window()->browsingContext()->setNeedsFrameTreeBuild();
+                    FrameTreeBuilder::
+                        needsFrameTreeBuildFromChildrenOfThisFrame(e->frame());
+                }
             } else {
                 element->setNeedsFrameTreeBuild();
             }
@@ -7432,22 +7529,22 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                 child->clearChildNeedsStyleRecalc();
 
                 if (!child->frame()) {
-                    Frame* frame = nullptr;
-
-                    Node* nd = child->parentNode();
-                    while (nd) {
-                        if (nd->frame()) {
-                            frame = nd->frame();
-                            break;
+                    if (parentElement->frame() && parentElement->isElement()) {
+                        Element* e = parentElement->asElement();
+                        while (e) {
+                            if (e->style()->hasBlockLikeDisplay()) {
+                                break;
+                            }
+                            e = e->parentElement();
                         }
-                        nd = nd->parentNode();
-                    }
-
-                    frame = FrameTreeBuilder::findNearestBlock(frame);
-                    if (frame) {
-                        window()->browsingContext()->setNeedsFrameTreeBuild();
-                        FrameTreeBuilder::
-                            needsFrameTreeBuildFromChildrenOfThisFrame(frame);
+                        if (e && e->frame() && !e->frame()->isFrameDocument()) {
+                            window()
+                                ->browsingContext()
+                                ->setNeedsFrameTreeBuild();
+                            FrameTreeBuilder::
+                                needsFrameTreeBuildFromChildrenOfThisFrame(
+                                    e->frame());
+                        }
                     }
                 }
             }

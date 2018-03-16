@@ -195,6 +195,22 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         }
         canvas->scale(s, s);
         canvas->translate(-tx, -ty);
+
+        tx = contentWidth() - s * rt.width();
+        if (tx > 0) {
+            tx = contentWidth() / 2 - (s * rt.width()) / 2;
+        } else {
+            tx = 0;
+        }
+
+        ty = contentHeight() - s * rt.height();
+        if (ty > 0) {
+            ty = contentHeight() / 2 - (s * rt.height()) / 2;
+        } else {
+            ty = 0;
+        }
+
+        canvas->translate(tx / s, ty / s);
     }
 
     PaintingContext ctx(canvas);
