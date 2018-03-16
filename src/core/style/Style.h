@@ -23,6 +23,7 @@
 #ifndef __StarFishStyle__
 #define __StarFishStyle__
 
+#include "StaticStrings.h"
 #include "binding/DocumentHoldable.h"
 #include "core/style/NamedColors.h"
 #include "core/style/MediaQueryEvaluator.h"
@@ -2634,35 +2635,9 @@ public:
 
     enum PseudoType {
         PseudoNone,
-        PseudoEmpty,
-        PseudoRoot,
-        PseudoFirstChild,
-        PseudoFirstOfType,
-        PseudoLastChild,
-        PseudoLastOfType,
-        PseudoOnlyChild,
-        PseudoOnlyOfType,
-        PseudoPlaceholderShown,
-        PseudoFirstLine,
-        PseudoFirstLetter,
-        PseudoNthChild,
-        PseudoNthOfType,
-        PseudoNthLastChild,
-        PseudoNthLastOfType,
-        PseudoLink,
-        PseudoHover,
-        PseudoFocus,
-        PseudoActive,
-        PseudoChecked,
-        PseudoEnabled,
-        PseudoDisabled,
-        PseudoTarget,
-        PseudoBefore,
-        PseudoAfter,
-        PseudoDir,
-        PseudoLang,
-        PseudoNot,
-        PseudoSelection
+#define ADD_PSEUDO_TYPE(name, nameLower, selectorName) Pseudo##name,
+        STARFISH_ENUM_PSEUDO_SELECTORS(ADD_PSEUDO_TYPE)
+#undef ADD_PSEUDO_TYPE
     };
 
     enum AttributeMatchType {
@@ -2761,7 +2736,7 @@ public:
 protected:
     Type m_type : 4;
     RelationType m_relation : 3;
-    PseudoType m_pseudotype : 5;
+    PseudoType m_pseudotype : 6;
     AttributeMatchType m_attributeMatch : 1;
     bool m_relationIsAffectedByPseudoContent : 1;
 
@@ -2860,7 +2835,7 @@ public:
 
     bool matchNth(int count);
 
-    PseudoType parsePseudoType(StarFish* sf, AtomicString name,
+    PseudoType parsePseudoType(StarFish* sf, AtomicString pseudoName,
                                bool hasArguments);
     void updatePseudoType(StarFish* sf, AtomicString name, bool hasArguments);
 

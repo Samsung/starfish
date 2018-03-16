@@ -68,40 +68,11 @@ StaticStrings::StaticStrings(StarFish* sf)
     STARFISH_ENUM_MATHML_TAG_NAMES(DEFINE_MATHML_LOCAL_NAMES)
 #undef DEFINE_MATHML_LOCAL_NAMES
 
-    m_firstChildSelector = AtomicString::createAtomicString(sf, "first-child");
-    m_firstOfTypeSelector =
-        AtomicString::createAtomicString(sf, "first-of-type");
-    m_lastChildSelector = AtomicString::createAtomicString(sf, "last-child");
-    m_lastOfTypeSelector = AtomicString::createAtomicString(sf, "last-of-type");
-    m_onlyChildSelector = AtomicString::createAtomicString(sf, "only-child");
-    m_onlyOfTypeSelector = AtomicString::createAtomicString(sf, "only-of-type");
-    m_placeholderShownSelector =
-        AtomicString::createAtomicString(sf, "placeholder-shown");
-    m_emptySelector = AtomicString::createAtomicString(sf, "empty");
-    m_firstLineSelector = AtomicString::createAtomicString(sf, "first-line");
-    m_firstLetterSelector =
-        AtomicString::createAtomicString(sf, "first-letter");
-    m_nthChildPSelector = AtomicString::createAtomicString(sf, "nth-child(");
-    m_nthLastChildPSelector =
-        AtomicString::createAtomicString(sf, "nth-last-child(");
-    m_nthOfTypePSelector = AtomicString::createAtomicString(sf, "nth-of-type(");
-    m_nthLastOfTypePSelector =
-        AtomicString::createAtomicString(sf, "nth-last-of-type(");
-    m_linkSelector = AtomicString::createAtomicString(sf, "link");
-    m_hoverSelector = AtomicString::createAtomicString(sf, "hover");
-    m_focusSelector = AtomicString::createAtomicString(sf, "focus");
-    m_activeSelector = AtomicString::createAtomicString(sf, "active");
-    m_enabledSelector = AtomicString::createAtomicString(sf, "enabled");
-    m_disabledSelector = AtomicString::createAtomicString(sf, "disabled");
-    m_targetSelector = AtomicString::createAtomicString(sf, "target");
-    m_beforeSelector = AtomicString::createAtomicString(sf, "before");
-    m_afterSelector = AtomicString::createAtomicString(sf, "after");
-    m_dirPSelector = AtomicString::createAtomicString(sf, "dir(");
-    m_langPSelector = AtomicString::createAtomicString(sf, "lang(");
-    m_notPSelector = AtomicString::createAtomicString(sf, "not(");
-    m_selectionSelector = AtomicString::createAtomicString(sf, "selection");
-    m_rootSelector = AtomicString::createAtomicString(sf, "root");
-    m_checkedSelector = AtomicString::createAtomicString(sf, "checked");
+#define DEFINE_PSEUDO_SELECTOR_LOCAL_NAMES(name, nameLower, selectorName) \
+    m_##nameLower##Selector =                                             \
+        AtomicString::createAtomicString(sf, selectorName);
+    STARFISH_ENUM_PSEUDO_SELECTORS(DEFINE_PSEUDO_SELECTOR_LOCAL_NAMES)
+#undef DEFINE_PSEUDO_SELECTOR_LOCAL_NAMES
 
     m_id = QualifiedName(AtomicString::emptyAtomicString(),
                          AtomicString::createAtomicString(sf, "id"));

@@ -1110,74 +1110,25 @@ bool CSSPseudoSelector::matchNth(int count)
     return (nthBValue() - count) % (-nthAValue()) == 0;
 }
 
-CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(StarFish* sf,
-                                                           AtomicString name,
-                                                           bool hasArguments)
+CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(
+    StarFish* sf, AtomicString pseudoName, bool hasArguments)
 {
-    if (name.isEmptyAtomicString() ||
-        !name.string()->containsOnlyASCIIChars()) {
+    if (pseudoName.isEmptyAtomicString() ||
+        !pseudoName.string()->containsOnlyASCIIChars()) {
         return CSSSelector::PseudoNone;
     }
     StaticStrings* sstrs = sf->staticStrings();
-    if (name == sstrs->m_firstChildSelector) {
-        return CSSSelector::PseudoType::PseudoFirstChild;
-    } else if (name == sstrs->m_firstOfTypeSelector) {
-        return CSSSelector::PseudoType::PseudoFirstOfType;
-    } else if (name == sstrs->m_lastChildSelector) {
-        return CSSSelector::PseudoType::PseudoLastChild;
-    } else if (name == sstrs->m_lastOfTypeSelector) {
-        return CSSSelector::PseudoType::PseudoLastOfType;
-    } else if (name == sstrs->m_onlyChildSelector) {
-        return CSSSelector::PseudoType::PseudoOnlyChild;
-    } else if (name == sstrs->m_onlyOfTypeSelector) {
-        return CSSSelector::PseudoType::PseudoOnlyOfType;
-    } else if (name == sstrs->m_placeholderShownSelector) {
-        return CSSSelector::PseudoType::PseudoPlaceholderShown;
-    } else if (name == sstrs->m_emptySelector) {
-        return CSSSelector::PseudoType::PseudoEmpty;
-    } else if (name == sstrs->m_firstLineSelector) {
-        return CSSSelector::PseudoType::PseudoFirstLine;
-    } else if (name == sstrs->m_firstLetterSelector) {
-        return CSSSelector::PseudoType::PseudoFirstLetter;
-    } else if (name == sstrs->m_nthChildPSelector) {
-        return CSSSelector::PseudoType::PseudoNthChild;
-    } else if (name == sstrs->m_nthLastChildPSelector) {
-        return CSSSelector::PseudoType::PseudoNthLastChild;
-    } else if (name == sstrs->m_nthOfTypePSelector) {
-        return CSSSelector::PseudoType::PseudoNthOfType;
-    } else if (name == sstrs->m_nthLastOfTypePSelector) {
-        return CSSSelector::PseudoType::PseudoNthLastOfType;
-    } else if (name == sstrs->m_linkSelector) {
-        return CSSSelector::PseudoType::PseudoLink;
-    } else if (name == sstrs->m_hoverSelector) {
-        return CSSSelector::PseudoType::PseudoHover;
-    } else if (name == sstrs->m_focusSelector) {
-        return CSSSelector::PseudoType::PseudoFocus;
-    } else if (name == sstrs->m_activeSelector) {
-        return CSSSelector::PseudoType::PseudoActive;
-    } else if (name == sstrs->m_enabledSelector) {
-        return CSSSelector::PseudoType::PseudoEnabled;
-    } else if (name == sstrs->m_disabledSelector) {
-        return CSSSelector::PseudoType::PseudoDisabled;
-    } else if (name == sstrs->m_targetSelector) {
-        return CSSSelector::PseudoType::PseudoTarget;
-    } else if (name == sstrs->m_beforeSelector) {
-        return CSSSelector::PseudoType::PseudoBefore;
-    } else if (name == sstrs->m_afterSelector) {
-        return CSSSelector::PseudoType::PseudoAfter;
-    } else if (name == sstrs->m_dirPSelector) {
-        return CSSSelector::PseudoType::PseudoDir;
-    } else if (name == sstrs->m_langPSelector) {
-        return CSSSelector::PseudoType::PseudoLang;
-    } else if (name == sstrs->m_notPSelector) {
-        return CSSSelector::PseudoType::PseudoNot;
-    } else if (name == sstrs->m_selectionSelector) {
-        return CSSSelector::PseudoType::PseudoSelection;
-    } else if (name == sstrs->m_rootSelector) {
-        return CSSSelector::PseudoType::PseudoRoot;
-    } else if (name == sstrs->m_checkedSelector) {
-        return CSSSelector::PseudoType::PseudoChecked;
-    } else {
+    if (false) {
+    }
+#define SET_PSEUDO_TYPE(name, nameLower, ...)              \
+    else if (pseudoName == sstrs->m_##nameLower##Selector) \
+    {                                                      \
+        return CSSSelector::PseudoType::Pseudo##name;      \
+    }
+    STARFISH_ENUM_PSEUDO_SELECTORS(SET_PSEUDO_TYPE)
+#undef SET_PSEUDO_TYPE
+    else
+    {
         return CSSSelector::PseudoNone;
     }
 }
@@ -1233,49 +1184,58 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
             break;
     */
     case PseudoActive:
+    case PseudoAnyLink:
     /*
         case PseudoAny:
-        case PseudoAnyLink:
         case PseudoAutofill:
     */
+    case PseudoBlank:
     case PseudoChecked:
+    // case PseudoCornerPresent:
+    case PseudoCurrent:
     /*
-        case PseudoCornerPresent:
         case PseudoDecrement:
-        case PseudoDefault:
     */
+    case PseudoDefault:
+    case PseudoDir:
     case PseudoDisabled:
     /*
         case PseudoDoubleButton:
         case PseudoDrag:
     */
+    case PseudoDrop:
     case PseudoEmpty:
     case PseudoEnabled:
-    //  case PseudoEnd:
+    // case PseudoEnd:
     case PseudoFirstChild:
     case PseudoFirstOfType:
     case PseudoFocus:
+    case PseudoFocusWithin:
+    case PseudoFocusVisible:
     /*
         case PseudoFullPageMedia:
         case PseudoFullScreen:
         case PseudoFullScreenAncestor:
+    */
+    case PseudoFuture:
+    /*
         case PseudoFutureCue:
         case PseudoHorizontal:
         case PseudoHost:
         case PseudoHostContext:
     */
     case PseudoHover:
+    case PseudoInRange:
     /*
-        case PseudoInRange:
         case PseudoIncrement:
-        case PseudoIndeterminate:
-        case PseudoInvalid:
     */
-    case PseudoDir:
+    case PseudoIndeterminate:
+    case PseudoInvalid:
     case PseudoLang:
     case PseudoLastChild:
     case PseudoLastOfType:
     case PseudoLink:
+    case PseudoLocalLink:
     /*
         case PseudoListBox:
         case PseudoNoButton:
@@ -1287,33 +1247,32 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
     case PseudoNthOfType:
     case PseudoOnlyChild:
     case PseudoOnlyOfType:
-    /*
-        case PseudoOptional:
-    */
+    case PseudoOptional:
+    case PseudoOutOfRange:
+    case PseudoPast:
+    // case PseudoPastCue:
+    case PseudoPaused:
     case PseudoPlaceholderShown:
-    /*
-        case PseudoOutOfRange:
-        case PseudoPastCue:
-        case PseudoReadOnly:
-        case PseudoReadWrite:
-        case PseudoRequired:
-    */
+    case PseudoPlaying:
+    case PseudoReadOnly:
+    case PseudoReadWrite:
+    case PseudoRequired:
     case PseudoRoot:
+    case PseudoScope:
     /*
-        case PseudoScope:
         case PseudoSingleButton:
         case PseudoSpatialNavigationFocus:
         case PseudoStart:
     */
     case PseudoTarget:
+    case PseudoTargetWithin:
     case PseudoNone:
-        /*
-            case PseudoUnresolved:
-            case PseudoValid:
-            case PseudoVertical:
-            case PseudoVisited:
-            case PseudoWindowInactive:
-        */
+    // case PseudoUnresolved:
+    case PseudoUserInvalid:
+    case PseudoValid:
+    // case PseudoVertical:
+    case PseudoVisited:
+        // case PseudoWindowInactive:
         if (type() != PseudoClass) {
             m_pseudotype = PseudoNone;
         }
