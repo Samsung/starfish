@@ -1459,6 +1459,16 @@ public:
         m_rareComputedStyleData.ensureBorder()->image().setImageResource(value);
     }
 
+    void setBorderImageRepeatX(const BorderImageRepeatValue v)
+    {
+        m_rareComputedStyleData.ensureBorder()->image().setRepeatX(v);
+    }
+
+    void setBorderImageRepeatY(const BorderImageRepeatValue v)
+    {
+        m_rareComputedStyleData.ensureBorder()->image().setRepeatY(v);
+    }
+
     void setBorderImageSliceFromOther(ComputedStyle* other)
     {
         BorderData oBorder = other->border();
