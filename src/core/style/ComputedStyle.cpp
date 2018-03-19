@@ -819,6 +819,20 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
                                         this);
                 shadow.setOffsetY(v);
             }
+            if (!shadow.radius().isComputed()) {
+                auto v = shadow.radius();
+                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                        windowSize.width(), windowSize.height(),
+                                        this);
+                shadow.setRadius(v);
+            }
+            if (!shadow.spreadDistance().isComputed()) {
+                auto v = shadow.spreadDistance();
+                v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                        windowSize.width(), windowSize.height(),
+                                        this);
+                shadow.setSpreadDistance(v);
+            }
         }
     }
 

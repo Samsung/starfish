@@ -205,6 +205,13 @@ namespace Unit {
             m_size = newMaxPoint - newLocation;
         }
 
+        bool intersects(const Rect& other) const
+        {
+            return !isEmpty() && !other.isEmpty() && x() < other.maxX() &&
+                   other.x() < maxX() && y() < other.maxY() &&
+                   other.y() < maxY();
+        }
+
         bool operator==(const Rect& r) const
         {
             return m_location.x() == r.m_location.x() &&

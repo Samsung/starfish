@@ -68,6 +68,16 @@ public:
         m_radius = radius;
     }
 
+    Length spreadDistance()
+    {
+        return m_spreadDistance;
+    }
+
+    void setSpreadDistance(Length spreadDistance)
+    {
+        m_spreadDistance = spreadDistance;
+    }
+
     Unit::Color color()
     {
         return m_color;
