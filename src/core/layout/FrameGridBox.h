@@ -29,11 +29,81 @@ class FrameBox;
 class FrameGridBox;
 class LineBox;
 
+class GridLine : public gc {
+public:
+    LayoutUnit gap()
+    {
+        return m_gap;
+    }
+
+    bool isComputed()
+    {
+        return m_computed;
+    }
+
+    // The 'computed' is for the 'fr' unit.
+    GridLine(LayoutUnit gap, bool computed)
+        : m_gap(gap)
+        , m_lineName(nullptr)
+        , m_computed(computed)
+    {
+    }
+
+    GridLine(LayoutUnit gap)
+        : m_gap(gap)
+        , m_lineName(nullptr)
+        , m_computed(true)
+    {
+        m_computed = true;
+    }
+
+private:
+    LayoutUnit m_gap;
+    String* m_lineName;
+    bool m_computed;
+};
+
+struct GridLayoutScope {
+    GridLayoutScope(FrameBox* box)
+        : m_box(box)
+    {
+        ComputedStyle* style = box->style();
+        m_width = style->width();
+        m_height = style->height();
+        m_minWidth = style->minWidth();
+        m_maxWidth = style->maxWidth();
+        m_minHeight = style->minHeight();
+        m_maxHeight = style->maxHeight();
+    }
+
+    ~GridLayoutScope()
+    {
+        ComputedStyle* style = m_box->style();
+        style->setWidth(m_width);
+        style->setHeight(m_height);
+        style->setMinWidth(m_minWidth);
+        style->setMaxWidth(m_maxWidth);
+        style->setMinHeight(m_minHeight);
+        style->setMaxHeight(m_maxHeight);
+    }
+
+    FrameBox* m_box;
+    Length m_width;
+    Length m_height;
+    Length m_minWidth;
+    Length m_maxWidth;
+    Length m_minHeight;
+    Length m_maxHeight;
+};
+
 class GridFormattingContext {
 public:
     GridFormattingContext(LayoutContext& ctx, FrameGridBox* container,
                           LayoutUnit availableWidth);
     void computeColumnsAndRows();
+    void buildGridLineTemplate();
+    void layoutGridItems();
+    void applyAlign();
 
     static bool doesParticipateInGridFormattingContext(Frame* GridItem);
 
@@ -41,6 +111,9 @@ private:
     LayoutContext& m_layoutContext;
     FrameGridBox* m_container;
     LayoutUnit m_availableWidth;
+    GCVector<GridLine> m_gridLineColumns;
+    GCVector<GridLine> m_gridLineRows;
+    GCVector<FrameBox*> m_orderedGridItems;
 };
 
 class FrameGridBox : public FrameBlockBox {

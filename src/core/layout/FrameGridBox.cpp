@@ -33,32 +33,139 @@ GridFormattingContext::GridFormattingContext(LayoutContext& ctx,
 
 void GridFormattingContext::computeColumnsAndRows()
 {
-    std::vector<FrameBox*> orderedGridItems;
     Frame* child = m_container->firstChild();
 
     while (child) {
         if (child->isGridItem()) {
-            orderedGridItems.push_back(child->asFrameBox());
+            m_orderedGridItems.push_back(child->asFrameBox());
         }
         child = child->next();
     }
 
-    std::stable_sort(orderedGridItems.begin(), orderedGridItems.end(),
+    std::stable_sort(m_orderedGridItems.begin(), m_orderedGridItems.end(),
                      [](FrameBox* a, FrameBox* b) {
                          return a->style()->order() < b->style()->order();
                      });
 
-    auto item = orderedGridItems.begin();
+    buildGridLineTemplate();
+    layoutGridItems();
+}
 
-    // Apply 'y' coordinate, but we have to make grid properties.
-    LayoutUnit y(0);
-    while (item != orderedGridItems.end()) {
-        FrameBox* gridItem = (*item);
-        gridItem->layout(m_layoutContext,
-                         Frame::LayoutWantToResolve::ResolveAll);
+void GridFormattingContext::layoutGridItems()
+{
+    auto item = m_orderedGridItems.begin();
+    for (size_t row = 0; row < m_gridLineRows.size() - 1; row++) {
+        for (size_t col = 0; col < m_gridLineColumns.size() - 1; col++) {
+            LayoutUnit offsetX, offsetY;
+            FrameBox* gridItem = (*item);
+            if (!row) {
+                offsetY = m_container->borderTop() + m_container->paddingTop();
+            } else {
+                offsetY = m_gridLineRows[row].gap() + m_container->borderTop() +
+                          m_container->paddingTop();
+            }
 
-        gridItem->setY(y);
-        y += gridItem->height();
+            if (!col) {
+                offsetX =
+                    m_container->borderLeft() + m_container->paddingLeft();
+            } else {
+                offsetX = m_gridLineColumns[col].gap() +
+                          m_container->borderLeft() +
+                          m_container->paddingLeft();
+            }
+            gridItem->setX(offsetX);
+            gridItem->setY(offsetY);
+            item++;
+            if (item == m_orderedGridItems.end()) {
+                return;
+            }
+        }
+    }
+}
+
+void GridFormattingContext::buildGridLineTemplate()
+{
+    const GCVector<GridLength>* columns =
+        m_container->style()->gridTemplateColumns();
+
+    m_gridLineColumns.push_back(GridLine(0));
+    m_gridLineRows.push_back(GridLine(0));
+
+    if (columns) {
+        for (size_t i = 0; i < columns->size(); i++) {
+            GridLength gridLength = (*columns)[i];
+            GridLine preGridLine = m_gridLineColumns[i];
+
+            if (gridLength.isLength() && gridLength.length().isFixed()) {
+                Length length = gridLength.length();
+                GridLine line =
+                    GridLine(preGridLine.gap() + length.numberData());
+                m_gridLineColumns.push_back(line);
+            }
+        }
+    }
+
+    if (!columns) {
+        m_gridLineColumns.push_back(GridLine(m_availableWidth));
+    }
+
+    const GCVector<GridLength>* rows = m_container->style()->gridTemplateRows();
+
+    if (rows) {
+        for (size_t i = 0; i < rows->size(); i++) {
+            GridLength gridLength = (*rows)[i];
+            GridLine preGridLine = m_gridLineRows[i];
+
+            if (gridLength.isLength() && gridLength.length().isFixed()) {
+                Length length = gridLength.length();
+                GridLine line =
+                    GridLine(preGridLine.gap() + length.numberData());
+                m_gridLineRows.push_back(line);
+            }
+        }
+    }
+
+    auto item = m_orderedGridItems.begin();
+    size_t lineNumber = 0;
+    size_t columnIndex = 0;
+    size_t rowIndex = 0;
+
+    double maxHeight = -1;
+    while (item != m_orderedGridItems.end()) {
+        bool needNewLine = false;
+
+        if (m_gridLineRows.size() <= rowIndex + 1) {
+            needNewLine = true;
+        }
+
+        GridLine preGridLine = m_gridLineColumns[columnIndex];
+        GridLine gridLength = m_gridLineColumns[columnIndex + 1];
+
+        {
+            FrameBox* gridItem = (*item);
+            GridLayoutScope scope(gridItem);
+            ComputedStyle* style = gridItem->style();
+            style->setWidth(
+                Length(Length::Fixed, gridLength.gap() - preGridLine.gap()));
+            gridItem->layout(m_layoutContext,
+                             Frame::LayoutWantToResolve::ResolveAll);
+            maxHeight = std::max(maxHeight, gridItem->height().toDouble());
+        }
+
+        if (columnIndex + 1 >= m_gridLineColumns.size() - 1) {
+            if (needNewLine && maxHeight != -1) {
+                GridLine line =
+                    GridLine(m_gridLineRows[rowIndex].gap() + maxHeight);
+                m_gridLineRows.push_back(line);
+            }
+
+            columnIndex = 0;
+            maxHeight = -1;
+            rowIndex++;
+        } else {
+            columnIndex++;
+        }
+
         item++;
     }
 }
