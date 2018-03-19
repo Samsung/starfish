@@ -980,6 +980,14 @@ enum ListStylePositionValue {
     ListStylePositionInside,
 };
 
+enum UserSelectValue {
+    NoneUserSelectValue,
+    AutoUserSelectValue,
+    TextUserSelectValue,
+    ContainUserSelectValue,
+    AllUserSelectValue,
+};
+
 class ValueList;
 class ValuePair;
 class FontFaceSrcData;
@@ -1135,7 +1143,8 @@ class CSSStyleDeclaration;
     F(ListStyleImage, listStyleImage, "list-style-image")                    \
     F(ListStyleType, listStyleType, "list-style-type")                       \
     F(Clip, clip, "clip")                                                    \
-    F(LetterSpacing, letterSpacing, "letter-spacing")
+    F(LetterSpacing, letterSpacing, "letter-spacing")                        \
+    F(UserSelect, userSelect, "user-select")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)
@@ -1394,7 +1403,10 @@ public:
         ListStyleCounterValueKind,
 
         // rect for clip
-        RectValueKind
+        RectValueKind,
+
+        // user-select
+        UserSelectValueKind,
     };
 
     CSSStyleValuePair()
@@ -1867,6 +1879,12 @@ public:
         return m_value.m_rect;
     }
 
+    UserSelectValue userSelectValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == UserSelectValueKind);
+        return m_value.m_userSelect;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1923,6 +1941,7 @@ public:
         MaskSizeValue m_maskSize;
         ObjectFitValue m_objectFit;
         ListStylePositionValue m_listStylePosition;
+        UserSelectValue m_userSelect;
         RectData* m_rect;
 
         ValueData(int v)
@@ -2144,6 +2163,11 @@ public:
 
         ValueData(ListStylePositionValue v)
             : m_listStylePosition(v)
+        {
+        }
+
+        ValueData(UserSelectValue v)
+            : m_userSelect(v)
         {
         }
 

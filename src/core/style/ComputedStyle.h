@@ -104,7 +104,8 @@ class RareComputedStyleData : public gc {
         RY,
         R,
         D,
-        Clip
+        Clip,
+        UserSelect
     };
 
     union RareComputedStyleValue {
@@ -127,6 +128,7 @@ class RareComputedStyleData : public gc {
         ObjectSizingData* m_objectSizing;
         ShadowDataList* m_boxShadowDataList;
         RectData* m_clip;
+        UserSelectValue m_userSelect;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -220,6 +222,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(RectData* rect)
             : m_clip(rect)
+        {
+        }
+
+        RareComputedStyleValue(UserSelectValue v)
+            : m_userSelect(v)
         {
         }
     };
@@ -331,6 +338,7 @@ public:
     GETTER_VALUE(Length, length, cy, CY);
     GETTER_VALUE(Length, length, rx, RX);
     GETTER_VALUE(Length, length, ry, RY);
+    GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect);
 
 #undef GETTER_VALUE
 
@@ -2438,6 +2446,25 @@ public:
     bool seenPseudoElementAfter() const
     {
         return m_seenPseudoElementAfter;
+    }
+
+    UserSelectValue userSelect()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return UserSelectValue::NoneUserSelectValue;
+        }
+
+        Nullable<UserSelectValue> us = rareComputedStyleData()->userSelect();
+        if (us.hasValue()) {
+            return us.getValue();
+        }
+
+        return UserSelectValue::NoneUserSelectValue;
+    }
+
+    void setUserSelect(UserSelectValue us)
+    {
+        *m_rareComputedStyleData.ensureUserSelect() = us;
     }
 
     void* operator new(size_t size);
