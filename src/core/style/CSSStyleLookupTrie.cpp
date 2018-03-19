@@ -378,6 +378,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Text-Shadow
         // Empty-Cells
         // Align-Items
+        // User-Select
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left", 11) == 0) {
@@ -431,6 +432,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'a':
             if (memcmp(data, "align-items", 11) == 0) {
                 return CSSStyleKind::AlignItems;
+            }
+            break;
+        case 'u':
+            if (memcmp(data, "user-select", 11) == 0) {
+                return CSSStyleKind::UserSelect;
             }
             break;
         }
@@ -1166,6 +1172,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "textShadow", 10) == 0) {
                 return CSSStyleKind::TextShadow;
+            }
+            break;
+        case 'u':
+            if (memcmp(data, "userSelect", 10) == 0) {
+                return CSSStyleKind::UserSelect;
             }
             break;
         }

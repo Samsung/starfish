@@ -1611,6 +1611,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
+    if (newStyle->userSelect() != oldStyle->userSelect()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::UserSelect] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     return damage;
 }
 

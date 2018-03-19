@@ -2414,6 +2414,22 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
+    case CSSStyleValuePair::ValueKind::UserSelectValueKind:
+        switch (userSelectValue()) {
+        case NoneUserSelectValue:
+            return String::fromUTF8("none");
+        case AutoUserSelectValue:
+            return String::fromUTF8("auto");
+        case TextUserSelectValue:
+            return String::fromUTF8("text");
+        case ContainUserSelectValue:
+            return String::fromUTF8("contain");
+        case AllUserSelectValue:
+            return String::fromUTF8("all");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -6665,6 +6681,24 @@ void StyleResolver::apply(Element* element,
             } else {
                 style->setListStylePosition(
                     cssValues[k].listStylePositionValue());
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::UserSelect:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setUserSelect(parentStyle->userSelect());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::Unset:
+            case CSSStyleValuePair::ValueKind::Auto:
+                style->setUserSelect(UserSelectValue::NoneUserSelectValue);
+                break;
+            default:
+                STARFISH_ASSERT(
+                    CSSStyleValuePair::ValueKind::UserSelectValueKind ==
+                    cssValues[k].valueKind());
+                style->setUserSelect(cssValues[k].userSelectValue());
+                break;
             }
             break;
         case CSSStyleValuePair::KeyKind::Empty:
@@ -11175,6 +11209,36 @@ bool CSSStyleValuePair::updateValueListStylePosition(
         return true;
     }
     return false;
+}
+
+bool CSSStyleValuePair::updateValueUserSelect(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::UserSelectValueKind;
+    if (STRING_VALUE_IS_STRING("none")) {
+        m_value.m_userSelect = UserSelectValue::NoneUserSelectValue;
+    } else if (STRING_VALUE_IS_STRING("auto")) {
+        m_value.m_userSelect = UserSelectValue::AutoUserSelectValue;
+    } else if (STRING_VALUE_IS_STRING("text")) {
+        // TODO: enable the comment below when supporting this value
+        // m_value.m_userSelect = UserSelectValue::TextUserSelectValue;
+        return false;
+    } else if (STRING_VALUE_IS_STRING("contain")) {
+        // TODO: enable the comment below when supporting this value
+        // m_value.m_userSelect = UserSelectValue::ContainUserSelectValue;
+        return false;
+    } else if (STRING_VALUE_IS_STRING("all")) {
+        // TODO: enable the comment below when supporting this value
+        // m_value.m_userSelect = UserSelectValue::AllUserSelectValue;
+        return false;
+    } else {
+        return false;
+    }
+    return true;
 }
 
 #ifdef STARFISH_ENABLE_TEST
