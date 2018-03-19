@@ -5,6 +5,6 @@ interface HTMLUListElement : HTMLElement {
   // also has obsolete members
 
   // https://html.spec.whatwg.org/#HTMLUListElement-partial
-  [Unimplemented, CEReactions] attribute boolean compact;
-  [Unimplemented, CEReactions] attribute DOMString type;
+  [CEReactions, Reflect] attribute boolean compact;
+  [CEReactions, Reflect] attribute DOMString type;
 };

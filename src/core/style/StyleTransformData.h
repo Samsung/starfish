@@ -309,6 +309,7 @@ public:
     StyleTransformDataGroup()
     {
         m_hasComplexTransform = false;
+        m_has3DTransform = false;
     }
 
     ~StyleTransformDataGroup()
@@ -318,12 +319,14 @@ public:
     void clear()
     {
         m_hasComplexTransform = false;
+        m_has3DTransform = false;
         m_group.clear();
     }
 
     void reset(StyleTransformDataGroup* other)
     {
         m_hasComplexTransform = other->m_hasComplexTransform;
+        m_has3DTransform = other->m_has3DTransform;
         m_group.assign(other->m_group.begin(), other->m_group.end());
     }
 
@@ -366,6 +369,11 @@ public:
         return m_hasComplexTransform;
     }
 
+    bool has3DTransform()
+    {
+        return m_has3DTransform;
+    }
+
 private:
     friend inline bool operator==(const StyleTransformDataGroup& a,
                                   const StyleTransformDataGroup& b);
@@ -373,6 +381,7 @@ private:
                                   const StyleTransformDataGroup& b);
 
     bool m_hasComplexTransform;
+    bool m_has3DTransform;
     GCVector<StyleTransformData> m_group;
 };
 

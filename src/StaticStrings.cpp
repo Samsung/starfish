@@ -227,6 +227,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                             AtomicString::createAtomicString(sf, "async"));
     m_defer = QualifiedName(AtomicString::emptyAtomicString(),
                             AtomicString::createAtomicString(sf, "defer"));
+    m_compact = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "compact"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

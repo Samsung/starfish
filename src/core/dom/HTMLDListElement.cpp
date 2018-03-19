@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -19,11 +19,11 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
-#include "core/dom/HTMLStrongElement.h"
+#include "core/dom/HTMLDListElement.h"
 
 namespace StarFish {
-QualifiedName HTMLStrongElement::name()
+QualifiedName HTMLDListElement::name()
 {
-    return starFish()->staticStrings()->m_strongTagName;
+    return starFish()->staticStrings()->m_dlTagName;
 }
 }

@@ -1173,7 +1173,13 @@ void Frame::computeStyleFlags()
     m_flags.m_isEstablishesStackingContext |= (style->hasTransforms(this));
 
     // TODO add condition
+    m_flags.m_needsGraphicsBuffer |= (style->has3DTransforms(this));
+
+#ifdef PORT_CANVAS_BACKEND_EFL
+    // force use graphics buffer with complex-transform
+    // because efl canvas can't deal well with complex-transform
     m_flags.m_needsGraphicsBuffer |= (style->hasComplexTransforms(this));
+#endif
 }
 
 Node* Frame::nodeSlowCase() const

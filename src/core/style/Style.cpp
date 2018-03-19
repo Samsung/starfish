@@ -5732,6 +5732,8 @@ void StyleResolver::apply(Element* element,
                     default:
                         style->m_rareComputedStyleData.ensureTransforms()
                             ->m_hasComplexTransform = true;
+                        style->m_rareComputedStyleData.ensureTransforms()
+                            ->m_has3DTransform = true;
                         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                     }
                 }

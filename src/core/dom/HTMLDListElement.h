@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,19 +17,23 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLStrongElement__
-#define __StarFishHTMLStrongElement__
+#ifndef __StarFishHTMLDListElement__
+#define __StarFishHTMLDListElement__
 
 #include "core/dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLStrongElement : public HTMLElement {
+class HTMLDListElement : public HTMLElement {
 public:
-    HTMLStrongElement(Document* document)
+    HTMLDListElement(Document* document)
         : HTMLElement(document)
     {
     }
+
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isHTMLDListElement() const override;
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();

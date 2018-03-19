@@ -913,6 +913,7 @@ public:
 
     bool hasTransforms(Frame* frame);
     bool hasComplexTransforms(Frame* frame);
+    bool has3DTransforms(Frame* frame);
 
     StyleTransformDataGroup* transforms(Frame* frame = nullptr);
 

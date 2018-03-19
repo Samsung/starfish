@@ -342,6 +342,7 @@ public:
     QualifiedName m_autofocus;
     QualifiedName m_async;
     QualifiedName m_defer;
+    QualifiedName m_compact;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

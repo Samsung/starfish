@@ -20,6 +20,8 @@
 #ifndef __StarFishCanvas__
 #define __StarFishCanvas__
 
+#define STARFISH_CANVAS_LENGTH_MAX 65535
+
 #include "core/modules/canvas/TextDecorationData.h"
 #include "core/modules/canvas/CanvasShadowData.h"
 #include "core/layout/Frame.h"
