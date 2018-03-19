@@ -258,6 +258,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #ifdef STARFISH_ENABLE_TEST
     , m_testCompatibleMode(StarFishTestCompatibleMode::Normal)
 #endif
+    , m_lweWebView(nullptr)
 {
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     m_width = w;
@@ -685,9 +686,9 @@ size_t StarFish::countPointersInRootSet(void* ptr)
 void StarFish::registerWebViewHandler(const std::string& handlerName,
                                       std::function<void(String*, int)> handler)
 {
-    auto it = m_lwe_webview_handlers.find(handlerName);
-    if (it == m_lwe_webview_handlers.end()) {
-        m_lwe_webview_handlers.insert(std::make_pair(handlerName, handler));
+    auto it = m_lweWebViewHandlers.find(handlerName);
+    if (it == m_lweWebViewHandlers.end()) {
+        m_lweWebViewHandlers.insert(std::make_pair(handlerName, handler));
     } else {
         it->second = handler;
     }
@@ -696,8 +697,8 @@ void StarFish::registerWebViewHandler(const std::string& handlerName,
 void StarFish::callWebViewHandler(const std::string& handlerName, String* url,
                                   int error_code)
 {
-    auto it = m_lwe_webview_handlers.find(handlerName);
-    if (it == m_lwe_webview_handlers.end()) {
+    auto it = m_lweWebViewHandlers.find(handlerName);
+    if (it == m_lweWebViewHandlers.end()) {
         return;
     }
     struct dummy {
@@ -721,8 +722,8 @@ void StarFish::callWebViewHandler(const std::string& handlerName, String* url,
                 int errorCode;
             };
             dummy* d = (dummy*)data;
-            auto it = d->starFish->m_lwe_webview_handlers.find(d->handlerName);
-            if (it != d->starFish->m_lwe_webview_handlers.end()) {
+            auto it = d->starFish->m_lweWebViewHandlers.find(d->handlerName);
+            if (it != d->starFish->m_lweWebViewHandlers.end()) {
                 (it->second)(d->url, d->errorCode);
             }
             delete d;

@@ -310,6 +310,14 @@ public:
                                 std::function<void(String*, int)> handler);
     void callWebViewHandler(const std::string& handlerName, String* url,
                             int error_code = 0);
+    void setLWEWebView(void* webView)
+    {
+        m_lweWebView = webView;
+    }
+    void* LWEWebView()
+    {
+        return m_lweWebView;
+    }
 
 protected:
     void enter();
@@ -382,7 +390,8 @@ protected:
     unsigned int m_testCompatibleMode;
 #endif
     std::unordered_map<std::string, std::function<void(String*, int)>>
-        m_lwe_webview_handlers;
+        m_lweWebViewHandlers;
+    void* m_lweWebView;
 
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);

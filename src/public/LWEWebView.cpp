@@ -57,7 +57,6 @@ struct WindowGlue {
     jmethodID m_onReceivedError;
     jmethodID m_onPageFinished;
     jmethodID m_onPageStarted;
-    LWE::WebViewClient* m_webViewClient;
     WindowGlue()
     {
         m_startTimer = m_requestRender = 0;
@@ -65,14 +64,19 @@ struct WindowGlue {
 } g_WindowGlue;
 JavaVM* g_jvm;
 
+std::map<LWE::WebView*, std::pair<jobject, LWE::WebViewClient*>> g_webViews;
+
 typedef bool (*TimerCallback)(int uid, void* data);
 int startTimer(int ms, TimerCallback pointer, void* data);
 void cancelTimer(int uid);
 
-void callOnLoadResourceHandler(const char* url);
-void callOnReceivedError(int errorCode, bool canGoBack, bool canGoForward);
-void callOnPageFinished(const char* url, bool canGoBack, bool canGoForward);
-void callOnPageStarted(const char* url, bool canGoBack, bool canGoForward);
+void callOnLoadResourceHandler(LWE::WebView* view, const char* url);
+void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
+                         bool canGoForward);
+void callOnPageFinished(LWE::WebView* view, const char* url, bool canGoBack,
+                        bool canGoForward);
+void callOnPageStarted(LWE::WebView* view, const char* url, bool canGoBack,
+                       bool canGoForward);
 
 extern unsigned char* g_androidBitmapAddress;
 extern size_t g_androidBitmapWidth;
@@ -144,9 +148,11 @@ static StarFish::ScriptValue nativeCallbackFunction(
 }
 
 Settings::Settings(std::string default_ua, std::string ua)
-    : m_cacheMode(StarFish::HTTPCache::LOAD_DEFAULT)
-    , m_defaultUserAgent(default_ua)
+    : m_defaultUserAgent(default_ua)
     , m_UserAgent(ua)
+#if defined(STARFISH_ENABLE_HTTPCACHE)
+    , m_cacheMode(StarFish::HTTPCache::LOAD_DEFAULT)
+#endif
 {
 }
 
@@ -503,17 +509,17 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
     g_WindowGlue.m_env = env;
     g_WindowGlue.m_startTimer = GetJMethod(env, clazz, "startTimer", "(III)I");
     g_WindowGlue.m_cancelTimer = GetJMethod(env, clazz, "cancelTimer", "(I)V");
-    g_WindowGlue.m_requestRender =
-        GetJMethod(env, clazz, "requestRender", "()V");
 
+    g_WindowGlue.m_requestRender =
+        env->GetMethodID(clazz, "requestRender", "()V");
     g_WindowGlue.m_onLoadResource =
-        GetJMethod(env, clazz, "onLoadResource", "(Ljava/lang/String;)V");
+        env->GetMethodID(clazz, "onLoadResource", "(Ljava/lang/String;)V");
     g_WindowGlue.m_onReceivedError =
-        GetJMethod(env, clazz, "onReceivedError", "(IZZ)V");
+        env->GetMethodID(clazz, "onReceivedError", "(IZZ)V");
     g_WindowGlue.m_onPageFinished =
-        GetJMethod(env, clazz, "onPageFinished", "(Ljava/lang/String;ZZ)V");
+        env->GetMethodID(clazz, "onPageFinished", "(Ljava/lang/String;ZZ)V");
     g_WindowGlue.m_onPageStarted =
-        GetJMethod(env, clazz, "onPageStarted", "(Ljava/lang/String;ZZ)V");
+        env->GetMethodID(clazz, "onPageStarted", "(Ljava/lang/String;ZZ)V");
 
     env->DeleteLocalRef(clazz);
 
@@ -530,7 +536,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_serviceQueueTimer(
     return ret;
 }
 
-void callOnLoadResourceHandler(const char* url)
+void callOnLoadResourceHandler(LWE::WebView* view, const char* url)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -551,11 +557,12 @@ void callOnLoadResourceHandler(const char* url)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     jstring jstr = env->NewStringUTF(url);
-    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
-                              g_WindowGlue.m_onLoadResource, jstr);
+    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onLoadResource,
+                        jstr);
 }
 
-void callOnReceivedError(int errorCode, bool canGoBack, bool canGoForward)
+void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
+                         bool canGoForward)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -578,11 +585,11 @@ void callOnReceivedError(int errorCode, bool canGoBack, bool canGoForward)
     jint jint1 = errorCode;
     jboolean jboolean1 = canGoBack;
     jboolean jboolean2 = canGoForward;
-    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
-                              g_WindowGlue.m_onReceivedError, jint1, jboolean1,
-                              jboolean2);
+    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onReceivedError,
+                        jint1, jboolean1, jboolean2);
 }
-void callOnPageFinished(const char* url, bool canGoBack, bool canGoForward)
+void callOnPageFinished(LWE::WebView* view, const char* url, bool canGoBack,
+                        bool canGoForward)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -605,11 +612,11 @@ void callOnPageFinished(const char* url, bool canGoBack, bool canGoForward)
     jstring jstr = env->NewStringUTF(url);
     jboolean jboolean1 = canGoBack;
     jboolean jboolean2 = canGoForward;
-    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
-                              g_WindowGlue.m_onPageFinished, jstr, jboolean1,
-                              jboolean2);
+    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onPageFinished,
+                        jstr, jboolean1, jboolean2);
 }
-void callOnPageStarted(const char* url, bool canGoBack, bool canGoForward)
+void callOnPageStarted(LWE::WebView* view, const char* url, bool canGoBack,
+                       bool canGoForward)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -633,9 +640,8 @@ void callOnPageStarted(const char* url, bool canGoBack, bool canGoForward)
     jboolean jboolean1 = canGoBack;
     jboolean jboolean2 = canGoForward;
 
-    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
-                              g_WindowGlue.m_onPageStarted, jstr, jboolean1,
-                              jboolean2);
+    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onPageStarted,
+                        jstr, jboolean1, jboolean2);
 }
 
 int startTimer(int ms, TimerCallback pointer, void* data)
@@ -700,7 +706,7 @@ void cancelTimer(int uid)
                               uid);
 }
 
-void requestRender()
+void requestRender(void* view)
 {
     JNIEnv* env = g_WindowGlue.m_env;
 
@@ -725,9 +731,8 @@ void requestRender()
         LOGE("reuqest render error");
         return;
     }
-
-    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
-                              g_WindowGlue.m_requestRender);
+    env->CallVoidMethod(g_webViews[(LWE::WebView*)view].first,
+                        g_WindowGlue.m_requestRender);
 }
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -752,39 +757,43 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
     StarFish::StarFish* starfish = new (NoGC) StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)0, locale, timezoneID, nullptr, w, h, 0,
         0, defaultFontSizeMultiplier, String::fromUTF8("Roboto"), info, "", "",
-        nullptr, ua);
+        "/mnt/sdcard/TMP", ua);
 
     env->ReleaseStringUTFChars(jua, cstr);
 
     LWE::WebView* webView = LWE::WebView::Create(starfish);
+    starfish->setLWEWebView((void*)webView);
 
     class AndroidWebViewClient : public LWE::WebViewClient {
         virtual void OnReceivedError(LWE::WebView* view,
                                      LWE::ResourceError error) override
         {
-            callOnReceivedError(error.GetErrorCode(), view->CanGoBack(),
+            callOnReceivedError(view, error.GetErrorCode(), view->CanGoBack(),
                                 view->CanGoBack());
         }
         virtual void OnPageFinished(LWE::WebView* view,
                                     std::string url) override
         {
-            callOnPageFinished(url.c_str(), view->CanGoBack(),
+            callOnPageFinished(view, url.c_str(), view->CanGoBack(),
                                view->CanGoBack());
         }
         virtual void OnPageStarted(LWE::WebView* view, std::string url) override
         {
-            callOnPageStarted(url.c_str(), view->CanGoBack(),
+            callOnPageStarted(view, url.c_str(), view->CanGoBack(),
                               view->CanGoBack());
         }
         virtual void OnLoadResource(LWE::WebView* view,
                                     std::string url) override
         {
-            callOnLoadResourceHandler(url.c_str());
+            callOnLoadResourceHandler(view, url.c_str());
         }
     };
     AndroidWebViewClient* client = new AndroidWebViewClient();
     webView->SetWebViewClient(client);
-    g_WindowGlue.m_webViewClient = client;
+
+    jobject java_webview = env->NewGlobalRef(thiz);
+    g_webViews.insert(
+        std::make_pair(webView, std::make_pair(java_webview, client)));
 
     return (jlong)webView;
 }
@@ -796,8 +805,9 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Destroy(JNIEnv* env,
 {
     LWE::WebView* webView = (LWE::WebView*)wv;
     webView->Destroy();
-    delete g_WindowGlue.m_webViewClient;
-    g_WindowGlue.m_webViewClient = nullptr;
+    env->DeleteGlobalRef(g_webViews[webView].first);
+    delete (g_webViews[webView].second);
+    g_webViews.erase(webView);
     delete webView;
 }
 
@@ -1050,7 +1060,23 @@ Java_com_samsung_android_mobileservice_lwe_WebView_setCacheMode(JNIEnv* env,
                                                                 jlong wv,
                                                                 jint mode)
 {
+#ifdef STARFISH_ENABLE_HTTPCACHE
     LWE::WebView* webView = (LWE::WebView*)wv;
+    ((StarFish::StarFish*)webView->getInternalPtr())
+        ->httpCache()
+        ->setCacheMode(mode);
+#endif
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_ClearCache(JNIEnv* env,
+                                                              jobject thiz,
+                                                              jlong wv)
+{
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    LWE::WebView* webView = (LWE::WebView*)wv;
+    ((StarFish::StarFish*)webView->getInternalPtr())->httpCache()->clear();
+#endif
 }
 
 extern "C" JNIEXPORT void JNICALL

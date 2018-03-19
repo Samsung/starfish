@@ -107,11 +107,14 @@ void HTTPCacheEntry::setEntryFileNameUsingCachePath(String* cachePath)
 {
     Locker<Mutex> locker(*m_mutex);
     auto newPath = cachePath->toUTF8NonGCString();
+    char buf[256];
 
     newPath.append("/");
-    newPath.append(std::to_string(m_url->urlString()->hashValue()));
+    snprintf(buf, sizeof(buf), "%zu", m_url->urlString()->hashValue());
+    newPath.append(std::string(buf));
     newPath.append("_");
-    newPath.append(std::to_string(longTickCount()));
+    snprintf(buf, sizeof(buf), "%ju", longTickCount());
+    newPath.append(std::string(buf));
 
     m_entryFileInfo.entryFilePath = newPath;
 }
@@ -159,6 +162,7 @@ bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
 
 void HTTPCacheEntry::readEntryHeaders(HeaderMap& out)
 {
+    char buf[256];
     m_mutex->lock();
     HTTPContentInfo copied = m_httpContentInfo;
     m_mutex->unlock();
@@ -167,9 +171,11 @@ void HTTPCacheEntry::readEntryHeaders(HeaderMap& out)
         out.insert(std::make_pair(HTTPHeaderMap::kContentLanguage,
                                   copied.contentLanguage));
     }
+
     if (copied.contentLength) {
-        out.insert(std::make_pair(HTTPHeaderMap::kContentLength,
-                                  std::to_string(copied.contentLength)));
+        snprintf(buf, sizeof(buf), "%zu", copied.contentLength);
+        out.insert(
+            std::make_pair(HTTPHeaderMap::kContentLength, std::string(buf)));
     }
     if (copied.contentType.size()) {
         out.insert(
@@ -217,9 +223,10 @@ String* HTTPCacheEntry::toString() const
     //  rquestTime(UINT) responeTime(UINT) lastModified(UINT) Etag(STRING)
     //  entryFilePath(STRING) lastModificationTime(UINT) byteLength(UINT)
 
+    char buf[256];
     StringBuilder builder;
-    std::string entryKey =
-        std::to_string(copied->m_url->urlString()->hashValue());
+    snprintf(buf, sizeof(buf), "%zu", copied->m_url->urlString()->hashValue());
+    std::string entryKey(buf);
     builder.appendString(entryKey.data());
     builder.appendString(kSeparator);
 
@@ -233,7 +240,9 @@ String* HTTPCacheEntry::toString() const
     m_cacheControl.mustRevalidate ? builder.appendString("1")
                                   : builder.appendString("0");
     builder.appendString(kSeparator);
-    std::string maxAge = std::to_string(copied->m_cacheControl.maxAge);
+    snprintf(buf, sizeof(buf), "%ju", copied->m_cacheControl.maxAge);
+    std::string maxAge(buf);
+
     builder.appendString(maxAge.data());
     builder.appendString(kSeparator);
 
@@ -244,8 +253,8 @@ String* HTTPCacheEntry::toString() const
             : "null";
     builder.appendString(contentLanguage.data());
     builder.appendString(kSeparator);
-    std::string contentLength =
-        std::to_string(copied->m_httpContentInfo.contentLength);
+    snprintf(buf, sizeof(buf), "%zu", copied->m_httpContentInfo.contentLength);
+    std::string contentLength(buf);
     builder.appendString(contentLength.data());
     builder.appendString(kSeparator);
     std::string contentType = (copied->m_httpContentInfo.contentType.size())
@@ -261,22 +270,24 @@ String* HTTPCacheEntry::toString() const
     builder.appendString(kSeparator);
 
     // http freshness info
-    std::string date = std::to_string(copied->m_httpFreshnessInfo.date);
+    snprintf(buf, sizeof(buf), "%ju", copied->m_httpFreshnessInfo.date);
+    std::string date(buf);
     builder.appendString(date.data());
     builder.appendString(kSeparator);
-    std::string age = std::to_string(copied->m_httpFreshnessInfo.age);
+    snprintf(buf, sizeof(buf), "%ju", copied->m_httpFreshnessInfo.age);
+    std::string age(buf);
     builder.appendString(age.data());
     builder.appendString(kSeparator);
-    std::string requestTime =
-        std::to_string(copied->m_httpFreshnessInfo.requestTime);
+    snprintf(buf, sizeof(buf), "%ju", copied->m_httpFreshnessInfo.requestTime);
+    std::string requestTime(buf);
     builder.appendString(requestTime.data());
     builder.appendString(kSeparator);
-    std::string responseTime =
-        std::to_string(copied->m_httpFreshnessInfo.responseTime);
+    snprintf(buf, sizeof(buf), "%ju", copied->m_httpFreshnessInfo.responseTime);
+    std::string responseTime(buf);
     builder.appendString(responseTime.data());
     builder.appendString(kSeparator);
-    std::string lastModified =
-        std::to_string(copied->m_httpFreshnessInfo.lastModified);
+    snprintf(buf, sizeof(buf), "%ju", copied->m_httpFreshnessInfo.lastModified);
+    std::string lastModified(buf);
     builder.appendString(lastModified.data());
     builder.appendString(kSeparator);
     // See https://tools.ietf.org/html/rfc7232#section-2.3
@@ -289,11 +300,13 @@ String* HTTPCacheEntry::toString() const
     // entry File info
     builder.appendString(copied->m_entryFileInfo.entryFilePath.data());
     builder.appendString(kSeparator);
-    std::string lastModificationTime =
-        std::to_string(copied->m_entryFileInfo.lastModificationTime);
+    snprintf(buf, sizeof(buf), "%ju",
+             copied->m_entryFileInfo.lastModificationTime);
+    std::string lastModificationTime(buf);
     builder.appendString(lastModificationTime.data());
     builder.appendString(kSeparator);
-    std::string byteLength = std::to_string(copied->m_entryFileInfo.byteLength);
+    snprintf(buf, sizeof(buf), "%zu", copied->m_entryFileInfo.byteLength);
+    std::string byteLength(buf);
     builder.appendString(byteLength.data());
 
     return builder.finalize();
