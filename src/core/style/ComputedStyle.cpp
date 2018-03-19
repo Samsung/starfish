@@ -865,7 +865,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
 
     GCVector<GridLength>* rows = m_rareComputedStyleData.gridTemplateRows();
 
-    if (columns) {
+    if (rows) {
         for (size_t i = 0; i < rows->size(); i++) {
             if ((*rows)[i].isLength() && !(*rows)[i].length().isComputed()) {
                 (*rows)[i].mutableLength().changeToFixedIfNeeded(
