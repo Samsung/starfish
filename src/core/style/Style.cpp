@@ -7840,7 +7840,8 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
         m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
     } else if (STRING_VALUE_IS_STRING("hidden")) {
         m_value.m_borderStyle = BorderStyleValue::HiddenBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("solid")) {
+    } else if (STRING_VALUE_IS_STRING("solid") ||
+               STRING_VALUE_IS_STRING("auto")) {
         m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
     } else if (STRING_VALUE_IS_STRING("dashed")) {
         m_value.m_borderStyle = BorderStyleValue::DashedBorderStyleValue;
