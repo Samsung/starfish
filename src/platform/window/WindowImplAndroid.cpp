@@ -327,7 +327,9 @@ void WebView::setNeedsRendering()
     WindowImplAndroid* wnd = (WindowImplAndroid*)starFish()->platformWindow();
     m_needsRendering = true;
 
-    requestRender();
+    if (starFish()->LWEWebView() != nullptr) {
+        requestRender(starFish()->LWEWebView());
+    }
 }
 
 Canvas* WindowImplAndroid::preparePainting()

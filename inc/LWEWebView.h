@@ -38,9 +38,9 @@ public:
 	void SetUserAgentString(std::string ua);
 	void SetCacheMode(int mode);
 private:
-	int m_cacheMode;
 	std::string m_defaultUserAgent;
 	std::string m_UserAgent;
+	int m_cacheMode;
 };
 
 class STARFISH_EXPORT ResourceError
@@ -101,7 +101,7 @@ private:
 }
 
 #ifdef PORT_WINDOW_BACKEND_ANDROID
-	void requestRender();
+	void requestRender(void* view);
 #endif
 
 #endif
