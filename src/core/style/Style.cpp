@@ -6714,6 +6714,32 @@ void StyleResolver::apply(Element* element,
                 style->setGridTemplateRows(cssValues[k].gridTemplateUnits());
             }
             break;
+        case CSSStyleValuePair::KeyKind::CaretColor:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setCaretColor(parentStyle->caretColor());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setCaretColor(Unit::Color(0, 0, 0, 255));
+                break;
+            case CSSStyleValuePair::ValueKind::ColorValueKind:
+                style->setCaretColor(cssValues[k].colorValue());
+                break;
+            default:
+                STARFISH_ASSERT(
+                    cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::NamedColorValueKind);
+                if (cssValues[k].namedColorValue() ==
+                    NamedColor::NamedColorValue::currentColor) {
+                    style->ensureInheritedRareData()->m_caretColor =
+                        parentStyle->ensureInheritedRareData()->m_caretColor;
+                } else {
+                    style->setCaretColor(NamedColor::namedColorToColor(
+                        cssValues[k].namedColorValue()));
+                }
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -7835,6 +7861,27 @@ bool CSSStyleValuePair::updateValueColor(const CSSTokenVector& tokens)
 bool CSSStyleValuePair::updateValueBackgroundColor(const CSSTokenVector& tokens)
 {
     return updateValueColor(tokens);
+}
+
+bool CSSStyleValuePair::updateValueCaretColor(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
+    if (STRING_VALUE_IS_STRING("auto")) {
+        CSSTokenValue token("currentcolor");
+        return CSSPropertyParser::parseNamedColor(token, this);
+    } else if (STRING_VALUE_IS_STRING("transparent")) {
+        m_value.m_color = Unit::Color(0, 0, 0, 0);
+        return true;
+    } else {
+        return updateValueColor(tokens);
+    }
+
+    return false;
 }
 
 #define UPDATE_VALUE_BORDER_COLOR(POS, ...)                \

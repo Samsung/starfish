@@ -110,6 +110,8 @@ class RareComputedStyleData : public gc {
         // Grid
         GridTemplateColumns,
         GridTemplateRows,
+
+        CaretColor
     };
 
     union RareComputedStyleValue {
@@ -134,6 +136,7 @@ class RareComputedStyleData : public gc {
         RectData* m_clip;
         UserSelectValue m_userSelect;
         GCVector<GridLength>* m_gridTemplateUnits;
+        Unit::Color m_color;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -237,6 +240,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(GCVector<GridLength>* gridTemplate)
             : m_gridTemplateUnits(gridTemplate)
+        {
+        }
+
+        RareComputedStyleValue(Unit::Color c)
+            : m_color(c)
         {
         }
     };
@@ -442,6 +450,8 @@ class ComputedStyle : public gc {
         ShadowDataList m_textShadowDataList;
         ListStyleData m_listStyleData;
 
+        Unit::Color m_caretColor;
+
         InheritedStylesRareData()
         {
             m_letterSpacing = Length(Length::Fixed, 0);
@@ -457,6 +467,7 @@ class ComputedStyle : public gc {
             m_strokeWidth = Length(Length::Fixed, 1);
 
             m_textTransform = NoneTextTransformValue;
+            m_caretColor = Unit::Color(0, 0, 0, 255);
         }
 
         void* operator new(size_t size);
@@ -2503,6 +2514,19 @@ public:
     void setUserSelect(UserSelectValue us)
     {
         *m_rareComputedStyleData.ensureUserSelect() = us;
+    }
+
+    Unit::Color caretColor()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_caretColor;
+        }
+        return InheritedStylesRareData().m_caretColor;
+    }
+
+    void setCaretColor(Unit::Color c)
+    {
+        ensureInheritedRareData()->m_caretColor = c;
     }
 
     void* operator new(size_t size);

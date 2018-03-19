@@ -1655,6 +1655,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->caretColor() != oldStyle->caretColor()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::CaretColor] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     return damage;
 }
 

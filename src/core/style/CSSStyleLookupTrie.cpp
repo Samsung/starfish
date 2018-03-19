@@ -379,10 +379,16 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Empty-Cells
         // Align-Items
         // User-Select
+        // Caret-Color
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left", 11) == 0) {
                 return CSSStyleKind::BorderLeft;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "caret-color", 11) == 0) {
+                return CSSStyleKind::CaretColor;
             }
             break;
         case 'e':
@@ -1132,6 +1138,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "borderLeft", 10) == 0) {
                 return CSSStyleKind::BorderLeft;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "caretColor", 10) == 0) {
+                return CSSStyleKind::CaretColor;
             }
             break;
         case 'v':

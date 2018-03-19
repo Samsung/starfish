@@ -1331,6 +1331,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     }
     ADD_COLOR_PAIR(Color, color)
     ADD_COLOR_PAIR(BackgroundColor, backgroundColor)
+    ADD_COLOR_PAIR(CaretColor, caretColor)
 #undef ADD_COLOR_PAIR
     else
     {
