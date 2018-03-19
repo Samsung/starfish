@@ -33,6 +33,7 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/modules/canvas/ShadowBlur.h"
 
 namespace StarFish {
 
@@ -784,8 +785,8 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
     }
 #endif
 
+    paintBoxShadows(canvas);
     applyBorderRadiusClippingIfNeeds(canvas);
-
     do {
         if (node() && node()->isHTMLHtmlElement()) {
             break;
@@ -815,6 +816,89 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 #endif
 
     canvas->restore();
+}
+
+void FrameBox::paintBoxShadows(Canvas* canvas)
+{
+    // TODO : Implement inset, spread distance
+    ComputedStyle* s = style();
+
+    if (s->visibility() != VisibilityValue::VisibleVisibilityValue) {
+        return;
+    }
+
+    bool hasShadow = s->boxShadow().size() ? true : false;
+    if (hasShadow) {
+        canvas->save();
+        CanvasShadowDataList list = s->boxShadow().toCanvasShadowDataList(this);
+
+        Unit::Rect borderRect = makeRect(BoxValue::BorderBoxBoxValue);
+        size_t width = ceil(borderRect.width());
+        size_t height = ceil(borderRect.height());
+
+        for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
+            float radiusOffset = 0.0f;
+            if (shadow->radius()) {
+                radiusOffset = shadow->radius();
+                radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
+                radiusOffset *= 2;
+            }
+
+            NativeImageData* nativeImage = NativeImageData::create(
+                width + ceil(radiusOffset), height + ceil(radiusOffset));
+            Canvas* cv =
+                Canvas::createGenericCanvas(node()->starFish(), nativeImage);
+            cv->clearColor(Unit::Color(0, 0, 0, 0));
+
+            if (shadow->hasColor()) {
+                cv->setColor(shadow->color());
+            } else {
+                cv->setColor(s->color());
+            }
+
+            cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
+            applyBorderRadiusClippingIfNeeds(cv);
+            cv->drawRect(borderRect);
+
+            ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                          nativeImage->height(), nativeImage->stride());
+            sb.process(shadow->radius());
+            delete cv;
+
+            float offset = ceil(radiusOffset / 2);
+            Unit::Rect shadowRect(-offset + shadow->offsetX(),
+                                  -offset + shadow->offsetY(),
+                                  nativeImage->width(), nativeImage->height());
+
+            bool intersect = borderRect.intersects(shadowRect);
+            canvas->save();
+            if (intersect) {
+                Unit::Rect exteriorRect;
+                exteriorRect.unite(borderRect);
+                exteriorRect.unite(shadowRect);
+
+                canvas->beginPath();
+                canvas->moveTo(exteriorRect.x(), exteriorRect.y());
+                canvas->lineTo(exteriorRect.x() + exteriorRect.width(),
+                               exteriorRect.y());
+                canvas->lineTo(exteriorRect.x() + exteriorRect.width(),
+                               exteriorRect.y() + exteriorRect.height());
+                canvas->lineTo(exteriorRect.x(),
+                               exteriorRect.y() + exteriorRect.height());
+                canvas->closePath();
+                if (style()->hasBorderRadius()) {
+                    applyBorderRadiusClippingIfNeeds(canvas);
+                } else {
+                    canvas->setFillRule(false);
+                    canvas->clip(borderRect);
+                }
+            }
+            canvas->drawImage(nativeImage, shadowRect);
+            canvas->restore();
+        }
+        list.clear();
+        canvas->restore();
+    }
 }
 
 Unit::Rect FrameBox::makeRect(BoxValue box)

@@ -4725,11 +4725,10 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
             CanvasShadowDataList list =
                 s->textShadow().toCanvasShadowDataList(this);
-            ComputedStyle* s = style();
-            for (auto& shadow : list) {
+            for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
                 float radiusOffset = 0.0f;
-                if (shadow.radius()) {
-                    radiusOffset = shadow.radius();
+                if (shadow->radius()) {
+                    radiusOffset = shadow->radius();
                     radiusOffset =
                         std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
                     radiusOffset *= 2;
@@ -4741,10 +4740,10 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                 cv->clearColor(Unit::Color(0, 0, 0, 0));
                 cv->setFont(s->font());
                 auto tdc = canvas->textDecorationData();
-                if (shadow.hasColor()) {
-                    cv->setColor(shadow.color());
-                    tdc.setUnderLineColor(shadow.color());
-                    tdc.setLineThroughColor(shadow.color());
+                if (shadow->hasColor()) {
+                    cv->setColor(shadow->color());
+                    tdc.setUnderLineColor(shadow->color());
+                    tdc.setLineThroughColor(shadow->color());
                 } else {
                     cv->setColor(s->color());
                 }
@@ -4754,18 +4753,18 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
                 ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                               nativeImage->height(), nativeImage->stride());
-                sb.process(shadow.radius());
+                sb.process(shadow->radius());
 
                 delete cv;
 
                 Unit::Rect rect(0, 0, nativeImage->width(),
                                 nativeImage->height());
                 float offset = ceil(radiusOffset / 2);
-                canvas->translate(-offset + shadow.offsetX(),
-                                  -offset + shadow.offsetY());
+                canvas->translate(-offset + shadow->offsetX(),
+                                  -offset + shadow->offsetY());
                 canvas->drawImage(nativeImage, rect);
-                canvas->translate(offset - shadow.offsetX(),
-                                  offset - shadow.offsetY());
+                canvas->translate(offset - shadow->offsetX(),
+                                  offset - shadow->offsetY());
             }
             list.clear();
 

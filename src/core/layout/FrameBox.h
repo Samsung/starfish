@@ -669,6 +669,7 @@ public:
 
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual void paintBackgroundAndBorders(Canvas* canvas);
+    virtual void paintBoxShadows(Canvas* canvas);
 
     virtual Unit::Rect makeRect(BoxValue box);
     static void paintBackground(Canvas* canvas, FrameBox* box,
