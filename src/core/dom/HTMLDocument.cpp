@@ -50,8 +50,6 @@
 #include "core/dom/HTMLScriptElement.h"
 #include "core/dom/HTMLSelectElement.h"
 #include "core/dom/HTMLSpanElement.h"
-#include "core/dom/HTMLStrongElement.h"
-#include "core/dom/HTMLStyleElement.h"
 #include "core/dom/HTMLStyleElement.h"
 #include "core/dom/HTMLTableCaptionElement.h"
 #include "core/dom/HTMLTableColElement.h"
@@ -68,6 +66,7 @@
 #include "core/dom/HTMLTrackElement.h"
 #include "core/dom/HTMLUListElement.h"
 #include "core/dom/HTMLOListElement.h"
+#include "core/dom/HTMLDListElement.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
@@ -140,8 +139,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLUListElement(document);
     } else if (name == str->m_olTagName.localNameAtomic()) {
         return new HTMLOListElement(document);
-    } else if (name == str->m_strongTagName.localNameAtomic()) {
-        return new HTMLStrongElement(document);
+    } else if (name == str->m_dlTagName.localNameAtomic()) {
+        return new HTMLDListElement(document);
     } else if (name == str->m_tableTagName.localNameAtomic()) {
         return new HTMLTableElement(document);
     } else if (name == str->m_thTagName.localNameAtomic()) {
@@ -199,6 +198,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
     }
     DEFINE_KNOWN_ELEMENT(center)
     DEFINE_KNOWN_ELEMENT(i)
+    DEFINE_KNOWN_ELEMENT(b)
+    DEFINE_KNOWN_ELEMENT(strong)
     DEFINE_KNOWN_ELEMENT(cite)
     DEFINE_KNOWN_ELEMENT(em)
     DEFINE_KNOWN_ELEMENT(var)
@@ -213,6 +214,9 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
     DEFINE_KNOWN_ELEMENT(nav)
     DEFINE_KNOWN_ELEMENT(section)
     DEFINE_KNOWN_ELEMENT(summary)
+    DEFINE_KNOWN_ELEMENT(code)
+    DEFINE_KNOWN_ELEMENT(dt)
+    DEFINE_KNOWN_ELEMENT(dd)
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic())
     {

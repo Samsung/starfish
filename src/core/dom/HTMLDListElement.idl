@@ -1,0 +1,9 @@
+// https://html.spec.whatwg.org/#htmldlistelement
+
+[HTMLConstructor]
+interface HTMLDListElement : HTMLElement {
+  // also has obsolete members
+
+  // https://html.spec.whatwg.org/#HTMLDListElement-partial
+  [CEReactions, Reflect] attribute boolean compact;
+};

@@ -117,6 +117,16 @@ bool ComputedStyle::hasComplexTransforms(Frame* frame)
     }
 }
 
+bool ComputedStyle::has3DTransforms(Frame* frame)
+{
+    StyleTransformDataGroup* t = transforms(frame);
+    if (t) {
+        return t->has3DTransform();
+    } else {
+        return false;
+    }
+}
+
 StyleTransformDataGroup* ComputedStyle::transforms(Frame* frame)
 {
     if (!hasRareComputeStyleData()) {

@@ -58,11 +58,16 @@ This section describes the complete list of supported HTML tags and attributes b
 |  [pre](https://www.w3.org/TR/html5/grouping-content.html#the-pre-element) |  |  | &lt;pre&gt;SAMSUNG&lt;/pre&gt; |  |
 |  [ul](https://www.w3.org/TR/html5/grouping-content.html#the-ul-element)  |  |  | &lt;ul&gt;&lt;/ul&gt; | List items are not displayed as bullets. |
 |  [li](https://www.w3.org/TR/html5/grouping-content.html#the-li-element)  |  |  | &lt;li&gt;Coffee&lt;/li&gt; |  |
+|  [dd](https://www.w3.org/TR/html5/grouping-content.html#the-dd-element)  |  |  | &lt;dd&gt;Coffee&lt;/dd&gt; |  |
+|  [dl](https://www.w3.org/TR/html5/grouping-content.html#the-dl-element)  |  |  | &lt;dl&gt;Coffee&lt;/dl&gt; |  |
+|  [dt](https://www.w3.org/TR/html5/grouping-content.html#the-dt-element)  |  |  | &lt;dt&gt;Coffee&lt;/dt&gt; |  |
 |  [audio](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) |  |  | &lt;audio&gt;&lt;/audio&gt; |  |
 |  [source](https://www.w3.org/TR/html5/embedded-content-0.html#the-source-element) | src | &lt;URL&gt; | &lt;source src="horse.mp4"&gt; |  |
 |  | type | MIME-type | &lt;source type="video/mp4"&gt; | Only video/mp4 and audio/mp4 are supported. |
 |  [object](https://www.w3.org/TR/html5/embedded-content-0.html#the-object-element) |  |  | &lt;object&gt;&lt;/object&gt; |  |
 |  [strong](https://www.w3.org/TR/html5/text-level-semantics.html#the-strong-element) |  |  | &lt;h1&gt;Chapter 1: &lt;strong&gt;The Praxis&lt;/strong&gt;&lt;/h1&gt; |  |
+|  [b](https://www.w3.org/TR/html5/text-level-semantics.html#the-b-element) |  |  | &lt;h1&gt;Chapter 1: &lt;b&gt;The Praxis&lt;/b&gt;&lt;/h1&gt; |  |
+|  [i](https://www.w3.org/TR/html5/text-level-semantics.html#the-i-element) |  |  | &lt;h1&gt;Chapter 1: &lt;i&gt;The Praxis&lt;/i&gt;&lt;/h1&gt; |  |
 |  [font](https://www.w3.org/TR/html401/present/graphics.html#edef-FONT) | color |  | &lt;font color="red"&gt;SAMSUNG&lt;/font&gt; | Obsolete features. |
 |  | size | Possible values:<br>- An integer between 1 and 7. This sets the font to some fixed size, whose rendering depends on the user agent. Not all user agents may render all seven sizes.<br>-A relative increase in font size. The value "+1" means one size larger. The value "-3" means three sizes smaller. All sizes belong to the scale of 1 to 7. | &lt;font size="+3"&gt;SAMSUNG&lt;/font&gt; | Obsolete features. |
 |  [fieldset](https://www.w3.org/TR/html5/forms.html#the-fieldset-element) |  |  | &lt;fieldset&gt;&lt;legend&gt;Card&lt;/legend&gt;&lt;/fieldset&gt; |  |
@@ -415,6 +420,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | media | Is a DOMString representing a list of one or more media formats to which the resource applies. |
 |  | attribute | type | Is a DOMString representing the MIME type of the linked resource. |
 | [HTMLUListElement](https://html.spec.whatwg.org/#htmlulistelement)  | interface | HTMLUListElement |  |
+|  | attribute | type | This variable just relect attribute 'type' |
+|  | attribute | compact | This variable just relect attribute 'compact' |
+| [HTMLDListElement](https://html.spec.whatwg.org/#htmldlistelement)  | interface | HTMLDListElement |  |
+|  | attribute | compact | This variable just relect attribute 'compact' |
 | [HTMLMediaElement](https://html.spec.whatwg.org/multipage/embedded-content.html#htmlmediaelement) | interface | HTMLMediaElement | The HTMLMediaElement interface adds to HTMLElement the properties and methods needed to support basic media-related capabilities that are common to audio and video. The HTMLVideoElement and HTMLAudioElement elements both inherit this interface. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
 |  | enum | CanPlayTypeResult | "", "maybe", "probably" |
 |  | typedef | (MediaStream or MediaSource or Blob) MediaProvider |  |

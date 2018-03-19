@@ -228,6 +228,7 @@ struct StackingContext::ComputeStackingContextContext {
 
 StackingContextRareData::StackingContextRareData()
     : m_needsGraphicsBuffer(false)
+    , m_hasNon2DRectTransform(false)
     , m_visibleRect(0, 0, 0, 0)
     , m_buffer(nullptr)
 {
@@ -647,6 +648,17 @@ void StackingContext::computeTransformMatrix()
         m_rareData->m_matrix = cs->transformsToMatrix(
             m_owner->width(), m_owner->height(), m_owner, true);
 
+        m_rareData->m_hasNon2DRectTransform =
+            m_owner->style()->has3DTransforms(m_owner) ||
+            !m_rareData->m_matrix.rectStaysRect();
+
+#ifdef PORT_CANVAS_BACKEND_EFL
+        // force use graphics buffer with complex-transform
+        // because efl canvas can't deal well with complex-transform
+        m_rareData->m_hasNon2DRectTransform =
+            m_owner->style()->hasComplexTransforms(m_owner);
+#endif
+
         if (!m_rareData->m_matrix.isIdentity()) {
             /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
                                m_rareData->m_matrix.getScaleX(),
@@ -660,6 +672,17 @@ void StackingContext::computeTransformMatrix()
                                m_rareData->m_matrix.get(8));*/
             SkMatrix test;
             bool testResult = m_rareData->m_matrix.invert(&test);
+            if (testResult) {
+                for (size_t i = 0; i < 9; i++) {
+                    // prevent applying too big matrix
+                    // because cairo can't deal well with huge matrix
+                    if (m_rareData->m_matrix.get(i) >
+                        STARFISH_CANVAS_LENGTH_MAX) {
+                        testResult = false;
+                        break;
+                    }
+                }
+            }
             if (!testResult) {
                 m_rareData->m_matrix = SkMatrix::InvalidMatrix();
             }
@@ -965,8 +988,9 @@ void StackingContext::computeStackingContextProperties(
     compositingState.compositeFlagInfo->insert(
         std::make_pair(this, willBeComposited));
 
-    descendantHas3DTransform |= anyDescendantHas3DTransform ||
-                                m_owner->style()->hasComplexTransforms(m_owner);
+    descendantHas3DTransform |=
+        anyDescendantHas3DTransform ||
+        (m_rareData ? m_rareData->m_hasNon2DRectTransform : false);
 
     if (willBeComposited) {
         SkMatrix l = SkMatrix::I();
