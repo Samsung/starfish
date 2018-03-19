@@ -410,7 +410,7 @@ void FrameInputBox::paintCaret(Canvas* canvas)
     y = e->currentCaretLayoutLocation().y();
     canvas->save();
     canvas->clip(makeRect(BoxValue::ContentBoxBoxValue));
-    canvas->setColor(node()->style()->color());
+    canvas->setColor(node()->style()->caretColor());
     canvas->drawRect(LayoutRect(x - scrollLeft(), y, caretThickness,
                                 style()->font()->metrics().m_fontHeight));
     canvas->restore();

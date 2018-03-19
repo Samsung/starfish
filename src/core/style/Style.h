@@ -1147,7 +1147,8 @@ class CSSStyleDeclaration;
     F(LetterSpacing, letterSpacing, "letter-spacing")                        \
     F(UserSelect, userSelect, "user-select")                                 \
     F(GridTemplateColumns, gridTemplateColumns, "grid-template-columns")     \
-    F(GridTemplateRows, gridTemplateRows, "grid-template-rows")
+    F(GridTemplateRows, gridTemplateRows, "grid-template-rows")              \
+    F(CaretColor, caretColor, "caret-color")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)
