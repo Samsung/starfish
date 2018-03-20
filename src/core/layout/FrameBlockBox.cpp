@@ -546,7 +546,8 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         clearContentHeightDamaged();
     }
 
-    if (!hasBlockFlow() && !isFrameFlexibleBox() && !isFrameTableBox()) {
+    if (!hasBlockFlow() && !isFrameFlexibleBox() && !isFrameTableBox() &&
+        !isFrameGridBox()) {
         inlineLayoutAdditionalPath(ctx);
     }
 

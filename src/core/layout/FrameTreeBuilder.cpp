@@ -849,7 +849,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         ctx.openCountingContext(current->asHTMLListContainer()->start());
     }
 
-    if (ctx.isInFrameFlexFlow()) {
+    if (ctx.isInFrameFlexFlow() || ctx.isInFrameGridFlow()) {
         if (!current->isCharacterData() && current->style()) {
             current->style()->blockify(current, true);
         }

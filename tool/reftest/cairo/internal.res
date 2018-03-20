@@ -246,3 +246,5 @@ test/cairo/internal-test/css/float/preferred-width-with-overflowhidden.html
 test/cairo/internal-test/cookie/cookie-internal-test-1.html
 test/cairo/internal-test/cookie/cookie-internal-test-2.html
 test/cairo/internal-test/css/overflow/scroll-width-height.html
+test/cairo/internal-test/css/grid/gridbox_simple-box.html
+test/cairo/internal-test/css/grid/gridbox_simple-box-2.html
