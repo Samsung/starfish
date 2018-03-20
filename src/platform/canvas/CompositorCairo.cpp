@@ -406,6 +406,12 @@ public:
         cairo_restore(m_canvas);
     }
 
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
+                           const Unit::Rect& dst, bool xRepeat, bool yRepeat)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual void postMatrix(const SkMatrix& matrix)
     {
         cairo_matrix_t result_matrix;

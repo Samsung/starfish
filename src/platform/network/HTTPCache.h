@@ -26,6 +26,10 @@ namespace StarFish {
 typedef GCVector<String*> HTTPCacheLRUList;
 class NetworkURLWorkerData;
 class File;
+class HTTPCache;
+
+extern HTTPCache* g_httpCache;
+extern int g_httpCacheCNT;
 
 class HTTPCache : public gc {
 public:
@@ -36,11 +40,14 @@ public:
     static const int LOAD_NO_CACHE = 2;
     static const int LOAD_CACHE_ONLY = 3;
 
-    static Nullable<HTTPCache*> create(String* cacheDirPath)
+    static Nullable<HTTPCache*> getInstance(String* cacheDirPath)
     {
-        HTTPCache* newObject = new HTTPCache(cacheDirPath);
-        return (newObject->good()) ? Nullable<HTTPCache*>(newObject)
-                                   : Nullable<HTTPCache*>();
+        if (g_httpCache == nullptr) {
+            g_httpCache = new (NoGC) HTTPCache(cacheDirPath);
+        }
+        g_httpCacheCNT++;
+        return (g_httpCache->good()) ? Nullable<HTTPCache*>(g_httpCache)
+                                     : Nullable<HTTPCache*>();
     }
 
     HTTPCache(String* cacheDirPath);
