@@ -470,14 +470,33 @@ static bool hoverMediaFeatureEval(MediaQueryExpValue& value,
                                   MediaValues* mediaValues,
                                   MediaFeaturePrefix op)
 {
-    if (!value.isID) {
-        return false;
-    }
-
     // https://drafts.csswg.org/mediaqueries-4/#hover
-    // TODO: Suppose that the primary pointing device we support can hover.
-    // However, there may be no pointing device and it can't hover if it exists.
-    return value.id->equalsIgnoreCase("hover");
+    // NOTE: The spec says that this feature is at-risk, and may be dropped
+    // during the CR period.
+    if (value.isID) {
+        // TODO: Suppose that the (primary) pointing device we support can
+        // hover. However, the (primary) pointing device can’t hover, or that
+        // there is no pointing device.
+        return value.id->equalsIgnoreCase("hover");
+    }
+    return true;
+}
+
+static bool pointerMediaFeatureEval(MediaQueryExpValue& value,
+                                    MediaValues* mediaValues,
+                                    MediaFeaturePrefix op)
+{
+    // https://drafts.csswg.org/mediaqueries-4/#pointer
+    // NOTE: The spec says that this feature is at-risk, and may be dropped
+    // during the CR period.
+    if (value.isID) {
+        // TODO: Suppose that the (primary) input mechanism of the device
+        // includes an accurate pointing device. However, the (primary) input
+        // mechanism of the device does not include a pointing device and
+        // includes a pointing device of limited accuracy.
+        return value.id->equalsIgnoreCase("fine");
+    }
+    return true;
 }
 
 bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
@@ -559,8 +578,10 @@ bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
         return scanMediaFeatureEval(value, m_mediaValues, NoPrefix);
     } else if (feature->equals("grid")) {
         return gridMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("hover")) {
+    } else if (feature->equals("hover") || feature->equals("any-hover")) {
         return hoverMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("pointer") || feature->equals("any-pointer")) {
+        return pointerMediaFeatureEval(value, m_mediaValues, NoPrefix);
     } else {
         auto s = exp->mediaFeature()->toUTF8NonGCString();
         STARFISH_LOG_INFO("unsupported media feature: %s\n", s.data());
