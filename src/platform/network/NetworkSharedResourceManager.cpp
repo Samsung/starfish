@@ -74,7 +74,8 @@ static void removeSSLLocks(void)
     OPENSSL_free(sslLockarray);
 }
 
-static NetworkSharedResourceManager* instance = nullptr;
+static NetworkSharedResourceManager* g_networkSharedResourceMangerInstance =
+    nullptr;
 
 static bool domainMatch(String* cookieDomain, String* host)
 {
@@ -239,18 +240,19 @@ static void curlUnlockCallback(CURL* handle, curl_lock_data data, void* userPtr)
 
 NetworkSharedResourceManager* NetworkSharedResourceManager::getInstance()
 {
-    if (!instance) {
-        instance = new NetworkSharedResourceManager();
+    if (!g_networkSharedResourceMangerInstance) {
+        g_networkSharedResourceMangerInstance =
+            new NetworkSharedResourceManager();
     }
-    return instance;
+    return g_networkSharedResourceMangerInstance;
 }
 
 void NetworkSharedResourceManager::close()
 {
-    STARFISH_ASSERT(instance);
+    STARFISH_ASSERT(g_networkSharedResourceMangerInstance);
     STARFISH_LOG_INFO("NetworkSharedResourceManager::close()\n");
-    delete instance;
-    instance = nullptr;
+    delete g_networkSharedResourceMangerInstance;
+    g_networkSharedResourceMangerInstance = nullptr;
 }
 
 NetworkSharedResourceManager::NetworkSharedResourceManager()

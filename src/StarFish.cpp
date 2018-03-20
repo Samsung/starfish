@@ -207,7 +207,7 @@ smaps_sizes getSmapsStats()
     return sizes;
 }
 #endif
-
+static int g_singletonInstanceCnt = 0;
 static bool g_starFishGlobalInit = false;
 typedef void (*GCCollectionEventListenter)(GC_EventType);
 static std::list<GCCollectionEventListenter> g_gcCollectionEventListenterList;
@@ -410,6 +410,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         }
     }
 #endif
+    g_singletonInstanceCnt++;
 #ifdef STARFISH_ENABLE_TTS
     m_tts = new TTS(this);
 #endif
@@ -456,14 +457,15 @@ StarFish::~StarFish()
 
     joinAllActiveThread();
 
-    NetworkSharedResourceManager::close();
+    if (g_singletonInstanceCnt <= 1) {
+        NetworkSharedResourceManager::close();
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (m_httpCache) {
-        if (m_httpCache->flush()) {
-            GC_FREE(g_httpCache);
-        }
-    }
+        g_httpCache->flush();
+        GC_FREE(g_httpCache);
 #endif
+    } else {
+        g_singletonInstanceCnt--;
+    }
 }
 
 void StarFish::run()
