@@ -598,7 +598,6 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 fireSubmitEvent();
                 return true;
             } else if (shouldUsePlaceholder()) {
-                setValue(String::emptyString);
                 return true;
             }
         } else if (event->type()->equals("mousedown") ||
