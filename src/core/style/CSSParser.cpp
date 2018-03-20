@@ -2685,6 +2685,12 @@ const String* resolutionMediaFeature =
 const String* scanMediaFeature = String::createASCIIStringWithNoGC("scan");
 const String* widthMediaFeature = String::createASCIIStringWithNoGC("width");
 const String* hoverMediaFeature = String::createASCIIStringWithNoGC("hover");
+const String* anyHoverMediaFeature =
+    String::createASCIIStringWithNoGC("any-hover");
+const String* pointerMediaFeature =
+    String::createASCIIStringWithNoGC("pointer");
+const String* anyPointerMediaFeature =
+    String::createASCIIStringWithNoGC("any-pointer");
 
 static inline bool featureWithoutValue(String* mediaFeature)
 {
@@ -2706,7 +2712,10 @@ static inline bool featureWithoutValue(String* mediaFeature)
            mediaFeature->equals(resolutionMediaFeature) ||
            mediaFeature->equals(displayModeMediaFeature) ||
            mediaFeature->equals(scanMediaFeature) ||
-           mediaFeature->equals(hoverMediaFeature);
+           mediaFeature->equals(hoverMediaFeature) ||
+           mediaFeature->equals(anyHoverMediaFeature) ||
+           mediaFeature->equals(pointerMediaFeature) ||
+           mediaFeature->equals(anyPointerMediaFeature);
 }
 
 static inline bool featureWithValidIdent(const String* mediaFeature,
@@ -2729,9 +2738,17 @@ static inline bool featureWithValidIdent(const String* mediaFeature,
                ident->equalsIgnoreCase("progressive");
     }
 
-    if (mediaFeature->equals(hoverMediaFeature)) {
+    if (mediaFeature->equals(hoverMediaFeature) ||
+        mediaFeature->equals(anyHoverMediaFeature)) {
         return ident->equalsIgnoreCase("none") ||
                ident->equalsIgnoreCase("hover");
+    }
+
+    if (mediaFeature->equals(pointerMediaFeature) ||
+        mediaFeature->equals(anyPointerMediaFeature)) {
+        return ident->equalsIgnoreCase("none") ||
+               ident->equalsIgnoreCase("coarse") ||
+               ident->equalsIgnoreCase("fine");
     }
 
     return false;
