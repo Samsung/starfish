@@ -29,6 +29,7 @@ public:
     StyleTransitionData()
         : m_property(TransitionPropertyValue::TransitionPropertyAllValue)
         , m_duration(0)
+        , m_delay(0)
     {
     }
 
@@ -56,6 +57,16 @@ public:
         m_duration = duration;
     }
 
+    CSSTime delay()
+    {
+        return m_delay;
+    }
+
+    void setDelay(CSSTime delay)
+    {
+        m_delay = delay;
+    }
+
     TransitionTimingFunctionValue timingFunction()
     {
         return m_timingFunction;
@@ -75,6 +86,7 @@ private:
     TransitionPropertyValue m_property;
     TransitionTimingFunctionValue m_timingFunction;
     CSSTime m_duration;
+    CSSTime m_delay;
 };
 
 bool operator==(const StyleTransitionData& a, const StyleTransitionData& b)
@@ -84,6 +96,10 @@ bool operator==(const StyleTransitionData& a, const StyleTransitionData& b)
     }
 
     if (a.m_duration != b.m_duration) {
+        return false;
+    }
+
+    if (a.m_delay != b.m_delay) {
         return false;
     }
 

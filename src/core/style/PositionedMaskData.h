@@ -159,6 +159,11 @@ public:
         return m_layers[layer].sizeTypeValue();
     }
 
+    size_t size() const
+    {
+        return m_layers.size();
+    }
+
     bool operator==(const PositionedMaskData& o)
     {
         return m_maskImage == o.m_maskImage;

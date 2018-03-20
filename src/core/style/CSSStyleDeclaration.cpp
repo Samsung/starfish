@@ -83,7 +83,19 @@ static CSSStyleValuePair lengthToCSSStyleValue(Length len)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     return p;
-};
+}
+
+static CSSStyleValuePair stylePaintDataToCSSStyleValue(StylePaintData paintData)
+{
+    CSSStyleValuePair ret;
+    if (paintData.color().isTransparent()) {
+        ret.setValueKind(CSSStyleValuePair::ValueKind::None);
+    } else {
+        ret.setValueKind(CSSStyleValuePair::ValueKind::ColorValueKind);
+        ret.setColorValue(paintData.color());
+    }
+    return ret;
+}
 
 void CSSStyleDeclaration::rootPointerValueIfExists(CSSStyleValuePair v)
 {
@@ -1203,6 +1215,191 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             }
         }
         addValuePair(shadows);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderCollapse) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderCollapse);
+        p.setValueKind(CSSStyleValuePair::ValueKind::BorderCollapseValueKind);
+        p.setValue(CSSStyleValuePair::ValueData(style->borderCollapse()));
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderSpacing) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderSpacing);
+        auto h = style->horizontalBorderSpacing();
+        auto v = style->verticalBorderSpacing();
+        if (h == v) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            p.setValue(lengthToCSSStyleValue(h).value());
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* list =
+                new ValueList(ValueList::Separator::SpaceSeparator);
+            list->emplace_back(CSSStyleValuePair::ValueKind::Length,
+                               lengthToCSSStyleValue(h).value());
+            list->emplace_back(CSSStyleValuePair::ValueKind::Length,
+                               lengthToCSSStyleValue(v).value());
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::TableLayout) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TableLayout);
+        p.setValueKind(CSSStyleValuePair::ValueKind::TableLayoutValueKind);
+        p.setValue(CSSStyleValuePair::ValueData(style->tableLayout()));
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::Content) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Content);
+        p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        ContentDataGroup* contentData = style->content();
+        if (contentData) {
+            ValueList* values = new ValueList();
+            for (size_t i = 0; i < contentData->size(); i++) {
+                ContentData& c = contentData->at(i);
+                if (c.type() == ContentData::Text) {
+                    CSSStyleValuePair t;
+                    t.setValueKind(CSSStyleValuePair::StringValueKind);
+                    t.setStringValue(c.text()->text());
+                    values->pushBack(t);
+                } else if (c.type() == ContentData::Image) {
+                    CSSStyleValuePair t;
+                    t.setValueKind(CSSStyleValuePair::UrlValueKind);
+                    t.setStringValue(c.image()->image());
+                    values->pushBack(t);
+                }
+            }
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::TransitionProperty) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionProperty);
+        p.setValueKind(
+            CSSStyleValuePair::ValueKind::TransitionPropertyValueKind);
+        p.setValue(CSSStyleValuePair::ValueData(style->transitionProperty()));
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::TransitionDuration) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionDuration);
+        p.setValueKind(CSSStyleValuePair::ValueKind::Time);
+        p.setValue(CSSStyleValuePair::ValueData(style->transitionDuration()));
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::TransitionDelay) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionDelay);
+        p.setValueKind(CSSStyleValuePair::ValueKind::Time);
+        p.setValue(CSSStyleValuePair::ValueData(style->transitionDelay()));
+        addValuePair(p);
+    } else if (keyKind ==
+               CSSStyleValuePair::KeyKind::TransitionTimingFunction) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionTimingFunction);
+        p.setValueKind(
+            CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind);
+        p.setValue(
+            CSSStyleValuePair::ValueData(style->transitionTimingFunction()));
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BoxShadow) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);
+        p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::Fill) {
+        CSSStyleValuePair p = stylePaintDataToCSSStyleValue(style->fill());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Fill);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::FillOpacity) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::FillOpacity);
+        p.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        p.setNumberValue(style->fillOpacity());
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::FillRule) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::FillRule);
+        p.setValueKind(CSSStyleValuePair::ValueKind::FillRuleValueKind);
+        p.setValue(CSSStyleValuePair::ValueData(style->fillRule()));
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::Stroke) {
+        CSSStyleValuePair p = stylePaintDataToCSSStyleValue(style->stroke());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Stroke);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::StrokeWidth) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->strokeWidth());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeWidth);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::X) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->x());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::X);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::Y) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->y());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Y);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::CX) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->cx());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::CX);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::CY) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->cy());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::CY);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::R) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->r());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::R);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::RX) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->rx());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::RX);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::RY) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->ry());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::RY);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::OutlineColor) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineColor);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ColorValueKind);
+        p.setColorValue(style->color());
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::OutlineWidth) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->outlineWidth());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineWidth);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::OutlineOffset) {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->outlineOffset());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineOffset);
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::OutlineStyle) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineStyle);
+        p.setValueKind(CSSStyleValuePair::ValueKind::BorderStyleValueKind);
+        p.setBorderStyleValue(style->outlineStyle());
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::Cursor) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Cursor);
+        p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        // when cursor value type is implemented, add cursor value type instead
+        // of string `auto`
+        p.setStringValue(String::createASCIIString("auto"));
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::MaskImage) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::MaskImage);
+        String* url = style->maskImage();
+        if (url->length()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            p.setStringValue(url);
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::MaskSize) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::MaskSize);
+        p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::GridTemplateColumns) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateColumns);

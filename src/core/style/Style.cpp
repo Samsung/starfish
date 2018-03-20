@@ -2892,6 +2892,7 @@ static void removeTransitionCSSValuePairs(CSSStyleDeclaration* target)
 {
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::TransitionProperty);
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDuration);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDelay);
     target->removeCSSValuePair(
         CSSStyleValuePair::KeyKind::TransitionTimingFunction);
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDelay);
@@ -2924,6 +2925,12 @@ static void addTransitionDurationCSSValuePairs(CSSStyleDeclaration* target,
 {
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDuration,
                             duration);
+}
+
+static void addTransitionDelayCSSValuePairs(CSSStyleDeclaration* target,
+                                            CSSStyleValuePair delay)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDelay, delay);
 }
 
 bool CSSStyleValuePair::updateValueUnitTransitionProperty(
@@ -3213,7 +3220,27 @@ void CSSStyleDeclaration::setTransitionTransitionDuration(const char* value,
     }
 }
 
-static String* createTransitionString(String* property, String* duration)
+void CSSStyleDeclaration::setTransitionTransitionDelay(const char* value,
+                                                       size_t length,
+                                                       bool isImportant)
+{
+    if (length == 0) {
+        removeTransitionCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    CSSStyleValuePair v;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addTransitionDelayCSSValuePairs(this, v);
+    }
+}
+
+static String* createTransitionString(String* property, String* duration,
+                                      String* delay)
 {
     StringBuilder builder;
 
@@ -3230,6 +3257,14 @@ static String* createTransitionString(String* property, String* duration)
         builder.appendString(duration);
     }
 
+    if (!delay->equals(String::emptyString) &&
+        !delay->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(delay);
+    }
+
     return builder.finalize();
 }
 
@@ -3237,19 +3272,26 @@ String* CSSStyleDeclaration::Transition()
 {
     String* property = TransitionProperty();
     String* duration = TransitionDuration();
-    return createTransitionString(property, duration);
+    String* delay = TransitionDelay();
+    return createTransitionString(property, duration, delay);
 }
 
 String* CSSStyleDeclaration::TransitionTransitionProperty()
 {
     String* property = TransitionProperty();
-    return createTransitionString(property, nullptr);
+    return createTransitionString(property, nullptr, nullptr);
 }
 
 String* CSSStyleDeclaration::TransitionTransitionDuration()
 {
     String* duration = TransitionDuration();
-    return createTransitionString(nullptr, duration);
+    return createTransitionString(nullptr, duration, nullptr);
+}
+
+String* CSSStyleDeclaration::TransitionTransitionDelay()
+{
+    String* delay = TransitionDelay();
+    return createTransitionString(nullptr, nullptr, delay);
 }
 
 void CSSStyleDeclaration::setBackground(const char* value, size_t length,
@@ -4996,7 +5038,30 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionDelay:
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setTransitionDelay(CSSTime(0));
+                break;
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setTransitionDelay(parentStyle->transitionDelay());
+                break;
+            case CSSStyleValuePair::ValueKind::Time:
+                style->setTransitionDelay(cssValues[k].timeValue());
+                break;
+            case CSSStyleValuePair::ValueKind::CalcValueKind: {
+                CalcData* calcData = cssValues[k].calcValue();
+                CalcValueType type = calcData->type();
+                if (type.isTime()) {
+                    style->setTransitionDelay(calcData->timeValue());
+                } else {
+                    style->setTransitionDelay(CSSTime(0));
+                }
+                break;
+            }
+            default:
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
             break;
         case CSSStyleValuePair::KeyKind::BorderImageSlice:
             if ((cssValues[k].valueKind() ==
@@ -10384,6 +10449,11 @@ bool CSSStyleValuePair::updateValueTransitionDuration(
     return updateValueTime(tokens, 0);
 }
 
+bool CSSStyleValuePair::updateValueTransitionDelay(const CSSTokenVector& tokens)
+{
+    return updateValueTime(tokens, 0);
+}
+
 bool CSSStyleValuePair::updateValueTransitionTimingFunction(
     const CSSTokenVector& tokens)
 {
@@ -10420,12 +10490,6 @@ bool CSSStyleValuePair::updateValueTransitionTimingFunction(
         return false;
     }
     return false;
-}
-
-bool CSSStyleValuePair::updateValueTransitionDelay(const CSSTokenVector& tokens)
-{
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return true;
 }
 
 bool CSSStyleValuePair::updateValueBoxSizing(const CSSTokenVector& tokens)
@@ -11350,7 +11414,7 @@ bool CSSStyleValuePair::updateValueMaskImage(const CSSTokenVector& tokens)
 
 bool CSSStyleValuePair::updateValueMaskSize(const CSSTokenVector& tokens)
 {
-    // TODO:
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return false;
 }
 

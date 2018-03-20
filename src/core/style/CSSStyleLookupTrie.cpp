@@ -677,10 +677,14 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Top-Style
         // Border-Top-Width
         // List-Style-Image
+        // transition-delay
         switch (data[0]) {
         case 't':
             if (memcmp(data, "transform-origin", 16) == 0) {
                 return CSSStyleKind::TransformOrigin;
+            }
+            if (memcmp(data, "transition-delay", 16) == 0) {
+                return CSSStyleKind::TransitionDelay;
             }
             break;
 
@@ -1418,6 +1422,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 't':
             if (memcmp(data, "transformOrigin", 15) == 0) {
                 return CSSStyleKind::TransformOrigin;
+            }
+            if (memcmp(data, "transitionDelay", 15) == 0) {
+                return CSSStyleKind::TransitionDelay;
             }
             break;
         case 'b':
