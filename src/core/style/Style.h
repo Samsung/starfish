@@ -983,10 +983,14 @@ enum ListStylePositionValue {
 
 enum UserSelectValue {
     NoneUserSelectValue,
-    AutoUserSelectValue,
     TextUserSelectValue,
     ContainUserSelectValue,
     AllUserSelectValue,
+};
+
+enum HyphensValue {
+    NoneHyphensValue,
+    ManualHyphensValue,
 };
 
 class ValueList;
@@ -1148,7 +1152,8 @@ class CSSStyleDeclaration;
     F(UserSelect, userSelect, "user-select")                                 \
     F(GridTemplateColumns, gridTemplateColumns, "grid-template-columns")     \
     F(GridTemplateRows, gridTemplateRows, "grid-template-rows")              \
-    F(CaretColor, caretColor, "caret-color")
+    F(CaretColor, caretColor, "caret-color")                                 \
+    F(Hyphens, hyphens, "hyphens")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)
@@ -1415,6 +1420,8 @@ public:
 
         // grid
         GridTemplateUnits,
+
+        HyphensValueKind
     };
 
     CSSStyleValuePair()
@@ -1893,6 +1900,12 @@ public:
         return m_value.m_userSelect;
     }
 
+    HyphensValue hyphensValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == HyphensValueKind);
+        return m_value.m_hyphens;
+    }
+
     GCVector<GridLength>* gridTemplateUnits() const
     {
         STARFISH_ASSERT(m_valueKind == GridTemplateUnits);
@@ -1956,6 +1969,7 @@ public:
         ObjectFitValue m_objectFit;
         ListStylePositionValue m_listStylePosition;
         UserSelectValue m_userSelect;
+        HyphensValue m_hyphens;
         RectData* m_rect;
         GCVector<GridLength>* m_gridTemplateUnits;
 
@@ -2183,6 +2197,11 @@ public:
 
         ValueData(UserSelectValue v)
             : m_userSelect(v)
+        {
+        }
+
+        ValueData(HyphensValue v)
+            : m_hyphens(v)
         {
         }
 

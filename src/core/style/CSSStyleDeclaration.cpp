@@ -1339,6 +1339,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                    listStylePosition)
     ADD_VALUE_PAIR(ListStyleType, StringValueKind, listStyleType)
     ADD_VALUE_PAIR(UserSelect, UserSelectValueKind, userSelect)
+    ADD_VALUE_PAIR(Hyphens, HyphensValueKind, hyphens)
 
 #undef ADD_VALUE_PAIR
 #define ADD_COLOR_PAIR(KEY, GETTER)                                    \

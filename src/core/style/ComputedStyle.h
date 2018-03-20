@@ -106,12 +106,12 @@ class RareComputedStyleData : public gc {
         D,
         Clip,
         UserSelect,
+        CaretColor,
+        Hyphens,
 
         // Grid
         GridTemplateColumns,
         GridTemplateRows,
-
-        CaretColor
     };
 
     union RareComputedStyleValue {
@@ -137,6 +137,7 @@ class RareComputedStyleData : public gc {
         UserSelectValue m_userSelect;
         GCVector<GridLength>* m_gridTemplateUnits;
         Unit::Color m_color;
+        HyphensValue m_hyphens;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -245,6 +246,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(Unit::Color c)
             : m_color(c)
+        {
+        }
+
+        RareComputedStyleValue(HyphensValue v)
+            : m_hyphens(v)
         {
         }
     };
@@ -451,6 +457,7 @@ class ComputedStyle : public gc {
         ListStyleData m_listStyleData;
 
         Unit::Color m_caretColor;
+        HyphensValue m_hyphens;
 
         InheritedStylesRareData()
         {
@@ -468,6 +475,7 @@ class ComputedStyle : public gc {
 
             m_textTransform = NoneTextTransformValue;
             m_caretColor = Unit::Color(0, 0, 0, 255);
+            m_hyphens = HyphensValue::NoneHyphensValue;
         }
 
         void* operator new(size_t size);
@@ -2528,6 +2536,19 @@ public:
     void setCaretColor(Unit::Color c)
     {
         ensureInheritedRareData()->m_caretColor = c;
+    }
+
+    HyphensValue hyphens()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_hyphens;
+        }
+        return InheritedStylesRareData().m_hyphens;
+    }
+
+    void setHyphens(HyphensValue v)
+    {
+        ensureInheritedRareData()->m_hyphens = v;
     }
 
     void* operator new(size_t size);

@@ -1685,6 +1685,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
+    if (newStyle->hyphens() != oldStyle->hyphens()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Hyphens] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     return damage;
 }
 

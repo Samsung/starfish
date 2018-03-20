@@ -174,6 +174,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Z-Index
         // Opacity
         // Outline
+        // Hyphens
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "content", 7) == 0) {
@@ -183,6 +184,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'd':
             if (memcmp(data, "display", 7) == 0) {
                 return CSSStyleKind::Display;
+            }
+            break;
+        case 'h':
+            if (memcmp(data, "hyphens", 7) == 0) {
+                return CSSStyleKind::Hyphens;
             }
             break;
         case 'p':
@@ -999,6 +1005,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'd':
             if (memcmp(data, "display", 7) == 0) {
                 return CSSStyleKind::Display;
+            }
+            break;
+        case 'h':
+            if (memcmp(data, "hyphens", 7) == 0) {
+                return CSSStyleKind::Hyphens;
             }
             break;
         case 'p':

@@ -2418,14 +2418,22 @@ String* CSSStyleValuePair::toString() const
         switch (userSelectValue()) {
         case NoneUserSelectValue:
             return String::fromUTF8("none");
-        case AutoUserSelectValue:
-            return String::fromUTF8("auto");
         case TextUserSelectValue:
             return String::fromUTF8("text");
         case ContainUserSelectValue:
             return String::fromUTF8("contain");
         case AllUserSelectValue:
             return String::fromUTF8("all");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
+    case CSSStyleValuePair::ValueKind::HyphensValueKind:
+        switch (userSelectValue()) {
+        case NoneHyphensValue:
+            return String::fromUTF8("none");
+        case ManualHyphensValue:
+            return String::fromUTF8("manual");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -6726,6 +6734,25 @@ void StyleResolver::apply(Element* element,
                 style->setUserSelect(cssValues[k].userSelectValue());
                 break;
             }
+            break;
+        case CSSStyleValuePair::KeyKind::Hyphens:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setHyphens(parentStyle->hyphens());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::Auto:
+                style->setHyphens(HyphensValue::NoneHyphensValue);
+                break;
+            default:
+                STARFISH_ASSERT(
+                    CSSStyleValuePair::ValueKind::HyphensValueKind ==
+                    cssValues[k].valueKind());
+                style->setHyphens(cssValues[k].hyphensValue());
+                break;
+            }
+            break;
         case CSSStyleValuePair::KeyKind::GridTemplateColumns:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::GridTemplateUnits) {
@@ -11522,11 +11549,14 @@ bool CSSStyleValuePair::updateValueUserSelect(const CSSTokenVector& tokens)
     }
 
     const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_STRING("auto")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+        return true;
+    }
+
     m_valueKind = CSSStyleValuePair::ValueKind::UserSelectValueKind;
     if (STRING_VALUE_IS_STRING("none")) {
         m_value.m_userSelect = UserSelectValue::NoneUserSelectValue;
-    } else if (STRING_VALUE_IS_STRING("auto")) {
-        m_value.m_userSelect = UserSelectValue::AutoUserSelectValue;
     } else if (STRING_VALUE_IS_STRING("text")) {
         // TODO: enable the comment below when supporting this value
         // m_value.m_userSelect = UserSelectValue::TextUserSelectValue;
@@ -11538,6 +11568,31 @@ bool CSSStyleValuePair::updateValueUserSelect(const CSSTokenVector& tokens)
     } else if (STRING_VALUE_IS_STRING("all")) {
         // TODO: enable the comment below when supporting this value
         // m_value.m_userSelect = UserSelectValue::AllUserSelectValue;
+        return false;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueHyphens(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_STRING("auto")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+        return true;
+    }
+
+    m_valueKind = CSSStyleValuePair::ValueKind::HyphensValueKind;
+    if (STRING_VALUE_IS_STRING("none")) {
+        m_value.m_hyphens = HyphensValue::NoneHyphensValue;
+    } else if (STRING_VALUE_IS_STRING("manual")) {
+        // TODO: enable the comment below when supporting this value
+        // m_value.m_hyphens = HyphensValue::ManualHyphensValue;
         return false;
     } else {
         return false;
