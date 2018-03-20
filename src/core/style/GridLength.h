@@ -87,8 +87,11 @@ public:
             builder.appendString(value);
             builder.appendString("px");
         } else {
-            // TODO: Such as 1fr
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            char temp[100];
+            snprintf(temp, sizeof(temp), "%.1f", m_fr);
+            String* value = String::fromUTF8(temp);
+            builder.appendString(value);
+            builder.appendString("fr");
         }
         return builder.finalize();
     }

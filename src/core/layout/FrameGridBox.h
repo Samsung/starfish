@@ -31,9 +31,15 @@ class LineBox;
 
 class GridLine : public gc {
 public:
-    LayoutUnit gap()
+    LayoutUnit offset()
     {
-        return m_gap;
+        return m_offset;
+    }
+
+    void setOffset(LayoutUnit v, bool computed)
+    {
+        m_computed = computed;
+        m_offset = v;
     }
 
     bool isComputed()
@@ -42,15 +48,15 @@ public:
     }
 
     // The 'computed' is for the 'fr' unit.
-    GridLine(LayoutUnit gap, bool computed)
-        : m_gap(gap)
+    GridLine(LayoutUnit offset, bool computed)
+        : m_offset(offset)
         , m_lineName(nullptr)
         , m_computed(computed)
     {
     }
 
-    GridLine(LayoutUnit gap)
-        : m_gap(gap)
+    GridLine(LayoutUnit offset)
+        : m_offset(offset)
         , m_lineName(nullptr)
         , m_computed(true)
     {
@@ -58,7 +64,7 @@ public:
     }
 
 private:
-    LayoutUnit m_gap;
+    LayoutUnit m_offset;
     String* m_lineName;
     bool m_computed;
 };
@@ -100,10 +106,11 @@ class GridFormattingContext {
 public:
     GridFormattingContext(LayoutContext& ctx, FrameGridBox* container,
                           LayoutUnit availableWidth);
+
     void computeColumnsAndRows();
+    void applyFrUnitsWithColumns();
     void buildGridLineTemplate();
     void layoutGridItems();
-    void applyAlign();
 
     static bool doesParticipateInGridFormattingContext(Frame* GridItem);
 
