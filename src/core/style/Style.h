@@ -881,6 +881,7 @@ enum WordWrapValue {
 
 enum VisibilityValue {
     VisibleVisibilityValue,
+    CollapseVisibilityValue,
     HiddenVisibilityValue,
 };
 
@@ -1099,11 +1100,11 @@ class CSSStyleDeclaration;
     F(TableLayout, tableLayout, "table-layout")                              \
     F(UnicodeBidi, unicodeBidi, "unicode-bidi")                              \
     F(Content, content, "content")                                           \
-    F(TransitionProperty, transitionProperty, "transitionProperty")          \
-    F(TransitionDuration, transitionDuration, "transitionDuration")          \
+    F(TransitionProperty, transitionProperty, "transition-property")         \
+    F(TransitionDuration, transitionDuration, "transition-duration")         \
     F(TransitionTimingFunction, transitionTimingFunction,                    \
-      "transitionTimingFunction")                                            \
-    F(TransitionDelay, transitionDelay, "transitionDelay")                   \
+      "transition-timing-function")                                          \
+    F(TransitionDelay, transitionDelay, "transition-delay")                  \
     F(BoxShadow, boxShadow, "box-shadow")                                    \
     F(BoxSizing, boxSizing, "box-sizing")                                    \
     F(Fill, fill, "fill")                                                    \
@@ -1153,6 +1154,7 @@ class CSSStyleDeclaration;
     F(GridTemplateColumns, gridTemplateColumns, "grid-template-columns")     \
     F(GridTemplateRows, gridTemplateRows, "grid-template-rows")              \
     F(CaretColor, caretColor, "caret-color")                                 \
+    F(FontKerning, fontKerning, "font-kerning")                              \
     F(Hyphens, hyphens, "hyphens")
 
 // font related properties must be followed end of this
@@ -1186,10 +1188,6 @@ class CSSStyleDeclaration;
     F(Outline, outline, "outline")                                   \
     F(Overflow, overflow, "overflow")                                \
     F(Transition, transition, "transition")                          \
-    F(TransitionTransitionProperty, transitionTransitionProperty,    \
-      "transitionProperty")                                          \
-    F(TransitionTransitionDuration, transitionTransitionDuration,    \
-      "transitionDuration")                                          \
     F(FlexFlow, flexFlow, "flex-flow")                               \
     F(Flex, flex, "flex")                                            \
     F(ListStyle, listStyle, "list-style")
@@ -1363,6 +1361,7 @@ public:
         FontSizeValueKind,
         FontStyleValueKind,
         FontWeightValueKind,
+        FontKerningValueKind,
         WordWrapValueKind,
 
         BorderStyleValueKind,
@@ -1561,6 +1560,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == FontWeightValueKind);
         return m_value.m_fontWeight;
+    }
+
+    FontKerningValue fontKerningValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == FontKerningValueKind);
+        return m_value.m_fontKerning;
     }
 
     WordWrapValue wordWrapValue() const
@@ -1923,6 +1928,7 @@ public:
         FontSizeValue m_fontSize;
         FontStyleValue m_fontStyle;
         FontWeightValue m_fontWeight;
+        FontKerningValue m_fontKerning;
         WordWrapValue m_wordWrap;
         TextAlignValue m_textAlign;
         SideValue m_side;
@@ -2007,6 +2013,10 @@ public:
         }
         ValueData(FontStyleValue v)
             : m_fontStyle(v)
+        {
+        }
+        ValueData(FontKerningValue v)
+            : m_fontKerning(v)
         {
         }
         ValueData(FontWeightValue v)

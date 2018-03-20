@@ -40,6 +40,12 @@ enum FontWeight {
     FontWeightEnd = 9,
 };
 
+enum FontKerningValue {
+    FontKerningAutoValue, // Default
+    FontKerningNormalValue,
+    FontKerningNoneValue,
+};
+
 struct FontMetrics {
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
@@ -95,6 +101,7 @@ protected:
         m_size = 0;
         m_spaceWidth = 0;
         m_letterSpacing = 0;
+        m_fontKerning = FontKerningValue::FontKerningAutoValue;
         m_fontFaceList = nullptr;
     }
 
@@ -138,6 +145,11 @@ public:
     char style()
     {
         return m_style;
+    }
+
+    FontKerningValue fontKerning()
+    {
+        return m_fontKerning;
     }
 
     size_t seenUnresolvedWebFontIndex()
@@ -204,6 +216,7 @@ protected:
     size_t m_seenUnresolvedWebFontIndex;
     char m_weight;
     char m_style;
+    FontKerningValue m_fontKerning;
     float m_size;
     float m_spaceWidth;
     float m_letterSpacing;
@@ -260,14 +273,15 @@ class FontSelector : public DocumentHoldable, public gc {
 
 public:
 #if !defined(PORT_CANVAS_BACKEND_EFL)
-    Font* loadFont(String* familyNameArray[], size_t familyNameArraySize,
-                   float size, char style = 0, char weight = 4,
-                   float letterSpacing = 0);
+    Font* loadFont(
+        String* familyNameArray[], size_t familyNameArraySize, float size,
+        char style = 0, char weight = 4, float letterSpacing = 0,
+        FontKerningValue fontKerning = FontKerningValue::FontKerningAutoValue);
 #else
-    virtual Font* loadFont(String* familyNameArray[],
-                           size_t familyNameArraySize, float size,
-                           char style = 0, char weight = 4,
-                           float letterSpacing = 0);
+    virtual Font* loadFont(
+        String* familyNameArray[], size_t familyNameArraySize, float size,
+        char style = 0, char weight = 4, float letterSpacing = 0,
+        FontKerningValue fontKerning = FontKerningValue::FontKerningAutoValue);
 #endif
 
     PlatformFontSelector* platformFontSelector()

@@ -366,9 +366,10 @@ public:
     }
 
     Font* loadFont(String* familyNameArray[], size_t familyNameArraySize,
-                   float size, char style, char weight, float letterSpacing)
+                   float size, char style, char weight, float letterSpacing,
+                   FontKerningValue fontKerning)
     {
-        // EFL backend ignores letterSpacing
+        // EFL backend ignores letterSpacing, fontKerning
         auto cacheFontName = mergeFamilyNames(
             familyNameArray, familyNameArraySize, size, style, weight);
         auto iter = m_fontCache.find(cacheFontName);

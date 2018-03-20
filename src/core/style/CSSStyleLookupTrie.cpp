@@ -474,6 +474,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Fill-Opacity
         // Stroke-Width
         // Word-Spacing
+        // font-kerning
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-style", 12) == 0) {
@@ -517,6 +518,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'f':
             if (memcmp(data, "fill-opacity", 12) == 0) {
                 return CSSStyleKind::FillOpacity;
+            }
+            if (memcmp(data, "font-kerning", 12) == 0) {
+                return CSSStyleKind::FontKerning;
             }
             break;
         case 's':
@@ -1277,6 +1281,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'f':
             if (memcmp(data, "fillOpacity", 11) == 0) {
                 return CSSStyleKind::FillOpacity;
+            }
+            if (memcmp(data, "fontKerning", 11) == 0) {
+                return CSSStyleKind::FontKerning;
             }
             break;
         case 's':
