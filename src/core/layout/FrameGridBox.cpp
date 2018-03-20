@@ -77,6 +77,9 @@ void GridFormattingContext::layoutGridItems()
             gridItem->setY(offsetY);
             item++;
             if (item == m_orderedGridItems.end()) {
+                m_container->computeContentHeight(
+                    m_layoutContext,
+                    m_gridLineRows[m_gridLineRows.size() - 1].gap());
                 return;
             }
         }
@@ -129,8 +132,8 @@ void GridFormattingContext::buildGridLineTemplate()
     size_t lineNumber = 0;
     size_t columnIndex = 0;
     size_t rowIndex = 0;
+    double maxHeight = 0;
 
-    double maxHeight = -1;
     while (item != m_orderedGridItems.end()) {
         bool needNewLine = false;
 
@@ -145,28 +148,38 @@ void GridFormattingContext::buildGridLineTemplate()
             FrameBox* gridItem = (*item);
             GridLayoutScope scope(gridItem);
             ComputedStyle* style = gridItem->style();
+
             style->setWidth(
                 Length(Length::Fixed, gridLength.gap() - preGridLine.gap()));
+            if (!needNewLine) {
+                if (rowIndex + 1 < m_gridLineRows.size()) {
+                    style->setHeight(Length(
+                        Length::Fixed, m_gridLineRows[rowIndex + 1].gap() -
+                                           m_gridLineRows[rowIndex].gap()));
+                }
+            }
+
             gridItem->layout(m_layoutContext,
                              Frame::LayoutWantToResolve::ResolveAll);
             maxHeight = std::max(maxHeight, gridItem->height().toDouble());
         }
 
-        if (columnIndex + 1 >= m_gridLineColumns.size() - 1) {
-            if (needNewLine && maxHeight != -1) {
+        item++;
+
+        if ((columnIndex + 1 >= m_gridLineColumns.size() - 1) ||
+            (item == m_orderedGridItems.end())) {
+            if (needNewLine) {
                 GridLine line =
                     GridLine(m_gridLineRows[rowIndex].gap() + maxHeight);
                 m_gridLineRows.push_back(line);
             }
 
             columnIndex = 0;
-            maxHeight = -1;
+            maxHeight = 0;
             rowIndex++;
         } else {
             columnIndex++;
         }
-
-        item++;
     }
 }
 

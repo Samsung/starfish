@@ -1872,7 +1872,7 @@ public:
         if (isFrameBlockBox()) {
             if (isFrameTableBox() || isFrameTableRowBox() ||
                 isFrameTableSectionBox() || isFrameTableColBox() ||
-                isFrameFlexibleBox()) {
+                isFrameFlexibleBox() || isFrameGridBox()) {
                 return false;
             }
             return true;
