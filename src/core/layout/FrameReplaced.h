@@ -138,7 +138,8 @@ public:
 
     virtual void paintReplaced(Canvas* canvas)
     {
-        applyBorderRadiusClippingIfNeeds(canvas);
+        const LayoutRect rect(0, 0, width(), height());
+        applyBorderRadiusClippingIfNeeds(canvas, rect);
         if (!isFrameReplaced()) {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

@@ -25,11 +25,12 @@ namespace StarFish {
 class CanvasShadowData {
 public:
     CanvasShadowData(const float& offsetX, const float& offsetY,
-                     const float& radius, const Unit::Color& color,
-                     const bool& hasColor)
+                     const float& radius, const float& spreadDistance,
+                     const Unit::Color& color, const bool& hasColor)
         : m_offsetX(offsetX)
         , m_offsetY(offsetY)
         , m_radius(radius)
+        , m_spreadDistance(spreadDistance)
         , m_color(color)
         , m_hasColor(hasColor)
     {
@@ -60,10 +61,16 @@ public:
         return m_hasColor;
     }
 
+    float spreadDistance()
+    {
+        return m_spreadDistance;
+    }
+
 private:
     float m_offsetX;
     float m_offsetY;
     float m_radius;
+    float m_spreadDistance;
     Unit::Color m_color;
     bool m_hasColor;
 };
