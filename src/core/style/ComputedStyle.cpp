@@ -1083,6 +1083,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->fontKerning() != oldStyle->fontKerning()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::FontKerning] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     if (newStyle->m_inheritedStyles.m_wordWrap !=
         oldStyle->m_inheritedStyles.m_wordWrap) {
         damagedKeys[CSSStyleValuePair::KeyKind::WordWrap] = true;
@@ -1133,6 +1140,14 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+
+        if (newStyle->m_inheritedStyles.m_visibility ==
+                VisibilityValue::CollapseVisibilityValue ||
+            oldStyle->m_inheritedStyles.m_visibility ==
+                VisibilityValue::CollapseVisibilityValue) {
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
     }
 
     if (newStyle->m_inheritedStyles.m_borderCollapse !=
@@ -1652,7 +1667,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damagedKeys[CSSStyleValuePair::KeyKind::ListStylePosition] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
-            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
     if (newStyle->clip() != oldStyle->clip()) {

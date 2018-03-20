@@ -440,24 +440,26 @@ class ComputedStyle : public gc {
                                             bool* damagedKeys);
 
     struct InheritedStylesRareData {
+        FillRuleValue m_fillRule : 1; // svg
+        TextTransformValue m_textTransform : 2;
+        HyphensValue m_hyphens : 1;
+        FontKerningValue m_fontKerning : 2;
+
         Length m_letterSpacing;
         Length m_textIndent;
         Length m_wordSpacing;
         Length m_horizontalBorderSpacing; // table
         Length m_verticalBorderSpacing;   // table
 
-        StylePaintData m_fill;    // svg
-        FillRuleValue m_fillRule; // svg
-        float m_fillOpacity;      // svg
-        StylePaintData m_stroke;  // svg
-        Length m_strokeWidth;     // svg
+        StylePaintData m_fill;   // svg
+        float m_fillOpacity;     // svg
+        StylePaintData m_stroke; // svg
+        Length m_strokeWidth;    // svg
 
-        TextTransformValue m_textTransform;
         ShadowDataList m_textShadowDataList;
         ListStyleData m_listStyleData;
 
         Unit::Color m_caretColor;
-        HyphensValue m_hyphens;
 
         InheritedStylesRareData()
         {
@@ -476,6 +478,7 @@ class ComputedStyle : public gc {
             m_textTransform = NoneTextTransformValue;
             m_caretColor = Unit::Color(0, 0, 0, 255);
             m_hyphens = HyphensValue::NoneHyphensValue;
+            m_fontKerning = FontKerningValue::FontKerningAutoValue;
         }
 
         void* operator new(size_t size);
@@ -1744,6 +1747,15 @@ public:
 
     VisibilityValue visibility()
     {
+        // only table elements needs `collapse` value.
+        return m_inheritedStyles.m_visibility ==
+                       VisibilityValue::VisibleVisibilityValue
+                   ? VisibilityValue::VisibleVisibilityValue
+                   : VisibilityValue::HiddenVisibilityValue;
+    }
+
+    VisibilityValue originalVisibility()
+    {
         return m_inheritedStyles.m_visibility;
     }
 
@@ -1760,6 +1772,20 @@ public:
     WordWrapValue wordWrap()
     {
         return m_inheritedStyles.m_wordWrap;
+    }
+
+    FontKerningValue fontKerning()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_fontKerning;
+        }
+        return InheritedStylesRareData().m_fontKerning;
+    }
+
+    void setFontKerning(FontKerningValue v)
+    {
+        if (v != fontKerning())
+            ensureInheritedRareData()->m_fontKerning = v;
     }
 
     Length letterSpacing()
@@ -2648,7 +2674,7 @@ protected:
         TextAlignValue m_textAlign : 3;
         DirectionValue m_direction : 1;
         WhiteSpaceValue m_whiteSpace : 3;
-        VisibilityValue m_visibility : 1;
+        VisibilityValue m_visibility : 2;
         BorderCollapseValue m_borderCollapse : 1; // table
         CaptionSideValue m_captionSide : 1;       // table
         EmptyCellsValue m_emptyCells : 1;         // table

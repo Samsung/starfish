@@ -1514,6 +1514,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
     ADD_VALUE_PAIR(FontStyle, FontStyleValueKind, fontStyle)
     ADD_VALUE_PAIR(FontWeight, FontWeightValueKind, fontWeight)
+    ADD_VALUE_PAIR(FontKerning, FontKerningValueKind, fontKerning)
     ADD_VALUE_PAIR(WordWrap, WordWrapValueKind, wordWrap)
     ADD_VALUE_PAIR(OverflowWrap, WordWrapValueKind, wordWrap)
     ADD_VALUE_PAIR(OverflowX, OverflowValueKind, overflowX)

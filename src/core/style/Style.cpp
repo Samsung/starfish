@@ -2094,6 +2094,18 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
+    case CSSStyleValuePair::ValueKind::FontKerningValueKind:
+        switch (fontKerningValue()) {
+        case FontKerningValue::FontKerningAutoValue:
+            return String::fromUTF8("auto");
+        case FontKerningValue::FontKerningNormalValue:
+            return String::fromUTF8("normal");
+        case FontKerningValue::FontKerningNoneValue:
+            return String::fromUTF8("none");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
     case CSSStyleValuePair::ValueKind::WordWrapValueKind:
         switch (wordWrapValue()) {
         case WordWrapValue::NormalWordWrapValue:
@@ -2189,6 +2201,8 @@ String* CSSStyleValuePair::toString() const
         switch (visibilityValue()) {
         case VisibilityValue::VisibleVisibilityValue:
             return String::fromUTF8("visible");
+        case VisibilityValue::CollapseVisibilityValue:
+            return String::fromUTF8("collapse");
         case VisibilityValue::HiddenVisibilityValue:
             return String::fromUTF8("hidden");
         default:
@@ -4246,6 +4260,33 @@ void StyleResolver::apply(Element* element,
                     data[i + 1].m_familyName = val->at(i).stringValue();
                 }
                 style->m_inheritedStyles.m_fontFamilyDatas = data;
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::FontKerning:
+            if ((cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Inherit) ||
+                (cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Unset)) {
+                style->setFontKerning(parentStyle->fontKerning());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->setFontKerning(FontKerningValue::FontKerningAutoValue);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::FontKerningValueKind) {
+                if (cssValues[k].fontKerningValue() ==
+                    FontKerningValue::FontKerningAutoValue) {
+                    style->setFontKerning(
+                        FontKerningValue::FontKerningAutoValue);
+                } else if (cssValues[k].fontKerningValue() ==
+                           FontKerningValue::FontKerningNormalValue) {
+                    style->setFontKerning(
+                        FontKerningValue::FontKerningNormalValue);
+                } else {
+                    style->setFontKerning(
+                        FontKerningValue::FontKerningNoneValue);
+                }
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
         case CSSStyleValuePair::KeyKind::FontWeight:
@@ -8543,6 +8584,26 @@ bool CSSStyleValuePair::updateValueFontStyle(const CSSTokenVector& tokens)
     return updateValueUnitFontStyle(tokens[0]);
 }
 
+bool CSSStyleValuePair::updateValueFontKerning(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::FontKerningValueKind;
+    if (STRING_VALUE_IS_STRING("auto")) {
+        m_value.m_fontKerning = FontKerningValue::FontKerningAutoValue;
+    } else if (STRING_VALUE_IS_STRING("normal")) {
+        m_value.m_fontKerning = FontKerningValue::FontKerningNormalValue;
+    } else if (STRING_VALUE_IS_STRING("none")) {
+        m_value.m_fontKerning = FontKerningValue::FontKerningNoneValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueUnitFontStyle(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::FontStyleValueKind;
@@ -10305,6 +10366,8 @@ bool CSSStyleValuePair::updateValueVisibility(const CSSTokenVector& tokens)
         m_value.m_visibility = VisibilityValue::VisibleVisibilityValue;
     } else if (STRING_VALUE_IS_STRING("hidden")) {
         m_value.m_visibility = VisibilityValue::HiddenVisibilityValue;
+    } else if (STRING_VALUE_IS_STRING("collapse")) {
+        m_value.m_visibility = VisibilityValue::CollapseVisibilityValue;
     } else {
         return false;
     }

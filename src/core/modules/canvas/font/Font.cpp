@@ -40,7 +40,8 @@ static UTF8StringDataNonGCStd mergeStyleWeightWithString(
 static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
                                                size_t len, float size,
                                                char style, char weight,
-                                               float letterSpacing)
+                                               float letterSpacing,
+                                               FontKerningValue kerningValue)
 {
     UTF8StringDataNonGCStd result;
     result.reserve(128);
@@ -69,6 +70,8 @@ static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
     result += (style + 'a');
     result += "@w:";
     result += (weight + 'a');
+    result += "@k:";
+    result += (kerningValue + 'a');
     return result;
 }
 
@@ -167,10 +170,12 @@ FontFace* FontSelector::loadFromPlatform(const UTF8StringDataNonGCStd& fm,
 
 Font* FontSelector::loadFont(String* familyNameArray[],
                              size_t familyNameArraySize, float size, char style,
-                             char weight, float letterSpacing)
+                             char weight, float letterSpacing,
+                             FontKerningValue fontKerning)
 {
-    auto cacheFontName = mergeFamilyNames(familyNameArray, familyNameArraySize,
-                                          size, style, weight, letterSpacing);
+    auto cacheFontName =
+        mergeFamilyNames(familyNameArray, familyNameArraySize, size, style,
+                         weight, letterSpacing, fontKerning);
     auto iter = m_fontCache.find(cacheFontName);
     if (iter != m_fontCache.end()) {
         return iter->second;

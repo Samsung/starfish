@@ -765,6 +765,12 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
         FrameTreeBuilder::clearTree(current);
         return nullptr;
     }
+
+    if (ComputedStyle::isDisplayTableValueType(display) &&
+        current->style()->originalVisibility() ==
+            VisibilityValue::CollapseVisibilityValue) {
+        return nullptr;
+    }
     if (current->isHTMLImageElement()) {
         return new FrameReplacedImage(current);
     }

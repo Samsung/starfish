@@ -403,13 +403,6 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
         return true;
     }
 
-    if (((FontFaceImplCairo*)(FontImplCairo*)f->fontFaceList()[0])
-            ->m_supportsKerning) {
-        if (f->size() >= 48) {
-            return false;
-        }
-    }
-
     size_t length = sv.length();
     auto accessData = sv.bufferAccessData();
     for (size_t i = 0; i < length; i++) {
@@ -424,7 +417,21 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
         }
     }
 
-    return true;
+    if (f->fontKerning() == FontKerningAutoValue) {
+        if (((FontFaceImplCairo*)(FontImplCairo*)f->fontFaceList()[0])
+                ->m_supportsKerning) {
+            if (f->size() >= 48) {
+                return false;
+            }
+        }
+        return true;
+    } else if (f->fontKerning() == FontKerningNormalValue) {
+        return ((FontFaceImplCairo*)(FontImplCairo*)f->fontFaceList()[0])
+            ->m_supportsKerning;
+    } else {
+        STARFISH_ASSERT(f->fontKerning() == FontKerningNoneValue);
+        return true;
+    }
 }
 
 #if !defined(PORT_CANVAS_BACKEND_EFL)
