@@ -2429,7 +2429,7 @@ String* CSSStyleValuePair::toString() const
         }
         break;
     case CSSStyleValuePair::ValueKind::HyphensValueKind:
-        switch (userSelectValue()) {
+        switch (hyphensValue()) {
         case NoneHyphensValue:
             return String::fromUTF8("none");
         case ManualHyphensValue:
