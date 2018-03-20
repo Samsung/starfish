@@ -46,8 +46,6 @@
 namespace StarFish {
 
 HTTPCache* g_httpCache = nullptr;
-int g_httpCacheCNT = 0;
-
 const size_t HTTPCache::kBlockSize = BLKGETSIZE;
 
 HTTPCache::HTTPCache(String* cacheDirPath)
@@ -405,11 +403,6 @@ bool HTTPCache::flush()
 {
     STARFISH_ASSERT(isMainThread());
     STARFISH_LOG_INFO("HTTPCache::flush()\n");
-
-    if (g_httpCacheCNT > 1) {
-        g_httpCacheCNT--;
-        return false;
-    }
 
     bool check = true;
 

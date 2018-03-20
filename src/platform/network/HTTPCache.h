@@ -29,7 +29,6 @@ class File;
 class HTTPCache;
 
 extern HTTPCache* g_httpCache;
-extern int g_httpCacheCNT;
 
 class HTTPCache : public gc {
 public:
@@ -45,7 +44,6 @@ public:
         if (g_httpCache == nullptr) {
             g_httpCache = new (NoGC) HTTPCache(cacheDirPath);
         }
-        g_httpCacheCNT++;
         return (g_httpCache->good()) ? Nullable<HTTPCache*>(g_httpCache)
                                      : Nullable<HTTPCache*>();
     }
