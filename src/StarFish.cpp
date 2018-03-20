@@ -404,7 +404,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (httpCacheDirectorypath != nullptr) {
         auto nullable =
-            HTTPCache::create((String::fromUTF8(httpCacheDirectorypath)));
+            HTTPCache::getInstance((String::fromUTF8(httpCacheDirectorypath)));
         if (nullable.hasValue()) {
             m_httpCache = nullable.getValue();
         }
@@ -459,7 +459,9 @@ StarFish::~StarFish()
     NetworkSharedResourceManager::close();
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (m_httpCache) {
-        m_httpCache->flush();
+        if (m_httpCache->flush()) {
+            GC_FREE(g_httpCache);
+        }
     }
 #endif
 }

@@ -749,6 +749,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
 
     const char* locale = "ko-KR";
     const char* timezoneID = "Asia/Seoul";
+    const char* cacheDir = "/mnt/sdcard/TMP";
     float defaultFontSizeMultiplier = 1;
 
     const char* cstr = env->GetStringUTFChars(jua, NULL);
@@ -757,8 +758,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
     StarFish::StarFish* starfish = new (NoGC) StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)0, locale, timezoneID, nullptr, w, h, 0,
         0, defaultFontSizeMultiplier, String::fromUTF8("Roboto"), info, "", "",
-        "/mnt/sdcard/TMP", ua);
-
+        cacheDir, ua);
     env->ReleaseStringUTFChars(jua, cstr);
 
     LWE::WebView* webView = LWE::WebView::Create(starfish);
