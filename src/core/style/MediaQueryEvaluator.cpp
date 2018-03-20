@@ -326,7 +326,8 @@ static bool aspectRatioMediaFeatureEval(MediaQueryExpValue& value,
         return compareAspectRatioValue(value, mediaValues->viewportWidth(),
                                        mediaValues->viewportHeight(), op);
     }
-    return false;
+    // Assume if we have a device, its aspect ratio is non-zero.
+    return true;
 }
 
 static bool deviceAspectRatioMediaFeatureEval(MediaQueryExpValue& value,
@@ -337,7 +338,8 @@ static bool deviceAspectRatioMediaFeatureEval(MediaQueryExpValue& value,
         return compareAspectRatioValue(value, mediaValues->screenWidth(),
                                        mediaValues->screenHeight(), op);
     }
-    return false;
+    // Assume if we have a device, its device aspect ratio is non-zero.
+    return true;
 }
 
 static bool numberValue(const MediaQueryExpValue& value, float& result)
@@ -402,11 +404,15 @@ static bool monochromeMediaFeatureEval(MediaQueryExpValue& value,
 static bool evalResolution(MediaQueryExpValue& value, MediaValues* mediaValues,
                            MediaFeaturePrefix op)
 {
-    if (!value.isValid() || !value.isValue || !isResolution(value.unit)) {
-        return false;
+    float actualResolution = mediaValues->devicePixelRatio();
+
+    if (!value.isValid()) {
+        return !!actualResolution;
     }
 
-    float actualResolution = mediaValues->devicePixelRatio();
+    if (!value.isValue || !isResolution(value.unit)) {
+        return false;
+    }
 
     if (value.unit == UnitType::Number) {
         return compareValue(actualResolution, clampTo<float>(value.value), op);
