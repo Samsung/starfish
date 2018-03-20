@@ -9826,14 +9826,20 @@ static bool parseGridTemplateColumnsAndRows(const CSSTokenVector& tokens,
         float number = parser.parsedNumber();
         parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
         String* str = parser.parsedString();
-        if (str->length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
+        if (str->length() != 0 &&
+            (!CSSPropertyParser::isLengthUnit(str) && !str->equals("fr"))) {
             return false;
         }
 
         // TODO : Add the GridLine, GridArea and Repeat
         // Create GridLength and push back into vector.
-        GridLength g(CSSLength(str, number).toLength());
-        v->push_back(g);
+        if (str->equals("fr")) {
+            GridLength g(number);
+            v->push_back(g);
+        } else {
+            GridLength g(CSSLength(str, number).toLength());
+            v->push_back(g);
+        }
     }
 
     return true;
