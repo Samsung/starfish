@@ -820,7 +820,9 @@ public:
         return false;
     }
 
-    void applyBorderRadiusClippingIfNeeds(Canvas* canvas);
+    void applyBorderRadiusClippingIfNeeds(Canvas* canvas,
+                                          const LayoutRect& rect,
+                                          float spreadDistance = 0);
 
 protected:
     bool hasRareData() const

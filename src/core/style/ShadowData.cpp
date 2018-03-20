@@ -43,11 +43,14 @@ CanvasShadowData ShadowData::toCanvasShadowData(Frame* owner) const
 {
     STARFISH_ASSERT(owner);
     LayoutUnit unused;
+
     float offsetX = m_offsetX.specifiedValue(unused, owner);
     float offsetY = m_offsetY.specifiedValue(unused, owner);
     float radius = m_radius.specifiedValue(unused, owner);
+    float spreadDistance = m_spreadDistance.specifiedValue(unused, owner);
 
-    CanvasShadowData ret(offsetX, offsetY, radius, m_color, m_hasColor);
+    CanvasShadowData ret(offsetX, offsetY, radius, spreadDistance, m_color,
+                         m_hasColor);
     return ret;
 }
 
