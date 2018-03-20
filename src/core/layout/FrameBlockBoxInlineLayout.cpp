@@ -4725,7 +4725,8 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
         if (hasShadow) {
             canvas->save();
             size_t width = (size_t)contentWidth().ceil();
-            size_t height = (size_t)(ceil(s->font()->metrics().m_fontHeight));
+            size_t height =
+                (size_t)(ceil((float)s->font()->metrics().m_fontHeight));
             canvas->translate(dx, dy);
 
             CanvasShadowDataList list =

@@ -696,8 +696,8 @@ void FrameTreeBuilder::createPseudoElement(
         return;
     }
 
-    ComputedStyle* pseudoStyle =
-        parent->style()->pseudoStyle(parent->asElement(), pseudoId);
+    ComputedStyle* pseudoStyle = parent->style()->pseudoStyle(
+        parent->asElement(), pseudoId, parentStyle);
     if (!pseudoElementFrameIsNeeded(pseudoStyle)) {
         return;
     }

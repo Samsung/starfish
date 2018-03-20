@@ -108,6 +108,7 @@ public:
     String* Transition();
     String* TransitionTransitionProperty();
     String* TransitionTransitionDuration();
+    String* TransitionTransitionDelay();
     String* Overflow();
     String* FlexFlow();
     String* Flex();
@@ -148,6 +149,8 @@ public:
                                          bool isImportant);
     void setTransitionTransitionDuration(const char* value, size_t len,
                                          bool isImportant);
+    void setTransitionTransitionDelay(const char* value, size_t len,
+                                      bool isImportant);
     void setOverflow(const char* value, size_t len, bool isImportant);
     void setFlexFlow(const char* value, size_t len, bool isImportant);
     void setFlex(const char* value, size_t len, bool isImportant);

@@ -226,4 +226,3 @@ test/efl/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-bo
 test/efl/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-content-box.html
 test/efl/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-padding-box.html
 test/efl/reftest/csswg-test/css-backgrounds-3_original/css3-background-size-contain.html
-

@@ -1597,6 +1597,25 @@ public:
         m_rareComputedStyleData.ensureTransition()->setDuration(duration);
     }
 
+    CSSTime transitionDelay()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return CSSTime(0);
+        }
+
+        StyleTransitionData* transition = m_rareComputedStyleData.transition();
+        if (transition) {
+            return transition->delay();
+        }
+
+        return CSSTime(0);
+    }
+
+    void setTransitionDelay(CSSTime duration)
+    {
+        m_rareComputedStyleData.ensureTransition()->setDelay(duration);
+    }
+
     TransitionTimingFunctionValue transitionTimingFunction()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
@@ -2252,7 +2271,8 @@ public:
     }
 
     ComputedStyle* pseudoStyle(Element* containerElement,
-                               StyleResolver::PseudoElementType pid);
+                               StyleResolver::PseudoElementType pid,
+                               ComputedStyle* stickyInheritFrom = nullptr);
     bool seenPseudoElement(StyleResolver::PseudoElementType pseudoId)
     {
         if (pseudoId == StyleResolver::PseudoElementType::PseudoElementBefore) {
@@ -2428,6 +2448,21 @@ public:
         }
 
         return MaskSizeValue::ContainMaskSizeValue;
+    }
+
+    size_t maskSizeLayerLength()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return 0;
+        }
+
+        PositionedMaskData* positionedMask =
+            m_rareComputedStyleData.positionedMask();
+        if (positionedMask) {
+            return positionedMask->size();
+        }
+
+        return 0;
     }
 
     const ListStyleData listStyleData()
