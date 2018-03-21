@@ -32,5 +32,12 @@ void TextDecorationData::merge(ComputedStyle* style)
         m_hasLineThrough = true;
         m_lineThroughColor = style->color();
     }
+
+    Nullable<Unit::Color> c =
+        style->rareComputedStyleData()->textDecorationColor();
+    if (c.hasValue()) {
+        m_underLineColor = c.getValue();
+        m_lineThroughColor = c.getValue();
+    }
 }
 }

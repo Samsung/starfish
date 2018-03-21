@@ -358,6 +358,13 @@ static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
     }
 }
 
+CSSTokenValue CSSTokenValue::tolower() const
+{
+    CSSTokenValue copy = *this;
+    std::transform(copy.begin(), copy.end(), copy.begin(), ::tolower);
+    return copy;
+}
+
 String* CSSTransformFunctions::toString()
 {
     StringBuilder builder;
@@ -2159,6 +2166,7 @@ String* CSSStyleValuePair::toString() const
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     case CSSStyleValuePair::ValueKind::BorderImageRepeatValueKind:
         switch (borderImageRepeatValue()) {
         case BorderImageRepeatValue::StretchValue:
@@ -4496,6 +4504,33 @@ void StyleResolver::apply(Element* element,
                     cssValues[k].valueKind() ==
                     CSSStyleValuePair::ValueKind::TextDecorationValueKind);
                 style->setTextDecoration(cssValues[k].textDecorationValue());
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::TextDecorationColor:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setTextDecorationColor(
+                    parentStyle->textDecorationColor());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setTextDecorationColor(Unit::Color(0, 0, 0, 255));
+                break;
+            case CSSStyleValuePair::ValueKind::ColorValueKind:
+                style->setTextDecorationColor(cssValues[k].colorValue());
+                break;
+            default:
+                STARFISH_ASSERT(
+                    cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::NamedColorValueKind);
+                if (cssValues[k].namedColorValue() ==
+                    NamedColor::NamedColorValue::currentColor) {
+                    style->setTextDecorationColor(
+                        parentStyle->textDecorationColor());
+                } else {
+                    style->setTextDecorationColor(NamedColor::namedColorToColor(
+                        cssValues[k].namedColorValue()));
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::TextShadow: {
@@ -10438,6 +10473,27 @@ bool CSSStyleValuePair::updateValueTextDecoration(const CSSTokenVector& tokens)
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueTextDecorationColor(
+    const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue value = tokens[0].tolower();
+    m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
+
+    if (STRING_VALUE_IS_STRING("currentcolor")) {
+        return CSSPropertyParser::parseNamedColor(value, this);
+    } else if (STRING_VALUE_IS_STRING("transparent")) {
+        m_value.m_color = Unit::Color(0, 0, 0, 0);
+        return true;
+    } else {
+        return updateValueColor(tokens);
+    }
+    return false;
 }
 
 bool CSSStyleValuePair::updateValueTextAlign(const CSSTokenVector& tokens)

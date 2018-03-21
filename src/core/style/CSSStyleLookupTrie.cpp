@@ -836,6 +836,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // background-position-y
         // background-attachment
         // Grid-Template-Columns
+        // text-decoration-color
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background-position-x", 21) == 0) {
@@ -851,6 +852,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'g':
             if (memcmp(data, "grid-template-columns", 21) == 0) {
                 return CSSStyleKind::GridTemplateColumns;
+            }
+            break;
+        case 't':
+            if (memcmp(data, "text-decoration-color", 21) == 0) {
+                return CSSStyleKind::TextDecorationColor;
             }
             break;
         }
@@ -1561,6 +1567,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "borderTopLeftRadius", 19) == 0) {
                 return CSSStyleKind::BorderTopLeftRadius;
+            }
+            break;
+        case 't':
+            if (memcmp(data, "textDecorationColor", 19) == 0) {
+                return CSSStyleKind::TextDecorationColor;
             }
             break;
         case 'g':
