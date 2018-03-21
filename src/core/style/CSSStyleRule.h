@@ -33,6 +33,7 @@ class StyleRuleCondition;
 class StyleRuleMedia;
 class StyleRuleImport;
 class StyleRuleFontFace;
+class StyleRuleSupports;
 class MediaQuerySet;
 class MediaList;
 
@@ -170,6 +171,22 @@ private:
 
     StyleRuleFontFace* m_styleRule;
     CSSStyleDeclaration* m_propertiesWrapper;
+};
+
+class CSSSupportsRule : public CSSConditionRule {
+public:
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isCSSSupportsRule() const override;
+
+    CSSSupportsRule(StyleRuleSupports*, CSSStyleSheet*);
+    String* cssText() override;
+
+private:
+    CSSRule::Type type() const override
+    {
+        return CSSRule::Type::SUPPORTS_RULE;
+    }
 };
 }
 

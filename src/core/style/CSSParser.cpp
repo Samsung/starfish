@@ -2137,6 +2137,13 @@ StyleRuleFontFace* CSSParser::parseFontFaceRule()
     return nullptr;
 }
 
+StyleRuleSupports* CSSParser::parseSupportsRule()
+{
+    // TODO: Parse the @supports CSS at-rule.
+    // https://drafts.csswg.org/css-conditional-3/#at-supports
+    return nullptr;
+}
+
 String* CSSParser::parseURLString()
 {
     RefPtr<CSSToken> token = getToken(true, false);
@@ -2248,6 +2255,8 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
                 }
             } else if (token->isAtRule("@font-face")) {
                 rule = parseFontFaceRule();
+            } else if (token->isAtRule("@supports")) {
+                rule = parseSupportsRule();
             }
             /*
              else if (token.isAtRule("@variables")) {

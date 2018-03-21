@@ -40,8 +40,11 @@ public:
         MEDIA_RULE = 4,
         FONT_FACE_RULE = 5,
         PAGE_RULE = 6,
+        KEYFRAMES_RULE = 7,
+        KEYFRAME_RULE = 8,
         MARGIN_RULE = 9,
-        NAMESPACE_RULE = 10
+        NAMESPACE_RULE = 10,
+        SUPPORTS_RULE = 12
     };
 
     virtual void init(ScriptBindingInstance* instance,
