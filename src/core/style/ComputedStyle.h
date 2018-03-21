@@ -2276,6 +2276,20 @@ public:
         m_rareComputedStyleData.ensureContent()->push_back(content);
     }
 
+    void setContentCounter(String* id, const CounterStyle* v)
+    {
+        ContentData content(ContentData::ContentType::Counter);
+        content.setCounter(id, v);
+        m_rareComputedStyleData.ensureContent()->push_back(content);
+    }
+
+    void setContentCounters(String* id, String* sp, const CounterStyle* v)
+    {
+        ContentData content(ContentData::ContentType::Counter);
+        content.setCounters(id, sp, v);
+        m_rareComputedStyleData.ensureContent()->push_back(content);
+    }
+
     void setPseudoType(StyleResolver::PseudoElementType id)
     {
         m_pseudoId = id;

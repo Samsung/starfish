@@ -50,6 +50,7 @@
 #include "core/style/AncestorSelectorFilter.h"
 #include "core/style/CalcData.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/CSSCounterFunction.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
@@ -1769,6 +1770,8 @@ String* CSSStyleValuePair::toString() const
         return String::fromUTF8("normal");
     case CSSStyleValuePair::ValueKind::StringValueKind:
         return stringValue();
+    case CSSStyleValuePair::ValueKind::KeywordValueKind:
+        return keywordValue();
     case CSSStyleValuePair::ValueKind::ColorValueKind:
         return colorValue().toString();
     case CSSStyleValuePair::ValueKind::NamedColorValueKind:
@@ -2466,6 +2469,8 @@ String* CSSStyleValuePair::toString() const
         break;
     case CSSStyleValuePair::ValueKind::GridTemplateUnits:
         return GridLength::toStringWithGridLengths(gridTemplateUnits());
+    case CSSStyleValuePair::ValueKind::CounterFunctionValueKind:
+        return counterFunctionValue()->toString();
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -5165,7 +5170,7 @@ void StyleResolver::apply(Element* element,
                 ValueList* values = cssValues[k].multiValue();
                 unsigned int size = values->size();
                 if ((*values)[size - 1].valueKind() ==
-                    CSSStyleValuePair::ValueKind::StringValueKind) {
+                    CSSStyleValuePair::ValueKind::KeywordValueKind) {
                     style->setBorderImageSliceFill(true);
                     size--;
                 }
@@ -6038,6 +6043,26 @@ void StyleResolver::apply(Element* element,
                             element->document()
                                 ->createAttributeName(item.attrValue())
                                 .localNameAtomic());
+                    } else if (item.valueKind() ==
+                               CSSStyleValuePair::ValueKind::
+                                   CounterFunctionValueKind) {
+                        CSSCounterFunction* v = item.counterFunctionValue();
+                        Nullable<String*> sp = v->separator();
+                        Nullable<String*> counterName = v->style();
+                        const CounterStyle* counter = nullptr;
+                        if (counterName.hasValue()) {
+                            counter = CounterStyle::getKnownCounter(
+                                counterName.getValue());
+                        }
+                        if (!counter) {
+                            counter = CounterStyle::getDecimalCounter();
+                        }
+                        if (sp.hasValue()) {
+                            style->setContentCounters(v->name(), sp.getValue(),
+                                                      counter);
+                        } else {
+                            style->setContentCounter(v->name(), counter);
+                        }
                     } else {
                         STARFISH_RELEASE_ASSERT_NOT_REACHED();
                     }
@@ -8739,9 +8764,105 @@ bool CSSStyleValuePair::updateValueCursor(const CSSTokenVector& tokens)
     return true;
 }
 
+static bool parseCounter(const CSSTokenValue& s, CSSStyleValuePair* pair)
+{
+    auto ss = s.trim();
+    CSSPropertyParser parser((char*)ss.data(), ss.length());
+    parser.consumeString(0);
+    if (!parser.parsedString()->equals("counter")) {
+        return false;
+    }
+    if (!parser.consumeIfNext('(')) {
+        return false;
+    }
+    // Argument: name
+    parser.consumeWhitespaces();
+    parser.consumeString(CSSPropertyParser::AllowNegative |
+                         CSSPropertyParser::AllowUnderline);
+    String* name = parser.parsedString();
+    parser.consumeWhitespaces();
+    if (parser.consumeIfNext(')') && parser.isEnd()) {
+        pair->setCounterFunctionValue(new CSSCounterFunction(name));
+        return true;
+    }
+    // Argument: style
+    if (!parser.consumeIfNext(',')) {
+        return false;
+    }
+    parser.consumeWhitespaces();
+    parser.consumeString(CSSPropertyParser::AllowNegative |
+                         CSSPropertyParser::AllowUnderline);
+    String* style = parser.parsedString();
+    if (!style->length()) {
+        return false;
+    }
+    parser.consumeWhitespaces();
+    if (!parser.consumeIfNext(')') || !parser.isEnd()) {
+        return false;
+    }
+    auto value = new CSSCounterFunction(name);
+    value->setStyle(style);
+    pair->setCounterFunctionValue(value);
+    return true;
+}
+
+static bool parseCounters(const CSSTokenValue& s, CSSStyleValuePair* pair)
+{
+    auto ss = s.trim();
+    CSSPropertyParser parser((char*)ss.data(), ss.length());
+    parser.consumeString(0);
+    if (!parser.parsedString()->equals("counters")) {
+        return false;
+    }
+    if (!parser.consumeIfNext('(')) {
+        return false;
+    }
+    // Argument: name
+    parser.consumeWhitespaces();
+    parser.consumeString(CSSPropertyParser::AllowNegative |
+                         CSSPropertyParser::AllowUnderline);
+    String* name = parser.parsedString();
+    parser.consumeWhitespaces();
+    // Argument: separator
+    if (!parser.consumeIfNext(',')) {
+        return false;
+    }
+    if (!parser.consumeContentString()) {
+        return false;
+    }
+    String* separator = parser.parsedString();
+    parser.consumeWhitespaces();
+    if (parser.consumeIfNext(')') && parser.isEnd()) {
+        auto value = new CSSCounterFunction(name);
+        value->setSeparator(separator);
+        pair->setCounterFunctionValue(value);
+        return true;
+    }
+    // Argument: style
+    if (!parser.consumeIfNext(',')) {
+        return false;
+    }
+    parser.consumeWhitespaces();
+    parser.consumeString(CSSPropertyParser::AllowNegative |
+                         CSSPropertyParser::AllowUnderline);
+    String* style = parser.parsedString();
+    if (!style->length()) {
+        return false;
+    }
+    parser.consumeWhitespaces();
+    if (!parser.consumeIfNext(')') || !parser.isEnd()) {
+        return false;
+    }
+    auto value = new CSSCounterFunction(name);
+    value->setSeparator(separator);
+    value->setStyle(style);
+    pair->setCounterFunctionValue(value);
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueContent(const CSSTokenVector& tokens)
 {
-    ValueList* values = new ValueList();
+    ValueList* values = new ValueList(ValueList::SpaceSeparator);
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
         CSSStyleValuePair ret;
@@ -8756,7 +8877,8 @@ bool CSSStyleValuePair::updateValueContent(const CSSTokenVector& tokens)
             } else if (parser.parseAttr(value.data(), value.length(),
                                         &(ret.m_value.m_stringValue))) {
                 ret.m_valueKind = CSSStyleValuePair::ValueKind::Attr;
-            } else {
+            } else if (!parseCounter(value, &ret) &&
+                       !parseCounters(value, &ret)) {
                 // TODO: Consider various value types of the 'content' property.
                 // https://www.w3.org/TR/CSS2/generate.html#content
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -8765,6 +8887,7 @@ bool CSSStyleValuePair::updateValueContent(const CSSTokenVector& tokens)
         }
         values->push_back(ret);
     }
+
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     m_value.m_multiValue = values;
     return true;
@@ -9393,8 +9516,7 @@ bool CSSStyleValuePair::updateValueBorderImageSlice(
             return false;
         }
         isFill = true;
-        fill = CSSStyleValuePair(CSSStyleValuePair::ValueKind::StringValueKind,
-                                 String::fromUTF8("fill"));
+        fill.setKeywordValue(String::fromUTF8("fill"));
         size--;
     }
 

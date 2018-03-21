@@ -64,12 +64,74 @@ private:
     String* m_image;
 };
 
+class CounterStyle;
+class CounterContentData : public gc {
+public:
+    CounterContentData(String* id, const CounterStyle* counter)
+        : m_id(id)
+        , m_separator()
+        , m_counter(counter)
+    {
+    }
+
+    CounterContentData(String* id, String* separator,
+                       const CounterStyle* counter)
+        : m_id(id)
+        , m_separator(separator)
+        , m_counter(counter)
+    {
+    }
+
+    String* id() const
+    {
+        return m_id;
+    }
+
+    void setId(String* id)
+    {
+        m_id = id;
+    }
+
+    Nullable<String*> separator() const
+    {
+        return m_separator;
+    }
+
+    void setSeparator(String* s)
+    {
+        m_separator = s;
+    }
+
+    void unsetSeparator()
+    {
+        m_separator = Nullable<String*>();
+    }
+
+    const CounterStyle* counterStyle() const
+    {
+        return m_counter;
+    }
+
+    void setCounterStyle(const CounterStyle* counter)
+    {
+        m_counter = counter;
+    }
+
+    bool equals(const CounterContentData* other) const;
+
+private:
+    String* m_id;
+    Nullable<String*> m_separator;
+    const CounterStyle* m_counter;
+};
+
 class ContentData : public gc {
 public:
     enum ContentType {
         None,
         Text,
         Image,
+        Counter,
     };
 
     ContentData()
@@ -108,6 +170,11 @@ public:
         return m_type == Image;
     }
 
+    bool isCounter()
+    {
+        return m_type == Counter;
+    }
+
     TextContentData* text() const
     {
         STARFISH_ASSERT(m_type == Text);
@@ -140,6 +207,36 @@ public:
         }
     }
 
+    CounterContentData* counter() const
+    {
+        STARFISH_ASSERT(m_type == Counter);
+        return m_value.m_counter;
+    }
+
+    void setCounter(String* id, const CounterStyle* counter)
+    {
+        STARFISH_ASSERT(m_type == Counter);
+        if (!m_value.m_counter) {
+            m_value.m_counter = new CounterContentData(id, counter);
+        } else {
+            m_value.m_counter->setId(id);
+            m_value.m_counter->unsetSeparator();
+            m_value.m_counter->setCounterStyle(counter);
+        }
+    }
+
+    void setCounters(String* id, String* sp, const CounterStyle* counter)
+    {
+        STARFISH_ASSERT(m_type == Counter);
+        if (!m_value.m_counter) {
+            m_value.m_counter = new CounterContentData(id, sp, counter);
+        } else {
+            m_value.m_counter->setId(id);
+            m_value.m_counter->setSeparator(sp);
+            m_value.m_counter->setCounterStyle(counter);
+        }
+    }
+
 private:
     friend inline bool operator==(const ContentData& a, const ContentData& b);
     friend inline bool operator!=(const ContentData& a, const ContentData& b);
@@ -148,6 +245,7 @@ private:
     union ContentPointer {
         TextContentData* m_text;
         ImageContentData* m_image;
+        CounterContentData* m_counter;
         ContentPointer(TextContentData* v)
         {
             m_text = v;
@@ -170,6 +268,11 @@ bool operator==(const ContentData& a, const ContentData& b)
         break;
     case ContentData::ContentType::Image:
         if (!(a.image()->image()->equals(b.image()->image()))) {
+            return false;
+        }
+        break;
+    case ContentData::ContentType::Counter:
+        if (!a.counter()->equals(b.counter())) {
             return false;
         }
         break;
