@@ -2209,6 +2209,18 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
+    case CSSStyleValuePair::ValueKind::ImageRenderingValueKind:
+        switch (imageRenderingValue()) {
+        case ImageRenderingValue::ImageRenderingAutoValue:
+            return String::fromUTF8("auto");
+        case ImageRenderingValue::ImageRenderingPixelatedValue:
+            return String::fromUTF8("pixelated");
+        case ImageRenderingValue::ImageRenderingCrispEdgesValue:
+            return String::fromUTF8("crisp-edges");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
     case CSSStyleValuePair::ValueKind::UnicodeBidiValueKind:
         switch (unicodeBidiValue()) {
         case NormalUnicodeBidiValue:
@@ -4375,6 +4387,34 @@ void StyleResolver::apply(Element* element,
                     style->setVerticalAlign(
                         VerticalAlignValue::BaselineVAlignValue);
                 }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::ImageRendering:
+            if ((cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Inherit) ||
+                (cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Unset)) {
+                style->setImageRendering(parentStyle->imageRendering());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->setImageRendering(
+                    ImageRenderingValue::ImageRenderingAutoValue);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::ImageRenderingValueKind) {
+                if (cssValues[k].imageRenderingValue() ==
+                    ImageRenderingValue::ImageRenderingAutoValue) {
+                    style->setImageRendering(
+                        ImageRenderingValue::ImageRenderingAutoValue);
+                } else if (cssValues[k].imageRenderingValue() ==
+                           ImageRenderingValue::ImageRenderingCrispEdgesValue) {
+                    style->setImageRendering(
+                        ImageRenderingValue::ImageRenderingCrispEdgesValue);
+                } else {
+                    style->setImageRendering(
+                        ImageRenderingValue::ImageRenderingPixelatedValue);
+                }
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
         case CSSStyleValuePair::KeyKind::TableLayout:
@@ -10368,6 +10408,28 @@ bool CSSStyleValuePair::updateValueVisibility(const CSSTokenVector& tokens)
         m_value.m_visibility = VisibilityValue::HiddenVisibilityValue;
     } else if (STRING_VALUE_IS_STRING("collapse")) {
         m_value.m_visibility = VisibilityValue::CollapseVisibilityValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueImageRendering(const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    m_valueKind = CSSStyleValuePair::ValueKind::ImageRenderingValueKind;
+    const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_STRING("auto")) {
+        m_value.m_imageRendering = ImageRenderingValue::ImageRenderingAutoValue;
+    } else if (STRING_VALUE_IS_STRING("crisp-edges")) {
+        m_value.m_imageRendering =
+            ImageRenderingValue::ImageRenderingCrispEdgesValue;
+    } else if (STRING_VALUE_IS_STRING("pixelated")) {
+        m_value.m_imageRendering =
+            ImageRenderingValue::ImageRenderingPixelatedValue;
     } else {
         return false;
     }

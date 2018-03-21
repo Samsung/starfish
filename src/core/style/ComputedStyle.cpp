@@ -1112,6 +1112,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->imageRendering() != oldStyle->imageRendering()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::ImageRendering] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     if (newStyle->textIndent() != oldStyle->textIndent()) {
         damagedKeys[CSSStyleValuePair::KeyKind::TextIndent] = true;
         damage = (ComputedStyleDamage)(

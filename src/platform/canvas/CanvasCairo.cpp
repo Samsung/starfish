@@ -427,8 +427,28 @@ public:
 #endif
     }
 
+    void setImageRenderingModeToPattern(cairo_pattern_t* resizePattern,
+                                        ImageRenderingValue imageRenderingMode)
+    {
+        cairo_filter_t autoFilterMode =
+            cairo_get_antialias(m_canvas) >= CAIRO_ANTIALIAS_GOOD
+                ? CAIRO_FILTER_GOOD
+                : CAIRO_FILTER_FAST;
+
+        if (imageRenderingMode == ImageRenderingAutoValue) {
+            cairo_pattern_set_filter(resizePattern, autoFilterMode);
+        } else if (imageRenderingMode == ImageRenderingPixelatedValue) {
+            // TODO PixelatedValue should affect when painting bigger image than
+            // original only
+            cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_GAUSSIAN);
+        } else if (imageRenderingMode == ImageRenderingCrispEdgesValue) {
+            cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_NEAREST);
+        }
+    }
+
     void drawImageCairo(cairo_surface_t* localSurface, const Unit::Rect& dst,
-                        double surfaceWidth, double surfaceHeight)
+                        double surfaceWidth, double surfaceHeight,
+                        ImageRenderingValue imageRenderingMode)
     {
         INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::drawImageCairo");
 
@@ -451,10 +471,7 @@ public:
         cairo_matrix_init_identity(&matrix);
         cairo_matrix_scale(&matrix, surfaceWidth / ww, surfaceHeight / hh);
         cairo_pattern_set_matrix(resizePattern, &matrix);
-        cairo_pattern_set_filter(resizePattern, cairo_get_antialias(m_canvas) >=
-                                                        CAIRO_ANTIALIAS_GOOD
-                                                    ? CAIRO_FILTER_GOOD
-                                                    : CAIRO_FILTER_FAST);
+        setImageRenderingModeToPattern(resizePattern, imageRenderingMode);
         cairo_pattern_set_extend(resizePattern, CAIRO_EXTEND_PAD);
 
         cairo_set_source(m_canvas, resizePattern);
@@ -484,7 +501,8 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
+                           ImageRenderingValue imageRenderingMode)
     {
         if (!lastState().m_visible) {
             return;
@@ -502,14 +520,16 @@ public:
                 data->height(), data->stride());
         }
 
-        drawImageCairo(image, dst, surfaceWidth, surfaceHeight);
+        drawImageCairo(image, dst, surfaceWidth, surfaceHeight,
+                       imageRenderingMode);
 
         if (surfaceWasCreated) {
             cairo_surface_destroy(image);
         }
     }
 
-    virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst)
+    virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst,
+                           ImageRenderingValue imageRenderingMode)
     {
         if (!lastState().m_visible) {
             return;
@@ -519,7 +539,8 @@ public:
             (unsigned char*)data->data(), CAIRO_FORMAT_ARGB32,
             data->imageWidth(), data->imageHeight(), data->bufferStride());
 
-        drawImageCairo(image, dst, data->imageWidth(), data->imageHeight());
+        drawImageCairo(image, dst, data->imageWidth(), data->imageHeight(),
+                       imageRenderingMode);
         cairo_surface_destroy(image);
     }
 
@@ -528,7 +549,8 @@ public:
     // src : 원본 이미지에서 Clip할 영역
     // dst : canvas에 그려질 영역
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, bool xRepeat, bool yRepeat)
+                           const Unit::Rect& dst, bool xRepeat, bool yRepeat,
+                           ImageRenderingValue imageRenderingMode)
     {
         cairo_save(m_canvas);
         if (!lastState().m_visible) {
@@ -553,9 +575,10 @@ public:
 
         if (xRepeat || yRepeat) {
             drawRepeatImageCairo(image, dst, src.width(), src.height(), xRepeat,
-                                 yRepeat);
+                                 yRepeat, imageRenderingMode);
         } else {
-            drawImageCairo(image, dst, src.width(), src.height());
+            drawImageCairo(image, dst, src.width(), src.height(),
+                           imageRenderingMode);
         }
         if (surfaceWasCreated) {
             cairo_surface_destroy(srcImage);
@@ -571,14 +594,15 @@ public:
                                  double scale, bool fill)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        drawImage(data, dst);
+        drawImage(data, dst, ImageRenderingAutoValue);
         return;
     }
 
     virtual void drawRepeatImageCairo(cairo_surface_t* localSurface,
                                       const Unit::Rect& dst, float imageWidth,
                                       float imageHeight, bool xRepeat,
-                                      bool yRepeat)
+                                      bool yRepeat,
+                                      ImageRenderingValue imageRenderingMode)
     {
         if (!lastState().m_visible) {
             return;
@@ -619,10 +643,7 @@ public:
             cairo_matrix_translate(&matrix, -x, -y);
 
             cairo_pattern_set_matrix(pattern, &matrix);
-            cairo_pattern_set_filter(pattern, cairo_get_antialias(m_canvas) >=
-                                                      CAIRO_ANTIALIAS_GOOD
-                                                  ? CAIRO_FILTER_GOOD
-                                                  : CAIRO_FILTER_FAST);
+            setImageRenderingModeToPattern(pattern, imageRenderingMode);
             cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
 
             cairo_translate(m_canvas, xx, yy);
@@ -644,7 +665,8 @@ public:
 
     virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat)
+                                 bool xRepeat, bool yRepeat,
+                                 ImageRenderingValue imageRenderingMode)
     {
         if (!lastState().m_visible) {
             return;
@@ -692,7 +714,7 @@ public:
             cairo_matrix_translate(&matrix, -x, -y);
 
             cairo_pattern_set_matrix(pattern, &matrix);
-            cairo_pattern_set_filter(pattern, CAIRO_FILTER_FAST);
+            setImageRenderingModeToPattern(pattern, imageRenderingMode);
             cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
 
             cairo_translate(m_canvas, xx, yy);

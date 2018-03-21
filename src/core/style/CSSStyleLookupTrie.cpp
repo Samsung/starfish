@@ -671,6 +671,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::ObjectPosition;
             }
             break;
+        case 'i':
+            if (memcmp(data, "image-rendering", 15) == 0) {
+                return CSSStyleKind::ImageRendering;
+            }
+            break;
         }
         break;
     case 16:
@@ -1428,6 +1433,12 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "objectPosition", 14) == 0) {
                 return CSSStyleKind::ObjectPosition;
             }
+            break;
+        case 'i':
+            if (memcmp(data, "imageRendering", 14) == 0) {
+                return CSSStyleKind::ImageRendering;
+            }
+            break;
         }
         break;
     case 15:

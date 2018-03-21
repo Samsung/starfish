@@ -142,17 +142,27 @@ public:
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
                           const StringView& text) = 0;
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst) = 0;
-    virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst) = 0;
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, bool xRepeat,
-                           bool yRepeat) = 0;
+    virtual void drawImage(
+        NativeImageData* data, const Unit::Rect& dst,
+        ImageRenderingValue imageRenderingMode =
+            ImageRenderingValue::ImageRenderingAutoValue) = 0;
+    virtual void drawImage(
+        CanvasSurface* data, const Unit::Rect& dst,
+        ImageRenderingValue imageRenderingMode =
+            ImageRenderingValue::ImageRenderingAutoValue) = 0;
+    virtual void drawImage(
+        NativeImageData* data, const Unit::Rect& src, const Unit::Rect& dst,
+        bool xRepeat, bool yRepeat,
+        ImageRenderingValue imageRenderingMode =
+            ImageRenderingValue::ImageRenderingAutoValue) = 0;
     virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
                                  size_t l, size_t t, size_t r, size_t b,
                                  double scale, bool fill) = 0;
-    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
-                                 float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat) = 0;
+    virtual void drawRepeatImage(
+        NativeImageData* data, const Unit::Rect& dst, float imageWidth,
+        float imageHeight, bool xRepeat, bool yRepeat,
+        ImageRenderingValue imageRenderingMode =
+            ImageRenderingValue::ImageRenderingAutoValue) = 0;
 
     virtual void applyMatrixTo(LayoutLocation& lp) = 0;
     virtual void applyMatrixTo(LayoutRect& lp) = 0;

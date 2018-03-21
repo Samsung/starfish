@@ -1064,6 +1064,8 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
         canvas->restore();
     }
 
+    ImageRenderingValue imageRenderingValue = style->imageRendering();
+
     for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
         unsigned int idx = style->backgroundLayerSize() - i - 1;
         NativeImageData* id = style->backgroundImageData(idx);
@@ -1187,19 +1189,22 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
             auto repeatY = style->backgroundRepeatY(idx);
             if (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
                 repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                canvas->drawRepeatImage(id,
-                                        Unit::Rect(x, y, paintingW, paintingH),
-                                        imgW, imgH, true, true);
+                canvas->drawRepeatImage(
+                    id, Unit::Rect(x, y, paintingW, paintingH), imgW, imgH,
+                    true, true, imageRenderingValue);
             } else if (repeatX == BackgroundRepeatValue::NoRepeatRepeatValue &&
                        repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
                 canvas->drawRepeatImage(id, Unit::Rect(x, y, imgW, paintingH),
-                                        imgW, imgH, false, true);
+                                        imgW, imgH, false, true,
+                                        imageRenderingValue);
             } else if (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
                        repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
                 canvas->drawRepeatImage(id, Unit::Rect(x, y, paintingW, imgH),
-                                        imgW, imgH, true, false);
+                                        imgW, imgH, true, false,
+                                        imageRenderingValue);
             } else {
-                canvas->drawImage(id, Unit::Rect(x, y, imgW, imgH));
+                canvas->drawImage(id, Unit::Rect(x, y, imgW, imgH),
+                                  imageRenderingValue);
             }
 
             canvas->restore();
@@ -1372,30 +1377,32 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
         bool isFill = border.image().sliceFill();
         canvas->setNeedsGoodQualityAntialias();
 
+        ImageRenderingValue imageRenderingValue = style()->imageRendering();
+
         // Four Corners
         // left-top
         canvas->drawImage(imgData, Unit::Rect(0, 0, lSlice, tSlice),
                           Unit::Rect(rect.x(), rect.y(), drawRect, drawRect),
-                          false, false);
+                          false, false, imageRenderingValue);
         // right-top
         canvas->drawImage(
             imgData, Unit::Rect((float)imgWidth - rSlice, 0, rSlice, tSlice),
             Unit::Rect((float)rect.width() - drawRect, rect.y(), drawRect,
                        drawRect),
-            false, false);
+            false, false, imageRenderingValue);
         // left-bottom
         canvas->drawImage(
             imgData, Unit::Rect(0, (float)imgHeight - bSlice, lSlice, bSlice),
             Unit::Rect(rect.x(), (float)height() - drawRect, drawRect,
                        drawRect),
-            false, false);
+            false, false, imageRenderingValue);
         // right-bottom
         canvas->drawImage(
             imgData, Unit::Rect((float)imgWidth - rSlice,
                                 (float)imgHeight - bSlice, rSlice, bSlice),
             Unit::Rect((float)rect.width() - drawRect,
                        (float)height() - drawRect, drawRect, drawRect),
-            false, false);
+            false, false, imageRenderingValue);
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Four Edges
@@ -1407,7 +1414,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                            tSlice),
                 Unit::Rect(rect.x() + drawRect, rect.y(),
                            (float)width() - (drawRect * 2), drawRect),
-                false, false);
+                false, false, imageRenderingValue);
             // middle-bottom
             canvas->drawImage(
                 imgData,
@@ -1415,7 +1422,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                            (float)imgWidth - (lSlice + rSlice), bSlice),
                 Unit::Rect(rect.x() + drawRect, (float)height() - drawRect,
                            (float)width() - (drawRect * 2), drawRect),
-                false, false);
+                false, false, imageRenderingValue);
         }
 
         if (tSlice + bSlice <= imgHeight) {
@@ -1425,14 +1432,14 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                     (float)(imgHeight - (tSlice + bSlice))),
                 Unit::Rect(rect.x(), rect.y() + drawRect, drawRect,
                            (float)height() - (drawRect * 2)),
-                false, false);
+                false, false, imageRenderingValue);
             // right-middle
             canvas->drawImage(
                 imgData, Unit::Rect((float)imgWidth - rSlice, tSlice, rSlice,
                                     (float)(imgHeight - (tSlice + bSlice))),
                 Unit::Rect((float)rect.width() - drawRect, rect.y() + drawRect,
                            drawRect, (float)height() - (drawRect * 2)),
-                false, false);
+                false, false, imageRenderingValue);
         }
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1446,7 +1453,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 Unit::Rect(rect.x() + drawRect, rect.y() + drawRect,
                            (float)width() - (drawRect * 2),
                            (float)height() - (drawRect * 2)),
-                false, false);
+                false, false, imageRenderingValue);
         }
 
         canvas->setNeedsFastAntialias();

@@ -41,12 +41,13 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
                 canvas->clip(frameRect);
                 LayoutRect imgRect =
                     computeObjectFit(id->width(), id->height());
-                canvas->drawImage(id, Unit::Rect(imgRect.x(), imgRect.y(),
-                                                 imgRect.width(),
-                                                 imgRect.height()));
+                canvas->drawImage(id,
+                                  Unit::Rect(imgRect.x(), imgRect.y(),
+                                             imgRect.width(), imgRect.height()),
+                                  style()->imageRendering());
                 canvas->restore();
             } else {
-                canvas->drawImage(id, frameRect);
+                canvas->drawImage(id, frameRect, style()->imageRendering());
             }
         } else {
             canvas->translate(borderLeft() + paddingLeft(),
@@ -106,7 +107,8 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
             }
 
             canvas->drawImage(id,
-                              Unit::Rect(x, y, imageDstWidth, imageDstHeight));
+                              Unit::Rect(x, y, imageDstWidth, imageDstHeight),
+                              style()->imageRendering());
         }
     }
 }

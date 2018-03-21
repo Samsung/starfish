@@ -899,6 +899,12 @@ enum ObjectFitValue {
     ScaledownObjectFitValue,
 };
 
+enum ImageRenderingValue {
+    ImageRenderingAutoValue,
+    ImageRenderingCrispEdgesValue,
+    ImageRenderingPixelatedValue,
+};
+
 enum TransitionPropertyValue {
     TransitionPropertyAllValue,
     TransitionPropertyBackgroundColorValue,
@@ -1155,6 +1161,7 @@ class CSSStyleDeclaration;
     F(GridTemplateRows, gridTemplateRows, "grid-template-rows")              \
     F(CaretColor, caretColor, "caret-color")                                 \
     F(FontKerning, fontKerning, "font-kerning")                              \
+    F(ImageRendering, imageRendering, "image-rendering")                     \
     F(Hyphens, hyphens, "hyphens")
 
 // font related properties must be followed end of this
@@ -1420,6 +1427,9 @@ public:
         // grid
         GridTemplateUnits,
 
+        // img
+        ImageRenderingValueKind,
+
         HyphensValueKind
     };
 
@@ -1614,6 +1624,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == BorderWidthValueKind);
         return m_value.m_borderWidth;
+    }
+
+    ImageRenderingValue imageRenderingValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == ImageRenderingValueKind);
+        return m_value.m_imageRendering;
     }
 
     CSSLength cssLengthValue() const
@@ -1944,6 +1960,7 @@ public:
         BorderImageRepeatValue m_borderImageRepeat;
         BorderStyleValue m_borderStyle;
         BorderWidthValue m_borderWidth;
+        ImageRenderingValue m_imageRendering;
         ValueList* m_multiValue;
         ValuePair* m_pairValue;
         FontFaceSrcData* m_fontFaceSrcData;
@@ -2105,6 +2122,10 @@ public:
         }
         ValueData(UnicodeBidiValue v)
             : m_unicodeBidi(v)
+        {
+        }
+        ValueData(ImageRenderingValue v)
+            : m_imageRendering(v)
         {
         }
         ValueData(TextDecorationValue v)

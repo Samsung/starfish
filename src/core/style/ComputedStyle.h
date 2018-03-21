@@ -444,6 +444,7 @@ class ComputedStyle : public gc {
         TextTransformValue m_textTransform : 2;
         HyphensValue m_hyphens : 1;
         FontKerningValue m_fontKerning : 2;
+        ImageRenderingValue m_imageRendering : 2;
 
         Length m_letterSpacing;
         Length m_textIndent;
@@ -479,6 +480,7 @@ class ComputedStyle : public gc {
             m_caretColor = Unit::Color(0, 0, 0, 255);
             m_hyphens = HyphensValue::NoneHyphensValue;
             m_fontKerning = FontKerningValue::FontKerningAutoValue;
+            m_imageRendering = ImageRenderingValue::ImageRenderingAutoValue;
         }
 
         void* operator new(size_t size);
@@ -1786,6 +1788,20 @@ public:
     {
         if (v != fontKerning())
             ensureInheritedRareData()->m_fontKerning = v;
+    }
+
+    ImageRenderingValue imageRendering()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_imageRendering;
+        }
+        return InheritedStylesRareData().m_imageRendering;
+    }
+
+    void setImageRendering(ImageRenderingValue v)
+    {
+        if (v != imageRendering())
+            ensureInheritedRareData()->m_imageRendering = v;
     }
 
     Length letterSpacing()
