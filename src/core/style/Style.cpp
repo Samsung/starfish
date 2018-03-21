@@ -417,9 +417,8 @@ bool CSSStyleValuePair::updateVarValue(const char* str,
 {
 #ifdef STARFISH_ENABLE_CSS_VARIABLE
     if (isValidVariables(tokens)) {
-        m_value.m_stringValue = String::createASCIIString(str);
         m_keyKind = CSSStyleValuePair::KeyKind::VarValue;
-        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
+        setVarFunctionValue(String::createASCIIString(str));
         return true;
     }
 #endif
@@ -869,15 +868,14 @@ static bool parseFontShorthand(const CSSTokenVector& tokens,
         return false;
     }
     if (fontFamilyCandidate.size() == 1) {
-        _Family->setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-        _Family->setStringValue(String::fromUTF8(
+        _Family->setKeywordValue(String::fromUTF8(
             fontFamilyCandidate[0].data(), fontFamilyCandidate[0].length()));
     } else {
         ValueList* val = new ValueList(
             ValueList::Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
         for (size_t i = 0; i < fontFamilyCandidate.size(); i++) {
             auto str = fontFamilyCandidate[i];
-            val->emplace_back(CSSStyleValuePair::ValueKind::StringValueKind,
+            val->emplace_back(CSSStyleValuePair::ValueKind::KeywordValueKind,
                               String::fromUTF8(str.data(), str.length()));
         }
         _Family->setValueList(val);
@@ -1768,8 +1766,13 @@ String* CSSStyleValuePair::toString() const
         return angleValue().toString();
     case CSSStyleValuePair::ValueKind::Normal:
         return String::fromUTF8("normal");
-    case CSSStyleValuePair::ValueKind::StringValueKind:
-        return stringValue();
+    case CSSStyleValuePair::ValueKind::StringValueKind: {
+        StringBuilder builder;
+        builder.appendString("\"");
+        builder.appendString(stringValue());
+        builder.appendString("\"");
+        return builder.finalize();
+    }
     case CSSStyleValuePair::ValueKind::KeywordValueKind:
         return keywordValue();
     case CSSStyleValuePair::ValueKind::ColorValueKind:
@@ -2471,6 +2474,8 @@ String* CSSStyleValuePair::toString() const
         return GridLength::toStringWithGridLengths(gridTemplateUnits());
     case CSSStyleValuePair::ValueKind::CounterFunctionValueKind:
         return counterFunctionValue()->toString();
+    case CSSStyleValuePair::ValueKind::VarFunctionValueKind:
+        return varFunctionValue();
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -3895,19 +3900,17 @@ void StyleResolver::apply(Element* element,
 #ifdef STARFISH_ENABLE_CSS_VARIABLE
         if (cssValues[k].keyKind() == CSSStyleValuePair::KeyKind::VarValue) {
             // TODO: Define the new value againe.
-            size_t len = cssValues[k].stringValue()->length();
+            String* keyword = cssValues[k].varFunctionValue();
+            size_t len = keyword->length();
             CSSTokenVector tokens;
             if (UNLIKELY(cssValues[k].temporaryKeyKind() ==
                          CSSStyleValuePair::KeyKind::Content)) {
                 CSSStyleDeclaration::tokenizeCSSValue(
-                    tokens,
-                    cssValues[k].stringValue()->toUTF8NonGCString().data(), len,
-                    "", 0, true);
+                    tokens, keyword->toUTF8NonGCString().data(), len, "", 0,
+                    true);
             } else {
                 CSSStyleDeclaration::tokenizeCSSValue(
-                    tokens,
-                    cssValues[k].stringValue()->toUTF8NonGCString().data(), len,
-                    ",", 1);
+                    tokens, keyword->toUTF8NonGCString().data(), len, ",", 1);
             }
 
             for (size_t i = 0; i < tokens.size(); i++) {
@@ -4260,11 +4263,11 @@ void StyleResolver::apply(Element* element,
                 style->m_inheritedStyles.m_fontFamilyDatas =
                     element->document()->starFish()->initialFontFamilyDatas();
             } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::StringValueKind) {
+                       CSSStyleValuePair::ValueKind::KeywordValueKind) {
                 FontFamilyData* data =
                     (FontFamilyData*)GC_MALLOC(sizeof(FontFamilyData) * 2);
                 data[0].m_length = 1;
-                data[1].m_familyName = cssValues[k].stringValue();
+                data[1].m_familyName = cssValues[k].keywordValue();
                 style->m_inheritedStyles.m_fontFamilyDatas = data;
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
@@ -4274,7 +4277,7 @@ void StyleResolver::apply(Element* element,
                     sizeof(FontFamilyData) * (val->size() + 1));
                 data[0].m_length = val->size();
                 for (size_t i = 0; i < val->size(); i++) {
-                    data[i + 1].m_familyName = val->at(i).stringValue();
+                    data[i + 1].m_familyName = val->at(i).keywordValue();
                 }
                 style->m_inheritedStyles.m_fontFamilyDatas = data;
             }
@@ -4534,7 +4537,7 @@ void StyleResolver::apply(Element* element,
                             Unit::Color color = (*shadow)[j].colorValue();
                             sd.setColor(color);
                         } break;
-                        case CSSStyleValuePair::ValueKind::StringValueKind: {
+                        case CSSStyleValuePair::ValueKind::KeywordValueKind: {
                             sd.setInset();
                         } break;
                         default:
@@ -4582,7 +4585,7 @@ void StyleResolver::apply(Element* element,
                             Unit::Color color = (*shadow)[j].colorValue();
                             sd.setColor(color);
                         } break;
-                        case CSSStyleValuePair::ValueKind::StringValueKind: {
+                        case CSSStyleValuePair::ValueKind::KeywordValueKind: {
                             sd.setInset();
                         } break;
                         default:
@@ -10033,14 +10036,13 @@ bool CSSStyleValuePair::updateValueUnitFontWeight(const CSSTokenValue& value)
 bool CSSStyleValuePair::updateValueFontFamily(const CSSTokenVector& tokens)
 {
     if (tokens.size() == 1) {
-        setValueKind(ValueKind::StringValueKind);
         const std::string& str = tokens[0];
         if (str[0] == '\'' && str.length() > 2 && str.back() == '\'') {
-            setStringValue(String::fromUTF8(str.data() + 1, str.length() - 2));
+            setKeywordValue(String::fromUTF8(str.data() + 1, str.length() - 2));
         } else if (str[0] == '"' && str.length() > 2 && str.back() == '"') {
-            setStringValue(String::fromUTF8(str.data() + 1, str.length() - 2));
+            setKeywordValue(String::fromUTF8(str.data() + 1, str.length() - 2));
         } else {
-            setStringValue(String::fromUTF8(str.data(), str.length()));
+            setKeywordValue(String::fromUTF8(str.data(), str.length()));
         }
         return true;
     }
@@ -10057,14 +10059,14 @@ bool CSSStyleValuePair::updateValueFontFamily(const CSSTokenVector& tokens)
             const std::string& str = tokens[i];
             if (str[0] == '\'' && str.length() > 2 && str.back() == '\'') {
                 val->emplace_back(
-                    ValueKind::StringValueKind,
+                    ValueKind::KeywordValueKind,
                     String::fromUTF8(str.data() + 1, str.length() - 2));
             } else if (str[0] == '"' && str.length() > 2 && str.back() == '"') {
                 val->emplace_back(
-                    ValueKind::StringValueKind,
+                    ValueKind::KeywordValueKind,
                     String::fromUTF8(str.data() + 1, str.length() - 2));
             } else {
-                val->emplace_back(ValueKind::StringValueKind,
+                val->emplace_back(ValueKind::KeywordValueKind,
                                   String::fromUTF8(str.data(), str.length()));
             }
             seenComma = false;
@@ -10073,7 +10075,6 @@ bool CSSStyleValuePair::updateValueFontFamily(const CSSTokenVector& tokens)
     if (seenComma)
         return false;
 
-    setValueKind(ValueKind::ValueListKind);
     setValueList(val);
     return true;
 }
@@ -10364,9 +10365,7 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
                     if (hasInset || !boxShadow) {
                         return false;
                     }
-                    temp.setValueKind(
-                        CSSStyleValuePair::ValueKind::StringValueKind);
-                    temp.setStringValue(String::fromUTF8(tokens[j].data()));
+                    temp.setKeywordValue(String::fromUTF8(tokens[j].data()));
                     shadow.multiValue()->push_back(temp);
                     hasInset = true;
                     currentShadowSize++;

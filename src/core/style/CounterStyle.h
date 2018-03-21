@@ -281,6 +281,11 @@ public:
         m_padSymbol = v;
     }
 
+    size_t symbolCount()
+    {
+        return m_symbols.size();
+    }
+
     bool equals(const CounterStyle* other) const;
 
     String* generateLabel(int32_t index) const;
