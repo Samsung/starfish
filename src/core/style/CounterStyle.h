@@ -23,40 +23,6 @@
 namespace StarFish {
 
 class Document;
-class CounterStyle;
-
-// class CounterLabelBuilder : public gc {
-//     STARFISH_MAKE_STACK_ALLOCATED()
-
-// public:
-//     static CounterLabelBuilder create(const CounterStyle* counter, int32_t
-//     pos = 0);
-//     String* proceed();
-
-// protected:
-//     CounterLabelBuilder(const CounterStyle* counter, int32_t pos);
-//     CounterLabelBuilder(const CounterStyle* counter)
-//         : CounterLabelBuilder(counter, 0)
-//     {
-//     }
-
-//     bool exceedBound();
-
-//     String* getSymbol();
-//     String* getSymbol(GCVector<const CounterStyle*>& failedCounters);
-//     String* getFallbackSymbol(GCVector<const CounterStyle*>& failedCounters);
-
-//     Nullable<String*> getCyclicSymbol();
-//     Nullable<String*> getFixedSymbol();
-//     Nullable<String*> getSymbolicSymbol();
-//     Nullable<String*> getAlphabeticSymbol();
-//     Nullable<String*> getNumericSymbol();
-//     Nullable<String*> getAdditiveSymbol();
-
-// protected:
-//     int32_t m_pos;
-//     const CounterStyle* m_counterStyle;
-// };
 
 class CounterStyle : public gc {
 public:

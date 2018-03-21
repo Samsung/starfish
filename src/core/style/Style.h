@@ -48,6 +48,7 @@ class MediaQueryEvaluator;
 class Node;
 class RuleSet;
 class MutablePropertyValue;
+class CSSCounterFunction;
 
 class CSSTokenValue : public std::string {
 public:
@@ -1336,6 +1337,7 @@ public:
         Time,
         Normal,
         StringValueKind,
+        KeywordValueKind,
         ColorValueKind,
         NamedColorValueKind,
         UrlValueKind,
@@ -1417,6 +1419,7 @@ public:
 
         ListStylePositionValueKind,
         ListStyleCounterValueKind,
+        CounterFunctionValueKind,
 
         // rect for clip
         RectValueKind,
@@ -1718,6 +1721,18 @@ public:
         m_value.m_stringValue = value;
     }
 
+    String* keywordValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == KeywordValueKind);
+        return m_value.m_stringValue;
+    }
+
+    void setKeywordValue(String* v)
+    {
+        m_valueKind = KeywordValueKind;
+        m_value.m_stringValue = v;
+    }
+
     BackgroundSizeValue backgroundSizeValue() const
     {
         STARFISH_ASSERT(m_valueKind == BackgroundSizeValueKind);
@@ -1933,6 +1948,12 @@ public:
         return m_value.m_gridTemplateUnits;
     }
 
+    CSSCounterFunction* counterFunctionValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == CounterFunctionValueKind);
+        return m_value.m_counterFunctionValue;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1995,6 +2016,7 @@ public:
         HyphensValue m_hyphens;
         RectData* m_rect;
         GCVector<GridLength>* m_gridTemplateUnits;
+        CSSCounterFunction* m_counterFunctionValue;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2245,6 +2267,11 @@ public:
             : m_gridTemplateUnits(v)
         {
         }
+
+        ValueData(CSSCounterFunction* v)
+            : m_counterFunctionValue(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2261,6 +2288,7 @@ public:
         switch (m_valueKind) {
         case UrlValueKind:
         case StringValueKind:
+        case KeywordValueKind:
         case Attr:
         case ListStyleCounterValueKind:
             return m_value.m_stringValue;
@@ -2278,6 +2306,8 @@ public:
             return m_value.m_rect;
         case GridTemplateUnits:
             return m_value.m_gridTemplateUnits;
+        case CounterFunctionValueKind:
+            return m_value.m_counterFunctionValue;
         default:
             return nullptr;
         }
@@ -2420,6 +2450,12 @@ public:
     {
         m_valueKind = CSSStyleValuePair::ValueKind::GridTemplateUnits;
         m_value.m_gridTemplateUnits = val;
+    }
+
+    void setCounterFunctionValue(CSSCounterFunction* v)
+    {
+        m_valueKind = CSSStyleValuePair::CounterFunctionValueKind;
+        m_value.m_counterFunctionValue = v;
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \

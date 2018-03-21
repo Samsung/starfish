@@ -331,14 +331,36 @@ public:
         return true;
     }
 
-    bool consumeContentString()
+    bool consumeContentStringAll()
     {
-        if (isQuote(*m_curPos++) && isQuote(*--m_endPos)) {
+        if (isQuote(*m_curPos) && *m_curPos++ == (*--m_endPos)) {
             m_parsedString = String::fromUTF8(m_curPos, m_endPos - m_curPos);
             return true;
         } else {
             return false;
         }
+    }
+
+    bool consumeContentString()
+    {
+        char* backup = m_curPos;
+        consumeWhitespaces();
+        char openingQuote = *m_curPos;
+        if (!consumeIfNext('"') && !consumeIfNext('\'')) {
+            m_curPos = backup;
+            return false;
+        }
+        char* start = m_curPos;
+        while (m_curPos < m_endPos) {
+            if (*m_curPos == openingQuote) {
+                m_parsedString = String::fromUTF8(start, m_curPos - start);
+                m_curPos++;
+                return true;
+            }
+            m_curPos++;
+        }
+        m_curPos = backup;
+        return false;
     }
 
     bool consumeAttr()
@@ -764,7 +786,7 @@ public:
     static bool parseContentString(const char* str, size_t len, String** ret)
     {
         CSSPropertyParser parser((char*)str, len);
-        if (parser.consumeContentString()) {
+        if (parser.consumeContentStringAll()) {
             *ret = parser.parsedString();
             return true;
         }

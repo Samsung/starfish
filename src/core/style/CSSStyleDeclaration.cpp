@@ -28,6 +28,7 @@
 #include "core/page/Window.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
+#include "core/style/CSSCounterFunction.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleLookupTrie.h"
@@ -967,7 +968,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                                (float)box.left().number());
         }
         if (border.image().sliceFill()) {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::StringValueKind,
+            vals->emplace_back(CSSStyleValuePair::ValueKind::KeywordValueKind,
                                String::fromUTF8("fill"));
         }
 
@@ -1264,8 +1265,17 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                     t.setValueKind(CSSStyleValuePair::UrlValueKind);
                     t.setStringValue(c.image()->image());
                     values->pushBack(t);
+                } else if (c.type() == ContentData::Counter) {
+                    CSSStyleValuePair t;
+                    CounterContentData* data = c.counter();
+                    CSSCounterFunction* f = new CSSCounterFunction(data->id());
+                    f->setSeparator(data->separator());
+                    f->setStyle(data->counterStyle()->name());
+                    t.setCounterFunctionValue(f);
+                    values->pushBack(t);
                 }
             }
+            p.setValueList(values);
         }
         addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::TransitionProperty) {
