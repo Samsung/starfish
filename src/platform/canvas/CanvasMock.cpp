@@ -150,7 +150,8 @@ public:
     {
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
+                           ImageRenderingValue imageRenderingMode)
     {
     }
 
@@ -166,7 +167,8 @@ public:
     {
     }
 
-    void drawImage(CanvasSurface* data, const Unit::Rect& dst)
+    void drawImage(CanvasSurface* data, const Unit::Rect& dst,
+                   ImageRenderingValue imageRenderingMode)
     {
     }
 

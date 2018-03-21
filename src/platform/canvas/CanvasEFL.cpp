@@ -1305,13 +1305,15 @@ public:
         }
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
+                           ImageRenderingValue imageRenderingMode)
     {
         drawImageInner(data, dst, 0, 0, 0, 0, 1.0, true);
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, bool xRepeat, bool yRepeat)
+                           const Unit::Rect& dst, bool xRepeat, bool yRepeat,
+                           ImageRenderingValue imageRenderingMode)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
@@ -1325,7 +1327,8 @@ public:
 
     virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat)
+                                 bool xRepeat, bool yRepeat,
+                                 ImageRenderingValue imageRenderingMode)
     {
         if (canSkipPainting(Unit::Rect(0, 0, dst.width(), dst.height()))) {
             return;
@@ -1500,7 +1503,8 @@ public:
         }
     }
 
-    void drawImage(CanvasSurface* data, const Unit::Rect& dst)
+    void drawImage(CanvasSurface* data, const Unit::Rect& dst,
+                   ImageRenderingValue imageRenderingMode)
     {
         if (!lastState().m_visible) {
             return;
