@@ -33,6 +33,7 @@ class StyleRule;
 class StyleRuleMedia;
 class StyleRuleImport;
 class StyleRuleFontFace;
+class StyleRuleSupports;
 
 class StyleRuleBase : public gc {
 public:
@@ -43,8 +44,11 @@ public:
         MEDIA_RULE = 4,
         FONT_FACE_RULE = 5,
         PAGE_RULE = 6,
+        KEYFRAMES_RULE = 7,
+        KEYFRAME_RULE = 8,
         MARGIN_RULE = 9,
-        NAMESPACE_RULE = 10
+        NAMESPACE_RULE = 10,
+        SUPPORTS_RULE = 12
     };
 
     StyleRuleBase(RuleType ruleType)
@@ -96,10 +100,26 @@ public:
         return type() == RuleType::FONT_FACE_RULE;
     }
 
+    bool isKeyframesRule()
+    {
+        return type() == RuleType::KEYFRAMES_RULE;
+    }
+
+    bool isKeyframeRule()
+    {
+        return type() == RuleType::KEYFRAME_RULE;
+    }
+
+    bool isSupportsRule()
+    {
+        return type() == RuleType::SUPPORTS_RULE;
+    }
+
     inline StyleRule* asStyleRule();
     inline StyleRuleMedia* asStyleRuleMedia();
     inline StyleRuleImport* asStyleRuleImport();
     inline StyleRuleFontFace* asStyleRuleFontFace();
+    inline StyleRuleSupports* asStyleRuleSupports();
 
     CSSRule* createCSSOMWrapper(CSSStyleSheet* parent_sheet = 0) const;
     CSSRule* createCSSOMWrapper(CSSRule* parent_rule) const;
@@ -304,6 +324,23 @@ protected:
     CSSStyleDeclaration* m_styleDeclaration;
 };
 
+class StyleRuleSupports : public StyleRuleCondition {
+    friend class StyleResolver;
+
+public:
+    StyleRuleSupports(String* conditionText, bool conditionIsSupported,
+                      GCVector<StyleRuleBase*>& rules);
+    StyleRuleSupports(StyleRuleSupports& o);
+    bool conditionIsSupported() const
+    {
+        return m_conditionIsSupported;
+    }
+
+private:
+    String* m_conditionText;
+    bool m_conditionIsSupported;
+};
+
 inline StyleRule* StyleRuleBase::asStyleRule()
 {
     STARFISH_ASSERT(isStyleRule());
@@ -326,6 +363,12 @@ inline StyleRuleFontFace* StyleRuleBase::asStyleRuleFontFace()
 {
     STARFISH_ASSERT(isFontFaceRule());
     return (StyleRuleFontFace*)this;
+}
+
+inline StyleRuleSupports* StyleRuleBase::asStyleRuleSupports()
+{
+    STARFISH_ASSERT(isSupportsRule());
+    return (StyleRuleSupports*)this;
 }
 }
 

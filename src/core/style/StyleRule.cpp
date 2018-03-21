@@ -60,6 +60,9 @@ CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
     case FONT_FACE_RULE:
         rule = new CSSFontFaceRule(self->asStyleRuleFontFace(), parentSheet);
         break;
+    case SUPPORTS_RULE:
+        rule = new CSSSupportsRule(self->asStyleRuleSupports(), parentSheet);
+        break;
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;

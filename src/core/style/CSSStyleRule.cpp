@@ -391,4 +391,21 @@ String* CSSFontFaceRule::cssText()
     result.appendChar('}');
     return result.finalize();
 }
+
+CSSSupportsRule::CSSSupportsRule(StyleRuleSupports* supportsRule,
+                                 CSSStyleSheet* parent)
+    : CSSConditionRule(supportsRule, parent)
+{
+}
+
+String* CSSSupportsRule::cssText()
+{
+    StringBuilder result;
+    result.appendString("@supports ");
+    result.appendString(conditionText());
+    result.appendString(" {\n");
+    appendCSSTextForItems(result);
+    result.appendChar('}');
+    return result.finalize();
+}
 }

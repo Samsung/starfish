@@ -33,3 +33,7 @@ interface CSSMediaRule : CSSConditionRule {
 interface CSSFontFaceRule : CSSRule {
     [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
 };
+
+// https://drafts.csswg.org/css-conditional-3/#the-csssupportsrule-interface
+interface CSSSupportsRule : CSSConditionRule {
+};
