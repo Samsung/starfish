@@ -155,6 +155,8 @@ public:
 
         return substring(first, (last - first + 1));
     }
+
+    CSSTokenValue tolower() const;
 };
 typedef VectorWithInlineStorage<4, CSSTokenValue, std::allocator<CSSTokenValue>>
     CSSTokenVector;
@@ -1067,6 +1069,7 @@ class CSSStyleDeclaration;
     F(OverflowWrap, overflowWrap, "overflow-wrap")                           \
     F(Position, position, "position")                                        \
     F(TextDecoration, textDecoration, "text-decoration")                     \
+    F(TextDecorationColor, textDecorationColor, "text-decoration-color")     \
     F(Display, display, "display")                                           \
     F(Float, float, "float")                                                 \
     F(Clear, clear, "clear")                                                 \

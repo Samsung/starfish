@@ -89,6 +89,7 @@ class RareComputedStyleData : public gc {
         Transforms,
         TransformOrigin,
         Transition,
+        TextDecorationColor,
         Content,
         Outline,
         BorderRadius,
@@ -363,6 +364,7 @@ public:
     GETTER_VALUE(Length, length, rx, RX);
     GETTER_VALUE(Length, length, ry, RY);
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect);
+    GETTER_VALUE(Unit::Color, color, textDecorationColor, TextDecorationColor);
 
 #undef GETTER_VALUE
 
@@ -870,6 +872,26 @@ public:
     void setTextDecoration(TextDecorationValue decoration)
     {
         m_textDecoration = decoration;
+    }
+
+    Unit::Color textDecorationColor()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Unit::Color(0, 0, 0, 255);
+        }
+
+        Nullable<Unit::Color> c =
+            rareComputedStyleData()->textDecorationColor();
+        if (c.hasValue()) {
+            return c.getValue();
+        }
+
+        return Unit::Color(0, 0, 0, 255);
+    }
+
+    void setTextDecorationColor(Unit::Color c)
+    {
+        *m_rareComputedStyleData.ensureTextDecorationColor() = c;
     }
 
     DirectionValue direction()
