@@ -10552,7 +10552,7 @@ bool CSSStyleValuePair::updateValueTransitionTimingFunction(
     } else {
         return false;
     }
-    return false;
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueBoxSizing(const CSSTokenVector& tokens)

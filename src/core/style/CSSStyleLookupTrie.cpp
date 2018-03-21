@@ -882,10 +882,16 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         break;
     case 26:
         // border-bottom-right-radius
+        // transition-timing-function
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-bottom-right-radius", 26) == 0) {
                 return CSSStyleKind::BorderBottomRightRadius;
+            }
+            break;
+        case 't':
+            if (memcmp(data, "transition-timing-function", 26) == 0) {
+                return CSSStyleKind::TransitionTimingFunction;
             }
             break;
         }
@@ -1523,14 +1529,14 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::BackgroundPosition;
             }
             break;
-        }
-        break;
-    case 't':
-        if (memcmp(data, "transitionProperty", 18) == 0) {
-            return CSSStyleKind::TransitionProperty;
-        }
-        if (memcmp(data, "transitionDuration", 18) == 0) {
-            return CSSStyleKind::TransitionDuration;
+        case 't':
+            if (memcmp(data, "transitionProperty", 18) == 0) {
+                return CSSStyleKind::TransitionProperty;
+            }
+            if (memcmp(data, "transitionDuration", 18) == 0) {
+                return CSSStyleKind::TransitionDuration;
+            }
+            break;
         }
         break;
     case 19:
@@ -1578,6 +1584,15 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "borderBottomRightRadius", 23) == 0) {
                 return CSSStyleKind::BorderBottomRightRadius;
+            }
+            break;
+        }
+        break;
+    case 24:
+        switch (data[0]) {
+        case 't':
+            if (memcmp(data, "transitionTimingFunction", 24) == 0) {
+                return CSSStyleKind::TransitionTimingFunction;
             }
             break;
         }
