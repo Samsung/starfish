@@ -30,7 +30,11 @@ String* ListStyleData::type() const
 
 void ListStyleData::setType(String* v)
 {
-    auto counter = new CounterStyle(v, CounterStyle::CyclicSystem);
+    StringBuilder sb;
+    sb.appendChar('"');
+    sb.appendString(v);
+    sb.appendChar('"');
+    auto counter = new CounterStyle(sb.finalize(), CounterStyle::CyclicSystem);
     counter->setSuffix(String::spaceString);
 
     GCVector<String*> symbols;

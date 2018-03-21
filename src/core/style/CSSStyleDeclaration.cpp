@@ -562,7 +562,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::FontFamily);
         if (style->fontFamily()[0].m_length == 1) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            p.setValueKind(CSSStyleValuePair::ValueKind::KeywordValueKind);
             p.setValue(style->fontFamily()[1].m_familyName);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
@@ -571,8 +571,9 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                                   CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
             size_t len = style->fontFamily()[0].m_length;
             for (size_t i = 0; i < len; i++) {
-                val->emplace_back(CSSStyleValuePair::ValueKind::StringValueKind,
-                                  style->fontFamily()[i + 1].m_familyName);
+                val->emplace_back(
+                    CSSStyleValuePair::ValueKind::KeywordValueKind,
+                    style->fontFamily()[i + 1].m_familyName);
             }
             p.setValueList(val);
         }
@@ -1167,8 +1168,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (listStyle.image()->length() == 0) {
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
-            p.setValue(listStyle.image());
+            p.setUrlValue(listStyle.image());
         }
         addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::TextShadow) {
@@ -1257,13 +1257,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 ContentData& c = contentData->at(i);
                 if (c.type() == ContentData::Text) {
                     CSSStyleValuePair t;
-                    t.setValueKind(CSSStyleValuePair::StringValueKind);
                     t.setStringValue(c.text()->text());
                     values->pushBack(t);
                 } else if (c.type() == ContentData::Image) {
                     CSSStyleValuePair t;
-                    t.setValueKind(CSSStyleValuePair::UrlValueKind);
-                    t.setStringValue(c.image()->image());
+                    t.setUrlValue(c.image()->image());
                     values->pushBack(t);
                 } else if (c.type() == ContentData::Counter) {
                     CSSStyleValuePair t;
@@ -1388,18 +1386,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::Cursor);
-        p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
         // when cursor value type is implemented, add cursor value type instead
         // of string `auto`
-        p.setStringValue(String::createASCIIString("auto"));
+        p.setKeywordValue(String::createASCIIString("auto"));
         addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::MaskImage) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MaskImage);
         String* url = style->maskImage();
         if (url->length()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-            p.setStringValue(url);
+            p.setUrlValue(url);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         }
@@ -1545,20 +1541,20 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     ADD_VALUE_PAIR(ObjectFit, ObjectFitValueKind, objectFit)
     ADD_VALUE_PAIR(ListStylePosition, ListStylePositionValueKind,
                    listStylePosition)
-    ADD_VALUE_PAIR(ListStyleType, StringValueKind, listStyleType)
+    ADD_VALUE_PAIR(ListStyleType, KeywordValueKind, listStyleType)
     ADD_VALUE_PAIR(UserSelect, UserSelectValueKind, userSelect)
     ADD_VALUE_PAIR(Hyphens, HyphensValueKind, hyphens)
     ADD_VALUE_PAIR(ImageRendering, ImageRenderingValueKind, imageRendering)
 
 #undef ADD_VALUE_PAIR
-#define ADD_COLOR_PAIR(KEY, GETTER)                                    \
-    else if (keyKind == CSSStyleValuePair::KeyKind::KEY)               \
-    {                                                                  \
-        CSSStyleValuePair p;                                           \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::KEY);                 \
-        p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind); \
-        p.setValue(style->GETTER().toString());                        \
-        addValuePair(p);                                               \
+#define ADD_COLOR_PAIR(KEY, GETTER)                                     \
+    else if (keyKind == CSSStyleValuePair::KeyKind::KEY)                \
+    {                                                                   \
+        CSSStyleValuePair p;                                            \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::KEY);                  \
+        p.setValueKind(CSSStyleValuePair::ValueKind::KeywordValueKind); \
+        p.setValue(style->GETTER().toString());                         \
+        addValuePair(p);                                                \
     }
     ADD_COLOR_PAIR(Color, color)
     ADD_COLOR_PAIR(BackgroundColor, backgroundColor)

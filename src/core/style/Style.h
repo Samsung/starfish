@@ -1433,7 +1433,8 @@ public:
         // img
         ImageRenderingValueKind,
 
-        HyphensValueKind
+        HyphensValueKind,
+        VarFunctionValueKind
     };
 
     CSSStyleValuePair()
@@ -1954,6 +1955,12 @@ public:
         return m_value.m_counterFunctionValue;
     }
 
+    String* varFunctionValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == VarFunctionValueKind);
+        return m_value.m_stringValue;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -2291,6 +2298,7 @@ public:
         case KeywordValueKind:
         case Attr:
         case ListStyleCounterValueKind:
+        case VarFunctionValueKind:
             return m_value.m_stringValue;
         case ValueListKind:
             return m_value.m_multiValue;
@@ -2456,6 +2464,12 @@ public:
     {
         m_valueKind = CSSStyleValuePair::CounterFunctionValueKind;
         m_value.m_counterFunctionValue = v;
+    }
+
+    void setVarFunctionValue(String* v)
+    {
+        m_valueKind = VarFunctionValueKind;
+        m_value.m_stringValue = v;
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \
