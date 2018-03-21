@@ -19,6 +19,9 @@ def run_test_pool(case_runner, in_path, nproc,
     try:
         with open(in_path) as fp:
             for line in fp:
+                line = line.strip()
+                if len(line) == 0:
+                    continue
                 content = line.split()[0]
                 if (len(content) > 0) and content[0] != '#':
                     tcs.append((idx, content))
