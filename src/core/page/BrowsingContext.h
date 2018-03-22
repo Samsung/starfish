@@ -225,6 +225,7 @@ public:
 
     HistoryManager* historyManager();
 
+    // starting global pointing Intercept must use default event.
     void addGlobalPointingEventInterceptListener(EventTarget* node);
     void removeGlobalPointingEventInterceptListener(EventTarget* node);
 
@@ -288,6 +289,7 @@ private:
     bool m_isActive; // true means this context is alive
 
     Unit::Location m_touchDownPoint;
+    Unit::Location m_lastMouseMovePoint;
 
     GCUnorderedSet<Node*> m_activeNodeSet;
     Node* m_activeNodeTarget;

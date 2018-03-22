@@ -1620,6 +1620,10 @@ void Node::setNeedsFrameTreeBuildWithoutSelf()
 
     window()->browsingContext()->setNeedsFrameTreeBuild();
 
+    if (needsFrameTreeBuild()) {
+        return;
+    }
+
     Frame* old = frame();
     if (old) {
         Frame* blockParent = FrameTreeBuilder::findNearestBlock(old);
