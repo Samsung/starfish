@@ -108,9 +108,9 @@ void GridFormattingContext::applyFrUnitsWithColumns()
         GridLine& line = m_gridLineColumns[i];
         if (!line.isComputed()) {
             if (remainingSpace > 0) {
-                LayoutUnit offset =
-                    round((line.fr() * remainingSpace) / frOfSum);
-                line.setOffset(offset, true);
+                LayoutUnit offset = (line.fr() * remainingSpace) / frOfSum;
+                double value = round(offset.toDouble());
+                line.setOffset(value, true);
             } else {
                 line.setOffset(0, true);
             }
@@ -141,9 +141,9 @@ void GridFormattingContext::applyFrUnitsWithRows()
     for (size_t i = 1; i < m_gridLineRows.size(); i++) {
         GridLine* line = &m_gridLineRows[i];
         if (!line->isComputed()) {
-            LayoutUnit offset =
-                round(maxGrid->offset() * line->fr() / maxGrid->fr());
-            offset = std::max(offset, line->offset());
+            LayoutUnit offset = maxGrid->offset() * line->fr() / maxGrid->fr();
+            double value = round(offset.toDouble());
+            offset = std::max(value, line->offset().toDouble());
             line->setOffset(offset, true);
         }
     }
