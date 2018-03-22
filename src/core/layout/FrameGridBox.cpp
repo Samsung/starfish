@@ -86,19 +86,20 @@ void GridFormattingContext::layoutGridItems()
 void GridFormattingContext::applyFrUnitsWithColumns()
 {
     LayoutUnit computedSum(0);
+    LayoutUnit frOfSum(0);
     for (size_t i = 0; i < m_gridLineColumns.size(); i++) {
         GridLine line = m_gridLineColumns[i];
         if (line.isComputed()) {
             computedSum += line.offset();
+        } else {
+            frOfSum += line.fr();
         }
     }
 
-    LayoutUnit frSum(0);
-    for (size_t i = 0; i < m_gridLineColumns.size(); i++) {
-        GridLine line = m_gridLineColumns[i];
-        if (!line.isComputed()) {
-            frSum += line.offset();
-        }
+    // https://www.w3.org/TR/css-grid-1/#leftover-space
+    // If this value is less than 1, set it to 1 instead.
+    if (frOfSum < 1.0f) {
+        frOfSum = 1.0f;
     }
 
     LayoutUnit remainingSpace = m_availableWidth - computedSum;
@@ -107,12 +108,43 @@ void GridFormattingContext::applyFrUnitsWithColumns()
         GridLine& line = m_gridLineColumns[i];
         if (!line.isComputed()) {
             if (remainingSpace > 0) {
-                LayoutUnit offset = line.offset() / frSum;
-                offset = offset * remainingSpace;
+                LayoutUnit offset =
+                    round((line.fr() * remainingSpace) / frOfSum);
                 line.setOffset(offset, true);
             } else {
                 line.setOffset(0, true);
             }
+        }
+    }
+}
+
+void GridFormattingContext::applyFrUnitsWithRows()
+{
+    LayoutUnit maxHeight(0);
+    GridLine* maxGrid = nullptr;
+    for (size_t i = 1; i < m_gridLineRows.size(); i++) {
+        GridLine line = m_gridLineRows[i];
+        if (!line.isComputed()) {
+            if (maxHeight < line.offset()) {
+                maxHeight = line.offset();
+                maxGrid = &m_gridLineRows[i];
+            }
+        }
+    }
+
+    if (!maxGrid) {
+        return;
+    } else {
+        maxGrid->setComputed(true);
+    }
+
+    for (size_t i = 1; i < m_gridLineRows.size(); i++) {
+        GridLine* line = &m_gridLineRows[i];
+        if (!line->isComputed()) {
+            LayoutUnit offset =
+                round(maxGrid->offset() * line->fr() / maxGrid->fr());
+            offset = std::max(offset, line->offset());
+            line->setOffset(offset, true);
         }
     }
 }
@@ -134,7 +166,9 @@ void GridFormattingContext::buildGridLineTemplate()
                 GridLine line = GridLine(length.numberData());
                 m_gridLineColumns.push_back(line);
             } else if (gridLength.isFr()) {
-                GridLine line = GridLine(gridLength.fr(), false);
+                double value = gridLength.fr();
+
+                GridLine line = GridLine(value, false);
                 m_gridLineColumns.push_back(line);
             }
         }
@@ -154,6 +188,11 @@ void GridFormattingContext::buildGridLineTemplate()
                 Length length = gridLength.length();
                 GridLine line = GridLine(length.numberData());
                 m_gridLineRows.push_back(line);
+            } else if (gridLength.isFr()) {
+                double value = gridLength.fr();
+
+                GridLine line = GridLine(value, false);
+                m_gridLineRows.push_back(line);
             }
         }
     }
@@ -161,10 +200,20 @@ void GridFormattingContext::buildGridLineTemplate()
     // Apply Flex(Fr) units for Columns such as <1fr>.
     applyFrUnitsWithColumns();
 
+    arrangeGridLines();
+
+    applyFrUnitsWithRows();
+
+    arrangeGridLines();
+}
+
+void GridFormattingContext::arrangeGridLines()
+{
     // This part is to create hypothetical lines for columns and rows.
     size_t columnIndex = 0;
     size_t rowIndex = 0;
     double maxHeight = 0;
+
     auto item = m_orderedGridItems.begin();
 
     while (item != m_orderedGridItems.end()) {
@@ -174,7 +223,7 @@ void GridFormattingContext::buildGridLineTemplate()
             needNewLine = true;
         }
 
-        GridLine gridLength = m_gridLineColumns[columnIndex + 1];
+        GridLine gridColumnLine = m_gridLineColumns[columnIndex + 1];
 
         {
             FrameBox* gridItem = (*item);
@@ -185,8 +234,12 @@ void GridFormattingContext::buildGridLineTemplate()
             // This case is very critical, because there is no remaining spaces
             // for <fr> unit, and then in this case put a prefered width into a
             // line.
-            if (gridLength.offset() != 0) {
-                style->setWidth(Length(Length::Fixed, gridLength.offset()));
+            if (gridColumnLine.offset() != 0) {
+                Length width = style->width();
+                if (!width.isFixed()) {
+                    style->setWidth(
+                        Length(Length::Fixed, gridColumnLine.offset()));
+                }
             } else {
                 PreferredWidthMainContext mainContext;
                 PreferredWidthContext p(m_layoutContext, mainContext, gridItem,
@@ -200,8 +253,13 @@ void GridFormattingContext::buildGridLineTemplate()
 
             if (!needNewLine) {
                 if (rowIndex + 1 < m_gridLineRows.size()) {
-                    style->setHeight(Length(
-                        Length::Fixed, m_gridLineRows[rowIndex + 1].offset()));
+                    Length height = style->height();
+                    if (!height.isFixed() &&
+                        m_gridLineRows[rowIndex + 1].isComputed()) {
+                        style->setHeight(
+                            Length(Length::Fixed,
+                                   m_gridLineRows[rowIndex + 1].offset()));
+                    }
                 }
             }
 
@@ -218,6 +276,11 @@ void GridFormattingContext::buildGridLineTemplate()
             if (needNewLine) {
                 GridLine line = GridLine(maxHeight);
                 m_gridLineRows.push_back(line);
+            } else {
+                if (m_gridLineRows[rowIndex + 1].isFr()) {
+                    GridLine& frRow = m_gridLineRows[rowIndex + 1];
+                    frRow.setOffset(maxHeight, false);
+                }
             }
 
             columnIndex = maxHeight = 0;
