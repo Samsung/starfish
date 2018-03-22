@@ -15,6 +15,24 @@ License:       LGPL-2.1+ and Apache-2.0 and BSD-3-Clause and BSL-1.0 and LGPL-3.
 %define tizen_platform tv
 %endif
 
+%if "%{?TIZEN_PRODUCT_TV}" == "1"
+%define tizen_platform tv
+%else
+%if "%{?TIZEN_PRODUCT_MOBILE}" == "1"
+%define tizen_platform mobile
+%else
+%if "%{?TIZEN_PRODUCT_WEARABLE}" == "1"
+%define tizen_platform wearable
+%else
+%if "%{?TIZEN_PRODUCT_HEADLESS}" == "1"
+%define tizen_platform wearable
+%else
+%define tizen_platform unified
+%endif
+%endif
+%endif
+%endif
+
 %if "%{tizen_platform}" == "mobile"
 #ExcludeArch: %{arm} %ix86 x86_64
 %endif
@@ -119,6 +137,15 @@ GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="
 ninja -C out/release starfish.tizen_wearable.release
 cd ..
 %endif
+%if "%{tizen_platform}" == "unified"
+mkdir -p tizen_build
+cd tizen_build
+GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen %{?gyp_addition_command}
+ninja -C out/release starfish.tizen.release
+GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen %{?gyp_addition_command}
+ninja -C out/release starfish.tizen.release
+cd ..
+%endif
 
 %install
 %define bin StarFish
@@ -153,6 +180,12 @@ cp ./tizen_wearable_build/out/release/lib/*.so %{buildroot}%{_libdir}
 mv %{buildroot}%{_libdir}/liblightweight-web-engine.tizen_wearable.so %{buildroot}%{_libdir}/libWebWidgetEngine.so
 mkdir -p %{buildroot}%{_bindir}
 cp -r ./tizen_wearable_build/out/release/lightweight-web-engine.tizen_wearable %{buildroot}%{_bindir}/%{bin}
+%endif
+%if "%{tizen_platform}" == "unified"
+cp -r ./tizen_build/out/release/lib/*.so %{buildroot}%{_libdir}
+mv %{buildroot}%{_libdir}/liblightweight-web-engine.tizen.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
+mkdir -p %{buildroot}%{_bindir}
+cp -r ./tizen_build/out/release/lightweight-web-engine.tizen %{buildroot}%{_bindir}/%{bin}
 %endif
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
