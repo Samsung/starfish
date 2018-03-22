@@ -611,6 +611,7 @@ void FrameReplaced::paintContent(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
+    ctx.m_canvas->save();
     if (isFlexItem()) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline) {
             paintBackgroundAndBorders(ctx.m_canvas);
@@ -637,6 +638,7 @@ void FrameReplaced::paintContent(PaintingContext& ctx)
             paintOutline(ctx.m_canvas);
         }
     }
+    ctx.m_canvas->restore();
 }
 
 Frame* FrameReplaced::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
