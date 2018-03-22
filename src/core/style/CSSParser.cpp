@@ -218,6 +218,9 @@ class CSSParser;
 
 void* CSSToken::operator new(size_t size, CSSParser* parser)
 {
+    if (!parser) {
+        return GC_MALLOC(sizeof(CSSToken));
+    }
     if (parser->m_initialTokenMemoryPoolSize) {
         parser->m_initialTokenMemoryPoolSize--;
         return parser
@@ -234,7 +237,7 @@ void* CSSToken::operator new(size_t size, CSSParser* parser)
 
 CSSToken::~CSSToken()
 {
-    if (m_parser->m_isPoolEnabled) {
+    if (m_parser && m_parser->m_isPoolEnabled) {
         if (m_parser->m_initialTokenMemoryPoolSize <
             CSSTOKEN_POOL_INITIAL_SIZE) {
             m_parser->m_initialTokenMemoryPool
@@ -747,6 +750,13 @@ protected:
     size_t m_pos;
     GCAtomicVector<size_t> m_preservedPos;
 };
+
+bool CSSPropertyParser::stringIsIdent(String* v)
+{
+    CSSScanner scanner(nullptr, v);
+    RefPtr<CSSToken> token = scanner.nextToken(false);
+    return token->isIdent();
+}
 
 CSSParser::CSSParser(Document* document)
     : DocumentHoldable(document)

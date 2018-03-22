@@ -8783,6 +8783,9 @@ static bool parseCounter(const CSSTokenValue& s, CSSStyleValuePair* pair)
     parser.consumeString(CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowUnderline);
     String* name = parser.parsedString();
+    if (!CSSPropertyParser::stringIsIdent(name)) {
+        return false;
+    }
     parser.consumeWhitespaces();
     if (parser.consumeIfNext(')') && parser.isEnd()) {
         pair->setCounterFunctionValue(new CSSCounterFunction(name));
@@ -8796,7 +8799,7 @@ static bool parseCounter(const CSSTokenValue& s, CSSStyleValuePair* pair)
     parser.consumeString(CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowUnderline);
     String* style = parser.parsedString();
-    if (!style->length()) {
+    if (!style->length() || !CSSPropertyParser::stringIsIdent(style)) {
         return false;
     }
     parser.consumeWhitespaces();
@@ -8825,6 +8828,9 @@ static bool parseCounters(const CSSTokenValue& s, CSSStyleValuePair* pair)
     parser.consumeString(CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowUnderline);
     String* name = parser.parsedString();
+    if (!CSSPropertyParser::stringIsIdent(name)) {
+        return false;
+    }
     parser.consumeWhitespaces();
     // Argument: separator
     if (!parser.consumeIfNext(',')) {
@@ -8849,7 +8855,7 @@ static bool parseCounters(const CSSTokenValue& s, CSSStyleValuePair* pair)
     parser.consumeString(CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowUnderline);
     String* style = parser.parsedString();
-    if (!style->length()) {
+    if (!style->length() || !CSSPropertyParser::stringIsIdent(style)) {
         return false;
     }
     parser.consumeWhitespaces();
@@ -11718,8 +11724,12 @@ static bool parseListStyleType(const CSSTokenValue& value,
         pair->setValueKind(CSSStyleValuePair::StringValueKind);
         pair->setValue(parsed);
     } else {
+        String* customIdent = String::fromUTF8(value.data(), value.length());
+        if (!CSSPropertyParser::stringIsIdent(customIdent)) {
+            return false;
+        }
         pair->setValueKind(CSSStyleValuePair::ListStyleCounterValueKind);
-        pair->setValue(String::fromUTF8(value.data(), value.length()));
+        pair->setValue(customIdent);
     }
     return true;
 }
@@ -11785,7 +11795,6 @@ static bool parseListStyleShorhand(const CSSTokenVector& tokens,
             }
             continue;
         }
-        // NOTE parseListStyleType() return always true
         if (!foundType && parseListStyleType(token, type)) {
             foundType = true;
             continue;
