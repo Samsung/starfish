@@ -67,7 +67,6 @@ void FrameReplacedIFrame::layout(LayoutContext& ctx,
             if (v->browsingContext()->window()) {
                 v->browsingContext()->window()->resize(contentWidth(),
                                                        contentHeight());
-                v->browsingContext()->layoutIfNeeds();
             }
         }
 

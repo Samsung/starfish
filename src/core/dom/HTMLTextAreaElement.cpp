@@ -184,6 +184,7 @@ void HTMLTextAreaElement::setApiValue(String* value)
     // TODO Reset selection diretion if necessary
     m_value = value;
     m_dirtyValueFlag = true;
+    setNeedsFrameTreeBuildWithoutSelf();
 }
 
 String* HTMLTextAreaElement::defaultValue()

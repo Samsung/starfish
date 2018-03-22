@@ -357,7 +357,11 @@ void Window::resize(uint32_t w, uint32_t h)
         String* eventType = starFish()->staticStrings()->m_resize.localName();
         UIEvent* e = new UIEvent(document(), eventType);
         e->setView(this);
-        dispatchEventByUA(this, e);
+        if (browsingContext()->isTopLevelBrowsingContext()) {
+            dispatchEventByUA(e);
+        } else {
+            dispatchEventIdleTimeByUA(e);
+        }
         browsingContext()->setNeedsLayout();
     }
 }

@@ -63,7 +63,8 @@ public:
     MouseData(unsigned char button, unsigned char buttons, double clientX,
               double clientY, double screenX, double screenY,
               int32_t clickCount, EventTarget* relatedTarget = nullptr)
-        : m_button(button)
+        : m_isDefaultPrevented(false)
+        , m_button(button)
         , m_buttons(buttons)
         , m_clientX(clientX)
         , m_clientY(clientY)
@@ -154,7 +155,18 @@ public:
         m_relatedTarget = relatedTarget;
     }
 
+    bool isDefaultPrevented()
+    {
+        return m_isDefaultPrevented;
+    }
+
+    void setDefaultPrevented()
+    {
+        m_isDefaultPrevented = true;
+    }
+
 protected:
+    bool m_isDefaultPrevented;
     unsigned char m_button;
     unsigned char m_buttons;
 
@@ -199,6 +211,9 @@ public:
         , m_mouseData(data)
     {
         setDetail(data.clickCount());
+        if (data.isDefaultPrevented()) {
+            setDefaultPrevented(true);
+        }
     }
 
     MouseEvent(Document* document, String* eventType, MouseEventInit& init)

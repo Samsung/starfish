@@ -89,6 +89,8 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView,
                                      : nullptr)
     , m_sourceElement(source)
     , m_touchDownPoint(0, 0)
+    , m_lastMouseMovePoint(std::numeric_limits<float>::quiet_NaN(),
+                           std::numeric_limits<float>::quiet_NaN())
     , m_activeNodeTarget(nullptr)
     , m_documentVersionWhenComputingActiveNodeSet(0)
     , m_hoveredNodeTarget(nullptr)
@@ -541,13 +543,13 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
 
 void BrowsingContext::markHasPendingStyleSheet()
 {
-    STARFISH_LOG_INFO("Window::markHasPendingStyleSheet\n");
+    // STARFISH_LOG_INFO("Window::markHasPendingStyleSheet\n");
     m_pendingStyleSheetCount++;
 }
 
 void BrowsingContext::unmarkHasPendingStyleSheet()
 {
-    STARFISH_LOG_INFO("Window::unmarkHasPendingStyleSheet\n");
+    // STARFISH_LOG_INFO("Window::unmarkHasPendingStyleSheet\n");
     if (m_pendingStyleSheetCount > 0) {
         m_pendingStyleSheetCount--;
         setNeedsRendering();
@@ -1255,8 +1257,20 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         return true;
     }
 
-    // STARFISH_LOG_INFO("BrowsingContext::dispatchMouseEvent %d %f %f\n",
-    // (int)kind, data.clientX(), data.clientY());
+    bool mouseMoved = false;
+    if (m_lastMouseMovePoint.x() != data.screenX() ||
+        m_lastMouseMovePoint.y() != data.screenY()) {
+        m_lastMouseMovePoint.setX(data.screenX());
+        m_lastMouseMovePoint.setY(data.screenY());
+        mouseMoved = true;
+    }
+
+    if (kind == MouseEventKind::MouseEventMove && !mouseMoved) {
+        return true;
+    }
+
+    // STARFISH_LOG_INFO("BrowsingContext::dispatchMouseEvent %d %f %f %d\n",
+    // (int)kind, data.clientX(), data.clientY(), (int)data.buttons());
 
     data.setClientX(data.clientX() + window()->scrollX());
     data.setClientY(data.clientY() + window()->scrollY());
@@ -1723,6 +1737,14 @@ void BrowsingContext::unRegisterNeedsLayoutInWebView()
 
 void BrowsingContext::addGlobalPointingEventInterceptListener(EventTarget* node)
 {
+    size_t sizeBefore = m_globalPointingEventListener.size();
+    if (sizeBefore == 0) {
+        MouseData mdata(MouseData::MouseButtonValue::NoButton,
+                        MouseData::MouseButtonsValue::NoButtonDown,
+                        m_lastMouseMovePoint.x(), m_lastMouseMovePoint.y(), 0);
+        mdata.setDefaultPrevented();
+        dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
+    }
     m_globalPointingEventListener.insert(m_globalPointingEventListener.end(),
                                          node);
 }
