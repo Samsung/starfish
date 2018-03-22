@@ -123,6 +123,8 @@ public:
         return false;
     }
 
+    static bool stringIsIdent(String* v);
+
     char* curPos() const
     {
         return m_curPos;
