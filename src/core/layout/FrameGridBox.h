@@ -36,10 +36,20 @@ public:
         return m_offset;
     }
 
-    void setOffset(LayoutUnit v, bool computed)
+    LayoutUnit fr()
+    {
+        return m_fr;
+    }
+
+    void setOffset(LayoutUnit offset, bool computed)
     {
         m_computed = computed;
-        m_offset = v;
+        m_offset = offset;
+    }
+
+    void setComputed(bool computed)
+    {
+        m_computed = computed;
     }
 
     bool isComputed()
@@ -47,26 +57,41 @@ public:
         return m_computed;
     }
 
+    bool isFr()
+    {
+        return m_state == Fr;
+    }
+
     // The 'computed' is for the 'fr' unit.
-    GridLine(LayoutUnit offset, bool computed)
-        : m_offset(offset)
+    GridLine(LayoutUnit fr, bool computed)
+        : m_offset(0)
+        , m_fr(fr)
         , m_lineName(nullptr)
         , m_computed(computed)
+        , m_state(Fr)
     {
     }
 
     GridLine(LayoutUnit offset)
         : m_offset(offset)
+        , m_fr(0)
         , m_lineName(nullptr)
         , m_computed(true)
+        , m_state(Fixed)
     {
         m_computed = true;
     }
 
 private:
     LayoutUnit m_offset;
+    LayoutUnit m_fr;
     String* m_lineName;
     bool m_computed;
+    enum GridLineState {
+        Fixed,
+        Fr,
+    };
+    GridLineState m_state;
 };
 
 struct GridLayoutScope {
@@ -109,10 +134,16 @@ public:
 
     void computeColumnsAndRows();
     void applyFrUnitsWithColumns();
+    void applyFrUnitsWithRows();
     void buildGridLineTemplate();
     void layoutGridItems();
+    void arrangeGridLines();
 
     static bool doesParticipateInGridFormattingContext(Frame* GridItem);
+
+    // TODO: Implement a function called 'computePreferredWidth' for
+    // 'inline-grid'.
+    // void computePreferredWidth(PreferredWidthContext& ctx);
 
 private:
     LayoutContext& m_layoutContext;

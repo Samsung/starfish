@@ -250,5 +250,6 @@ test/cairo/internal-test/css/grid/gridbox_simple-box.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-2.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-3.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-5.html
+test/cairo/internal-test/css/grid/gridbox_simple-box-6.html
 test/cairo/internal-test/css/style/lookup-computed-style.html
 test/cairo/internal-test/css/text/text-decoration-color-001a.html
