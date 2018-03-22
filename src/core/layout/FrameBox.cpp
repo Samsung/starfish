@@ -492,17 +492,49 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
         float topRightHorizontal =
             br.m_topRightHorizontal.specifiedValue(width(), this);
 
+        float topLeftVertical =
+            br.m_topLeftVertical.specifiedValue(height(), this);
+        float bottomLeftVertical =
+            br.m_bottomLeftVertical.specifiedValue(height(), this);
+
+        float topRightVertical =
+            br.m_topRightVertical.specifiedValue(height(), this);
+        float bottomRightVertical =
+            br.m_bottomRightVertical.specifiedValue(height(), this);
+
+        float bottomLeftHorizontal =
+            br.m_bottomLeftHorizontal.specifiedValue(width(), this);
+        float bottomRightHorizontal =
+            br.m_bottomRightHorizontal.specifiedValue(width(), this);
+
+        float r;
+
+        if (spreadDistance != 0.0f) {
+#define APPLY_SPREAD_DISTANCE(POS)                      \
+    if (POS < spreadDistance) {                         \
+        r = POS / spreadDistance;                       \
+        POS += spreadDistance * (1 + pow(r - 1.0f, 3)); \
+    } else {                                            \
+        POS += spreadDistance;                          \
+    }
+
+            APPLY_SPREAD_DISTANCE(topLeftHorizontal);
+            APPLY_SPREAD_DISTANCE(topRightHorizontal);
+            APPLY_SPREAD_DISTANCE(topLeftVertical);
+            APPLY_SPREAD_DISTANCE(bottomLeftVertical);
+            APPLY_SPREAD_DISTANCE(topRightVertical);
+            APPLY_SPREAD_DISTANCE(bottomRightVertical);
+            APPLY_SPREAD_DISTANCE(bottomLeftHorizontal);
+            APPLY_SPREAD_DISTANCE(bottomRightHorizontal);
+#undef APPLY_SPREAD_DISTANCE
+        }
+
         if (topLeftHorizontal + topRightHorizontal > maxWidthValue) {
             float a = topLeftHorizontal;
             float b = topRightHorizontal;
             topLeftHorizontal = a / (a + b) * maxWidthValue;
             topRightHorizontal = b / (a + b) * maxWidthValue;
         }
-
-        float topLeftVertical =
-            br.m_topLeftVertical.specifiedValue(height(), this);
-        float bottomLeftVertical =
-            br.m_bottomLeftVertical.specifiedValue(height(), this);
 
         if (topLeftVertical + bottomLeftVertical > maxHeightValue) {
             float a = topLeftVertical;
@@ -511,22 +543,12 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
             bottomLeftVertical = b / (a + b) * maxHeightValue;
         }
 
-        float topRightVertical =
-            br.m_topRightVertical.specifiedValue(height(), this);
-        float bottomRightVertical =
-            br.m_bottomRightVertical.specifiedValue(height(), this);
-
         if (topRightVertical + bottomRightVertical > maxHeightValue) {
             float a = topRightVertical;
             float b = bottomRightVertical;
             topRightVertical = a / (a + b) * maxHeightValue;
             bottomRightVertical = b / (a + b) * maxHeightValue;
         }
-
-        float bottomLeftHorizontal =
-            br.m_bottomLeftHorizontal.specifiedValue(width(), this);
-        float bottomRightHorizontal =
-            br.m_bottomRightHorizontal.specifiedValue(width(), this);
 
         if (bottomLeftHorizontal + bottomRightHorizontal > maxWidthValue) {
             float a = bottomLeftHorizontal;
@@ -535,71 +557,10 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
             bottomRightHorizontal = b / (a + b) * maxWidthValue;
         }
 
-        float r;
-        if (spreadDistance != 0.0f) {
-            if (topLeftHorizontal < spreadDistance) {
-                r = topLeftHorizontal / spreadDistance;
-                topLeftHorizontal += spreadDistance * (1 + pow(r - 1.0f, 3));
-            } else {
-                topLeftHorizontal += spreadDistance;
-            }
-
-            if (topRightHorizontal < spreadDistance) {
-                r = topRightHorizontal / spreadDistance;
-                topRightHorizontal += spreadDistance * (1 + pow(r - 1.0f, 3));
-            } else {
-                topRightHorizontal += spreadDistance;
-            }
-
-            if (topLeftVertical < spreadDistance) {
-                r = topLeftVertical / spreadDistance;
-                topLeftVertical += spreadDistance * (1 + pow(r - 1.0f, 3));
-            } else {
-                topLeftVertical += spreadDistance;
-            }
-
-            if (bottomLeftVertical < spreadDistance) {
-                r = bottomLeftVertical / spreadDistance;
-                bottomLeftVertical += spreadDistance * (1 + pow(r - 1.0f, 3));
-            } else {
-                bottomLeftVertical += spreadDistance;
-            }
-
-            if (topRightVertical < spreadDistance) {
-                r = topRightVertical / spreadDistance;
-                topRightVertical += spreadDistance * (1 + pow(r - 1.0f, 3));
-            } else {
-                topRightVertical += spreadDistance;
-            }
-
-            if (bottomRightVertical < spreadDistance) {
-                r = bottomRightVertical / spreadDistance;
-                bottomRightVertical += spreadDistance * (1 + pow(r - 1.0f, 3));
-            } else {
-                bottomRightVertical += spreadDistance;
-            }
-
-            if (bottomLeftHorizontal < spreadDistance) {
-                r = bottomLeftHorizontal / spreadDistance;
-                bottomLeftHorizontal += spreadDistance * (1 + pow(r - 1.0f, 3));
-            } else {
-                bottomLeftHorizontal += spreadDistance;
-            }
-
-            if (bottomRightHorizontal < spreadDistance) {
-                r = bottomRightHorizontal / spreadDistance;
-                bottomRightHorizontal +=
-                    spreadDistance * (1 + pow(r - 1.0f, 3));
-            } else {
-                bottomRightHorizontal += spreadDistance;
-            }
-        }
-
         float arcR;
-
         // border-left
         {
-            if (topLeftHorizontal && topLeftVertical) {
+            if (topLeftHorizontal > 0 && topLeftVertical > 0) {
                 canvas->save();
                 canvas->translate(topLeftHorizontal + rect.x().toFloat(),
                                   topLeftVertical + rect.y().toFloat());
@@ -616,7 +577,7 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
                 canvas->moveTo(rect.x(), rect.y());
             }
 
-            if (bottomLeftHorizontal && bottomLeftVertical) {
+            if (bottomLeftHorizontal > 0 && bottomLeftVertical > 0) {
                 canvas->save();
                 canvas->translate(rect.x() + bottomLeftHorizontal,
                                   rect.maxY() - bottomLeftVertical);
@@ -641,10 +602,10 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
 
         // border-bottom
         {
-            if (bottomLeftHorizontal && bottomLeftVertical) {
+            if (bottomLeftHorizontal > 0 && bottomLeftVertical > 0) {
                 canvas->save();
                 canvas->translate(rect.x() + bottomLeftHorizontal,
-                                  rect.height() - bottomLeftVertical);
+                                  rect.maxY() - bottomLeftVertical);
                 if (bottomLeftVertical > bottomLeftHorizontal) {
                     canvas->scale(
                         1 * (bottomLeftHorizontal / bottomLeftVertical), 1);
@@ -661,7 +622,7 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
                 canvas->lineTo(rect.x(), rect.maxY());
             }
 
-            if (bottomRightHorizontal && bottomRightVertical) {
+            if (bottomRightHorizontal > 0 && bottomRightVertical > 0) {
                 canvas->save();
                 canvas->translate(rect.maxX() - bottomRightHorizontal,
                                   rect.maxY() - bottomRightVertical);
@@ -683,7 +644,7 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
 
         // border-right
         {
-            if (bottomRightHorizontal && bottomRightVertical) {
+            if (bottomRightHorizontal > 0 && bottomRightVertical > 0) {
                 canvas->save();
                 canvas->translate(rect.maxX() - bottomRightHorizontal,
                                   rect.maxY() - bottomRightVertical);
@@ -702,7 +663,7 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
                 canvas->lineTo(rect.maxX(), rect.maxY());
             }
 
-            if (topRightHorizontal && topRightVertical) {
+            if (topRightHorizontal > 0 && topRightVertical > 0) {
                 canvas->save();
                 canvas->translate(rect.maxX().toFloat() - topRightHorizontal,
                                   rect.y().toFloat() + topRightVertical);
@@ -725,7 +686,7 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
 
         // border-top
         {
-            if (topRightHorizontal && topRightVertical) {
+            if (topRightHorizontal > 0 && topRightVertical > 0) {
                 canvas->save();
                 canvas->translate(-topRightHorizontal + rect.maxX().toFloat(),
                                   topRightVertical + rect.y().toFloat());
@@ -746,7 +707,7 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
                 canvas->lineTo(rect.maxX(), rect.y());
             }
 
-            if (topLeftHorizontal && topLeftVertical) {
+            if (topLeftHorizontal > 0 && topLeftVertical > 0) {
                 canvas->save();
                 canvas->translate(topLeftHorizontal + rect.x().toFloat(),
                                   topLeftVertical + rect.y().toFloat());
@@ -898,75 +859,170 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
         canvas->save();
         CanvasShadowDataList list = s->boxShadow().toCanvasShadowDataList(this);
 
-        Unit::Rect borderRect = makeRect(BoxValue::BorderBoxBoxValue);
-
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
             float sd = shadow->spreadDistance();
-            Unit::Rect shadowRect(0, 0, borderRect.width() + sd * 2,
-                                  borderRect.height() + sd * 2);
 
-            float radiusOffset = 0.0f;
-            if (shadow->radius()) {
-                radiusOffset = shadow->radius();
-                radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
-                radiusOffset *= 2;
-            }
+            if (shadow->inset()) {
+                Unit::Rect borderRect = makeRect(BoxValue::BorderBoxBoxValue);
+                Unit::Rect paddingRect = makeRect(BoxValue::PaddingBoxBoxValue);
+                Unit::Rect shadowRect(
+                    paddingRect.x(), paddingRect.y(),
+                    paddingRect.width() + abs(shadow->offsetX()),
+                    paddingRect.height() + abs(shadow->offsetY()));
 
-            NativeImageData* nativeImage = NativeImageData::create(
-                ceil(shadowRect.width() + radiusOffset),
-                ceil(shadowRect.height() + radiusOffset));
-            Canvas* cv =
-                Canvas::createGenericCanvas(node()->starFish(), nativeImage);
-            cv->clearColor(Unit::Color(0, 0, 0, 0));
+                float x = (shadow->offsetX() < 0)
+                              ? 0.0f
+                              : paddingRect.x() + shadow->offsetX();
+                float y = (shadow->offsetX() < 0)
+                              ? 0.0f
+                              : paddingRect.y() + shadow->offsetY();
 
-            if (shadow->hasColor()) {
-                cv->setColor(shadow->color());
-            } else {
-                cv->setColor(s->color());
-            }
+                Unit::Rect interiorRect(x + sd, y + sd,
+                                        paddingRect.width() - sd * 2,
+                                        paddingRect.height() - sd * 2);
 
-            cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
-            const LayoutRect clipRect(0, 0, shadowRect.width(),
-                                      shadowRect.height());
-            applyBorderRadiusClippingIfNeeds(cv, clipRect, sd);
-            cv->drawRect(shadowRect);
-
-            ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                          nativeImage->height(), nativeImage->stride());
-            sb.process(shadow->radius());
-            delete cv;
-
-            float offset = ceil(radiusOffset / 2);
-            Unit::Rect imageRect(-offset + shadow->offsetX() - sd,
-                                 -offset + shadow->offsetY() - sd,
-                                 nativeImage->width(), nativeImage->height());
-
-            bool intersect = borderRect.intersects(imageRect);
-            canvas->save();
-            if (intersect) {
                 Unit::Rect exteriorRect;
                 exteriorRect.unite(borderRect);
-                exteriorRect.unite(imageRect);
+                exteriorRect.unite(shadowRect);
+                exteriorRect.unite(interiorRect);
 
-                canvas->beginPath();
-                canvas->moveTo(exteriorRect.x(), exteriorRect.y());
-                canvas->lineTo(exteriorRect.x() + exteriorRect.width(),
-                               exteriorRect.y());
-                canvas->lineTo(exteriorRect.x() + exteriorRect.width(),
-                               exteriorRect.y() + exteriorRect.height());
-                canvas->lineTo(exteriorRect.x(),
-                               exteriorRect.y() + exteriorRect.height());
-                canvas->closePath();
+                // Create image buffer bigger than paddingbox+ shadowBox
+                const float margin = 4.0f;
+                const float half = 2.0f;
+
+                Unit::Rect ImageRect(0, 0, exteriorRect.width() + margin,
+                                     exteriorRect.height() + margin);
+
+                NativeImageData* nativeImage = NativeImageData::create(
+                    ceil(ImageRect.width()), ceil(ImageRect.height()));
+                Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
+                                                         nativeImage);
+                cv->clearColor(Unit::Color(0, 0, 0, 0));
+
+                if (shadow->hasColor()) {
+                    cv->setColor(shadow->color());
+                } else {
+                    cv->setColor(s->color());
+                }
+                // Draw an outline of Image
+                cv->beginPath();
+                cv->moveTo(ImageRect.x(), ImageRect.y());
+                cv->lineTo(ImageRect.x() + ImageRect.width(), ImageRect.y());
+                cv->lineTo(ImageRect.x() + ImageRect.width(),
+                           ImageRect.y() + ImageRect.height());
+                cv->lineTo(ImageRect.x(), ImageRect.y() + ImageRect.height());
+                cv->lineTo(ImageRect.x(), ImageRect.y());
+                cv->closePath();
+
+                cv->translate(half, half);
+
+                // Draw a shadow box that will not be filled.
+                if (style()->hasBorderRadius()) {
+                    const LayoutRect rect(interiorRect.x(), interiorRect.y(),
+                                          interiorRect.width(),
+                                          interiorRect.height());
+                    // apply inner border radius line(anti-clock)
+                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                } else {
+                    // draw interiorRect
+                    cv->setFillRule(false);
+                    cv->drawRect(interiorRect);
+                }
+                cv->fill();
+
+                ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                              nativeImage->height(), nativeImage->stride());
+                sb.process(shadow->radius());
+                delete cv;
+
+                canvas->save();
                 if (style()->hasBorderRadius()) {
                     const LayoutRect rect(0, 0, width(), height());
                     applyBorderRadiusClippingIfNeeds(canvas, rect);
                 } else {
-                    canvas->setFillRule(false);
-                    canvas->clip(borderRect);
+                    canvas->clip(paddingRect);
                 }
+
+                float dx = (shadow->offsetX() < 0)
+                               ? ceil(-half + shadow->offsetX())
+                               : -half;
+                float dy = (shadow->offsetY() < 0)
+                               ? ceil(-half + shadow->offsetY())
+                               : -half;
+
+                canvas->translate(dx, dy);
+                canvas->drawImage(nativeImage, ImageRect);
+                canvas->restore();
+            } else {
+                Unit::Rect borderRect = makeRect(BoxValue::BorderBoxBoxValue);
+                Unit::Rect shadowRect(0, 0, borderRect.width() + sd * 2,
+                                      borderRect.height() + sd * 2);
+
+                float radiusOffset = 0.0f;
+                if (shadow->radius()) {
+                    radiusOffset = shadow->radius();
+                    radiusOffset =
+                        std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
+                    radiusOffset *= 2;
+                }
+
+                NativeImageData* nativeImage = NativeImageData::create(
+                    ceil(shadowRect.width() + radiusOffset),
+                    ceil(shadowRect.height() + radiusOffset));
+                Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
+                                                         nativeImage);
+                cv->clearColor(Unit::Color(0, 0, 0, 0));
+
+                if (shadow->hasColor()) {
+                    cv->setColor(shadow->color());
+                } else {
+                    cv->setColor(s->color());
+                }
+
+                cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
+                const LayoutRect clipRect(0, 0, shadowRect.width(),
+                                          shadowRect.height());
+                applyBorderRadiusClippingIfNeeds(cv, clipRect, sd);
+                cv->drawRect(shadowRect);
+
+                ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                              nativeImage->height(), nativeImage->stride());
+                sb.process(shadow->radius());
+                delete cv;
+
+                float offset = ceil(radiusOffset / 2);
+                Unit::Rect imageRect(-offset + shadow->offsetX() - sd,
+                                     -offset + shadow->offsetY() - sd,
+                                     nativeImage->width(),
+                                     nativeImage->height());
+
+                bool intersect = borderRect.intersects(imageRect);
+                canvas->save();
+                if (intersect) {
+                    Unit::Rect exteriorRect;
+                    exteriorRect.unite(borderRect);
+                    exteriorRect.unite(imageRect);
+
+                    canvas->beginPath();
+                    canvas->moveTo(exteriorRect.x(), exteriorRect.y());
+                    canvas->lineTo(exteriorRect.x() + exteriorRect.width(),
+                                   exteriorRect.y());
+                    canvas->lineTo(exteriorRect.x() + exteriorRect.width(),
+                                   exteriorRect.y() + exteriorRect.height());
+                    canvas->lineTo(exteriorRect.x(),
+                                   exteriorRect.y() + exteriorRect.height());
+                    canvas->closePath();
+                    if (style()->hasBorderRadius()) {
+                        const LayoutRect rect(0, 0, width(), height());
+                        applyBorderRadiusClippingIfNeeds(canvas, rect);
+                    } else {
+                        canvas->setFillRule(false);
+                        canvas->clip(borderRect);
+                    }
+                }
+                canvas->drawImage(nativeImage, imageRect);
+                canvas->restore();
             }
-            canvas->drawImage(nativeImage, imageRect);
-            canvas->restore();
         }
         list.clear();
         canvas->restore();

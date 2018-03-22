@@ -50,7 +50,7 @@ CanvasShadowData ShadowData::toCanvasShadowData(Frame* owner) const
     float spreadDistance = m_spreadDistance.specifiedValue(unused, owner);
 
     CanvasShadowData ret(offsetX, offsetY, radius, spreadDistance, m_color,
-                         m_hasColor);
+                         m_hasColor, m_inset);
     return ret;
 }
 

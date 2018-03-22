@@ -26,13 +26,15 @@ class CanvasShadowData {
 public:
     CanvasShadowData(const float& offsetX, const float& offsetY,
                      const float& radius, const float& spreadDistance,
-                     const Unit::Color& color, const bool& hasColor)
+                     const Unit::Color& color, const bool& hasColor,
+                     const bool& inset)
         : m_offsetX(offsetX)
         , m_offsetY(offsetY)
         , m_radius(radius)
         , m_spreadDistance(spreadDistance)
         , m_color(color)
         , m_hasColor(hasColor)
+        , m_inset(inset)
     {
     }
 
@@ -66,6 +68,11 @@ public:
         return m_spreadDistance;
     }
 
+    bool inset()
+    {
+        return m_inset;
+    }
+
 private:
     float m_offsetX;
     float m_offsetY;
@@ -73,6 +80,7 @@ private:
     float m_spreadDistance;
     Unit::Color m_color;
     bool m_hasColor;
+    bool m_inset;
 };
 
 class CanvasShadowDataList : public GCVector<CanvasShadowData> {
