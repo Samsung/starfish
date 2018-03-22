@@ -64,12 +64,16 @@ void PlatformWindow::setWebView(WebView* webView)
 
 void PlatformWindow::pause()
 {
-    webView()->mainBrowsingContext()->pause();
+    if (webView()->mainBrowsingContext()) {
+        webView()->mainBrowsingContext()->pause();
+    }
 }
 
 void PlatformWindow::resume()
 {
-    webView()->mainBrowsingContext()->resume();
+    if (webView()->mainBrowsingContext()) {
+        webView()->mainBrowsingContext()->resume();
+    }
 }
 
 void PlatformWindow::close()
@@ -86,22 +90,28 @@ void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                                         size_t touchCount)
 {
     registerOrUpdateIdleTimeCleaner();
-    webView()->mainBrowsingContext()->dispatchTouchEvent(kind, touches,
-                                                         touchCount);
+    if (webView()->mainBrowsingContext()) {
+        webView()->mainBrowsingContext()->dispatchTouchEvent(kind, touches,
+                                                             touchCount);
+    }
 }
 
 void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
     registerOrUpdateIdleTimeCleaner();
-    webView()->mainBrowsingContext()->dispatchMouseEvent(kind, data);
+    if (webView()->mainBrowsingContext()) {
+        webView()->mainBrowsingContext()->dispatchMouseEvent(kind, data);
+    }
 }
 
 void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
                                              int z, bool isVerticalWheelEvent)
 {
     registerOrUpdateIdleTimeCleaner();
-    webView()->mainBrowsingContext()->dispatchMouseWheelEvent(
-        screenX, screenY, z, isVerticalWheelEvent);
+    if (webView()->mainBrowsingContext()) {
+        webView()->mainBrowsingContext()->dispatchMouseWheelEvent(
+            screenX, screenY, z, isVerticalWheelEvent);
+    }
 }
 
 void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
@@ -229,14 +239,18 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
 #undef ADJEST_VIRTUAL_CURSOR_POSITION
 #endif
 
-    webView()->mainBrowsingContext()->dispatchKeyEvent(kind, data);
+    if (webView()->mainBrowsingContext()) {
+        webView()->mainBrowsingContext()->dispatchKeyEvent(kind, data);
+    }
 }
 
 void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
                                               String* data, Node* node)
 {
-    webView()->mainBrowsingContext()->dispatchCompositionEvent(kind, data,
-                                                               node);
+    if (webView()->mainBrowsingContext()) {
+        webView()->mainBrowsingContext()->dispatchCompositionEvent(kind, data,
+                                                                   node);
+    }
 }
 
 bool PlatformWindow::rendering()
