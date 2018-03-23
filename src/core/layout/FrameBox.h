@@ -670,6 +670,7 @@ public:
     virtual void paintChildrenWith(PaintingContext& ctx);
     virtual void paintBackgroundAndBorders(Canvas* canvas);
     virtual void paintBoxShadows(Canvas* canvas);
+    virtual void paintInsetBoxShadows(Canvas* canvas);
 
     virtual Unit::Rect makeRect(BoxValue box);
     static void paintBackground(Canvas* canvas, FrameBox* box,
@@ -822,7 +823,10 @@ public:
 
     void applyBorderRadiusClippingIfNeeds(Canvas* canvas,
                                           const LayoutRect& rect,
-                                          float spreadDistance = 0);
+                                          float spreadDistance = 0,
+                                          bool inset = false);
+    void applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
+                           float spreadDistance = 0, bool inset = false);
 
 protected:
     bool hasRareData() const
