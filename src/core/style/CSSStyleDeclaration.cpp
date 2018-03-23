@@ -1306,11 +1306,63 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             CSSStyleValuePair::ValueData(style->transitionTimingFunction()));
         addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::BoxShadow) {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);
-        p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        addValuePair(p);
+        CSSStyleValuePair shadows;
+        shadows.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);
+        if (!style->boxShadow().size()) {
+            shadows.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else {
+            shadows.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+            shadows.setValueList(
+                new ValueList(ValueList::Separator::CommaSeparator));
+
+            for (auto& sd : style->boxShadow()) {
+                CSSStyleValuePair s;
+                s.setValueList(
+                    new ValueList(ValueList::Separator::SpaceSeparator));
+                {
+                    CSSStyleValuePair color;
+                    if (sd.hasColor()) {
+                        color.setColorValue(sd.color());
+                    } else {
+                        color.setColorValue(style->color());
+                    }
+                    s.multiValue()->emplace_back(color.valueKind(),
+                                                 color.value());
+                }
+
+                CSSStyleValuePair lengths;
+                lengths.setValueList(
+                    new ValueList(ValueList::Separator::SpaceSeparator));
+
+                CSSStyleValuePair l1 = lengthToCSSStyleValue(sd.offsetX());
+                lengths.multiValue()->emplace_back(l1.valueKind(), l1.value());
+
+                CSSStyleValuePair l2 = lengthToCSSStyleValue(sd.offsetY());
+                lengths.multiValue()->emplace_back(l2.valueKind(), l2.value());
+
+                CSSStyleValuePair l3 = lengthToCSSStyleValue(sd.radius());
+                lengths.multiValue()->emplace_back(l3.valueKind(), l3.value());
+
+                CSSStyleValuePair l4 =
+                    lengthToCSSStyleValue(sd.spreadDistance());
+                lengths.multiValue()->emplace_back(l4.valueKind(), l4.value());
+
+                s.multiValue()->emplace_back(lengths.valueKind(),
+                                             lengths.value());
+
+                if (sd.inset()) {
+                    CSSStyleValuePair inset;
+                    inset.setValueKind(
+                        CSSStyleValuePair::ValueKind::StringValueKind);
+                    inset.setStringValue(String::createASCIIString("inset"));
+                    s.multiValue()->emplace_back(inset.valueKind(),
+                                                 inset.value());
+                }
+
+                shadows.multiValue()->emplace_back(s.valueKind(), s.value());
+            }
+        }
+        addValuePair(shadows);
     } else if (keyKind == CSSStyleValuePair::KeyKind::Fill) {
         CSSStyleValuePair p = stylePaintDataToCSSStyleValue(style->fill());
         p.setKeyKind(CSSStyleValuePair::KeyKind::Fill);

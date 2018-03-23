@@ -94,11 +94,15 @@ public:
         return m_hasColor;
     }
 
+    bool inset()
+    {
+        return m_inset;
+    }
+
     void setInset()
     {
         m_inset = true;
     }
-
     CanvasShadowData toCanvasShadowData(Frame* owner) const;
 
     bool operator==(const ShadowData& o)
