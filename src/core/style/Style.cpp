@@ -1773,6 +1773,8 @@ String* CSSStyleValuePair::toString() const
         builder.appendString("\"");
         return builder.finalize();
     }
+    case CSSStyleValuePair::ValueKind::AtomicStringValueKind:
+        return atomicStringValue().string();
     case CSSStyleValuePair::ValueKind::KeywordValueKind:
         return keywordValue();
     case CSSStyleValuePair::ValueKind::ColorValueKind:
@@ -2410,8 +2412,6 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
-    case CSSStyleValuePair::ValueKind::ListStyleCounterValueKind:
-        return listStyleCounterValue();
     case CSSStyleValuePair::ValueKind::RectValueKind:
         if (m_valueKind == CSSStyleValuePair::ValueKind::RectValueKind) {
             return clip()->toString();
@@ -6123,11 +6123,11 @@ void StyleResolver::apply(Element* element,
                                    CounterFunctionValueKind) {
                         CSSCounterFunction* v = item.counterFunctionValue();
                         Nullable<String*> sp = v->separator();
-                        Nullable<String*> counterName = v->style();
+                        Nullable<AtomicString> counterName = v->style();
                         const CounterStyle* counter = nullptr;
                         if (counterName.hasValue()) {
                             counter = CounterStyle::getKnownCounter(
-                                counterName.getValue());
+                                counterName.getValue().string());
                         }
                         if (!counter) {
                             counter = CounterStyle::getDecimalCounter();
@@ -6909,23 +6909,20 @@ void StyleResolver::apply(Element* element,
             BORDER_RADIUS_APPLY(BottomLeft, bottomLeft, Horizontal, Vertical)
 
         case CSSStyleValuePair::KeyKind::ListStyleType:
-            if (cssValues[k].valueKind() ==
-                    CSSStyleValuePair::ValueKind::Inherit ||
-                cssValues[k].valueKind() ==
-                    CSSStyleValuePair::ValueKind::Unset) {
+            if (cssValues[k].valueKind() == CSSStyleValuePair::Inherit ||
+                cssValues[k].valueKind() == CSSStyleValuePair::Unset) {
                 style->setListStyleType(
                     parentStyle->listStyleData().typeData());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::None) {
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::None) {
                 style->setListStyleType(CounterStyle::getNoneCounter());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::Initial) {
                 style->setListStyleType(CounterStyle::getDiscCounter());
             } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::
-                           ListStyleCounterValueKind) {
-                String* counterName = cssValues[k].listStyleCounterValue();
-                auto counterStyle = CounterStyle::getKnownCounter(counterName);
+                       CSSStyleValuePair::AtomicStringValueKind) {
+                const AtomicString& counterName =
+                    cssValues[k].atomicStringValue();
+                auto counterStyle =
+                    CounterStyle::getKnownCounter(counterName.string());
                 if (counterStyle) {
                     style->setListStyleType(counterStyle);
                 } else {
@@ -7035,6 +7032,49 @@ void StyleResolver::apply(Element* element,
                     style->setCaretColor(NamedColor::namedColorToColor(
                         cssValues[k].namedColorValue()));
                 }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::CounterReset:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setCounterReset(parentStyle->counterReset());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::None:
+                style->setCounterReset(nullptr);
+                break;
+            default:
+                ValueList* list = cssValues[k].multiValue();
+                size_t size = list->size();
+                STARFISH_ASSERT(size % 2 == 0);
+                for (size_t i = 0; i < size; i += 2) {
+                    style->setCounterResetItem(list->at(i).atomicStringValue(),
+                                               list->at(i + 1).int32Value());
+                }
+                break;
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::CounterIncrement:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setCounterIncrement(parentStyle->counterIncrement());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::None:
+                style->setCounterIncrement(nullptr);
+                break;
+            default:
+                ValueList* list = cssValues[k].multiValue();
+                size_t size = list->size();
+                STARFISH_ASSERT(size % 2 == 0);
+                for (size_t i = 0; i < size; i += 2) {
+                    style->setCounterIncrementItem(
+                        list->at(i).atomicStringValue(),
+                        list->at(i + 1).int32Value());
+                }
+                break;
             }
             break;
         case CSSStyleValuePair::KeyKind::Empty:
@@ -8855,7 +8895,8 @@ bool CSSStyleValuePair::updateValueCursor(Document* document,
     return true;
 }
 
-static bool parseCounter(const CSSTokenValue& s, CSSStyleValuePair* pair)
+static bool parseCounter(Document* document, const CSSTokenValue& s,
+                         CSSStyleValuePair* pair)
 {
     auto ss = s.trim();
     CSSPropertyParser parser((char*)ss.data(), ss.length());
@@ -8874,9 +8915,11 @@ static bool parseCounter(const CSSTokenValue& s, CSSStyleValuePair* pair)
     if (!CSSPropertyParser::stringIsIdent(name)) {
         return false;
     }
+    AtomicString aname =
+        AtomicString::createAtomicString(document->starFish(), name);
     parser.consumeWhitespaces();
     if (parser.consumeIfNext(')') && parser.isEnd()) {
-        pair->setCounterFunctionValue(new CSSCounterFunction(name));
+        pair->setCounterFunctionValue(new CSSCounterFunction(aname));
         return true;
     }
     // Argument: style
@@ -8887,20 +8930,23 @@ static bool parseCounter(const CSSTokenValue& s, CSSStyleValuePair* pair)
     parser.consumeString(CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowUnderline);
     String* style = parser.parsedString();
-    if (!style->length() || !CSSPropertyParser::stringIsIdent(style)) {
+    if (!CSSPropertyParser::stringIsIdent(style)) {
         return false;
     }
+    AtomicString astyle =
+        AtomicString::createAtomicString(document->starFish(), style);
     parser.consumeWhitespaces();
     if (!parser.consumeIfNext(')') || !parser.isEnd()) {
         return false;
     }
-    auto value = new CSSCounterFunction(name);
-    value->setStyle(style);
+    auto value = new CSSCounterFunction(aname);
+    value->setStyle(astyle);
     pair->setCounterFunctionValue(value);
     return true;
 }
 
-static bool parseCounters(const CSSTokenValue& s, CSSStyleValuePair* pair)
+static bool parseCounters(Document* document, const CSSTokenValue& s,
+                          CSSStyleValuePair* pair)
 {
     auto ss = s.trim();
     CSSPropertyParser parser((char*)ss.data(), ss.length());
@@ -8919,6 +8965,8 @@ static bool parseCounters(const CSSTokenValue& s, CSSStyleValuePair* pair)
     if (!CSSPropertyParser::stringIsIdent(name)) {
         return false;
     }
+    AtomicString aname =
+        AtomicString::createAtomicString(document->starFish(), name);
     parser.consumeWhitespaces();
     // Argument: separator
     if (!parser.consumeIfNext(',')) {
@@ -8930,7 +8978,7 @@ static bool parseCounters(const CSSTokenValue& s, CSSStyleValuePair* pair)
     String* separator = parser.parsedString();
     parser.consumeWhitespaces();
     if (parser.consumeIfNext(')') && parser.isEnd()) {
-        auto value = new CSSCounterFunction(name);
+        auto value = new CSSCounterFunction(aname);
         value->setSeparator(separator);
         pair->setCounterFunctionValue(value);
         return true;
@@ -8943,16 +8991,18 @@ static bool parseCounters(const CSSTokenValue& s, CSSStyleValuePair* pair)
     parser.consumeString(CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowUnderline);
     String* style = parser.parsedString();
-    if (!style->length() || !CSSPropertyParser::stringIsIdent(style)) {
+    if (!CSSPropertyParser::stringIsIdent(style)) {
         return false;
     }
+    AtomicString astyle =
+        AtomicString::createAtomicString(document->starFish(), style);
     parser.consumeWhitespaces();
     if (!parser.consumeIfNext(')') || !parser.isEnd()) {
         return false;
     }
-    auto value = new CSSCounterFunction(name);
+    auto value = new CSSCounterFunction(aname);
     value->setSeparator(separator);
-    value->setStyle(style);
+    value->setStyle(astyle);
     pair->setCounterFunctionValue(value);
     return true;
 }
@@ -8975,8 +9025,8 @@ bool CSSStyleValuePair::updateValueContent(Document* document,
             } else if (parser.parseAttr(value.data(), value.length(),
                                         &(ret.m_value.m_stringValue))) {
                 ret.m_valueKind = CSSStyleValuePair::ValueKind::Attr;
-            } else if (!parseCounter(value, &ret) &&
-                       !parseCounters(value, &ret)) {
+            } else if (!parseCounter(document, value, &ret) &&
+                       !parseCounters(document, value, &ret)) {
                 // TODO: Consider various value types of the 'content' property.
                 // https://www.w3.org/TR/CSS2/generate.html#content
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -11931,7 +11981,7 @@ String* CSSStyleDeclaration::ListStyle()
     return builder.finalize();
 }
 
-static bool parseListStyleType(const CSSTokenValue& value,
+static bool parseListStyleType(Document* document, const CSSTokenValue& value,
                                CSSStyleValuePair* pair)
 {
     String* parsed = String::emptyString;
@@ -11946,8 +11996,9 @@ static bool parseListStyleType(const CSSTokenValue& value,
         if (!CSSPropertyParser::stringIsIdent(customIdent)) {
             return false;
         }
-        pair->setValueKind(CSSStyleValuePair::ListStyleCounterValueKind);
-        pair->setValue(customIdent);
+        AtomicString aCustomIdent =
+            AtomicString::createAtomicString(document->starFish(), customIdent);
+        pair->setAtomicStringValue(aCustomIdent);
     }
     return true;
 }
@@ -11977,7 +12028,8 @@ static bool parseListStyleImage(const CSSTokenValue& value,
     return CSSPropertyParser::parseUrl(value.data(), pair);
 }
 
-static bool parseListStyleShorhand(const CSSTokenVector& tokens,
+static bool parseListStyleShorhand(Document* document,
+                                   const CSSTokenVector& tokens,
                                    CSSStyleValuePair* type,
                                    CSSStyleValuePair* position,
                                    CSSStyleValuePair* image)
@@ -12013,7 +12065,7 @@ static bool parseListStyleShorhand(const CSSTokenVector& tokens,
             }
             continue;
         }
-        if (!foundType && parseListStyleType(token, type)) {
+        if (!foundType && parseListStyleType(document, token, type)) {
             foundType = true;
             continue;
         }
@@ -12050,7 +12102,7 @@ void CSSStyleDeclaration::setListStyle(const char* value, size_t len,
         addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleImage, c);
-    } else if (parseListStyleShorhand(tokens, &t, &p, &i)) {
+    } else if (parseListStyleShorhand(m_node->document(), tokens, &t, &p, &i)) {
         t.setFlagImportant(isImportant);
         p.setFlagImportant(isImportant);
         i.setFlagImportant(isImportant);
@@ -12066,7 +12118,7 @@ bool CSSStyleValuePair::updateValueListStyleType(Document* document,
     if (tokens.size() != 1) {
         return false;
     }
-    return parseListStyleType(tokens[0], this);
+    return parseListStyleType(document, tokens[0], this);
 }
 
 bool CSSStyleValuePair::updateValueListStylePosition(
@@ -12087,18 +12139,68 @@ bool CSSStyleValuePair::updateValueListStyleImage(Document* document,
     return parseListStyleImage(tokens[0], this);
 }
 
+static bool parseCounterPairList(Document* document,
+                                 const CSSTokenVector& tokens,
+                                 int32_t defaultValue, CSSStyleValuePair* pair)
+{
+    size_t size = tokens.size();
+    if (size == 1 && tokens[0].equals("none")) {
+        pair->setValueKind(CSSStyleValuePair::None);
+        return true;
+    }
+    // NOTE Use temp containers to prevent making unnecessary AtomicStrings
+    GCVector<String*> tempIdent;
+    GCAtomicVector<int32_t> tempInt;
+    bool nameTurn = true;
+    for (size_t i = 0; i < size; i++, nameTurn = !nameTurn) {
+        const CSSTokenValue& token = tokens[i];
+        if (nameTurn) {
+            String* ident = String::emptyString;
+            if (CSSPropertyParser::parseCustomIdent(token.data(),
+                                                    token.length(), &ident) &&
+                !ident->equals("none")) {
+                tempIdent.push_back(ident);
+            } else {
+                return false;
+            }
+        } else {
+            int32_t number;
+            if (CSSPropertyParser::parseInt32(
+                    token.data(), CSSPropertyParser::AllowNegative, number)) {
+                tempInt.push_back(number);
+            } else {
+                tempInt.push_back(defaultValue);
+                i--;
+            }
+        }
+    }
+    size = tempIdent.size();
+    size_t intSize = tempInt.size();
+    ValueList* list = new ValueList(ValueList::Separator::SpaceSeparator);
+    for (size_t i = 0; i < size; i++) {
+        list->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
+                           AtomicString::createAtomicString(
+                               document->starFish(), tempIdent[i]));
+        if (i < intSize) {
+            list->emplace_back(CSSStyleValuePair::Int32, tempInt[i]);
+        } else {
+            list->emplace_back(CSSStyleValuePair::Int32, defaultValue);
+        }
+    }
+    pair->setValueList(list);
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueCounterReset(Document* document,
                                                 const CSSTokenVector& tokens)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return false;
+    return parseCounterPairList(document, tokens, 0, this);
 }
 
 bool CSSStyleValuePair::updateValueCounterIncrement(
     Document* document, const CSSTokenVector& tokens)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return false;
+    return parseCounterPairList(document, tokens, 1, this);
 }
 
 bool CSSStyleValuePair::updateValueUserSelect(Document* document,

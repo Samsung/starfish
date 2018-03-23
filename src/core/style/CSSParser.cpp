@@ -754,7 +754,7 @@ protected:
 bool CSSPropertyParser::stringIsIdent(String* v)
 {
     CSSScanner scanner(nullptr, v);
-    RefPtr<CSSToken> token = scanner.nextToken(false);
+    RefPtr<CSSToken> token = scanner.nextToken();
     return token->isIdent();
 }
 

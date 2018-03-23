@@ -1343,6 +1343,7 @@ public:
         Time,
         Normal,
         StringValueKind,
+        AtomicStringValueKind,
         KeywordValueKind,
         ColorValueKind,
         NamedColorValueKind,
@@ -1424,7 +1425,6 @@ public:
         ObjectPositionValueKind,
 
         ListStylePositionValueKind,
-        ListStyleCounterValueKind,
         CounterFunctionValueKind,
 
         // rect for clip
@@ -1731,6 +1731,18 @@ public:
         m_value.m_stringValue = value;
     }
 
+    const AtomicString& atomicStringValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == AtomicStringValueKind);
+        return m_value.m_atomicStringValue;
+    }
+
+    void setAtomicStringValue(AtomicString& v)
+    {
+        m_valueKind = AtomicStringValueKind;
+        m_value.m_atomicStringValue = v;
+    }
+
     String* keywordValue() const
     {
         STARFISH_ASSERT(m_valueKind == KeywordValueKind);
@@ -1935,12 +1947,6 @@ public:
         return m_value.m_listStylePosition;
     }
 
-    String* listStyleCounterValue() const
-    {
-        STARFISH_ASSERT(m_valueKind == ListStyleCounterValueKind);
-        return m_value.m_stringValue;
-    }
-
     RectData* clip() const
     {
         STARFISH_ASSERT(m_valueKind == RectValueKind);
@@ -2003,6 +2009,7 @@ public:
         CSSLength m_length;
         CSSAngle m_angle;
         String* m_stringValue;
+        AtomicString m_atomicStringValue;
         BackgroundSizeValue m_backgroundSize;
         BoxValue m_box;
         BackgroundRepeatValue m_backgroundRepeat;
@@ -2122,6 +2129,10 @@ public:
         }
         ValueData(String* v)
             : m_stringValue(v)
+        {
+        }
+        ValueData(AtomicString& v)
+            : m_atomicStringValue(v)
         {
         }
         ValueData(BackgroundSizeValue v)
@@ -2325,7 +2336,6 @@ public:
         case StringValueKind:
         case KeywordValueKind:
         case Attr:
-        case ListStyleCounterValueKind:
         case VarFunctionValueKind:
             return m_value.m_stringValue;
         case ValueListKind:

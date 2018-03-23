@@ -24,6 +24,7 @@
 #include "core/style/BorderData.h"
 #include "core/style/LengthData.h"
 #include "core/style/ContentData.h"
+#include "core/style/CounterBaseList.h"
 #include "core/style/FlexBasisData.h"
 #include "core/style/DefaultStyle.h"
 #include "core/style/Style.h"
@@ -111,6 +112,8 @@ class RareComputedStyleData : public gc {
         CaretColor,
         Hyphens,
         TextOverflow,
+        CounterReset,
+        CounterIncrement,
 
         // Grid
         GridTemplateColumns,
@@ -143,6 +146,7 @@ class RareComputedStyleData : public gc {
         HyphensValue m_hyphens;
         TextDecorationLineValue m_textDecorationLine;
         TextOverflowData* m_textOverflow;
+        CounterBaseList* m_counterBaseList;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -266,6 +270,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(TextOverflowData* v)
             : m_textOverflow(v)
+        {
+        }
+
+        RareComputedStyleValue(CounterBaseList* v)
+            : m_counterBaseList(v)
         {
         }
     };
@@ -433,11 +442,32 @@ public:
     GETTER_PTR(GCVector<GridLength>, gridTemplateUnits, gridTemplateRows,
                GridTemplateRows);
     GETTER_PTR(TextOverflowData, textOverflow, textOverflow, TextOverflow);
+    GETTER_PTR(CounterBaseList, counterBaseList, counterReset, CounterReset);
+    GETTER_PTR(CounterBaseList, counterBaseList, counterIncrement,
+               CounterIncrement);
+
+    void setCounterReset(CounterBaseList* v)
+    {
+        clearCounterReset();
+        if (v) {
+            m_styles.emplace_back(KeyKind::CounterReset, v);
+        }
+    }
+
+    void setCounterIncrement(CounterBaseList* v)
+    {
+        clearCounterIncrement();
+        if (v) {
+            m_styles.emplace_back(KeyKind::CounterIncrement, v);
+        }
+    }
 
 #undef GETTER_PTR
 
     CLEARER(Transforms);
     CLEARER(Content);
+    CLEARER(CounterReset);
+    CLEARER(CounterIncrement);
 
 #undef FIND_VALUE
 #undef CLEARER
@@ -2354,18 +2384,61 @@ public:
         m_rareComputedStyleData.ensureContent()->push_back(content);
     }
 
-    void setContentCounter(String* id, const CounterStyle* v)
+    void setContentCounter(const AtomicString& id, const CounterStyle* v)
     {
         ContentData content(ContentData::ContentType::Counter);
         content.setCounter(id, v);
         m_rareComputedStyleData.ensureContent()->push_back(content);
     }
 
-    void setContentCounters(String* id, String* sp, const CounterStyle* v)
+    void setContentCounters(const AtomicString& id, String* sp,
+                            const CounterStyle* v)
     {
         ContentData content(ContentData::ContentType::Counter);
         content.setCounters(id, sp, v);
         m_rareComputedStyleData.ensureContent()->push_back(content);
+    }
+
+    CounterBaseList* counterReset()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return nullptr;
+        }
+        return m_rareComputedStyleData.counterReset();
+    }
+
+    CounterBaseList* counterIncrement()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return nullptr;
+        }
+        return m_rareComputedStyleData.counterIncrement();
+    }
+
+    void setCounterReset(CounterBaseList* v)
+    {
+        if (!v && !m_rareComputedStyleData.m_styles.size()) {
+            return;
+        }
+        m_rareComputedStyleData.setCounterReset(v);
+    }
+
+    void setCounterResetItem(const AtomicString& id, int32_t v)
+    {
+        m_rareComputedStyleData.ensureCounterReset()->emplace_back(id, v);
+    }
+
+    void setCounterIncrement(CounterBaseList* v)
+    {
+        if (!v && !m_rareComputedStyleData.m_styles.size()) {
+            return;
+        }
+        m_rareComputedStyleData.setCounterIncrement(v);
+    }
+
+    void setCounterIncrementItem(const AtomicString& id, int32_t v)
+    {
+        m_rareComputedStyleData.ensureCounterIncrement()->emplace_back(id, v);
     }
 
     void setPseudoType(StyleResolver::PseudoElementType id)
@@ -2439,7 +2512,7 @@ public:
         return false;
     }
 
-    bool hasRareComputeStyleData()
+    bool hasRareComputeStyleData() const
     {
         return m_rareComputedStyleData.m_styles.size();
     }

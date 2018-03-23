@@ -25,7 +25,7 @@ namespace StarFish {
 
 bool CounterContentData::equals(const CounterContentData* b) const
 {
-    if (!id()->equals(b->id())) {
+    if (id() != b->id()) {
         return false;
     }
     if (separator().hasValue() != b->separator().hasValue()) {

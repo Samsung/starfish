@@ -67,14 +67,14 @@ private:
 class CounterStyle;
 class CounterContentData : public gc {
 public:
-    CounterContentData(String* id, const CounterStyle* counter)
+    CounterContentData(const AtomicString& id, const CounterStyle* counter)
         : m_id(id)
         , m_separator()
         , m_counter(counter)
     {
     }
 
-    CounterContentData(String* id, String* separator,
+    CounterContentData(const AtomicString& id, String* separator,
                        const CounterStyle* counter)
         : m_id(id)
         , m_separator(separator)
@@ -82,12 +82,12 @@ public:
     {
     }
 
-    String* id() const
+    const AtomicString& id() const
     {
         return m_id;
     }
 
-    void setId(String* id)
+    void setId(const AtomicString& id)
     {
         m_id = id;
     }
@@ -120,7 +120,7 @@ public:
     bool equals(const CounterContentData* other) const;
 
 private:
-    String* m_id;
+    AtomicString m_id;
     Nullable<String*> m_separator;
     const CounterStyle* m_counter;
 };
@@ -213,7 +213,7 @@ public:
         return m_value.m_counter;
     }
 
-    void setCounter(String* id, const CounterStyle* counter)
+    void setCounter(const AtomicString& id, const CounterStyle* counter)
     {
         STARFISH_ASSERT(m_type == Counter);
         if (!m_value.m_counter) {
@@ -225,7 +225,8 @@ public:
         }
     }
 
-    void setCounters(String* id, String* sp, const CounterStyle* counter)
+    void setCounters(const AtomicString& id, String* sp,
+                     const CounterStyle* counter)
     {
         STARFISH_ASSERT(m_type == Counter);
         if (!m_value.m_counter) {

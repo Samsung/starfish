@@ -444,8 +444,7 @@ public:
         return false;
     }
 
-    static bool parseInt32(const char* token, uint8_t option,
-                           CSSStyleValuePair* pair)
+    static bool parseInt32(const char* token, uint8_t option, int32_t& result)
     {
         bool allowNegative = option & AllowNegative;
         CSSPropertyParser parser((char*)token);
@@ -454,10 +453,21 @@ public:
             if (!allowNegative && t < 0) {
                 return false;
             }
-            pair->setInt32Value(t);
+            result = t;
             return parser.isEnd();
         }
         return false;
+    }
+
+    static bool parseInt32(const char* token, uint8_t option,
+                           CSSStyleValuePair* pair)
+    {
+        int32_t result;
+        if (!parseInt32(token, option, result)) {
+            return false;
+        }
+        pair->setInt32Value(result);
+        return true;
     }
 
     static bool parseLength(const char* token, uint8_t option,
@@ -817,6 +827,16 @@ public:
                     return true;
                 }
             }
+        }
+        return false;
+    }
+
+    static bool parseCustomIdent(const char* str, size_t len, String** ret)
+    {
+        String* ident = String::fromUTF8(str, len);
+        if (stringIsIdent(ident)) {
+            *ret = ident;
+            return true;
         }
         return false;
     }

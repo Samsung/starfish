@@ -24,14 +24,14 @@ namespace StarFish {
 
 class CSSCounterFunction : public gc {
 public:
-    CSSCounterFunction(String* name)
+    CSSCounterFunction(const AtomicString& name)
         : m_name(name)
         , m_separator()
         , m_style()
     {
     }
 
-    String* name()
+    const AtomicString& name() const
     {
         return m_name;
     }
@@ -46,12 +46,12 @@ public:
         m_separator = sp;
     }
 
-    Nullable<String*> style()
+    Nullable<AtomicString> style()
     {
         return m_style;
     }
 
-    void setStyle(String* style)
+    void setStyle(const AtomicString& style)
     {
         m_style = style;
     }
@@ -61,26 +61,26 @@ public:
         StringBuilder result;
         if (m_separator.hasValue()) {
             result.appendString("counters(");
-            result.appendString(m_name);
+            result.appendString(m_name.string());
             result.appendString(", \"");
             result.appendString(m_separator.getValue());
             result.appendString("\"");
         } else {
             result.appendString("counter(");
-            result.appendString(m_name);
+            result.appendString(m_name.string());
         }
         if (m_style.hasValue()) {
             result.appendString(", ");
-            result.appendString(m_style.getValue());
+            result.appendString(m_style.getValue().string());
         }
         result.appendChar(')');
         return result.finalize();
     }
 
 protected:
-    String* m_name;
+    AtomicString m_name;
     Nullable<String*> m_separator;
-    Nullable<String*> m_style;
+    Nullable<AtomicString> m_style;
 };
 }
 
