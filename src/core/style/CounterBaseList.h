@@ -17,26 +17,34 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "core/style/ContentData.h"
-#include "core/style/CounterStyle.h"
+#ifndef __StarFishListCounterBaseList__
+#define __StarFishListCounterBaseList__
 
 namespace StarFish {
 
-bool CounterContentData::equals(const CounterContentData* b) const
+typedef GCAtomicVector<std::pair<AtomicString, int32_t>> CounterBaseList;
+
+inline bool operator==(const CounterBaseList& a, const CounterBaseList& b)
 {
-    if (id() != b->id()) {
+    if (&a == &b) {
+        return true;
+    }
+    size_t size = a.size();
+    if (size != b.size()) {
         return false;
     }
-    if (separator().hasValue() != b->separator().hasValue()) {
-        return false;
+    for (size_t i = 0; i < size; i++) {
+        if (a[i] != b[i]) {
+            return false;
+        }
     }
-    if (separator().hasValue() &&
-        !separator().getValue()->equals(b->separator().getValue())) {
-        return false;
-    }
-    STARFISH_ASSERT(counterStyle());
-    STARFISH_ASSERT(b->counterStyle());
-    return counterStyle()->equals(b->counterStyle());
+    return true;
 }
-} /* namespace StarFish */
+
+inline bool operator!=(const CounterBaseList& a, const CounterBaseList& b)
+{
+    return !operator==(a, b);
+}
+}
+
+#endif

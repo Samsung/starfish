@@ -1268,7 +1268,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                     CounterContentData* data = c.counter();
                     CSSCounterFunction* f = new CSSCounterFunction(data->id());
                     f->setSeparator(data->separator());
-                    f->setStyle(data->counterStyle()->name());
+                    f->setStyle(AtomicString::createAtomicString(
+                        m_node->starFish(), data->counterStyle()->name()));
                     t.setCounterFunctionValue(f);
                     values->pushBack(t);
                 }
@@ -1431,6 +1432,40 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setKeyKind(CSSStyleValuePair::KeyKind::TextOverflow);
         p.setValueKind(CSSStyleValuePair::ValueKind::TextOverflowValueKind);
         p.setValue(new TextOverflowData(style->textOverflow()));
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::CounterReset) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::CounterReset);
+        CounterBaseList* list = style->counterReset();
+        if (list) {
+            ValueList* v = new ValueList(ValueList::SpaceSeparator);
+            size_t size = list->size();
+            for (size_t i = 0; i < size; i++) {
+                v->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
+                                (*list)[i].first);
+                v->emplace_back(CSSStyleValuePair::Int32, (*list)[i].second);
+            }
+            p.setValueList(v);
+        } else {
+            p.setValueKind(CSSStyleValuePair::None);
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::CounterIncrement) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::CounterIncrement);
+        CounterBaseList* list = style->counterIncrement();
+        if (list) {
+            ValueList* v = new ValueList(ValueList::SpaceSeparator);
+            size_t size = list->size();
+            for (size_t i = 0; i < size; i++) {
+                v->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
+                                (*list)[i].first);
+                v->emplace_back(CSSStyleValuePair::Int32, (*list)[i].second);
+            }
+            p.setValueList(v);
+        } else {
+            p.setValueKind(CSSStyleValuePair::None);
+        }
         addValuePair(p);
     }
 #define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \

@@ -1646,6 +1646,23 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    CounterBaseList* newCReset = newStyle->counterReset();
+    CounterBaseList* oldCReset = oldStyle->counterReset();
+    if (newCReset != oldCReset &&
+        (!newCReset || !oldCReset || *newCReset != *oldCReset)) {
+        damagedKeys[CSSStyleValuePair::CounterReset] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    }
+
+    CounterBaseList* newCInc = newStyle->counterIncrement();
+    CounterBaseList* oldCInc = oldStyle->counterIncrement();
+    if (newCInc != oldCInc && (!newCInc || !oldCInc || *newCInc != *oldCInc)) {
+        damagedKeys[CSSStyleValuePair::CounterIncrement] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    }
+
     if (newStyle->outlineColor() != oldStyle->outlineColor()) {
         damagedKeys[CSSStyleValuePair::KeyKind::OutlineColor] = true;
         damage = (ComputedStyleDamage)(
