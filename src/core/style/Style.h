@@ -156,8 +156,6 @@ public:
 
         return substring(first, (last - first + 1));
     }
-
-    CSSTokenValue tolower() const;
 };
 typedef VectorWithInlineStorage<4, CSSTokenValue, std::allocator<CSSTokenValue>>
     CSSTokenVector;
@@ -847,12 +845,12 @@ enum EmptyCellsValue {
     HideEmptyCellsValue,
 };
 
-enum TextDecorationValue {
-    NoneTextDecorationValue,
-    UnderLineTextDecorationValue,
-    OverLineTextDecorationValue,
-    LineThroughTextDecorationValue,
-    BlinkTextDecorationValue,
+enum TextDecorationLineValue {
+    NoneTextDecorationLineValue,
+    UnderlineTextDecorationLineValue,
+    OverlineTextDecorationLineValue,
+    LineThroughTextDecorationLineValue,
+    BlinkTextDecorationLineValue,
 };
 
 enum FontStyleValue {
@@ -1072,6 +1070,7 @@ class CSSStyleDeclaration;
     F(OverflowWrap, overflowWrap, "overflow-wrap")                           \
     F(Position, position, "position")                                        \
     F(TextDecoration, textDecoration, "text-decoration")                     \
+    F(TextDecorationLine, textDecorationLine, "text-decoration-line")        \
     F(TextDecorationColor, textDecorationColor, "text-decoration-color")     \
     F(Display, display, "display")                                           \
     F(Float, float, "float")                                                 \
@@ -1391,7 +1390,7 @@ public:
         EmptyCellsValueKind,
 
         OverflowValueKind,
-        TextDecorationValueKind,
+        TextDecorationLineValueKind,
         VisibilityValueKind,
         UnicodeBidiValueKind,
         BoxSizingValueKind,
@@ -1786,8 +1785,15 @@ public:
         return m_value.m_visibility;
     }
 
-    TextDecorationValue textDecorationValue() const
+    TextDecorationLineValue textDecorationValue() const
     {
+        STARFISH_ASSERT(m_valueKind == TextDecorationLineValueKind);
+        return m_value.m_textDecoration;
+    }
+
+    TextDecorationLineValue textDecorationLineValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == TextDecorationLineValueKind);
         return m_value.m_textDecoration;
     }
 
@@ -2011,7 +2017,7 @@ public:
         OverflowValue m_overflow;
         VisibilityValue m_visibility;
         UnicodeBidiValue m_unicodeBidi;
-        TextDecorationValue m_textDecoration;
+        TextDecorationLineValue m_textDecoration;
         CSSTransformFunctions* m_transforms;
         Unit::Color m_color;
         NamedColor::NamedColorValue m_namedColor;
@@ -2174,7 +2180,7 @@ public:
             : m_imageRendering(v)
         {
         }
-        ValueData(TextDecorationValue v)
+        ValueData(TextDecorationLineValue v)
             : m_textDecoration(v)
         {
         }

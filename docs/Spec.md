@@ -1020,6 +1020,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | [Text](https://www.w3.org/TR/CSS2/text.html) | text-indent | &lt;length&gt; &#124; &lt;percentage&gt; | Specifies the indentation of the first line of text in a block container.  |
 | | text-align | left &#124; right &#124; center | Specifies the horizontal alignment of text in an element | This CSS3 module defines properties for text manipulation and specifies their processing model. It covers line breaking, justification and alignment, white space handling, and text transformation. |
 | | text-decoration | none &#124; [ underline &#124;&#124; line-through ] | Specifies the decoration added to the text | |
+| | text-decoration-line | none &#124; [ underline &#124;&#124; line-through ] | Specifies the decoration added to the text | |
 | | text-decoration-color | &lt;color&gt; |  The text-decoration-color CSS property sets the color of the decorative additions to text that are specified by text-decoration-line.  | |
 | | text-transform | none &#124; capitalize &#124; uppercase &#124; lowercase &#124; initial &#124; inherit | Appears in all-uppercase or all-lowercase, or with each word capitalized. | |
 | | white-space | normal &#124; pre &#124; nowrap &#124; pre-wrap &#124; pre-line | Describes how whitespace inside the element is handled. | |
