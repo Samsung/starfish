@@ -545,6 +545,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Outline-Style
         // Outline-Color
         // Overflow-Wrap
+        // text-overflow
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "padding-right", 13) == 0) {
@@ -567,6 +568,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'a':
             if (memcmp(data, "align-content", 13) == 0) {
                 return CSSStyleKind::AlignContent;
+            }
+            break;
+        case 't':
+            if (memcmp(data, "text-overflow", 13) == 0) {
+                return CSSStyleKind::TextOverflow;
             }
             break;
         case 'o':
@@ -1352,6 +1358,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "overflowWrap", 12) == 0) {
                 return CSSStyleKind::OverflowWrap;
+            }
+            break;
+        case 't':
+            if (memcmp(data, "textOverflow", 12) == 0) {
+                return CSSStyleKind::TextOverflow;
             }
             break;
         }

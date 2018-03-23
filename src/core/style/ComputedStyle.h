@@ -109,6 +109,7 @@ class RareComputedStyleData : public gc {
         UserSelect,
         CaretColor,
         Hyphens,
+        TextOverflow,
 
         // Grid
         GridTemplateColumns,
@@ -139,6 +140,7 @@ class RareComputedStyleData : public gc {
         GCVector<GridLength>* m_gridTemplateUnits;
         Unit::Color m_color;
         HyphensValue m_hyphens;
+        TextOverflowData* m_textOverflow;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -252,6 +254,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(HyphensValue v)
             : m_hyphens(v)
+        {
+        }
+
+        RareComputedStyleValue(TextOverflowData* v)
+            : m_textOverflow(v)
         {
         }
     };
@@ -416,6 +423,7 @@ public:
                GridTemplateColumns);
     GETTER_PTR(GCVector<GridLength>, gridTemplateUnits, gridTemplateRows,
                GridTemplateRows);
+    GETTER_PTR(TextOverflowData, textOverflow, textOverflow, TextOverflow);
 
 #undef GETTER_PTR
 
@@ -2273,6 +2281,25 @@ public:
         GCVector<GridLength>* gridTemplate =
             m_rareComputedStyleData.gridTemplateRows();
         return gridTemplate;
+    }
+
+    TextOverflowData textOverflow()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return TextOverflowData();
+        }
+
+        TextOverflowData* o = m_rareComputedStyleData.textOverflow();
+        if (o) {
+            return *o;
+        }
+
+        return TextOverflowData();
+    }
+
+    void setTextOverflow(TextOverflowData v)
+    {
+        *m_rareComputedStyleData.ensureTextOverflow() = v;
     }
 
     void clearContent()

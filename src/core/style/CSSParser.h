@@ -94,6 +94,17 @@ public:
         m_parsedUrl = String::emptyString;
     }
 
+    CSSPropertyParser(const CSSTokenValue& src)
+        : m_startPos((char*)src.data())
+        , m_endPos((char*)src.data() + src.length())
+        , m_curPos((char*)src.data())
+    {
+        m_parsedNumber = 0;
+        m_parsedInt32 = 0;
+        m_parsedString = String::emptyString;
+        m_parsedUrl = String::emptyString;
+    }
+
     static bool isLengthUnit(String* str)
     {
         if (str->equals("px") || str->equals("em") || str->equals("ex") ||

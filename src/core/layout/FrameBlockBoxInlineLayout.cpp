@@ -1144,6 +1144,15 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
         m_textIndentWidth =
             textIndent.specifiedValue(cb->contentWidth(), block);
     }
+
+    {
+        ComputedStyle* style = m_block->notAnonymousBlockStyle();
+        TextOverflowData textOverflowData = style->textOverflow();
+        m_shouldConsiderTextOverflow =
+            !textOverflowData.hasClipValue() &&
+            style->overflowX() == OverflowValue::HiddenOverflow &&
+            (!(style->whiteSpace() & WhiteSpaceValue::PreLineWhiteSpaceValue));
+    }
 }
 
 void LineFormattingContext::registerInlineContent(FrameLineBreak* br)
@@ -1420,6 +1429,10 @@ void InlineBoxLayoutParentBox::moveToNewLineBox(LineFormattingContext* ctx,
 
 void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
 {
+    if (ctx->m_shouldConsiderTextOverflow) {
+        return;
+    }
+
     auto& boxes = this->boxes();
     auto it = boxes.begin();
     InlineTextBox* first = nullptr;
@@ -3903,6 +3916,86 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                         0 &&
                     lineFormattingContext.m_word.isEmpty());
 
+    {
+        ComputedStyle* style = notAnonymousBlockStyle();
+        TextOverflowData textOverflowData = style->textOverflow();
+        bool needsTestingTextOverflow =
+            lineFormattingContext.m_shouldConsiderTextOverflow;
+        bool isLtr = lineFormattingContext.m_block->style()->direction() ==
+                     DirectionValue::LtrDirectionValue;
+        if (needsTestingTextOverflow) {
+            String* overflowString;
+            if (textOverflowData.hasEllipsisValue()) {
+                overflowString = String::fromUTF8("\u2026");
+            } else {
+                overflowString = textOverflowData.stringValue();
+            }
+            LayoutUnit rightBoundary = width() - rightMBPWidth();
+            while (true) {
+                bool seenHidedText = false;
+                if (isLtr) {
+                    iterateChildFrameBox([&](FrameBox* box) {
+                        LayoutRect absRect;
+                        if (box->isInlineTextBox() &&
+                            (absRect = box->absoluteRect(this)).maxX() >
+                                rightBoundary) {
+                            if (!box->asInlineTextBox()
+                                     ->isHidedByTextOverflow()) {
+                                LayoutUnit diff =
+                                    absRect.maxX() - rightBoundary;
+                                box->asInlineTextBox()
+                                    ->markNeedsConsiderTextOverflow(
+                                        overflowString, true, diff);
+                                seenHidedText = seenHidedText |
+                                                box->asInlineTextBox()
+                                                    ->isHidedByTextOverflow();
+                                if (box->asInlineTextBox()
+                                        ->isHidedByTextOverflow()) {
+                                    rightBoundary = std::min(absRect.x() - 1,
+                                                             rightBoundary);
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    LayoutUnit leftBoundary = leftMBPWidth();
+                    iterateChildFrameBox([&](FrameBox* box) {
+                        LayoutRect absRect;
+                        if (box->isInlineTextBox() &&
+                            (absRect = box->absoluteRect(this)).x() <
+                                leftBoundary) {
+                            box->asInlineTextBox()
+                                ->markNeedsConsiderTextOverflow(overflowString,
+                                                                false, 0);
+                            if (!box->asInlineTextBox()
+                                     ->isHidedByTextOverflow()) {
+                                LayoutUnit diff = leftBoundary - absRect.x();
+                                box->asInlineTextBox()
+                                    ->markNeedsConsiderTextOverflow(
+                                        overflowString, false, diff);
+                                seenHidedText = seenHidedText |
+                                                box->asInlineTextBox()
+                                                    ->isHidedByTextOverflow();
+                                if (box->asInlineTextBox()
+                                        ->isHidedByTextOverflow()) {
+                                    leftBoundary = std::max(
+                                        absRect.maxX() +
+                                            box->style()->font()->measureText(
+                                                overflowString),
+                                        leftBoundary);
+                                }
+                            }
+                        }
+                    });
+                }
+
+                if (!seenHidedText) {
+                    break;
+                }
+            }
+        }
+    }
+
     registerRelativePositionedBoxesAndMarkPaintFlag(ctx);
 
     return lineFormattingContext.contentHeightForBlock();
@@ -4743,6 +4836,29 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
             canvas->setVisible(true);
         }
 
+        StringView txt = text();
+        if (UNLIKELY(hasInlineTextBoxRareData() &&
+                     inlineTextBoxRareData()->m_needsApplyTextOverflow)) {
+            if (inlineTextBoxRareData()->m_isHidedByTextOverflow) {
+                return;
+            }
+            StringBuilder builder;
+            if (inlineTextBoxRareData()->m_isTextOverflowDirectionIsLTR) {
+                builder.appendString(
+                    inlineTextBoxRareData()->m_nonOverflowText);
+                builder.appendString(inlineTextBoxRareData()->m_overflowText);
+                txt = builder.finalize();
+            } else {
+                builder.appendString(inlineTextBoxRareData()->m_overflowText);
+                builder.appendString(
+                    inlineTextBoxRareData()->m_nonOverflowText);
+                txt = builder.finalize();
+
+                dx += s->font()->measureText(text()) -
+                      s->font()->measureText(txt);
+            }
+        }
+
         canvas->setFont(s->font());
         canvas->setColor(s->color());
 
@@ -4781,7 +4897,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                 }
                 cv->setTextDecorationData(tdc);
                 cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
-                cv->drawText(0, 0, contentWidth(), text());
+                cv->drawText(0, 0, contentWidth(), txt);
 
                 ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                               nativeImage->height(), nativeImage->stride());
@@ -4803,7 +4919,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
             canvas->restore();
         }
 
-        canvas->drawText(dx, dy, contentWidth(), text());
+        canvas->drawText(dx, dy, contentWidth(), txt);
     }
 }
 
@@ -4902,6 +5018,63 @@ Frame* InlineTextBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
         return FrameBox::hitTest(x, y, stage);
     }
     return nullptr;
+}
+
+void InlineTextBox::markNeedsConsiderTextOverflow(String* overflowString,
+                                                  bool isLtr,
+                                                  LayoutUnit clippedWidth)
+{
+    ensureInlineTextBoxRareData();
+    inlineTextBoxRareData()->m_needsApplyTextOverflow = true;
+    inlineTextBoxRareData()->m_isTextOverflowDirectionIsLTR = isLtr;
+    Font* fnt = style()->font();
+    LayoutUnit overflowStringWidth = fnt->measureText(overflowString);
+    StringView originalText = text();
+
+    if (isLtr) {
+        size_t end;
+        for (end = originalText.length(); end != 0; end--) {
+            if ((fnt->measureText(StringView(originalText.string(),
+                                             originalText.start(),
+                                             originalText.start() + end)) +
+                 overflowStringWidth) < (width() - clippedWidth)) {
+                break;
+            }
+        }
+
+        if (end == 0 && overflowStringWidth >= (width() - clippedWidth)) {
+            inlineTextBoxRareData()->m_isHidedByTextOverflow = true;
+        } else {
+            inlineTextBoxRareData()->m_overflowText = overflowString;
+            inlineTextBoxRareData()->m_nonOverflowText = StringView(
+                m_rareData->m_text.string(), m_rareData->m_text.start(),
+                m_rareData->m_text.start() + end);
+            inlineTextBoxRareData()->m_nonOverflowTextWidth =
+                fnt->measureText(inlineTextBoxRareData()->m_nonOverflowText);
+        }
+    } else {
+        size_t start;
+        for (start = 0; start < originalText.length(); start++) {
+            if ((fnt->measureText(StringView(originalText.string(),
+                                             originalText.start() + start,
+                                             originalText.end())) +
+                 overflowStringWidth) < (width() - clippedWidth)) {
+                break;
+            }
+        }
+
+        if (start == originalText.length() &&
+            overflowStringWidth >= (width() - clippedWidth)) {
+            inlineTextBoxRareData()->m_isHidedByTextOverflow = true;
+        } else {
+            inlineTextBoxRareData()->m_overflowText = overflowString;
+            inlineTextBoxRareData()->m_nonOverflowText = StringView(
+                m_rareData->m_text.string(), m_rareData->m_text.start() + start,
+                m_rareData->m_text.end());
+            inlineTextBoxRareData()->m_nonOverflowTextWidth =
+                fnt->measureText(inlineTextBoxRareData()->m_nonOverflowText);
+        }
+    }
 }
 
 Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y,

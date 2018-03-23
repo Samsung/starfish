@@ -1996,7 +1996,6 @@ protected:
         bool m_isFirstLine : 1;
         // special flag for InlineTextBox
         CharDirection m_direction : 2;
-        bool m_gotLongString : 1;
         // special flag for InlineNonReplacedBox
         bool m_isCollapsed : 1;
         bool m_seenNormalFlowInlineBox : 1;

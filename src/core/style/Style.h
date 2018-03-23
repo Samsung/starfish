@@ -30,6 +30,7 @@
 #include "core/style/Length.h"
 #include "core/style/GridLength.h"
 #include "core/style/RectData.h"
+#include "core/style/TextOverflowData.h"
 #include "core/util/VectorWithInlineStorage.h"
 #include "core/util/BloomFilter.h"
 
@@ -1168,6 +1169,7 @@ class CSSStyleDeclaration;
     F(CaretColor, caretColor, "caret-color")                                 \
     F(FontKerning, fontKerning, "font-kerning")                              \
     F(ImageRendering, imageRendering, "image-rendering")                     \
+    F(TextOverflow, textOverflow, "text-overflow")                           \
     F(Hyphens, hyphens, "hyphens")
 
 // font related properties must be followed end of this
@@ -1437,6 +1439,9 @@ public:
 
         // img
         ImageRenderingValueKind,
+
+        // text-overflow
+        TextOverflowValueKind,
 
         HyphensValueKind,
         VarFunctionValueKind
@@ -1960,6 +1965,12 @@ public:
         return m_value.m_counterFunctionValue;
     }
 
+    TextOverflowData textOverflowValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == TextOverflowValueKind);
+        return *m_value.m_textOverflowData;
+    }
+
     String* varFunctionValue() const
     {
         STARFISH_ASSERT(m_valueKind == VarFunctionValueKind);
@@ -2029,6 +2040,7 @@ public:
         RectData* m_rect;
         GCVector<GridLength>* m_gridTemplateUnits;
         CSSCounterFunction* m_counterFunctionValue;
+        TextOverflowData* m_textOverflowData;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2284,6 +2296,11 @@ public:
             : m_counterFunctionValue(v)
         {
         }
+
+        ValueData(TextOverflowData* v)
+            : m_textOverflowData(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2321,6 +2338,8 @@ public:
             return m_value.m_gridTemplateUnits;
         case CounterFunctionValueKind:
             return m_value.m_counterFunctionValue;
+        case TextOverflowValueKind:
+            return m_value.m_textOverflowData;
         default:
             return nullptr;
         }

@@ -32,6 +32,23 @@ namespace StarFish {
 class FrameBlockBox;
 class LineFormattingContext;
 
+struct InlineTextBoxRareData : public gc {
+    bool m_needsApplyTextOverflow;
+    bool m_isHidedByTextOverflow;
+    bool m_isTextOverflowDirectionIsLTR;
+    StringView m_text;
+    StringView m_nonOverflowText;
+    String* m_overflowText;
+    LayoutUnit m_nonOverflowTextWidth;
+
+    InlineTextBoxRareData()
+    {
+        m_isHidedByTextOverflow = m_needsApplyTextOverflow = false;
+        m_isTextOverflowDirectionIsLTR = true;
+        m_overflowText = String::emptyString;
+    }
+};
+
 class InlineTextBox : public FrameBox {
 public:
     InlineTextBox(InlineTextBox* box)
@@ -112,9 +129,8 @@ public:
 
     StringView text()
     {
-        if (UNLIKELY(m_flags.m_gotLongString)) {
-            STARFISH_ASSERT(m_text->isStringView());
-            return *((StringView*)m_text);
+        if (UNLIKELY(m_end < m_start)) {
+            return m_rareData->m_text;
         }
         return StringView(m_text, m_start, m_end);
     }
@@ -131,6 +147,15 @@ public:
         return m_flags.m_isFirstLine;
     }
 
+    bool isHidedByTextOverflow()
+    {
+        if (!hasInlineTextBoxRareData()) {
+            return false;
+        }
+        return inlineTextBoxRareData()->m_isHidedByTextOverflow;
+    }
+    void markNeedsConsiderTextOverflow(String* overflowString, bool isLtr,
+                                       LayoutUnit clippedWidth);
     ComputedStyle* style()
     {
         Frame* parent = layoutParent();
@@ -157,18 +182,48 @@ protected:
     void setText(String* str, size_t start, size_t end)
     {
         STARFISH_ASSERT(str);
+        if (hasInlineTextBoxRareData()) {
+            inlineTextBoxRareData()->m_text = StringView(str, start, end);
+            return;
+        }
         if (start < std::numeric_limits<uint16_t>::max() &&
             end < std::numeric_limits<uint16_t>::max()) {
             m_text = str;
             m_start = start;
             m_end = end;
-            m_flags.m_gotLongString = false;
         } else {
-            m_text = new StringView(str, start, end);
-            m_flags.m_gotLongString = true;
+            ensureInlineTextBoxRareData();
+            inlineTextBoxRareData()->m_text = StringView(str, start, end);
         }
     }
-    String* m_text;
+
+    bool hasInlineTextBoxRareData()
+    {
+        return m_end < m_start;
+    }
+
+    InlineTextBoxRareData* inlineTextBoxRareData()
+    {
+        STARFISH_ASSERT(hasInlineTextBoxRareData());
+        return m_rareData;
+    }
+
+    void ensureInlineTextBoxRareData()
+    {
+        if (hasInlineTextBoxRareData()) {
+            return;
+        }
+
+        InlineTextBoxRareData* rareData = new InlineTextBoxRareData();
+        rareData->m_text = StringView(m_text, m_start, m_end);
+        m_start = 1;
+        m_end = 0;
+        m_rareData = rareData;
+    }
+    union {
+        String* m_text;
+        InlineTextBoxRareData* m_rareData;
+    };
     uint16_t m_start;
     uint16_t m_end;
 };
@@ -687,6 +742,15 @@ public:
     {
     }
 
+    ComputedStyle* notAnonymousBlockStyle()
+    {
+        ComputedStyle* style = this->style();
+        if (isAnonymous()) {
+            style = parent()->style();
+        }
+        return style;
+    }
+
     bool hasBiggerContentThanFrameWidth()
     {
         updateScrollWidthAndHeightIfNeeds();
@@ -1149,6 +1213,7 @@ public:
     bool m_canConcatWord;
     bool m_isLastLineBox;
     bool m_isFirstLineCandidate;
+    bool m_shouldConsiderTextOverflow;
     size_t m_inlineBoxIndex;
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;
