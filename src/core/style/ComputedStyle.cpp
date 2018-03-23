@@ -814,7 +814,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
     }
 
     if (boxShadow().size()) {
-        for (auto shadow : (*m_rareComputedStyleData.boxShadow())) {
+        for (auto& shadow : (*m_rareComputedStyleData.boxShadow())) {
             if (!shadow.offsetX().isComputed()) {
                 auto v = shadow.offsetX();
                 v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
