@@ -129,8 +129,8 @@ void CSSStyleDeclaration::clear()
 
 ScriptBindingInstance* CSSStyleDeclaration::scriptBindingInstance()
 {
-    STARFISH_ASSERT(m_element);
-    return m_element->scriptBindingInstance();
+    STARFISH_ASSERT(m_node);
+    return m_node->scriptBindingInstance();
 }
 
 CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
@@ -196,32 +196,33 @@ void CSSStyleDeclaration::setCustomProperty(String* key, String* value,
 FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_GETTER)
 #undef DEFINE_ATTRIBUTE_GETTER
 
-#define DEFINE_ATTRIBUTE_SETTER(name, ...)                                    \
-    void CSSStyleDeclaration::set##name(const char* value, size_t len,        \
-                                        bool isImportant)                     \
-    {                                                                         \
-        if (len == 0) {                                                       \
-            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);             \
-            return;                                                           \
-        }                                                                     \
-        CSSTokenVector tokens;                                                \
-        if (UNLIKELY(CSSStyleValuePair::KeyKind::name ==                      \
-                     CSSStyleValuePair::KeyKind::Content)) {                  \
-            tokenizeCSSValue(tokens, value, len, "", 0, true);                \
-        } else {                                                              \
-            tokenizeCSSValue(tokens, value, len, ",", 1);                     \
-        }                                                                     \
-        CSSStyleValuePair ret;                                                \
-        if (ret.updateVarValue(value, tokens)) {                              \
-            ret.setFlagImportant(isImportant);                                \
-            ret.setTemporaryKeyKind(CSSStyleValuePair::KeyKind::name);        \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::VarValue, ret);       \
-            return;                                                           \
-        }                                                                     \
-        if (ret.updateValueCommon(tokens) || ret.updateValue##name(tokens)) { \
-            ret.setFlagImportant(isImportant);                                \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);           \
-        }                                                                     \
+#define DEFINE_ATTRIBUTE_SETTER(name, ...)                              \
+    void CSSStyleDeclaration::set##name(const char* value, size_t len,  \
+                                        bool isImportant)               \
+    {                                                                   \
+        if (len == 0) {                                                 \
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);       \
+            return;                                                     \
+        }                                                               \
+        CSSTokenVector tokens;                                          \
+        if (UNLIKELY(CSSStyleValuePair::KeyKind::name ==                \
+                     CSSStyleValuePair::KeyKind::Content)) {            \
+            tokenizeCSSValue(tokens, value, len, "", 0, true);          \
+        } else {                                                        \
+            tokenizeCSSValue(tokens, value, len, ",", 1);               \
+        }                                                               \
+        CSSStyleValuePair ret;                                          \
+        if (ret.updateVarValue(value, tokens)) {                        \
+            ret.setFlagImportant(isImportant);                          \
+            ret.setTemporaryKeyKind(CSSStyleValuePair::KeyKind::name);  \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::VarValue, ret); \
+            return;                                                     \
+        }                                                               \
+        if (ret.updateValueCommon(tokens) ||                            \
+            ret.updateValue##name(m_node->document(), tokens)) {        \
+            ret.setFlagImportant(isImportant);                          \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);     \
+        }                                                               \
     }
 
 FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_SETTER)
@@ -292,29 +293,29 @@ String* CSSStyleDeclaration::combineBoxString(String* t, String* r, String* b,
 
 void ComputedStyleCSSStyleDeclaration::layoutIfNeeds()
 {
-    if (m_element == nullptr) {
+    if (m_node->isDocument()) {
         return;
     }
 
-    m_element->window()->browsingContext()->webView()->layoutIfNeeds();
+    m_node->window()->browsingContext()->webView()->layoutIfNeeds();
 }
 
 void ComputedStyleCSSStyleDeclaration::buildFrameTreeIfNeeds()
 {
-    if (m_element == nullptr) {
+    if (m_node->isDocument()) {
         return;
     }
 
-    m_element->window()->browsingContext()->buildFrameTreeIfNeeds();
+    m_node->window()->browsingContext()->buildFrameTreeIfNeeds();
 }
 
 void ComputedStyleCSSStyleDeclaration::resolveStyleIfNeeds()
 {
-    if (m_element == nullptr) {
+    if (m_node->isDocument()) {
         return;
     }
 
-    m_element->window()->browsingContext()->resolveStyleIfNeeds();
+    m_node->window()->browsingContext()->resolveStyleIfNeeds();
 }
 
 ComputedStyleCSSStyleDeclaration::Stage
@@ -349,12 +350,12 @@ ComputedStyleCSSStyleDeclaration::requiredStage(
 void ComputedStyleCSSStyleDeclaration::updateValue(
     CSSStyleValuePair::KeyKind keyKind)
 {
-    if (m_element == nullptr || m_element->style() == nullptr) {
+    if (m_node->isDocument() || m_node->style() == nullptr) {
         return;
     }
 
-    Frame* frame = m_element->frame();
-    ComputedStyle* style = m_element->style();
+    Frame* frame = m_node->frame();
+    ComputedStyle* style = m_node->style();
 
     if ((keyKind >= CSSStyleValuePair::KeyKind::PaddingTop &&
          keyKind <= CSSStyleValuePair::KeyKind::PaddingLeft) ||
@@ -420,9 +421,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         l.setKeyKind(CSSStyleValuePair::KeyKind::Left);
         r.setKeyKind(CSSStyleValuePair::KeyKind::Right);
         if (frame && frame->isFrameBox() && frame->isPositioned()) {
-            LayoutContext ctx(
-                m_element->starFish(),
-                m_element->document()->frame()->asFrameDocument());
+            LayoutContext ctx(m_node->starFish(),
+                              m_node->document()->frame()->asFrameDocument());
             FrameBox* cb = containingBlock(frame);
             FrameBox* self = frame->asFrameBox();
             LayoutUnit parentContentWidth = cb->contentWidth();
@@ -521,10 +521,10 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             w.setKeyKind(CSSStyleValuePair::KeyKind::Width);
             if (frame && style->width().isDefinite(true)) {
                 LayoutContext ctx(
-                    m_element->starFish(),
-                    m_element->document()->frame()->asFrameDocument());
+                    m_node->starFish(),
+                    m_node->document()->frame()->asFrameDocument());
                 w.setLengthValue(CSSLength(style->width().specifiedValue(
-                    ctx.parentContentWidth(frame), m_element)));
+                    ctx.parentContentWidth(frame), m_node)));
             } else {
                 if (frame && frame->isFrameBox()) {
                     w.setLengthValue(
@@ -539,8 +539,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             h.setKeyKind(CSSStyleValuePair::KeyKind::Height);
             if (frame && frame->isFrameBox()) {
                 LayoutContext ctx(
-                    m_element->starFish(),
-                    m_element->document()->frame()->asFrameDocument());
+                    m_node->starFish(),
+                    m_node->document()->frame()->asFrameDocument());
                 bool parentHasFixedHeight = ctx.parentHasFixedHeight(frame);
                 if (style->height().isDefinite(parentHasFixedHeight)) {
                     LayoutUnit parentContentHeight;
@@ -548,7 +548,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                         parentContentHeight = ctx.parentFixedHeight(frame);
                     }
                     h.setLengthValue(CSSLength(style->height().specifiedValue(
-                        parentContentHeight, m_element)));
+                        parentContentHeight, m_node)));
                 } else {
                     h.setLengthValue(
                         CSSLength(frame->asFrameBox()->contentHeight()));
@@ -1731,6 +1731,17 @@ bool CSSStyleDeclaration::defaultNamedSetter(String* name,
     return true;
 }
 
+StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(
+    CSSStyleDeclaration* src, CSSRule* parentRule)
+    : CSSStyleDeclaration(parentRule->parentStyleSheet()
+                              ->scriptBindingInstance()
+                              ->ownerDocument())
+{
+    m_cssValues = src->m_cssValues;
+    m_pointerRooter = src->m_pointerRooter;
+    m_parentRule = parentRule;
+}
+
 CSSStyleSheet* StyleRuleCSSStyleDeclaration::parentStyleSheet() const
 {
     STARFISH_ASSERT(m_parentRule);
@@ -1764,13 +1775,16 @@ void StyleRuleCSSStyleDeclaration::setCssText(String* text)
 
 void InlineCSSStyleDeclaration::setCssText(String* text)
 {
-    m_element->setStyleAttr(text);
+    STARFISH_ASSERT(m_node->isElement());
+    m_node->asElement()->setStyleAttr(text);
 }
 
 void ComputedStyleCSSStyleDeclaration::setCssText(String* text)
 {
+    STARFISH_ASSERT(m_node->isElement());
     throw new DOMException(
-        m_element->document(), DOMException::NO_MODIFICATION_ALLOWED_ERR,
+        m_node->asElement()->document(),
+        DOMException::NO_MODIFICATION_ALLOWED_ERR,
         "These styles are computed, and therefore read-only.");
 }
 }

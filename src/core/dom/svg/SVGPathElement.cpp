@@ -50,7 +50,7 @@ void SVGPathElement::styleForPresentationAttribute(
     SVGElement::styleForPresentationAttribute(cssValues);
 
     String* d = getAttributeOrEmpty(starFish()->staticStrings()->m_d);
-    CSSStyleDeclaration decl;
+    CSSStyleDeclaration decl(this);
     auto buf = d->toUTF8NonGCString();
     decl.setD(buf.data(), buf.length(), false);
     if (decl.hasCSSValuePair(CSSStyleValuePair::KeyKind::D)) {

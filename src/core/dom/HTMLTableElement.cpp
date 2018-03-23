@@ -81,7 +81,7 @@ void HTMLTableElement::styleForPresentationAttribute(
         CSSTokenVector tokens;
         CSSTokenValue token = value->toNullableUTF8String().m_buffer;
         tokens.push_back(token);
-        if (pair.updateValueBorderSpacing(tokens)) {
+        if (pair.updateValueBorderSpacing(document(), tokens)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::BorderSpacing);
             cssValues.push_back(pair);
         }
@@ -97,7 +97,7 @@ void HTMLTableElement::styleForPresentationAttribute(
         CSSTokenVector tokens;
         CSSTokenValue token = w->toNullableUTF8String().m_buffer;
         tokens.push_back(token);
-        if (pair.updateValueWidth(tokens)) {
+        if (pair.updateValueWidth(document(), tokens)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
             cssValues.push_back(pair);
         }

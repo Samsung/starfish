@@ -171,7 +171,7 @@ void SVGElement::styleForPresentationAttribute(
             CSSTokenVector tokens;
             CSSStyleDeclaration::tokenizeCSSValue(tokens, fillStr.data(),
                                                   fillStr.length());
-            if (pair.updateValueFill(tokens)) {
+            if (pair.updateValueFill(document(), tokens)) {
                 cssValues.push_back(pair);
             }
         }
@@ -185,7 +185,7 @@ void SVGElement::styleForPresentationAttribute(
             CSSTokenVector tokens;
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
-            if (pair.updateValueFillRule(tokens)) {
+            if (pair.updateValueFillRule(document(), tokens)) {
                 cssValues.push_back(pair);
             }
         }
@@ -199,7 +199,7 @@ void SVGElement::styleForPresentationAttribute(
             CSSTokenVector tokens;
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
-            if (pair.updateValueFillOpacity(tokens)) {
+            if (pair.updateValueFillOpacity(document(), tokens)) {
                 cssValues.push_back(pair);
             }
         }
@@ -215,7 +215,7 @@ void SVGElement::styleForPresentationAttribute(
             CSSTokenVector tokens;
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
-            if (pair.updateValueStroke(tokens)) {
+            if (pair.updateValueStroke(document(), tokens)) {
                 cssValues.push_back(pair);
             }
         }
@@ -229,7 +229,7 @@ void SVGElement::styleForPresentationAttribute(
             CSSTokenVector tokens;
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
-            if (pair.updateValueStrokeWidth(tokens)) {
+            if (pair.updateValueStrokeWidth(document(), tokens)) {
                 cssValues.push_back(pair);
             }
         }

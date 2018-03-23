@@ -289,6 +289,7 @@ public:
     bool equals(const CounterStyle* other) const;
 
     String* generateLabel(int32_t index) const;
+    String* generateLabelForCSSContentProperty(int32_t index) const;
 
 protected:
     Range getDefaultRange() const
