@@ -45,8 +45,8 @@
 
 namespace StarFish {
 
-HTTPCache* g_httpCache = nullptr;
 const size_t HTTPCache::kBlockSize = BLKGETSIZE;
+HTTPCache* HTTPCache::g_httpCache = nullptr;
 
 HTTPCache::HTTPCache(String* cacheDirPath)
     : m_cacheEntryTable()
@@ -120,6 +120,10 @@ void HTTPCache::clear()
 
 void HTTPCache::clearCacheDir()
 {
+    HTTPCacheEntryMultiMap().swap(m_cacheEntryTable);
+    HTTPCacheLRUList().swap(m_cacheLRUList);
+    m_currentTotalSizeOfBlocks = 0;
+
     Directory* dir = Directory::create();
     dir->open(m_cacheDirPath);
     dir->clearDir();

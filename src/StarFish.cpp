@@ -460,8 +460,7 @@ StarFish::~StarFish()
     if (g_singletonInstanceCnt <= 1) {
         NetworkSharedResourceManager::close();
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        g_httpCache->flush();
-        GC_FREE(g_httpCache);
+        HTTPCache::destory();
 #endif
     } else {
         g_singletonInstanceCnt--;
