@@ -1426,6 +1426,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::TextOverflow) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TextOverflow);
+        p.setValueKind(CSSStyleValuePair::ValueKind::TextOverflowValueKind);
+        p.setValue(new TextOverflowData(style->textOverflow()));
+        addValuePair(p);
     }
 #define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
     else if (keyKind ==                                                       \

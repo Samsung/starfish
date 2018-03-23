@@ -1133,6 +1133,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->textOverflow() != oldStyle->textOverflow()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextOverflow] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     if (newStyle->m_inheritedStyles.m_textAlign !=
         oldStyle->m_inheritedStyles.m_textAlign) {
         damagedKeys[CSSStyleValuePair::KeyKind::TextAlign] = true;

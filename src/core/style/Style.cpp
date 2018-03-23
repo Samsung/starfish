@@ -2484,6 +2484,22 @@ String* CSSStyleValuePair::toString() const
         return counterFunctionValue()->toString();
     case CSSStyleValuePair::ValueKind::VarFunctionValueKind:
         return varFunctionValue();
+    case CSSStyleValuePair::ValueKind::TextOverflowValueKind: {
+        auto value = textOverflowValue();
+        if (value.hasClipValue()) {
+            return String::fromUTF8("auto");
+        } else if (value.hasEllipsisValue()) {
+            return String::fromUTF8("ellipsis");
+        } else if (value.hasStringValue()) {
+            StringBuilder builder;
+            builder.appendString("\"");
+            builder.appendString(value.stringValue());
+            builder.appendString("\"");
+            return builder.finalize();
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -4484,6 +4500,19 @@ void StyleResolver::apply(Element* element,
                 } else {
                     style->setTextIndent(Length(Length::Fixed, 0));
                 }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::TextOverflow:
+            if ((cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Inherit)) {
+                style->setTextOverflow(parentStyle->textOverflow());
+            } else if ((cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Initial) ||
+                       (cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Unset)) {
+                style->setTextOverflow(TextOverflowData());
+            } else {
+                style->setTextOverflow(cssValues[k].textOverflowValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::TextDecoration:
@@ -10593,6 +10622,33 @@ bool CSSStyleValuePair::updateValueTextTransform(Document* document,
         m_valueKind = CSSStyleValuePair::ValueKind::TextTransformValueKind;
         m_value.m_textTransform =
             TextTransformValue::LowercaseTextTransformValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTextOverflow(Document* document,
+                                                const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    CSSPropertyParser parser(value);
+    m_valueKind = CSSStyleValuePair::ValueKind::TextOverflowValueKind;
+
+    String* stringValue = String::emptyString;
+    if (value.equals("clip")) {
+        m_value.m_textOverflowData =
+            new TextOverflowData(TextOverflowValue::TextOverflowClipValue);
+    } else if (value.equals("ellipsis")) {
+        m_value.m_textOverflowData =
+            new TextOverflowData(TextOverflowValue::TextOverflowEllipsisValue);
+    } else if (parser.parseContentString(value.data(), value.length(),
+                                         &(stringValue))) {
+        m_value.m_textOverflowData = new TextOverflowData(stringValue);
     } else {
         return false;
     }
