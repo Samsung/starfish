@@ -837,6 +837,17 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             break;
         }
         break;
+
+    case 20:
+        // text-decoration-line
+        switch (data[0]) {
+        case 't':
+            if (memcmp(data, "text-decoration-line", 20) == 0) {
+                return CSSStyleKind::TextDecorationLine;
+            }
+            break;
+        }
+        break;
     case 21:
         // background-position-x
         // background-position-y
@@ -1563,6 +1574,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "transitionDuration", 18) == 0) {
                 return CSSStyleKind::TransitionDuration;
+            }
+            if (memcmp(data, "textDecorationLine", 18) == 0) {
+                return CSSStyleKind::TextDecorationLine;
             }
             break;
         }

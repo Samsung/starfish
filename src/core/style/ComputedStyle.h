@@ -90,6 +90,7 @@ class RareComputedStyleData : public gc {
         TransformOrigin,
         Transition,
         TextDecorationColor,
+        TextDecorationLine,
         Content,
         Outline,
         BorderRadius,
@@ -140,6 +141,7 @@ class RareComputedStyleData : public gc {
         GCVector<GridLength>* m_gridTemplateUnits;
         Unit::Color m_color;
         HyphensValue m_hyphens;
+        TextDecorationLineValue m_textDecorationLine;
         TextOverflowData* m_textOverflow;
 
         RareComputedStyleValue(int32_t int32Value)
@@ -239,6 +241,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(UserSelectValue v)
             : m_userSelect(v)
+        {
+        }
+
+        RareComputedStyleValue(TextDecorationLineValue v)
+            : m_textDecorationLine(v)
         {
         }
 
@@ -372,6 +379,8 @@ public:
     GETTER_VALUE(Length, length, ry, RY);
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect);
     GETTER_VALUE(Unit::Color, color, textDecorationColor, TextDecorationColor);
+    GETTER_VALUE(TextDecorationLineValue, textDecorationLine,
+                 textDecorationLine, TextDecorationLine);
 
 #undef GETTER_VALUE
 
@@ -872,14 +881,34 @@ public:
         return ShadowDataList();
     }
 
-    TextDecorationValue textDecoration()
+    TextDecorationLineValue textDecoration()
     {
         return m_textDecoration;
     }
 
-    void setTextDecoration(TextDecorationValue decoration)
+    void setTextDecoration(TextDecorationLineValue decoration)
     {
         m_textDecoration = decoration;
+    }
+
+    TextDecorationLineValue textDecorationLine()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return TextDecorationLineValue::NoneTextDecorationLineValue;
+        }
+
+        Nullable<TextDecorationLineValue> v =
+            rareComputedStyleData()->textDecorationLine();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return TextDecorationLineValue::NoneTextDecorationLineValue;
+    }
+
+    void setTextDecorationLine(TextDecorationLineValue v)
+    {
+        *m_rareComputedStyleData.ensureTextDecorationLine() = v;
     }
 
     Unit::Color textDecorationColor()
@@ -2727,7 +2756,7 @@ protected:
         m_zIndexSpecifiedByUser = false;
         m_overflowX = OverflowValue::VisibleOverflow;
         m_overflowY = OverflowValue::VisibleOverflow;
-        m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
+        m_textDecoration = TextDecorationLineValue::NoneTextDecorationLineValue;
         m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
@@ -2782,7 +2811,7 @@ protected:
     VerticalAlignValue m_verticalAlign : 4;
     OverflowValue m_overflowX : 2;
     OverflowValue m_overflowY : 2;
-    TextDecorationValue m_textDecoration : 3;
+    TextDecorationLineValue m_textDecoration : 3;
 
     UnicodeBidiValue m_unicodeBidi : 2;
     BoxSizingValue m_boxSizing : 1;

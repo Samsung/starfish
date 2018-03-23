@@ -358,13 +358,6 @@ static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
     }
 }
 
-CSSTokenValue CSSTokenValue::tolower() const
-{
-    CSSTokenValue copy = *this;
-    std::transform(copy.begin(), copy.end(), copy.begin(), ::tolower);
-    return copy;
-}
-
 String* CSSTransformFunctions::toString()
 {
     StringBuilder builder;
@@ -2195,17 +2188,17 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
-    case CSSStyleValuePair::ValueKind::TextDecorationValueKind:
+    case CSSStyleValuePair::ValueKind::TextDecorationLineValueKind:
         switch (textDecorationValue()) {
-        case TextDecorationValue::NoneTextDecorationValue:
+        case TextDecorationLineValue::NoneTextDecorationLineValue:
             return String::fromUTF8("none");
-        case TextDecorationValue::UnderLineTextDecorationValue:
+        case TextDecorationLineValue::UnderlineTextDecorationLineValue:
             return String::fromUTF8("underline");
-        case TextDecorationValue::OverLineTextDecorationValue:
+        case TextDecorationLineValue::OverlineTextDecorationLineValue:
             return String::fromUTF8("overline");
-        case TextDecorationValue::LineThroughTextDecorationValue:
+        case TextDecorationLineValue::LineThroughTextDecorationLineValue:
             return String::fromUTF8("line-through");
-        case TextDecorationValue::BlinkTextDecorationValue:
+        case TextDecorationLineValue::BlinkTextDecorationLineValue:
             return String::fromUTF8("blink");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -4524,15 +4517,30 @@ void StyleResolver::apply(Element* element,
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
                 style->setTextDecoration(
-                    TextDecorationValue::NoneTextDecorationValue);
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::None) {
-                style->setTextDecoration(cssValues[k].textDecorationValue());
+                    TextDecorationLineValue::NoneTextDecorationLineValue);
             } else {
                 STARFISH_ASSERT(
                     cssValues[k].valueKind() ==
-                    CSSStyleValuePair::ValueKind::TextDecorationValueKind);
+                    CSSStyleValuePair::ValueKind::TextDecorationLineValueKind);
                 style->setTextDecoration(cssValues[k].textDecorationValue());
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::TextDecorationLine:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->setTextDecorationLine(parentStyle->textDecorationLine());
+            } else if ((cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Initial) ||
+                       (cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Unset)) {
+                style->setTextDecorationLine(
+                    TextDecorationLineValue::NoneTextDecorationLineValue);
+            } else {
+                STARFISH_ASSERT(
+                    cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::TextDecorationLineValueKind);
+                style->setTextDecorationLine(
+                    cssValues[k].textDecorationLineValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::TextDecorationColor:
@@ -10529,21 +10537,35 @@ bool CSSStyleValuePair::updateValueTextDecoration(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     // none | [ underline || line-through ] | inherit // Initial value -> none
-    m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationValueKind;
+    m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationLineValueKind;
 
     if (STRING_VALUE_IS_NONE()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::None;
-        m_value.m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
+        m_value.m_textDecoration =
+            TextDecorationLineValue::NoneTextDecorationLineValue;
     } else if (STRING_VALUE_IS_STRING("underline")) {
         m_value.m_textDecoration =
-            TextDecorationValue::UnderLineTextDecorationValue;
+            TextDecorationLineValue::UnderlineTextDecorationLineValue;
     } else if (STRING_VALUE_IS_STRING("line-through")) {
         m_value.m_textDecoration =
-            TextDecorationValue::LineThroughTextDecorationValue;
+            TextDecorationLineValue::LineThroughTextDecorationLineValue;
+    } else if (STRING_VALUE_IS_STRING("overline")) {
+        m_value.m_textDecoration =
+            TextDecorationLineValue::OverlineTextDecorationLineValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("blink")) {
+        m_value.m_textDecoration =
+            TextDecorationLineValue::BlinkTextDecorationLineValue;
+        return false; // unsupported yet
     } else {
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueTextDecorationLine(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueTextDecoration(document, tokens);
 }
 
 bool CSSStyleValuePair::updateValueTextDecorationColor(
@@ -10553,7 +10575,7 @@ bool CSSStyleValuePair::updateValueTextDecorationColor(
         return false;
     }
 
-    const CSSTokenValue value = tokens[0].tolower();
+    const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
 
     if (STRING_VALUE_IS_STRING("currentcolor")) {

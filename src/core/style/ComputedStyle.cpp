@@ -1417,6 +1417,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
+    if (newStyle->textDecorationLine() != oldStyle->textDecorationLine()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextDecorationLine] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     float newOpacity = newStyle->opacity();
     float oldOpacity = oldStyle->opacity();
 
