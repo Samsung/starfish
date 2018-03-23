@@ -205,6 +205,18 @@ String* CounterStyle::getSymbolAt(
     return result.getValue();
 }
 
+String* CounterStyle::generateLabelForCSSContentProperty(int32_t pos) const
+{
+    // label = negativePrefix + symbol
+    StringBuilder stringBuilder;
+    bool needNegativeSign = pos < 0 && !ignoreNegativeSign();
+    if (needNegativeSign) {
+        stringBuilder.appendString(negativePrefix());
+    }
+    stringBuilder.appendString(getSymbolAt(pos));
+    return stringBuilder.finalize();
+}
+
 String* CounterStyle::generateLabel(int32_t pos) const
 {
     String* symbol = getSymbolAt(pos);

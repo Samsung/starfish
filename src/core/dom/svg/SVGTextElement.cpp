@@ -55,7 +55,7 @@ void SVGTextElement::styleForPresentationAttribute(
     {
         auto attr = getAttribute(ss->m_fontDashFamily);
         if (attr.hasValue()) {
-            CSSStyleDeclaration decl;
+            CSSStyleDeclaration decl(this);
             auto str = attr.getValue()->toUTF8NonGCString();
             decl.setFontFamily(str.data(), str.length(), false);
             if (decl.cssValues().size()) {

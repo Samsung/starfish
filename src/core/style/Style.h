@@ -1044,6 +1044,8 @@ class CSSStyleDeclaration;
     F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y")           \
     F(BackgroundPositionX, backgroundPositionX, "background-position-x")     \
     F(BackgroundPositionY, backgroundPositionY, "background-position-y")     \
+    F(CounterReset, counterReset, "counter-reset")                           \
+    F(CounterIncrement, counterIncrement, "counter-increment")               \
     F(LineHeight, lineHeight, "line-height")                                 \
     F(WhiteSpace, whiteSpace, "white-space")                                 \
     F(WordSpacing, wordSpacing, "word-spacing")                              \
@@ -2476,7 +2478,7 @@ public:
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \
-    bool updateValue##name(const CSSTokenVector& tokens);
+    bool updateValue##name(Document* document, const CSSTokenVector& tokens);
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
     bool updateValueFontFamily(const CSSTokenVector& tokens);

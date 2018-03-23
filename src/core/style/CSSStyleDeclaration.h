@@ -67,10 +67,16 @@ class CSSStyleDeclaration : public ScriptWrappable {
 public:
     enum Stage { resolveStyle, frameTreeBuild, layout };
 
-    CSSStyleDeclaration(Element* element = nullptr)
+    CSSStyleDeclaration(Element* element)
         : ScriptWrappable(this)
     {
-        m_element = element;
+        m_node = (Node*)element;
+    }
+
+    CSSStyleDeclaration(Document* document)
+        : ScriptWrappable(this)
+    {
+        m_node = (Node*)document;
     }
 
     void addValuePair(CSSStyleValuePair p);
@@ -252,18 +258,13 @@ protected:
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
     GCVector<MutablePropertyValue> m_cssCustomValues;
     GCUnorderedSet<void*> m_pointerRooter;
-    Element* m_element;
+    Node* m_node;
 };
 
 class StyleRuleCSSStyleDeclaration : public CSSStyleDeclaration {
 public:
-    StyleRuleCSSStyleDeclaration(CSSStyleDeclaration* src, CSSRule* parentRule)
-        : CSSStyleDeclaration()
-    {
-        m_cssValues = src->m_cssValues;
-        m_pointerRooter = src->m_pointerRooter;
-        m_parentRule = parentRule;
-    }
+    StyleRuleCSSStyleDeclaration(CSSStyleDeclaration* src, CSSRule* parentRule);
+
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     CSSRule* parentRule() const
@@ -280,7 +281,7 @@ protected:
 
 class InlineCSSStyleDeclaration : public CSSStyleDeclaration {
 public:
-    InlineCSSStyleDeclaration(Element* element = nullptr)
+    InlineCSSStyleDeclaration(Element* element)
         : CSSStyleDeclaration(element)
     {
     }
@@ -295,7 +296,7 @@ public:
 
 class ComputedStyleCSSStyleDeclaration : public CSSStyleDeclaration {
 public:
-    ComputedStyleCSSStyleDeclaration(Element* element = nullptr)
+    ComputedStyleCSSStyleDeclaration(Element* element)
         : CSSStyleDeclaration(element)
     {
     }

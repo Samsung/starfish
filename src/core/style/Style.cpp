@@ -3815,8 +3815,8 @@ CSSStyleValuePair CSSStyleDeclaration::getCSSValuePair(
 
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()
 {
-    if (m_element) {
-        m_element->notifyInlineStyleChanged();
+    if (m_node->isElement()) {
+        m_node->asElement()->notifyInlineStyleChanged();
     }
 }
 
@@ -8109,7 +8109,8 @@ bool CSSStyleValuePair::updateValueUnitPadding(const CSSTokenValue& value)
                                        CSSPropertyParser::AllowPercent);
 }
 
-bool CSSStyleValuePair::updateValueColor(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueColor(Document* document,
+                                         const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8118,12 +8119,14 @@ bool CSSStyleValuePair::updateValueColor(const CSSTokenVector& tokens)
     return updateValueUnitColor(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueBackgroundColor(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueBackgroundColor(Document* document,
+                                                   const CSSTokenVector& tokens)
 {
-    return updateValueColor(tokens);
+    return updateValueColor(document, tokens);
 }
 
-bool CSSStyleValuePair::updateValueCaretColor(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueCaretColor(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8138,7 +8141,7 @@ bool CSSStyleValuePair::updateValueCaretColor(const CSSTokenVector& tokens)
         m_value.m_color = Unit::Color(0, 0, 0, 0);
         return true;
     } else {
-        return updateValueColor(tokens);
+        return updateValueColor(document, tokens);
     }
 
     return false;
@@ -8146,9 +8149,9 @@ bool CSSStyleValuePair::updateValueCaretColor(const CSSTokenVector& tokens)
 
 #define UPDATE_VALUE_BORDER_COLOR(POS, ...)                \
     bool CSSStyleValuePair::updateValueBorder##POS##Color( \
-        const CSSTokenVector& tokens)                      \
+        Document* document, const CSSTokenVector& tokens)  \
     {                                                      \
-        return updateValueColor(tokens);                   \
+        return updateValueColor(document, tokens);         \
     }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_COLOR)
 #undef UPDATE_VALUE_BORDER_COLOR
@@ -8185,7 +8188,7 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
 
 #define UPDATE_VALUE_BORDER_STYLE(POS, ...)                \
     bool CSSStyleValuePair::updateValueBorder##POS##Style( \
-        const CSSTokenVector& tokens)                      \
+        Document* document, const CSSTokenVector& tokens)  \
     {                                                      \
         if (tokens.size() != 1) {                          \
             return false;                                  \
@@ -8196,30 +8199,31 @@ GEN_FOURSIDE(UPDATE_VALUE_BORDER_STYLE)
 #undef UPDATE_VALUE_BORDER_STYLE
 
 bool CSSStyleValuePair::updateValueBorderTopLeftRadius(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     return updateBorderRadiusValue(this, tokens);
 }
 
 bool CSSStyleValuePair::updateValueBorderTopRightRadius(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     return updateBorderRadiusValue(this, tokens);
 }
 
 bool CSSStyleValuePair::updateValueBorderBottomLeftRadius(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     return updateBorderRadiusValue(this, tokens);
 }
 
 bool CSSStyleValuePair::updateValueBorderBottomRightRadius(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     return updateBorderRadiusValue(this, tokens);
 }
 
-bool CSSStyleValuePair::updateValueDirection(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueDirection(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8237,7 +8241,8 @@ bool CSSStyleValuePair::updateValueDirection(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueWhiteSpace(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueWhiteSpace(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8261,7 +8266,8 @@ bool CSSStyleValuePair::updateValueWhiteSpace(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueObjectFit(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueObjectFit(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8463,7 +8469,8 @@ static bool updatePositionValue(const GCVector<CSSStyleValuePair>& values,
     return true;
 }
 
-bool CSSStyleValuePair::updateValueObjectPosition(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueObjectPosition(Document* document,
+                                                  const CSSTokenVector& tokens)
 {
     CSSStyleValuePair xPair;
     CSSStyleValuePair yPair;
@@ -8542,7 +8549,8 @@ bool CSSStyleValuePair::updateValueObjectPosition(const CSSTokenVector& tokens,
     return updatePositionValue(values, xPair, yPair);
 }
 
-bool CSSStyleValuePair::updateValueWordSpacing(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueWordSpacing(Document* document,
+                                               const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8564,7 +8572,8 @@ bool CSSStyleValuePair::updateValueUnitWordSpacing(const CSSTokenValue& value)
     }
 }
 
-bool CSSStyleValuePair::updateValueLetterSpacing(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueLetterSpacing(Document* document,
+                                                 const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8582,7 +8591,8 @@ bool CSSStyleValuePair::updateValueLetterSpacing(const CSSTokenVector& tokens)
     }
 }
 
-bool CSSStyleValuePair::updateValueDisplay(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueDisplay(Document* document,
+                                           const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8636,7 +8646,8 @@ bool CSSStyleValuePair::updateValueDisplay(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueFloat(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFloat(Document* document,
+                                         const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8656,7 +8667,8 @@ bool CSSStyleValuePair::updateValueFloat(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueClear(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueClear(Document* document,
+                                         const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8678,7 +8690,8 @@ bool CSSStyleValuePair::updateValueClear(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueFontStyle(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFontStyle(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8687,7 +8700,8 @@ bool CSSStyleValuePair::updateValueFontStyle(const CSSTokenVector& tokens)
     return updateValueUnitFontStyle(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueFontKerning(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFontKerning(Document* document,
+                                               const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8737,7 +8751,7 @@ bool CSSStyleValuePair::updateValueUnitBackgroundRepeat(
 }
 
 bool CSSStyleValuePair::updateValueBackgroundRepeatX(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8746,7 +8760,7 @@ bool CSSStyleValuePair::updateValueBackgroundRepeatX(
 }
 
 bool CSSStyleValuePair::updateValueBackgroundRepeatY(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -8791,12 +8805,14 @@ bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
     return shouldBeComma;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueBackgroundImage(Document* document,
+                                                   const CSSTokenVector& tokens)
 {
     return updateValueBackgroundImage(tokens, true);
 }
 
-bool CSSStyleValuePair::updateValueCursor(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueCursor(Document* document,
+                                          const CSSTokenVector& tokens)
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return true;
@@ -8904,7 +8920,8 @@ static bool parseCounters(const CSSTokenValue& s, CSSStyleValuePair* pair)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueContent(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueContent(Document* document,
+                                           const CSSTokenVector& tokens)
 {
     ValueList* values = new ValueList(ValueList::SpaceSeparator);
     for (unsigned int i = 0; i < tokens.size(); i++) {
@@ -8938,7 +8955,7 @@ bool CSSStyleValuePair::updateValueContent(const CSSTokenVector& tokens)
 }
 
 bool CSSStyleValuePair::updateValueBorderImageRepeat(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     size_t len = tokens.size();
     if (len < 1 || len > 2) {
@@ -8970,7 +8987,7 @@ bool CSSStyleValuePair::updateValueBorderImageRepeat(
 }
 
 bool CSSStyleValuePair::updateValueBorderImageSource(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -9003,7 +9020,7 @@ bool CSSStyleValuePair::updateValueUnitBorderWidth(const CSSTokenValue& value)
 
 #define UPDATE_VALUE_BORDER_WIDTH(POS, ...)                \
     bool CSSStyleValuePair::updateValueBorder##POS##Width( \
-        const CSSTokenVector& tokens)                      \
+        Document* document, const CSSTokenVector& tokens)  \
     {                                                      \
         if (tokens.size() != 1) {                          \
             return false;                                  \
@@ -9285,7 +9302,7 @@ bool CSSStyleValuePair::updateValueAngle(const CSSTokenVector& tokens,
 }
 
 bool CSSStyleValuePair::updateValueBorderImageWidth(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     // [length | number]
     if (tokens.size() != 1) {
@@ -9340,7 +9357,7 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPositionY(
 }
 
 bool CSSStyleValuePair::updateValueBackgroundPositionX(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -9349,7 +9366,7 @@ bool CSSStyleValuePair::updateValueBackgroundPositionX(
 }
 
 bool CSSStyleValuePair::updateValueBackgroundPositionY(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -9377,7 +9394,7 @@ bool CSSStyleValuePair::updateValueUnitBackgroundAttachment(
 }
 
 bool CSSStyleValuePair::updateValueBackgroundAttachment(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     return updateValueBackgroundAttachment(tokens, true);
 }
@@ -9432,13 +9449,14 @@ bool CSSStyleValuePair::updateValueUnitBox(const CSSTokenValue& value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundClip(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueBackgroundClip(Document* document,
+                                                  const CSSTokenVector& tokens)
 {
     return updateValueBox(tokens, true);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundOrigin(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     return updateValueBox(tokens, true);
 }
@@ -9478,7 +9496,8 @@ bool CSSStyleValuePair::updateValueBox(const CSSTokenVector& tokens,
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueBackgroundSize(Document* document,
+                                                  const CSSTokenVector& tokens)
 {
     return updateValueBackgroundSize(tokens, true);
 }
@@ -9545,7 +9564,7 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
 }
 
 bool CSSStyleValuePair::updateValueBorderImageSlice(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     // [<number> | <percentage>]{1,4} && fill?
     size_t size = tokens.size();
@@ -9597,7 +9616,8 @@ bool CSSStyleValuePair::updateValueBorderImageSlice(
     return true;
 }
 
-bool CSSStyleValuePair::updateValueFontSize(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFontSize(Document* document,
+                                            const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -9636,7 +9656,8 @@ bool CSSStyleValuePair::updateValueUnitFontSize(const CSSTokenValue& value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueLineHeight(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueLineHeight(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -9663,7 +9684,7 @@ bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
 
 #define UPDATE_VALUE_PADDING(POS, ...)                                     \
     bool CSSStyleValuePair::updateValuePadding##POS(                       \
-        const CSSTokenVector& tokens)                                      \
+        Document* document, const CSSTokenVector& tokens)                  \
     {                                                                      \
         return updateValueLength(tokens, CSSPropertyParser::AllowPercent); \
     }
@@ -9671,7 +9692,8 @@ GEN_FOURSIDE(UPDATE_VALUE_PADDING)
 #undef UPDATE_VALUE_PADDING
 
 #define UPDATE_VALUE_SIDE(POS, ...)                                            \
-    bool CSSStyleValuePair::updateValue##POS(const CSSTokenVector& tokens)     \
+    bool CSSStyleValuePair::updateValue##POS(Document* document,               \
+                                             const CSSTokenVector& tokens)     \
     {                                                                          \
         return updateValueLength(tokens, CSSPropertyParser::AllowNegative |    \
                                              CSSPropertyParser::AllowPercent | \
@@ -9682,7 +9704,7 @@ GEN_FOURSIDE(UPDATE_VALUE_SIDE)
 
 #define UPDATE_VALUE_MARGIN(POS, ...)                                          \
     bool CSSStyleValuePair::updateValueMargin##POS(                            \
-        const CSSTokenVector& tokens)                                          \
+        Document* document, const CSSTokenVector& tokens)                      \
     {                                                                          \
         return updateValueLength(tokens, CSSPropertyParser::AllowNegative |    \
                                              CSSPropertyParser::AllowPercent | \
@@ -9691,43 +9713,50 @@ GEN_FOURSIDE(UPDATE_VALUE_SIDE)
 GEN_FOURSIDE(UPDATE_VALUE_MARGIN)
 #undef UPDATE_VALUE_MARGIN
 
-bool CSSStyleValuePair::updateValueWidth(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueWidth(Document* document,
+                                         const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
 }
 
-bool CSSStyleValuePair::updateValueMaxWidth(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueMaxWidth(Document* document,
+                                            const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowNone);
 }
 
-bool CSSStyleValuePair::updateValueMinWidth(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueMinWidth(Document* document,
+                                            const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
 }
 
-bool CSSStyleValuePair::updateValueHeight(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueHeight(Document* document,
+                                          const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
 }
 
-bool CSSStyleValuePair::updateValueMaxHeight(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueMaxHeight(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowNone);
 }
 
-bool CSSStyleValuePair::updateValueMinHeight(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueMinHeight(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
 }
 
-bool CSSStyleValuePair::updateValueVerticalAlign(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueVerticalAlign(Document* document,
+                                                 const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -9794,7 +9823,8 @@ static bool parseRectFunctionPart(const CSSTokenValue& s, size_t* ret,
     return true;
 }
 
-bool CSSStyleValuePair::updateValueClip(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueClip(Document* document,
+                                        const CSSTokenVector& tokens)
 {
     // https://www.w3.org/TR/css-masking-1/#clip-property
     if (tokens.size() != 1)
@@ -9887,7 +9917,7 @@ static bool parseGridTemplateColumnsAndRows(const CSSTokenVector& tokens,
 }
 
 bool CSSStyleValuePair::updateValueGridTemplateColumns(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (!tokens.size())
         return false;
@@ -9910,7 +9940,7 @@ bool CSSStyleValuePair::updateValueGridTemplateColumns(
 }
 
 bool CSSStyleValuePair::updateValueGridTemplateRows(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (!tokens.size())
         return false;
@@ -9931,7 +9961,8 @@ bool CSSStyleValuePair::updateValueGridTemplateRows(
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueTransformOrigin(Document* document,
+                                                   const CSSTokenVector& tokens)
 {
     //  [ left | center | right | top | bottom | <percentage> | <length> ] |
     //  [ left | center | right | <percentage> | <length> ]
@@ -10024,17 +10055,20 @@ bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueTransform(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     return updateValueTransform(tokens, false);
 }
 
-bool CSSStyleValuePair::updateValueOpacity(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueOpacity(Document* document,
+                                           const CSSTokenVector& tokens)
 {
     return updateValueNumber(tokens, CSSPropertyParser::AllowNegative);
 }
 
-bool CSSStyleValuePair::updateValueFontWeight(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFontWeight(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10140,7 +10174,8 @@ bool CSSStyleValuePair::updateValueUnitWordWrap(const CSSTokenValue& value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueWordWrap(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueWordWrap(Document* document,
+                                            const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10149,7 +10184,8 @@ bool CSSStyleValuePair::updateValueWordWrap(const CSSTokenVector& tokens)
     return updateValueUnitWordWrap(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueOverflowWrap(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueOverflowWrap(Document* document,
+                                                const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10158,7 +10194,8 @@ bool CSSStyleValuePair::updateValueOverflowWrap(const CSSTokenVector& tokens)
     return updateValueUnitWordWrap(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueOverflowX(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueOverflowX(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10185,7 +10222,8 @@ bool CSSStyleValuePair::updateValueUnitOverflowX(const CSSTokenValue& value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueOverflowY(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueOverflowY(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10287,7 +10325,8 @@ String* CSSStyleDeclaration::Overflow()
     }
 }
 
-bool CSSStyleValuePair::updateValuePosition(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValuePosition(Document* document,
+                                            const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10435,14 +10474,16 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
     return false;
 }
 
-bool CSSStyleValuePair::updateValueTextShadow(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueTextShadow(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     // none | [ <offset-x> <offset-y> <blur-radius>? && <color>? ]#
     // initial : none
     return updateValueShadow(tokens, false);
 }
 
-bool CSSStyleValuePair::updateValueBoxShadow(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueBoxShadow(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     //  none | [inset? && [ <offset-x> <offset-y> <blur-radius>?
     //  <spread-radius>? <color>? ] ]#
@@ -10450,7 +10491,8 @@ bool CSSStyleValuePair::updateValueBoxShadow(const CSSTokenVector& tokens)
     return updateValueShadow(tokens, true);
 }
 
-bool CSSStyleValuePair::updateValueTextDecoration(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueTextDecoration(Document* document,
+                                                  const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10476,7 +10518,7 @@ bool CSSStyleValuePair::updateValueTextDecoration(const CSSTokenVector& tokens)
 }
 
 bool CSSStyleValuePair::updateValueTextDecorationColor(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10491,12 +10533,13 @@ bool CSSStyleValuePair::updateValueTextDecorationColor(
         m_value.m_color = Unit::Color(0, 0, 0, 0);
         return true;
     } else {
-        return updateValueColor(tokens);
+        return updateValueColor(document, tokens);
     }
     return false;
 }
 
-bool CSSStyleValuePair::updateValueTextAlign(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueTextAlign(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10527,7 +10570,8 @@ bool CSSStyleValuePair::updateValueTextAlign(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTextTransform(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueTextTransform(Document* document,
+                                                 const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10555,13 +10599,15 @@ bool CSSStyleValuePair::updateValueTextTransform(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTextIndent(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueTextIndent(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowNegative |
                                          CSSPropertyParser::AllowPercent);
 }
 
-bool CSSStyleValuePair::updateValueUnicodeBidi(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueUnicodeBidi(Document* document,
+                                               const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10583,7 +10629,8 @@ bool CSSStyleValuePair::updateValueUnicodeBidi(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueVisibility(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueVisibility(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10603,7 +10650,8 @@ bool CSSStyleValuePair::updateValueVisibility(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueImageRendering(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueImageRendering(Document* document,
+                                                  const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10625,7 +10673,8 @@ bool CSSStyleValuePair::updateValueImageRendering(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueZIndex(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueZIndex(Document* document,
+                                          const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10643,7 +10692,8 @@ bool CSSStyleValuePair::updateValueZIndex(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBorderCollapse(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueBorderCollapse(Document* document,
+                                                  const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10663,7 +10713,8 @@ bool CSSStyleValuePair::updateValueBorderCollapse(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBorderSpacing(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueBorderSpacing(Document* document,
+                                                 const CSSTokenVector& tokens)
 {
     // <length> <length>? | inherit,
     // Initial : 0, Percentages: N/A, lengths may not be negative.
@@ -10693,7 +10744,8 @@ bool CSSStyleValuePair::updateValueBorderSpacing(const CSSTokenVector& tokens)
     return false;
 }
 
-bool CSSStyleValuePair::updateValueCaptionSide(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueCaptionSide(Document* document,
+                                               const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10711,7 +10763,8 @@ bool CSSStyleValuePair::updateValueCaptionSide(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueEmptyCells(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueEmptyCells(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10729,7 +10782,8 @@ bool CSSStyleValuePair::updateValueEmptyCells(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueTableLayout(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueTableLayout(Document* document,
+                                               const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10748,7 +10802,7 @@ bool CSSStyleValuePair::updateValueTableLayout(const CSSTokenVector& tokens)
 }
 
 bool CSSStyleValuePair::updateValueTransitionProperty(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10758,18 +10812,19 @@ bool CSSStyleValuePair::updateValueTransitionProperty(
 }
 
 bool CSSStyleValuePair::updateValueTransitionDuration(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     return updateValueTime(tokens, 0);
 }
 
-bool CSSStyleValuePair::updateValueTransitionDelay(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueTransitionDelay(Document* document,
+                                                   const CSSTokenVector& tokens)
 {
     return updateValueTime(tokens, 0);
 }
 
 bool CSSStyleValuePair::updateValueTransitionTimingFunction(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10806,7 +10861,8 @@ bool CSSStyleValuePair::updateValueTransitionTimingFunction(
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBoxSizing(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueBoxSizing(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10843,7 +10899,8 @@ bool CSSStyleValuePair::updateValueUnitFlexDirection(const CSSTokenValue& value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueFlexDirection(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFlexDirection(Document* document,
+                                                 const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10868,7 +10925,8 @@ bool CSSStyleValuePair::updateValueUnitFlexWrap(const CSSTokenValue& value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueFlexWrap(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFlexWrap(Document* document,
+                                            const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10963,7 +11021,8 @@ String* CSSStyleDeclaration::FlexFlow()
     return builder.finalize();
 }
 
-bool CSSStyleValuePair::updateValueOrder(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueOrder(Document* document,
+                                         const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -10974,7 +11033,8 @@ bool CSSStyleValuePair::updateValueOrder(const CSSTokenVector& tokens)
         token, CSSPropertyParser::AllowNegative, this);
 }
 
-bool CSSStyleValuePair::updateValueJustifyContent(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueJustifyContent(Document* document,
+                                                  const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11022,7 +11082,8 @@ bool CSSStyleValuePair::updateValueUnitAlignItem(const CSSTokenValue& value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueAlignItems(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueAlignItems(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11032,7 +11093,8 @@ bool CSSStyleValuePair::updateValueAlignItems(const CSSTokenVector& tokens)
     return updateValueUnitAlignItem(value);
 }
 
-bool CSSStyleValuePair::updateValueAlignSelf(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueAlignSelf(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11043,10 +11105,11 @@ bool CSSStyleValuePair::updateValueAlignSelf(const CSSTokenVector& tokens)
         m_valueKind = CSSStyleValuePair::ValueKind::Auto;
         return true;
     }
-    return updateValueAlignItems(tokens);
+    return updateValueAlignItems(document, tokens);
 }
 
-bool CSSStyleValuePair::updateValueAlignContent(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueAlignContent(Document* document,
+                                                const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11074,7 +11137,8 @@ bool CSSStyleValuePair::updateValueAlignContent(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueFlexGrow(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFlexGrow(Document* document,
+                                            const CSSTokenVector& tokens)
 {
     return updateValueNumber(tokens, 0);
 }
@@ -11084,7 +11148,8 @@ bool CSSStyleValuePair::updateValueUnitFlexGrow(const CSSTokenValue& value)
     return updateValueUnitNumber(value, 0);
 }
 
-bool CSSStyleValuePair::updateValueFlexShrink(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFlexShrink(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     return updateValueNumber(tokens, 0);
 }
@@ -11094,7 +11159,8 @@ bool CSSStyleValuePair::updateValueUnitFlexShrink(const CSSTokenValue& value)
     return updateValueUnitNumber(value, 0);
 }
 
-bool CSSStyleValuePair::updateValueFlexBasis(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFlexBasis(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11275,7 +11341,8 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
     return true;
 }
 
-bool CSSStyleValuePair::updateValueFill(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFill(Document* document,
+                                        const CSSTokenVector& tokens)
 {
     if (tokens.size() == 1) {
         const CSSTokenValue& value = tokens[0];
@@ -11287,12 +11354,14 @@ bool CSSStyleValuePair::updateValueFill(const CSSTokenVector& tokens)
     return updateValueUnitColor(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueFillOpacity(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFillOpacity(Document* document,
+                                               const CSSTokenVector& tokens)
 {
-    return updateValueOpacity(tokens);
+    return updateValueOpacity(document, tokens);
 }
 
-bool CSSStyleValuePair::updateValueFillRule(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueFillRule(Document* document,
+                                            const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11310,7 +11379,8 @@ bool CSSStyleValuePair::updateValueFillRule(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueStroke(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueStroke(Document* document,
+                                          const CSSTokenVector& tokens)
 {
     if (tokens.size() == 1) {
         const CSSTokenValue& value = tokens[0];
@@ -11323,7 +11393,8 @@ bool CSSStyleValuePair::updateValueStroke(const CSSTokenVector& tokens)
     return updateValueUnitColor(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueStrokeWidth(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueStrokeWidth(Document* document,
+                                               const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11333,37 +11404,44 @@ bool CSSStyleValuePair::updateValueStrokeWidth(const CSSTokenVector& tokens)
                        CSSPropertyParser::ParserOption::AllowWithoutUnit);
 }
 
-bool CSSStyleValuePair::updateValueX(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueX(Document* document,
+                                     const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }
 
-bool CSSStyleValuePair::updateValueY(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueY(Document* document,
+                                     const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }
 
-bool CSSStyleValuePair::updateValueR(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueR(Document* document,
+                                     const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }
 
-bool CSSStyleValuePair::updateValueRX(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueRX(Document* document,
+                                      const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }
 
-bool CSSStyleValuePair::updateValueRY(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueRY(Document* document,
+                                      const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }
 
-bool CSSStyleValuePair::updateValueCX(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueCX(Document* document,
+                                      const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }
 
-bool CSSStyleValuePair::updateValueCY(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueCY(Document* document,
+                                      const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }
@@ -11428,7 +11506,8 @@ String* CSSStyleDeclaration::D()
     return String::emptyString;
 }
 
-bool CSSStyleValuePair::updateValueOutlineColor(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueOutlineColor(Document* document,
+                                                const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11436,7 +11515,8 @@ bool CSSStyleValuePair::updateValueOutlineColor(const CSSTokenVector& tokens)
     return updateValueUnitColor(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueOutlineWidth(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueOutlineWidth(Document* document,
+                                                const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11444,7 +11524,8 @@ bool CSSStyleValuePair::updateValueOutlineWidth(const CSSTokenVector& tokens)
     return updateValueUnitBorderWidth(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueOutlineStyle(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueOutlineStyle(Document* document,
+                                                const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11452,7 +11533,8 @@ bool CSSStyleValuePair::updateValueOutlineStyle(const CSSTokenVector& tokens)
     return updateValueUnitBorderStyle(tokens[0]);
 }
 
-bool CSSStyleValuePair::updateValueOutlineOffset(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueOutlineOffset(Document* document,
+                                                 const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11711,7 +11793,8 @@ String* CSSStyleDeclaration::Flex()
     return builder.finalize();
 }
 
-bool CSSStyleValuePair::updateValueMaskImage(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueMaskImage(Document* document,
+                                             const CSSTokenVector& tokens)
 {
     // none | <image> | <url>
     if (tokens.size() != 1) {
@@ -11726,7 +11809,8 @@ bool CSSStyleValuePair::updateValueMaskImage(const CSSTokenVector& tokens)
     return false;
 }
 
-bool CSSStyleValuePair::updateValueMaskSize(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueMaskSize(Document* document,
+                                            const CSSTokenVector& tokens)
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return false;
@@ -11898,7 +11982,8 @@ void CSSStyleDeclaration::setListStyle(const char* value, size_t len,
     }
 }
 
-bool CSSStyleValuePair::updateValueListStyleType(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueListStyleType(Document* document,
+                                                 const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11907,7 +11992,7 @@ bool CSSStyleValuePair::updateValueListStyleType(const CSSTokenVector& tokens)
 }
 
 bool CSSStyleValuePair::updateValueListStylePosition(
-    const CSSTokenVector& tokens)
+    Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11915,7 +12000,8 @@ bool CSSStyleValuePair::updateValueListStylePosition(
     return parseListStylePosition(tokens[0], this);
 }
 
-bool CSSStyleValuePair::updateValueListStyleImage(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueListStyleImage(Document* document,
+                                                  const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11923,7 +12009,22 @@ bool CSSStyleValuePair::updateValueListStyleImage(const CSSTokenVector& tokens)
     return parseListStyleImage(tokens[0], this);
 }
 
-bool CSSStyleValuePair::updateValueUserSelect(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueCounterReset(Document* document,
+                                                const CSSTokenVector& tokens)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueCounterIncrement(
+    Document* document, const CSSTokenVector& tokens)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueUserSelect(Document* document,
+                                              const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;
@@ -11956,7 +12057,8 @@ bool CSSStyleValuePair::updateValueUserSelect(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueHyphens(const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueHyphens(Document* document,
+                                           const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
         return false;

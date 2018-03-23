@@ -1823,7 +1823,7 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
 
     bool valid = false;
     bool invalidDeclaration = false;
-    CSSStyleDeclaration* declarations = new CSSStyleDeclaration();
+    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
     if (list.size()) {
         RefPtr<CSSToken> token = currentToken();
         if (token->isSymbol('{')) {
@@ -2098,7 +2098,7 @@ StyleRuleFontFace* CSSParser::parseFontFaceRule()
 {
     preserveState();
 
-    CSSStyleDeclaration* decl = new CSSStyleDeclaration();
+    CSSStyleDeclaration* decl = new CSSStyleDeclaration(document());
 
     RefPtr<CSSToken> token = getToken(true, false);
     bool valid = false;
