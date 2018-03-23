@@ -28,6 +28,7 @@
 #include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameInline.h"
 #include "core/layout/FrameTableBox.h"
+#include "core/layout/FrameGridBox.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/util/LineBreakerIteratorPool.h"
@@ -4517,6 +4518,31 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
     w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), ctx.preferredMinWidth(),
                                   unused, true);
     ctx.updatePreferredMinWidth(w);
+}
+
+void FrameGridBox::computePreferredWidth(PreferredWidthContext& ctx)
+{
+    LayoutUnit gridPreferredWidth = 0;
+    LayoutUnit gridPreferredMinWidth = 0;
+
+    Length width = style()->width();
+    if (width.isDefinite(false)) {
+        LayoutUnit unused;
+        gridPreferredWidth = width.specifiedValue(unused, this);
+        gridPreferredWidth = contentWidthApplyingBoxSizing(gridPreferredWidth);
+        gridPreferredMinWidth = gridPreferredWidth;
+        ctx.updatePreferredMinWidth(gridPreferredMinWidth);
+        ctx.updatePreferredWidth(gridPreferredWidth);
+    } else {
+        GridFormattingContext gridFormattingContext(ctx.layoutContext(), this,
+                                                    0);
+
+        gridFormattingContext.computeColumnsAndRows();
+        gridPreferredWidth = gridFormattingContext.preferredWidth();
+        gridPreferredMinWidth = gridPreferredWidth;
+        ctx.updatePreferredWidth(gridPreferredWidth);
+        ctx.updatePreferredMinWidth(gridPreferredMinWidth);
+    }
 }
 
 void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)

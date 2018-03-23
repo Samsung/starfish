@@ -138,12 +138,9 @@ public:
     void buildGridLineTemplate();
     void layoutGridItems();
     void arrangeGridLines();
+    LayoutUnit preferredWidth();
 
     static bool doesParticipateInGridFormattingContext(Frame* GridItem);
-
-    // TODO: Implement a function called 'computePreferredWidth' for
-    // 'inline-grid'.
-    // void computePreferredWidth(PreferredWidthContext& ctx);
 
 private:
     LayoutContext& m_layoutContext;
@@ -174,6 +171,7 @@ public:
     }
 
     void layoutGrid(LayoutContext& ctx);
+    void computePreferredWidth(PreferredWidthContext& ctx);
 };
 }
 #endif

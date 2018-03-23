@@ -31,6 +31,17 @@ GridFormattingContext::GridFormattingContext(LayoutContext& ctx,
 {
 }
 
+LayoutUnit GridFormattingContext::preferredWidth()
+{
+    LayoutUnit widthOfSum(0);
+    for (size_t col = 0; col < m_gridLineColumns.size(); col++) {
+        if (m_gridLineColumns[col].isComputed()) {
+            widthOfSum += m_gridLineColumns[col].offset();
+        }
+    }
+    return widthOfSum;
+}
+
 void GridFormattingContext::computeColumnsAndRows()
 {
     Frame* child = m_container->firstChild();
