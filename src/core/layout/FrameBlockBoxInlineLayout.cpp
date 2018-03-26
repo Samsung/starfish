@@ -3937,12 +3937,12 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                     iterateChildFrameBox([&](FrameBox* box) {
                         LayoutRect absRect;
                         if (box->isInlineTextBox() &&
-                            (absRect = box->absoluteRect(this)).maxX() >
+                            (absRect = box->absoluteRect(this)).maxX() >=
                                 rightBoundary) {
                             if (!box->asInlineTextBox()
                                      ->isHidedByTextOverflow()) {
                                 LayoutUnit diff =
-                                    absRect.maxX() - rightBoundary;
+                                    absRect.maxX() - width() + rightMBPWidth();
                                 box->asInlineTextBox()
                                     ->markNeedsConsiderTextOverflow(
                                         overflowString, true, diff);
@@ -3951,8 +3951,8 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                                                     ->isHidedByTextOverflow();
                                 if (box->asInlineTextBox()
                                         ->isHidedByTextOverflow()) {
-                                    rightBoundary = std::min(absRect.x() - 1,
-                                                             rightBoundary);
+                                    rightBoundary =
+                                        std::min(absRect.x(), rightBoundary);
                                 }
                             }
                         }
@@ -3962,14 +3962,14 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                     iterateChildFrameBox([&](FrameBox* box) {
                         LayoutRect absRect;
                         if (box->isInlineTextBox() &&
-                            (absRect = box->absoluteRect(this)).x() <
+                            (absRect = box->absoluteRect(this)).x() <=
                                 leftBoundary) {
                             box->asInlineTextBox()
                                 ->markNeedsConsiderTextOverflow(overflowString,
                                                                 false, 0);
                             if (!box->asInlineTextBox()
                                      ->isHidedByTextOverflow()) {
-                                LayoutUnit diff = leftBoundary - absRect.x();
+                                LayoutUnit diff = leftMBPWidth() - absRect.x();
                                 box->asInlineTextBox()
                                     ->markNeedsConsiderTextOverflow(
                                         overflowString, false, diff);
