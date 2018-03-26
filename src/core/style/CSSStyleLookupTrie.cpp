@@ -305,6 +305,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Visibility
         // Align-Self
         // Line-Break
+        // Word-Break
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background", 10) == 0) {
@@ -377,6 +378,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'a':
             if (memcmp(data, "align-self", 10) == 0) {
                 return CSSStyleKind::AlignSelf;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "word-break", 10) == 0) {
+                return CSSStyleKind::WordBreak;
             }
             break;
         }
@@ -1192,6 +1198,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "overflowY", 9) == 0) {
                 return CSSStyleKind::OverflowY;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "wordBreak", 9) == 0) {
+                return CSSStyleKind::WordBreak;
             }
             break;
         }

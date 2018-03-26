@@ -112,6 +112,7 @@ class RareComputedStyleData : public gc {
         CaretColor,
         Hyphens,
         LineBreak,
+        WordBreak,
         TextOverflow,
         CounterReset,
         CounterIncrement,
@@ -146,6 +147,7 @@ class RareComputedStyleData : public gc {
         Unit::Color m_color;
         HyphensValue m_hyphens;
         LineBreakValue m_lineBreak;
+        WordBreakValue m_wordBreak;
         TextDecorationLineValue m_textDecorationLine;
         TextOverflowData* m_textOverflow;
         CounterBaseList* m_counterBaseList;
@@ -272,6 +274,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(LineBreakValue v)
             : m_lineBreak(v)
+        {
+        }
+
+        RareComputedStyleValue(WordBreakValue v)
+            : m_wordBreak(v)
         {
         }
 
@@ -518,6 +525,7 @@ class ComputedStyle : public gc {
         ListStyleData m_listStyleData;
 
         Unit::Color m_caretColor;
+        WordBreakValue m_wordBreak : 3;
 
         InheritedStylesRareData()
         {
@@ -538,6 +546,7 @@ class ComputedStyle : public gc {
             m_hyphens = HyphensValue::NoneHyphensValue;
             m_fontKerning = FontKerningValue::FontKerningAutoValue;
             m_imageRendering = ImageRenderingValue::ImageRenderingAutoValue;
+            m_wordBreak = WordBreakValue::NormalWordBreakValue;
         }
 
         void* operator new(size_t size);
@@ -2818,6 +2827,19 @@ public:
     void setLineBreak(LineBreakValue v)
     {
         *m_rareComputedStyleData.ensureLineBreak() = v;
+    }
+
+    WordBreakValue wordBreak()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_wordBreak;
+        }
+        return InheritedStylesRareData().m_wordBreak;
+    }
+
+    void setWordBreak(WordBreakValue v)
+    {
+        ensureInheritedRareData()->m_wordBreak = v;
     }
 
     void* operator new(size_t size);
