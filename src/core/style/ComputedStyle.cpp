@@ -1423,6 +1423,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
+    if (newStyle->textUnderlinePosition() !=
+        oldStyle->textUnderlinePosition()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextUnderlinePosition] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     float newOpacity = newStyle->opacity();
     float oldOpacity = oldStyle->opacity();
 

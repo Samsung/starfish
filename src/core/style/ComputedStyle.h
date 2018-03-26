@@ -92,6 +92,7 @@ class RareComputedStyleData : public gc {
         Transition,
         TextDecorationColor,
         TextDecorationStyle,
+        TextUnderlinePosition,
         Content,
         Outline,
         BorderRadius,
@@ -149,6 +150,7 @@ class RareComputedStyleData : public gc {
         LineBreakValue m_lineBreak;
         WordBreakValue m_wordBreak;
         TextDecorationStyleValue m_textDecorationStyle;
+        TextUnderlinePositionValue m_textUnderlinePosition;
         TextOverflowData* m_textOverflow;
         CounterBaseList* m_counterBaseList;
 
@@ -254,6 +256,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(TextDecorationStyleValue v)
             : m_textDecorationStyle(v)
+        {
+        }
+
+        RareComputedStyleValue(TextUnderlinePositionValue v)
+            : m_textUnderlinePosition(v)
         {
         }
 
@@ -526,6 +533,7 @@ class ComputedStyle : public gc {
 
         Unit::Color m_caretColor;
         WordBreakValue m_wordBreak : 3;
+        TextUnderlinePositionValue m_textUnderlinePosition : 3;
 
         InheritedStylesRareData()
         {
@@ -547,6 +555,8 @@ class ComputedStyle : public gc {
             m_fontKerning = FontKerningValue::FontKerningAutoValue;
             m_imageRendering = ImageRenderingValue::ImageRenderingAutoValue;
             m_wordBreak = WordBreakValue::NormalWordBreakValue;
+            m_textUnderlinePosition =
+                TextUnderlinePositionValue::AutoTextUnderlinePositionValue;
         }
 
         void* operator new(size_t size);
@@ -988,6 +998,19 @@ public:
     void setTextDecorationStyle(TextDecorationStyleValue v)
     {
         *m_rareComputedStyleData.ensureTextDecorationStyle() = v;
+    }
+
+    TextUnderlinePositionValue textUnderlinePosition()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_textUnderlinePosition;
+        }
+        return InheritedStylesRareData().m_textUnderlinePosition;
+    }
+
+    void setTextUnderlinePosition(TextUnderlinePositionValue v)
+    {
+        ensureInheritedRareData()->m_textUnderlinePosition = v;
     }
 
     DirectionValue direction()

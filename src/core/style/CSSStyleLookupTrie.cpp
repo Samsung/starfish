@@ -901,10 +901,16 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         break;
     case 23:
         // border-top-right-radius
+        // text-underline-position
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-top-right-radius", 23) == 0) {
                 return CSSStyleKind::BorderTopRightRadius;
+            }
+            break;
+        case 't':
+            if (memcmp(data, "text-underline-position", 23) == 0) {
+                return CSSStyleKind::TextUnderlinePosition;
             }
             break;
         }
@@ -1635,6 +1641,15 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "backgroundAttachment", 20) == 0) {
                 return CSSStyleKind::BackgroundAttachment;
+            }
+            break;
+        }
+        break;
+    case 21:
+        switch (data[0]) {
+        case 't':
+            if (memcmp(data, "textUnderlinePosition", 21) == 0) {
+                return CSSStyleKind::TextUnderlinePosition;
             }
             break;
         }
