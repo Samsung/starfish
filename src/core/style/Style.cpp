@@ -5357,92 +5357,75 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::BorderImageWidth:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                BorderData pBorder = parentStyle->border();
-                style->setBorderImageWidths(pBorder.image().widths());
+                style->setBorderImageWidths(
+                    parentStyle->border().image().widths());
             } else if ((cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) ||
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
-                BorderImageLengthBox box;
-                style->setBorderImageWidths(box);
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Number) {
-                BorderImageLength unit;
-                unit.setValue(cssValues[k].numberValue());
-                style->setBorderImageWidths(
-                    BorderImageLengthBox(unit, unit, unit, unit));
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                Nullable<Length> len = convertValueToLength(
-                    CSSStyleValuePair::ValueKind::Length, cssValues[k].value());
-                if (len.hasValue()) {
-                    BorderImageLength unit;
-                    unit.setValue(len.getValue());
-                    style->setBorderImageWidths(
-                        BorderImageLengthBox(unit, unit, unit, unit));
-                } else {
-                    BorderImageLengthBox box;
-                    style->setBorderImageWidths(box);
-                }
+                style->setBorderImageWidths(BorderImageLengthBox());
             } else {
-                STARFISH_LOG_ERROR(
-                    "border-image-width: a list of values is not supported\n")
-                /* NOTE: Not allow ValueList in current spec
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
-                BorderImageLength top, right, bottom, left;
-                ValueList* l = cssValues[k].multiValue();
-                unsigned int size = l->size();
-                if (l->atIndex(0).valueKind() ==
+                BorderImageLength t, r, b, l;
+                ValueList* values = cssValues[k].multiValue();
+                unsigned int size = values->size();
+
+                if ((*values)[0].valueKind() ==
                     CSSStyleValuePair::ValueKind::Number) {
-                    top.setValue((*l)[0].numberValue());
+                    t.setValue((*values)[0].numberValue());
                 } else {
-                    top.setValue(convertValueToLength((*l)[0].valueKind(),
+                    Nullable<Length> nTop = convertValueToLength(
+                        (*values)[0].valueKind(), (*values)[0].value());
+                    if (nTop.hasValue()) {
+                        t = nTop.getValue();
+                    }
                 }
-                (*l)[0].value()));
                 if (size > 1) {
-                    if ((*l)[1].valueKind() ==
+                    if ((*values)[1].valueKind() ==
                         CSSStyleValuePair::ValueKind::Number) {
-                        right.setValue((*l)[1].numberValue());
-                    }
-                    else {
-                        right.setValue(convertValueToLength(
-                                       (*l)[1].valueKind(),
-                                       (*l)[1].value()));
+                        r.setValue((*values)[1].numberValue());
+                    } else {
+                        Nullable<Length> nRight = convertValueToLength(
+                            (*values)[1].valueKind(), (*values)[1].value());
+                        if (nRight.hasValue()) {
+                            r = nRight.getValue();
+                        }
                     }
                 } else {
-                    right = top;
+                    r = t;
                 }
                 if (size > 2) {
-                    if ((*l)[2].valueKind() ==
+                    if ((*values)[2].valueKind() ==
                         CSSStyleValuePair::ValueKind::Number) {
-                        bottom.setValue((*l)[2].numberValue());
-                    }
-                    else {
-                        bottom.setValue(convertValueToLength(
-                                        (*l)[2].valueKind(),
-                                        (*l)[2].value()));
+                        b.setValue((*values)[2].numberValue());
+                    } else {
+                        Nullable<Length> nBottom = convertValueToLength(
+                            (*values)[2].valueKind(), (*values)[2].value());
+                        if (nBottom.hasValue()) {
+                            b = nBottom.getValue();
+                        }
                     }
                 } else {
-                    bottom = top;
+                    b = t;
                 }
                 if (size > 3) {
-                    if ((*l)[3].valueKind() ==
+                    if ((*values)[3].valueKind() ==
                         CSSStyleValuePair::ValueKind::Number) {
-                        left.setValue((*l)[3].numberValue());
-                    }
-                    else {
-                        left.setValue(convertValueToLength(
-                                      (*l)[3].valueKind(),
-                                      (*l)[3].value()));
+                        l.setValue((*values)[3].numberValue());
+                    } else {
+                        Nullable<Length> nLeft = convertValueToLength(
+                            (*values)[3].valueKind(), (*values)[3].value());
+                        if (nLeft.hasValue()) {
+                            l = nLeft.getValue();
+                        }
                     }
                 } else {
-                    left = right;
+                    l = r;
                 }
-                style->setBorderImageWidths(BorderImageLengthBox(
-                                            top, right, bottom, left));
-                */
+                style->setBorderImageWidths(BorderImageLengthBox(l, r, t, b));
             }
+
             break;
         case CSSStyleValuePair::KeyKind::BorderCollapse:
             // separate | collapse | initial | inherit
@@ -9391,17 +9374,33 @@ bool CSSStyleValuePair::updateValueAngle(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueBorderImageWidth(
     Document* document, const CSSTokenVector& tokens)
 {
-    // [length | number]
-    if (tokens.size() != 1) {
+    // [ <length-percentage> | <number> | auto ]{1,4}
+    size_t size = tokens.size();
+    if (size < 1 || size > 4) {
         return false;
     }
 
-    const char* value = tokens[0].data();
-    if (CSSPropertyParser::parseNumber(value, 0, &(m_value.m_floatValue))) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Number;
-    } else {
-        return CSSPropertyParser::parseLength(value, 0, this);
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+
+    float result = 0.f;
+    for (unsigned int i = 0; i < size; i++) {
+        CSSTokenValue value = tokens[i];
+        if (CSSPropertyParser::parseNumber(value.data(), 0, &result)) {
+            values->push_back(CSSStyleValuePair(
+                CSSStyleValuePair::ValueKind::Number, (float)result));
+        } else {
+            CSSStyleValuePair ret;
+            if (!ret.updateValueUnitLengthOrCalc(
+                    value, CSSPropertyParser::AllowPercent |
+                               CSSPropertyParser::AllowAuto)) {
+                return false;
+            }
+            values->push_back(ret);
+        }
     }
+    m_value.m_multiValue = values;
+
     return true;
 }
 
