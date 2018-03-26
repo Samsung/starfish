@@ -861,6 +861,13 @@ enum TextDecorationStyleValue {
     WavyTextDecorationStyleValue,
 };
 
+enum TextUnderlinePositionValue {
+    AutoTextUnderlinePositionValue,
+    UnderTextUnderlinePositionValue,
+    LeftTextUnderlinePositionValue,
+    RightTextUnderlinePositionValue,
+};
+
 enum FontStyleValue {
     NormalFontStyleValue,
     ItalicFontStyleValue,
@@ -1051,148 +1058,149 @@ class CSSStyleDeclaration;
 // * top|bottom|left|right
 // * width|height
 // * border--[top|bottom|left|right]-width
-#define FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)                                    \
-    F(Color, color, "color")                                                 \
-    F(Direction, direction, "direction")                                     \
-    F(BackgroundColor, backgroundColor, "background-color")                  \
-    F(BackgroundImage, backgroundImage, "background-image")                  \
-    F(BackgroundSize, backgroundSize, "background-size")                     \
-    F(BackgroundAttachment, backgroundAttachment, "background-attachment")   \
-    F(BackgroundClip, backgroundClip, "background-clip")                     \
-    F(BackgroundOrigin, backgroundOrigin, "background-origin")               \
-    F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x")           \
-    F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y")           \
-    F(BackgroundPositionX, backgroundPositionX, "background-position-x")     \
-    F(BackgroundPositionY, backgroundPositionY, "background-position-y")     \
-    F(CounterReset, counterReset, "counter-reset")                           \
-    F(CounterIncrement, counterIncrement, "counter-increment")               \
-    F(LineHeight, lineHeight, "line-height")                                 \
-    F(WhiteSpace, whiteSpace, "white-space")                                 \
-    F(WordSpacing, wordSpacing, "word-spacing")                              \
-    F(PaddingTop, paddingTop, "padding-top")                                 \
-    F(PaddingRight, paddingRight, "padding-right")                           \
-    F(PaddingBottom, paddingBottom, "padding-bottom")                        \
-    F(PaddingLeft, paddingLeft, "padding-left")                              \
-    F(MarginTop, marginTop, "margin-top")                                    \
-    F(MarginRight, marginRight, "margin-right")                              \
-    F(MarginBottom, marginBottom, "margin-bottom")                           \
-    F(MarginLeft, marginLeft, "margin-left")                                 \
-    F(Top, top, "top")                                                       \
-    F(Bottom, bottom, "bottom")                                              \
-    F(Left, left, "left")                                                    \
-    F(Right, right, "right")                                                 \
-    F(Width, width, "width")                                                 \
-    F(Height, height, "height")                                              \
-    F(MaxWidth, maxWidth, "max-width")                                       \
-    F(MinWidth, minWidth, "min-width")                                       \
-    F(MaxHeight, maxHeight, "max-height")                                    \
-    F(MinHeight, minHeight, "min-height")                                    \
-    F(WordWrap, wordWrap, "word-wrap")                                       \
-    F(OverflowWrap, overflowWrap, "overflow-wrap")                           \
-    F(Position, position, "position")                                        \
-    F(TextDecoration, textDecoration, "text-decoration")                     \
-    F(TextDecorationLine, textDecorationLine, "text-decoration-line")        \
-    F(TextDecorationColor, textDecorationColor, "text-decoration-color")     \
-    F(TextDecorationStyle, textDecorationStyle, "text-decoration-style")     \
-    F(Display, display, "display")                                           \
-    F(Float, float, "float")                                                 \
-    F(Clear, clear, "clear")                                                 \
-    F(BorderImageSlice, borderImageSlice, "border-image-slice")              \
-    F(BorderImageSource, borderImageSource, "border-image-source")           \
-    F(BorderImageRepeat, borderImageRepeat, "border-image-repeat")           \
-    F(BorderImageWidth, borderImageWidth, "border-image-width")              \
-    F(BorderTopColor, borderTopColor, "border-top-color")                    \
-    F(BorderRightColor, borderRightColor, "border-right-color")              \
-    F(BorderBottomColor, borderBottomColor, "border-bottom-color")           \
-    F(BorderLeftColor, borderLeftColor, "border-left-color")                 \
-    F(BorderTopStyle, borderTopStyle, "border-top-style")                    \
-    F(BorderRightStyle, borderRightStyle, "border-right-style")              \
-    F(BorderBottomStyle, borderBottomStyle, "border-bottom-style")           \
-    F(BorderLeftStyle, borderLeftStyle, "border-left-style")                 \
-    F(BorderTopWidth, borderTopWidth, "border-top-width")                    \
-    F(BorderRightWidth, borderRightWidth, "border-right-width")              \
-    F(BorderBottomWidth, borderBottomWidth, "border-bottom-width")           \
-    F(BorderLeftWidth, borderLeftWidth, "border-left-width")                 \
-    F(BorderCollapse, borderCollapse, "border-collapse")                     \
-    F(BorderSpacing, borderSpacing, "border-spacing")                        \
-    F(CaptionSide, CaptionSide, "caption-side")                              \
-    F(EmptyCells, EmptyCells, "empty-cells")                                 \
-    F(TextAlign, textAlign, "text-align")                                    \
-    F(TextIndent, textIndent, "text-indent")                                 \
-    F(TextShadow, textShadow, "text-shadow")                                 \
-    F(TextTransform, textTransform, "text-transform")                        \
-    F(Transform, transform, "transform")                                     \
-    F(TransformOrigin, transformOrigin, "transform-origin")                  \
-    F(Visibility, visibility, "visibility")                                  \
-    F(ObjectFit, objectFit, "object-fit")                                    \
-    F(ObjectPosition, objectPosition, "object-position")                     \
-    F(OverflowX, overflowX, "overflow-x")                                    \
-    F(OverflowY, overflowY, "overflow-y")                                    \
-    F(ZIndex, zIndex, "z-index")                                             \
-    F(VerticalAlign, verticalAlign, "vertical-align")                        \
-    F(Opacity, opacity, "opacity")                                           \
-    F(TableLayout, tableLayout, "table-layout")                              \
-    F(UnicodeBidi, unicodeBidi, "unicode-bidi")                              \
-    F(Content, content, "content")                                           \
-    F(TransitionProperty, transitionProperty, "transition-property")         \
-    F(TransitionDuration, transitionDuration, "transition-duration")         \
-    F(TransitionTimingFunction, transitionTimingFunction,                    \
-      "transition-timing-function")                                          \
-    F(TransitionDelay, transitionDelay, "transition-delay")                  \
-    F(BoxShadow, boxShadow, "box-shadow")                                    \
-    F(BoxSizing, boxSizing, "box-sizing")                                    \
-    F(Fill, fill, "fill")                                                    \
-    F(FillOpacity, fillOpacity, "fill-opacity")                              \
-    F(FillRule, fillRule, "fill-rule")                                       \
-    F(Stroke, stroke, "stroke")                                              \
-    F(StrokeWidth, strokeWidth, "stroke-width")                              \
-    F(X, x, "x")                                                             \
-    F(Y, y, "y")                                                             \
-    F(R, r, "r")                                                             \
-    F(RX, rx, "rx")                                                          \
-    F(RY, ry, "ry")                                                          \
-    F(CX, cx, "cx")                                                          \
-    F(CY, cy, "cy")                                                          \
-    F(FlexDirection, flexDirection, "flex-direction")                        \
-    F(FlexWrap, flexWrap, "flex-wrap")                                       \
-    F(Order, order, "order")                                                 \
-    F(JustifyContent, justifyContent, "justify-content")                     \
-    F(AlignItems, alignItems, "align-items")                                 \
-    F(AlignSelf, alignSelf, "align-self")                                    \
-    F(AlignContent, alignContent, "align-content")                           \
-    F(FlexGrow, flexGrow, "flex-grow")                                       \
-    F(FlexShrink, flexShrink, "flex-shrink")                                 \
-    F(FlexBasis, flexBasis, "flex-basis")                                    \
-    F(OutlineColor, outlineColor, "outline-color")                           \
-    F(OutlineStyle, outlineStyle, "outline-style")                           \
-    F(OutlineWidth, outlineWidth, "outline-width")                           \
-    F(OutlineOffset, outlineOffset, "outline-offset")                        \
-    F(BorderTopLeftRadius, borderTopLeftRadius, "border-top-left-radius")    \
-    F(BorderTopRightRadius, borderTopRightRadius, "border-top-right-radius") \
-    F(BorderBottomRightRadius, borderBottomRightRadius,                      \
-      "border-bottom-right-radius")                                          \
-    F(BorderBottomLeftRadius, borderBottomLeftRadius,                        \
-      "border-bottom-left-radius")                                           \
-    F(Cursor, cursor, "cursor")                                              \
-    F(MaskImage, maskImage, "mask-image")                                    \
-    F(MaskSize, maskSize, "mask-size")                                       \
-    F(FontSize, fontSize, "font-size")                                       \
-    F(FontWeight, fontWeight, "font-weight")                                 \
-    F(FontStyle, fontStyle, "font-style")                                    \
-    F(ListStylePosition, listStylePosition, "list-style-position")           \
-    F(ListStyleImage, listStyleImage, "list-style-image")                    \
-    F(ListStyleType, listStyleType, "list-style-type")                       \
-    F(Clip, clip, "clip")                                                    \
-    F(LetterSpacing, letterSpacing, "letter-spacing")                        \
-    F(UserSelect, userSelect, "user-select")                                 \
-    F(GridTemplateColumns, gridTemplateColumns, "grid-template-columns")     \
-    F(GridTemplateRows, gridTemplateRows, "grid-template-rows")              \
-    F(CaretColor, caretColor, "caret-color")                                 \
-    F(FontKerning, fontKerning, "font-kerning")                              \
-    F(ImageRendering, imageRendering, "image-rendering")                     \
-    F(TextOverflow, textOverflow, "text-overflow")                           \
-    F(Hyphens, hyphens, "hyphens")                                           \
-    F(LineBreak, lineBreak, "line-break")                                    \
+#define FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)                                      \
+    F(Color, color, "color")                                                   \
+    F(Direction, direction, "direction")                                       \
+    F(BackgroundColor, backgroundColor, "background-color")                    \
+    F(BackgroundImage, backgroundImage, "background-image")                    \
+    F(BackgroundSize, backgroundSize, "background-size")                       \
+    F(BackgroundAttachment, backgroundAttachment, "background-attachment")     \
+    F(BackgroundClip, backgroundClip, "background-clip")                       \
+    F(BackgroundOrigin, backgroundOrigin, "background-origin")                 \
+    F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x")             \
+    F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y")             \
+    F(BackgroundPositionX, backgroundPositionX, "background-position-x")       \
+    F(BackgroundPositionY, backgroundPositionY, "background-position-y")       \
+    F(CounterReset, counterReset, "counter-reset")                             \
+    F(CounterIncrement, counterIncrement, "counter-increment")                 \
+    F(LineHeight, lineHeight, "line-height")                                   \
+    F(WhiteSpace, whiteSpace, "white-space")                                   \
+    F(WordSpacing, wordSpacing, "word-spacing")                                \
+    F(PaddingTop, paddingTop, "padding-top")                                   \
+    F(PaddingRight, paddingRight, "padding-right")                             \
+    F(PaddingBottom, paddingBottom, "padding-bottom")                          \
+    F(PaddingLeft, paddingLeft, "padding-left")                                \
+    F(MarginTop, marginTop, "margin-top")                                      \
+    F(MarginRight, marginRight, "margin-right")                                \
+    F(MarginBottom, marginBottom, "margin-bottom")                             \
+    F(MarginLeft, marginLeft, "margin-left")                                   \
+    F(Top, top, "top")                                                         \
+    F(Bottom, bottom, "bottom")                                                \
+    F(Left, left, "left")                                                      \
+    F(Right, right, "right")                                                   \
+    F(Width, width, "width")                                                   \
+    F(Height, height, "height")                                                \
+    F(MaxWidth, maxWidth, "max-width")                                         \
+    F(MinWidth, minWidth, "min-width")                                         \
+    F(MaxHeight, maxHeight, "max-height")                                      \
+    F(MinHeight, minHeight, "min-height")                                      \
+    F(WordWrap, wordWrap, "word-wrap")                                         \
+    F(OverflowWrap, overflowWrap, "overflow-wrap")                             \
+    F(Position, position, "position")                                          \
+    F(TextDecoration, textDecoration, "text-decoration")                       \
+    F(TextDecorationLine, textDecorationLine, "text-decoration-line")          \
+    F(TextDecorationColor, textDecorationColor, "text-decoration-color")       \
+    F(TextDecorationStyle, textDecorationStyle, "text-decoration-style")       \
+    F(TextUnderlinePosition, textUnderlinePosition, "text-underline-position") \
+    F(Display, display, "display")                                             \
+    F(Float, float, "float")                                                   \
+    F(Clear, clear, "clear")                                                   \
+    F(BorderImageSlice, borderImageSlice, "border-image-slice")                \
+    F(BorderImageSource, borderImageSource, "border-image-source")             \
+    F(BorderImageRepeat, borderImageRepeat, "border-image-repeat")             \
+    F(BorderImageWidth, borderImageWidth, "border-image-width")                \
+    F(BorderTopColor, borderTopColor, "border-top-color")                      \
+    F(BorderRightColor, borderRightColor, "border-right-color")                \
+    F(BorderBottomColor, borderBottomColor, "border-bottom-color")             \
+    F(BorderLeftColor, borderLeftColor, "border-left-color")                   \
+    F(BorderTopStyle, borderTopStyle, "border-top-style")                      \
+    F(BorderRightStyle, borderRightStyle, "border-right-style")                \
+    F(BorderBottomStyle, borderBottomStyle, "border-bottom-style")             \
+    F(BorderLeftStyle, borderLeftStyle, "border-left-style")                   \
+    F(BorderTopWidth, borderTopWidth, "border-top-width")                      \
+    F(BorderRightWidth, borderRightWidth, "border-right-width")                \
+    F(BorderBottomWidth, borderBottomWidth, "border-bottom-width")             \
+    F(BorderLeftWidth, borderLeftWidth, "border-left-width")                   \
+    F(BorderCollapse, borderCollapse, "border-collapse")                       \
+    F(BorderSpacing, borderSpacing, "border-spacing")                          \
+    F(CaptionSide, CaptionSide, "caption-side")                                \
+    F(EmptyCells, EmptyCells, "empty-cells")                                   \
+    F(TextAlign, textAlign, "text-align")                                      \
+    F(TextIndent, textIndent, "text-indent")                                   \
+    F(TextShadow, textShadow, "text-shadow")                                   \
+    F(TextTransform, textTransform, "text-transform")                          \
+    F(Transform, transform, "transform")                                       \
+    F(TransformOrigin, transformOrigin, "transform-origin")                    \
+    F(Visibility, visibility, "visibility")                                    \
+    F(ObjectFit, objectFit, "object-fit")                                      \
+    F(ObjectPosition, objectPosition, "object-position")                       \
+    F(OverflowX, overflowX, "overflow-x")                                      \
+    F(OverflowY, overflowY, "overflow-y")                                      \
+    F(ZIndex, zIndex, "z-index")                                               \
+    F(VerticalAlign, verticalAlign, "vertical-align")                          \
+    F(Opacity, opacity, "opacity")                                             \
+    F(TableLayout, tableLayout, "table-layout")                                \
+    F(UnicodeBidi, unicodeBidi, "unicode-bidi")                                \
+    F(Content, content, "content")                                             \
+    F(TransitionProperty, transitionProperty, "transition-property")           \
+    F(TransitionDuration, transitionDuration, "transition-duration")           \
+    F(TransitionTimingFunction, transitionTimingFunction,                      \
+      "transition-timing-function")                                            \
+    F(TransitionDelay, transitionDelay, "transition-delay")                    \
+    F(BoxShadow, boxShadow, "box-shadow")                                      \
+    F(BoxSizing, boxSizing, "box-sizing")                                      \
+    F(Fill, fill, "fill")                                                      \
+    F(FillOpacity, fillOpacity, "fill-opacity")                                \
+    F(FillRule, fillRule, "fill-rule")                                         \
+    F(Stroke, stroke, "stroke")                                                \
+    F(StrokeWidth, strokeWidth, "stroke-width")                                \
+    F(X, x, "x")                                                               \
+    F(Y, y, "y")                                                               \
+    F(R, r, "r")                                                               \
+    F(RX, rx, "rx")                                                            \
+    F(RY, ry, "ry")                                                            \
+    F(CX, cx, "cx")                                                            \
+    F(CY, cy, "cy")                                                            \
+    F(FlexDirection, flexDirection, "flex-direction")                          \
+    F(FlexWrap, flexWrap, "flex-wrap")                                         \
+    F(Order, order, "order")                                                   \
+    F(JustifyContent, justifyContent, "justify-content")                       \
+    F(AlignItems, alignItems, "align-items")                                   \
+    F(AlignSelf, alignSelf, "align-self")                                      \
+    F(AlignContent, alignContent, "align-content")                             \
+    F(FlexGrow, flexGrow, "flex-grow")                                         \
+    F(FlexShrink, flexShrink, "flex-shrink")                                   \
+    F(FlexBasis, flexBasis, "flex-basis")                                      \
+    F(OutlineColor, outlineColor, "outline-color")                             \
+    F(OutlineStyle, outlineStyle, "outline-style")                             \
+    F(OutlineWidth, outlineWidth, "outline-width")                             \
+    F(OutlineOffset, outlineOffset, "outline-offset")                          \
+    F(BorderTopLeftRadius, borderTopLeftRadius, "border-top-left-radius")      \
+    F(BorderTopRightRadius, borderTopRightRadius, "border-top-right-radius")   \
+    F(BorderBottomRightRadius, borderBottomRightRadius,                        \
+      "border-bottom-right-radius")                                            \
+    F(BorderBottomLeftRadius, borderBottomLeftRadius,                          \
+      "border-bottom-left-radius")                                             \
+    F(Cursor, cursor, "cursor")                                                \
+    F(MaskImage, maskImage, "mask-image")                                      \
+    F(MaskSize, maskSize, "mask-size")                                         \
+    F(FontSize, fontSize, "font-size")                                         \
+    F(FontWeight, fontWeight, "font-weight")                                   \
+    F(FontStyle, fontStyle, "font-style")                                      \
+    F(ListStylePosition, listStylePosition, "list-style-position")             \
+    F(ListStyleImage, listStyleImage, "list-style-image")                      \
+    F(ListStyleType, listStyleType, "list-style-type")                         \
+    F(Clip, clip, "clip")                                                      \
+    F(LetterSpacing, letterSpacing, "letter-spacing")                          \
+    F(UserSelect, userSelect, "user-select")                                   \
+    F(GridTemplateColumns, gridTemplateColumns, "grid-template-columns")       \
+    F(GridTemplateRows, gridTemplateRows, "grid-template-rows")                \
+    F(CaretColor, caretColor, "caret-color")                                   \
+    F(FontKerning, fontKerning, "font-kerning")                                \
+    F(ImageRendering, imageRendering, "image-rendering")                       \
+    F(TextOverflow, textOverflow, "text-overflow")                             \
+    F(Hyphens, hyphens, "hyphens")                                             \
+    F(LineBreak, lineBreak, "line-break")                                      \
     F(WordBreak, wordBreak, "word-break")
 
 // font related properties must be followed end of this
@@ -1417,6 +1425,7 @@ public:
         OverflowValueKind,
         TextDecorationLineValueKind,
         TextDecorationStyleValueKind,
+        TextUnderlinePositionValueKind,
         VisibilityValueKind,
         UnicodeBidiValueKind,
         BoxSizingValueKind,
@@ -1842,6 +1851,12 @@ public:
         return m_value.m_textDecorationStyle;
     }
 
+    TextUnderlinePositionValue textUnderlinePositionValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == TextUnderlinePositionValueKind);
+        return m_value.m_textUnderlinePosition;
+    }
+
     Unit::Color colorValue() const
     {
         STARFISH_ASSERT(m_valueKind == ColorValueKind);
@@ -2071,6 +2086,7 @@ public:
         UnicodeBidiValue m_unicodeBidi;
         TextDecorationLineValue m_textDecorationLine;
         TextDecorationStyleValue m_textDecorationStyle;
+        TextUnderlinePositionValue m_textUnderlinePosition;
         CSSTransformFunctions* m_transforms;
         Unit::Color m_color;
         NamedColor::NamedColorValue m_namedColor;
@@ -2245,6 +2261,10 @@ public:
         }
         ValueData(TextDecorationStyleValue v)
             : m_textDecorationStyle(v)
+        {
+        }
+        ValueData(TextUnderlinePositionValue v)
+            : m_textUnderlinePosition(v)
         {
         }
         ValueData(CSSTransformFunctions* v)

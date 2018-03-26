@@ -2222,6 +2222,20 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
+    case CSSStyleValuePair::ValueKind::TextUnderlinePositionValueKind:
+        switch (textUnderlinePositionValue()) {
+        case TextUnderlinePositionValue::AutoTextUnderlinePositionValue:
+            return String::fromUTF8("auto");
+        case TextUnderlinePositionValue::UnderTextUnderlinePositionValue:
+            return String::fromUTF8("under");
+        case TextUnderlinePositionValue::LeftTextUnderlinePositionValue:
+            return String::fromUTF8("left");
+        case TextUnderlinePositionValue::RightTextUnderlinePositionValue:
+            return String::fromUTF8("right");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
     case CSSStyleValuePair::ValueKind::VisibilityValueKind:
         switch (visibilityValue()) {
         case VisibilityValue::VisibleVisibilityValue:
@@ -4626,6 +4640,25 @@ void StyleResolver::apply(Element* element,
                     CSSStyleValuePair::ValueKind::TextDecorationStyleValueKind);
                 style->setTextDecorationStyle(
                     cssValues[k].textDecorationStyleValue());
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::TextUnderlinePosition:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setTextUnderlinePosition(
+                    parentStyle->textUnderlinePosition());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setTextUnderlinePosition(
+                    TextUnderlinePositionValue::AutoTextUnderlinePositionValue);
+                break;
+            default:
+                STARFISH_ASSERT(cssValues[k].valueKind() ==
+                                CSSStyleValuePair::ValueKind::
+                                    TextUnderlinePositionValueKind);
+                style->setTextUnderlinePosition(
+                    cssValues[k].textUnderlinePositionValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::TextShadow: {
@@ -10762,6 +10795,38 @@ bool CSSStyleValuePair::updateValueTextDecorationStyle(
     } else {
         return false;
     }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTextUnderlinePosition(
+    Document* document, const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::TextUnderlinePositionValueKind;
+
+    if (STRING_VALUE_IS_STRING("auto")) {
+        m_value.m_textUnderlinePosition =
+            TextUnderlinePositionValue::AutoTextUnderlinePositionValue;
+    } else if (STRING_VALUE_IS_STRING("under")) {
+        m_value.m_textUnderlinePosition =
+            TextUnderlinePositionValue::UnderTextUnderlinePositionValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("left")) {
+        m_value.m_textUnderlinePosition =
+            TextUnderlinePositionValue::LeftTextUnderlinePositionValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("right")) {
+        m_value.m_textUnderlinePosition =
+            TextUnderlinePositionValue::RightTextUnderlinePositionValue;
+        return false; // unsupported yet
+    } else {
+        return false;
+    }
+
     return true;
 }
 
