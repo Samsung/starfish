@@ -2803,12 +2803,20 @@ void FrameBox::establishesStackingContextIfNeeds()
 
 LayoutRect FrameBox::frameVisibleRect()
 {
+    LayoutRect out = frameVisibleOutlineRect();
+    LayoutRect shadow = frameVisibleShadowsRect();
+    out.unite(shadow);
+    return out;
+}
+
+LayoutRect FrameBox::frameVisibleOutlineRect()
+{
     LayoutRect r = frameRect();
     r.setX(0);
     r.setY(0);
 
     ComputedStyle* cs = style();
-    // TODO add box-shadow size into visibleRect when box-shadow implemented
+
     if (cs && cs->outlineStyle() != BorderStyleValue::NoneBorderStyleValue) {
         LayoutUnit t = outlineThickness();
         r.setX(r.x() - t);
@@ -2818,6 +2826,59 @@ LayoutRect FrameBox::frameVisibleRect()
     }
 
     return r;
+}
+ALWAYS_INLINE LayoutRect computeVisibleShadowRect(
+    const LayoutRect& owner, const CanvasShadowData& shadow)
+{
+    LayoutRect ret = owner;
+    if (!shadow.inset()) {
+        float radiusOffset = 0.0f;
+        if (shadow.radius()) {
+            radiusOffset = shadow.radius();
+            radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
+        }
+        float sd = shadow.spreadDistance();
+        LayoutRect rect(owner.x() + shadow.offsetX() - radiusOffset - sd,
+                        owner.y() + shadow.offsetY() - radiusOffset - sd,
+                        ceil(owner.width() + sd * 2 + radiusOffset * 2),
+                        ceil(owner.height() + sd * 2 + radiusOffset * 2));
+
+        ret.unite(rect);
+    }
+    return ret;
+}
+
+LayoutRect FrameBox::frameVisibleShadowsRect()
+{
+    LayoutRect owner = frameRect();
+    owner.setX(0);
+    owner.setY(0);
+
+    LayoutRect ret = owner;
+
+    ComputedStyle* cs = style();
+    if (!cs) {
+        return ret;
+    }
+
+    if (cs->boxShadow().size()) {
+        CanvasShadowDataList list =
+            cs->boxShadow().toCanvasShadowDataList(this);
+        for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
+            LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
+            ret.unite(rect);
+        }
+    }
+
+    if (cs->textShadow().size()) {
+        CanvasShadowDataList list =
+            cs->textShadow().toCanvasShadowDataList(this);
+        for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
+            LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
+            ret.unite(rect);
+        }
+    }
+    return ret;
 }
 
 bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
@@ -2829,14 +2890,14 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     }
 
     ComputedStyle* cs = style();
+
     if (cs && cs->visibility() == HiddenVisibilityValue) {
         return true;
     }
 
     bool ret = !shouldApplyOverflow();
-    LayoutRect r = frameVisibleRect();
+    LayoutRect outline = frameVisibleOutlineRect();
 
-    // TODO consider box-shadow here visibleRect when box-shadow implemented
     if (ctx.purpose == Frame::ComputeVisibleRectContext::GraphicsBuffer &&
         isFrameBlockBox()) {
         BorderData border = cs->border();
@@ -2845,8 +2906,8 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
              cs->backgroundLayerSize() == 0 && !border.hasBorderStyle() &&
              (cs->outlineStyle() == BorderStyleValue::NoneBorderStyleValue ||
               outlineThickness() == 0))) {
-            r.setWidth(0);
-            r.setHeight(0);
+            outline.setWidth(0);
+            outline.setHeight(0);
             ret = true;
         }
     }
@@ -2855,12 +2916,51 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         ctx.purpose == Frame::ComputeVisibleRectContext::Scrolling &&
         isFrameFlexibleBox()) {
         if (cs->height().isDefinite(true)) {
-            ctx.uniteRect(r);
-            return false;
+            ctx.uniteRect(outline);
+            ret = false;
         }
     }
+    ctx.uniteRect(outline);
 
-    ctx.uniteRect(r);
+    for (int i = 0; cs && i < 2; ++i) {
+        CanvasShadowDataList list;
+        LayoutRect owner = frameRect();
+        owner.setX(0);
+        owner.setY(0);
+        LayoutRect shadowsRect = owner;
+        if (i == 0) {
+            list = cs->boxShadow().toCanvasShadowDataList(this);
+        } else {
+            list = cs->textShadow().toCanvasShadowDataList(this);
+        }
+        for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
+            if (ctx.purpose ==
+                    Frame::ComputeVisibleRectContext::GraphicsBuffer &&
+                isFrameBlockBox()) {
+                if (shadow->hasColor() && !shadow->color().isTransparent()) {
+                    LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
+                    shadowsRect.unite(rect);
+                    ret = false;
+                } else if (!shadow->hasColor() &&
+                           !cs->color().isTransparent()) {
+                    LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
+                    shadowsRect.unite(rect);
+                    ret = false;
+                }
+            } else if (ctx.isForSpecialValueForTableCell &&
+                       ctx.purpose ==
+                           Frame::ComputeVisibleRectContext::Scrolling &&
+                       isFrameFlexibleBox()) {
+                LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
+                shadowsRect.unite(rect);
+                ret = false;
+            }
+        }
+
+        if (shadowsRect != owner) {
+            ctx.uniteRect(shadowsRect);
+        }
+    }
 
     return ret;
 }

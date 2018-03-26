@@ -142,6 +142,8 @@ public:
 
     // FrameRect including outline, box-shadow
     LayoutRect frameVisibleRect();
+    LayoutRect frameVisibleOutlineRect();
+    LayoutRect frameVisibleShadowsRect();
 
     LayoutUnit x() const
     {

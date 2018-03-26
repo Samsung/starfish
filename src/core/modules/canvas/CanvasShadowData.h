@@ -38,37 +38,37 @@ public:
     {
     }
 
-    float offsetX()
+    float offsetX() const
     {
         return m_offsetX;
     }
 
-    float offsetY()
+    float offsetY() const
     {
         return m_offsetY;
     }
 
-    float radius()
+    float radius() const
     {
         return m_radius;
     }
 
-    Unit::Color color()
+    Unit::Color color() const
     {
         return m_color;
     }
 
-    bool hasColor()
+    bool hasColor() const
     {
         return m_hasColor;
     }
 
-    float spreadDistance()
+    float spreadDistance() const
     {
         return m_spreadDistance;
     }
 
-    bool inset()
+    bool inset() const
     {
         return m_inset;
     }
