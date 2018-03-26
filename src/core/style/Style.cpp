@@ -2471,6 +2471,16 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
+    case CSSStyleValuePair::ValueKind::LineBreakValueKind:
+        switch (lineBreakValue()) {
+        case LooseLineBreakValue:
+            return String::fromUTF8("loose");
+        case NormalLineBreakValue:
+            return String::fromUTF8("normal");
+        case StrictLineBreakValue:
+            return String::fromUTF8("strict");
+        }
+        break;
     case CSSStyleValuePair::ValueKind::GridTemplateUnits:
         return GridLength::toStringWithGridLengths(gridTemplateUnits());
     case CSSStyleValuePair::ValueKind::CounterFunctionValueKind:
@@ -6977,6 +6987,23 @@ void StyleResolver::apply(Element* element,
                     cssValues[k].valueKind());
                 style->setHyphens(cssValues[k].hyphensValue());
                 break;
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::LineBreak:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setLineBreak(parentStyle->lineBreak());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::Auto:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setLineBreak(LineBreakValue::NormalLineBreakValue);
+                break;
+            default:
+                STARFISH_ASSERT(
+                    CSSStyleValuePair::ValueKind::LineBreakValueKind ==
+                    cssValues[k].valueKind());
+                style->setLineBreak(cssValues[k].lineBreakValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::GridTemplateColumns:
@@ -12256,6 +12283,32 @@ bool CSSStyleValuePair::updateValueHyphens(Document* document,
         // TODO: enable the comment below when supporting this value
         // m_value.m_hyphens = HyphensValue::ManualHyphensValue;
         return false;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueLineBreak(Document* document,
+                                             const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_STRING("auto")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+        return true;
+    }
+
+    m_valueKind = CSSStyleValuePair::ValueKind::LineBreakValueKind;
+    if (STRING_VALUE_IS_STRING("loose")) {
+        m_value.m_lineBreak = LineBreakValue::LooseLineBreakValue;
+    } else if (STRING_VALUE_IS_STRING("normal")) {
+        m_value.m_lineBreak = LineBreakValue::NormalLineBreakValue;
+    } else if (STRING_VALUE_IS_STRING("strict")) {
+        m_value.m_lineBreak = LineBreakValue::StrictLineBreakValue;
     } else {
         return false;
     }

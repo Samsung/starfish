@@ -1748,6 +1748,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->lineBreak() != oldStyle->lineBreak()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::LineBreak] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     return damage;
 }
 
