@@ -1405,12 +1405,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     // and is further propagated to any in-flow block-level boxes that split the
     // inline (see section 9.2.1.1).
     // https://www.w3.org/TR/CSS2/text.html#propdef-text-decoration
-    if (newStyle->m_textDecoration != oldStyle->m_textDecoration) {
-        damagedKeys[CSSStyleValuePair::KeyKind::TextDecoration] = true;
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
-    }
-
     if (newStyle->textDecorationColor() != oldStyle->textDecorationColor()) {
         damagedKeys[CSSStyleValuePair::KeyKind::TextDecorationColor] = true;
         damage = (ComputedStyleDamage)(
@@ -1419,6 +1413,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->textDecorationLine() != oldStyle->textDecorationLine()) {
         damagedKeys[CSSStyleValuePair::KeyKind::TextDecorationLine] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->textDecorationStyle() != oldStyle->textDecorationStyle()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextDecorationStyle] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }

@@ -853,6 +853,14 @@ enum TextDecorationLineValue {
     BlinkTextDecorationLineValue,
 };
 
+enum TextDecorationStyleValue {
+    SolidTextDecorationStyleValue,
+    DoubleTextDecorationStyleValue,
+    DottedTextDecorationStyleValue,
+    DashedTextDecorationStyleValue,
+    WavyTextDecorationStyleValue,
+};
+
 enum FontStyleValue {
     NormalFontStyleValue,
     ItalicFontStyleValue,
@@ -1085,6 +1093,7 @@ class CSSStyleDeclaration;
     F(TextDecoration, textDecoration, "text-decoration")                     \
     F(TextDecorationLine, textDecorationLine, "text-decoration-line")        \
     F(TextDecorationColor, textDecorationColor, "text-decoration-color")     \
+    F(TextDecorationStyle, textDecorationStyle, "text-decoration-style")     \
     F(Display, display, "display")                                           \
     F(Float, float, "float")                                                 \
     F(Clear, clear, "clear")                                                 \
@@ -1407,6 +1416,7 @@ public:
 
         OverflowValueKind,
         TextDecorationLineValueKind,
+        TextDecorationStyleValueKind,
         VisibilityValueKind,
         UnicodeBidiValueKind,
         BoxSizingValueKind,
@@ -1816,14 +1826,20 @@ public:
 
     TextDecorationLineValue textDecorationValue() const
     {
-        STARFISH_ASSERT(m_valueKind == TextDecorationLineValueKind);
-        return m_value.m_textDecoration;
+        // TODO: shorthand not supported yet
+        return textDecorationLineValue();
     }
 
     TextDecorationLineValue textDecorationLineValue() const
     {
         STARFISH_ASSERT(m_valueKind == TextDecorationLineValueKind);
-        return m_value.m_textDecoration;
+        return m_value.m_textDecorationLine;
+    }
+
+    TextDecorationStyleValue textDecorationStyleValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == TextDecorationStyleValueKind);
+        return m_value.m_textDecorationStyle;
     }
 
     Unit::Color colorValue() const
@@ -2053,7 +2069,8 @@ public:
         OverflowValue m_overflow;
         VisibilityValue m_visibility;
         UnicodeBidiValue m_unicodeBidi;
-        TextDecorationLineValue m_textDecoration;
+        TextDecorationLineValue m_textDecorationLine;
+        TextDecorationStyleValue m_textDecorationStyle;
         CSSTransformFunctions* m_transforms;
         Unit::Color m_color;
         NamedColor::NamedColorValue m_namedColor;
@@ -2223,7 +2240,11 @@ public:
         {
         }
         ValueData(TextDecorationLineValue v)
-            : m_textDecoration(v)
+            : m_textDecorationLine(v)
+        {
+        }
+        ValueData(TextDecorationStyleValue v)
+            : m_textDecorationStyle(v)
         {
         }
         ValueData(CSSTransformFunctions* v)
