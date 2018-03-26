@@ -29,6 +29,26 @@ class FrameBox;
 class FrameGridBox;
 class LineBox;
 
+class GridArea : public gc {
+public:
+    GridArea(FrameBox* box, size_t idx, size_t rowStart, size_t rowEnd,
+             size_t columnStart, size_t columnEnd)
+        : m_box(box)
+        , m_index(idx)
+        , m_rowStart(rowStart)
+        , m_rowEnd(rowEnd)
+        , m_columnStart(columnStart)
+        , m_columnEnd(columnEnd)
+    {
+    }
+    FrameBox* m_box;
+    size_t m_index;
+    size_t m_rowStart;
+    size_t m_rowEnd;
+    size_t m_columnStart;
+    size_t m_columnEnd;
+};
+
 class GridLine : public gc {
 public:
     LayoutUnit offset()
@@ -127,6 +147,7 @@ struct GridLayoutScope {
     Length m_maxHeight;
 };
 
+#define GRID_MAX_TRACK 50
 class GridFormattingContext {
 public:
     GridFormattingContext(LayoutContext& ctx, FrameGridBox* container,
@@ -137,7 +158,10 @@ public:
     void applyFrUnitsWithRows();
     void buildGridLineTemplate();
     void layoutGridItems();
-    void arrangeGridLines();
+    void arrageGridLinesWithGridAreas();
+    bool fixGridAreaWithDefine(GridArea*, size_t);
+    bool fixGridAreaWithUndefine(GridArea*, size_t);
+    void buildGridAreaAndOrdering();
     LayoutUnit preferredWidth();
 
     static bool doesParticipateInGridFormattingContext(Frame* GridItem);
@@ -149,6 +173,9 @@ private:
     GCVector<GridLine> m_gridLineColumns;
     GCVector<GridLine> m_gridLineRows;
     GCVector<FrameBox*> m_orderedGridItems;
+    GCVector<GridArea> m_orderedGridArea;
+    // FIXME(#1286): This checker is poor.
+    bool m_areaChecker[GRID_MAX_TRACK][GRID_MAX_TRACK];
 };
 
 class FrameGridBox : public FrameBlockBox {

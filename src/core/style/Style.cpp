@@ -7184,6 +7184,42 @@ void StyleResolver::apply(Element* element,
                 break;
             }
             break;
+        case CSSStyleValuePair::KeyKind::GridColumnStart:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Int32:
+                style->setGridColumnStart(cssValues[k].int32Value());
+                break;
+            default:
+                break;
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::GridColumnEnd:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Int32:
+                style->setGridColumnEnd(cssValues[k].int32Value());
+                break;
+            default:
+                break;
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::GridRowStart:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Int32:
+                style->setGridRowStart(cssValues[k].int32Value());
+                break;
+            default:
+                break;
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::GridRowEnd:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Int32:
+                style->setGridRowEnd(cssValues[k].int32Value());
+                break;
+            default:
+                break;
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -10169,6 +10205,110 @@ bool CSSStyleValuePair::updateValueGridTemplateRows(
     setGridTemplateUnits(v);
 
     return true;
+}
+
+bool CSSStyleValuePair::updateValueGridRowStart(Document* document,
+                                                const CSSTokenVector& tokens)
+{
+    if (!tokens.size()) {
+        return false;
+    }
+
+    auto ss = tokens[0].trim();
+    CSSPropertyParser parser((char*)ss.data(), ss.length());
+
+    bool hasPoint = false;
+    parser.consumeWhitespaces();
+    if (!parser.consumeNumber(&hasPoint)) {
+        return false;
+    }
+
+    float number = parser.parsedNumber();
+
+    if (number >= 1.0f) {
+        setInt32Value(number);
+        return true;
+    }
+
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueGridRowEnd(Document* document,
+                                              const CSSTokenVector& tokens)
+{
+    if (!tokens.size()) {
+        return false;
+    }
+
+    auto ss = tokens[0].trim();
+    CSSPropertyParser parser((char*)ss.data(), ss.length());
+
+    bool hasPoint = false;
+    parser.consumeWhitespaces();
+    if (!parser.consumeNumber(&hasPoint)) {
+        return false;
+    }
+
+    float number = parser.parsedNumber();
+
+    if (number >= 1.0f) {
+        setInt32Value(number);
+        return true;
+    }
+
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueGridColumnStart(Document* document,
+                                                   const CSSTokenVector& tokens)
+{
+    if (!tokens.size()) {
+        return false;
+    }
+
+    auto ss = tokens[0].trim();
+    CSSPropertyParser parser((char*)ss.data(), ss.length());
+
+    bool hasPoint = false;
+    parser.consumeWhitespaces();
+    if (!parser.consumeNumber(&hasPoint)) {
+        return false;
+    }
+
+    float number = parser.parsedNumber();
+
+    if (number >= 1.0f) {
+        setInt32Value(number);
+        return true;
+    }
+
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueGridColumnEnd(Document* document,
+                                                 const CSSTokenVector& tokens)
+{
+    if (!tokens.size()) {
+        return false;
+    }
+
+    auto ss = tokens[0].trim();
+    CSSPropertyParser parser((char*)ss.data(), ss.length());
+
+    bool hasPoint = false;
+    parser.consumeWhitespaces();
+    if (!parser.consumeNumber(&hasPoint)) {
+        return false;
+    }
+
+    float number = parser.parsedNumber();
+
+    if (number >= 1.0f) {
+        setInt32Value(number);
+        return true;
+    }
+
+    return false;
 }
 
 bool CSSStyleValuePair::updateValueTransformOrigin(Document* document,
