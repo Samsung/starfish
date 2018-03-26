@@ -1002,7 +1002,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageWidth);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList();
+        ValueList* vals = new ValueList(ValueList::Separator::SpaceSeparator);
         BorderData border = style->border();
         BorderImageLengthBox box = border.image().widths();
 

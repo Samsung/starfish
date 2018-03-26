@@ -39,6 +39,7 @@ public:
     BorderImageLength(Length length)
         : m_type(LengthType)
         , m_length(length)
+        , m_number(0.0)
     {
     }
 
@@ -99,7 +100,24 @@ public:
         }
     }
 
-    float specifiedSliceValue(LayoutUnit parentLength, Frame* f)
+    // borderImgArea: Percentage
+    // borderWidth : Number
+    // borderImgSlice : Auto
+    float computeBorderImageWidth(LayoutUnit borderImgArea,
+                                  LayoutUnit borderWidth,
+                                  LayoutUnit borderImgSlice, Frame* f)
+    {
+        STARFISH_ASSERT(isSpecified());
+        if (isNumber()) {
+            return borderWidth * number();
+        }
+        if (isLength() && length().isAuto()) {
+            return borderImgSlice;
+        }
+        return length().specifiedValue(borderImgArea, f);
+    }
+
+    float computedBorderImageSlice(LayoutUnit parentLength, Frame* f)
     {
         STARFISH_ASSERT(isSpecified());
         if (isLength()) {

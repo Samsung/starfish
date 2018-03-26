@@ -1441,32 +1441,173 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
     // draw border-image
     BorderData border = style()->border();
     if (border.hasBorderImageData()) {
-        // Draw image borders at the four corners as shown below.
-        //   ______________
-        //  |_|          |_|
-        //  |              |
-        //  |              |
-        //  |_            _|
-        //  |_|__________|_|
-        //
+// Draw image borders at the four corners as shown below.
+//   ______________
+//  |_|          |_|
+//  |              |
+//  |              |
+//  |_            _|
+//  |_|__________|_|
+//
 
-        double bWidth = border.top().width().specifiedValue(height(), this);
-        double bImgWidth =
-            border.image().widths().top().specifiedValue(bWidth, this);
-        double bImgSlice =
-            border.image().slices().top().specifiedSliceValue(height(), this);
+#if !defined(PORT_CANVAS_BACKEND_EFL)
+        double bLWidth = border.left().width().specifiedValue(width(), this);
+        double bTWidth = border.top().width().specifiedValue(height(), this);
+        double bRWidth = border.right().width().specifiedValue(width(), this);
+        double bBWidth = border.bottom().width().specifiedValue(height(), this);
 
         size_t imgWidth = border.image().imageData()->width();
         size_t imgHeight = border.image().imageData()->height();
 
-        size_t lSlice =
-            border.image().slices().left().specifiedSliceValue(imgWidth, this);
-        size_t tSlice =
-            border.image().slices().top().specifiedSliceValue(imgHeight, this);
-        size_t rSlice =
-            border.image().slices().right().specifiedSliceValue(imgWidth, this);
-        size_t bSlice = border.image().slices().bottom().specifiedSliceValue(
+        size_t lSlice = std::min(
+            (size_t)border.image().slices().left().computedBorderImageSlice(
+                imgWidth, this),
+            imgWidth);
+        size_t tSlice = std::min(
+            (size_t)border.image().slices().top().computedBorderImageSlice(
+                imgHeight, this),
+            imgHeight);
+        size_t rSlice = std::min(
+            (size_t)border.image().slices().right().computedBorderImageSlice(
+                imgWidth, this),
+            imgWidth);
+        size_t bSlice = std::min(
+            (size_t)border.image().slices().bottom().computedBorderImageSlice(
+                imgHeight, this),
+            imgHeight);
+
+        double bImgLWidth =
+            border.image().widths().left().computeBorderImageWidth(
+                width(), bLWidth, lSlice, this);
+        double bImgTWidth =
+            border.image().widths().top().computeBorderImageWidth(
+                height(), bTWidth, tSlice, this);
+        double bImgRWidth =
+            border.image().widths().right().computeBorderImageWidth(
+                width(), bRWidth, rSlice, this);
+        double bImgBWidth =
+            border.image().widths().bottom().computeBorderImageWidth(
+                height(), bBWidth, bSlice, this);
+
+        double value = std::min((float)width() / (bImgLWidth + bImgRWidth),
+                                (float)height() / (bImgTWidth + bImgBWidth));
+        if (value < 1) {
+            bImgLWidth *= value;
+            bImgRWidth *= value;
+            bImgTWidth *= value;
+            bImgBWidth *= value;
+        }
+
+        NativeImageData* imgData = border.image().imageData();
+        canvas->setNeedsGoodQualityAntialias();
+
+        ImageRenderingValue imageRenderingValue = style()->imageRendering();
+
+        // Four Corners
+        // left-top
+        canvas->drawImage(
+            imgData, Unit::Rect(0, 0, lSlice, tSlice),
+            Unit::Rect(rect.x(), rect.y(), bImgLWidth, bImgTWidth), false,
+            false, imageRenderingValue);
+        // right-top
+        canvas->drawImage(
+            imgData, Unit::Rect((float)imgWidth - rSlice, 0, rSlice, tSlice),
+            Unit::Rect((float)rect.width() - bImgRWidth, rect.y(), bImgRWidth,
+                       bImgTWidth),
+            false, false, imageRenderingValue);
+        // left-bottom
+        canvas->drawImage(
+            imgData, Unit::Rect(0, (float)imgHeight - bSlice, lSlice, bSlice),
+            Unit::Rect(rect.x(), (float)height() - bImgBWidth, bImgLWidth,
+                       bImgBWidth),
+            false, false, imageRenderingValue);
+
+        // right-bottom
+        canvas->drawImage(
+            imgData, Unit::Rect((float)imgWidth - rSlice,
+                                (float)imgHeight - bSlice, rSlice, bSlice),
+            Unit::Rect((float)rect.width() - bImgRWidth,
+                       (float)height() - bImgBWidth, bImgRWidth, bImgBWidth),
+            false, false, imageRenderingValue);
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Four Edges
+        if (lSlice + rSlice < imgWidth) {
+            // middle-top
+            canvas->drawImage(
+                imgData,
+                Unit::Rect(lSlice, 0, (float)imgWidth - (lSlice + rSlice),
+                           tSlice),
+                Unit::Rect(rect.x() + bImgLWidth, rect.y(),
+                           (float)width() - (bImgLWidth + bImgRWidth),
+                           bImgTWidth),
+                false, false, imageRenderingValue);
+            // middle-bottom
+            canvas->drawImage(
+                imgData,
+                Unit::Rect(lSlice, (float)imgHeight - bSlice,
+                           (float)imgWidth - (lSlice + rSlice), bSlice),
+                Unit::Rect(rect.x() + bImgLWidth, (float)height() - bImgBWidth,
+                           (float)width() - (bImgLWidth + bImgRWidth),
+                           bImgBWidth),
+                false, false, imageRenderingValue);
+        }
+
+        if (tSlice + bSlice < imgHeight) {
+            // left-middle
+            canvas->drawImage(
+                imgData, Unit::Rect(0, tSlice, lSlice,
+                                    (float)(imgHeight - (tSlice + bSlice))),
+                Unit::Rect(rect.x(), rect.y() + bImgTWidth, bImgLWidth,
+                           (float)height() - (bImgTWidth + bImgBWidth)),
+                false, false, imageRenderingValue);
+            // right-middle
+            canvas->drawImage(
+                imgData, Unit::Rect((float)imgWidth - rSlice, tSlice, rSlice,
+                                    (float)(imgHeight - (tSlice + bSlice))),
+                Unit::Rect((float)rect.width() - bImgRWidth,
+                           rect.y() + bImgTWidth, bImgRWidth,
+                           (float)height() - (bImgTWidth + bImgBWidth)),
+                false, false, imageRenderingValue);
+        }
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // One Middle
+        // middle-middle
+        if (border.image().sliceFill() && lSlice + rSlice < imgWidth &&
+            tSlice + bSlice < imgHeight) {
+            canvas->drawImage(
+                imgData,
+                Unit::Rect(lSlice, tSlice, (float)imgWidth - (lSlice + rSlice),
+                           (float)(imgHeight - (tSlice + bSlice))),
+                Unit::Rect(rect.x() + bImgLWidth, rect.y() + bImgTWidth,
+                           (float)width() - (bImgLWidth + bImgRWidth),
+                           (float)height() - (bImgTWidth + bImgBWidth)),
+                false, false, imageRenderingValue);
+        }
+
+        canvas->setNeedsFastAntialias();
+#else
+        double bWidth = border.top().width().specifiedValue(height(), this);
+        double bImgWidth =
+            border.image().widths().top().specifiedValue(bWidth, this);
+        double bImgSlice =
+            border.image().slices().top().computedBorderImageSlice(height(),
+                                                                   this);
+
+        size_t imgWidth = border.image().imageData()->width();
+        size_t imgHeight = border.image().imageData()->height();
+
+        size_t lSlice = border.image().slices().left().computedBorderImageSlice(
+            imgWidth, this);
+        size_t tSlice = border.image().slices().top().computedBorderImageSlice(
             imgHeight, this);
+        size_t rSlice =
+            border.image().slices().right().computedBorderImageSlice(imgWidth,
+                                                                     this);
+        size_t bSlice =
+            border.image().slices().bottom().computedBorderImageSlice(imgHeight,
+                                                                      this);
 
         NativeImageData* imgData = border.image().imageData();
 
@@ -1481,97 +1622,6 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
         }
 
         double scale = bImgWidth / bImgSlice;
-
-#if !defined(PORT_CANVAS_BACKEND_EFL)
-        float drawRect = std::min((float)width(), (float)height()) / 2.0;
-        if (drawRect > bImgWidth) {
-            drawRect = bImgWidth;
-        }
-
-        bool isFill = border.image().sliceFill();
-        canvas->setNeedsGoodQualityAntialias();
-
-        ImageRenderingValue imageRenderingValue = style()->imageRendering();
-
-        // Four Corners
-        // left-top
-        canvas->drawImage(imgData, Unit::Rect(0, 0, lSlice, tSlice),
-                          Unit::Rect(rect.x(), rect.y(), drawRect, drawRect),
-                          false, false, imageRenderingValue);
-        // right-top
-        canvas->drawImage(
-            imgData, Unit::Rect((float)imgWidth - rSlice, 0, rSlice, tSlice),
-            Unit::Rect((float)rect.width() - drawRect, rect.y(), drawRect,
-                       drawRect),
-            false, false, imageRenderingValue);
-        // left-bottom
-        canvas->drawImage(
-            imgData, Unit::Rect(0, (float)imgHeight - bSlice, lSlice, bSlice),
-            Unit::Rect(rect.x(), (float)height() - drawRect, drawRect,
-                       drawRect),
-            false, false, imageRenderingValue);
-        // right-bottom
-        canvas->drawImage(
-            imgData, Unit::Rect((float)imgWidth - rSlice,
-                                (float)imgHeight - bSlice, rSlice, bSlice),
-            Unit::Rect((float)rect.width() - drawRect,
-                       (float)height() - drawRect, drawRect, drawRect),
-            false, false, imageRenderingValue);
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        // Four Edges
-        // middle-top
-        if (lSlice + rSlice <= imgWidth) {
-            canvas->drawImage(
-                imgData,
-                Unit::Rect(lSlice, 0, (float)imgWidth - (lSlice + rSlice),
-                           tSlice),
-                Unit::Rect(rect.x() + drawRect, rect.y(),
-                           (float)width() - (drawRect * 2), drawRect),
-                false, false, imageRenderingValue);
-            // middle-bottom
-            canvas->drawImage(
-                imgData,
-                Unit::Rect(lSlice, (float)imgHeight - bSlice,
-                           (float)imgWidth - (lSlice + rSlice), bSlice),
-                Unit::Rect(rect.x() + drawRect, (float)height() - drawRect,
-                           (float)width() - (drawRect * 2), drawRect),
-                false, false, imageRenderingValue);
-        }
-
-        if (tSlice + bSlice <= imgHeight) {
-            // left-middle
-            canvas->drawImage(
-                imgData, Unit::Rect(0, tSlice, lSlice,
-                                    (float)(imgHeight - (tSlice + bSlice))),
-                Unit::Rect(rect.x(), rect.y() + drawRect, drawRect,
-                           (float)height() - (drawRect * 2)),
-                false, false, imageRenderingValue);
-            // right-middle
-            canvas->drawImage(
-                imgData, Unit::Rect((float)imgWidth - rSlice, tSlice, rSlice,
-                                    (float)(imgHeight - (tSlice + bSlice))),
-                Unit::Rect((float)rect.width() - drawRect, rect.y() + drawRect,
-                           drawRect, (float)height() - (drawRect * 2)),
-                false, false, imageRenderingValue);
-        }
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        // One Middle
-        // middle-middle
-        if (isFill) {
-            canvas->drawImage(
-                imgData,
-                Unit::Rect(lSlice, tSlice, (float)imgWidth - (lSlice + rSlice),
-                           (float)(imgHeight - (tSlice + bSlice))),
-                Unit::Rect(rect.x() + drawRect, rect.y() + drawRect,
-                           (float)width() - (drawRect * 2),
-                           (float)height() - (drawRect * 2)),
-                false, false, imageRenderingValue);
-        }
-
-        canvas->setNeedsFastAntialias();
-#else
         bool isFill = false;
 
         if ((lSlice + rSlice > imgWidth) || (tSlice + bSlice > imgHeight)) {
