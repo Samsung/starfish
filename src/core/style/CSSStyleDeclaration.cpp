@@ -1610,6 +1610,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     ADD_VALUE_PAIR(TextDecoration, TextDecorationLineValueKind, textDecoration)
     ADD_VALUE_PAIR(TextDecorationLine, TextDecorationLineValueKind,
                    textDecorationLine)
+    ADD_VALUE_PAIR(TextDecorationStyle, TextDecorationStyleValueKind,
+                   textDecorationStyle)
     ADD_VALUE_PAIR(TextTransform, TextTransformValueKind, textTransform)
     ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
     ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)

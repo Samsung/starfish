@@ -25,14 +25,11 @@ namespace StarFish {
 
 void TextDecorationData::merge(ComputedStyle* style)
 {
-    if ((style->textDecoration() == UnderlineTextDecorationLineValue) ||
-        (style->textDecorationLine() == UnderlineTextDecorationLineValue)) {
+    if (style->textDecorationLine() == UnderlineTextDecorationLineValue) {
         m_hasUnderLine = true;
         m_underLineColor = style->color();
-    } else if ((style->textDecoration() ==
-                LineThroughTextDecorationLineValue) ||
-               (style->textDecorationLine() ==
-                LineThroughTextDecorationLineValue)) {
+    } else if (style->textDecorationLine() ==
+               LineThroughTextDecorationLineValue) {
         m_hasLineThrough = true;
         m_lineThroughColor = style->color();
     }

@@ -91,7 +91,7 @@ class RareComputedStyleData : public gc {
         TransformOrigin,
         Transition,
         TextDecorationColor,
-        TextDecorationLine,
+        TextDecorationStyle,
         Content,
         Outline,
         BorderRadius,
@@ -148,7 +148,7 @@ class RareComputedStyleData : public gc {
         HyphensValue m_hyphens;
         LineBreakValue m_lineBreak;
         WordBreakValue m_wordBreak;
-        TextDecorationLineValue m_textDecorationLine;
+        TextDecorationStyleValue m_textDecorationStyle;
         TextOverflowData* m_textOverflow;
         CounterBaseList* m_counterBaseList;
 
@@ -252,8 +252,8 @@ class RareComputedStyleData : public gc {
         {
         }
 
-        RareComputedStyleValue(TextDecorationLineValue v)
-            : m_textDecorationLine(v)
+        RareComputedStyleValue(TextDecorationStyleValue v)
+            : m_textDecorationStyle(v)
         {
         }
 
@@ -403,8 +403,8 @@ public:
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect);
     GETTER_VALUE(LineBreakValue, lineBreak, lineBreak, LineBreak);
     GETTER_VALUE(Unit::Color, color, textDecorationColor, TextDecorationColor);
-    GETTER_VALUE(TextDecorationLineValue, textDecorationLine,
-                 textDecorationLine, TextDecorationLine);
+    GETTER_VALUE(TextDecorationStyleValue, textDecorationStyle,
+                 textDecorationStyle, TextDecorationStyle);
 
 #undef GETTER_VALUE
 
@@ -930,32 +930,24 @@ public:
 
     TextDecorationLineValue textDecoration()
     {
-        return m_textDecoration;
+        // TODO: shorthand not supported yet
+        return textDecorationLine();
     }
 
     void setTextDecoration(TextDecorationLineValue decoration)
     {
-        m_textDecoration = decoration;
+        // TODO: shorthand not supported yet
+        setTextDecorationLine(decoration);
     }
 
     TextDecorationLineValue textDecorationLine()
     {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return TextDecorationLineValue::NoneTextDecorationLineValue;
-        }
-
-        Nullable<TextDecorationLineValue> v =
-            rareComputedStyleData()->textDecorationLine();
-        if (v.hasValue()) {
-            return v.getValue();
-        }
-
-        return TextDecorationLineValue::NoneTextDecorationLineValue;
+        return m_textDecorationLine;
     }
 
-    void setTextDecorationLine(TextDecorationLineValue v)
+    void setTextDecorationLine(TextDecorationLineValue decoration)
     {
-        *m_rareComputedStyleData.ensureTextDecorationLine() = v;
+        m_textDecorationLine = decoration;
     }
 
     Unit::Color textDecorationColor()
@@ -976,6 +968,26 @@ public:
     void setTextDecorationColor(Unit::Color c)
     {
         *m_rareComputedStyleData.ensureTextDecorationColor() = c;
+    }
+
+    TextDecorationStyleValue textDecorationStyle()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return TextDecorationStyleValue::SolidTextDecorationStyleValue;
+        }
+
+        Nullable<TextDecorationStyleValue> c =
+            rareComputedStyleData()->textDecorationStyle();
+        if (c.hasValue()) {
+            return c.getValue();
+        }
+
+        return TextDecorationStyleValue::SolidTextDecorationStyleValue;
+    }
+
+    void setTextDecorationStyle(TextDecorationStyleValue v)
+    {
+        *m_rareComputedStyleData.ensureTextDecorationStyle() = v;
     }
 
     DirectionValue direction()
@@ -2878,7 +2890,8 @@ protected:
         m_zIndexSpecifiedByUser = false;
         m_overflowX = OverflowValue::VisibleOverflow;
         m_overflowY = OverflowValue::VisibleOverflow;
-        m_textDecoration = TextDecorationLineValue::NoneTextDecorationLineValue;
+        m_textDecorationLine =
+            TextDecorationLineValue::NoneTextDecorationLineValue;
         m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
@@ -2933,7 +2946,7 @@ protected:
     VerticalAlignValue m_verticalAlign : 4;
     OverflowValue m_overflowX : 2;
     OverflowValue m_overflowY : 2;
-    TextDecorationLineValue m_textDecoration : 3;
+    TextDecorationLineValue m_textDecorationLine : 3;
 
     UnicodeBidiValue m_unicodeBidi : 2;
     BoxSizingValue m_boxSizing : 1;

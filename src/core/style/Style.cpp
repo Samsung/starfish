@@ -2191,7 +2191,7 @@ String* CSSStyleValuePair::toString() const
         }
         break;
     case CSSStyleValuePair::ValueKind::TextDecorationLineValueKind:
-        switch (textDecorationValue()) {
+        switch (textDecorationLineValue()) {
         case TextDecorationLineValue::NoneTextDecorationLineValue:
             return String::fromUTF8("none");
         case TextDecorationLineValue::UnderlineTextDecorationLineValue:
@@ -2202,6 +2202,22 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("line-through");
         case TextDecorationLineValue::BlinkTextDecorationLineValue:
             return String::fromUTF8("blink");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
+    case CSSStyleValuePair::ValueKind::TextDecorationStyleValueKind:
+        switch (textDecorationStyleValue()) {
+        case TextDecorationStyleValue::SolidTextDecorationStyleValue:
+            return String::fromUTF8("solid");
+        case TextDecorationStyleValue::DoubleTextDecorationStyleValue:
+            return String::fromUTF8("double");
+        case TextDecorationStyleValue::DottedTextDecorationStyleValue:
+            return String::fromUTF8("dotted");
+        case TextDecorationStyleValue::DashedTextDecorationStyleValue:
+            return String::fromUTF8("dashed");
+        case TextDecorationStyleValue::WavyTextDecorationStyleValue:
+            return String::fromUTF8("wavy");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -2514,6 +2530,7 @@ String* CSSStyleValuePair::toString() const
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     }
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -4590,6 +4607,25 @@ void StyleResolver::apply(Element* element,
                     style->setTextDecorationColor(NamedColor::namedColorToColor(
                         cssValues[k].namedColorValue()));
                 }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::TextDecorationStyle:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setTextDecorationStyle(
+                    parentStyle->textDecorationStyle());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setTextDecorationStyle(
+                    TextDecorationStyleValue::SolidTextDecorationStyleValue);
+                break;
+            default:
+                STARFISH_ASSERT(
+                    cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::TextDecorationStyleValueKind);
+                style->setTextDecorationStyle(
+                    cssValues[k].textDecorationStyleValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::TextShadow: {
@@ -10635,6 +10671,13 @@ bool CSSStyleValuePair::updateValueBoxShadow(Document* document,
 bool CSSStyleValuePair::updateValueTextDecoration(Document* document,
                                                   const CSSTokenVector& tokens)
 {
+    // TODO: shorthand not supported yet
+    return updateValueTextDecorationLine(document, tokens);
+}
+
+bool CSSStyleValuePair::updateValueTextDecorationLine(
+    Document* document, const CSSTokenVector& tokens)
+{
     if (tokens.size() != 1) {
         return false;
     }
@@ -10644,32 +10687,26 @@ bool CSSStyleValuePair::updateValueTextDecoration(Document* document,
     m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationLineValueKind;
 
     if (STRING_VALUE_IS_NONE()) {
-        m_value.m_textDecoration =
+        m_value.m_textDecorationLine =
             TextDecorationLineValue::NoneTextDecorationLineValue;
     } else if (STRING_VALUE_IS_STRING("underline")) {
-        m_value.m_textDecoration =
+        m_value.m_textDecorationLine =
             TextDecorationLineValue::UnderlineTextDecorationLineValue;
     } else if (STRING_VALUE_IS_STRING("line-through")) {
-        m_value.m_textDecoration =
+        m_value.m_textDecorationLine =
             TextDecorationLineValue::LineThroughTextDecorationLineValue;
     } else if (STRING_VALUE_IS_STRING("overline")) {
-        m_value.m_textDecoration =
+        m_value.m_textDecorationLine =
             TextDecorationLineValue::OverlineTextDecorationLineValue;
         return false; // unsupported yet
     } else if (STRING_VALUE_IS_STRING("blink")) {
-        m_value.m_textDecoration =
+        m_value.m_textDecorationLine =
             TextDecorationLineValue::BlinkTextDecorationLineValue;
         return false; // unsupported yet
     } else {
         return false;
     }
     return true;
-}
-
-bool CSSStyleValuePair::updateValueTextDecorationLine(
-    Document* document, const CSSTokenVector& tokens)
-{
-    return updateValueTextDecoration(document, tokens);
 }
 
 bool CSSStyleValuePair::updateValueTextDecorationColor(
@@ -10691,6 +10728,41 @@ bool CSSStyleValuePair::updateValueTextDecorationColor(
         return updateValueColor(document, tokens);
     }
     return false;
+}
+
+bool CSSStyleValuePair::updateValueTextDecorationStyle(
+    Document* document, const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationStyleValueKind;
+
+    if (STRING_VALUE_IS_STRING("solid")) {
+        m_value.m_textDecorationStyle =
+            TextDecorationStyleValue::SolidTextDecorationStyleValue;
+    } else if (STRING_VALUE_IS_STRING("double")) {
+        m_value.m_textDecorationStyle =
+            TextDecorationStyleValue::DoubleTextDecorationStyleValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("dotted")) {
+        m_value.m_textDecorationStyle =
+            TextDecorationStyleValue::DottedTextDecorationStyleValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("dashed")) {
+        m_value.m_textDecorationStyle =
+            TextDecorationStyleValue::DashedTextDecorationStyleValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("wavy")) {
+        m_value.m_textDecorationStyle =
+            TextDecorationStyleValue::WavyTextDecorationStyleValue;
+        return false; // unsupported yet
+    } else {
+        return false;
+    }
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueTextAlign(Document* document,
