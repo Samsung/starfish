@@ -121,6 +121,10 @@ class RareComputedStyleData : public gc {
         // Grid
         GridTemplateColumns,
         GridTemplateRows,
+        GridRowStart,
+        GridRowEnd,
+        GridColumnStart,
+        GridColumnEnd,
     };
 
     union RareComputedStyleValue {
@@ -370,6 +374,11 @@ public:
     GETTER_VALUE(float, floatValue, flexShrink, FlexShrink);
     GETTER_VALUE(float, floatValue, opacity, Opacity);
     GETTER_VALUE(String*, stringValue, d, D);
+
+    GETTER_VALUE(int32_t, int32Value, gridRowStart, GridRowStart);
+    GETTER_VALUE(int32_t, int32Value, gridRowEnd, GridRowEnd);
+    GETTER_VALUE(int32_t, int32Value, gridColumnStart, GridColumnStart);
+    GETTER_VALUE(int32_t, int32Value, gridColumnEnd, GridColumnEnd);
 
     LengthData* ensureOffset()
     {
@@ -2411,6 +2420,66 @@ public:
     void setTextOverflow(TextOverflowData v)
     {
         *m_rareComputedStyleData.ensureTextOverflow() = v;
+    }
+
+    void setGridRowStart(int32_t v)
+    {
+        *m_rareComputedStyleData.ensureGridRowStart() = v;
+    }
+
+    void setGridRowEnd(int32_t v)
+    {
+        *m_rareComputedStyleData.ensureGridRowEnd() = v;
+    }
+
+    void setGridColumnStart(int32_t v)
+    {
+        *m_rareComputedStyleData.ensureGridColumnStart() = v;
+    }
+
+    void setGridColumnEnd(int32_t v)
+    {
+        *m_rareComputedStyleData.ensureGridColumnEnd() = v;
+    }
+
+    int32_t gridRowStart()
+    {
+        Nullable<int32_t> v = m_rareComputedStyleData.gridRowStart();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return 0;
+    }
+
+    int32_t gridRowEnd()
+    {
+        Nullable<int32_t> v = m_rareComputedStyleData.gridRowEnd();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return 0;
+    }
+
+    int32_t gridColumnStart()
+    {
+        Nullable<int32_t> v = m_rareComputedStyleData.gridColumnStart();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return 0;
+    }
+
+    int32_t gridColumnEnd()
+    {
+        Nullable<int32_t> v = m_rareComputedStyleData.gridColumnEnd();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return 0;
     }
 
     void clearContent()

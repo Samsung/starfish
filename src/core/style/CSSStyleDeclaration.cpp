@@ -1519,6 +1519,26 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::None);
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridRowStart) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::GridRowStart);
+        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
+        p.setInt32Value(style->gridRowStart());
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridRowEnd) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::GridRowEnd);
+        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
+        p.setInt32Value(style->gridRowEnd());
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridColumnStart) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
+        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
+        p.setInt32Value(style->gridColumnStart());
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridColumnEnd) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
+        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
+        p.setInt32Value(style->gridColumnStart());
     }
 #define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
     else if (keyKind ==                                                       \

@@ -64,34 +64,35 @@ void GridFormattingContext::computeColumnsAndRows()
 
 void GridFormattingContext::layoutGridItems()
 {
-    auto item = m_orderedGridItems.begin();
-    LayoutUnit heightOfSum(0);
+    for (auto area : m_orderedGridArea) {
+        FrameBox* gridItem = area.m_box;
+        LayoutUnit offsetX, offsetY;
 
-    for (size_t row = 0; row < m_gridLineRows.size() - 1; row++) {
-        LayoutUnit widthOfSum(0);
-        heightOfSum += m_gridLineRows[row].offset();
-        for (size_t col = 0; col < m_gridLineColumns.size() - 1; col++) {
-            LayoutUnit offsetX, offsetY;
-            FrameBox* gridItem = (*item);
-
-            offsetY = heightOfSum + m_container->borderTop() +
-                      m_container->paddingTop();
-
-            widthOfSum += m_gridLineColumns[col].offset();
-            offsetX = widthOfSum + m_container->borderLeft() +
-                      m_container->paddingLeft();
-
-            gridItem->setX(offsetX);
-            gridItem->setY(offsetY);
-            item++;
-            if (item == m_orderedGridItems.end()) {
-                row++;
-                heightOfSum += m_gridLineRows[row].offset();
-                m_container->computeContentHeight(m_layoutContext, heightOfSum);
-                return;
-            }
+        LayoutUnit heightOfSum(0);
+        for (size_t i = 0; i < area.m_rowStart; i++) {
+            heightOfSum += m_gridLineRows[i].offset();
         }
+
+        LayoutUnit widthOfSum(0);
+        for (size_t i = 0; i < area.m_columnStart; i++) {
+            widthOfSum += m_gridLineColumns[i].offset();
+        }
+
+        offsetY =
+            heightOfSum + m_container->borderTop() + m_container->paddingTop();
+
+        offsetX =
+            widthOfSum + m_container->borderLeft() + m_container->paddingLeft();
+        gridItem->setX(offsetX);
+        gridItem->setY(offsetY);
     }
+
+    LayoutUnit heightOfSum(0);
+    for (size_t i = 0; i < m_gridLineRows.size(); i++) {
+        heightOfSum += m_gridLineRows[i].offset();
+    }
+
+    m_container->computeContentHeight(m_layoutContext, heightOfSum);
 }
 
 void GridFormattingContext::applyFrUnitsWithColumns()
@@ -135,7 +136,7 @@ void GridFormattingContext::applyFrUnitsWithRows()
     GridLine* maxGrid = nullptr;
     for (size_t i = 1; i < m_gridLineRows.size(); i++) {
         GridLine line = m_gridLineRows[i];
-        if (!line.isComputed()) {
+        if (!line.isComputed() && line.isFr()) {
             if (maxHeight < line.offset()) {
                 maxHeight = line.offset();
                 maxGrid = &m_gridLineRows[i];
@@ -157,6 +158,159 @@ void GridFormattingContext::applyFrUnitsWithRows()
             offset = std::max(value, line->offset().toDouble());
             line->setOffset(offset, true);
         }
+    }
+}
+
+static void adaptStartAndEndValueForColumn(size_t columnLength, size_t& start,
+                                           size_t& end)
+{
+    if (start > 0 && end > 0) {
+        if (start > end) {
+            size_t temp = start;
+            start = end;
+            end = temp;
+        }
+    } else if (start > 0 && !end) {
+        end = start + 1;
+    } else if (end > 0 && !start) {
+        start = end - 1;
+    }
+
+    // FIXME : this exception is wrong
+    // to control lines over the number of fixed columns.
+    if (start > columnLength - 1 || end > columnLength) {
+        start = end = 0;
+    }
+}
+
+bool GridFormattingContext::fixGridAreaWithDefine(GridArea* area, size_t row)
+{
+    return false;
+}
+
+bool GridFormattingContext::fixGridAreaWithUndefine(GridArea* area, size_t row)
+{
+    if (!area) {
+        return false;
+    }
+
+    ComputedStyle* style = area->m_box->style();
+    size_t columnLength = m_gridLineColumns.size() - 1;
+    size_t position = 0;
+    bool available = true;
+
+    size_t start = style->gridColumnStart();
+    size_t end = style->gridColumnEnd();
+    adaptStartAndEndValueForColumn(m_gridLineColumns.size(), start, end);
+
+    if (columnLength + 1 >= GRID_MAX_TRACK || row >= GRID_MAX_TRACK) {
+        return true;
+    }
+
+    if (!start && !end) {
+        for (size_t i = 0; i < columnLength; i++) {
+            if (m_areaChecker[row][i]) {
+                position = i + 1;
+                m_areaChecker[row][i] = false;
+                break;
+            }
+        }
+    } else {
+        for (size_t i = start - 1; i < end - 1; i++) {
+            if (!m_areaChecker[row][i]) {
+                available = false;
+                break;
+            }
+        }
+
+        if (available) {
+            for (size_t i = start - 1; i < end - 1; i++) {
+                m_areaChecker[row][i] = false;
+            }
+            position = style->gridColumnStart();
+        }
+    }
+
+    if (row + 1 > m_gridLineRows.size() - 1) {
+        GridLine line = GridLine(0);
+        line.setComputed(false);
+        m_gridLineRows.push_back(line);
+    }
+
+    if (!position || !available) {
+        return false;
+    }
+
+    area->m_rowStart = row + 1;
+    area->m_rowEnd = area->m_rowStart + 1;
+
+    area->m_columnStart = position;
+    if (!start && !end) {
+        area->m_columnEnd = area->m_columnStart + 1;
+    } else {
+        area->m_columnEnd = end;
+    }
+
+    m_orderedGridArea.push_back(*area);
+
+    return true;
+}
+
+void GridFormattingContext::buildGridAreaAndOrdering()
+{
+    for (size_t i = 0; i < GRID_MAX_TRACK; i++) {
+        for (size_t j = 0; j < GRID_MAX_TRACK; j++) {
+            m_areaChecker[i][j] = true;
+        }
+    }
+
+    size_t idx = 0;
+    std::vector<GridArea> defined;
+    std::vector<GridArea> undefined;
+    for (auto gridItem : m_orderedGridItems) {
+        ComputedStyle* style = gridItem->style();
+        if (style->gridRowStart() > 0) {
+            GridArea area(gridItem, idx, style->gridRowStart(),
+                          style->gridRowEnd(), style->gridColumnStart(),
+                          style->gridColumnEnd());
+            defined.push_back(area);
+        } else {
+            GridArea area(gridItem, idx, 0, 0, 0, 0);
+            undefined.push_back(area);
+        }
+        idx++;
+    }
+
+    std::stable_sort(defined.begin(), defined.end(),
+                     [](const GridArea& a, const GridArea& b) {
+                         return a.m_rowStart < b.m_rowStart;
+                     });
+
+    size_t definedIdx = 0;
+    size_t undefinedIdx = 0;
+
+    for (size_t row = 0; row < m_gridLineRows.size();) {
+        GridArea* definedGridArea = nullptr;
+        GridArea* undefinedGridArea = nullptr;
+
+        if (definedIdx < defined.size()) {
+            definedGridArea = &defined[definedIdx];
+        }
+
+        if (undefinedIdx < undefined.size()) {
+            undefinedGridArea = &undefined[undefinedIdx];
+        }
+
+        while (fixGridAreaWithUndefine(undefinedGridArea, row)) {
+            undefinedIdx++;
+            if (undefinedIdx < undefined.size()) {
+                undefinedGridArea = &undefined[undefinedIdx];
+            } else {
+                undefinedGridArea = nullptr;
+            }
+        }
+
+        row++;
     }
 }
 
@@ -208,96 +362,73 @@ void GridFormattingContext::buildGridLineTemplate()
         }
     }
 
+    // ordering item and make line.
+    buildGridAreaAndOrdering();
+
     // Apply Flex(Fr) units for Columns such as <1fr>.
     applyFrUnitsWithColumns();
 
-    arrangeGridLines();
+    arrageGridLinesWithGridAreas();
 
     applyFrUnitsWithRows();
 
-    arrangeGridLines();
+    arrageGridLinesWithGridAreas();
 }
 
-void GridFormattingContext::arrangeGridLines()
+void GridFormattingContext::arrageGridLinesWithGridAreas()
 {
-    // This part is to create hypothetical lines for columns and rows.
-    size_t columnIndex = 0;
-    size_t rowIndex = 0;
-    double maxHeight = 0;
+    for (auto area : m_orderedGridArea) {
+        FrameBox* gridItem = area.m_box;
+        GridLayoutScope scope(gridItem);
+        ComputedStyle* style = gridItem->style();
 
-    auto item = m_orderedGridItems.begin();
-
-    while (item != m_orderedGridItems.end()) {
-        bool needNewLine = false;
-
-        if (m_gridLineRows.size() <= rowIndex + 1) {
-            needNewLine = true;
+        LayoutUnit width;
+        for (size_t i = area.m_columnStart; i <= area.m_columnEnd - 1; i++) {
+            width += m_gridLineColumns[i].offset();
         }
 
-        GridLine gridColumnLine = m_gridLineColumns[columnIndex + 1];
-
-        {
-            FrameBox* gridItem = (*item);
-            GridLayoutScope scope(gridItem);
-
-            ComputedStyle* style = gridItem->style();
-
-            // This case is very critical, because there is no remaining spaces
-            // for <fr> unit, and then in this case put a prefered width into a
-            // line.
-            if (gridColumnLine.offset() != 0) {
-                Length width = style->width();
-                if (!width.isFixed()) {
-                    style->setWidth(
-                        Length(Length::Fixed, gridColumnLine.offset()));
-                }
-            } else {
+        Length styleWidth = style->width();
+        if (styleWidth.isFixed()) {
+            width = styleWidth.fixed();
+        } else {
+            if (width <= 0) {
                 PreferredWidthMainContext mainContext;
                 PreferredWidthContext p(m_layoutContext, mainContext, gridItem,
                                         gridItem, 0);
                 p.computePreferredWidth();
                 LayoutUnit contentWidth = p.preferredWidth();
-                style->setWidth(Length(Length::Fixed, contentWidth));
-                GridLine& frColumn = m_gridLineColumns[columnIndex + 1];
+                GridLine& frColumn = m_gridLineColumns[area.m_columnStart];
                 frColumn.setOffset(contentWidth, true);
+                width = contentWidth;
             }
-
-            if (!needNewLine) {
-                if (rowIndex + 1 < m_gridLineRows.size()) {
-                    Length height = style->height();
-                    if (!height.isFixed() &&
-                        m_gridLineRows[rowIndex + 1].isComputed()) {
-                        style->setHeight(
-                            Length(Length::Fixed,
-                                   m_gridLineRows[rowIndex + 1].offset()));
-                    }
-                }
-            }
-
-            gridItem->layout(m_layoutContext,
-                             Frame::LayoutWantToResolve::ResolveAll);
-
-            maxHeight = std::max(maxHeight, gridItem->height().toDouble());
         }
 
-        item++;
+        style->setWidth(Length(Length::Fixed, width));
 
-        if ((columnIndex + 1 >= m_gridLineColumns.size() - 1) ||
-            (item == m_orderedGridItems.end())) {
-            if (needNewLine) {
-                GridLine line = GridLine(maxHeight);
-                m_gridLineRows.push_back(line);
-            } else {
-                if (m_gridLineRows[rowIndex + 1].isFr()) {
-                    GridLine& frRow = m_gridLineRows[rowIndex + 1];
-                    frRow.setOffset(maxHeight, false);
-                }
+        if (!style->height().isFixed()) {
+            LayoutUnit height;
+            for (size_t i = area.m_rowStart; i <= area.m_rowEnd - 1; i++) {
+                height += m_gridLineRows[i].offset();
             }
 
-            columnIndex = maxHeight = 0;
-            rowIndex++;
-        } else {
-            columnIndex++;
+            if (m_gridLineRows[area.m_rowStart].isComputed()) {
+                style->setHeight(Length(Length::Fixed, height));
+            }
+        }
+
+        gridItem->layout(m_layoutContext,
+                         Frame::LayoutWantToResolve::ResolveAll);
+
+        if (!m_gridLineRows[area.m_rowStart].isComputed()) {
+            GridLine& line = m_gridLineRows[area.m_rowStart];
+            line.setOffset(std::max(line.offset(), gridItem->height()), false);
+        }
+    }
+
+    for (size_t row = 0; row < m_gridLineRows.size(); row++) {
+        if (!m_gridLineRows[row].isComputed() && !m_gridLineRows[row].isFr()) {
+            GridLine& line = m_gridLineRows[row];
+            line.setComputed(true);
         }
     }
 }

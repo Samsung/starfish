@@ -1195,6 +1195,10 @@ class CSSStyleDeclaration;
     F(UserSelect, userSelect, "user-select")                                   \
     F(GridTemplateColumns, gridTemplateColumns, "grid-template-columns")       \
     F(GridTemplateRows, gridTemplateRows, "grid-template-rows")                \
+    F(GridRowStart, gridRowStart, "grid-row-start")                            \
+    F(GridRowEnd, gridRowEnd, "grid-row-end")                                  \
+    F(GridColumnStart, gridColumnStart, "grid-column-start")                   \
+    F(GridColumnEnd, gridColumnEnd, "grid-column-end")                         \
     F(CaretColor, caretColor, "caret-color")                                   \
     F(FontKerning, fontKerning, "font-kerning")                                \
     F(ImageRendering, imageRendering, "image-rendering")                       \

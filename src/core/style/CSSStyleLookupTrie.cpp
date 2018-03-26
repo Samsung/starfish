@@ -482,6 +482,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Stroke-Width
         // Word-Spacing
         // font-kerning
+        // Grid-Row-End
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-style", 12) == 0) {
@@ -538,6 +539,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'w':
             if (memcmp(data, "word-spacing", 12) == 0) {
                 return CSSStyleKind::WordSpacing;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "grid-row-end", 12) == 0) {
+                return CSSStyleKind::GridRowEnd;
             }
             break;
         }
@@ -606,6 +612,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Outline-Offset
         // text-transform
         // letter-spacing
+        // Grid-Row-Start
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-spacing", 14) == 0) {
@@ -642,6 +649,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::LetterSpacing;
             }
             break;
+        case 'g':
+            if (memcmp(data, "grid-row-start", 14) == 0) {
+                return CSSStyleKind::GridRowStart;
+            }
+            break;
         }
         break;
     case 15:
@@ -652,6 +664,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Background-Clip
         // Object-position
         // List-Style-Type
+        // Grid-Column-End
         switch (data[0]) {
         case 'j':
             if (memcmp(data, "justify-content", 15) == 0) {
@@ -687,6 +700,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'i':
             if (memcmp(data, "image-rendering", 15) == 0) {
                 return CSSStyleKind::ImageRendering;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "grid-column-end", 15) == 0) {
+                return CSSStyleKind::GridColumnEnd;
             }
             break;
         }
@@ -740,6 +758,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Left-Width
         // Background-Repeat
         // Background-Origin
+        // Grid-Column-Start
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left-color", 17) == 0) {
@@ -756,6 +775,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "background-origin", 17) == 0) {
                 return CSSStyleKind::BackgroundOrigin;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "grid-column-start", 17) == 0) {
+                return CSSStyleKind::GridColumnStart;
             }
             break;
         }
@@ -1253,6 +1277,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::FlexShrink;
             }
             break;
+        case 'g':
+            if (memcmp(data, "gridRowEnd", 10) == 0) {
+                return CSSStyleKind::GridRowEnd;
+            }
+            break;
         case 'l':
             if (memcmp(data, "lineHeight", 10) == 0) {
                 return CSSStyleKind::LineHeight;
@@ -1401,6 +1430,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::TextOverflow;
             }
             break;
+        case 'g':
+            if (memcmp(data, "gridRowStart", 12) == 0) {
+                return CSSStyleKind::GridRowStart;
+            }
+            break;
         }
         break;
     case 13:
@@ -1441,6 +1475,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "letterSpacing", 13) == 0) {
                 return CSSStyleKind::LetterSpacing;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "gridColumnEnd", 13) == 0) {
+                return CSSStyleKind::GridColumnEnd;
             }
             break;
         }
@@ -1520,6 +1559,12 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "borderLeftWidth", 15) == 0) {
                 return CSSStyleKind::BorderLeftWidth;
             }
+            break;
+        case 'g':
+            if (memcmp(data, "gridColumnStart", 15) == 0) {
+                return CSSStyleKind::GridColumnStart;
+            }
+            break;
         }
         break;
     case 16:
