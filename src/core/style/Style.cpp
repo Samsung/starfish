@@ -1290,7 +1290,7 @@ String* CSSStyleDeclaration::generateCSSText() const
         if (m_cssValues[i].flagImportant()) {
             txt.appendString(" !important");
         }
-        txt.appendChar(';');
+        txt.appendString("; ");
     }
     return txt.finalize();
 }

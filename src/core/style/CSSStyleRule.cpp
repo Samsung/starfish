@@ -75,9 +75,6 @@ String* CSSStyleRule::cssText()
 
     String* decls = m_styleRule->styleDeclaration()->generateCSSText();
     result.appendString(decls);
-    if (!decls->isEmpty()) {
-        result.appendChar(' ');
-    }
     result.appendChar('}');
     return result.finalize();
 }
@@ -385,9 +382,6 @@ String* CSSFontFaceRule::cssText()
 
     String* decls = m_styleRule->styleDeclaration()->generateCSSText();
     result.appendString(decls);
-    if (!decls->isEmpty()) {
-        result.appendChar(' ');
-    }
     result.appendChar('}');
     return result.finalize();
 }
