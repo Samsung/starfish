@@ -111,6 +111,7 @@ class RareComputedStyleData : public gc {
         UserSelect,
         CaretColor,
         Hyphens,
+        LineBreak,
         TextOverflow,
         CounterReset,
         CounterIncrement,
@@ -144,6 +145,7 @@ class RareComputedStyleData : public gc {
         GCVector<GridLength>* m_gridTemplateUnits;
         Unit::Color m_color;
         HyphensValue m_hyphens;
+        LineBreakValue m_lineBreak;
         TextDecorationLineValue m_textDecorationLine;
         TextOverflowData* m_textOverflow;
         CounterBaseList* m_counterBaseList;
@@ -268,6 +270,11 @@ class RareComputedStyleData : public gc {
         {
         }
 
+        RareComputedStyleValue(LineBreakValue v)
+            : m_lineBreak(v)
+        {
+        }
+
         RareComputedStyleValue(TextOverflowData* v)
             : m_textOverflow(v)
         {
@@ -387,6 +394,7 @@ public:
     GETTER_VALUE(Length, length, rx, RX);
     GETTER_VALUE(Length, length, ry, RY);
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect);
+    GETTER_VALUE(LineBreakValue, lineBreak, lineBreak, LineBreak);
     GETTER_VALUE(Unit::Color, color, textDecorationColor, TextDecorationColor);
     GETTER_VALUE(TextDecorationLineValue, textDecorationLine,
                  textDecorationLine, TextDecorationLine);
@@ -2791,6 +2799,25 @@ public:
     void setHyphens(HyphensValue v)
     {
         ensureInheritedRareData()->m_hyphens = v;
+    }
+
+    LineBreakValue lineBreak()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return LineBreakValue::NormalLineBreakValue;
+        }
+
+        Nullable<LineBreakValue> v = rareComputedStyleData()->lineBreak();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return LineBreakValue::NormalLineBreakValue;
+    }
+
+    void setLineBreak(LineBreakValue v)
+    {
+        *m_rareComputedStyleData.ensureLineBreak() = v;
     }
 
     void* operator new(size_t size);
