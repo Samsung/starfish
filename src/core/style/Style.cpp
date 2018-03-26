@@ -2481,6 +2481,18 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("strict");
         }
         break;
+    case CSSStyleValuePair::ValueKind::WordBreakValueKind:
+        switch (wordBreakValue()) {
+        case NormalWordBreakValue:
+            return String::fromUTF8("normal");
+        case BreakAllWordBreakValue:
+            return String::fromUTF8("break-all");
+        case KeepAllWordBreakValue:
+            return String::fromUTF8("keep-all");
+        case BreakWordWordBreakValue:
+            return String::fromUTF8("break-word");
+        }
+        break;
     case CSSStyleValuePair::ValueKind::GridTemplateUnits:
         return GridLength::toStringWithGridLengths(gridTemplateUnits());
     case CSSStyleValuePair::ValueKind::CounterFunctionValueKind:
@@ -7004,6 +7016,22 @@ void StyleResolver::apply(Element* element,
                     CSSStyleValuePair::ValueKind::LineBreakValueKind ==
                     cssValues[k].valueKind());
                 style->setLineBreak(cssValues[k].lineBreakValue());
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::WordBreak:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setWordBreak(parentStyle->wordBreak());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setWordBreak(WordBreakValue::NormalWordBreakValue);
+                break;
+            default:
+                STARFISH_ASSERT(
+                    CSSStyleValuePair::ValueKind::WordBreakValueKind ==
+                    cssValues[k].valueKind());
+                style->setWordBreak(cssValues[k].wordBreakValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::GridTemplateColumns:
@@ -12309,6 +12337,31 @@ bool CSSStyleValuePair::updateValueLineBreak(Document* document,
         m_value.m_lineBreak = LineBreakValue::NormalLineBreakValue;
     } else if (STRING_VALUE_IS_STRING("strict")) {
         m_value.m_lineBreak = LineBreakValue::StrictLineBreakValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueWordBreak(Document* document,
+                                             const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::WordBreakValueKind;
+    if (STRING_VALUE_IS_STRING("normal")) {
+        m_value.m_wordBreak = WordBreakValue::NormalWordBreakValue;
+    } else if (STRING_VALUE_IS_STRING("break-all")) {
+        m_value.m_wordBreak = WordBreakValue::BreakAllWordBreakValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("keep-all")) {
+        m_value.m_wordBreak = WordBreakValue::KeepAllWordBreakValue;
+    } else if (STRING_VALUE_IS_STRING("break-word")) {
+        m_value.m_wordBreak = WordBreakValue::BreakWordWordBreakValue;
+        return false; // unsupported yet
     } else {
         return false;
     }

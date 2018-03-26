@@ -1754,6 +1754,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->wordBreak() != oldStyle->wordBreak()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::WordBreak] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     return damage;
 }
 

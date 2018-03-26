@@ -1008,6 +1008,13 @@ enum LineBreakValue {
     StrictLineBreakValue,
 };
 
+enum WordBreakValue {
+    NormalWordBreakValue,
+    BreakAllWordBreakValue,
+    KeepAllWordBreakValue,
+    BreakWordWordBreakValue,
+};
+
 class ValueList;
 class ValuePair;
 class FontFaceSrcData;
@@ -1176,7 +1183,8 @@ class CSSStyleDeclaration;
     F(ImageRendering, imageRendering, "image-rendering")                     \
     F(TextOverflow, textOverflow, "text-overflow")                           \
     F(Hyphens, hyphens, "hyphens")                                           \
-    F(LineBreak, linebreak, "line-break")
+    F(LineBreak, lineBreak, "line-break")                                    \
+    F(WordBreak, wordBreak, "word-break")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)
@@ -1451,6 +1459,7 @@ public:
 
         HyphensValueKind,
         LineBreakValueKind,
+        WordBreakValueKind,
         VarFunctionValueKind
     };
 
@@ -1979,6 +1988,12 @@ public:
         return m_value.m_lineBreak;
     }
 
+    WordBreakValue wordBreakValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == WordBreakValueKind);
+        return m_value.m_wordBreak;
+    }
+
     GCVector<GridLength>* gridTemplateUnits() const
     {
         STARFISH_ASSERT(m_valueKind == GridTemplateUnits);
@@ -2065,6 +2080,7 @@ public:
         UserSelectValue m_userSelect;
         HyphensValue m_hyphens;
         LineBreakValue m_lineBreak;
+        WordBreakValue m_wordBreak;
         RectData* m_rect;
         GCVector<GridLength>* m_gridTemplateUnits;
         CSSCounterFunction* m_counterFunctionValue;
@@ -2316,6 +2332,11 @@ public:
 
         ValueData(LineBreakValue v)
             : m_lineBreak(v)
+        {
+        }
+
+        ValueData(WordBreakValue v)
+            : m_wordBreak(v)
         {
         }
 

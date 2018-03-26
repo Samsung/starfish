@@ -1640,6 +1640,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     ADD_VALUE_PAIR(UserSelect, UserSelectValueKind, userSelect)
     ADD_VALUE_PAIR(Hyphens, HyphensValueKind, hyphens)
     ADD_VALUE_PAIR(LineBreak, LineBreakValueKind, lineBreak)
+    ADD_VALUE_PAIR(WordBreak, WordBreakValueKind, wordBreak)
     ADD_VALUE_PAIR(ImageRendering, ImageRenderingValueKind, imageRendering)
 
 #undef ADD_VALUE_PAIR
