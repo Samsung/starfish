@@ -1312,7 +1312,7 @@ void Element::dumpStyle()
     printf(", style: { ");
     auto s = getComputedStyle()->generateCSSText()->toUTF8NonGCString();
     printf("%s", s.data());
-    printf(" }");
+    printf("}");
 }
 #endif
 
