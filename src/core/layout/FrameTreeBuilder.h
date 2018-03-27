@@ -25,6 +25,7 @@
 namespace StarFish {
 
 class ComputedStyle;
+class ContentData;
 class Document;
 class Element;
 class Frame;
@@ -57,23 +58,19 @@ public:
     void setIsInFrameGridFlow(bool b);
     bool isInFrameTableFlow() const;
 
-    void openCountingContext(int32_t start = 1)
+    void openCountingContextIfNeeds(Node* from);
+    void closeCountingContextIfNeeds(Node* from);
+    Nullable<String*> getStringFromContentData(ContentData* from);
+    int32_t getAndIncreaseListCounterIndex()
     {
-        m_countIndice.push_back(start);
-    }
-
-    void closeCountingContext()
-    {
-        m_countIndice.pop_back();
-    }
-
-    int32_t getAndIncreaseCountIndex()
-    {
-        if (!m_countIndice.size()) {
+        if (!m_listCounterIndice.size()) {
             return 0;
         }
-        return m_countIndice.back()++;
+        return m_listCounterIndice.back()++;
     }
+
+protected:
+    void resetPseudoCounter(Node*, AtomicString&, int32_t);
 
 protected:
     bool m_isInFrameInlineFlow;
@@ -84,7 +81,11 @@ protected:
     std::unordered_map<Node*, FrameInline*, std::hash<Node*>,
                        std::equal_to<Node*>>
         m_frameInlineItem;
-    GCAtomicVector<int32_t> m_countIndice;
+    std::vector<std::pair<Node*, std::unordered_set<AtomicString>>>
+        m_pseudoCounters;
+    std::unordered_map<AtomicString, std::vector<int32_t>>
+        m_pseudoCounterIndice;
+    std::vector<int32_t> m_listCounterIndice;
 };
 
 class FrameTreeBuilder {
