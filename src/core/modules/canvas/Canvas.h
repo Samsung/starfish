@@ -86,7 +86,8 @@ public:
 };
 
 struct BorderInfo {
-    double scale;
+    double hScale;
+    double vScale;
     BorderImageRepeatValue hRepeat;
     BorderImageRepeatValue vRepeat;
 };
