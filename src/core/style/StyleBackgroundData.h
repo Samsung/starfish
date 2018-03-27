@@ -349,11 +349,6 @@ public:
         m_layers[layer].setImageResource(data);
     }
 
-    void setBgImageGradient(CSSGradientValue* gradient, unsigned int layer)
-    {
-        // TODO: Save the gradient value
-    }
-
     void setRepeatX(BackgroundRepeatValue repeat, unsigned int layer = 0)
     {
         resizeLayerIfNeeded(layer);

@@ -5205,6 +5205,9 @@ void StyleResolver::apply(Element* element,
                 } else if (cssValues[k].valueKind() ==
                            CSSStyleValuePair::ValueKind::UrlValueKind) {
                     style->setMaskImage(cssValues[k].urlValue(origin));
+                } else if (cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::GradientValueKind) {
+                    style->setMaskImage(cssValues[k].gradientValue());
                 } else {
                     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 }
@@ -5449,6 +5452,9 @@ void StyleResolver::apply(Element* element,
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
                 style->setBorderImageSource(String::emptyString);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::GradientValueKind) {
+                style->setBorderImageSource(cssValues[k].gradientValue());
             } else {
                 STARFISH_ASSERT(CSSStyleValuePair::ValueKind::UrlValueKind ==
                                 cssValues[k].valueKind());
@@ -9039,7 +9045,7 @@ bool CSSStyleValuePair::updateValueUnitUrlOrNone(const CSSTokenValue& value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueGradient(const CSSTokenValue& value)
+bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
 {
     auto ss = value.trim();
     CSSPropertyParser parser((char*)ss.data(), ss.length());
@@ -9092,7 +9098,7 @@ bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
         }
         CSSStyleValuePair ret;
         if (shouldBeComma || (!ret.updateValueUnitUrlOrNone(value) &&
-                              !ret.updateValueGradient(value))) {
+                              !ret.updateValueUnitGradient(value))) {
             return false;
         }
         shouldBeComma = true;
@@ -9302,7 +9308,7 @@ bool CSSStyleValuePair::updateValueBorderImageSource(
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (updateValueUnitUrlOrNone(value)) {
+    if (updateValueUnitUrlOrNone(value) || updateValueUnitGradient(value)) {
         return true;
     }
 
@@ -12373,7 +12379,7 @@ bool CSSStyleValuePair::updateValueMaskImage(Document* document,
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (updateValueUnitUrlOrNone(value)) {
+    if (updateValueUnitUrlOrNone(value) || updateValueUnitGradient(value)) {
         return true;
     }
 
