@@ -51,6 +51,7 @@
 #include "core/style/CalcData.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSCounterFunction.h"
+#include "core/style/CSSGradientValue.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
@@ -2564,6 +2565,8 @@ String* CSSStyleValuePair::toString() const
         }
         break;
     }
+    case CSSStyleValuePair::ValueKind::GradientValueKind:
+        return gradientValue()->toString();
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -4931,6 +4934,10 @@ void StyleResolver::apply(Element* element,
                     } else if (item.valueKind() ==
                                CSSStyleValuePair::ValueKind::UrlValueKind) {
                         style->setBackgroundImage(item.urlValue(origin), i);
+                    } else if (item.valueKind() ==
+                               CSSStyleValuePair::ValueKind::
+                                   GradientValueKind) {
+                        style->setBackgroundImage(item.gradientValue(), i);
                     } else if (item.valueKind() ==
                                CSSStyleValuePair::ValueKind::Initial) {
                         style->setBackgroundImage(String::emptyString, i);
@@ -9032,6 +9039,43 @@ bool CSSStyleValuePair::updateValueUnitUrlOrNone(const CSSTokenValue& value)
     return true;
 }
 
+bool CSSStyleValuePair::updateValueGradient(const CSSTokenValue& value)
+{
+    auto ss = value.trim();
+    CSSPropertyParser parser((char*)ss.data(), ss.length());
+    parser.consumeString(CSSPropertyParser::AllowNegative);
+    String* type = parser.parsedString();
+    if (type->equals("linear-gradient") && parser.consumeIfNext('(')) {
+        // linear-gradient() = linear-gradient(
+        //   [ <angle> | to <side-or-corner> ]?
+        //   <color-stop-list>
+        // )
+        CSSAngle angle;
+        CSSStyleValuePair s;
+        parser.consumeWhitespaces();
+        parser.consumeString(CSSPropertyParser::AllowNegative);
+        String* str = parser.parsedString();
+        // TODO: Parse 'to <side-or-corner>' and <color-stop-list>
+        if (parser.parseAngle(str->toUTF8NonGCString().c_str(),
+                              CSSPropertyParser::AllowNegative, &s)) {
+            angle = s.angleValue();
+        } else {
+            // Set the default value
+            angle = CSSAngle(180);
+        }
+        CSSLinearGradientValue* linearGradientValue =
+            new CSSLinearGradientValue(angle);
+        m_value.m_gradientValue = linearGradientValue;
+    } else if (type->equals("radial-gradient") && parser.consumeIfNext('(')) {
+        // TODO: Consider the radial gradient
+        return false;
+    } else {
+        return false;
+    }
+    m_valueKind = CSSStyleValuePair::ValueKind::GradientValueKind;
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
                                                    bool allowComma)
 {
@@ -9047,7 +9091,8 @@ bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
             continue;
         }
         CSSStyleValuePair ret;
-        if (shouldBeComma || !ret.updateValueUnitUrlOrNone(value)) {
+        if (shouldBeComma || (!ret.updateValueUnitUrlOrNone(value) &&
+                              !ret.updateValueGradient(value))) {
             return false;
         }
         shouldBeComma = true;

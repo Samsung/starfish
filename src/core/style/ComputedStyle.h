@@ -1189,6 +1189,12 @@ public:
         m_rareComputedStyleData.ensureBackground()->setBgImage(img, layer);
     }
 
+    void setBackgroundImage(CSSGradientValue* gradient, unsigned int layer = 0)
+    {
+        m_rareComputedStyleData.ensureBackground()->setBgImageGradient(gradient,
+                                                                       layer);
+    }
+
     void setBackgroundImageResource(ImageResource* img, unsigned int layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setBgImageResource(img,
