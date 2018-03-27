@@ -2236,6 +2236,24 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
+    case CSSStyleValuePair::ValueKind::ResizeValueKind:
+        switch (resizeValue()) {
+        case ResizeValue::NoneResizeValue:
+            return String::fromUTF8("none");
+        case ResizeValue::BothResizeValue:
+            return String::fromUTF8("both");
+        case ResizeValue::HorizontalResizeValue:
+            return String::fromUTF8("horizontal");
+        case ResizeValue::VerticalResizeValue:
+            return String::fromUTF8("vertical");
+        case ResizeValue::BlockResizeValue:
+            return String::fromUTF8("block");
+        case ResizeValue::InlineResizeValue:
+            return String::fromUTF8("inline");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
     case CSSStyleValuePair::ValueKind::VisibilityValueKind:
         switch (visibilityValue()) {
         case VisibilityValue::VisibleVisibilityValue:
@@ -4659,6 +4677,21 @@ void StyleResolver::apply(Element* element,
                                     TextUnderlinePositionValueKind);
                 style->setTextUnderlinePosition(
                     cssValues[k].textUnderlinePositionValue());
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::Resize:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->setResize(parentStyle->resize());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setResize(ResizeValue::NoneResizeValue);
+                break;
+            default:
+                STARFISH_ASSERT(cssValues[k].valueKind() ==
+                                CSSStyleValuePair::ValueKind::ResizeValueKind);
+                style->setResize(cssValues[k].resizeValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::TextShadow: {
@@ -10962,6 +10995,40 @@ bool CSSStyleValuePair::updateValueTextUnderlinePosition(
     } else if (STRING_VALUE_IS_STRING("right")) {
         m_value.m_textUnderlinePosition =
             TextUnderlinePositionValue::RightTextUnderlinePositionValue;
+        return false; // unsupported yet
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueResize(Document* document,
+                                          const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::ResizeValueKind;
+
+    if (STRING_VALUE_IS_STRING("none")) {
+        m_value.m_resize = ResizeValue::NoneResizeValue;
+    } else if (STRING_VALUE_IS_STRING("both")) {
+        m_value.m_resize = ResizeValue::BothResizeValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("horizontal")) {
+        m_value.m_resize = ResizeValue::HorizontalResizeValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("vertical")) {
+        m_value.m_resize = ResizeValue::VerticalResizeValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("block")) {
+        m_value.m_resize = ResizeValue::BlockResizeValue;
+        return false; // unsupported yet
+    } else if (STRING_VALUE_IS_STRING("inline")) {
+        m_value.m_resize = ResizeValue::InlineResizeValue;
         return false; // unsupported yet
     } else {
         return false;

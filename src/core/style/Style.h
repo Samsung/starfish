@@ -1030,6 +1030,15 @@ enum WordBreakValue {
     BreakWordWordBreakValue,
 };
 
+enum ResizeValue {
+    NoneResizeValue,
+    BothResizeValue,
+    HorizontalResizeValue,
+    VerticalResizeValue,
+    BlockResizeValue,
+    InlineResizeValue,
+};
+
 class ValueList;
 class ValuePair;
 class FontFaceSrcData;
@@ -1205,7 +1214,8 @@ class CSSStyleDeclaration;
     F(TextOverflow, textOverflow, "text-overflow")                             \
     F(Hyphens, hyphens, "hyphens")                                             \
     F(LineBreak, lineBreak, "line-break")                                      \
-    F(WordBreak, wordBreak, "word-break")
+    F(WordBreak, wordBreak, "word-break")                                      \
+    F(Resize, resize, "resize")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)
@@ -1430,6 +1440,7 @@ public:
         TextDecorationLineValueKind,
         TextDecorationStyleValueKind,
         TextUnderlinePositionValueKind,
+        ResizeValueKind,
         VisibilityValueKind,
         UnicodeBidiValueKind,
         BoxSizingValueKind,
@@ -2029,6 +2040,12 @@ public:
         return m_value.m_wordBreak;
     }
 
+    ResizeValue resizeValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == ResizeValueKind);
+        return m_value.m_resize;
+    }
+
     GCVector<GridLength>* gridTemplateUnits() const
     {
         STARFISH_ASSERT(m_valueKind == GridTemplateUnits);
@@ -2091,6 +2108,7 @@ public:
         TextDecorationLineValue m_textDecorationLine;
         TextDecorationStyleValue m_textDecorationStyle;
         TextUnderlinePositionValue m_textUnderlinePosition;
+        ResizeValue m_resize;
         CSSTransformFunctions* m_transforms;
         Unit::Color m_color;
         NamedColor::NamedColorValue m_namedColor;
@@ -2269,6 +2287,10 @@ public:
         }
         ValueData(TextUnderlinePositionValue v)
             : m_textUnderlinePosition(v)
+        {
+        }
+        ValueData(ResizeValue v)
+            : m_resize(v)
         {
         }
         ValueData(CSSTransformFunctions* v)

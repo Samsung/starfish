@@ -1430,6 +1430,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
+    if (newStyle->resize() != oldStyle->resize()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Resize] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     float newOpacity = newStyle->opacity();
     float oldOpacity = oldStyle->opacity();
 
