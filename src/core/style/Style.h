@@ -1107,7 +1107,6 @@ class CSSStyleDeclaration;
     F(WordWrap, wordWrap, "word-wrap")                                         \
     F(OverflowWrap, overflowWrap, "overflow-wrap")                             \
     F(Position, position, "position")                                          \
-    F(TextDecoration, textDecoration, "text-decoration")                       \
     F(TextDecorationLine, textDecorationLine, "text-decoration-line")          \
     F(TextDecorationColor, textDecorationColor, "text-decoration-color")       \
     F(TextDecorationStyle, textDecorationStyle, "text-decoration-style")       \
@@ -1244,6 +1243,7 @@ class CSSStyleDeclaration;
     F(Background, background, "background")                          \
     F(BackgroundRepeat, backgroundRepeat, "background-repeat")       \
     F(BackgroundPosition, backgroundPosition, "background-position") \
+    F(TextDecoration, textDecoration, "text-decoration")             \
     F(Margin, margin, "margin")                                      \
     F(Padding, padding, "padding")                                   \
     F(Font, font, "font")                                            \
@@ -2540,6 +2540,12 @@ public:
     {
         m_valueKind = CSSStyleValuePair::ValueKind::Time;
         m_value.m_time = val;
+    }
+
+    void setTextDecorationLineValue(TextDecorationLineValue v)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationLineValueKind;
+        m_value.m_textDecorationLine = v;
     }
 
     void setColorValue(Unit::Color val)

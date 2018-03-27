@@ -1666,9 +1666,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     ADD_VALUE_PAIR(Clear, ClearValueKind, clear)
     ADD_VALUE_PAIR(VerticalAlign, VerticalAlignValueKind, verticalAlign)
     ADD_VALUE_PAIR(TextAlign, SideValueKind, textAlign)
-    ADD_VALUE_PAIR(TextDecoration, TextDecorationLineValueKind, textDecoration)
-    ADD_VALUE_PAIR(TextDecorationLine, TextDecorationLineValueKind,
-                   textDecorationLine)
+    ADD_VALUE_PAIR(TextDecorationLine, ValueListKind, textDecorationLine)
     ADD_VALUE_PAIR(TextDecorationStyle, TextDecorationStyleValueKind,
                    textDecorationStyle)
     ADD_VALUE_PAIR(TextUnderlinePosition, TextUnderlinePositionValueKind,
