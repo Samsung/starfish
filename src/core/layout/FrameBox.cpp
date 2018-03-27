@@ -895,8 +895,15 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
 
             if (!shadow->inset()) {
                 Unit::Rect borderRect = makeRect(BoxValue::BorderBoxBoxValue);
-                Unit::Rect shadowRect(0, 0, borderRect.width() + sd * 2,
-                                      borderRect.height() + sd * 2);
+
+                int xx = 0, yy = 0, ww = 0, hh = 0;
+                LayoutUnit rx = borderRect.x();
+                LayoutUnit ry = borderRect.y();
+                xx = rx.floor();
+                yy = ry.floor();
+                ww = snapSizeToPixel(borderRect.width() + sd * 2, rx);
+                hh = snapSizeToPixel(borderRect.height() + sd * 2, ry);
+                Unit::Rect shadowRect(xx, yy, ww, hh);
 
                 float radiusOffset = 0.0f;
                 if (shadow->radius()) {
@@ -952,12 +959,22 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     canvas->lineTo(exteriorRect.x(),
                                    exteriorRect.y() + exteriorRect.height());
                     canvas->closePath();
+
+                    int xx = 0, yy = 0, ww = 0, hh = 0;
+                    LayoutUnit rx = borderRect.x();
+                    LayoutUnit ry = borderRect.y();
+                    xx = rx.floor();
+                    yy = ry.floor();
+                    ww = snapSizeToPixel(borderRect.width(), rx);
+                    hh = snapSizeToPixel(borderRect.height(), ry);
+                    Unit::Rect rect(xx, yy, ww, hh);
+
                     if (style()->hasBorderRadius()) {
-                        const LayoutRect rect(0, 0, width(), height());
-                        applyBorderRadiusClippingIfNeeds(canvas, rect);
+                        const LayoutRect r(0, 0, rect.width(), rect.height());
+                        applyBorderRadiusClippingIfNeeds(canvas, r);
                     } else {
                         canvas->setFillRule(false);
-                        canvas->clip(borderRect);
+                        canvas->clip(rect);
                     }
                 }
                 canvas->drawImage(nativeImage, imageRect);
@@ -995,16 +1012,20 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                     paddingRect.width() + abs(shadow->offsetX()),
                     paddingRect.height() + abs(shadow->offsetY()));
 
-                float x = (shadow->offsetX() < 0)
-                              ? 0.0f
-                              : paddingRect.x() + shadow->offsetX();
-                float y = (shadow->offsetY() < 0)
-                              ? 0.0f
-                              : paddingRect.y() + shadow->offsetY();
-
-                Unit::Rect interiorRect(x + sd, y + sd,
-                                        paddingRect.width() - sd * 2,
-                                        paddingRect.height() - sd * 2);
+                int ix = 0, iy = 0, iw = 0, ih = 0;
+                LayoutUnit x = ((shadow->offsetX() < 0)
+                                    ? 0.0f
+                                    : paddingRect.x() + shadow->offsetX()) +
+                               sd;
+                LayoutUnit y = ((shadow->offsetY() < 0)
+                                    ? 0.0f
+                                    : paddingRect.y() + shadow->offsetY()) +
+                               sd;
+                ix = x.floor();
+                iy = y.floor();
+                iw = snapSizeToPixel(paddingRect.width() - sd * 2, x);
+                ih = snapSizeToPixel(paddingRect.height() - sd * 2, y);
+                Unit::Rect interiorRect(ix, iy, iw, ih);
 
                 Unit::Rect exteriorRect;
                 exteriorRect.unite(borderRect);
@@ -1063,15 +1084,21 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 sb.process(shadow->radius());
                 delete cv;
 
+                int xx = 0, yy = 0, ww = 0, hh = 0;
+                LayoutUnit rx = paddingRect.x();
+                LayoutUnit ry = paddingRect.y();
+                xx = rx.floor();
+                yy = ry.floor();
+                ww = snapSizeToPixel(paddingRect.width(), rx);
+                hh = snapSizeToPixel(paddingRect.height(), ry);
+                Unit::Rect rect(xx, yy, ww, hh);
                 canvas->save();
                 if (style()->hasBorderRadius()) {
-                    const LayoutRect rect(paddingRect.x(), paddingRect.y(),
-                                          paddingRect.width(),
-                                          paddingRect.height());
-                    applyBorderRadiusClippingIfNeeds(canvas, rect, 0, true);
+                    const LayoutRect r(rect.x(), rect.y(), rect.width(),
+                                       rect.height());
+                    applyBorderRadiusClippingIfNeeds(canvas, r, 0, true);
                 } else {
-                    // FIXME: Apply snapSizeToPixel
-                    canvas->clip(paddingRect);
+                    canvas->clip(rect);
                 }
 
                 float dx =
