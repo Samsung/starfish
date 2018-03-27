@@ -50,6 +50,7 @@ class Node;
 class RuleSet;
 class MutablePropertyValue;
 class CSSCounterFunction;
+class CSSGradientValue;
 
 class CSSTokenValue : public std::string {
 public:
@@ -1494,7 +1495,10 @@ public:
         HyphensValueKind,
         LineBreakValueKind,
         WordBreakValueKind,
-        VarFunctionValueKind
+        VarFunctionValueKind,
+
+        // Gradient
+        GradientValueKind
     };
 
     CSSStyleValuePair()
@@ -2070,6 +2074,12 @@ public:
         return m_value.m_stringValue;
     }
 
+    CSSGradientValue* gradientValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == GradientValueKind);
+        return m_value.m_gradientValue;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -2140,6 +2150,7 @@ public:
         GCVector<GridLength>* m_gridTemplateUnits;
         CSSCounterFunction* m_counterFunctionValue;
         TextOverflowData* m_textOverflowData;
+        CSSGradientValue* m_gradientValue;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2426,6 +2437,11 @@ public:
             : m_textOverflowData(v)
         {
         }
+
+        ValueData(CSSGradientValue* v)
+            : m_gradientValue(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2464,6 +2480,8 @@ public:
             return m_value.m_counterFunctionValue;
         case TextOverflowValueKind:
             return m_value.m_textOverflowData;
+        case GradientValueKind:
+            return m_value.m_gradientValue;
         default:
             return nullptr;
         }
@@ -2620,6 +2638,12 @@ public:
         m_value.m_stringValue = v;
     }
 
+    void setGradientValue(CSSGradientValue* val)
+    {
+        m_valueKind = CSSStyleValuePair::GradientValueKind;
+        m_value.m_gradientValue = val;
+    }
+
 #define NEW_SET_VALUE_DECL(name, ...) \
     bool updateValue##name(Document* document, const CSSTokenVector& tokens);
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(NEW_SET_VALUE_DECL)
@@ -2659,6 +2683,7 @@ public:
     bool updateValueUnitBorderColor(const CSSTokenValue& token);
     bool updateValueUnitColor(const CSSTokenValue& token);
     bool updateValueUnitUrlOrNone(const CSSTokenValue& token);
+    bool updateValueGradient(const CSSTokenValue& value);
     bool updateValueUnitMargin(const CSSTokenValue& token);
     bool updateValueUnitPadding(const CSSTokenValue& token);
     bool updateValueUnitFontSize(const CSSTokenValue& token);
