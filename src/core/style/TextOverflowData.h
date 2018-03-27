@@ -78,7 +78,7 @@ public:
 
     bool operator!=(const TextOverflowData& data)
     {
-        return operator==(data);
+        return !operator==(data);
     }
 
 private:
