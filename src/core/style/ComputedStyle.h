@@ -93,6 +93,7 @@ class RareComputedStyleData : public gc {
         TextDecorationColor,
         TextDecorationStyle,
         TextUnderlinePosition,
+        Resize,
         Content,
         Outline,
         BorderRadius,
@@ -155,6 +156,7 @@ class RareComputedStyleData : public gc {
         WordBreakValue m_wordBreak;
         TextDecorationStyleValue m_textDecorationStyle;
         TextUnderlinePositionValue m_textUnderlinePosition;
+        ResizeValue m_resize;
         TextOverflowData* m_textOverflow;
         CounterBaseList* m_counterBaseList;
 
@@ -265,6 +267,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(TextUnderlinePositionValue v)
             : m_textUnderlinePosition(v)
+        {
+        }
+
+        RareComputedStyleValue(ResizeValue v)
+            : m_resize(v)
         {
         }
 
@@ -421,6 +428,7 @@ public:
     GETTER_VALUE(Unit::Color, color, textDecorationColor, TextDecorationColor);
     GETTER_VALUE(TextDecorationStyleValue, textDecorationStyle,
                  textDecorationStyle, TextDecorationStyle);
+    GETTER_VALUE(ResizeValue, resize, resize, Resize);
 
 #undef GETTER_VALUE
 
@@ -1020,6 +1028,25 @@ public:
     void setTextUnderlinePosition(TextUnderlinePositionValue v)
     {
         ensureInheritedRareData()->m_textUnderlinePosition = v;
+    }
+
+    ResizeValue resize()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return ResizeValue::NoneResizeValue;
+        }
+
+        Nullable<ResizeValue> v = rareComputedStyleData()->resize();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return ResizeValue::NoneResizeValue;
+    }
+
+    void setResize(ResizeValue v)
+    {
+        *m_rareComputedStyleData.ensureResize() = v;
     }
 
     DirectionValue direction()

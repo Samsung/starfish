@@ -132,6 +132,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Margin
         // Stroke
         // Cursor
+        // resize
         switch (data[0]) {
         case 'b':
             switch (data[1]) {
@@ -158,6 +159,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "margin", 6) == 0) {
                 return CSSStyleKind::Margin;
+            }
+            break;
+        case 'r':
+            if (memcmp(data, "resize", 6) == 0) {
+                return CSSStyleKind::Resize;
             }
             break;
         case 's':
@@ -1069,6 +1075,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'z':
             if (memcmp(data, "zIndex", 6) == 0) {
                 return CSSStyleKind::ZIndex;
+            }
+            break;
+        case 'r':
+            if (memcmp(data, "resize", 6) == 0) {
+                return CSSStyleKind::Resize;
             }
             break;
         case 's':

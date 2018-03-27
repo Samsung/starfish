@@ -1634,6 +1634,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                    textDecorationStyle)
     ADD_VALUE_PAIR(TextUnderlinePosition, TextUnderlinePositionValueKind,
                    textUnderlinePosition)
+    ADD_VALUE_PAIR(Resize, ResizeValueKind, resize)
     ADD_VALUE_PAIR(TextTransform, TextTransformValueKind, textTransform)
     ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
     ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
