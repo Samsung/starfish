@@ -508,7 +508,6 @@ public:
             return;
         }
 
-        m_drawnImages.push_back(data);
         size_t surfaceWidth = data->width(), surfaceHeight = data->height();
 
         bool surfaceWasCreated = false;
@@ -1187,7 +1186,6 @@ private:
 protected:
     StarFish* m_starfish;
     std::vector<CanvasStateCairo> m_state;
-    GCVector<NativeImageData*> m_drawnImages;
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
     unsigned m_width;

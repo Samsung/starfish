@@ -4913,6 +4913,8 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                 canvas->drawImage(nativeImage, rect);
                 canvas->translate(offset - shadow->offsetX(),
                                   offset - shadow->offsetY());
+
+                delete nativeImage;
             }
             list.clear();
 

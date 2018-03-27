@@ -962,6 +962,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                 }
                 canvas->drawImage(nativeImage, imageRect);
                 canvas->restore();
+
+                delete nativeImage;
             }
         }
         list.clear();
@@ -1080,6 +1082,8 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 canvas->translate(dx, dy);
                 canvas->drawImage(nativeImage, ImageRect);
                 canvas->restore();
+
+                delete nativeImage;
             }
         }
         list.clear();

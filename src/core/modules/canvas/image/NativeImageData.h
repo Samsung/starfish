@@ -63,8 +63,12 @@ public:
     }
     virtual ~NativeImageData()
     {
+        disposeNativeImageData();
+
         auto& r = everyNativeImageInstances();
         r.erase(std::find(r.begin(), r.end(), this));
+
+        GC_REGISTER_FINALIZER_NO_ORDER(this, NULL, NULL, NULL, NULL);
     }
 
     PreserveAspectRatioValue preserveAspectRatioValue()
@@ -86,14 +90,15 @@ protected:
         m_isSeenByGC = false;
         m_preserveAspectRatioValue = None;
         everyNativeImageInstances().push_back(this);
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           NativeImageData* self =
-                                               (NativeImageData*)obj;
-                                           self->disposeNativeImageData();
-                                           self->~NativeImageData();
-                                       },
-                                       NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                NativeImageData* self = (NativeImageData*)obj;
+                self->disposeNativeImageData();
+                auto& r = everyNativeImageInstances();
+                r.erase(std::find(r.begin(), r.end(), self));
+            },
+            NULL, NULL, NULL);
     }
 
     bool m_isSeenByGC : 1;
