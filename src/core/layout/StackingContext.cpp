@@ -112,7 +112,7 @@ struct StackingContext::ComputeStackingContextContext {
 
     LayoutRect computeLayerExtent(StackingContext* c, SkMatrix m)
     {
-        LayoutRect rt = c->owner()->frameRect();
+        LayoutRect rt(LayoutLocation(), c->owner()->frameRect().size());
         if (m.rectStaysRect()) {
             SkRect skRect =
                 SkRect::MakeXYWH((float)rt.x(), (float)rt.y(),
@@ -807,20 +807,21 @@ void StackingContext::computeStackingContextProperties(
             ? IndirectCompositingReason::Stacking
             : IndirectCompositingReason::None;
 
-    if (!willBeComposited && compositingState.testingOverlap &&
-        (*compositingState.overlapMapFilled.get())) {
-        // TODO
-        // compositingReason =
-        // compositingState.isOverlapWithAlreadyCompositedLayer(this) ?
-        // IndirectCompositingReason::Overlap : IndirectCompositingReason::None;
-    }
-
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     if (m_owner->isFrameReplaced() &&
         m_owner->asFrameReplaced()->isFrameReplacedVideo()) {
         compositingReason = IndirectCompositingReason::Overlap;
     }
 #endif
+
+    if (!willBeComposited &&
+        compositingReason == IndirectCompositingReason::Stacking &&
+        compositingState.testingOverlap) {
+        compositingReason =
+            compositingState.isOverlapWithAlreadyCompositedLayer(this)
+                ? IndirectCompositingReason::Overlap
+                : IndirectCompositingReason::None;
+    }
 
     // layer.setIndirectCompositingReason(compositingReason);
 

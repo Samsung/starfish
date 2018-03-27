@@ -292,13 +292,13 @@ void BrowsingContext::resolveStyleIfNeeds()
                 if (decl->getCSSValuePair(
                             CSSStyleValuePair::KeyKind::FontFamily)
                         .valueKind() !=
-                    CSSStyleValuePair::ValueKind::StringValueKind) {
+                    CSSStyleValuePair::ValueKind::KeywordValueKind) {
                     continue;
                 }
                 String* fontFamily =
                     decl->getCSSValuePair(
                             CSSStyleValuePair::KeyKind::FontFamily)
-                        .stringValue();
+                        .keywordValue();
                 FontFaceSrcData* src =
                     decl->getCSSValuePair(CSSStyleValuePair::KeyKind::Src)
                         .fontFaceSrcDataValue();
