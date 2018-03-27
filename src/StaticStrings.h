@@ -228,7 +228,11 @@ namespace StarFish {
     F(TargetWithin, targetWithin, "target-within")             \
     F(UserInvalid, userInvalid, "user-invalid")                \
     F(Valid, valid, "valid")                                   \
-    F(Visited, visited, "visited")
+    F(Visited, visited, "visited")                             \
+    F(Cue, cue, "cue")                                         \
+    F(GrammarError, grammarError, "grammar-error")             \
+    F(Placeholder, placeholder, "placeholder")                 \
+    F(SpellingError, spellingError, "spelling-error")
 
 class StaticStrings : public gc {
     friend class QualifiedName;
