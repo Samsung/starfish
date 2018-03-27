@@ -580,7 +580,7 @@ void FrameTreeBuilder::createOutsideCounterIfNeeds(Node* parent,
     if (!parentFrame) {
         return;
     }
-    int32_t index = ctx.getAndIncreaseCountIndex();
+    int32_t index = ctx.getAndIncreaseListCounterIndex();
     STARFISH_ASSERT(parent->style()->listStyleData().typeData()->valid());
     String* label =
         parent->style()->listStyleData().typeData()->generateLabel(index);
@@ -644,7 +644,7 @@ void FrameTreeBuilder::createInsideCounterIfNeeds(Node* parent,
         return;
     }
 
-    int32_t index = ctx.getAndIncreaseCountIndex();
+    int32_t index = ctx.getAndIncreaseListCounterIndex();
     STARFISH_ASSERT(parent->style()->listStyleData().typeData()->valid());
     String* label =
         parent->style()->listStyleData().typeData()->generateLabel(index);
@@ -842,6 +842,127 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
     }
 }
 
+void FrameTreeBuilderContext::resetPseudoCounter(Node* container,
+                                                 AtomicString& counterName,
+                                                 int32_t resetValue)
+{
+    if (!m_pseudoCounters.size() ||
+        m_pseudoCounters.back().first != container) {
+        m_pseudoCounters.emplace_back(container,
+                                      std::unordered_set<AtomicString>());
+    }
+    std::unordered_set<AtomicString>& currentSet =
+        m_pseudoCounters.back().second;
+    if (currentSet.find(counterName) != currentSet.end()) {
+        STARFISH_ASSERT(m_pseudoCounterIndice[counterName].size());
+        m_pseudoCounterIndice[counterName].back() = resetValue;
+    } else {
+        currentSet.insert(counterName);
+        m_pseudoCounterIndice[counterName].push_back(resetValue);
+    }
+}
+
+void FrameTreeBuilderContext::openCountingContextIfNeeds(Node* from)
+{
+    // List counter (list-style-type, list-style-position, list-style-image)
+    if (from->isHTMLListContainer()) {
+        m_listCounterIndice.push_back(from->asHTMLListContainer()->start());
+    }
+    // Pseudo counter (counter-reset, counter-increment)
+    if (from->style()->counterReset()) {
+        CounterBaseList* counterData = from->style()->counterReset();
+        size_t dataSize = counterData->size();
+        for (size_t i = 0; i < dataSize; i++) {
+            auto& item = (*counterData)[i];
+            Node* current = from->isPseudoElement() ? from->parentNode() : from;
+            resetPseudoCounter(current->parentNode(), item.first, item.second);
+        }
+    }
+    if (from->style()->counterIncrement()) {
+        CounterBaseList* counterData = from->style()->counterIncrement();
+        size_t dataSize = counterData->size();
+        for (size_t i = 0; i < dataSize; i++) {
+            auto& item = (*counterData)[i];
+            AtomicString& counterName = item.first;
+            int32_t incrementValue = item.second;
+            auto matchResult = m_pseudoCounterIndice.find(counterName);
+            if (matchResult != m_pseudoCounterIndice.end()) {
+                matchResult->second.back() += incrementValue;
+            } else {
+                // If 'counter-increment' or 'content' on an element or
+                // pseudo-element refers to a counter that is not in the scope
+                // of any 'counter-reset', implementations should behave as
+                // though a 'counter-reset' had reset the counter to 0 on that
+                // element or pseudo-element.
+                Node* current =
+                    from->isPseudoElement() ? from->parentNode() : from;
+                resetPseudoCounter(current, counterName, incrementValue);
+            }
+        }
+    }
+}
+
+void FrameTreeBuilderContext::closeCountingContextIfNeeds(Node* from)
+{
+    // List counter (list-style-type, list-style-position, list-style-image)
+    if (from->isHTMLListContainer()) {
+        m_listCounterIndice.pop_back();
+    }
+    // Pseudo counter (counter-reset, counter-increment)
+    if (m_pseudoCounters.size() && m_pseudoCounters.back().first == from) {
+        std::unordered_set<AtomicString>& currentSet =
+            m_pseudoCounters.back().second;
+        auto iter = currentSet.begin();
+        while (iter != currentSet.end()) {
+            const AtomicString& counterName = *iter;
+            std::vector<int32_t>& counter = m_pseudoCounterIndice[counterName];
+            STARFISH_ASSERT(counter.size());
+            counter.pop_back();
+            if (!counter.size()) {
+                m_pseudoCounterIndice.erase(counterName);
+            }
+            iter++;
+        }
+        m_pseudoCounters.pop_back();
+    }
+}
+
+Nullable<String*> FrameTreeBuilderContext::getStringFromContentData(
+    ContentData* from)
+{
+    if (from->isText()) {
+        return from->text()->text();
+    }
+    if (from->isCounter()) {
+        CounterContentData* counterData = from->counter();
+        const AtomicString& counterName = counterData->id();
+        auto matchResult = m_pseudoCounterIndice.find(counterName);
+        if (matchResult == m_pseudoCounterIndice.end()) {
+            return counterData->counterStyle()
+                ->generateLabelForCSSContentProperty(0);
+        }
+        std::vector<int32_t>& indice = matchResult->second;
+        Nullable<String*> sp = counterData->separator();
+        if (!sp.hasValue()) {
+            STARFISH_ASSERT(indice.size());
+            return counterData->counterStyle()
+                ->generateLabelForCSSContentProperty(indice.back());
+        }
+        StringBuilder sb;
+        size_t indiceSize = indice.size();
+        for (size_t i = 0; i < indiceSize; i++) {
+            sb.appendString(
+                counterData->counterStyle()->generateLabelForCSSContentProperty(
+                    indice[i]));
+            if (i + 1 != indiceSize) {
+                sb.appendString(sp.getValue());
+            }
+        }
+        return sb.finalize();
+    }
+    return Nullable<String*>();
+}
+
 Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                                    bool force = false)
 {
@@ -851,9 +972,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     GCVector<FrameInline*> stackedFrameInline;
     Frame* currentFrame;
 
-    if (current->isHTMLListContainer()) {
-        ctx.openCountingContext(current->asHTMLListContainer()->start());
-    }
+    ctx.openCountingContextIfNeeds(current);
 
     if (ctx.isInFrameFlexFlow() || ctx.isInFrameGridFlow()) {
         if (!current->isCharacterData() && current->style()) {
@@ -1015,7 +1134,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         if (content) {
             auto iter = content->begin();
             while (iter != content->end()) {
-                if (iter->isText()) {
+                Nullable<String*> text = ctx.getStringFromContentData(&(*iter));
+                if (text.hasValue()) {
                     ComputedStyle* contentTextStyle =
                         new ComputedStyle(current->style());
                     contentTextStyle->setDisplay(
@@ -1025,7 +1145,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                                                          current);
 
                     Text* contentText =
-                        new Text(current->document(), iter->text()->text());
+                        new Text(current->document(), text.getValue());
                     contentText->setStyle(contentTextStyle);
                     contentText->setParentNode(current);
                     contentText->clearNeedsStyleRecalc();
@@ -1079,9 +1199,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         createOutsideCounterIfNeeds(current, ctx);
     }
 
-    if (current->isHTMLListContainer()) {
-        ctx.closeCountingContext();
-    }
+    ctx.closeCountingContextIfNeeds(current);
+
     return currentFrame;
 }
 
