@@ -93,6 +93,8 @@ void* ComputedStyle::operator new(size_t size)
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_width));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_height));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle, m_textDecorationLineData));
         GC_set_bit(
             obj_bitmap,
             GC_WORD_OFFSET(ComputedStyle, m_rareComputedStyleData.m_styles));

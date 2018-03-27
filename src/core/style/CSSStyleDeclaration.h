@@ -112,6 +112,7 @@ public:
     String* Font();
     String* FontFamily();
     String* Src();
+    String* TextDecoration();
     String* Transition();
     String* TransitionTransitionProperty();
     String* TransitionTransitionDuration();
@@ -151,6 +152,7 @@ public:
     void setFont(const char* value, size_t len, bool isImportant);
     void setFontFamily(const char* value, size_t len, bool isImportant);
     void setSrc(const char* value, size_t len, bool isImportant);
+    void setTextDecoration(const char* value, size_t len, bool isImportant);
     void setTransition(const char* value, size_t len, bool isImportant);
     void setTransitionTransitionProperty(const char* value, size_t len,
                                          bool isImportant);

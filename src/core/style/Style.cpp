@@ -4586,23 +4586,6 @@ void StyleResolver::apply(Element* element,
                 style->setTextOverflow(cssValues[k].textOverflowValue());
             }
             break;
-        case CSSStyleValuePair::KeyKind::TextDecoration:
-            if (cssValues[k].valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setTextDecoration(parentStyle->textDecoration());
-            } else if ((cssValues[k].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (cssValues[k].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setTextDecoration(
-                    TextDecorationLineValue::NoneTextDecorationLineValue);
-            } else {
-                STARFISH_ASSERT(
-                    cssValues[k].valueKind() ==
-                    CSSStyleValuePair::ValueKind::TextDecorationLineValueKind);
-                style->setTextDecoration(cssValues[k].textDecorationValue());
-            }
-            break;
         case CSSStyleValuePair::KeyKind::TextDecorationLine:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
@@ -4611,14 +4594,14 @@ void StyleResolver::apply(Element* element,
                         CSSStyleValuePair::ValueKind::Initial) ||
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
-                style->setTextDecorationLine(
-                    TextDecorationLineValue::NoneTextDecorationLineValue);
+                CSSStyleValuePair p;
+                p.setValueKind(CSSStyleValuePair::TextDecorationLineValueKind);
+                p.setValue(NoneTextDecorationLineValue);
+                style->textDecorationLine()->push_back(p);
             } else {
-                STARFISH_ASSERT(
-                    cssValues[k].valueKind() ==
-                    CSSStyleValuePair::ValueKind::TextDecorationLineValueKind);
-                style->setTextDecorationLine(
-                    cssValues[k].textDecorationLineValue());
+                STARFISH_ASSERT(cssValues[k].valueKind() ==
+                                CSSStyleValuePair::ValueKind::ValueListKind);
+                style->setTextDecorationLine(cssValues[k].multiValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::TextDecorationColor:
@@ -11019,43 +11002,146 @@ bool CSSStyleValuePair::updateValueBoxShadow(Document* document,
     return updateValueShadow(tokens, true);
 }
 
-bool CSSStyleValuePair::updateValueTextDecoration(Document* document,
-                                                  const CSSTokenVector& tokens)
+void CSSStyleDeclaration::setTextDecoration(const char* value, size_t len,
+                                            bool isImportant)
 {
-    // TODO: shorthand not supported yet
-    return updateValueTextDecorationLine(document, tokens);
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, "", 0);
+
+    CSSStyleValuePair ret;
+    if (ret.updateValueCommon(tokens)) {
+        ret.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine, ret);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle, ret);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor, ret);
+        return;
+    }
+
+    bool doneStyle = false;
+    bool doneColor = false;
+    bool doneLine = false;
+    CSSTokenVector singleTokenList;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        singleTokenList.clear();
+        singleTokenList.push_back(tokens[i]);
+
+        CSSStyleValuePair p;
+        p.setFlagImportant(isImportant);
+        if (!doneStyle &&
+            p.updateValueTextDecorationStyle(nullptr, singleTokenList)) {
+            addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle, p);
+            doneStyle = true;
+        } else if (!doneColor &&
+                   p.updateValueTextDecorationColor(nullptr, singleTokenList)) {
+            addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor, p);
+            doneColor = true;
+        } else if (!doneLine &&
+                   p.updateValueTextDecorationLine(nullptr, singleTokenList)) {
+            // text-decoration-line can accept consecutive multi-values
+            std::set<TextDecorationLineValue> set;
+            const CSSStyleValuePair& lineVal = p.multiValue()->at(0);
+            set.insert(lineVal.textDecorationLineValue());
+            for (size_t j = i + 1; j < tokens.size(); j++) {
+                singleTokenList.clear();
+                singleTokenList.push_back(tokens[j]);
+                bool ok = false;
+                CSSStyleValuePair tmpVal;
+                if (tmpVal.updateValueTextDecorationLine(nullptr,
+                                                         singleTokenList)) {
+                    const CSSStyleValuePair& nextVal =
+                        tmpVal.multiValue()->at(0);
+                    if (set.find(nextVal.textDecorationLineValue()) ==
+                        set.end()) {
+                        i = j;
+                        set.insert(nextVal.textDecorationLineValue());
+                        p.multiValue()->push_back(nextVal);
+                        ok = true;
+                    }
+                }
+
+                if (!ok) {
+                    break;
+                }
+            }
+            addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine, p);
+            doneLine = true;
+        } else {
+            // Error: each style, color, and line can appear only once OR
+            // an unknown token received
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine);
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle);
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor);
+            return;
+        }
+    }
+}
+
+String* CSSStyleDeclaration::TextDecoration()
+{
+    StringBuilder b;
+    for (unsigned i = 0; i < m_cssValues.size(); i++) {
+        CSSStyleValuePair& p = m_cssValues[i];
+        switch (p.keyKind()) {
+        case CSSStyleValuePair::KeyKind::TextDecorationLine:
+            b.appendString(p.multiValue()->toString());
+            break;
+        case CSSStyleValuePair::KeyKind::TextDecorationStyle:
+        case CSSStyleValuePair::KeyKind::TextDecorationColor:
+            b.appendString(p.toString());
+            break;
+        default:
+            break;
+        }
+    }
+
+    return b.finalize();
 }
 
 bool CSSStyleValuePair::updateValueTextDecorationLine(
     Document* document, const CSSTokenVector& tokens)
 {
-    if (tokens.size() != 1) {
+    if (tokens.size() < 1) {
         return false;
     }
 
-    const CSSTokenValue& value = tokens[0];
-    // none | [ underline || line-through ] | inherit // Initial value -> none
-    m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationLineValueKind;
+    m_valueKind = CSSStyleValuePair::ValueListKind;
+    m_value.m_multiValue = new ValueList(ValueList::Separator::SpaceSeparator);
+    std::set<TextDecorationLineValue> set;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        TextDecorationLineValue v;
 
-    if (STRING_VALUE_IS_NONE()) {
-        m_value.m_textDecorationLine =
-            TextDecorationLineValue::NoneTextDecorationLineValue;
-    } else if (STRING_VALUE_IS_STRING("underline")) {
-        m_value.m_textDecorationLine =
-            TextDecorationLineValue::UnderlineTextDecorationLineValue;
-    } else if (STRING_VALUE_IS_STRING("line-through")) {
-        m_value.m_textDecorationLine =
-            TextDecorationLineValue::LineThroughTextDecorationLineValue;
-    } else if (STRING_VALUE_IS_STRING("overline")) {
-        m_value.m_textDecorationLine =
-            TextDecorationLineValue::OverlineTextDecorationLineValue;
-        return false; // unsupported yet
-    } else if (STRING_VALUE_IS_STRING("blink")) {
-        m_value.m_textDecorationLine =
-            TextDecorationLineValue::BlinkTextDecorationLineValue;
-        return false; // unsupported yet
-    } else {
-        return false;
+        if (STRING_VALUE_IS_NONE()) {
+            v = TextDecorationLineValue::NoneTextDecorationLineValue;
+        } else if (STRING_VALUE_IS_STRING("underline")) {
+            v = TextDecorationLineValue::UnderlineTextDecorationLineValue;
+        } else if (STRING_VALUE_IS_STRING("line-through")) {
+            v = TextDecorationLineValue::LineThroughTextDecorationLineValue;
+        } else if (STRING_VALUE_IS_STRING("overline")) {
+            v = TextDecorationLineValue::OverlineTextDecorationLineValue;
+            return false; // unsupported yet
+        } else if (STRING_VALUE_IS_STRING("blink")) {
+            v = TextDecorationLineValue::BlinkTextDecorationLineValue;
+            return false; // unsupported yet
+        } else {
+            return false;
+        }
+
+        if (set.find(v) == set.end()) {
+            CSSStyleValuePair p;
+            p.setTextDecorationLineValue(v);
+            m_value.m_multiValue->push_back(p);
+            set.insert(v);
+        } else {
+            return false; // invalid when duplicate inputs are given
+        }
     }
     return true;
 }

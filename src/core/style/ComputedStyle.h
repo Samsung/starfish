@@ -955,26 +955,30 @@ public:
         return ShadowDataList();
     }
 
-    TextDecorationLineValue textDecoration()
+    ValueList* textDecoration()
     {
         // TODO: shorthand not supported yet
         return textDecorationLine();
     }
 
-    void setTextDecoration(TextDecorationLineValue decoration)
+    void setTextDecoration(ValueList* decoration)
     {
         // TODO: shorthand not supported yet
         setTextDecorationLine(decoration);
     }
 
-    TextDecorationLineValue textDecorationLine()
+    ValueList* textDecorationLine()
     {
-        return m_textDecorationLine;
+        if (!m_textDecorationLineData) {
+            m_textDecorationLineData =
+                new ValueList(ValueList::Separator::SpaceSeparator);
+        }
+        return m_textDecorationLineData;
     }
 
-    void setTextDecorationLine(TextDecorationLineValue decoration)
+    void setTextDecorationLine(ValueList* decorationLines)
     {
-        m_textDecorationLine = decoration;
+        m_textDecorationLineData = decorationLines;
     }
 
     Unit::Color textDecorationColor()
@@ -3037,8 +3041,7 @@ protected:
         m_zIndexSpecifiedByUser = false;
         m_overflowX = OverflowValue::VisibleOverflow;
         m_overflowY = OverflowValue::VisibleOverflow;
-        m_textDecorationLine =
-            TextDecorationLineValue::NoneTextDecorationLineValue;
+        m_textDecorationLineData = nullptr;
         m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
@@ -3093,8 +3096,7 @@ protected:
     VerticalAlignValue m_verticalAlign : 4;
     OverflowValue m_overflowX : 2;
     OverflowValue m_overflowY : 2;
-    TextDecorationLineValue m_textDecorationLine : 3;
-
+    ValueList* m_textDecorationLineData;
     UnicodeBidiValue m_unicodeBidi : 2;
     BoxSizingValue m_boxSizing : 1;
     TableLayoutValue m_tableLayout : 1; // table
