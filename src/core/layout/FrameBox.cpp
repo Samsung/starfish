@@ -463,6 +463,33 @@ void FrameBox::paintOutline(Canvas* canvas)
     }
 }
 
+void FrameBox::computeBorderRadiusProperties(
+    const BorderRadiusData& br, const LayoutRect& rect,
+    float& topLeftHorizontal, float& topRightHorizontal, float& topLeftVertical,
+    float& bottomLeftVertical, float& topRightVertical,
+    float& bottomRightVertical, float& bottomLeftHorizontal,
+    float& bottomRightHorizontal)
+{
+    topLeftHorizontal =
+        br.m_topLeftHorizontal.specifiedValue(rect.width(), this);
+    topRightHorizontal =
+        br.m_topRightHorizontal.specifiedValue(rect.width(), this);
+
+    topLeftVertical = br.m_topLeftVertical.specifiedValue(rect.height(), this);
+    bottomLeftVertical =
+        br.m_bottomLeftVertical.specifiedValue(rect.height(), this);
+
+    topRightVertical =
+        br.m_topRightVertical.specifiedValue(rect.height(), this);
+    bottomRightVertical =
+        br.m_bottomRightVertical.specifiedValue(rect.height(), this);
+
+    bottomLeftHorizontal =
+        br.m_bottomLeftHorizontal.specifiedValue(rect.width(), this);
+    bottomRightHorizontal =
+        br.m_bottomRightHorizontal.specifiedValue(rect.width(), this);
+}
+
 void FrameBox::applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
                                  float spreadDistance, bool inset)
 {
@@ -486,25 +513,19 @@ void FrameBox::applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
                 std::min(maxHeightValue, maxWidthValue);
         }
 
-        float topLeftHorizontal =
-            br.m_topLeftHorizontal.specifiedValue(width(), this);
-        float topRightHorizontal =
-            br.m_topRightHorizontal.specifiedValue(width(), this);
+        float topLeftHorizontal;
+        float topRightHorizontal;
+        float topLeftVertical;
+        float bottomLeftVertical;
+        float topRightVertical;
+        float bottomRightVertical;
+        float bottomLeftHorizontal;
+        float bottomRightHorizontal;
 
-        float topLeftVertical =
-            br.m_topLeftVertical.specifiedValue(height(), this);
-        float bottomLeftVertical =
-            br.m_bottomLeftVertical.specifiedValue(height(), this);
-
-        float topRightVertical =
-            br.m_topRightVertical.specifiedValue(height(), this);
-        float bottomRightVertical =
-            br.m_bottomRightVertical.specifiedValue(height(), this);
-
-        float bottomLeftHorizontal =
-            br.m_bottomLeftHorizontal.specifiedValue(width(), this);
-        float bottomRightHorizontal =
-            br.m_bottomRightHorizontal.specifiedValue(width(), this);
+        computeBorderRadiusProperties(
+            br, rect, topLeftHorizontal, topRightHorizontal, topLeftVertical,
+            bottomLeftVertical, topRightVertical, bottomRightVertical,
+            bottomLeftHorizontal, bottomRightHorizontal);
 
         if (inset) {
 #define APPLY_BORDER_WIDTH(POS, BORDER_SIDE) \
@@ -877,6 +898,35 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
     canvas->restore();
 }
 
+void FrameBox::applyBorderShapeClippingUsedInPaintingBoxShadow(
+    const Unit::Rect& shadowRect, const Unit::Rect& borderRect,
+    const Unit::Rect& imageRect, Canvas* canvas)
+{
+    bool intersect = borderRect.intersects(imageRect);
+    if (intersect) {
+        Unit::Rect exteriorRect;
+        exteriorRect.unite(borderRect);
+        exteriorRect.unite(imageRect);
+
+        canvas->beginPath();
+        canvas->moveTo(exteriorRect.x(), exteriorRect.y());
+        canvas->lineTo(exteriorRect.x() + exteriorRect.width(),
+                       exteriorRect.y());
+        canvas->lineTo(exteriorRect.x() + exteriorRect.width(),
+                       exteriorRect.y() + exteriorRect.height());
+        canvas->lineTo(exteriorRect.x(),
+                       exteriorRect.y() + exteriorRect.height());
+        canvas->closePath();
+        if (style()->hasBorderRadius()) {
+            const LayoutRect rect(0, 0, width(), height());
+            applyBorderRadiusClippingIfNeeds(canvas, rect);
+        } else {
+            canvas->setFillRule(false);
+            canvas->clip(borderRect);
+        }
+    }
+}
+
 void FrameBox::paintBoxShadows(Canvas* canvas)
 {
     ComputedStyle* s = style();
@@ -913,74 +963,224 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     radiusOffset *= 2;
                 }
 
-                NativeImageData* nativeImage = NativeImageData::create(
-                    ceil(shadowRect.width() + radiusOffset),
-                    ceil(shadowRect.height() + radiusOffset));
-                Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
-                                                         nativeImage);
-                cv->clearColor(Unit::Color(0, 0, 0, 0));
-
-                if (shadow->hasColor()) {
-                    cv->setColor(shadow->color());
-                } else {
-                    cv->setColor(s->color());
-                }
-
-                cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
-                const LayoutRect clipRect(0, 0, shadowRect.width(),
-                                          shadowRect.height());
-                applyBorderRadiusClippingIfNeeds(cv, clipRect, sd);
-                cv->drawRect(shadowRect);
-
-                ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                              nativeImage->height(), nativeImage->stride());
-                sb.process(shadow->radius());
-                delete cv;
-
-                float offset = ceil(radiusOffset / 2);
-                Unit::Rect imageRect(-offset + shadow->offsetX() - sd,
-                                     -offset + shadow->offsetY() - sd,
-                                     nativeImage->width(),
-                                     nativeImage->height());
-
-                bool intersect = borderRect.intersects(imageRect);
-                canvas->save();
-                if (intersect) {
-                    Unit::Rect exteriorRect;
-                    exteriorRect.unite(borderRect);
-                    exteriorRect.unite(imageRect);
-
-                    canvas->beginPath();
-                    canvas->moveTo(exteriorRect.x(), exteriorRect.y());
-                    canvas->lineTo(exteriorRect.x() + exteriorRect.width(),
-                                   exteriorRect.y());
-                    canvas->lineTo(exteriorRect.x() + exteriorRect.width(),
-                                   exteriorRect.y() + exteriorRect.height());
-                    canvas->lineTo(exteriorRect.x(),
-                                   exteriorRect.y() + exteriorRect.height());
-                    canvas->closePath();
-
-                    int xx = 0, yy = 0, ww = 0, hh = 0;
-                    LayoutUnit rx = borderRect.x();
-                    LayoutUnit ry = borderRect.y();
-                    xx = rx.floor();
-                    yy = ry.floor();
-                    ww = snapSizeToPixel(borderRect.width(), rx);
-                    hh = snapSizeToPixel(borderRect.height(), ry);
-                    Unit::Rect rect(xx, yy, ww, hh);
-
-                    if (style()->hasBorderRadius()) {
-                        const LayoutRect r(0, 0, rect.width(), rect.height());
-                        applyBorderRadiusClippingIfNeeds(canvas, r);
+                // fast path
+                float shortSide =
+                    std::min(shadowRect.width(), shadowRect.height());
+                bool canUseFastPath =
+                    (shadow->radius() < shortSide / 2) && shadow->radius() > 0;
+                float topLeftHorizontal = 0;
+                float topRightHorizontal = 0;
+                float topLeftVertical = 0;
+                float bottomLeftVertical = 0;
+                float topRightVertical = 0;
+                float bottomRightVertical = 0;
+                float bottomLeftHorizontal = 0;
+                float bottomRightHorizontal = 0;
+                if (canUseFastPath && s->hasBorderRadius()) {
+                    auto br = s->borderRadius();
+                    computeBorderRadiusProperties(
+                        br, frameRect(), topLeftHorizontal, topRightHorizontal,
+                        topLeftVertical, bottomLeftVertical, topRightVertical,
+                        bottomRightVertical, bottomLeftHorizontal,
+                        bottomRightHorizontal);
+                    if (topLeftHorizontal == topRightHorizontal &&
+                        topRightHorizontal == topLeftVertical &&
+                        topLeftVertical == bottomLeftVertical &&
+                        bottomLeftVertical == topRightVertical &&
+                        topRightVertical == bottomRightVertical &&
+                        bottomRightVertical == bottomLeftHorizontal &&
+                        bottomLeftHorizontal == bottomRightHorizontal) {
                     } else {
-                        canvas->setFillRule(false);
-                        canvas->clip(rect);
+                        canUseFastPath = false;
                     }
                 }
-                canvas->drawImage(nativeImage, imageRect);
-                canvas->restore();
+                if (canUseFastPath) {
+                    canvas->save();
+                    canvas->setNeedsNoneAntialias();
+                    size_t bufImageSize = std::max((double)ceil(radiusOffset),
+                                                   (double)topLeftHorizontal);
+                    NativeImageData* nativeImage =
+                        NativeImageData::create(bufImageSize, bufImageSize);
+                    Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
+                                                             nativeImage);
+                    auto shadowColor =
+                        shadow->hasColor() ? shadow->color() : s->color();
+                    cv->setColor(shadowColor);
+                    cv->clearColor(Unit::Color(0, 0, 0, 0));
 
-                delete nativeImage;
+                    cv->translate(ceil(radiusOffset / 2),
+                                  ceil(radiusOffset / 2));
+                    const LayoutRect clipRect(0, 0, shadowRect.width(),
+                                              shadowRect.height());
+                    applyBorderRadiusClippingIfNeeds(cv, clipRect, sd);
+                    cv->drawRect(shadowRect);
+                    ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                                  nativeImage->height(), nativeImage->stride());
+                    sb.process(shadow->radius());
+                    delete cv;
+
+                    float offset = ceil(radiusOffset / 2);
+                    Unit::Rect imageRect(
+                        -offset + shadow->offsetX() - sd,
+                        -offset + shadow->offsetY() - sd,
+                        ceil(shadowRect.width() + radiusOffset),
+                        ceil(shadowRect.height() + radiusOffset));
+
+                    applyBorderShapeClippingUsedInPaintingBoxShadow(
+                        shadowRect, borderRect, imageRect, canvas);
+
+                    float pieceSize = bufImageSize;
+                    // center
+                    canvas->setColor(shadowColor);
+                    canvas->drawRect(Unit::Rect(
+                        imageRect.x() + pieceSize, imageRect.y() + pieceSize,
+                        imageRect.width() - pieceSize * 2,
+                        imageRect.height() - pieceSize * 2));
+
+                    // top-left
+                    Unit::Rect src;
+                    Unit::Rect dst;
+                    src = Unit::Rect(0, 0, pieceSize, pieceSize);
+                    dst = Unit::Rect(imageRect.x(), imageRect.y(), pieceSize,
+                                     pieceSize);
+                    DrawImageInfo drawImageInfo = {
+                        1.0, 1.0, BorderImageRepeatValue::StretchValue,
+                        BorderImageRepeatValue::StretchValue
+                    };
+                    canvas->drawImage(nativeImage, src, dst, drawImageInfo);
+
+                    // top-left -> top-right
+                    src = Unit::Rect(pieceSize - 1, 0, 1, pieceSize);
+                    dst = Unit::Rect(imageRect.x() + pieceSize, imageRect.y(),
+                                     imageRect.width() - pieceSize * 2,
+                                     pieceSize);
+                    canvas->drawImage(nativeImage, src, dst, drawImageInfo);
+
+                    // top-right
+                    src = Unit::Rect(0, 0, pieceSize, pieceSize);
+                    dst = Unit::Rect(imageRect.maxX() - pieceSize,
+                                     imageRect.y(), pieceSize, pieceSize);
+                    canvas->save();
+                    canvas->translate(dst.x(), dst.y());
+                    dst.setX(0);
+                    dst.setY(0);
+                    canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
+                    canvas->rotate(deg2rad(90));
+                    canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
+                    canvas->drawImage(nativeImage, src, dst, drawImageInfo);
+                    canvas->restore();
+
+                    // top-right -> bottom-right
+                    src = Unit::Rect(0, pieceSize - 1, pieceSize, 1);
+                    dst = Unit::Rect(imageRect.maxX() - pieceSize,
+                                     imageRect.y() + pieceSize, pieceSize,
+                                     imageRect.height() - pieceSize * 2);
+                    canvas->save();
+                    canvas->translate(dst.x(), dst.y());
+                    dst.setX(0);
+                    dst.setY(0);
+                    canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
+                    canvas->rotate(deg2rad(180));
+                    canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
+                    canvas->drawImage(nativeImage, src, dst, drawImageInfo);
+                    canvas->restore();
+
+                    // bottom-right
+                    src = Unit::Rect(0, 0, pieceSize, pieceSize);
+                    dst = Unit::Rect(imageRect.maxX() - pieceSize,
+                                     imageRect.maxY() - pieceSize, pieceSize,
+                                     pieceSize);
+                    canvas->save();
+                    canvas->translate(dst.x(), dst.y());
+                    dst.setX(0);
+                    dst.setY(0);
+                    canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
+                    canvas->rotate(deg2rad(180));
+                    canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
+                    canvas->drawImage(nativeImage, src, dst, drawImageInfo);
+                    canvas->restore();
+
+                    // bottom-right -> bottom-left
+                    src = Unit::Rect(pieceSize - 1, 0, 1, pieceSize);
+                    dst = Unit::Rect(
+                        imageRect.x() + pieceSize, imageRect.maxY() - pieceSize,
+                        imageRect.width() - pieceSize * 2, pieceSize);
+                    canvas->save();
+                    canvas->translate(dst.x(), dst.y());
+                    dst.setX(0);
+                    dst.setY(0);
+                    canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
+                    canvas->rotate(deg2rad(180));
+                    canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
+                    canvas->drawImage(nativeImage, src, dst, drawImageInfo);
+                    canvas->restore();
+
+                    // bottom-left
+                    src = Unit::Rect(0, 0, pieceSize, pieceSize);
+                    dst =
+                        Unit::Rect(imageRect.x(), imageRect.maxY() - pieceSize,
+                                   pieceSize, pieceSize);
+                    canvas->save();
+                    canvas->translate(dst.x(), dst.y());
+                    dst.setX(0);
+                    dst.setY(0);
+                    canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
+                    canvas->rotate(deg2rad(270));
+                    canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
+                    canvas->drawImage(nativeImage, src, dst, drawImageInfo);
+                    canvas->restore();
+
+                    // bottom-left -> top-left
+                    src = Unit::Rect(0, pieceSize - 1, pieceSize, 1);
+                    dst = Unit::Rect(imageRect.x(), imageRect.y() + pieceSize,
+                                     pieceSize,
+                                     imageRect.height() - pieceSize * 2);
+                    canvas->drawImage(nativeImage, src, dst, drawImageInfo);
+
+                    canvas->restore();
+
+                    delete nativeImage;
+                } else {
+                    canvas->save();
+                    NativeImageData* nativeImage = NativeImageData::create(
+                        ceil(shadowRect.width() + radiusOffset),
+                        ceil(shadowRect.height() + radiusOffset));
+                    Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
+                                                             nativeImage);
+                    cv->clearColor(Unit::Color(0, 0, 0, 0));
+
+                    if (shadow->hasColor()) {
+                        cv->setColor(shadow->color());
+                    } else {
+                        cv->setColor(s->color());
+                    }
+
+                    cv->translate(ceil(radiusOffset / 2),
+                                  ceil(radiusOffset / 2));
+                    const LayoutRect clipRect(0, 0, shadowRect.width(),
+                                              shadowRect.height());
+                    applyBorderRadiusClippingIfNeeds(cv, clipRect, sd);
+                    cv->drawRect(shadowRect);
+
+                    ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                                  nativeImage->height(), nativeImage->stride());
+                    sb.process(shadow->radius());
+                    delete cv;
+
+                    float offset = ceil(radiusOffset / 2);
+                    Unit::Rect imageRect(
+                        -offset + shadow->offsetX() - sd,
+                        -offset + shadow->offsetY() - sd,
+                        ceil(shadowRect.width() + radiusOffset),
+                        ceil(shadowRect.height() + radiusOffset));
+
+                    applyBorderShapeClippingUsedInPaintingBoxShadow(
+                        shadowRect, borderRect, imageRect, canvas);
+                    canvas->drawImage(nativeImage, imageRect);
+                    canvas->restore();
+
+                    delete nativeImage;
+                }
             }
         }
         list.clear();
@@ -1554,9 +1754,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
         ImageRenderingValue imageRenderingValue = style()->imageRendering();
 
-        BorderInfo borderinfo = { 1.0, 1.0,
-                                  BorderImageRepeatValue::StretchValue,
-                                  BorderImageRepeatValue::StretchValue };
+        DrawImageInfo borderinfo = { 1.0, 1.0,
+                                     BorderImageRepeatValue::StretchValue,
+                                     BorderImageRepeatValue::StretchValue };
         // Four Corners
         // left-top
         if ((lSlice > 0 && bImgLWidth > 0) && (tSlice > 0 && bImgTWidth > 0)) {

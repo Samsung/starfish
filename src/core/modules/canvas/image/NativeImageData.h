@@ -84,6 +84,12 @@ public:
     void* operator new(size_t size) = delete;
     void* operator new[](size_t size) = delete;
 
+#ifdef STARFISH_ENABLE_TEST
+    virtual void dumpImage(const char* path)
+    {
+    }
+#endif
+
 protected:
     NativeImageData()
     {

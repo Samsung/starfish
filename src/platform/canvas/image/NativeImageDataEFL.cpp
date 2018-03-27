@@ -105,6 +105,11 @@ public:
         m_height = h;
     }
 
+    virtual ~NativeImageDataEFL()
+    {
+        disposeNativeImageData();
+    }
+
     virtual void clear()
     {
         void* address = evas_object_image_data_get(m_image, EINA_TRUE);

@@ -831,6 +831,15 @@ public:
                            float spreadDistance = 0, bool inset = false);
 
 protected:
+    void computeBorderRadiusProperties(
+        const BorderRadiusData& br, const LayoutRect& rect,
+        float& topLeftHorizontal, float& topRightHorizontal,
+        float& topLeftVertical, float& bottomLeftVertical,
+        float& topRightVertical, float& bottomRightVertical,
+        float& bottomLeftHorizontal, float& bottomRightHorizontal);
+    void applyBorderShapeClippingUsedInPaintingBoxShadow(
+        const Unit::Rect& shadowRect, const Unit::Rect& borderRect,
+        const Unit::Rect& imageRect, Canvas* canvas);
     bool hasRareData() const
     {
         size_t* ptr = (size_t*)m_layoutParent;
