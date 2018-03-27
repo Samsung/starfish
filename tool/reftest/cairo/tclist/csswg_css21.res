@@ -2291,6 +2291,8 @@ test/cairo/reftest/csswg-test/css21_original/generated-content/content-attr-002.
 test/cairo/reftest/csswg-test/css21_original/generated-content/content-attr-case-001.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-attr-case-002.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-auto-reset-001.htm
+#
+# NOTE Moved 'content-counter-000~016.htm' to csswg_manual.res (font-dependent test)
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counter-000.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counter-001.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counter-002.htm
@@ -2308,6 +2310,8 @@ test/cairo/reftest/csswg-test/css21_original/generated-content/content-attr-case
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counter-014.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counter-015.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counter-016.htm
+#
+# NOTE Moved 'content-counters-000~018.htm' to csswg_manual.res (font-dependent test)
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counters-000.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counters-001.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counters-002.htm
@@ -2327,14 +2331,7 @@ test/cairo/reftest/csswg-test/css21_original/generated-content/content-attr-case
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counters-016.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counters-017.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/content-counters-018.htm
-# test/cairo/reftest/csswg-test/css21_original/generated-content/content-inherit-001.htm
-# test/cairo/reftest/csswg-test/css21_original/generated-content/content-inherit-002.htm
-# test/cairo/reftest/csswg-test/css21_original/generated-content/content-newline-001.htm
-# test/cairo/reftest/csswg-test/css21_original/generated-content/content-uri-001.htm
-# test/cairo/reftest/csswg-test/css21_original/generated-content/content-white-space-001.htm
-# test/cairo/reftest/csswg-test/css21_original/generated-content/content-white-space-002.htm
-# test/cairo/reftest/csswg-test/css21_original/generated-content/content-white-space-003.htm
-# test/cairo/reftest/csswg-test/css21_original/generated-content/content-white-space-004.htm
+# NOTE Moved counter-related TCs to csswg_manual.res (font-dependent test)
 # test/cairo/reftest/csswg-test/css21_original/generated-content/counter-increment-000.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/counter-increment-001.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/counter-increment-002.htm
@@ -2357,6 +2354,15 @@ test/cairo/reftest/csswg-test/css21_original/generated-content/content-attr-case
 # test/cairo/reftest/csswg-test/css21_original/generated-content/counters-scope-implied-000.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/counters-scope-implied-001.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/counters-scope-implied-002.htm
+#
+# test/cairo/reftest/csswg-test/css21_original/generated-content/content-inherit-001.htm
+# test/cairo/reftest/csswg-test/css21_original/generated-content/content-inherit-002.htm
+# test/cairo/reftest/csswg-test/css21_original/generated-content/content-newline-001.htm
+# test/cairo/reftest/csswg-test/css21_original/generated-content/content-uri-001.htm
+# test/cairo/reftest/csswg-test/css21_original/generated-content/content-white-space-001.htm
+# test/cairo/reftest/csswg-test/css21_original/generated-content/content-white-space-002.htm
+# test/cairo/reftest/csswg-test/css21_original/generated-content/content-white-space-003.htm
+# test/cairo/reftest/csswg-test/css21_original/generated-content/content-white-space-004.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/multiple-content-values-001.htm
 test/cairo/reftest/csswg-test/css21_original/generated-content/other-attribute-001.htm
 # test/cairo/reftest/csswg-test/css21_original/generated-content/quotes-001.htm

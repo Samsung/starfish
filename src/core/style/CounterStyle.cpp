@@ -55,6 +55,7 @@ String* CounterStyle::getFallbackSymbol(
 
 Nullable<String*> CounterStyle::getCyclicSymbol(int32_t pos) const
 {
+    STARFISH_ASSERT(m_symbols.size());
     if (exceedBound(pos)) {
         return Nullable<String*>();
     }
@@ -71,6 +72,7 @@ Nullable<String*> CounterStyle::getCyclicSymbol(int32_t pos) const
 
 Nullable<String*> CounterStyle::getFixedSymbol(int32_t pos) const
 {
+    STARFISH_ASSERT(m_symbols.size());
     int32_t start = firstSymbolValue();
     // NOTE This is safe becase symbols.size() can not exceed kMaxRangeValue
     int32_t size = (int32_t)m_symbols.size();
@@ -82,6 +84,7 @@ Nullable<String*> CounterStyle::getFixedSymbol(int32_t pos) const
 
 Nullable<String*> CounterStyle::getSymbolicSymbol(int32_t pos) const
 {
+    STARFISH_ASSERT(m_symbols.size());
     if (exceedBound(pos) || pos == 0) {
         // NOTE In symbolic system, index 0 does not match any symbol
         return Nullable<String*>();
@@ -99,6 +102,7 @@ Nullable<String*> CounterStyle::getSymbolicSymbol(int32_t pos) const
 
 Nullable<String*> CounterStyle::getAlphabeticSymbol(int32_t pos) const
 {
+    STARFISH_ASSERT(m_symbols.size());
     if (exceedBound(pos) || pos == 0) {
         // NOTE In alphabetic system, index 0 does not match any symbol
         return Nullable<String*>();
@@ -118,6 +122,7 @@ Nullable<String*> CounterStyle::getAlphabeticSymbol(int32_t pos) const
 
 Nullable<String*> CounterStyle::getNumericSymbol(int32_t pos) const
 {
+    STARFISH_ASSERT(m_symbols.size());
     if (exceedBound(pos)) {
         return Nullable<String*>();
     }
@@ -134,6 +139,7 @@ Nullable<String*> CounterStyle::getNumericSymbol(int32_t pos) const
 
 Nullable<String*> CounterStyle::getAdditiveSymbol(int32_t pos) const
 {
+    STARFISH_ASSERT(m_additiveSymbols.size());
     if (exceedBound(pos)) {
         return Nullable<String*>();
     }
@@ -164,6 +170,15 @@ Nullable<String*> CounterStyle::getAdditiveSymbol(int32_t pos) const
     return result;
 }
 
+static CounterStyle::System extendsRootSystem(const CounterStyle* from)
+{
+    const CounterStyle* extends = from->extends();
+    if (extends->system() != CounterStyle::ExtendsSystem) {
+        return extends->system();
+    }
+    return extendsRootSystem(extends);
+}
+
 String* CounterStyle::getSymbolAt(int32_t pos) const
 {
     GCVector<const CounterStyle*> failedCounters;
@@ -173,31 +188,32 @@ String* CounterStyle::getSymbolAt(int32_t pos) const
 String* CounterStyle::getSymbolAt(
     int32_t pos, GCVector<const CounterStyle*>& failedCounters) const
 {
-    STARFISH_ASSERT(m_symbols.size() || m_additiveSymbols.size());
     Nullable<String*> result;
-    switch (m_system) {
-    case CounterStyle::NoneSystem:
+    CounterStyle::System system =
+        m_system == ExtendsSystem ? extendsRootSystem(this) : m_system;
+    switch (system) {
+    case NoneSystem:
         return String::emptyString;
-    case CounterStyle::CyclicSystem:
+    case CyclicSystem:
         result = getCyclicSymbol(pos);
         break;
-    case CounterStyle::NumericSystem:
+    case NumericSystem:
         result = getNumericSymbol(pos);
         break;
-    case CounterStyle::FixedSystem:
+    case FixedSystem:
         result = getFixedSymbol(pos);
         break;
-    case CounterStyle::AlphabeticSystem:
+    case AlphabeticSystem:
         result = getAlphabeticSymbol(pos);
         break;
-    case CounterStyle::SymbolicSystem:
+    case SymbolicSystem:
         result = getSymbolicSymbol(pos);
         break;
-    case CounterStyle::AdditiveSystem:
+    case AdditiveSystem:
         result = getAdditiveSymbol(pos);
         break;
-    case CounterStyle::ExtendsSystem:
-        break;
+    default:
+        STARFISH_ASSERT_NOT_REACHED();
     }
     if (!result.hasValue()) {
         return getFallbackSymbol(pos, failedCounters);
@@ -207,21 +223,30 @@ String* CounterStyle::getSymbolAt(
 
 String* CounterStyle::generateLabelForCSSContentProperty(int32_t pos) const
 {
-    // label = negativePrefix + symbol
+    String* symbol = getSymbolAt(pos);
+    // label : negativePrefix + padded symbol + negativeSuffix
     StringBuilder stringBuilder;
     bool needNegativeSign = pos < 0 && !ignoreNegativeSign();
     if (needNegativeSign) {
         stringBuilder.appendString(negativePrefix());
     }
-    stringBuilder.appendString(getSymbolAt(pos));
+    if (padSymbol()->length()) {
+        int diff = (int)padWidth() - (int)symbol->length();
+        for (; diff > 0; diff--) {
+            stringBuilder.appendString(padSymbol());
+        }
+    }
+    stringBuilder.appendString(symbol);
+    if (needNegativeSign) {
+        stringBuilder.appendString(negativeSuffix());
+    }
     return stringBuilder.finalize();
 }
 
 String* CounterStyle::generateLabel(int32_t pos) const
 {
     String* symbol = getSymbolAt(pos);
-
-    // label = prefix + negativePrefix + padded symbol + negativeSuffix + suffix
+    // label : prefix + negativePrefix + padded symbol + negativeSuffix + suffix
     StringBuilder stringBuilder;
     stringBuilder.appendString(prefix());
     bool needNegativeSign = pos < 0 && !ignoreNegativeSign();
@@ -264,6 +289,9 @@ String* CounterStyle::getDefaultSuffix()
 
 const CounterStyle* CounterStyle::getKnownCounter(String* name)
 {
+    if (name->equals("none")) {
+        return getNoneCounter();
+    }
     if (name->equalsIgnoreCase("disc")) {
         return getDiscCounter();
     }

@@ -207,7 +207,7 @@ FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_GETTER)
         CSSTokenVector tokens;                                          \
         if (UNLIKELY(CSSStyleValuePair::KeyKind::name ==                \
                      CSSStyleValuePair::KeyKind::Content)) {            \
-            tokenizeCSSValue(tokens, value, len, "", 0, true);          \
+            tokenizeCSSValue(tokens, value, len, "", 0, true, true);    \
         } else {                                                        \
             tokenizeCSSValue(tokens, value, len, ",", 1);               \
         }                                                               \

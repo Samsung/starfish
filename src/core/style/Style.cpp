@@ -3757,7 +3757,8 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                                            const char* data, size_t length,
                                            const char* seperator,
                                            size_t seperatorCount,
-                                           bool isCaseSensitive)
+                                           bool isCaseSensitive,
+                                           bool preserveContentWS)
 {
     CSSTokenValue str;
     bool inParenthesis = false;
@@ -3776,13 +3777,15 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
             inQuotes = !inQuotes;
         }
 
-        if (isWhiteSpaceState && String::isSpaceOrNewline(data[i])) {
+        if (!preserveContentWS && isWhiteSpaceState &&
+            String::isSpaceOrNewline(data[i])) {
             continue;
         }
 
         isWhiteSpaceState = false;
         str += data[i];
-        if ((inParenthesis || inQuotes) && String::isSpaceOrNewline(data[i])) {
+        if (!preserveContentWS && (inParenthesis || inQuotes) &&
+            String::isSpaceOrNewline(data[i])) {
             str[str.length() - 1] = ' ';
             isWhiteSpaceState = true;
             continue;
