@@ -71,6 +71,11 @@ public:
         initInternalSurface();
     }
 
+    virtual ~NativeImageDataMISC()
+    {
+        disposeNativeImageData();
+    }
+
     virtual uint8_t* data()
     {
         return (uint8_t*)m_image;
@@ -681,6 +686,15 @@ private:
     {
         return m_hasTransparentPixel;
     }
+
+#ifdef STARFISH_ENABLE_TEST
+    virtual void dumpImage(const char* path)
+    {
+        if (m_imageSurface) {
+            cairo_surface_write_to_png(m_imageSurface, path);
+        }
+    }
+#endif
 
 protected:
     bool m_hasTransparentPixel;

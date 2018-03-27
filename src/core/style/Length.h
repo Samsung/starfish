@@ -39,7 +39,8 @@ public:
         Percent,
         Fixed,
 
-        // After finishing resolveStyle, ex/em values should be changed to Fixed
+        // After finishing resolveStyle, ex~Vmax values should be changed to
+        // Fixed
         Ex,
         Em,
         Rem,
@@ -69,6 +70,19 @@ public:
         : m_data(data)
         , m_type(Calc)
     {
+    }
+
+    // this function returns not exact value with `Calc` type
+    bool hasZeroValueAnyway(bool treatAutoAsZero = true)
+    {
+        switch (m_type) {
+        case Auto:
+            return treatAutoAsZero;
+        case Calc:
+            return false;
+        default:
+            return m_data.m_numberData == 0;
+        }
     }
 
     void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,

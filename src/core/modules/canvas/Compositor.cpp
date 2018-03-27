@@ -150,7 +150,8 @@ public:
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, BorderInfo& borderinfo,
+                           const Unit::Rect& dst,
+                           const DrawImageInfo& borderinfo,
                            ImageRenderingValue imageRenderingMode)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();

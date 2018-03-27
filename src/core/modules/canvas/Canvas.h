@@ -49,6 +49,11 @@ public:
     }
 };
 
+inline double deg2rad(float degree)
+{
+    return degree * 3.14159265358979323846 / 180;
+}
+
 #ifndef STARFISH_CANVAS_SURFACE_MARGIN
 #define STARFISH_CANVAS_SURFACE_MARGIN 5
 #endif
@@ -85,7 +90,7 @@ public:
     virtual size_t bufferStride() = 0;
 };
 
-struct BorderInfo {
+struct DrawImageInfo {
     double hScale;
     double vScale;
     BorderImageRepeatValue hRepeat;
@@ -159,7 +164,7 @@ public:
             ImageRenderingValue::ImageRenderingAutoValue) = 0;
     virtual void drawImage(
         NativeImageData* data, const Unit::Rect& src, const Unit::Rect& dst,
-        BorderInfo& borderinfo,
+        const DrawImageInfo& borderinfo,
         ImageRenderingValue imageRenderingMode =
             ImageRenderingValue::ImageRenderingAutoValue) = 0;
     virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
@@ -241,6 +246,10 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
     virtual void setStrokeWidth(float width)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void setNeedsNoneAntialias()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }

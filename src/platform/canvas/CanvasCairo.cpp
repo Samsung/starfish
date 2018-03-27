@@ -430,10 +430,14 @@ public:
     void setImageRenderingModeToPattern(cairo_pattern_t* resizePattern,
                                         ImageRenderingValue imageRenderingMode)
     {
-        cairo_filter_t autoFilterMode =
-            cairo_get_antialias(m_canvas) >= CAIRO_ANTIALIAS_GOOD
-                ? CAIRO_FILTER_GOOD
-                : CAIRO_FILTER_FAST;
+        auto anti = cairo_get_antialias(m_canvas);
+        cairo_filter_t autoFilterMode;
+        if (anti == CAIRO_ANTIALIAS_NONE) {
+            autoFilterMode = CAIRO_FILTER_FAST;
+        } else {
+            autoFilterMode = anti >= CAIRO_ANTIALIAS_GOOD ? CAIRO_FILTER_GOOD
+                                                          : CAIRO_FILTER_FAST;
+        }
 
         if (imageRenderingMode == ImageRenderingAutoValue) {
             cairo_pattern_set_filter(resizePattern, autoFilterMode);
@@ -544,7 +548,8 @@ public:
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, BorderInfo& borderinfo,
+                           const Unit::Rect& dst,
+                           const DrawImageInfo& borderinfo,
                            ImageRenderingValue imageRenderingMode)
     {
         cairo_save(m_canvas);
@@ -596,7 +601,8 @@ public:
 
     virtual void drawRepeatImageCairo(cairo_surface_t* localSurface,
                                       const Unit::Rect& dst, float imageWidth,
-                                      float imageHeight, BorderInfo& borderinfo,
+                                      float imageHeight,
+                                      const DrawImageInfo& borderinfo,
                                       ImageRenderingValue imageRenderingMode)
     {
         if (!lastState().m_visible) {
@@ -1167,6 +1173,10 @@ private:
         }
 
         cairo_translate(canvas, -dx, -dy);
+    }
+    virtual void setNeedsNoneAntialias()
+    {
+        cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_NONE);
     }
     virtual void setNeedsFastAntialias()
     {
