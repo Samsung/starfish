@@ -543,12 +543,8 @@ public:
         cairo_surface_destroy(image);
     }
 
-    ///////////////////////////////////////////
-    // data: 원본 이미지
-    // src : 원본 이미지에서 Clip할 영역
-    // dst : canvas에 그려질 영역
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, bool xRepeat, bool yRepeat,
+                           const Unit::Rect& dst, BorderInfo& borderinfo,
                            ImageRenderingValue imageRenderingMode)
     {
         cairo_save(m_canvas);
@@ -572,12 +568,13 @@ public:
                 srcImage, src.x(), src.y(), src.width(), src.height());
         }
 
-        if (xRepeat || yRepeat) {
-            drawRepeatImageCairo(image, dst, src.width(), src.height(), xRepeat,
-                                 yRepeat, imageRenderingMode);
-        } else {
+        if (borderinfo.hRepeat == BorderImageRepeatValue::StretchValue &&
+            borderinfo.vRepeat == BorderImageRepeatValue::StretchValue) {
             drawImageCairo(image, dst, src.width(), src.height(),
                            imageRenderingMode);
+        } else {
+            drawRepeatImageCairo(image, dst, src.width(), src.height(),
+                                 borderinfo, imageRenderingMode);
         }
         if (surfaceWasCreated) {
             cairo_surface_destroy(srcImage);
@@ -599,8 +596,7 @@ public:
 
     virtual void drawRepeatImageCairo(cairo_surface_t* localSurface,
                                       const Unit::Rect& dst, float imageWidth,
-                                      float imageHeight, bool xRepeat,
-                                      bool yRepeat,
+                                      float imageHeight, BorderInfo& borderinfo,
                                       ImageRenderingValue imageRenderingMode)
     {
         if (!lastState().m_visible) {
@@ -610,35 +606,33 @@ public:
         INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::drawRepeatImage");
 
         cairo_save(m_canvas);
-        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-        ww = dst.width();
-        hh = dst.height();
+        double xx = dst.x(), yy = dst.y(), ww = dst.width(), hh = dst.height();
+        double x = 0.0, y = 0.0, hScale = borderinfo.scale,
+               vScale = borderinfo.scale;
+        double scaledWidth = imageWidth / borderinfo.scale;
+        double scaledHeight = imageHeight / borderinfo.scale;
 
-        float x = 0.0, y = 0.0;
-        if (xRepeat) {
-            x = (dst.x() - floor(dst.x() / imageWidth) * imageWidth) -
-                imageWidth;
+        if (borderinfo.hRepeat == BorderImageRepeatValue::RepeatValue) {
+            x = (ww - scaledWidth) / 2;
+        } else if (borderinfo.hRepeat == BorderImageRepeatValue::RoundValue) {
+            hScale = std::max(1.0, round(ww / scaledWidth));
+            hScale = (scaledWidth * hScale) / ww * borderinfo.scale;
         }
-        if (yRepeat) {
-            y = (dst.y() - floor(dst.y() / imageHeight) * imageHeight) -
-                imageHeight;
+        if (borderinfo.vRepeat == BorderImageRepeatValue::RepeatValue) {
+            y = (hh - scaledHeight) / 2;
+        } else if (borderinfo.vRepeat == BorderImageRepeatValue::RoundValue) {
+            vScale = std::max(1.0, round(hh / scaledHeight));
+            vScale = (scaledHeight * vScale) / hh * borderinfo.scale;
         }
-        xx = dst.x();
-        yy = dst.y();
 
         cairo_pattern_t* pattern;
         cairo_matrix_t matrix;
 
         cairo_surface_t* image = localSurface;
-
-        x = 0.0;
-        y = 0.0;
-        double surfaceWidth = imageWidth, surfaceHeight = imageHeight;
-        if (surfaceWidth && surfaceHeight) {
+        if (scaledWidth && scaledHeight) {
             pattern = cairo_pattern_create_for_surface(image);
 
-            // TODO:border-image-slice/border-image-width
-            cairo_matrix_init_scale(&matrix, (float)20 / 15, (float)20 / 15);
+            cairo_matrix_init_scale(&matrix, hScale, vScale);
             cairo_matrix_translate(&matrix, -x, -y);
 
             cairo_pattern_set_matrix(pattern, &matrix);
@@ -648,7 +642,7 @@ public:
             cairo_translate(m_canvas, xx, yy);
             cairo_set_source(m_canvas, pattern);
 
-            cairo_rectangle(m_canvas, 0, 0, ww, hh);
+            cairo_rectangle(m_canvas, 0.0, 0.0, ww, hh);
 
             if (lastState().m_opacity < 1) {
                 cairo_clip(m_canvas);
