@@ -607,22 +607,22 @@ public:
 
         cairo_save(m_canvas);
         double xx = dst.x(), yy = dst.y(), ww = dst.width(), hh = dst.height();
-        double x = 0.0, y = 0.0, hScale = borderinfo.scale,
-               vScale = borderinfo.scale;
-        double scaledWidth = imageWidth / borderinfo.scale;
-        double scaledHeight = imageHeight / borderinfo.scale;
+        double x = 0.0, y = 0.0, hScale = borderinfo.hScale,
+               vScale = borderinfo.vScale;
+        double scaledWidth = imageWidth / borderinfo.hScale;
+        double scaledHeight = imageHeight / borderinfo.vScale;
 
         if (borderinfo.hRepeat == BorderImageRepeatValue::RepeatValue) {
             x = (ww - scaledWidth) / 2;
         } else if (borderinfo.hRepeat == BorderImageRepeatValue::RoundValue) {
             hScale = std::max(1.0, round(ww / scaledWidth));
-            hScale = (scaledWidth * hScale) / ww * borderinfo.scale;
+            hScale = (scaledWidth * hScale) / ww * borderinfo.hScale;
         }
         if (borderinfo.vRepeat == BorderImageRepeatValue::RepeatValue) {
             y = (hh - scaledHeight) / 2;
         } else if (borderinfo.vRepeat == BorderImageRepeatValue::RoundValue) {
             vScale = std::max(1.0, round(hh / scaledHeight));
-            vScale = (scaledHeight * vScale) / hh * borderinfo.scale;
+            vScale = (scaledHeight * vScale) / hh * borderinfo.vScale;
         }
 
         cairo_pattern_t* pattern;
