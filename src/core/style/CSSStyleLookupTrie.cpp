@@ -560,6 +560,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Margin-Bottom
         // Border-Bottom
         // Align-Content
+        // Counter-Reset
         // Outline-Width
         // Outline-Style
         // Outline-Color
@@ -587,6 +588,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'a':
             if (memcmp(data, "align-content", 13) == 0) {
                 return CSSStyleKind::AlignContent;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "counter-reset", 13) == 0) {
+                return CSSStyleKind::CounterReset;
             }
             break;
         case 't':
@@ -764,6 +770,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Left-Width
         // Background-Repeat
         // Background-Origin
+        // Counter-Increment
         // Grid-Column-Start
         switch (data[0]) {
         case 'b':
@@ -781,6 +788,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "background-origin", 17) == 0) {
                 return CSSStyleKind::BackgroundOrigin;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "counter-increment", 17) == 0) {
+                return CSSStyleKind::CounterIncrement;
             }
             break;
         case 'g':
@@ -1422,6 +1434,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::BorderRadius;
             }
             break;
+        case 'c':
+            if (memcmp(data, "counterReset", 12) == 0) {
+                return CSSStyleKind::CounterReset;
+            }
+            break;
         case 'o':
             if (memcmp(data, "outlineColor", 12) == 0) {
                 return CSSStyleKind::OutlineColor;
@@ -1601,6 +1618,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "borderRightColor", 16) == 0) {
                 return CSSStyleKind::BorderRightColor;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "counterIncrement", 16) == 0) {
+                return CSSStyleKind::CounterIncrement;
             }
             break;
         case 'g':

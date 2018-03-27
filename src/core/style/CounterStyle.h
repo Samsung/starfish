@@ -129,6 +129,7 @@ public:
         , m_padSymbol(parent->padSymbol())
         , m_fallback(parent->fallback())
         , m_symbols(parent->m_symbols)
+        , m_additiveSymbols(parent->m_additiveSymbols)
     {
     }
 
@@ -252,12 +253,14 @@ public:
     void setSymbols(const GCVector<String*>& ref)
     {
         STARFISH_ASSERT(m_system != AdditiveSystem);
+        STARFISH_ASSERT(m_system != ExtendsSystem);
         m_symbols = ref;
     }
 
     void setSortedAddictiveSymbols(const GCVector<AdditiveTuple>& ref)
     {
         STARFISH_ASSERT(m_system == AdditiveSystem);
+        STARFISH_ASSERT(m_system != ExtendsSystem);
         m_additiveSymbols = ref;
     }
 

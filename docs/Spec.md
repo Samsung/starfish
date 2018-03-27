@@ -1058,6 +1058,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | | list-style-type | &lt;counter-style&gt; &#124; &lt;string&gt; &#124; none | Specifies the appearance of a list item element | |
 | | list-style-position | inside  &#124; outside | Specifies the position of the marker box in the principal block box. | |
 | | list-style-image | &lt;url&gt; &#124; none | Specifies an image to be used as the list item marker. | Development status: Parsed. Loaded. but not appeared on screen. |
+| | counter-increment | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Increases or decreases the value of a CSS counter by a given value. |
+| | counter-reset | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Resets a CSS counter to a given value. |
 
 
 ## Selectors

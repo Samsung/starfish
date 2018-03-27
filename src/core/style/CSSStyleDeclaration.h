@@ -97,7 +97,8 @@ public:
     static void tokenizeCSSValue(CSSTokenVector& tokens, const char* src,
                                  size_t len, const char* seperator = "",
                                  size_t seperatorCount = 0,
-                                 bool isCaseSensitive = false);
+                                 bool isCaseSensitive = false,
+                                 bool preserveContentWS = false);
 
     String* Border();
     String* BorderTop();
