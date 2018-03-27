@@ -1155,7 +1155,11 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
     /*
     // fallthrough
         case PseudoBackdrop:
-        case PseudoCue:
+    */
+    case PseudoCue:
+    case PseudoGrammarError:
+    case PseudoPlaceholder:
+    /*
         case PseudoResizer:
         case PseudoScrollbar:
         case PseudoScrollbarCorner:
@@ -1165,6 +1169,7 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
         case PseudoScrollbarTrackPiece:
     */
     case PseudoSelection:
+    case PseudoSpellingError:
         /*
             case PseudoWebKitCustomElement:
             case PseudoContent:
@@ -7996,6 +8001,7 @@ bool StyleResolver::checkPseudoElement(Element* element,
         result.pseudoType = PseudoElementType::PseudoElementAfter;
         return true;
     default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return false;
     }
 }
