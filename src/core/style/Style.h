@@ -2683,7 +2683,7 @@ public:
     bool updateValueUnitBorderColor(const CSSTokenValue& token);
     bool updateValueUnitColor(const CSSTokenValue& token);
     bool updateValueUnitUrlOrNone(const CSSTokenValue& token);
-    bool updateValueGradient(const CSSTokenValue& value);
+    bool updateValueUnitGradient(const CSSTokenValue& value);
     bool updateValueUnitMargin(const CSSTokenValue& token);
     bool updateValueUnitPadding(const CSSTokenValue& token);
     bool updateValueUnitFontSize(const CSSTokenValue& token);

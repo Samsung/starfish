@@ -1191,8 +1191,7 @@ public:
 
     void setBackgroundImage(CSSGradientValue* gradient, unsigned int layer = 0)
     {
-        m_rareComputedStyleData.ensureBackground()->setBgImageGradient(gradient,
-                                                                       layer);
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     void setBackgroundImageResource(ImageResource* img, unsigned int layer = 0)
@@ -1697,6 +1696,11 @@ public:
     void setBorderImageSource(String* url)
     {
         m_rareComputedStyleData.ensureBorder()->image().setUrl(url);
+    }
+
+    void setBorderImageSource(CSSGradientValue* gradient)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     void setBorderImageSlices(BorderImageLengthBox slices)
@@ -2769,6 +2773,11 @@ public:
     void setMaskImage(String* url)
     {
         rareComputedStyleData()->ensurePositionedMask()->setImage(url);
+    }
+
+    void setMaskImage(CSSGradientValue* gradient)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     void setMaskSize(MaskSizeValue size, unsigned int layer = 0)
