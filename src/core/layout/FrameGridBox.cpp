@@ -161,8 +161,35 @@ void GridFormattingContext::applyFrUnitsWithRows()
     }
 }
 
-static void adaptStartAndEndValueForColumn(size_t columnLength, size_t& start,
-                                           size_t& end)
+static void adaptStartAndEndValueForRow(size_t numberOfRows, size_t& start,
+                                        size_t& end)
+{
+    if (start > 0 && end > 0) {
+        if (start > end) {
+            size_t temp = start;
+            start = end;
+            end = temp;
+        }
+    } else if (start > 0 && !end) {
+        end = start + 1;
+    } else if (end > 0 && !start) {
+        start = end;
+        end = start + 1;
+    }
+
+    // FIXME : this exception is wrong
+    // to control lines over the number of fixed rows.
+    if (start > numberOfRows - 1 || end > numberOfRows) {
+        start = end = 0;
+    }
+
+    if (start > GRID_MAX_TRACK - 1 || end > GRID_MAX_TRACK) {
+        start = end = 0;
+    }
+}
+
+static void adaptStartAndEndValueForColumn(size_t numberOfColumns,
+                                           size_t& start, size_t& end)
 {
     if (start > 0 && end > 0) {
         if (start > end) {
@@ -178,14 +205,80 @@ static void adaptStartAndEndValueForColumn(size_t columnLength, size_t& start,
 
     // FIXME : this exception is wrong
     // to control lines over the number of fixed columns.
-    if (start > columnLength - 1 || end > columnLength) {
+    if (start > numberOfColumns - 1 || end > numberOfColumns) {
+        start = end = 0;
+    }
+
+    if (start > GRID_MAX_TRACK - 1 || end > GRID_MAX_TRACK) {
         start = end = 0;
     }
 }
 
 bool GridFormattingContext::fixGridAreaWithDefine(GridArea* area, size_t row)
 {
-    return false;
+    if (!area) {
+        return false;
+    }
+
+    if (m_gridLineColumns.size() >= GRID_MAX_TRACK || row >= GRID_MAX_TRACK) {
+        return true;
+    }
+
+    size_t rowStart = area->m_rowStart;
+    size_t rowEnd = area->m_rowEnd;
+
+    if (rowStart != row + 1) {
+        return false;
+    }
+
+    size_t columnStart = area->m_columnStart;
+    size_t columnEnd = area->m_columnEnd;
+
+    bool available = false;
+    if (!columnStart && !columnEnd) {
+        size_t columnLength = m_gridLineColumns.size() - 1;
+        for (size_t i = 0; i < columnLength; i++) {
+            if (m_areaChecker[row][i]) {
+                columnStart = i + 1;
+                columnEnd = i + 2;
+                available = true;
+                break;
+            }
+        }
+    } else {
+        available = true;
+    }
+
+    if (!available) {
+        return false;
+    }
+
+    for (size_t row = rowStart - 1; row < rowEnd - 1; row++) {
+        for (size_t col = columnStart - 1; col < columnEnd - 1; col++) {
+            if (!m_areaChecker[row][col]) {
+                available = false;
+            }
+        }
+    }
+
+    if (!available) {
+        return false;
+    }
+
+    for (size_t row = rowStart - 1; row < rowEnd - 1; row++) {
+        for (size_t col = columnStart - 1; col < columnEnd - 1; col++) {
+            m_areaChecker[row][col] = false;
+        }
+    }
+
+    area->m_rowStart = rowStart;
+    area->m_rowEnd = rowEnd;
+    area->m_columnStart = columnStart;
+    area->m_columnEnd = columnEnd;
+
+    m_orderedGridArea.push_back(*area);
+
+    return true;
 }
 
 bool GridFormattingContext::fixGridAreaWithUndefine(GridArea* area, size_t row)
@@ -234,6 +327,11 @@ bool GridFormattingContext::fixGridAreaWithUndefine(GridArea* area, size_t row)
     if (row + 1 > m_gridLineRows.size() - 1) {
         GridLine line = GridLine(0);
         line.setComputed(false);
+
+        if (m_gridLineRows.size() >= GRID_MAX_TRACK) {
+            return true;
+        }
+
         m_gridLineRows.push_back(line);
     }
 
@@ -269,13 +367,22 @@ void GridFormattingContext::buildGridAreaAndOrdering()
     std::vector<GridArea> undefined;
     for (auto gridItem : m_orderedGridItems) {
         ComputedStyle* style = gridItem->style();
-        if (style->gridRowStart() > 0) {
-            GridArea area(gridItem, idx, style->gridRowStart(),
-                          style->gridRowEnd(), style->gridColumnStart(),
-                          style->gridColumnEnd());
+
+        size_t rowStart = style->gridRowStart();
+        size_t rowEnd = style->gridRowEnd();
+        size_t columnStart = style->gridColumnStart();
+        size_t columnEnd = style->gridColumnEnd();
+
+        adaptStartAndEndValueForRow(m_gridLineRows.size(), rowStart, rowEnd);
+        adaptStartAndEndValueForColumn(m_gridLineColumns.size(), columnStart,
+                                       columnEnd);
+        if (rowStart && rowEnd) {
+            GridArea area(gridItem, idx, rowStart, rowEnd, columnStart,
+                          columnEnd);
             defined.push_back(area);
         } else {
-            GridArea area(gridItem, idx, 0, 0, 0, 0);
+            GridArea area(gridItem, idx, rowStart, rowEnd, columnStart,
+                          columnEnd);
             undefined.push_back(area);
         }
         idx++;
@@ -292,6 +399,7 @@ void GridFormattingContext::buildGridAreaAndOrdering()
     for (size_t row = 0; row < m_gridLineRows.size();) {
         GridArea* definedGridArea = nullptr;
         GridArea* undefinedGridArea = nullptr;
+        // Make a context stack.
 
         if (definedIdx < defined.size()) {
             definedGridArea = &defined[definedIdx];
@@ -299,6 +407,16 @@ void GridFormattingContext::buildGridAreaAndOrdering()
 
         if (undefinedIdx < undefined.size()) {
             undefinedGridArea = &undefined[undefinedIdx];
+        }
+
+        // First, order defined grid items.
+        while (fixGridAreaWithDefine(definedGridArea, row)) {
+            definedIdx++;
+            if (definedIdx < defined.size()) {
+                definedGridArea = &defined[definedIdx];
+            } else {
+                definedGridArea = nullptr;
+            }
         }
 
         while (fixGridAreaWithUndefine(undefinedGridArea, row)) {
@@ -365,7 +483,6 @@ void GridFormattingContext::buildGridLineTemplate()
     // ordering item and make line.
     buildGridAreaAndOrdering();
 
-    // Apply Flex(Fr) units for Columns such as <1fr>.
     applyFrUnitsWithColumns();
 
     arrageGridLinesWithGridAreas();
