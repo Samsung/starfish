@@ -85,6 +85,12 @@ public:
     virtual size_t bufferStride() = 0;
 };
 
+struct BorderInfo {
+    double scale;
+    BorderImageRepeatValue hRepeat;
+    BorderImageRepeatValue vRepeat;
+};
+
 class Canvas : public gc {
 protected:
     Canvas()
@@ -152,7 +158,7 @@ public:
             ImageRenderingValue::ImageRenderingAutoValue) = 0;
     virtual void drawImage(
         NativeImageData* data, const Unit::Rect& src, const Unit::Rect& dst,
-        bool xRepeat, bool yRepeat,
+        BorderInfo& borderinfo,
         ImageRenderingValue imageRenderingMode =
             ImageRenderingValue::ImageRenderingAutoValue) = 0;
     virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
