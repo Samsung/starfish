@@ -131,6 +131,7 @@ public:
         , m_symbols(parent->m_symbols)
         , m_additiveSymbols(parent->m_additiveSymbols)
     {
+        STARFISH_ASSERT(parent);
     }
 
     static const CounterStyle* getKnownCounter(String* name);

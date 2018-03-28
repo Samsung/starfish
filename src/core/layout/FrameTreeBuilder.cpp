@@ -701,6 +701,11 @@ void FrameTreeBuilder::createPseudoElement(
     if (!pseudoElementFrameIsNeeded(pseudoStyle)) {
         return;
     }
+    if ((pseudoId == StyleResolver::PseudoElementBefore ||
+         pseudoId == StyleResolver::PseudoElementAfter) &&
+        !pseudoStyle->content()) {
+        return;
+    }
     pseudoElement->setStyle(pseudoStyle);
 
     if (pseudoElement->isFirstLetterPseudoElement()) {
@@ -868,19 +873,23 @@ void FrameTreeBuilderContext::openCountingContextIfNeeds(Node* from)
     if (from->isHTMLListContainer()) {
         m_listCounterIndice.push_back(from->asHTMLListContainer()->start());
     }
+    if (from->style()->display() == DisplayValue::NoneDisplayValue) {
+        return;
+    }
     // Pseudo counter (counter-reset, counter-increment)
     if (from->style()->counterReset()) {
         CounterBaseList* counterData = from->style()->counterReset();
         size_t dataSize = counterData->size();
+        Node* parent = from->parentNode();
         for (size_t i = 0; i < dataSize; i++) {
             auto& item = (*counterData)[i];
-            Node* current = from->isPseudoElement() ? from->parentNode() : from;
-            resetPseudoCounter(current->parentNode(), item.first, item.second);
+            resetPseudoCounter(parent, item.first, item.second);
         }
     }
     if (from->style()->counterIncrement()) {
         CounterBaseList* counterData = from->style()->counterIncrement();
         size_t dataSize = counterData->size();
+        Node* parent = from->parentNode();
         for (size_t i = 0; i < dataSize; i++) {
             auto& item = (*counterData)[i];
             AtomicString& counterName = item.first;
@@ -894,9 +903,7 @@ void FrameTreeBuilderContext::openCountingContextIfNeeds(Node* from)
                 // of any 'counter-reset', implementations should behave as
                 // though a 'counter-reset' had reset the counter to 0 on that
                 // element or pseudo-element.
-                Node* current =
-                    from->isPseudoElement() ? from->parentNode() : from;
-                resetPseudoCounter(current, counterName, incrementValue);
+                resetPseudoCounter(parent, counterName, incrementValue);
             }
         }
     }

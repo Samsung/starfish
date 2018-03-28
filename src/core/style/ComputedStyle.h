@@ -2848,6 +2848,14 @@ public:
         return listStyleData().typeData()->system() != CounterStyle::NoneSystem;
     }
 
+    bool hasFactorsAffectingFrameTree()
+    {
+        if (counterIncrement() || counterReset()) {
+            return true;
+        }
+        return false;
+    }
+
     String* listStyleType()
     {
         return listStyleData().type();
