@@ -512,3 +512,25 @@ test/efl/reftest/csswg-test/css21_original/generated-content/content-counters-01
 test/efl/reftest/csswg-test/css21_original/generated-content/content-counters-016.htm
 test/efl/reftest/csswg-test/css21_original/generated-content/content-counters-017.htm
 test/efl/reftest/csswg-test/css21_original/generated-content/content-counters-018.htm
+# test/efl/reftest/csswg-test/css21_original/generated-content/counter-increment-000.htm
+# test/efl/reftest/csswg-test/css21_original/generated-content/counter-increment-001.htm
+# test/efl/reftest/csswg-test/css21_original/generated-content/counter-increment-002.htm
+# test/efl/reftest/csswg-test/css21_original/generated-content/counter-reset-000.htm
+# test/efl/reftest/csswg-test/css21_original/generated-content/counter-reset-001.htm
+# test/efl/reftest/csswg-test/css21_original/generated-content/counter-reset-002.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-hidden-000.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-hidden-001.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-hidden-002.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-multi-000.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-multi-001.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-order-000.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-order-001.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-root-000.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-scope-000.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-scope-001.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-scope-002.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-scope-003.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-scope-004.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-scope-implied-000.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-scope-implied-001.htm
+test/efl/reftest/csswg-test/css21_original/generated-content/counters-scope-implied-002.htm

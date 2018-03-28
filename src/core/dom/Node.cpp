@@ -1341,6 +1341,10 @@ Node* Node::removeChild(Node* child)
         notifyNodeRemoveFromDocumentTree(child);
     }
 
+    if (child->hasStyleFactorsAffectingFrameTree()) {
+        setNeedsFrameTreeBuildWithoutSelf();
+    }
+
     Node* parent = this;
     while (parent) {
         parent->didNodeRemoved(this, child);
@@ -1801,6 +1805,12 @@ void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
 {
     if (frame()) {
         frame()->computeStyleFlags();
+    }
+    if (newStyle) {
+        m_hasStyleFactorsAffectingFrameTree =
+            newStyle->hasFactorsAffectingFrameTree();
+    } else {
+        m_hasStyleFactorsAffectingFrameTree = false;
     }
 }
 
