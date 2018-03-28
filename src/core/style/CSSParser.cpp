@@ -2094,6 +2094,17 @@ StyleRuleImport* CSSParser::parseImportRule()
     return new StyleRuleImport(url, mediaQuery);
 }
 
+static bool isFontRelatedKey(CSSStyleValuePair::KeyKind key)
+{
+    if ((key >= CSSStyleValuePair::KeyKind::FontSize &&
+         key <= CSSStyleValuePair::KeyKind::FontKerning) ||
+        key == CSSStyleValuePair::KeyKind::FontFamily ||
+        key == CSSStyleValuePair::KeyKind::Src) {
+        return true;
+    }
+    return false;
+}
+
 StyleRuleFontFace* CSSParser::parseFontFaceRule()
 {
     preserveState();
@@ -2124,18 +2135,24 @@ StyleRuleFontFace* CSSParser::parseFontFaceRule()
 
         for (size_t i = 0; i < decl->cssValues().size(); i++) {
             auto keyKind = decl->cssValues()[i].keyKind();
-            if (keyKind >= CSSStyleValuePair::KeyKind::FontKeyKindStart &&
-                keyKind <= CSSStyleValuePair::KeyKind::FontKeyKindEnd) {
-            } else if (keyKind == CSSStyleValuePair::KeyKind::Src) {
-            } else {
+            if (!isFontRelatedKey(keyKind)) {
                 decl->removeCSSValuePair(keyKind);
                 i--;
             }
         }
 
-        if (decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily) &&
-            decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::Src)) {
+        if (decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily)) {
             return new StyleRuleFontFace(decl);
+        } else if (decl->hasCSSValuePair(
+                       CSSStyleValuePair::KeyKind::FontSize) ||
+                   decl->hasCSSValuePair(
+                       CSSStyleValuePair::KeyKind::FontWeight) ||
+                   decl->hasCSSValuePair(
+                       CSSStyleValuePair::KeyKind::FontStyle) ||
+                   decl->hasCSSValuePair(
+                       CSSStyleValuePair::KeyKind::FontKerning) ||
+                   decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::Src)) {
+            return new StyleRuleFontFace(new CSSStyleDeclaration(document()));
         } else {
             return nullptr;
         }

@@ -289,10 +289,13 @@ void BrowsingContext::resolveStyleIfNeeds()
 #if !defined(PORT_CANVAS_BACKEND_EFL) && !defined(PORT_CANVAS_BACKEND_MOCK)
             for (size_t i = 0; i < webFonts.size(); i++) {
                 CSSStyleDeclaration* decl = webFonts[i];
-                if (decl->getCSSValuePair(
+                if (!decl->hasCSSValuePair(
+                        CSSStyleValuePair::KeyKind::FontFamily) ||
+                    decl->getCSSValuePair(
                             CSSStyleValuePair::KeyKind::FontFamily)
-                        .valueKind() !=
-                    CSSStyleValuePair::ValueKind::KeywordValueKind) {
+                            .valueKind() !=
+                        CSSStyleValuePair::ValueKind::KeywordValueKind ||
+                    !decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::Src)) {
                     continue;
                 }
                 String* fontFamily =

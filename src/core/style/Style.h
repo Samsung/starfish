@@ -1197,6 +1197,7 @@ class CSSStyleDeclaration;
     F(FontSize, fontSize, "font-size")                                         \
     F(FontWeight, fontWeight, "font-weight")                                   \
     F(FontStyle, fontStyle, "font-style")                                      \
+    F(FontKerning, fontKerning, "font-kerning")                                \
     F(ListStylePosition, listStylePosition, "list-style-position")             \
     F(ListStyleImage, listStyleImage, "list-style-image")                      \
     F(ListStyleType, listStyleType, "list-style-type")                         \
@@ -1210,7 +1211,6 @@ class CSSStyleDeclaration;
     F(GridColumnStart, gridColumnStart, "grid-column-start")                   \
     F(GridColumnEnd, gridColumnEnd, "grid-column-end")                         \
     F(CaretColor, caretColor, "caret-color")                                   \
-    F(FontKerning, fontKerning, "font-kerning")                                \
     F(ImageRendering, imageRendering, "image-rendering")                       \
     F(TextOverflow, textOverflow, "text-overflow")                             \
     F(Hyphens, hyphens, "hyphens")                                             \
@@ -1368,9 +1368,7 @@ public:
 #define ADD_CSS_KEYKIND(Name, name, cssname) Name,
         FOR_EACH_STYLE_ATTRIBUTE(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
-            FontKeyKindStart = FontSize,
-        FontKeyKindEnd = FontFamily,
-        VarValue,
+            VarValue,
         KeyKindSize,
     };
     // font related properties must be followed end of this enum(KeyKind)
