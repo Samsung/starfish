@@ -232,7 +232,10 @@ namespace StarFish {
     F(Cue, cue, "cue")                                         \
     F(GrammarError, grammarError, "grammar-error")             \
     F(Placeholder, placeholder, "placeholder")                 \
-    F(SpellingError, spellingError, "spelling-error")
+    F(SpellingError, spellingError, "spelling-error")          \
+    F(Marker, marker, "marker")                                \
+    F(Backdrop, backdrop, "backdrop")                          \
+    F(FullScreen, fullScreen, "fullscreen")
 
 class StaticStrings : public gc {
     friend class QualifiedName;
