@@ -1115,9 +1115,10 @@ class CSSStyleDeclaration;
     F(Display, display, "display")                                             \
     F(Float, float, "float")                                                   \
     F(Clear, clear, "clear")                                                   \
+    F(BorderImageOutset, borderImageOutset, "border-image-outset")             \
+    F(BorderImageRepeat, borderImageRepeat, "border-image-repeat")             \
     F(BorderImageSlice, borderImageSlice, "border-image-slice")                \
     F(BorderImageSource, borderImageSource, "border-image-source")             \
-    F(BorderImageRepeat, borderImageRepeat, "border-image-repeat")             \
     F(BorderImageWidth, borderImageWidth, "border-image-width")                \
     F(BorderTopColor, borderTopColor, "border-top-color")                      \
     F(BorderRightColor, borderRightColor, "border-right-color")                \

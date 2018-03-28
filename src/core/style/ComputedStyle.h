@@ -1718,6 +1718,11 @@ public:
         m_rareComputedStyleData.ensureBorder()->image().setWidths(value);
     }
 
+    void setBorderImageOutsets(BorderImageLengthBox value)
+    {
+        m_rareComputedStyleData.ensureBorder()->image().setOutsets(value);
+    }
+
     void setBorderImageResource(ImageResource* value)
     {
         m_rareComputedStyleData.ensureBorder()->image().setImageResource(value);

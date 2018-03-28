@@ -1037,6 +1037,45 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         p.setValue(vals);
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderImageOutset) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageOutset);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* vals = new ValueList(ValueList::Separator::SpaceSeparator);
+        BorderData border = style->border();
+        BorderImageLengthBox box = border.image().outsets();
+
+        if (box.top().isLength()) {
+            CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
+            vals->emplace_back(t.valueKind(), t.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.top().number());
+        }
+        if (box.right().isLength()) {
+            CSSStyleValuePair r = lengthToCSSStyleValue(box.right().length());
+            vals->emplace_back(r.valueKind(), r.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.right().number());
+        }
+        if (box.bottom().isLength()) {
+            CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom().length());
+            vals->emplace_back(b.valueKind(), b.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.bottom().number());
+        }
+        if (box.left().isLength()) {
+            CSSStyleValuePair l = lengthToCSSStyleValue(box.left().length());
+            vals->emplace_back(l.valueKind(), l.value());
+        } else {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)box.bottom().number());
+        }
+
+        p.setValue(vals);
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::TransformOrigin) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransformOrigin);
