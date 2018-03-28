@@ -1152,12 +1152,10 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
         if (type() == PseudoClass) {
             m_type = PseudoElement;
         }
-    /*
-    // fallthrough
-        case PseudoBackdrop:
-    */
+    case PseudoBackdrop:
     case PseudoCue:
     case PseudoGrammarError:
+    case PseudoMarker:
     case PseudoPlaceholder:
     /*
         case PseudoResizer:
@@ -1218,11 +1216,9 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
     case PseudoFocus:
     case PseudoFocusWithin:
     case PseudoFocusVisible:
-    /*
-        case PseudoFullPageMedia:
-        case PseudoFullScreen:
-        case PseudoFullScreenAncestor:
-    */
+    // case PseudoFullPageMedia:
+    case PseudoFullScreen:
+    // case PseudoFullScreenAncestor:
     case PseudoFuture:
     /*
         case PseudoFutureCue:
