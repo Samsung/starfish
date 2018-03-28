@@ -837,6 +837,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     case 19:
         // Background-Repeat-X
         // Background-Repeat-Y
+        // Border-Image-Outset
         // Border-Image-Repeat
         // Border-Image-Source
         // Border-Bottom-Style
@@ -854,6 +855,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "background-position", 19) == 0) {
                 return CSSStyleKind::BackgroundPosition;
+            }
+            if (memcmp(data, "border-image-outset", 19) == 0) {
+                return CSSStyleKind::BorderImageOutset;
             }
             if (memcmp(data, "border-image-repeat", 19) == 0) {
                 return CSSStyleKind::BorderImageRepeat;
@@ -1640,6 +1644,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "backgroundRepeatY", 17) == 0) {
                 return CSSStyleKind::BackgroundRepeatY;
+            }
+            if (memcmp(data, "borderImageOutset", 17) == 0) {
+                return CSSStyleKind::BorderImageOutset;
             }
             if (memcmp(data, "borderImageRepeat", 17) == 0) {
                 return CSSStyleKind::BorderImageRepeat;

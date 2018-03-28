@@ -1487,6 +1487,25 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
         double bRWidth = border.right().width().specifiedValue(width(), this);
         double bBWidth = border.bottom().width().specifiedValue(height(), this);
 
+        double bLOutset =
+            border.image().outsets().left().computedBorderImageOutset(bLWidth,
+                                                                      this);
+        double bTOutset =
+            border.image().outsets().top().computedBorderImageOutset(bTWidth,
+                                                                     this);
+        double bROutset =
+            border.image().outsets().right().computedBorderImageOutset(bRWidth,
+                                                                       this);
+        double bBOutset =
+            border.image().outsets().bottom().computedBorderImageOutset(bBWidth,
+                                                                        this);
+
+        LayoutRect outsetRect = rect;
+        outsetRect.setX(outsetRect.x() - bLOutset);
+        outsetRect.setY(outsetRect.y() - bTOutset);
+        outsetRect.setWidth(outsetRect.width() + bLOutset + bROutset);
+        outsetRect.setHeight(outsetRect.height() + bTOutset + bBOutset);
+
         size_t imgWidth = border.image().imageData()->width();
         size_t imgHeight = border.image().imageData()->height();
 
@@ -1520,8 +1539,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
             border.image().widths().bottom().computeBorderImageWidth(
                 height(), bBWidth, bSlice, this);
 
-        double value = std::min((float)width() / (bImgLWidth + bImgRWidth),
-                                (float)height() / (bImgTWidth + bImgBWidth));
+        double value =
+            std::min((float)outsetRect.width() / (bImgLWidth + bImgRWidth),
+                     (float)outsetRect.height() / (bImgTWidth + bImgBWidth));
         if (value < 1) {
             bImgLWidth *= value;
             bImgRWidth *= value;
@@ -1541,21 +1561,25 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
         // left-top
         if ((lSlice > 0 && bImgLWidth > 0) && (tSlice > 0 && bImgTWidth > 0)) {
             canvas->drawImage(imgData, Unit::Rect(0, 0, lSlice, tSlice),
-                              Unit::Rect(0, 0, bImgLWidth, bImgTWidth),
+                              Unit::Rect(outsetRect.x(), outsetRect.y(),
+                                         bImgLWidth, bImgTWidth),
                               borderinfo, imageRenderingValue);
         }
         // right-top
         if ((rSlice > 0 && bImgRWidth > 0) && (tSlice > 0 && bImgTWidth > 0)) {
             canvas->drawImage(
                 imgData, Unit::Rect(imgWidth - rSlice, 0, rSlice, tSlice),
-                Unit::Rect(width() - bImgRWidth, 0, bImgRWidth, bImgTWidth),
+                Unit::Rect(outsetRect.x() + outsetRect.width() - bImgRWidth,
+                           outsetRect.y(), bImgRWidth, bImgTWidth),
                 borderinfo, imageRenderingValue);
         }
         // left-bottom
         if ((lSlice > 0 && bImgLWidth > 0) && (bSlice > 0 && bImgBWidth > 0)) {
             canvas->drawImage(
                 imgData, Unit::Rect(0, imgHeight - bSlice, lSlice, bSlice),
-                Unit::Rect(0, height() - bImgBWidth, bImgLWidth, bImgBWidth),
+                Unit::Rect(outsetRect.x(),
+                           outsetRect.y() + outsetRect.height() - bImgBWidth,
+                           bImgLWidth, bImgBWidth),
                 borderinfo, imageRenderingValue);
         }
 
@@ -1564,7 +1588,8 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
             canvas->drawImage(
                 imgData, Unit::Rect(imgWidth - rSlice, imgHeight - bSlice,
                                     rSlice, bSlice),
-                Unit::Rect(width() - bImgRWidth, height() - bImgBWidth,
+                Unit::Rect(outsetRect.x() + outsetRect.width() - bImgRWidth,
+                           outsetRect.y() + outsetRect.height() - bImgBWidth,
                            bImgRWidth, bImgBWidth),
                 borderinfo, imageRenderingValue);
         }
@@ -1582,8 +1607,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 canvas->drawImage(
                     imgData,
                     Unit::Rect(lSlice, 0, imgWidth - (lSlice + rSlice), tSlice),
-                    Unit::Rect(bImgLWidth, 0,
-                               width() - (bImgLWidth + bImgRWidth), bImgTWidth),
+                    Unit::Rect(outsetRect.x() + bImgLWidth, outsetRect.y(),
+                               outsetRect.width() - (bImgLWidth + bImgRWidth),
+                               bImgTWidth),
                     borderinfo, imageRenderingValue);
             }
             // middle-bottom
@@ -1594,8 +1620,11 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 canvas->drawImage(
                     imgData, Unit::Rect(lSlice, imgHeight - bSlice,
                                         imgWidth - (lSlice + rSlice), bSlice),
-                    Unit::Rect(bImgLWidth, height() - bImgBWidth,
-                               width() - (bImgLWidth + bImgRWidth), bImgBWidth),
+                    Unit::Rect(outsetRect.x() + bImgLWidth,
+                               outsetRect.y() + outsetRect.height() -
+                                   bImgBWidth,
+                               outsetRect.width() - (bImgLWidth + bImgRWidth),
+                               bImgBWidth),
                     borderinfo, imageRenderingValue);
             }
         }
@@ -1611,8 +1640,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 canvas->drawImage(
                     imgData, Unit::Rect(0, tSlice, lSlice,
                                         imgHeight - (tSlice + bSlice)),
-                    Unit::Rect(0, bImgTWidth, bImgLWidth,
-                               height() - (bImgTWidth + bImgBWidth)),
+                    Unit::Rect(outsetRect.x(), outsetRect.y() + bImgTWidth,
+                               bImgLWidth,
+                               outsetRect.height() - (bImgTWidth + bImgBWidth)),
                     borderinfo, imageRenderingValue);
             }
 
@@ -1624,8 +1654,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 canvas->drawImage(
                     imgData, Unit::Rect(imgWidth - rSlice, tSlice, rSlice,
                                         imgHeight - (tSlice + bSlice)),
-                    Unit::Rect(width() - bImgRWidth, bImgTWidth, bImgRWidth,
-                               height() - (bImgTWidth + bImgBWidth)),
+                    Unit::Rect(outsetRect.x() + outsetRect.width() - bImgRWidth,
+                               outsetRect.y() + bImgTWidth, bImgRWidth,
+                               outsetRect.height() - (bImgTWidth + bImgBWidth)),
                     borderinfo, imageRenderingValue);
             }
         }
@@ -1649,14 +1680,15 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
             } else if (rSlice > 0 && bImgRWidth > 0) {
                 borderinfo.vScale = rSlice / bImgRWidth;
             }
-            canvas->drawImage(imgData,
-                              Unit::Rect(lSlice, tSlice,
-                                         imgWidth - (lSlice + rSlice),
-                                         imgHeight - (tSlice + bSlice)),
-                              Unit::Rect(bImgLWidth, bImgTWidth,
-                                         width() - (bImgLWidth + bImgRWidth),
-                                         height() - (bImgTWidth + bImgBWidth)),
-                              borderinfo, imageRenderingValue);
+            canvas->drawImage(
+                imgData,
+                Unit::Rect(lSlice, tSlice, imgWidth - (lSlice + rSlice),
+                           imgHeight - (tSlice + bSlice)),
+                Unit::Rect(outsetRect.x() + bImgLWidth,
+                           outsetRect.y() + bImgTWidth,
+                           outsetRect.width() - (bImgLWidth + bImgRWidth),
+                           outsetRect.height() - (bImgTWidth + bImgBWidth)),
+                borderinfo, imageRenderingValue);
         }
 
         canvas->setNeedsFastAntialias();

@@ -5495,6 +5495,64 @@ void StyleResolver::apply(Element* element,
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
+        case CSSStyleValuePair::KeyKind::BorderImageOutset:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
+                style->setBorderImageOutsets(
+                    parentStyle->border().image().outsets());
+            } else if ((cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Initial) ||
+                       (cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Unset)) {
+                style->setBorderImageOutsets(
+                    BorderImageLengthBox(Length(Length::Fixed, 0)));
+            } else {
+                STARFISH_ASSERT(cssValues[k].valueKind() ==
+                                CSSStyleValuePair::ValueKind::ValueListKind);
+                BorderImageLength t, r, b, l;
+                ValueList* values = cssValues[k].multiValue();
+                unsigned int size = values->size();
+
+                if ((*values)[0].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Number) {
+                    t.setValue((*values)[0].numberValue());
+                } else {
+                    t = (*values)[0].toLengthValue();
+                }
+                if (size > 1) {
+                    if ((*values)[1].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Number) {
+                        r.setValue((*values)[1].numberValue());
+                    } else {
+                        r = (*values)[1].toLengthValue();
+                    }
+                } else {
+                    r = t;
+                }
+                if (size > 2) {
+                    if ((*values)[2].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Number) {
+                        b.setValue((*values)[2].numberValue());
+                    } else {
+                        b = (*values)[2].toLengthValue();
+                    }
+                } else {
+                    b = t;
+                }
+                if (size > 3) {
+                    if ((*values)[3].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Number) {
+                        l.setValue((*values)[3].numberValue());
+                    } else {
+                        l = (*values)[3].toLengthValue();
+                    }
+                } else {
+                    l = r;
+                }
+                style->setBorderImageOutsets(BorderImageLengthBox(l, r, t, b));
+            }
+
+            break;
         case CSSStyleValuePair::KeyKind::BorderImageWidth:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
@@ -5504,7 +5562,7 @@ void StyleResolver::apply(Element* element,
                         CSSStyleValuePair::ValueKind::Initial) ||
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBorderImageWidths(BorderImageLengthBox());
+                style->setBorderImageWidths(BorderImageLengthBox(1.0));
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
@@ -9618,6 +9676,37 @@ bool CSSStyleValuePair::updateValueAngle(const CSSTokenVector& tokens,
         return false;
     }
     return updateValueUnitAngleOrCalc(tokens[0], option);
+}
+
+bool CSSStyleValuePair::updateValueBorderImageOutset(
+    Document* document, const CSSTokenVector& tokens)
+{
+    // [ <length> | <number>]{1,4}
+    size_t size = tokens.size();
+    if (size < 1 || size > 4) {
+        return false;
+    }
+
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+
+    float result = 0.f;
+    for (unsigned int i = 0; i < size; i++) {
+        CSSTokenValue value = tokens[i];
+        if (CSSPropertyParser::parseNumber(value.data(), 0, &result)) {
+            values->push_back(CSSStyleValuePair(
+                CSSStyleValuePair::ValueKind::Number, (float)result));
+        } else {
+            CSSStyleValuePair ret;
+            if (!ret.updateValueUnitLengthOrCalc(value, 0)) {
+                return false;
+            }
+            values->push_back(ret);
+        }
+    }
+    m_value.m_multiValue = values;
+
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueBorderImageWidth(

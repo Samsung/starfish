@@ -26,6 +26,8 @@
 namespace StarFish {
 
 #define DEFAULT_VALUE_IMAGE_WIDTH() (BorderImageLengthBox(1.0))
+#define DEFAULT_VALUE_IMAGE_OUTSET() \
+    (BorderImageLengthBox(Length(Length::Fixed, 0)))
 #define DEFAULT_VALUE_IMAGE_SLICE() \
     (BorderImageLengthBox(Length(Length::Percent, 1.0)))
 #define DEFAULT_VALUE_IMAGE_REPEAT() (StretchValue)
@@ -43,6 +45,7 @@ public:
         , m_sliceFill(false)
         , m_slices(DEFAULT_VALUE_IMAGE_SLICE())
         , m_widths(DEFAULT_VALUE_IMAGE_WIDTH())
+        , m_outsets(DEFAULT_VALUE_IMAGE_OUTSET())
         , m_imageResource(NULL)
     {
     }
@@ -90,10 +93,11 @@ public:
     BorderImageRepeatValue m_repeatY; // [border-image-repeat]
 
     // TODO: Need Image Data Structure
-    String* m_url;                 // [border-image-source]
-    bool m_sliceFill;              // [border-image-slice]
-    BorderImageLengthBox m_slices; // [border-image-slice]
-    BorderImageLengthBox m_widths; // [border-image-width]
+    String* m_url;                  // [border-image-source]
+    bool m_sliceFill;               // [border-image-slice]
+    BorderImageLengthBox m_slices;  // [border-image-slice]
+    BorderImageLengthBox m_widths;  // [border-image-width]
+    BorderImageLengthBox m_outsets; // [border-image-outset]
     ImageResource* m_imageResource;
 };
 
@@ -130,6 +134,10 @@ public:
     {
         return isNull() ? DEFAULT_VALUE_IMAGE_WIDTH() : m_data->m_widths;
     }
+    BorderImageLengthBox outsets()
+    {
+        return isNull() ? DEFAULT_VALUE_IMAGE_OUTSET() : m_data->m_outsets;
+    }
     NativeImageData* imageData();
 
     ImageResource* imageResource()
@@ -163,6 +171,10 @@ public:
     void setWidths(BorderImageLengthBox value)
     {
         data()->m_widths = value;
+    }
+    void setOutsets(BorderImageLengthBox value)
+    {
+        data()->m_outsets = value;
     }
     void setImageResource(ImageResource* value)
     {

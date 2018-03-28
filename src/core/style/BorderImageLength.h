@@ -127,6 +127,16 @@ public:
         }
     }
 
+    float computedBorderImageOutset(LayoutUnit borderWidth, Frame* f)
+    {
+        STARFISH_ASSERT(isSpecified());
+        if (isNumber()) {
+            return number() * borderWidth;
+        } else {
+            return length().fixed();
+        }
+    }
+
     String* dumpString()
     {
         if (m_type == LengthType) {
