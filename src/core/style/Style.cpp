@@ -2568,6 +2568,18 @@ String* CSSStyleValuePair::toString() const
     }
     case CSSStyleValuePair::ValueKind::GradientValueKind:
         return gradientValue()->toString();
+    case CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind:
+        switch (widthHeightKeywordValue()) {
+        case AvailableValue:
+            return String::fromUTF8("available");
+        case MinContentValue:
+            return String::fromUTF8("min-content");
+        case MaxContentValue:
+            return String::fromUTF8("max-content");
+        case FitContentValue:
+            return String::fromUTF8("fit-content");
+        }
+        break;
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -4119,6 +4131,10 @@ void StyleResolver::apply(Element* element,
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
                 style->m_width = Length();
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::
+                           WidthHeightKeywordValueKind) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             } else {
                 Nullable<Length> length = convertValueToLength(
                     cssValues[k].valueKind(), cssValues[k].value());
@@ -10120,45 +10136,82 @@ GEN_FOURSIDE(UPDATE_VALUE_SIDE)
 GEN_FOURSIDE(UPDATE_VALUE_MARGIN)
 #undef UPDATE_VALUE_MARGIN
 
+bool CSSStyleValuePair::updateValueWidthHeightKeyword(
+    const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitWidthHeightKeyword(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueUnitWidthHeightKeyword(
+    const CSSTokenValue& value)
+{
+    if (STRING_VALUE_IS_STRING("available")) {
+        m_value.m_widthHeightKeywordValue =
+            WidthHeightKeywordValue::AvailableValue;
+    } else if (STRING_VALUE_IS_STRING("min-content")) {
+        m_value.m_widthHeightKeywordValue =
+            WidthHeightKeywordValue::MinContentValue;
+    } else if (STRING_VALUE_IS_STRING("max-content")) {
+        m_value.m_widthHeightKeywordValue =
+            WidthHeightKeywordValue::MaxContentValue;
+    } else if (STRING_VALUE_IS_STRING("fit-content")) {
+        m_value.m_widthHeightKeywordValue =
+            WidthHeightKeywordValue::FitContentValue;
+    } else {
+        return false;
+    }
+    m_valueKind = CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind;
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueWidth(Document* document,
                                          const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+    return updateValueWidthHeightKeyword(tokens) ||
+           updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueMaxWidth(Document* document,
                                             const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+    return updateValueWidthHeightKeyword(tokens) ||
+           updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowNone);
 }
 
 bool CSSStyleValuePair::updateValueMinWidth(Document* document,
                                             const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+    return updateValueWidthHeightKeyword(tokens) ||
+           updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueHeight(Document* document,
                                           const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+    return updateValueWidthHeightKeyword(tokens) ||
+           updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueMaxHeight(Document* document,
                                              const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+    return updateValueWidthHeightKeyword(tokens) ||
+           updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowNone);
 }
 
 bool CSSStyleValuePair::updateValueMinHeight(Document* document,
                                              const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+    return updateValueWidthHeightKeyword(tokens) ||
+           updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
 }
 
