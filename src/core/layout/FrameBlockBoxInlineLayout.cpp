@@ -3930,7 +3930,9 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             } else {
                 overflowString = textOverflowData.stringValue();
             }
-            LayoutUnit rightBoundary = width() - rightMBPWidth();
+            LayoutUnit rightBoundary =
+                width() - rightMBPWidth() + LayoutUnit::epsilon();
+            LayoutUnit leftBoundary = leftMBPWidth() - LayoutUnit::epsilon();
             while (true) {
                 bool seenHidedText = false;
                 if (isLtr) {
@@ -3958,7 +3960,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                         }
                     });
                 } else {
-                    LayoutUnit leftBoundary = leftMBPWidth();
                     iterateChildFrameBox([&](FrameBox* box) {
                         LayoutRect absRect;
                         if (box->isInlineTextBox() &&
@@ -4861,7 +4862,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
         canvas->setFont(s->font());
         canvas->setColor(s->color());
-
+#ifndef PORT_CANVAS_BACKEND_EFL
         bool hasShadow = s->textShadow().size() ? true : false;
 
         if (hasShadow) {
@@ -4920,7 +4921,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
             canvas->restore();
         }
-
+#endif
         canvas->drawText(dx, dy, contentWidth(), txt);
     }
 }

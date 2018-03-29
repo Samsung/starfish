@@ -238,6 +238,13 @@ private:
 };
 
 class AnimationExecutor : public gc {
+    struct PendingAnimiationInfo : public gc {
+        Element* element;
+        ComputedStyle* oldStyle;
+        ComputedStyle* newStyle;
+        Frame* oldFrame;
+    };
+
 public:
     AnimationExecutor(Window* window)
         : m_isAlive(false)
@@ -265,11 +272,16 @@ public:
     void stopIfNeeds();
     void step();
 
+    void runPendingAnimation();
+    void addPendingAnimation(Element* element, ComputedStyle* oldStyle,
+                             ComputedStyle* newStyle, Frame* oldFrame);
+
 private:
     bool m_isAlive;
     Window* m_window;
     size_t m_platformAnimator;
     GCVector<AnimationTask*> m_animationList;
+    GCVector<PendingAnimiationInfo*> m_pendingAnimationInfoList;
 };
 }
 #endif

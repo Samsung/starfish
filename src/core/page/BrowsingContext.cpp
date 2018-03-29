@@ -676,6 +676,11 @@ void BrowsingContext::dispose()
 
     m_rootMap.clear();
     unRegisterNeedsLayoutInWebView();
+    auto& v = m_webView->m_browsingContextsHasPendingAnimation;
+    auto iter = std::find(v.begin(), v.end(), this);
+    if (iter != v.end()) {
+        v.erase(iter);
+    }
 }
 
 void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
@@ -1721,6 +1726,14 @@ void BrowsingContext::registerNeedsLayoutInWebView()
     }
 
     auto& v = m_webView->m_browsingContextsNeedsLayout;
+    if (v.end() == std::find(v.begin(), v.end(), this)) {
+        v.push_back(this);
+    }
+}
+
+void BrowsingContext::notifyHasPendingAnimation()
+{
+    auto& v = m_webView->m_browsingContextsHasPendingAnimation;
     if (v.end() == std::find(v.begin(), v.end(), this)) {
         v.push_back(this);
     }

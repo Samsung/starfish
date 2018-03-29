@@ -383,7 +383,9 @@ float Window::devicePixelRatio()
 
 double Window::scrollX()
 {
-    browsingContext()->webView()->layoutIfNeeds();
+    if (!browsingContext()->webView()->inRendering()) {
+        browsingContext()->webView()->layoutIfNeeds();
+    }
     if (document()->frame()) {
         return document()->frame()->asFrameBlockBox()->scrollLeft();
     }
@@ -392,7 +394,9 @@ double Window::scrollX()
 
 double Window::scrollY()
 {
-    browsingContext()->webView()->layoutIfNeeds();
+    if (!browsingContext()->webView()->inRendering()) {
+        browsingContext()->webView()->layoutIfNeeds();
+    }
     if (document()->frame()) {
         return document()->frame()->asFrameBlockBox()->scrollTop();
     }

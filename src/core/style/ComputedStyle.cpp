@@ -920,7 +920,33 @@ static AnimationTimingFunction* getTimingFunction(ComputedStyle* style)
     }
 }
 
-void applyTransition(Element* element, ComputedStyle* oldStyle,
+bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
+{
+    TransitionPropertyValue property = newStyle->transitionProperty();
+    bool isPropertyAll =
+        property == TransitionPropertyValue::TransitionPropertyAllValue;
+
+    if ((isPropertyAll ||
+         property == TransitionPropertyValue::TransitionPropertyWidthValue) &&
+        damagedKeys[CSSStyleValuePair::Width]) {
+        return true;
+    }
+    if ((isPropertyAll ||
+         property == TransitionPropertyValue::TransitionPropertyHeightValue) &&
+        damagedKeys[CSSStyleValuePair::Height]) {
+        return true;
+    }
+    if ((isPropertyAll ||
+         property ==
+             TransitionPropertyValue::TransitionPropertyTransformValue) &&
+        damagedKeys[CSSStyleValuePair::Transform]) {
+        return true;
+    }
+
+    return false;
+}
+
+void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                      ComputedStyle* newStyle, const bool* damagedKeys)
 {
     AnimationExecutor* executor = element->document()->animationExecutor();
@@ -968,9 +994,9 @@ void applyTransition(Element* element, ComputedStyle* oldStyle,
          property ==
              TransitionPropertyValue::TransitionPropertyTransformValue) &&
         damagedKeys[CSSStyleValuePair::Transform]) {
-        if (element->frame() && element->frame()->isTransformable()) {
-            STARFISH_ASSERT(element->frame()->isFrameBox());
-            FrameBox* box = element->frame()->asFrameBox();
+        if (oldFrame->isTransformable()) {
+            STARFISH_ASSERT(oldFrame->isFrameBox());
+            FrameBox* box = oldFrame->asFrameBox();
             SkMatrix matrixBefore = oldStyle->transformsToMatrix(
                 box->width(), box->height(), box, true);
 
@@ -1499,11 +1525,16 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         oldStyle->hasRareComputeStyleData()
             ? oldStyle->rareComputedStyleData()->transforms()
             : nullptr;
+    if (oldTransforms && oldTransforms->size() == 0) {
+        oldTransforms = nullptr;
+    }
     StyleTransformDataGroup* newTransforms =
         newStyle->hasRareComputeStyleData()
             ? newStyle->rareComputedStyleData()->transforms()
             : nullptr;
-
+    if (newTransforms && newTransforms->size() == 0) {
+        newTransforms = nullptr;
+    }
     bool oldComplex =
         oldTransforms ? oldTransforms->hasComplexTransform() : false;
     bool newComplex =
