@@ -67,9 +67,29 @@ public:
         m_offset = offset;
     }
 
+    void setFixed(bool fixed)
+    {
+        m_fixed = fixed;
+    }
+
     void setComputed(bool computed)
     {
         m_computed = computed;
+    }
+
+    void setNewLine(bool newLine)
+    {
+        m_newLine = newLine;
+    }
+
+    bool isFixed()
+    {
+        return m_fixed;
+    }
+
+    bool isNewLine()
+    {
+        return m_newLine;
     }
 
     bool isComputed()
@@ -88,6 +108,8 @@ public:
         , m_fr(fr)
         , m_lineName(nullptr)
         , m_computed(computed)
+        , m_fixed(true)
+        , m_newLine(false)
         , m_state(Fr)
     {
     }
@@ -97,9 +119,10 @@ public:
         , m_fr(0)
         , m_lineName(nullptr)
         , m_computed(true)
+        , m_fixed(true)
+        , m_newLine(false)
         , m_state(Fixed)
     {
-        m_computed = true;
     }
 
 private:
@@ -107,6 +130,8 @@ private:
     LayoutUnit m_fr;
     String* m_lineName;
     bool m_computed;
+    bool m_fixed;
+    bool m_newLine;
     enum GridLineState {
         Fixed,
         Fr,
@@ -158,11 +183,25 @@ public:
     void applyFrUnitsWithRows();
     void buildGridLineTemplate();
     void layoutGridItems();
-    void arrageGridLinesWithGridAreas();
+    void arrangeGridLinesWithGridAreas(bool);
+    void arrangeGridColumnLine();
+
     bool fixGridAreaWithDefine(GridArea*, size_t);
-    bool fixGridAreaWithUndefine(GridArea*, size_t);
+    bool fixGridAreaWithUndefine(GridArea**, GridArea*, size_t);
     void buildGridAreaAndOrdering();
     LayoutUnit preferredWidth();
+
+    GCVector<GridLine>& gridLineColumns()
+    {
+        return m_gridLineColumns;
+    }
+
+    LayoutContext& layoutContext()
+    {
+        return m_layoutContext;
+    }
+
+    bool existColumnTemplate();
 
     static bool doesParticipateInGridFormattingContext(Frame* GridItem);
 
