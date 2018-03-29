@@ -1040,6 +1040,16 @@ enum ResizeValue {
     InlineResizeValue,
 };
 
+// These values are introduced in CSS basic box model
+// (https://drafts.csswg.org/css-box-3/). But, it is undergoing changes and many
+// parts are not consistent with other modules of CSS.
+enum WidthHeightKeywordValue {
+    AvailableValue,
+    MaxContentValue,
+    MinContentValue,
+    FitContentValue,
+};
+
 class ValueList;
 class ValuePair;
 class FontFaceSrcData;
@@ -1385,7 +1395,7 @@ public:
         Number, // real number values -
                 // https://www.w3.org/TR/CSS21/syndata.html#value-def-number
         Int32,
-        Angle, //
+        Angle,
         Time,
         Normal,
         StringValueKind,
@@ -1496,8 +1506,11 @@ public:
         WordBreakValueKind,
         VarFunctionValueKind,
 
-        // Gradient
-        GradientValueKind
+        // gradient
+        GradientValueKind,
+
+        // keyword value for width and height
+        WidthHeightKeywordValueKind
     };
 
     CSSStyleValuePair()
@@ -2079,6 +2092,12 @@ public:
         return m_value.m_gradientValue;
     }
 
+    WidthHeightKeywordValue widthHeightKeywordValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == WidthHeightKeywordValueKind);
+        return m_value.m_widthHeightKeywordValue;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -2150,6 +2169,7 @@ public:
         CSSCounterFunction* m_counterFunctionValue;
         TextOverflowData* m_textOverflowData;
         CSSGradientValue* m_gradientValue;
+        WidthHeightKeywordValue m_widthHeightKeywordValue;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2441,6 +2461,11 @@ public:
             : m_gradientValue(v)
         {
         }
+
+        ValueData(WidthHeightKeywordValue v)
+            : m_widthHeightKeywordValue(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2665,6 +2690,8 @@ public:
     bool updateValueUnitLength(const CSSTokenValue& token, uint8_t option);
     bool updateValueUnitLengthOrCalc(const CSSTokenValue& token,
                                      uint8_t option);
+    bool updateValueWidthHeightKeyword(const CSSTokenVector& tokens);
+    bool updateValueUnitWidthHeightKeyword(const CSSTokenValue& value);
     bool updateValueTime(const CSSTokenVector& tokens, uint8_t option);
     bool updateValueUnitTime(const CSSTokenValue& token, uint8_t option);
     bool updateValueUnitTimeOrCalc(const CSSTokenValue& token, uint8_t option);
