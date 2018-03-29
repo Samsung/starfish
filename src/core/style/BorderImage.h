@@ -101,9 +101,9 @@ public:
     ImageResource* m_imageResource;
 };
 
-class BorderImage {
+class BorderImageData {
 public:
-    BorderImage()
+    BorderImageData()
         : m_data(nullptr)
     {
     }
@@ -190,7 +190,7 @@ public:
         }
     }
 
-    bool operator==(const BorderImage& o)
+    bool operator==(const BorderImageData& o)
     {
         if (m_data == NULL && o.m_data == NULL) {
         } else if (m_data == NULL || o.m_data == NULL) {
@@ -201,7 +201,7 @@ public:
         return true;
     }
 
-    bool operator!=(const BorderImage& o)
+    bool operator!=(const BorderImageData& o)
     {
         return !operator==(o);
     }

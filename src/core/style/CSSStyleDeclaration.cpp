@@ -976,22 +976,22 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValue(vals);
         addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::BorderImageRepeat) {
-        BorderImage borderImage = style->border().image();
+        BorderImageData bImage = style->border().image();
 
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageRepeat);
 
-        if (borderImage.repeatX() == borderImage.repeatY()) {
-            p.setBorderImageRepeatValue(borderImage.repeatX());
+        if (bImage.repeatX() == bImage.repeatY()) {
+            p.setBorderImageRepeatValue(bImage.repeatX());
         } else {
             ValueList* vals =
                 new ValueList(ValueList::Separator::SpaceSeparator);
             vals->emplace_back(
                 CSSStyleValuePair::ValueKind::BorderImageRepeatValueKind,
-                borderImage.repeatX());
+                bImage.repeatX());
             vals->emplace_back(
                 CSSStyleValuePair::ValueKind::BorderImageRepeatValueKind,
-                borderImage.repeatY());
+                bImage.repeatY());
             p.setValueList(vals);
         }
         addValuePair(p);

@@ -106,6 +106,7 @@ public:
     String* BorderBottom();
     String* BorderLeft();
     String* BorderRadius();
+    String* BorderImage();
     String* Background();
     String* BackgroundRepeat();
     String* BackgroundPosition();
@@ -149,6 +150,7 @@ public:
     void setBorderWidth(const char* value, size_t len, bool isImportant);
     void setBorderStyle(const char* value, size_t len, bool isImportant);
     void setBorderColor(const char* value, size_t len, bool isImportant);
+    void setBorderImage(const char* value, size_t len, bool isImportant);
     void setFont(const char* value, size_t len, bool isImportant);
     void setFontFamily(const char* value, size_t len, bool isImportant);
     void setSrc(const char* value, size_t len, bool isImportant);

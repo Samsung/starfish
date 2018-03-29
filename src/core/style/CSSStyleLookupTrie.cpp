@@ -476,6 +476,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 12:
+        // Border-Image
         // Border-Style
         // Border-Width
         // Border-Color
@@ -491,6 +492,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Grid-Row-End
         switch (data[0]) {
         case 'b':
+            if (memcmp(data, "border-image", 12) == 0) {
+                return CSSStyleKind::BorderImage;
+            }
             if (memcmp(data, "border-style", 12) == 0) {
                 return CSSStyleKind::BorderStyle;
             }
@@ -1355,6 +1359,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
     case 11:
         switch (data[0]) {
         case 'b':
+            if (memcmp(data, "borderImage", 11) == 0) {
+                return CSSStyleKind::BorderImage;
+            }
             if (memcmp(data, "borderStyle", 11) == 0) {
                 return CSSStyleKind::BorderStyle;
             }

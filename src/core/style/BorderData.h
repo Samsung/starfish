@@ -64,7 +64,7 @@ public:
         return m_left;
     }
 
-    BorderImage& image()
+    BorderImageData& image()
     {
         return m_image;
     }
@@ -129,7 +129,7 @@ private:
     BorderValue m_bottom;
     BorderValue m_left;
 
-    BorderImage m_image;
+    BorderImageData m_image;
 };
 
 } /* namespace StarFish */
