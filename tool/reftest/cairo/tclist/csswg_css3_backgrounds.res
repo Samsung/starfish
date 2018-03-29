@@ -249,3 +249,14 @@ test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-
 test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-content-box.html
 test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-background-origin-padding-box.html
 test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-background-size-contain.html
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/box-shadow-001.htm
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/box-shadow-002.htm
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/box-shadow-003.htm
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/box-shadow-004.htm
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/box-shadow-005.html
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/box-shadow-inset-spread-without-border-radius.html
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/box-shadow-inset-without-border-radius.html
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/box-shadow-outset-spread-without-border-radius.html
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/box-shadow-outset-without-border-radius.html
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/box-shadow-syntax-001.htm
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-box-shadow.html
