@@ -954,9 +954,12 @@ This section describes the complete list of supported HTML tags and attributes b
 | | border-top-style | none &#124; solid &#124; dashed &#124; inset &#124; outset | Sets the style of the top border. | |
 | | border-top-width | medium &#124; thin &#124; thick &#124; &lt;length&gt;	| Sets the width of the top border. | |
 | | border-width | &lt;border-width&gt; | Sets the width of the four borders (shorthand). | |
-| | border-image-source | &lt;image&gt; &#124; none | The path to the image is to be used as a border. | |
-| | border-image-slice | &lt;number&gt; fill | How to slice the border image. &lt;number&gt; value can take only one value and initial value is 100. | |
-| | border-image-width | &lt;length&gt; &#124; &lt;number&gt;	| Width of the border image. &lt;number&gt; value represents multiples of the corresponding border-top-width. | |
+| | border-image | &lt;border-image-source&gt; &#124;&#124; &lt;border-image-slice&gt; [/ &lt;border-image-width&gt; &#124; / &lt;border-image-width&gt;? / &lt;border-image-outset&gt;]? &#124;&#124; &lt;border-image-repeat&gt; | Lets you draw an image in place of an element's border-style. | |
+| | border-image-source | &lt;image&gt; &#124; none | Specifies the source image used to create an element's border image. | |
+| | border-image-slice | [&lt;number&gt; &#124; &lt;percentage&gt;]{1,4} && fill? | Divides the image specified by border-image-source into regions. These regions are used to form the components of an element's border image.| |
+| | border-image-width | [&lt;length-percentage&gt; &#124; &lt;number&gt; &#124; auto]{1,4}	| Specifies the width of an element's border image. | |
+| | border-image-outset | [&lt;length&gt; &#124; &lt;number&gt;]{1,4}	| Specifies the distance by which an element's border image is set out from its border box. | |
+| | border-image-repeat | [ stretch &#124; repeat &#124; round &#124; space ]	| Defines how the edge regions of a source image are adjusted to fit the dimensions of an element's border image. | |
 | | border-radius | &lt;length-percentage&gt;{1,4} [ / &lt;length-percentage&gt;{1,4} ]?	| define the radii of a quarter ellipse that defines the shape of the corner of the outer border edge | |
 | | border-top-left-radius, border-top-right-radius, border-bottom-right-radius, border-bottom-left-radius | &lt;length-percentage&gt;{1,2} | define the radii of a quarter ellipse that defines the shape of the corner of the outer border edge | |
 | [Outline](https://www.w3.org/TR/css-ui-3/) | outline | &lt;border-width&gt; &lt;border-style&gt; &lt;border-color&gt; | Sets all the border properties (shorthand). | In the former case, various properties define the style (&lt;border-style&gt;), color (&lt;border-color&gt;), and thickness (&lt;border-width&gt;) of the border. &lt;border-width&gt; may take one of the following values: thin, medium, thick, and &lt;length&gt;. &lt;border-color&gt; may take one of the following values: &lt;color&gt;, and transparent. &lt;border-style&gt; may take one of the following values: none, solid, inset, and outset. (Also check Border Properties) |

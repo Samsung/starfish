@@ -238,6 +238,10 @@ test/cairo/reftest/csswg-test/css-backgrounds-3_original/border-images.html
 test/cairo/reftest/csswg-test/css-backgrounds-3_original/border-image-repeat-round.html
 test/cairo/reftest/csswg-test/css-backgrounds-3_original/border-image-round-and-stretch.html
 test/cairo/reftest/csswg-test/css-backgrounds-3_original/border-image-slice-percentage.html
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/border-image-slice-003.htm
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/border-image-width-005.htm
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/border-image-width-006.htm
+test/cairo/reftest/csswg-test/css-backgrounds-3_original/border-image-width-007.htm
 test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-border-image-repeat-stretch.html
 test/cairo/reftest/csswg-test/css-backgrounds-3_original/css3-border-image-repeat-repeat.html
 test/cairo/reftest/csswg-test/css-backgrounds-3_converted/css3-background-size-001.html
