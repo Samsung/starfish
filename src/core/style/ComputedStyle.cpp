@@ -385,11 +385,6 @@ void ComputedStyle::loadBorderImage(
 #endif
             setBorderImageResource(res);
         }
-
-        setBorderLeftStyle(BorderStyleValue::SolidBorderStyleValue);
-        setBorderTopStyle(BorderStyleValue::SolidBorderStyleValue);
-        setBorderRightStyle(BorderStyleValue::SolidBorderStyleValue);
-        setBorderBottomStyle(BorderStyleValue::SolidBorderStyleValue);
     }
 }
 
