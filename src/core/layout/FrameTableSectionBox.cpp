@@ -108,7 +108,7 @@ void* FrameTableSectionBox::operator new(size_t size)
 void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     FrameBox fakeSection(node(), style());
-
+    paintBoxShadows(canvas);
     for (auto& rowStruct : m_grid) {
         for (auto& cellStruct : rowStruct.cells()) {
             canvas->save();
@@ -139,7 +139,7 @@ void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
             canvas->restore();
         }
     }
-
+    paintInsetBoxShadows(canvas);
     // TODO : Below should be fixed when 'border-collpase:collapse' is
     // supported.
     paintBorders(canvas, m_frameRect);

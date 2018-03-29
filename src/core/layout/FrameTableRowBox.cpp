@@ -242,6 +242,7 @@ void FrameTableRowBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     Frame* child = firstChild();
     FrameBox fakeRow(node(), style());
+    paintBoxShadows(canvas);
     while (child) {
         if (child->isFrameTableCellBox()) {
             FrameTableCellBox* cell = child->asFrameTableCellBox();
@@ -253,6 +254,7 @@ void FrameTableRowBox::paintBackgroundAndBorders(Canvas* canvas)
         }
         child = child->next();
     }
+    paintInsetBoxShadows(canvas);
     paintBorders(canvas, m_frameRect);
 }
 }

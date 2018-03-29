@@ -1024,6 +1024,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | text-decoration-line | none &#124; [ underline &#124;&#124; line-through ] | Specifies the decoration added to the text | |
 | | text-decoration-style | solid | Sets the style of the lines specified by text-decoration-line. The style applies to all lines that are specified; there is no way to define different styles for each of the lines defined by text-decoration-line. | |
 | | text-decoration-color | &lt;color&gt; |  The text-decoration-color CSS property sets the color of the decorative additions to text that are specified by text-decoration-line.  | |
+| | text-shadow | none &#124; [ &lt;length&gt;{2,3} && &lt;color&gt;? ]# | Adds shadows to text. It accepts a comma-separated list of shadows to be applied to the text and any of its decorations. Each shadow is described by some combination of X and Y offsets from the element, blur radius, and color. | |
 | | text-transform | none &#124; capitalize &#124; uppercase &#124; lowercase &#124; initial &#124; inherit | Appears in all-uppercase or all-lowercase, or with each word capitalized. | |
 | | white-space | normal &#124; pre &#124; nowrap &#124; pre-wrap &#124; pre-line | Describes how whitespace inside the element is handled. | |
 | | word-spacing | normal &#124; length &#124; initial &#124; inherit | Specifies the spacing behavior between tags and words. | |
@@ -1060,7 +1061,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | list-style-image | &lt;url&gt; &#124; none | Specifies an image to be used as the list item marker. | Development status: Parsed. Loaded. but not appeared on screen. |
 | | counter-increment | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Increases or decreases the value of a CSS counter by a given value. |
 | | counter-reset | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Resets a CSS counter to a given value. |
-
+| [Box-shadow](https://www.w3.org/TR/css-backgrounds-3/#the-box-shadow) | box-shadow | none &#124; &lt;shadow&gt;# | Attaches one or more drop-shadows to the box. The property accepts either the none value, which indicates no shadows, or a comma-separated list of shadows, ordered front to back. | &lt;shadow&gt; = inset? && &lt;length&gt;{2,4} && &lt;color&gt;? |
 
 ## Selectors
 
