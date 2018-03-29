@@ -23,7 +23,7 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 
 namespace StarFish {
-NativeImageData* BorderImage::imageData()
+NativeImageData* BorderImageData::imageData()
 {
     if (!isNull() && data()->m_imageResource) {
         return data()->m_imageResource->imageData();

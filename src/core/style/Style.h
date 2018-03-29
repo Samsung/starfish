@@ -1246,6 +1246,7 @@ class CSSStyleDeclaration;
     F(BorderRight, borderRight, "border-right")                      \
     F(BorderBottom, borderBottom, "border-bottom")                   \
     F(BorderLeft, borderLeft, "border-left")                         \
+    F(BorderImage, borderImage, "border-image")                      \
     F(BorderStyle, borderStyle, "border-style")                      \
     F(BorderWidth, borderWidth, "border-width")                      \
     F(BorderColor, borderColor, "border-color")                      \
@@ -2713,6 +2714,11 @@ public:
     bool updateValueUnitBorderStyle(const CSSTokenValue& token);
     bool updateValueUnitBorderWidth(const CSSTokenValue& token);
     bool updateValueUnitBorderColor(const CSSTokenValue& token);
+    bool updateValueUnitBorderImageSource(const CSSTokenValue& token);
+    bool updateValueUnitBorderImageSlice(const CSSTokenVector& tokens);
+    bool updateValueUnitBorderImageWidth(const CSSTokenVector& tokens);
+    bool updateValueUnitBorderImageOutset(const CSSTokenVector& tokens);
+    bool updateValueUnitBorderImageRepeat(const CSSTokenVector& tokens);
     bool updateValueUnitColor(const CSSTokenValue& token);
     bool updateValueUnitUrlOrNone(const CSSTokenValue& token);
     bool updateValueUnitGradient(const CSSTokenValue& value);

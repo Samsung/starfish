@@ -783,6 +783,146 @@ static bool parseBackgroundShorthand(
     return true;
 }
 
+static bool isRepeatTokenValue(const CSSTokenValue& token)
+{
+    if (token.equals("stretch") || token.equals("repeat") ||
+        token.equals("round") || token.equals("space")) {
+        return true;
+    }
+    return false;
+}
+
+static bool parseBorderImageShorthand(const CSSTokenVector& tokens,
+                                      CSSStyleValuePair* _source,
+                                      CSSStyleValuePair* _slice,
+                                      CSSStyleValuePair* _width,
+                                      CSSStyleValuePair* _outset,
+                                      CSSStyleValuePair* _repeat)
+{
+    size_t len = tokens.size();
+    if (len < 1 || len > 18) {
+        return false;
+    }
+
+    _source->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _slice->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _width->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _outset->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _repeat->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool hasSource = false, hasSlice = false, hasWidth = false,
+         hasOutset = false, hasRepeat = false;
+    bool hasSlicePrev = false, shouldWidth = false;
+    bool hasWidthPrev = false, shouldOutset = false;
+    CSSStyleValuePair temp;
+    CSSTokenVector toks;
+
+    size_t pos = 0;
+    while (pos < len) {
+        CSSTokenValue token = tokens[pos++];
+        std::transform(token.begin(), token.end(), token.begin(), ::tolower);
+        if (hasSlicePrev) {
+            hasSlicePrev = false;
+            if (token.equals("/")) {
+                shouldWidth = true;
+                continue;
+            }
+        }
+        if (hasWidthPrev) {
+            hasWidthPrev = false;
+            if (token.equals("/")) {
+                shouldOutset = true;
+                continue;
+            }
+        }
+
+        if (shouldWidth) {
+            shouldWidth = false;
+            if (token.equals("/")) {
+                shouldOutset = true;
+                continue;
+            }
+
+            toks.clear();
+            toks.push_back(token);
+            while (pos < len) {
+                token = tokens[pos++];
+                if (token.equals("/")) {
+                    shouldOutset = true;
+                    pos--;
+                    break;
+                } else if (isRepeatTokenValue(token)) {
+                    pos--;
+                    break;
+                }
+                toks.push_back(token);
+            }
+
+            if (temp.updateValueUnitBorderImageWidth(toks)) {
+                hasWidthPrev = true;
+                hasWidth = true;
+                *_width = temp;
+                continue;
+            }
+        } else if (shouldOutset) {
+            shouldOutset = false;
+            toks.clear();
+            toks.push_back(token);
+            while (pos < len) {
+                token = tokens[pos++];
+                if (isRepeatTokenValue(token)) {
+                    pos--;
+                    break;
+                }
+                toks.push_back(token);
+            }
+
+            if (temp.updateValueUnitBorderImageOutset(toks)) {
+                hasOutset = true;
+                *_outset = temp;
+                continue;
+            }
+        } else if (!hasSource && temp.updateValueUnitBorderImageSource(token)) {
+            hasSource = true;
+            *_source = temp;
+            continue;
+        } else if (!hasSlice || !hasRepeat) {
+            toks.clear();
+            toks.push_back(token);
+            bool isRepeat = isRepeatTokenValue(token) ? true : false;
+
+            while (pos < len) {
+                token = tokens[pos++];
+                if (token.equals("/")) {
+                    pos--;
+                    break;
+                } else if (isRepeatTokenValue(token)) {
+                    if (isRepeat) {
+                        toks.push_back(token);
+                    } else {
+                        pos--;
+                    }
+                    break;
+                }
+                toks.push_back(token);
+            }
+
+            if (isRepeat && temp.updateValueUnitBorderImageRepeat(toks)) {
+                hasRepeat = true;
+                *_repeat = temp;
+                continue;
+            } else if (temp.updateValueUnitBorderImageSlice(toks)) {
+                hasSlicePrev = true;
+                hasSlice = true;
+                *_slice = temp;
+                continue;
+            }
+        }
+        return false;
+    }
+    return true;
+}
+
 static bool parseFontShorthand(const CSSTokenVector& tokens,
                                CSSStyleValuePair* _Style,
                                // UNSUPPORTED CSSStyleValuePair* _Variant,
@@ -2853,6 +2993,12 @@ String* CSSStyleDeclaration::Background()
     return builder.finalize();
 }
 
+String* CSSStyleDeclaration::BorderImage()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return String::emptyString;
+}
+
 static void removeBackgroundCSSValuePairs(CSSStyleDeclaration* target)
 {
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor);
@@ -2892,6 +3038,34 @@ static void addBackgroundCSSValuePairs(
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundOrigin,
                             origin);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundClip, clip);
+}
+
+static void removeBorderImageCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageSource);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageSlice);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageWidth);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageOutset);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageRepeat);
+}
+
+static void addBorderImageCSSValuePairs(CSSStyleDeclaration* target,
+                                        CSSStyleValuePair source,
+                                        CSSStyleValuePair slice,
+                                        CSSStyleValuePair width,
+                                        CSSStyleValuePair outset,
+                                        CSSStyleValuePair repeat)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageSource,
+                            source);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageSlice,
+                            slice);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageWidth,
+                            width);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageOutset,
+                            outset);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageRepeat,
+                            repeat);
 }
 
 static bool attributeValueMatches(
@@ -3536,6 +3710,32 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
                                    origin, clip);
     }
 #undef APPEND_NEW_LAYER
+}
+
+void CSSStyleDeclaration::setBorderImage(const char* value, size_t length,
+                                         bool isImportant)
+{
+    if (length == 0) {
+        removeBorderImageCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, "/", 1);
+
+    CSSStyleValuePair v, source, slice, width, outset, repeat;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addBorderImageCSSValuePairs(this, v, v, v, v, v);
+    } else if (parseBorderImageShorthand(tokens, &source, &slice, &width,
+                                         &outset, &repeat)) {
+        source.setFlagImportant(isImportant);
+        slice.setFlagImportant(isImportant);
+        width.setFlagImportant(isImportant);
+        outset.setFlagImportant(isImportant);
+        repeat.setFlagImportant(isImportant);
+        addBorderImageCSSValuePairs(this, source, slice, width, outset, repeat);
+    }
 }
 
 String* CSSStyleDeclaration::FontFamily()
@@ -5467,7 +5667,7 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::BorderImageRepeat:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                BorderImage borderImage = parentStyle->border().image();
+                BorderImageData borderImage = parentStyle->border().image();
                 style->setBorderImageRepeatX(borderImage.repeatX());
                 style->setBorderImageRepeatY(borderImage.repeatY());
             } else if (cssValues[k].valueKind() ==
@@ -9333,6 +9533,12 @@ bool CSSStyleValuePair::updateValueContent(Document* document,
 bool CSSStyleValuePair::updateValueBorderImageRepeat(
     Document* document, const CSSTokenVector& tokens)
 {
+    return updateValueUnitBorderImageRepeat(tokens);
+}
+
+bool CSSStyleValuePair::updateValueUnitBorderImageRepeat(
+    const CSSTokenVector& tokens)
+{
     size_t len = tokens.size();
     if (len < 1 || len > 2) {
         return false;
@@ -9369,11 +9575,15 @@ bool CSSStyleValuePair::updateValueBorderImageSource(
         return false;
     }
 
-    const CSSTokenValue& value = tokens[0];
+    return updateValueUnitBorderImageSource(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueUnitBorderImageSource(
+    const CSSTokenValue& value)
+{
     if (updateValueUnitUrlOrNone(value) || updateValueUnitGradient(value)) {
         return true;
     }
-
     return false;
 }
 
@@ -9680,6 +9890,12 @@ bool CSSStyleValuePair::updateValueAngle(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueBorderImageOutset(
     Document* document, const CSSTokenVector& tokens)
 {
+    return updateValueUnitBorderImageOutset(tokens);
+}
+
+bool CSSStyleValuePair::updateValueUnitBorderImageOutset(
+    const CSSTokenVector& tokens)
+{
     // [ <length> | <number>]{1,4}
     size_t size = tokens.size();
     if (size < 1 || size > 4) {
@@ -9710,6 +9926,11 @@ bool CSSStyleValuePair::updateValueBorderImageOutset(
 
 bool CSSStyleValuePair::updateValueBorderImageWidth(
     Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueUnitBorderImageWidth(tokens);
+}
+bool CSSStyleValuePair::updateValueUnitBorderImageWidth(
+    const CSSTokenVector& tokens)
 {
     // [ <length-percentage> | <number> | auto ]{1,4}
     size_t size = tokens.size();
@@ -9988,6 +10209,12 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
 
 bool CSSStyleValuePair::updateValueBorderImageSlice(
     Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueUnitBorderImageSlice(tokens);
+}
+
+bool CSSStyleValuePair::updateValueUnitBorderImageSlice(
+    const CSSTokenVector& tokens)
 {
     // [<number> | <percentage>]{1,4} && fill?
     size_t size = tokens.size();

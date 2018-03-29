@@ -956,10 +956,10 @@ test/cairo/reftest/csswg-test/css21_original/tables/table-background-edge-and-bo
 #test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bc-rowgroup-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bc-table-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-cell-001.htm
-test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-colgroup-001.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-colgroup-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-column-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-row-001.htm # Fails in docker
-test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-rowgroup-001.htm
+#test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-rowgroup-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-backgrounds-bs-table-001.htm # Fails in docker
 #test/cairo/reftest/csswg-test/css21_original/tables/table-borders-001.htm
 #test/cairo/reftest/csswg-test/css21_original/tables/table-borders-002.htm
