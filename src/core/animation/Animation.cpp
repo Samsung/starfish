@@ -110,7 +110,7 @@ void AnimationTask::fireCancelEvent()
 // * returnVal range : 0-1
 float AnimationTask::computeProgress(uint64_t tickCount)
 {
-    uint64_t timeDiff = std::max((uint64_t)1, tickCount - m_startTimeMs);
+    uint64_t timeDiff = tickCount - m_startTimeMs;
     float result = timeDiff / ((float)m_durationMs);
     if (result >= 1) {
         result = 1;
@@ -316,7 +316,6 @@ void AnimationExecutor::cancelAnimation(Element* target)
 }
 
 // [NOTICE]
-// * Currently, Its behavior hardly coupled with ecore_animator
 // * I believe it's best choice at this moment.
 // * We do not have a sophisticated solution that surpasses this
 void AnimationExecutor::startIfNeeds()
@@ -390,5 +389,62 @@ void AnimationExecutor::step()
         }
     }
     stopIfNeeds();
+}
+
+void AnimationExecutor::runPendingAnimation()
+{
+    for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {
+        PendingAnimiationInfo* info = m_pendingAnimationInfoList[i];
+
+        ComputedStyle* currentElementStyle = info->element->style();
+        if (!info->element
+                 ->isInDocumentScopeAndDocumentParticipateInRendering()) {
+            currentElementStyle = nullptr;
+        }
+
+        bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
+            false,
+        };
+
+        if (!info->newStyle->transitionDuration().isZero()) {
+            compareStyle(info->oldStyle, currentElementStyle, damagedKeys);
+            if (!info->oldFrame) {
+                info->oldFrame = info->element->frame();
+            }
+            if (info->oldFrame) {
+                applyTransition(info->element, info->oldStyle, info->oldFrame,
+                                currentElementStyle, damagedKeys);
+            }
+        }
+    }
+    m_pendingAnimationInfoList.clear();
+}
+
+void AnimationExecutor::addPendingAnimation(Element* element,
+                                            ComputedStyle* oldStyle,
+                                            ComputedStyle* newStyle,
+                                            Frame* oldFrame)
+{
+    newStyle->markUsedInAnimator();
+
+    for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {
+        if (m_pendingAnimationInfoList[i]->element == element) {
+            m_pendingAnimationInfoList[i]->oldStyle = oldStyle;
+            m_pendingAnimationInfoList[i]->newStyle = newStyle;
+            m_pendingAnimationInfoList[i]->oldFrame = oldFrame;
+            return;
+        }
+    }
+
+    if (m_pendingAnimationInfoList.size() == 0) {
+        window()->browsingContext()->notifyHasPendingAnimation();
+    }
+
+    PendingAnimiationInfo* info = new PendingAnimiationInfo();
+    info->element = element;
+    info->oldStyle = oldStyle;
+    info->newStyle = newStyle;
+    info->oldFrame = oldFrame;
+    m_pendingAnimationInfoList.push_back(info);
 }
 }

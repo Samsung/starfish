@@ -451,6 +451,17 @@ void WebView::layoutIfNeeds()
     }
     m_browsingContextsNeedsLayout.clear();
 
+    if (inRendering()) {
+        for (size_t i = 0; i < m_browsingContextsHasPendingAnimation.size();
+             i++) {
+            m_browsingContextsHasPendingAnimation[i]
+                ->document()
+                ->animationExecutor()
+                ->runPendingAnimation();
+        }
+        m_browsingContextsHasPendingAnimation.clear();
+    }
+
     for (size_t i = 0; i < m_didLayoutCallbacks.size(); i++) {
         m_didLayoutCallbacks[i].first(m_didLayoutCallbacks[i].second);
     }
@@ -671,19 +682,16 @@ bool WebView::rendering(bool force)
                     canvas->translate(
                         mainFrame->firstChild()->asFrameBox()->x(),
                         mainFrame->firstChild()->asFrameBox()->y());
-                    mainFrame->firstChild()
-                        ->asFrameBox()
-                        ->stackingContext()
-                        ->paintStackingContext(canvas, true);
+                    m_rootStackingContext->paintStackingContext(canvas, true);
                     canvas->restore();
                 }
                 canvas->restore();
                 m_didCompositeBefore = false;
             } else {
-                mainFrame->firstChild()
-                    ->asFrameBox()
-                    ->stackingContext()
-                    ->paintStackingContext(nullptr, false);
+                STARFISH_ASSERT(
+                    m_rootStackingContext ==
+                    mainFrame->firstChild()->asFrameBox()->stackingContext());
+                m_rootStackingContext->paintStackingContext(nullptr, false);
             }
         }
 
@@ -734,13 +742,7 @@ bool WebView::rendering(bool force)
             Canvas* canvas = Compositor::createCanvasAdaptor(compositor);
             mainBrowsingContext()->paintWindowBackground(canvas);
 
-            mainBrowsingContext()
-                ->document()
-                ->frame()
-                ->firstChild()
-                ->asFrameBox()
-                ->stackingContext()
-                ->compositeStackingContext(compositor);
+            m_rootStackingContext->compositeStackingContext(compositor);
 
             compositor->restore();
 

@@ -232,6 +232,7 @@ private:
     StackingContext* m_rootStackingContext;
     GCVector<CanvasSurface*> m_backStackingContextBufferUpWhileReCompsite;
     GCVector<std::pair<DidLayoutCallback, void*>> m_didLayoutCallbacks;
+    GCVector<BrowsingContext*> m_browsingContextsHasPendingAnimation;
 };
 }
 

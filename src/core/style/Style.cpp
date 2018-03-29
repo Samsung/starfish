@@ -8274,18 +8274,24 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             false,
         };
 
-        if (!element->style() || !element->frame()) {
+        if (!element->style()) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageInherited |
                 ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
         } else {
-            damage = compareStyle(element->style(), style, damagedKeys);
+            if (!element->frame()) {
+                damage = (ComputedStyleDamage)(
+                    ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+            }
+            damage = (ComputedStyleDamage)(
+                damage | compareStyle(element->style(), style, damagedKeys));
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageInherited) {
             inheritedStyleChanged = inheritedStyleChanged | true;
         }
 
+        Frame* oldFrame = element->frame();
         if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
             if (style->display() != DisplayValue::NoneDisplayValue &&
                 element->frame() == nullptr && element->parentElement()) {
@@ -8326,17 +8332,26 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             element->setNeedsComposite();
         }
 
-        ComputedStyle* old_style = element->style();
+        ComputedStyle* oldStyle = element->style();
         element->setStyle(style);
 
-        if (old_style && !style->transitionDuration().isZero() &&
+        if (oldStyle && !style->transitionDuration().isZero() &&
             (damage != ComputedStyleDamage::ComputedStyleDamageNone)) {
-            if (element->webView()->inRendering()) {
-                applyTransition(element, old_style, style, damagedKeys);
+            if (needsToApplyTransition(style, damagedKeys)) {
+                if (!element->webView()->inRendering()) {
+                    element->document()
+                        ->animationExecutor()
+                        ->addPendingAnimation(element, oldStyle, style,
+                                              oldFrame);
+                } else {
+                    applyTransition(element, oldStyle, oldFrame, style,
+                                    damagedKeys);
+                }
             }
         } else if (element->webView()->inRendering()) {
             element->document()->animationExecutor()->cancelAnimation(element);
         }
+
         element->clearNeedsStyleRecalc();
     }
 

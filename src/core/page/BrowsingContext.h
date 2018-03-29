@@ -252,6 +252,8 @@ public:
         m_name = name;
     }
 
+    void notifyHasPendingAnimation();
+
 private:
     // Don't call function directly
     // you can use this function from WebView::navigate or
