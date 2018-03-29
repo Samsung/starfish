@@ -1474,7 +1474,9 @@ size_t FrameTableBox::numOfRowsInTheTable()
 void FrameTableBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     // Fill in the table with background color
+    paintBoxShadows(canvas);
     paintBackground(canvas, this, nullptr);
+    paintInsetBoxShadows(canvas);
     paintBorders(canvas, m_tableRect);
 }
 
