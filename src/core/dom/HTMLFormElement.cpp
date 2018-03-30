@@ -53,6 +53,21 @@ FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
 {
 }
 
+void* FormDataSetItem::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(FormDataSetItem)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(FormDataSetItem, m_name));
+        GC_set_bit(desc, GC_WORD_OFFSET(FormDataSetItem, m_value));
+        GC_set_bit(desc, GC_WORD_OFFSET(FormDataSetItem, m_type));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FormDataSetItem));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 String* FormDataSetItem::toString()
 {
     StringBuilder b;
@@ -69,6 +84,19 @@ FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
     , m_enctype(enctype)
     , m_method(method)
 {
+}
+
+void* FormSubmitData::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(FormSubmitData)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(FormSubmitData, m_formDataSet));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FormSubmitData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
 String* FormSubmitData::toString()

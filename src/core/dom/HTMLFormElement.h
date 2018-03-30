@@ -35,6 +35,9 @@ class FormDataSetItem : public gc {
 public:
     FormDataSetItem(String* name, String* value, String* type);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     String* toString();
 
     String* m_name;
@@ -47,6 +50,9 @@ public:
     FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
                    ResourceRequest::EncodeType enctype,
                    ResourceRequest::MethodType method);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     String* toString();
 
