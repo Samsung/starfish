@@ -38,7 +38,8 @@ ShadowBlur::ShadowBlur(uint8_t* source, const size_t& width,
     , m_height(height)
     , m_stride(stride)
     , m_source(source)
-    , m_workspace(new uint8_t[m_stride * m_height])
+    , m_workspace(new uint8_t[m_stride * m_height],
+                  [](uint8_t* data) { delete[] data; })
 {
     // TODO
     STARFISH_RELEASE_ASSERT(m_stride == m_width * 4);
@@ -280,6 +281,9 @@ static void boxesForGauss(int* bxs, int n, int r)
 
 void ShadowBlur::process(float radius)
 {
+    if (radius <= 0) {
+        return;
+    }
     int r = ceill(radius);
     r = std::min(r, (int)RADIUS_LIMIT);
     int bxs[3] = {

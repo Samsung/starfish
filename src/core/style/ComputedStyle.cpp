@@ -1157,6 +1157,10 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     if (newStyle->textOverflow() != oldStyle->textOverflow()) {
+        if (newStyle->textOverflow() != oldStyle->textOverflow()) {
+            newStyle->textOverflow() != oldStyle->textOverflow();
+            puts("asdf");
+        }
         damagedKeys[CSSStyleValuePair::KeyKind::TextOverflow] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
@@ -1434,7 +1438,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->textDecorationLine() != oldStyle->textDecorationLine()) {
+    if (!newStyle->textDecorationLine()->equalsTextDecorationLine(
+            oldStyle->textDecorationLine())) {
         damagedKeys[CSSStyleValuePair::KeyKind::TextDecorationLine] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);

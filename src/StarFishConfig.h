@@ -448,10 +448,12 @@ inline bool operator!=(const T& a, const Nullable<T>& b)
 #include "core/util/Vector.h"
 
 // typedef of GC-aware vector
-template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+template <typename T,
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
 using GCVectorT = StarFish::Vector<T, Allocator>;
 
-template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+template <typename T,
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
 class GCVector : public GCVectorT<T, Allocator>, public gc {
 };
 
@@ -466,46 +468,50 @@ class GCAtomicVector : public GCAtomicVectorT<T, Allocator>, public gc {
 };
 
 // typedef of GC-aware list
-template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+template <typename T,
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
 using GCListT = std::list<T, Allocator>;
 
-template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+template <typename T,
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
 class GCList : public GCListT<T, Allocator>, public gc {
 };
 
 // typedef of GC-aware deque
-template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+template <typename T,
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
 using GCDequeT = std::deque<T, Allocator>;
 
-template <typename T, typename Allocator = gc_allocator_ignore_off_page<T>>
+template <typename T,
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
 class GCDeque : public GCDequeT<T, Allocator>, public gc {
 };
 
 // typedef of GC-aware unordered_map
 template <typename Key, typename Value, typename Hasher = std::hash<Key>,
           typename Predicate = std::equal_to<Key>,
-          typename Allocator =
-              gc_allocator_ignore_off_page<std::pair<Key, Value>>>
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
+              std::pair<Key, Value>>>
 using GCUnorderedMap =
     std::unordered_map<Key, Value, Hasher, Predicate, Allocator>;
 
 template <typename Key, typename Value, typename Hasher = std::hash<Key>,
           typename Predicate = std::equal_to<Key>,
-          typename Allocator =
-              gc_allocator_ignore_off_page<std::pair<Key, Value>>>
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
+              std::pair<Key, Value>>>
 using GCUnorderedMultiMap =
     std::unordered_multimap<Key, Value, Hasher, Predicate, Allocator>;
 
 // typedef of GC-aware map
 template <typename Key, typename Value, typename Comparator,
-          typename Allocator =
-              gc_allocator_ignore_off_page<std::pair<Key, Value>>>
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
+              std::pair<Key, Value>>>
 using GCMap = std::map<Key, Value, Comparator, Allocator>;
 
 // typedef of GC-aware unordered_set
 template <typename T, typename Hasher = std::hash<T>,
           typename Predicate = std::equal_to<T>,
-          typename Allocator = gc_allocator_ignore_off_page<T>>
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
 using GCUnorderedSet = std::unordered_set<T, Hasher, Predicate, Allocator>;
 
 template <class T>

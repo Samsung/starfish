@@ -2841,7 +2841,7 @@ private:
     CSSStyleValuePair m_second;
 };
 
-class ValueList : protected GCAtomicVector<CSSStyleValuePair> {
+class ValueList : public GCAtomicVector<CSSStyleValuePair> {
 public:
     enum Separator {
         None,
@@ -2863,13 +2863,27 @@ public:
     {
     }
 
-    void push_back(CSSStyleValuePair p)
+    ValueList(const ValueList& src)
+        : GCAtomicVector<CSSStyleValuePair>(src)
+        , m_separator(src.m_separator)
+        , m_pointerRooter(src.m_pointerRooter)
+    {
+    }
+
+    ValueList(ValueList&& src)
+        : GCAtomicVector<CSSStyleValuePair>(src)
+        , m_separator(src.m_separator)
+        , m_pointerRooter(std::move(src.m_pointerRooter))
+    {
+    }
+
+    void push_back(const CSSStyleValuePair& p)
     {
         GCAtomicVector<CSSStyleValuePair>::push_back(p);
         rootPointer(p);
     }
 
-    void pushBack(CSSStyleValuePair p)
+    void pushBack(const CSSStyleValuePair& p)
     {
         GCAtomicVector<CSSStyleValuePair>::pushBack(p);
         rootPointer(p);
@@ -2907,9 +2921,20 @@ public:
         return at(idx);
     }
 
-    static void* operator new(size_t size)
+    bool equalsTextDecorationLine(ValueList* list)
     {
-        return GC_MALLOC(size);
+        if (size() != list->size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < size(); i++) {
+            if (at(i).textDecorationLineValue() !=
+                list->at(i).textDecorationLineValue()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     String* toString()
@@ -2953,12 +2978,12 @@ protected:
     {
         auto p = v.pointerValue();
         if (p) {
-            m_pointerRooter.insert(p);
+            m_pointerRooter.push_back(p);
         }
     }
 
     Separator m_separator;
-    GCUnorderedSet<void*> m_pointerRooter;
+    GCVector<void*> m_pointerRooter;
 };
 
 class CSSSelector;

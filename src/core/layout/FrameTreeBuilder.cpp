@@ -1102,102 +1102,6 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
         traverseFrameTreeToFillCounterText(document->frame(), context);
     }
 }
-#ifdef STARFISH_ENABLE_TEST
-void dump(Frame* frm, unsigned depth)
-{
-    for (unsigned i = 0; i < depth; i++) {
-        printf("  ");
-    }
-    if (frm->isFlexItem()) {
-        printf("%s(FlexItem)", frm->name());
-    } else if (frm->isGridItem()) {
-        printf("%s(GridItem)", frm->name());
-    } else {
-        printf("%s", frm->name());
-    }
-    printf("[%p]", frm);
-    if (frm->isAnonymous()) {
-        printf("[anonymous block box] ");
-    } else {
-        frm->node()->dump();
-    }
-
-    frm->dump(depth);
-
-    printf("\n");
-
-    Frame* f = frm->firstChild();
-    while (f) {
-        dump(f, depth + 1);
-        f = f->next();
-    }
-}
-
-bool isNeedsTabBeforeNode(Node* node)
-{
-    Frame* f = node->frame();
-    if (f && (!f->isFrameTableCellBox() ||
-              f->asFrameTableCellBox()->absoluteColumnIndex() <= 0))
-        return false;
-    return true;
-}
-
-bool isNeedsNewlinesBeforeNode(Node* node)
-{
-    if (node->isHTMLParagraphElement() || node->isHTMLDivElement() ||
-        node->isHTMLOListElement() || node->isHTMLLIElement() ||
-        node->isHTMLUListElement() || node->isHTMLBRElement()) {
-        return true;
-    }
-
-    Frame* f = node->frame();
-    if (node->isHTMLOptionElement() || node->isHTMLOptGroupElement())
-        return false;
-
-    if (!f || f->isFrameTableCellBox())
-        return false;
-
-    return !f->isFrameInline() && !node->isHTMLBodyElement() &&
-           f->isFrameBlockBox() && f->asFrameBlockBox()->hasBlockFlow();
-}
-
-String* dumpText(Node* node, bool* lastTextNode)
-{
-    String* result = String::emptyString;
-    if (isNeedsTabBeforeNode(node) && *lastTextNode) {
-        result = result->concat('\t');
-    } else if (isNeedsNewlinesBeforeNode(node) && *lastTextNode) {
-        result = result->concat('\n');
-    }
-
-    if (node->isText() &&
-        node->parentNode()->style()->visibility() ==
-            VisibilityValue::VisibleVisibilityValue &&
-        node->parentNode()->parentNode()->style()->display() !=
-            DisplayValue::NoneDisplayValue) {
-        result = result->concat(
-            node->asText()->wholeText()->stripAndCollapseASCIIwhitespace());
-        *lastTextNode = true;
-    }
-    Node* child = node->firstChild();
-    while (child) {
-        result = result->concat(dumpText(child, lastTextNode));
-        child = child->nextSibling();
-    }
-    return result;
-}
-
-void FrameTreeBuilder::dumpFrameTree(Document* document, unsigned depth)
-{
-    dump(document->frame(), depth);
-}
-
-String* FrameTreeBuilder::dumpFrameTreeAsText(Document* document,
-                                              unsigned depth)
-{
-    bool lastTextNode = false;
-    return dumpText(document, &lastTextNode);
-}
 
 void CountingContext::resetPseudoCounter(Node* container,
                                          AtomicString& counterName,
@@ -1291,6 +1195,60 @@ void CountingContext::unsetCounterIfNeeds(Frame* from)
     }
 }
 
+bool isNeedsTabBeforeNode(Node* node)
+{
+    Frame* f = node->frame();
+    if (f && (!f->isFrameTableCellBox() ||
+              f->asFrameTableCellBox()->absoluteColumnIndex() <= 0))
+        return false;
+    return true;
+}
+
+bool isNeedsNewlinesBeforeNode(Node* node)
+{
+    if (node->isHTMLParagraphElement() || node->isHTMLDivElement() ||
+        node->isHTMLOListElement() || node->isHTMLLIElement() ||
+        node->isHTMLUListElement() || node->isHTMLBRElement()) {
+        return true;
+    }
+
+    Frame* f = node->frame();
+    if (node->isHTMLOptionElement() || node->isHTMLOptGroupElement())
+        return false;
+
+    if (!f || f->isFrameTableCellBox())
+        return false;
+
+    return !f->isFrameInline() && !node->isHTMLBodyElement() &&
+           f->isFrameBlockBox() && f->asFrameBlockBox()->hasBlockFlow();
+}
+
+String* dumpText(Node* node, bool* lastTextNode)
+{
+    String* result = String::emptyString;
+    if (isNeedsTabBeforeNode(node) && *lastTextNode) {
+        result = result->concat('\t');
+    } else if (isNeedsNewlinesBeforeNode(node) && *lastTextNode) {
+        result = result->concat('\n');
+    }
+
+    if (node->isText() &&
+        node->parentNode()->style()->visibility() ==
+            VisibilityValue::VisibleVisibilityValue &&
+        node->parentNode()->parentNode()->style()->display() !=
+            DisplayValue::NoneDisplayValue) {
+        result = result->concat(
+            node->asText()->wholeText()->stripAndCollapseASCIIwhitespace());
+        *lastTextNode = true;
+    }
+    Node* child = node->firstChild();
+    while (child) {
+        result = result->concat(dumpText(child, lastTextNode));
+        child = child->nextSibling();
+    }
+    return result;
+}
+
 void CountingContext::updateFrameCounterText(FrameCounterText* frame)
 {
     STARFISH_ASSERT(frame->node());
@@ -1341,6 +1299,49 @@ void FrameTreeBuilder::traverseFrameTreeToFillCounterText(
         child = child->next();
     }
     context.unsetCounterIfNeeds(root);
+}
+
+#ifdef STARFISH_ENABLE_TEST
+void dump(Frame* frm, unsigned depth)
+{
+    for (unsigned i = 0; i < depth; i++) {
+        printf("  ");
+    }
+    if (frm->isFlexItem()) {
+        printf("%s(FlexItem)", frm->name());
+    } else if (frm->isGridItem()) {
+        printf("%s(GridItem)", frm->name());
+    } else {
+        printf("%s", frm->name());
+    }
+    printf("[%p]", frm);
+    if (frm->isAnonymous()) {
+        printf("[anonymous block box] ");
+    } else {
+        frm->node()->dump();
+    }
+
+    frm->dump(depth);
+
+    printf("\n");
+
+    Frame* f = frm->firstChild();
+    while (f) {
+        dump(f, depth + 1);
+        f = f->next();
+    }
+}
+
+void FrameTreeBuilder::dumpFrameTree(Document* document, unsigned depth)
+{
+    dump(document->frame(), depth);
+}
+
+String* FrameTreeBuilder::dumpFrameTreeAsText(Document* document,
+                                              unsigned depth)
+{
+    bool lastTextNode = false;
+    return dumpText(document, &lastTextNode);
 }
 
 #endif
