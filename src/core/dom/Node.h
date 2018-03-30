@@ -566,7 +566,7 @@ public:
         return false;
     }
 
-    HTMLFormControl* asHTMLFormObject()
+    HTMLFormControl* asHTMLFormControl()
     {
         STARFISH_ASSERT(isHTMLFormControl());
         return reinterpret_cast<HTMLFormControl*>(this);
