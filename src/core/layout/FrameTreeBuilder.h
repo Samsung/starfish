@@ -30,6 +30,7 @@ class Document;
 class Element;
 class Frame;
 class FrameBlockBox;
+class FrameCounterText;
 class FrameInline;
 class FrameTableCaptionBox;
 class FrameTableCellBox;
@@ -58,15 +59,14 @@ public:
     void setIsInFrameGridFlow(bool b);
     bool isInFrameTableFlow() const;
 
-    void openCountingContextIfNeeds(Node* from);
-    void closeCountingContextIfNeeds(Node* from);
-    Nullable<String*> getStringFromContentData(ContentData* from);
-    int32_t getAndIncreaseListCounterIndex()
+    bool seenNewFrameCounter() const
     {
-        if (!m_listCounterIndice.size()) {
-            return 0;
-        }
-        return m_listCounterIndice.back()++;
+        return m_seenNewFrameCounter;
+    }
+
+    void setSeenNewFrameCounter()
+    {
+        m_seenNewFrameCounter = true;
     }
 
 protected:
@@ -76,11 +76,33 @@ protected:
     bool m_isInFrameInlineFlow;
     bool m_isInFrameFlexFlow;
     bool m_isInFrameGridFlow;
+    bool m_seenNewFrameCounter;
     FrameBlockBox* m_currentBlockContainer;
     FrameTableObjectBox* m_lastAnonymousTableObjectParent;
     std::unordered_map<Node*, FrameInline*, std::hash<Node*>,
                        std::equal_to<Node*>>
         m_frameInlineItem;
+};
+
+class CountingContext {
+public:
+    STARFISH_MAKE_STACK_ALLOCATED()
+
+    void setCounterIfNeeds(Frame* from);
+    void unsetCounterIfNeeds(Frame* from);
+    void updateFrameCounterText(FrameCounterText* frame);
+
+protected:
+    void resetPseudoCounter(Node*, AtomicString&, int32_t);
+    int32_t getAndIncreaseListCounterIndex()
+    {
+        if (!m_listCounterIndice.size()) {
+            return 0;
+        }
+        return m_listCounterIndice.back()++;
+    }
+
+protected:
     std::vector<std::pair<Node*, std::unordered_set<AtomicString>>>
         m_pseudoCounters;
     std::unordered_map<AtomicString, std::vector<int32_t>>
@@ -105,10 +127,6 @@ public:
     static void createPseudoElement(Node* parent,
                                     StyleResolver::PseudoElementType pseudoId,
                                     FrameTreeBuilderContext& ctx);
-    static void createInsideCounterIfNeeds(Node* parent,
-                                           FrameTreeBuilderContext& ctx);
-    static void createOutsideCounterIfNeeds(Node* parent,
-                                            FrameTreeBuilderContext& ctx);
     static ComputedStyle* pseudoStyleForElementInternal(
         Node* node, StyleResolver::PseudoElementType pseudoId,
         ComputedStyle* parentStyle);
@@ -125,6 +143,8 @@ private:
                               bool force);
     static Frame* buildTree(Node* current, FrameTreeBuilderContext& ctx,
                             bool force);
+    static void buildPseudoContentChild(FrameTreeBuilderContext& context,
+                                        Node* parent, ContentData* child);
     static void insertChild(FrameBlockBox* blockContainer, Frame* currentFrame,
                             Node* currentNode, FrameTreeBuilderContext& ctx);
     static void insertFlexItemChild(FrameBlockBox* blockContainer,
@@ -141,6 +161,8 @@ private:
         FrameBlockBox* blockContainer,
         FrameTableObjectBox* lastAnonymousTableObjectParent,
         Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx);
+    static void traverseFrameTreeToFillCounterText(Frame* current,
+                                                   CountingContext& ctx);
 };
 }
 

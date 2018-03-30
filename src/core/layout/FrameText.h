@@ -113,28 +113,32 @@ public:
 #endif
 #endif
 
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameText, m_node));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameText, m_treeItemModel.m_firstChild));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameText, m_treeItemModel.m_lastChild));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameText, m_treeItemModel.m_parent));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameText, m_treeItemModel.m_previous));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameText, m_treeItemModel.m_next));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameText, m_treeItemModel.m_firstChild));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameText, m_treeItemModel.m_lastChild));
+    }
+
     void* operator new(size_t size)
     {
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(FrameText)] = { 0 };
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameText, m_node));
-            GC_set_bit(obj_bitmap,
-                       GC_WORD_OFFSET(FrameText, m_treeItemModel.m_firstChild));
-            GC_set_bit(obj_bitmap,
-                       GC_WORD_OFFSET(FrameText, m_treeItemModel.m_lastChild));
-            GC_set_bit(obj_bitmap,
-                       GC_WORD_OFFSET(FrameText, m_treeItemModel.m_parent));
-            GC_set_bit(obj_bitmap,
-                       GC_WORD_OFFSET(FrameText, m_treeItemModel.m_previous));
-            GC_set_bit(obj_bitmap,
-                       GC_WORD_OFFSET(FrameText, m_treeItemModel.m_next));
-            GC_set_bit(obj_bitmap,
-                       GC_WORD_OFFSET(FrameText, m_treeItemModel.m_firstChild));
-            GC_set_bit(obj_bitmap,
-                       GC_WORD_OFFSET(FrameText, m_treeItemModel.m_lastChild));
-
+            FrameText::fillGCDescriptor(obj_bitmap);
             descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameText));
             typeInited = true;
         }

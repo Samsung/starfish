@@ -452,6 +452,8 @@ public:
 
     void loadBuiltinPolyfill(String* localpath);
 
+    void notifyCountingOutdated();
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers

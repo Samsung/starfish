@@ -103,7 +103,7 @@ protected:
         , m_tabIndexWasSetExplicitly(false)
         , m_hasDirAttribute(false)
         , m_isRunningTransformAnimation(false)
-        , m_hasStyleFactorsAffectingFrameTree(false)
+        , m_canBeCountingRoot(false)
         , m_state(NodeStateNormal)
         , m_rareNodeMembers(nullptr)
         , m_nextSibling(nullptr)
@@ -609,11 +609,6 @@ public:
         m_isRunningTransformAnimation = false;
     }
 
-    bool hasStyleFactorsAffectingFrameTree() const
-    {
-        return m_hasStyleFactorsAffectingFrameTree;
-    }
-
 private:
     void validatePreinsert(Node* child, Node* childRef);
     void validateReplace(Node* child, Node* childToRemove);
@@ -650,7 +645,7 @@ protected:
     bool m_hasDirAttribute : 1;
     // for animation
     bool m_isRunningTransformAnimation : 1;
-    bool m_hasStyleFactorsAffectingFrameTree : 1;
+    bool m_canBeCountingRoot : 1;
 
     int m_state : 8;
 

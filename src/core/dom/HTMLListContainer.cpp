@@ -19,6 +19,7 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+#include "core/dom/Document.h"
 #include "core/dom/HTMLListContainer.h"
 
 namespace StarFish {
@@ -34,5 +35,17 @@ int32_t HTMLListContainer::start()
 void HTMLListContainer::setStart(int32_t v)
 {
     setAttribute(starFish()->staticStrings()->m_start, String::fromInt(v));
+}
+
+void HTMLListContainer::didNodeInserted(Node* parent, Node* newChild)
+{
+    HTMLElement::didNodeInserted(parent, newChild);
+    document()->notifyCountingOutdated();
+}
+
+void HTMLListContainer::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    HTMLElement::didNodeRemoved(parent, oldChild);
+    document()->notifyCountingOutdated();
 }
 }
