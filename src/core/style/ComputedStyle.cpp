@@ -1376,6 +1376,40 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->border().image().url() != oldStyle->border().image().url()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderImageSource] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+    if (newStyle->border().image().slices() !=
+            oldStyle->border().image().slices() ||
+        newStyle->border().image().sliceFill() !=
+            oldStyle->border().image().sliceFill()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderImageSlice] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+    if (newStyle->border().image().widths() !=
+        oldStyle->border().image().widths()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderImageWidth] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+    if (newStyle->border().image().outsets() !=
+        oldStyle->border().image().outsets()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderImageOutset] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+    if (newStyle->border().image().repeatX() !=
+            oldStyle->border().image().repeatX() ||
+        newStyle->border().image().repeatY() !=
+            oldStyle->border().image().repeatY()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BorderImageRepeat] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     if (newStyle->m_unicodeBidi != oldStyle->m_unicodeBidi) {
         damagedKeys[CSSStyleValuePair::KeyKind::UnicodeBidi] = true;
         damage = (ComputedStyleDamage)(
