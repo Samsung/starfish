@@ -49,7 +49,7 @@ public:
 
     static void destory()
     {
-        if (g_httpCache == nullptr) {
+        if (g_httpCache != nullptr) {
             g_httpCache->flush();
             GC_FREE(g_httpCache);
             g_httpCache = nullptr;
@@ -67,6 +67,7 @@ public:
 
     void put(NetworkURLWorkerData* data);
     void update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry);
+    void remove(HTTPCacheEntry* entry);
     bool flush();
     void expire();
     bool pruneAsNeededForCacheSpace(const size_t reserve);
@@ -100,6 +101,7 @@ private:
     void clearCacheDir();
     void init();
     void removeItemInLRUList(String* url);
+    void removeItemIncacheEntryTable(String* url);
     HTTPCacheEntryMultiMap::iterator findEntryInCacheEntryTable(String* key);
     HTTPCacheLRUList::iterator findItemInLRUList(String* item);
     void extractHTTPCacheEntryProperty(NetworkURLWorkerData* nwd,

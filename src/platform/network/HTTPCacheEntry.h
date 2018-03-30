@@ -130,6 +130,8 @@ public:
     bool needsPropertiesUpdate();
 
     bool isConsistent();
+    bool good();
+    void setToBad();
 
     static const char* kSeparator;
 
@@ -144,6 +146,7 @@ private:
     size_t m_usingCount;
     bool m_needsRawDataUpdate;
     bool m_needsPropertiesUpdate;
+    bool m_good;
 };
 
 typedef GCUnorderedMultiMap<size_t, HTTPCacheEntry*> HTTPCacheEntryMultiMap;
