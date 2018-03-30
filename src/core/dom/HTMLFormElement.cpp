@@ -53,6 +53,15 @@ FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
 {
 }
 
+String* FormDataSetItem::toString()
+{
+    StringBuilder b;
+    b.appendString(m_name);
+    b.appendChar('=');
+    b.appendString(m_value);
+    return b.finalize();
+}
+
 FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
                                ResourceRequest::EncodeType enctype,
                                ResourceRequest::MethodType method)
@@ -60,6 +69,20 @@ FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
     , m_enctype(enctype)
     , m_method(method)
 {
+}
+
+String* FormSubmitData::toString()
+{
+    StringBuilder b;
+    for (size_t i = 0; i < m_formDataSet->size(); i++) {
+        FormDataSetItem* item = (*m_formDataSet)[i];
+        b.appendString(item->toString());
+        if (i < m_formDataSet->size() - 1) {
+            b.appendChar('&');
+        }
+    }
+
+    return b.finalize();
 }
 
 HTMLFormElement::HTMLFormElement(Document* document)
@@ -505,7 +528,7 @@ void HTMLFormElement::submit(HTMLElement* submitter)
     HTMLFormControl* inputNode = nullptr;
     if (submitter &&
         (submitter->isHTMLInputElement() || submitter->isHTMLButtonElement())) {
-        inputNode = submitter->asHTMLFormObject();
+        inputNode = submitter->asHTMLFormControl();
         if (inputNode->type()->equals("submit") ||
             inputNode->type()->equals("image")) {
             formAction = inputNode->formAction();
@@ -574,8 +597,14 @@ void HTMLFormElement::submitData(ResourceURL* url,
         starFish()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
     }
 
-    DocumentURL* urlToOpen =
-        new DocumentURL(url, new FormSubmitData(formDataSet, enctype, method));
+    FormSubmitData* dataToSubmit =
+        new FormSubmitData(formDataSet, enctype, method);
+    String* urlStr = url->urlString();
+    if (method == ResourceRequest::GET_METHOD) {
+        urlStr = urlStr->concat("?")->concat(dataToSubmit->toString());
+    }
+
+    DocumentURL* urlToOpen = new DocumentURL(urlStr, dataToSubmit);
     auto fn = [](size_t handle, void* data1, void* data2) {
         HTMLFormElement* formElement = (HTMLFormElement*)data1;
         DocumentURL* urlToOpen = (DocumentURL*)data2;
@@ -635,86 +664,83 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
         new (GC) GCVector<FormDataSetItem*>();
 
     // 1-3
-    GCVector<HTMLElement*> list;
-    computeFormAssociatedElements(this, list);
-    for (Node* c : list) {
+    GCVector<HTMLFormControl*> list;
+    computeFormSubmittableElements(this, list);
+    for (HTMLFormControl* field : list) {
         // TODO: HTML object is not supported
-        if (isSubmittableElement(c)) {
-            HTMLFormControl* field = c->asHTMLFormObject();
-
-            // 3.1
-            // datalist is not supported
-            if (field->disabled()) {
+        // 3.1
+        // datalist is not supported
+        if (field->disabled()) {
+            continue;
+        } else if ((field != submitter) && isButton(field)) {
+            continue;
+        } else if (field->isHTMLInputElement()) {
+            if (field->type()->equals("checkbox") &&
+                (!field->asHTMLInputElement()->checked())) {
                 continue;
-            } else if ((field != submitter) && isButton(field)) {
-                continue;
-            } else if (field->isHTMLInputElement()) {
-                if (field->type()->equals("checkbox") &&
-                    (!field->asHTMLInputElement()->checked())) {
-                    continue;
-                } else if (field->type()->equals("radio") &&
-                           (!field->asHTMLInputElement()->checked())) {
-                    continue;
-                }
-            } else if (!field->isHTMLInputElement() &&
-                       field->type()->equals("image") &&
-                       (field->domName()->isEmpty())) {
+            } else if (field->type()->equals("radio") &&
+                       (!field->asHTMLInputElement()->checked())) {
                 continue;
             }
+        } else if (!field->isHTMLInputElement() &&
+                   field->type()->equals("image") &&
+                   (field->domName()->isEmpty())) {
+            continue;
+        }
 
-            // 3.2, 3.3
-            if (field->isHTMLInputElement() && field->type()->equals("image")) {
-                // TODO
-                continue;
-            }
+        // 3.2, 3.3
+        if (field->isHTMLInputElement() && field->type()->equals("image")) {
+            // TODO
+            continue;
+        }
 
-            // 3.4-3.10
-            if (field->isHTMLSelectElement()) {
-                GCVector<HTMLOptionElement*> optionElements;
-                field->asHTMLSelectElement()->computeListOfOptionElements(
-                    field, optionElements);
-                for (HTMLOptionElement* opt : optionElements) {
-                    if (!opt->disabled() && opt->selected()) {
-                        formDataSet->push_back(new FormDataSetItem(
-                            opt->domName(), opt->value(), opt->type()));
-                    }
-                }
-            } else if (field->isHTMLInputElement()) {
-                HTMLInputElement* inputNode = field->asHTMLInputElement();
-                String* val = inputNode->value();
-
-                if (inputNode->type()->equals("checkbox") ||
-                    inputNode->type()->equals("radio")) {
-                    if (val->equals(String::emptyString)) {
-                        val = String::createASCIIString("on");
-                    }
+        // 3.4-3.10
+        if (field->isHTMLSelectElement()) {
+            GCVector<HTMLOptionElement*> optionElements;
+            field->asHTMLSelectElement()->computeListOfOptionElements(
+                field, optionElements);
+            for (HTMLOptionElement* opt : optionElements) {
+                if (!opt->disabled() && opt->selected()) {
                     formDataSet->push_back(new FormDataSetItem(
-                        inputNode->domName(), val, inputNode->type()));
+                        opt->domName(), opt->value(), opt->type()));
                 }
-            } else if (false) {
-                // TODO: file upload, object
-            } else {
-                formDataSet->push_back(new FormDataSetItem(
-                    field->domName(), field->value(), field->type()));
             }
+        } else if (field->isHTMLInputElement() &&
+                   (field->type()->equals("checkbox") ||
+                    field->type()->equals("radio"))) {
+            HTMLInputElement* inputNode = field->asHTMLInputElement();
+            String* val = inputNode->value()->trim();
+            if (val->equals(String::emptyString)) {
+                val = String::createASCIIString("on");
+            }
+            formDataSet->push_back(new FormDataSetItem(inputNode->domName(),
+                                                       val, inputNode->type()));
+        } else if (field->isHTMLInputElement() &&
+                   field->type()->equals("file")) {
+            // TODO: file upload, object
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        } else {
+            formDataSet->push_back(new FormDataSetItem(
+                field->domName(), field->value(), field->type()));
         }
     }
 
     return formDataSet;
 }
 
-void HTMLFormElement::computeFormAssociatedElements(
-    Node* parent, GCVector<HTMLElement*>& list)
+void HTMLFormElement::computeFormSubmittableElements(
+    Node* parent, GCVector<HTMLFormControl*>& list)
 {
     for (Node* c = parent->firstChild(); c; c = c->nextSibling()) {
-        if (c->isHTMLIFrameElement()) {
+        if (c->isHTMLIFrameElement() || c->isHTMLFormElement()) {
             continue;
         }
 
-        if (isFormAssociatedElement(c)) {
-            list.push_back(c->asHTMLElement());
+        if (isSubmittableElement(c) &&
+            (c->asHTMLFormControl()->form() == this)) {
+            list.push_back(c->asHTMLFormControl());
         } else {
-            computeFormAssociatedElements(c, list);
+            computeFormSubmittableElements(c, list);
         }
     }
 }

@@ -8120,7 +8120,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromAttribute);
         return element->isHTMLElement() && element->isHTMLFormControl() &&
-               element->asHTMLFormObject()->isPlaceholderVisible();
+               element->asHTMLFormControl()->isPlaceholderVisible();
     case CSSSelector::PseudoType::PseudoEmpty:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);

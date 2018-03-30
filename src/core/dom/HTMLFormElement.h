@@ -35,6 +35,8 @@ class FormDataSetItem : public gc {
 public:
     FormDataSetItem(String* name, String* value, String* type);
 
+    String* toString();
+
     String* m_name;
     String* m_value;
     String* m_type;
@@ -45,6 +47,9 @@ public:
     FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
                    ResourceRequest::EncodeType enctype,
                    ResourceRequest::MethodType method);
+
+    String* toString();
+
     GCVector<FormDataSetItem*>* m_formDataSet;
     ResourceRequest::EncodeType m_enctype;
     ResourceRequest::MethodType m_method;
@@ -182,8 +187,8 @@ private:
                     ResourceRequest::MethodType methodType);
     void clearPlannedNavigationTask();
     bool isFormAssociatedElement(Node* node);
-    void computeFormAssociatedElements(Node* parent,
-                                       GCVector<HTMLElement*>& list);
+    void computeFormSubmittableElements(Node* parent,
+                                        GCVector<HTMLFormControl*>& list);
     bool isSubmittableElement(Node* node);
 
     HTMLFormControlsCollection* m_elements;
