@@ -2727,6 +2727,8 @@ const String* pointerMediaFeature =
     String::createASCIIStringWithNoGC("pointer");
 const String* anyPointerMediaFeature =
     String::createASCIIStringWithNoGC("any-pointer");
+const String* scriptingMediaFeature =
+    String::createASCIIStringWithNoGC("scripting");
 
 static inline bool featureWithoutValue(String* mediaFeature)
 {
@@ -2751,7 +2753,8 @@ static inline bool featureWithoutValue(String* mediaFeature)
            mediaFeature->equals(hoverMediaFeature) ||
            mediaFeature->equals(anyHoverMediaFeature) ||
            mediaFeature->equals(pointerMediaFeature) ||
-           mediaFeature->equals(anyPointerMediaFeature);
+           mediaFeature->equals(anyPointerMediaFeature) ||
+           mediaFeature->equals(scriptingMediaFeature);
 }
 
 static inline bool featureWithValidIdent(const String* mediaFeature,
@@ -2785,6 +2788,12 @@ static inline bool featureWithValidIdent(const String* mediaFeature,
         return ident->equalsIgnoreCase("none") ||
                ident->equalsIgnoreCase("coarse") ||
                ident->equalsIgnoreCase("fine");
+    }
+
+    if (mediaFeature->equals(scriptingMediaFeature)) {
+        return ident->equalsIgnoreCase("none") ||
+               ident->equalsIgnoreCase("initial-only") ||
+               ident->equalsIgnoreCase("enabled");
     }
 
     return false;
