@@ -499,6 +499,20 @@ static bool pointerMediaFeatureEval(MediaQueryExpValue& value,
     return true;
 }
 
+static bool scriptingMediaFeatureEval(MediaQueryExpValue& value,
+                                      MediaValues* mediaValues,
+                                      MediaFeaturePrefix op)
+{
+    // https://drafts.csswg.org/mediaqueries-5/#scripting
+    if (value.isID) {
+        // TODO: Consider the 'initial-only' value
+        return mediaValues->hasScriptEngineInstance()
+                   ? value.id->equalsIgnoreCase("enabled")
+                   : value.id->equalsIgnoreCase("none");
+    }
+    return true;
+}
+
 bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
 {
     // MediaQueryExp can be nullptr when it has invalid expressions.
@@ -582,6 +596,8 @@ bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
         return hoverMediaFeatureEval(value, m_mediaValues, NoPrefix);
     } else if (feature->equals("pointer") || feature->equals("any-pointer")) {
         return pointerMediaFeatureEval(value, m_mediaValues, NoPrefix);
+    } else if (feature->equals("scripting")) {
+        return scriptingMediaFeatureEval(value, m_mediaValues, NoPrefix);
     } else {
         auto s = exp->mediaFeature()->toUTF8NonGCString();
         STARFISH_LOG_INFO("unsupported media feature: %s\n", s.data());

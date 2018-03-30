@@ -22,6 +22,7 @@
 #include "core/dom/Document.h"
 #include "core/layout/Frame.h"
 #include "core/page/Screen.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/MediaValues.h"
@@ -148,6 +149,11 @@ int32_t MediaValues::colorBitsPerComponent() const
 bool MediaValues::isMonochrome() const
 {
     return m_frame->document()->window()->screen()->isMonochrome();
+}
+
+bool MediaValues::hasScriptEngineInstance() const
+{
+    return m_frame->document()->webView()->scriptEngineInstance();
 }
 
 } /* namespace StarFish */

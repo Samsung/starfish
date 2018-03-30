@@ -42,6 +42,7 @@ public:
     float devicePixelRatio() const;
     int32_t colorBitsPerComponent() const;
     bool isMonochrome() const;
+    bool hasScriptEngineInstance() const;
 
 private:
     Frame* m_frame;
