@@ -425,6 +425,7 @@ void AnimationExecutor::addPendingAnimation(Element* element,
                                             ComputedStyle* newStyle,
                                             Frame* oldFrame)
 {
+    oldStyle->markUsedInAnimator();
     newStyle->markUsedInAnimator();
 
     for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {

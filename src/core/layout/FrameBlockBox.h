@@ -778,6 +778,7 @@ protected:
     LayoutUnit layoutInline(LayoutContext& ctx);
     void registerRelativePositionedBoxesAndMarkPaintFlag(LayoutContext& ctx);
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
+    void registerRelativePositionIfNeeds(LayoutContext& ctx);
 
     virtual bool hasFrameTreeItemModel()
     {
