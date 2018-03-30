@@ -249,9 +249,9 @@ Cell* FrameTableBox::cellAtSlot(size_t x, size_t y)
         }
     }
 
-    // 3. We check the entire cells in the table
+    // 2. We check the entire cells in the table
     for (size_t i = y; i < m_table->m_rows.size(); i--) {
-        Row* row = m_table->m_rows[y];
+        Row* row = m_table->m_rows[i];
         for (size_t j = 0; j < row->m_cells.size(); j++) {
             Cell* cell = row->m_cells[j];
             if ((cell->m_slotX <= x && x < cell->m_slotX + cell->m_width) &&
