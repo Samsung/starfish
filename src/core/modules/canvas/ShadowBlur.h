@@ -38,7 +38,7 @@ private:
     size_t m_height;
     size_t m_stride;
     uint8_t* m_source;
-    std::unique_ptr<uint8_t> m_workspace;
+    std::unique_ptr<uint8_t, void (*)(uint8_t*)> m_workspace;
 };
 }
 #endif

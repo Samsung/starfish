@@ -68,7 +68,7 @@ public:
     bool operator==(const TextOverflowData& data)
     {
         if (hasEnumValue() && data.hasEnumValue()) {
-            return hasClipValue() && data.hasClipValue();
+            return hasClipValue() == data.hasClipValue();
         } else if (!hasEnumValue() && !data.hasEnumValue()) {
             return stringValue()->equals(data.stringValue());
         } else {
