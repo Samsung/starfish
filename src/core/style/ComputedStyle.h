@@ -2563,6 +2563,13 @@ public:
         m_rareComputedStyleData.ensureContent()->push_back(content);
     }
 
+    void setContentCounter(CounterContentData* c)
+    {
+        ContentData content(ContentData::ContentType::Counter);
+        content.setCounter(c);
+        m_rareComputedStyleData.ensureContent()->push_back(content);
+    }
+
     void setContentCounter(const AtomicString& id, const CounterStyle* v)
     {
         ContentData content(ContentData::ContentType::Counter);
@@ -2867,14 +2874,6 @@ public:
     bool hasVisibleListCounter()
     {
         return listStyleData().typeData()->system() != CounterStyle::NoneSystem;
-    }
-
-    bool hasFactorsAffectingFrameTree()
-    {
-        if (counterIncrement() || counterReset()) {
-            return true;
-        }
-        return false;
     }
 
     String* listStyleType()

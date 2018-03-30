@@ -213,6 +213,12 @@ public:
         return m_value.m_counter;
     }
 
+    void setCounter(CounterContentData* v)
+    {
+        STARFISH_ASSERT(m_type == Counter);
+        m_value.m_counter = v;
+    }
+
     void setCounter(const AtomicString& id, const CounterStyle* counter)
     {
         STARFISH_ASSERT(m_type == Counter);

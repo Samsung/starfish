@@ -1341,10 +1341,6 @@ Node* Node::removeChild(Node* child)
         notifyNodeRemoveFromDocumentTree(child);
     }
 
-    if (child->hasStyleFactorsAffectingFrameTree()) {
-        setNeedsFrameTreeBuildWithoutSelf();
-    }
-
     Node* parent = this;
     while (parent) {
         parent->didNodeRemoved(this, child);
@@ -1807,10 +1803,10 @@ void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
         frame()->computeStyleFlags();
     }
     if (newStyle) {
-        m_hasStyleFactorsAffectingFrameTree =
-            newStyle->hasFactorsAffectingFrameTree();
+        m_canBeCountingRoot =
+            newStyle->counterIncrement() || newStyle->counterReset();
     } else {
-        m_hasStyleFactorsAffectingFrameTree = false;
+        m_canBeCountingRoot = false;
     }
 }
 
@@ -1819,12 +1815,18 @@ void Node::didNodeInserted(Node* parent, Node* newChild)
     if (hasRareMembers()) {
         m_rareNodeMembers->invalidateActiveActiveNodeListCacheIfNeeded();
     }
+    if (m_canBeCountingRoot) {
+        document()->notifyCountingOutdated();
+    }
 }
 
 void Node::didNodeRemoved(Node* parent, Node* oldChild)
 {
     if (hasRareMembers()) {
         m_rareNodeMembers->invalidateActiveActiveNodeListCacheIfNeeded();
+    }
+    if (m_canBeCountingRoot) {
+        document()->notifyCountingOutdated();
     }
 }
 

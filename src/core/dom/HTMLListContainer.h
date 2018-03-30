@@ -39,17 +39,8 @@ public:
     int32_t start();
     void setStart(int32_t v);
 
-    virtual void didNodeInserted(Node* parent, Node* newChild) override
-    {
-        HTMLElement::didNodeInserted(parent, newChild);
-        setNeedsFrameTreeBuildWithoutSelf();
-    }
-
-    virtual void didNodeRemoved(Node* parent, Node* oldChild) override
-    {
-        HTMLElement::didNodeRemoved(parent, oldChild);
-        setNeedsFrameTreeBuildWithoutSelf();
-    }
+    void didNodeInserted(Node* parent, Node* newChild) override;
+    void didNodeRemoved(Node* parent, Node* oldChild) override;
 };
 }
 

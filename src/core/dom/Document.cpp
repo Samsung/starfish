@@ -1717,6 +1717,13 @@ Event* Document::createEvent(String* type)
                            nullptr);
 }
 
+void Document::notifyCountingOutdated()
+{
+    browsingContext()->setNeedsFrameTreeBuild();
+    STARFISH_ASSERT(frame());
+    frame()->asFrameDocument()->setCountingOutdatedFlag();
+}
+
 DEFINE_EVENT_LISTENER(Document, abort);
 DEFINE_EVENT_LISTENER(Document, blur);
 DEFINE_EVENT_LISTENER(Document, click);

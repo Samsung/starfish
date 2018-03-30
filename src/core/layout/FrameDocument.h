@@ -30,6 +30,7 @@ class FrameDocument : public FrameBlockBox {
 public:
     FrameDocument(Node* node)
         : FrameBlockBox(node, nullptr)
+        , m_countingOutdatedFlag(false)
     {
     }
 
@@ -60,12 +61,25 @@ public:
 
     bool scrollTo(LayoutUnit left, LayoutUnit top);
 
+    void setCountingOutdatedFlag()
+    {
+        m_countingOutdatedFlag = true;
+    }
+
+    bool popCountingOutdatedFlag()
+    {
+        bool result = m_countingOutdatedFlag;
+        m_countingOutdatedFlag = false;
+        return result;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
 protected:
     LayoutUnit m_scrollLeft;
     LayoutUnit m_scrollTop;
+    bool m_countingOutdatedFlag;
 };
 }
 
