@@ -301,6 +301,25 @@ ResourceURL::ResourceURL(String* url, String* baseURL)
     parseURLString(baseURL, url);
 }
 
+void* ResourceURL::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(ResourceURL)] = { 0 };
+        fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(ResourceURL));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void ResourceURL::fillGCDescriptor(GC_word* desc)
+{
+    GC_set_bit(desc, GC_WORD_OFFSET(ResourceURL, m_string));
+    GC_set_bit(desc, GC_WORD_OFFSET(ResourceURL, m_urlString));
+}
+
 bool ResourceURL::isValidURL(String* url)
 {
     // TODO: checking for the validity of a url requires a regexp check.
@@ -962,5 +981,19 @@ DocumentURL::DocumentURL(ResourceURL* url, FormSubmitData* formSubmitData)
     : ResourceURL(*url)
     , m_formSubmitData(formSubmitData)
 {
+}
+
+void* DocumentURL::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(DocumentURL)] = { 0 };
+        ResourceURL::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(DocumentURL, m_formSubmitData));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(DocumentURL));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 }

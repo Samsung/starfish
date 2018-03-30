@@ -73,6 +73,10 @@ public:
         m_isValid = src.m_isValid;
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+    static void fillGCDescriptor(GC_word* desc);
+
     static ResourceURL* AboutBlankURL()
     {
         return new ResourceURL("about:blank");
@@ -222,6 +226,9 @@ public:
     DocumentURL(String* url, FormSubmitData* formSubmitData);
     DocumentURL(ResourceURL* url);
     DocumentURL(ResourceURL* url, FormSubmitData* formSubmitData);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual bool isDocumentURL() override
     {
