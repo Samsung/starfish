@@ -26,6 +26,7 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/profiling/Profiling.h"
 #include "platform/loader/ResourceURL.h"
+#include "core/modules/threading/Thread.h"
 
 namespace StarFish {
 
@@ -42,6 +43,7 @@ HTTPCacheEntry::HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
     , m_usingCount(0)
     , m_needsRawDataUpdate(false)
     , m_needsPropertiesUpdate(false)
+    , m_good(true)
 {
 }
 
@@ -71,6 +73,7 @@ HTTPCacheEntry::HTTPCacheEntry(const HTTPCacheEntry& rhs)
 
     m_mutex = new Mutex();
     m_usingCount = rhs.m_usingCount;
+    m_good = rhs.m_good;
 }
 
 size_t HTTPCacheEntry::entryKey() const
@@ -122,24 +125,26 @@ void HTTPCacheEntry::setEntryFileNameUsingCachePath(String* cachePath)
 bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
 {
     STARFISH_ASSERT(m_entryFileInfo.entryFilePath.compare("") != 0);
-
     Locker<Mutex> locker(*m_mutex);
+
     if (rawData.size() == 0) {
-        return false;
+        return m_good = false;
     }
 
     File* out = File::create();
     if (!out->open(m_entryFileInfo.entryFilePath, File::Write)) {
-        return false;
+        return m_good = false;
     }
 
     size_t length = out->write(rawData.data(), sizeof(char), rawData.size());
     bool ret = (rawData.size() == length) & (out->flush() == 0);
 
-    m_entryFileInfo.lastModificationTime = out->lastModificationTime();
-    m_entryFileInfo.byteLength = length;
+    if (ret) {
+        m_entryFileInfo.lastModificationTime = out->lastModificationTime();
+        m_entryFileInfo.byteLength = length;
+    }
 
-    return ret & (out->close() == 0);
+    return m_good = ret & (out->close() == 0);
 }
 
 bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
@@ -150,14 +155,14 @@ bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
 
     File* in = File::createInNonGCArea(); // Must free
     if (!in->open(m_entryFileInfo.entryFilePath, File::Read)) {
-        return false;
+        return m_good = false;
     }
 
-    bool ret = in->readAll(out) & (in->close() == 0);
+    m_good = in->readAll(out) & (in->close() == 0);
 
     free(in);
 
-    return ret;
+    return m_good;
 }
 
 void HTTPCacheEntry::readEntryHeaders(HeaderMap& out)
@@ -350,6 +355,12 @@ bool HTTPCacheEntry::needsPropertiesUpdate()
 
 bool HTTPCacheEntry::isConsistent()
 {
+    STARFISH_ASSERT(isMainThread());
+
+    if (!m_good) {
+        return m_good;
+    }
+
     File* file = File::create();
 
     if (file->open(m_entryFileInfo.entryFilePath, File::Read)) {
@@ -361,7 +372,17 @@ bool HTTPCacheEntry::isConsistent()
         }
     }
     file->close();
-    return false;
+    return m_good = false;
+}
+bool HTTPCacheEntry::good()
+{
+    STARFISH_ASSERT(isMainThread());
+    return m_good;
+}
+void HTTPCacheEntry::setToBad()
+{
+    STARFISH_ASSERT(isMainThread());
+    m_good = false;
 }
 }
 #endif

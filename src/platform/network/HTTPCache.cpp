@@ -240,6 +240,8 @@ bool HTTPCache::initFromIndexFileIfPossible()
     }
 
     expire();
+    STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
+                      (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
     return true;
 }
 
@@ -254,7 +256,8 @@ HTTPCacheEntryMultiMap::iterator HTTPCache::get(ResourceURL* url)
     String* item = url->urlString();
 
     auto entryItr = findEntryInCacheEntryTable(item);
-    if (entryItr == m_cacheEntryTable.end() || !entryItr->second->canUse()) {
+    if (entryItr == m_cacheEntryTable.end() || !entryItr->second->canUse() ||
+        !entryItr->second->isConsistent()) {
         return m_cacheEntryTable.end();
     }
 
@@ -322,7 +325,9 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
     newEntry->setEntryFileNameUsingCachePath(m_cacheDirPath);
 
     if (!newEntry->writeRawDataToEntryFile(nwd->request->response())) {
-        STARFISH_LOG_ERROR("[HTTPCache] Failed to write RawData\n");
+        STARFISH_LOG_ERROR(
+            "[HTTPCache] Failed to write RawData(url:%s)\n",
+            nwd->request->url()->string()->toUTF8NonGCString().data());
         return;
     }
 
@@ -337,6 +342,7 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
 
 void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
 {
+    STARFISH_ASSERT(isMainThread());
     if (m_cacheMode == LOAD_NO_CACHE) {
         return;
     }
@@ -346,8 +352,13 @@ void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
         return;
     }
 
+    bool isGood = true;
+    if (!entry->isConsistent()) {
+        isGood = false;
+    }
+
     size_t old = calcBlocksSize(entry->entryFileInfo().byteLength);
-    if (entry->needsPropertiesUpdate()) {
+    if (isGood && entry->needsPropertiesUpdate()) {
         entry->setNeedsPropertiesUpdate(false);
 
         CacheControl cc;
@@ -360,23 +371,31 @@ void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
         entry->setHTTPContentInfo(cinfo);
         entry->setHTTPFreshnessInfo(finfo);
     }
-
-    if (entry->needsRawDataUpdate()) {
+    size_t sizeOfBlocks = 0;
+    if (isGood && entry->needsRawDataUpdate()) {
         entry->setNeedsRawDataUpdate(false);
-        size_t sizeOfBlocks = calcBlocksSize(entry->entryFileInfo().byteLength);
+        sizeOfBlocks = calcBlocksSize(entry->entryFileInfo().byteLength);
         if (!pruneAsNeededForCacheSpace(sizeOfBlocks)) {
-            // TODO
-            STARFISH_ASSERT_NOT_REACHED();
-            return;
+            isGood = false;
         }
 
-        if (!entry->writeRawDataToEntryFile(nwd->request->response())) {
-            STARFISH_LOG_ERROR("[HTTPCache] Failed to write RawData\n");
-            // TODO
-            STARFISH_ASSERT_NOT_REACHED();
-            return;
+        if (isGood &&
+            !entry->writeRawDataToEntryFile(nwd->request->response())) {
+            STARFISH_LOG_ERROR(
+                "[HTTPCache] Failed to write RawData(url:%s)\n",
+                entry->url()->string()->toUTF8NonGCString().data());
+            isGood = false;
         }
-        m_currentTotalSizeOfBlocks += (sizeOfBlocks - old);
+
+        if (isGood) {
+            m_currentTotalSizeOfBlocks += (sizeOfBlocks - old);
+        }
+    }
+
+    if (!isGood) {
+        STARFISH_LOG_ERROR(
+            "[HTTPCache] Failed to update a entry, so remove it\n");
+        remove(entry);
     }
 }
 
@@ -465,7 +484,7 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
 
             File* fio = File::create();
             if (fio->open(cacheEntry->entryFileInfo().entryFilePath,
-                          File::Read)) {
+                          File::ReadWrite)) {
                 auto info = cacheEntry->entryFileInfo();
                 size_t sizeOfBlock = calcBlocksSize(info.byteLength);
                 fio->removeFile();
@@ -520,15 +539,15 @@ void HTTPCache::expire()
     STARFISH_ASSERT(isMainThread());
 
     for (auto it = m_cacheEntryTable.begin(); it != m_cacheEntryTable.end();) {
-        if (it->second->shouldExpire()) {
+        if (it->second->shouldExpire() || !it->second->good()) {
             File* fio = File::create();
             fio->open(it->second->entryFileInfo().entryFilePath, File::Read);
-
-            if (fio->isOpen()) {
-                fio->removeFile();
-            }
-
+            fio->removeFile();
             fio->close();
+
+            size_t size =
+                calcBlocksSize(it->second->entryFileInfo().byteLength);
+            m_currentTotalSizeOfBlocks -= size;
 
             removeItemInLRUList(it->second->url()->urlString());
             it = m_cacheEntryTable.erase(it);
@@ -558,11 +577,42 @@ HTTPCacheLRUList::iterator HTTPCache::findItemInLRUList(String* item)
     return m_cacheLRUList.end();
 }
 
+void HTTPCache::remove(HTTPCacheEntry* entry)
+{
+    STARFISH_ASSERT(isMainThread());
+    entry->setToBad();
+
+    if (1 < entry->usingCount()) {
+        return;
+    }
+
+    File* fio = File::create();
+
+    if (fio->open(entry->entryFileInfo().entryFilePath, File::ReadWrite)) {
+        fio->removeFile();
+        fio->close();
+        size_t size = calcBlocksSize(entry->entryFileInfo().byteLength);
+        m_currentTotalSizeOfBlocks -= size;
+    }
+
+    String* url = entry->url()->urlString();
+    removeItemInLRUList(url);
+    removeItemIncacheEntryTable(url);
+}
+
 void HTTPCache::removeItemInLRUList(String* item)
 {
     auto it = findItemInLRUList(item);
     if (it != m_cacheLRUList.end()) {
         m_cacheLRUList.erase(it);
+    }
+}
+
+void HTTPCache::removeItemIncacheEntryTable(String* url)
+{
+    auto it = findEntryInCacheEntryTable(url);
+    if (it != m_cacheEntryTable.end()) {
+        m_cacheEntryTable.erase(it);
     }
 }
 
