@@ -994,7 +994,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
          property ==
              TransitionPropertyValue::TransitionPropertyTransformValue) &&
         damagedKeys[CSSStyleValuePair::Transform]) {
-        if (oldFrame->isTransformable()) {
+        if (oldFrame && oldFrame->isTransformable()) {
             STARFISH_ASSERT(oldFrame->isFrameBox());
             FrameBox* box = oldFrame->asFrameBox();
             SkMatrix matrixBefore = oldStyle->transformsToMatrix(

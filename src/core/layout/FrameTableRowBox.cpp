@@ -149,6 +149,7 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
     for (Frame* c = firstChild(); c; c = c->next()) {
         STARFISH_ASSERT(c->isFrameTableCellBox());
         FrameTableCellBox* cell = c->asFrameTableCellBox();
+        cell->setY(0);
         ctx.pushBlockBoxAligningAtFirstBaseline(cell);
         cell->layoutHeight(ctx);
         auto it = ctx.firstLineAscender(cell);

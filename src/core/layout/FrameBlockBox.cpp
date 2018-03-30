@@ -160,6 +160,21 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
     }
 }
 
+void FrameBlockBox::registerRelativePositionIfNeeds(LayoutContext& ctx)
+{
+    if (style()->position() == PositionValue::RelativePositionValue) {
+        ctx.registerRelativePositionedBox(this, true);
+    }
+
+    if (node() && node()->parentElement()) {
+        Node* nd = node()->parentElement();
+        if (nd->frame()->isFrameInline() &&
+            nd->style()->position() == RelativePositionValue) {
+            ctx.registerRelativePositionedBox(this, false);
+        }
+    }
+}
+
 void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 {
     LayoutUnit top = paddingTop() + borderTop();
@@ -175,21 +190,23 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             ctx.setIsQuickLayout(true);
             quickLayout(ctx);
             ctx.setIsQuickLayout(isQuickLayout);
+
+            // FIXME remove this line when table deal with quick layout
+            // correctly
+            // table-cell height is computed by calling
+            // `FrameBlockBox::layout(ctx,
+            // Frame::LayoutWantToResolve::ResolveHeight);`
+            // if table-cell doesn't have needs layout flag, register relative
+            // position element is skiped
+            if (isFrameTableCellBox()) {
+                registerRelativePositionIfNeeds(ctx);
+            }
+
             return;
         }
     }
 
-    if (style()->position() == PositionValue::RelativePositionValue) {
-        ctx.registerRelativePositionedBox(this, true);
-    }
-
-    if (node() && node()->parentElement()) {
-        Node* nd = node()->parentElement();
-        if (nd->frame()->isFrameInline() &&
-            nd->style()->position() == RelativePositionValue) {
-            ctx.registerRelativePositionedBox(this, false);
-        }
-    }
+    registerRelativePositionIfNeeds(ctx);
 
     if (isFrameTableBox()) {
         asFrameTableBox()->layoutTable(ctx);
