@@ -10,33 +10,43 @@ License:       LGPL-2.1+ and Apache-2.0 and BSD-3-Clause and BSL-1.0 and LGPL-3.
 
 # [ tv | headless | mobile | wearable ]
 %if %{?tizen_profile_name:1}%{!?tizen_profile_name:0}
-%define tizen_platform %{tizen_profile_name}
+%define tizen_product %{tizen_profile_name}
 %else
-%define tizen_platform tv
+%define tizen_product tv
 %endif
 
 %if "%{?TIZEN_PRODUCT_TV}" == "1"
-%define tizen_platform tv
+%define tizen_product tv
 %else
 %if "%{?TIZEN_PRODUCT_MOBILE}" == "1"
-%define tizen_platform mobile
+%define tizen_product gear
 %else
 %if "%{?TIZEN_PRODUCT_WEARABLE}" == "1"
-%define tizen_platform wearable
+%define tizen_product gear
 %else
 %if "%{?TIZEN_PRODUCT_HEADLESS}" == "1"
-%define tizen_platform wearable
+%define tizen_product speaker
 %else
-%define tizen_platform unified
+%define tizen_product unified
 %endif
 %endif
 %endif
 %endif
 
-%if "%{tizen_platform}" == "mobile"
+%if "%{tizen_profile_name}" == "tv"
+%define tizen_product tv
+%endif
+%if "%{tizen_profile_name}" == "mobile"
+%define tizen_product gear
+%endif
+%if "%{tizen_profile_name}" == "headless"
+%define tizen_product speaker
+%endif
+
+%if "%{tizen_product}" == "gear"
 #ExcludeArch: %{arm} %ix86 x86_64
 %endif
-%if "%{tizen_platform}" == "tv"
+%if "%{tizen_product}" == "tv"
 #ExcludeArch: %{arm} %ix86 x86_64
 %endif
 
@@ -66,12 +76,12 @@ BuildRequires: pkgconfig(dali-adaptor)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
-%if "%{tizen_platform}" == "tv"
+%if "%{tizen_product}" == "tv"
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
 BuildRequires: pkgconfig(vd-win-util)
 %endif
-%if "%{tizen_platform}" == "wearable"
+%if "%{tizen_product}" == "gear"
 BuildRequires: pkgconfig(bundle)
 %endif
 
@@ -93,100 +103,58 @@ lightweight-web-engine development headers
 cd third_party/libtuv
 make
 cd -
-%if "%{tizen_platform}" == "tv"
-mkdir -p tizen_tv_build
-cd tizen_tv_build
-GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen_tv %{?gyp_addition_command}
-ninja -C out/release starfish.tizen_tv.release
-GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen_tv %{?gyp_addition_command}
-ninja -C out/release starfish.tizen_tv.release
-cd ..
+
+%if "%{tizen_product}" == "tv"
+%define target tv
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dcustom=vd %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.tv.release
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dcustom=vd %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.tv.release
 %endif
-%if "%{tizen_platform}" == "headless"
-mkdir -p tizen_headless_build
-cd tizen_headless_build
+
+%if "%{tizen_product}" == "gear"
+%define target gear
+CFLAGS+=' -Os '
+CXXFLAGS+=' -Os '
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dcustom=im %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.gear.release
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dcustom=im %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.gear.release
+%endif
+
+%if "%{tizen_product}" == "speaker"
+%define target speaker
 # '-mthumb' that's automatically appended to the compiler flag causes an
 # unknown error in headless mode. To fix this (temporarily until correct flags
 # are given by the system), '-marm' is appended to override the '-mthumb' flag.
 # With '-marm', compiler emits some warnings.
 CFLAGS+=' -marm '
 CXXFLAGS+=' -marm '
-GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen_headless %{?gyp_addition_command}
-ninja -C out/release starfish.tizen_headless.release
-GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen_headless %{?gyp_addition_command}
-ninja -C out/release starfish.tizen_headless.release
-cd ..
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dcustom=im -DtouchUi=0 %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.speaker.release
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dcustom=im -DtouchUi=0 %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.speaker.release
 %endif
-%if "%{tizen_platform}" == "mobile"
-mkdir -p tizen_mobile_build
-cd tizen_mobile_build
-GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen %{?gyp_addition_command}
-ninja -C out/release starfish.tizen.release
-GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen %{?gyp_addition_command}
-ninja -C out/release starfish.tizen.release
-cd ..
+
+%if "%{tizen_product}" == "unified"
+%define target unified
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.unified.release
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.unified.release
 %endif
-%if "%{tizen_platform}" == "wearable"
-CFLAGS+=' -Os '
-CXXFLAGS+=' -Os '
-mkdir -p tizen_wearable_build
-cd tizen_wearable_build
-GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen_wearable %{?gyp_addition_command}
-ninja -C out/release starfish.tizen_wearable.release
-GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen_wearable %{?gyp_addition_command}
-ninja -C out/release starfish.tizen_wearable.release
-cd ..
-%endif
-%if "%{tizen_platform}" == "unified"
-mkdir -p tizen_build
-cd tizen_build
-GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen %{?gyp_addition_command}
-ninja -C out/release starfish.tizen.release
-GYP_GENERATORS=ninja ../tool/gyp/gyp ../build.gyp --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen %{?gyp_addition_command}
-ninja -C out/release starfish.tizen.release
-cd ..
-%endif
+
+mv out_tizen/%{target}/release/lib/liblightweight-web-engine.%{target}.so out_tizen/%{target}/release/lib/liblightweight-web-engine.so
+mv out_tizen/%{target}/release/lightweight-web-engine.%{target} out_tizen/%{target}/release/lightweight-web-engine
+
 
 %install
 %define bin StarFish
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}
-
-
-
-%if "%{tizen_platform}" == "tv"
-cp -r ./tizen_tv_build/out/release/lib/*.so %{buildroot}%{_libdir}
-#cp -r ./tizen_tv_build/out/release/lib/tizen/libtuv.so %{buildroot}%{_libdir}
-mv %{buildroot}%{_libdir}/liblightweight-web-engine.tizen_tv.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
 mkdir -p %{buildroot}%{_bindir}
-cp -r ./tizen_tv_build/out/release/lightweight-web-engine.tizen_tv %{buildroot}%{_bindir}/%{bin}
-%endif
-%if "%{tizen_platform}" == "headless"
-cp -r ./tizen_headless_build/out/release/lib/*.so %{buildroot}%{_libdir}
-#cp -r ./tizen_headless_build/out/release/lib/tizen/libtuv.so %{buildroot}%{_libdir}
-mv %{buildroot}%{_libdir}/liblightweight-web-engine.tizen_headless.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
-mkdir -p %{buildroot}%{_bindir}
-cp -r ./tizen_headless_build/out/release/lightweight-web-engine.tizen_headless %{buildroot}%{_bindir}/%{bin}
-%endif
-%if "%{tizen_platform}" == "mobile"
-cp -r ./tizen_mobile_build/out/release/lib/*.so %{buildroot}%{_libdir}
-#cp -r ./tizen_mobile_build/out/release/lib/tizen/libtuv.so %{buildroot}%{_libdir}
-mv %{buildroot}%{_libdir}/liblightweight-web-engine.tizen.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
-mkdir -p %{buildroot}%{_bindir}
-cp -r ./tizen_mobile_build/out/release/lightweight-web-engine.tizen %{buildroot}%{_bindir}/%{bin}
-%endif
-%if "%{tizen_platform}" == "wearable"
-cp ./tizen_wearable_build/out/release/lib/*.so %{buildroot}%{_libdir}
-mv %{buildroot}%{_libdir}/liblightweight-web-engine.tizen_wearable.so %{buildroot}%{_libdir}/libWebWidgetEngine.so
-mkdir -p %{buildroot}%{_bindir}
-cp -r ./tizen_wearable_build/out/release/lightweight-web-engine.tizen_wearable %{buildroot}%{_bindir}/%{bin}
-%endif
-%if "%{tizen_platform}" == "unified"
-cp -r ./tizen_build/out/release/lib/*.so %{buildroot}%{_libdir}
-mv %{buildroot}%{_libdir}/liblightweight-web-engine.tizen.so %{buildroot}%{_libdir}/liblightweight-web-engine.so
-mkdir -p %{buildroot}%{_bindir}
-cp -r ./tizen_build/out/release/lightweight-web-engine.tizen %{buildroot}%{_bindir}/%{bin}
-%endif
+cp -r out_tizen/%{target}/release/lib/*.so %{buildroot}%{_libdir}
+cp -r out_tizen/%{target}/release/lightweight-web-engine %{buildroot}%{_bindir}/%{bin}
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishPublic.h %{buildroot}%{_includedir}/%{name}/

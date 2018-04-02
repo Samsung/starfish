@@ -215,6 +215,7 @@
                     'files': [
                         '/usr/lib/web-widget-js/release/libescargot.a',
                     ],
+                    # To workaround the 'duplicate-target' in ninja
                     'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
                 },
             ],
@@ -357,7 +358,7 @@
                     'files': [
                         '/usr/lib/web-widget-js/release/libgc.a'
                     ],
-                    'destination': '<(PRODUCT_DIR)/../release/lib',
+                    'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
                 },
             ],
             'include_dirs': [
@@ -372,7 +373,7 @@
                     'third_party/GCutil',
                 ],
                 'libraries': [
-                    'lib/libgc.a',
+                    'lib/tizen/libgc.a',
                 ],
             },
         },

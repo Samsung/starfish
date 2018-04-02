@@ -20,65 +20,42 @@
             'STARFISH_ENABLE_HTTPCACHE',
             # 'STARFISH_ENABLE_PROFILING',
         ],
+        # NOTE: common #defines for all Tizen platform
         'defines_tizen': [
             'STARFISH_TIZEN',
             'STARFISH_TIZEN_OBS',
-            #'STARFISH_ENABLE_INSPECTOR',
-            'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_ENABLE_DOMPARSER',
-            #'STARFISH_ENABLE_TEST',
-            #'STARFISH_ENABLE_VIRTUAL_CURSOR',
             'STARFISH_IGNORE_CROSS_ORIGIN',
-            #'TIZEN_DEVICE_API',
+            'TIZEN_DEVICE_API',
             'SIZE_MAX=0xffffffff',
-            # 'STARFISH_IGNORE_SSL_VERIFYPEER',
-            # 'STARFISH_MEDIAPLAYER_DEBUG',
-        ],
-        'defines_tizen_tv': [
-            'STARFISH_TIZEN',
-            'STARFISH_TIZEN_OBS',
-            'STARFISH_TIZEN_TV',
+            #'STARFISH_IGNORE_SSL_VERIFYPEER',
             #'STARFISH_ENABLE_INSPECTOR',
+            #'STARFISH_ENABLE_TEST',
+            #'STARFISH_MEDIAPLAYER_DEBUG',
+        ],
+        # NOTE: specific #defines for each department
+        # e.g., 'defines_tizen' + 'defines_custom_vd' = defines used by the compiler
+        'defines_custom_vd': [
+            'STARFISH_TIZEN_TV',
             #'STARFISH_ENABLE_AVPLAY',
             'STARFISH_ENABLE_TRANSPARENT_WINDOW',
-            'STARFISH_ENABLE_MULTIMEDIA',
-            'STARFISH_ENABLE_DOMPARSER',
             'STARFISH_ENABLE_TTS',
-            #'STARFISH_ENABLE_TEST',
             #'STARFISH_ENABLE_BODY_FOCUS_RING',
             #'STARFISH_ENABLE_VIRTUAL_CURSOR',
-            'STARFISH_IGNORE_CROSS_ORIGIN',
-            'TIZEN_DEVICE_API',
             'USE_PRODUCT_FEATURE',
-            'SIZE_MAX=0xffffffff',
         ],
-        'defines_tizen_wearable': [
-            'STARFISH_TIZEN',
-            'STARFISH_TIZEN_OBS',
+        'defines_custom_im': [
+            'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_TIZEN_WEARABLE',
-            #'STARFISH_ENABLE_INSPECTOR',
-            'STARFISH_ENABLE_DOMPARSER',
-            #'STARFISH_ENABLE_TEST',
-            'STARFISH_IGNORE_CROSS_ORIGIN',
-            'TIZEN_DEVICE_API',
-            'SIZE_MAX=0xffffffff',
+        ],
+        'defines_custom_da': [
         ],
         'defines_tizen_headless': [
-            'STARFISH_TIZEN',
-            'STARFISH_TIZEN_OBS',
             'STARFISH_TIZEN_HEADLESS',
             'STARFISH_ENABLE_MULTIMEDIA',
-            #'STARFISH_ENABLE_INSPECTOR',
-            #'STARFISH_ENABLE_MULTIMEDIA',
-            'STARFISH_ENABLE_DOMPARSER',
-            #'STARFISH_ENABLE_TEST',
-            'STARFISH_IGNORE_CROSS_ORIGIN',
             'STARFISH_ENABLE_SHELL',
             # 'STARFISH_ENABLE_CANVAS',
-            'TIZEN_DEVICE_API',
-            'SIZE_MAX=0xffffffff',
         ],
-
         'defines_debug': [
             'GC_DEBUG', # bdwgc
             '_GLIBCXX_DEBUG',
@@ -146,85 +123,20 @@
                 'component%': 'static_library',
                 'backend%': 'efl_cairo',
                 'platform%': 'linux',
+                'custom%': 'none',
+                'touchUi%': '1',
                 'deplib%': 'shared_library',
             },
             'component%':'<(component)',
             'backend%': '<(backend)',
             'platform%': '<(platform)',
+            'custom%': '<(custom)',
+            'touchUi%': '1',
             'cflags_extra%': [],
+            'include_dirs_extra': [],
             'deplib%': '<(deplib)',
 
             'conditions': [
-                ['platform=="tizen"', {
-                    'include_dirs_extra': [
-                        'third_party/deviceapi/src',
-                        '/usr/include/dlog',
-                        '/usr/include/location',
-                    ],
-                    'cflags_extra': [
-                    ],
-                    'sources_extra': [
-                        '<!@(find third_party/deviceapi/src -name *.cpp)',
-                    ],
-                    'libraries_extra': [
-                        '-lrt',
-                        '-ldl',
-                        '-lcapi-location-manager',
-                        '-Wl,-soname,liblightweight-web-engine.so',
-                    ],
-                }],
-                ['platform=="tizen_tv"', {
-                    'include_dirs_extra': [
-                        'third_party/deviceapi/src',
-                        '/usr/include/dlog',
-                        '/usr/include/location',
-                    ],
-                    'cflags_extra': [
-                    ],
-                    'sources_extra': [
-                        '<!@(find third_party/deviceapi/src -name *.cpp)',
-                    ],
-                    'libraries_extra': [
-                        '-lrt',
-                        '-ldl',
-                        '-lcapi-location-manager',
-                        '-Wl,-soname,liblightweight-web-engine.so',
-                    ],
-                }],
-                ['platform=="tizen_wearable"', {
-                    'include_dirs_extra': [
-                        'third_party/deviceapi/src',
-                        '/usr/include/dlog',
-                        '/usr/include/location',
-                    ],
-                    'cflags_extra': [
-                    ],
-                    'sources_extra': [
-                        '<!@(find third_party/deviceapi/src -name *.cpp)',
-                    ],
-                    'libraries_extra': [
-                        '-lrt',
-                        '-ldl',
-                        '-lcapi-location-manager',
-                        '-Wl,-soname,libWebWidgetEngine.so',
-                    ],
-                }],
-                ['platform=="tizen_headless"', {
-                    'include_dirs_extra': [
-                        'third_party/deviceapi/src',
-                        '/usr/include/dlog',
-                    ],
-                    'cflags_extra': [
-                    ],
-                    'sources_extra': [
-                        '<!@(find third_party/deviceapi/src -name *.cpp)',
-                    ],
-                    'libraries_extra': [
-                        '-lrt',
-                        '-ldl',
-                        '-Wl,-soname,liblightweight-web-engine.so',
-                    ],
-                }],
                 ['platform=="linux"', {
                     'cflags_extra': [
                     ],
@@ -233,6 +145,38 @@
                     'sources_extra': [
                     ],
                     'libraries_extra': [
+                    ],
+                }],
+                ['platform=="tizen"', {
+                    'include_dirs_extra': [
+                        '<@(include_dirs_extra)',
+                        'third_party/deviceapi/src',
+                        '/usr/include/dlog',
+                        '/usr/include/location',
+                    ],
+                    'cflags_extra': [
+                    ],
+                    'sources_extra': [
+                        '<!@(find third_party/deviceapi/src -name *.cpp)',
+                    ],
+                    'libraries_extra': [
+                        '-lrt',
+                        '-ldl',
+                        '-lcapi-location-manager',
+                        '-Wl,-soname,liblightweight-web-engine.so',
+                    ],
+                }],
+                ['touchUi=="1"', {
+                    'include_dirs_extra': [
+                        '<@(include_dirs_extra)',
+                        '/usr/include/location',
+                    ],
+                    'cflags_extra': [
+                    ],
+                    'sources_extra': [
+                    ],
+                    'libraries_extra': [
+                        '-lcapi-location-manager',
                     ],
                 }],
                 ['backend=="efl_cairo"', {
@@ -259,7 +203,47 @@
                         '-lgif',
                     ],
                 }],
+                ['custom=="vd"', {
+                    'cflags_extra': [
+                    ],
+                    'include_dirs_extra': [
+                        '<@(include_dirs_extra)',
+                        'src/platform/lwe_vd',
+                    ],
+                    'sources_extra': [
+                        '<!@(find src/platform/lwe_vd -name *.cpp)',
+                    ],
+                    'libraries_extra': [
+                    ],
+                }],
+                ['custom=="im"', {
+                    'cflags_extra': [
+                    ],
+                    'include_dirs_extra': [
+                        '<@(include_dirs_extra)',
+                        'src/platform/lwe_im',
+                    ],
+                    'sources_extra': [
+                        '<!@(find src/platform/lwe_im -name *.cpp)',
+                    ],
+                    'libraries_extra': [
+                    ],
+                }],
+                ['custom=="da"', {
+                    'cflags_extra': [
+                    ],
+                    'include_dirs_extra': [
+                        '<@(include_dirs_extra)',
+                        'src/platform/lwe_da',
+                    ],
+                    'sources_extra': [
+                        '<!@(find src/platform/lwe_da -name *.cpp)',
+                    ],
+                    'libraries_extra': [
+                    ],
+                }],
             ],
+            'include_dirs_extra%': '<(include_dirs_extra)',
         },
         'component%':'<(component)',
         'backend%': '<(backend)',
@@ -372,48 +356,13 @@
                     '-pthread',
                 ],
             }],
-            ['platform=="tizen_tv" and backend=="efl_cairo"', {
-                'defines_extra': [
-                    'STARFISH_EFL_CAIRO',
-                ],
-                'cflags_extra': [
-                    '<@(cflags_extra)',
-                    '-fno-rtti',
-                    '-Wno-format-nonliteral',
-                ],
-                'libraries_extra': [
-                    '<@(libraries_extra)',
-                ],
-                'deps_extra': [
-                    './build.dep.gyp:efl_cairo.tizen',
-                ],
-            }],
-            ['platform=="tizen_wearable" and backend=="efl_cairo"', {
-                'defines_extra': [
-                ],
-                'cflags_extra': [
-                    '<@(cflags_extra)',
-                    '-fno-rtti',
-                    '-Wno-format-nonliteral',
-                ],
-                'libraries_extra': [
-                    '<@(libraries_extra)',
-                ],
-                'deps_extra': [
-                    './build.dep.gyp:efl_cairo.tizen',
-                ],
-            }],
-            ['platform=="tizen_headless" and backend=="efl_cairo"', {
+            ['touchUi=="0" and backend=="efl_cairo"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO_HEADLESS',
                 ],
                 'cflags_extra': [
-                    '<@(cflags_extra)',
-                    '-fno-rtti',
-                    '-Wno-format-nonliteral',
                 ],
                 'libraries_extra': [
-                    '<@(libraries_extra)',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_headless_cairo.tizen',

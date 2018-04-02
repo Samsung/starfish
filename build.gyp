@@ -33,7 +33,7 @@
            '<@(include_dirs_extra)',
        ],
        'sources': [
-           '<!@(find src -name *.cpp)',
+           '<!@(find src -name *.cpp | grep -v "platform/lwe_")',
            '<@(sources_extra)',
        ],
        'conditions': [
@@ -89,14 +89,14 @@
                    'configurations': {
                        'debug': {
                            'ldflags': [
-                               '-Wl,-rpath=\$$ORIGIN/lib/debug',
-                               '-Wl,-rpath-link=lib/debug',
+                               '-Wl,-rpath=\$$ORIGIN/lib',
+                               '-Wl,-rpath-link=lib',
                            ],
                        },
                        'release': {
                            'ldflags': [
-                               '-Wl,-rpath=\$$ORIGIN/lib/release',
-                               '-Wl,-rpath-link=lib/release',
+                               '-Wl,-rpath=\$$ORIGIN/lib',
+                               '-Wl,-rpath-link=lib',
                            ],
                        }
                    }
@@ -138,13 +138,13 @@
             ],
         },
         {
-            'target_name': 'starfish.tizen.release',
+            'target_name': 'starfish.tizen.unified.release',
             'type': '<(component)',
-            'product_name': 'lightweight-web-engine.tizen',
+            'product_name': 'lightweight-web-engine.unified',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
-#                './build.dep.gyp:zmq.tizen',
+                # './build.dep.gyp:zmq.tizen',
                 './build.dep.gyp:capi-network-connection',
                 './build.dep.gyp:capi-media-player',
                 './build.dep.gyp:mp4parse',
@@ -156,13 +156,13 @@
             ],
         },
         {
-            'target_name': 'starfish.tizen_tv.release',
+            'target_name': 'starfish.tizen.tv.release',
             'type': '<(component)',
-            'product_name': 'lightweight-web-engine.tizen_tv',
+            'product_name': 'lightweight-web-engine.tv',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
-#                './build.dep.gyp:zmq.tizen',
+                # './build.dep.gyp:zmq.tizen',
                 './build.dep.gyp:capi-network-connection',
                 './build.dep.gyp:capi-media-player',
                 './build.dep.gyp:vconf',
@@ -171,13 +171,14 @@
                 '<@(deps_release_extra)',
             ],
             'defines': [
-                '<@(defines_tizen_tv)',
+                '<@(defines_tizen)',
+                '<@(defines_custom_vd)',
             ],
         },
         {
-            'target_name': 'starfish.tizen_wearable.release',
+            'target_name': 'starfish.tizen.gear.release',
             'type': '<(component)',
-            'product_name': 'lightweight-web-engine.tizen_wearable',
+            'product_name': 'lightweight-web-engine.gear',
             'dependencies': [
                 './build.dep.gyp:tizen-dlog',
                 './build.dep.gyp:tizen-bundle',
@@ -187,18 +188,18 @@
                 '<@(deps_release_extra)',
             ],
             'defines': [
-                '<@(defines_tizen_wearable)',
+                '<@(defines_tizen)',
+                '<@(defines_custom_im)',
             ],
         },
-
         {
-            'target_name': 'starfish.tizen_headless.release',
+            'target_name': 'starfish.tizen.speaker.release',
             'type': '<(component)',
-            'product_name': 'lightweight-web-engine.tizen_headless',
+            'product_name': 'lightweight-web-engine.speaker',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
-#                './build.dep.gyp:zmq.tizen',
+                # './build.dep.gyp:zmq.tizen',
                 './build.dep.gyp:capi-network-connection',
                 './build.dep.gyp:capi-media-player',
                 './build.dep.gyp:mp4parse',
@@ -206,6 +207,8 @@
                 '<@(deps_release_extra)',
             ],
             'defines': [
+                '<@(defines_tizen)',
+                #'<@(defines_custom_im)',
                 '<@(defines_tizen_headless)',
             ],
         },
