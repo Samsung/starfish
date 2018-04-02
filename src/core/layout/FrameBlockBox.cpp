@@ -190,18 +190,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             ctx.setIsQuickLayout(true);
             quickLayout(ctx);
             ctx.setIsQuickLayout(isQuickLayout);
-
-            // FIXME remove this line when table deal with quick layout
-            // correctly
-            // table-cell height is computed by calling
-            // `FrameBlockBox::layout(ctx,
-            // Frame::LayoutWantToResolve::ResolveHeight);`
-            // if table-cell doesn't have needs layout flag, register relative
-            // position element is skiped
-            if (isFrameTableCellBox()) {
-                registerRelativePositionIfNeeds(ctx);
-            }
-
+            registerRelativePositionIfNeeds(ctx);
             return;
         }
     }

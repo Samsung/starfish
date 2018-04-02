@@ -1308,11 +1308,11 @@ void dump(Frame* frm, unsigned depth)
         printf("  ");
     }
     if (frm->isFlexItem()) {
-        printf("%s(FlexItem)", frm->name());
+        printf("%s(FlexItem)[%d]", frm->name(), (int)depth);
     } else if (frm->isGridItem()) {
-        printf("%s(GridItem)", frm->name());
+        printf("%s(GridItem)[%d]", frm->name(), (int)depth);
     } else {
-        printf("%s", frm->name());
+        printf("%s[%d]", frm->name(), (int)depth);
     }
     printf("[%p]", frm);
     if (frm->isAnonymous()) {

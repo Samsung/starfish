@@ -328,17 +328,19 @@ void FrameInputBox::layout(LayoutContext& ctx,
     LayoutUnit caretThickness = e->caretThickness();
     LayoutUnit mostRight;
     LayoutUnit mostLeft;
+    LayoutUnit mostTop = borderTop() + paddingTop();
     LayoutUnit x, y;
     iterateChildFrameBox([&](FrameBox* box) {
         if (box->isInlineTextBox()) {
+            auto absPoint = box->absolutePoint(this);
             mostRight =
                 std::max(mostRight, box->asInlineTextBox()->x() +
                                         box->asInlineTextBox()->width());
             mostLeft = std::max(mostLeft, box->asInlineTextBox()->x());
+            mostTop = std::max(absPoint.y(), mostTop);
             if (!found && box->asInlineTextBox()->text().end() == cPos) {
                 found = true;
 
-                auto absPoint = box->absolutePoint(this);
                 x = absPoint.x();
                 y = absPoint.y();
                 if (isLTR) {
@@ -350,7 +352,7 @@ void FrameInputBox::layout(LayoutContext& ctx,
 
     if (!found && (e->state() & Node::NodeStateFocused)) {
         String* value = e->value();
-        y = paddingTop() + borderTop();
+        y = mostTop;
         if (isLTR) {
             x = paddingLeft() + borderLeft();
             if (value->length()) {
