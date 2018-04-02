@@ -45,18 +45,29 @@ Default values are in **bold**.
   Use either efl, dali, or efl_cairo as the backend graphics library
 * -Dplatform=[ **linux** | tizen ]<br>
   Compile Starfish for either linux or tizen platform
+* -Dcustom=[ **none** | vd | im | da ]<br>
+  Compile target-specific code for either VD, IM, or DA department.
+* -DtouchUi=[ 0 | **1** ]<br>
+  Enable a touch UI.
 
 The following build targets are available when running the ninja script.
 
 ```sh
-ninja -C out/[ debug | release ] target
+ninja -C out/release target
 ```
 
 where target is either:
 
-* ``starfish.x64.debug``
 * ``starfish.x64.release``
-* ``starfish.tizen.release``
+* ``starfish.tizen.tv.release``
+* ``starfish.tizen.gear.release``
+* ``starfish.tizen.speaker.release``
+
+Debug build is available for x86\_64.
+
+```sh
+ninja -C out/debug starfish.x64.debug
+```
 
 ### GBS Build
 
