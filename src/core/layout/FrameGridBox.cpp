@@ -226,7 +226,7 @@ static void adaptStartAndEndValueForColumn(GridFormattingContext& ctx,
         GCVector<GridLine>& gridLineColumns = ctx.gridLineColumns();
         bool existFr = false;
         for (size_t i = 0; i < gridLineColumns.size(); i++) {
-            if (gridLineColumns[i].isFr()) {
+            if (gridLineColumns[i].isFr() && !gridLineColumns[i].isNewLine()) {
                 existFr = true;
                 break;
             }
@@ -589,7 +589,9 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(
         bool isFixed = true;
 
         if (style->width().isFixed()) {
-            width = style->width().fixed();
+            gridItem->layout(m_layoutContext,
+                             Frame::LayoutWantToResolve::ResolveWidth);
+            width = style->width().fixed() + gridItem->mbpWidth();
             contentWidth = width;
             isFixed = true;
         } else {
@@ -753,7 +755,7 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(
             }
         }
 
-        style->setWidth(Length(Length::Fixed, width));
+        style->setWidth(Length(Length::Fixed, width - gridItem->mbpWidth()));
 
         if (!style->height().isFixed()) {
             LayoutUnit height;
@@ -762,7 +764,8 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(
             }
 
             if (m_gridLineRows[area.m_rowStart].isComputed()) {
-                style->setHeight(Length(Length::Fixed, height));
+                style->setHeight(
+                    Length(Length::Fixed, height - gridItem->mbpHeight()));
             }
         }
 
