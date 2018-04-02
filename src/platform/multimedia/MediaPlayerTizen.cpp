@@ -821,11 +821,10 @@ void MediaPlayerTizen::setNativePlayerDefaultOptions(ResourceURL* url)
         m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
         player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
 #else
-        player_display_h displayHandle = GET_DISPLAY(m_canvasSurface->unwrap());
-        player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_EVAS,
-                           displayHandle);
         player_set_display_mode(m_nativePlayer,
                                 PLAYER_DISPLAY_MODE_ORIGIN_OR_LETTER);
+        player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_EVAS,
+                           m_canvasSurface->unwrap());
 #endif
     } else {
         player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_NONE, nullptr);
@@ -961,6 +960,8 @@ void MediaPlayerTizen::handlePrepared()
             STARFISH_ASSERT(height > 0);
             m_videoWidth = (unsigned long)width;
             m_videoHeight = (unsigned long)height;
+
+            m_canvasSurface->attachNativeBuffer(m_videoWidth, m_videoHeight);
         }
 
         PLAYER_LOGI("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec,
@@ -1582,6 +1583,8 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
     m_videoHeight = info->videoHeight();
     media_format_set_video_width(mediaFormat, m_videoWidth);
     media_format_set_video_height(mediaFormat, m_videoHeight);
+    m_videoStream->setMaxBufferSize(
+        (m_videoWidth * m_videoHeight * 30 * 2 * 7) / 100 / 8 * 5);
 
 #if defined(STARFISH_TIZEN_TV)
     auto mediaFormatExtra = m_videoStream->videoFormatExtra();
