@@ -588,6 +588,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::All) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::All);
+        p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        p.setValue(String::emptyString);
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::WhiteSpace) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpace);

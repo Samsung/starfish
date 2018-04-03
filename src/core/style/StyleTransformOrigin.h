@@ -105,7 +105,7 @@ private:
 class StyleTransformOrigin : public gc {
 public:
     StyleTransformOrigin()
-        : m_originValue(NULL)
+        : m_originValue(new TransformOriginData())
     {
     }
 
