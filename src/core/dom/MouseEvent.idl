@@ -39,10 +39,10 @@ interface MouseEvent : UIEvent {
                       optional long screenY = 0,
                       optional long clientX = 0,
                       optional long clientY = 0,
-                      // optional boolean ctrlKey,
-                      // optional boolean altKey,
-                      // optional boolean shiftKey,
-                      // optional boolean metaKey,
+                      optional boolean ctrlKey = false,
+                      optional boolean altKey = false,
+                      optional boolean shiftKey = false,
+                      optional boolean metaKey = false,
                       optional unsigned short button = 0,
                       optional EventTarget? relatedTarget = null);
 };
