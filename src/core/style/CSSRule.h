@@ -34,8 +34,9 @@ class CSSRuleList;
 class CSSRule : public ScriptWrappable {
 public:
     enum Type {
+        // UNKNOWN_RULE = 0 // Obsolete
         STYLE_RULE = 1,
-        CHARSET_RULE = 2,
+        CHARSET_RULE = 2, // Obsolete: removed in most browsers
         IMPORT_RULE = 3,
         MEDIA_RULE = 4,
         FONT_FACE_RULE = 5,
@@ -44,7 +45,12 @@ public:
         KEYFRAME_RULE = 8,
         MARGIN_RULE = 9,
         NAMESPACE_RULE = 10,
-        SUPPORTS_RULE = 12
+        COUNTER_STYLE_RULE = 11,
+        SUPPORTS_RULE = 12,
+        DOCUMENT_RULE = 13,
+        FONT_FEATURE_VALUES_RULE = 14,
+        VIEWPORT_RULE = 15,
+        REGION_STYLE_RULE = 16,
     };
 
     virtual void init(ScriptBindingInstance* instance,

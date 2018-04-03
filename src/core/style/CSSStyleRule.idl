@@ -37,3 +37,8 @@ interface CSSFontFaceRule : CSSRule {
 // https://drafts.csswg.org/css-conditional-3/#the-csssupportsrule-interface
 interface CSSSupportsRule : CSSConditionRule {
 };
+
+// https://drafts.csswg.org/css-counter-styles-3/#idl-index
+interface CSSCounterStyleRule : CSSRule {
+};
+

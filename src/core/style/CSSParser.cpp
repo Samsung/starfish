@@ -95,7 +95,7 @@ const char* kNAMESPACE_RULE_POSITION =
     "@namespace rule invalid at this position in the stylesheet";
 const char* kCHARSET_RULE_CHARSET_SOF =
     "@charset rule invalid at this position in the stylesheet";
-const char* kUNKNOWN_AT_RULE = "Unknow @-rule";
+const char* kUNKNOWN_AT_RULE = "Unknown @-rule";
 
 unsigned char CSS_ESCAPE = '\\';
 
@@ -2171,6 +2171,12 @@ StyleRuleSupports* CSSParser::parseSupportsRule()
     return nullptr;
 }
 
+StyleRuleCounterStyle* CSSParser::parseCounterStyleRule()
+{
+    // TODO: Parse @counter-style rules
+    return nullptr;
+}
+
 String* CSSParser::parseURLString()
 {
     RefPtr<CSSToken> token = getToken(true, false);
@@ -2284,6 +2290,8 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
                 rule = parseFontFaceRule();
             } else if (token->isAtRule("@supports")) {
                 rule = parseSupportsRule();
+            } else if (token->isAtRule("@counter-style")) {
+                rule = parseCounterStyleRule();
             }
             /*
              else if (token.isAtRule("@variables")) {

@@ -34,6 +34,7 @@ class StyleRuleMedia;
 class StyleRuleImport;
 class StyleRuleFontFace;
 class StyleRuleSupports;
+class StyleRuleCounterStyle;
 class MediaQuerySet;
 class MediaList;
 
@@ -186,6 +187,23 @@ private:
     CSSRule::Type type() const override
     {
         return CSSRule::Type::SUPPORTS_RULE;
+    }
+};
+
+class CSSCounterStyleRule : public CSSRule {
+public:
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isCSSCounterStyleRule() const override;
+
+    CSSCounterStyleRule(StyleRuleCounterStyle* styleRule,
+                        CSSStyleSheet* parent);
+    String* cssText() override;
+
+private:
+    CSSRule::Type type() const override
+    {
+        return CSSRule::Type::COUNTER_STYLE_RULE;
     }
 };
 }
