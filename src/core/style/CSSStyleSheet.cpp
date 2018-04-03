@@ -366,7 +366,8 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
     RefPtr<CSSToken> token = parser.makeToken(ruleString);
 
     GCVector<StyleRuleBase*> rules;
-    parser.parseRules(token, rules, CSSParser::RuleListType::TopLevelRuleList);
+    parser.parseRules(token, rules, CSSParser::RuleListType::TopLevelRuleList,
+                      true);
 
     if (rules.size() != 1) {
         StringBuilder msg;

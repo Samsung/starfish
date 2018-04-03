@@ -2017,7 +2017,7 @@ void CSSParser::consumeComponentValue(RefPtr<CSSToken>& token)
     } while (nestingLevel && token->isNotNull());
 }
 
-StyleRuleMedia* CSSParser::parseMediaRule()
+StyleRuleMedia* CSSParser::parseMediaRule(bool isInsertedByUser)
 {
     preserveState();
     RefPtr<CSSToken> token = getToken(true, true);
@@ -2055,7 +2055,8 @@ StyleRuleMedia* CSSParser::parseMediaRule()
 
     GCVector<StyleRuleBase*> rootRule;
     if (token->isSymbol('{') && hasMediaRule) {
-        parseRules(token, rootRule, RuleListType::RegularRuleList);
+        parseRules(token, rootRule, RuleListType::RegularRuleList,
+                   isInsertedByUser);
         forgetState();
         return new StyleRuleMedia(mediaQuerySet, rootRule);
     }
@@ -2241,7 +2242,7 @@ void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
 
 void CSSParser::parseRules(RefPtr<CSSToken> token,
                            GCVector<StyleRuleBase*>& rootRule,
-                           RuleListType ruleListType)
+                           RuleListType ruleListType, bool isInsertedByUser)
 {
     AllowedRulesType allowedRules = AllowedRulesType::RegularRules;
     switch (ruleListType) {
@@ -2282,8 +2283,8 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
                 token->isAtRule("@import")) {
                 rule = parseImportRule();
             } else if (token->isAtRule("@media")) {
-                rule = parseMediaRule();
-                if (lookAhead(true, false)->isSymbol(';')) {
+                rule = parseMediaRule(isInsertedByUser);
+                if (isInsertedByUser && lookAhead(true, false)->isSymbol(';')) {
                     rule = nullptr;
                 }
             } else if (token->isAtRule("@font-face")) {
