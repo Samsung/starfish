@@ -9470,27 +9470,101 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
     auto ss = value.trim();
     CSSPropertyParser parser((char*)ss.data(), ss.length());
     parser.consumeString(CSSPropertyParser::AllowNegative);
+
     String* type = parser.parsedString();
     if (type->equals("linear-gradient") && parser.consumeIfNext('(')) {
         // linear-gradient() = linear-gradient(
         //   [ <angle> | to <side-or-corner> ]?
         //   <color-stop-list>
         // )
+
+        CSSLinearGradientValue* linearGradientValue =
+            new CSSLinearGradientValue();
+
         CSSAngle angle;
         CSSStyleValuePair s;
         parser.consumeWhitespaces();
         parser.consumeString(CSSPropertyParser::AllowNegative);
         String* str = parser.parsedString();
-        // TODO: Parse 'to <side-or-corner>' and <color-stop-list>
-        if (parser.parseAngle(str->toUTF8NonGCString().c_str(),
-                              CSSPropertyParser::AllowNegative, &s)) {
+        if (str->equals("to")) {
+            CSSAngle lr;
+            CSSAngle tb;
+            bool hasLR = false;
+            bool hasTB = false;
+            while (parser.consumeWhitespaces() && *(parser.curPos()) != ',') {
+                parser.consumeString(0);
+                String* ps = parser.parsedString();
+                if (!hasTB && ps->equals("top")) {
+                    hasTB = true;
+                    tb = CSSAngle(0);
+                } else if (!hasLR && ps->equals("right")) {
+                    hasLR = true;
+                    lr = CSSAngle(90);
+                } else if (!hasTB && ps->equals("bottom")) {
+                    hasTB = true;
+                    tb = CSSAngle(180);
+                } else if (!hasLR && ps->equals("left")) {
+                    hasLR = true;
+                    lr = CSSAngle(270);
+                } else {
+                    return false;
+                }
+            }
+            if (hasLR && !hasTB) {
+                angle = lr;
+            } else if (!hasLR && hasTB) {
+                angle = tb;
+            } else if (hasLR && hasTB) {
+                angle = tb + lr / 2;
+            }
+            linearGradientValue->setAngle(angle);
+            parser.consumeIfNext(',');
+        } else if (parser.parseAngle(str->toUTF8NonGCString().c_str(),
+                                     CSSPropertyParser::AllowNegative, &s)) {
             angle = s.angleValue();
-        } else {
-            // Set the default value
-            angle = CSSAngle(180);
+            linearGradientValue->setAngle(angle);
+            parser.consumeIfNext(',');
         }
-        CSSLinearGradientValue* linearGradientValue =
-            new CSSLinearGradientValue(angle);
+
+        while (parser.consumeWhitespaces() && *(parser.curPos()) != ')') {
+            ColorStop* cs = new ColorStop();
+
+            while (parser.consumeWhitespaces() && *(parser.curPos()) != ',' &&
+                   *(parser.curPos()) != ')') {
+                CSSStyleValuePair color;
+                CSSStyleValuePair length;
+                parser.consumeString(0);
+                String* ps = parser.parsedString();
+                CSSTokenValue value(ps->toUTF8NonGCString().data());
+                if (!color.updateValueUnitColor(value)) {
+                    return false;
+                }
+
+                Unit::Color c;
+                if (color.valueKind() ==
+                    CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                    c = NamedColor::namedColorToColor(color.namedColorValue());
+                } else {
+                    c = color.colorValue();
+                }
+                cs->setColor(c);
+
+                uint8_t option = CSSPropertyParser::AllowNegative |
+                                 CSSPropertyParser::AllowPercent;
+                parser.consumeWhitespaces();
+                if (*(parser.curPos()) != ',' && *(parser.curPos()) != ')') {
+                    parser.consumeString(option);
+                    ps = parser.parsedString();
+                    value = CSSTokenValue(ps->toUTF8NonGCString().data());
+                    if (!length.updateValueUnitLength(value, option)) {
+                        return false;
+                    }
+                    cs->setLength(length.lengthValue());
+                }
+                linearGradientValue->colorStopList().push_back(cs);
+            }
+            parser.consumeIfNext(',');
+        }
         m_value.m_gradientValue = linearGradientValue;
     } else if (type->equals("radial-gradient") && parser.consumeIfNext('(')) {
         // TODO: Consider the radial gradient

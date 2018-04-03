@@ -24,7 +24,58 @@
 
 namespace StarFish {
 
-enum CSSGradientType { LinearGradient, RadialGradient };
+enum class CSSGradientType { LinearGradient, RadialGradient };
+
+class ColorStop : public gc {
+public:
+    ColorStop()
+        : m_color()
+        , m_length()
+    {
+    }
+
+    Unit::Color color()
+    {
+        return m_color;
+    }
+
+    void setColor(Unit::Color color)
+    {
+        m_color = color;
+    }
+
+    Length length()
+    {
+        return m_length;
+    }
+
+    void setLength(Length length)
+    {
+        m_length = length;
+    }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(ColorStop)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ColorStop, m_length));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ColorStop));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new(size_t size, ColorStop* colorStop)
+    {
+        return colorStop;
+    }
+    void* operator new[](size_t size) = delete;
+
+private:
+    Unit::Color m_color;
+    Length m_length;
+};
 
 class CSSGradientValue : public gc {
 public:
@@ -34,6 +85,7 @@ public:
         , m_startingY(0)
         , m_endingX(0)
         , m_endingY(0)
+        , m_colorStopList()
     {
     }
 
@@ -84,18 +136,23 @@ public:
 
     String* toString();
 
+    GCVector<ColorStop*>& colorStopList()
+    {
+        return m_colorStopList;
+    }
+
 protected:
     CSSGradientType m_gradientType;
     float m_startingX;
     float m_startingY;
     float m_endingX;
     float m_endingY;
-    // TODO: Consider <color-stop-list>
+    GCVector<ColorStop*> m_colorStopList;
 };
 
 class CSSLinearGradientValue : public CSSGradientValue {
 public:
-    CSSLinearGradientValue(CSSAngle angle)
+    CSSLinearGradientValue(CSSAngle angle = CSSAngle(180))
         : CSSGradientValue(CSSGradientType::LinearGradient)
         , m_angle(angle)
     {
