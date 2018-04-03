@@ -261,12 +261,12 @@ public:
                            Font* font) const;
     float fontPercentValue(Node* n, bool isFontSize) const;
 
-    bool isZero()
+    bool isZero() const
     {
         return isSpecified() && !m_data.m_numberData;
     }
 
-    bool isPositiveOrZero()
+    bool isPositiveOrZero() const
     {
         STARFISH_ASSERT(isSpecified());
         return m_data.m_numberData >= 0;
