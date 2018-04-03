@@ -558,6 +558,26 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
 
     changeFontPercentToFixedIfNeeded(curFontSize, rootFontSize, font(),
                                      current);
+
+    // When <center><table>...</table></center>, table is placed in the middle
+    // of the parent block, but the content of the table is not affected by
+    // <center>. To do so, Blink seems resets the text-align.
+    if (m_inheritedStyles.m_textAlign ==
+        TextAlignValue::StarFishCenterTextAlignValue) {
+        switch (display()) {
+        case DisplayValue::TableRowGroupDisplayValue:
+        case DisplayValue::TableHeaderGroupDisplayValue:
+        case DisplayValue::TableFooterGroupDisplayValue:
+        case DisplayValue::TableRowDisplayValue:
+        case DisplayValue::TableColumnGroupDisplayValue:
+        case DisplayValue::TableColumnDisplayValue:
+        case DisplayValue::TableCellDisplayValue:
+            setTextAlign(TextAlignValue::StartTextAlignValue);
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
