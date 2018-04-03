@@ -48,20 +48,24 @@ CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
     StyleRuleBase* self = const_cast<StyleRuleBase*>(this);
 
     switch (type()) {
-    case STYLE_RULE:
+    case CSSRule::Type::STYLE_RULE:
         rule = new CSSStyleRule(self->asStyleRule(), parentSheet);
         break;
-    case MEDIA_RULE:
+    case CSSRule::Type::MEDIA_RULE:
         rule = new CSSMediaRule(self->asStyleRuleMedia(), parentSheet);
         break;
-    case IMPORT_RULE:
+    case CSSRule::Type::IMPORT_RULE:
         rule = new CSSImportRule(self->asStyleRuleImport(), parentSheet);
         break;
-    case FONT_FACE_RULE:
+    case CSSRule::Type::FONT_FACE_RULE:
         rule = new CSSFontFaceRule(self->asStyleRuleFontFace(), parentSheet);
         break;
-    case SUPPORTS_RULE:
+    case CSSRule::Type::SUPPORTS_RULE:
         rule = new CSSSupportsRule(self->asStyleRuleSupports(), parentSheet);
+        break;
+    case CSSRule::Type::COUNTER_STYLE_RULE:
+        rule = new CSSCounterStyleRule(self->asStyleRuleCounterStyle(),
+                                       parentSheet);
         break;
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -76,7 +80,7 @@ CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
 }
 
 StyleRule::StyleRule(CSSSelectorList&& selectorList, CSSStyleDeclaration* decl)
-    : StyleRuleBase(StyleRuleBase::STYLE_RULE)
+    : StyleRuleBase(CSSRule::Type::STYLE_RULE)
     , m_selectorList(std::move(selectorList))
     , m_styleDeclaration(decl)
     , m_order(0)
@@ -125,7 +129,8 @@ void StyleRule::wrapperTakeSelectorList(CSSSelectorList& selectors)
     initFlagsRelatedWithSelectorList();
 }
 
-StyleRuleGroup::StyleRuleGroup(RuleType type, GCVector<StyleRuleBase*>& rules)
+StyleRuleGroup::StyleRuleGroup(CSSRule::Type type,
+                               GCVector<StyleRuleBase*>& rules)
     : StyleRuleBase(type)
 {
     m_childRules.assign(rules.begin(), rules.end());
@@ -146,14 +151,15 @@ void StyleRuleGroup::wrapperRemoveRule(unsigned index)
     m_childRules.erase(m_childRules.begin() + index);
 }
 
-StyleRuleCondition::StyleRuleCondition(RuleType type, String* conditionText,
+StyleRuleCondition::StyleRuleCondition(CSSRule::Type type,
+                                       String* conditionText,
                                        GCVector<StyleRuleBase*>& rules)
     : StyleRuleGroup(type, rules)
     , m_conditionText(conditionText)
 {
 }
 
-StyleRuleCondition::StyleRuleCondition(RuleType type,
+StyleRuleCondition::StyleRuleCondition(CSSRule::Type type,
                                        GCVector<StyleRuleBase*>& rules)
     : StyleRuleGroup(type, rules)
 {
@@ -168,7 +174,7 @@ StyleRuleCondition::StyleRuleCondition(StyleRuleCondition& conditionRule)
 
 StyleRuleMedia::StyleRuleMedia(MediaQuerySet* media,
                                GCVector<StyleRuleBase*>& rules)
-    : StyleRuleCondition(StyleRuleBase::MEDIA_RULE, rules)
+    : StyleRuleCondition(CSSRule::Type::MEDIA_RULE, rules)
     , m_mediaQuerySet(media)
 {
 }
@@ -185,7 +191,7 @@ StyleRuleMedia::StyleRuleMedia(StyleRuleMedia& o)
 }
 
 StyleRuleImport::StyleRuleImport(String* href, MediaQuerySet* media)
-    : StyleRuleBase(StyleRuleBase::IMPORT_RULE)
+    : StyleRuleBase(CSSRule::Type::IMPORT_RULE)
     , m_strHref(href)
     , m_mediaQuerySet(media)
     , m_generatedSheet(nullptr)
@@ -316,7 +322,7 @@ void StyleRuleImport::requestStyleSheet()
 }
 
 StyleRuleFontFace::StyleRuleFontFace(CSSStyleDeclaration* decl)
-    : StyleRuleBase(StyleRuleBase::FONT_FACE_RULE)
+    : StyleRuleBase(CSSRule::Type::FONT_FACE_RULE)
     , m_styleDeclaration(decl)
 {
 }

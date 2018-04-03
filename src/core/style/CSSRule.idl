@@ -19,7 +19,15 @@ interface CSSRule {
   const unsigned short KEYFRAMES_RULE = 7;
   const unsigned short KEYFRAME_RULE = 8;
 
+  // https://drafts.csswg.org/css-counter-styles-3/#idl-index
+  const unsigned short COUNTER_STYLE_RULE = 11;
+
   // CSS Conditional Rules
   // https://dev.w3.org/csswg/css-conditional/#extentions-to-cssrule-interface
   const unsigned short SUPPORTS_RULE = 12;
+
+  const unsigned short DOCUMENT_RULE = 13;
+  const unsigned short FONT_FEATURE_VALUES_RULE = 14;
+  const unsigned short VIEWPORT_RULE = 15;
+  const unsigned short REGION_STYLE_RULE = 16;
 };

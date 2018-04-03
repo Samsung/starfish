@@ -402,4 +402,19 @@ String* CSSSupportsRule::cssText()
     result.appendChar('}');
     return result.finalize();
 }
+
+CSSCounterStyleRule::CSSCounterStyleRule(StyleRuleCounterStyle* styleRule,
+                                         CSSStyleSheet* parent)
+    : CSSRule(parent)
+{
+}
+
+String* CSSCounterStyleRule::cssText()
+{
+    // TODO: print @counter-style after parsing the rule
+    StringBuilder ret;
+    ret.appendString("@counter-style { ");
+    ret.appendChar('}');
+    return ret.finalize();
+}
 }

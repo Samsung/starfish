@@ -20,9 +20,10 @@
 #ifndef __StarFishStyleRule__
 #define __StarFishStyleRule__
 
+#include "core/style/CSSRule.h"
+
 namespace StarFish {
 
-class CSSRule;
 class CSSSelector;
 class CSSStyleSheet;
 class CSSStyleDeclaration;
@@ -34,24 +35,11 @@ class StyleRuleMedia;
 class StyleRuleImport;
 class StyleRuleFontFace;
 class StyleRuleSupports;
+class StyleRuleCounterStyle;
 
 class StyleRuleBase : public gc {
 public:
-    enum RuleType {
-        STYLE_RULE = 1,
-        CHARSET_RULE = 2,
-        IMPORT_RULE = 3,
-        MEDIA_RULE = 4,
-        FONT_FACE_RULE = 5,
-        PAGE_RULE = 6,
-        KEYFRAMES_RULE = 7,
-        KEYFRAME_RULE = 8,
-        MARGIN_RULE = 9,
-        NAMESPACE_RULE = 10,
-        SUPPORTS_RULE = 12
-    };
-
-    StyleRuleBase(RuleType ruleType)
+    StyleRuleBase(CSSRule::Type ruleType)
         : m_ruleType(ruleType)
     {
     }
@@ -65,54 +53,79 @@ public:
     {
     }
 
-    RuleType type() const
+    CSSRule::Type type() const
     {
         return m_ruleType;
     }
 
     bool isStyleRule()
     {
-        return type() == RuleType::STYLE_RULE;
+        return type() == CSSRule::Type::STYLE_RULE;
     }
 
     bool isMediaRule()
     {
-        return type() == RuleType::MEDIA_RULE;
+        return type() == CSSRule::Type::MEDIA_RULE;
     }
 
     bool isImportRule()
     {
-        return type() == RuleType::IMPORT_RULE;
+        return type() == CSSRule::Type::IMPORT_RULE;
     }
 
     bool isCharsetRule()
     {
-        return type() == RuleType::CHARSET_RULE;
+        return type() == CSSRule::Type::CHARSET_RULE;
     }
 
     bool isNamespaceRule()
     {
-        return type() == RuleType::NAMESPACE_RULE;
+        return type() == CSSRule::Type::NAMESPACE_RULE;
     }
 
     bool isFontFaceRule()
     {
-        return type() == RuleType::FONT_FACE_RULE;
+        return type() == CSSRule::Type::FONT_FACE_RULE;
     }
 
     bool isKeyframesRule()
     {
-        return type() == RuleType::KEYFRAMES_RULE;
+        return type() == CSSRule::Type::KEYFRAMES_RULE;
     }
 
     bool isKeyframeRule()
     {
-        return type() == RuleType::KEYFRAME_RULE;
+        return type() == CSSRule::Type::KEYFRAME_RULE;
+    }
+
+    bool isCounterStyleRule()
+    {
+        return type() == CSSRule::Type::COUNTER_STYLE_RULE;
     }
 
     bool isSupportsRule()
     {
-        return type() == RuleType::SUPPORTS_RULE;
+        return type() == CSSRule::Type::SUPPORTS_RULE;
+    }
+
+    bool isDocumentRule()
+    {
+        return type() == CSSRule::Type::DOCUMENT_RULE;
+    }
+
+    bool isFontFeatureValuesRule()
+    {
+        return type() == CSSRule::Type::FONT_FEATURE_VALUES_RULE;
+    }
+
+    bool isViewportRule()
+    {
+        return type() == CSSRule::Type::VIEWPORT_RULE;
+    }
+
+    bool isRegionStyleRule()
+    {
+        return type() == CSSRule::Type::REGION_STYLE_RULE;
     }
 
     inline StyleRule* asStyleRule();
@@ -120,12 +133,13 @@ public:
     inline StyleRuleImport* asStyleRuleImport();
     inline StyleRuleFontFace* asStyleRuleFontFace();
     inline StyleRuleSupports* asStyleRuleSupports();
+    inline StyleRuleCounterStyle* asStyleRuleCounterStyle();
 
     CSSRule* createCSSOMWrapper(CSSStyleSheet* parent_sheet = 0) const;
     CSSRule* createCSSOMWrapper(CSSRule* parent_rule) const;
 
 protected:
-    RuleType m_ruleType;
+    CSSRule::Type m_ruleType;
     CSSRule* createCSSOMWrapper(CSSStyleSheet* parentSheet,
                                 CSSRule* parentRule) const;
 };
@@ -206,7 +220,7 @@ class StyleRuleGroup : public StyleRuleBase {
     friend class StyleResolver;
 
 public:
-    StyleRuleGroup(RuleType type, GCVector<StyleRuleBase*>& rules);
+    StyleRuleGroup(CSSRule::Type type, GCVector<StyleRuleBase*>& rules);
     StyleRuleGroup(StyleRuleGroup& o);
 
     GCVector<StyleRuleBase*>& childRules()
@@ -223,9 +237,9 @@ protected:
 
 class StyleRuleCondition : public StyleRuleGroup {
 public:
-    StyleRuleCondition(RuleType, String* condition_text,
+    StyleRuleCondition(CSSRule::Type, String* condition_text,
                        GCVector<StyleRuleBase*>& rules);
-    StyleRuleCondition(RuleType, GCVector<StyleRuleBase*>& rules);
+    StyleRuleCondition(CSSRule::Type, GCVector<StyleRuleBase*>& rules);
     StyleRuleCondition(StyleRuleCondition&);
 
     String* conditionText() const
@@ -341,6 +355,13 @@ private:
     bool m_conditionIsSupported;
 };
 
+class StyleRuleCounterStyle : public StyleRuleBase {
+    friend class StyleResolver;
+
+public:
+    StyleRuleCounterStyle(CSSStyleDeclaration* decl);
+};
+
 inline StyleRule* StyleRuleBase::asStyleRule()
 {
     STARFISH_ASSERT(isStyleRule());
@@ -369,6 +390,12 @@ inline StyleRuleSupports* StyleRuleBase::asStyleRuleSupports()
 {
     STARFISH_ASSERT(isSupportsRule());
     return (StyleRuleSupports*)this;
+}
+
+inline StyleRuleCounterStyle* StyleRuleBase::asStyleRuleCounterStyle()
+{
+    STARFISH_ASSERT(isCounterStyleRule());
+    return (StyleRuleCounterStyle*)this;
 }
 }
 
