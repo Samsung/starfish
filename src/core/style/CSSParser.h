@@ -1336,7 +1336,7 @@ public:
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
     void parseRules(RefPtr<CSSToken> token, GCVector<StyleRuleBase*>& rootRule,
-                    RuleListType ruleListType);
+                    RuleListType ruleListType, bool isInsertedByUser = false);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
     ParseResult parseStyleRule(RefPtr<CSSToken> aToken,
                                GCVector<StyleRuleBase*>& rules,
@@ -1344,7 +1344,7 @@ public:
                                GCVector<CSSSelectorList*>* sList,
                                bool isQueryingSelector = false);
     RefPtr<CSSToken> makeToken(String* str);
-    StyleRuleMedia* parseMediaRule();
+    StyleRuleMedia* parseMediaRule(bool isInsertedByUser);
     MediaQuerySet* parseMediaQuery();
     StyleRuleImport* parseImportRule();
     StyleRuleFontFace* parseFontFaceRule();

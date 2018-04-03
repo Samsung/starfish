@@ -1008,7 +1008,7 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
 {
     switch (length) {
     case 3:
-        if (memcmp(data, "src", 3) == 0) {
+        if (memcmp(data, "all", 3) == 0) {
             return CSSStyleKind::All;
         }
         if (memcmp(data, "top", 3) == 0) {
