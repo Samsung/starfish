@@ -781,6 +781,21 @@ void FrameBlockBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     }
 }
 
+static bool isNonSelfCollapsingHeight(LayoutContext& ctx, FrameBlockBox* box,
+                                      const Length& heightLength)
+{
+    // NOTE: In case of percentage height,
+    // if containing blocks' height is fixed, the block is not
+    // self-collapsing block.
+    // TODO: should we handle the case : calc(100% - 100% + 10px)
+    if (((heightLength.isPercent() && !heightLength.isZero()) ||
+         (heightLength.isCalc() && !heightLength.isCalcAndLengthOfType())) &&
+        ctx.parentHasFixedHeight(box)) {
+        return true;
+    }
+    return false;
+}
+
 bool FrameBlockBox::isSelfCollapsingBlock(LayoutContext& ctx)
 {
     if (isEstablishesBlockFormattingContext()) {
@@ -799,18 +814,15 @@ bool FrameBlockBox::isSelfCollapsingBlock(LayoutContext& ctx)
         return false;
     }
 
-    Length heightLength = style()->height();
-    // NOTE: In case of percentage height,
-    // if containing blocks' height is fixed, the block is not
-    // self-collapsing block.
-    // TODO: should we handle the case : calc(100% - 100% + 10px)
-    if (((heightLength.isPercent() && !heightLength.isZero()) ||
-         (heightLength.isCalc() && !heightLength.isCalcAndLengthOfType())) &&
-        ctx.parentHasFixedHeight(this)) {
+    if (isNonSelfCollapsingHeight(ctx, this, style()->height()) ||
+        isNonSelfCollapsingHeight(ctx, this, style()->minHeight())) {
         return false;
     }
 
-    if (heightLength.isAuto() || heightLength.isZero()) {
+    Length heightLength = style()->height();
+    Length minHeightLength = style()->minHeight();
+    if ((heightLength.isAuto() || heightLength.isZero()) &&
+        (minHeightLength.isAuto() || minHeightLength.isZero())) {
         Frame* child = firstChild();
         while (child) {
             if (!child->isNormalFlow()) {
