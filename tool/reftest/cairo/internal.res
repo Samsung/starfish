@@ -204,6 +204,7 @@ test/cairo/internal-test/css/table/table_fixed_21.html
 test/cairo/internal-test/storage/storage_01.html
 test/cairo/internal-test/css/table/table_auto_09.html
 test/cairo/internal-test/css/table/table_fixed_22.html
+test/cairo/internal-test/css/table/table_fixed_23.html
 test/cairo/internal-test/css/table/table_auto_10.html
 test/cairo/internal-test/css/clear/linebox-relayout.html
 test/cairo/internal-test/css/url/url-invalid.html
