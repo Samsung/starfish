@@ -1057,7 +1057,11 @@ This section describes the complete list of supported HTML tags and attributes b
 | | resolution | &lt;resolution&gt; | Describes the resolution of the output device, i.e. the density of the pixels.  | |
 | | scan | progressive &#124; interlace | Describes the scanning process of "tv" output devices. | The lightweight web engine doesn't support this feature. |
 | | grid | &lt;integer&gt; | This is used to query whether the output device is grid or bitmap. If the output device is grid-based (e.g., a "tty" terminal, or a phone display with only one fixed font), the value will be 1. Otherwise, the value will be 0. | The lightweight web engine supports only bitmap device. |
-| [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-4/) | hover | none &#124; hover | The hover media feature is used to query the user’s ability to hover over elements on the page with the primary pointing device. | |
+| [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-4/) | hover | none &#124; hover | The 'hover' media feature is used to query the user’s ability to hover over elements on the page with the primary pointing device. | |
+| | any-hover | none &#124; hover | The 'any-hover' media feature is identical to the 'hover' media feature, but this corresponds to the union of capabilities of all the pointing devices available to the user. | |
+| | pointer | none &#124; coarse &#124; fine | The 'pointer' media feature is used to query the presence and accuracy of a pointing device such as a mouse. | |
+| | any-pointer | none &#124; coarse &#124; fine | The 'any-pointer' media feature is identical to the 'pointer' media feature, but this corresponds to the union of capabilities of all the pointing devices available to the user. | |
+| [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-5/) | scripting | none &#124; initial-only &#124; enabled | The 'scripting' media feature is used to query whether scripting languages, such as JavaScript, are supported on the current document. | |
 | [List](https://www.w3.org/TR/CSS2/generate.html#lists) | list-style | &lt;list-style-type&gt; &#124; &lt;list-style-position&gt; &#124; &lt;list-style-image&gt; | Shorthand | |
 | | list-style-type | &lt;counter-style&gt; &#124; &lt;string&gt; &#124; none | Specifies the appearance of a list item element | |
 | | list-style-position | inside  &#124; outside | Specifies the position of the marker box in the principal block box. | |
