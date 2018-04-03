@@ -80,3 +80,7 @@ test/cairo/reftest/vendor/blink_original/fast/css/object-position-with-fit-none.
 test/cairo/reftest/vendor/blink_original/fast/css/object-fit-img-svg.html
 test/cairo/reftest/vendor/blink_original/fast/css/object-fit-img-svg2.html
 test/cairo/reftest/vendor/blink_original/fast/css/object-position-svg.html
+test/cairo/reftest/vendor/blink_original/fast/css/all-inherit-or-unset-color.html
+test/cairo/reftest/vendor/blink_original/fast/css/all-shorthand.html
+test/cairo/reftest/vendor/blink_original/fast/css/crash-on-csstext.html
+

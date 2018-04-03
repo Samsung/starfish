@@ -90,6 +90,7 @@ public:
     virtual bool isCSSStyleDeclaration() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
+    String* cssTextAffectedByAllProperty(const size_t& pos) const;
     String* generateCSSText() const;
 
     void notifyNeedsStyleRecalc();

@@ -1184,6 +1184,7 @@ class CSSStyleDeclaration;
     F(FlexDirection, flexDirection, "flex-direction")                          \
     F(FlexWrap, flexWrap, "flex-wrap")                                         \
     F(Order, order, "order")                                                   \
+    F(All, all, "all")                                                         \
     F(JustifyContent, justifyContent, "justify-content")                       \
     F(AlignItems, alignItems, "align-items")                                   \
     F(AlignSelf, alignSelf, "align-self")                                      \
@@ -1377,7 +1378,7 @@ public:
     enum KeyKind {
         Empty,
 #define ADD_CSS_KEYKIND(Name, name, cssname) Name,
-        FOR_EACH_STYLE_ATTRIBUTE(ADD_CSS_KEYKIND)
+        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
             VarValue,
         KeyKindSize,
@@ -3436,6 +3437,12 @@ protected:
                GCVector<MutablePropertyValue>& cssCustomValues,
                ResourceURL* origin, ComputedStyle* style,
                ComputedStyle* parentStyle, bool isImportant = false);
+
+    void applyAllProperty(Element* element,
+                          CSSStyleValuePair::ValueKind valueKind,
+                          GCVector<MutablePropertyValue>& cssCustomValues,
+                          ResourceURL* origin, ComputedStyle*& style,
+                          ComputedStyle* parentStyle, bool isImportant = false);
 
     Match matchForRelation(Element* element, AtomicString elementName,
                            AtomicString elementId,

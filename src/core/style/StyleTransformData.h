@@ -325,9 +325,13 @@ public:
 
     void reset(StyleTransformDataGroup* other)
     {
-        m_hasComplexTransform = other->m_hasComplexTransform;
-        m_has3DTransform = other->m_has3DTransform;
-        m_group.assign(other->m_group.begin(), other->m_group.end());
+        if (!other) {
+            clear();
+        } else {
+            m_hasComplexTransform = other->m_hasComplexTransform;
+            m_has3DTransform = other->m_has3DTransform;
+            m_group.assign(other->m_group.begin(), other->m_group.end());
+        }
     }
 
     void append(StyleTransformData f)

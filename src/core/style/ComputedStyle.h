@@ -1126,7 +1126,6 @@ public:
 
     void setTransform(StyleTransformDataGroup* transform)
     {
-        STARFISH_ASSERT(transform);
         m_rareComputedStyleData.ensureTransforms()->reset(transform);
     }
 
@@ -1635,7 +1634,7 @@ public:
     StyleTransformOrigin* transformOrigin()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
-            return nullptr;
+            return new StyleTransformOrigin();
         }
 
         StyleTransformOrigin* transformOrigin =
@@ -1644,7 +1643,7 @@ public:
             return transformOrigin;
         }
 
-        return nullptr;
+        return new StyleTransformOrigin();
     }
 
     bool hasTransformOrigin()

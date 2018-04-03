@@ -54,6 +54,7 @@
 #include "core/style/CSSGradientValue.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
+#include "core/style/CSSStyleLookupTrie.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/FontFaceSrcData.h"
 #include "core/style/FlexBasisData.h"
@@ -1422,17 +1423,102 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
     }
 }
 
+String* CSSStyleDeclaration::cssTextAffectedByAllProperty(
+    const size_t& pos) const
+{
+    String* value;
+    CSSStyleValuePair pair = m_cssValues[pos];
+    switch (pair.valueKind()) {
+    case CSSStyleValuePair::ValueKind::Initial:
+        value = String::createASCIIString("initial");
+        break;
+    case CSSStyleValuePair::ValueKind::Inherit:
+        value = String::createASCIIString("inherit");
+        break;
+    case CSSStyleValuePair::ValueKind::Unset:
+        value = String::createASCIIString("unset");
+        break;
+    default:
+        value = String::emptyString;
+        break;
+    }
+    bool isImportant = pair.flagImportant();
+    StringBuilder txt;
+#define APPEND_CSS_VALUES(Name, name, cssname)                              \
+    {                                                                       \
+        CSSStyleKind kind = lookupCSSStyle(cssname, strlen(cssname));       \
+        if (kind != CSSStyleKind::All && kind != CSSStyleKind::Direction && \
+            kind != CSSStyleKind::UnicodeBidi) {                            \
+            txt.appendString(cssname);                                      \
+            txt.appendString(": ");                                         \
+            auto iter =                                                     \
+                std::find_if(m_cssValues.begin() + pos, m_cssValues.end(),  \
+                             [kind](CSSStyleValuePair p) {                  \
+                                 return (p.keyKind() - 1) == (kind - 2);    \
+                             });                                            \
+            if (iter != m_cssValues.end()) {                                \
+                txt.appendString(iter->toString());                         \
+            } else {                                                        \
+                txt.appendString(value);                                    \
+            }                                                               \
+            if (isImportant || iter->flagImportant()) {                     \
+                txt.appendString(" !important");                            \
+            }                                                               \
+            txt.appendString("; ");                                         \
+        }                                                                   \
+    }
+    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(APPEND_CSS_VALUES)
+#undef APPEND_CSS_VALUES
+
+    return txt.finalize();
+}
+
 String* CSSStyleDeclaration::generateCSSText() const
 {
+    size_t pos =
+        std::find_if(m_cssValues.begin(), m_cssValues.end(),
+                     [](CSSStyleValuePair p) {
+                         return p.keyKind() == CSSStyleValuePair::KeyKind::All;
+                     }) -
+        m_cssValues.begin();
+
+    bool hasAllProperty = false;
+    bool hasImportantAllProperty = false;
+    if (pos < m_cssValues.size()) {
+        hasAllProperty = true;
+        hasImportantAllProperty = m_cssValues[pos].flagImportant();
+    }
+
+    if (hasAllProperty && (pos + 1) < m_cssValues.size() &&
+        !hasImportantAllProperty) {
+        return cssTextAffectedByAllProperty(pos);
+    }
+
     StringBuilder txt;
-    for (size_t i = 0; i < m_cssValues.size(); i++) {
-        txt.appendString(m_cssValues[i].keyName());
-        txt.appendString(": ");
-        txt.appendString(m_cssValues[i].toString());
-        if (m_cssValues[i].flagImportant()) {
-            txt.appendString(" !important");
+    auto itValue = m_cssValues.begin();
+    if (hasAllProperty) {
+        itValue += pos;
+    }
+    for (; itValue != m_cssValues.end(); itValue++) {
+        if (hasImportantAllProperty) {
+            if (itValue->flagImportant()) {
+                txt.appendString(itValue->keyName());
+                txt.appendString(": ");
+                txt.appendString(itValue->toString());
+                if (itValue->flagImportant()) {
+                    txt.appendString(" !important");
+                }
+                txt.appendString("; ");
+            }
+        } else {
+            txt.appendString(itValue->keyName());
+            txt.appendString(": ");
+            txt.appendString(itValue->toString());
+            if (itValue->flagImportant()) {
+                txt.appendString(" !important");
+            }
+            txt.appendString("; ");
         }
-        txt.appendString("; ");
     }
     return txt.finalize();
 }
@@ -4180,6 +4266,30 @@ void* StyleResolveContext::allocateComputedStyle()
     }
 }
 
+void StyleResolver::applyAllProperty(
+    Element* element, CSSStyleValuePair::ValueKind valueKind,
+    GCVector<MutablePropertyValue>& cssCustomValues, ResourceURL* origin,
+    ComputedStyle*& style, ComputedStyle* parentStyle, bool isImportant)
+{
+    GCAtomicVector<CSSStyleValuePair> cssValues;
+    CSSStyleKind kind;
+#define ADD_CSS_VALUE_PAIR(Name, name, cssname)                         \
+    kind = lookupCSSStyle(cssname, strlen(cssname));                    \
+    if (kind != CSSStyleKind::All && kind != CSSStyleKind::Direction && \
+        kind != CSSStyleKind::UnicodeBidi) {                            \
+        CSSStyleValuePair p;                                            \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Name);                 \
+        p.setValueKind(valueKind);                                      \
+        p.setFlagImportant(isImportant);                                \
+        cssValues.push_back(p);                                         \
+    }
+    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_VALUE_PAIR)
+#undef ADD_CSS_VALUE_PAIR
+
+    apply(element, cssValues, cssCustomValues, origin, style, parentStyle,
+          isImportant);
+}
+
 ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
                                            Element* element,
                                            ComputedStyle* parent)
@@ -4290,6 +4400,20 @@ void StyleResolver::apply(Element* element,
                     CSSStyleValuePair::ValueKind::PositionValueKind ==
                     cssValues[k].valueKind());
                 style->m_position = cssValues[k].positionValue();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::All:
+            if ((cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Inherit) ||
+                (cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Initial) ||
+                (cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Unset)) {
+                applyAllProperty(element, cssValues[k].valueKind(),
+                                 cssCustomValues, origin, style, parentStyle,
+                                 isImportant);
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
         case CSSStyleValuePair::KeyKind::Float:
@@ -5670,8 +5794,10 @@ void StyleResolver::apply(Element* element,
                 BorderImageData borderImage = parentStyle->border().image();
                 style->setBorderImageRepeatX(borderImage.repeatX());
                 style->setBorderImageRepeatY(borderImage.repeatY());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
+            } else if ((cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Initial) ||
+                       (cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Unset)) {
                 style->setBorderImageRepeatX(
                     BorderImageRepeatValue::StretchValue);
                 style->setBorderImageRepeatY(
@@ -7319,8 +7445,10 @@ void StyleResolver::apply(Element* element,
                 cssValues[k].valueKind() ==
                     CSSStyleValuePair::ValueKind::Unset) {
                 style->setListStyleImage(parentStyle->listStyleData().image());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::None) {
+            } else if ((cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::Initial) ||
+                       (cssValues[k].valueKind() ==
+                        CSSStyleValuePair::ValueKind::None)) {
                 style->setListStyleImage(String::emptyString);
             } else {
                 style->setListStyleImage(cssValues[k].urlValue(origin));
@@ -9187,6 +9315,21 @@ bool CSSStyleValuePair::updateValueDisplay(Document* document,
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueAll(Document* document,
+                                       const CSSTokenVector& tokens)
+{
+    // initial | inherit | unset | revert
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    // TODO: 'revert' value is added in CSS Level 4
+    // Currently, this property value is not supported by Chrome, so we will
+    // support this value in the future.
+
+    return false;
 }
 
 bool CSSStyleValuePair::updateValueFloat(Document* document,
