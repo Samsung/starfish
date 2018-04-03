@@ -961,7 +961,11 @@ void MediaPlayerTizen::handlePrepared()
             m_videoWidth = (unsigned long)width;
             m_videoHeight = (unsigned long)height;
 
-            m_canvasSurface->attachNativeBuffer(m_videoWidth, m_videoHeight);
+            if (m_canvasSurface) {
+                // there is no surface on TV/headless
+                m_canvasSurface->attachNativeBuffer(m_videoWidth,
+                                                    m_videoHeight);
+            }
         }
 
         PLAYER_LOGI("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec,

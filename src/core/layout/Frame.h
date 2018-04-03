@@ -1873,8 +1873,16 @@ public:
     bool canBeContainingBlockOfAbsolutePositionedBox(Frame* child)
     {
         STARFISH_ASSERT(child->isAbsolutePositioned());
-        return isFrameDocument() ||
-               (child->style()->position() != FixedPositionValue &&
+
+        if (isFrameDocument()) {
+            return true;
+        }
+
+        if (!style()) {
+            return false;
+        }
+
+        return (child->style()->position() != FixedPositionValue &&
                 isPositioned()) ||
                style()->hasTransforms(this);
     }

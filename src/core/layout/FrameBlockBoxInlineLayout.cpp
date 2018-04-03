@@ -813,7 +813,7 @@ void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
                         box->appliedOverflowX() == VisibleOverflow) {
                         ascender = p.getValue();
                     } else {
-                        ascender = height();
+                        ascender = box->height();
                     }
                 }
 

@@ -1177,10 +1177,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     if (newStyle->textOverflow() != oldStyle->textOverflow()) {
-        if (newStyle->textOverflow() != oldStyle->textOverflow()) {
-            newStyle->textOverflow() != oldStyle->textOverflow();
-            puts("asdf");
-        }
         damagedKeys[CSSStyleValuePair::KeyKind::TextOverflow] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);

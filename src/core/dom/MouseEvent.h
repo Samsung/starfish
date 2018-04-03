@@ -264,8 +264,10 @@ public:
     void initMouseEvent(String* type, bool bubbles, bool cancelable,
                         Window* view, int32_t detail, double screenX,
                         double screenY, double clientX, double clientY,
-                        unsigned char button, EventTarget* relatedTarget)
+                        unsigned char button, bool ctrlKey, bool altKey,
+                        bool shiftKey, bool metaKey, EventTarget* relatedTarget)
     {
+        // use ctrlKey, altKey, shiftKey, metaKey
         setType(type);
         setBubbles(bubbles);
         setCancelable(cancelable);
