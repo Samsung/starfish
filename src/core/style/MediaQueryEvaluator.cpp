@@ -520,87 +520,17 @@ bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
         return false;
     }
 
-    // TODO: Consider remaining features.
-    String* feature = exp->mediaFeature();
     MediaQueryExpValue value = exp->expValue();
-    if (feature->equals("width")) {
-        return widthMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("min-width")) {
-        return widthMediaFeatureEval(value, m_mediaValues, MinPrefix);
-    } else if (feature->equals("max-width")) {
-        return widthMediaFeatureEval(value, m_mediaValues, MaxPrefix);
-    } else if (feature->equals("height")) {
-        return heightMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("min-height")) {
-        return heightMediaFeatureEval(value, m_mediaValues, MinPrefix);
-    } else if (feature->equals("max-height")) {
-        return heightMediaFeatureEval(value, m_mediaValues, MaxPrefix);
-    } else if (feature->equals("device-width")) {
-        return deviceWidthMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("min-device-width")) {
-        return deviceWidthMediaFeatureEval(value, m_mediaValues, MinPrefix);
-    } else if (feature->equals("max-device-width")) {
-        return deviceWidthMediaFeatureEval(value, m_mediaValues, MaxPrefix);
-    } else if (feature->equals("device-height")) {
-        return deviceHeightMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("min-device-height")) {
-        return deviceHeightMediaFeatureEval(value, m_mediaValues, MinPrefix);
-    } else if (feature->equals("max-device-height")) {
-        return deviceHeightMediaFeatureEval(value, m_mediaValues, MaxPrefix);
-    } else if (feature->equals("orientation")) {
-        return orientationMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("aspect-ratio")) {
-        return aspectRatioMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("min-aspect-ratio")) {
-        return aspectRatioMediaFeatureEval(value, m_mediaValues, MinPrefix);
-    } else if (feature->equals("max-aspect-ratio")) {
-        return aspectRatioMediaFeatureEval(value, m_mediaValues, MaxPrefix);
-    } else if (feature->equals("device-aspect-ratio")) {
-        return deviceAspectRatioMediaFeatureEval(value, m_mediaValues,
-                                                 NoPrefix);
-    } else if (feature->equals("min-device-aspect-ratio")) {
-        return deviceAspectRatioMediaFeatureEval(value, m_mediaValues,
-                                                 MinPrefix);
-    } else if (feature->equals("max-device-aspect-ratio")) {
-        return deviceAspectRatioMediaFeatureEval(value, m_mediaValues,
-                                                 MaxPrefix);
-    } else if (feature->equals("color")) {
-        return colorMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("min-color")) {
-        return colorMediaFeatureEval(value, m_mediaValues, MinPrefix);
-    } else if (feature->equals("max-color")) {
-        return colorMediaFeatureEval(value, m_mediaValues, MaxPrefix);
-    } else if (feature->equals("color-index")) {
-        return colorIndexMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("min-color-index")) {
-        return colorIndexMediaFeatureEval(value, m_mediaValues, MinPrefix);
-    } else if (feature->equals("max-color-index")) {
-        return colorIndexMediaFeatureEval(value, m_mediaValues, MaxPrefix);
-    } else if (feature->equals("monochrome")) {
-        return monochromeMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("min-monochrome")) {
-        return monochromeMediaFeatureEval(value, m_mediaValues, MinPrefix);
-    } else if (feature->equals("max-monochrome")) {
-        return monochromeMediaFeatureEval(value, m_mediaValues, MaxPrefix);
-    } else if (feature->equals("resolution")) {
-        return resolutionMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("min-resolution")) {
-        return resolutionMediaFeatureEval(value, m_mediaValues, MinPrefix);
-    } else if (feature->equals("max-resolution")) {
-        return resolutionMediaFeatureEval(value, m_mediaValues, MaxPrefix);
-    } else if (feature->equals("scan")) {
-        return scanMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("grid")) {
-        return gridMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("hover") || feature->equals("any-hover")) {
-        return hoverMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("pointer") || feature->equals("any-pointer")) {
-        return pointerMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else if (feature->equals("scripting")) {
-        return scriptingMediaFeatureEval(value, m_mediaValues, NoPrefix);
-    } else {
-        auto s = exp->mediaFeature()->toUTF8NonGCString();
-        STARFISH_LOG_INFO("unsupported media feature: %s\n", s.data());
+    switch (exp->mediaFeature()) {
+    case MediaFeatureNone:
+        return false;
+#define EVAL_MEDIA_FEATURES(name, mediaFeatureName, evalFunc, prefix) \
+    case MediaFeature##name:                                          \
+        return evalFunc##MediaFeatureEval(value, m_mediaValues, prefix);
+        ENUM_MEDIA_FEATURES(EVAL_MEDIA_FEATURES)
+#undef EVAL_MEDIA_FEATURES
+    default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return false;
     }
 }

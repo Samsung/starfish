@@ -1196,6 +1196,59 @@ protected:
     };
 };
 
+#define ENUM_MEDIA_FEATURES(F)                                               \
+    F(AspectRatio, "aspect-ratio", aspectRatio, NoPrefix)                    \
+    F(MaxAspectRatio, "max-aspect-ratio", aspectRatio, MaxPrefix)            \
+    F(MinAspectRatio, "min-aspect-ratio", aspectRatio, MinPrefix)            \
+    F(Height, "height", height, NoPrefix)                                    \
+    F(MaxHeight, "max-height", height, MaxPrefix)                            \
+    F(MinHeight, "min-height", height, MinPrefix)                            \
+    F(Orientation, "orientation", orientation, NoPrefix)                     \
+    F(Resolution, "resolution", resolution, NoPrefix)                        \
+    F(MaxResolution, "max-resolution", resolution, MaxPrefix)                \
+    F(MinResolution, "min-resolution", resolution, MinPrefix)                \
+    F(Width, "width", width, NoPrefix)                                       \
+    F(MaxWidth, "max-width", width, MaxPrefix)                               \
+    F(MinWidth, "min-width", width, MinPrefix)                               \
+    F(DeviceAspectRatio, "device-aspect-ratio", deviceAspectRatio, NoPrefix) \
+    F(MaxDeviceAspectRatio, "max-device-aspect-ratio", deviceAspectRatio,    \
+      MaxPrefix)                                                             \
+    F(MinDeviceAspectRatio, "min-device-aspect-ratio", deviceAspectRatio,    \
+      MinPrefix)                                                             \
+    F(DeviceHeight, "device-height", deviceHeight, NoPrefix)                 \
+    F(MaxDeviceHeight, "max-device-height", deviceHeight, MaxPrefix)         \
+    F(MinDeviceHeight, "min-device-height", deviceHeight, MinPrefix)         \
+    F(DeviceWidth, "device-width", deviceWidth, NoPrefix)                    \
+    F(MaxDeviceWidth, "max-device-width", deviceWidth, MaxPrefix)            \
+    F(MinDeviceWidth, "min-device-width", deviceWidth, MinPrefix)            \
+    F(AnyHover, "any-hover", hover, NoPrefix)                                \
+    F(AnyPointer, "any-pointer", pointer, NoPrefix)                          \
+    F(Color, "color", color, NoPrefix)                                       \
+    F(MaxColor, "max-color", color, MaxPrefix)                               \
+    F(MinColor, "min-color", color, MinPrefix)                               \
+    F(ColorIndex, "color-index", colorIndex, NoPrefix)                       \
+    F(MaxColorIndex, "max-color-index", colorIndex, MaxPrefix)               \
+    F(MinColorIndex, "min-color-index", colorIndex, MinPrefix)               \
+    F(Grid, "grid", grid, NoPrefix)                                          \
+    F(Hover, "hover", hover, NoPrefix)                                       \
+    F(Monochrome, "monochrome", monochrome, NoPrefix)                        \
+    F(MaxMonochrome, "max-monochrome", monochrome, MaxPrefix)                \
+    F(MinMonochrome, "min-monochrome", monochrome, MinPrefix)                \
+    F(Pointer, "pointer", pointer, NoPrefix)                                 \
+    F(Scan, "scan", scan, NoPrefix)                                          \
+    F(Scripting, "scripting", scripting, NoPrefix)
+
+enum MediaFeature {
+    MediaFeatureNone,
+#define ADD_MEDIA_FEATURE(name, ...) MediaFeature##name,
+    ENUM_MEDIA_FEATURES(ADD_MEDIA_FEATURE)
+#undef ADD_MEDIA_FEATURE
+        MediaFeatureViewportDependentStart = MediaFeatureAspectRatio,
+    MediaFeatureViewportDependentEnd = MediaFeatureMinWidth,
+    MediaFeatureDeviceDependentStart = MediaFeatureDeviceAspectRatio,
+    MediaFeatureDeviceDependentEnd = MediaFeatureMinDeviceWidth
+};
+
 class CSSScanner;
 class MediaQueryExp;
 
@@ -1204,7 +1257,7 @@ private:
     MediaQuery::RestrictorType m_restrictor;
     String* m_mediaType;
     GCVector<MediaQueryExp*> m_expressions;
-    String* m_mediaFeature;
+    MediaFeature m_mediaFeature;
     GCVector<RefPtr<CSSToken>> m_valueList;
     bool m_mediaTypeSet;
 
@@ -1230,9 +1283,9 @@ public:
     {
         m_restrictor = restrictor;
     }
-    inline void setMediaFeature(String* str)
+    inline void setMediaFeature(MediaFeature mediaFeature)
     {
-        m_mediaFeature = str;
+        m_mediaFeature = mediaFeature;
     }
 };
 
@@ -1452,11 +1505,11 @@ struct MediaQueryExpValue {
 
 class MediaQueryExp : public gc {
 public:
-    static MediaQueryExp* createIfValid(String* mediaFeature,
+    static MediaQueryExp* createIfValid(MediaFeature mediaFeature,
                                         const GCVector<RefPtr<CSSToken>>&);
     ~MediaQueryExp();
 
-    String* mediaFeature()
+    MediaFeature mediaFeature()
     {
         return m_mediaFeature;
     }
@@ -1477,9 +1530,9 @@ public:
     String* serialize() const;
 
 protected:
-    MediaQueryExp(String*, MediaQueryExpValue);
+    MediaQueryExp(MediaFeature mediaFeature, MediaQueryExpValue expValue);
 
-    String* m_mediaFeature;
+    MediaFeature m_mediaFeature;
     MediaQueryExpValue m_expValue;
 };
 }
