@@ -7,12 +7,12 @@ Starfish is a lightweight Web browser engine for mobile and wearable devices.
 ### Install required packages
 
 ```sh
+sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libjpeg-turbo8-dev libgif-dev cmake autoconf automake libtool
+sudo apt-get install python-pip
+pip install Jinja2
 sudo add-apt-repository ppa:enlightenment-git/ppa
 sudo apt-get update
 sudo apt-get install libefl-dev
-sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libjpeg-turbo8-dev libgif-dev
-sudo apt-get install python-pip
-pip install Jinja2
 ```
 
 ### Download StarFish and compile third party libraries
