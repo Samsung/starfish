@@ -1,0 +1,8 @@
+// https://html.spec.whatwg.org/multipage/grouping-content.html#the-blockquote-element
+// https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-q-element
+
+[Exposed=Window,
+ HTMLConstructor]
+interface HTMLQuoteElement : HTMLElement {
+    [CEReactions] attribute DOMString cite;
+};
