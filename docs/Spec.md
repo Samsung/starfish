@@ -465,6 +465,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLObjectElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-object-element) | interface | HTMLObjectElement | The object element can represent an external resource, which, depending on the type of the resource, will either be treated as an image, as a nested browsing context, or as an external resource to be processed by a plugin. |
 | [HTMLParagraphElement](https://html.spec.whatwg.org/multipage/semantics.html#the-p-element)  | interface | HTMLParagraphElement |  |
 | [HTMLPreElement](https://html.spec.whatwg.org/multipage/semantics.html#the-pre-element) | interface | HTMLPreElement | The HTMLPreElement interface expose specific properties and methods for manipulating block of preformatted text. |
+| [HTMLQuoteElement](https://html.spec.whatwg.org/multipage/grouping-content.html#the-blockquote-element) | interface | HTMLQuoteElement | The blockquote element represents a section that is quoted from another source. |
+|  | attribute | cite | Containing a URL for the source of the quotation. |
 | [HTMLScriptElement](https://html.spec.whatwg.org/multipage/scripting.html#the-script-element) | interface | HTMLScriptElement | The script element allows authors to include dynamic script and data blocks in their documents. |
 |  | attribute | src | Address of the resource.<br>&lt;URL&gt; must be a local path. |
 |  | attribute | type | Type of embedded resource.<br>Allowed value: text/javascript |
