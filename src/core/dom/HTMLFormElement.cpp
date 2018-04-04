@@ -474,6 +474,16 @@ void HTMLFormElement::setEnctype(String* enctype)
     setAttribute(starFish()->staticStrings()->m_enctype, enctype);
 }
 
+String* HTMLFormElement::encoding()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_enctype);
+}
+
+void HTMLFormElement::setEncoding(String* encoding)
+{
+    setEnctype(encoding);
+}
+
 String* HTMLFormElement::method()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_method);
@@ -496,7 +506,11 @@ void HTMLFormElement::setTarget(String* target)
 
 String* HTMLFormElement::action()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_action);
+    String* action = getAttributeOrEmpty(starFish()->staticStrings()->m_action);
+    if (action->equals(String::emptyString)) {
+        action = document()->documentURI()->urlString();
+    }
+    return action;
 }
 
 void HTMLFormElement::setAction(String* action)
