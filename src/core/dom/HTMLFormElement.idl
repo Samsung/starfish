@@ -7,7 +7,7 @@ interface HTMLFormElement : HTMLElement {
     [CEReactions] attribute USVString action;
     [Unimplemented, CEReactions] attribute DOMString autocomplete;
     [CEReactions] attribute DOMString enctype;
-    [Unimplemented, CEReactions] attribute DOMString encoding;
+    [CEReactions] attribute DOMString encoding;
     [CEReactions] attribute DOMString method;
     [CEReactions, Rename=domName] attribute DOMString name;
     [Unimplemented, CEReactions] attribute boolean noValidate;

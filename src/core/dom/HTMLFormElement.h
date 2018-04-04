@@ -169,6 +169,9 @@ public:
     String* enctype();
     void setEnctype(String* enctype);
 
+    String* encoding();
+    void setEncoding(String* encoding);
+
     String* method();
     void setMethod(String* method);
 
