@@ -793,6 +793,19 @@ enum OverflowValue {
     ScrollOverflow,
 };
 
+enum PointerEventsValue {
+    PointerEventsNoneValue,
+    PointerEventsAutoValue,
+    PointerEventsVisiblePaintedValue,
+    PointerEventsVisibleFillValue,
+    PointerEventsVisibleStrokeValue,
+    PointerEventsVisibleValue,
+    PointerEventsPaintedValue,
+    PointerEventsFillValue,
+    PointerEventsStrokeValue,
+    PointerEventsAllValue,
+};
+
 enum BorderImageRepeatValue {
     StretchValue,
     RepeatValue,
@@ -1228,6 +1241,7 @@ class CSSStyleDeclaration;
     F(Hyphens, hyphens, "hyphens")                                             \
     F(LineBreak, lineBreak, "line-break")                                      \
     F(WordBreak, wordBreak, "word-break")                                      \
+    F(PointerEvents, pointerEvents, "pointer-events")                          \
     F(Resize, resize, "resize")
 
 // font related properties must be followed end of this
@@ -1513,7 +1527,10 @@ public:
         GradientValueKind,
 
         // keyword value for width and height
-        WidthHeightKeywordValueKind
+        WidthHeightKeywordValueKind,
+
+        // pointer-events
+        PointerEventsValueKind
     };
 
     CSSStyleValuePair()
@@ -2101,6 +2118,12 @@ public:
         return m_value.m_widthHeightKeywordValue;
     }
 
+    PointerEventsValue pointerEventsValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == PointerEventsValueKind);
+        return m_value.m_pointerEventsValue;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -2173,6 +2196,7 @@ public:
         TextOverflowData* m_textOverflowData;
         CSSGradientValue* m_gradientValue;
         WidthHeightKeywordValue m_widthHeightKeywordValue;
+        PointerEventsValue m_pointerEventsValue;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2467,6 +2491,11 @@ public:
 
         ValueData(WidthHeightKeywordValue v)
             : m_widthHeightKeywordValue(v)
+        {
+        }
+
+        ValueData(PointerEventsValue v)
+            : m_pointerEventsValue(v)
         {
         }
     };

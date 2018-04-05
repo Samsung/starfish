@@ -4,6 +4,7 @@ import subprocess
 import utils
 from urlparse import urlparse
 from shutil import copyfile
+from subprocess import Popen, PIPE
 
 try:
   FNULL
@@ -82,10 +83,18 @@ def case_runner(tc):
     starfish_command = ["./StarFish", tc_file, HIDE_WINDOW_OPT,
                         __opts.font_opt, __opts.width, __opts.height,
                         SCREENSHOT_OPT_PREFIX + tc_result_png]
+    starfish_output=""
+    starfish_err=""
     try:
-        subprocess.call(starfish_command, stdout=FNULL, stderr=subprocess.STDOUT)
+        p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        starfish_output, starfish_err = p.communicate("")
+        #subprocess.call(starfish_command, stdout=FNULL, stderr=subprocess.STDOUT)
         if not os.path.isfile(tc_result_png):
             print "ERROR : Starfish error - " + tc_file
+            print "Starfish output=>"
+            print starfish_output
+            print "Starfish stderr=>"
+            print starfish_err
             return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
 
         # Diff

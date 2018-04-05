@@ -2204,6 +2204,32 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
+    case CSSStyleValuePair::ValueKind::PointerEventsValueKind:
+        switch (pointerEventsValue()) {
+        case PointerEventsAutoValue:
+            return String::fromUTF8("auto");
+        case PointerEventsNoneValue:
+            return String::fromUTF8("none");
+        case PointerEventsVisibleFillValue:
+            return String::fromUTF8("visibleFill");
+        case PointerEventsVisiblePaintedValue:
+            return String::fromUTF8("visiblePainted");
+        case PointerEventsVisibleStrokeValue:
+            return String::fromUTF8("visibleStroke");
+        case PointerEventsVisibleValue:
+            return String::fromUTF8("visible");
+        case PointerEventsPaintedValue:
+            return String::fromUTF8("painted");
+        case PointerEventsFillValue:
+            return String::fromUTF8("fill");
+        case PointerEventsStrokeValue:
+            return String::fromUTF8("stroke");
+        case PointerEventsAllValue:
+            return String::fromUTF8("all");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        break;
     case CSSStyleValuePair::ValueKind::ObjectFitValueKind:
         switch (objectFitValue()) {
         case FillObjectFitValue:
@@ -5125,6 +5151,19 @@ void StyleResolver::apply(Element* element,
                 style->setBoxShadow(ShadowDataList());
             }
         } break;
+        case CSSStyleValuePair::KeyKind::PointerEvents:
+            if ((cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Inherit) ||
+                (cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Unset)) {
+                style->setPointerEvents(parentStyle->pointerEvents());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial) {
+                style->setPointerEvents(PointerEventsAutoValue);
+            } else {
+                style->setPointerEvents(cssValues[k].pointerEventsValue());
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Direction:
             if ((cssValues[k].valueKind() ==
                  CSSStyleValuePair::ValueKind::Inherit) ||
@@ -9349,6 +9388,51 @@ bool CSSStyleValuePair::updateValueAll(Document* document,
     return false;
 }
 
+bool CSSStyleValuePair::updateValuePointerEvents(Document* document,
+                                                 const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::PointerEventsValueKind;
+    if (STRING_VALUE_IS_STRING("none")) {
+        m_value.m_pointerEventsValue =
+            PointerEventsValue::PointerEventsNoneValue;
+    } else if (STRING_VALUE_IS_STRING("auto")) {
+        m_value.m_pointerEventsValue =
+            PointerEventsValue::PointerEventsAutoValue;
+    } else if (STRING_VALUE_IS_STRING("visiblepainted")) {
+        m_value.m_pointerEventsValue =
+            PointerEventsValue::PointerEventsVisiblePaintedValue;
+    } else if (STRING_VALUE_IS_STRING("visiblefill")) {
+        m_value.m_pointerEventsValue =
+            PointerEventsValue::PointerEventsVisibleFillValue;
+    } else if (STRING_VALUE_IS_STRING("visiblestroke")) {
+        m_value.m_pointerEventsValue =
+            PointerEventsValue::PointerEventsVisibleStrokeValue;
+    } else if (STRING_VALUE_IS_STRING("visible")) {
+        m_value.m_pointerEventsValue =
+            PointerEventsValue::PointerEventsVisibleValue;
+    } else if (STRING_VALUE_IS_STRING("painted")) {
+        m_value.m_pointerEventsValue =
+            PointerEventsValue::PointerEventsPaintedValue;
+    } else if (STRING_VALUE_IS_STRING("fill")) {
+        m_value.m_pointerEventsValue =
+            PointerEventsValue::PointerEventsFillValue;
+    } else if (STRING_VALUE_IS_STRING("stroke")) {
+        m_value.m_pointerEventsValue =
+            PointerEventsValue::PointerEventsStrokeValue;
+    } else if (STRING_VALUE_IS_STRING("all")) {
+        m_value.m_pointerEventsValue =
+            PointerEventsValue::PointerEventsAllValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueFloat(Document* document,
                                          const CSSTokenVector& tokens)
 {
@@ -9576,7 +9660,7 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                     if (!length.updateValueUnitLength(value, option)) {
                         return false;
                     }
-                    cs->setLength(length.lengthValue());
+                    cs->setLength(length.toLengthValue());
                 }
                 linearGradientValue->colorStopList().push_back(cs);
             }

@@ -537,6 +537,9 @@ class ComputedStyle : public gc {
         HyphensValue m_hyphens : 1;
         FontKerningValue m_fontKerning : 2;
         ImageRenderingValue m_imageRendering : 2;
+        WordBreakValue m_wordBreak : 3;
+        TextUnderlinePositionValue m_textUnderlinePosition : 3;
+        PointerEventsValue m_pointerEventsValue : 4;
 
         Length m_letterSpacing;
         Length m_textIndent;
@@ -553,8 +556,6 @@ class ComputedStyle : public gc {
         ListStyleData m_listStyleData;
 
         Unit::Color m_caretColor;
-        WordBreakValue m_wordBreak : 3;
-        TextUnderlinePositionValue m_textUnderlinePosition : 3;
 
         InheritedStylesRareData()
         {
@@ -578,6 +579,7 @@ class ComputedStyle : public gc {
             m_wordBreak = WordBreakValue::NormalWordBreakValue;
             m_textUnderlinePosition =
                 TextUnderlinePositionValue::AutoTextUnderlinePositionValue;
+            m_pointerEventsValue = PointerEventsValue::PointerEventsAutoValue;
         }
 
         void* operator new(size_t size);
@@ -1036,6 +1038,19 @@ public:
     void setTextUnderlinePosition(TextUnderlinePositionValue v)
     {
         ensureInheritedRareData()->m_textUnderlinePosition = v;
+    }
+
+    PointerEventsValue pointerEvents()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_pointerEventsValue;
+        }
+        return InheritedStylesRareData().m_pointerEventsValue;
+    }
+
+    void setPointerEvents(PointerEventsValue v)
+    {
+        ensureInheritedRareData()->m_pointerEventsValue = v;
     }
 
     ResizeValue resize()

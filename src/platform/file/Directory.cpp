@@ -151,11 +151,11 @@ private:
         stat(path, &statPath);
         if (S_ISDIR(statPath.st_mode) == 0) {
             STARFISH_LOG_ERROR("Is not directory : %s\n", path);
-            STARFISH_ASSERT_NOT_REACHED();
+            return;
         }
         if ((dir = opendir(path)) == nullptr) {
             STARFISH_LOG_ERROR("Can`t open directory : %s\n", path);
-            STARFISH_ASSERT_NOT_REACHED();
+            return;
         }
 
         size_t pathLen = strlen(path);
@@ -182,7 +182,7 @@ private:
             if (unlink(fullPath.c_str()) != 0) {
                 STARFISH_LOG_ERROR("Can`t remove a file: %s\n",
                                    fullPath.c_str());
-                STARFISH_ASSERT_NOT_REACHED();
+                continue;
             }
         }
         closedir(dir);

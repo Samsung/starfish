@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import utils
+from subprocess import Popen, PIPE
 
 try:
   FNULL
@@ -59,11 +60,18 @@ def case_runner(tc):
     # Run starfish
     starfish_command = ["./StarFish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression]
     try:
-        result = subprocess.check_output(starfish_command, stderr=FNULL)
-    except subprocess.CalledProcessError:
+        p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        starfish_output, starfish_err = p.communicate("")
+        if "[STARFISH_TEST] Got signal" in starfish_output:
+            raise Error
+    except:
         print "ERROR : Crash - " + tc_file
+        print "stdout=>"
+        print starfish_output
+        print "stderr=>"
+        print starfish_err
         return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
-    return __opts.tc_handler(tc_file, result, __opts.show_progress)
+    return __opts.tc_handler(tc_file, starfish_output, __opts.show_progress)
 
 
 def run_parallel(list_file, nproc=None, width=None, height=None, regression=None,

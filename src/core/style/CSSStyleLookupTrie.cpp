@@ -659,6 +659,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "padding-bottom", 14) == 0) {
                 return CSSStyleKind::PaddingBottom;
             }
+            if (memcmp(data, "pointer-events", 14) == 0) {
+                return CSSStyleKind::PointerEvents;
+            }
             break;
         case 'o':
             if (memcmp(data, "outline-offset", 14) == 0) {
@@ -1514,6 +1517,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'p':
             if (memcmp(data, "paddingBottom", 13) == 0) {
                 return CSSStyleKind::PaddingBottom;
+            }
+            if (memcmp(data, "pointerEvents", 13) == 0) {
+                return CSSStyleKind::PointerEvents;
             }
             break;
         case 'o':
