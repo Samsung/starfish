@@ -512,8 +512,78 @@ void DaliShellController::KeyEventHandler(const Dali::KeyEvent& event)
 
 #endif
 
+#if defined(STARFISH_ENABLE_TEST)
+#include <stdio.h>
+#include <signal.h>
+#include <execinfo.h>
+
+void bt_sighandler(int sig, struct sigcontext ctx)
+{
+    void* trace[16];
+    char** messages = (char**)NULL;
+    int i, trace_size = 0;
+
+    // `[STARFISH_TEST] Got signal` string is used by test case runner
+    // don't change!
+    if (sig == SIGSEGV) {
+        printf("[STARFISH_TEST] Got signal %d, faulty address is %p, from %p\n",
+               sig, (void*)ctx.cr2, (void*)ctx.rip);
+    } else {
+        printf("[STARFISH_TEST] Got signal %d\n", sig);
+    }
+
+    trace_size = backtrace(trace, 16);
+    /* overwrite sigaction with caller's address */
+    trace[1] = (void*)ctx.rip;
+    messages = backtrace_symbols(trace, trace_size);
+    /* skip first stack frame (points here) */
+    printf("[bt] Execution path:\n");
+    for (i = 1; i < trace_size; ++i) {
+        printf("[bt] #%d %s\n", i, messages[i]);
+
+        char syscom[256];
+        sprintf(syscom, "addr2line %p -e StarFish",
+                trace[i]); // last parameter is the name of this app
+        system(syscom);
+    }
+
+    fflush(stdout);
+
+    exit(0);
+}
+
+// crash test functions
+int func_a(int a, char b)
+{
+    char* p = (char*)0xdeadbeef;
+    a = a + b;
+    *p = 10; /* CRASH here!! */
+    return 2 * a;
+}
+
+int func_b()
+{
+    int res, a = 5;
+    res = 5 + func_a(a, 't');
+    return res;
+}
+
+#endif
+
 int main(int argc, char* argv[])
 {
+#if defined(STARFISH_ENABLE_TEST)
+    /* Install our signal handler */
+    struct sigaction sa;
+
+    sa.sa_handler = (void (*)(int))bt_sighandler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+
+    sigaction(SIGSEGV, &sa, NULL);
+    sigaction(SIGUSR1, &sa, NULL);
+#endif
+
 #ifndef NDEBUG
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
@@ -560,6 +630,9 @@ int main(int argc, char* argv[])
         puts("please specify url");
         return -1;
     }
+
+    // sig handling tester
+    // printf("%d\n", func_b());
 
     std::string screenShot;
     std::string customUserAgentString;

@@ -692,7 +692,11 @@ public:
     {
         if (x >= 0 && x < m_frameRect.width() && y >= 0 &&
             y < m_frameRect.height()) {
-            return this;
+            if (style()->pointerEvents() >=
+                PointerEventsValue::PointerEventsAutoValue) {
+                return this;
+            }
+            return nullptr;
         }
         return nullptr;
     }

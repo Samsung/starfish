@@ -1731,6 +1731,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     ADD_VALUE_PAIR(LineBreak, LineBreakValueKind, lineBreak)
     ADD_VALUE_PAIR(WordBreak, WordBreakValueKind, wordBreak)
     ADD_VALUE_PAIR(ImageRendering, ImageRenderingValueKind, imageRendering)
+    ADD_VALUE_PAIR(PointerEvents, PointerEventsValueKind, pointerEvents)
 
 #undef ADD_VALUE_PAIR
 #define ADD_COLOR_PAIR(KEY, GETTER)                                     \

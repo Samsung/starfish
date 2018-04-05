@@ -74,8 +74,19 @@ FrameBox* containingBlock(Frame* currentFrame)
     if (currentFrame->isAbsolutePositioned()) {
         Frame* f = currentFrame->parent();
         if (!f) {
-            STARFISH_ASSERT(currentFrame->isFrameDocument());
-            return currentFrame->asFrameBox();
+            if (currentFrame->isFrameDocument()) {
+                return currentFrame->asFrameBox();
+            }
+
+            f = currentFrame->layoutParent();
+
+            if (!f) {
+                currentFrame->asFrameBox();
+            }
+
+            while (!f->isAnonymous()) {
+                f = f->layoutParent();
+            }
         }
 
         while (!f->canBeContainingBlockOfAbsolutePositionedBox(currentFrame)) {
