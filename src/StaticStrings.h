@@ -352,6 +352,7 @@ public:
     QualifiedName m_compact;
     QualifiedName m_cite;
     QualifiedName m_datetime;
+    QualifiedName m_valuetype;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

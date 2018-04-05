@@ -1,0 +1,13 @@
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-param-element
+
+[Exposed=Window,
+ HTMLConstructor]
+interface HTMLParamElement : HTMLElement {
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString value;
+
+    // also has obsolete members
+    // https://html.spec.whatwg.org/#HTMLParamElement-partial
+    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect] attribute DOMString valueType;
+};
