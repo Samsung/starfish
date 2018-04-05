@@ -42,3 +42,9 @@ interface CSSSupportsRule : CSSConditionRule {
 interface CSSCounterStyleRule : CSSRule {
 };
 
+// https://drafts.csswg.org/cssom/#the-cssnamespacerule-interface
+interface CSSNamespaceRule : CSSRule {
+    readonly attribute DOMString namespaceURI;
+    readonly attribute DOMString prefix;
+};
+

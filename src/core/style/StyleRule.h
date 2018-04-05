@@ -36,6 +36,7 @@ class StyleRuleImport;
 class StyleRuleFontFace;
 class StyleRuleSupports;
 class StyleRuleCounterStyle;
+class StyleRuleNamespace;
 
 class StyleRuleBase : public gc {
 public:
@@ -134,6 +135,7 @@ public:
     inline StyleRuleFontFace* asStyleRuleFontFace();
     inline StyleRuleSupports* asStyleRuleSupports();
     inline StyleRuleCounterStyle* asStyleRuleCounterStyle();
+    inline StyleRuleNamespace* asStyleRuleNamespace();
 
     CSSRule* createCSSOMWrapper(CSSStyleSheet* parent_sheet = 0) const;
     CSSRule* createCSSOMWrapper(CSSRule* parent_rule) const;
@@ -362,6 +364,25 @@ public:
     StyleRuleCounterStyle(CSSStyleDeclaration* decl);
 };
 
+class StyleRuleNamespace : public StyleRuleBase {
+public:
+    StyleRuleNamespace();
+
+    String* namespaceURI() const
+    {
+        return m_namespaceURI;
+    }
+
+    String* prefix() const
+    {
+        return m_prefix;
+    }
+
+private:
+    String* m_namespaceURI;
+    String* m_prefix;
+};
+
 inline StyleRule* StyleRuleBase::asStyleRule()
 {
     STARFISH_ASSERT(isStyleRule());
@@ -396,6 +417,12 @@ inline StyleRuleCounterStyle* StyleRuleBase::asStyleRuleCounterStyle()
 {
     STARFISH_ASSERT(isCounterStyleRule());
     return (StyleRuleCounterStyle*)this;
+}
+
+inline StyleRuleNamespace* StyleRuleBase::asStyleRuleNamespace()
+{
+    STARFISH_ASSERT(isNamespaceRule());
+    return (StyleRuleNamespace*)this;
 }
 }
 
