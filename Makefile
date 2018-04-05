@@ -1051,7 +1051,6 @@ test_all:
 	make vendor_test_blink_fast_html
 	make vendor_test_blink_fast_css
 	make vendor_test_blink_fast_etc
-	make_vendor_text_blink_css3_cairo
 	make vendor_test_gecko_layout
 	make vendor_test_webkit_fast_dom
 	make vendor_test_webkit_fast_html
@@ -1061,36 +1060,29 @@ test_all:
 	make csswg_test_all
 	make internal_test
 
-test_pr:
-	make vendor_test_blink_fast_html
-	make vendor_test_blink_fast_dom
-	make vendor_test_blink_fast_css
-	make vendor_test_blink_fast_etc
-	make vendor_test_gecko_layout
-	make vendor_test_webkit_fast_html
-	make vendor_test_webkit_fast_css
-	make vendor_test_webkit_fast_dom
-	make web_platform_test_dom
-	make web_platform_test_html
-	make web_platform_test_dom_events
-	make web_platform_test_progress_events
-	make web_platform_test_page_visibility
-	make web_platform_test_xhr
-	make dom_conformance_test
-	make dom_conformance_test_webkit
-	make dom_conformance_test_blink
-	make dom_conformance_test_gecko
-	make bidi_test
-	make internal_test_gitlab_prerequisite div=5
-	make internal_test_part1
-	make internal_test_part2
-	make internal_test_part3
-	make internal_test_part4
-	make internal_test_part5
-	make internal_test_manual
-	make vendor_test_webkit_fast_etc
-	make csswg_test_all
-
+test_all_cairo:
+	make dom_conformance_test_cairo
+	make dom_conformance_test_webkit_cairo
+	make dom_conformance_test_blink_cairo
+	make dom_conformance_test_gecko_cairo
+	make web_platform_test_dom_cairo
+	make web_platform_test_dom_events_cairo
+	make web_platform_test_html_cairo
+	make web_platform_test_page_visibility_cairo
+	make web_platform_test_progress_events_cairo
+	make web_platform_test_xhr_cairo
+	make vendor_test_blink_fast_dom_cairo
+	make vendor_test_blink_fast_html_cairo
+	make vendor_test_blink_fast_css_cairo
+	make vendor_test_blink_fast_etc_cairo
+	make vendor_test_gecko_layout_cairo
+	make vendor_test_webkit_fast_dom_cairo
+	make vendor_test_webkit_fast_html_cairo
+	make vendor_test_webkit_fast_css_cairo
+	make vendor_test_webkit_fast_etc_cairo
+	make bidi_test_cairo
+	make csswg_test_all_cairo
+	make internal_test_cairo
 
 reftest_emulator_2.3:
 	./tool/reftest/reftest_runner.sh emulator 2.3 all
