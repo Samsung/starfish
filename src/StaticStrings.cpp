@@ -231,6 +231,9 @@ StaticStrings::StaticStrings(StarFish* sf)
                               AtomicString::createAtomicString(sf, "compact"));
     m_cite = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "cite"));
+    m_datetime =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "datetime"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

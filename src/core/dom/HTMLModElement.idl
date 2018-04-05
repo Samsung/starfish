@@ -1,0 +1,9 @@
+// https://html.spec.whatwg.org/multipage/edits.html#the-del-element
+// https://html.spec.whatwg.org/multipage/edits.html#the-ins-element
+
+[Exposed=Window,
+ HTMLConstructor]
+interface HTMLModElement : HTMLElement {
+    [CEReactions] attribute DOMString cite;
+    [CEReactions] attribute DOMString dateTime;
+};
