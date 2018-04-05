@@ -7655,6 +7655,23 @@ void StyleResolver::apply(Element* element,
                 break;
             }
             break;
+        case CSSStyleValuePair::KeyKind::GridGap:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::ValueListKind) {
+                ValueList* list = cssValues[k].multiValue();
+                if (list->size() == 1) {
+                    CSSLength length = list->at(0).cssLengthValue();
+                    style->setGridRowGap(length.toLength());
+                    style->setGridColumnGap(length.toLength());
+                } else if (list->size() == 2) {
+                    CSSLength row = list->at(0).cssLengthValue();
+                    CSSLength column = list->at(1).cssLengthValue();
+
+                    style->setGridRowGap(row.toLength());
+                    style->setGridColumnGap(column.toLength());
+                }
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -10982,6 +10999,49 @@ bool CSSStyleValuePair::updateValueGridColumnEnd(Document* document,
     }
 
     return false;
+}
+
+bool CSSStyleValuePair::updateValueGridGap(Document* document,
+                                           const CSSTokenVector& tokens)
+{
+    if (!tokens.size()) {
+        return false;
+    }
+
+    if (tokens.size() > 2) {
+        return false;
+    }
+
+    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+
+    for (size_t i = 0; i < tokens.size(); i++) {
+        auto ss = tokens[i];
+        ss.trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+        bool hasPoint = false;
+
+        if (!parser.consumeNumber(&hasPoint)) {
+            return false;
+        }
+
+        float number = parser.parsedNumber();
+        parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
+
+        String* str = parser.parsedString();
+
+        if (str->length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
+            return false;
+        }
+
+        CSSLength length = CSSLength(str, number);
+        CSSStyleValuePair ret;
+        ret.setLengthValue(length);
+        values->push_back(ret);
+    }
+
+    setValueList(values);
+
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueTransformOrigin(Document* document,
