@@ -2178,6 +2178,13 @@ StyleRuleCounterStyle* CSSParser::parseCounterStyleRule()
     return nullptr;
 }
 
+StyleRuleNamespace* CSSParser::parseNamespaceRule()
+{
+    // TODO: Parse the @namespace CSS at-rule.
+    // https://drafts.csswg.org/css-namespaces-3/
+    return nullptr;
+}
+
 String* CSSParser::parseURLString()
 {
     RefPtr<CSSToken> token = getToken(true, false);
@@ -2293,10 +2300,11 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
                 rule = parseSupportsRule();
             } else if (token->isAtRule("@counter-style")) {
                 rule = parseCounterStyleRule();
+            } else if (token->isAtRule("@namespace")) {
+                rule = parseNamespaceRule();
             }
             /*
              else if (token.isAtRule("@variables")) {
-            } else if (token.isAtRule("@namespace")) {
             } else if (token.isAtRule("@page")) {
             } else if (token.isAtRule("@keyframes")) {
             } else if (token.isAtRule("@charset")) {

@@ -418,4 +418,29 @@ String* CSSCounterStyleRule::cssText()
     ret.appendChar('}');
     return ret.finalize();
 }
+
+CSSNamespaceRule::CSSNamespaceRule(StyleRuleNamespace* namespaceRule,
+                                   CSSStyleSheet* parent)
+    : CSSRule(parent)
+    , m_styleRule(namespaceRule)
+{
+}
+
+String* CSSNamespaceRule::cssText()
+{
+    // TODO: Consider namespaceURI and prefix
+    StringBuilder result;
+    result.appendString("@namespace ");
+    return result.finalize();
+}
+
+String* CSSNamespaceRule::namespaceURI() const
+{
+    return m_namesaceURI;
+}
+
+String* CSSNamespaceRule::prefix() const
+{
+    return m_prefix;
+}
 }

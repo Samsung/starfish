@@ -35,6 +35,7 @@ class StyleRuleImport;
 class StyleRuleFontFace;
 class StyleRuleSupports;
 class StyleRuleCounterStyle;
+class StyleRuleNamespace;
 class MediaQuerySet;
 class MediaList;
 
@@ -205,6 +206,31 @@ private:
     {
         return CSSRule::Type::COUNTER_STYLE_RULE;
     }
+};
+
+class CSSNamespaceRule : public CSSRule {
+public:
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isCSSNamespaceRule() const override;
+
+    CSSNamespaceRule(StyleRuleNamespace* styleRule, CSSStyleSheet* parent);
+    String* cssText() override;
+    StyleRuleNamespace* styleRule() const
+    {
+        return m_styleRule;
+    }
+    String* namespaceURI() const;
+    String* prefix() const;
+
+private:
+    CSSRule::Type type() const override
+    {
+        return CSSRule::Type::NAMESPACE_RULE;
+    }
+    StyleRuleNamespace* m_styleRule;
+    String* m_namesaceURI;
+    String* m_prefix;
 };
 }
 

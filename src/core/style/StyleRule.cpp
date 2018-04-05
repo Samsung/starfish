@@ -67,6 +67,9 @@ CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
         rule = new CSSCounterStyleRule(self->asStyleRuleCounterStyle(),
                                        parentSheet);
         break;
+    case CSSRule::Type::NAMESPACE_RULE:
+        rule = new CSSNamespaceRule(self->asStyleRuleNamespace(), parentSheet);
+        break;
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
@@ -324,6 +327,13 @@ void StyleRuleImport::requestStyleSheet()
 StyleRuleFontFace::StyleRuleFontFace(CSSStyleDeclaration* decl)
     : StyleRuleBase(CSSRule::Type::FONT_FACE_RULE)
     , m_styleDeclaration(decl)
+{
+}
+
+StyleRuleNamespace::StyleRuleNamespace()
+    : StyleRuleBase(CSSRule::Type::NAMESPACE_RULE)
+    , m_namespaceURI(String::emptyString)
+    , m_prefix(String::emptyString)
 {
 }
 }
