@@ -648,6 +648,11 @@ HTMLCollection* Document::images()
     return getElementsByTagName(starFish()->staticStrings()->m_imgTagName);
 }
 
+HTMLCollection* Document::links()
+{
+    return getElementsByTagName(starFish()->staticStrings()->m_linkTagName);
+}
+
 HTMLCollection* Document::forms()
 {
     return getElementsByTagName(starFish()->staticStrings()->m_formTagName);

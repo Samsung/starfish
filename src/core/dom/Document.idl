@@ -29,7 +29,7 @@ interface Document : Node {
   readonly attribute DOMString compatMode;
   readonly attribute DOMString characterSet;
   [Rename=characterSet] readonly attribute DOMString charset;
-  [Unimplemented] readonly attribute DOMString inputEncoding;
+  [Rename=characterSet] readonly attribute DOMString inputEncoding;
   readonly attribute DOMString contentType;
 
   readonly attribute DocumentType? doctype;
@@ -87,7 +87,7 @@ interface Document : Node {
   [SameObject] readonly attribute HTMLCollection images;
   [Unimplemented, SameObject] readonly attribute HTMLCollection embeds;
   [Unimplemented, SameObject] readonly attribute HTMLCollection plugins;
-  [Unimplemented, SameObject] readonly attribute HTMLCollection links;
+  [SameObject] readonly attribute HTMLCollection links;
   [SameObject] readonly attribute HTMLCollection forms;
   [SameObject] readonly attribute HTMLCollection scripts;
   NodeList getElementsByName(DOMString elementName);

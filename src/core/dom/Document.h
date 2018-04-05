@@ -162,6 +162,7 @@ public:
     NodeList* getElementsByName(String* elementName);
 
     HTMLCollection* images();
+    HTMLCollection* links();
     HTMLCollection* forms();
     HTMLCollection* scripts();
 
