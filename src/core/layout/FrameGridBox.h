@@ -196,12 +196,18 @@ public:
         return m_gridLineColumns;
     }
 
+    GCVector<GridLine>& gridLineRows()
+    {
+        return m_gridLineRows;
+    }
+
     LayoutContext& layoutContext()
     {
         return m_layoutContext;
     }
 
     bool existColumnTemplate();
+    bool existRowTemplate();
 
     static bool doesParticipateInGridFormattingContext(Frame* GridItem);
 
