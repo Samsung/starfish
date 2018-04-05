@@ -467,6 +467,11 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | datetime | Containing a date-and-time string representing a timestamp for the change. |
 | [HTMLObjectElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-object-element) | interface | HTMLObjectElement | The object element can represent an external resource, which, depending on the type of the resource, will either be treated as an image, as a nested browsing context, or as an external resource to be processed by a plugin. |
 | [HTMLParagraphElement](https://html.spec.whatwg.org/multipage/semantics.html#the-p-element)  | interface | HTMLParagraphElement |  |
+| [HTMLParamElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-param-element) | interface | HTMLParamElement | The param element defines parameters for plugins invoked by object elements. It does not represent anything on its own. |
+|  | attribute | name | Represents the name of the parameter. |
+|  | attribute | value | Represents the value associated to the parameter. |
+|  | attribute | type | Contains the type of the parameter. |
+|  | attribute | valueType | Contains the type of the value. |
 | [HTMLPreElement](https://html.spec.whatwg.org/multipage/semantics.html#the-pre-element) | interface | HTMLPreElement | The HTMLPreElement interface expose specific properties and methods for manipulating block of preformatted text. |
 | [HTMLQuoteElement](https://html.spec.whatwg.org/multipage/grouping-content.html#the-blockquote-element) | interface | HTMLQuoteElement | The blockquote element represents a section that is quoted from another source. |
 |  | attribute | cite | Containing a URL for the source of the quotation. |

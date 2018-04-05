@@ -70,6 +70,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLQuoteElement.h"
 #include "core/dom/HTMLModElement.h"
+#include "core/dom/HTMLParamElement.h"
 #include "core/dom/HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLAudioElement.h"
@@ -197,6 +198,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
     } else if (name == str->m_delTagName.localNameAtomic() ||
                name == str->m_insTagName.localNameAtomic()) {
         return new HTMLModElement(document, name);
+    } else if (name == str->m_paramTagName.localNameAtomic()) {
+        return new HTMLParamElement(document);
     }
 #define DEFINE_KNOWN_ELEMENT(tagName)                               \
     else if (name == str->m_##tagName##TagName.localNameAtomic())   \
