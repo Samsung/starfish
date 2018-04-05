@@ -462,6 +462,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | textTracks | Returns the list of TextTrack objects contained in the element. |
 |  | method | TextTrack addTextTrack(TextTrackKind kind, optional DOMString label = "", optional DOMString language = "") |  |
 | [HTMLMetaElement](https://html.spec.whatwg.org/multipage/semantics.html#meta) | interface | HTMLMetaElement | The meta element represents various kinds of metadata that cannot be expressed using the title, base, link, style, and script elements. |
+| [HTMLModElement](https://html.spec.whatwg.org/#htmlmodelement) | interface | HTMLModElement | The mod element represents edits to the document. |
+|  | attribute | cite | Containing a URI of a resource explaining the change. |
+|  | attribute | datetime | Containing a date-and-time string representing a timestamp for the change. |
 | [HTMLObjectElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-object-element) | interface | HTMLObjectElement | The object element can represent an external resource, which, depending on the type of the resource, will either be treated as an image, as a nested browsing context, or as an external resource to be processed by a plugin. |
 | [HTMLParagraphElement](https://html.spec.whatwg.org/multipage/semantics.html#the-p-element)  | interface | HTMLParagraphElement |  |
 | [HTMLPreElement](https://html.spec.whatwg.org/multipage/semantics.html#the-pre-element) | interface | HTMLPreElement | The HTMLPreElement interface expose specific properties and methods for manipulating block of preformatted text. |
