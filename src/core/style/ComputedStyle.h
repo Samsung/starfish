@@ -126,6 +126,8 @@ class RareComputedStyleData : public gc {
         GridRowEnd,
         GridColumnStart,
         GridColumnEnd,
+        GridRowGap,
+        GridColumnGap,
     };
 
     union RareComputedStyleValue {
@@ -423,6 +425,8 @@ public:
     GETTER_VALUE(Length, length, cy, CY);
     GETTER_VALUE(Length, length, rx, RX);
     GETTER_VALUE(Length, length, ry, RY);
+    GETTER_VALUE(Length, length, gridRowGap, GridRowGap);
+    GETTER_VALUE(Length, length, gridColumnGap, GridColumnGap);
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect);
     GETTER_VALUE(LineBreakValue, lineBreak, lineBreak, LineBreak);
     GETTER_VALUE(Unit::Color, color, textDecorationColor, TextDecorationColor);
@@ -2497,6 +2501,36 @@ public:
     void setGridColumnEnd(int32_t v)
     {
         *m_rareComputedStyleData.ensureGridColumnEnd() = v;
+    }
+
+    void setGridRowGap(Length l)
+    {
+        *m_rareComputedStyleData.ensureGridRowGap() = l;
+    }
+
+    void setGridColumnGap(Length l)
+    {
+        *m_rareComputedStyleData.ensureGridColumnGap() = l;
+    }
+
+    Length gridRowGap()
+    {
+        Nullable<Length> gap = m_rareComputedStyleData.gridRowGap();
+        if (gap.hasValue()) {
+            return gap.getValue();
+        }
+
+        return Length();
+    }
+
+    Length gridColumnGap()
+    {
+        Nullable<Length> gap = m_rareComputedStyleData.gridColumnGap();
+        if (gap.hasValue()) {
+            return gap.getValue();
+        }
+
+        return Length();
     }
 
     int32_t gridRowStart()

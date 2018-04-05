@@ -1221,6 +1221,7 @@ class CSSStyleDeclaration;
     F(GridRowEnd, gridRowEnd, "grid-row-end")                                  \
     F(GridColumnStart, gridColumnStart, "grid-column-start")                   \
     F(GridColumnEnd, gridColumnEnd, "grid-column-end")                         \
+    F(GridGap, gridGap, "grid-gap")                                            \
     F(CaretColor, caretColor, "caret-color")                                   \
     F(ImageRendering, imageRendering, "image-rendering")                       \
     F(TextOverflow, textOverflow, "text-overflow")                             \

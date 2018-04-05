@@ -224,6 +224,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     case 8:
         // Position
         // Overflow
+        // Grid-Gap
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "position", 8) == 0) {
@@ -233,6 +234,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'o':
             if (memcmp(data, "overflow", 8) == 0) {
                 return CSSStyleKind::Overflow;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "grid-gap", 8) == 0) {
+                return CSSStyleKind::GridGap;
             }
             break;
         }
@@ -1144,6 +1150,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "outline", 7) == 0) {
                 return CSSStyleKind::Outline;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "gridGap", 7) == 0) {
+                return CSSStyleKind::GridGap;
             }
             break;
         }

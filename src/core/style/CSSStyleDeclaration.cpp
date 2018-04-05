@@ -1524,6 +1524,27 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridGap) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::GridGap);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+        Length row = style->gridRowGap();
+        Length column = style->gridColumnGap();
+        CSSStyleValuePair ret1;
+        if (row.isFixed()) {
+            ret1.setLengthValue(CSSLength(row.numberData()));
+            values->push_back(ret1);
+        }
+
+        CSSStyleValuePair ret2;
+        if (column.isFixed()) {
+            ret2.setLengthValue(CSSLength(column.numberData()));
+            values->push_back(ret2);
+        }
+        p.setValueList(values);
+
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::TextOverflow) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TextOverflow);

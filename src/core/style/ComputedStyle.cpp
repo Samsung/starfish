@@ -799,6 +799,8 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         TO_FIXED(cy, CY);
         TO_FIXED(rx, RX);
         TO_FIXED(ry, RY);
+        TO_FIXED(gridRowGap, GridRowGap);
+        TO_FIXED(gridColumnGap, GridColumnGap);
 
 #undef TO_FIXED
     }
@@ -1851,6 +1853,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     if (newStyle->wordBreak() != oldStyle->wordBreak()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::WordBreak] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->gridRowGap() != oldStyle->gridRowGap()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::WordBreak] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->gridColumnGap() != oldStyle->gridColumnGap()) {
         damagedKeys[CSSStyleValuePair::KeyKind::WordBreak] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
