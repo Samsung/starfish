@@ -39,6 +39,15 @@ LayoutUnit GridFormattingContext::preferredWidth()
             widthOfSum += m_gridLineColumns[col].offset();
         }
     }
+
+    if (m_container->style()->gridColumnGap().isFixed()) {
+        LayoutUnit columnGap(0);
+        columnGap = m_container->style()->gridColumnGap().fixed();
+        for (size_t i = 1; i < m_gridLineColumns.size() - 1; i++) {
+            widthOfSum += columnGap;
+        }
+    }
+
     return widthOfSum;
 }
 
@@ -87,6 +96,17 @@ void GridFormattingContext::computeColumnsAndRows()
 
 void GridFormattingContext::layoutGridItems()
 {
+    LayoutUnit rowGap(0);
+    LayoutUnit columnGap(0);
+
+    if (m_container->style()->gridRowGap().isFixed()) {
+        rowGap = m_container->style()->gridRowGap().fixed();
+    }
+
+    if (m_container->style()->gridColumnGap().isFixed()) {
+        columnGap = m_container->style()->gridColumnGap().fixed();
+    }
+
     for (auto area : m_orderedGridArea) {
         FrameBox* gridItem = area.m_box;
         LayoutUnit offsetX, offsetY;
@@ -96,9 +116,17 @@ void GridFormattingContext::layoutGridItems()
             heightOfSum += m_gridLineRows[i].offset();
         }
 
+        for (size_t i = 1; i < area.m_rowStart; i++) {
+            heightOfSum += rowGap;
+        }
+
         LayoutUnit widthOfSum(0);
         for (size_t i = 0; i < area.m_columnStart; i++) {
             widthOfSum += m_gridLineColumns[i].offset();
+        }
+
+        for (size_t i = 1; i < area.m_columnStart; i++) {
+            widthOfSum += columnGap;
         }
 
         offsetY =
@@ -113,6 +141,10 @@ void GridFormattingContext::layoutGridItems()
     LayoutUnit heightOfSum(0);
     for (size_t i = 0; i < m_gridLineRows.size(); i++) {
         heightOfSum += m_gridLineRows[i].offset();
+    }
+
+    for (size_t i = 1; i < m_gridLineRows.size() - 1; i++) {
+        heightOfSum += rowGap;
     }
 
     m_container->computeContentHeight(m_layoutContext, heightOfSum);

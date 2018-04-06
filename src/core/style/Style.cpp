@@ -7711,6 +7711,20 @@ void StyleResolver::apply(Element* element,
                 }
             }
             break;
+        case CSSStyleValuePair::KeyKind::GridRowGap:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Length) {
+                CSSLength row = cssValues[k].cssLengthValue();
+                style->setGridRowGap(row.toLength());
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::GridColumnGap:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Length) {
+                CSSLength column = cssValues[k].cssLengthValue();
+                style->setGridColumnGap(column.toLength());
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -11124,6 +11138,68 @@ bool CSSStyleValuePair::updateValueGridGap(Document* document,
     }
 
     setValueList(values);
+
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueGridRowGap(Document* document,
+                                              const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    auto ss = tokens[0];
+    ss.trim();
+    CSSPropertyParser parser((char*)ss.data(), ss.length());
+    bool hasPoint = false;
+
+    if (!parser.consumeNumber(&hasPoint)) {
+        return false;
+    }
+
+    float number = parser.parsedNumber();
+    parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
+
+    String* str = parser.parsedString();
+
+    if (str->length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
+        return false;
+    }
+
+    CSSLength length = CSSLength(str, number);
+    setLengthValue(length);
+
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueGridColumnGap(Document* document,
+                                                 const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    auto ss = tokens[0];
+    ss.trim();
+    CSSPropertyParser parser((char*)ss.data(), ss.length());
+    bool hasPoint = false;
+
+    if (!parser.consumeNumber(&hasPoint)) {
+        return false;
+    }
+
+    float number = parser.parsedNumber();
+    parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
+
+    String* str = parser.parsedString();
+
+    if (str->length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
+        return false;
+    }
+
+    CSSLength length = CSSLength(str, number);
+    setLengthValue(length);
 
     return true;
 }

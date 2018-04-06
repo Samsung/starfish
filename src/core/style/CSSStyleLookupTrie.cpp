@@ -500,6 +500,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Word-Spacing
         // font-kerning
         // Grid-Row-End
+        // Grid-Row-Gap
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-image", 12) == 0) {
@@ -564,6 +565,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'g':
             if (memcmp(data, "grid-row-end", 12) == 0) {
                 return CSSStyleKind::GridRowEnd;
+            }
+            if (memcmp(data, "grid-row-gap", 12) == 0) {
+                return CSSStyleKind::GridRowGap;
             }
             break;
         }
@@ -694,6 +698,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Object-position
         // List-Style-Type
         // Grid-Column-End
+        // Grid-Column-Gap
         switch (data[0]) {
         case 'j':
             if (memcmp(data, "justify-content", 15) == 0) {
@@ -734,6 +739,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'g':
             if (memcmp(data, "grid-column-end", 15) == 0) {
                 return CSSStyleKind::GridColumnEnd;
+            }
+            if (memcmp(data, "grid-column-gap", 15) == 0) {
+                return CSSStyleKind::GridColumnGap;
             }
             break;
         }
@@ -1333,6 +1341,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             if (memcmp(data, "gridRowEnd", 10) == 0) {
                 return CSSStyleKind::GridRowEnd;
             }
+            if (memcmp(data, "gridRowGap", 10) == 0) {
+                return CSSStyleKind::GridRowGap;
+            }
             break;
         case 'l':
             if (memcmp(data, "lineHeight", 10) == 0) {
@@ -1543,6 +1554,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'g':
             if (memcmp(data, "gridColumnEnd", 13) == 0) {
                 return CSSStyleKind::GridColumnEnd;
+            }
+            if (memcmp(data, "gridColumnGap", 13) == 0) {
+                return CSSStyleKind::GridColumnGap;
             }
             break;
         }
