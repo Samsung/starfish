@@ -318,6 +318,14 @@ public:
     {
         return m_lweWebView;
     }
+    int posX()
+    {
+        return m_posX;
+    }
+    int posY()
+    {
+        return m_posY;
+    }
 
 protected:
     void enter();
@@ -362,9 +370,9 @@ protected:
     String* m_customUserAgentString;
     String* m_builtinPolyfillPathString;
 
-#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     int m_width;
     int m_height;
+#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     int bufferIdx;
     int m_completBufferIdx;
     void* m_frameBufffer1;
@@ -392,6 +400,8 @@ protected:
     std::unordered_map<std::string, std::function<void(String*, int)>>
         m_lweWebViewHandlers;
     void* m_lweWebView;
+    int m_posX;
+    int m_posY;
 
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);

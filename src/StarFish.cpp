@@ -259,10 +259,12 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_testCompatibleMode(StarFishTestCompatibleMode::Normal)
 #endif
     , m_lweWebView(nullptr)
+    , m_posX(0)
+    , m_posY(0)
 {
-#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     m_width = w;
     m_height = h;
+#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     m_needsUpdate = false;
     m_completBufferIdx = 0;
     bufferIdx = 1;
@@ -334,39 +336,38 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #if defined(PORT_WINDOW_BACKEND_EFL)
     if (!platformHandle) {
         Evas_Object* wndObj = elm_win_add(NULL, STARFISH_NAME, ELM_WIN_BASIC);
-#ifdef STARFISH_TIZEN
-#ifdef STARFISH_ENABLE_TRANSPARENT_WINDOW
-        // Set efl configuration for resizing window (Without this, Window'll be
-        // full-screen only )
-        elm_win_aux_hint_add(wndObj, "wm.policy.win.user.geometry", "1");
-
-        elm_win_alpha_set(wndObj, EINA_TRUE);
-        Evas_Object* bg = elm_bg_add(wndObj);
-        evas_object_color_set(bg, 0x00, 0x00, 0x00, 0x00);
-
-        evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND,
-                                         EVAS_HINT_EXPAND);
-        elm_win_resize_object_add(wndObj, bg);
-        evas_object_show(bg);
-#else
-        Evas_Object* bg = elm_bg_add(wndObj);
-        evas_object_color_set(bg, 0xff, 0xff, 0xff, 0xff);
-
-        evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND,
-                                         EVAS_HINT_EXPAND);
-        elm_win_resize_object_add(wndObj, bg);
-        evas_object_show(bg);
-#endif
-#endif
         elm_win_title_set(wndObj, STARFISH_NAME);
         elm_win_autodel_set(wndObj, EINA_TRUE);
         evas_object_resize(wndObj, w, h);
         evas_object_move(wndObj, x, y);
         platformHandle = wndObj;
     } else {
-        evas_object_resize((Evas_Object*)platformHandle, w, h);
-        evas_object_move((Evas_Object*)platformHandle, x, y);
+        m_posX = x;
+        m_posY = y;
     }
+#ifdef STARFISH_TIZEN
+#ifdef STARFISH_ENABLE_TRANSPARENT_WINDOW
+    // Set efl configuration for resizing window (Without this, Window'll be
+    // full-screen only )
+    elm_win_aux_hint_add(wndObj, "wm.policy.win.user.geometry", "1");
+
+    elm_win_alpha_set(wndObj, EINA_TRUE);
+    Evas_Object* bg = elm_bg_add(wndObj);
+    evas_object_color_set(bg, 0x00, 0x00, 0x00, 0x00);
+
+    evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_win_resize_object_add(wndObj, bg);
+    evas_object_show(bg);
+#else
+    Evas_Object* bg = elm_bg_add(wndObj);
+    evas_object_color_set(bg, 0xff, 0xff, 0xff, 0xff);
+
+    evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_win_resize_object_add(wndObj, bg);
+    evas_object_show(bg);
+#endif
+#endif
+
 #endif
 
 #if defined(STARFISH_TIZEN_TV)
@@ -415,19 +416,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_tts = new TTS(this);
 #endif
 
-    int width = w;
-    int height = h;
-
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-    width = m_width;
-    height = m_height;
-#elif defined(PORT_WINDOW_BACKEND_EFL)
-    evas_object_geometry_get((Evas_Object*)nativeHandle(), NULL, NULL, &width,
-                             &height);
-#endif
-
     m_platformWindow =
-        PlatformWindow::create(this, nativeHandle(), width, height);
+        PlatformWindow::create(this, nativeHandle(), m_width, m_height);
 
     WebView* webView = WebView::create(this);
     m_platformWindow->setWebView(webView);

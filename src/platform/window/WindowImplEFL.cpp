@@ -145,7 +145,8 @@ public:
 #endif
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
         int width;
-        evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, NULL);
+        evas_object_geometry_get(eflWindow->m_mainBox, NULL, NULL, &width,
+                                 NULL);
         return width;
     }
 
@@ -159,19 +160,19 @@ public:
 #endif
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
         int height;
-        evas_object_geometry_get(eflWindow->m_window, NULL, NULL, NULL,
+        evas_object_geometry_get(eflWindow->m_mainBox, NULL, NULL, NULL,
                                  &height);
         return (height)-m_offsetYDueToSoftwareKeyboard;
     }
 
     virtual void resizeTo(int w, int h) override
     {
-        evas_object_resize(m_window, w, h);
+        evas_object_resize(m_mainBox, w, h);
     }
 
     virtual void* unwrap() override
     {
-        return (void*)m_window;
+        return (void*)m_mainBox;
     }
 
     virtual void clearResources() override;
@@ -940,12 +941,17 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
+    wnd->m_mainBox = elm_image_add(wnd->m_window);
+    evas_object_resize(wnd->m_mainBox, width, height);
+    evas_object_move(wnd->m_mainBox, wnd->starFish()->posX(),
+                     wnd->starFish()->posY());
+    evas_object_show(wnd->m_mainBox);
+
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-    wnd->m_canvasAdpater =
-        evas_object_image_add(evas_object_evas_get((Evas_Object*)win));
-    evas_object_size_hint_weight_set(wnd->m_canvasAdpater, EVAS_HINT_EXPAND,
-                                     EVAS_HINT_EXPAND);
-    elm_win_resize_object_add((Evas_Object*)win, wnd->m_canvasAdpater);
+    wnd->m_canvasAdpater = elm_image_object_get(wnd->m_mainBox);
+    evas_object_resize(wnd->m_canvasAdpater, width, height);
+    evas_object_move(wnd->m_canvasAdpater, wnd->starFish()->posX(),
+                     wnd->starFish()->posY());
     evas_object_image_content_hint_set(wnd->m_canvasAdpater,
                                        EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
     evas_object_image_alpha_set(wnd->m_canvasAdpater, EINA_TRUE);
@@ -984,16 +990,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_cairo = cairo_create(wnd->m_surface);
 #endif
 #ifndef STARFISH_TIZEN_WEARABLE
-    Evas* e = evas_object_evas_get(wnd->m_window);
+    Evas* e = evas_object_evas_get(wnd->m_mainBox);
     Ecore_Evas* ee = ecore_evas_ecore_evas_get(e);
     Ecore_Window ew = ecore_evas_window_get(ee);
     wnd->m_handle = (uintptr_t)ew;
-
-    wnd->m_mainBox = elm_box_add(wnd->m_window);
-    evas_object_size_hint_weight_set(wnd->m_mainBox, EVAS_HINT_EXPAND,
-                                     EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(wnd->m_window, wnd->m_mainBox);
-    evas_object_show(wnd->m_mainBox);
 #ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
@@ -1014,7 +1014,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             WindowImplEFL* sf = (WindowImplEFL*)data;
             Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
             // We care just left button now
-            if (d->buttons == 1) {
+            int currentPosX = d->x - sf->starFish()->posX();
+            int currentPosY = d->y - sf->starFish()->posY();
+            if (d->buttons == 1 && (currentPosX >= 0 && currentPosY >= 0)) {
                 StarFishEnterer enter(sf->starFish());
                 if (d->timestamp - sf->m_lastClickedTimestamp >
                     CLICK_REFRESH_DELAY) {
@@ -1026,8 +1028,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 MouseData mdata(
                     MouseData::MouseButtonValue::LeftButton,
                     MouseData::MouseButtonsValue::LeftButtonDown,
-                    d->x / sf->starFish()->screenInfo().deviceScaleFactor,
-                    d->y / sf->starFish()->screenInfo().deviceScaleFactor,
+                    currentPosX /
+                        sf->starFish()->screenInfo().deviceScaleFactor,
+                    currentPosY /
+                        sf->starFish()->screenInfo().deviceScaleFactor,
                     sf->m_clickedCount);
                 sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
                 sf->m_isMouseLbuttonDown = true;
@@ -1042,13 +1046,17 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             WindowImplEFL* sf = (WindowImplEFL*)data;
             Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
             // We care just left button now
-            if (d->buttons == 1) {
+            int currentPosX = d->x - sf->starFish()->posX();
+            int currentPosY = d->y - sf->starFish()->posY();
+            if (d->buttons == 1 && (currentPosX >= 0 && currentPosY >= 0)) {
                 StarFishEnterer enter(sf->starFish());
                 MouseData mdata(
                     MouseData::MouseButtonValue::NoButton,
                     MouseData::MouseButtonsValue::NoButtonDown,
-                    d->x / sf->starFish()->screenInfo().deviceScaleFactor,
-                    d->y / sf->starFish()->screenInfo().deviceScaleFactor,
+                    currentPosX /
+                        sf->starFish()->screenInfo().deviceScaleFactor,
+                    currentPosY /
+                        sf->starFish()->screenInfo().deviceScaleFactor,
                     sf->m_clickedCount);
                 sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
                 sf->m_isMouseLbuttonDown = false;
@@ -1064,10 +1072,17 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             Ecore_Event_Mouse_Wheel* d = (Ecore_Event_Mouse_Wheel*)event;
             StarFishEnterer enter(sf->m_starFish);
             // We only care vertical wheel
-            sf->dispatchMouseWheelEvent(
-                d->x / sf->starFish()->screenInfo().deviceScaleFactor,
-                d->y / sf->starFish()->screenInfo().deviceScaleFactor, d->z,
-                true);
+            int currentPosX = d->x - sf->starFish()->posX();
+            int currentPosY = d->y - sf->starFish()->posY();
+
+            if (currentPosX >= 0 && currentPosY >= 0) {
+                sf->dispatchMouseWheelEvent(
+                    currentPosX /
+                        sf->starFish()->screenInfo().deviceScaleFactor,
+                    currentPosY /
+                        sf->starFish()->screenInfo().deviceScaleFactor,
+                    d->z, true);
+            }
             return EINA_TRUE;
         },
         wnd);
@@ -1077,16 +1092,23 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         [](void* data, int type, void* event) -> Eina_Bool {
             WindowImplEFL* sf = (WindowImplEFL*)data;
             Ecore_Event_Mouse_Move* d = (Ecore_Event_Mouse_Move*)event;
-            StarFishEnterer enter(sf->m_starFish);
-            unsigned char buttons =
-                sf->m_isMouseLbuttonDown
-                    ? MouseData::MouseButtonsValue::LeftButtonDown
-                    : 0;
-            MouseData mdata(
-                0, buttons,
-                d->x / sf->starFish()->screenInfo().deviceScaleFactor,
-                d->y / sf->starFish()->screenInfo().deviceScaleFactor, 0);
-            sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
+            int currentPosX = d->x - sf->starFish()->posX();
+            int currentPosY = d->y - sf->starFish()->posY();
+            if (currentPosX >= 0 && currentPosY >= 0) {
+                StarFishEnterer enter(sf->m_starFish);
+                unsigned char buttons =
+                    sf->m_isMouseLbuttonDown
+                        ? MouseData::MouseButtonsValue::LeftButtonDown
+                        : 0;
+                MouseData mdata(
+                    0, buttons,
+                    currentPosX /
+                        sf->starFish()->screenInfo().deviceScaleFactor,
+                    currentPosY /
+                        sf->starFish()->screenInfo().deviceScaleFactor,
+                    0);
+                sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
+            }
             return EINA_TRUE;
         },
         wnd);
@@ -1154,15 +1176,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
 #else
     Evas* e = evas_object_evas_get(wnd->m_window);
-    wnd->m_mainBox = elm_box_add(wnd->m_window);
-    evas_object_size_hint_weight_set(wnd->m_mainBox, EVAS_HINT_EXPAND,
-                                     EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(wnd->m_window, wnd->m_mainBox);
-    evas_object_show(wnd->m_mainBox);
 
     wnd->m_dummyBox = elm_button_add(wnd->m_window);
     int w, h;
-    evas_object_geometry_get(wnd->m_window, &w, &h, NULL, NULL);
+    evas_object_geometry_get(wnd->m_mainBox, &w, &h, NULL, NULL);
     evas_object_resize(wnd->m_dummyBox, width, height);
     evas_object_move(wnd->m_dummyBox, 0, 0);
     evas_object_show(wnd->m_dummyBox);
@@ -1265,7 +1282,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 #endif
 
     // Rendering control callback
-    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+    evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
                             EVAS_CALLBACK_RENDER_POST,
                             [](void* data, Evas* e, void* event_info) {
                                 STARFISH_ASSERT(isMainThread());
@@ -1276,7 +1293,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                             },
                             wnd);
 
-    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+    evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
                             EVAS_CALLBACK_RENDER_PRE,
                             [](void* data, Evas* e, void* event_info) {
                                 STARFISH_ASSERT(isMainThread());
@@ -1284,13 +1301,13 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                 wnd->m_isEvasFlushed = false;
                             },
                             wnd);
-    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+    evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
                             EVAS_CALLBACK_RENDER_POST,
                             [](void* data, Evas* e, void* event_info) {}, wnd);
-    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+    evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
                             EVAS_CALLBACK_RENDER_FLUSH_PRE,
                             [](void* data, Evas* e, void* event_info) {}, wnd);
-    evas_event_callback_add(evas_object_evas_get(wnd->m_window),
+    evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
                             EVAS_CALLBACK_RENDER_FLUSH_POST,
                             [](void* data, Evas* e, void* event_info) {}, wnd);
 
@@ -1330,9 +1347,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     ecore_imf_context_client_window_set(
         wnd->m_imfContext,
         (void*)ecore_evas_window_get(
-            ecore_evas_ecore_evas_get(evas_object_evas_get(wnd->m_window))));
+            ecore_evas_ecore_evas_get(evas_object_evas_get(wnd->m_mainBox))));
     ecore_imf_context_client_canvas_set(wnd->m_imfContext,
-                                        evas_object_evas_get(wnd->m_window));
+                                        evas_object_evas_get(wnd->m_mainBox));
 
     ecore_imf_context_retrieve_surrounding_callback_set(
         wnd->m_imfContext,
@@ -1609,7 +1626,7 @@ PlatformWindow::~PlatformWindow()
     }
 
     if (eflWindow->m_mainBox) {
-        elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_mainBox);
+        // elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_mainBox);
         evas_object_del(eflWindow->m_mainBox);
         eflWindow->m_mainBox = nullptr;
     }
@@ -1705,8 +1722,8 @@ Canvas* WindowImplEFL::preparePainting()
     }
 #endif
     int width, height;
-    evas_object_geometry_get(m_window, NULL, NULL, &width, &height);
-    Evas* evas = evas_object_evas_get(m_window);
+    evas_object_geometry_get(m_mainBox, NULL, NULL, &width, &height);
+    Evas* evas = evas_object_evas_get(m_mainBox);
     struct dummy {
         void* a;
         void* b;
@@ -1719,8 +1736,8 @@ Canvas* WindowImplEFL::preparePainting()
     dummy* d = new dummy;
     d->a = evas;
     d->b = nullptr;
-    d->w = width;
-    d->h = height;
+    d->w = width + starFish()->posX();
+    d->h = height + starFish()->posY();
     d->objList = &m_objectList;
     d->f = false;
     auto iter = m_objectList.begin();
@@ -1806,8 +1823,8 @@ Canvas* WindowImplEFL::preparePainting()
     } d;
     d.cairo = m_canvasAdpaterCairo;
     d.surface = m_canvasAdpaterSurface;
-    d.w = width();
-    d.h = height();
+    d.w = width() + starFish()->posX();
+    d.h = height() + starFish()->posY();
     return Canvas::createDirect(starFish(), &d);
 #endif
 }
@@ -1904,8 +1921,8 @@ Compositor* WindowImplEFL::prepareCompositor()
     }
 #endif
     int width, height;
-    evas_object_geometry_get(m_window, NULL, NULL, &width, &height);
-    Evas* evas = evas_object_evas_get(m_window);
+    evas_object_geometry_get(m_mainBox, NULL, NULL, &width, &height);
+    Evas* evas = evas_object_evas_get(m_mainBox);
     struct dummy {
         void* a;
         void* b;
@@ -1918,8 +1935,8 @@ Compositor* WindowImplEFL::prepareCompositor()
     dummy* d = new dummy;
     d->a = evas;
     d->b = nullptr;
-    d->w = width;
-    d->h = height;
+    d->w = width + starFish()->posX();
+    d->h = height + starFish()->posY();
     d->objList = &m_objectList;
     d->f = true;
     auto iter = m_objectList.begin();

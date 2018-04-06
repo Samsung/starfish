@@ -736,16 +736,21 @@ bool WebView::rendering(bool force)
                 starFish()->platformWindow()->prepareCompositor();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
+
+            compositor->translate(starFish()->posX(), starFish()->posY());
             compositor->save();
             compositor->translate(-mainFrame->scrollLeft(),
                                   -mainFrame->scrollTop());
+            compositor->clip(Unit::Rect(
+                mainFrame->scrollLeft().toInt(), mainFrame->scrollTop().toInt(),
+                starFish()->platformWindow()->width(),
+                starFish()->platformWindow()->height()));
             Canvas* canvas = Compositor::createCanvasAdaptor(compositor);
             mainBrowsingContext()->paintWindowBackground(canvas);
 
             m_rootStackingContext->compositeStackingContext(compositor);
 
             compositor->restore();
-
             mainBrowsingContext()->window()->scrolling()->paintScrollbars(
                 canvas, mainFrame, mainFrame->appliedOverflowX(),
                 mainFrame->appliedOverflowY());
