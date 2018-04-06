@@ -55,6 +55,10 @@ static const char* ORIGINS_ARE_NOT_MATCHED =
     "does not match the recipient window's origin('%s')";
 static const char* NOT_POSITIVE =
     "The value provided (%s) is not positive or 0.";
+static const char* EXCEED_MIN_BOUNDARY =
+    "The value provided (%s) is less than the minimum boundary (%s).";
+static const char* EXCEED_MAX_BOUNDARY =
+    "The value provided (%s) is greater than the maximum boundary (%s).";
 
 size_t bufferSize(std::initializer_list<const char*> args);
 

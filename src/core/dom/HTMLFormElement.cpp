@@ -433,15 +433,62 @@ int32_t HTMLFormControl::maxLength()
 
 void HTMLFormControl::setMaxLength(int32_t maxlength)
 {
+    int32_t minlength = minLength();
     if (maxlength < 0) {
         COMPOSE_MESSAGE(reason, NOT_POSITIVE,
                         String::fromInt(maxlength)->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "maxLength",
                         "HTMLFormControl", reason);
         throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+    } else if (minlength >= 0 && maxlength < minlength) {
+        COMPOSE_MESSAGE(reason, EXCEED_MIN_BOUNDARY,
+                        String::fromInt(maxlength)->toUTF8NonGCString().data(),
+                        String::fromInt(minlength)->toUTF8NonGCString().data());
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "maxLength",
+                        "HTMLFormControl", reason);
+        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
     } else {
         setAttribute(starFish()->staticStrings()->m_maxlength,
                      String::fromInt(maxlength));
+    }
+}
+
+int32_t HTMLFormControl::minLength()
+{
+    int32_t result = 0;
+    Nullable<String*> minLengthStr =
+        getAttribute(starFish()->staticStrings()->m_minlength);
+
+    if (!minLengthStr.hasValue()) {
+        result = -1;
+    } else {
+        result = String::parseInt(minLengthStr.getValue());
+        if (result < 0) {
+            result = -1;
+        }
+    }
+    return result;
+}
+
+void HTMLFormControl::setMinLength(int32_t minlength)
+{
+    int32_t maxlength = maxLength();
+    if (minlength < 0) {
+        COMPOSE_MESSAGE(reason, NOT_POSITIVE,
+                        String::fromInt(minlength)->toUTF8NonGCString().data());
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "minLength",
+                        "HTMLFormControl", reason);
+        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+    } else if (maxlength >= 0 && maxlength < minlength) {
+        COMPOSE_MESSAGE(reason, EXCEED_MAX_BOUNDARY,
+                        String::fromInt(minlength)->toUTF8NonGCString().data(),
+                        String::fromInt(maxlength)->toUTF8NonGCString().data());
+        COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "minLength",
+                        "HTMLFormControl", reason);
+        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+    } else {
+        setAttribute(starFish()->staticStrings()->m_minlength,
+                     String::fromInt(minlength));
     }
 }
 

@@ -621,7 +621,8 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 switch (event->asKeyboardEvent()->keyValue()) {
                 case KeyValue::BackspaceKey: {
                     if (value->length()) {
-                        if (m_currentCaretPosition > 0) {
+                        if (m_currentCaretPosition > 0 &&
+                            (int32_t)value->length() > minLength()) {
                             StringBuilder sb;
                             sb.appendSubString(value, 0,
                                                m_currentCaretPosition - 1);
@@ -637,7 +638,8 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
                 case KeyValue::DeleteKey: {
                     if (value->length()) {
                         if (m_currentCaretPosition >= 0 &&
-                            m_currentCaretPosition < value->length()) {
+                            m_currentCaretPosition < value->length() &&
+                            (int32_t)value->length() > minLength()) {
                             StringBuilder sb;
                             sb.appendSubString(value, 0,
                                                m_currentCaretPosition);

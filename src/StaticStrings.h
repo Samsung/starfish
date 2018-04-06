@@ -325,6 +325,7 @@ public:
     QualifiedName m_max;
     QualifiedName m_maxlength;
     QualifiedName m_min;
+    QualifiedName m_minlength;
     QualifiedName m_step;
     QualifiedName m_tabindex;
     QualifiedName m_formAction;
@@ -339,6 +340,7 @@ public:
     QualifiedName m_checkbox;
     QualifiedName m_radio;
     QualifiedName m_text;
+    QualifiedName m_textlength;
     QualifiedName m_placeholder;
     QualifiedName m_selected;
     QualifiedName m_multiple;
