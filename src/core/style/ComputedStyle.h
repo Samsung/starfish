@@ -95,6 +95,7 @@ class RareComputedStyleData : public gc {
         TextUnderlinePosition,
         Resize,
         Content,
+        Quote,
         Outline,
         BorderRadius,
         PositionedMask,
@@ -160,6 +161,7 @@ class RareComputedStyleData : public gc {
         TextDecorationStyleValue m_textDecorationStyle;
         TextUnderlinePositionValue m_textUnderlinePosition;
         ResizeValue m_resize;
+        QuoteValue m_quote;
         TextOverflowData* m_textOverflow;
         CounterBaseList* m_counterBaseList;
 
@@ -275,6 +277,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(ResizeValue v)
             : m_resize(v)
+        {
+        }
+
+        RareComputedStyleValue(QuoteValue v)
+            : m_quote(v)
         {
         }
 
@@ -435,6 +442,7 @@ public:
     GETTER_VALUE(TextDecorationStyleValue, textDecorationStyle,
                  textDecorationStyle, TextDecorationStyle);
     GETTER_VALUE(ResizeValue, resize, resize, Resize);
+    GETTER_VALUE(QuoteValue, quote, quote, Quote);
 
 #undef GETTER_VALUE
 
@@ -2476,7 +2484,6 @@ public:
         if (content) {
             return content;
         }
-
         return nullptr;
     }
 
@@ -2694,6 +2701,41 @@ public:
     void setCounterIncrementItem(const AtomicString& id, int32_t v)
     {
         m_rareComputedStyleData.ensureCounterIncrement()->emplace_back(id, v);
+    }
+
+    void setContentQuote(QuoteValue v)
+    {
+        ContentData content(ContentData::ContentType::Quote);
+        content.setQuote(v);
+        m_rareComputedStyleData.ensureContent()->push_back(content);
+    }
+
+    bool hasQuote()
+    {
+        ComputedStyle* before = cachedPseudoStyle(
+            StyleResolver::PseudoElementType::PseudoElementBefore);
+        ComputedStyle* after = cachedPseudoStyle(
+            StyleResolver::PseudoElementType::PseudoElementAfter);
+
+        if (before != nullptr && hasQuote(before)) {
+            return true;
+        } else if (after != nullptr && hasQuote(after)) {
+            return true;
+        }
+        return false;
+    }
+
+    bool hasQuote(ComputedStyle* style)
+    {
+        if (!style->m_rareComputedStyleData.m_styles.size()) {
+            return false;
+        }
+        ContentDataGroup* content = style->rareComputedStyleData()->content();
+        if (content != nullptr && content->size() == 1 &&
+            content->back().isQuote()) {
+            return true;
+        }
+        return false;
     }
 
     void setPseudoType(StyleResolver::PseudoElementType id)

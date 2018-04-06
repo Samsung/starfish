@@ -1821,8 +1821,10 @@ void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
     if (newStyle) {
         m_canBeCountingRoot =
             newStyle->counterIncrement() || newStyle->counterReset();
+        m_canBeQuoteRoot = newStyle->hasQuote();
     } else {
         m_canBeCountingRoot = false;
+        m_canBeQuoteRoot = false;
     }
 }
 
@@ -1834,6 +1836,9 @@ void Node::didNodeInserted(Node* parent, Node* newChild)
     if (m_canBeCountingRoot) {
         document()->notifyCountingOutdated();
     }
+    if (m_canBeQuoteRoot) {
+        document()->notifyQuoteOutdated();
+    }
 }
 
 void Node::didNodeRemoved(Node* parent, Node* oldChild)
@@ -1843,6 +1848,9 @@ void Node::didNodeRemoved(Node* parent, Node* oldChild)
     }
     if (m_canBeCountingRoot) {
         document()->notifyCountingOutdated();
+    }
+    if (m_canBeQuoteRoot) {
+        document()->notifyQuoteOutdated();
     }
 }
 

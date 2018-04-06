@@ -598,6 +598,13 @@ enum TransitionTimingFunctionValue {
 
 enum BoxSizingValue { ContentBoxBoxSizingValue, BorderBoxBoxSizingValue };
 
+enum QuoteValue {
+    OpenQuoteValue,
+    CloseQuoteValue,
+    NoOpenQuoteValue,
+    NoCloseQuoteValue,
+};
+
 enum FillRuleValue {
     FillRuleNonZero,
     FillRuleEvenOdd,
@@ -1088,6 +1095,7 @@ public:
 
         // content
         Attr,
+        QuoteValueKind,
 
         // svg
         FillRuleValueKind,
@@ -1305,6 +1313,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == UnicodeBidiValueKind);
         return m_value.m_unicodeBidi;
+    }
+
+    QuoteValue quoteValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == QuoteValueKind);
+        return m_value.m_quote;
     }
 
     BorderImageRepeatValue borderImageRepeatValue() const
@@ -1748,6 +1762,7 @@ public:
         BoxValue m_box;
         BackgroundRepeatValue m_backgroundRepeat;
         BackgroundAttachmentValue m_backgroundAttachment;
+        QuoteValue m_quote;
         BorderImageRepeatValue m_borderImageRepeat;
         BorderStyleValue m_borderStyle;
         BorderWidthValue m_borderWidth;
@@ -1891,6 +1906,10 @@ public:
         }
         ValueData(BackgroundAttachmentValue v)
             : m_backgroundAttachment(v)
+        {
+        }
+        ValueData(QuoteValue v)
+            : m_quote(v)
         {
         }
         ValueData(BorderImageRepeatValue v)
@@ -2237,6 +2256,12 @@ public:
         m_valueKind =
             CSSStyleValuePair::ValueKind::BackgroundAttachmentValueKind;
         m_value.m_backgroundAttachment = val;
+    }
+
+    void setQuoteValue(QuoteValue val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::QuoteValueKind;
+        m_value.m_quote = val;
     }
 
     void setBorderImageRepeatValue(BorderImageRepeatValue val)

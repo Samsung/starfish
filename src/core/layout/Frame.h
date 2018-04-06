@@ -49,6 +49,7 @@ class FrameInputBox;
 class FrameSVGBox;
 class FrameText;
 class FrameCounterText;
+class FrameQuoteText;
 class InlineTextBox;
 class InlineNonReplacedBox;
 class InlineBoxLayoutParentBox;
@@ -1039,6 +1040,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameQuoteText() const
+    {
+        return false;
+    }
+
     virtual bool isFrameInline()
     {
         return false;
@@ -1149,6 +1155,12 @@ public:
     {
         STARFISH_ASSERT(isFrameCounterText());
         return (FrameCounterText*)this;
+    }
+
+    FrameQuoteText* asFrameQuoteText()
+    {
+        STARFISH_ASSERT(isFrameQuoteText());
+        return (FrameQuoteText*)this;
     }
 
     FrameBox* asFrameBox()

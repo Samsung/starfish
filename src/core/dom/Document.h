@@ -455,6 +455,8 @@ public:
 
     void notifyCountingOutdated();
 
+    void notifyQuoteOutdated();
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers

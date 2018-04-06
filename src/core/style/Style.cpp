@@ -2832,6 +2832,17 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("fit-content");
         }
         break;
+    case CSSStyleValuePair::ValueKind::QuoteValueKind:
+        switch (quoteValue()) {
+        case OpenQuoteValue:
+            return String::fromUTF8("open-quote");
+        case CloseQuoteValue:
+            return String::fromUTF8("close-quote");
+        case NoOpenQuoteValue:
+            return String::fromUTF8("no-open-quote");
+        case NoCloseQuoteValue:
+            return String::fromUTF8("no-close-quote");
+        }
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -6684,6 +6695,9 @@ void StyleResolver::apply(Element* element,
                         } else {
                             style->setContentCounter(v->name(), counter);
                         }
+                    } else if (item.valueKind() ==
+                               CSSStyleValuePair::ValueKind::QuoteValueKind) {
+                        style->setContentQuote(item.quoteValue());
                     } else {
                         STARFISH_RELEASE_ASSERT_NOT_REACHED();
                     }
@@ -9861,8 +9875,16 @@ bool CSSStyleValuePair::updateValueContent(Document* document,
         CSSStyleValuePair ret;
         if (!ret.updateValueUnitUrlOrNone(value)) {
             CSSPropertyParser parser((char*)tokens[i].data());
-            if (value.equals("normal")) {
+            if (STRING_VALUE_IS_STRING("normal")) {
                 ret.m_valueKind = CSSStyleValuePair::ValueKind::Normal;
+            } else if (STRING_VALUE_IS_STRING("open-quote")) {
+                ret.setQuoteValue(QuoteValue::OpenQuoteValue);
+            } else if (STRING_VALUE_IS_STRING("close-quote")) {
+                ret.setQuoteValue(QuoteValue::CloseQuoteValue);
+            } else if (STRING_VALUE_IS_STRING("no-open-quote")) {
+                ret.setQuoteValue(QuoteValue::NoOpenQuoteValue);
+            } else if (STRING_VALUE_IS_STRING("no-close-quote")) {
+                ret.setQuoteValue(QuoteValue::NoCloseQuoteValue);
             } else if (parser.parseContentString(
                            value.data(), value.length(),
                            &(ret.m_value.m_stringValue))) {

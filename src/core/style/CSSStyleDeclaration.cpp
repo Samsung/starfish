@@ -1317,6 +1317,10 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                         m_node->starFish(), data->counterStyle()->name()));
                     t.setCounterFunctionValue(f);
                     values->pushBack(t);
+                } else if (c.type() == ContentData::Quote) {
+                    CSSStyleValuePair t;
+                    t.setQuoteValue(c.quote());
+                    values->pushBack(t);
                 }
             }
             p.setValueList(values);
