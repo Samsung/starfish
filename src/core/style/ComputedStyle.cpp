@@ -1997,6 +1997,9 @@ ComputedStyle* ComputedStyle::pseudoStyle(
             containerElement, pseudoType,
             stickyInheritFrom ? stickyInheritFrom : this);
         addCachedPseudoStyle(cs);
+
+        m_styleDamageSource = (StyleResolver::StyleDamageSource)(
+            m_styleDamageSource | cs->m_styleDamageSource);
     }
     return cs;
 }

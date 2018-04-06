@@ -44,6 +44,7 @@ public:
     {
         close();
         struct stat s;
+        memset(&s, 0, sizeof(struct stat));
         stat(filePath, &s);
         if ((s.st_mode & S_IFMT) == S_IFDIR) {
             return false;
@@ -113,6 +114,7 @@ public:
     int64_t lastAccessTime() override
     {
         struct stat s;
+        memset(&s, 0, sizeof(struct stat));
         stat(m_path.data(), &s);
         return s.st_atime;
     }
@@ -120,6 +122,7 @@ public:
     int64_t lastModificationTime() override
     {
         struct stat s;
+        memset(&s, 0, sizeof(struct stat));
         stat(m_path.data(), &s);
         return s.st_mtime;
     }
@@ -127,6 +130,7 @@ public:
     int64_t lastChangeTime() override
     {
         struct stat s;
+        memset(&s, 0, sizeof(struct stat));
         stat(m_path.data(), &s);
         return s.st_ctime;
     }
@@ -260,6 +264,7 @@ public:
     int64_t lastAccessTime() override
     {
         struct stat s;
+        memset(&s, 0, sizeof(struct stat));
         stat(m_path.data(), &s);
         return s.st_atime;
     }
@@ -267,6 +272,7 @@ public:
     int64_t lastModificationTime() override
     {
         struct stat s;
+        memset(&s, 0, sizeof(struct stat));
         stat(m_path.data(), &s);
         return s.st_mtime;
     }
@@ -274,6 +280,7 @@ public:
     int64_t lastChangeTime() override
     {
         struct stat s;
+        memset(&s, 0, sizeof(struct stat));
         stat(m_path.data(), &s);
         return s.st_ctime;
     }

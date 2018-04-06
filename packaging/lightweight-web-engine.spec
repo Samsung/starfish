@@ -173,5 +173,6 @@ cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
 %files devel
 %{_includedir}
 %{_bindir}/%{bin}
+%{_libdir}/*.so
 %{_libdir}/pkgconfig/lightweight-web-engine.pc
 

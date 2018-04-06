@@ -14,6 +14,7 @@ def tc_handler(tc_file, output, show_progress=True):
     if word_all == 0:
         result = PColors.red("[FAIL] ") + tc_file + " (" + PColors.red("Invalid result") + ")"
         word_fail += 1
+        result += "Starfish output => " + output
     elif word_fail == 0:
         result = PColors.green("[PASS] ") + tc_file
         result += " (" + PColors.green("PASS: " + str(word_pass)) + ")"
@@ -22,6 +23,7 @@ def tc_handler(tc_file, output, show_progress=True):
         result = PColors.red("[FAIL] ") + tc_file
         result += " (" + PColors.green("PASS: " + str(word_pass)) + ", "
         result += PColors.red("FAIL: " + str(word_fail)) + ")"
+        result += "Starfish output => " + output
 
     if show_progress:
         print result

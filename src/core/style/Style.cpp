@@ -4164,7 +4164,7 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
 }
 
 void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
-                                          CSSStyleValuePair ret)
+                                          const CSSStyleValuePair& ret)
 {
     for (unsigned i = 0; i < m_cssValues.size(); i++) {
         if (m_cssValues[i].keyKind() == name) {
@@ -4182,8 +4182,8 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
             return;
         }
     }
-    ret.setKeyKind(name);
-    m_cssValues.push_back(ret);
+    m_cssValues.push_back(CSSStyleValuePair(ret));
+    m_cssValues.back().setKeyKind(name);
     rootPointerValueIfExists(ret);
     notifyNeedsStyleRecalc();
 }
