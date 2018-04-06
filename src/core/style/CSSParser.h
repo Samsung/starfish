@@ -400,6 +400,26 @@ public:
         return true;
     }
 
+    bool consumeParenthesis()
+    {
+        consumeWhitespaces();
+        if (*m_curPos != '(') {
+            return false;
+        }
+
+        size_t len = 0;
+        char* start = m_curPos;
+        for (char *cur = m_curPos; cur < m_endPos && *cur != ')';
+             cur++, len++) {
+        }
+
+        if (*(m_curPos + len) != ')') {
+            return false;
+        }
+        m_parsedString = String::fromUTF8(start, len + 1);
+        m_curPos += len + 1;
+        return true;
+    }
     String* parsedString()
     {
         return m_parsedString;
