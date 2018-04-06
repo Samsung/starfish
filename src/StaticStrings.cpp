@@ -166,6 +166,9 @@ StaticStrings::StaticStrings(StarFish* sf)
                       AtomicString::createAtomicString(sf, "maxlength"));
     m_min = QualifiedName(AtomicString::emptyAtomicString(),
                           AtomicString::createAtomicString(sf, "min"));
+    m_minlength =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "minlength"));
     m_step = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "step"));
     m_tabindex =
@@ -200,6 +203,9 @@ StaticStrings::StaticStrings(StarFish* sf)
                             AtomicString::createAtomicString(sf, "radio"));
     m_text = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "text"));
+    m_textlength =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "textlength"));
     m_placeholder =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "placeholder"));

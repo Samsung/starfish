@@ -200,6 +200,11 @@ void HTMLTextAreaElement::setDefaultValue(String* value)
     setTextContent(value);
 }
 
+int HTMLTextAreaElement::textLength()
+{
+    return apiValue()->length();
+}
+
 uint32_t HTMLTextAreaElement::cols()
 {
     Nullable<String*> attrValue =

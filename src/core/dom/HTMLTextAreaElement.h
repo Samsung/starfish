@@ -54,6 +54,8 @@ public:
     String* defaultValue();
     void setDefaultValue(String* value);
 
+    int textLength();
+
     uint32_t cols();
     void setCols(uint32_t value);
 

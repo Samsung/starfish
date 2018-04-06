@@ -109,6 +109,9 @@ public:
     int32_t maxLength();
     void setMaxLength(int32_t maxlength);
 
+    int32_t minLength();
+    void setMinLength(int32_t minlength);
+
     bool isAutofocusable();
 
     bool autofocus();

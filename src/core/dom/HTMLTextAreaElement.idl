@@ -9,8 +9,8 @@ interface HTMLTextAreaElement : HTMLElement {
     [CEReactions, Reflect] attribute boolean disabled;
     readonly attribute HTMLFormElement? form;
     [Unimplemented, CEReactions] attribute DOMString inputMode;
-    [CEReactions, RaisesExceptio=Setter] attribute long maxLength;
-    [Unimplemented, CEReactions, RaisesExceptio=Setter] attribute long minLength;
+    [CEReactions, RaisesException=Setter] attribute long maxLength;
+    [CEReactions, RaisesException=Setter] attribute long minLength;
     [CEReactions, Reflect] attribute DOMString name;
     [CEReactions, Reflect] attribute DOMString placeholder;
     [CEReactions, Reflect] attribute boolean readOnly;
@@ -21,7 +21,7 @@ interface HTMLTextAreaElement : HTMLElement {
     readonly attribute DOMString type;
     [CEReactions] attribute DOMString defaultValue;
     [TreatNullAs=EmptyString, CEReactions, Rename=apiValue] attribute DOMString value;
-    [Unimplemented] readonly attribute unsigned long textLength;
+    readonly attribute unsigned long textLength;
 
     [Unimplemented] readonly attribute boolean willValidate;
     [Unimplemented] readonly attribute ValidityState validity;
