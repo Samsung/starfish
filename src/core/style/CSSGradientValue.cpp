@@ -22,26 +22,38 @@
 
 namespace StarFish {
 
-String* CSSGradientValue::toString()
+String* CSSLinearGradientValue::toString()
 {
     StringBuilder result;
-    switch (m_gradientType) {
-    case CSSGradientType::LinearGradient: {
-        result.appendString("linear-gradient(");
-        CSSLinearGradientValue* linear = (CSSLinearGradientValue*)this;
-        if (linear->angle().toDegreeValue() != 180) {
-            result.appendString(linear->angle().toString());
+
+    result.appendString("linear-gradient(");
+    CSSLinearGradientValue* linear = (CSSLinearGradientValue*)this;
+    if (linear->angle().toDegreeValue() != 180) {
+        result.appendString(linear->angle().toString());
+    } else {
+        result.appendString("to ");
+        if (m_sc & toLeft) {
+            result.appendString("left ");
+        } else if (m_sc & toRight) {
+            result.appendString("right ");
         }
-        // TODO: Consider 'to <side-or-corner>' and <color-stop-list>
-        result.appendChar(')');
-        break;
+
+        if (m_sc & toTop) {
+            result.appendString("top");
+        } else if (m_sc & toBottom) {
+            result.appendString("bottom");
+        }
     }
-    case CSSGradientType::RadialGradient:
-        // TODO: Consider radial gradient
-        result.appendString("radial-gradient(");
-        result.appendChar(')');
-        break;
+
+    for (auto cs : m_colorStopList) {
+        result.appendString(", ");
+        result.appendString(cs->color().toString());
+        result.appendChar(' ');
+        result.appendString(cs->offset().toString());
     }
+
+    result.appendChar(')');
+
     return result.finalize();
 }
 

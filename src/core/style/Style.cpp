@@ -9606,33 +9606,27 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             CSSAngle tb;
             bool hasLR = false;
             bool hasTB = false;
+            uint8_t sideOrConer = 0;
             while (parser.consumeWhitespaces() && *(parser.curPos()) != ',') {
                 parser.consumeString(0);
                 String* ps = parser.parsedString();
                 if (!hasTB && ps->equals("top")) {
                     hasTB = true;
-                    tb = CSSAngle(0);
+                    sideOrConer |= SideOrConer::toTop;
                 } else if (!hasLR && ps->equals("right")) {
                     hasLR = true;
-                    lr = CSSAngle(90);
+                    sideOrConer |= SideOrConer::toRight;
                 } else if (!hasTB && ps->equals("bottom")) {
                     hasTB = true;
-                    tb = CSSAngle(180);
+                    sideOrConer |= SideOrConer::toBottom;
                 } else if (!hasLR && ps->equals("left")) {
                     hasLR = true;
-                    lr = CSSAngle(270);
+                    sideOrConer |= SideOrConer::toLeft;
                 } else {
                     return false;
                 }
             }
-            if (hasLR && !hasTB) {
-                angle = lr;
-            } else if (!hasLR && hasTB) {
-                angle = tb;
-            } else if (hasLR && hasTB) {
-                angle = tb + lr / 2;
-            }
-            linearGradientValue->setAngle(angle);
+            linearGradientValue->setSideOrConter(sideOrConer);
             parser.consumeIfNext(',');
         } else if (parser.parseAngle(str->toUTF8NonGCString().c_str(),
                                      CSSPropertyParser::AllowNegative, &s)) {
@@ -9650,6 +9644,11 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                 CSSStyleValuePair length;
                 parser.consumeString(0);
                 String* ps = parser.parsedString();
+                if (*parser.curPos() == '(') {
+                    parser.consumeParenthesis();
+                    ps = ps->concat(parser.parsedString());
+                }
+
                 CSSTokenValue value(ps->toUTF8NonGCString().data());
                 if (!color.updateValueUnitColor(value)) {
                     return false;
@@ -9674,7 +9673,17 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                     if (!length.updateValueUnitLength(value, option)) {
                         return false;
                     }
-                    cs->setLength(length.toLengthValue());
+                    if (length.valueKind() ==
+                        CSSStyleValuePair::ValueKind::Length) {
+                        cs->setOffset(
+                            ColorStopOffsetValue(length.cssLengthValue()));
+                    } else if (length.valueKind() ==
+                               CSSStyleValuePair::ValueKind::Percentage) {
+                        cs->setOffset(
+                            ColorStopOffsetValue(length.percentageValue()));
+                    } else {
+                        return false;
+                    }
                 }
                 linearGradientValue->colorStopList().push_back(cs);
             }

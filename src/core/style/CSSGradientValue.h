@@ -26,11 +26,153 @@ namespace StarFish {
 
 enum class CSSGradientType { LinearGradient, RadialGradient };
 
+enum SideOrConer {
+    toLeft = 1 << 0,
+    toRight = 1 << 1,
+    toTop = 1 << 2,
+    toBottom = 1 << 3
+};
+
+class ColorStopOffsetType {
+public:
+    enum class ValueType { None, Invalid, Length, Percentage };
+
+    STARFISH_MAKE_STACK_ALLOCATED();
+
+    ColorStopOffsetType()
+        : m_type(ValueType::None)
+    {
+    }
+
+    ColorStopOffsetType(ValueType type)
+        : m_type(type)
+    {
+    }
+
+    bool isNone() const
+    {
+        return m_type == ValueType::None;
+    }
+
+    bool isInvalid() const
+    {
+        return m_type == ValueType::Invalid;
+    }
+
+    bool isLength() const
+    {
+        return m_type == ValueType::Length;
+    }
+
+    bool isPercentage() const
+    {
+        return m_type == ValueType::Percentage;
+    }
+
+    bool operator==(ColorStopOffsetType& other) const
+    {
+        return m_type == other.m_type;
+    }
+
+    bool operator!=(ColorStopOffsetType& other) const
+    {
+        return !(operator==(other));
+    }
+    ValueType m_type;
+};
+
+class ColorStopOffsetValue {
+public:
+    union ColorStopOffsetData {
+        float m_numberData;
+        CSSLength m_lengthData;
+
+        ColorStopOffsetData(float data)
+            : m_numberData(data)
+        {
+        }
+
+        ColorStopOffsetData(CSSLength data)
+            : m_lengthData(data)
+        {
+        }
+    };
+
+    ColorStopOffsetValue()
+        : m_type(ColorStopOffsetType::ValueType::None)
+        , m_data(0)
+    {
+    }
+
+    ColorStopOffsetValue(ColorStopOffsetType::ValueType type)
+        : m_type(type)
+        , m_data(0)
+    {
+    }
+
+    ColorStopOffsetValue(float data)
+        : m_type(ColorStopOffsetType::ValueType::Percentage)
+        , m_data(data)
+    {
+    }
+
+    ColorStopOffsetValue(CSSLength data)
+        : m_type(ColorStopOffsetType::ValueType::Length)
+        , m_data(data)
+    {
+    }
+
+    void setType(ColorStopOffsetType::ValueType type)
+    {
+        m_type = type;
+    }
+
+    ColorStopOffsetType type() const
+    {
+        return m_type;
+    }
+
+    void setValue(ColorStopOffsetData data)
+    {
+        m_data = data;
+    }
+
+    float percentageValue() const
+    {
+        STARFISH_ASSERT(m_type.isPercentage());
+        return m_data.m_numberData;
+    }
+
+    CSSLength lengthValue() const
+    {
+        STARFISH_ASSERT(m_type.isLength());
+        return m_data.m_lengthData;
+    }
+
+    String* toString()
+    {
+        if (m_type.isLength()) {
+            return m_data.m_lengthData.toString();
+        } else if (m_type.isPercentage()) {
+            StringBuilder builder;
+            builder.appendString(
+                String::fromFloat(m_data.m_numberData * 100.f));
+            builder.appendChar('%');
+            return builder.finalize();
+        }
+        return String::emptyString;
+    }
+
+private:
+    ColorStopOffsetType m_type;
+    ColorStopOffsetData m_data;
+};
+
 class ColorStop : public gc {
 public:
     ColorStop()
         : m_color()
-        , m_length()
+        , m_offset()
     {
     }
 
@@ -44,37 +186,19 @@ public:
         m_color = color;
     }
 
-    Length length()
+    ColorStopOffsetValue offset()
     {
-        return m_length;
+        return m_offset;
     }
 
-    void setLength(Length length)
+    void setOffset(ColorStopOffsetValue offset)
     {
-        m_length = length;
+        m_offset = offset;
     }
-
-    void* operator new(size_t size)
-    {
-        static bool typeInited = false;
-        static GC_descr descr;
-        if (!typeInited) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(ColorStop)] = { 0 };
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ColorStop, m_length));
-            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ColorStop));
-            typeInited = true;
-        }
-        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-    }
-    void* operator new(size_t size, ColorStop* colorStop)
-    {
-        return colorStop;
-    }
-    void* operator new[](size_t size) = delete;
 
 private:
     Unit::Color m_color;
-    Length m_length;
+    ColorStopOffsetValue m_offset;
 };
 
 class CSSGradientValue : public gc {
@@ -134,7 +258,7 @@ public:
         m_endingY = val;
     }
 
-    String* toString();
+    virtual String* toString() = 0;
 
     GCVector<ColorStop*>& colorStopList()
     {
@@ -155,6 +279,7 @@ public:
     CSSLinearGradientValue(CSSAngle angle = CSSAngle(180))
         : CSSGradientValue(CSSGradientType::LinearGradient)
         , m_angle(angle)
+        , m_sc(0)
     {
     }
 
@@ -168,8 +293,21 @@ public:
         m_angle = val;
     }
 
+    void setSideOrConter(uint8_t sc)
+    {
+        m_sc = sc;
+    }
+
+    uint8_t SideOrConer()
+    {
+        return m_sc;
+    }
+
+    virtual String* toString() override;
+
 private:
     CSSAngle m_angle;
+    uint8_t m_sc;
 };
 
 } /* namespace StarFish */
