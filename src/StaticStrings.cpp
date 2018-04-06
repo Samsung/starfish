@@ -242,7 +242,7 @@ StaticStrings::StaticStrings(StarFish* sf)
                       AtomicString::createAtomicString(sf, "datetime"));
     m_valuetype =
         QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(sf, "valueType"));
+                      AtomicString::createAtomicString(sf, "valuetype"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));
