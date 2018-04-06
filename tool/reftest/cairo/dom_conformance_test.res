@@ -666,8 +666,8 @@ test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLParamElement02.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLParamElement03.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLParamElement04.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLPreElement01.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLQuoteElement01.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLQuoteElement02.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLQuoteElement01.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLQuoteElement02.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLScriptElement01.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLScriptElement02.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLScriptElement03.html

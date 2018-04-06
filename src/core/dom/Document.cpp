@@ -1729,6 +1729,13 @@ void Document::notifyCountingOutdated()
     frame()->asFrameDocument()->setCountingOutdatedFlag();
 }
 
+void Document::notifyQuoteOutdated()
+{
+    browsingContext()->setNeedsFrameTreeBuild();
+    STARFISH_ASSERT(frame());
+    frame()->asFrameDocument()->setQuoteOutdatedFlag();
+}
+
 DEFINE_EVENT_LISTENER(Document, abort);
 DEFINE_EVENT_LISTENER(Document, blur);
 DEFINE_EVENT_LISTENER(Document, click);

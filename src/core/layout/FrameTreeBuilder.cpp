@@ -32,6 +32,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameText.h"
 #include "core/layout/FrameCounterText.h"
+#include "core/layout/FrameQuoteText.h"
 #include "core/layout/FrameInline.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
@@ -70,6 +71,7 @@ FrameTreeBuilderContext::FrameTreeBuilderContext(
     m_isInFrameFlexFlow = false;
     m_isInFrameGridFlow = false;
     m_seenNewFrameCounter = false;
+    m_seenNewFrameQuote = false;
     m_lastAnonymousTableObjectParent = nullptr;
     setCurrentBlockContainer(currentBlockContainer);
 }
@@ -879,6 +881,14 @@ void FrameTreeBuilder::buildPseudoContentChild(FrameTreeBuilderContext& context,
         FrameTreeBuilder::insertChild(context.currentBlockContainer(), frame,
                                       node, context);
         context.setSeenNewFrameCounter();
+    } else if (child->isQuote()) {
+        auto node = createPseudoContentText(parent, String::emptyString);
+        FrameQuoteText* frame = new FrameQuoteText(node, child->quote());
+        node->style()->setContentQuote(child->quote());
+        node->setFrame(frame);
+        FrameTreeBuilder::insertChild(context.currentBlockContainer(), frame,
+                                      node, context);
+        context.setSeenNewFrameQuote();
     }
     STARFISH_ASSERT(forCheckIntegrity == context.currentBlockContainer());
 }
@@ -1109,6 +1119,7 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
     STARFISH_ASSERT(document->frame());
 
     bool seenNewFrameCounter = false;
+    bool seenNewFrameQuote = false;
     Node* n = document->rootElement();
 
     if (n) {
@@ -1116,6 +1127,7 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
             FrameTreeBuilderContext ctx(document->frame()->asFrameBlockBox());
             buildTree(n, ctx);
             seenNewFrameCounter |= ctx.seenNewFrameCounter();
+            seenNewFrameQuote |= ctx.seenNewFrameQuote();
         }
         n->clearNeedsFrameTreeBuild();
         n->clearChildNeedsFrameTreeBuild();
@@ -1125,9 +1137,13 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
     document->clearChildNeedsFrameTreeBuild();
 
     FrameDocument* frameRoot = document->frame()->asFrameDocument();
-    if (frameRoot->popCountingOutdatedFlag() || seenNewFrameCounter) {
-        CountingContext context;
-        traverseFrameTreeToFillCounterText(document->frame(), context);
+    if (frameRoot->popCountingOutdatedFlag() ||
+        frameRoot->popQuoteOutdatedFlag() || seenNewFrameCounter ||
+        seenNewFrameQuote) {
+        CountingContext countingContext;
+        QuoteContext quoteContext;
+        traverseFrameTreeToFillText(document->frame(), countingContext,
+                                    quoteContext);
     }
 }
 
@@ -1309,24 +1325,63 @@ void CountingContext::updateFrameCounterText(FrameCounterText* frame)
         Length(Length::Fixed, -indent.toFloat()));
 }
 
-void FrameTreeBuilder::traverseFrameTreeToFillCounterText(
-    Frame* root, CountingContext& context)
+void QuoteContext::updateFrameQuoteText(FrameQuoteText* frame)
+{
+    STARFISH_ASSERT(frame->node());
+    // TODO: Custom quotation marks
+    // TODO: Different quotation marks in each language
+    switch (frame->quote()) {
+    case OpenQuoteValue:
+        if (m_quoteLevel == 0) {
+            frame->setText(String::createUTF32String(0x201C));
+        } else {
+            frame->setText(String::createUTF32String(0x2018));
+        }
+        incrementQuoteLevel();
+        break;
+    case CloseQuoteValue:
+        if (m_quoteLevel == 0) {
+            frame->setText(String::emptyString);
+        } else if (m_quoteLevel == 1) {
+            frame->setText(String::createUTF32String(0x201D));
+        } else {
+            frame->setText(String::createUTF32String(0x2019));
+        }
+        decrementQuoteLevel();
+        break;
+    case NoOpenQuoteValue:
+        incrementQuoteLevel();
+        frame->setText(String::emptyString);
+        break;
+    case NoCloseQuoteValue:
+        decrementQuoteLevel();
+        frame->setText(String::emptyString);
+        break;
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
+void FrameTreeBuilder::traverseFrameTreeToFillText(
+    Frame* root, CountingContext& countingContext, QuoteContext& quoteContext)
 {
     STARFISH_ASSERT(root);
     if (root->isFrameText()) {
         if (root->isFrameCounterText()) {
-            context.updateFrameCounterText(root->asFrameCounterText());
+            countingContext.updateFrameCounterText(root->asFrameCounterText());
+        } else if (root->isFrameQuoteText()) {
+            quoteContext.updateFrameQuoteText(root->asFrameQuoteText());
         }
         return;
     }
 
-    context.setCounterIfNeeds(root);
+    countingContext.setCounterIfNeeds(root);
     Frame* child = root->firstChild();
     while (child) {
-        traverseFrameTreeToFillCounterText(child, context);
+        traverseFrameTreeToFillText(child, countingContext, quoteContext);
         child = child->next();
     }
-    context.unsetCounterIfNeeds(root);
+    countingContext.unsetCounterIfNeeds(root);
 }
 
 #ifdef STARFISH_ENABLE_TEST

@@ -22,6 +22,7 @@
 
 #include "core/dom/EventTarget.h"
 #include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
 
 namespace StarFish {
 
@@ -620,6 +621,14 @@ public:
         m_isRunningTransformAnimation = false;
     }
 
+    bool hasQuote()
+    {
+        if (m_style != nullptr) {
+            return m_style->hasQuote();
+        }
+        return false;
+    }
+
 private:
     void validatePreinsert(Node* child, Node* childRef);
     void validateReplace(Node* child, Node* childToRemove);
@@ -657,6 +666,7 @@ protected:
     // for animation
     bool m_isRunningTransformAnimation : 1;
     bool m_canBeCountingRoot : 1;
+    bool m_canBeQuoteRoot : 1;
 
     int m_state : 8;
 

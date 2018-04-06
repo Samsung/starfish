@@ -31,6 +31,7 @@ public:
     FrameDocument(Node* node)
         : FrameBlockBox(node, nullptr)
         , m_countingOutdatedFlag(false)
+        , m_quoteOutdatedFlag(false)
     {
     }
 
@@ -73,6 +74,18 @@ public:
         return result;
     }
 
+    void setQuoteOutdatedFlag()
+    {
+        m_quoteOutdatedFlag = true;
+    }
+
+    bool popQuoteOutdatedFlag()
+    {
+        bool result = m_quoteOutdatedFlag;
+        m_quoteOutdatedFlag = false;
+        return result;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
@@ -80,6 +93,7 @@ protected:
     LayoutUnit m_scrollLeft;
     LayoutUnit m_scrollTop;
     bool m_countingOutdatedFlag;
+    bool m_quoteOutdatedFlag;
 };
 }
 

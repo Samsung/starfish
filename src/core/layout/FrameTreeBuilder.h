@@ -31,6 +31,7 @@ class Element;
 class Frame;
 class FrameBlockBox;
 class FrameCounterText;
+class FrameQuoteText;
 class FrameInline;
 class FrameTableCaptionBox;
 class FrameTableCellBox;
@@ -69,6 +70,16 @@ public:
         m_seenNewFrameCounter = true;
     }
 
+    bool seenNewFrameQuote() const
+    {
+        return m_seenNewFrameQuote;
+    }
+
+    void setSeenNewFrameQuote()
+    {
+        m_seenNewFrameQuote = true;
+    }
+
 protected:
     void resetPseudoCounter(Node*, AtomicString&, int32_t);
 
@@ -77,6 +88,7 @@ protected:
     bool m_isInFrameFlexFlow;
     bool m_isInFrameGridFlow;
     bool m_seenNewFrameCounter;
+    bool m_seenNewFrameQuote;
     FrameBlockBox* m_currentBlockContainer;
     FrameTableObjectBox* m_lastAnonymousTableObjectParent;
     std::unordered_map<Node*, FrameInline*, std::hash<Node*>,
@@ -108,6 +120,32 @@ protected:
     std::unordered_map<AtomicString, std::vector<int32_t>>
         m_pseudoCounterIndice;
     std::vector<int32_t> m_listCounterIndice;
+};
+
+class QuoteContext {
+public:
+    STARFISH_MAKE_STACK_ALLOCATED()
+    QuoteContext()
+        : m_quoteLevel(0)
+    {
+    }
+
+    void updateFrameQuoteText(FrameQuoteText* frame);
+
+    void incrementQuoteLevel()
+    {
+        m_quoteLevel++;
+    }
+
+    void decrementQuoteLevel()
+    {
+        if (m_quoteLevel != 0) {
+            m_quoteLevel--;
+        }
+    }
+
+protected:
+    size_t m_quoteLevel;
 };
 
 class FrameTreeBuilder {
@@ -165,8 +203,9 @@ private:
         FrameBlockBox* blockContainer,
         FrameTableObjectBox* lastAnonymousTableObjectParent,
         Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx);
-    static void traverseFrameTreeToFillCounterText(Frame* current,
-                                                   CountingContext& ctx);
+    static void traverseFrameTreeToFillText(Frame* current,
+                                            CountingContext& countingCtx,
+                                            QuoteContext& quoteCtx);
 };
 }
 

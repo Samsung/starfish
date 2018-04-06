@@ -20,6 +20,8 @@
 #ifndef __StarFishContentData__
 #define __StarFishContentData__
 
+#include "core/style/Style.h"
+
 namespace StarFish {
 
 class TextContentData : public gc {
@@ -132,6 +134,7 @@ public:
         Text,
         Image,
         Counter,
+        Quote,
     };
 
     ContentData()
@@ -173,6 +176,11 @@ public:
     bool isCounter()
     {
         return m_type == Counter;
+    }
+
+    bool isQuote()
+    {
+        return m_type == Quote;
     }
 
     TextContentData* text() const
@@ -244,6 +252,18 @@ public:
         }
     }
 
+    QuoteValue quote() const
+    {
+        STARFISH_ASSERT(m_type == Quote);
+        return m_value.m_quote;
+    }
+
+    void setQuote(const QuoteValue v)
+    {
+        STARFISH_ASSERT(m_type == Quote);
+        m_value.m_quote = v;
+    }
+
 private:
     friend inline bool operator==(const ContentData& a, const ContentData& b);
     friend inline bool operator!=(const ContentData& a, const ContentData& b);
@@ -253,6 +273,7 @@ private:
         TextContentData* m_text;
         ImageContentData* m_image;
         CounterContentData* m_counter;
+        QuoteValue m_quote;
         ContentPointer(TextContentData* v)
         {
             m_text = v;
@@ -280,6 +301,11 @@ bool operator==(const ContentData& a, const ContentData& b)
         break;
     case ContentData::ContentType::Counter:
         if (!a.counter()->equals(b.counter())) {
+            return false;
+        }
+        break;
+    case ContentData::ContentType::Quote:
+        if (a.quote() != b.quote()) {
             return false;
         }
         break;
