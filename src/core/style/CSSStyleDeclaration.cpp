@@ -1545,6 +1545,20 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValueList(values);
 
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridRowGap) {
+        CSSStyleValuePair p;
+        Length row = style->gridRowGap();
+        if (row.isFixed()) {
+            p.setLengthValue(CSSLength(row.fixed()));
+        }
+        addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridColumnGap) {
+        CSSStyleValuePair p;
+        Length column = style->gridColumnGap();
+        if (column.isFixed()) {
+            p.setLengthValue(CSSLength(column.fixed()));
+        }
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::TextOverflow) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TextOverflow);
