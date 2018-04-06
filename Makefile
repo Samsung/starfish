@@ -757,6 +757,9 @@ clean:
 	rm -rf out
 	find src/binding -type f -name "*Binding.cpp" ! -name "*CustomBinding.cpp" | xargs -r rm
 	find src/binding -type f -name "*Union.h" ! -name "*CustomUnion.h" | xargs -r rm
+	rm -f binding_generator/scripts/*.pyc
+	rm -f binding_generator/scripts/*tab.py
+	rm -f binding_generator/scripts/*.out
 
 $(AUTOGEN_SRC): $(AUTOGEN_DEPENDENCY)
 	@echo "[GEN] $@"
