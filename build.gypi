@@ -26,6 +26,7 @@
             'STARFISH_TIZEN_OBS',
             'STARFISH_ENABLE_DOMPARSER',
             'STARFISH_IGNORE_CROSS_ORIGIN',
+            'STARFISH_ENABLE_MULTIMEDIA',
             'TIZEN_DEVICE_API',
             'SIZE_MAX=0xffffffff',
             #'STARFISH_IGNORE_SSL_VERIFYPEER',
@@ -47,14 +48,12 @@
             'USE_PRODUCT_FEATURE',
         ],
         'defines_custom_im': [
-            'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_TIZEN_WEARABLE',
         ],
         'defines_custom_da': [
         ],
         'defines_tizen_headless': [
             'STARFISH_TIZEN_HEADLESS',
-            'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_ENABLE_SHELL',
             # 'STARFISH_ENABLE_CANVAS',
         ],
@@ -117,7 +116,6 @@
            #'<(starfish_root)/third_party/rapidxml',
            '<!@(pkg-config --cflags-only-I <(third_party_libs) | sed s/-I//g)',
         ],
-        'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',],
         'main_file' : 'src/shell/shell.cpp',
         'test_runner_file' : 'src/shell/testRunner.cpp',
         'variables': {
@@ -159,7 +157,7 @@
                     'cflags_extra': [
                     ],
                     'sources_extra': [
-                        '<!@(find third_party/deviceapi/src -name *.cpp)',
+                        #'<!@(find third_party/deviceapi/src -name *.cpp)',
                     ],
                     'libraries_extra': [
                         '-lrt',
@@ -209,11 +207,11 @@
                     'cflags_extra': [
                     ],
                     'include_dirs_extra': [
-                        '<@(include_dirs_extra)',
-                        'src/platform/lwe_vd',
+                        #'<@(include_dirs_extra)',
+                        #'src/platform/lwe_vd',
                     ],
                     'sources_extra': [
-                        '<!@(find src/platform/lwe_vd -name *.cpp)',
+                        #'<!@(find src/platform/lwe_vd -name *.cpp)',
                     ],
                     'libraries_extra': [
                     ],
@@ -222,11 +220,11 @@
                     'cflags_extra': [
                     ],
                     'include_dirs_extra': [
-                        '<@(include_dirs_extra)',
-                        'src/platform/lwe_im',
+                        #'<@(include_dirs_extra)',
+                        #'src/platform/lwe_im',
                     ],
                     'sources_extra': [
-                        '<!@(find src/platform/lwe_im -name *.cpp)',
+                        #'<!@(find src/platform/lwe_im -name *.cpp)',
                     ],
                     'libraries_extra': [
                     ],
@@ -235,11 +233,11 @@
                     'cflags_extra': [
                     ],
                     'include_dirs_extra': [
-                        '<@(include_dirs_extra)',
-                        'src/platform/lwe_da',
+                        #'<@(include_dirs_extra)',
+                        #'src/platform/lwe_da',
                     ],
                     'sources_extra': [
-                        '<!@(find src/platform/lwe_da -name *.cpp)',
+                        #'<!@(find src/platform/lwe_da -name *.cpp)',
                     ],
                     'libraries_extra': [
                     ],
@@ -250,6 +248,7 @@
         'component%':'<(component)',
         'backend%': '<(backend)',
         'platform%': '<(platform)',
+        'custom%': '<(custom)',
         'deplib%': '<(deplib)',
         'include_dirs_extra%': '<(include_dirs_extra)',
         'sources_extra%': '<(sources_extra)',
