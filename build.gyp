@@ -11,7 +11,7 @@
     'target_defaults' : {
         'default_configuration': 'debug',
         'dependencies': [
-            './build.dep.gyp:js_binding',
+            #'./build.dep.gyp:js_binding',
             './build.dep.gyp:clipper',
             './build.dep.gyp:cppzmq',
             './build.dep.gyp:skia',
@@ -21,11 +21,8 @@
             'include_dirs': [
                 '<(starfish_root)/src',
                 '<(starfish_root)/inc',
-                '<(escargot_root)/include',
-                'third_party/clipper/cpp',
-                'third_party/MP4Parse/source/include',
-                'third_party/skia_matrix',
-                'third_party/webm',
+            ],
+            'libraries': [
             ],
         },
        'include_dirs': [
@@ -33,7 +30,7 @@
            '<@(include_dirs_extra)',
        ],
        'sources': [
-           '<!@(find src -name *.cpp | grep -v "platform/lwe_")',
+           '<!@(find src -name *.cpp)',
            '<@(sources_extra)',
        ],
        'conditions': [
@@ -43,6 +40,11 @@
                    '<(test_runner_file)',
                ],
            }],
+           ['custom=="vd"', {
+               'sources!' : [
+                   'src/platform/tts/TTS.cpp',
+               ],
+           }],
        ],
        'conditions': [
            ['OS=="linux"', {
@@ -50,9 +52,11 @@
                    '<@(cflags_default)',
                    '<@(cflags_extra)',
                ],
+               'cflags!' : [
+                   '-fvisibility=hidden',
+               ],
                'ldflags' : [
                    '-Wl,--gc-sections',
-                   #'-flto', # when enable lto, we can get slim binary(-200kb). but I can not sure the result is stable & linking takes all day long!
                ],
                'defines': [
                    '<@(defines_default)',
@@ -78,6 +82,7 @@
                        ],
                    },
                },
+               'code_gen_results' : ['<!@(python binding_generator/scripts/starfish_code_generator.py src/ src/binding/)',],
                'link_settings': {
                    'ldflags' : [
                        '-L/usr/local/lib',
@@ -136,6 +141,7 @@
             'defines': [
                 '<@(defines_x64)',
             ],
+
         },
         {
             'target_name': 'starfish.tizen.unified.release',

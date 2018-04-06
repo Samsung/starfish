@@ -69,7 +69,7 @@
             'sources': [
                 'third_party/clipper/cpp/clipper.cpp',
             ],
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     'third_party/clipper/cpp',
                 ],
@@ -85,7 +85,7 @@
                     'action_name': 'generate_code',
                     'inputs': [
                         'binding_generator/scripts/starfish_code_generator.py',
-                        '.git/modules/binding_generator/HEAD',
+                        #'.git/modules/binding_generator/HEAD',
                         '<!@(find src -name *.idl)',
                     ],
                     'outputs': [
@@ -110,7 +110,7 @@
                 'third_party/skia_matrix/SkMatrix.cpp',
                 'third_party/skia_matrix/SkDebug.cpp',
             ],
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     'third_party/skia_matrix',
                 ],
@@ -127,7 +127,7 @@
             'sources': [
                 '<!@(find third_party/MP4Parse/source -name MP4*.cpp)',
             ],
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     'third_party/MP4Parse/source/include',
                 ],
@@ -145,7 +145,7 @@
                 'third_party/webm/mkvparser.cpp',
                 'third_party/webm/webvttparser.cc',
             ],
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     'third_party/webm',
                 ],
@@ -179,11 +179,13 @@
                 },
             ],
             'direct_dependent_settings': {
-                'include_dirs': [
-                    'third_party/escargot/include',
-                ],
                 'libraries': [
                     'lib/libescargot.a',
+                ],
+            },
+            'all_dependent_settings': {
+                'include_dirs': [
+                    'third_party/escargot/include',
                 ],
             },
         },
@@ -199,11 +201,13 @@
                 },
             ],
             'direct_dependent_settings': {
-                'include_dirs': [
-                    'third_party/escargot/include',
-                ],
                 'libraries': [
                     'lib/libescargot.a',
+                ],
+            },
+            'all_dependent_settings': {
+                'include_dirs': [
+                    'third_party/escargot/include',
                 ],
             },
         },
@@ -220,11 +224,13 @@
                 },
             ],
             'direct_dependent_settings': {
-                'include_dirs': [
-                    'third_party/escargot/include',
-                ],
                 'libraries': [
                     'lib/tizen/libescargot.a',
+                ],
+            },
+            'all_dependent_settings': {
+                'include_dirs': [
+                    'third_party/escargot/include',
                 ],
             },
         },
@@ -311,11 +317,13 @@
             'sources': [
                 '<!@(find third_party/GCutil -maxdepth 1 -name *.cpp)',
             ],
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     'third_party/GCutil/bdwgc/include',
                     'third_party/GCutil',
                 ],
+            },
+            'direct_dependent_settings': {
                 'libraries': [
                     'lib/libgc.so',
                 ],
@@ -340,11 +348,13 @@
             'sources': [
                 '<!@(find third_party/GCutil -maxdepth 1 -name *.cpp)',
             ],
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     'third_party/GCutil/bdwgc/include',
                     'third_party/GCutil',
                 ],
+            },
+            'direct_dependent_settings': {
                 'libraries': [
                     'lib/libgc.so',
                 ],
@@ -368,19 +378,21 @@
                 '<!@(find third_party/GCutil -maxdepth 1 -name *.cpp)',
             ],
             'direct_dependent_settings': {
+                'libraries': [
+                    'lib/tizen/libgc.a',
+                ],
+            },
+            'all_dependent_settings': {
                 'include_dirs': [
                     'third_party/GCutil/bdwgc/include',
                     'third_party/GCutil',
-                ],
-                'libraries': [
-                    'lib/tizen/libgc.a',
                 ],
             },
         },
         {
             'target_name': 'efl.x64',
             'type': 'none',
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
                 ],
@@ -392,7 +404,7 @@
         {
             'target_name': 'efl.tizen',
             'type': 'none',
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf-evas efl-extension | sed s/-I//g) || true)',
                 ],
@@ -417,7 +429,7 @@
         {
             'target_name': 'capi-media-player',
             'type': 'none',
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I capi-media-player | sed s/-I//g) || true)',
                 ],
@@ -429,7 +441,7 @@
         {
             'target_name': 'tizen-dlog',
             'type': 'none',
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I dlog | sed s/-I//g) || true)',
                 ],
@@ -453,19 +465,21 @@
         {
             'target_name': 'vconf',
             'type': 'none',
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I vconf vconf-internal-keys-tv vd-win-util | sed s/-I//g) || true)',
                 ],
+
                 'libraries': [
                     '<!@((pkg-config --silence-errors --libs-only-l vconf vconf-internal-keys-tv vd-win-util) || true)',
                 ],
+
             },
         },
         {
             'target_name': 'efl_cairo.x64',
             'type': 'none',
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
                 ],
@@ -478,7 +492,7 @@
         {
             'target_name': 'efl_cairo.tizen',
             'type': 'none',
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
                 ],
@@ -491,7 +505,7 @@
         {
             'target_name': 'efl_headless_cairo.tizen',
             'type': 'none',
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I ecore | sed s/-I//g) || true)',
                 ],
@@ -503,7 +517,7 @@
         {
             'target_name': 'dali.x64',
             'type': 'none',
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore | sed s/-I//g) || true)',
                     '/usr/include/dali',
@@ -522,7 +536,7 @@
         {
             'target_name': 'dali.tizen',
             'type': 'none',
-            'direct_dependent_settings': {
+            'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore | sed s/-I//g) || true)',
                     '/usr/include/dali',
