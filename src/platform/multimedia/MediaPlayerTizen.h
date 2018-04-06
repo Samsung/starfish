@@ -129,6 +129,11 @@ protected:
     } m_formatExtra;
 #endif
 
+    void initFormatExtraForAudio();
+    void initFormatExtraForVideo();
+    void createMediaFormatStreamType();
+    void releaseMediaFormatStreamType();
+
     volatile uint64_t m_maxBufferSize;
     volatile uint64_t m_lastSubmittedDTS;
     volatile size_t m_initSegmentIndex;
@@ -190,14 +195,12 @@ public:
                            const LayoutRect& absVideoRect);
     virtual void prepareMediaSource();
 
-#if defined(STARFISH_TIZEN_TV)
     void updateStreamInfo(MediaStream* stream, size_t pastInitIndex,
                           size_t newInitIndex);
     void updateAudioStreamInfo(MediaStream* audio, size_t pastInitIndex,
                                size_t newInitIndex);
     void updateVideoStreamInfo(MediaStream* video, size_t pastInitIndex,
                                size_t newInitIndex);
-#endif
     void enterUnderrunState();
     void exitUnderrunState();
 
@@ -225,6 +228,26 @@ public:
 
     void initVideoStreamInfo(size_t initSegmentIndex = 0);
     void initAudioStreamInfo(size_t initSegmentIndex = 0);
+
+    static void seekedCallback(void* data)
+    {
+        PLAYER_LOGI("player_set_play_position_cb\n");
+        MediaPlayerTizen* self = (MediaPlayerTizen*)data;
+        self->handleSeeked();
+    }
+
+protected:
+    int playerSetPlayPosition(int& timeInMS);
+    void disposePlayer();
+    void initCanvasSurface();
+    void setNativePlayerDisplayMode();
+    void setPlayerDisplayVideoAtPausedState(int& ret);
+    void punchHole(Compositor* canvas, const LayoutRect& videoRect,
+                   const LayoutRect& absVideoRect);
+    void setMediaFormatExtraForVideo(media_format_h& mediaFormat,
+                                     StreamInfo* info);
+    void setMediaFormatExtraForAudio(media_format_h& mediaFormat,
+                                     StreamInfo* info);
 };
 }
 
