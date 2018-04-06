@@ -98,11 +98,11 @@ static CSSStyleValuePair stylePaintDataToCSSStyleValue(StylePaintData paintData)
     return ret;
 }
 
-void CSSStyleDeclaration::rootPointerValueIfExists(CSSStyleValuePair v)
+void CSSStyleDeclaration::rootPointerValueIfExists(const CSSStyleValuePair& v)
 {
     auto p = v.pointerValue();
     if (p) {
-        m_pointerRooter.insert(p);
+        m_pointerRooter.push_back(p);
     }
 }
 

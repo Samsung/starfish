@@ -131,7 +131,7 @@ public:
 #undef DECLARE_ATTRIBUTE_GETTER
 
     void addCSSValuePair(CSSStyleValuePair::KeyKind name,
-                         CSSStyleValuePair ret);
+                         const CSSStyleValuePair& ret);
 
     void removeCSSValuePair(CSSStyleValuePair::KeyKind name);
     bool hasCSSValuePair(CSSStyleValuePair::KeyKind name);
@@ -259,11 +259,11 @@ public:
     }
 
 protected:
-    void rootPointerValueIfExists(CSSStyleValuePair v);
+    void rootPointerValueIfExists(const CSSStyleValuePair& v);
 
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
     GCVector<MutablePropertyValue> m_cssCustomValues;
-    GCUnorderedSet<void*> m_pointerRooter;
+    GCVector<void*> m_pointerRooter;
     Node* m_node;
 };
 

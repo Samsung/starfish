@@ -1665,12 +1665,28 @@ void Node::setNeedsStyleRecalc(StyleChangeReason reason)
         return;
     }
 
-    if (!m_needsStyleRecalc) {
-        m_needsStyleRecalc = true;
-    }
+    if (reason <= StyleChangeReason::ClassChange) {
+        if (!m_needsStyleRecalc) {
+            m_needsStyleRecalc = true;
+        }
 
-    if (parentNode()) {
-        parentNode()->setChildNeedsStyleRecalc();
+        if (parentNode()) {
+            parentNode()->setChildNeedsStyleRecalc();
+        }
+    } else {
+        StyleResolver::StyleDamageSource cmr;
+        if (style() && style()->styleDamageSource()) {
+            cmr = style()->styleDamageSource();
+        } else {
+            cmr = StyleResolver::StyleDamageSource::NoDamage;
+        }
+
+        if (cmr & reason) {
+            m_needsStyleRecalc = true;
+            if (parentNode()) {
+                parentNode()->setChildNeedsStyleRecalc();
+            }
+        }
     }
 
     if (reason) {

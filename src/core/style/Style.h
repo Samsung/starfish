@@ -2509,7 +2509,7 @@ public:
     {
     }
 
-    void* pointerValue()
+    void* pointerValue() const
     {
         switch (m_valueKind) {
         case UrlValueKind:
@@ -2788,7 +2788,7 @@ protected:
 
 class CSSStyleValuePairVectorHolder : public gc {
 public:
-    void push_back(CSSStyleValuePair p)
+    void push_back(const CSSStyleValuePair& p)
     {
         for (size_t i = 0; i < m_data.size(); i++) {
             CSSStyleValuePair v = m_data[i];
@@ -2813,15 +2813,15 @@ public:
     }
 
 protected:
-    void rootPointer(CSSStyleValuePair v)
+    void rootPointer(const CSSStyleValuePair& v)
     {
         auto p = v.pointerValue();
         if (p) {
-            m_pointerRooter.insert(p);
+            m_pointerRooter.push_back(p);
         }
     }
     GCAtomicVector<CSSStyleValuePair> m_data;
-    GCUnorderedSet<void*> m_pointerRooter;
+    GCVector<void*> m_pointerRooter;
 };
 
 class ValuePair : public gc {

@@ -519,7 +519,7 @@ void DaliShellController::KeyEventHandler(const Dali::KeyEvent& event)
 
 void bt_sighandler(int sig, struct sigcontext ctx)
 {
-    void* trace[16];
+    void* trace[128];
     char** messages = (char**)NULL;
     int i, trace_size = 0;
 
@@ -532,7 +532,7 @@ void bt_sighandler(int sig, struct sigcontext ctx)
         printf("[STARFISH_TEST] Got signal %d\n", sig);
     }
 
-    trace_size = backtrace(trace, 16);
+    trace_size = backtrace(trace, 128);
     /* overwrite sigaction with caller's address */
     trace[1] = (void*)ctx.rip;
     messages = backtrace_symbols(trace, trace_size);
