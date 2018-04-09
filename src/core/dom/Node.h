@@ -551,6 +551,12 @@ public:
                StyleResolver::PseudoElementType::PseudoElementFirstLetter;
     }
 
+    bool isCounterPseudoElement() const
+    {
+        return getPseudoId() ==
+               StyleResolver::PseudoElementType::PseudoElementCounter;
+    }
+
     virtual StyleResolver::PseudoElementType getPseudoId() const
     {
         return StyleResolver::PseudoElementType::PseudoElementNone;

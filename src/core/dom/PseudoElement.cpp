@@ -134,6 +134,9 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
                 }
             }
             firstLetterFrame = firstLetterFrame->firstChild();
+        } else if (firstLetterFrame->node()->isCounterPseudoElement()) {
+            // Skip counter frames
+            firstLetterFrame = firstLetterFrame->next();
         } else if (firstLetterFrame->isFrameText()) {
             String* str = firstLetterFrame->asFrameText()->text();
             if (firstLetterLength(str) ||

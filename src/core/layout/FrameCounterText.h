@@ -30,9 +30,9 @@ class CounterStyle;
 class FrameCounterText : public FrameText {
 public:
     enum CounterType {
-        CounterTypePseudoContent,
         CounterTypeListOutside,
         CounterTypeListInside,
+        CounterTypePseudoContent,
     };
 
     FrameCounterText(Node* node, CounterType type);
