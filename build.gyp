@@ -4,6 +4,7 @@
 
     'includes': [
         'build.gypi',
+        'build_vd.gypi'
     ],
     #'make_global_settings': [
     #    ['CXX', '/usr/bin/g++'],
@@ -38,11 +39,6 @@
                'sources!' : [
                    '<(main_file)',
                    '<(test_runner_file)',
-               ],
-           }],
-           ['custom=="vd"', {
-               'sources!' : [
-                   'src/platform/tts/TTS.cpp',
                ],
            }],
        ],
