@@ -283,6 +283,8 @@ public:
 #endif
 #if defined(STARFISH_TIZEN_WEARABLE)
         evas_object_raise(m_dummyBox);
+#else
+        evas_object_raise(m_mainBox);
 #endif
 
         m_inRendering = false;
@@ -312,21 +314,19 @@ public:
     Evas_GL_Context* m_evasGLContext;
 #endif
 
-    Ecore_Event_Handler* m_desktopMouseDownEventHandler;
-    Ecore_Event_Handler* m_desktopMouseMoveEventHandler;
-    Ecore_Event_Handler* m_desktopMouseUpEventHandler;
-    Ecore_Event_Handler* m_desktopMouseWheelEventHandler;
-    Ecore_Event_Handler* m_desktopKeyDownEventHandler;
-    Ecore_Event_Handler* m_desktopKeyUpEventHandler;
-
-    void (*m_mobileMouseDownEventHandler)(void* data, Evas* evas,
-                                          Evas_Object* obj, void* event_info);
-    void (*m_mobileMouseMoveEventHandler)(void* data, Evas* evas,
-                                          Evas_Object* obj, void* event_info);
-    void (*m_mobileMouseUpEventHandler)(void* data, Evas* evas,
-                                        Evas_Object* obj, void* event_info);
-    void (*m_mobileClickEventHandler)(void* data, Evas_Object* obj,
-                                      void* event_info);
+    void (*m_mouseDownEventHandler)(void* data, Evas* evas, Evas_Object* obj,
+                                    void* event_info);
+    void (*m_mouseMoveEventHandler)(void* data, Evas* evas, Evas_Object* obj,
+                                    void* event_info);
+    void (*m_mouseUpEventHandler)(void* data, Evas* evas, Evas_Object* obj,
+                                  void* event_info);
+    void (*m_mouseWheelEventHandler)(void* data, Evas* evas, Evas_Object* obj,
+                                     void* event_info);
+    void (*m_keyDownEventHandler)(void* data, Evas* evas, Evas_Object* obj,
+                                  void* event_info);
+    void (*m_keyUpEventHandler)(void* data, Evas* evas, Evas_Object* obj,
+                                void* event_info);
+    void (*m_clickEventHandler)(void* data, Evas_Object* obj, void* event_info);
 
     Ecore_Animator* m_renderingAnimator;
 
@@ -1008,171 +1008,177 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     evas_object_show(wnd->m_window);
 #endif
 
-    wnd->m_desktopMouseDownEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_MOUSE_BUTTON_DOWN,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            WindowImplEFL* sf = (WindowImplEFL*)data;
-            Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
-            // We care just left button now
-            int currentPosX = d->x - sf->starFish()->posX();
-            int currentPosY = d->y - sf->starFish()->posY();
-            if (d->buttons == 1 && (currentPosX >= 0 && currentPosY >= 0)) {
-                StarFishEnterer enter(sf->starFish());
-                if (d->timestamp - sf->m_lastClickedTimestamp >
-                    CLICK_REFRESH_DELAY) {
-                    sf->m_clickedCount = 1;
-                    sf->m_lastClickedTimestamp = d->timestamp;
-                } else {
-                    sf->m_clickedCount++;
-                }
-                MouseData mdata(
-                    MouseData::MouseButtonValue::LeftButton,
-                    MouseData::MouseButtonsValue::LeftButtonDown,
-                    currentPosX /
-                        sf->starFish()->screenInfo().deviceScaleFactor,
-                    currentPosY /
-                        sf->starFish()->screenInfo().deviceScaleFactor,
-                    sf->m_clickedCount);
-                sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
-                sf->m_isMouseLbuttonDown = true;
+    wnd->m_mouseDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
+                                      void* event_info) -> void {
+        WindowImplEFL* sf = (WindowImplEFL*)data;
+        Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*)event_info;
+        // We care just left button now
+        int currentPosX = ev->output.x - sf->starFish()->posX();
+        int currentPosY = ev->output.y - sf->starFish()->posY();
+        if (ev->button == 1 && (currentPosX >= 0 && currentPosY >= 0)) {
+            StarFishEnterer enter(sf->starFish());
+            if (ev->timestamp - sf->m_lastClickedTimestamp >
+                CLICK_REFRESH_DELAY) {
+                sf->m_clickedCount = 1;
+                sf->m_lastClickedTimestamp = ev->timestamp;
+            } else {
+                sf->m_clickedCount++;
             }
-            return EINA_TRUE;
-        },
-        wnd);
+            MouseData mdata(
+                MouseData::MouseButtonValue::LeftButton,
+                MouseData::MouseButtonsValue::LeftButtonDown,
+                currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
+                currentPosY / sf->starFish()->screenInfo().deviceScaleFactor,
+                sf->m_clickedCount);
+            sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
+            sf->m_isMouseLbuttonDown = true;
+        }
+        return;
+    };
+    evas_object_event_callback_add(wnd->m_mainBox, EVAS_CALLBACK_MOUSE_DOWN,
+                                   wnd->m_mouseDownEventHandler, wnd);
 
-    wnd->m_desktopMouseUpEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_MOUSE_BUTTON_UP,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            WindowImplEFL* sf = (WindowImplEFL*)data;
-            Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
-            // We care just left button now
-            int currentPosX = d->x - sf->starFish()->posX();
-            int currentPosY = d->y - sf->starFish()->posY();
-            if (d->buttons == 1 && (currentPosX >= 0 && currentPosY >= 0)) {
-                StarFishEnterer enter(sf->starFish());
-                MouseData mdata(
-                    MouseData::MouseButtonValue::NoButton,
-                    MouseData::MouseButtonsValue::NoButtonDown,
-                    currentPosX /
-                        sf->starFish()->screenInfo().deviceScaleFactor,
-                    currentPosY /
-                        sf->starFish()->screenInfo().deviceScaleFactor,
-                    sf->m_clickedCount);
-                sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
-                sf->m_isMouseLbuttonDown = false;
+    wnd->m_mouseUpEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
+                                    void* event_info) -> void {
+        WindowImplEFL* sf = (WindowImplEFL*)data;
+        Evas_Event_Mouse_Up* ev = (Evas_Event_Mouse_Up*)event_info;
+        // We care just left button now
+        int currentPosX = ev->output.x - sf->starFish()->posX();
+        int currentPosY = ev->output.y - sf->starFish()->posY();
+        if (ev->button == 1 && (currentPosX >= 0 && currentPosY >= 0)) {
+            StarFishEnterer enter(sf->starFish());
+            if (ev->timestamp - sf->m_lastClickedTimestamp >
+                CLICK_REFRESH_DELAY) {
+                sf->m_clickedCount = 1;
+                sf->m_lastClickedTimestamp = ev->timestamp;
+            } else {
+                sf->m_clickedCount++;
             }
-            return EINA_TRUE;
-        },
-        wnd);
+            MouseData mdata(
+                MouseData::MouseButtonValue::NoButton,
+                MouseData::MouseButtonsValue::NoButtonDown,
+                currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
+                currentPosY / sf->starFish()->screenInfo().deviceScaleFactor,
+                sf->m_clickedCount);
+            sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
+            sf->m_isMouseLbuttonDown = false;
+        }
+        return;
+    };
+    evas_object_event_callback_add(wnd->m_mainBox, EVAS_CALLBACK_MOUSE_UP,
+                                   wnd->m_mouseUpEventHandler, wnd);
 
-    wnd->m_desktopMouseWheelEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_MOUSE_WHEEL,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            WindowImplEFL* sf = (WindowImplEFL*)data;
-            Ecore_Event_Mouse_Wheel* d = (Ecore_Event_Mouse_Wheel*)event;
+    wnd->m_mouseWheelEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
+                                       void* event_info) -> void {
+        WindowImplEFL* sf = (WindowImplEFL*)data;
+        Evas_Event_Mouse_Wheel* ev = (Evas_Event_Mouse_Wheel*)event_info;
+        StarFishEnterer enter(sf->m_starFish);
+        // We care just left button now
+        int currentPosX = ev->output.x - sf->starFish()->posX();
+        int currentPosY = ev->output.y - sf->starFish()->posY();
+        if (currentPosX >= 0 && currentPosY >= 0) {
+            sf->dispatchMouseWheelEvent(
+                currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
+                currentPosY / sf->starFish()->screenInfo().deviceScaleFactor,
+                ev->z, true);
+        }
+        return;
+    };
+    evas_object_event_callback_add(wnd->m_mainBox, EVAS_CALLBACK_MOUSE_WHEEL,
+                                   wnd->m_mouseWheelEventHandler, wnd);
+
+    wnd->m_mouseMoveEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
+                                      void* event_info) -> void {
+        WindowImplEFL* sf = (WindowImplEFL*)data;
+        Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*)event_info;
+        // We care just left button now
+        int currentPosX = ev->cur.output.x - sf->starFish()->posX();
+        int currentPosY = ev->cur.output.y - sf->starFish()->posY();
+        if (currentPosX >= 0 && currentPosY >= 0) {
             StarFishEnterer enter(sf->m_starFish);
-            // We only care vertical wheel
-            int currentPosX = d->x - sf->starFish()->posX();
-            int currentPosY = d->y - sf->starFish()->posY();
+            unsigned char buttons =
+                sf->m_isMouseLbuttonDown
+                    ? MouseData::MouseButtonsValue::LeftButtonDown
+                    : 0;
+            MouseData mdata(
+                0, buttons,
+                currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
+                currentPosY / sf->starFish()->screenInfo().deviceScaleFactor,
+                0);
+            sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
+        }
+        return;
+    };
+    evas_object_event_callback_add(wnd->m_mainBox, EVAS_CALLBACK_MOUSE_MOVE,
+                                   wnd->m_mouseMoveEventHandler, wnd);
 
-            if (currentPosX >= 0 && currentPosY >= 0) {
-                sf->dispatchMouseWheelEvent(
-                    currentPosX /
-                        sf->starFish()->screenInfo().deviceScaleFactor,
-                    currentPosY /
-                        sf->starFish()->screenInfo().deviceScaleFactor,
-                    d->z, true);
-            }
-            return EINA_TRUE;
-        },
-        wnd);
-
-    wnd->m_desktopMouseMoveEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_MOUSE_MOVE,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            WindowImplEFL* sf = (WindowImplEFL*)data;
-            Ecore_Event_Mouse_Move* d = (Ecore_Event_Mouse_Move*)event;
-            int currentPosX = d->x - sf->starFish()->posX();
-            int currentPosY = d->y - sf->starFish()->posY();
-            if (currentPosX >= 0 && currentPosY >= 0) {
-                StarFishEnterer enter(sf->m_starFish);
-                unsigned char buttons =
-                    sf->m_isMouseLbuttonDown
-                        ? MouseData::MouseButtonsValue::LeftButtonDown
-                        : 0;
-                MouseData mdata(
-                    0, buttons,
-                    currentPosX /
-                        sf->starFish()->screenInfo().deviceScaleFactor,
-                    currentPosY /
-                        sf->starFish()->screenInfo().deviceScaleFactor,
-                    0);
-                sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
-            }
-            return EINA_TRUE;
-        },
-        wnd);
-
-    wnd->m_desktopKeyDownEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_KEY_DOWN,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            WindowImplEFL* sf = (WindowImplEFL*)data;
-            if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
-                return EINA_TRUE;
-            }
-
-            Ecore_Event_Key* d = (Ecore_Event_Key*)event;
+    wnd->m_keyDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
+                                    void* event_info) -> void {
+        WindowImplEFL* sf = (WindowImplEFL*)data;
+        Evas_Event_Key_Down* ev = (Evas_Event_Key_Down*)event_info;
+        if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
+            return;
+        }
 #ifdef STARFISH_TIZEN_TV
-            if ((strncmp(d->key, "XF86Red", 7) == 0)) {
-                d->key = "Tab";
-            } else if ((strncmp(d->key, "XF86Back", 8) == 0)) {
-                d->key = "Escape";
-            }
+        if ((strncmp(ev->key, "XF86Red", 7) == 0)) {
+            ev->key = "Tab";
+        } else if ((strncmp(ev->key, "XF86Back", 8) == 0)) {
+            ev->key = "Escape";
+        }
 #endif
-            auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
-            PlatformKeyEventData pkdata(keyValue);
-            setRepeatToPlatformKeyEventData(sf, d->timestamp, pkdata);
-            setModifiersToPlatformKeyEventData(d, pkdata);
-            StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchKeyEvent(KeyEventKind::KeyEventDown, pkdata);
-            sf->dispatchKeyEvent(KeyEventKind::KeyEventPress, pkdata);
-            sf->m_isKeyDown = true;
+        auto keyValue = ecoreEventKeyToKeyValue(
+            ev->key,
+            (evas_key_modifier_is_set(ev->modifiers, "Shift_L") == EINA_TRUE) ||
+                (evas_key_modifier_is_set(ev->modifiers, "Shift_R") ==
+                 EINA_TRUE));
+        PlatformKeyEventData pkdata(keyValue);
+        setRepeatToPlatformKeyEventData(sf, ev->timestamp, pkdata);
+        setModifiersToPlatformKeyEventData(ev->modifiers, pkdata);
+        StarFishEnterer enter(sf->m_starFish);
+        sf->dispatchKeyEvent(KeyEventKind::KeyEventDown, pkdata);
+        sf->dispatchKeyEvent(KeyEventKind::KeyEventPress, pkdata);
+        sf->m_isKeyDown = true;
 
 #ifdef STARFISH_TIZEN_TV
-            if ((strncmp(d->key, "XF86Exit", 8) == 0)) {
-                evas_object_del(sf->m_window);
-                return EINA_FALSE;
-            }
+        if ((strncmp(ev->key, "XF86Exit", 8) == 0)) {
+            evas_object_del(sf->m_window);
+            return EINA_FALSE;
+        }
 #endif
-            return EINA_TRUE;
-        },
-        wnd);
+        return;
+    };
+    evas_object_event_callback_add(wnd->m_mainBox, EVAS_CALLBACK_KEY_DOWN,
+                                   wnd->m_keyDownEventHandler, wnd);
 
-    wnd->m_desktopKeyUpEventHandler = ecore_event_handler_add(
-        ECORE_EVENT_KEY_UP,
-        [](void* data, int type, void* event) -> Eina_Bool {
-            WindowImplEFL* sf = (WindowImplEFL*)data;
-            if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
-                return EINA_TRUE;
-            }
-
-            Ecore_Event_Key* d = (Ecore_Event_Key*)event;
+    wnd->m_keyUpEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
+                                  void* event_info) -> void {
+        WindowImplEFL* sf = (WindowImplEFL*)data;
+        Evas_Event_Key_Up* ev = (Evas_Event_Key_Up*)event_info;
+        if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
+            return;
+        }
 #ifdef STARFISH_TIZEN_TV
-            if ((strncmp(d->key, "XF86Red", 7) == 0)) {
-                d->key = "Tab";
-            } else if ((strncmp(d->key, "XF86Back", 8) == 0)) {
-                d->key = "Escape";
-            }
+        if ((strncmp(ev->key, "XF86Red", 7) == 0)) {
+            ev->key = "Tab";
+        } else if ((strncmp(ev->key, "XF86Back", 8) == 0)) {
+            ev->key = "Escape";
+        }
 #endif
-            auto keyValue = ecoreEventKeyToKeyValue(d->key, d->modifiers & 1);
-            PlatformKeyEventData kdata(keyValue);
-            setModifiersToPlatformKeyEventData(d, kdata);
-            StarFishEnterer enter(sf->m_starFish);
-            sf->dispatchKeyEvent(KeyEventKind::KeyEventUp, kdata);
-            sf->m_isKeyDown = false;
-            return EINA_TRUE;
-        },
-        wnd);
+        auto keyValue = ecoreEventKeyToKeyValue(
+            ev->key,
+            (evas_key_modifier_is_set(ev->modifiers, "Shift_L") == EINA_TRUE) ||
+                (evas_key_modifier_is_set(ev->modifiers, "Shift_R") ==
+                 EINA_TRUE));
+
+        PlatformKeyEventData kdata(keyValue);
+        setModifiersToPlatformKeyEventData(ev->modifiers, kdata);
+        StarFishEnterer enter(sf->m_starFish);
+        sf->dispatchKeyEvent(KeyEventKind::KeyEventUp, kdata);
+        sf->m_isKeyDown = false;
+        return;
+    };
+    evas_object_event_callback_add(wnd->m_mainBox, EVAS_CALLBACK_KEY_UP,
+                                   wnd->m_keyUpEventHandler, wnd);
 
 #else
     Evas* e = evas_object_evas_get(wnd->m_window);
@@ -1193,8 +1199,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
     evas_object_show(wnd->m_window);
 
-    wnd->m_mobileMouseDownEventHandler =
-        [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
+    wnd->m_mouseDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
+                                      void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
         Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*)event_info;
         sf->m_lastMouseX = ev->canvas.x;
@@ -1214,10 +1220,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN,
-                                   wnd->m_mobileMouseDownEventHandler, wnd);
+                                   wnd->m_mouseDownEventHandler, wnd);
 
-    wnd->m_mobileMouseMoveEventHandler =
-        [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
+    wnd->m_mouseMoveEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
+                                      void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
         Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*)event_info;
         ((WindowImplEFL*)sf)->m_lastMouseX = ev->cur.canvas.x;
@@ -1240,10 +1246,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE,
-                                   wnd->m_mobileMouseMoveEventHandler, wnd);
+                                   wnd->m_mouseMoveEventHandler, wnd);
 
-    wnd->m_mobileMouseUpEventHandler =
-        [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
+    wnd->m_mouseUpEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
+                                    void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
 
         StarFishEnterer enter(sf->starFish());
@@ -1260,10 +1266,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_UP,
-                                   wnd->m_mobileMouseUpEventHandler, wnd);
+                                   wnd->m_mouseUpEventHandler, wnd);
 
-    wnd->m_mobileClickEventHandler = [](void* data, Evas_Object* obj,
-                                        void* event_info) -> void {
+    wnd->m_clickEventHandler = [](void* data, Evas_Object* obj,
+                                  void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
 
         StarFishEnterer enter(sf->m_starFish);
@@ -1275,9 +1281,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                             sf->starFish()->screenInfo().deviceScaleFactor,
                         sf->m_clickedCount);
         sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
+        return;
     };
     evas_object_smart_callback_add(wnd->m_dummyBox, "clicked",
-                                   wnd->m_mobileClickEventHandler, wnd);
+                                   wnd->clickEventHandler, wnd);
 
 #endif
 
@@ -1636,26 +1643,35 @@ PlatformWindow::~PlatformWindow()
     }
 
 #ifndef STARFISH_TIZEN_WEARABLE
-    ecore_event_handler_del(eflWindow->m_desktopMouseDownEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopMouseUpEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopMouseMoveEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopMouseWheelEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopKeyDownEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopKeyUpEventHandler);
+    evas_object_event_callback_del(eflWindow->m_mainBox,
+                                   EVAS_CALLBACK_MOUSE_DOWN,
+                                   eflWindow->m_mouseDownEventHandler);
+    evas_object_event_callback_del(eflWindow->m_mainBox, EVAS_CALLBACK_MOUSE_UP,
+                                   eflWindow->m_mouseUpEventHandler);
+    evas_object_event_callback_del(eflWindow->m_mainBox,
+                                   EVAS_CALLBACK_MOUSE_WHEEL,
+                                   eflWindow->m_mouseWheelEventHandler);
+    evas_object_event_callback_del(eflWindow->m_mainBox,
+                                   EVAS_CALLBACK_MOUSE_MOVE,
+                                   eflWindow->m_mouseMoveEventHandler);
+    evas_object_event_callback_del(eflWindow->m_mainBox, EVAS_CALLBACK_KEY_DOWN,
+                                   eflWindow->m_keyDownEventHandler);
+    evas_object_event_callback_del(eflWindow->m_mainBox, EVAS_CALLBACK_KEY_UP,
+                                   eflWindow->m_keyUpEventHandler);
 #endif
 
 #ifdef STARFISH_TIZEN_WEARABLE
     evas_object_event_callback_del(eflWindow->m_dummyBox,
                                    EVAS_CALLBACK_MOUSE_DOWN,
-                                   eflWindow->m_mobileMouseDownEventHandler);
+                                   eflWindow->m_mouseDownEventHandler);
     evas_object_event_callback_del(eflWindow->m_dummyBox,
                                    EVAS_CALLBACK_MOUSE_MOVE,
-                                   eflWindow->m_mobileMouseMoveEventHandler);
+                                   eflWindow->m_mouseMoveEventHandler);
     evas_object_event_callback_del(eflWindow->m_dummyBox,
                                    EVAS_CALLBACK_MOUSE_UP,
-                                   eflWindow->m_mobileMouseUpEventHandler);
+                                   eflWindow->m_mouseUpEventHandler);
     evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked",
-                                   eflWindow->m_mobileClickEventHandler);
+                                   eflWindow->m_clickEventHandler);
 
 #endif
 #ifdef STARFISH_TIZEN_WEARABLE
