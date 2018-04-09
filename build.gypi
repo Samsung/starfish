@@ -38,9 +38,7 @@
         # e.g., 'defines_tizen' + 'defines_custom_vd' = defines used by the compiler
         'defines_custom_vd': [
             'STARFISH_TIZEN_TV',
-            'STARFISH_ENABLE_MULTIMEDIA',
             #'STARFISH_ENABLE_AVPLAY',
-            'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_ENABLE_TRANSPARENT_WINDOW',
             'STARFISH_ENABLE_TTS',
             #'STARFISH_ENABLE_BODY_FOCUS_RING',
