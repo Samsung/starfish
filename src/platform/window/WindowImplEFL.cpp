@@ -95,6 +95,7 @@ public:
         : PlatformWindow(sf)
     {
         m_mainBox = nullptr;
+        m_nonIMEKeyEventBox = nullptr;
         m_dummyBox = nullptr;
         m_dummyBoxClipper = nullptr;
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
@@ -186,6 +187,8 @@ public:
                 nullptr,
                 [](size_t a, void* data) {
                     WindowImplEFL* self = ((WindowImplEFL*)data);
+                    evas_object_focus_set(self->m_nonIMEKeyEventBox,
+                                          EINA_FALSE);
                     evas_object_focus_set(self->m_mainBox, EINA_TRUE);
                     self->m_softKeyboardOrigin = self->webView()->focusedNode();
                 },
@@ -210,6 +213,7 @@ public:
             [](size_t a, void* data) {
                 WindowImplEFL* self = ((WindowImplEFL*)data);
                 evas_object_focus_set(self->m_mainBox, EINA_FALSE);
+                evas_object_focus_set(self->m_nonIMEKeyEventBox, EINA_TRUE);
             },
             this);
     }
@@ -300,6 +304,8 @@ public:
 #endif
     std::vector<Evas_Object*> m_objectList;
     Evas_Object* m_mainBox;
+    Evas_Object* m_nonIMEKeyEventBox;
+    Ecore_Idler* m_nonIMEKeyEventBoxInitHandler;
     Evas_Object* m_dummyBox;
     Evas_Object* m_dummyBoxClipper;
 
@@ -941,14 +947,27 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
-    wnd->m_mainBox = elm_image_add(wnd->m_window);
+    wnd->m_mainBox = elm_label_add(wnd->m_window);
     evas_object_resize(wnd->m_mainBox, width, height);
     evas_object_move(wnd->m_mainBox, wnd->starFish()->posX(),
                      wnd->starFish()->posY());
     evas_object_show(wnd->m_mainBox);
 
+    wnd->m_nonIMEKeyEventBox = elm_label_add(wnd->m_window);
+    evas_object_show(wnd->m_nonIMEKeyEventBox);
+
+    wnd->m_nonIMEKeyEventBoxInitHandler = ecore_idler_add(
+        [](void* data) -> Eina_Bool {
+            WindowImplEFL* sf = (WindowImplEFL*)data;
+            evas_object_focus_set(sf->m_nonIMEKeyEventBox, EINA_TRUE);
+            sf->m_nonIMEKeyEventBoxInitHandler = nullptr;
+            return ECORE_CALLBACK_CANCEL;
+        },
+        wnd);
+
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-    wnd->m_canvasAdpater = elm_image_object_get(wnd->m_mainBox);
+    wnd->m_canvasAdpater =
+        evas_object_image_add(evas_object_evas_get(wnd->m_mainBox));
     evas_object_resize(wnd->m_canvasAdpater, width, height);
     evas_object_move(wnd->m_canvasAdpater, wnd->starFish()->posX(),
                      wnd->starFish()->posY());
@@ -1012,6 +1031,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                       void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
         Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*)event_info;
+
         // We care just left button now
         int currentPosX = ev->output.x - sf->starFish()->posX();
         int currentPosY = ev->output.y - sf->starFish()->posY();
@@ -1116,9 +1136,11 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                     void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
         Evas_Event_Key_Down* ev = (Evas_Event_Key_Down*)event_info;
+
         if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
             return;
         }
+
 #ifdef STARFISH_TIZEN_TV
         if ((strncmp(ev->key, "XF86Red", 7) == 0)) {
             ev->key = "Tab";
@@ -1147,16 +1169,19 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 #endif
         return;
     };
-    evas_object_event_callback_add(wnd->m_mainBox, EVAS_CALLBACK_KEY_DOWN,
+    evas_object_event_callback_add(wnd->m_nonIMEKeyEventBox,
+                                   EVAS_CALLBACK_KEY_DOWN,
                                    wnd->m_keyDownEventHandler, wnd);
 
     wnd->m_keyUpEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                   void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
         Evas_Event_Key_Up* ev = (Evas_Event_Key_Up*)event_info;
+
         if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
             return;
         }
+
 #ifdef STARFISH_TIZEN_TV
         if ((strncmp(ev->key, "XF86Red", 7) == 0)) {
             ev->key = "Tab";
@@ -1177,7 +1202,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         sf->m_isKeyDown = false;
         return;
     };
-    evas_object_event_callback_add(wnd->m_mainBox, EVAS_CALLBACK_KEY_UP,
+    evas_object_event_callback_add(wnd->m_nonIMEKeyEventBox,
+                                   EVAS_CALLBACK_KEY_UP,
                                    wnd->m_keyUpEventHandler, wnd);
 
 #else
@@ -1610,6 +1636,12 @@ PlatformWindow::~PlatformWindow()
     STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+
+    if (eflWindow->m_nonIMEKeyEventBoxInitHandler) {
+        ecore_idler_del(eflWindow->m_nonIMEKeyEventBoxInitHandler);
+        eflWindow->m_nonIMEKeyEventBoxInitHandler = nullptr;
+    }
+
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     if (eflWindow->m_canvasAdpater) {
         evas_object_del(eflWindow->m_canvasAdpater);
@@ -1636,6 +1668,11 @@ PlatformWindow::~PlatformWindow()
         // elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_mainBox);
         evas_object_del(eflWindow->m_mainBox);
         eflWindow->m_mainBox = nullptr;
+    }
+
+    if (eflWindow->m_nonIMEKeyEventBox) {
+        evas_object_del(eflWindow->m_nonIMEKeyEventBox);
+        eflWindow->m_nonIMEKeyEventBox = nullptr;
     }
 
     if (eflWindow->m_imfContext) {
