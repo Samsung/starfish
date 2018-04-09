@@ -2084,15 +2084,14 @@ StyleRuleImport* CSSParser::parseImportRule()
 
     restoreState();
 
-    String* url = parseURLString();
-    if (url->equals(String::emptyString)) {
+    Nullable<String*> url = parseURLString();
+    if (!url.hasValue()) {
         return nullptr;
     }
 
     getToken(true, false);
     MediaQuerySet* mediaQuery = parseMediaQuery();
-
-    return new StyleRuleImport(url, mediaQuery);
+    return new StyleRuleImport(url.getValue(), mediaQuery);
 }
 
 static bool isFontRelatedKey(CSSStyleValuePair::KeyKind key)
@@ -2180,21 +2179,51 @@ StyleRuleCounterStyle* CSSParser::parseCounterStyleRule()
 
 StyleRuleNamespace* CSSParser::parseNamespaceRule()
 {
-    // TODO: Parse the @namespace CSS at-rule.
-    // https://drafts.csswg.org/css-namespaces-3/
-    return nullptr;
+    preserveState();
+    RefPtr<CSSToken> token = getToken(true, true);
+
+    while (token->isNotNull() && !token->isSymbol('{') &&
+           !token->isSymbol(';')) {
+        consumeComponentValue(token);
+    }
+
+    if (!token->isSymbol(';')) {
+        ungetToken();
+        forgetState();
+        return nullptr;
+    }
+    restoreState();
+
+    preserveState();
+    token = getToken(true, true);
+
+    String* prefix = String::emptyString;
+    if (token->isIdent()) {
+        prefix = token->value()->toString();
+    }
+
+    Nullable<String*> namespaceURI = parseURLString();
+    if (!namespaceURI.hasValue()) {
+        ungetToken();
+        forgetState();
+        return nullptr;
+    }
+
+    token = currentToken();
+    while (token->isNotNull() && !token->isSymbol(';')) {
+        token = getToken(true, true);
+    }
+
+    forgetState();
+    return new StyleRuleNamespace(namespaceURI.getValue(), prefix);
 }
 
-String* CSSParser::parseURLString()
+Nullable<String*> CSSParser::parseURLString()
 {
-    RefPtr<CSSToken> token = getToken(true, false);
+    RefPtr<CSSToken> token = getToken(true, true);
 
     CSSTokenString urlSource;
     if (token->isString()) {
-        if (token->value()->charAt(0) !=
-            token->value()->charAt(token->value()->length() - 1)) {
-            return String::emptyString;
-        }
         urlSource.appendChar('u');
         urlSource.appendChar('r');
         urlSource.appendChar('l');
@@ -2210,7 +2239,7 @@ String* CSSParser::parseURLString()
         }
         urlSource.appendOther(*(token->value()));
     } else {
-        return String::emptyString;
+        return nullptr;
     }
 
     String* ret = String::emptyString;

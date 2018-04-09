@@ -1372,7 +1372,7 @@ public:
     StyleRuleSupports* parseSupportsRule();
     StyleRuleCounterStyle* parseCounterStyleRule();
     StyleRuleNamespace* parseNamespaceRule();
-    String* parseURLString();
+    Nullable<String*> parseURLString();
     void consumeComponentValue(RefPtr<CSSToken>& token);
     void parseSelector(GCVector<CSSSelectorList*>& list, bool& validSelector);
 
