@@ -145,6 +145,10 @@ private:
                             bool force);
     static void buildPseudoContentChild(FrameTreeBuilderContext& context,
                                         Node* parent, ContentData* child);
+    static void buildListCounterInsideIfNeeds(FrameTreeBuilderContext& context,
+                                              Node* parent);
+    static void buildListCounterOutsideIfNeeds(FrameTreeBuilderContext& context,
+                                               Node* parent);
     static void insertChild(FrameBlockBox* blockContainer, Frame* currentFrame,
                             Node* currentNode, FrameTreeBuilderContext& ctx);
     static void insertFlexItemChild(FrameBlockBox* blockContainer,

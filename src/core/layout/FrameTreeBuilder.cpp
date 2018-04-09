@@ -536,13 +536,42 @@ Frame* findPseudoFrameForTable(Frame* frame, bool isBefore = true)
     return pseudoFrame;
 }
 
-static ComputedStyle* createStyleForCounter(Node* from)
+static PseudoElement* buildListCounter(Node* parent,
+                                       FrameCounterText::CounterType type)
 {
-    ComputedStyle* counterStyle = new ComputedStyle(from->style());
-    counterStyle->loadResources(from, from->style());
-    counterStyle->arrangeStyleValues(from->style(), from);
-    counterStyle->setDisplay(DisplayValue::InlineDisplayValue);
-    return counterStyle;
+    // Generate style for PseudoElement
+    ComputedStyle* pseudoStyle = new ComputedStyle(parent->style());
+    pseudoStyle->loadResources(parent, parent->style());
+    pseudoStyle->arrangeStyleValues(parent->style(), parent);
+    pseudoStyle->setDisplay(DisplayValue::InlineBlockDisplayValue);
+
+    // Generate pseudo element
+    PseudoElement* pseudoElement = new PseudoElement(
+        parent->document(),
+        StyleResolver::PseudoElementType::PseudoElementCounter);
+    pseudoElement->setStyle(pseudoStyle);
+    pseudoElement->setParentNode(parent);
+    pseudoElement->setFrame(new FrameBlockBox(pseudoElement, nullptr));
+    pseudoElement->clearNeedsStyleRecalc();
+    pseudoElement->clearNeedsFrameTreeBuild();
+
+    // Generate style for Text
+    ComputedStyle* textStyle = new ComputedStyle(pseudoElement->style());
+    textStyle->loadResources(pseudoElement, pseudoElement->style());
+    textStyle->arrangeStyleValues(pseudoElement->style(), pseudoElement);
+    textStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
+
+    // Generate text node
+    Text* textNode = new Text(parent->document(), String::emptyString);
+    textNode->setParentNode(pseudoElement);
+    textNode->setStyle(textStyle);
+    textNode->setFrame(new FrameCounterText(textNode, type));
+    textNode->clearNeedsStyleRecalc();
+    textNode->clearNeedsFrameTreeBuild();
+
+    pseudoElement->frame()->appendChild(textNode->frame());
+
+    return pseudoElement;
 }
 
 static FrameBlockBox* findOutsideCounterAttachableFrameBlockBox(Frame* root)
@@ -562,7 +591,8 @@ static FrameBlockBox* findOutsideCounterAttachableFrameBlockBox(Frame* root)
     return nullptr;
 }
 
-static void buildListCounterIfNeeds(Node* parent, FrameTreeBuilderContext& ctx)
+void FrameTreeBuilder::buildListCounterInsideIfNeeds(
+    FrameTreeBuilderContext& ctx, Node* parent)
 {
     DisplayValue display = parent->style()->display();
     if (display != DisplayValue::ListItemDisplayValue) {
@@ -571,48 +601,46 @@ static void buildListCounterIfNeeds(Node* parent, FrameTreeBuilderContext& ctx)
     if (!parent->style()->hasVisibleListCounter()) {
         return;
     }
+    if (parent->style()->listStylePosition() !=
+        ListStylePositionValue::ListStylePositionInside) {
+        return;
+    }
     Frame* parentFrame = parent->frame();
     if (!parentFrame) {
         return;
     }
-    FrameCounterText::CounterType type =
-        parent->style()->listStylePosition() ==
-                ListStylePositionValue::ListStylePositionOutside
-            ? FrameCounterText::CounterTypeListOutside
-            : FrameCounterText::CounterTypeListInside;
 
-    // Generate style for PseudoElement
-    ComputedStyle* pseudoStyle = createStyleForCounter(parent);
-    pseudoStyle->setDisplay(DisplayValue::InlineBlockDisplayValue);
-
-    // Generate pseudo element
-    PseudoElement* pseudoElement = new PseudoElement(
-        parent->document(),
-        StyleResolver::PseudoElementType::PseudoElementCounter);
-    pseudoElement->setStyle(pseudoStyle);
-    pseudoElement->setParentNode(parent);
-    pseudoElement->setFrame(new FrameBlockBox(pseudoElement, nullptr));
-    pseudoElement->clearNeedsStyleRecalc();
-    pseudoElement->clearNeedsFrameTreeBuild();
-
-    // Generate style for Text
-    ComputedStyle* textStyle = createStyleForCounter(pseudoElement);
-    textStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
-
-    // Generate text node
-    Text* textNode = new Text(parent->document(), String::emptyString);
-    textNode->setParentNode(pseudoElement);
-    textNode->setStyle(textStyle);
-    textNode->setFrame(new FrameCounterText(textNode, type));
-    textNode->clearNeedsStyleRecalc();
-    textNode->clearNeedsFrameTreeBuild();
-
-    pseudoElement->frame()->appendChild(textNode->frame());
+    PseudoElement* pseudoElement =
+        buildListCounter(parent, FrameCounterText::CounterTypeListInside);
     ctx.setSeenNewFrameCounter();
 
-    if (type == FrameCounterText::CounterTypeListOutside) {
-        pseudoElement->frame()->style()->setWidth(Length(Length::Fixed, 0));
+    FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
+                                  pseudoElement->frame(), pseudoElement, ctx);
+}
+
+void FrameTreeBuilder::buildListCounterOutsideIfNeeds(
+    FrameTreeBuilderContext& ctx, Node* parent)
+{
+    DisplayValue display = parent->style()->display();
+    if (display != DisplayValue::ListItemDisplayValue) {
+        return;
     }
+    if (!parent->style()->hasVisibleListCounter()) {
+        return;
+    }
+    if (parent->style()->listStylePosition() !=
+        ListStylePositionValue::ListStylePositionOutside) {
+        return;
+    }
+    Frame* parentFrame = parent->frame();
+    if (!parentFrame) {
+        return;
+    }
+
+    PseudoElement* pseudoElement =
+        buildListCounter(parent, FrameCounterText::CounterTypeListOutside);
+    pseudoElement->style()->setWidth(Length(Length::Fixed, 0));
+    ctx.setSeenNewFrameCounter();
 
     // Append frame
     FrameBlockBox* t = findOutsideCounterAttachableFrameBlockBox(parentFrame);
@@ -990,7 +1018,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     }
 
     if (needsCreatePseudoElement) {
-        // buildListInsideCounterIfNeeds(current, ctx);
+        buildListCounterInsideIfNeeds(ctx, current);
         createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementBefore,
             ctx);
@@ -1070,7 +1098,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         createPseudoElement(
             current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
             ctx);
-        buildListCounterIfNeeds(current, ctx);
+        buildListCounterOutsideIfNeeds(ctx, current);
     }
 
     return currentFrame;
