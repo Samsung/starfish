@@ -7804,14 +7804,8 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
                 authorRules.push_back(std::make_pair(rule, url));
             }
         }
-        if (result.seenCombinator) {
-            // This is used to determine whether to recalculate the children's
-            // style when the attributes of the element is changed.
-            ret->setStyleDamageSource(result.styleDamageFrom);
-        } else {
-            ret->setStyleDamageSource((StyleDamageSource)(
-                result.styleDamageFrom & StyleDamageFromDOMTree));
-        }
+
+        ret->setStyleDamageSource(result.styleDamageFrom);
     }
 }
 
