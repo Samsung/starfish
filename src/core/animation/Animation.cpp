@@ -194,11 +194,11 @@ void TransformAnimationTask::computeToValue()
     Element* current = targetElement();
     ComputedStyle* style = current->style();
 
-    if (!style->hasTransforms()) {
+    if (!style->hasTransforms() || style->transforms(box)->size() == 0) {
         // NOTE
         // having transform is reason of creating StackingContext
-        // for rebuilding stacking context, we should give layout damage
-        current->setNeedsLayout();
+        box->computeStyleFlags();
+        current->webView()->clearStackingContext(true);
     }
     style->rareComputedStyleData()->ensureTransforms()->append(
         StyleTransformData(StyleTransformData::InternalMatrix));
@@ -226,12 +226,6 @@ void TransformAnimationTask::detachedFromElement()
             StyleTransformData::InternalMatrix) {
             // cleanup
             transforms->removeAt(transforms->size() - 1);
-            if (transforms->size() == 0) {
-                // NOTE
-                // having transform is reason of creating StackingContext
-                // for rebuilding stacking context, we should give layout damage
-                current->setNeedsLayout();
-            }
         }
     }
     targetElement()->clearRunningTransformAnimation();

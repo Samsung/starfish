@@ -157,7 +157,7 @@
                     'cflags_extra': [
                     ],
                     'sources_extra': [
-                        #'<!@(find third_party/deviceapi/src -name *.cpp)',
+                        '<!@(find third_party/deviceapi/src -name *.cpp)',
                     ],
                     'libraries_extra': [
                         '-lrt',

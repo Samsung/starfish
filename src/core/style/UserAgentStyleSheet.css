@@ -313,3 +313,12 @@
 "    margin-left: 40px;"
 "    margin-right: 40px;"
 "}"
+#if !defined(STARFISH_ENABLE_TEST)
+// old test expect images are doesn't consider this rule
+"a {"
+"     color: blue"
+"}"
+#endif
+"a:hover {"
+"    text-decoration: underline;"
+"}"
