@@ -229,8 +229,6 @@ private:
         return CSSRule::Type::NAMESPACE_RULE;
     }
     StyleRuleNamespace* m_styleRule;
-    String* m_namesaceURI;
-    String* m_prefix;
 };
 }
 

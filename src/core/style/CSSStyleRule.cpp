@@ -436,11 +436,11 @@ String* CSSNamespaceRule::cssText()
 
 String* CSSNamespaceRule::namespaceURI() const
 {
-    return m_namesaceURI;
+    return m_styleRule->namespaceURI();
 }
 
 String* CSSNamespaceRule::prefix() const
 {
-    return m_prefix;
+    return m_styleRule->prefix();
 }
 }

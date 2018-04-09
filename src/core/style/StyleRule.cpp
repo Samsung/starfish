@@ -330,10 +330,10 @@ StyleRuleFontFace::StyleRuleFontFace(CSSStyleDeclaration* decl)
 {
 }
 
-StyleRuleNamespace::StyleRuleNamespace()
+StyleRuleNamespace::StyleRuleNamespace(String* namespaceURI, String* prefix)
     : StyleRuleBase(CSSRule::Type::NAMESPACE_RULE)
-    , m_namespaceURI(String::emptyString)
-    , m_prefix(String::emptyString)
+    , m_namespaceURI(namespaceURI)
+    , m_prefix(prefix)
 {
 }
 }

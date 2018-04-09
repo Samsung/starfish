@@ -366,7 +366,7 @@ public:
 
 class StyleRuleNamespace : public StyleRuleBase {
 public:
-    StyleRuleNamespace();
+    StyleRuleNamespace(String* namespaceURI, String* prefix);
 
     String* namespaceURI() const
     {
