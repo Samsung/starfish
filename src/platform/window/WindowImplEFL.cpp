@@ -1804,12 +1804,18 @@ Canvas* WindowImplEFL::preparePainting()
         }
     }
 
+    int w, h;
+    evas_object_image_size_get(m_canvasAdpater, &w, &h);
     evas_object_show(m_canvasAdpater);
     void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
     evas_object_image_data_set(m_canvasAdpater, addr);
     m_canvasAdpaterSurface = cairo_image_surface_create_for_data(
-        (unsigned char*)addr, CAIRO_FORMAT_ARGB32, width(), height(),
+        (unsigned char*)addr, CAIRO_FORMAT_ARGB32, w, h,
         evas_object_image_stride_get(m_canvasAdpater));
+    STARFISH_LOG_INFO("WindowImplEFL::preparePainting buffer info %p -> %p\n",
+                      addr,
+                      ((unsigned char*)addr) +
+                          (evas_object_image_stride_get(m_canvasAdpater) * h));
     cairo_surface_set_device_scale(m_canvasAdpaterSurface,
                                    m_starFish->screenInfo().deviceScaleFactor,
                                    m_starFish->screenInfo().deviceScaleFactor);
