@@ -48,9 +48,6 @@
                    '<@(cflags_default)',
                    '<@(cflags_extra)',
                ],
-               'cflags!' : [
-                   '-fvisibility=hidden',
-               ],
                'ldflags' : [
                    '-Wl,--gc-sections',
                ],
