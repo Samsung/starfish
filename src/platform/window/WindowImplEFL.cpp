@@ -1164,10 +1164,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 #ifdef STARFISH_TIZEN_TV
         if ((strncmp(ev->key, "XF86Exit", 8) == 0)) {
             evas_object_del(sf->m_window);
-            return EINA_FALSE;
         }
 #endif
-        return;
     };
     evas_object_event_callback_add(wnd->m_nonIMEKeyEventBox,
                                    EVAS_CALLBACK_KEY_DOWN,
@@ -1243,7 +1241,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             sf->m_clickedCount);
         sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
         sf->m_isMouseLbuttonDown = true;
-        return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN,
                                    wnd->m_mouseDownEventHandler, wnd);
@@ -1268,8 +1265,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                             sf->starFish()->screenInfo().deviceScaleFactor,
                         0);
         sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
-
-        return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE,
                                    wnd->m_mouseMoveEventHandler, wnd);
@@ -1288,8 +1283,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                         sf->m_clickedCount);
         sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
         sf->m_isMouseLbuttonDown = false;
-
-        return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_UP,
                                    wnd->m_mouseUpEventHandler, wnd);
@@ -1307,7 +1300,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                             sf->starFish()->screenInfo().deviceScaleFactor,
                         sf->m_clickedCount);
         sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
-        return;
     };
     evas_object_smart_callback_add(wnd->m_dummyBox, "clicked",
                                    wnd->clickEventHandler, wnd);
@@ -1361,6 +1353,19 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 #else
             StarFishEnterer enter(wnd->starFish());
             wnd->onResize();
+#endif
+        },
+        wnd);
+    evas_object_event_callback_add(
+        wnd->m_mainBox, EVAS_CALLBACK_MOVE,
+        [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+            WindowImplEFL* wnd = (WindowImplEFL*)data;
+            StarFishEnterer enter(wnd->starFish());
+            int x, y;
+            evas_object_geometry_get(wnd->m_mainBox, &x, &y, NULL, NULL);
+            wnd->starFish()->setPos(x, y);
+            evas_object_move(wnd->m_canvasAdpater, x, y);
 #endif
         },
         wnd);

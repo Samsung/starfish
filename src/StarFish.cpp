@@ -334,8 +334,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     }
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
+    Evas_Object* wndObj;
     if (!platformHandle) {
-        Evas_Object* wndObj = elm_win_add(NULL, STARFISH_NAME, ELM_WIN_BASIC);
+        wndObj = elm_win_add(NULL, STARFISH_NAME, ELM_WIN_BASIC);
         elm_win_title_set(wndObj, STARFISH_NAME);
         elm_win_autodel_set(wndObj, EINA_TRUE);
         evas_object_resize(wndObj, w, h);

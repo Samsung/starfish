@@ -318,6 +318,11 @@ public:
     {
         return m_lweWebView;
     }
+    void setPos(int x, int y)
+    {
+        m_posX = x;
+        m_posY = y;
+    }
     int posX()
     {
         return m_posX;
