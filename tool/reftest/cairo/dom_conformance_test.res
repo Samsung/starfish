@@ -268,7 +268,7 @@ test/cairo/reftest/dom-conformance-test/html/level2/html/anchor04.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/AppletsCollection.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/area01.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/area02.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/area03.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/area03.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/area04.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/body01.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/button01.html

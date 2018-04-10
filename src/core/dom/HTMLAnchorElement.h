@@ -20,14 +20,14 @@
 #ifndef __StarFishHTMLAnchorElement__
 #define __StarFishHTMLAnchorElement__
 
-#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLHyperlinkContainer.h"
 
 namespace StarFish {
 
-class HTMLAnchorElement : public HTMLElement {
+class HTMLAnchorElement : public HTMLHyperlinkContainer {
 public:
     HTMLAnchorElement(Document* document)
-        : HTMLElement(document)
+        : HTMLHyperlinkContainer(document)
     {
         m_tabIndexWasSetExplicitly = true;
         m_tabIndex = 0;
@@ -50,21 +50,6 @@ public:
     virtual bool handleDefaultEvent(Event* event) override;
 
     bool supportsFocus() const override;
-
-    String* href();
-    void setHref(String* href);
-
-    String* host();
-    void setHost(String* host);
-
-    String* pathname();
-    void setPathname(String* host);
-
-    String* protocol();
-    void setProtocol(String* protocol);
-
-    String* target();
-    void setTarget(String* target);
 };
 }
 

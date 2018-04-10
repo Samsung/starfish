@@ -17,36 +17,39 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLMapElement__
-#define __StarFishHTMLMapElement__
+#ifndef __StarFishHTMLHyperlinkContainer__
+#define __StarFishHTMLHyperlinkContainer__
 
 #include "core/dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLMapElement : public HTMLElement {
+class HTMLHyperlinkContainer : public HTMLElement {
 public:
-    HTMLMapElement(Document* document)
+    HTMLHyperlinkContainer(Document* document)
         : HTMLElement(document)
-        , m_areas(nullptr)
     {
     }
 
-    void* operator new(size_t size);
-    void* operator new[](size_t size) = delete;
+    virtual bool isHTMLHyperlinkContainer() const override
+    {
+        return true;
+    }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isHTMLMapElement() const override;
+    String* href();
+    void setHref(String* href);
 
-    /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    String* host();
+    void setHost(String* host);
 
-    HTMLCollection* areas();
+    String* pathname();
+    void setPathname(String* host);
 
-private:
-    HTMLCollection* m_areas;
+    String* protocol();
+    void setProtocol(String* protocol);
+
+    String* target();
+    void setTarget(String* target);
 };
 }
-
 #endif

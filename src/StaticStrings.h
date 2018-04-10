@@ -355,6 +355,10 @@ public:
     QualifiedName m_cite;
     QualifiedName m_datetime;
     QualifiedName m_valuetype;
+    QualifiedName m_nohref;
+    QualifiedName m_download;
+    QualifiedName m_ping;
+    QualifiedName m_usemap;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

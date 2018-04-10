@@ -17,36 +17,27 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLMapElement__
-#define __StarFishHTMLMapElement__
-
-#include "core/dom/HTMLElement.h"
+#include "StarFishConfig.h"
+#include "StarFish.h"
+#include "core/dom/HTMLAreaElement.h"
 
 namespace StarFish {
 
-class HTMLMapElement : public HTMLElement {
-public:
-    HTMLMapElement(Document* document)
-        : HTMLElement(document)
-        , m_areas(nullptr)
-    {
+void* HTMLAreaElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLAreaElement)] = { 0 };
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLAreaElement));
+        typeInited = true;
     }
-
-    void* operator new(size_t size);
-    void* operator new[](size_t size) = delete;
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isHTMLMapElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name();
-
-    HTMLCollection* areas();
-
-private:
-    HTMLCollection* m_areas;
-};
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-#endif
+QualifiedName HTMLAreaElement::name()
+{
+    return starFish()->staticStrings()->m_areaTagName;
+}
+}

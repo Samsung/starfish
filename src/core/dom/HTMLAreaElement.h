@@ -17,18 +17,17 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLMapElement__
-#define __StarFishHTMLMapElement__
+#ifndef __StarFishHTMLAreaElement__
+#define __StarFishHTMLAreaElement__
 
-#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLHyperlinkContainer.h"
 
 namespace StarFish {
 
-class HTMLMapElement : public HTMLElement {
+class HTMLAreaElement : public HTMLHyperlinkContainer {
 public:
-    HTMLMapElement(Document* document)
-        : HTMLElement(document)
-        , m_areas(nullptr)
+    HTMLAreaElement(Document* document)
+        : HTMLHyperlinkContainer(document)
     {
     }
 
@@ -37,16 +36,10 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLMapElement() const override;
+    virtual bool isHTMLAreaElement() const;
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
-
-    HTMLCollection* areas();
-
-private:
-    HTMLCollection* m_areas;
 };
 }
-
 #endif

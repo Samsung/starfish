@@ -1,0 +1,22 @@
+// https://html.spec.whatwg.org/multipage/image-maps.html#the-area-element
+// NOTE Using DOMString instread of USVString
+
+[Exposed=Window,
+ HTMLConstructor]
+interface HTMLAreaElement : HTMLElement {
+    [Unimplemented, CEReactions] attribute DOMString alt;
+    [Unimplemented, CEReactions] attribute DOMString coords;
+    [Unimplemented, CEReactions] attribute DOMString shape;
+    [CEReactions, Reflect] attribute DOMString target;
+    [Unimplemented, CEReactions, Reflect] attribute DOMString download;
+    [Unimplemented, CEReactions, Reflect] attribute USVString ping;
+    [Unimplemented, CEReactions, Reflect] attribute DOMString rel;
+    [Unimplemented, SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
+    [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
+
+    // obsolete members
+    // https://html.spec.whatwg.org/#HTMLAreaElement-partial
+    [CEReactions, Reflect] attribute boolean noHref;
+};
+
+HTMLAreaElement implements HTMLHyperlinkElementUtils;
