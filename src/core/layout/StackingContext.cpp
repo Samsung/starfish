@@ -1016,7 +1016,21 @@ void StackingContext::applyStackingContextProperties(
 
     bool willBeComposited = (*ctx.compositeFlagInfo)[this];
     if (compositedBefore != willBeComposited) {
-        m_owner->node()->setNeedsPainting();
+        if (compositedBefore) {
+            StackingContext* p = m_parent;
+            while (p) {
+                if (p->needsGraphicsBuffer()) {
+                    break;
+                }
+                p = p->parent();
+            }
+            if (!p) {
+                p = this;
+            }
+            p->m_owner->node()->setNeedsPainting();
+        } else {
+            m_owner->node()->setNeedsPainting();
+        }
     } else if (compositedBefore && compositedBefore == willBeComposited) {
         m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
     }
@@ -1040,9 +1054,11 @@ void StackingContext::applyStackingContextProperties(
         iter++;
     }
 
+    if (m_rareData) {
+        m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
+    }
     if (needsGraphicsBuffer()) {
         SkMatrix l = SkMatrix::I();
-        m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
         Frame::ComputeVisibleRectContext ctx(
             Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
             m_rareData->m_visibleRect);

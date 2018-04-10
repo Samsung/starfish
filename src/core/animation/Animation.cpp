@@ -25,6 +25,7 @@
 #include "core/dom/TransitionEvent.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/StackingContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/style/ComputedStyle.h"
@@ -194,14 +195,21 @@ void TransformAnimationTask::computeToValue()
     Element* current = targetElement();
     ComputedStyle* style = current->style();
 
+    bool needsToRecomputeStackingContext = false;
     if (!style->hasTransforms() || style->transforms(box)->size() == 0) {
         // NOTE
         // having transform is reason of creating StackingContext
+        needsToRecomputeStackingContext = true;
+    }
+
+    style->rareComputedStyleData()->ensureTransforms()->append(
+        StyleTransformData(StyleTransformData::InternalMatrix));
+
+    if (needsToRecomputeStackingContext) {
         box->computeStyleFlags();
         current->webView()->clearStackingContext(true);
     }
-    style->rareComputedStyleData()->ensureTransforms()->append(
-        StyleTransformData(StyleTransformData::InternalMatrix));
+
     execute(0);
 }
 
@@ -216,19 +224,26 @@ void TransformAnimationTask::detachedFromElement()
     AnimationTask::detachedFromElement();
 
     Element* current = targetElement();
-    current->setNeedsStyleRecalc(Node::JustNeedsRecalcSelf);
-    current->webView()->setNeedsComputeStackingContextProperties();
-
     ComputedStyle* style = current->style();
+    FrameBox* box = current->frame()->asFrameBox();
+
     if (style && style->hasTransforms()) {
         auto transforms = style->rareComputedStyleData()->transforms();
         if (transforms->at(transforms->size() - 1).type() ==
             StyleTransformData::InternalMatrix) {
             // cleanup
             transforms->removeAt(transforms->size() - 1);
+            if (transforms->size() == 0) {
+                current->webView()->clearStackingContext(true);
+                style->clearTransform();
+                box->computeStyleFlags();
+            } else {
+                current->webView()->setNeedsComputeStackingContextProperties();
+            }
         }
     }
-    targetElement()->clearRunningTransformAnimation();
+
+    current->clearRunningTransformAnimation();
 }
 
 void TransformAnimationTask::execute(float progress)

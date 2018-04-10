@@ -72,6 +72,7 @@ public:
     virtual void resize(size_t w, size_t h) = 0;
     virtual void clear() = 0;
     virtual void detachNativeBuffer() = 0;
+
     virtual ~CanvasSurface()
     {
     }
@@ -89,6 +90,12 @@ public:
     virtual size_t bufferWidth() = 0;
     virtual size_t bufferHeight() = 0;
     virtual size_t bufferStride() = 0;
+
+#if defined(STARFISH_ENABLE_TEST)
+    virtual void dump(const char* path)
+    {
+    }
+#endif
 };
 
 struct DrawImageInfo {

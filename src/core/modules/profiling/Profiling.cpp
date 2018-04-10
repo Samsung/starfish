@@ -58,14 +58,18 @@ uint64_t timestamp()
     return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
+// #define STARFISH_PROFILER_TIMER_PRINT_TOTAL 1
+
 ProfilerTimer::~ProfilerTimer()
 {
     uint64_t end = longTickCount();
     float time = (float)((end - m_start) / 1000.f);
     STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, time);
+#ifdef STARFISH_PROFILER_TIMER_PRINT_TOTAL
     AtomicString aTag = AtomicString::createAtomicString(m_starFish, m_msg);
     float accumTime = m_starFish->profileRecode(aTag.string()) + time;
     STARFISH_LOG_INFO("in total, did %s in %f ms\n", m_msg, accumTime);
     m_starFish->updateProfileRecord(aTag.string(), accumTime);
+#endif
 }
 }

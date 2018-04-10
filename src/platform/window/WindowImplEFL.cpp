@@ -404,7 +404,7 @@ public:
         // STARFISH_LOG_INFO("detach CanvasSurfaceEFL NativeBuffer %p\n",
         //                   image);
         int w, h;
-        evas_object_image_size_get(m_image, &w, &h);
+        evas_object_image_size_get(image, &w, &h);
         g_totalCanvasSurfaceEFLSize -= (w * h * 4);
         evas_object_image_size_set(image, 0, 0);
         evas_object_hide(image);
@@ -418,6 +418,11 @@ public:
         STARFISH_ASSERT(address);
         evas_object_image_data_set(m_image, address);
         return (uint8_t*)address;
+    }
+
+    virtual void dump(const char* path)
+    {
+        evas_object_image_save(m_image, path, nullptr, nullptr);
     }
 
     virtual void detachNativeBuffer()
@@ -1828,6 +1833,13 @@ Canvas* WindowImplEFL::preparePainting()
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
+            STARFISH_LOG_INFO(
+                "WindowImplEFL::preparePainting buffer info(screen shot) %p -> "
+                "%p\n",
+                g_surfaceForScreehShot->data(),
+                g_surfaceForScreehShot->data() +
+                    (g_surfaceForScreehShot->bufferStride() *
+                     g_surfaceForScreehShot->bufferHeight()));
             Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
             return c;
         }
@@ -1975,6 +1987,15 @@ Compositor* WindowImplEFL::prepareCompositor()
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
+
+            STARFISH_LOG_INFO(
+                "WindowImplEFL::preparePainting buffer info(screen shot) %p -> "
+                "%p\n",
+                g_surfaceForScreehShot->data(),
+                g_surfaceForScreehShot->data() +
+                    (g_surfaceForScreehShot->bufferStride() *
+                     g_surfaceForScreehShot->bufferHeight()));
+
             Compositor* c =
                 Compositor::create(starFish(), g_surfaceForScreehShot);
             return c;
