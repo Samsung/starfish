@@ -20,7 +20,8 @@
 #ifndef __StarFishCSSGradientValue__
 #define __StarFishCSSGradientValue__
 
-#include "core/style/Style.h"
+#include "core/style/CSSAngle.h"
+#include "core/style/CSSLength.h"
 
 namespace StarFish {
 
@@ -309,7 +310,6 @@ private:
     CSSAngle m_angle;
     uint8_t m_sc;
 };
+} // namespace StarFish
 
-} /* namespace StarFish */
-
-#endif /* __StarFishCSSGradientValue__ */
+#endif
