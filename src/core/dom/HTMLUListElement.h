@@ -37,6 +37,16 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
+
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues);
+
+    String* type();
+    void setType(String* type);
 };
 }
 

@@ -19,6 +19,7 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+#include "core/dom/Document.h"
 #include "core/dom/HTMLLIElement.h"
 
 namespace StarFish {
@@ -26,5 +27,49 @@ namespace StarFish {
 QualifiedName HTMLLIElement::name()
 {
     return starFish()->staticStrings()->m_liTagName;
+}
+
+void HTMLLIElement::didAttributeChanged(QualifiedName name, String* old,
+                                        String* value, bool attributeCreated,
+                                        bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
+
+    if (name == starFish()->staticStrings()->m_value) {
+        document()->notifyCountingOutdated();
+    }
+}
+
+int32_t HTMLLIElement::value()
+{
+    String* valueStr =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+    return String::parseInt(valueStr);
+}
+
+void HTMLLIElement::setValue(int32_t v)
+{
+    setAttribute(starFish()->staticStrings()->m_value, String::fromInt(v));
+}
+
+bool HTMLLIElement::hasValue()
+{
+    Nullable<String*> v = getAttribute(starFish()->staticStrings()->m_value);
+    if (v.hasValue()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+String* HTMLLIElement::type()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+}
+
+void HTMLLIElement::setType(String* type)
+{
+    setAttribute(starFish()->staticStrings()->m_type, type);
 }
 }

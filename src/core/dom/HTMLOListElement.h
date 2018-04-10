@@ -37,6 +37,27 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
+
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues);
+
+    virtual int32_t startNumber() override;
+
+    int32_t start();
+    void setStart(int32_t v);
+
+    virtual bool reversed() override;
+    void setReversed(bool b);
+
+    String* type();
+    void setType(String* type);
+
+private:
+    unsigned itemCount();
 };
 }
 

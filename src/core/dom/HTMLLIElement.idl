@@ -2,8 +2,8 @@
 
 [HTMLConstructor]
 interface HTMLLIElement : HTMLElement {
-  [Unimplemented, CEReactions] attribute long value;
+  [CEReactions] attribute long value;
 
   // also has obsolete members
-  [CEReactions, Reflect] attribute DOMString type;
+  [Unimplemented, CEReactions] attribute DOMString type;
 };

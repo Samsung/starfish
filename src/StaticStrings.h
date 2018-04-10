@@ -345,6 +345,7 @@ public:
     QualifiedName m_selected;
     QualifiedName m_multiple;
     QualifiedName m_required;
+    QualifiedName m_reversed;
     QualifiedName m_alt;
     QualifiedName m_scrolling;
     QualifiedName m_frameborder;
