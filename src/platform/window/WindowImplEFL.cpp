@@ -173,7 +173,7 @@ public:
 
     virtual void* unwrap() override
     {
-        return (void*)m_mainBox;
+        return (void*)m_window;
     }
 
     virtual void clearResources() override;
