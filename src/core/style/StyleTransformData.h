@@ -172,23 +172,23 @@ public:
         char temp[100];
         if (m_type == Matrix) {
             snprintf(temp, sizeof(temp),
-                     "matrix(%.3f %.3f %.3f %.3f %.3f %.3f) ", matrix()->a(),
-                     matrix()->b(), matrix()->c(), matrix()->d(), matrix()->e(),
-                     matrix()->f());
+                     "matrix(%.3f, %.3f, %.3f, %.3f, %.3f, %.3f) ",
+                     matrix()->a(), matrix()->b(), matrix()->c(), matrix()->d(),
+                     matrix()->e(), matrix()->f());
         } else if (m_type == Scale) {
-            snprintf(temp, sizeof(temp), "scale(%.3f %.3f) ", scale()->x(),
+            snprintf(temp, sizeof(temp), "scale(%.3f, %.3f) ", scale()->x(),
                      scale()->y());
         } else if (m_type == Rotate) {
             snprintf(temp, sizeof(temp), "rotate(%.3f) ", rotate()->angle());
         } else if (m_type == Skew) {
-            snprintf(temp, sizeof(temp), "skew(%.3f %.3f) ", skew()->angleX(),
+            snprintf(temp, sizeof(temp), "skew(%.3f, %.3f) ", skew()->angleX(),
                      skew()->angleY());
         } else if (m_type == Translate) {
             auto utf8Data1 =
                 translate()->tx().dumpString()->toUTF8NonGCString();
             auto utf8Data2 =
                 translate()->ty().dumpString()->toUTF8NonGCString();
-            snprintf(temp, sizeof(temp), "translate(%s %s) ", utf8Data1.data(),
+            snprintf(temp, sizeof(temp), "translate(%s, %s) ", utf8Data1.data(),
                      utf8Data2.data());
         } else {
             return String::emptyString;
