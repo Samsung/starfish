@@ -1,0 +1,7 @@
+// https://html.spec.whatwg.org/multipage/image-maps.html#the-map-element
+[Exposed=Window,
+ HTMLConstructor]
+interface HTMLMapElement : HTMLElement {
+    [CEReactions, Reflect] attribute DOMString name;
+    [Unimplemented, SameObject] readonly attribute HTMLCollection areas;
+};
