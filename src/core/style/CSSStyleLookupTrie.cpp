@@ -418,7 +418,13 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Align-Items
         // User-Select
         // Caret-Color
+        // Will-Change
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "align-items", 11) == 0) {
+                return CSSStyleKind::AlignItems;
+            }
+            break;
         case 'b':
             if (memcmp(data, "border-left", 11) == 0) {
                 return CSSStyleKind::BorderLeft;
@@ -450,19 +456,14 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::LineHeight;
             }
             break;
-        case 'w':
-            if (memcmp(data, "white-space", 11) == 0) {
-                return CSSStyleKind::WhiteSpace;
+        case 'm':
+            if (memcmp(data, "margin-left", 11) == 0) {
+                return CSSStyleKind::MarginLeft;
             }
             break;
         case 'p':
             if (memcmp(data, "padding-top", 11) == 0) {
                 return CSSStyleKind::PaddingTop;
-            }
-            break;
-        case 'm':
-            if (memcmp(data, "margin-left", 11) == 0) {
-                return CSSStyleKind::MarginLeft;
             }
             break;
         case 't':
@@ -473,14 +474,17 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::TextShadow;
             }
             break;
-        case 'a':
-            if (memcmp(data, "align-items", 11) == 0) {
-                return CSSStyleKind::AlignItems;
-            }
-            break;
         case 'u':
             if (memcmp(data, "user-select", 11) == 0) {
                 return CSSStyleKind::UserSelect;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "will-change", 11) == 0) {
+                return CSSStyleKind::WillChange;
+            }
+            if (memcmp(data, "white-space", 11) == 0) {
+                return CSSStyleKind::WhiteSpace;
             }
             break;
         }
@@ -1327,9 +1331,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::CaretColor;
             }
             break;
-        case 'v':
-            if (memcmp(data, "visibility", 10) == 0) {
-                return CSSStyleKind::Visibility;
+        case 'e':
+            if (memcmp(data, "emptyCells", 10) == 0) {
+                return CSSStyleKind::EmptyCells;
             }
             break;
         case 'f':
@@ -1356,24 +1360,14 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
                 return CSSStyleKind::LineHeight;
             }
             break;
-        case 'w':
-            if (memcmp(data, "whiteSpace", 10) == 0) {
-                return CSSStyleKind::WhiteSpace;
-            }
-            break;
-        case 'p':
-            if (memcmp(data, "paddingTop", 10) == 0) {
-                return CSSStyleKind::PaddingTop;
-            }
-            break;
         case 'm':
             if (memcmp(data, "marginLeft", 10) == 0) {
                 return CSSStyleKind::MarginLeft;
             }
             break;
-        case 'e':
-            if (memcmp(data, "emptyCells", 10) == 0) {
-                return CSSStyleKind::EmptyCells;
+        case 'p':
+            if (memcmp(data, "paddingTop", 10) == 0) {
+                return CSSStyleKind::PaddingTop;
             }
             break;
         case 't':
@@ -1390,6 +1384,19 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'u':
             if (memcmp(data, "userSelect", 10) == 0) {
                 return CSSStyleKind::UserSelect;
+            }
+            break;
+        case 'v':
+            if (memcmp(data, "visibility", 10) == 0) {
+                return CSSStyleKind::Visibility;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "willChange", 10) == 0) {
+                return CSSStyleKind::WillChange;
+            }
+            if (memcmp(data, "whiteSpace", 10) == 0) {
+                return CSSStyleKind::WhiteSpace;
             }
             break;
         }

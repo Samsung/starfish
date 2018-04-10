@@ -848,7 +848,8 @@ class CSSStyleDeclaration;
     F(LineBreak, lineBreak, "line-break")                                      \
     F(WordBreak, wordBreak, "word-break")                                      \
     F(PointerEvents, pointerEvents, "pointer-events")                          \
-    F(Resize, resize, "resize")
+    F(Resize, resize, "resize")                                                \
+    F(WillChange, willChange, "will-change")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)

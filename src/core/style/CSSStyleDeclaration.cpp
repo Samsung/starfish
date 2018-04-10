@@ -1632,6 +1632,30 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
         p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
         p.setInt32Value(style->gridColumnStart());
+    } else if (keyKind == CSSStyleValuePair::KeyKind::WillChange) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::WillChange);
+        WillChangeData* data = style->willChange();
+        if (!data) {
+            p.setValueKind(CSSStyleValuePair::Auto);
+        } else {
+            ValueList* list = new ValueList(ValueList::CommaSeparator);
+            if (data->contents()) {
+                list->emplace_back(CSSStyleValuePair::KeywordValueKind,
+                                   String::fromUTF8("contents"));
+            }
+            if (data->scrollPosition()) {
+                list->emplace_back(CSSStyleValuePair::KeywordValueKind,
+                                   String::fromUTF8("scroll-position"));
+            }
+            size_t size = data->size();
+            for (size_t i = 0; i < size; i++) {
+                list->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
+                                   data->at(i));
+            }
+            p.setValueList(list);
+        }
+        addValuePair(p);
     }
 #define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
     else if (keyKind ==                                                       \
