@@ -7725,6 +7725,12 @@ void StyleResolver::apply(Element* element,
                 style->setGridColumnGap(column.toLength());
             }
             break;
+        case CSSStyleValuePair::KeyKind::GridTemplateAreas:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::StringValueKind) {
+                style->setGridTemplateAreas(cssValues[k].stringValue());
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -11203,6 +11209,229 @@ bool CSSStyleValuePair::updateValueGridColumnGap(Document* document,
 
     CSSLength length = CSSLength(str, number);
     setLengthValue(length);
+
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueGridTemplateAreas(
+    Document* document, const CSSTokenVector& tokens)
+{
+    struct Area {
+        size_t columnStart;
+        size_t columnEnd;
+        size_t rowStart;
+        size_t rowEnd;
+    };
+
+    if (!tokens.size()) {
+        return false;
+    }
+    size_t count = 0;
+    std::unordered_multimap<std::string, struct Area> collector;
+    std::unordered_set<std::string> areaSet;
+
+    for (size_t row = 0; row < tokens.size(); row++) {
+        auto ss = tokens[row];
+        ss.trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+        parser.consumeContentString();
+        String* separator = parser.parsedString();
+        if (!separator) {
+            return false;
+        }
+        auto s = separator->toUTF8NonGCString();
+        CSSTokenVector areas;
+        CSSStyleDeclaration::tokenizeCSSValue(areas, s.data(), s.length());
+        for (size_t col = 0; col < areas.size(); col++) {
+            std::string str = areas[col];
+            Area area;
+            area.columnStart = col + 1;
+            area.columnEnd = area.columnStart + 1;
+            area.rowStart = row + 1;
+            area.rowEnd = area.rowStart + 1;
+            collector.insert(std::make_pair(str, area));
+            areaSet.insert(str);
+        }
+    }
+
+    // Check the validation of 'grid-template-areas'.
+    // eg. this is a valid case.
+    // "head head"
+    // "nav  nav"
+    // "foot foot"
+    // but this is a invalid case.
+    // "head nav"
+    // "nav  nav"
+    // "foot foot"
+    for (const std::string& name : areaSet) {
+        std::vector<struct Area> stack;
+        for (auto it = collector.find(name); it != collector.end(); it++) {
+            if (name.compare(it->first)) {
+                break;
+            }
+
+            if (!stack.size()) {
+                stack.push_back(it->second);
+            } else {
+                bool merge = false;
+                struct Area target = it->second;
+                for (size_t i = 0; i < stack.size(); i++) {
+                    struct Area* area = &stack[i];
+                    std::set<size_t> set;
+                    if (area->columnStart == target.columnStart &&
+                        area->columnEnd == target.columnEnd) {
+                        set.insert(area->rowStart);
+                        set.insert(area->rowEnd);
+                        set.insert(target.rowStart);
+                        set.insert(target.rowEnd);
+
+                        if (set.size() != 3) {
+                            continue;
+                        }
+
+                        std::vector<size_t> orderedTracks;
+                        for (auto it = set.begin(); it != set.end(); ++it) {
+                            orderedTracks.push_back(*it);
+                        }
+
+                        size_t previous = orderedTracks[0];
+
+                        for (size_t i = 1; i < orderedTracks.size(); i++) {
+                            if ((orderedTracks[i] - previous) != 1) {
+                                continue;
+                            }
+                            previous = orderedTracks[i];
+                        }
+
+                        area->rowStart = orderedTracks[0];
+                        area->rowEnd = orderedTracks[2];
+                        merge = true;
+                        break;
+                    } else if (area->rowStart == target.rowStart &&
+                               area->rowEnd == target.rowEnd) {
+                        set.insert(area->columnStart);
+                        set.insert(area->columnEnd);
+                        set.insert(target.columnStart);
+                        set.insert(target.columnEnd);
+                        if (set.size() != 3) {
+                            continue;
+                        }
+
+                        std::vector<size_t> orderedTracks;
+                        for (auto it = set.begin(); it != set.end(); ++it) {
+                            orderedTracks.push_back(*it);
+                        }
+
+                        size_t previous = orderedTracks[0];
+
+                        for (size_t i = 1; i < orderedTracks.size(); i++) {
+                            if ((orderedTracks[i] - previous) != 1) {
+                                continue;
+                            }
+                            previous = orderedTracks[i];
+                        }
+
+                        area->columnStart = orderedTracks[0];
+                        area->columnEnd = orderedTracks[2];
+                        merge = true;
+                        break;
+                    }
+                }
+
+                if (!merge) {
+                    stack.push_back(it->second);
+                }
+            }
+        }
+
+        if (stack.size() != 1) {
+            while (stack.size() != 1) {
+                struct Area target = stack.back();
+                stack.pop_back();
+                bool merge = false;
+                for (size_t i = 0; i < stack.size(); i++) {
+                    struct Area* area = &stack[i];
+                    std::set<size_t> set;
+                    if (area->columnStart == target.columnStart &&
+                        area->columnEnd == target.columnEnd) {
+                        set.insert(area->rowStart);
+                        set.insert(area->rowEnd);
+                        set.insert(target.rowStart);
+                        set.insert(target.rowEnd);
+
+                        if (set.size() != 3) {
+                            continue;
+                        }
+
+                        std::vector<size_t> orderedTracks;
+                        for (auto it = set.begin(); it != set.end(); ++it) {
+                            orderedTracks.push_back(*it);
+                        }
+
+                        size_t previous = orderedTracks[0];
+
+                        for (size_t i = 1; i < orderedTracks.size(); i++) {
+                            if ((orderedTracks[i] - previous) != 1) {
+                                continue;
+                            }
+                            previous = orderedTracks[i];
+                        }
+
+                        area->rowStart = orderedTracks[0];
+                        area->rowEnd = orderedTracks[2];
+                        merge = true;
+                        break;
+                    } else if (area->rowStart == target.rowStart &&
+                               area->rowEnd == target.rowEnd) {
+                        set.insert(area->columnStart);
+                        set.insert(area->columnEnd);
+                        set.insert(target.columnStart);
+                        set.insert(target.columnEnd);
+                        if (set.size() != 3) {
+                            continue;
+                        }
+
+                        std::vector<size_t> orderedTracks;
+                        for (auto it = set.begin(); it != set.end(); ++it) {
+                            orderedTracks.push_back(*it);
+                        }
+
+                        size_t previous = orderedTracks[0];
+
+                        for (size_t i = 1; i < orderedTracks.size(); i++) {
+                            if ((orderedTracks[i] - previous) != 1) {
+                                continue;
+                            }
+                            previous = orderedTracks[i];
+                        }
+
+                        area->columnStart = orderedTracks[0];
+                        area->columnEnd = orderedTracks[2];
+                        merge = true;
+                        break;
+                    }
+                }
+
+                if (!merge) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    CSSTokenValue value;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        auto ss = tokens[i];
+        ss.trim();
+        value += ss;
+        if (i != tokens.size() - 1) {
+            value += " ";
+        }
+    }
+
+    String* str = String::createASCIIString(value.c_str());
+    setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+    setStringValue(str);
 
     return true;
 }

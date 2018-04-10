@@ -1559,6 +1559,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setLengthValue(CSSLength(column.fixed()));
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridTemplateAreas) {
+        CSSStyleValuePair p;
+        String* areas = style->gridTemplateAreas();
+        if (areas) {
+            p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateAreas);
+            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            p.setStringValue(areas);
+        }
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::TextOverflow) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TextOverflow);

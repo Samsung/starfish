@@ -1859,13 +1859,19 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     if (newStyle->gridRowGap() != oldStyle->gridRowGap()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::WordBreak] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::GridRowGap] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
     if (newStyle->gridColumnGap() != oldStyle->gridColumnGap()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::WordBreak] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::GridColumnGap] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->gridTemplateAreas() != oldStyle->gridTemplateAreas()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::GridTemplateAreas] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
