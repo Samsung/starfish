@@ -21,6 +21,7 @@
 #include "StarFish.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLAnchorElement.h"
+#include "core/dom/HTMLAreaElement.h"
 #include "core/dom/HTMLBaseElement.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLBRElement.h"
@@ -40,6 +41,7 @@
 #include "core/dom/HTMLLegendElement.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/HTMLLIElement.h"
+#include "core/dom/HTMLMapElement.h"
 #include "core/dom/HTMLMetaElement.h"
 #include "core/dom/HTMLObjectElement.h"
 #include "core/dom/HTMLOptGroupElement.h"
@@ -200,6 +202,10 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLModElement(document, name);
     } else if (name == str->m_paramTagName.localNameAtomic()) {
         return new HTMLParamElement(document);
+    } else if (name == str->m_mapTagName.localNameAtomic()) {
+        return new HTMLMapElement(document);
+    } else if (name == str->m_areaTagName.localNameAtomic()) {
+        return new HTMLAreaElement(document);
     }
 #define DEFINE_KNOWN_ELEMENT(tagName)                               \
     else if (name == str->m_##tagName##TagName.localNameAtomic())   \

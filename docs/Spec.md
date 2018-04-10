@@ -323,6 +323,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | style | Return a live CSS declaration block. |
 | [HTMLAnchorElement](https://html.spec.whatwg.org/multipage/semantics.html#the-a-element) | interface | HTMLAnchorElement | The HTMLAnchorElement interface represents hyperlink elements and provides special properties and methods (beyond those of the regular HTMLElement object interface that they inherit from) for manipulating the layout and presentation of such elements. |
 |  | attribute | target | Reflect the respective content attribute of the same name |
+| [HTMLAreaElement](https://html.spec.whatwg.org/multipage/image-maps.html#the-area-element) | interface | HTMLAreaElement | The area element represents either a hyperlink with some text and a corresponding area on an image map, or a dead area on an image map. |
+|  | attribute | target | Reflect the target HTML attribute, indicating the browsing context in which to open the linked resource. |
+|  | attribute | noHref | Indicate if the area is inactive (true) or active (false). |
 | [HTMLHyperlinkElementUtils](https://html.spec.whatwg.org/multipage/links.html#api-for-a-and-area-elements) | interface | HTMLHyperlinkElementUtils | The HTMLHyperlinkElementUtils mixin defines utility methods and properties to work with HTMLAnchorElement and HTMLAreaElement. These utilities allow to deal with common features like URLs. |
 |  | attribute | href | Return the whole URL. |
 |  | attribute | protocol | Return the whole protocol. |
@@ -425,7 +428,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLDListElement](https://html.spec.whatwg.org/#htmldlistelement)  | interface | HTMLDListElement |  |
 |  | attribute | compact | This variable just relect attribute 'compact' |
 | [HTMLMapElement](https://html.spec.whatwg.org/multipage/image-maps.html#the-map-element) | interface | HTMLMapElement | The map element, in conjunction with an img element and any area element descendants, defines an image map. |
-|  | attribute | name | Represent the map element for referencing it other context. |
+|  | attribute | name | Represents the map element for referencing it other context. |
+|  | attribute | areas | Represents the area elements associated to this map. |
 | [HTMLMediaElement](https://html.spec.whatwg.org/multipage/embedded-content.html#htmlmediaelement) | interface | HTMLMediaElement | The HTMLMediaElement interface adds to HTMLElement the properties and methods needed to support basic media-related capabilities that are common to audio and video. The HTMLVideoElement and HTMLAudioElement elements both inherit this interface. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
 |  | enum | CanPlayTypeResult | "", "maybe", "probably" |
 |  | typedef | (MediaStream or MediaSource or Blob) MediaProvider |  |

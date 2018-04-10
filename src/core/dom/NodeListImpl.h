@@ -35,6 +35,7 @@ bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection);
 bool isFormElements(Node* node, void* data, GCVector<Node*>* collection);
 bool isOptionElement(Node* node, void* data, GCVector<Node*>* collection);
 bool isSelectedOption(Node* node, void* data, GCVector<Node*>* collection);
+bool isMapAreasElement(Node* node, void* data, GCVector<Node*>* collection);
 
 class NodeListImpl : public gc {
 public:
@@ -49,6 +50,7 @@ public:
         FormElementsFiliter,
         OptionElementFilter,
         SelectedOptionsFilter,
+        MapAreasElementFilter,
     };
 
     NodeListImpl(Node* root, FilterFunctionType filterType, void* data,
@@ -86,6 +88,9 @@ public:
             break;
         case SelectedOptionsFilter:
             m_filter = isSelectedOption;
+            break;
+        case MapAreasElementFilter:
+            m_filter = isMapAreasElement;
             break;
         case None:
             STARFISH_ASSERT_NOT_REACHED();

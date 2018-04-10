@@ -594,6 +594,11 @@ public:
         return false;
     }
 
+    virtual bool isHTMLHyperlinkContainer() const
+    {
+        return false;
+    }
+
     HTMLListContainer* asHTMLListContainer() const
     {
         STARFISH_ASSERT(isHTMLListContainer());

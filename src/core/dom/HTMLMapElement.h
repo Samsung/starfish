@@ -28,6 +28,7 @@ class HTMLMapElement : public HTMLElement {
 public:
     HTMLMapElement(Document* document)
         : HTMLElement(document)
+        , m_areas(nullptr)
     {
     }
 
@@ -40,6 +41,11 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
+
+    HTMLCollection* areas();
+
+private:
+    HTMLCollection* m_areas;
 };
 }
 

@@ -20,6 +20,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLMapElement.h"
+#include "core/dom/HTMLCollection.h"
 
 namespace StarFish {
 void* HTMLMapElement::operator new(size_t size)
@@ -28,6 +29,7 @@ void* HTMLMapElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLMapElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMapElement, m_areas));
         HTMLElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLMapElement));
         typeInited = true;
@@ -38,5 +40,15 @@ void* HTMLMapElement::operator new(size_t size)
 QualifiedName HTMLMapElement::name()
 {
     return starFish()->staticStrings()->m_mapTagName;
+}
+
+HTMLCollection* HTMLMapElement::areas()
+{
+    if (m_areas) {
+        return m_areas;
+    }
+    m_areas = new HTMLCollection(this, NodeListImpl::MapAreasElementFilter,
+                                 nullptr, false);
+    return m_areas;
 }
 }

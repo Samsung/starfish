@@ -66,6 +66,9 @@ public:
     void setSrc(String* src);
     String* src();
 
+    void setUseMap(String* useMap);
+    String* useMap();
+
     unsigned long width();
     void setWidth(unsigned long width);
 
