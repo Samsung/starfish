@@ -20,9 +20,9 @@
 #ifndef __StarFishCalcData__
 #define __StarFishCalcData__
 
-#include "core/util/String.h"
-#include "core/style/Length.h"
-#include "core/style/Style.h"
+#include "core/style/CSSAngle.h"
+#include "core/style/CSSLength.h"
+#include "core/style/CSSTime.h"
 
 namespace StarFish {
 
@@ -212,35 +212,12 @@ public:
         return m_data.m_timeData;
     }
 
-    String* toString()
-    {
-        if (m_type.isNumber()) {
-            return String::fromFloat(m_data.m_numberData);
-        } else if (m_type.isLength()) {
-            return m_data.m_lengthData.toString();
-        } else if (m_type.isAngle()) {
-            return m_data.m_angleData.toString();
-        } else if (m_type.isTime()) {
-            return m_data.m_timeData.toString();
-        } else if (m_type.isPercentage()) {
-            StringBuilder builder;
-            builder.appendString(
-                String::fromFloat(m_data.m_numberData * 100.f));
-            builder.appendChar('%');
-            return builder.finalize();
-        }
-
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        return String::emptyString;
-    }
+    String* toString();
 
 private:
     CalcValueType m_type;
     CalcValueData m_data;
 };
-
-#define MUL true
-#define DIV false
 
 class CalcTerm : public gc {
 public:
@@ -270,266 +247,24 @@ public:
         return m_values;
     }
 
-    CalcValueType type() const
-    {
-        STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-        auto it = m_values.begin();
-        CalcValueType lType = (*it).type();
-        it++;
-        auto it2 = m_operators.begin();
-        while (it != m_values.end()) {
-            CalcValueType rType = (*it).type();
-            bool operand = *it2;
+    CalcValueType type() const;
 
-            if (operand == MUL) {
-                if (lType.isNumber()) {
-                    lType = rType;
-                } else if (!rType.isNumber()) {
-                    return CalcValueType::Invalid;
-                }
-            } else {
-                if (!(rType.isNumber() && (*it).numberValue() != 0)) {
-                    return CalcValueType::Invalid;
-                }
-            }
+    float numberValue() const;
 
-            it++;
-            it2++;
-        }
+    LayoutUnit specifiedValue(LayoutUnit parentContentLength, Node* n) const;
 
-        return lType;
-    }
+    LayoutUnit specifiedFontValue(Node* n) const;
 
-    float numberValue() const
-    {
-        STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-        auto it = m_values.begin();
-        float n = (*it).numberValue();
-        it++;
-        auto it2 = m_operators.begin();
-        while (it != m_values.end()) {
-            bool operand = *it2;
+    CSSAngle angleValue() const;
 
-            if (operand == MUL) {
-                n *= (*it).numberValue();
-            } else {
-                n /= (*it).numberValue();
-            }
+    CSSTime timeValue() const;
 
-            it++;
-            it2++;
-        }
-
-        return n;
-    }
-
-    LayoutUnit specifiedValue(LayoutUnit parentContentLength, Node* n) const
-    {
-        STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-        auto it = m_values.begin();
-        CalcValueType lType = (*it).type();
-        float num = 1;
-        LayoutUnit l;
-        if (lType.isNumber()) {
-            num = (*it).numberValue();
-        } else {
-            l = (*it).specifiedValue(parentContentLength, n);
-        }
-        it++;
-        auto it2 = m_operators.begin();
-        while (it != m_values.end()) {
-            CalcValueType rType = (*it).type();
-            bool operand = *it2;
-
-            if (operand == MUL) {
-                if (rType.isNumber()) {
-                    num *= (*it).numberValue();
-                } else {
-                    l = (*it).specifiedValue(parentContentLength, n);
-                    l *= num;
-                    num = 1;
-                }
-            } else {
-                if (rType.isNumber()) {
-                    num /= (*it).numberValue();
-                } else {
-                    l = (*it).specifiedValue(parentContentLength, n);
-                    l /= num;
-                    num = 1;
-                }
-            }
-
-            it++;
-            it2++;
-        }
-
-        return num * l;
-    }
-
-    LayoutUnit specifiedFontValue(Node* n) const
-    {
-        STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-        auto it = m_values.begin();
-        CalcValueType lType = (*it).type();
-        float num = 1;
-        LayoutUnit l;
-        if (lType.isNumber()) {
-            num = (*it).numberValue();
-        } else {
-            l = (*it).specifiedFontValue(n);
-        }
-        it++;
-        auto it2 = m_operators.begin();
-        while (it != m_values.end()) {
-            CalcValueType rType = (*it).type();
-            bool operand = *it2;
-
-            if (operand == MUL) {
-                if (rType.isNumber()) {
-                    num *= (*it).numberValue();
-                } else {
-                    l = (*it).specifiedFontValue(n);
-                    l *= num;
-                    num = 1;
-                }
-            } else {
-                if (rType.isNumber()) {
-                    num /= (*it).numberValue();
-                } else {
-                    l = (*it).specifiedFontValue(n);
-                    l /= num;
-                    num = 1;
-                }
-            }
-
-            it++;
-            it2++;
-        }
-
-        return num * l;
-    }
-
-    CSSAngle angleValue() const
-    {
-        STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-        auto it = m_values.begin();
-        CalcValueType lType = (*it).type();
-        float num = 1;
-        CSSAngle a;
-        if (lType.isNumber()) {
-            num = (*it).numberValue();
-        } else {
-            a = (*it).angleValue();
-        }
-        it++;
-        auto it2 = m_operators.begin();
-        while (it != m_values.end()) {
-            CalcValueType rType = (*it).type();
-            bool operand = *it2;
-
-            if (operand == MUL) {
-                if (lType.isNumber()) {
-                    num *= (*it).numberValue();
-                } else {
-                    a = (*it).angleValue();
-                    a *= num;
-                    num = 1;
-                }
-            } else {
-                if (lType.isNumber()) {
-                    num /= (*it).numberValue();
-                } else {
-                    a = (*it).angleValue();
-                    a /= num;
-                    num = 1;
-                }
-            }
-
-            it++;
-            it2++;
-        }
-
-        return num * a;
-    }
-
-    CSSTime timeValue() const
-    {
-        STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-        auto it = m_values.begin();
-        CalcValueType lType = (*it).type();
-        float num = 1;
-        CSSTime t;
-        if (lType.isNumber()) {
-            num = (*it).numberValue();
-        } else {
-            t = (*it).timeValue();
-        }
-        it++;
-        auto it2 = m_operators.begin();
-        while (it != m_values.end()) {
-            CalcValueType rType = (*it).type();
-            bool operand = *it2;
-
-            if (operand == MUL) {
-                if (lType.isNumber()) {
-                    num *= (*it).numberValue();
-                } else {
-                    t = (*it).timeValue();
-                    t *= num;
-                    num = 1;
-                }
-            } else {
-                if (lType.isNumber()) {
-                    num /= (*it).numberValue();
-                } else {
-                    t = (*it).timeValue();
-                    t /= num;
-                    num = 1;
-                }
-            }
-
-            it++;
-            it2++;
-        }
-
-        return num * t;
-    }
-
-    String* toString()
-    {
-        STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-        StringBuilder builder;
-        auto it = m_values.begin();
-        builder.appendString((*it).toString());
-        it++;
-        auto it2 = m_operators.begin();
-        while (it != m_values.end()) {
-            builder.appendString(String::spaceString);
-            bool operand = *it2;
-
-            if (operand == MUL) {
-                builder.appendChar('*');
-            } else {
-                builder.appendChar('/');
-            }
-
-            builder.appendString(String::spaceString);
-            builder.appendString((*it).toString());
-
-            it++;
-            it2++;
-        }
-
-        return builder.finalize();
-    }
+    String* toString();
 
 private:
     GCVector<bool> m_operators;
     GCVector<CalcValue> m_values;
 };
-
-#undef MUL
-#undef DIV
 
 class CalcData : public gc {
 public:
@@ -636,34 +371,7 @@ public:
         return t;
     }
 
-    String* toString()
-    {
-        StringBuilder builder;
-
-        builder.appendString(String::createASCIIString("calc("));
-        auto it = m_terms.begin();
-        builder.appendString((*it)->toString());
-        it++;
-        while (it != m_terms.end()) {
-            builder.appendString(String::spaceString);
-            String* r = (*it)->toString();
-
-            if (r->charAt(0) == '-') {
-                builder.appendString(String::createASCIIString("- "));
-                builder.appendString(r->substring(1, r->length() - 1));
-            } else if (r->charAt(0) == '+') {
-                builder.appendString(String::createASCIIString("+ "));
-                builder.appendString(r->substring(1, r->length() - 1));
-            } else {
-                builder.appendString(String::createASCIIString("+ "));
-                builder.appendString(r);
-            }
-
-            it++;
-        }
-        builder.appendChar(')');
-        return builder.finalize();
-    }
+    String* toString();
 
 private:
     GCVector<CalcTerm*> m_terms;

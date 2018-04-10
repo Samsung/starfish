@@ -27,7 +27,6 @@ namespace StarFish {
 class NativeImageData;
 class ImageResource;
 class ComputedStyle;
-class CSSGradientValue;
 
 class BackgroundLayer : public gc {
     friend class StyleBackgroundData;
