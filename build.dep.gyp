@@ -3,7 +3,7 @@
     # Update build.dep.gyp if third party libraries are to be added
 
     'includes': [
-        'build.gypi',
+        'build/build.gypi',
     ],
     'variables' : {
         'variables': {

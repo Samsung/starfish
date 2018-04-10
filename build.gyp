@@ -3,8 +3,8 @@
     # Update build.gypi if build targets needs to be modified
 
     'includes': [
-        'build.gypi',
-        'build_vd.gypi'
+        'build/build.gypi',
+        'build/build_vd.gypi'
     ],
     #'make_global_settings': [
     #    ['CXX', '/usr/bin/g++'],
