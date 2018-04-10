@@ -88,6 +88,7 @@ Evas* internalCanvas()
 }
 static int g_totalCanvasSurfaceEFLSize;
 static PlatformWindow* g_currentWnd = nullptr;
+static void* g_focusedWin = nullptr;
 
 class WindowImplEFL : public PlatformWindow {
 public:
@@ -289,8 +290,10 @@ public:
         evas_object_raise(m_dummyBox);
 #else
         evas_object_raise(m_mainBox);
+        if (!isIMEEnabledNow() && g_focusedWin == this) {
+            evas_object_focus_set(m_nonIMEKeyEventBox, EINA_TRUE);
+        }
 #endif
-
         m_inRendering = false;
         return ret;
     }
@@ -305,7 +308,6 @@ public:
     std::vector<Evas_Object*> m_objectList;
     Evas_Object* m_mainBox;
     Evas_Object* m_nonIMEKeyEventBox;
-    Ecore_Idler* m_nonIMEKeyEventBoxInitHandler;
     Evas_Object* m_dummyBox;
     Evas_Object* m_dummyBoxClipper;
 
@@ -956,15 +958,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_nonIMEKeyEventBox = elm_label_add(wnd->m_window);
     evas_object_show(wnd->m_nonIMEKeyEventBox);
 
-    wnd->m_nonIMEKeyEventBoxInitHandler = ecore_idler_add(
-        [](void* data) -> Eina_Bool {
-            WindowImplEFL* sf = (WindowImplEFL*)data;
-            evas_object_focus_set(sf->m_nonIMEKeyEventBox, EINA_TRUE);
-            sf->m_nonIMEKeyEventBoxInitHandler = nullptr;
-            return ECORE_CALLBACK_CANCEL;
-        },
-        wnd);
-
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     wnd->m_canvasAdpater =
         evas_object_image_add(evas_object_evas_get(wnd->m_mainBox));
@@ -1029,6 +1022,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
     wnd->m_mouseDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                       void* event_info) -> void {
+        g_focusedWin = data;
         WindowImplEFL* sf = (WindowImplEFL*)data;
         Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*)event_info;
 
@@ -1537,15 +1531,18 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                           EINA_TRUE) ||
                              (evas_key_modifier_is_set(
                                   ev->modifiers, "Shift_R") == EINA_TRUE));
-            PlatformKeyEventData kdata(keyValue);
-            setRepeatToPlatformKeyEventData(self, ev->timestamp, kdata);
-            setModifiersToPlatformKeyEventData(ev->modifiers, kdata);
-            StarFishEnterer enter(self->m_starFish);
-            self->dispatchKeyEvent(KeyEventKind::KeyEventDown, kdata);
-            self->dispatchKeyEvent(KeyEventKind::KeyEventPress, kdata);
-            self->m_isKeyDown = true;
+            if ((strcmp(ev->key, "Up") != 0) &&
+                (strcmp(ev->key, "Down") != 0)) {
+                PlatformKeyEventData kdata(keyValue);
+                setRepeatToPlatformKeyEventData(self, ev->timestamp, kdata);
+                setModifiersToPlatformKeyEventData(ev->modifiers, kdata);
+                StarFishEnterer enter(self->m_starFish);
+                self->dispatchKeyEvent(KeyEventKind::KeyEventDown, kdata);
+                self->dispatchKeyEvent(KeyEventKind::KeyEventPress, kdata);
+                self->m_isKeyDown = true;
+            }
 
-            if (tryFilter && !String::isASCIIPrintableKey(kdata.keyValue())) {
+            if (tryFilter && !String::isASCIIPrintableKey(keyValue)) {
                 Ecore_IMF_Event_Key_Down ecore_ev;
                 ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
                 ecore_imf_context_filter_event(self->m_imfContext,
@@ -1583,17 +1580,22 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                     return;
                 }
             }
-            // process non-char keys
-            auto keyValue = ecoreEventKeyToKeyValue(
-                ev->key, (evas_key_modifier_is_set(ev->modifiers, "Shift_L") ==
-                          EINA_TRUE) ||
-                             (evas_key_modifier_is_set(
-                                  ev->modifiers, "Shift_R") == EINA_TRUE));
-            PlatformKeyEventData kdata(keyValue);
-            setModifiersToPlatformKeyEventData(ev->modifiers, kdata);
-            StarFishEnterer enter(self->m_starFish);
-            self->dispatchKeyEvent(KeyEventKind::KeyEventUp, kdata);
-            self->m_isKeyDown = false;
+
+            if ((strcmp(ev->key, "Up") != 0) &&
+                (strcmp(ev->key, "Down") != 0)) {
+                // process non-char keys
+                auto keyValue = ecoreEventKeyToKeyValue(
+                    ev->key,
+                    (evas_key_modifier_is_set(ev->modifiers, "Shift_L") ==
+                     EINA_TRUE) ||
+                        (evas_key_modifier_is_set(ev->modifiers, "Shift_R") ==
+                         EINA_TRUE));
+                PlatformKeyEventData kdata(keyValue);
+                setModifiersToPlatformKeyEventData(ev->modifiers, kdata);
+                StarFishEnterer enter(self->m_starFish);
+                self->dispatchKeyEvent(KeyEventKind::KeyEventUp, kdata);
+                self->m_isKeyDown = false;
+            }
         },
         wnd);
 
@@ -1632,7 +1634,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     ecore_imf_context_autocapital_type_set(wnd->m_imfContext,
                                            ECORE_IMF_AUTOCAPITAL_TYPE_NONE);
     ecore_imf_context_prediction_allow_set(wnd->m_imfContext, EINA_FALSE);
-
+    g_focusedWin = wnd;
     return wnd;
 }
 
@@ -1641,11 +1643,6 @@ PlatformWindow::~PlatformWindow()
     STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-
-    if (eflWindow->m_nonIMEKeyEventBoxInitHandler) {
-        ecore_idler_del(eflWindow->m_nonIMEKeyEventBoxInitHandler);
-        eflWindow->m_nonIMEKeyEventBoxInitHandler = nullptr;
-    }
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     if (eflWindow->m_canvasAdpater) {
