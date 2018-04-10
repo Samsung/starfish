@@ -7745,6 +7745,36 @@ void StyleResolver::apply(Element* element,
                 style->setGridTemplateAreas(cssValues[k].stringValue());
             }
             break;
+        case CSSStyleValuePair::KeyKind::WillChange:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setWillChange(parentStyle->willChange());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::Auto:
+                style->setWillChange(nullptr);
+                break;
+            default:
+                ValueList* list = cssValues[k].multiValue();
+                size_t size = list->size();
+                auto willChangeData = new WillChangeData();
+                for (size_t i = 0; i < size; i++) {
+                    const AtomicString& item = list->at(i).atomicStringValue();
+                    if (item.string()->equals("contents")) {
+                        willChangeData->setContents();
+                        continue;
+                    }
+                    if (item.string()->equals("scroll-position")) {
+                        willChangeData->setScrollPosition();
+                        continue;
+                    }
+                    willChangeData->push_back(item);
+                }
+                style->setWillChange(willChangeData);
+                break;
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Empty:
             break;
         default:
@@ -13926,6 +13956,43 @@ bool CSSStyleValuePair::updateValueWordBreak(Document* document,
     } else {
         return false;
     }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueWillChange(Document* document,
+                                              const CSSTokenVector& tokens)
+{
+    size_t size = tokens.size();
+    if (size % 2 == 0) {
+        // Including comma seperators, size of tokens has to be odd number
+        return false;
+    }
+    if (size == 1 && tokens[0].equals("auto")) {
+        setValueKind(Auto);
+        return true;
+    }
+    auto list = new ValueList(ValueList::Separator::CommaSeparator);
+    for (size_t i = 0; i < size; i++) {
+        if (i % 2 != 0) {
+            if (!tokens[i].equals(",")) {
+                return false;
+            }
+            continue;
+        }
+        if (tokens[i].equals("auto") || tokens[i].equals("initial") ||
+            tokens[i].equals("inherit") || tokens[i].equals("unset") ||
+            tokens[i].equals("will-change")) {
+            return false;
+        }
+        String* item = String::fromUTF8(tokens[i].data(), tokens[i].length());
+        if (!CSSPropertyParser::stringIsIdent(item)) {
+            return false;
+        }
+        list->emplace_back(
+            AtomicStringValueKind,
+            AtomicString::createAtomicString(document->starFish(), item));
+    }
+    setValueList(list);
     return true;
 }
 

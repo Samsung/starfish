@@ -38,6 +38,7 @@
 #include "core/style/PositionedMaskData.h"
 #include "core/style/OutlineData.h"
 #include "core/style/ObjectSizingData.h"
+#include "core/style/WillChangeData.h"
 #include "core/animation/Animation.h"
 
 namespace StarFish {
@@ -130,6 +131,8 @@ class RareComputedStyleData : public gc {
         GridRowGap,
         GridColumnGap,
         GridTemplateAreas,
+
+        WillChange,
     };
 
     union RareComputedStyleValue {
@@ -164,6 +167,7 @@ class RareComputedStyleData : public gc {
         QuoteValue m_quote;
         TextOverflowData* m_textOverflow;
         CounterBaseList* m_counterBaseList;
+        WillChangeData* m_willChange;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -317,6 +321,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(CounterBaseList* v)
             : m_counterBaseList(v)
+        {
+        }
+
+        RareComputedStyleValue(WillChangeData* v)
+            : m_willChange(v)
         {
         }
     };
@@ -515,12 +524,30 @@ public:
         }
     }
 
+    WillChangeData* willChange()
+    {
+        FIND_VALUE(WillChange);
+        if (it == m_styles.end()) {
+            return nullptr;
+        }
+        return (*it).m_value.m_willChange;
+    }
+
+    void setWillChange(WillChangeData* v)
+    {
+        clearWillChange();
+        if (v) {
+            m_styles.emplace_back(KeyKind::WillChange, v);
+        }
+    }
+
 #undef GETTER_PTR
 
     CLEARER(Transforms);
     CLEARER(Content);
     CLEARER(CounterReset);
     CLEARER(CounterIncrement);
+    CLEARER(WillChange);
 
 #undef FIND_VALUE
 #undef CLEARER
@@ -2736,6 +2763,22 @@ public:
             return true;
         }
         return false;
+    }
+
+    WillChangeData* willChange()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return nullptr;
+        }
+        return m_rareComputedStyleData.willChange();
+    }
+
+    void setWillChange(WillChangeData* v)
+    {
+        if (!v && !m_rareComputedStyleData.m_styles.size()) {
+            return;
+        }
+        m_rareComputedStyleData.setWillChange(v);
     }
 
     void setPseudoType(StyleResolver::PseudoElementType id)
