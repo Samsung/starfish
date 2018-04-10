@@ -254,7 +254,7 @@ test/cairo/internal-test/css/grid/gridbox_simple-box-5.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-6.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-7.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-8.html
-test/cairo/internal-test/css/grid/gridbox_simple-box-9.html
+#test/cairo/internal-test/css/grid/gridbox_simple-box-9.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-11.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-12.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-14.html
