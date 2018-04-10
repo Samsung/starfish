@@ -218,6 +218,9 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_required =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "required"));
+    m_reversed =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "reversed"));
     m_alt = QualifiedName(AtomicString::emptyAtomicString(),
                           AtomicString::createAtomicString(sf, "alt"));
     m_scrolling =

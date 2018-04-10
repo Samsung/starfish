@@ -36,8 +36,9 @@ public:
         return true;
     }
 
-    int32_t start();
-    void setStart(int32_t v);
+    virtual int32_t startNumber();
+
+    virtual bool reversed();
 
     void didNodeInserted(Node* parent, Node* newChild) override;
     void didNodeRemoved(Node* parent, Node* oldChild) override;

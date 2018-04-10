@@ -5,7 +5,7 @@ interface HTMLOListElement : HTMLElement {
   // also has obsolete members
 
   // https://html.spec.whatwg.org/#HTMLOListElement-partial
-  [Unimplemented,CEReactions] attribute boolean reversed;
+  [CEReactions] attribute boolean reversed;
   [CEReactions] attribute long start;
-  [Unimplemented,CEReactions] attribute DOMString type;
+  [CEReactions] attribute DOMString type;
 };

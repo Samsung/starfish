@@ -106,13 +106,7 @@ public:
 
 protected:
     void resetPseudoCounter(Node*, AtomicString&, int32_t);
-    int32_t getAndIncreaseListCounterIndex()
-    {
-        if (!m_listCounterIndice.size()) {
-            return 0;
-        }
-        return m_listCounterIndice.back()++;
-    }
+    int32_t getAndUpdateListCounterIndex(Frame* frame);
 
 protected:
     std::vector<std::pair<Node*, std::unordered_set<AtomicString>>>
@@ -120,6 +114,7 @@ protected:
     std::unordered_map<AtomicString, std::vector<int32_t>>
         m_pseudoCounterIndice;
     std::vector<int32_t> m_listCounterIndice;
+    std::vector<bool> m_listCounterReverses;
 };
 
 class QuoteContext {

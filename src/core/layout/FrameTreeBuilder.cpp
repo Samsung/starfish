@@ -25,6 +25,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLListContainer.h"
+#include "core/dom/HTMLLIElement.h"
 #include "core/dom/PseudoElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/svg/SVGSVGElement.h"
@@ -1167,6 +1168,34 @@ void CountingContext::resetPseudoCounter(Node* container,
     }
 }
 
+int32_t CountingContext::getAndUpdateListCounterIndex(Frame* frame)
+{
+    if (!m_listCounterIndice.size()) {
+        return 0;
+    }
+
+    Node* node = frame->node();
+    while (node) {
+        if (node->isHTMLLIElement()) {
+            break;
+        }
+        node = node->parentNode();
+    }
+
+    STARFISH_ASSERT(m_listCounterIndice.size() == m_listCounterReverses.size());
+    STARFISH_ASSERT(node->isHTMLLIElement());
+
+    if (node->asHTMLLIElement()->hasValue()) {
+        m_listCounterIndice.back() = node->asHTMLLIElement()->value();
+    }
+
+    if (m_listCounterReverses.back()) {
+        return m_listCounterIndice.back()--;
+    } else {
+        return m_listCounterIndice.back()++;
+    }
+}
+
 void CountingContext::setCounterIfNeeds(Frame* from)
 {
     Node* node = from->node();
@@ -1175,7 +1204,13 @@ void CountingContext::setCounterIfNeeds(Frame* from)
     }
     // List counter (list-style-type, list-style-position, list-style-image)
     if (node->isHTMLListContainer()) {
-        m_listCounterIndice.push_back(node->asHTMLListContainer()->start());
+        m_listCounterIndice.push_back(
+            node->asHTMLListContainer()->startNumber());
+        if (node->asHTMLListContainer()->reversed()) {
+            m_listCounterReverses.push_back(true);
+        } else {
+            m_listCounterReverses.push_back(false);
+        }
     }
     // Pseudo counter (counter-reset, counter-increment)
     if (node->style()->counterReset()) {
@@ -1219,6 +1254,7 @@ void CountingContext::unsetCounterIfNeeds(Frame* from)
     // List counter (list-style-type, list-style-position, list-style-image)
     if (node->isHTMLListContainer()) {
         m_listCounterIndice.pop_back();
+        m_listCounterReverses.pop_back();
     }
     // Pseudo counter (counter-reset, counter-increment)
     if (m_pseudoCounters.size() && m_pseudoCounters.back().first == node) {
@@ -1308,7 +1344,7 @@ void CountingContext::updateFrameCounterText(FrameCounterText* frame)
     }
 
     STARFISH_ASSERT(frame->isListType());
-    frame->updateCounterText(getAndIncreaseListCounterIndex());
+    frame->updateCounterText(getAndUpdateListCounterIndex(frame));
 
     if (frame->isListInsideType()) {
         return;

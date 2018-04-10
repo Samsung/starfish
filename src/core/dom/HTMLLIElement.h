@@ -37,6 +37,18 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
+
+    int32_t value();
+    void setValue(int32_t v);
+
+    bool hasValue();
+
+    String* type();
+    void setType(String* type);
 };
 }
 

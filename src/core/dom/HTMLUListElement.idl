@@ -6,5 +6,5 @@ interface HTMLUListElement : HTMLElement {
 
   // https://html.spec.whatwg.org/#HTMLUListElement-partial
   [CEReactions, Reflect] attribute boolean compact;
-  [CEReactions, Reflect] attribute DOMString type;
+  [CEReactions] attribute DOMString type;
 };

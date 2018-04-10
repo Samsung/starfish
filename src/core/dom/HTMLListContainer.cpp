@@ -23,18 +23,14 @@
 #include "core/dom/HTMLListContainer.h"
 
 namespace StarFish {
-int32_t HTMLListContainer::start()
+int32_t HTMLListContainer::startNumber()
 {
-    Nullable<String*> v = getAttribute(starFish()->staticStrings()->m_start);
-    if (v.hasValue()) {
-        return String::parseInt(v.getValue());
-    }
     return 1;
 }
 
-void HTMLListContainer::setStart(int32_t v)
+bool HTMLListContainer::reversed()
 {
-    setAttribute(starFish()->staticStrings()->m_start, String::fromInt(v));
+    return false;
 }
 
 void HTMLListContainer::didNodeInserted(Node* parent, Node* newChild)
