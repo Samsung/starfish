@@ -870,6 +870,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Bottom-Color
         // Background-Position
         // List-Style-Position
+        // Grid-Template-Areas
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background-repeat-x", 19) == 0) {
@@ -911,6 +912,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "transition-duration", 19) == 0) {
                 return CSSStyleKind::TransitionDuration;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "grid-template-areas", 19) == 0) {
+                return CSSStyleKind::GridTemplateAreas;
             }
             break;
         }
@@ -1712,6 +1718,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'l':
             if (memcmp(data, "listStylePosition", 17) == 0) {
                 return CSSStyleKind::ListStylePosition;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "gridTemplateAreas", 17) == 0) {
+                return CSSStyleKind::GridTemplateAreas;
             }
             break;
         }

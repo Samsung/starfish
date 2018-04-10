@@ -708,17 +708,38 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                 }
                 size_t start = area.m_columnStart;
                 size_t end = area.m_columnEnd;
+
                 if (!isFixed) {
                     width = contentWidth;
                 }
+
                 if (sumWidth < contentWidth) {
-                    LayoutUnit dividedWidth = contentWidth / (end - start);
+                    std::vector<GridLine*> fixed;
+                    std::vector<GridLine*> noneFixed;
                     for (size_t i = start; i <= end - 1; i++) {
-                        GridLine& line = m_gridLineColumns[i];
-                        line.setOffset(dividedWidth, true);
+                        if (m_gridLineColumns[i].isFixed() &&
+                            !m_gridLineColumns[i].isFr()) {
+                            fixed.push_back(&m_gridLineColumns[i]);
+                        } else {
+                            noneFixed.push_back(&m_gridLineColumns[i]);
+                        }
+                    }
+
+                    if (noneFixed.size()) {
+                        LayoutUnit sumOfFixedSize(0);
+                        for (size_t i = 0; i < fixed.size(); i++) {
+                            sumOfFixedSize += fixed[i]->offset();
+                        }
+
+                        LayoutUnit dividedWidth =
+                            (contentWidth - sumOfFixedSize) / noneFixed.size();
+                        for (size_t i = 0; i < noneFixed.size(); i++) {
+                            GridLine* line = noneFixed[i];
+                            line->setOffset(dividedWidth, true);
+                        }
                     }
                 } else {
-                    if (isFixed) {
+                    if (!isFixed) {
                         LayoutUnit diff =
                             (sumWidth - contentWidth) / (end - start);
                         for (size_t i = start; i <= end - 1; i++) {
@@ -808,19 +829,35 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                     GridArea* biggest = getBiggestAreaWithColumn(
                         m_orderedGridArea, area.m_rowStart, start, end);
                     if (biggest) {
-                        LayoutUnit diff = (sumWidth - contentWidth) /
-                                          (biggest->m_columnEnd - end);
-                        LayoutUnit dividedWidth = contentWidth / (end - start);
+                        std::vector<GridLine*> fixed;
+                        std::vector<GridLine*> noneFixed;
+                        LayoutUnit sumOfFixed(0);
                         for (size_t i = start; i <= end - 1; i++) {
-                            GridLine& line = m_gridLineColumns[i];
-                            line.setOffset(dividedWidth, true);
+                            if (m_gridLineColumns[i].isFixed() &&
+                                !m_gridLineColumns[i].isFr()) {
+                                fixed.push_back(&m_gridLineColumns[i]);
+                                sumOfFixed += m_gridLineColumns[i].offset();
+                            } else {
+                                noneFixed.push_back(&m_gridLineColumns[i]);
+                            }
                         }
-                        // FIXME : If this line is fixed line, we dont
-                        // distribute column's width.
-                        for (size_t i = end; i <= biggest->m_columnEnd - 1;
-                             i++) {
-                            GridLine& line = m_gridLineColumns[i];
-                            line.setOffset(line.offset() + diff, true);
+
+                        if (sumOfFixed < contentWidth) {
+                            LayoutUnit diff = (sumWidth - contentWidth) /
+                                              (biggest->m_columnEnd - end);
+                            LayoutUnit dividedWidth =
+                                contentWidth / (end - start);
+                            for (size_t i = start; i <= end - 1; i++) {
+                                GridLine& line = m_gridLineColumns[i];
+                                line.setOffset(dividedWidth, true);
+                            }
+                            // FIXME : If this line is fixed line, we dont
+                            // distribute column's width.
+                            for (size_t i = end; i <= biggest->m_columnEnd - 1;
+                                 i++) {
+                                GridLine& line = m_gridLineColumns[i];
+                                line.setOffset(line.offset() + diff, true);
+                            }
                         }
                     }
                 }
