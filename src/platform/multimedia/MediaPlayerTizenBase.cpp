@@ -20,8 +20,6 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 
-#if !defined(STARFISH_TIZEN_TV)
-
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/util/URL.h"
@@ -138,6 +136,5 @@ void MediaPlayerTizen::setMediaFormatExtraForAudio(media_format_h& mediaFormat,
 }
 }
 
-#endif
 #endif
 #endif
