@@ -42,6 +42,9 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
 
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues);
+
     int32_t value();
     void setValue(int32_t v);
 

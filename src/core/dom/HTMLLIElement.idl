@@ -5,5 +5,5 @@ interface HTMLLIElement : HTMLElement {
   [CEReactions] attribute long value;
 
   // also has obsolete members
-  [Unimplemented, CEReactions] attribute DOMString type;
+  [CEReactions] attribute DOMString type;
 };

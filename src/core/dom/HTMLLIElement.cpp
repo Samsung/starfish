@@ -38,6 +38,74 @@ void HTMLLIElement::didAttributeChanged(QualifiedName name, String* old,
 
     if (name == starFish()->staticStrings()->m_value) {
         document()->notifyCountingOutdated();
+    } else if (name == starFish()->staticStrings()->m_type) {
+        document()->notifyCountingOutdated();
+    }
+}
+
+void HTMLLIElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues);
+
+    String* typeString = type();
+    if (typeString != String::emptyString) {
+        Node* current = parentNode();
+        Node* list = nullptr;
+        while (current) {
+            if (current->isHTMLListContainer()) {
+                list = current;
+                break;
+            }
+            current = current->parentNode();
+        }
+
+        if (list) {
+            CSSStyleValuePair pair;
+
+            if (list->isHTMLOListElement()) {
+                if (typeString->equals("1")) {
+                    AtomicString strValue =
+                        AtomicString::createAtomicString(starFish(), "decimal");
+                    pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
+                    pair.setAtomicStringValue(strValue);
+                } else if (typeString->equals("a")) {
+                    AtomicString strValue = AtomicString::createAtomicString(
+                        starFish(), "lower-alpha");
+                    pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
+                    pair.setAtomicStringValue(strValue);
+                } else if (typeString->equals("A")) {
+                    AtomicString strValue = AtomicString::createAtomicString(
+                        starFish(), "upper-alpha");
+                    pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
+                    pair.setAtomicStringValue(strValue);
+                } else if (typeString->equals("i")) {
+                    AtomicString strValue = AtomicString::createAtomicString(
+                        starFish(), "lower-roman");
+                    pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
+                    pair.setAtomicStringValue(strValue);
+                } else if (typeString->equals("I")) {
+                    AtomicString strValue = AtomicString::createAtomicString(
+                        starFish(), "upper-roman");
+                    pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
+                    pair.setAtomicStringValue(strValue);
+                }
+            } else {
+                STARFISH_ASSERT(list->isHTMLUListElement());
+                if (typeString->equals("disc") ||
+                    typeString->equals("square") ||
+                    typeString->equals("circle")) {
+                    AtomicString strValue = AtomicString::createAtomicString(
+                        starFish(), typeString);
+                    pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
+                    pair.setAtomicStringValue(strValue);
+                }
+            }
+
+            if (pair.keyKind() != CSSStyleValuePair::KeyKind::Empty) {
+                cssValues.push_back(pair);
+            }
+        }
     }
 }
 
