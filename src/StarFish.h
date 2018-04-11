@@ -156,6 +156,11 @@ public:
         return m_nativeHandle;
     }
 
+    bool shouldFitWindow()
+    {
+        return m_shouldFitWindow;
+    }
+
     ScreenInfo& screenInfo()
     {
         return m_screenInfo;
@@ -352,6 +357,7 @@ protected:
     MessageLoop* m_messageLoop;
     Timer* m_timer;
     void* m_nativeHandle;
+    bool m_shouldFitWindow;
     PlatformWindow* m_platformWindow;
     PlatformFontSelector* m_platformFontSelector;
     PlatformFontCache* m_platformFontCache;
