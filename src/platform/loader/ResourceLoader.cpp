@@ -262,8 +262,10 @@ static void registerImageURLs(
     if (cs) {
         size_t i = 0;
         while (i < cs->backgroundLayerSize()) {
-            if (cs->backgroundImage(i)->length()) {
-                auto utf8Data = cs->backgroundImage(i)->toUTF8NonGCString();
+            if (cs->backgroundImage(i) &&
+                cs->backgroundImage(i)->type().isURL()) {
+                auto utf8Data =
+                    cs->backgroundImage(i)->urlValue()->toUTF8NonGCString();
                 currentUsingResourcePaths.insert(utf8Data.data());
             }
             i++;

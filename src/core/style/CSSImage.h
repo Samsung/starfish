@@ -38,7 +38,7 @@ public:
         Gradient
     };
 
-    // STARFISH_MAKE_STACK_ALLOCATED();
+    STARFISH_MAKE_STACK_ALLOCATED();
 
     CSSImageValueType()
         : m_type(ValueType::None)
@@ -65,12 +65,12 @@ public:
         return m_type == ValueType::Gradient;
     }
 
-    bool operator==(CSSImageValueType& other) const
+    bool operator==(const CSSImageValueType& other) const
     {
         return m_type == other.m_type;
     }
 
-    bool operator!=(CSSImageValueType& other) const
+    bool operator!=(const CSSImageValueType& other) const
     {
         return !(operator==(other));
     }
@@ -105,14 +105,14 @@ public:
     }
 
     CSSImage(String* url)
-        : m_valueType(CSSImageValueType::ValueType::URL)
-        , m_valueData(url)
+        : m_valueData(url)
+        , m_valueType(CSSImageValueType::ValueType::URL)
     {
     }
 
     CSSImage(CSSGradientValue* gradient)
-        : m_valueType(CSSImageValueType::ValueType::Gradient)
-        , m_valueData(gradient)
+        : m_valueData(gradient)
+        , m_valueType(CSSImageValueType::ValueType::Gradient)
     {
     }
 
@@ -125,6 +125,8 @@ public:
     CSSGradientValue* gradientValue() const;
 
     String* toString() const;
+
+    void applyOriginToURL(const ResourceURL* origin);
 
     void* operator new(size_t size)
     {
@@ -146,9 +148,16 @@ public:
 
     void* operator new[](size_t size) = delete;
 
+    bool operator==(const CSSImage& other) const;
+
+    bool operator!=(const CSSImage& other) const
+    {
+        return !(operator==(other));
+    }
+
 private:
-    CSSImageValueType m_valueType;
     CSSImageValueData m_valueData;
+    CSSImageValueType m_valueType;
 };
 }
 

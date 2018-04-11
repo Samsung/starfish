@@ -38,15 +38,50 @@ CSSGradientValue* CSSImage::gradientValue() const
 String* CSSImage::toString() const
 {
     switch (m_valueType.m_type) {
-    case CSSImageValueType::ValueType::URL:
-        return m_valueData.m_url;
-        break;
+    case CSSImageValueType::ValueType::URL: {
+        StringBuilder builder;
+        builder.appendString("url(\"");
+        builder.appendString(m_valueData.m_url);
+        builder.appendString("\")");
+        return builder.finalize();
+    } break;
     case CSSImageValueType::ValueType::Gradient:
         return m_valueData.m_gradient->toString();
+        break;
+    case CSSImageValueType::ValueType::None:
+        return String::createASCIIString("none");
         break;
     default:
         return String::emptyString;
         break;
     }
+}
+
+void CSSImage::applyOriginToURL(const ResourceURL* origin)
+{
+    STARFISH_ASSERT(m_valueType.isURL());
+    m_valueData.m_url = ResourceURL::mergeDocumentURIWithURIString(
+        origin->baseURI(), m_valueData.m_url);
+}
+
+bool CSSImage::operator==(const CSSImage& other) const
+{
+    if (m_valueType != other.m_valueType) {
+        return false;
+    }
+
+    switch (m_valueType.m_type) {
+    case CSSImageValueType::ValueType::URL:
+        return m_valueData.m_url->equals(other.m_valueData.m_url);
+        break;
+    case CSSImageValueType::ValueType::Gradient:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return false;
+        break;
+    default:
+        return false;
+        break;
+    }
+    return false;
 }
 } // namespace

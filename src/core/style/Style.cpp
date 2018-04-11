@@ -2843,6 +2843,8 @@ String* CSSStyleValuePair::toString() const
         case NoCloseQuoteValue:
             return String::fromUTF8("no-close-quote");
         }
+    case CSSStyleValuePair::ValueKind::CSSImageValueKind:
+        return CSSImageValue()->toString();
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -5303,7 +5305,8 @@ void StyleResolver::apply(Element* element,
                  CSSStyleValuePair::ValueKind::Initial) ||
                 (cssValues[k].valueKind() ==
                  CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBackgroundImage(String::emptyString);
+                CSSImage* cssimg = new CSSImage();
+                style->setBackgroundImage(cssimg);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
                 style->setBackgroundImage(parentStyle->backgroundImage());
@@ -5313,21 +5316,15 @@ void StyleResolver::apply(Element* element,
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
                     const CSSStyleValuePair& item = (*list)[i];
-                    if (item.valueKind() ==
-                        CSSStyleValuePair::ValueKind::None) {
-                        style->setBackgroundImage(String::emptyString, i);
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::UrlValueKind) {
-                        style->setBackgroundImage(item.urlValue(origin), i);
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::
-                                   GradientValueKind) {
-                        style->setBackgroundImage(item.gradientValue(), i);
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::Initial) {
-                        style->setBackgroundImage(String::emptyString, i);
-                    } else if (cssValues[k].valueKind() ==
-                               CSSStyleValuePair::ValueKind::Inherit) {
+                    auto vKind = item.valueKind();
+                    if (vKind ==
+                        CSSStyleValuePair::ValueKind::CSSImageValueKind) {
+                        CSSImage* cssImage = item.CSSImageValue();
+                        if (cssImage->type().isURL()) {
+                            cssImage->applyOriginToURL(origin);
+                        }
+                        style->setBackgroundImage(item.CSSImageValue(), i);
+                    } else if (vKind == CSSStyleValuePair::ValueKind::Inherit) {
                         style->setBackgroundImage(
                             parentStyle->backgroundImage(), i);
                     } else {
@@ -9391,6 +9388,27 @@ bool CSSStyleValuePair::updateValueUnitWordSpacing(const CSSTokenValue& value)
     }
 }
 
+bool CSSStyleValuePair::updateValueUnitCSSImage(const CSSTokenValue& value)
+{
+    // <image> = <url> | <image-list> | <element-reference>  | <gradient>
+    CSSStyleValuePair pair;
+    if (pair.updateValueUnitUrlOrNone(value)) {
+        if (pair.valueKind() == CSSStyleValuePair::ValueKind::None) {
+            CSSImage* cssImage = new CSSImage();
+            setCSSImage(cssImage);
+        } else {
+            CSSImage* cssImage = new CSSImage(pair.urlStringValue());
+            setCSSImage(cssImage);
+        }
+        return true;
+    } else if (pair.updateValueUnitGradient(value)) {
+        CSSImage* cssImage = new CSSImage(pair.gradientValue());
+        setCSSImage(cssImage);
+        return true;
+    }
+    return false;
+}
+
 bool CSSStyleValuePair::updateValueLetterSpacing(Document* document,
                                                  const CSSTokenVector& tokens)
 {
@@ -9793,8 +9811,7 @@ bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
             continue;
         }
         CSSStyleValuePair ret;
-        if (shouldBeComma || (!ret.updateValueUnitUrlOrNone(value) &&
-                              !ret.updateValueUnitGradient(value))) {
+        if (shouldBeComma || !ret.updateValueUnitCSSImage(value)) {
             return false;
         }
         shouldBeComma = true;

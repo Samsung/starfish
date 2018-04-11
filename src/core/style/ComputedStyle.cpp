@@ -282,10 +282,11 @@ void ComputedStyle::loadBackgroundImage(
     StarFish* sf = consumer->starFish();
     size_t bgIndex = 0;
     while (bgIndex < backgroundLayerSize()) {
-        if (!backgroundImage(bgIndex)->equals(String::emptyString)) {
-            ResourceURL* u =
-                new ResourceURL(backgroundImage(bgIndex),
-                                consumer->document()->baseURL()->baseURI());
+        CSSImage* bImg = backgroundImage(bgIndex);
+
+        if (bImg && bImg->type().isURL()) {
+            ResourceURL* u = new ResourceURL(
+                bImg->urlValue(), consumer->document()->baseURL()->baseURI());
 
             if (prevComputedStyleValueForReferenceLoadedResources &&
                 prevComputedStyleValueForReferenceLoadedResources
@@ -331,6 +332,8 @@ void ComputedStyle::loadBackgroundImage(
                     consumer->document()->documentURI(), true);
 #endif
             }
+        } else if (bImg && bImg->type().isGradient()) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
         bgIndex++;
     }

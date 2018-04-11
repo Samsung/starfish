@@ -1249,14 +1249,9 @@ public:
         m_rareComputedStyleData.ensureBackground()->setBgColorToCurrentColor();
     }
 
-    void setBackgroundImage(String* img, unsigned int layer = 0)
+    void setBackgroundImage(CSSImage* image, unsigned int layer = 0)
     {
-        m_rareComputedStyleData.ensureBackground()->setBgImage(img, layer);
-    }
-
-    void setBackgroundImage(CSSGradientValue* gradient, unsigned int layer = 0)
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        m_rareComputedStyleData.ensureBackground()->setBgImage(image, layer);
     }
 
     void setBackgroundImageResource(ImageResource* img, unsigned int layer = 0)
@@ -1332,11 +1327,11 @@ public:
         return background->bgColor();
     }
 
-    String* backgroundImage(unsigned int layer = 0)
+    CSSImage* backgroundImage(unsigned int layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
-            return String::emptyString;
+            return nullptr;
         }
         return background->bgImage(layer);
     }
