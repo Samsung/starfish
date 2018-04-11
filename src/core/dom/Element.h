@@ -118,6 +118,13 @@ public:
         return m_attributes[t].value();
     }
 
+    bool hasAttributes() const
+    {
+        return m_attributes.size();
+    }
+
+    GCVector<String*> getAttributeNames() const;
+
 protected:
     size_t hasAttribute(const AttributeName& name) const;
     size_t hasAttributeNode(const AttributeName& name);

@@ -935,10 +935,11 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
         return;
     }
 
-    bool hasShadow = s->boxShadow().size() ? true : false;
+    bool hasShadow = s->boxShadow() ? true : false;
     if (hasShadow) {
         canvas->save();
-        CanvasShadowDataList list = s->boxShadow().toCanvasShadowDataList(this);
+        CanvasShadowDataList list =
+            s->boxShadow()->toCanvasShadowDataList(this);
 
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
             float sd = shadow->spreadDistance();
@@ -1196,10 +1197,11 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
         return;
     }
 
-    bool hasShadow = s->boxShadow().size() ? true : false;
+    bool hasShadow = s->boxShadow() ? true : false;
     if (hasShadow) {
         canvas->save();
-        CanvasShadowDataList list = s->boxShadow().toCanvasShadowDataList(this);
+        CanvasShadowDataList list =
+            s->boxShadow()->toCanvasShadowDataList(this);
 
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
             float sd = shadow->spreadDistance();
@@ -3155,18 +3157,18 @@ LayoutRect FrameBox::frameVisibleShadowsRect()
         return ret;
     }
 
-    if (cs->boxShadow().size()) {
+    if (cs->boxShadow()) {
         CanvasShadowDataList list =
-            cs->boxShadow().toCanvasShadowDataList(this);
+            cs->boxShadow()->toCanvasShadowDataList(this);
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
             LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
             ret.unite(rect);
         }
     }
 
-    if (cs->textShadow().size()) {
+    if (cs->textShadow()) {
         CanvasShadowDataList list =
-            cs->textShadow().toCanvasShadowDataList(this);
+            cs->textShadow()->toCanvasShadowDataList(this);
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
             LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
             ret.unite(rect);
@@ -3223,9 +3225,13 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         owner.setY(0);
         LayoutRect shadowsRect = owner;
         if (i == 0) {
-            list = cs->boxShadow().toCanvasShadowDataList(this);
+            if (cs->boxShadow()) {
+                list = cs->boxShadow()->toCanvasShadowDataList(this);
+            }
         } else {
-            list = cs->textShadow().toCanvasShadowDataList(this);
+            if (cs->textShadow()) {
+                list = cs->textShadow()->toCanvasShadowDataList(this);
+            }
         }
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
             if (ctx.purpose ==

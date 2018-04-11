@@ -5066,7 +5066,11 @@ void StyleResolver::apply(Element* element,
                  CSSStyleValuePair::ValueKind::Inherit) ||
                 (cssValues[k].valueKind() ==
                  CSSStyleValuePair::ValueKind::Unset)) {
-                style->setTextShadow(parentStyle->textShadow());
+                if (parentStyle->textShadow()) {
+                    style->setTextShadow(*parentStyle->textShadow());
+                } else {
+                    style->setTextShadow(ShadowDataList());
+                }
             } else if ((cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) ||
                        (cssValues[k].valueKind() ==
@@ -5120,7 +5124,11 @@ void StyleResolver::apply(Element* element,
                 style->setBoxShadow(ShadowDataList());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
-                style->setBoxShadow(parentStyle->boxShadow());
+                if (parentStyle->boxShadow()) {
+                    style->setBoxShadow(*parentStyle->boxShadow());
+                } else {
+                    style->setBoxShadow(ShadowDataList());
+                }
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ValueListKind) {
                 ValueList* shadows = cssValues[k].multiValue();
@@ -7855,7 +7863,13 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
             }
         }
 
-        ret->setStyleDamageSource(result.styleDamageFrom);
+        if (result.seenCombinator) {
+            ret->setStyleDamageSource(result.styleDamageFrom);
+        } else {
+            ret->setStyleDamageSource((StyleResolver::StyleDamageSource)(
+                result.styleDamageFrom &
+                ~StyleResolver::StyleDamageSource::StyleDamageFromDOMTree));
+        }
     }
 }
 
@@ -8336,26 +8350,32 @@ bool StyleResolver::checkPseudoClass(Element* element,
     case CSSSelector::PseudoType::PseudoFirstChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return isFirstChild(element);
     case CSSSelector::PseudoType::PseudoLastChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return isLastChild(element);
     case CSSSelector::PseudoType::PseudoFirstOfType:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return element->parentElement() && isFirstOfType(element);
     case CSSSelector::PseudoType::PseudoLastOfType:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return element->parentElement() && isLastOfType(element);
     case CSSSelector::PseudoType::PseudoOnlyChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return isFirstChild(element) && isLastChild(element);
     case CSSSelector::PseudoType::PseudoOnlyOfType:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return element->parentElement() && isFirstOfType(element) &&
                isLastOfType(element);
     case CSSSelector::PseudoType::PseudoPlaceholderShown:
@@ -8366,25 +8386,30 @@ bool StyleResolver::checkPseudoClass(Element* element,
     case CSSSelector::PseudoType::PseudoEmpty:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return isEmpty(element);
     case CSSSelector::PseudoNthChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return element->parentElement() &&
                selector->matchNth(nthChildIndex(element));
     case CSSSelector::PseudoNthOfType:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return element->parentElement() &&
                selector->matchNth(nthOfTypeIndex(element));
     case CSSSelector::PseudoNthLastChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return element->parentElement() &&
                selector->matchNth(nthLastChildIndex(element));
     case CSSSelector::PseudoNthLastOfType:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
+        result.seenCombinator = true;
         return element->parentElement() &&
                selector->matchNth(nthLastOfTypeIndex(element));
     case CSSSelector::PseudoType::PseudoDir: {
@@ -8512,6 +8537,15 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
     if (element->needsStyleRecalc() || inheritedStyleChanged) {
         ComputedStyle* style =
             resolver->resolveStyle(ctx, element, parentStyle);
+
+        if (style->display() == DisplayValue::NoneDisplayValue &&
+            (!element->style() ||
+             element->style()->display() == DisplayValue::NoneDisplayValue)) {
+            element->setStyle(style);
+            element->clearNeedsStyleRecalc();
+            return damage;
+        }
+
         bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
             false,
         };

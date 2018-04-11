@@ -805,7 +805,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
 #undef TO_FIXED
     }
 
-    if (textShadow().size()) {
+    if (textShadow()) {
         for (auto& shadow :
              m_inheritedStyles.m_rareData->m_textShadowDataList) {
             if (!shadow.offsetX().isComputed()) {
@@ -832,7 +832,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         }
     }
 
-    if (boxShadow().size()) {
+    if (boxShadow()) {
         for (auto& shadow : (*m_rareComputedStyleData.boxShadow())) {
             if (!shadow.offsetX().isComputed()) {
                 auto v = shadow.offsetX();
@@ -1795,8 +1795,32 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->textShadow() != oldStyle->textShadow()) {
+    ShadowDataList* oldShadow = oldStyle->textShadow();
+    ShadowDataList* newShadow = newStyle->textShadow();
+
+    if (oldShadow == nullptr && newShadow == nullptr) {
+    } else if ((oldShadow != nullptr && newShadow == nullptr) ||
+               (oldShadow == nullptr && newShadow != nullptr)) {
         damagedKeys[CSSStyleValuePair::KeyKind::TextShadow] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    } else if (*oldShadow != *newShadow) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextShadow] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    oldShadow = oldStyle->boxShadow();
+    newShadow = newStyle->boxShadow();
+
+    if (oldShadow == nullptr && newShadow == nullptr) {
+    } else if ((oldShadow != nullptr && newShadow == nullptr) ||
+               (oldShadow == nullptr && newShadow != nullptr)) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BoxShadow] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    } else if (*oldShadow != *newShadow) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BoxShadow] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }

@@ -38,7 +38,7 @@ public:
 
     void setLengths(ValueList* lengths);
 
-    Length offsetX()
+    Length offsetX() const
     {
         return m_offsetX;
     }
@@ -48,7 +48,7 @@ public:
         m_offsetX = offsetX;
     }
 
-    Length offsetY()
+    Length offsetY() const
     {
         return m_offsetY;
     }
@@ -58,7 +58,7 @@ public:
         m_offsetY = offsetY;
     }
 
-    Length radius()
+    Length radius() const
     {
         return m_radius;
     }
@@ -68,7 +68,7 @@ public:
         m_radius = radius;
     }
 
-    Length spreadDistance()
+    Length spreadDistance() const
     {
         return m_spreadDistance;
     }
@@ -78,7 +78,7 @@ public:
         m_spreadDistance = spreadDistance;
     }
 
-    Unit::Color color()
+    Unit::Color color() const
     {
         return m_color;
     }
@@ -89,12 +89,12 @@ public:
         m_color = color;
     }
 
-    bool hasColor()
+    bool hasColor() const
     {
         return m_hasColor;
     }
 
-    bool inset()
+    bool inset() const
     {
         return m_inset;
     }
@@ -105,14 +105,14 @@ public:
     }
     CanvasShadowData toCanvasShadowData(Frame* owner) const;
 
-    bool operator==(const ShadowData& o)
+    bool operator==(const ShadowData& o) const
     {
         return ((this->m_offsetX == o.m_offsetX) &&
                 (this->m_offsetY == o.m_offsetY) &&
                 (this->m_radius == o.m_radius) && (this->m_color == o.m_color));
     }
 
-    bool operator!=(const ShadowData& o)
+    bool operator!=(const ShadowData& o) const
     {
         return !operator==(o);
     }
@@ -153,7 +153,7 @@ class ShadowDataList : public GCVector<ShadowData> {
 public:
     CanvasShadowDataList toCanvasShadowDataList(Frame* owner) const;
 
-    bool operator==(const ShadowDataList& o)
+    bool operator==(const ShadowDataList& o) const
     {
         if (this->size() != o.size()) {
             return false;
@@ -165,7 +165,7 @@ public:
         }
         return true;
     }
-    bool operator!=(const ShadowDataList& o)
+    bool operator!=(const ShadowDataList& o) const
     {
         return !operator==(o);
     }

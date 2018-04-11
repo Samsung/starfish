@@ -958,19 +958,22 @@ public:
         ensureInheritedRareData()->m_textShadowDataList.push_back(shadow);
     }
 
-    void setTextShadow(ShadowDataList val)
+    void setTextShadow(const ShadowDataList& val)
     {
-        if (val != textShadow()) {
+        if (textShadow() == nullptr && val.size() == 0) {
+            return;
+        }
+        if (textShadow() == nullptr || val != *textShadow()) {
             ensureInheritedRareData()->m_textShadowDataList = val;
         }
     }
 
-    ShadowDataList textShadow()
+    ShadowDataList* textShadow()
     {
         if (m_inheritedStyles.m_rareData) {
-            return m_inheritedStyles.m_rareData->m_textShadowDataList;
+            return &m_inheritedStyles.m_rareData->m_textShadowDataList;
         }
-        return InheritedStylesRareData().m_textShadowDataList;
+        return nullptr;
     }
 
     void addBoxShadow(ShadowData& shadow)
@@ -978,24 +981,27 @@ public:
         m_rareComputedStyleData.ensureBoxShadow()->push_back(shadow);
     }
 
-    void setBoxShadow(ShadowDataList val)
+    void setBoxShadow(const ShadowDataList& val)
     {
-        if (val != boxShadow()) {
+        if (boxShadow() == nullptr && val.size() == 0) {
+            return;
+        }
+        if (boxShadow() == nullptr || val != *boxShadow()) {
             (*m_rareComputedStyleData.ensureBoxShadow()) = val;
         }
     }
 
-    ShadowDataList boxShadow()
+    ShadowDataList* boxShadow()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
-            return ShadowDataList();
+            return nullptr;
         }
         ShadowDataList* shadowDataList = m_rareComputedStyleData.boxShadow();
         if (shadowDataList) {
-            return *shadowDataList;
+            return shadowDataList;
         }
 
-        return ShadowDataList();
+        return nullptr;
     }
 
     ValueList* textDecoration()

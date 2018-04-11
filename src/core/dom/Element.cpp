@@ -385,6 +385,20 @@ Attr* Element::removeAttributeNode(Attr* attr)
     return attr;
 }
 
+GCVector<String*> Element::getAttributeNames() const
+{
+    GCVector<String*> ret;
+
+    ret.reserve(m_attributes.size());
+
+    auto siz = m_attributes.size();
+    for (size_t i = 0; i < siz; i++) {
+        ret.push_back(m_attributes[i].name().toString());
+    }
+
+    return ret;
+}
+
 bool Element::matches(String* selectors)
 {
     GCVector<CSSSelectorList*> selectorListContainer;

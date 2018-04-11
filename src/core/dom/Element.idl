@@ -20,9 +20,9 @@ interface Element : Node {
   [CEReactions, SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
   [Unimplemented, CEReactions, Unscopable] attribute DOMString slot;
 
-  [Unimplemented] boolean hasAttributes();
+  boolean hasAttributes();
   [SameObject] readonly attribute NamedNodeMap attributes;
-  [Unimplemented] sequence<DOMString> getAttributeNames();
+  sequence<DOMString> getAttributeNames();
   DOMString? getAttribute(DOMString qualifiedName);
   DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
   [CEReactions, RaisesException] void setAttribute(DOMString qualifiedName, DOMString value);

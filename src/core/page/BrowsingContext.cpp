@@ -17,7 +17,7 @@
  *  USA
  */
 
-#define STARFISH_ENABLE_PROFILE_TIMER
+// #define STARFISH_ENABLE_PROFILE_TIMER
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
