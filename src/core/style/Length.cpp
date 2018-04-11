@@ -272,7 +272,7 @@ bool Length::operator==(const Length& src) const
     }
 }
 
-String* Length::dumpString()
+String* Length::dumpString() const
 {
     if (isCalc()) {
         return m_data.m_calcData->toString();
