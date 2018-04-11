@@ -62,8 +62,8 @@ public:
     };
 
     BackgroundLayer()
-        : m_image(String::emptyString)
-        , m_imageResource(NULL)
+        : m_image(nullptr)
+        , m_imageResource(nullptr)
         , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
         , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
         , m_positionX(Length(Length::Percent, 0.0f))
@@ -103,9 +103,9 @@ public:
         m_size.m_typeValue = size;
     }
 
-    void setImage(String* img)
+    void setImage(CSSImage* image)
     {
-        m_image = img;
+        m_image = image;
     }
 
     void setImageResource(ImageResource* data)
@@ -148,7 +148,7 @@ public:
         m_origin = origin;
     }
 
-    String* bgImage() const
+    CSSImage* bgImage() const
     {
         return m_image;
     }
@@ -260,7 +260,7 @@ private:
     friend inline bool operator!=(const BackgroundLayer& a,
                                   const BackgroundLayer& b);
 
-    String* m_image;
+    CSSImage* m_image;
     ImageResource* m_imageResource;
 
     // background-repeat
@@ -330,13 +330,13 @@ public:
         m_layers[layer].setSize(size);
     }
 
-    void setBgImage(String* img, unsigned int layer)
+    void setBgImage(CSSImage* image, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
         if (m_maxLayerImages < layer + 1) {
             m_maxLayerImages = layer + 1;
         }
-        m_layers[layer].setImage(img);
+        m_layers[layer].setImage(image);
     }
 
     void setBgImageResource(ImageResource* data, unsigned int layer)
@@ -416,10 +416,10 @@ public:
         return m_color;
     }
 
-    String* bgImage(unsigned int layer = 0) const
+    CSSImage* bgImage(unsigned int layer = 0) const
     {
         if (m_layers.size() <= layer) {
-            return String::emptyString;
+            return nullptr;
         }
         return m_layers[layer].bgImage();
     }
@@ -608,7 +608,7 @@ private:
 
 bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
 {
-    if (!a.m_image->equals(b.m_image)) {
+    if (!(a.m_image == b.m_image)) {
         return false;
     }
 

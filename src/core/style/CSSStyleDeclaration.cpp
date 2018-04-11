@@ -746,10 +746,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
-            if (style->backgroundImage(i)->length() != 0) {
-                item.setUrlValue(style->backgroundImage(i));
-                bgImageValues->push_back(item);
-            }
+            item.setCSSImage(style->backgroundImage(i));
+            bgImageValues->push_back(item);
         }
         bgImage.setValueList(bgImageValues);
         addValuePair(bgImage);

@@ -26,6 +26,7 @@
 #include "StaticStrings.h"
 #include "core/style/CSSAngle.h"
 #include "core/style/CSSLength.h"
+#include "core/style/CSSImage.h"
 #include "core/style/CSSTime.h"
 #include "binding/DocumentHoldable.h"
 #include "core/style/NamedColors.h"
@@ -1138,7 +1139,10 @@ public:
         WidthHeightKeywordValueKind,
 
         // pointer-events
-        PointerEventsValueKind
+        PointerEventsValueKind,
+
+        // css image data type
+        CSSImageValueKind
     };
 
     CSSStyleValuePair()
@@ -1738,6 +1742,12 @@ public:
         return m_value.m_pointerEventsValue;
     }
 
+    CSSImage* CSSImageValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == CSSImageValueKind);
+        return m_value.m_cssImage;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1812,6 +1822,7 @@ public:
         CSSGradientValue* m_gradientValue;
         WidthHeightKeywordValue m_widthHeightKeywordValue;
         PointerEventsValue m_pointerEventsValue;
+        CSSImage* m_cssImage;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2117,6 +2128,11 @@ public:
             : m_pointerEventsValue(v)
         {
         }
+
+        ValueData(CSSImage* v)
+            : m_cssImage(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2157,6 +2173,8 @@ public:
             return m_value.m_textOverflowData;
         case GradientValueKind:
             return m_value.m_gradientValue;
+        case CSSImageValueKind:
+            return m_value.m_cssImage;
         default:
             return nullptr;
         }
@@ -2331,6 +2349,12 @@ public:
         m_value.m_gradientValue = val;
     }
 
+    void setCSSImage(CSSImage* val)
+    {
+        m_valueKind = CSSStyleValuePair::CSSImageValueKind;
+        m_value.m_cssImage = val;
+    }
+
 #define NEW_SET_VALUE_DECL(name, ...) \
     bool updateValue##name(Document* document, const CSSTokenVector& tokens);
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(NEW_SET_VALUE_DECL)
@@ -2396,6 +2420,7 @@ public:
     bool updateValueUnitFlexShrink(const CSSTokenValue& value);
     bool updateValueUnitFlexBasis(const CSSTokenValue& value);
     bool updateValueUnitWordSpacing(const CSSTokenValue& value);
+    bool updateValueUnitCSSImage(const CSSTokenValue& value);
 
     bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit);
     bool updateValueObjectPosition(const CSSTokenVector& tokens,
