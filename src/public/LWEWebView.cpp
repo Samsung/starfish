@@ -474,6 +474,14 @@ void* WebView::getInternalPtr()
 {
     return m_starfish;
 }
+
+void* WebView::unwrap()
+{
+    if (m_starfish) {
+        return ((StarFish::StarFish*)m_starfish)->LWEWebViewDelegator();
+    }
+    return nullptr;
+}
 }
 
 #ifdef PORT_WINDOW_BACKEND_ANDROID

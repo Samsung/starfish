@@ -1652,6 +1652,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                            ECORE_IMF_AUTOCAPITAL_TYPE_NONE);
     ecore_imf_context_prediction_allow_set(wnd->m_imfContext, EINA_FALSE);
     g_focusedWin = wnd;
+    wnd->m_starFish->setWebViewDelegator(wnd->m_mainBox);
     return wnd;
 }
 

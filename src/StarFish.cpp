@@ -262,6 +262,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_lweWebView(nullptr)
     , m_posX(0)
     , m_posY(0)
+    , m_lweWebViewControlDelegator(nullptr)
 {
     m_nativeHandle = platformHandle;
     m_width = w;

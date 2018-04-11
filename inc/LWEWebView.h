@@ -90,6 +90,7 @@ public:
 
 	// Internal API
 	void* getInternalPtr();
+	void* unwrap();
 
 protected:
 	WebView(void* starFish);
