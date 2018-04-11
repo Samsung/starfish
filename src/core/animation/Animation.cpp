@@ -415,7 +415,8 @@ void AnimationExecutor::runPendingAnimation()
             false,
         };
 
-        if (!info->newStyle->transitionDuration().isZero()) {
+        if (currentElementStyle &&
+            !info->newStyle->transitionDuration().isZero()) {
             compareStyle(info->oldStyle, currentElementStyle, damagedKeys);
             if (!info->oldFrame) {
                 info->oldFrame = info->element->frame();

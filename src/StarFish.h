@@ -336,6 +336,14 @@ public:
     {
         return m_posY;
     }
+    void setWebViewDelegator(void* delegator)
+    {
+        m_lweWebViewControlDelegator = delegator;
+    }
+    void* LWEWebViewDelegator()
+    {
+        return m_lweWebViewControlDelegator;
+    }
 
 protected:
     void enter();
@@ -413,6 +421,7 @@ protected:
     void* m_lweWebView;
     int m_posX;
     int m_posY;
+    void* m_lweWebViewControlDelegator;
 
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);

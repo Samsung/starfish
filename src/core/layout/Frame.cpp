@@ -81,11 +81,7 @@ FrameBox* containingBlock(Frame* currentFrame)
             f = currentFrame->layoutParent();
 
             if (!f) {
-                currentFrame->asFrameBox();
-            }
-
-            while (!f->isAnonymous()) {
-                f = f->layoutParent();
+                f = currentFrame->asFrameBox();
             }
         }
 
