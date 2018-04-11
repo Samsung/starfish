@@ -418,12 +418,19 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | contentWindow | Returns the WindowProxy object of the iframe element's nested browsing context, if its nested browsing context is non-null, or null otherwise. |
 |  | attribute | scrolling | Specifies whether or not to display scrollbars in an iframe |
 | [HTMLLegendElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-legend-element) | interface | HTMLLegendElement | Represents a caption for the rest of the contents of the legend element's parent fieldset element, if any. |
-|  | attribte  | form | Returns the element's form owner, or null if there is not one. |
+|  | attribute  | form | Returns the element's form owner, or null if there is not one. |
+| [HTMLLIElement](https://html.spec.whatwg.org/#htmllielement) | interface | HTMLLIElement | Represents a list item. |
+|  | attribute  | value | Returns the ordinal value of the list item, or 1 if there is no one. |
+|  | attribute  | type | Returns the style of the bullet point of a list item in a list. |
 | [HTMLLinkElement](https://html.spec.whatwg.org/multipage/semantics.html#the-link-element) | interface | HTMLLinkElement | The HTMLLinkElement interface represents reference information for external resources and the relationship of those resources to a document and vice-versa |
 |  | attribute | href | Is a DOMString representing the URI for the target resource. |
 |  | attribute | rel | Is a DOMString representing the forward relationship of the linked resource from the document to the resource. |
 |  | attribute | media | Is a DOMString representing a list of one or more media formats to which the resource applies. |
 |  | attribute | type | Is a DOMString representing the MIME type of the linked resource. |
+| [HTMLOListElement](https://html.spec.whatwg.org/#htmlolistelement)  | interface | HTMLOListElement |  |
+|  | attribute | reversed | Specifies that the list order should be descending. |
+|  | attribute | start | Specifies the start value of an ordered list. |
+|  | attribute | type | Specifies the kind of marker to use in the list. |
 | [HTMLUListElement](https://html.spec.whatwg.org/#htmlulistelement)  | interface | HTMLUListElement |  |
 |  | attribute | type | This variable just relect attribute 'type' |
 |  | attribute | compact | This variable just relect attribute 'compact' |

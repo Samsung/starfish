@@ -3,6 +3,7 @@
 [HTMLConstructor]
 interface HTMLOListElement : HTMLElement {
   // also has obsolete members
+  [CEReactions, Reflect] attribute boolean compact;
 
   // https://html.spec.whatwg.org/#HTMLOListElement-partial
   [CEReactions] attribute boolean reversed;

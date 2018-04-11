@@ -597,8 +597,8 @@ test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLabelElement02.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLegendElement02.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLegendElement03.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLegendElement04.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLIElement01.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLIElement02.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLIElement01.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLIElement02.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement01.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement02.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement03.html
@@ -639,9 +639,9 @@ test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLModElement04.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLObjectElement18.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLObjectElement19.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLObjectElement20.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLOListElement01.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLOListElement02.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLOListElement03.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLOListElement01.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLOListElement02.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLOListElement03.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLOptGroupElement01.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLOptGroupElement02.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLOptionElement01.html
@@ -849,8 +849,8 @@ test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLTextAreaElement03.h
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLTextAreaElement14.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLTextAreaElement15.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLTitleElement01.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLUListElement01.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLUListElement02.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLUListElement01.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLUListElement02.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/object01.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/object02.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/object03.html

@@ -1183,7 +1183,7 @@ int32_t CountingContext::getAndUpdateListCounterIndex(Frame* frame)
     }
 
     STARFISH_ASSERT(m_listCounterIndice.size() == m_listCounterReverses.size());
-    STARFISH_ASSERT(node->isHTMLLIElement());
+    STARFISH_ASSERT(node && node->isHTMLLIElement());
 
     if (node->asHTMLLIElement()->hasValue()) {
         m_listCounterIndice.back() = node->asHTMLLIElement()->value();
