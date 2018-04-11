@@ -494,9 +494,9 @@ void FrameBox::applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
                                  float spreadDistance, bool inset)
 {
     // apply clip if border-radius exists
-    if (style()->hasBorderRadius()) {
+    if (hasFrameBorderRadius()) {
         // const LayoutRect rect(0, 0, width(), height());
-        auto br = style()->borderRadius();
+        auto br = frameBorderRadius();
 
         float maxWidthValue = rect.width();
         float maxHeightValue = rect.height();
@@ -775,7 +775,7 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
                                                 float spreadDistance,
                                                 bool inset)
 {
-    if (style()->hasBorderRadius()) {
+    if (hasFrameBorderRadius()) {
         applyBorderRadius(canvas, rect, spreadDistance, inset);
         canvas->clipPath();
     }
@@ -796,9 +796,9 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 
 // apply clip if border-radius exists
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
-    if (style()->hasBorderRadius()) {
+    if (hasFrameBorderRadius()) {
         const LayoutRect rect(0, 0, width(), height());
-        auto br = style()->borderRadius();
+        auto br = frameBorderRadius();
         float arcR;
         float topLeftHorizontal =
             br.m_topLeftHorizontal.specifiedValue(width(), this);
@@ -917,7 +917,7 @@ void FrameBox::applyBorderShapeClippingUsedInPaintingBoxShadow(
         canvas->lineTo(exteriorRect.x(),
                        exteriorRect.y() + exteriorRect.height());
         canvas->closePath();
-        if (style()->hasBorderRadius()) {
+        if (hasFrameBorderRadius()) {
             const LayoutRect rect(0, 0, width(), height());
             applyBorderRadiusClippingIfNeeds(canvas, rect);
         } else {
@@ -977,8 +977,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                 float bottomRightVertical = 0;
                 float bottomLeftHorizontal = 0;
                 float bottomRightHorizontal = 0;
-                if (canUseFastPath && s->hasBorderRadius()) {
-                    auto br = s->borderRadius();
+                if (canUseFastPath && hasFrameBorderRadius()) {
+                    auto br = frameBorderRadius();
                     computeBorderRadiusProperties(
                         br, frameRect(), topLeftHorizontal, topRightHorizontal,
                         topLeftVertical, bottomLeftVertical, topRightVertical,
@@ -1265,7 +1265,7 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 cv->translate(half, half);
 
                 // Draw a shadow box that will not be filled.
-                if (style()->hasBorderRadius()) {
+                if (hasFrameBorderRadius()) {
                     const LayoutRect rect(interiorRect.x(), interiorRect.y(),
                                           interiorRect.width(),
                                           interiorRect.height());
@@ -1295,7 +1295,7 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 hh = snapSizeToPixel(paddingRect.height(), ry);
                 Unit::Rect rect(xx, yy, ww, hh);
                 canvas->save();
-                if (style()->hasBorderRadius()) {
+                if (hasFrameBorderRadius()) {
                     const LayoutRect r(rect.x(), rect.y(), rect.width(),
                                        rect.height());
                     applyBorderRadiusClippingIfNeeds(canvas, r, 0, true);
@@ -1971,9 +1971,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
         }
 #endif
     } else if (border.hasBorderStyle()) {
-        if (style()->hasBorderRadius()) {
+        if (hasFrameBorderRadius()) {
             float x, y;
-            auto br = style()->borderRadius();
+            auto br = frameBorderRadius();
 
             float maxWidthValue = rect.width();
             float maxHeightValue = rect.height();

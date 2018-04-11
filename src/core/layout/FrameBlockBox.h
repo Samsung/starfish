@@ -488,6 +488,7 @@ public:
         setMarginLeft(0);
         setBorderLeft(0);
         setPaddingLeft(0);
+        setLeftMBPCleared(true);
     }
 
     void unsetRightMBP()
@@ -495,6 +496,7 @@ public:
         setMarginRight(0);
         setBorderRight(0);
         setPaddingRight(0);
+        setRightMBPCleared(true);
     }
 
     void* operator new(size_t size);
