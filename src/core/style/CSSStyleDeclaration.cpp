@@ -1219,14 +1219,14 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     } else if (keyKind == CSSStyleValuePair::KeyKind::TextShadow) {
         CSSStyleValuePair shadows;
         shadows.setKeyKind(CSSStyleValuePair::KeyKind::TextShadow);
-        if (!style->textShadow().size()) {
+        if (!style->textShadow()) {
             shadows.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             shadows.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
             shadows.setValueList(
                 new ValueList(ValueList::Separator::CommaSeparator));
 
-            for (auto& sd : style->textShadow()) {
+            for (auto& sd : *style->textShadow()) {
                 CSSStyleValuePair s;
                 s.setValueList(
                     new ValueList(ValueList::Separator::SpaceSeparator));
@@ -1357,14 +1357,14 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     } else if (keyKind == CSSStyleValuePair::KeyKind::BoxShadow) {
         CSSStyleValuePair shadows;
         shadows.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);
-        if (!style->boxShadow().size()) {
+        if (!style->boxShadow()) {
             shadows.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             shadows.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
             shadows.setValueList(
                 new ValueList(ValueList::Separator::CommaSeparator));
 
-            for (auto& sd : style->boxShadow()) {
+            for (auto& sd : *style->boxShadow()) {
                 CSSStyleValuePair s;
                 s.setValueList(
                     new ValueList(ValueList::Separator::SpaceSeparator));

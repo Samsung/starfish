@@ -512,7 +512,7 @@ void DaliShellController::KeyEventHandler(const Dali::KeyEvent& event)
 
 #endif
 
-#if defined(STARFISH_ENABLE_TEST)
+#if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_64)
 #include <stdio.h>
 #include <signal.h>
 #include <execinfo.h>
@@ -526,10 +526,12 @@ void bt_sighandler(int sig, struct sigcontext ctx)
     // `[STARFISH_TEST] Got signal` string is used by test case runner
     // don't change!
     if (sig == SIGSEGV) {
-        printf("[STARFISH_TEST] Got signal %d, faulty address is %p, from %p\n",
-               sig, (void*)ctx.cr2, (void*)ctx.rip);
+        printf(
+            "[STARFISH_TEST] Got signal %d, pid %d, faulty address is %p, from "
+            "%p\n",
+            (int)getpid(), sig, (void*)ctx.cr2, (void*)ctx.rip);
     } else {
-        printf("[STARFISH_TEST] Got signal %d\n", sig);
+        printf("[STARFISH_TEST] Got signal %d, pid %d\n", (int)getpid(), sig);
     }
 
     trace_size = backtrace(trace, 128);

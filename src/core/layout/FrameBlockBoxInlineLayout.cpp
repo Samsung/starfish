@@ -4863,7 +4863,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
         canvas->setFont(s->font());
         canvas->setColor(s->color());
 #ifndef PORT_CANVAS_BACKEND_EFL
-        bool hasShadow = s->textShadow().size() ? true : false;
+        bool hasShadow = s->textShadow() ? true : false;
 
         if (hasShadow) {
             canvas->save();
@@ -4873,7 +4873,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
             canvas->translate(dx, dy);
 
             CanvasShadowDataList list =
-                s->textShadow().toCanvasShadowDataList(this);
+                s->textShadow()->toCanvasShadowDataList(this);
             for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
                 float radiusOffset = 0.0f;
                 if (shadow->radius()) {
