@@ -13,6 +13,7 @@ pip install Jinja2
 sudo add-apt-repository ppa:enlightenment-git/ppa
 sudo apt-get update
 sudo apt-get install libefl-dev
+sudo apt-get install asciidoc xmlto (optional for zeromq)
 ```
 
 ### Download StarFish and compile third party libraries
