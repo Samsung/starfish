@@ -278,7 +278,7 @@ public:
         return !operator==(src);
     }
 
-    String* dumpString();
+    String* dumpString() const;
 
 protected:
     union ValueData {
