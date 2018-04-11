@@ -1791,4 +1791,29 @@ void Frame::clearRunningTransformAnimation()
     STARFISH_ASSERT(node());
     node()->isRunningTransformAnimation();
 }
+
+bool Frame::hasFrameBorderRadius()
+{
+    return style()->hasBorderRadius() &&
+           !(isLeftMBPCleared() && isRightMBPCleared());
+}
+
+BorderRadiusData Frame::frameBorderRadius()
+{
+    STARFISH_ASSERT(style()->hasBorderRadius());
+    BorderRadiusData data = style()->borderRadius();
+    if (isLeftMBPCleared()) {
+        data.m_topLeftHorizontal = Length(Length::Fixed, 0);
+        data.m_topLeftVertical = Length(Length::Fixed, 0);
+        data.m_bottomLeftHorizontal = Length(Length::Fixed, 0);
+        data.m_bottomLeftVertical = Length(Length::Fixed, 0);
+    }
+    if (isRightMBPCleared()) {
+        data.m_topRightHorizontal = Length(Length::Fixed, 0);
+        data.m_topRightVertical = Length(Length::Fixed, 0);
+        data.m_bottomRightHorizontal = Length(Length::Fixed, 0);
+        data.m_bottomRightVertical = Length(Length::Fixed, 0);
+    }
+    return data;
+}
 }

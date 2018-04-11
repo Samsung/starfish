@@ -1795,12 +1795,12 @@ public:
 
     void setLeftMBPCleared(bool b)
     {
-        m_flags.m_isLeftMBPCleared = true;
+        m_flags.m_isLeftMBPCleared = b;
     }
 
     void setRightMBPCleared(bool b)
     {
-        m_flags.m_isRightMBPCleared = true;
+        m_flags.m_isRightMBPCleared = b;
     }
 
     bool needsGraphicsBuffer() const
@@ -1965,6 +1965,9 @@ public:
     LayoutLocation adjustedPositionRelativeToOffsetParent();
 
     FrameBox* findNearestAssociateBox();
+
+    bool hasFrameBorderRadius();
+    BorderRadiusData frameBorderRadius();
 
 protected:
     virtual bool hasFrameTreeItemModel()

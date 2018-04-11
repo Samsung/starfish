@@ -552,7 +552,7 @@ public:
                                       b->width() - b->borderWidth(),
                                       b->height() - b->borderHeight());
                         canvas->clip(rt);
-                        if (b->style()->hasBorderRadius()) {
+                        if (b->hasFrameBorderRadius()) {
                             canvas->translate(dx, dy);
                             const LayoutRect rect(0, 0, b->width(),
                                                   b->height());
