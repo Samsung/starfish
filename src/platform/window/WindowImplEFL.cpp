@@ -1335,6 +1335,18 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                             EVAS_CALLBACK_RENDER_FLUSH_POST,
                             [](void* data, Evas* e, void* event_info) {}, wnd);
 
+    if (sf->shouldFitWindow()) {
+        evas_object_event_callback_add(
+            wnd->m_window, EVAS_CALLBACK_RESIZE,
+            [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
+                WindowImplEFL* wnd = (WindowImplEFL*)data;
+                int w, h;
+                evas_object_geometry_get(wnd->m_window, NULL, NULL, &w, &h);
+                evas_object_resize(wnd->m_mainBox, w, h);
+            },
+            wnd);
+    }
+
     evas_object_event_callback_add(
         wnd->m_mainBox, EVAS_CALLBACK_RESIZE,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {

@@ -229,6 +229,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     : m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
+    , m_shouldFitWindow(true)
     , m_console(new Console(this))
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_avplay(new Avplay(this))
@@ -262,6 +263,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_posX(0)
     , m_posY(0)
 {
+    m_nativeHandle = platformHandle;
     m_width = w;
     m_height = h;
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
@@ -335,14 +337,15 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
     Evas_Object* wndObj;
-    if (!platformHandle) {
+    if (!m_nativeHandle) {
         wndObj = elm_win_add(NULL, STARFISH_NAME, ELM_WIN_BASIC);
         elm_win_title_set(wndObj, STARFISH_NAME);
         elm_win_autodel_set(wndObj, EINA_TRUE);
         evas_object_resize(wndObj, w, h);
         evas_object_move(wndObj, x, y);
-        platformHandle = wndObj;
+        m_nativeHandle = wndObj;
     } else {
+        m_shouldFitWindow = false;
         m_posX = x;
         m_posY = y;
     }
@@ -374,7 +377,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #if defined(STARFISH_TIZEN_TV)
     Initialize_CursorMod();
     Ecore_Wl_Window* wl_window =
-        elm_win_wl_window_get((Evas_Object*)platformHandle);
+        elm_win_wl_window_get((Evas_Object*)m_nativeHandle);
     struct wl_surface* surface = ecore_wl_window_surface_get(wl_window);
     Cursor_Set_Config(surface, TIZEN_CURSOR_CONFIG_CURSOR_AVAILABLE,
                       NULL); // Enable cursor in application
@@ -382,7 +385,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     vd_util_cursormod = 0;
 #endif
 
-    m_nativeHandle = platformHandle;
     m_deviceKind = deviceKindUseTouchScreen;
     m_startUpFlag = flag;
 #ifndef STARFISH_LINE_BREAK_ITERATOR_POOL_SIZE
