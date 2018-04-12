@@ -513,6 +513,22 @@ static bool scriptingMediaFeatureEval(MediaQueryExpValue& value,
     return true;
 }
 
+static bool updateMediaFeatureEval(MediaQueryExpValue& value,
+                                   MediaValues* mediaValues,
+                                   MediaFeaturePrefix op)
+{
+    // https://www.w3.org/TR/mediaqueries-4/#update
+    if (value.isID) {
+        // NOTE: Suppose that the output device we support is not unusually
+        // constrained in speed, so regularly-updating things like CSS
+        // animations can be used. However, we should consider more value if we
+        // support more output devices. (e.g., none: documents printed on paper,
+        // slow: E-ink screens or severely under-powered devices)
+        return value.id->equalsIgnoreCase("fast");
+    }
+    return true;
+}
+
 bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
 {
     // MediaQueryExp can be nullptr when it has invalid expressions.
