@@ -3021,12 +3021,14 @@ public:
         MatchResult()
             : pseudoType(PseudoElementNone)
             , styleDamageFrom(NoDamage)
+            , styleDamageSourceNodeStateMap(0)
             , seenCombinator(false)
         {
         }
 
         PseudoElementType pseudoType;
         StyleDamageSource styleDamageFrom;
+        int styleDamageSourceNodeStateMap;
         bool seenCombinator;
     };
 

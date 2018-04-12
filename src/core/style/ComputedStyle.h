@@ -2814,6 +2814,17 @@ public:
         return m_styleDamageSource;
     }
 
+    void setStyleDamageSourceNodeStateMap(int result)
+    {
+        m_styleDamageSourceNodeStateMap =
+            (m_styleDamageSourceNodeStateMap | result);
+    }
+
+    int styleDamageSourceNodeStateMap() const
+    {
+        return m_styleDamageSourceNodeStateMap;
+    }
+
     GCVector<ComputedStyle*>* cachedPseudoStyles()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
@@ -3231,6 +3242,7 @@ protected:
         m_alignContent = AlignContentValue::StretchAlignContentValue;
         m_pseudoId = StyleResolver::PseudoElementType::PseudoElementNone;
         m_styleDamageSource = StyleResolver::StyleDamageSource::NoDamage;
+        m_styleDamageSourceNodeStateMap = 0;
     }
 
     // NOTICE
@@ -3284,6 +3296,7 @@ protected:
     AlignContentValue m_alignContent : 3;
     StyleResolver::PseudoElementType m_pseudoId : 6;
     StyleResolver::StyleDamageSource m_styleDamageSource : 5;
+    int m_styleDamageSourceNodeStateMap : 4;
     bool m_zIndexSpecifiedByUser : 1;
 
     Length m_width;

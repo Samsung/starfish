@@ -7867,6 +7867,8 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
                 result.styleDamageFrom &
                 ~StyleResolver::StyleDamageSource::StyleDamageFromDOMTree));
         }
+        ret->setStyleDamageSourceNodeStateMap(
+            result.styleDamageSourceNodeStateMap);
     }
 }
 
@@ -8327,18 +8329,26 @@ bool StyleResolver::checkPseudoClass(Element* element,
     case CSSSelector::PseudoType::PseudoHover:
         result.styleDamageFrom = (StyleDamageSource)(
             result.styleDamageFrom | StyleDamageFromElementState);
+        result.styleDamageSourceNodeStateMap =
+            result.styleDamageSourceNodeStateMap | Node::NodeStateHovered;
         return element->state() & Node::NodeState::NodeStateHovered;
     case CSSSelector::PseudoType::PseudoActive:
         result.styleDamageFrom = (StyleDamageSource)(
             result.styleDamageFrom | StyleDamageFromElementState);
+        result.styleDamageSourceNodeStateMap =
+            result.styleDamageSourceNodeStateMap | Node::NodeStateActive;
         return element->state() & Node::NodeState::NodeStateActive;
     case CSSSelector::PseudoType::PseudoFocus:
         result.styleDamageFrom = (StyleDamageSource)(
             result.styleDamageFrom | StyleDamageFromElementState);
+        result.styleDamageSourceNodeStateMap =
+            result.styleDamageSourceNodeStateMap | Node::NodeStateFocused;
         return element->state() & Node::NodeState::NodeStateFocused;
     case CSSSelector::PseudoType::PseudoTarget:
         result.styleDamageFrom = (StyleDamageSource)(
             result.styleDamageFrom | StyleDamageFromElementState);
+        result.styleDamageSourceNodeStateMap =
+            result.styleDamageSourceNodeStateMap | Node::NodeStateTarget;
         return element->state() & Node::NodeState::NodeStateTarget;
     case CSSSelector::PseudoType::PseudoRoot:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |

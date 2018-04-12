@@ -1494,6 +1494,16 @@ LayoutLocation StackingContext::relativeLocation(StackingContext* sCtx)
             l.setX(l.x() + parent->asFrameBlockBox()->scrollLeft());
             l.setY(l.y() + parent->asFrameBlockBox()->scrollTop());
         }
+    } else {
+        FrameBox* box = sCtx->owner()->layoutParent()->asFrameBox();
+        while (!box->stackingContext()) {
+            if (box->isFrameBlockBox()) {
+                l.setX(l.x() - box->asFrameBlockBox()->scrollLeft());
+                l.setY(l.y() - box->asFrameBlockBox()->scrollTop());
+            }
+
+            box = box->layoutParent()->asFrameBox();
+        }
     }
 
     return l;

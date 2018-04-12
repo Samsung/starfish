@@ -282,6 +282,9 @@ public:
     NodeList* querySelectorAll(String* selector);
 
     /* Other methods (not in Node Interface) */
+
+    // When you want to add State,
+    // You need to update ComputedStyle::m_styleDamageSourceNodeStateMap
     enum NodeState {
         NodeStateNormal = 0,
         NodeStateActive = 1 << 0,
