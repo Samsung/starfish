@@ -2412,7 +2412,8 @@ bool LineFormattingContext::hasFloatingBoxAlreadyInLineBox(Frame* f)
 bool LineFormattingContext::dontBreakLine(FrameBox* box, LayoutUnit width)
 {
     bool wrapLine = box->shouldWrapLines();
-    if (box->isFloating()) {
+    if (box->isFloating() ||
+        box->style()->display() == InlineBlockDisplayValue) {
         wrapLine = true;
     }
     return (!hasFloatingBoxAlreadyInLineBox(box) && m_currentLineWidth == 0 &&

@@ -93,8 +93,6 @@ void* ComputedStyle::operator new(size_t size)
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_width));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_height));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(ComputedStyle, m_textDecorationLineData));
         GC_set_bit(
             obj_bitmap,
             GC_WORD_OFFSET(ComputedStyle, m_rareComputedStyleData.m_styles));
@@ -1493,8 +1491,25 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (!newStyle->textDecorationLine()->equalsTextDecorationLine(
-            oldStyle->textDecorationLine())) {
+    ValueList* oldTextDecorationLine = oldStyle->textDecorationLine();
+    ValueList* newTextDecorationLine = newStyle->textDecorationLine();
+    if (oldTextDecorationLine && oldTextDecorationLine->size() == 0) {
+        oldTextDecorationLine = nullptr;
+    }
+    if (newTextDecorationLine && newTextDecorationLine->size() == 0) {
+        newTextDecorationLine = nullptr;
+    }
+
+    if (oldTextDecorationLine == nullptr && newTextDecorationLine == nullptr) {
+    } else if ((oldTextDecorationLine != nullptr &&
+                newTextDecorationLine == nullptr) ||
+               (oldTextDecorationLine == nullptr &&
+                newTextDecorationLine != nullptr)) {
+        damagedKeys[CSSStyleValuePair::KeyKind::TextDecorationLine] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    } else if (!oldTextDecorationLine->equalsTextDecorationLine(
+                   newTextDecorationLine)) {
         damagedKeys[CSSStyleValuePair::KeyKind::TextDecorationLine] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);

@@ -1654,6 +1654,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueList(list);
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::TextDecorationLine) {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TextDecorationLine);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        if (style->textDecorationLine()) {
+            p.setValue(style->textDecorationLine());
+        } else {
+            p.setValue(new ValueList(ValueList::Separator::SpaceSeparator));
+        }
+        addValuePair(p);
     }
 #define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
     else if (keyKind ==                                                       \

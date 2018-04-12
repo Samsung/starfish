@@ -94,6 +94,7 @@ class RareComputedStyleData : public gc {
         TextDecorationColor,
         TextDecorationStyle,
         TextUnderlinePosition,
+        TextDecorationLine,
         Resize,
         Content,
         Quote,
@@ -168,6 +169,7 @@ class RareComputedStyleData : public gc {
         TextOverflowData* m_textOverflow;
         CounterBaseList* m_counterBaseList;
         WillChangeData* m_willChange;
+        ValueList* m_textDecorationLine;
 
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
@@ -326,6 +328,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(WillChangeData* v)
             : m_willChange(v)
+        {
+        }
+
+        RareComputedStyleValue(ValueList* v)
+            : m_textDecorationLine(v)
         {
         }
     };
@@ -507,6 +514,8 @@ public:
     GETTER_PTR(CounterBaseList, counterBaseList, counterReset, CounterReset);
     GETTER_PTR(CounterBaseList, counterBaseList, counterIncrement,
                CounterIncrement);
+    GETTER_PTR(ValueList, textDecorationLine, textDecorationLine,
+               TextDecorationLine);
 
     void setCounterReset(CounterBaseList* v)
     {
@@ -541,6 +550,14 @@ public:
         }
     }
 
+    void setTextDecorationLine(ValueList* v)
+    {
+        clearTextDecorationLine();
+        if (v) {
+            m_styles.emplace_back(KeyKind::TextDecorationLine, v);
+        }
+    }
+
 #undef GETTER_PTR
 
     CLEARER(Transforms);
@@ -548,6 +565,7 @@ public:
     CLEARER(CounterReset);
     CLEARER(CounterIncrement);
     CLEARER(WillChange);
+    CLEARER(TextDecorationLine);
 
 #undef FIND_VALUE
 #undef CLEARER
@@ -1004,30 +1022,22 @@ public:
         return nullptr;
     }
 
-    ValueList* textDecoration()
-    {
-        // TODO: shorthand not supported yet
-        return textDecorationLine();
-    }
-
-    void setTextDecoration(ValueList* decoration)
-    {
-        // TODO: shorthand not supported yet
-        setTextDecorationLine(decoration);
-    }
-
     ValueList* textDecorationLine()
     {
-        if (!m_textDecorationLineData) {
-            m_textDecorationLineData =
-                new ValueList(ValueList::Separator::SpaceSeparator);
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return nullptr;
         }
-        return m_textDecorationLineData;
+        return m_rareComputedStyleData.textDecorationLine();
+    }
+
+    ValueList* ensureTextDecorationLine()
+    {
+        return m_rareComputedStyleData.ensureTextDecorationLine();
     }
 
     void setTextDecorationLine(ValueList* decorationLines)
     {
-        m_textDecorationLineData = decorationLines;
+        m_rareComputedStyleData.setTextDecorationLine(decorationLines);
     }
 
     Unit::Color textDecorationColor()
@@ -3208,7 +3218,6 @@ protected:
         m_zIndexSpecifiedByUser = false;
         m_overflowX = OverflowValue::VisibleOverflow;
         m_overflowY = OverflowValue::VisibleOverflow;
-        m_textDecorationLineData = nullptr;
         m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
@@ -3263,7 +3272,6 @@ protected:
     VerticalAlignValue m_verticalAlign : 4;
     OverflowValue m_overflowX : 2;
     OverflowValue m_overflowY : 2;
-    ValueList* m_textDecorationLineData;
     UnicodeBidiValue m_unicodeBidi : 2;
     BoxSizingValue m_boxSizing : 1;
     TableLayoutValue m_tableLayout : 1; // table

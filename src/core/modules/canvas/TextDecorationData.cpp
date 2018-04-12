@@ -26,15 +26,18 @@ namespace StarFish {
 void TextDecorationData::merge(ComputedStyle* style)
 {
     ValueList* vals = style->textDecorationLine();
-    for (size_t i = 0; i < vals->size(); i++) {
-        const CSSStyleValuePair& v = vals->at(i);
-        if (v.textDecorationLineValue() == UnderlineTextDecorationLineValue) {
-            m_hasUnderLine = true;
-            m_underLineColor = style->color();
-        } else if (v.textDecorationLineValue() ==
-                   LineThroughTextDecorationLineValue) {
-            m_hasLineThrough = true;
-            m_lineThroughColor = style->color();
+    if (vals) {
+        for (size_t i = 0; i < vals->size(); i++) {
+            const CSSStyleValuePair& v = vals->at(i);
+            if (v.textDecorationLineValue() ==
+                UnderlineTextDecorationLineValue) {
+                m_hasUnderLine = true;
+                m_underLineColor = style->color();
+            } else if (v.textDecorationLineValue() ==
+                       LineThroughTextDecorationLineValue) {
+                m_hasLineThrough = true;
+                m_lineThroughColor = style->color();
+            }
         }
     }
 
