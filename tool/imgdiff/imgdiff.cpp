@@ -168,7 +168,8 @@ public:
         vfprintf(stderr, s, args);
         fprintf(stderr, "\n");
         va_end(args);
-        ::abort();
+        // ::abort();
+        exit(-1);
     }
 
     virtual int width()

@@ -24,6 +24,7 @@ result.xml
 tool/reftest/cairo/internal_part*
 tool/reftest/elf/internal_part*
 error_report
+tool/imgdiff/imgdiff
 
 # Build tools generated
 tags

@@ -4976,7 +4976,7 @@ void StyleResolver::apply(Element* element,
                 CSSStyleValuePair p;
                 p.setValueKind(CSSStyleValuePair::TextDecorationLineValueKind);
                 p.setValue(NoneTextDecorationLineValue);
-                style->textDecorationLine()->push_back(p);
+                style->ensureTextDecorationLine()->push_back(p);
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
