@@ -37,6 +37,14 @@ static UTF8StringDataNonGCStd mergeStyleWeightWithString(
     return result;
 }
 
+template <typename T>
+std::string to_string(T value)
+{
+    std::ostringstream os;
+    os << value;
+    return os.str();
+}
+
 static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
                                                size_t len, float size,
                                                char style, char weight,
@@ -64,8 +72,8 @@ static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
         }
     }
 
-    result += "@s:" + String::fromInt(int(size + 0.5f))->toUTF8NonGCString();
-    result += "@ls:" + String::fromFloat(letterSpacing)->toUTF8NonGCString();
+    result += "@s:" + ::StarFish::to_string(int(size + 0.5f));
+    result += "@ls:" + ::StarFish::to_string(letterSpacing);
     result += "@s:";
     result += (style + 'a');
     result += "@w:";

@@ -515,6 +515,48 @@ Node* Node::nearestParentElement()
     return t;
 }
 
+static void setSiblingsNeedsStyleRecalcIfNeededWithStateChange(Node* startNode,
+                                                               int oldState,
+                                                               int newState)
+{
+    Node* node = startNode->nextSibling();
+    while (node) {
+        if (node->isElement()) {
+            int stateDamageMap = 0;
+            if (node->style()) {
+                stateDamageMap = node->style()->styleDamageSourceNodeStateMap();
+            }
+
+            if ((stateDamageMap & oldState) | (stateDamageMap & newState)) {
+                node->setNeedsStyleRecalc();
+            }
+        }
+
+        node = node->nextSibling();
+    }
+}
+
+static void setChildrenNeedsStyleRecalcIfNeededWithStateChange(Node* startNode,
+                                                               int oldState,
+                                                               int newState)
+{
+    Node* child = startNode->firstChild();
+    while (child) {
+        if (child->isElement()) {
+            int stateDamageMap = 0;
+            if (child->style()) {
+                stateDamageMap =
+                    child->style()->styleDamageSourceNodeStateMap();
+            }
+
+            if ((stateDamageMap & oldState) | (stateDamageMap & newState)) {
+                child->setNeedsStyleRecalc();
+            }
+        }
+        child = child->nextSibling();
+    }
+}
+
 void Node::setState(NodeState state, bool enable)
 {
     int newState = m_state;
@@ -532,7 +574,35 @@ void Node::setState(NodeState state, bool enable)
     if (m_state != newState) {
         int oldState = m_state;
         m_state = newState;
-        setNeedsStyleRecalc(StyleChangeReason::ElementStateChange);
+
+        if (document()->doesParticipateInRendering()) {
+            StyleResolver::StyleDamageSource cmr;
+            int stateDamageMap = 0;
+            if (style() && style()->styleDamageSource()) {
+                cmr = style()->styleDamageSource();
+                stateDamageMap = style()->styleDamageSourceNodeStateMap();
+            } else {
+                cmr = StyleResolver::StyleDamageSource::NoDamage;
+            }
+
+            if (cmr &
+                StyleResolver::StyleDamageSource::StyleDamageFromElementState) {
+                if ((stateDamageMap & oldState) | (stateDamageMap & newState)) {
+                    m_needsStyleRecalc = true;
+                    if (parentNode()) {
+                        parentNode()->setChildNeedsStyleRecalc();
+                    }
+                }
+            }
+
+            setSiblingsNeedsStyleRecalcIfNeededWithStateChange(this, oldState,
+                                                               newState);
+            setChildrenNeedsStyleRecalcIfNeededWithStateChange(this, oldState,
+                                                               newState);
+        }
+
+        window()->browsingContext()->setNeedsStyleRecalc();
+
         didStateChanged(oldState, newState);
     }
 }
