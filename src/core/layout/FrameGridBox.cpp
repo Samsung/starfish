@@ -689,7 +689,9 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
             for (size_t i = 0; i < m_orderedGridArea.size(); i++) {
                 GridArea preArea = m_orderedGridArea[i];
                 if (preArea.m_rowStart < area.m_rowStart) {
-                    if (preArea.m_columnEnd == area.m_columnEnd) {
+                    if (preArea.m_columnEnd == area.m_columnEnd &&
+                        preArea.m_columnEnd - preArea.m_columnStart >
+                            area.m_columnEnd - area.m_columnStart) {
                         size_t diff =
                             preArea.m_columnEnd - preArea.m_columnStart;
                         if (maxValue < diff) {
@@ -781,8 +783,11 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                         GridArea* biggest = getBiggestAreaWithColumn(
                             m_orderedGridArea, area.m_rowStart, start, end);
                         if (biggest) {
-                            LayoutUnit diff = (contentWidth - sumWidth) /
-                                              (biggest->m_columnEnd - end);
+                            LayoutUnit diff = 0;
+                            if (biggest->m_columnEnd - end) {
+                                diff = (contentWidth - sumWidth) /
+                                       (biggest->m_columnEnd - end);
+                            }
 
                             LayoutUnit dividedWidth =
                                 contentWidth / (end - start);
@@ -843,8 +848,11 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                         }
 
                         if (sumOfFixed < contentWidth) {
-                            LayoutUnit diff = (sumWidth - contentWidth) /
-                                              (biggest->m_columnEnd - end);
+                            LayoutUnit diff = 0;
+                            if (biggest->m_columnEnd - end) {
+                                diff = (sumWidth - contentWidth) /
+                                       (biggest->m_columnEnd - end);
+                            }
                             LayoutUnit dividedWidth =
                                 contentWidth / (end - start);
                             for (size_t i = start; i <= end - 1; i++) {
