@@ -1962,6 +1962,8 @@ void CSSStyleDeclaration::setBorderRadius(const char* value, size_t len,
 String* CSSStyleValuePair::toString() const
 {
     switch (valueKind()) {
+    case CSSStyleValuePair::ValueKind::Attr:
+        return attrValue();
     case CSSStyleValuePair::ValueKind::Initial:
         return String::initialString;
     case CSSStyleValuePair::ValueKind::Inherit:
@@ -2550,6 +2552,9 @@ String* CSSStyleValuePair::toString() const
         ValueList* list = multiValue();
         return list->toString();
     }
+    case CSSStyleValuePair::ValueKind::ValuePairKind: {
+        return pairValue()->toString();
+    }
     case CSSStyleValuePair::ValueKind::TransitionPropertyValueKind:
         return transitionPropertyValueToString(transitionPropertyValue());
     case CSSStyleValuePair::ValueKind::Time:
@@ -2845,8 +2850,13 @@ String* CSSStyleValuePair::toString() const
         }
     case CSSStyleValuePair::ValueKind::CSSImageValueKind:
         return CSSImageValue()->toString();
-    default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    case CSSStyleValuePair::ValueKind::BoxDecorationBreakValueKind:
+        switch (boxDecorationBreakValue()) {
+        case CloneBoxDecorationBreakValue:
+            return String::fromUTF8("clone");
+        case SliceBoxDecorationBreakValue:
+            return String::fromUTF8("slice");
+        }
     }
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
@@ -7777,6 +7787,21 @@ void StyleResolver::apply(Element* element,
                     willChangeData->push_back(item);
                 }
                 style->setWillChange(willChangeData);
+                break;
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::BoxDecorationBreak:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setBoxDecorationBreak(parentStyle->boxDecorationBreak());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setBoxDecorationBreak(SliceBoxDecorationBreakValue);
+                break;
+            default:
+                style->setBoxDecorationBreak(
+                    cssValues[k].boxDecorationBreakValue());
                 break;
             }
             break;
@@ -14055,6 +14080,23 @@ bool CSSStyleValuePair::updateValueWillChange(Document* document,
     }
     setValueList(list);
     return true;
+}
+
+bool CSSStyleValuePair::updateValueBoxDecorationBreak(
+    Document* document, const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_STRING("clone")) {
+        setBoxDecorationBreakValue(CloneBoxDecorationBreakValue);
+        return true;
+    } else if (STRING_VALUE_IS_STRING("slice")) {
+        setBoxDecorationBreakValue(SliceBoxDecorationBreakValue);
+        return true;
+    }
+    return false;
 }
 
 #ifdef STARFISH_ENABLE_TEST

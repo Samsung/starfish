@@ -78,6 +78,7 @@ class RareComputedStyleData : public gc {
         FlexShrink,
         Opacity,
         Border,
+        BoxDecorationBreak,
         BoxShadow,
         Padding,
         Margin,
@@ -142,6 +143,7 @@ class RareComputedStyleData : public gc {
         String* m_stringValue;
         Length m_length;
         BorderData* m_borderData;
+        BoxDecorationBreakValue m_boxDecorationBreak;
         LengthData* m_lengthData;
         FlexBasisData* m_flexBasis;
         StyleTransformDataGroup* m_transforms;
@@ -193,6 +195,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(BorderData* borderData)
             : m_borderData(borderData)
+        {
+        }
+
+        RareComputedStyleValue(BoxDecorationBreakValue v)
+            : m_boxDecorationBreak(v)
         {
         }
 
@@ -459,6 +466,8 @@ public:
                  textDecorationStyle, TextDecorationStyle);
     GETTER_VALUE(ResizeValue, resize, resize, Resize);
     GETTER_VALUE(QuoteValue, quote, quote, Quote);
+    GETTER_VALUE(BoxDecorationBreakValue, boxDecorationBreak,
+                 boxDecorationBreak, BoxDecorationBreak);
 
 #undef GETTER_VALUE
 
@@ -1020,6 +1029,23 @@ public:
         }
 
         return nullptr;
+    }
+
+    BoxDecorationBreakValue boxDecorationBreak()
+    {
+        if (m_rareComputedStyleData.m_styles.size()) {
+            Nullable<BoxDecorationBreakValue> v =
+                m_rareComputedStyleData.boxDecorationBreak();
+            if (v.hasValue()) {
+                return v.getValue();
+            }
+        }
+        return SliceBoxDecorationBreakValue;
+    }
+
+    void setBoxDecorationBreak(BoxDecorationBreakValue v)
+    {
+        *m_rareComputedStyleData.ensureBoxDecorationBreak() = v;
     }
 
     ValueList* textDecorationLine()

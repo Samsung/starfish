@@ -1615,21 +1615,25 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridRowStart);
         p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
         p.setInt32Value(style->gridRowStart());
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::GridRowEnd) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridRowEnd);
         p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
         p.setInt32Value(style->gridRowEnd());
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::GridColumnStart) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
         p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
         p.setInt32Value(style->gridColumnStart());
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::GridColumnEnd) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
         p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
         p.setInt32Value(style->gridColumnStart());
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::WillChange) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::WillChange);
@@ -1770,6 +1774,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     ADD_VALUE_PAIR(OverflowY, OverflowValueKind, overflowY)
     ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiValueKind, unicodeBidi)
     ADD_VALUE_PAIR(Opacity, Number, opacity)
+    ADD_VALUE_PAIR(BoxDecorationBreak, BoxDecorationBreakValueKind,
+                   boxDecorationBreak)
     ADD_VALUE_PAIR(BoxSizing, BoxSizingValueKind, boxSizing)
     ADD_VALUE_PAIR(FlexDirection, FlexDirectionValueKind, flexDirection)
     ADD_VALUE_PAIR(FlexWrap, FlexWrapValueKind, flexWrap)
