@@ -2200,6 +2200,8 @@ StyleRuleNamespace* CSSParser::parseNamespaceRule()
     String* prefix = String::emptyString;
     if (token->isIdent()) {
         prefix = token->value()->toString();
+    } else {
+        ungetToken();
     }
 
     Nullable<String*> namespaceURI = parseURLString();
