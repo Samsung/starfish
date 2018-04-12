@@ -1,0 +1,14 @@
+.git/*
+.gitignore
+.gitmodules
+
+*.pyc
+lextab.*
+parsetab.*
+
+test/*
+tool/reftest/*
+vendortest/*
+
+.gbs.conf
+.gitlab-ci.yml
