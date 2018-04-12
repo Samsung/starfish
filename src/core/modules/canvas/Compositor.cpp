@@ -178,6 +178,12 @@ public:
                                       xRepeat, yRepeat);
     }
 
+    virtual void drawLinearGradient(const LayoutRect& rt,
+                                    CSSLinearGradientValue* gradient)
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
     virtual void applyMatrixTo(LayoutLocation& lp)
     {
         m_compositor->applyMatrixTo(lp);

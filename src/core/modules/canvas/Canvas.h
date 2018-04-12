@@ -31,6 +31,7 @@ namespace StarFish {
 class Frame;
 class NativeImageData;
 class PlatformWindow;
+class CSSLinearGradientValue;
 
 class CanvasState {
 public:
@@ -183,7 +184,8 @@ public:
         float imageHeight, bool xRepeat, bool yRepeat,
         ImageRenderingValue imageRenderingMode =
             ImageRenderingValue::ImageRenderingAutoValue) = 0;
-
+    virtual void drawLinearGradient(const LayoutRect& rt,
+                                    CSSLinearGradientValue* gradient) = 0;
     virtual void applyMatrixTo(LayoutLocation& lp) = 0;
     virtual void applyMatrixTo(LayoutRect& lp) = 0;
 

@@ -25,6 +25,8 @@
 
 namespace StarFish {
 
+class CSSLinearGradientValue;
+
 enum class CSSGradientType { LinearGradient, RadialGradient };
 
 enum SideOrConer {
@@ -206,10 +208,6 @@ class CSSGradientValue : public gc {
 public:
     CSSGradientValue(CSSGradientType gradientType)
         : m_gradientType(gradientType)
-        , m_startingX(0)
-        , m_startingY(0)
-        , m_endingX(0)
-        , m_endingY(0)
         , m_colorStopList()
     {
     }
@@ -219,44 +217,10 @@ public:
         return m_gradientType;
     }
 
-    float startingX()
+    CSSLinearGradientValue* asCSSLinearGradientValue()
     {
-        return m_startingX;
-    }
-
-    void setStartingX(float val)
-    {
-        m_startingX = val;
-    }
-
-    float startingY()
-    {
-        return m_startingY;
-    }
-
-    void setStartingY(float val)
-    {
-        m_startingY = val;
-    }
-
-    float endingX()
-    {
-        return m_endingX;
-    }
-
-    void setEndingX(float val)
-    {
-        m_endingX = val;
-    }
-
-    float endingY()
-    {
-        return m_endingY;
-    }
-
-    void setEndingY(float val)
-    {
-        m_endingY = val;
+        STARFISH_ASSERT(m_gradientType == CSSGradientType::LinearGradient);
+        return (CSSLinearGradientValue*)this;
     }
 
     virtual String* toString() = 0;
@@ -268,10 +232,6 @@ public:
 
 protected:
     CSSGradientType m_gradientType;
-    float m_startingX;
-    float m_startingY;
-    float m_endingX;
-    float m_endingY;
     GCVector<ColorStop*> m_colorStopList;
 };
 
@@ -303,6 +263,9 @@ public:
     {
         return m_sc;
     }
+
+    bool computeEndPoints(const int width, const int height, float& x1,
+                          float& y1, float& x2, float& y2);
 
     virtual String* toString() override;
 

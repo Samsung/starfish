@@ -9828,6 +9828,9 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             }
             parser.consumeIfNext(',');
         }
+        if (linearGradientValue->colorStopList().size() < 2) {
+            return false;
+        }
         m_value.m_gradientValue = linearGradientValue;
     } else if (type->equals("radial-gradient") && parser.consumeIfNext('(')) {
         // TODO: Consider the radial gradient

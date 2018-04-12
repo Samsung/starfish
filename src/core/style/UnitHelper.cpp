@@ -66,4 +66,9 @@ float convertFromTurnToDeg(float value)
 {
     return value * 360;
 }
+
+float convertFromDegToRad(float value)
+{
+    return value * static_cast<float>(M_PI) / 180.0f;
+}
 }
