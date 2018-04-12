@@ -1319,7 +1319,7 @@ static void removeAnonymousBlockBoxesIfNeeded(FrameBlockBox* parent)
         }
 
         Frame* newParent;
-        if (parent->isFrameFlexibleBox()) {
+        if (parent->isFrameFlexibleBox() && parent->firstChild()) {
             newParent = parent->firstChild();
             newParent->markNeedsLayout();
             if (newParent) {

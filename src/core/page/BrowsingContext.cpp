@@ -1383,7 +1383,8 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
     bool useEventInDOMTree = false;
     Node* node = targetNode;
     while (node) {
-        if (node->isElement()) {
+        if (node->isElement() && node->frame() &&
+            node->frame()->shouldApplyOverflow()) {
             Element* e = node->asElement();
             if (isVerticalWheelEvent) {
                 if (e->appliedOverflowY() >= OverflowValue::AutoOverflow) {
