@@ -2726,7 +2726,8 @@ static inline bool featureWithoutValue(MediaFeature mediaFeature)
            mediaFeature == MediaFeature::MediaFeatureAnyHover ||
            mediaFeature == MediaFeature::MediaFeaturePointer ||
            mediaFeature == MediaFeature::MediaFeatureAnyPointer ||
-           mediaFeature == MediaFeature::MediaFeatureScripting;
+           mediaFeature == MediaFeature::MediaFeatureScripting ||
+           mediaFeature == MediaFeature::MediaFeatureUpdate;
 }
 
 static inline bool featureWithValidIdent(MediaFeature mediaFeature,
@@ -2768,6 +2769,12 @@ static inline bool featureWithValidIdent(MediaFeature mediaFeature,
         return ident->equalsIgnoreCase("none") ||
                ident->equalsIgnoreCase("initial-only") ||
                ident->equalsIgnoreCase("enabled");
+    }
+
+    if (mediaFeature == MediaFeature::MediaFeatureUpdate) {
+        return ident->equalsIgnoreCase("none") ||
+               ident->equalsIgnoreCase("slow") ||
+               ident->equalsIgnoreCase("fast");
     }
 
     return false;

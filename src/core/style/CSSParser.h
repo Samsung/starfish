@@ -1256,7 +1256,8 @@ protected:
     F(MinMonochrome, "min-monochrome", monochrome, MinPrefix)                \
     F(Pointer, "pointer", pointer, NoPrefix)                                 \
     F(Scan, "scan", scan, NoPrefix)                                          \
-    F(Scripting, "scripting", scripting, NoPrefix)
+    F(Scripting, "scripting", scripting, NoPrefix)                           \
+    F(Update, "update", update, NoPrefix)
 
 enum MediaFeature {
     MediaFeatureNone,
