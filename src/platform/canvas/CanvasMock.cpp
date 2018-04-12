@@ -167,6 +167,11 @@ public:
     {
     }
 
+    virtual void drawLinearGradient(const LayoutRect& rt,
+                                    CSSLinearGradientValue* gradient)
+    {
+    }
+
     void drawImage(CanvasSurface* data, const Unit::Rect& dst,
                    ImageRenderingValue imageRenderingMode)
     {

@@ -25,6 +25,7 @@
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
 
 #include "core/modules/canvas/Canvas.h"
+#include "core/style/CSSGradientValue.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/canvas/ShadowBlur.h"
@@ -734,6 +735,52 @@ public:
         if (surfaceWasCreated) {
             cairo_surface_destroy(image);
         }
+        cairo_restore(m_canvas);
+    }
+
+    virtual void drawLinearGradient(const LayoutRect& rt,
+                                    CSSLinearGradientValue* gradient)
+    {
+        STARFISH_ASSERT(m_canvas);
+        if (!lastState().m_visible) {
+            return;
+        }
+        int xx = 0, yy = 0, ww = 0, hh = 0;
+        LayoutUnit rx = rt.x();
+        LayoutUnit ry = rt.y();
+
+        xx = rx.floor();
+        yy = ry.floor();
+        ww = snapSizeToPixel(rt.width(), rx);
+        hh = snapSizeToPixel(rt.height(), ry);
+
+        float x1, y1, x2, y2;
+        if (!gradient->computeEndPoints(ww, hh, x1, y1, x2, y2)) {
+            return;
+        }
+
+        cairo_save(m_canvas);
+        cairo_translate(m_canvas, xx, yy);
+
+        cairo_pattern_t* pt;
+        pt = cairo_pattern_create_linear(x1, y1, x2, y2);
+
+        const auto& colorStops = gradient->colorStopList();
+        size_t size = colorStops.size();
+        float offset = (100.0f / (size - 1)) / 100.0f;
+        float sum;
+        for (size_t i = 0; i < size; ++i) {
+            // TODO : Consider offset(length or percentage) of Color stop
+            const auto& color = colorStops[i]->color();
+            (i == 0) ? sum = 0 : ((i == size - 1) ? sum = 1.0f : sum += offset);
+            cairo_pattern_add_color_stop_rgba(pt, sum, color.R(), color.G(),
+                                              color.B(), color.A());
+        }
+
+        cairo_rectangle(m_canvas, xx, yy, ww, hh);
+        cairo_set_source(m_canvas, pt);
+        cairo_fill(m_canvas);
+        cairo_pattern_destroy(pt);
         cairo_restore(m_canvas);
     }
 

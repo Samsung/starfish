@@ -1504,6 +1504,12 @@ public:
         }
     }
 
+    virtual void drawLinearGradient(const LayoutRect& rt,
+                                    CSSLinearGradientValue* gradient)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     void drawImage(CanvasSurface* data, const Unit::Rect& dst,
                    ImageRenderingValue imageRenderingMode)
     {
