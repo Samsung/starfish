@@ -13,7 +13,9 @@ pip install Jinja2
 sudo add-apt-repository ppa:enlightenment-git/ppa
 sudo apt-get update
 sudo apt-get install libefl-dev
-sudo apt-get install asciidoc xmlto (optional for zeromq)
+
+# optional for zeromq
+sudo apt-get install asciidoc xmlto
 ```
 
 ### Download StarFish and compile third party libraries
@@ -80,21 +82,10 @@ vi gbs-conf/gbs.conf
 # fill out 'user' and 'passwd'
 ```
 
-Build required packages
-```sh
-git clone git@github.sec.samsung.net:RS7-webtf/escargot.git
-cd escargot
-git submodule init
-git submodule update
-make install_header_to_include
-gbs -c ../gbs-conf/gbs.conf build --define 'jobs 16' -A armv7l -P [ profile.40arm | profile.VdKantM ] --incremental --include-all
-```
-
 Build StarFish
 ```
 cd starfish
-./binding_generator/scripts/starfish_code_generator.py src/ src/binding/
-gbs -c ../gbs-conf/gbs.conf build -A armv7l -P [ profile.40arm | profile.VdKantM ] --incremental --include-all
+gbs -c ../gbs-conf/gbs.conf build -A armv7l -P profile.50std  --incremental --include-all
 ```
 
 The following build options are supported when building RPMs.

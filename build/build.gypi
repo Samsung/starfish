@@ -354,6 +354,12 @@
                     '-pthread',
                 ],
             }],
+            # Specific device apis are included by each department-specific gyp
+            ['platform=="tizen" and custom=="none"', {
+                'sources_extra': [
+                    '<!@(find third_party/deviceapi/src -name *.cpp)',
+                ],
+            }],
             ['touchUi=="0" and backend=="efl_cairo"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO_HEADLESS',

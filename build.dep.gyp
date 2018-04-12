@@ -217,7 +217,7 @@
             'copies': [
                 {
                     'files': [
-                        '/usr/lib/web-widget-js/release/libescargot.a',
+                        'third_party/escargot/libescargot.a',
                     ],
                     # To workaround the 'duplicate-target' in ninja
                     'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
@@ -366,7 +366,7 @@
             'copies': [
                 {
                     'files': [
-                        '/usr/lib/web-widget-js/release/libgc.a'
+                        './third_party/GCutil/bdwgc/out/tizen_obs/arm/release.shared/.libs/libgc.a'
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
                 },

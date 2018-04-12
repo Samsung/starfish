@@ -6,7 +6,6 @@ if [ ! -f /proc/cpuinfo ]; then
     exit 1
 fi
 NUMPROC=$(grep 'processor' /proc/cpuinfo | wc -l)
-CU=$PWD
 
 
 COMPILER_VERSION_MAJOR=4.6
@@ -16,6 +15,9 @@ COMPILER_VERSION_MINOR=4.6.4
 ###########################################################
 # Zeromq build
 ###########################################################
+
+CU=`pwd`
+
 cd third_party/zeromq/
 rm -rf ./out
 
@@ -158,11 +160,13 @@ function build_zeromq_for_tizen() {
 }
 
 function build_zeromq_for_tizen_obs() {
+    ROOT=$PWD
 
     for host in wearable; do
     for arch in $1; do
     for mode in release debug; do
     for libtype in shared; do
+        cd $ROOT
         echo =========================================================================
         echo Building zeromq for $host $arch $mode $libtype
 
@@ -212,20 +216,20 @@ if [[ $1 == tizen_obs_arm ]]; then
 elif [[ $1 == tizen_obs_i386 ]]; then
     build_zeromq_for_tizen_obs i386 $2
 else # full build
-#build zeromq
-build_zeromq_for_linux
+    #build zeromq
+    build_zeromq_for_linux
 
-if [ -z "$TIZEN_SDK_HOME" ]; then
-    echo "Do not build for Tizen"
-else
-    echo "TIZEN_SDK_HOME env is ...""$TIZEN_SDK_HOME"
-    build_zeromq_for_tizen
-    #cd $CU
-    #mkdir -p third_party/zeromq/out/tizen_2.4_tv/i386/release.shared/.libs/
-    #cp third_party/zeromq/out/tizen_2.4_mobile/i386/release.shared/.libs/*  third_party/zeromq/out/tizen_2.4_tv/i386/release.shared/.libs/
-    #mkdir -p third_party/zeromq/out/tizen_2.4_tv/i386/debug.shared/.libs/
-    #cp third_party/zeromq/out/tizen_2.4_mobile/i386/debug.shared/.libs/*  third_party/zeromq/out/tizen_2.4_tv/i386/debug.shared/.libs/
-fi
+    if [ -z "$TIZEN_SDK_HOME" ]; then
+        echo "Do not build for Tizen"
+    else
+        echo "TIZEN_SDK_HOME env is ...""$TIZEN_SDK_HOME"
+        build_zeromq_for_tizen
+        #cd $CU
+        #mkdir -p third_party/zeromq/out/tizen_2.4_tv/i386/release.shared/.libs/
+        #cp third_party/zeromq/out/tizen_2.4_mobile/i386/release.shared/.libs/*  third_party/zeromq/out/tizen_2.4_tv/i386/release.shared/.libs/
+        #mkdir -p third_party/zeromq/out/tizen_2.4_tv/i386/debug.shared/.libs/
+        #cp third_party/zeromq/out/tizen_2.4_mobile/i386/debug.shared/.libs/*  third_party/zeromq/out/tizen_2.4_tv/i386/debug.shared/.libs/
+    fi
 fi
 
 cd $CU

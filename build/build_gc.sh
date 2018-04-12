@@ -23,7 +23,11 @@ COMPILER_VERSION_MINOR=4.6.4
 ###########################################################
 # GC build
 ###########################################################
+
+ROOT=`pwd`
 cd third_party/GCutil/bdwgc/
+BDWGC_ROOT=`pwd`
+
 if [[ $INCREMENTAL == false ]]; then
     autoreconf -vif
     automake --add-missing
@@ -185,27 +189,18 @@ function build_gc_for_tizen() {
 }
 
 function build_gc_for_tizen_obs() {
-
     for host in wearable; do
     for arch in $1; do
-    for mode in release debug; do
+    for mode in release; do
     for libtype in shared static; do
         echo =========================================================================
         echo Building bdwgc for $host $arch $mode $libtype
 
+        cd $BDWGC_ROOT
         BUILDDIR=out/tizen_obs/$arch/$mode.$libtype
         rm -rf $BUILDDIR
         mkdir -p $BUILDDIR
         cd $BUILDDIR
-
-        if [[ $2 == only_release ]]; then
-            if [ $mode == debug ] || [ $libtype == static ]; then
-                mkdir .libs/
-                touch .libs/libgc.a
-                cd -
-                continue;
-            fi
-        fi
 
         GCCONFFLAGS_HOST=GCCONFFLAGS_$host CFLAGS_HOST=CFLAGS_$host LDFLAGS_HOST=LDFLAGS_$host
         GCCONFFLAGS_MODE=GCCONFFLAGS_$mode CFLAGS_MODE=CFLAGS_$mode LDFLAGS_MODE=LDFLAGS_$mode
@@ -237,16 +232,15 @@ if [[ $1 == tizen_obs_arm ]]; then
     build_gc_for_tizen_obs arm $2
 elif [[ $1 == tizen_obs_i386 ]]; then
     build_gc_for_tizen_obs i386 $2
-
 else # full build
+    build_gc_for_linux
 
-build_gc_for_linux
-
-if [ -z "$TIZEN_SDK_HOME" ]; then
-    echo "Do not build for Tizen"
-else
-    echo "TIZEN_SDK_HOME env is ...""$TIZEN_SDK_HOME"
-    build_gc_for_tizen
+    if [ -z "$TIZEN_SDK_HOME" ]; then
+        echo "Do not build for Tizen"
+    else
+        echo "TIZEN_SDK_HOME env is ...""$TIZEN_SDK_HOME"
+        build_gc_for_tizen
+    fi
 fi
 
-fi
+cd $ROOT
