@@ -7760,6 +7760,14 @@ void StyleResolver::apply(Element* element,
                 style->setGridTemplateAreas(cssValues[k].stringValue());
             }
             break;
+        case CSSStyleValuePair::KeyKind::GridArea:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::StringValueKind) {
+                style->setGridArea(cssValues[k].stringValue());
+            } else {
+                style->setGridArea(nullptr);
+            }
+            break;
         case CSSStyleValuePair::KeyKind::WillChange:
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Inherit:
@@ -11347,6 +11355,27 @@ bool CSSStyleValuePair::updateValueGridColumnGap(Document* document,
 
     CSSLength length = CSSLength(str, number);
     setLengthValue(length);
+
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueGridArea(Document* document,
+                                            const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const char* token = tokens[0].data();
+    int32_t val = 0;
+    if (TOKEN_IS_STRING("auto")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+    } else {
+        // This part stores the name of area.
+        String* str = String::createASCIIString(token);
+        setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        setStringValue(str);
+    }
 
     return true;
 }

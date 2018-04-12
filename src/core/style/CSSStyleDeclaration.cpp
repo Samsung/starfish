@@ -1570,6 +1570,18 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setStringValue(areas);
         }
         addValuePair(p);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::GridArea) {
+        CSSStyleValuePair p;
+        String* area = style->gridArea();
+        if (area) {
+            p.setKeyKind(CSSStyleValuePair::KeyKind::GridArea);
+            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            p.setStringValue(area);
+        } else {
+            p.setKeyKind(CSSStyleValuePair::KeyKind::GridArea);
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
     } else if (keyKind == CSSStyleValuePair::KeyKind::TextOverflow) {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TextOverflow);

@@ -1918,6 +1918,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->gridArea() != oldStyle->gridArea()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::GridArea] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     return damage;
 }
 
