@@ -255,6 +255,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Fill-Rule
         // Word-Wrap
         // Mask-Size
+        // Grid-Area
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font-size", 9) == 0) {
@@ -297,6 +298,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'w':
             if (memcmp(data, "word-wrap", 9) == 0) {
                 return CSSStyleKind::WordWrap;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "grid-area", 9) == 0) {
+                return CSSStyleKind::GridArea;
             }
             break;
         }
@@ -1228,6 +1234,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'w':
             if (memcmp(data, "wordWrap", 8) == 0) {
                 return CSSStyleKind::WordWrap;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "gridArea", 8) == 0) {
+                return CSSStyleKind::GridArea;
             }
             break;
         }

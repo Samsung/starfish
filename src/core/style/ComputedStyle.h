@@ -133,6 +133,7 @@ class RareComputedStyleData : public gc {
         GridRowGap,
         GridColumnGap,
         GridTemplateAreas,
+        GridArea,
 
         WillChange,
     };
@@ -415,6 +416,7 @@ public:
     GETTER_VALUE(float, floatValue, opacity, Opacity);
     GETTER_VALUE(String*, stringValue, d, D);
     GETTER_VALUE(String*, stringValue, gridTemplateAreas, GridTemplateAreas);
+    GETTER_VALUE(String*, stringValue, gridArea, GridArea);
 
     GETTER_VALUE(int32_t, int32Value, gridRowStart, GridRowStart);
     GETTER_VALUE(int32_t, int32Value, gridRowEnd, GridRowEnd);
@@ -1571,6 +1573,25 @@ public:
         Nullable<String*> areas = m_rareComputedStyleData.gridTemplateAreas();
         if (areas.hasValue()) {
             return areas.getValue();
+        }
+
+        return String::emptyString;
+    }
+
+    void setGridArea(String* area)
+    {
+        *m_rareComputedStyleData.ensureGridArea() = area;
+    }
+
+    String* gridArea()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return String::emptyString;
+        }
+
+        Nullable<String*> area = m_rareComputedStyleData.gridArea();
+        if (area.hasValue()) {
+            return area.getValue();
         }
 
         return String::emptyString;
