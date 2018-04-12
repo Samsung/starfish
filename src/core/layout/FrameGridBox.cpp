@@ -739,7 +739,7 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                         }
                     }
                 } else {
-                    if (!isFixed) {
+                    if (isFixed) {
                         LayoutUnit diff =
                             (sumWidth - contentWidth) / (end - start);
                         for (size_t i = start; i <= end - 1; i++) {
