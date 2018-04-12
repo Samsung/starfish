@@ -667,6 +667,11 @@ enum WidthHeightKeywordValue {
     FitContentValue,
 };
 
+enum BoxDecorationBreakValue {
+    SliceBoxDecorationBreakValue,
+    CloneBoxDecorationBreakValue,
+};
+
 class ValueList;
 class ValuePair;
 class FontFaceSrcData;
@@ -708,6 +713,7 @@ class CSSStyleDeclaration;
     F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y")             \
     F(BackgroundPositionX, backgroundPositionX, "background-position-x")       \
     F(BackgroundPositionY, backgroundPositionY, "background-position-y")       \
+    F(BoxDecorationBreak, boxDecorationBreak, "box-decoration-break")          \
     F(CounterReset, counterReset, "counter-reset")                             \
     F(CounterIncrement, counterIncrement, "counter-increment")                 \
     F(LineHeight, lineHeight, "line-height")                                   \
@@ -1079,6 +1085,7 @@ public:
         VisibilityValueKind,
         UnicodeBidiValueKind,
         BoxSizingValueKind,
+        BoxDecorationBreakValueKind,
 
         // flex
         FlexDirectionValueKind,
@@ -1107,7 +1114,6 @@ public:
 
         // object-fit
         ObjectFitValueKind,
-        ObjectPositionValueKind,
 
         ListStylePositionValueKind,
         CounterFunctionValueKind,
@@ -1748,6 +1754,12 @@ public:
         return m_value.m_cssImage;
     }
 
+    BoxDecorationBreakValue boxDecorationBreakValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == BoxDecorationBreakValueKind);
+        return m_value.m_boxDecorationBreakValue;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1823,6 +1835,7 @@ public:
         WidthHeightKeywordValue m_widthHeightKeywordValue;
         PointerEventsValue m_pointerEventsValue;
         CSSImage* m_cssImage;
+        BoxDecorationBreakValue m_boxDecorationBreakValue;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2133,6 +2146,11 @@ public:
             : m_cssImage(v)
         {
         }
+
+        ValueData(BoxDecorationBreakValue v)
+            : m_boxDecorationBreakValue(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2353,6 +2371,12 @@ public:
     {
         m_valueKind = CSSStyleValuePair::CSSImageValueKind;
         m_value.m_cssImage = val;
+    }
+
+    void setBoxDecorationBreakValue(BoxDecorationBreakValue v)
+    {
+        m_valueKind = BoxDecorationBreakValueKind;
+        m_value.m_boxDecorationBreakValue = v;
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \
