@@ -407,7 +407,7 @@ public:
 
         FrameBox* self = sCtx->owner();
 
-        {
+        if (self->style()->position() != FixedPositionValue) {
             bool needsRestore = false;
             Frame* s = self->layoutParent();
             while (s) {
@@ -1198,6 +1198,15 @@ void StackingContext::paintStackingContext(
         canvas->setVisible(true);
     }
 
+    std::unique_ptr<CanvasStateRestorer> canvasStateRestorerForFixedLayer;
+    if (needsPainting) {
+        if (m_owner->style()->position() == PositionValue::FixedPositionValue) {
+            canvasStateRestorerForFixedLayer.reset(
+                new CanvasStateRestorer(canvas, this, parent()->owner()));
+        }
+        m_owner->paintBackgroundAndBorders(canvas);
+    }
+
     if (owner()->isAbsolutePositioned()) {
         RectData* rect = owner()->style()->clip();
         if (rect) {
@@ -1232,9 +1241,6 @@ void StackingContext::paintStackingContext(
                     ->paintWindowBackground(canvas);
             }
         }
-    }
-    if (needsPainting) {
-        m_owner->paintBackgroundAndBorders(canvas);
     }
 
     if (!hasStackingBuffer && owner()->shouldApplyOverflow()) {
