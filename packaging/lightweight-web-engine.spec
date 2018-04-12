@@ -55,8 +55,6 @@ ExclusiveArch: %arm
 BuildRequires: make
 BuildRequires: cmake
 BuildRequires: ninja
-BuildRequires: web-widget-js
-BuildRequires: web-widget-js-devel
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(evas)
 BuildRequires: pkgconfig(ecore-evas)
@@ -101,9 +99,8 @@ lightweight-web-engine development headers
 %setup -q
 
 %build
-cd third_party/libtuv
-make
-cd -
+
+./build_third_party.sh arm
 
 %if "%{tizen_product}" == "tv"
 %define target tv
