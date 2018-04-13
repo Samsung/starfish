@@ -265,3 +265,6 @@ test/cairo/internal-test/css/text/text-decoration-color-001a.html
 test/cairo/internal-test/css/text/text-decoration-line-001.html
 test/cairo/internal-test/css/text/text-decoration-001.html
 test/cairo/internal-test/css/text/text-overflow-001.html
+test/cairo/internal-test/dom/HTMLAnchorElement01.html
+test/cairo/internal-test/dom/HTMLAnchorElement02.html
+test/cairo/internal-test/dom/HTMLAnchorElement03.html

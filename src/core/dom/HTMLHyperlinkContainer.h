@@ -42,8 +42,14 @@ public:
     String* host();
     void setHost(String* host);
 
+    String* hostname();
+    void setHostname(String* hostname);
+
     String* pathname();
     void setPathname(String* host);
+
+    String* port();
+    void setPort(String* port);
 
     String* protocol();
     void setProtocol(String* protocol);
