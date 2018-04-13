@@ -66,6 +66,7 @@ class CSSStyleDeclaration : public ScriptWrappable {
 
 public:
     enum Stage { resolveStyle, frameTreeBuild, layout };
+    static CSSStyleValuePair lengthToCSSStyleValue(Length len);
 
     CSSStyleDeclaration(Element* element)
         : ScriptWrappable(this)

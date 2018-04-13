@@ -18,68 +18,46 @@
  */
 
 #include "StarFishConfig.h"
-#include "core/style/CSSImage.h"
-#include "core/style/CSSGradientValue.h"
+#include "core/style/ImageValue.h"
+#include "core/style/GradientData.h"
 
 namespace StarFish {
 
-String* CSSImage::urlValue() const
+String* ImageValue::urlValue() const
 {
     STARFISH_ASSERT(m_valueType.isURL());
     return m_valueData.m_url;
 }
 
-CSSGradientValue* CSSImage::gradientValue() const
+GradientData* ImageValue::gradientValue() const
 {
     STARFISH_ASSERT(m_valueType.isGradient());
     return m_valueData.m_gradient;
 }
 
-String* CSSImage::toString() const
-{
-    switch (m_valueType.m_type) {
-    case CSSImageValueType::ValueType::URL: {
-        StringBuilder builder;
-        builder.appendString("url(\"");
-        builder.appendString(m_valueData.m_url);
-        builder.appendString("\")");
-        return builder.finalize();
-    } break;
-    case CSSImageValueType::ValueType::Gradient:
-        return m_valueData.m_gradient->toString();
-        break;
-    case CSSImageValueType::ValueType::None:
-        return String::createASCIIString("none");
-        break;
-    default:
-        return String::emptyString;
-        break;
-    }
-}
-
-void CSSImage::applyOriginToURL(const ResourceURL* origin)
+void ImageValue::applyOriginToURL(const ResourceURL* origin)
 {
     STARFISH_ASSERT(m_valueType.isURL());
     m_valueData.m_url = ResourceURL::mergeDocumentURIWithURIString(
         origin->baseURI(), m_valueData.m_url);
 }
 
-bool CSSImage::operator==(const CSSImage& other) const
+bool ImageValue::operator==(const ImageValue& other) const
 {
     if (m_valueType != other.m_valueType) {
         return false;
     }
 
     if (m_valueType == other.m_valueType &&
-        m_valueType == CSSImageValueType::ValueType::None) {
+        m_valueType == ImageValueType::ValueType::None) {
         return true;
     }
 
     switch (m_valueType.m_type) {
-    case CSSImageValueType::ValueType::URL:
+    case ImageValueType::ValueType::URL:
         return m_valueData.m_url->equals(other.m_valueData.m_url);
         break;
-    case CSSImageValueType::ValueType::Gradient:
+    case ImageValueType::ValueType::Gradient:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return false;
         break;

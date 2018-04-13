@@ -34,7 +34,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/modules/canvas/ShadowBlur.h"
-#include "core/style/CSSGradientValue.h"
+#include "core/style/GradientData.h"
 
 namespace StarFish {
 
@@ -1599,14 +1599,14 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                 LayoutRect(paintingRect.x(), paintingRect.y(),
                            paintingRect.width(), paintingRect.height());
 
-            CSSImage* cssImage = style->backgroundImage(idx);
+            ImageValue* imageValue = style->backgroundImage(idx);
 
-            if (cssImage->gradientValue()->type() ==
+            if (imageValue->gradientValue()->type() ==
                 CSSGradientType::LinearGradient) {
                 canvas->drawLinearGradient(
                     gradientRect,
-                    cssImage->gradientValue()->asCSSLinearGradientValue());
-            } else if (cssImage->gradientValue()->type() ==
+                    imageValue->gradientValue()->asLinearGradientData());
+            } else if (imageValue->gradientValue()->type() ==
                        CSSGradientType::RadialGradient) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }

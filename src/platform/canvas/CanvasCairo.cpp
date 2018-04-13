@@ -25,7 +25,7 @@
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
 
 #include "core/modules/canvas/Canvas.h"
-#include "core/style/CSSGradientValue.h"
+#include "core/style/GradientData.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/canvas/ShadowBlur.h"
@@ -739,7 +739,7 @@ public:
     }
 
     virtual void drawLinearGradient(const LayoutRect& rt,
-                                    CSSLinearGradientValue* gradient)
+                                    LinearGradientData* gradient)
     {
         STARFISH_ASSERT(m_canvas);
         if (!lastState().m_visible) {

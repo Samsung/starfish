@@ -2849,8 +2849,6 @@ String* CSSStyleValuePair::toString() const
         case NoCloseQuoteValue:
             return String::fromUTF8("no-close-quote");
         }
-    case CSSStyleValuePair::ValueKind::CSSImageValueKind:
-        return CSSImageValue()->toString();
     case CSSStyleValuePair::ValueKind::BoxDecorationBreakValueKind:
         switch (boxDecorationBreakValue()) {
         case CloneBoxDecorationBreakValue:
@@ -5305,8 +5303,8 @@ void StyleResolver::apply(Element* element,
                  CSSStyleValuePair::ValueKind::Initial) ||
                 (cssValues[k].valueKind() ==
                  CSSStyleValuePair::ValueKind::Unset)) {
-                CSSImage* cssimg = new CSSImage();
-                style->setBackgroundImage(cssimg);
+                ImageValue* image = new ImageValue();
+                style->setBackgroundImage(image);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
                 style->setBackgroundImage(parentStyle->backgroundImage());
@@ -5317,13 +5315,20 @@ void StyleResolver::apply(Element* element,
                 for (unsigned int i = 0; i < list->size(); i++) {
                     const CSSStyleValuePair& item = (*list)[i];
                     auto vKind = item.valueKind();
-                    if (vKind ==
-                        CSSStyleValuePair::ValueKind::CSSImageValueKind) {
-                        CSSImage* cssImage = item.CSSImageValue();
-                        if (cssImage->type().isURL()) {
-                            cssImage->applyOriginToURL(origin);
-                        }
-                        style->setBackgroundImage(item.CSSImageValue(), i);
+                    ImageValue* image;
+                    if (vKind == CSSStyleValuePair::ValueKind::None ||
+                        vKind == CSSStyleValuePair::ValueKind::Initial) {
+                        image = new ImageValue();
+                        style->setBackgroundImage(image, i);
+                    } else if (vKind ==
+                               CSSStyleValuePair::ValueKind::UrlValueKind) {
+                        image = new ImageValue(item.urlValue(origin));
+                        style->setBackgroundImage(image, i);
+                    } else if (vKind == CSSStyleValuePair::ValueKind::
+                                            GradientValueKind) {
+                        image = new ImageValue(
+                            item.gradientValue()->convertToGradientData());
+                        style->setBackgroundImage(image, i);
                     } else if (vKind == CSSStyleValuePair::ValueKind::Inherit) {
                         style->setBackgroundImage(
                             parentStyle->backgroundImage(), i);
@@ -9441,22 +9446,7 @@ bool CSSStyleValuePair::updateValueUnitWordSpacing(const CSSTokenValue& value)
 bool CSSStyleValuePair::updateValueUnitCSSImage(const CSSTokenValue& value)
 {
     // <image> = <url> | <image-list> | <element-reference>  | <gradient>
-    CSSStyleValuePair pair;
-    if (pair.updateValueUnitUrlOrNone(value)) {
-        if (pair.valueKind() == CSSStyleValuePair::ValueKind::None) {
-            CSSImage* cssImage = new CSSImage();
-            setCSSImage(cssImage);
-        } else {
-            CSSImage* cssImage = new CSSImage(pair.urlStringValue());
-            setCSSImage(cssImage);
-        }
-        return true;
-    } else if (pair.updateValueUnitGradient(value)) {
-        CSSImage* cssImage = new CSSImage(pair.gradientValue());
-        setCSSImage(cssImage);
-        return true;
-    }
-    return false;
+    return updateValueUnitUrlOrNone(value) || updateValueUnitGradient(value);
 }
 
 bool CSSStyleValuePair::updateValueLetterSpacing(Document* document,
@@ -9782,7 +9772,7 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
         }
 
         while (parser.consumeWhitespaces() && *(parser.curPos()) != ')') {
-            ColorStop* cs = new ColorStop();
+            CSSColorStop* cs = new CSSColorStop();
 
             while (parser.consumeWhitespaces() && *(parser.curPos()) != ',' &&
                    *(parser.curPos()) != ')') {
@@ -9800,14 +9790,7 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                     return false;
                 }
 
-                Unit::Color c;
-                if (color.valueKind() ==
-                    CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                    c = NamedColor::namedColorToColor(color.namedColorValue());
-                } else {
-                    c = color.colorValue();
-                }
-                cs->setColor(c);
+                cs->setColor(color);
 
                 uint8_t option = CSSPropertyParser::AllowNegative |
                                  CSSPropertyParser::AllowPercent;
@@ -9819,23 +9802,13 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                     if (!length.updateValueUnitLength(value, option)) {
                         return false;
                     }
-                    if (length.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Length) {
-                        cs->setOffset(
-                            ColorStopOffsetValue(length.cssLengthValue()));
-                    } else if (length.valueKind() ==
-                               CSSStyleValuePair::ValueKind::Percentage) {
-                        cs->setOffset(
-                            ColorStopOffsetValue(length.percentageValue()));
-                    } else {
-                        return false;
-                    }
+                    cs->setOffset(length);
                 }
-                linearGradientValue->colorStopList().push_back(cs);
+                linearGradientValue->cssColorStopList().push_back(cs);
             }
             parser.consumeIfNext(',');
         }
-        if (linearGradientValue->colorStopList().size() < 2) {
+        if (linearGradientValue->cssColorStopList().size() < 2) {
             return false;
         }
         m_value.m_gradientValue = linearGradientValue;

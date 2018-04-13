@@ -168,7 +168,7 @@ public:
     }
 
     virtual void drawLinearGradient(const LayoutRect& rt,
-                                    CSSLinearGradientValue* gradient)
+                                    LinearGradientData* gradient)
     {
     }
 

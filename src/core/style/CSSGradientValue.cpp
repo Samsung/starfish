@@ -18,93 +18,10 @@
  */
 
 #include "StarFishConfig.h"
-#include "CSSGradientValue.h"
+#include "core/style/CSSGradientValue.h"
+#include "core/style/GradientData.h"
 
 namespace StarFish {
-
-bool CSSLinearGradientValue::computeEndPoints(const int width, const int height,
-                                              float& x1, float& y1, float& x2,
-                                              float& y2)
-{
-    if (m_sc == 0) {
-        float angle = m_angle.toDegreeValue();
-
-        angle = fmodf(angle, 360);
-        if (angle < 0)
-            angle += 360;
-
-        if (!angle) {
-            x1 = 0;
-            y1 = height;
-            x2 = 0;
-            y2 = 0;
-            return true;
-        }
-
-        if (angle == 90) {
-            x1 = 0;
-            y1 = 0;
-
-            x2 = width;
-            y2 = 0;
-            return true;
-        }
-
-        if (angle == 180) {
-            x1 = 0;
-            y1 = 0;
-            x2 = 0;
-            y2 = height;
-            return true;
-        }
-
-        if (angle == 270) {
-            x1 = width;
-            y1 = 0;
-            x2 = 0;
-            y2 = 0;
-            return true;
-        }
-
-        float slope = tan(convertFromDegToRad(90 - angle));
-
-        float perpendicularSlope = -1 / slope;
-
-        float halfHeight = height / 2;
-        float halfWidth = width / 2;
-
-        float cx, cy;
-
-        if (angle < 90) {
-            cx = halfWidth;
-            cy = halfHeight;
-        } else if (angle < 180) {
-            cx = halfWidth;
-            cy = -halfHeight;
-        } else if (angle < 270) {
-            cx = -halfWidth;
-            cy = -halfHeight;
-        } else {
-            cx = -halfWidth;
-            cy = halfHeight;
-        }
-
-        // Compute c (of y = mx + c) using the corner point.
-        float c = cy - perpendicularSlope * cx;
-        float ex = c / (slope - perpendicularSlope);
-        float ey = perpendicularSlope * ex + c;
-
-        x2 = halfWidth + ex;
-        y2 = halfHeight - ey;
-
-        x1 = halfWidth - ex;
-        y1 = halfHeight + ey;
-        return true;
-    } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return false;
-    }
-}
 
 String* CSSLinearGradientValue::toString()
 {
@@ -129,16 +46,59 @@ String* CSSLinearGradientValue::toString()
         }
     }
 
-    for (auto cs : m_colorStopList) {
+    for (auto cs : m_cssColorStopList) {
         result.appendString(", ");
         result.appendString(cs->color().toString());
-        result.appendChar(' ');
-        result.appendString(cs->offset().toString());
+
+        if (cs->offset().valueKind() != CSSStyleValuePair::ValueKind::None) {
+            result.appendChar(' ');
+            result.appendString(cs->offset().toString());
+        }
     }
 
     result.appendChar(')');
 
     return result.finalize();
+}
+
+GradientData* CSSLinearGradientValue::convertToGradientData()
+{
+    LinearGradientData* gradient = new LinearGradientData();
+
+    if (m_sc == 0) {
+        gradient->setAngle(m_angle.toDegreeValue());
+    } else {
+        gradient->setSideOrConter(m_sc);
+    }
+
+    auto& colorStopList = gradient->colorStopList();
+
+    for (auto item : m_cssColorStopList) {
+        ColorStop* cs = new ColorStop();
+        auto color = item->color();
+        if (color.valueKind() ==
+            CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+            Unit::Color c =
+                NamedColor::namedColorToColor(color.namedColorValue());
+            cs->setColor(c);
+        } else {
+            Unit::Color c = color.colorValue();
+            cs->setColor(c);
+        }
+
+        auto offset = item->offset();
+        if (offset.valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
+            cs->setOffset(ColorStopOffsetValue(offset.percentageValue()));
+        } else if (offset.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+            cs->setOffset(ColorStopOffsetValue(offset.lengthValue()));
+        } else if (offset.valueKind() == CSSStyleValuePair::ValueKind::None) {
+            cs->setOffset(ColorStopOffsetValue());
+        }
+
+        colorStopList.push_back(cs);
+    }
+
+    return gradient;
 }
 
 } /* namespace StarFish */

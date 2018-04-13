@@ -1505,7 +1505,7 @@ public:
     }
 
     virtual void drawLinearGradient(const LayoutRect& rt,
-                                    CSSLinearGradientValue* gradient)
+                                    LinearGradientData* gradient)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }

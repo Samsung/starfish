@@ -20,12 +20,11 @@
 #ifndef __StarFishCSSGradientValue__
 #define __StarFishCSSGradientValue__
 
-#include "core/style/CSSAngle.h"
-#include "core/style/CSSLength.h"
-
+#include "core/style/Style.h"
 namespace StarFish {
 
 class CSSLinearGradientValue;
+class GradientData;
 
 enum class CSSGradientType { LinearGradient, RadialGradient };
 
@@ -36,179 +35,44 @@ enum SideOrConer {
     toBottom = 1 << 3
 };
 
-class ColorStopOffsetType {
+class CSSColorStop : public gc {
 public:
-    enum class ValueType { None, Invalid, Length, Percentage };
-
-    STARFISH_MAKE_STACK_ALLOCATED();
-
-    ColorStopOffsetType()
-        : m_type(ValueType::None)
-    {
-    }
-
-    ColorStopOffsetType(ValueType type)
-        : m_type(type)
-    {
-    }
-
-    bool isNone() const
-    {
-        return m_type == ValueType::None;
-    }
-
-    bool isInvalid() const
-    {
-        return m_type == ValueType::Invalid;
-    }
-
-    bool isLength() const
-    {
-        return m_type == ValueType::Length;
-    }
-
-    bool isPercentage() const
-    {
-        return m_type == ValueType::Percentage;
-    }
-
-    bool operator==(ColorStopOffsetType& other) const
-    {
-        return m_type == other.m_type;
-    }
-
-    bool operator!=(ColorStopOffsetType& other) const
-    {
-        return !(operator==(other));
-    }
-    ValueType m_type;
-};
-
-class ColorStopOffsetValue {
-public:
-    union ColorStopOffsetData {
-        float m_numberData;
-        CSSLength m_lengthData;
-
-        ColorStopOffsetData(float data)
-            : m_numberData(data)
-        {
-        }
-
-        ColorStopOffsetData(CSSLength data)
-            : m_lengthData(data)
-        {
-        }
-    };
-
-    ColorStopOffsetValue()
-        : m_type(ColorStopOffsetType::ValueType::None)
-        , m_data(0)
-    {
-    }
-
-    ColorStopOffsetValue(ColorStopOffsetType::ValueType type)
-        : m_type(type)
-        , m_data(0)
-    {
-    }
-
-    ColorStopOffsetValue(float data)
-        : m_type(ColorStopOffsetType::ValueType::Percentage)
-        , m_data(data)
-    {
-    }
-
-    ColorStopOffsetValue(CSSLength data)
-        : m_type(ColorStopOffsetType::ValueType::Length)
-        , m_data(data)
-    {
-    }
-
-    void setType(ColorStopOffsetType::ValueType type)
-    {
-        m_type = type;
-    }
-
-    ColorStopOffsetType type() const
-    {
-        return m_type;
-    }
-
-    void setValue(ColorStopOffsetData data)
-    {
-        m_data = data;
-    }
-
-    float percentageValue() const
-    {
-        STARFISH_ASSERT(m_type.isPercentage());
-        return m_data.m_numberData;
-    }
-
-    CSSLength lengthValue() const
-    {
-        STARFISH_ASSERT(m_type.isLength());
-        return m_data.m_lengthData;
-    }
-
-    String* toString()
-    {
-        if (m_type.isLength()) {
-            return m_data.m_lengthData.toString();
-        } else if (m_type.isPercentage()) {
-            StringBuilder builder;
-            builder.appendString(
-                String::fromFloat(m_data.m_numberData * 100.f));
-            builder.appendChar('%');
-            return builder.finalize();
-        }
-        return String::emptyString;
-    }
-
-private:
-    ColorStopOffsetType m_type;
-    ColorStopOffsetData m_data;
-};
-
-class ColorStop : public gc {
-public:
-    ColorStop()
+    CSSColorStop()
         : m_color()
         , m_offset()
     {
     }
 
-    Unit::Color color()
+    CSSStyleValuePair color()
     {
         return m_color;
     }
 
-    void setColor(Unit::Color color)
+    void setColor(CSSStyleValuePair& color)
     {
         m_color = color;
     }
 
-    ColorStopOffsetValue offset()
+    CSSStyleValuePair offset()
     {
         return m_offset;
     }
 
-    void setOffset(ColorStopOffsetValue offset)
+    void setOffset(CSSStyleValuePair& offset)
     {
         m_offset = offset;
     }
 
 private:
-    Unit::Color m_color;
-    ColorStopOffsetValue m_offset;
+    CSSStyleValuePair m_color;
+    CSSStyleValuePair m_offset;
 };
 
 class CSSGradientValue : public gc {
 public:
     CSSGradientValue(CSSGradientType gradientType)
         : m_gradientType(gradientType)
-        , m_colorStopList()
+        , m_cssColorStopList()
     {
     }
 
@@ -217,22 +81,17 @@ public:
         return m_gradientType;
     }
 
-    CSSLinearGradientValue* asCSSLinearGradientValue()
-    {
-        STARFISH_ASSERT(m_gradientType == CSSGradientType::LinearGradient);
-        return (CSSLinearGradientValue*)this;
-    }
-
     virtual String* toString() = 0;
+    virtual GradientData* convertToGradientData() = 0;
 
-    GCVector<ColorStop*>& colorStopList()
+    GCVector<CSSColorStop*>& cssColorStopList()
     {
-        return m_colorStopList;
+        return m_cssColorStopList;
     }
 
 protected:
     CSSGradientType m_gradientType;
-    GCVector<ColorStop*> m_colorStopList;
+    GCVector<CSSColorStop*> m_cssColorStopList;
 };
 
 class CSSLinearGradientValue : public CSSGradientValue {
@@ -263,11 +122,8 @@ public:
     {
         return m_sc;
     }
-
-    bool computeEndPoints(const int width, const int height, float& x1,
-                          float& y1, float& x2, float& y2);
-
     virtual String* toString() override;
+    virtual GradientData* convertToGradientData() override;
 
 private:
     CSSAngle m_angle;

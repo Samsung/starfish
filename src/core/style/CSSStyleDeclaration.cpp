@@ -34,12 +34,13 @@
 #include "core/style/CSSStyleLookupTrie.h"
 #include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleSheet.h"
+#include "core/style/GradientData.h"
 #include "core/style/StyleRule.h"
 
 namespace StarFish {
 
 // helper function to convert Length to CSSStyleValuePair format
-static CSSStyleValuePair lengthToCSSStyleValue(Length len)
+CSSStyleValuePair CSSStyleDeclaration::lengthToCSSStyleValue(Length len)
 {
     CSSStyleValuePair p;
     if (len.isFixed()) {
@@ -753,7 +754,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
-            item.setCSSImage(style->backgroundImage(i));
+            auto imageValue = style->backgroundImage();
+            const auto& type = imageValue->type();
+            if (type.isNone()) {
+                item.setStringValue(String::emptyString);
+            } else if (type.isURL()) {
+                item.setUrlValue(imageValue->urlValue());
+            } else if (type.isGradient()) {
+                item.setGradientValue(
+                    imageValue->gradientValue()->convertToCSSGradientValue());
+            }
             bgImageValues->push_back(item);
         }
         bgImage.setValueList(bgImageValues);
