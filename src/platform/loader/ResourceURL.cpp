@@ -843,14 +843,18 @@ String* ResourceURL::host()
 
 ResourceURL* ResourceURL::setHost(String* newHost)
 {
-    STARFISH_ASSERT(newHost->length());
+    if (!newHost || newHost->isEmpty()) {
+        return this;
+    }
     size_t start =
         (m_passwordEnd == m_usernameStart) ? m_passwordEnd : m_passwordEnd + 1;
     StringBuilder builder;
     builder.appendString(m_urlString->substring(0, start));
     builder.appendString(newHost);
-    builder.appendString(
-        m_urlString->substring(m_portEnd, m_urlString->length() - m_portEnd));
+    if (newHost->find(":") == SIZE_MAX) {
+        builder.appendString(m_urlString->substring(
+            m_portEnd, m_urlString->length() - m_portEnd));
+    }
     return new ResourceURL(builder.finalize());
 }
 
@@ -863,8 +867,18 @@ String* ResourceURL::hostname()
 
 ResourceURL* ResourceURL::setHostname(String* newHostname)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return new ResourceURL(m_urlString);
+    if (!newHostname || newHostname->isEmpty()) {
+        return this;
+    }
+
+    size_t start =
+        (m_passwordEnd == m_usernameStart) ? m_passwordEnd : m_passwordEnd + 1;
+    StringBuilder builder;
+    builder.appendString(m_urlString->substring(0, start));
+    builder.appendString(newHostname);
+    builder.appendString(
+        m_urlString->substring(m_portEnd, m_urlString->length() - m_portEnd));
+    return new ResourceURL(builder.finalize());
 }
 
 String* ResourceURL::port()

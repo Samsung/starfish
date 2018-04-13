@@ -65,6 +65,31 @@ void HTMLHyperlinkContainer::setHost(String* host)
     setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
 }
 
+String* HTMLHyperlinkContainer::hostname()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        return (new ResourceURL(hrefAttr.getValue()->trim(),
+                                document()->baseURL()->urlString()))
+            ->hostname();
+    }
+    return String::emptyString;
+}
+
+void HTMLHyperlinkContainer::setHostname(String* hostname)
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (!hrefAttr.hasValue()) {
+        return;
+    }
+    ResourceURL* resourceURL = new ResourceURL(
+        hrefAttr.getValue()->trim(), document()->baseURL()->urlString());
+    resourceURL = resourceURL->setHostname(hostname);
+    setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
+}
+
 String* HTMLHyperlinkContainer::pathname()
 {
     Nullable<String*> hrefAttr =
@@ -87,6 +112,31 @@ void HTMLHyperlinkContainer::setPathname(String* path)
     ResourceURL* resourceURL = new ResourceURL(
         hrefAttr.getValue()->trim(), document()->baseURL()->urlString());
     resourceURL = resourceURL->setPathname(path);
+    setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
+}
+
+String* HTMLHyperlinkContainer::port()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        return (new ResourceURL(hrefAttr.getValue()->trim(),
+                                document()->baseURL()->urlString()))
+            ->port();
+    }
+    return String::emptyString;
+}
+
+void HTMLHyperlinkContainer::setPort(String* port)
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (!hrefAttr.hasValue()) {
+        return;
+    }
+    ResourceURL* resourceURL = new ResourceURL(
+        hrefAttr.getValue()->trim(), document()->baseURL()->urlString());
+    resourceURL = resourceURL->setPort(port);
     setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
 }
 
