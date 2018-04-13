@@ -196,7 +196,7 @@ std::string ResourceError::GetDescription()
     return m_description;
 }
 
-WebView* WebView::Create()
+WebView* WebView::Create(void* win, int x, int y, int width, int height)
 {
     // elm_init(0, 0);
     // elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
@@ -204,8 +204,6 @@ WebView* WebView::Create()
     std::string screenShot;
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
-    int width = 1280, height = 720;
-    int x = 0, y = 0;
     int flag = 0;
     float scaleFactor = 1;
 
@@ -219,10 +217,9 @@ WebView* WebView::Create()
     std::string cacheDir(getenv("HOME"));
     cacheDir += "/Starfish-cache";
     StarFish::StarFish* starfish = new StarFish::StarFish(
-        (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
-        width, height, x, y, 1,
-        StarFish::String::createASCIIString("sans-serif"), info,
-        "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
+        (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", win, width,
+        height, x, y, 1, StarFish::String::createASCIIString("sans-serif"),
+        info, "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
         cacheDir.data(),
         StarFish::String::fromUTF8(customUserAgentString.data()),
         StarFish::String::fromUTF8(builtinPolyfillPathString.data()));

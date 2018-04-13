@@ -26,7 +26,7 @@
             'STARFISH_TIZEN_OBS',
             'STARFISH_ENABLE_DOMPARSER',
             'STARFISH_IGNORE_CROSS_ORIGIN',
-            'STARFISH_ENABLE_MULTIMEDIA',
+            # 'STARFISH_ENABLE_MULTIMEDIA',
             'TIZEN_DEVICE_API',
             'SIZE_MAX=0xffffffff',
             #'STARFISH_IGNORE_SSL_VERIFYPEER',
@@ -36,7 +36,11 @@
         ],
         # NOTE: specific #defines for each department
         # e.g., 'defines_tizen' + 'defines_custom_vd' = defines used by the compiler
+        'defines_custom_unified': [
+            'STARFISH_ENABLE_MULTIMEDIA',
+        ],
         'defines_custom_vd': [
+            'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_TIZEN_TV',
             #'STARFISH_ENABLE_AVPLAY',
             'STARFISH_ENABLE_TRANSPARENT_WINDOW',
@@ -148,9 +152,9 @@
                 ['platform=="tizen"', {
                     'include_dirs_extra': [
                         '<@(include_dirs_extra)',
-                        'third_party/deviceapi/src',
                         '/usr/include/dlog',
                         '/usr/include/location',
+                        'third_party/deviceapi/src',
                     ],
                     'cflags_extra': [
                     ],
@@ -359,7 +363,12 @@
                 'sources_extra': [
                     '<!@(find third_party/deviceapi/src -name *.cpp)',
                 ],
-            }],
+            }], 
+            ['platform=="tizen" and custom=="im"', {
+                'sources_extra': [
+                    '<!@(find third_party/deviceapi/src -name *.cpp)',
+                ],
+            }], 
             ['touchUi=="0" and backend=="efl_cairo"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO_HEADLESS',
