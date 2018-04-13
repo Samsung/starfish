@@ -8601,6 +8601,26 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             }
             damage = (ComputedStyleDamage)(
                 damage | compareStyle(element->style(), style, damagedKeys));
+
+// #define STARFISH_ENABLE_PRINT_STYLE_DAMAGE
+#if defined(STARFISH_ENABLE_PRINT_STYLE_DAMAGE)
+            if (damage) {
+                for (size_t i = 0; i < CSSStyleValuePair::KeyKindSize; i++) {
+                    if (damagedKeys[i]) {
+                        switch (i) {
+#define ADD_CSS_KEYKIND(Name, name, cssname)                              \
+    case CSSStyleValuePair::KeyKind::Name:                                \
+        STARFISH_LOG_INFO("element %p, %s damaged\n", element, #Name ""); \
+        break;
+                            FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
+#undef ADD_CSS_KEYKIND
+                        default:
+                            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                        }
+                    }
+                }
+            }
+#endif
         }
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageInherited) {

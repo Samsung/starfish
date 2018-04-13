@@ -608,7 +608,7 @@ private:
 
 bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
 {
-    if (!(a.m_image == b.m_image)) {
+    if (!(*a.m_image == *b.m_image)) {
         return false;
     }
 

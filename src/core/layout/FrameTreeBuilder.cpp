@@ -496,7 +496,7 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
 
 ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
     Node* parent, StyleResolver::PseudoElementType pseudoId,
-    ComputedStyle* parentStyle)
+    ComputedStyle* parentStyle, ComputedStyle* oldPseudoStyleIfHas)
 {
     STARFISH_ASSERT(pseudoId !=
                     StyleResolver::PseudoElementType::PseudoElementNone);
@@ -520,7 +520,7 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
         style->setDisplay(DisplayValue::InlineDisplayValue);
         style->setPosition(PositionValue::StaticPositionValue);
     }
-    style->loadResources(parent);
+    style->loadResources(parent, oldPseudoStyleIfHas);
     style->arrangeStyleValues(parentStyle, parent);
 
     return style;

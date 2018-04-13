@@ -2889,7 +2889,8 @@ public:
 
     ComputedStyle* pseudoStyle(Element* containerElement,
                                StyleResolver::PseudoElementType pid,
-                               ComputedStyle* stickyInheritFrom = nullptr);
+                               ComputedStyle* stickyInheritFrom = nullptr,
+                               ComputedStyle* oldPseudoStyleIfHas = nullptr);
     bool seenPseudoElement(StyleResolver::PseudoElementType pseudoId)
     {
         if (pseudoId == StyleResolver::PseudoElementType::PseudoElementBefore) {

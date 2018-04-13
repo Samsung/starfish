@@ -1157,6 +1157,12 @@ void StackingContext::paintStackingContext(
 
     canvas->save();
 
+    std::unique_ptr<CanvasStateRestorer> canvasStateRestorerForFixedLayer;
+    if (m_owner->style()->position() == PositionValue::FixedPositionValue) {
+        canvasStateRestorerForFixedLayer.reset(
+            new CanvasStateRestorer(canvas, this, parent()->owner()));
+    }
+
     if (!hasStackingBuffer && owner()->style()->opacity() != 1) {
         canvas->beginOpacityLayer(owner()->style()->opacity());
     }
@@ -1198,15 +1204,6 @@ void StackingContext::paintStackingContext(
         canvas->setVisible(true);
     }
 
-    std::unique_ptr<CanvasStateRestorer> canvasStateRestorerForFixedLayer;
-    if (needsPainting) {
-        if (m_owner->style()->position() == PositionValue::FixedPositionValue) {
-            canvasStateRestorerForFixedLayer.reset(
-                new CanvasStateRestorer(canvas, this, parent()->owner()));
-        }
-        m_owner->paintBackgroundAndBorders(canvas);
-    }
-
     if (owner()->isAbsolutePositioned()) {
         RectData* rect = owner()->style()->clip();
         if (rect) {
@@ -1215,6 +1212,11 @@ void StackingContext::paintStackingContext(
                 rect->right().numberData(), rect->bottom().numberData()));
         }
     }
+
+    if (needsPainting) {
+        m_owner->paintBackgroundAndBorders(canvas);
+    }
+
     // Within each stacking context, the following layers are painted in
     // back-to-front order:
     // the background and borders of the element forming the stacking context.

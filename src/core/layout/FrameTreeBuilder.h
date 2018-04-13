@@ -162,7 +162,7 @@ public:
                                     FrameTreeBuilderContext& ctx);
     static ComputedStyle* pseudoStyleForElementInternal(
         Node* node, StyleResolver::PseudoElementType pseudoId,
-        ComputedStyle* parentStyle);
+        ComputedStyle* parentStyle, ComputedStyle* oldPseudoStyleIfHas);
 
     static Frame* buildSVGFrameTree(SVGElement* svgElement);
 #ifdef STARFISH_ENABLE_TEST

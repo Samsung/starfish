@@ -2039,7 +2039,7 @@ void ComputedStyle::removeCachedPseudoStyle(
 
 ComputedStyle* ComputedStyle::pseudoStyle(
     Element* containerElement, StyleResolver::PseudoElementType pseudoType,
-    ComputedStyle* stickyInheritFrom)
+    ComputedStyle* stickyInheritFrom, ComputedStyle* oldPseudoStyleIfHas)
 {
     if (!seenPseudoElement(pseudoType)) {
         return nullptr;
@@ -2049,7 +2049,7 @@ ComputedStyle* ComputedStyle::pseudoStyle(
     if (!cs) {
         cs = FrameTreeBuilder::pseudoStyleForElementInternal(
             containerElement, pseudoType,
-            stickyInheritFrom ? stickyInheritFrom : this);
+            stickyInheritFrom ? stickyInheritFrom : this, oldPseudoStyleIfHas);
         addCachedPseudoStyle(cs);
 
         m_styleDamageSource = (StyleResolver::StyleDamageSource)(

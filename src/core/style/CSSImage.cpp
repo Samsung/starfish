@@ -70,6 +70,11 @@ bool CSSImage::operator==(const CSSImage& other) const
         return false;
     }
 
+    if (m_valueType == other.m_valueType &&
+        m_valueType == CSSImageValueType::ValueType::None) {
+        return true;
+    }
+
     switch (m_valueType.m_type) {
     case CSSImageValueType::ValueType::URL:
         return m_valueData.m_url->equals(other.m_valueData.m_url);
