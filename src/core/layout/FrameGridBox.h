@@ -184,10 +184,10 @@ public:
     void buildGridLineTemplate();
     void layoutGridItems();
     void arrangeGridLinesWithGridAreas(bool);
-    void arrangeGridColumnLine();
 
     bool fixGridAreaWithDefine(GridArea*, size_t);
     bool fixGridAreaWithUndefine(GridArea**, GridArea*, size_t);
+    void parsingGridTemplateAreasAndStoreInformation();
     void buildGridAreaAndOrdering();
     LayoutUnit preferredWidth();
 
@@ -209,6 +209,8 @@ public:
     bool existColumnTemplate();
     bool existRowTemplate();
 
+    GridArea* getNamedGridArea(String* name);
+
     static bool doesParticipateInGridFormattingContext(Frame* GridItem);
 
 private:
@@ -219,6 +221,7 @@ private:
     GCVector<GridLine> m_gridLineRows;
     GCVector<FrameBox*> m_orderedGridItems;
     GCVector<GridArea> m_orderedGridArea;
+    GCUnorderedMultiMap<std::string, GridArea> m_namedAreaMap;
     // FIXME(#1286): This checker is poor.
     bool m_areaChecker[GRID_MAX_TRACK][GRID_MAX_TRACK];
 };
@@ -244,6 +247,40 @@ public:
 
     void layoutGrid(LayoutContext& ctx);
     void computePreferredWidth(PreferredWidthContext& ctx);
+};
+
+template <typename dataType>
+class SetForGrid {
+private:
+    std::vector<dataType> dataSet;
+
+public:
+    void insert(dataType data)
+    {
+        for (size_t i = 0; i < dataSet.size(); i++) {
+            if (data == dataSet[i]) {
+                return;
+            }
+        }
+
+        dataSet.push_back(data);
+    }
+
+    size_t size()
+    {
+        return dataSet.size();
+    }
+
+    void sort()
+    {
+        std::stable_sort(dataSet.begin(), dataSet.end());
+    }
+
+    std::vector<dataType>& set()
+    {
+        sort();
+        return dataSet;
+    }
 };
 }
 #endif
