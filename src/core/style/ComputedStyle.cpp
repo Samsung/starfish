@@ -280,7 +280,7 @@ void ComputedStyle::loadBackgroundImage(
     StarFish* sf = consumer->starFish();
     size_t bgIndex = 0;
     while (bgIndex < backgroundLayerSize()) {
-        CSSImage* bImg = backgroundImage(bgIndex);
+        ImageValue* bImg = backgroundImage(bgIndex);
 
         if (bImg && bImg->type().isURL()) {
             ResourceURL* u = new ResourceURL(

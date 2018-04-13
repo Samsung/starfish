@@ -17,17 +17,17 @@
  *  USA
  */
 
-// https://www.w3.org/TR/css3-images/#image-type
+// https://www.w3.org/TR/3-images/#image-type
 
-#ifndef __StarFishCSSImage__
-#define __StarFishCSSImage__
+#ifndef __StarFishImage__
+#define __StarFishImage__
 
 namespace StarFish {
 
 class String;
-class CSSGradientValue;
+class GradientData;
 
-class CSSImageValueType {
+class ImageValueType {
 public:
     enum class ValueType {
         None,
@@ -40,12 +40,12 @@ public:
 
     STARFISH_MAKE_STACK_ALLOCATED();
 
-    CSSImageValueType()
+    ImageValueType()
         : m_type(ValueType::None)
     {
     }
 
-    CSSImageValueType(ValueType type)
+    ImageValueType(ValueType type)
         : m_type(type)
     {
     }
@@ -65,12 +65,12 @@ public:
         return m_type == ValueType::Gradient;
     }
 
-    bool operator==(const CSSImageValueType& other) const
+    bool operator==(const ImageValueType& other) const
     {
         return m_type == other.m_type;
     }
 
-    bool operator!=(const CSSImageValueType& other) const
+    bool operator!=(const ImageValueType& other) const
     {
         return !(operator==(other));
     }
@@ -78,53 +78,51 @@ public:
     ValueType m_type;
 };
 
-class CSSImage : public gc {
+class ImageValue : public gc {
 public:
-    union CSSImageValueData {
+    union ImageValueData {
         String* m_url;
-        CSSGradientValue* m_gradient;
+        GradientData* m_gradient;
 
-        CSSImageValueData()
+        ImageValueData()
         {
         }
 
-        CSSImageValueData(String* url)
+        ImageValueData(String* url)
             : m_url(url)
         {
         }
 
-        CSSImageValueData(CSSGradientValue* gradient)
+        ImageValueData(GradientData* gradient)
             : m_gradient(gradient)
         {
         }
     };
 
-    CSSImage()
-        : m_valueType(CSSImageValueType::ValueType::None)
+    ImageValue()
+        : m_valueType(ImageValueType::ValueType::None)
     {
     }
 
-    CSSImage(String* url)
+    ImageValue(String* url)
         : m_valueData(url)
-        , m_valueType(CSSImageValueType::ValueType::URL)
+        , m_valueType(ImageValueType::ValueType::URL)
     {
     }
 
-    CSSImage(CSSGradientValue* gradient)
+    ImageValue(GradientData* gradient)
         : m_valueData(gradient)
-        , m_valueType(CSSImageValueType::ValueType::Gradient)
+        , m_valueType(ImageValueType::ValueType::Gradient)
     {
     }
 
-    CSSImageValueType type() const
+    ImageValueType type() const
     {
         return m_valueType;
     }
 
     String* urlValue() const;
-    CSSGradientValue* gradientValue() const;
-
-    String* toString() const;
+    GradientData* gradientValue() const;
 
     void applyOriginToURL(const ResourceURL* origin);
 
@@ -133,31 +131,31 @@ public:
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(CSSImage)] = { 0 };
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CSSImage, m_valueData));
-            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(CSSImage));
+            GC_word obj_bitmap[GC_BITMAP_SIZE(ImageValue)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ImageValue, m_valueData));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ImageValue));
             typeInited = true;
         }
         return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
     }
 
-    void* operator new(size_t size, CSSImage* cssImage)
+    void* operator new(size_t size, ImageValue* imageValue)
     {
-        return cssImage;
+        return imageValue;
     }
 
     void* operator new[](size_t size) = delete;
 
-    bool operator==(const CSSImage& other) const;
+    bool operator==(const ImageValue& other) const;
 
-    bool operator!=(const CSSImage& other) const
+    bool operator!=(const ImageValue& other) const
     {
         return !(operator==(other));
     }
 
 private:
-    CSSImageValueData m_valueData;
-    CSSImageValueType m_valueType;
+    ImageValueData m_valueData;
+    ImageValueType m_valueType;
 };
 }
 

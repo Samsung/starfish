@@ -1287,7 +1287,7 @@ public:
         m_rareComputedStyleData.ensureBackground()->setBgColorToCurrentColor();
     }
 
-    void setBackgroundImage(CSSImage* image, unsigned int layer = 0)
+    void setBackgroundImage(ImageValue* image, unsigned int layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setBgImage(image, layer);
     }
@@ -1365,7 +1365,7 @@ public:
         return background->bgColor();
     }
 
-    CSSImage* backgroundImage(unsigned int layer = 0)
+    ImageValue* backgroundImage(unsigned int layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {

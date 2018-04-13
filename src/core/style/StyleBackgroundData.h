@@ -103,7 +103,7 @@ public:
         m_size.m_typeValue = size;
     }
 
-    void setImage(CSSImage* image)
+    void setImage(ImageValue* image)
     {
         m_image = image;
     }
@@ -148,7 +148,7 @@ public:
         m_origin = origin;
     }
 
-    CSSImage* bgImage() const
+    ImageValue* bgImage() const
     {
         return m_image;
     }
@@ -260,7 +260,7 @@ private:
     friend inline bool operator!=(const BackgroundLayer& a,
                                   const BackgroundLayer& b);
 
-    CSSImage* m_image;
+    ImageValue* m_image;
     ImageResource* m_imageResource;
 
     // background-repeat
@@ -330,7 +330,7 @@ public:
         m_layers[layer].setSize(size);
     }
 
-    void setBgImage(CSSImage* image, unsigned int layer)
+    void setBgImage(ImageValue* image, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
         if (m_maxLayerImages < layer + 1) {
@@ -416,7 +416,7 @@ public:
         return m_color;
     }
 
-    CSSImage* bgImage(unsigned int layer = 0) const
+    ImageValue* bgImage(unsigned int layer = 0) const
     {
         if (m_layers.size() <= layer) {
             return nullptr;
