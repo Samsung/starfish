@@ -194,6 +194,7 @@ void CSSStyleDeclaration::setCustomProperty(String* key, String* value,
         return String::emptyString;                                           \
     }
 FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_GETTER)
+FOR_EACH_STYLE_ATTRIBUTE_STICKY(DEFINE_ATTRIBUTE_GETTER)
 #undef DEFINE_ATTRIBUTE_GETTER
 
 #define DEFINE_ATTRIBUTE_SETTER(name, ...)                              \
@@ -357,15 +358,19 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     Frame* frame = m_node->frame();
     ComputedStyle* style = m_node->style();
 
-    if ((keyKind >= CSSStyleValuePair::KeyKind::PaddingTop &&
-         keyKind <= CSSStyleValuePair::KeyKind::PaddingLeft) ||
-        (keyKind >= CSSStyleValuePair::KeyKind::MarginTop &&
-         keyKind <= CSSStyleValuePair::KeyKind::MarginLeft) ||
-        (keyKind >= CSSStyleValuePair::KeyKind::BorderTopWidth &&
-         keyKind <= CSSStyleValuePair::KeyKind::BorderLeftWidth)) {
-// length properties
+    switch (keyKind) {
+#define IGNORE_SHORTHANDS_AND_ETC(Name, ...) \
+    case CSSStyleValuePair::KeyKind::Name:   \
+        break;
+        FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(IGNORE_SHORTHANDS_AND_ETC)
+        IGNORE_SHORTHANDS_AND_ETC(Empty)
+        IGNORE_SHORTHANDS_AND_ETC(KeyKindSize)
+        IGNORE_SHORTHANDS_AND_ETC(Src)
+        IGNORE_SHORTHANDS_AND_ETC(VarValue)
+#undef IGNORE_SHORTHANDS_ETC
+
 #define ADD_ABSOLUTE_LENGTH_PAIR(keyKind, getter)                     \
-    {                                                                 \
+    case CSSStyleValuePair::KeyKind::keyKind: {                       \
         CSSStyleValuePair p;                                          \
         p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);            \
         if (frame && frame->isFrameBox()) {                           \
@@ -385,36 +390,26 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::Auto);       \
         }                                                             \
         addValuePair(p);                                              \
-    }
-        if (keyKind == CSSStyleValuePair::KeyKind::MarginTop) {
-            ADD_ABSOLUTE_LENGTH_PAIR(MarginTop, marginTop);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::MarginRight) {
-            ADD_ABSOLUTE_LENGTH_PAIR(MarginRight, marginRight);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::MarginBottom) {
-            ADD_ABSOLUTE_LENGTH_PAIR(MarginBottom, marginBottom);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::MarginLeft) {
-            ADD_ABSOLUTE_LENGTH_PAIR(MarginLeft, marginLeft);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::PaddingTop) {
-            ADD_ABSOLUTE_LENGTH_PAIR(PaddingTop, paddingTop);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::PaddingRight) {
-            ADD_ABSOLUTE_LENGTH_PAIR(PaddingRight, paddingRight);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::PaddingBottom) {
-            ADD_ABSOLUTE_LENGTH_PAIR(PaddingBottom, paddingBottom);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::PaddingLeft) {
-            ADD_ABSOLUTE_LENGTH_PAIR(PaddingLeft, paddingLeft);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::BorderTopWidth) {
-            ADD_ABSOLUTE_LENGTH_PAIR(BorderTopWidth, borderTop);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::BorderRightWidth) {
-            ADD_ABSOLUTE_LENGTH_PAIR(BorderRightWidth, borderRight);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::BorderBottomWidth) {
-            ADD_ABSOLUTE_LENGTH_PAIR(BorderBottomWidth, borderBottom);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::BorderLeftWidth) {
-            ADD_ABSOLUTE_LENGTH_PAIR(BorderLeftWidth, borderLeft)
-        } else {
-            STARFISH_ASSERT_NOT_REACHED();
-        }
-    } else if (keyKind >= CSSStyleValuePair::KeyKind::Top &&
-               keyKind <= CSSStyleValuePair::KeyKind::Right) {
+    } break;
+
+        ADD_ABSOLUTE_LENGTH_PAIR(MarginTop, marginTop);
+        ADD_ABSOLUTE_LENGTH_PAIR(MarginRight, marginRight);
+        ADD_ABSOLUTE_LENGTH_PAIR(MarginBottom, marginBottom);
+        ADD_ABSOLUTE_LENGTH_PAIR(MarginLeft, marginLeft);
+        ADD_ABSOLUTE_LENGTH_PAIR(PaddingTop, paddingTop);
+        ADD_ABSOLUTE_LENGTH_PAIR(PaddingRight, paddingRight);
+        ADD_ABSOLUTE_LENGTH_PAIR(PaddingBottom, paddingBottom);
+        ADD_ABSOLUTE_LENGTH_PAIR(PaddingLeft, paddingLeft);
+        ADD_ABSOLUTE_LENGTH_PAIR(BorderTopWidth, borderTop);
+        ADD_ABSOLUTE_LENGTH_PAIR(BorderRightWidth, borderRight);
+        ADD_ABSOLUTE_LENGTH_PAIR(BorderBottomWidth, borderBottom);
+        ADD_ABSOLUTE_LENGTH_PAIR(BorderLeftWidth, borderLeft)
+#undef ADD_ABSOLUTE_LENGTH_PAIR
+
+    case CSSStyleValuePair::KeyKind::Top:
+    case CSSStyleValuePair::KeyKind::Right:
+    case CSSStyleValuePair::KeyKind::Bottom:
+    case CSSStyleValuePair::KeyKind::Left: {
         CSSStyleValuePair t, b, l, r;
         t.setKeyKind(CSSStyleValuePair::KeyKind::Top);
         b.setKeyKind(CSSStyleValuePair::KeyKind::Bottom);
@@ -514,51 +509,49 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         } else if (keyKind == CSSStyleValuePair::KeyKind::Right) {
             addValuePair(r);
         }
-    } else if (keyKind >= CSSStyleValuePair::KeyKind::Width &&
-               keyKind <= CSSStyleValuePair::KeyKind::Height) {
-        if (keyKind == CSSStyleValuePair::KeyKind::Width) {
-            CSSStyleValuePair w;
-            w.setKeyKind(CSSStyleValuePair::KeyKind::Width);
-            if (frame && style->width().isDefinite(true)) {
-                LayoutContext ctx(
-                    m_node->starFish(),
-                    m_node->document()->frame()->asFrameDocument());
-                w.setLengthValue(CSSLength(style->width().specifiedValue(
-                    ctx.parentContentWidth(frame), m_node)));
-            } else {
-                if (frame && frame->isFrameBox()) {
-                    w.setLengthValue(
-                        CSSLength(frame->asFrameBox()->contentWidth()));
-                } else {
-                    w.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-                }
-            }
-            addValuePair(w);
+    } break;
+    case CSSStyleValuePair::KeyKind::Width: {
+        CSSStyleValuePair w;
+        w.setKeyKind(CSSStyleValuePair::KeyKind::Width);
+        if (frame && style->width().isDefinite(true)) {
+            LayoutContext ctx(m_node->starFish(),
+                              m_node->document()->frame()->asFrameDocument());
+            w.setLengthValue(CSSLength(style->width().specifiedValue(
+                ctx.parentContentWidth(frame), m_node)));
         } else {
-            CSSStyleValuePair h;
-            h.setKeyKind(CSSStyleValuePair::KeyKind::Height);
             if (frame && frame->isFrameBox()) {
-                LayoutContext ctx(
-                    m_node->starFish(),
-                    m_node->document()->frame()->asFrameDocument());
-                bool parentHasFixedHeight = ctx.parentHasFixedHeight(frame);
-                if (style->height().isDefinite(parentHasFixedHeight)) {
-                    LayoutUnit parentContentHeight;
-                    if (parentHasFixedHeight) {
-                        parentContentHeight = ctx.parentFixedHeight(frame);
-                    }
-                    h.setLengthValue(CSSLength(style->height().specifiedValue(
-                        parentContentHeight, m_node)));
-                } else {
-                    h.setLengthValue(
-                        CSSLength(frame->asFrameBox()->contentHeight()));
-                }
+                w.setLengthValue(
+                    CSSLength(frame->asFrameBox()->contentWidth()));
             } else {
-                h.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+                w.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             }
-            addValuePair(h);
         }
-    } else if (keyKind == CSSStyleValuePair::KeyKind::FontFamily) {
+        addValuePair(w);
+    } break;
+    case CSSStyleValuePair::KeyKind::Height: {
+        CSSStyleValuePair h;
+        h.setKeyKind(CSSStyleValuePair::KeyKind::Height);
+        if (frame && frame->isFrameBox()) {
+            LayoutContext ctx(m_node->starFish(),
+                              m_node->document()->frame()->asFrameDocument());
+            bool parentHasFixedHeight = ctx.parentHasFixedHeight(frame);
+            if (style->height().isDefinite(parentHasFixedHeight)) {
+                LayoutUnit parentContentHeight;
+                if (parentHasFixedHeight) {
+                    parentContentHeight = ctx.parentFixedHeight(frame);
+                }
+                h.setLengthValue(CSSLength(style->height().specifiedValue(
+                    parentContentHeight, m_node)));
+            } else {
+                h.setLengthValue(
+                    CSSLength(frame->asFrameBox()->contentHeight()));
+            }
+        } else {
+            h.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(h);
+    } break;
+    case CSSStyleValuePair::KeyKind::FontFamily: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::FontFamily);
         if (style->fontFamily()[0].m_length == 1) {
@@ -578,7 +571,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueList(val);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::ZIndex) {
+    } break;
+    case CSSStyleValuePair::KeyKind::ZIndex: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ZIndex);
         if (style->isSpecifiedZIndex()) {
@@ -588,18 +582,21 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::All) {
+    } break;
+    case CSSStyleValuePair::KeyKind::All: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::All);
         p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
         p.setValue(String::emptyString);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::WhiteSpace) {
+    } break;
+    case CSSStyleValuePair::KeyKind::WhiteSpace: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpace);
         p.setValue(CSSStyleValuePair::ValueData(style->whiteSpace()));
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::FlexBasis) {
+    } break;
+    case CSSStyleValuePair::KeyKind::FlexBasis: {
         CSSStyleValuePair p;
         FlexBasisData flexBasis = style->flexBasis();
         if (flexBasis.isContent()) {
@@ -611,11 +608,13 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         p.setKeyKind(CSSStyleValuePair::KeyKind::FlexBasis);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::TextIndent) {
+    } break;
+    case CSSStyleValuePair::KeyKind::TextIndent: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->textIndent());
         p.setKeyKind(CSSStyleValuePair::KeyKind::TextIndent);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::LineHeight) {
+    } break;
+    case CSSStyleValuePair::KeyKind::LineHeight: {
         CSSStyleValuePair lh;
         lh.setKeyKind(CSSStyleValuePair::KeyKind::LineHeight);
 
@@ -625,14 +624,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             lh.setLengthValue(CSSLength(CSSLength::PX, frame->lineHeight()));
         }
         addValuePair(lh);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::FontSize) {
+    } break;
+    case CSSStyleValuePair::KeyKind::FontSize: {
         CSSStyleValuePair fs;
         fs.setKeyKind(CSSStyleValuePair::KeyKind::FontSize);
 
         fs.setLengthValue(CSSLength(CSSLength::PX, style->fixedFontSize()));
 
         addValuePair(fs);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::LetterSpacing) {
+    } break;
+    case CSSStyleValuePair::KeyKind::LetterSpacing: {
         CSSStyleValuePair fs;
         fs.setKeyKind(CSSStyleValuePair::KeyKind::LetterSpacing);
 
@@ -640,7 +641,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             CSSLength(CSSLength::PX, style->letterSpacing().fixed()));
 
         addValuePair(fs);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::WordSpacing) {
+    } break;
+    case CSSStyleValuePair::KeyKind::WordSpacing: {
         CSSStyleValuePair fs;
         fs.setKeyKind(CSSStyleValuePair::KeyKind::WordSpacing);
 
@@ -648,7 +650,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             CSSLength(CSSLength::PX, style->wordSpacing().fixed()));
 
         addValuePair(fs);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::MinWidth) {
+    } break;
+    case CSSStyleValuePair::KeyKind::MinWidth: {
         CSSStyleValuePair minW;
         minW.setKeyKind(CSSStyleValuePair::KeyKind::MinWidth);
         Length minWidth = style->minWidth();
@@ -672,7 +675,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
 
         addValuePair(minW);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::MinHeight) {
+    } break;
+    case CSSStyleValuePair::KeyKind::MinHeight: {
         CSSStyleValuePair minH;
         minH.setKeyKind(CSSStyleValuePair::KeyKind::MinHeight);
         Length minHeight = style->minHeight();
@@ -696,7 +700,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
 
         addValuePair(minH);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::MaxWidth) {
+    } break;
+    case CSSStyleValuePair::KeyKind::MaxWidth: {
         CSSStyleValuePair maxW;
         maxW.setKeyKind(CSSStyleValuePair::KeyKind::MaxWidth);
         Length maxWidth = style->maxWidth();
@@ -716,7 +721,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
 
         addValuePair(maxW);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::MaxHeight) {
+    } break;
+    case CSSStyleValuePair::KeyKind::MaxHeight: {
         CSSStyleValuePair maxH;
         maxH.setKeyKind(CSSStyleValuePair::KeyKind::MaxHeight);
         Length maxHeight = style->maxHeight();
@@ -735,7 +741,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         addValuePair(maxH);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundImage) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BackgroundImage: {
         CSSStyleValuePair bgImage;
 
         bgImage.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundImage);
@@ -752,7 +759,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgImage.setValueList(bgImageValues);
         addValuePair(bgImage);
 
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundSize) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BackgroundSize: {
         CSSStyleValuePair bgSize;
 
         bgSize.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundSize);
@@ -790,7 +798,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgSize.setValueList(bgSizeValues);
         addValuePair(bgSize);
 
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundAttachment) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BackgroundAttachment: {
         CSSStyleValuePair bgAttachment;
 
         bgAttachment.setKeyKind(
@@ -810,7 +819,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgAttachment.setValueList(bgAttachmentValues);
         addValuePair(bgAttachment);
 
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundClip) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BackgroundClip: {
         CSSStyleValuePair bgClip;
 
         bgClip.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundClip);
@@ -828,7 +838,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgClip.setValueList(bgClipValues);
         addValuePair(bgClip);
 
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundOrigin) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BackgroundOrigin: {
         CSSStyleValuePair bgOrigin;
 
         bgOrigin.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundOrigin);
@@ -846,7 +857,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgOrigin.setValueList(bgOriginValues);
         addValuePair(bgOrigin);
 
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundRepeatX) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BackgroundRepeatX: {
         CSSStyleValuePair bgRepeatX;
 
         bgRepeatX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
@@ -866,7 +878,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgRepeatX.setValueList(bgRepeatXValues);
         addValuePair(bgRepeatX);
 
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundRepeatY) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BackgroundRepeatY: {
         CSSStyleValuePair bgRepeatY;
 
         bgRepeatY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
@@ -885,7 +898,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgRepeatY.setValueList(bgRepeatYValues);
         addValuePair(bgRepeatY);
 
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BackgroundPositionX: {
         CSSStyleValuePair bgPositionX;
 
         bgPositionX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionX);
@@ -905,7 +919,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgPositionX.setValueList(bgPositionXValues);
         addValuePair(bgPositionX);
 
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BackgroundPositionY: {
         CSSStyleValuePair bgPositionY;
 
         bgPositionY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionY);
@@ -925,7 +940,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgPositionY.setValueList(bgPositionYValues);
         addValuePair(bgPositionY);
 
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderImageSource) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderImageSource: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSource);
         BorderData border = style->border();
@@ -936,7 +952,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValue(border.image().url());
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderImageSlice) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderImageSlice: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSlice);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
@@ -979,7 +996,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         p.setValue(vals);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderImageRepeat) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderImageRepeat: {
         BorderImageData bImage = style->border().image();
 
         CSSStyleValuePair p;
@@ -999,7 +1017,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueList(vals);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderImageWidth) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderImageWidth: {
         // FIXME: Need to refactor BorderImageLength.h, and update the lines
         // below
 
@@ -1041,7 +1060,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         p.setValue(vals);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderImageOutset) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderImageOutset: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageOutset);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
@@ -1080,7 +1100,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         p.setValue(vals);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::TransformOrigin) {
+    } break;
+    case CSSStyleValuePair::KeyKind::TransformOrigin: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransformOrigin);
 
@@ -1101,7 +1122,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValue(vals);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::Transform) {
+    } break;
+    case CSSStyleValuePair::KeyKind::Transform: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::Transform);
         if (!style->hasTransforms()) {
@@ -1135,47 +1157,56 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValue(transforms);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderTopStyle) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderTopStyle: {
         CSSStyleValuePair tStyle;
         tStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderTopStyle);
         tStyle.setBorderStyleValue(style->border().top().style());
         addValuePair(tStyle);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderBottomStyle) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderBottomStyle: {
         CSSStyleValuePair bStyle;
         bStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderBottomStyle);
         bStyle.setBorderStyleValue(style->border().bottom().style());
         addValuePair(bStyle);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderLeftStyle) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderLeftStyle: {
         CSSStyleValuePair lStyle;
         lStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderLeftStyle);
         lStyle.setBorderStyleValue(style->border().left().style());
         addValuePair(lStyle);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderRightStyle) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderRightStyle: {
         CSSStyleValuePair rStyle;
         rStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderRightStyle);
         rStyle.setBorderStyleValue(style->border().right().style());
         addValuePair(rStyle);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderTopColor) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderTopColor: {
         CSSStyleValuePair tColor;
         tColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderTopColor);
         tColor.setColorValue(style->border().top().color());
         addValuePair(tColor);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderBottomColor) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderBottomColor: {
         CSSStyleValuePair bColor;
         bColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderBottomColor);
         bColor.setColorValue(style->border().bottom().color());
         addValuePair(bColor);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderLeftColor) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderLeftColor: {
         CSSStyleValuePair lColor;
         lColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderLeftColor);
         lColor.setColorValue(style->border().left().color());
         addValuePair(lColor);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderRightColor) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderRightColor: {
         CSSStyleValuePair rColor;
         rColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderRightColor);
         rColor.setColorValue(style->border().right().color());
         addValuePair(rColor);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::ObjectPosition) {
+    } break;
+    case CSSStyleValuePair::KeyKind::ObjectPosition: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ObjectPosition);
 
@@ -1194,7 +1225,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValue(vals);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::Clip) {
+    } break;
+    case CSSStyleValuePair::KeyKind::Clip: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::Clip);
         if (style->clip()) {
@@ -1204,7 +1236,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::ListStyleImage) {
+    } break;
+    case CSSStyleValuePair::KeyKind::ListStyleImage: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleImage);
         const ListStyleData& listStyle = style->listStyleData();
@@ -1214,7 +1247,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setUrlValue(listStyle.image());
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::TextShadow) {
+    } break;
+    case CSSStyleValuePair::KeyKind::TextShadow: {
         CSSStyleValuePair shadows;
         shadows.setKeyKind(CSSStyleValuePair::KeyKind::TextShadow);
         if (!style->textShadow()) {
@@ -1259,13 +1293,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             }
         }
         addValuePair(shadows);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderCollapse) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderCollapse: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderCollapse);
         p.setValueKind(CSSStyleValuePair::ValueKind::BorderCollapseValueKind);
         p.setValue(CSSStyleValuePair::ValueData(style->borderCollapse()));
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BorderSpacing) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderSpacing: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderSpacing);
         auto h = style->horizontalBorderSpacing();
@@ -1283,13 +1319,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                                lengthToCSSStyleValue(v).value());
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::TableLayout) {
+    } break;
+    case CSSStyleValuePair::KeyKind::TableLayout: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TableLayout);
         p.setValueKind(CSSStyleValuePair::ValueKind::TableLayoutValueKind);
         p.setValue(CSSStyleValuePair::ValueData(style->tableLayout()));
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::Content) {
+    } break;
+    case CSSStyleValuePair::KeyKind::Content: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::Content);
         p.setValueKind(CSSStyleValuePair::ValueKind::None);
@@ -1324,27 +1362,30 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueList(values);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::TransitionProperty) {
+    } break;
+    case CSSStyleValuePair::KeyKind::TransitionProperty: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionProperty);
         p.setValueKind(
             CSSStyleValuePair::ValueKind::TransitionPropertyValueKind);
         p.setValue(CSSStyleValuePair::ValueData(style->transitionProperty()));
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::TransitionDuration) {
+    } break;
+    case CSSStyleValuePair::KeyKind::TransitionDuration: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionDuration);
         p.setValueKind(CSSStyleValuePair::ValueKind::Time);
         p.setValue(CSSStyleValuePair::ValueData(style->transitionDuration()));
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::TransitionDelay) {
+    } break;
+    case CSSStyleValuePair::KeyKind::TransitionDelay: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionDelay);
         p.setValueKind(CSSStyleValuePair::ValueKind::Time);
         p.setValue(CSSStyleValuePair::ValueData(style->transitionDelay()));
         addValuePair(p);
-    } else if (keyKind ==
-               CSSStyleValuePair::KeyKind::TransitionTimingFunction) {
+    } break;
+    case CSSStyleValuePair::KeyKind::TransitionTimingFunction: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionTimingFunction);
         p.setValueKind(
@@ -1352,7 +1393,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValue(
             CSSStyleValuePair::ValueData(style->transitionTimingFunction()));
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::BoxShadow) {
+    } break;
+    case CSSStyleValuePair::KeyKind::BoxShadow: {
         CSSStyleValuePair shadows;
         shadows.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);
         if (!style->boxShadow()) {
@@ -1410,79 +1452,96 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             }
         }
         addValuePair(shadows);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::Fill) {
+    } break;
+    case CSSStyleValuePair::KeyKind::Fill: {
         CSSStyleValuePair p = stylePaintDataToCSSStyleValue(style->fill());
         p.setKeyKind(CSSStyleValuePair::KeyKind::Fill);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::FillOpacity) {
+    } break;
+    case CSSStyleValuePair::KeyKind::FillOpacity: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::FillOpacity);
         p.setValueKind(CSSStyleValuePair::ValueKind::Number);
         p.setNumberValue(style->fillOpacity());
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::FillRule) {
+    } break;
+    case CSSStyleValuePair::KeyKind::FillRule: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::FillRule);
         p.setValueKind(CSSStyleValuePair::ValueKind::FillRuleValueKind);
         p.setValue(CSSStyleValuePair::ValueData(style->fillRule()));
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::Stroke) {
+    } break;
+    case CSSStyleValuePair::KeyKind::Stroke: {
         CSSStyleValuePair p = stylePaintDataToCSSStyleValue(style->stroke());
         p.setKeyKind(CSSStyleValuePair::KeyKind::Stroke);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::StrokeWidth) {
+    } break;
+    case CSSStyleValuePair::KeyKind::StrokeWidth: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->strokeWidth());
         p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeWidth);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::X) {
+    } break;
+    case CSSStyleValuePair::KeyKind::X: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->x());
         p.setKeyKind(CSSStyleValuePair::KeyKind::X);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::Y) {
+    } break;
+    case CSSStyleValuePair::KeyKind::Y: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->y());
         p.setKeyKind(CSSStyleValuePair::KeyKind::Y);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::CX) {
+    } break;
+    case CSSStyleValuePair::KeyKind::CX: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->cx());
         p.setKeyKind(CSSStyleValuePair::KeyKind::CX);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::CY) {
+    } break;
+    case CSSStyleValuePair::KeyKind::CY: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->cy());
         p.setKeyKind(CSSStyleValuePair::KeyKind::CY);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::R) {
+    } break;
+    case CSSStyleValuePair::KeyKind::R: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->r());
         p.setKeyKind(CSSStyleValuePair::KeyKind::R);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::RX) {
+    } break;
+    case CSSStyleValuePair::KeyKind::RX: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->rx());
         p.setKeyKind(CSSStyleValuePair::KeyKind::RX);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::RY) {
+    } break;
+    case CSSStyleValuePair::KeyKind::RY: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->ry());
         p.setKeyKind(CSSStyleValuePair::KeyKind::RY);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::OutlineColor) {
+    } break;
+    case CSSStyleValuePair::KeyKind::OutlineColor: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineColor);
         p.setValueKind(CSSStyleValuePair::ValueKind::ColorValueKind);
         p.setColorValue(style->color());
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::OutlineWidth) {
+    } break;
+    case CSSStyleValuePair::KeyKind::OutlineWidth: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->outlineWidth());
         p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineWidth);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::OutlineOffset) {
+    } break;
+    case CSSStyleValuePair::KeyKind::OutlineOffset: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->outlineOffset());
         p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineOffset);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::OutlineStyle) {
+    } break;
+    case CSSStyleValuePair::KeyKind::OutlineStyle: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineStyle);
         p.setValueKind(CSSStyleValuePair::ValueKind::BorderStyleValueKind);
         p.setBorderStyleValue(style->outlineStyle());
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::Cursor) {
+    } break;
+    case CSSStyleValuePair::KeyKind::Cursor: {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::Cursor);
@@ -1490,7 +1549,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         // of string `auto`
         p.setKeywordValue(String::createASCIIString("auto"));
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::MaskImage) {
+    } break;
+    case CSSStyleValuePair::KeyKind::MaskImage: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MaskImage);
         String* url = style->maskImage();
@@ -1500,13 +1560,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::MaskSize) {
+    } break;
+    case CSSStyleValuePair::KeyKind::MaskSize: {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MaskSize);
         p.setValueKind(CSSStyleValuePair::ValueKind::None);
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridTemplateColumns) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridTemplateColumns: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateColumns);
         if (style->gridTemplateColumns()) {
@@ -1516,7 +1578,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridTemplateRows) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridTemplateRows: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateRows);
         if (style->gridTemplateRows()) {
@@ -1526,7 +1589,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridGap) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridGap: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridGap);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
@@ -1547,21 +1611,24 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValueList(values);
 
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridRowGap) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridRowGap: {
         CSSStyleValuePair p;
         Length row = style->gridRowGap();
         if (row.isFixed()) {
             p.setLengthValue(CSSLength(row.fixed()));
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridColumnGap) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridColumnGap: {
         CSSStyleValuePair p;
         Length column = style->gridColumnGap();
         if (column.isFixed()) {
             p.setLengthValue(CSSLength(column.fixed()));
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridTemplateAreas) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridTemplateAreas: {
         CSSStyleValuePair p;
         String* areas = style->gridTemplateAreas();
         if (areas) {
@@ -1570,7 +1637,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setStringValue(areas);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridArea) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridArea: {
         CSSStyleValuePair p;
         String* area = style->gridArea();
         if (area) {
@@ -1582,13 +1650,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::TextOverflow) {
+    } break;
+    case CSSStyleValuePair::KeyKind::TextOverflow: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TextOverflow);
         p.setValueKind(CSSStyleValuePair::ValueKind::TextOverflowValueKind);
         p.setValue(new TextOverflowData(style->textOverflow()));
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::CounterReset) {
+    } break;
+    case CSSStyleValuePair::KeyKind::CounterReset: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::CounterReset);
         CounterBaseList* list = style->counterReset();
@@ -1605,7 +1675,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::None);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::CounterIncrement) {
+    } break;
+    case CSSStyleValuePair::KeyKind::CounterIncrement: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::CounterIncrement);
         CounterBaseList* list = style->counterIncrement();
@@ -1622,31 +1693,36 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::None);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridRowStart) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridRowStart: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridRowStart);
         p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
         p.setInt32Value(style->gridRowStart());
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridRowEnd) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridRowEnd: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridRowEnd);
         p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
         p.setInt32Value(style->gridRowEnd());
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridColumnStart) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridColumnStart: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
         p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
         p.setInt32Value(style->gridColumnStart());
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::GridColumnEnd) {
+    } break;
+    case CSSStyleValuePair::KeyKind::GridColumnEnd: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
         p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
         p.setInt32Value(style->gridColumnStart());
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::WillChange) {
+    } break;
+    case CSSStyleValuePair::KeyKind::WillChange: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::WillChange);
         WillChangeData* data = style->willChange();
@@ -1670,7 +1746,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueList(list);
         }
         addValuePair(p);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::TextDecorationLine) {
+    } break;
+    case CSSStyleValuePair::KeyKind::TextDecorationLine: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TextDecorationLine);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
@@ -1680,11 +1757,20 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValue(new ValueList(ValueList::Separator::SpaceSeparator));
         }
         addValuePair(p);
-    }
+    } break;
+    case CSSStyleValuePair::KeyKind::D: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::D);
+        String* dvalue = style->d();
+        if (dvalue->length()) {
+            p.setPathFunctionValue(dvalue);
+        } else {
+            p.setValueKind(CSSStyleValuePair::None);
+        }
+        addValuePair(p);
+    } break;
 #define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
-    else if (keyKind ==                                                       \
-             CSSStyleValuePair::KeyKind::Border##Name1Name2##Radius)          \
-    {                                                                         \
+    case CSSStyleValuePair::KeyKind::Border##Name1Name2##Radius: {            \
         CSSStyleValuePair p;                                                  \
         p.setKeyKind(CSSStyleValuePair::KeyKind::Border##Name1Name2##Radius); \
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);          \
@@ -1746,89 +1832,86 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }                                                                     \
         p.setValueList(valueList);                                            \
         addValuePair(p);                                                      \
-    }
+    } break;
 
-    ADD_VALUE_PAIR_BORDER_RADIUS(TopLeft, topLeft)
-    ADD_VALUE_PAIR_BORDER_RADIUS(BottomLeft, bottomLeft)
-    ADD_VALUE_PAIR_BORDER_RADIUS(TopRight, topRight)
-    ADD_VALUE_PAIR_BORDER_RADIUS(BottomRight, bottomRight)
+        ADD_VALUE_PAIR_BORDER_RADIUS(TopLeft, topLeft)
+        ADD_VALUE_PAIR_BORDER_RADIUS(BottomLeft, bottomLeft)
+        ADD_VALUE_PAIR_BORDER_RADIUS(TopRight, topRight)
+        ADD_VALUE_PAIR_BORDER_RADIUS(BottomRight, bottomRight)
+#undef ADD_VALUE_PAIR_BORDER_RADIUS
 
 #define ADD_VALUE_PAIR(KEY, VALUE, GETTER)                   \
-    else if (keyKind == CSSStyleValuePair::KeyKind::KEY)     \
-    {                                                        \
+    case CSSStyleValuePair::KeyKind::KEY: {                  \
         CSSStyleValuePair p;                                 \
         p.setKeyKind(CSSStyleValuePair::KeyKind::KEY);       \
         p.setValueKind(CSSStyleValuePair::ValueKind::VALUE); \
         p.setValue(style->GETTER());                         \
         addValuePair(p);                                     \
-    }
-    ADD_VALUE_PAIR(Display, DisplayValueKind, display)
-    ADD_VALUE_PAIR(Position, PositionValueKind, position)
-    ADD_VALUE_PAIR(Float, FloatValueKind, floating)
-    ADD_VALUE_PAIR(Clear, ClearValueKind, clear)
-    ADD_VALUE_PAIR(VerticalAlign, VerticalAlignValueKind, verticalAlign)
-    ADD_VALUE_PAIR(TextAlign, SideValueKind, textAlign)
-    ADD_VALUE_PAIR(TextDecorationLine, ValueListKind, textDecorationLine)
-    ADD_VALUE_PAIR(TextDecorationStyle, TextDecorationStyleValueKind,
-                   textDecorationStyle)
-    ADD_VALUE_PAIR(TextUnderlinePosition, TextUnderlinePositionValueKind,
-                   textUnderlinePosition)
-    ADD_VALUE_PAIR(Resize, ResizeValueKind, resize)
-    ADD_VALUE_PAIR(TextTransform, TextTransformValueKind, textTransform)
-    ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
-    ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
-    ADD_VALUE_PAIR(FontStyle, FontStyleValueKind, fontStyle)
-    ADD_VALUE_PAIR(FontWeight, FontWeightValueKind, fontWeight)
-    ADD_VALUE_PAIR(FontKerning, FontKerningValueKind, fontKerning)
-    ADD_VALUE_PAIR(WordWrap, WordWrapValueKind, wordWrap)
-    ADD_VALUE_PAIR(OverflowWrap, WordWrapValueKind, wordWrap)
-    ADD_VALUE_PAIR(OverflowX, OverflowValueKind, overflowX)
-    ADD_VALUE_PAIR(OverflowY, OverflowValueKind, overflowY)
-    ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiValueKind, unicodeBidi)
-    ADD_VALUE_PAIR(Opacity, Number, opacity)
-    ADD_VALUE_PAIR(BoxDecorationBreak, BoxDecorationBreakValueKind,
-                   boxDecorationBreak)
-    ADD_VALUE_PAIR(BoxSizing, BoxSizingValueKind, boxSizing)
-    ADD_VALUE_PAIR(FlexDirection, FlexDirectionValueKind, flexDirection)
-    ADD_VALUE_PAIR(FlexWrap, FlexWrapValueKind, flexWrap)
-    ADD_VALUE_PAIR(Order, Int32, order)
-    ADD_VALUE_PAIR(JustifyContent, JustifyContentValueKind, justifyContent)
-    ADD_VALUE_PAIR(AlignItems, AlignItemValueKind, alignItems)
-    ADD_VALUE_PAIR(AlignSelf, AlignItemValueKind, alignSelf)
-    ADD_VALUE_PAIR(AlignContent, AlignContentValueKind, alignContent)
-    ADD_VALUE_PAIR(FlexGrow, Number, flexGrow)
-    ADD_VALUE_PAIR(FlexShrink, Number, flexShrink)
-    ADD_VALUE_PAIR(FillOpacity, Number, fillOpacity)
-    ADD_VALUE_PAIR(ObjectFit, ObjectFitValueKind, objectFit)
-    ADD_VALUE_PAIR(ListStylePosition, ListStylePositionValueKind,
-                   listStylePosition)
-    ADD_VALUE_PAIR(ListStyleType, KeywordValueKind, listStyleType)
-    ADD_VALUE_PAIR(UserSelect, UserSelectValueKind, userSelect)
-    ADD_VALUE_PAIR(Hyphens, HyphensValueKind, hyphens)
-    ADD_VALUE_PAIR(LineBreak, LineBreakValueKind, lineBreak)
-    ADD_VALUE_PAIR(WordBreak, WordBreakValueKind, wordBreak)
-    ADD_VALUE_PAIR(ImageRendering, ImageRenderingValueKind, imageRendering)
-    ADD_VALUE_PAIR(PointerEvents, PointerEventsValueKind, pointerEvents)
-
+    } break;
+        ADD_VALUE_PAIR(Display, DisplayValueKind, display)
+        ADD_VALUE_PAIR(Position, PositionValueKind, position)
+        ADD_VALUE_PAIR(Float, FloatValueKind, floating)
+        ADD_VALUE_PAIR(CaptionSide, CaptionSideValueKind, captionSide)
+        ADD_VALUE_PAIR(Clear, ClearValueKind, clear)
+        ADD_VALUE_PAIR(EmptyCells, EmptyCellsValueKind, emptyCells)
+        ADD_VALUE_PAIR(VerticalAlign, VerticalAlignValueKind, verticalAlign)
+        ADD_VALUE_PAIR(TextAlign, SideValueKind, textAlign)
+        ADD_VALUE_PAIR(TextDecorationStyle, TextDecorationStyleValueKind,
+                       textDecorationStyle)
+        ADD_VALUE_PAIR(TextUnderlinePosition, TextUnderlinePositionValueKind,
+                       textUnderlinePosition)
+        ADD_VALUE_PAIR(Resize, ResizeValueKind, resize)
+        ADD_VALUE_PAIR(TextTransform, TextTransformValueKind, textTransform)
+        ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
+        ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
+        ADD_VALUE_PAIR(FontStyle, FontStyleValueKind, fontStyle)
+        ADD_VALUE_PAIR(FontWeight, FontWeightValueKind, fontWeight)
+        ADD_VALUE_PAIR(FontKerning, FontKerningValueKind, fontKerning)
+        ADD_VALUE_PAIR(WordWrap, WordWrapValueKind, wordWrap)
+        ADD_VALUE_PAIR(OverflowWrap, WordWrapValueKind, wordWrap)
+        ADD_VALUE_PAIR(OverflowX, OverflowValueKind, overflowX)
+        ADD_VALUE_PAIR(OverflowY, OverflowValueKind, overflowY)
+        ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiValueKind, unicodeBidi)
+        ADD_VALUE_PAIR(Opacity, Number, opacity)
+        ADD_VALUE_PAIR(BoxDecorationBreak, BoxDecorationBreakValueKind,
+                       boxDecorationBreak)
+        ADD_VALUE_PAIR(BoxSizing, BoxSizingValueKind, boxSizing)
+        ADD_VALUE_PAIR(FlexDirection, FlexDirectionValueKind, flexDirection)
+        ADD_VALUE_PAIR(FlexWrap, FlexWrapValueKind, flexWrap)
+        ADD_VALUE_PAIR(Order, Int32, order)
+        ADD_VALUE_PAIR(JustifyContent, JustifyContentValueKind, justifyContent)
+        ADD_VALUE_PAIR(AlignItems, AlignItemValueKind, alignItems)
+        ADD_VALUE_PAIR(AlignSelf, AlignItemValueKind, alignSelf)
+        ADD_VALUE_PAIR(AlignContent, AlignContentValueKind, alignContent)
+        ADD_VALUE_PAIR(FlexGrow, Number, flexGrow)
+        ADD_VALUE_PAIR(FlexShrink, Number, flexShrink)
+        ADD_VALUE_PAIR(ObjectFit, ObjectFitValueKind, objectFit)
+        ADD_VALUE_PAIR(ListStylePosition, ListStylePositionValueKind,
+                       listStylePosition)
+        ADD_VALUE_PAIR(ListStyleType, KeywordValueKind, listStyleType)
+        ADD_VALUE_PAIR(UserSelect, UserSelectValueKind, userSelect)
+        ADD_VALUE_PAIR(Hyphens, HyphensValueKind, hyphens)
+        ADD_VALUE_PAIR(LineBreak, LineBreakValueKind, lineBreak)
+        ADD_VALUE_PAIR(WordBreak, WordBreakValueKind, wordBreak)
+        ADD_VALUE_PAIR(ImageRendering, ImageRenderingValueKind, imageRendering)
+        ADD_VALUE_PAIR(PointerEvents, PointerEventsValueKind, pointerEvents)
 #undef ADD_VALUE_PAIR
+
 #define ADD_COLOR_PAIR(KEY, GETTER)                                     \
-    else if (keyKind == CSSStyleValuePair::KeyKind::KEY)                \
-    {                                                                   \
+    case CSSStyleValuePair::KeyKind::KEY: {                             \
         CSSStyleValuePair p;                                            \
         p.setKeyKind(CSSStyleValuePair::KeyKind::KEY);                  \
         p.setValueKind(CSSStyleValuePair::ValueKind::KeywordValueKind); \
         p.setValue(style->GETTER().toString());                         \
         addValuePair(p);                                                \
-    }
-    ADD_COLOR_PAIR(Color, color)
-    ADD_COLOR_PAIR(BackgroundColor, backgroundColor)
-    ADD_COLOR_PAIR(TextDecorationColor, textDecorationColor)
-    ADD_COLOR_PAIR(CaretColor, caretColor)
+    } break;
+        ADD_COLOR_PAIR(Color, color)
+        ADD_COLOR_PAIR(BackgroundColor, backgroundColor)
+        ADD_COLOR_PAIR(TextDecorationColor, textDecorationColor)
+        ADD_COLOR_PAIR(CaretColor, caretColor)
 #undef ADD_COLOR_PAIR
-    else
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
+
+    } /* switch */
 }
 
 uint32_t CSSStyleDeclaration::length() const

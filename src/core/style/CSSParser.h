@@ -80,7 +80,7 @@ public:
         m_parsedNumber = 0;
         m_parsedInt32 = 0;
         m_parsedString = String::emptyString;
-        m_parsedUrl = String::emptyString;
+        m_parsedFunctionContent = String::emptyString;
     }
 
     CSSPropertyParser(char* value, size_t len)
@@ -91,7 +91,7 @@ public:
         m_parsedNumber = 0;
         m_parsedInt32 = 0;
         m_parsedString = String::emptyString;
-        m_parsedUrl = String::emptyString;
+        m_parsedFunctionContent = String::emptyString;
     }
 
     CSSPropertyParser(const CSSTokenValue& src)
@@ -102,7 +102,7 @@ public:
         m_parsedNumber = 0;
         m_parsedInt32 = 0;
         m_parsedString = String::emptyString;
-        m_parsedUrl = String::emptyString;
+        m_parsedFunctionContent = String::emptyString;
     }
 
     static bool isLengthUnit(String* str)
@@ -313,7 +313,7 @@ public:
         return true;
     }
 
-    bool consumeUrl()
+    bool consumeFunctionContent()
     {
         consumeWhitespaces();
         int len = 0;
@@ -339,7 +339,7 @@ public:
         if (*m_curPos != ')') {
             return false;
         }
-        m_parsedUrl = String::fromUTF8(start, len);
+        m_parsedFunctionContent = String::fromUTF8(start, len);
         m_curPos++;
         return true;
     }
@@ -424,9 +424,9 @@ public:
     {
         return m_parsedString;
     }
-    String* parsedUrl()
+    String* parsedFunctionContent()
     {
-        return m_parsedUrl;
+        return m_parsedFunctionContent;
     }
 
     bool isEnd()
@@ -440,13 +440,33 @@ public:
         if (parser.consumeString(0)) {
             String* name = parser.parsedString();
             if (name->equals("url") && parser.consumeIfNext('(')) {
-                if (parser.consumeUrl() && parser.isEnd()) {
-                    pair->setUrlValue(parser.parsedUrl());
+                if (parser.consumeFunctionContent() && parser.isEnd()) {
+                    pair->setUrlValue(parser.parsedFunctionContent());
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    static Nullable<String*> parseFunctionContent(const char* token,
+                                                  const char* functionName)
+    {
+        CSSPropertyParser parser((char*)token);
+        parser.consumeWhitespaces();
+        if (parser.consumeString(0)) {
+            String* name = parser.parsedString();
+            if (name->equals(functionName) && parser.consumeIfNext('(')) {
+                if (parser.consumeFunctionContent()) {
+                    String* mayResult = parser.parsedFunctionContent();
+                    parser.consumeWhitespaces();
+                    if (parser.isEnd()) {
+                        return mayResult;
+                    }
+                }
+            }
+        }
+        return Nullable<String*>();
     }
 
     static bool parseNumber(const char* token, uint8_t option, float* val)
@@ -868,7 +888,7 @@ public:
     float m_parsedNumber;
     int32_t m_parsedInt32;
     String* m_parsedString;
-    String* m_parsedUrl;
+    String* m_parsedFunctionContent;
 };
 
 class CSSParser;

@@ -863,15 +863,12 @@ class CSSStyleDeclaration;
 // define(FOR_EACH_STYLE_ATTRIBUTE)
 // This order is used by CSSParser::parseFontFaceRule
 
-// sticky properties
-#define FOR_EACH_STYLE_ATTRIBUTE(F)          \
-    FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)        \
+#define FOR_EACH_STYLE_ATTRIBUTE_STICKY(F)   \
     F(D, d, "d")                             \
     F(FontFamily, fontFamily, "font-family") \
     F(Src, src, "src")
 
-#define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                            \
-    FOR_EACH_STYLE_ATTRIBUTE(F)                                      \
+#define FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(F)                        \
     F(Border, border, "border")                                      \
     F(BorderTop, borderTop, "border-top")                            \
     F(BorderRight, borderRight, "border-right")                      \
@@ -895,6 +892,11 @@ class CSSStyleDeclaration;
     F(FlexFlow, flexFlow, "flex-flow")                               \
     F(Flex, flex, "flex")                                            \
     F(ListStyle, listStyle, "list-style")
+
+#define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F) \
+    FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)     \
+    FOR_EACH_STYLE_ATTRIBUTE_STICKY(F)    \
+    FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(F)
 
 #define GEN_FOURSIDE(F) \
     F(Top, top)         \
@@ -1036,6 +1038,7 @@ public:
         ColorValueKind,
         NamedColorValueKind,
         UrlValueKind,
+        PathFunctionValueKind,
 
         CalcValueKind,
 
@@ -1761,6 +1764,12 @@ public:
         return m_value.m_boxDecorationBreakValue;
     }
 
+    String* pathFunctionValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == PathFunctionValueKind);
+        return m_value.m_stringValue;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -2167,6 +2176,7 @@ public:
     {
         switch (m_valueKind) {
         case UrlValueKind:
+        case PathFunctionValueKind:
         case StringValueKind:
         case KeywordValueKind:
         case Attr:
@@ -2378,6 +2388,12 @@ public:
     {
         m_valueKind = BoxDecorationBreakValueKind;
         m_value.m_boxDecorationBreakValue = v;
+    }
+
+    void setPathFunctionValue(String* v)
+    {
+        m_valueKind = PathFunctionValueKind;
+        m_value.m_stringValue = v;
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \
