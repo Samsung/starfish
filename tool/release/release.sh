@@ -39,6 +39,8 @@ git submodule update
 cd third_party/escargot
 git submodule init
 git submodule update third_party/GCutil
+mkdir -p include
+make install_header_to_include
 cd $ROOT
 
 python binding_generator/scripts/starfish_code_generator.py src/ src/binding/
@@ -54,6 +56,9 @@ today=`date +%y%m%d`
 
 cd ../$repo
 find ./binding_generator ./tool ./third_party -name ".git*" -exec rm -f {} \;
+rm -fr test tool/reftest
+rm -fr .gbs.conf .gitlab-ci.yml ./third_party/escargot/.gitlab-ci.yml
+
 git add -A
 echo "======================================="
 echo git commit -m "LWE_Release_$today""_$hash"
