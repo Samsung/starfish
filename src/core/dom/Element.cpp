@@ -533,7 +533,8 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                     ComputedStyle* ocs = oldStyle->pseudoStyle(
                         this, (StyleResolver::PseudoElementType)i);
                     ComputedStyle* ncs = newStyle->pseudoStyle(
-                        this, (StyleResolver::PseudoElementType)i);
+                        this, (StyleResolver::PseudoElementType)i, nullptr,
+                        ocs);
                     bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
                         false,
                     };
