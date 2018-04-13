@@ -19,6 +19,8 @@
 
 #include "StarFishConfig.h"
 #include "core/layout/FrameGridBox.h"
+#include "core/style/CSSStyleDeclaration.h"
+#include "core/style/CSSParser.h"
 
 namespace StarFish {
 
@@ -215,10 +217,34 @@ void GridFormattingContext::applyFrUnitsWithRows()
     }
 }
 
+GridArea* GridFormattingContext::getNamedGridArea(String* name)
+{
+    auto it = m_namedAreaMap.find(name->toUTF8NonGCString().data());
+
+    if (it != m_namedAreaMap.end()) {
+        return &(it->second);
+    }
+
+    return nullptr;
+}
+
 static void adaptStartAndEndValueForRow(GridFormattingContext& ctx,
                                         FrameBox* gridItem, size_t numberOfRows,
                                         size_t& start, size_t& end)
 {
+    // check named grid areas.
+    auto style = gridItem->style();
+    if (style) {
+        String* name = style->gridArea();
+        if (name) {
+            GridArea* area = ctx.getNamedGridArea(name);
+            if (area) {
+                start = area->m_rowStart;
+                end = area->m_rowEnd;
+            }
+        }
+    }
+
     if (start > 0 && end > 0) {
         if (start > end) {
             size_t temp = start;
@@ -262,6 +288,19 @@ static void adaptStartAndEndValueForColumn(GridFormattingContext& ctx,
                                            size_t numberOfColumns,
                                            size_t& start, size_t& end)
 {
+    // check named grid areas.
+    auto style = gridItem->style();
+    if (style) {
+        String* name = style->gridArea();
+        if (name) {
+            GridArea* area = ctx.getNamedGridArea(name);
+            if (area) {
+                start = area->m_columnStart;
+                end = area->m_columnEnd;
+            }
+        }
+    }
+
     if (start > 0 && end > 0) {
         if (start > end) {
             size_t temp = start;
@@ -545,6 +584,209 @@ void GridFormattingContext::buildGridAreaAndOrdering()
     }
 }
 
+void GridFormattingContext::parsingGridTemplateAreasAndStoreInformation()
+{
+    struct Area {
+        size_t columnStart;
+        size_t columnEnd;
+        size_t rowStart;
+        size_t rowEnd;
+    };
+
+    // Parsing GridTemplateAreas.
+    String* str = m_container->style()->gridTemplateAreas();
+
+    if (!str) {
+        return;
+    }
+
+    auto raw = str->toUTF8NonGCString();
+
+    CSSTokenVector tokens;
+    CSSStyleDeclaration::tokenizeCSSValue(tokens, raw.data(), raw.length());
+
+    GCUnorderedMultiMap<std::string, struct Area> collector;
+    SetForGrid<std::string> areaSet;
+
+    for (size_t row = 0; row < tokens.size(); row++) {
+        auto ss = tokens[row];
+        ss.trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+        parser.consumeContentString();
+        String* separator = parser.parsedString();
+        if (!separator) {
+            return;
+        }
+
+        auto s = separator->toUTF8NonGCString();
+        CSSTokenVector areas;
+        CSSStyleDeclaration::tokenizeCSSValue(areas, s.data(), s.length());
+
+        for (size_t col = 0; col < areas.size(); col++) {
+            std::string name = areas[col];
+            Area area;
+            area.columnStart = col + 1;
+            area.columnEnd = area.columnStart + 1;
+            area.rowStart = row + 1;
+            area.rowEnd = area.rowStart + 1;
+            collector.insert(std::make_pair(name, area));
+            areaSet.insert(name);
+        }
+    }
+
+    for (const std::string& name : areaSet.set()) {
+        std::vector<struct Area> stack;
+        for (auto it = collector.find(name); it != collector.end(); it++) {
+            if (name.compare(it->first)) {
+                break;
+            }
+
+            if (!stack.size()) {
+                stack.push_back(it->second);
+            } else {
+                bool merge = false;
+                struct Area target = it->second;
+                for (size_t i = 0; i < stack.size(); i++) {
+                    struct Area* area = &stack[i];
+                    SetForGrid<size_t> set;
+                    if (area->columnStart == target.columnStart &&
+                        area->columnEnd == target.columnEnd) {
+                        set.insert(area->rowStart);
+                        set.insert(area->rowEnd);
+                        set.insert(target.rowStart);
+                        set.insert(target.rowEnd);
+
+                        if (set.size() != 3) {
+                            continue;
+                        }
+
+                        std::vector<size_t>& orderedTracks = set.set();
+                        size_t previous = orderedTracks[0];
+                        for (size_t i = 1; i < orderedTracks.size(); i++) {
+                            if ((orderedTracks[i] - previous) != 1) {
+                                continue;
+                            }
+                            previous = orderedTracks[i];
+                        }
+
+                        area->rowStart = orderedTracks[0];
+                        area->rowEnd = orderedTracks[2];
+                        merge = true;
+
+                        break;
+                    } else if (area->rowStart == target.rowStart &&
+                               area->rowEnd == target.rowEnd) {
+                        set.insert(area->columnStart);
+                        set.insert(area->columnEnd);
+                        set.insert(target.columnStart);
+                        set.insert(target.columnEnd);
+                        if (set.size() != 3) {
+                            continue;
+                        }
+
+                        std::vector<size_t>& orderedTracks = set.set();
+                        size_t previous = orderedTracks[0];
+
+                        for (size_t i = 1; i < orderedTracks.size(); i++) {
+                            if ((orderedTracks[i] - previous) != 1) {
+                                continue;
+                            }
+                            previous = orderedTracks[i];
+                        }
+
+                        area->columnStart = orderedTracks[0];
+                        area->columnEnd = orderedTracks[2];
+                        merge = true;
+                        break;
+                    }
+                }
+
+                if (!merge) {
+                    stack.push_back(it->second);
+                }
+            }
+        }
+
+        if (stack.size() != 1) {
+            while (stack.size() != 1) {
+                struct Area target = stack.back();
+                stack.pop_back();
+                bool merge = false;
+                for (size_t i = 0; i < stack.size(); i++) {
+                    struct Area* area = &stack[i];
+                    SetForGrid<size_t> set;
+                    if (area->columnStart == target.columnStart &&
+                        area->columnEnd == target.columnEnd) {
+                        set.insert(area->rowStart);
+                        set.insert(area->rowEnd);
+                        set.insert(target.rowStart);
+                        set.insert(target.rowEnd);
+
+                        if (set.size() != 3) {
+                            continue;
+                        }
+
+                        std::vector<size_t>& orderedTracks = set.set();
+
+                        size_t previous = orderedTracks[0];
+
+                        for (size_t i = 1; i < orderedTracks.size(); i++) {
+                            if ((orderedTracks[i] - previous) != 1) {
+                                continue;
+                            }
+                            previous = orderedTracks[i];
+                        }
+
+                        area->rowStart = orderedTracks[0];
+                        area->rowEnd = orderedTracks[2];
+                        merge = true;
+                        break;
+                    } else if (area->rowStart == target.rowStart &&
+                               area->rowEnd == target.rowEnd) {
+                        set.insert(area->columnStart);
+                        set.insert(area->columnEnd);
+                        set.insert(target.columnStart);
+                        set.insert(target.columnEnd);
+                        if (set.size() != 3) {
+                            continue;
+                        }
+
+                        std::vector<size_t>& orderedTracks = set.set();
+
+                        size_t previous = orderedTracks[0];
+
+                        for (size_t i = 1; i < orderedTracks.size(); i++) {
+                            if ((orderedTracks[i] - previous) != 1) {
+                                continue;
+                            }
+                            previous = orderedTracks[i];
+                        }
+
+                        area->columnStart = orderedTracks[0];
+                        area->columnEnd = orderedTracks[2];
+                        merge = true;
+                        break;
+                    }
+                }
+
+                if (merge) {
+                    struct Area area = stack.back();
+                    GridArea gridArea(nullptr, -1, area.rowStart, area.rowEnd,
+                                      area.columnStart, area.columnEnd);
+                    m_namedAreaMap.insert(std::make_pair(name, gridArea));
+                } else {
+                    return;
+                }
+            }
+        } else {
+            struct Area area = stack.back();
+            GridArea gridArea(nullptr, -1, area.rowStart, area.rowEnd,
+                              area.columnStart, area.columnEnd);
+            m_namedAreaMap.insert(std::make_pair(name, gridArea));
+        }
+    }
+}
+
 void GridFormattingContext::buildGridLineTemplate()
 {
     const GCVector<GridLength>* columns =
@@ -593,6 +835,9 @@ void GridFormattingContext::buildGridLineTemplate()
         }
     }
 
+    // parsing grid template areas and store this information.
+    parsingGridTemplateAreasAndStoreInformation();
+
     // ordering item and make line.
     buildGridAreaAndOrdering();
 
@@ -605,10 +850,6 @@ void GridFormattingContext::buildGridLineTemplate()
     applyFrUnitsWithRows();
 
     arrangeGridLinesWithGridAreas(false);
-}
-
-void GridFormattingContext::arrangeGridColumnLine()
-{
 }
 
 static GridArea* getBiggestAreaWithColumn(GCVector<GridArea>& list,

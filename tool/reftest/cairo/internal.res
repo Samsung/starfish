@@ -260,6 +260,7 @@ test/cairo/internal-test/css/grid/gridbox_simple-box-12.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-14.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-15.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-16.html
+test/cairo/internal-test/css/grid/gridbox_simple-box-17.html
 test/cairo/internal-test/css/style/lookup-computed-style.html
 test/cairo/internal-test/css/text/text-decoration-color-001a.html
 test/cairo/internal-test/css/text/text-decoration-line-001.html
