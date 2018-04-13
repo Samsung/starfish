@@ -2744,6 +2744,7 @@ public:
 #define ADD_PSEUDO_TYPE(name, nameLower, selectorName) Pseudo##name,
         STARFISH_ENUM_PSEUDO_SELECTORS(ADD_PSEUDO_TYPE)
 #undef ADD_PSEUDO_TYPE
+            PseudoTotalCount,
     };
 
     enum AttributeMatchType {

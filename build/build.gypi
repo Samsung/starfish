@@ -89,16 +89,13 @@
             '-fvisibility=hidden',
             '-fno-omit-frame-pointer',
             '-fstack-protector',
-            # WARNING(Experimental): With lto, smaller binary (-200kb) is
-            # generated, but linking is slower and stability is not tested.
-            #'-flto',
             '-fPIC',
-            #'-fuse-ld=gold', # for fast linking
         ],
         'cflags_debug': [
             '-O0',
             '-g3',
             '-Werror',
+            # '-fsanitize=address',
         ],
         'cflags_release': [
             '-O2',
@@ -111,6 +108,7 @@
             '-lcurl',
             '-lssl',
             '-lcrypto',
+            # '-lasan', # for -fsanitize=address
         ],
         'include_dirs_default': [
            '<(starfish_root)/src',

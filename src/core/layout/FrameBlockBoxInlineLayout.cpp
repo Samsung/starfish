@@ -4843,6 +4843,13 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                                        LayoutUnit dy)
 {
     if (stage == PaintingInlineStage::PaintingInlineBox) {
+        LayoutRect vr = frameVisibleRect();
+        vr.setX(vr.x() + dx);
+        vr.setY(vr.y() + dy);
+        if (canvas->canRejectPainting(vr)) {
+            return;
+        }
+
         ComputedStyle* s = style();
         if (s->visibility() == VisibilityValue::HiddenVisibilityValue) {
             return;

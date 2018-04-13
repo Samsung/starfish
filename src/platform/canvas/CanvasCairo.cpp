@@ -1221,14 +1221,30 @@ private:
 
         cairo_translate(canvas, -dx, -dy);
     }
+
+    virtual bool canRejectPainting(const LayoutRect& rect)
+    {
+        double x1, x2;
+        double y1, y2;
+        cairo_clip_extents(m_canvas, &x1, &y1, &x2, &y2);
+        LayoutRect c(x1, y1, x2 - x1, y2 - y1);
+        if (c.intersects(rect)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     virtual void setNeedsNoneAntialias()
     {
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_NONE);
     }
+
     virtual void setNeedsFastAntialias()
     {
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_FAST);
     }
+
     virtual void setNeedsGoodQualityAntialias()
     {
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_GOOD);

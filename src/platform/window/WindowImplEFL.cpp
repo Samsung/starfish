@@ -1789,6 +1789,7 @@ Canvas* WindowImplEFL::preparePainting()
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
+            starFish()->addPointerInRootSet(g_surfaceForScreehShot);
             Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
             return c;
         }
@@ -1846,6 +1847,7 @@ Canvas* WindowImplEFL::preparePainting()
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
+            starFish()->addPointerInRootSet(g_surfaceForScreehShot);
             STARFISH_LOG_INFO(
                 "WindowImplEFL::preparePainting buffer info(screen shot) %p -> "
                 "%p\n",
@@ -1938,6 +1940,7 @@ Compositor* WindowImplEFL::prepareCompositor()
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
+            starFish()->addPointerInRootSet(g_surfaceForScreehShot);
             Compositor* c =
                 Compositor::create(starFish(), g_surfaceForScreehShot);
             return c;

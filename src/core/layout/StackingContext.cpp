@@ -229,6 +229,7 @@ struct StackingContext::ComputeStackingContextContext {
 StackingContextRareData::StackingContextRareData()
     : m_needsGraphicsBuffer(false)
     , m_hasNon2DRectTransform(false)
+    , m_isVisibleRectComputedForNonGraphicsLayer(false)
     , m_visibleRect(0, 0, 0, 0)
     , m_buffer(nullptr)
 {
@@ -1064,6 +1065,23 @@ void StackingContext::applyStackingContextProperties(
             m_rareData->m_visibleRect);
 
         m_owner->computeVisibleRect(ctx);
+
+        if (m_rareData->m_visibleRect.width() &&
+            m_rareData->m_visibleRect.height()) {
+            // TODO implement sub-visible rect painting & compositing
+            LayoutRect visibleRect = m_owner->frameVisibleRect();
+            if (m_rareData->m_visibleRect.width() < visibleRect.width() ||
+                m_rareData->m_visibleRect.height() < visibleRect.height()) {
+                m_rareData->m_visibleRect.setWidth(std::max(
+                    visibleRect.width(), m_rareData->m_visibleRect.width()));
+                m_rareData->m_visibleRect.setHeight(std::max(
+                    visibleRect.height(), m_rareData->m_visibleRect.height()));
+            }
+        }
+    } else {
+        if (m_rareData) {
+            m_rareData->m_isVisibleRectComputedForNonGraphicsLayer = false;
+        }
     }
 }
 
@@ -1106,9 +1124,9 @@ void StackingContext::paintStackingContext(
     size_t bufferHeight =
         (int)(maxY - minY) * m_owner->node()->window()->devicePixelRatio();
 
-    bool hasStackingBuffer = needsGraphicsBuffer();
+    bool hasGraphicsBuffer = needsGraphicsBuffer();
 
-    if (hasStackingBuffer) {
+    if (hasGraphicsBuffer) {
         needsPainting = m_needsRepainting || parentGraphicsLayerNeedsPainting;
         if (m_needsRepainting) {
             parentGraphicsLayerNeedsPainting = true;
@@ -1163,11 +1181,11 @@ void StackingContext::paintStackingContext(
             new CanvasStateRestorer(canvas, this, parent()->owner()));
     }
 
-    if (!hasStackingBuffer && owner()->style()->opacity() != 1) {
+    if (!hasGraphicsBuffer && owner()->style()->opacity() != 1) {
         canvas->beginOpacityLayer(owner()->style()->opacity());
     }
 
-    if (!hasStackingBuffer) {
+    if (!hasGraphicsBuffer) {
         SkMatrix m = transformMatrix();
 
         if (!m.isIdentity()) {
@@ -1175,11 +1193,11 @@ void StackingContext::paintStackingContext(
             bool testResult = m_rareData->m_matrix.invert(&test);
             if (!testResult) {
                 // ignorePaintingDueToInvalidMatrix
-                if (!hasStackingBuffer && owner()->style()->opacity() != 1) {
+                if (!hasGraphicsBuffer && owner()->style()->opacity() != 1) {
                     canvas->endOpacityLayer();
                 }
                 canvas->restore();
-                if (hasStackingBuffer) {
+                if (hasGraphicsBuffer) {
                     delete canvas;
                 }
                 return;
@@ -1213,7 +1231,31 @@ void StackingContext::paintStackingContext(
         }
     }
 
-    if (needsPainting) {
+    bool canRejectPainting;
+    if (hasGraphicsBuffer) {
+        canRejectPainting =
+            canvas->canRejectPainting(StackingContext::visibleRect());
+    } else if (owner()->shouldApplyOverflow()) {
+        canRejectPainting =
+            canvas->canRejectPainting(m_owner->frameVisibleRect());
+    } else {
+        if (!ensureRareData()->m_isVisibleRectComputedForNonGraphicsLayer) {
+            ensureRareData()->m_visibleRect = m_owner->frameVisibleRect();
+            SkMatrix l = SkMatrix::I();
+            Frame::ComputeVisibleRectContext ctx(
+                Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
+                ensureRareData()->m_visibleRect);
+
+            m_owner->computeVisibleRect(ctx);
+
+            ensureRareData()->m_isVisibleRectComputedForNonGraphicsLayer = true;
+        }
+
+        canRejectPainting =
+            canvas->canRejectPainting(StackingContext::visibleRect());
+    }
+
+    if (needsPainting && !canRejectPainting) {
         m_owner->paintBackgroundAndBorders(canvas);
     }
 
@@ -1245,7 +1287,7 @@ void StackingContext::paintStackingContext(
         }
     }
 
-    if (!hasStackingBuffer && owner()->shouldApplyOverflow()) {
+    if (!hasGraphicsBuffer && owner()->shouldApplyOverflow()) {
         canvas->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
         const LayoutRect rect(0, 0, m_owner->width(), m_owner->height());
         m_owner->applyBorderRadiusClippingIfNeeds(canvas, rect);
@@ -1277,7 +1319,7 @@ void StackingContext::paintStackingContext(
         }
     }
 
-    if (needsPainting) {
+    if (needsPainting && !canRejectPainting) {
         m_owner->paintStackingContextContent(canvas);
     }
 
@@ -1303,7 +1345,7 @@ void StackingContext::paintStackingContext(
         }
     }
 
-    if (!hasStackingBuffer && owner()->style()->opacity() != 1) {
+    if (!hasGraphicsBuffer && owner()->style()->opacity() != 1) {
         canvas->endOpacityLayer();
     }
 
@@ -1344,10 +1386,10 @@ void StackingContext::paintStackingContext(
     }
 
     canvas->restore();
-    if (hasStackingBuffer) {
+    if (hasGraphicsBuffer) {
         delete canvas;
     }
-    if (hasStackingBuffer || isRootContext()) {
+    if (hasGraphicsBuffer || isRootContext()) {
         m_needsRepainting = false;
     }
 }

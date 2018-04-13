@@ -122,19 +122,19 @@ public:
     {
         return isNull() ? false : m_data->m_sliceFill;
     }
-    BorderImageRepeatValue repeatX()
+    BorderImageRepeatValue repeatX() const
     {
         return isNull() ? DEFAULT_VALUE_IMAGE_REPEAT() : m_data->m_repeatX;
     }
-    BorderImageRepeatValue repeatY()
+    BorderImageRepeatValue repeatY() const
     {
         return isNull() ? DEFAULT_VALUE_IMAGE_REPEAT() : m_data->m_repeatY;
     }
-    BorderImageLengthBox widths()
+    BorderImageLengthBox widths() const
     {
         return isNull() ? DEFAULT_VALUE_IMAGE_WIDTH() : m_data->m_widths;
     }
-    BorderImageLengthBox outsets()
+    BorderImageLengthBox outsets() const
     {
         return isNull() ? DEFAULT_VALUE_IMAGE_OUTSET() : m_data->m_outsets;
     }
@@ -206,11 +206,12 @@ public:
         return !operator==(o);
     }
 
-private:
-    bool isNull()
+    bool isNull() const
     {
         return m_data == nullptr;
     }
+
+private:
     BorderImageImpl* data()
     {
         if (isNull())
