@@ -2720,64 +2720,55 @@ static inline bool featureWithoutValue(MediaFeature mediaFeature)
            mediaFeature == MediaFeature::MediaFeatureAspectRatio ||
            mediaFeature == MediaFeature::MediaFeatureDeviceAspectRatio ||
            mediaFeature == MediaFeature::MediaFeatureResolution ||
-           // mediaFeature == MediaFeature::MediaFeatureDisplayMode ||
            mediaFeature == MediaFeature::MediaFeatureScan ||
            mediaFeature == MediaFeature::MediaFeatureHover ||
            mediaFeature == MediaFeature::MediaFeatureAnyHover ||
            mediaFeature == MediaFeature::MediaFeaturePointer ||
            mediaFeature == MediaFeature::MediaFeatureAnyPointer ||
            mediaFeature == MediaFeature::MediaFeatureScripting ||
-           mediaFeature == MediaFeature::MediaFeatureUpdate;
+           mediaFeature == MediaFeature::MediaFeatureUpdate ||
+           mediaFeature == MediaFeature::MediaFeatureOverflowBlock ||
+           mediaFeature == MediaFeature::MediaFeatureOverflowInline;
 }
 
 static inline bool featureWithValidIdent(MediaFeature mediaFeature,
                                          const String* ident)
 {
-    /*
-    if (mediaFeature == MediaFeature::MediaFeatureDisplayMode) {
-        return ident->equalsIgnoreCase("fullscreen") ||
-               ident->equalsIgnoreCase("standalone") ||
-               ident->equalsIgnoreCase("minimalui") ||
-               ident->equalsIgnoreCase("browser");
-    }
-    */
-
-    if (mediaFeature == MediaFeature::MediaFeatureOrientation) {
+    switch (mediaFeature) {
+    case MediaFeature::MediaFeatureOrientation:
         return ident->equalsIgnoreCase("portrait") ||
                ident->equalsIgnoreCase("landscape");
-    }
-
-    if (mediaFeature == MediaFeature::MediaFeatureScan) {
+    case MediaFeature::MediaFeatureScan:
         return ident->equalsIgnoreCase("interlace") ||
                ident->equalsIgnoreCase("progressive");
-    }
-
-    if (mediaFeature == MediaFeature::MediaFeatureHover ||
-        mediaFeature == MediaFeature::MediaFeatureAnyHover) {
+    case MediaFeature::MediaFeatureHover:
+    case MediaFeature::MediaFeatureAnyHover:
         return ident->equalsIgnoreCase("none") ||
                ident->equalsIgnoreCase("hover");
-    }
-
-    if (mediaFeature == MediaFeature::MediaFeaturePointer ||
-        mediaFeature == MediaFeature::MediaFeatureAnyPointer) {
+    case MediaFeature::MediaFeaturePointer:
+    case MediaFeature::MediaFeatureAnyPointer:
         return ident->equalsIgnoreCase("none") ||
                ident->equalsIgnoreCase("coarse") ||
                ident->equalsIgnoreCase("fine");
-    }
-
-    if (mediaFeature == MediaFeature::MediaFeatureScripting) {
+    case MediaFeature::MediaFeatureScripting:
         return ident->equalsIgnoreCase("none") ||
                ident->equalsIgnoreCase("initial-only") ||
                ident->equalsIgnoreCase("enabled");
-    }
-
-    if (mediaFeature == MediaFeature::MediaFeatureUpdate) {
+    case MediaFeature::MediaFeatureUpdate:
         return ident->equalsIgnoreCase("none") ||
                ident->equalsIgnoreCase("slow") ||
                ident->equalsIgnoreCase("fast");
+    case MediaFeature::MediaFeatureOverflowBlock:
+        return ident->equalsIgnoreCase("none") ||
+               ident->equalsIgnoreCase("scroll") ||
+               ident->equalsIgnoreCase("optional-paged") ||
+               ident->equalsIgnoreCase("paged");
+    case MediaFeature::MediaFeatureOverflowInline:
+        return ident->equalsIgnoreCase("none") ||
+               ident->equalsIgnoreCase("scroll");
+    default:
+        return false;
     }
-
-    return false;
 }
 
 static inline bool featureWithValidPositiveLength(MediaFeature mediaFeature,

@@ -1087,6 +1087,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | | pointer | none &#124; coarse &#124; fine | The 'pointer' media feature is used to query the presence and accuracy of a pointing device such as a mouse. | |
 | | any-pointer | none &#124; coarse &#124; fine | The 'any-pointer' media feature is identical to the 'pointer' media feature, but this corresponds to the union of capabilities of all the pointing devices available to the user. | |
 | | update | none &#124; slow &#124; fast | The 'update' media feature is used to query the ability of the output device to modify the apearance of content once it has been rendered. | |
+| | overflow-block | none &#124; scroll &#124; optional-paged &#124; paged | The 'overflow-block' media feature describes the behavior of the device when content overflows the initial containing block in the block axis. | |
+| | overflow-inline | none &#124; scroll | The 'overflow-inline' media feature describes the behavior of the device when content overflows the initial containing block in the inline axis. | |
 | [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-5/) | scripting | none &#124; initial-only &#124; enabled | The 'scripting' media feature is used to query whether scripting languages, such as JavaScript, are supported on the current document. | |
 | [List](https://www.w3.org/TR/CSS2/generate.html#lists) | list-style | &lt;list-style-type&gt; &#124; &lt;list-style-position&gt; &#124; &lt;list-style-image&gt; | Shorthand | |
 | | list-style-type | &lt;counter-style&gt; &#124; &lt;string&gt; &#124; none | Specifies the appearance of a list item element | |

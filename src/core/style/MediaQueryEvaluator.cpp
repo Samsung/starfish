@@ -529,6 +529,30 @@ static bool updateMediaFeatureEval(MediaQueryExpValue& value,
     return true;
 }
 
+static bool overflowBlockMediaFeatureEval(MediaQueryExpValue& value,
+                                          MediaValues* mediaValues,
+                                          MediaFeaturePrefix op)
+{
+    // https://www.w3.org/TR/mediaqueries-4/#mf-overflow-block
+    if (value.isID) {
+        // Consider more values if we support more devices. (e.g.,
+        // optinal-paged: slideshows, paged: printers, ebook readers)
+        return value.id->equalsIgnoreCase("scroll");
+    }
+    return true;
+}
+
+static bool overflowInlineMediaFeatureEval(MediaQueryExpValue& value,
+                                           MediaValues* mediaValues,
+                                           MediaFeaturePrefix op)
+{
+    // https://www.w3.org/TR/mediaqueries-4/#mf-overflow-inline
+    if (value.isID) {
+        return value.id->equalsIgnoreCase("scroll");
+    }
+    return true;
+}
+
 bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
 {
     // MediaQueryExp can be nullptr when it has invalid expressions.
