@@ -53,6 +53,7 @@ hash=`git log | head -1 | cut -f2 -d' ' | cut -c 1-6`
 today=`date +%y%m%d`
 
 cd ../$repo
+find ./binding_generator ./tool ./third_party -name ".git*" -exec rm -f {} \;
 git add -A
 echo "======================================="
 echo git commit -m "LWE_Release_$today""_$hash"
