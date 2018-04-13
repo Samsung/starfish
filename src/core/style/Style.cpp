@@ -389,7 +389,8 @@ String* CSSStyleValuePair::keyName() const
     case Name:                                    \
         return String::createASCIIString(cssname);
 
-        FOR_EACH_STYLE_ATTRIBUTE(ADD_CASE_FOR_KEYNAME);
+        FOR_EACH_STYLE_ATTRIBUTE_BASIC(ADD_CASE_FOR_KEYNAME)
+        FOR_EACH_STYLE_ATTRIBUTE_STICKY(ADD_CASE_FOR_KEYNAME)
 #undef ADD_CASE_FOR_KEYNAME
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -2857,6 +2858,13 @@ String* CSSStyleValuePair::toString() const
         case SliceBoxDecorationBreakValue:
             return String::fromUTF8("slice");
         }
+    case CSSStyleValuePair::ValueKind::PathFunctionValueKind: {
+        StringBuilder builder;
+        builder.appendString("path(\"");
+        builder.appendString(pathFunctionValue());
+        builder.appendString("\")");
+        return builder.finalize();
+    }
     }
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
@@ -3871,24 +3879,6 @@ void CSSStyleDeclaration::setBorderImage(const char* value, size_t length,
         repeat.setFlagImportant(isImportant);
         addBorderImageCSSValuePairs(this, source, slice, width, outset, repeat);
     }
-}
-
-String* CSSStyleDeclaration::FontFamily()
-{
-    for (unsigned i = 0; i < m_cssValues.size(); i++) {
-        if (m_cssValues[i].keyKind() == CSSStyleValuePair::KeyKind::FontFamily)
-            return m_cssValues[i].toString();
-    }
-    return String::emptyString;
-}
-
-String* CSSStyleDeclaration::Src()
-{
-    for (unsigned i = 0; i < m_cssValues.size(); i++) {
-        if (m_cssValues[i].keyKind() == CSSStyleValuePair::KeyKind::Src)
-            return m_cssValues[i].toString();
-    }
-    return String::emptyString;
 }
 
 String* CSSStyleDeclaration::Font()
@@ -7075,11 +7065,8 @@ void StyleResolver::apply(Element* element,
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
                 style->setD(parentStyle->d());
-            } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::StringValueKind) {
-                style->setD(cssValues[k].stringValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                style->setD(cssValues[k].pathFunctionValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::CX:
@@ -13373,48 +13360,14 @@ void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
         return;
     }
 
-    CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, len, "()", 2, true);
-
-    // path, (, "data", )
-    if (tokens.size() != 4) {
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::D);
-        return;
+    Nullable<String*> functionContent =
+        CSSPropertyParser::parseFunctionContent(value, "path");
+    if (functionContent.hasValue()) {
+        // TODO validate function content for D property
+        CSSStyleValuePair pair;
+        pair.setPathFunctionValue(functionContent.getValue());
+        addCSSValuePair(CSSStyleValuePair::KeyKind::D, pair);
     }
-    if (tokens[0] != "path" || tokens[1] != "(" || tokens[3] != ")" ||
-        tokens[2].length() < 2) {
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::D);
-        return;
-    }
-    if ((tokens[2][0] == '"' && tokens[2].back() == '"') ||
-        (tokens[2][0] == '\'' && tokens[2].back() == '\'')) {
-    } else {
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::D);
-        return;
-    }
-
-    // TODO validate path data
-    CSSStyleValuePair pair;
-    pair.setFlagImportant(isImportant);
-    pair.setKeyKind(CSSStyleValuePair::KeyKind::D);
-    pair.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-    pair.setStringValue(
-        String::fromUTF8(tokens[2].data() + 1, tokens[2].length() - 1));
-    addCSSValuePair(CSSStyleValuePair::KeyKind::D, pair);
-}
-
-String* CSSStyleDeclaration::D()
-{
-    for (unsigned i = 0; i < m_cssValues.size(); i++) {
-        if (m_cssValues[i].keyKind() == CSSStyleValuePair::KeyKind::D) {
-            StringBuilder sb;
-            sb.appendString("path('");
-            sb.appendString(m_cssValues[i].toString());
-            sb.appendString(")");
-            return sb.finalize();
-        }
-    }
-    return String::emptyString;
 }
 
 bool CSSStyleValuePair::updateValueOutlineColor(Document* document,
