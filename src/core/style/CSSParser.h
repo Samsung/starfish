@@ -1254,6 +1254,8 @@ protected:
     F(Monochrome, "monochrome", monochrome, NoPrefix)                        \
     F(MaxMonochrome, "max-monochrome", monochrome, MaxPrefix)                \
     F(MinMonochrome, "min-monochrome", monochrome, MinPrefix)                \
+    F(OverflowBlock, "overflow-block", overflowBlock, NoPrefix)              \
+    F(OverflowInline, "overflow-inline", overflowInline, NoPrefix)           \
     F(Pointer, "pointer", pointer, NoPrefix)                                 \
     F(Scan, "scan", scan, NoPrefix)                                          \
     F(Scripting, "scripting", scripting, NoPrefix)                           \
