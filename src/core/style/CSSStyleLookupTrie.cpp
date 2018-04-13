@@ -933,8 +933,14 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         break;
 
     case 20:
+        // box-decoration-break
         // text-decoration-line
         switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "box-decoration-break", 20) == 0) {
+                return CSSStyleKind::BoxDecorationBreak;
+            }
+            break;
         case 't':
             if (memcmp(data, "text-decoration-line", 20) == 0) {
                 return CSSStyleKind::TextDecorationLine;
@@ -946,7 +952,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // background-position-x
         // background-position-y
         // background-attachment
-        // Grid-Template-Columns
+        // grid-template-columns
         // text-decoration-color
         // text-decoration-style
         switch (data[0]) {
@@ -1750,6 +1756,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "backgroundPosition", 18) == 0) {
                 return CSSStyleKind::BackgroundPosition;
+            }
+            if (memcmp(data, "boxDecorationBreak", 18) == 0) {
+                return CSSStyleKind::BoxDecorationBreak;
             }
             break;
         case 't':

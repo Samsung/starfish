@@ -711,12 +711,20 @@ void InlineBoxLayoutParentBox::setLeftMBPs(LineFormattingContext* ctx)
                 if (!ctx->isSetLeftMBP(inrb) &&
                     ctx->isProcessedStartingMBP(inrb)) {
                     inrb->setOrgLeftMBP(ctx);
+                    ctx->markSetLeftMBP(inrb);
+                } else if (inrb->style()->boxDecorationBreak() !=
+                           SliceBoxDecorationBreakValue) {
+                    inrb->setOrgLeftMBP(ctx);
                 } else {
                     inrb->unsetLeftMBP();
                 }
             } else {
                 if (!ctx->isSetLeftMBP(inrb) &&
                     ctx->isProcessedEndingMBP(inrb)) {
+                    inrb->setOrgLeftMBP(ctx);
+                    ctx->markSetLeftMBP(inrb);
+                } else if (inrb->style()->boxDecorationBreak() !=
+                           SliceBoxDecorationBreakValue) {
                     inrb->setOrgLeftMBP(ctx);
                 } else {
                     inrb->unsetLeftMBP();
@@ -738,12 +746,20 @@ void InlineBoxLayoutParentBox::setRightMBPs(LineFormattingContext* ctx)
                 if (!ctx->isSetRightMBP(inrb) &&
                     ctx->isProcessedEndingMBP(inrb)) {
                     inrb->setOrgRightMBP(ctx);
+                    ctx->markSetRightMBP(inrb);
+                } else if (inrb->style()->boxDecorationBreak() !=
+                           SliceBoxDecorationBreakValue) {
+                    inrb->setOrgRightMBP(ctx);
                 } else {
                     inrb->unsetRightMBP();
                 }
             } else {
                 if (!ctx->isSetRightMBP(inrb) &&
                     ctx->isProcessedStartingMBP(inrb)) {
+                    inrb->setOrgRightMBP(ctx);
+                    ctx->markSetRightMBP(inrb);
+                } else if (inrb->style()->boxDecorationBreak() !=
+                           SliceBoxDecorationBreakValue) {
                     inrb->setOrgRightMBP(ctx);
                 } else {
                     inrb->unsetRightMBP();
@@ -3696,8 +3712,6 @@ void InlineNonReplacedBox::setOrgLeftMBP(
             parent = parent->layoutParent()->asFrameBox();
         }
     }
-
-    lineFormattingContext->markSetLeftMBP(this);
 }
 
 void InlineNonReplacedBox::setOrgRightMBP(
@@ -3724,8 +3738,6 @@ void InlineNonReplacedBox::setOrgRightMBP(
             parent = parent->layoutParent()->asFrameBox();
         }
     }
-
-    lineFormattingContext->markSetRightMBP(this);
 }
 
 void InlineNonReplacedBox::processStartingMBP(

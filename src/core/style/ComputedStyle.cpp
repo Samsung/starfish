@@ -1924,6 +1924,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->boxDecorationBreak() != oldStyle->boxDecorationBreak()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BoxDecorationBreak] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    }
+
     return damage;
 }
 
