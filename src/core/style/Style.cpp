@@ -73,10 +73,10 @@
 namespace StarFish {
 
 #define TOKEN_IS_STRING(str) \
-    ((memcmp(token, str, strlen(str))) == 0 && strlen(str) == strlen(token))
+    (strlen(str) == strlen(token) && (memcmp(token, str, strlen(str))) == 0)
 
 #define VALUE_IS_STRING(str) \
-    ((memcmp(value, str, strlen(str))) == 0 && strlen(str) == strlen(value))
+    (strlen(str) == strlen(value) && (memcmp(value, str, strlen(str))) == 0)
 
 #define VALUE_IS_INHERIT() VALUE_IS_STRING("inherit")
 
@@ -1420,6 +1420,8 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
         if (type() != PseudoClass) {
             m_pseudotype = PseudoNone;
         }
+        break;
+    case PseudoTotalCount:
         break;
     }
 }
@@ -8528,6 +8530,16 @@ bool StyleResolver::checkPseudoClass(Element* element,
         return false;
     }
     default:
+#ifdef STARFISH_ENABLE_TEST
+    {
+        // Code for reducing logging `STARFISH_RELEASE_ASSERT_UNIMPLEMENTED`
+        static bool pseudoLogMap[CSSSelector::PseudoTotalCount];
+        if (pseudoLogMap[selector->pseudoType()]) {
+            return false;
+        }
+        pseudoLogMap[selector->pseudoType()] = true;
+    }
+#endif
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         break;
     }

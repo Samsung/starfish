@@ -811,8 +811,10 @@ bool WebView::rendering(bool force)
                 exit(0);
             }
 
-            if (g_surfaceForScreehShot)
+            if (g_surfaceForScreehShot) {
                 g_surfaceForScreehShot->detachNativeBuffer();
+                starFish()->removePointerFromRootSet(g_surfaceForScreehShot);
+            }
             g_surfaceForScreehShot = nullptr;
         }
     }

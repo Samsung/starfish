@@ -191,6 +191,12 @@ public:
 
     virtual void setVisible(bool visible) = 0;
 
+    virtual bool canRejectPainting(const LayoutRect& rect)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return false;
+    }
+
     // Generic canvas functions
     virtual void beginPath()
     {

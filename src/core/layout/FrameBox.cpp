@@ -784,6 +784,10 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
 
 void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 {
+    if (canvas->canRejectPainting(frameVisibleRect())) {
+        return;
+    }
+
     canvas->save();
     bool overflowApplied = shouldApplyOverflow();
     if (overflowApplied) {
@@ -3158,6 +3162,42 @@ LayoutRect FrameBox::frameVisibleRect()
     LayoutRect out = frameVisibleOutlineRect();
     LayoutRect shadow = frameVisibleShadowsRect();
     out.unite(shadow);
+
+    BorderData border = style()->border();
+    const BorderImageData& bi = border.image();
+    if (!bi.isNull()) {
+        auto outsets = bi.outsets();
+        double bLWidth = border.left().width().specifiedValue(width(), this);
+        double bTWidth = border.top().width().specifiedValue(height(), this);
+        double bRWidth = border.right().width().specifiedValue(width(), this);
+        double bBWidth = border.bottom().width().specifiedValue(height(), this);
+
+        double bLOutset =
+            outsets.left().computedBorderImageOutset(bLWidth, this);
+        double bTOutset =
+            outsets.top().computedBorderImageOutset(bTWidth, this);
+        double bROutset =
+            outsets.right().computedBorderImageOutset(bRWidth, this);
+        double bBOutset =
+            outsets.bottom().computedBorderImageOutset(bBWidth, this);
+        LayoutRect r = frameRect();
+        if (bLOutset > 0) {
+            r.setX(r.x() - bLOutset);
+            r.setWidth(r.width() + bLOutset);
+        }
+        if (bTOutset > 0) {
+            r.setY(r.x() - bTOutset);
+            r.setHeight(r.height() + bTOutset);
+        }
+        if (bROutset > 0) {
+            r.setWidth(r.width() + bROutset);
+        }
+        if (bBOutset > 0) {
+            r.setHeight(r.height() + bBOutset);
+        }
+
+        out.unite(r);
+    }
     return out;
 }
 

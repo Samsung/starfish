@@ -37,6 +37,7 @@ class StackingContextChild : public GCVector<StackingContext*> {
 struct StackingContextRareData : public gc {
     bool m_needsGraphicsBuffer;
     bool m_hasNon2DRectTransform;
+    bool m_isVisibleRectComputedForNonGraphicsLayer;
     LayoutRect m_visibleRect;
     CanvasSurface* m_buffer;
     SkMatrix m_matrix;
