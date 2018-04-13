@@ -152,6 +152,7 @@
             ],
             'defines': [
                 '<@(defines_tizen)',
+                '<@(defines_custom_unified)',
             ],
         },
         {

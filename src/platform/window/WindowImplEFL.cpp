@@ -1301,7 +1301,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
     };
     evas_object_smart_callback_add(wnd->m_dummyBox, "clicked",
-                                   wnd->clickEventHandler, wnd);
+                                   wnd->m_clickEventHandler, wnd);
 
 #endif
 

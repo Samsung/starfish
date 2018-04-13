@@ -66,7 +66,7 @@ public:
 
 class STARFISH_EXPORT WebView {
 public:
-	static WebView* Create();
+	static WebView* Create(void* win,int x,int y,int width,int height);
 	static WebView* Create(void* starFish);
 
 	Settings GetSettings();
