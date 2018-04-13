@@ -529,9 +529,9 @@ void bt_sighandler(int sig, struct sigcontext ctx)
         printf(
             "[STARFISH_TEST] Got signal %d, pid %d, faulty address is %p, from "
             "%p\n",
-            (int)getpid(), sig, (void*)ctx.cr2, (void*)ctx.rip);
+            sig, (int)getpid(), (void*)ctx.cr2, (void*)ctx.rip);
     } else {
-        printf("[STARFISH_TEST] Got signal %d, pid %d\n", (int)getpid(), sig);
+        printf("[STARFISH_TEST] Got signal %d, pid %d\n", sig, (int)getpid());
     }
 
     trace_size = backtrace(trace, 128);
@@ -551,7 +551,9 @@ void bt_sighandler(int sig, struct sigcontext ctx)
 
     fflush(stdout);
 
-    exit(0);
+    // this is the trick: it will trigger the core dump
+    signal(sig, SIG_DFL);
+    kill(getpid(), sig);
 }
 
 // crash test functions

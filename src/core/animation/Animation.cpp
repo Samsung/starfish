@@ -239,6 +239,9 @@ void TransformAnimationTask::detachedFromElement()
                 box->computeStyleFlags();
             } else {
                 current->webView()->setNeedsComputeStackingContextProperties();
+                STARFISH_RELEASE_ASSERT(
+                    transforms->at(transforms->size() - 1).type() !=
+                    StyleTransformData::InternalMatrix);
             }
         }
     }
@@ -404,6 +407,18 @@ void AnimationExecutor::runPendingAnimation()
 {
     for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {
         PendingAnimiationInfo* info = m_pendingAnimationInfoList[i];
+
+        bool elementHasAnimation = false;
+        for (size_t j = 0; j < m_animationList.size(); j++) {
+            if (m_animationList[j]->targetElement() == info->element) {
+                elementHasAnimation = true;
+                break;
+            }
+        }
+
+        if (elementHasAnimation) {
+            continue;
+        }
 
         ComputedStyle* currentElementStyle = info->element->style();
         if (!info->element

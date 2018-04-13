@@ -3280,13 +3280,16 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         owner.setX(0);
         owner.setY(0);
         LayoutRect shadowsRect = owner;
+        bool hasShadow = false;
         if (i == 0) {
             if (cs->boxShadow()) {
                 list = cs->boxShadow()->toCanvasShadowDataList(this);
+                hasShadow = true;
             }
         } else {
             if (cs->textShadow()) {
                 list = cs->textShadow()->toCanvasShadowDataList(this);
+                hasShadow = true;
             }
         }
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
@@ -3312,8 +3315,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
                 ret = false;
             }
         }
-
-        if (shadowsRect != owner) {
+        if (hasShadow) {
             ctx.uniteRect(shadowsRect);
         }
     }
