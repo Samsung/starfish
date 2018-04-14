@@ -34,7 +34,7 @@ fi
 # Syncing with the current starfish repo
 
 git submodule init
-git submodule update
+git submodule update binding_generator third_party/deviceapi third_party/escargot third_party/GCutil tool/gyp
 
 cd third_party/escargot
 git submodule init
@@ -46,18 +46,16 @@ cd $ROOT
 python binding_generator/scripts/starfish_code_generator.py src/ src/binding/
 
 if [ "$repo" == "lwe_vd" ]; then
-    rsync -av --delete --exclude-from "tool/release/release_ignore.txt" . ../$repo/third_party/lwe
+    rsync -av --delete --include-from "tool/release/release_include.txt" --exclude-from "tool/release/release_exclude.txt" . ../$repo/third_party/lwe
 else
-    rsync -av --delete --exclude-from "tool/release/release_ignore.txt" . ../$repo
+    rsync -av --delete --include-from "tool/release/release_include.txt" --exclude-from "tool/release/release_exclude.txt" . ../$repo
 fi
 
 hash=`git log | head -1 | cut -f2 -d' ' | cut -c 1-6`
 today=`date +%y%m%d`
 
 cd ../$repo
-find ./binding_generator ./tool ./third_party -name ".git*" -exec rm -f {} \;
-rm -fr test tool/reftest
-rm -fr .gbs.conf .gitlab-ci.yml ./third_party/escargot/.gitlab-ci.yml
+mkdir -p .git
 
 git add -A
 echo "======================================="
