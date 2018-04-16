@@ -79,8 +79,6 @@ public:
     {
         m_parsedNumber = 0;
         m_parsedInt32 = 0;
-        m_parsedString = String::emptyString;
-        m_parsedFunctionContent = String::emptyString;
     }
 
     CSSPropertyParser(char* value, size_t len)
@@ -90,8 +88,6 @@ public:
     {
         m_parsedNumber = 0;
         m_parsedInt32 = 0;
-        m_parsedString = String::emptyString;
-        m_parsedFunctionContent = String::emptyString;
     }
 
     CSSPropertyParser(const CSSTokenValue& src)
@@ -101,35 +97,176 @@ public:
     {
         m_parsedNumber = 0;
         m_parsedInt32 = 0;
-        m_parsedString = String::emptyString;
-        m_parsedFunctionContent = String::emptyString;
     }
 
     static bool isLengthUnit(String* str)
     {
-        if (str->equals("px") || str->equals("em") || str->equals("ex") ||
-            str->equals("in") || str->equals("cm") || str->equals("mm") ||
-            str->equals("pt") || str->equals("pc") || str->equals("vw") ||
-            str->equals("vh") || str->equals("vmin") || str->equals("vmax") ||
-            str->equals("rem") || str->equals("ch")) {
-            return true;
+        return isLengthUnitImpl(str);
+    }
+
+    static bool isLengthUnit(const CSSTokenValue& str)
+    {
+        return isLengthUnitImpl(&str);
+    }
+
+    template <typename T>
+    static bool isLengthUnitImpl(T str)
+    {
+        size_t len = str->length();
+
+        if (len == 2) {
+            char32_t c0 = str->operator[](0);
+            char32_t c1 = str->operator[](1);
+
+            switch (c0) {
+            case 'p':
+                if (c1 == 'x') {
+                    return true;
+                }
+                if (c1 == 't') {
+                    return true;
+                }
+                if (c1 == 'c') {
+                    return true;
+                }
+                break;
+            case 'e':
+                if (c1 == 'm') {
+                    return true;
+                }
+                if (c1 == 'x') {
+                    return true;
+                }
+                break;
+            case 'i':
+                if (c1 == 'n') {
+                    return true;
+                }
+                break;
+            case 'c':
+                if (c1 == 'm') {
+                    return true;
+                }
+                if (c1 == 'h') {
+                    return true;
+                }
+                break;
+            case 'm':
+                if (c1 == 'm') {
+                    return true;
+                }
+                break;
+            case 'v':
+                if (c1 == 'w') {
+                    return true;
+                }
+                if (c1 == 'h') {
+                    return true;
+                }
+                break;
+            default:
+                break;
+            }
+        } else if (len == 3) {
+            char32_t c0 = str->operator[](0);
+            char32_t c1 = str->operator[](1);
+            char32_t c2 = str->operator[](2);
+
+            switch (c0) {
+            case 'r':
+                if (c1 == 'e' && c2 == 'm') {
+                    return true;
+                }
+                break;
+            default:
+                break;
+            }
+        } else if (len == 4) {
+            char32_t c0 = str->operator[](0);
+            char32_t c1 = str->operator[](1);
+            char32_t c2 = str->operator[](2);
+            char32_t c3 = str->operator[](3);
+
+            switch (c0) {
+            case 'v':
+                if (c1 == 'm' && c2 == 'i' && c3 == 'n') {
+                    return true;
+                }
+                if (c1 == 'm' && c2 == 'a' && c3 == 'x') {
+                    return true;
+                }
+                break;
+            default:
+                break;
+            }
         }
         return false;
     }
 
     static bool isAngleUnit(String* str)
     {
-        if (str->equals("deg") || str->equals("grad") || str->equals("rad") ||
-            str->equals("turn")) {
-            return true;
+        return isAngleUnitImpl(str);
+    }
+
+    static bool isAngleUnit(const CSSTokenValue& str)
+    {
+        return isAngleUnitImpl(&str);
+    }
+
+    template <typename T>
+    static bool isAngleUnitImpl(T str)
+    {
+        size_t len = str->length();
+        if (len == 3) {
+            char32_t c0 = str->operator[](0);
+            char32_t c1 = str->operator[](1);
+            char32_t c2 = str->operator[](2);
+            if (c0 == 'd' && c1 == 'e' && c2 == 'g') {
+                return true;
+            } else if (c0 == 'r' && c1 == 'a' && c2 == 'd') {
+                return true;
+            }
+        } else if (len == 4) {
+            char32_t c0 = str->operator[](0);
+            char32_t c1 = str->operator[](1);
+            char32_t c2 = str->operator[](2);
+            char32_t c3 = str->operator[](3);
+
+            if (c0 == 'g' && c1 == 'r' && c2 == 'a' && c3 == 'd') {
+                return true;
+            } else if (c0 == 't' && c1 == 'u' && c2 == 'r' && c3 == 'n') {
+                return true;
+            }
         }
         return false;
     }
 
     static bool isTimeUnit(String* str)
     {
-        if (str->equals("s") || str->equals("ms")) {
-            return true;
+        return isTimeUnitImpl(str);
+    }
+
+    static bool isTimeUnit(const CSSTokenValue& str)
+    {
+        return isTimeUnitImpl(&str);
+    }
+
+    template <typename T>
+    static bool isTimeUnitImpl(T str)
+    {
+        size_t len = str->length();
+        if (len == 1) {
+            char32_t c0 = str->charAt(0);
+            if (c0 == 's') {
+                return true;
+            }
+        } else if (len == 2) {
+            char32_t c0 = str->charAt(0);
+            char32_t c1 = str->charAt(1);
+
+            if (c0 == 'm' && c1 == 's') {
+                return true;
+            }
         }
         return false;
     }
@@ -291,7 +428,7 @@ public:
                 break;
             }
         }
-        m_parsedString = String::fromUTF8(m_curPos, len);
+        m_parsedString = CSSTokenValue(m_curPos, len);
         m_curPos += len;
         return true;
     }
@@ -339,7 +476,7 @@ public:
         if (*m_curPos != ')') {
             return false;
         }
-        m_parsedFunctionContent = String::fromUTF8(start, len);
+        m_parsedFunctionContent = CSSTokenValue(start, len);
         m_curPos++;
         return true;
     }
@@ -347,7 +484,7 @@ public:
     bool consumeContentStringAll()
     {
         if (isQuote(*m_curPos) && *m_curPos++ == (*--m_endPos)) {
-            m_parsedString = String::fromUTF8(m_curPos, m_endPos - m_curPos);
+            m_parsedString = CSSTokenValue(m_curPos, m_endPos - m_curPos);
             return true;
         } else {
             return false;
@@ -366,7 +503,7 @@ public:
         char* start = m_curPos;
         while (m_curPos < m_endPos) {
             if (*m_curPos == openingQuote) {
-                m_parsedString = String::fromUTF8(start, m_curPos - start);
+                m_parsedString = CSSTokenValue(start, m_curPos - start);
                 m_curPos++;
                 return true;
             }
@@ -395,7 +532,7 @@ public:
         if (*m_curPos != ')') {
             return false;
         }
-        m_parsedString = String::fromUTF8(start, len);
+        m_parsedString = CSSTokenValue(start, len);
         m_curPos++;
         return true;
     }
@@ -416,17 +553,30 @@ public:
         if (*(m_curPos + len) != ')') {
             return false;
         }
-        m_parsedString = String::fromUTF8(start, len + 1);
+        m_parsedString = CSSTokenValue(start, len + 1);
         m_curPos += len + 1;
         return true;
     }
-    String* parsedString()
+
+    const CSSTokenValue& parsedString()
     {
         return m_parsedString;
     }
-    String* parsedFunctionContent()
+
+    String* parsedStringToGCString()
+    {
+        return String::fromUTF8(m_parsedString.data(), m_parsedString.size());
+    }
+
+    const CSSTokenValue& parsedFunctionContent()
     {
         return m_parsedFunctionContent;
+    }
+
+    String* parsedFunctionContentToGCString()
+    {
+        return String::fromUTF8(m_parsedFunctionContent.data(),
+                                m_parsedFunctionContent.size());
     }
 
     bool isEnd()
@@ -438,10 +588,10 @@ public:
     {
         CSSPropertyParser parser((char*)token);
         if (parser.consumeString(0)) {
-            String* name = parser.parsedString();
-            if (name->equals("url") && parser.consumeIfNext('(')) {
+            const CSSTokenValue& name = parser.parsedString();
+            if (name == "url" && parser.consumeIfNext('(')) {
                 if (parser.consumeFunctionContent() && parser.isEnd()) {
-                    pair->setUrlValue(parser.parsedFunctionContent());
+                    pair->setUrlValue(parser.parsedFunctionContentToGCString());
                     return true;
                 }
             }
@@ -455,10 +605,11 @@ public:
         CSSPropertyParser parser((char*)token);
         parser.consumeWhitespaces();
         if (parser.consumeString(0)) {
-            String* name = parser.parsedString();
-            if (name->equals(functionName) && parser.consumeIfNext('(')) {
+            const CSSTokenValue& name = parser.parsedString();
+            if (name == functionName && parser.consumeIfNext('(')) {
                 if (parser.consumeFunctionContent()) {
-                    String* mayResult = parser.parsedFunctionContent();
+                    String* mayResult =
+                        parser.parsedFunctionContentToGCString();
                     parser.consumeWhitespaces();
                     if (parser.isEnd()) {
                         return mayResult;
@@ -526,14 +677,14 @@ public:
             return false;
         }
         parser.consumeString(option & AllowPercent);
-        String* str = parser.parsedString();
-        if (allowWithoutUnit && str->length() == 0) {
+        const CSSTokenValue& str = parser.parsedString();
+        if (allowWithoutUnit && str.length() == 0) {
             pair->setLengthValue(CSSLength(num));
             return parser.isEnd();
-        } else if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
+        } else if ((str.length() == 0 && num == 0) || isLengthUnit(str)) {
             pair->setLengthValue(CSSLength(str, num));
             return parser.isEnd();
-        } else if (allowPercent && str->equals("%")) {
+        } else if (allowPercent && str == "%") {
             pair->setPercentageValue(num / 100.f);
             return parser.isEnd();
         }
@@ -556,12 +707,12 @@ public:
             return false;
         }
         parser.consumeString(0);
-        String* str = parser.parsedString();
+        const CSSTokenValue& str = parser.parsedString();
 
-        if (allowWithoutUnit && str->length() == 0) {
+        if (allowWithoutUnit && str.length() == 0) {
             pair->setTimeValue(CSSTime(num));
             return parser.isEnd();
-        } else if ((str->length() == 0 && num == 0) || isTimeUnit(str)) {
+        } else if ((str.length() == 0 && num == 0) || isTimeUnit(str)) {
             pair->setTimeValue(CSSTime(str, num));
             return parser.isEnd();
         }
@@ -584,12 +735,12 @@ public:
             return false;
         }
         parser.consumeString(0);
-        String* str = parser.parsedString();
+        const CSSTokenValue& str = parser.parsedString();
 
-        if (allowWithoutUnit && str->length() == 0) {
+        if (allowWithoutUnit && str.length() == 0) {
             pair->setAngleValue(CSSAngle(num));
             return parser.isEnd();
-        } else if ((str->length() == 0 && num == 0) || isAngleUnit(str)) {
+        } else if ((str.length() == 0 && num == 0) || isAngleUnit(str)) {
             pair->setAngleValue(CSSAngle(str, num));
             return parser.isEnd();
         }
@@ -850,7 +1001,7 @@ public:
     {
         CSSPropertyParser parser((char*)str, len);
         if (parser.consumeContentStringAll()) {
-            *ret = parser.parsedString();
+            *ret = parser.parsedStringToGCString();
             return true;
         }
         return false;
@@ -860,10 +1011,10 @@ public:
     {
         CSSPropertyParser parser((char*)str, len);
         if (parser.consumeString(0)) {
-            String* name = parser.parsedString();
-            if (name->equals("attr") && parser.consumeIfNext('(')) {
+            const CSSTokenValue& name = parser.parsedString();
+            if (name == "attr" && parser.consumeIfNext('(')) {
                 if (parser.consumeAttr() && parser.isEnd()) {
-                    *ret = parser.parsedString();
+                    *ret = parser.parsedStringToGCString();
                     return true;
                 }
             }
@@ -887,8 +1038,8 @@ public:
 
     float m_parsedNumber;
     int32_t m_parsedInt32;
-    String* m_parsedString;
-    String* m_parsedFunctionContent;
+    CSSTokenValue m_parsedString;
+    CSSTokenValue m_parsedFunctionContent;
 };
 
 class CSSParser;

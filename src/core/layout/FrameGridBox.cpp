@@ -613,12 +613,12 @@ void GridFormattingContext::parsingGridTemplateAreasAndStoreInformation()
         ss.trim();
         CSSPropertyParser parser((char*)ss.data(), ss.length());
         parser.consumeContentString();
-        String* separator = parser.parsedString();
-        if (!separator) {
+        const auto& separator = parser.parsedString();
+        if (separator.length() == 0) {
             return;
         }
 
-        auto s = separator->toUTF8NonGCString();
+        auto s = separator;
         CSSTokenVector areas;
         CSSStyleDeclaration::tokenizeCSSValue(areas, s.data(), s.length());
 

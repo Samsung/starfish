@@ -19,6 +19,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "Style.h"
 #include "CSSTime.h"
 
 namespace StarFish {
@@ -27,6 +28,16 @@ CSSTime::CSSTime(String* str, float f)
     if (str->length() == 0 || str->equals("s")) {
         m_kind = S;
     } else if (str->equals("ms")) {
+        m_kind = MS;
+    }
+    m_value = f;
+}
+
+CSSTime::CSSTime(const CSSTokenValue& str, float f)
+{
+    if (str.length() == 0 || str == "s") {
+        m_kind = S;
+    } else if (str == "ms") {
         m_kind = MS;
     }
     m_value = f;

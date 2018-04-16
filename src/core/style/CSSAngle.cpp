@@ -19,6 +19,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "Style.h"
 #include "CSSAngle.h"
 
 namespace StarFish {
@@ -32,6 +33,20 @@ CSSAngle::CSSAngle(String* str, float f)
     } else if (str->equals("rad")) {
         m_kind = RAD;
     } else if (str->equals("turn")) {
+        m_kind = TURN;
+    }
+    m_value = f;
+}
+
+CSSAngle::CSSAngle(const CSSTokenValue& str, float f)
+{
+    if (str.length() == 0 || str == "deg") {
+        m_kind = DEG;
+    } else if (str == "grad") {
+        m_kind = GRAD;
+    } else if (str == "rad") {
+        m_kind = RAD;
+    } else if (str == "turn") {
         m_kind = TURN;
     }
     m_value = f;

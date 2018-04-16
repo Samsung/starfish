@@ -45,6 +45,7 @@ public:
     }
 
     CSSLength(String* unit, float f);
+    CSSLength(const CSSTokenValue& unit, float f);
 
     Kind kind() const
     {

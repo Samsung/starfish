@@ -9728,8 +9728,8 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
     CSSPropertyParser parser((char*)ss.data(), ss.length());
     parser.consumeString(CSSPropertyParser::AllowNegative);
 
-    String* type = parser.parsedString();
-    if (type->equals("linear-gradient") && parser.consumeIfNext('(')) {
+    const CSSTokenValue& type = parser.parsedString();
+    if (type == "linear-gradient" && parser.consumeIfNext('(')) {
         // linear-gradient() = linear-gradient(
         //   [ <angle> | to <side-or-corner> ]?
         //   <color-stop-list>
@@ -9742,8 +9742,8 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
         CSSStyleValuePair s;
         parser.consumeWhitespaces();
         parser.consumeString(CSSPropertyParser::AllowNegative);
-        String* str = parser.parsedString();
-        if (str->equals("to")) {
+        const CSSTokenValue& str = parser.parsedString();
+        if (str == "to") {
             CSSAngle lr;
             CSSAngle tb;
             bool hasLR = false;
@@ -9751,17 +9751,17 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             uint8_t sideOrConer = 0;
             while (parser.consumeWhitespaces() && *(parser.curPos()) != ',') {
                 parser.consumeString(0);
-                String* ps = parser.parsedString();
-                if (!hasTB && ps->equals("top")) {
+                const CSSTokenValue& ps = parser.parsedString();
+                if (!hasTB && ps == "top") {
                     hasTB = true;
                     sideOrConer |= SideOrConer::toTop;
-                } else if (!hasLR && ps->equals("right")) {
+                } else if (!hasLR && ps == "right") {
                     hasLR = true;
                     sideOrConer |= SideOrConer::toRight;
-                } else if (!hasTB && ps->equals("bottom")) {
+                } else if (!hasTB && ps == "bottom") {
                     hasTB = true;
                     sideOrConer |= SideOrConer::toBottom;
-                } else if (!hasLR && ps->equals("left")) {
+                } else if (!hasLR && ps == "left") {
                     hasLR = true;
                     sideOrConer |= SideOrConer::toLeft;
                 } else {
@@ -9770,7 +9770,7 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             }
             linearGradientValue->setSideOrConter(sideOrConer);
             parser.consumeIfNext(',');
-        } else if (parser.parseAngle(str->toUTF8NonGCString().c_str(),
+        } else if (parser.parseAngle(str.c_str(),
                                      CSSPropertyParser::AllowNegative, &s)) {
             angle = s.angleValue();
             linearGradientValue->setAngle(angle);
@@ -9785,10 +9785,10 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                 CSSStyleValuePair color;
                 CSSStyleValuePair length;
                 parser.consumeString(0);
-                String* ps = parser.parsedString();
+                String* ps = parser.parsedFunctionContentToGCString();
                 if (*parser.curPos() == '(') {
                     parser.consumeParenthesis();
-                    ps = ps->concat(parser.parsedString());
+                    ps = ps->concat(parser.parsedStringToGCString());
                 }
 
                 CSSTokenValue value(ps->toUTF8NonGCString().data());
@@ -9803,7 +9803,7 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                 parser.consumeWhitespaces();
                 if (*(parser.curPos()) != ',' && *(parser.curPos()) != ')') {
                     parser.consumeString(option);
-                    ps = parser.parsedString();
+                    ps = parser.parsedStringToGCString();
                     value = CSSTokenValue(ps->toUTF8NonGCString().data());
                     if (!length.updateValueUnitLength(value, option)) {
                         return false;
@@ -9818,7 +9818,7 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             return false;
         }
         m_value.m_gradientValue = linearGradientValue;
-    } else if (type->equals("radial-gradient") && parser.consumeIfNext('(')) {
+    } else if (type == "radial-gradient" && parser.consumeIfNext('(')) {
         // TODO: Consider the radial gradient
         return false;
     } else {
@@ -9873,7 +9873,7 @@ static bool parseCounter(Document* document, const CSSTokenValue& s,
     auto ss = s.trim();
     CSSPropertyParser parser((char*)ss.data(), ss.length());
     parser.consumeString(0);
-    if (!parser.parsedString()->equals("counter")) {
+    if (!(parser.parsedString() == "counter")) {
         return false;
     }
     if (!parser.consumeIfNext('(')) {
@@ -9883,7 +9883,7 @@ static bool parseCounter(Document* document, const CSSTokenValue& s,
     parser.consumeWhitespaces();
     parser.consumeString(CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowUnderline);
-    String* name = parser.parsedString();
+    String* name = parser.parsedStringToGCString();
     if (!CSSPropertyParser::stringIsIdent(name)) {
         return false;
     }
@@ -9901,7 +9901,7 @@ static bool parseCounter(Document* document, const CSSTokenValue& s,
     parser.consumeWhitespaces();
     parser.consumeString(CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowUnderline);
-    String* style = parser.parsedString();
+    String* style = parser.parsedStringToGCString();
     if (!CSSPropertyParser::stringIsIdent(style)) {
         return false;
     }
@@ -9923,7 +9923,7 @@ static bool parseCounters(Document* document, const CSSTokenValue& s,
     auto ss = s.trim();
     CSSPropertyParser parser((char*)ss.data(), ss.length());
     parser.consumeString(0);
-    if (!parser.parsedString()->equals("counters")) {
+    if (!(parser.parsedString() == "counters")) {
         return false;
     }
     if (!parser.consumeIfNext('(')) {
@@ -9933,7 +9933,7 @@ static bool parseCounters(Document* document, const CSSTokenValue& s,
     parser.consumeWhitespaces();
     parser.consumeString(CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowUnderline);
-    String* name = parser.parsedString();
+    String* name = parser.parsedStringToGCString();
     if (!CSSPropertyParser::stringIsIdent(name)) {
         return false;
     }
@@ -9947,7 +9947,7 @@ static bool parseCounters(Document* document, const CSSTokenValue& s,
     if (!parser.consumeContentString()) {
         return false;
     }
-    String* separator = parser.parsedString();
+    String* separator = parser.parsedStringToGCString();
     parser.consumeWhitespaces();
     if (parser.consumeIfNext(')') && parser.isEnd()) {
         auto value = new CSSCounterFunction(aname);
@@ -9962,7 +9962,7 @@ static bool parseCounters(Document* document, const CSSTokenValue& s,
     parser.consumeWhitespaces();
     parser.consumeString(CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowUnderline);
-    String* style = parser.parsedString();
+    String* style = parser.parsedStringToGCString();
     if (!CSSPropertyParser::stringIsIdent(style)) {
         return false;
     }
@@ -10143,7 +10143,7 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
     CSSPropertyParser parser((char*)token.data());
 
     parser.consumeString(0);
-    if (parser.parsedString()->equals("calc")) {
+    if (parser.parsedString() == "calc") {
         if (!parser.consumeIfNext('(')) {
             return false;
         }
@@ -10163,10 +10163,10 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
                                      CSSPropertyParser::AllowPlus |
                                      CSSPropertyParser::AllowNegative |
                                      CSSPropertyParser::AllowPercent);
-                auto str = parser.parsedString()->toUTF8NonGCString();
+                auto str = parser.parsedString();
                 CalcValue val;
                 if (isLenParser &&
-                    ret.updateValueUnitLength(CSSTokenValue(str.c_str()),
+                    ret.updateValueUnitLength(CSSTokenValue(str),
                                               parserOption)) {
                     if (unitParsed) {
                         return false;
@@ -10192,7 +10192,7 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
                         }
                     }
                 } else if (isTimeParser &&
-                           ret.updateValueUnitTime(CSSTokenValue(str.c_str()),
+                           ret.updateValueUnitTime(CSSTokenValue(str),
                                                    parserOption)) {
                     if (unitParsed) {
                         return false;
@@ -10205,7 +10205,7 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
                         val.setValue(-1 * ret.timeValue());
                     }
                 } else if (isAngleParser &&
-                           ret.updateValueUnitAngle(CSSTokenValue(str.c_str()),
+                           ret.updateValueUnitAngle(CSSTokenValue(str),
                                                     parserOption)) {
                     if (unitParsed) {
                         return false;
@@ -10989,7 +10989,7 @@ static bool parseRectFunctionPart(const CSSTokenValue& s, size_t* ret,
 
     parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
 
-    String* str = parser.parsedString();
+    String* str = parser.parsedStringToGCString();
 
     if (str->length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
         return false;
@@ -11074,15 +11074,15 @@ static bool parseGridTemplateColumnsAndRows(const CSSTokenVector& tokens,
 
         float number = parser.parsedNumber();
         parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
-        String* str = parser.parsedString();
-        if (str->length() != 0 &&
-            (!CSSPropertyParser::isLengthUnit(str) && !str->equals("fr"))) {
+        const auto& str = parser.parsedString();
+        if (str.length() != 0 &&
+            (!CSSPropertyParser::isLengthUnit(str) && !(str == "fr"))) {
             return false;
         }
 
         // TODO : Add the GridLine, GridArea and Repeat
         // Create GridLength and push back into vector.
-        if (str->equals("fr")) {
+        if (str == "fr") {
             GridLength g(number);
             v->push_back(g);
         } else {
@@ -11269,9 +11269,9 @@ bool CSSStyleValuePair::updateValueGridGap(Document* document,
         float number = parser.parsedNumber();
         parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
 
-        String* str = parser.parsedString();
+        const auto& str = parser.parsedString();
 
-        if (str->length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
+        if (str.length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
             return false;
         }
 
@@ -11305,9 +11305,9 @@ bool CSSStyleValuePair::updateValueGridRowGap(Document* document,
     float number = parser.parsedNumber();
     parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
 
-    String* str = parser.parsedString();
+    const auto& str = parser.parsedString();
 
-    if (str->length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
+    if (str.length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
         return false;
     }
 
@@ -11336,9 +11336,9 @@ bool CSSStyleValuePair::updateValueGridColumnGap(Document* document,
     float number = parser.parsedNumber();
     parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
 
-    String* str = parser.parsedString();
+    const auto& str = parser.parsedString();
 
-    if (str->length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
+    if (str.length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
         return false;
     }
 
@@ -11391,11 +11391,11 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
         ss.trim();
         CSSPropertyParser parser((char*)ss.data(), ss.length());
         parser.consumeContentString();
-        String* separator = parser.parsedString();
-        if (!separator) {
+        const auto& separator = parser.parsedString();
+        if (separator.length() == 0) {
             return false;
         }
-        auto s = separator->toUTF8NonGCString();
+        auto s = separator;
         CSSTokenVector areas;
         CSSStyleDeclaration::tokenizeCSSValue(areas, s.data(), s.length());
         for (size_t col = 0; col < areas.size(); col++) {
@@ -13077,7 +13077,7 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
             if (!res) {
                 return false;
             }
-            String* name = parser.parsedString();
+            const auto& name = parser.parsedString();
 
             enum TransformUnit {
                 Number,           // <number>
@@ -13091,12 +13091,12 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
             };
 
             int minArgCnt = 1, maxArgCnt = 1;
-            if (name->equals("matrix")) {
+            if (name == "matrix") {
                 fkind = CSSTransformFunction::Kind::Matrix;
                 units[0] = units[1] = units[2] = units[3] = units[4] =
                     units[5] = Number;
                 minArgCnt = maxArgCnt = 6;
-            } else if (name->equals("matrix3d")) {
+            } else if (name == "matrix3d") {
                 fkind = CSSTransformFunction::Kind::Matrix3D;
                 units[0] = units[1] = units[2] = units[3] = units[4] =
                     units[5] = Number;
@@ -13104,58 +13104,58 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                     units[11] = Number;
                 units[12] = units[13] = units[14] = units[15] = Number;
                 minArgCnt = maxArgCnt = 16;
-            } else if (name->equals("translate")) {
+            } else if (name == "translate") {
                 fkind = CSSTransformFunction::Kind::Translate;
                 maxArgCnt = 2;
                 units[0] = units[1] = TranslationValue;
-            } else if (name->equals("translate3d")) {
+            } else if (name == "translate3d") {
                 fkind = CSSTransformFunction::Kind::Translate3D;
                 maxArgCnt = 3;
                 units[0] = units[1] = TranslationValue;
                 units[2] = Length;
-            } else if (name->equals("translatex")) {
+            } else if (name == "translatex") {
                 fkind = CSSTransformFunction::Kind::TranslateX;
                 units[0] = TranslationValue;
-            } else if (name->equals("translatey")) {
+            } else if (name == "translatey") {
                 fkind = CSSTransformFunction::Kind::TranslateY;
                 units[0] = TranslationValue;
-            } else if (name->equals("translatez")) {
+            } else if (name == "translatez") {
                 fkind = CSSTransformFunction::Kind::TranslateZ;
                 units[0] = Length;
-            } else if (name->equals("scale")) {
+            } else if (name == "scale") {
                 maxArgCnt = 2;
                 fkind = CSSTransformFunction::Kind::Scale;
                 units[0] = units[1] = Number;
-            } else if (name->equals("scale3d")) {
+            } else if (name == "scale3d") {
                 maxArgCnt = 3;
                 fkind = CSSTransformFunction::Kind::Scale3D;
                 units[0] = units[1] = units[2] = Number;
-            } else if (name->equals("scalex")) {
+            } else if (name == "scalex") {
                 fkind = CSSTransformFunction::Kind::ScaleX;
                 units[0] = Number;
-            } else if (name->equals("scaley")) {
+            } else if (name == "scaley") {
                 fkind = CSSTransformFunction::Kind::ScaleY;
                 units[0] = Number;
-            } else if (name->equals("rotate")) {
+            } else if (name == "rotate") {
                 fkind = CSSTransformFunction::Kind::Rotate;
                 units[0] = Angle;
-            } else if (name->equals("rotate3d")) {
+            } else if (name == "rotate3d") {
                 fkind = CSSTransformFunction::Kind::Rotate3D;
                 minArgCnt = 4;
                 maxArgCnt = 4;
                 units[0] = units[1] = units[2] = Number;
                 units[3] = Angle;
-            } else if (name->equals("skew")) {
+            } else if (name == "skew") {
                 fkind = CSSTransformFunction::Kind::Skew;
                 maxArgCnt = 2;
                 units[0] = units[1] = Angle;
-            } else if (name->equals("skewx")) {
+            } else if (name == "skewx") {
                 fkind = CSSTransformFunction::Kind::SkewX;
                 units[0] = Angle;
-            } else if (name->equals("skewy")) {
+            } else if (name == "skewy") {
                 fkind = CSSTransformFunction::Kind::SkewY;
                 units[0] = Angle;
-            } else if (name->equals("perspective")) {
+            } else if (name == "perspective") {
                 fkind = CSSTransformFunction::Kind::Perspective;
                 units[0] = Number;
             } else {
@@ -13177,28 +13177,26 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                                      CSSPropertyParser::AllowPercent);
 
                 TransformUnit unit = units[idx];
-                auto str = parser.parsedString()->toUTF8NonGCString();
+                auto str = parser.parsedString();
                 CSSStyleValuePair ret;
                 if (unit == Number &&
                     ret.updateValueUnitNumber(
-                        CSSTokenValue(str.c_str()),
-                        CSSPropertyParser::AllowNegative)) {
+                        str, CSSPropertyParser::AllowNegative)) {
                     values->emplace_back(ret);
                 } else if (unit == Angle &&
                            ret.updateValueUnitAngleOrCalc(
-                               CSSTokenValue(str.c_str()),
+                               str,
                                option | CSSPropertyParser::AllowNegative)) {
                     values->emplace_back(ret);
                 } else if (unit == Length &&
                            ret.updateValueUnitLengthOrCalc(
-                               CSSTokenValue(str.c_str()),
+                               str,
                                option | CSSPropertyParser::AllowNegative)) {
                     values->emplace_back(ret);
                 } else if (unit == TranslationValue &&
                            ret.updateValueUnitLengthOrCalc(
-                               CSSTokenValue(str.c_str()),
-                               option | CSSPropertyParser::AllowNegative |
-                                   CSSPropertyParser::AllowPercent)) {
+                               str, option | CSSPropertyParser::AllowNegative |
+                                        CSSPropertyParser::AllowPercent)) {
                     values->emplace_back(ret);
                 } else {
                     return false;

@@ -18,6 +18,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "core/style/Style.h"
 #include "core/style/CalcData.h"
 
 namespace StarFish {

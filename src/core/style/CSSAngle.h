@@ -48,6 +48,7 @@ public:
     }
 
     CSSAngle(String* str, float f);
+    CSSAngle(const CSSTokenValue& str, float f);
 
     Kind kind() const
     {
