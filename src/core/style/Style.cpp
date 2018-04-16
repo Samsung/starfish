@@ -2878,27 +2878,20 @@ String* CSSStyleDeclaration::BackgroundRepeat()
     StringUtils::tokenize(repeatY, ",", 1, vRepeatY);
 
     StringBuilder builder;
-    for (size_t i = 0; i < vRepeatX.size(); i++) {
+    size_t size = std::min(vRepeatX.size(), vRepeatY.size());
+    for (size_t i = 0; i < size; i++) {
         String* rX = vRepeatX[i].trim();
         String* rY = vRepeatY[i].trim();
-        if (rX->equals("repeat") && rY->equals("repeat")) {
-            builder.appendString("repeat");
+        if (rX->equals(rY)) {
+            builder.appendString(rX);
         } else if (rX->equals("repeat") && rY->equals("no-repeat")) {
             builder.appendString("repeat-x");
         } else if (rX->equals("no-repeat") && rY->equals("repeat")) {
             builder.appendString("repeat-y");
-        } else if (rX->equals("no-repeat") && rY->equals("no-repeat")) {
-            builder.appendString("no-repeat");
-        } else if (rX->equals(String::initialString) &&
-                   rY->equals(String::initialString)) {
-            builder.appendString(String::initialString);
-        } else if (rX->equals(String::inheritString) &&
-                   rY->equals(String::inheritString)) {
-            builder.appendString(String::inheritString);
         } else {
-            builder.appendString(String::emptyString);
+            return builder.finalize();
         }
-        if (i != vRepeatX.size() - 1) {
+        if (i != size - 1) {
             builder.appendChar(',');
             builder.appendString(String::spaceString);
         }
