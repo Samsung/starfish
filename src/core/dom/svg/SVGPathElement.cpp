@@ -58,8 +58,7 @@ void SVGPathElement::styleForPresentationAttribute(
     } else if (d->length()) {
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::KeyKind::D);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-        pair.setStringValue(d);
+        pair.setPathFunctionValue(d);
         cssValues.push_back(pair);
     }
 }

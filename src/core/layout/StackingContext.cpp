@@ -1243,7 +1243,7 @@ void StackingContext::paintStackingContext(
             ensureRareData()->m_visibleRect = m_owner->frameVisibleRect();
             SkMatrix l = SkMatrix::I();
             Frame::ComputeVisibleRectContext ctx(
-                Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
+                Frame::ComputeVisibleRectContext::Scrolling, owner(), l,
                 ensureRareData()->m_visibleRect);
 
             m_owner->computeVisibleRect(ctx);
@@ -1384,6 +1384,8 @@ void StackingContext::paintStackingContext(
             }
         }
     }
+
+    canvasStateRestorerForFixedLayer.reset(nullptr);
 
     canvas->restore();
     if (hasGraphicsBuffer) {
