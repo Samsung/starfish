@@ -21,6 +21,7 @@
 #include "platform/loader/ImageResource.h"
 #include "core/style/StyleBackgroundData.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/style/GradientData.h"
 
 namespace StarFish {
 
@@ -30,5 +31,29 @@ NativeImageData* BackgroundLayer::imageData() const
         return m_imageResource->imageData();
     }
     return nullptr;
+}
+
+void BackgroundLayer::checkComputed(Length curFontSize, Length rootFontSize,
+                                    Font* font, LayoutSize windowSize,
+                                    ComputedStyle* cs)
+{
+    if (m_image && m_image->type().isURL()) {
+        if (m_size.hasLengthValue()) {
+            if (m_size.m_lengthValue) {
+                m_size.m_lengthValue->checkComputed(curFontSize, rootFontSize,
+                                                    font, windowSize, cs);
+            }
+        }
+
+        m_positionX.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                          windowSize.width(),
+                                          windowSize.height(), cs);
+        m_positionY.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                          windowSize.width(),
+                                          windowSize.height(), cs);
+    } else if (m_image && m_image->type().isGradient()) {
+        m_image->gradientValue()->checkComputed(curFontSize, rootFontSize, font,
+                                                windowSize, cs);
+    }
 }
 }

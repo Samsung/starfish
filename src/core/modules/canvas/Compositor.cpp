@@ -178,8 +178,10 @@ public:
                                       xRepeat, yRepeat);
     }
 
-    virtual void drawLinearGradient(const LayoutRect& rt,
-                                    LinearGradientData* gradient)
+    virtual void drawLinearGradient(const Unit::Rect& dst, const float& sx,
+                                    const float& sy, const float& ex,
+                                    const float& ey,
+                                    GCVector<ColorStop*>& colorStops)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

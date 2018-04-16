@@ -212,6 +212,18 @@ namespace Unit {
                    other.y() < maxY();
         }
 
+        Unit::Rect snapSizeToPixel()
+        {
+            Unit::Rect ret;
+            LayoutUnit rx = m_location.x();
+            LayoutUnit ry = m_location.y();
+            ret.m_location.setX(rx.floor());
+            ret.m_location.setY(ry.floor());
+            ret.setWidth(::StarFish::snapSizeToPixel(m_size.width(), rx));
+            ret.setHeight(::StarFish::snapSizeToPixel(m_size.height(), ry));
+            return ret;
+        }
+
         bool operator==(const Rect& r) const
         {
             return m_location.x() == r.m_location.x() &&

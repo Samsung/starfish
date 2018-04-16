@@ -17,11 +17,14 @@
  *  USA
  */
 
-#include "core/style/CSSGradientValue.h"
-
 namespace StarFish {
 
+class Font;
 class LinearGradientData;
+class CSSGradientValue;
+class FrameBox;
+
+enum class CSSGradientType;
 
 class ColorStopOffsetType {
 public:
@@ -149,6 +152,7 @@ public:
     ColorStop()
         : m_color()
         , m_offset()
+        , m_specified(false)
     {
     }
     Unit::Color color()
@@ -156,7 +160,7 @@ public:
         return m_color;
     }
 
-    void setColor(Unit::Color& color)
+    void setColor(Unit::Color color)
     {
         m_color = color;
     }
@@ -171,9 +175,20 @@ public:
         m_offset = offset;
     }
 
+    bool specified()
+    {
+        return m_specified;
+    }
+
+    void setSpecified(bool value)
+    {
+        m_specified = value;
+    }
+
 private:
     Unit::Color m_color;
     ColorStopOffsetValue m_offset;
+    bool m_specified;
 };
 
 class GradientData : public gc {
@@ -189,11 +204,7 @@ public:
         return m_type;
     }
 
-    LinearGradientData* asLinearGradientData()
-    {
-        STARFISH_ASSERT(m_type == CSSGradientType::LinearGradient);
-        return (LinearGradientData*)this;
-    }
+    LinearGradientData* asLinearGradientData();
 
     GCVector<ColorStop*>& colorStopList()
     {
@@ -202,6 +213,14 @@ public:
 
     virtual CSSGradientValue* convertToCSSGradientValue() = 0;
 
+    virtual void checkComputed(Length curFontSize, Length rootFontSize,
+                               Font* font, LayoutSize windowSize,
+                               ComputedStyle* cs) = 0;
+
+    void makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
+                                 float& y1, float& x2, float& y2,
+                                 FrameBox* owner);
+
 protected:
     CSSGradientType m_type;
     GCVector<ColorStop*> m_colorStopList;
@@ -209,12 +228,7 @@ protected:
 
 class LinearGradientData : public GradientData {
 public:
-    LinearGradientData(float angleDeg = 180.0f)
-        : GradientData(CSSGradientType::LinearGradient)
-        , m_angleDeg(angleDeg)
-        , m_sc(0)
-    {
-    }
+    LinearGradientData(float angleDeg = 180.0f);
 
     float angle()
     {
@@ -240,6 +254,9 @@ public:
                           float& y1, float& x2, float& y2);
 
     virtual CSSGradientValue* convertToCSSGradientValue() override;
+    virtual void checkComputed(Length curFontSize, Length rootFontSize,
+                               Font* font, LayoutSize windowSize,
+                               ComputedStyle* cs) override;
 
 private:
     float m_angleDeg;

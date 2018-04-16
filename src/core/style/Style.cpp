@@ -1447,28 +1447,29 @@ String* CSSStyleDeclaration::cssTextAffectedByAllProperty(
     }
     bool isImportant = pair.flagImportant();
     StringBuilder txt;
-#define APPEND_CSS_VALUES(Name, name, cssname)                              \
-    {                                                                       \
-        CSSStyleKind kind = lookupCSSStyle(cssname, strlen(cssname));       \
-        if (kind != CSSStyleKind::All && kind != CSSStyleKind::Direction && \
-            kind != CSSStyleKind::UnicodeBidi) {                            \
-            txt.appendString(cssname);                                      \
-            txt.appendString(": ");                                         \
-            auto iter =                                                     \
-                std::find_if(m_cssValues.begin() + pos, m_cssValues.end(),  \
-                             [kind](CSSStyleValuePair p) {                  \
-                                 return (p.keyKind() - 1) == (kind - 2);    \
-                             });                                            \
-            if (iter != m_cssValues.end()) {                                \
-                txt.appendString(iter->toString());                         \
-            } else {                                                        \
-                txt.appendString(value);                                    \
-            }                                                               \
-            if (isImportant || iter->flagImportant()) {                     \
-                txt.appendString(" !important");                            \
-            }                                                               \
-            txt.appendString("; ");                                         \
-        }                                                                   \
+#define APPEND_CSS_VALUES(Name, name, cssname)                                 \
+    {                                                                          \
+        CSSStyleKind kind = lookupCSSStyle(cssname, strlen(cssname));          \
+        if (kind != CSSStyleKind::All && kind != CSSStyleKind::Direction &&    \
+            kind != CSSStyleKind::UnicodeBidi) {                               \
+            txt.appendString(cssname);                                         \
+            txt.appendString(": ");                                            \
+            auto iter =                                                        \
+                std::find_if(m_cssValues.begin() + pos, m_cssValues.end(),     \
+                             [kind](CSSStyleValuePair p) {                     \
+                                 return (static_cast<int>(p.keyKind()) - 1) == \
+                                        (static_cast<int>(kind) - 2);          \
+                             });                                               \
+            if (iter != m_cssValues.end()) {                                   \
+                txt.appendString(iter->toString());                            \
+            } else {                                                           \
+                txt.appendString(value);                                       \
+            }                                                                  \
+            if (isImportant || iter->flagImportant()) {                        \
+                txt.appendString(" !important");                               \
+            }                                                                  \
+            txt.appendString("; ");                                            \
+        }                                                                      \
     }
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(APPEND_CSS_VALUES)
 #undef APPEND_CSS_VALUES
