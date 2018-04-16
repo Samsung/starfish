@@ -153,18 +153,16 @@ HTMLCollection* HTMLSelectElement::selectedOptions()
 String* HTMLSelectElement::type()
 {
     if (multiple()) {
-        return String::createASCIIString("select-one");
-    } else {
         return String::createASCIIString("select-multiple");
+    } else {
+        return String::createASCIIString("select-one");
     }
-
-    return String::emptyString;
 }
 
 int HTMLSelectElement::size()
 {
     String* size = getAttributeOrEmpty(starFish()->staticStrings()->m_size);
-    if (size->equals(String::emptyString)) {
+    if (!size->equals(String::emptyString)) {
         return String::parseInt(size);
     }
 
@@ -198,6 +196,106 @@ HTMLOptionsCollection* HTMLSelectElement::options()
     }
 
     return m_options;
+}
+
+unsigned HTMLSelectElement::length()
+{
+    return options()->length();
+}
+
+void HTMLSelectElement::setLength(unsigned newLength)
+{
+    unsigned currentLength = length();
+
+    if (currentLength < newLength) {
+        while (currentLength < newLength) {
+            appendChild(new HTMLOptionElement(document()));
+            currentLength++;
+        }
+    } else {
+        while (currentLength > newLength) {
+            remove(currentLength - 1);
+            currentLength--;
+        }
+    }
+}
+
+HTMLOptionElement* HTMLSelectElement::item(unsigned index)
+{
+    if (Element* option = options()->item(index)) {
+        return option->asHTMLOptionElement();
+    }
+
+    return nullptr;
+}
+
+HTMLOptionElement* HTMLSelectElement::namedItem(String* name)
+{
+    if (Element* option = options()->namedItem(name)) {
+        return option->asHTMLOptionElement();
+    }
+
+    return nullptr;
+}
+
+void HTMLSelectElement::add(HTMLOptionElementOrHTMLOptGroupElement element,
+                            Nullable<HTMLElementOrlong> before)
+{
+    HTMLElement* newElement;
+    if (element.isHTMLOptionElementValue()) {
+        newElement = element.getHTMLOptionElementValue();
+    } else if (element.isHTMLOptGroupElementValue()) {
+        newElement = element.getHTMLOptGroupElementValue();
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+
+    HTMLElement* beforeElement = nullptr;
+    if (before.hasValue()) {
+        if (before.getValue().isHTMLElementValue()) {
+            beforeElement = before.getValue().getHTMLElementValue();
+        } else if (before.getValue().islongValue()) {
+            beforeElement = item(before.getValue().getlongValue());
+        }
+    }
+    insertBefore(newElement, beforeElement);
+}
+
+void HTMLSelectElement::remove(int index)
+{
+    if (index < 0) {
+        return;
+    }
+
+    if (HTMLOptionElement* option = item(index)) {
+        option->remove();
+    }
+}
+
+bool HTMLSelectElement::defaultIndexedSetter(unsigned index,
+                                             HTMLOptionElement* option)
+{
+    if (!option) {
+        remove(index);
+        return true;
+    }
+
+    if (index > length()) {
+        setLength(index);
+    }
+
+    if (index == length()) {
+        appendChild(option);
+        return true;
+    }
+
+    HTMLOptionElement* oldOption = item(index);
+    Node* parent = oldOption->parentNode();
+
+    STARFISH_ASSERT(oldOption && parent);
+
+    parent->replaceChild(option, oldOption);
+    return true;
 }
 
 size_t HTMLSelectElement::selectedIndex()

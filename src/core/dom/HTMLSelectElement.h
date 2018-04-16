@@ -21,6 +21,8 @@
 #define __StarFishHTMLSelectElement__
 
 #include "core/dom/HTMLFormElement.h"
+#include "binding/HTMLElementOrlongUnion.h"
+#include "binding/HTMLOptionElementOrHTMLOptGroupElementUnion.h"
 
 namespace StarFish {
 
@@ -52,6 +54,18 @@ public:
     void setSize(int size);
 
     HTMLOptionsCollection* options();
+
+    unsigned length();
+    void setLength(unsigned length);
+
+    HTMLOptionElement* item(unsigned index);
+    HTMLOptionElement* namedItem(String* name);
+
+    void add(HTMLOptionElementOrHTMLOptGroupElement element,
+             Nullable<HTMLElementOrlong> before);
+    using Node::remove;
+    void remove(int index);
+    bool defaultIndexedSetter(unsigned index, HTMLOptionElement* option);
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();

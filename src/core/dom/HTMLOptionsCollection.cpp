@@ -25,6 +25,7 @@
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLOptionElement.h"
+#include "core/dom/HTMLSelectElement.h"
 #include "core/dom/Document.h"
 
 namespace StarFish {
@@ -48,8 +49,38 @@ size_t HTMLOptionsCollection::length() const
 
 void HTMLOptionsCollection::setLength(size_t value)
 {
-    // TODO
-    // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection-length
+    STARFISH_ASSERT(m_nodeListImpl.root());
+    STARFISH_ASSERT(m_nodeListImpl.root()->isHTMLSelectElement());
+    m_nodeListImpl.root()->asHTMLSelectElement()->setLength(value);
+}
+
+bool HTMLOptionsCollection::defaultIndexedSetter(unsigned index,
+                                                 HTMLOptionElement* option)
+{
+    STARFISH_ASSERT(m_nodeListImpl.root());
+    STARFISH_ASSERT(m_nodeListImpl.root()->isHTMLSelectElement());
+
+    HTMLSelectElement* select = m_nodeListImpl.root()->asHTMLSelectElement();
+    return select->defaultIndexedSetter(index, option);
+}
+
+void HTMLOptionsCollection::add(HTMLOptionElementOrHTMLOptGroupElement element,
+                                Nullable<HTMLElementOrlong> before)
+{
+    STARFISH_ASSERT(m_nodeListImpl.root());
+    STARFISH_ASSERT(m_nodeListImpl.root()->isHTMLSelectElement());
+    m_nodeListImpl.root()->asHTMLSelectElement()->add(element, before);
+}
+
+void HTMLOptionsCollection::remove(int index)
+{
+    if (index < 0) {
+        return;
+    }
+
+    if (HTMLOptionElement* option = item(index)->asHTMLOptionElement()) {
+        option->remove();
+    }
 }
 
 int HTMLOptionsCollection::selectedIndex()

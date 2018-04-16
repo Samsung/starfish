@@ -54,6 +54,7 @@ public:
     virtual void setValue(String* value);
     String* text();
     void setText(String* value);
+    int index();
 
     // Other methods
     bool handleDefaultEvent(Event* event);
