@@ -522,7 +522,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 
     if (scriptRef.m_error->length()) {
         STARFISH_LOG_ERROR(
-            "Script parse error %s\n",
+            "Script parse error: %s %s\n", fileName->toUTF8NonGCString().data(),
             toBrowserString(instance, ValueRef::create(scriptRef.m_error))
                 ->toUTF8NonGCString()
                 .data());
