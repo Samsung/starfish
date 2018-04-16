@@ -244,10 +244,9 @@ void HTMLSelectElement::add(HTMLOptionElementOrHTMLOptGroupElement element,
     HTMLElement* newElement;
     if (element.isHTMLOptionElementValue()) {
         newElement = element.getHTMLOptionElementValue();
-    } else if (element.isHTMLOptGroupElementValue()) {
-        newElement = element.getHTMLOptGroupElementValue();
     } else {
-        STARFISH_ASSERT_NOT_REACHED();
+        STARFISH_ASSERT(element.isHTMLOptGroupElementValue());
+        newElement = element.getHTMLOptGroupElementValue();
     }
 
     HTMLElement* beforeElement = nullptr;
