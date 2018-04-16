@@ -188,6 +188,21 @@ void HTMLOptionElement::setText(String* value)
     setTextContent(value);
 }
 
+int HTMLOptionElement::index()
+{
+    HTMLSelectElement* select = selectElement();
+    if (!select) {
+        return 0;
+    }
+
+    for (unsigned index = 0; index < select->length(); index++) {
+        if (this == select->item(index))
+            return index;
+    }
+
+    return 0;
+}
+
 bool HTMLOptionElement::defaultSelected()
 {
     Nullable<String*> val =

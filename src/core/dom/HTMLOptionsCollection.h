@@ -22,6 +22,8 @@
 
 #include "core/dom/HTMLCollection.h"
 #include "binding/ScriptWrappable.h"
+#include "binding/HTMLElementOrlongUnion.h"
+#include "binding/HTMLOptionElementOrHTMLOptGroupElementUnion.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/NodeListImpl.h"
 
@@ -43,6 +45,11 @@ public:
 
     size_t length() const;
     void setLength(size_t value);
+
+    bool defaultIndexedSetter(unsigned index, HTMLOptionElement* option);
+    void add(HTMLOptionElementOrHTMLOptGroupElement element,
+             Nullable<HTMLElementOrlong> before);
+    void remove(int index);
 
     int selectedIndex();
     void setSelectedIndex(int index);
