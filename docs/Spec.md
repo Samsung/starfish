@@ -1,7 +1,7 @@
 # Specification
 
 ## HTML
-This section describes the complete list of supported HTML tags and attributes by the lightweight web engine. Please note that only the tags and attributes mentioned explicitly in this section are supported. In addition, the Widget engine supports only HTML5 documents, and it assumes all input documents are HTML5 documents even if `!DOCTYPE` is not explicitly specified.
+This section describes the complete list of supported HTML tags and attributes by the lightweight web engine. Please note that only the tags and attributes mentioned explicitly in this section are supported. In addition, the lightweight web engine supports only HTML5 documents, and it assumes all input documents are HTML5 documents even if `!DOCTYPE` is not explicitly specified.
 
 | HTML Tag | Attribute | Allowed Value | Usage | Note |
 |----------|-----------|---------------|-------|------|
@@ -317,8 +317,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | scrollIntoView | scrolls the element on which it's called into the visible area of the browser window. |
 |  | method | scrollIntoView(bool alignToTop) | scrolls the element on which it's called into the visible area of the browser window. |
 | [EventTarget](https://dom.spec.whatwg.org/#interface-eventtarget) | interface | EventTarget | Represents the target to which an event is dispatched when something has occurred. |
-| | method | void addEventListener(DOMString type, EventListener? callback, optional boolean capture=false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: Starfish only support boolean type for third argument) |
-| | method | void removeEventListener(DOMString type, EventListener? callback, optional boolean captures=false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: Starfish only support boolean type for third argument) |
+| | method | void addEventListener(DOMString type, EventListener? callback, optional boolean capture=false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: The lightweight web engine only supports boolean type for third argument) |
+| | method | void removeEventListener(DOMString type, EventListener? callback, optional boolean captures=false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: The lightweight web engine only supports boolean type for third argument) |
 | | method | boolean dispatchEvent(Event event) | Dispatches an Event at the specified EventTarget, invoking the affected EventListeners in the appropriate order. |
 | [EventListener](https://dom.spec.whatwg.org/#callbackdef-eventlistener) | callback | EventListener = void () | An event listener can be used to observe a specific event. |
 | [ElementCSSInlineStyle](https://drafts.csswg.org/cssom/#elementcssinlinestyle) | interface | ElementCSSInlineStyle | The ElementCSSInlineStyle interface provides access to inline style properties of an element. |
@@ -1092,6 +1092,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | overflow-block | none &#124; scroll &#124; optional-paged &#124; paged | The 'overflow-block' media feature describes the behavior of the device when content overflows the initial containing block in the block axis. | |
 | | overflow-inline | none &#124; scroll | The 'overflow-inline' media feature describes the behavior of the device when content overflows the initial containing block in the inline axis. | |
 | [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-5/) | scripting | none &#124; initial-only &#124; enabled | The 'scripting' media feature is used to query whether scripting languages, such as JavaScript, are supported on the current document. | |
+| [Media Queries - Media Features](https://w3c.github.io/manifest/#the-display-mode-media-feature) | display-mode | fullscreen &#124; standalone &#124; minimal-ui &#124; browser | The 'display-mode' media feature represents the display mode of the web application. | The fullscreen display mode is not supported yet. |
 | [List](https://www.w3.org/TR/CSS2/generate.html#lists) | list-style | &lt;list-style-type&gt; &#124; &lt;list-style-position&gt; &#124; &lt;list-style-image&gt; | Shorthand | |
 | | list-style-type | &lt;counter-style&gt; &#124; &lt;string&gt; &#124; none | Specifies the appearance of a list item element | |
 | | list-style-position | inside  &#124; outside | Specifies the position of the marker box in the principal block box. | |

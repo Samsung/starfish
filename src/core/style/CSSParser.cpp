@@ -2728,7 +2728,8 @@ static inline bool featureWithoutValue(MediaFeature mediaFeature)
            mediaFeature == MediaFeature::MediaFeatureScripting ||
            mediaFeature == MediaFeature::MediaFeatureUpdate ||
            mediaFeature == MediaFeature::MediaFeatureOverflowBlock ||
-           mediaFeature == MediaFeature::MediaFeatureOverflowInline;
+           mediaFeature == MediaFeature::MediaFeatureOverflowInline ||
+           mediaFeature == MediaFeature::MediaFeatureDisplayMode;
 }
 
 static inline bool featureWithValidIdent(MediaFeature mediaFeature,
@@ -2766,6 +2767,11 @@ static inline bool featureWithValidIdent(MediaFeature mediaFeature,
     case MediaFeature::MediaFeatureOverflowInline:
         return ident->equalsIgnoreCase("none") ||
                ident->equalsIgnoreCase("scroll");
+    case MediaFeature::MediaFeatureDisplayMode:
+        return ident->equalsIgnoreCase("fullscreen") ||
+               ident->equalsIgnoreCase("standalone") ||
+               ident->equalsIgnoreCase("minimal-ui") ||
+               ident->equalsIgnoreCase("browser");
     default:
         return false;
     }
