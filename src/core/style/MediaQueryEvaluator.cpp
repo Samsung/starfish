@@ -553,6 +553,19 @@ static bool overflowInlineMediaFeatureEval(MediaQueryExpValue& value,
     return true;
 }
 
+static bool displayModeMediaFeatureEval(MediaQueryExpValue& value,
+                                        MediaValues* mediaValues,
+                                        MediaFeaturePrefix op)
+{
+    // https://w3c.github.io/manifest/#the-display-mode-media-feature
+    if (value.isID) {
+        // TODO: Consider 'fullscreen' value when we implement Fullscreen API.
+        // (https://fullscreen.spec.whatwg.org/)
+        return value.id->equalsIgnoreCase("browser");
+    }
+    return true;
+}
+
 bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
 {
     // MediaQueryExp can be nullptr when it has invalid expressions.

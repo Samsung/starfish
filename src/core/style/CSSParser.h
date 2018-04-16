@@ -1264,6 +1264,7 @@ protected:
     F(AnyHover, "any-hover", hover, NoPrefix)                                \
     F(AnyPointer, "any-pointer", pointer, NoPrefix)                          \
     F(Color, "color", color, NoPrefix)                                       \
+    F(DisplayMode, "display-mode", displayMode, NoPrefix)                    \
     F(MaxColor, "max-color", color, MaxPrefix)                               \
     F(MinColor, "min-color", color, MinPrefix)                               \
     F(ColorIndex, "color-index", colorIndex, NoPrefix)                       \
