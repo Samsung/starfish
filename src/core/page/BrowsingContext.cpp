@@ -420,8 +420,6 @@ void BrowsingContext::resolveStyleIfNeeds()
 
                     if (res == nullptr) {
                         res = document()->resourceLoader().fetchFont(fontURL);
-                        res->request(Resource::SyncIfAlreadyLoaded,
-                                     document()->documentURI(), true);
                         res->addResourceClient(
                             new WebFontLoadChecker(res, fontFamily));
 

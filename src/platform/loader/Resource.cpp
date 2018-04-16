@@ -33,6 +33,7 @@ namespace StarFish {
 void Resource::request(ResourceRequestSyncLevel syncLevel,
                        ResourceURL* referrerURL, bool allowCache)
 {
+    m_isRequested = true;
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
         m_resourceRequest = new ResourceRequest(loader()->document());

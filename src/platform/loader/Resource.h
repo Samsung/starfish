@@ -58,6 +58,7 @@ public:
         : m_isIncludedInComputingWindowOnLoadEvent(true)
         , m_isReferencedByAnoterResource(false)
         , m_isCanceledButContinueLoadingDueToCache(false)
+        , m_isRequested(false)
         , m_state(BeforeSend)
         , m_url(url)
         , m_loader(loader)
@@ -201,6 +202,11 @@ public:
         return m_state == State::Failed;
     }
 
+    bool isRequested()
+    {
+        return m_isRequested;
+    }
+
 protected:
     State state()
     {
@@ -210,6 +216,7 @@ protected:
     bool m_isIncludedInComputingWindowOnLoadEvent : 1;
     bool m_isReferencedByAnoterResource : 1;
     bool m_isCanceledButContinueLoadingDueToCache : 1;
+    bool m_isRequested : 1;
     State m_state;
     ResourceURL* m_url;
     ResourceLoader* m_loader;
