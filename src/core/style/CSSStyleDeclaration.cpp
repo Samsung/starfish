@@ -594,6 +594,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::WhiteSpace: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpace);
+        p.setValueKind(CSSStyleValuePair::WhiteSpaceValueKind);
         p.setValue(CSSStyleValuePair::ValueData(style->whiteSpace()));
         addValuePair(p);
     } break;
@@ -745,8 +746,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     } break;
     case CSSStyleValuePair::KeyKind::BackgroundImage: {
         CSSStyleValuePair bgImage;
-
         bgImage.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundImage);
+        if (!style->backgroundLayerSize()) {
+            bgImage.setValueKind(CSSStyleValuePair::None);
+            addValuePair(bgImage);
+            return;
+        }
         bgImage.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
 
         ValueList* bgImageValues;
@@ -768,12 +773,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         bgImage.setValueList(bgImageValues);
         addValuePair(bgImage);
-
     } break;
     case CSSStyleValuePair::KeyKind::BackgroundSize: {
         CSSStyleValuePair bgSize;
 
         bgSize.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundSize);
+        if (!style->backgroundLayerSize()) {
+            bgSize.setValueKind(CSSStyleValuePair::Auto);
+            addValuePair(bgSize);
+            return;
+        }
         bgSize.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
 
         ValueList* bgSizeValues;
@@ -814,6 +823,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         bgAttachment.setKeyKind(
             CSSStyleValuePair::KeyKind::BackgroundAttachment);
+        if (!style->backgroundLayerSize()) {
+            bgAttachment.setBackgroundAttachmentValue(
+                ScrollBackgroundAttachmentValue);
+            addValuePair(bgAttachment);
+            return;
+        }
         bgAttachment.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         ValueList* bgAttachmentValues;
 
@@ -834,6 +849,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair bgClip;
 
         bgClip.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundClip);
+        if (!style->backgroundLayerSize()) {
+            bgClip.setValueKind(CSSStyleValuePair::BoxValueKind);
+            bgClip.setValue(BorderBoxBoxValue);
+            addValuePair(bgClip);
+            return;
+        }
         bgClip.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
 
         ValueList* bgClipValues;
@@ -853,6 +874,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair bgOrigin;
 
         bgOrigin.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundOrigin);
+        if (!style->backgroundLayerSize()) {
+            bgOrigin.setValueKind(CSSStyleValuePair::BoxValueKind);
+            bgOrigin.setValue(PaddingBoxBoxValue);
+            addValuePair(bgOrigin);
+            return;
+        }
         bgOrigin.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
 
         ValueList* bgOriginValues;
@@ -872,6 +899,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair bgRepeatX;
 
         bgRepeatX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
+        if (!style->backgroundLayerSize()) {
+            bgRepeatX.setBackgroundRepeatValue(style->backgroundRepeatX());
+            addValuePair(bgRepeatX);
+            return;
+        }
         bgRepeatX.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
 
         ValueList* bgRepeatXValues;
@@ -893,6 +925,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair bgRepeatY;
 
         bgRepeatY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
+        if (!style->backgroundLayerSize()) {
+            bgRepeatY.setBackgroundRepeatValue(style->backgroundRepeatY());
+            addValuePair(bgRepeatY);
+            return;
+        }
         bgRepeatY.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
 
         ValueList* bgRepeatYValues;
@@ -913,6 +950,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair bgPositionX;
 
         bgPositionX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionX);
+        if (!style->backgroundLayerSize()) {
+            bgPositionX.setPercentageValue(0);
+            addValuePair(bgPositionX);
+            return;
+        }
         bgPositionX.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
 
         ValueList* bgPositionXValues;
@@ -934,6 +976,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair bgPositionY;
 
         bgPositionY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionY);
+        if (!style->backgroundLayerSize()) {
+            bgPositionY.setPercentageValue(0);
+            addValuePair(bgPositionY);
+            return;
+        }
         bgPositionY.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
 
         ValueList* bgPositionYValues;
