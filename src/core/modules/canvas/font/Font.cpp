@@ -23,6 +23,7 @@
 #include "core/style/ComputedStyle.h"
 #include "core/style/WebFont.h"
 #include "core/dom/Document.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace StarFish {
 
@@ -262,6 +263,11 @@ Font* FontSelector::loadFont(String* familyNameArray[],
         if (selectedWebFont) {
             if (!selectedWebFont->fromLocal()) {
                 // download from web
+                if (!selectedWebFont->fontResource()->isRequested()) {
+                    selectedWebFont->fontResource()->request(
+                        Resource::SyncIfAlreadyLoaded,
+                        document()->documentURI(), true);
+                }
                 if (selectedWebFont->fontResource()->fontFace()) {
                     // fontface loaded!
                     face = selectedWebFont->fontResource()->fontFace();
