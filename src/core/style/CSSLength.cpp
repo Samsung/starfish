@@ -19,42 +19,114 @@
  */
 
 #include "StarFishConfig.h"
+#include "Style.h"
 #include "CSSLength.h"
 
 namespace StarFish {
 
+template <typename T>
+static CSSLength::Kind computeLengthUnit(T str)
+{
+    size_t len = str->length();
+
+    if (len == 2) {
+        char32_t c0 = str->operator[](0);
+        char32_t c1 = str->operator[](1);
+
+        switch (c0) {
+        case 'p':
+            if (c1 == 'x') {
+                return CSSLength::PX;
+            }
+            if (c1 == 't') {
+                return CSSLength::PT;
+            }
+            if (c1 == 'c') {
+                return CSSLength::PC;
+            }
+            break;
+        case 'e':
+            if (c1 == 'm') {
+                return CSSLength::EM;
+            }
+            if (c1 == 'x') {
+                return CSSLength::EX;
+            }
+            break;
+        case 'i':
+            if (c1 == 'n') {
+                return CSSLength::IN;
+            }
+            break;
+        case 'c':
+            if (c1 == 'm') {
+                return CSSLength::CM;
+            }
+            if (c1 == 'h') {
+                return CSSLength::CH;
+            }
+            break;
+        case 'm':
+            if (c1 == 'm') {
+                return CSSLength::MM;
+            }
+            break;
+        case 'v':
+            if (c1 == 'w') {
+                return CSSLength::VW;
+            }
+            if (c1 == 'h') {
+                return CSSLength::VH;
+            }
+            break;
+        default:
+            break;
+        }
+    } else if (len == 3) {
+        char32_t c0 = str->operator[](0);
+        char32_t c1 = str->operator[](1);
+        char32_t c2 = str->operator[](2);
+
+        switch (c0) {
+        case 'r':
+            if (c1 == 'e' && c2 == 'm') {
+                return CSSLength::REM;
+            }
+            break;
+        default:
+            break;
+        }
+    } else if (len == 4) {
+        char32_t c0 = str->operator[](0);
+        char32_t c1 = str->operator[](1);
+        char32_t c2 = str->operator[](2);
+        char32_t c3 = str->operator[](3);
+
+        switch (c0) {
+        case 'v':
+            if (c1 == 'm' && c2 == 'i' && c3 == 'n') {
+                return CSSLength::VMIN;
+            }
+            if (c1 == 'm' && c2 == 'a' && c3 == 'x') {
+                return CSSLength::VMAX;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+    return CSSLength::PX;
+}
+
+CSSLength::CSSLength(const CSSTokenValue& unit, float f)
+{
+    m_kind = computeLengthUnit(&unit);
+    m_value = f;
+}
+
 CSSLength::CSSLength(String* unit, float f)
 {
-    if (unit->length() == 0 || unit->equals("px")) {
-        m_kind = PX;
-    } else if (unit->equals("em")) {
-        m_kind = EM;
-    } else if (unit->equals("ex")) {
-        m_kind = EX;
-    } else if (unit->equals("in")) {
-        m_kind = IN;
-    } else if (unit->equals("cm")) {
-        m_kind = CM;
-    } else if (unit->equals("mm")) {
-        m_kind = MM;
-    } else if (unit->equals("pt")) {
-        m_kind = PT;
-    } else if (unit->equals("pc")) {
-        m_kind = PC;
-    } else if (unit->equals("vw")) {
-        m_kind = VW;
-    } else if (unit->equals("vh")) {
-        m_kind = VH;
-    } else if (unit->equals("vmin")) {
-        m_kind = VMIN;
-    } else if (unit->equals("vmax")) {
-        m_kind = VMAX;
-    } else if (unit->equals("rem")) {
-        m_kind = REM;
-    } else if (unit->equals("ch")) {
-        m_kind = CH;
-    }
-
+    m_kind = computeLengthUnit(unit);
     m_value = f;
 }
 
