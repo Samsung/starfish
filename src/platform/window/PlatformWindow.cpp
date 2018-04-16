@@ -289,6 +289,7 @@ void PlatformWindow::onResize()
 #endif
     if (webView()->mainBrowsingContext()) {
         webView()->mainBrowsingContext()->window()->resize(width(), height());
+        webView()->setNeedsPainting();
     }
 }
 
