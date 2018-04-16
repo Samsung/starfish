@@ -167,8 +167,10 @@ public:
     {
     }
 
-    virtual void drawLinearGradient(const LayoutRect& rt,
-                                    LinearGradientData* gradient)
+    virtual void drawLinearGradient(const Unit::Rect& dst, const float& sx,
+                                    const float& sy, const float& ex,
+                                    const float& ey,
+                                    GCVector<ColorStop*>& colorStops)
     {
     }
 

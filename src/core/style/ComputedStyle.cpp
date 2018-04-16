@@ -331,7 +331,7 @@ void ComputedStyle::loadBackgroundImage(
 #endif
             }
         } else if (bImg && bImg->type().isGradient()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            // Do nothing at this time
         }
         bgIndex++;
     }

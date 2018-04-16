@@ -211,22 +211,7 @@ public:
     }
 
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
-                       LayoutSize windowSize, ComputedStyle* cs)
-    {
-        if (m_size.hasLengthValue()) {
-            if (m_size.m_lengthValue) {
-                m_size.m_lengthValue->checkComputed(curFontSize, rootFontSize,
-                                                    font, windowSize, cs);
-            }
-        }
-
-        m_positionX.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                          windowSize.width(),
-                                          windowSize.height(), cs);
-        m_positionY.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                          windowSize.width(),
-                                          windowSize.height(), cs);
-    }
+                       LayoutSize windowSize, ComputedStyle* cs);
 
     void* operator new(size_t size)
     {

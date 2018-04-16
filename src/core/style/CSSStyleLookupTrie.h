@@ -26,7 +26,7 @@ namespace StarFish {
 
 #define DEFINE_CSS_STYLE_KIND(name, nameLower, lowerCaseName) name,
 
-enum CSSStyleKind {
+enum class CSSStyleKind : int {
     Unknown,
     CustomProperty,
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_CSS_STYLE_KIND)
