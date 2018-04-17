@@ -1597,7 +1597,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                window->innerWidth(), window->innerHeight());
             } else {
                 unsigned int idx = style->backgroundLayerSize() - 1;
-                paintingRect = box->makeRect(style->backgroundClip(idx));
+                paintingRect = box->makeRect(BoxValue::PaddingBoxBoxValue);
             }
 
             ImageValue* imageValue = style->backgroundImage(idx);
@@ -1608,8 +1608,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                     imageValue->gradientValue()->asLinearGradientData();
 
                 float x1, y1, x2, y2;
-                gradient->computeEndPoints(rect.width(), rect.height(), x1, y1,
-                                           x2, y2);
+                gradient->computeEndPoints(rect, x1, y1, x2, y2);
 
                 GCVector<ColorStop*> colorStop;
                 gradient->makeSpecifiedColorStops(colorStop, x1, y1, x2, y2,

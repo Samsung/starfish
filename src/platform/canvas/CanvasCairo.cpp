@@ -749,7 +749,6 @@ public:
         }
 
         cairo_save(m_canvas);
-        cairo_translate(m_canvas, dst.x(), dst.y());
 
         cairo_pattern_t* pt;
         pt = cairo_pattern_create_linear(sx, sy, ex, ey);
