@@ -593,6 +593,11 @@ public:
         return (HTMLTextEditable*)this;
     }
 
+    virtual bool isLabelable() const
+    {
+        return false;
+    }
+
     virtual bool isHTMLListContainer() const
     {
         return false;

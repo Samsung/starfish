@@ -2,8 +2,8 @@
 
 [HTMLConstructor]
 interface HTMLLabelElement : HTMLElement {
-    [Unimplemented] readonly attribute HTMLFormElement? form;
-    [Unimplemented, CEReactions] attribute DOMString htmlFor;
-    [Unimplemented] readonly attribute HTMLElement? control;
+    readonly attribute HTMLFormElement? form;
+    [CEReactions, Rename=forAttr] attribute DOMString htmlFor;
+    readonly attribute HTMLElement? control;
 };
 

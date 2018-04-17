@@ -382,6 +382,21 @@ bool HTMLFormControl::isPlaceholderVisible()
     return false;
 }
 
+bool HTMLFormControl::isLabelable() const
+{
+    if (isHTMLInputElement()) {
+        String* type = getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+        if (!type->equals("hidden")) {
+            return true;
+        }
+    } else if (isHTMLButtonElement() || isHTMLSelectElement() ||
+               isHTMLTextAreaElement()) {
+        return true;
+    }
+
+    return false;
+}
+
 bool HTMLFormControl::isButton(HTMLFormControl* node)
 {
     if (node->type()->equals("submit") || node->type()->equals("button") ||
