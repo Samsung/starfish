@@ -204,6 +204,7 @@ protected:
 
     String* m_string;
     String* m_urlString;
+    String* m_baseURL;
 
     unsigned int m_protocolEnd;
     unsigned int m_usernameStart;

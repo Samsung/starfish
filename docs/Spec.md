@@ -330,10 +330,15 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | noHref | Indicate if the area is inactive (true) or active (false). |
 | [HTMLHyperlinkElementUtils](https://html.spec.whatwg.org/multipage/links.html#api-for-a-and-area-elements) | interface | HTMLHyperlinkElementUtils | The HTMLHyperlinkElementUtils mixin defines utility methods and properties to work with HTMLAnchorElement and HTMLAreaElement. These utilities allow to deal with common features like URLs. |
 |  | attribute | href | Return the whole URL. |
+|  | attribute | origin | Return the origin. |
 |  | attribute | protocol | Return the whole protocol. |
 |  | attribute | host | Return the whole host. |
 |  | attribute | hostname | Return the hostname. |
-|  | attribute | port | return the port. |
+|  | attribute | port | Return the port. |
+|  | attribute | username | Return the username. |
+|  | attribute | password | Return the password. |
+|  | attribute | search | Return the search. |
+|  | attribute | hash | Return the hash. |
 | [HTMLAudioElement](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) | interface | HTMLAudioElement | The audio element represents a sound or audio stream. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
 |  | constructor | Audio(optional DOMString src="") | |
 | [HTMLBodyElement](https://html.spec.whatwg.org/multipage/semantics.html#the-body-element) | interface | HTMLBodyElement | The body element represents the main content of the document. |

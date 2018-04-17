@@ -4,14 +4,14 @@
  NoInterfaceObject]
 interface HTMLHyperlinkElementUtils {
   [CEReactions] attribute USVString href;
-  [Unimplemented] readonly attribute USVString origin;
+  readonly attribute USVString origin;
   [CEReactions] attribute USVString protocol;
-  [Unimplemented, CEReactions] attribute USVString username;
-  [Unimplemented, CEReactions] attribute USVString password;
+  [CEReactions] attribute USVString username;
+  [CEReactions] attribute USVString password;
   [CEReactions] attribute USVString host;
   [CEReactions] attribute USVString hostname;
   [CEReactions] attribute USVString port;
   [CEReactions] attribute USVString pathname;
-  [Unimplemented, CEReactions] attribute USVString search;
-  [Unimplemented, CEReactions] attribute USVString hash;
+  [CEReactions] attribute USVString search;
+  [CEReactions] attribute USVString hash;
 };
