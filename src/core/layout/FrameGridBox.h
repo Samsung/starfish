@@ -82,6 +82,11 @@ public:
         m_newLine = newLine;
     }
 
+    void setContaining(bool contain)
+    {
+        m_containing = contain;
+    }
+
     bool isFixed()
     {
         return m_fixed;
@@ -102,6 +107,11 @@ public:
         return m_state == Fr;
     }
 
+    bool isContaining()
+    {
+        return m_containing;
+    }
+
     // The 'computed' is for the 'fr' unit.
     GridLine(LayoutUnit fr, bool computed)
         : m_offset(0)
@@ -111,6 +121,7 @@ public:
         , m_fixed(true)
         , m_newLine(false)
         , m_state(Fr)
+        , m_containing(false)
     {
     }
 
@@ -122,6 +133,7 @@ public:
         , m_fixed(true)
         , m_newLine(false)
         , m_state(Fixed)
+        , m_containing(false)
     {
     }
 
@@ -137,6 +149,7 @@ private:
         Fr,
     };
     GridLineState m_state;
+    bool m_containing;
 };
 
 struct GridLayoutScope {

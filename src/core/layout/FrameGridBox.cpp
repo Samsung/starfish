@@ -857,17 +857,48 @@ static GridArea* getBiggestAreaWithColumn(GCVector<GridArea>& list,
                                           size_t end)
 {
     GridArea* target = nullptr;
-    size_t maxArea = 0;
+    std::vector<GridArea*> areas;
     for (size_t i = 0; i < list.size(); i++) {
         GridArea preArea = list[i];
 
         if (preArea.m_rowStart < rowStart) {
             if (preArea.m_columnStart <= start && preArea.m_columnEnd >= end) {
-                size_t diff = preArea.m_columnEnd - preArea.m_columnStart;
-                if (maxArea < diff) {
-                    maxArea = diff;
-                    target = &list[i];
-                }
+                areas.push_back(&list[i]);
+            }
+        }
+    }
+
+    std::stable_sort(areas.begin(), areas.end(),
+                     [](const GridArea* a, const GridArea* b) {
+                         return a->m_columnEnd - a->m_columnStart <
+                                b->m_columnEnd - b->m_columnStart;
+                     });
+
+    if (areas.size()) {
+        for (size_t i = 0; i < areas.size(); i++) {
+            if (end - start < areas[i]->m_columnEnd - areas[i]->m_columnStart) {
+                target = areas[i];
+                break;
+            }
+        }
+    }
+
+    return target;
+}
+
+static GridArea* getSameAreaWithColumn(GCVector<GridArea>& list,
+                                       size_t rowStart, size_t start,
+                                       size_t end)
+{
+    GridArea* target = nullptr;
+    size_t maxArea = 0;
+    for (size_t i = 0; i < list.size(); i++) {
+        GridArea preArea = list[i];
+
+        if (preArea.m_rowStart < rowStart) {
+            if (preArea.m_columnStart == start && preArea.m_columnEnd == end) {
+                target = &list[i];
+                break;
             }
         }
     }
@@ -1001,7 +1032,6 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
             } else {
                 size_t start = area.m_columnStart;
                 size_t end = area.m_columnEnd;
-
                 LayoutUnit sumWidth(0);
                 for (size_t i = area.m_columnStart; i <= area.m_columnEnd - 1;
                      i++) {
@@ -1013,7 +1043,7 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                         if (!isFixed) {
                             width = contentWidth;
                         }
-                        LayoutUnit dividedWidth = width / (end - start);
+                        LayoutUnit dividedWidth = ceil(width / (end - start));
                         for (size_t i = area.m_columnStart;
                              i <= area.m_columnEnd - 1; i++) {
                             GridLine& line = m_gridLineColumns[i];
@@ -1023,11 +1053,85 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                     } else {
                         GridArea* biggest = getBiggestAreaWithColumn(
                             m_orderedGridArea, area.m_rowStart, start, end);
+
                         if (biggest) {
-                            LayoutUnit diff = 0;
-                            if (biggest->m_columnEnd - end) {
-                                diff = (contentWidth - sumWidth) /
-                                       (biggest->m_columnEnd - end);
+                            std::vector<GridLine*> distributedLines;
+                            for (size_t i = biggest->m_columnEnd - 1;
+                                 i >= biggest->m_columnStart; --i) {
+                                if (i > area.m_columnStart - 1 &&
+                                    i <= area.m_columnEnd - 1) {
+                                    continue;
+                                }
+
+                                if (biggest->m_columnEnd - 1 == i ||
+                                    !m_gridLineColumns[i].isContaining()) {
+                                    distributedLines.push_back(
+                                        &m_gridLineColumns[i]);
+                                } else {
+                                    break;
+                                }
+                            }
+
+                            LayoutUnit diff = contentWidth - sumWidth;
+                            if (distributedLines.size()) {
+                                LayoutUnit sumOfDistributedLines(0);
+                                for (size_t i = 0; i < distributedLines.size();
+                                     i++) {
+                                    sumOfDistributedLines +=
+                                        distributedLines[i]->offset();
+                                }
+
+                                LayoutUnit remaining(0);
+                                for (size_t i = 0; i < distributedLines.size();
+                                     i++) {
+                                    LayoutUnit offset =
+                                        diff * (distributedLines[i]->offset() /
+                                                sumOfDistributedLines);
+                                    if (distributedLines[i]->offset() - offset >
+                                        0) {
+                                        distributedLines[i]->setOffset(
+                                            distributedLines[i]->offset() -
+                                                offset,
+                                            true);
+                                    } else {
+                                        remaining +=
+                                            offset -
+                                            distributedLines[i]->offset();
+                                        distributedLines[i]->setOffset(0, true);
+                                    }
+                                }
+
+                                if (remaining > 0) {
+                                    GridArea* next = getBiggestAreaWithColumn(
+                                        m_orderedGridArea, biggest->m_rowStart,
+                                        biggest->m_columnStart,
+                                        biggest->m_columnEnd);
+                                    if (next) {
+                                        size_t count = 0;
+                                        for (size_t i = next->m_columnStart;
+                                             i <= next->m_columnEnd - 1; i++) {
+                                            if (i > biggest->m_columnStart -
+                                                        1 &&
+                                                i <= biggest->m_columnEnd - 1) {
+                                                continue;
+                                            }
+                                            count++;
+                                        }
+                                        LayoutUnit offset = remaining / count;
+                                        for (size_t i = next->m_columnStart;
+                                             i <= next->m_columnEnd - 1; i++) {
+                                            if (i > biggest->m_columnStart -
+                                                        1 &&
+                                                i <= biggest->m_columnEnd - 1) {
+                                                continue;
+                                            }
+                                            m_gridLineColumns[i].setOffset(
+                                                m_gridLineColumns[i].offset() -
+                                                    offset,
+                                                true);
+                                        }
+                                    }
+                                }
                             }
 
                             LayoutUnit dividedWidth =
@@ -1035,12 +1139,6 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                             for (size_t i = start; i <= end - 1; i++) {
                                 GridLine& line = m_gridLineColumns[i];
                                 line.setOffset(dividedWidth, true);
-                            }
-
-                            for (size_t i = end; i <= biggest->m_columnEnd - 1;
-                                 i++) {
-                                GridLine& line = m_gridLineColumns[i];
-                                line.setOffset(line.offset() - diff, true);
                             }
                         } else {
                             size_t count = 0;
@@ -1074,7 +1172,10 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                 } else if (sumWidth > contentWidth) {
                     GridArea* biggest = getBiggestAreaWithColumn(
                         m_orderedGridArea, area.m_rowStart, start, end);
-                    if (biggest) {
+                    GridArea* same = getSameAreaWithColumn(
+                        m_orderedGridArea, area.m_rowStart, start, end);
+
+                    if (biggest && !same) {
                         std::vector<GridLine*> fixed;
                         std::vector<GridLine*> noneFixed;
                         LayoutUnit sumOfFixed(0);
@@ -1110,6 +1211,15 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                         }
                     }
                 }
+            }
+
+            // Make a mark for the end of lines.
+            GridArea* biggest = getBiggestAreaWithColumn(
+                m_orderedGridArea, area.m_rowStart, area.m_columnStart,
+                area.m_columnStart);
+            if (biggest &&
+                !(m_gridLineColumns[area.m_columnEnd - 1].isContaining())) {
+                m_gridLineColumns[area.m_columnEnd - 1].setContaining(true);
             }
         }
 
