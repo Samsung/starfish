@@ -2220,6 +2220,13 @@ StyleRuleNamespace* CSSParser::parseNamespaceRule()
     return new StyleRuleNamespace(namespaceURI.getValue(), prefix);
 }
 
+StyleRuleKeyframes* CSSParser::parseKeyframesRule()
+{
+    // TODO: Parse @keyframes CSS at-rule.
+    // https://drafts.csswg.org/css-animations/#keyframes
+    return nullptr;
+}
+
 Nullable<String*> CSSParser::parseURLString()
 {
     RefPtr<CSSToken> token = getToken(true, true);
@@ -2333,13 +2340,9 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
                 rule = parseCounterStyleRule();
             } else if (token->isAtRule("@namespace")) {
                 rule = parseNamespaceRule();
+            } else if (token->isAtRule("@keyframes")) {
+                rule = parseKeyframesRule();
             }
-            /*
-             else if (token.isAtRule("@variables")) {
-            } else if (token.isAtRule("@page")) {
-            } else if (token.isAtRule("@keyframes")) {
-            } else if (token.isAtRule("@charset")) {
-            }*/
 
             if (rule) {
                 allowedRules = computeNewAllowedRules(allowedRules, rule);

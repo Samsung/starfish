@@ -36,6 +36,7 @@ class StyleRuleFontFace;
 class StyleRuleSupports;
 class StyleRuleCounterStyle;
 class StyleRuleNamespace;
+class StyleRuleKeyframes;
 class MediaQuerySet;
 class MediaList;
 
@@ -156,11 +157,11 @@ public:
                       void* domObjectPointer) override;
     virtual bool isCSSFontFaceRule() const override;
 
-    CSSFontFaceRule(StyleRuleFontFace* styleRule, CSSStyleSheet* parent);
+    CSSFontFaceRule(StyleRuleFontFace* fontFaceRule, CSSStyleSheet* parent);
     String* cssText() override;
-    StyleRuleFontFace* styleRule() const
+    StyleRuleFontFace* fontFaceRule() const
     {
-        return m_styleRule;
+        return m_fontFaceRule;
     }
 
     CSSStyleDeclaration* style();
@@ -171,7 +172,7 @@ private:
         return CSSRule::Type::FONT_FACE_RULE;
     }
 
-    StyleRuleFontFace* m_styleRule;
+    StyleRuleFontFace* m_fontFaceRule;
     CSSStyleDeclaration* m_propertiesWrapper;
 };
 
@@ -197,7 +198,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isCSSCounterStyleRule() const override;
 
-    CSSCounterStyleRule(StyleRuleCounterStyle* styleRule,
+    CSSCounterStyleRule(StyleRuleCounterStyle* counterStyleRule,
                         CSSStyleSheet* parent);
     String* cssText() override;
 
@@ -214,11 +215,11 @@ public:
                       void* domObjectPointer) override;
     virtual bool isCSSNamespaceRule() const override;
 
-    CSSNamespaceRule(StyleRuleNamespace* styleRule, CSSStyleSheet* parent);
+    CSSNamespaceRule(StyleRuleNamespace* namespaceRule, CSSStyleSheet* parent);
     String* cssText() override;
-    StyleRuleNamespace* styleRule() const
+    StyleRuleNamespace* namespaceRule() const
     {
-        return m_styleRule;
+        return m_namespaceRule;
     }
     String* namespaceURI() const;
     String* prefix() const;
@@ -228,7 +229,31 @@ private:
     {
         return CSSRule::Type::NAMESPACE_RULE;
     }
-    StyleRuleNamespace* m_styleRule;
+    StyleRuleNamespace* m_namespaceRule;
+};
+
+class CSSKeyframesRule : public CSSRule {
+public:
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isCSSKeyframesRule() const override;
+
+    CSSKeyframesRule(StyleRuleKeyframes* keyframesRule, CSSStyleSheet* parent);
+    String* cssText() override;
+    StyleRuleKeyframes* keyframesRule() const
+    {
+        return m_keyframesRule;
+    }
+
+    String* name();
+    void setName(String* name);
+
+private:
+    CSSRule::Type type() const override
+    {
+        return CSSRule::Type::KEYFRAMES_RULE;
+    }
+    StyleRuleKeyframes* m_keyframesRule;
 };
 }
 

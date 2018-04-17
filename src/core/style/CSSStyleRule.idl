@@ -48,3 +48,13 @@ interface CSSNamespaceRule : CSSRule {
     readonly attribute DOMString prefix;
 };
 
+// https://drafts.csswg.org/css-animations/#interface-csskeyframesrule
+interface CSSKeyframesRule : CSSRule {
+    attribute CSSOMString name;
+    [Unimplemented] readonly attribute CSSRuleList cssRules;
+
+    [Unimplemented] void appendRule(CSSOMString rule);
+    [Unimplemented] void deleteRule(CSSOMString select);
+    [Unimplemented] CSSKeyframeRule? findRule(CSSOMString select);
+};
+

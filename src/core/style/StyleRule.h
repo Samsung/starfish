@@ -37,6 +37,7 @@ class StyleRuleFontFace;
 class StyleRuleSupports;
 class StyleRuleCounterStyle;
 class StyleRuleNamespace;
+class StyleRuleKeyframes;
 
 class StyleRuleBase : public gc {
 public:
@@ -136,6 +137,7 @@ public:
     inline StyleRuleSupports* asStyleRuleSupports();
     inline StyleRuleCounterStyle* asStyleRuleCounterStyle();
     inline StyleRuleNamespace* asStyleRuleNamespace();
+    inline StyleRuleKeyframes* asStyleRuleKeyframes();
 
     CSSRule* createCSSOMWrapper(CSSStyleSheet* parent_sheet = 0) const;
     CSSRule* createCSSOMWrapper(CSSRule* parent_rule) const;
@@ -383,6 +385,25 @@ private:
     String* m_prefix;
 };
 
+class StyleRuleKeyframes : public StyleRuleBase {
+public:
+    // TODO: Consider <keyframe-block-list>
+    StyleRuleKeyframes(String* name);
+
+    String* name() const
+    {
+        return m_name;
+    }
+
+    void setName(String* name)
+    {
+        m_name = name;
+    }
+
+private:
+    String* m_name;
+};
+
 inline StyleRule* StyleRuleBase::asStyleRule()
 {
     STARFISH_ASSERT(isStyleRule());
@@ -423,6 +444,12 @@ inline StyleRuleNamespace* StyleRuleBase::asStyleRuleNamespace()
 {
     STARFISH_ASSERT(isNamespaceRule());
     return (StyleRuleNamespace*)this;
+}
+
+inline StyleRuleKeyframes* StyleRuleBase::asStyleRuleKeyframes()
+{
+    STARFISH_ASSERT(isKeyframesRule());
+    return (StyleRuleKeyframes*)this;
 }
 }
 

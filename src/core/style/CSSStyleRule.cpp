@@ -358,10 +358,10 @@ CSSStyleSheet* CSSImportRule::styleSheet()
     return m_styleSheetWrapper;
 }
 
-CSSFontFaceRule::CSSFontFaceRule(StyleRuleFontFace* styleRule,
+CSSFontFaceRule::CSSFontFaceRule(StyleRuleFontFace* fontFaceRule,
                                  CSSStyleSheet* parent)
     : CSSRule(parent)
-    , m_styleRule(styleRule)
+    , m_fontFaceRule(fontFaceRule)
     , m_propertiesWrapper(nullptr)
 {
 }
@@ -370,7 +370,7 @@ CSSStyleDeclaration* CSSFontFaceRule::style()
 {
     if (!m_propertiesWrapper) {
         m_propertiesWrapper = new StyleRuleCSSStyleDeclaration(
-            m_styleRule->styleDeclaration(), this->asCSSStyleRule());
+            m_fontFaceRule->styleDeclaration(), this->asCSSStyleRule());
     }
 
     return m_propertiesWrapper;
@@ -381,7 +381,7 @@ String* CSSFontFaceRule::cssText()
     StringBuilder result;
     result.appendString("@font-face { ");
 
-    String* decls = m_styleRule->styleDeclaration()->generateCSSText();
+    String* decls = m_fontFaceRule->styleDeclaration()->generateCSSText();
     result.appendString(decls);
     result.appendChar('}');
     return result.finalize();
@@ -404,8 +404,8 @@ String* CSSSupportsRule::cssText()
     return result.finalize();
 }
 
-CSSCounterStyleRule::CSSCounterStyleRule(StyleRuleCounterStyle* styleRule,
-                                         CSSStyleSheet* parent)
+CSSCounterStyleRule::CSSCounterStyleRule(
+    StyleRuleCounterStyle* counterStyleRule, CSSStyleSheet* parent)
     : CSSRule(parent)
 {
 }
@@ -422,25 +422,58 @@ String* CSSCounterStyleRule::cssText()
 CSSNamespaceRule::CSSNamespaceRule(StyleRuleNamespace* namespaceRule,
                                    CSSStyleSheet* parent)
     : CSSRule(parent)
-    , m_styleRule(namespaceRule)
+    , m_namespaceRule(namespaceRule)
 {
 }
 
 String* CSSNamespaceRule::cssText()
 {
-    // TODO: Consider namespaceURI and prefix
     StringBuilder result;
     result.appendString("@namespace ");
+    if (!prefix()->equals(String::emptyString)) {
+        result.appendString(prefix());
+        result.appendChar(' ');
+    }
+    result.appendString("url(\"");
+    if (!namespaceURI()->equals(String::emptyString)) {
+        result.appendString(namespaceURI());
+    }
+    result.appendString("\");");
     return result.finalize();
 }
 
 String* CSSNamespaceRule::namespaceURI() const
 {
-    return m_styleRule->namespaceURI();
+    return m_namespaceRule->namespaceURI();
 }
 
 String* CSSNamespaceRule::prefix() const
 {
-    return m_styleRule->prefix();
+    return m_namespaceRule->prefix();
+}
+
+CSSKeyframesRule::CSSKeyframesRule(StyleRuleKeyframes* keyframesRule,
+                                   CSSStyleSheet* parent)
+    : CSSRule(parent)
+    , m_keyframesRule(keyframesRule)
+{
+}
+
+String* CSSKeyframesRule::cssText()
+{
+    // TODO: Consider <keyframes-name> and <keyframe-block-list>
+    StringBuilder result;
+    result.appendString("@keyframes ");
+    return result.finalize();
+}
+
+String* CSSKeyframesRule::name()
+{
+    return m_keyframesRule->name();
+}
+
+void CSSKeyframesRule::setName(String* name)
+{
+    return m_keyframesRule->setName(name);
 }
 }
