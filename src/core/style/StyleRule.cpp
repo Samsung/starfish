@@ -70,6 +70,9 @@ CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
     case CSSRule::Type::NAMESPACE_RULE:
         rule = new CSSNamespaceRule(self->asStyleRuleNamespace(), parentSheet);
         break;
+    case CSSRule::Type::KEYFRAMES_RULE:
+        rule = new CSSKeyframesRule(self->asStyleRuleKeyframes(), parentSheet);
+        break;
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;

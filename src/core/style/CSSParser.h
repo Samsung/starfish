@@ -1490,6 +1490,7 @@ class StyleRuleFontFace;
 class StyleRuleSupports;
 class StyleRuleCounterStyle;
 class StyleRuleNamespace;
+class StyleRuleKeyframes;
 
 #ifndef CSSTOKEN_POOL_INITIAL_SIZE
 #define CSSTOKEN_POOL_INITIAL_SIZE 24
@@ -1547,6 +1548,7 @@ public:
     StyleRuleSupports* parseSupportsRule();
     StyleRuleCounterStyle* parseCounterStyleRule();
     StyleRuleNamespace* parseNamespaceRule();
+    StyleRuleKeyframes* parseKeyframesRule();
     Nullable<String*> parseURLString();
     void consumeComponentValue(RefPtr<CSSToken>& token);
     void parseSelector(GCVector<CSSSelectorList*>& list, bool& validSelector);
