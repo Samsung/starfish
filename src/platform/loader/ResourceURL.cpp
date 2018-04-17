@@ -267,6 +267,7 @@ ResourceURL::ResourceURL(String* url)
 }
 
 ResourceURL::ResourceURL(String* url, String* baseURL)
+    : m_baseURL(baseURL)
 {
     unsigned numLeadingSpaces = 0;
     unsigned numTrailingSpaces = 0;
@@ -318,6 +319,7 @@ void ResourceURL::fillGCDescriptor(GC_word* desc)
 {
     GC_set_bit(desc, GC_WORD_OFFSET(ResourceURL, m_string));
     GC_set_bit(desc, GC_WORD_OFFSET(ResourceURL, m_urlString));
+    GC_set_bit(desc, GC_WORD_OFFSET(ResourceURL, m_baseURL));
 }
 
 bool ResourceURL::isValidURL(String* url)
@@ -440,7 +442,10 @@ static String* removingDots(String* origPath)
 void ResourceURL::resolvePositions()
 {
     size_t pos = m_urlString->find(":");
-    STARFISH_ASSERT(pos != SIZE_MAX);
+    if (pos == SIZE_MAX) {
+        return;
+    }
+
     m_protocolEnd = pos + 1;
 
     bool hierarchical = m_urlString->charAt(m_protocolEnd) == '/';
@@ -599,7 +604,7 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         }
     }
 
-    if (!isAbsolute && !baseURL->equals("about:blank")) {
+    if (!isAbsolute && !baseURL->equals("about:blank") && !url->contains(":")) {
         STARFISH_ASSERT(baseURL->contains("://"));
         bool baseEndsWithSlash = baseURL->charAt(baseURL->length() - 1) == '/';
 
@@ -645,21 +650,19 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         m_protocol = UNKNOWN;
     }
 
-    if (m_protocol != UNKNOWN) {
-        resolvePositions();
+    resolvePositions();
 
-        if (m_urlString->charAt(m_protocolEnd) == '/') {
-            String* origPath = pathname();
-            String* newPath = removingDots(origPath);
-            if (newPath != origPath) {
-                setPathname(newPath, false);
-            }
+    if (m_urlString->charAt(m_protocolEnd) == '/') {
+        String* origPath = pathname();
+        String* newPath = removingDots(origPath);
+        if (newPath != origPath) {
+            setPathname(newPath, false);
         }
-
-        // TODO: need to check validity for other components (protocol, host,
-        // etc)
-        m_isValid = isValidPort();
     }
+
+    // TODO: need to check validity for other components (protocol, host,
+    // etc)
+    m_isValid = isValidPort();
 }
 
 bool ResourceURL::isValidPort()
@@ -748,7 +751,21 @@ String* ResourceURL::origin()
     if (m_protocol == FILE_PROTOCOL) {
         return m_urlString->substring(0, 7)->toASCIILower(); // "file://"
     }
-    return m_urlString->substring(0, m_hostEnd);
+
+    if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
+        if (!hostname()->isEmpty()) {
+            return protocol()->concat("//")->concat(host());
+        } else {
+            return String::createASCIIString("null");
+        }
+    } else if (m_protocol == UNKNOWN) {
+        if (!protocol()->isEmpty()) {
+            return protocol()->concat("//");
+        } else if (m_baseURL) {
+            return (new ResourceURL(m_baseURL))->origin();
+        }
+    }
+    return String::createASCIIString("null");
 }
 
 String* ResourceURL::href()

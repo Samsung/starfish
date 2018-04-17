@@ -39,6 +39,8 @@ public:
     String* href();
     void setHref(String* href);
 
+    String* origin();
+
     String* host();
     void setHost(String* host);
 
@@ -56,6 +58,18 @@ public:
 
     String* target();
     void setTarget(String* target);
+
+    String* username();
+    void setUsername(String* username);
+
+    String* password();
+    void setPassword(String* password);
+
+    String* search();
+    void setSearch(String* search);
+
+    String* hash();
+    void setHash(String* hash);
 };
 }
 #endif

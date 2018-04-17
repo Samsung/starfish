@@ -165,6 +165,18 @@ void HTMLHyperlinkContainer::setProtocol(String* protocol)
     setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
 }
 
+String* HTMLHyperlinkContainer::origin()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        ResourceURL* url = new ResourceURL(hrefAttr.getValue()->trim(),
+                                           document()->baseURL()->urlString());
+        return url->origin();
+    }
+    return String::emptyString;
+}
+
 String* HTMLHyperlinkContainer::target()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_target);
@@ -173,5 +185,113 @@ String* HTMLHyperlinkContainer::target()
 void HTMLHyperlinkContainer::setTarget(String* target)
 {
     setAttribute(starFish()->staticStrings()->m_target, target);
+}
+
+String* HTMLHyperlinkContainer::username()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        ResourceURL* url = new ResourceURL(hrefAttr.getValue()->trim(),
+                                           document()->baseURL()->urlString());
+        if (!url->hostname()->isEmpty()) {
+            return url->username();
+        }
+    }
+    return String::emptyString;
+}
+
+void HTMLHyperlinkContainer::setUsername(String* username)
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (!hrefAttr.hasValue()) {
+        return;
+    }
+    ResourceURL* resourceURL = new ResourceURL(
+        hrefAttr.getValue()->trim(), document()->baseURL()->baseURI());
+    resourceURL = resourceURL->setUsername(username);
+    setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
+}
+
+String* HTMLHyperlinkContainer::password()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        ResourceURL* url = new ResourceURL(hrefAttr.getValue()->trim(),
+                                           document()->baseURL()->urlString());
+        if (!url->hostname()->isEmpty()) {
+            return url->password();
+        }
+    }
+    return String::emptyString;
+}
+
+void HTMLHyperlinkContainer::setPassword(String* password)
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (!hrefAttr.hasValue()) {
+        return;
+    }
+    ResourceURL* resourceURL = new ResourceURL(
+        hrefAttr.getValue()->trim(), document()->baseURL()->baseURI());
+    resourceURL = resourceURL->setPassword(password);
+    setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
+}
+
+String* HTMLHyperlinkContainer::search()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        ResourceURL* url = new ResourceURL(hrefAttr.getValue()->trim(),
+                                           document()->baseURL()->urlString());
+        if (!url->hostname()->isEmpty()) {
+            return url->search();
+        }
+    }
+    return String::emptyString;
+}
+
+void HTMLHyperlinkContainer::setSearch(String* hash)
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (!hrefAttr.hasValue()) {
+        return;
+    }
+    ResourceURL* resourceURL = new ResourceURL(
+        hrefAttr.getValue()->trim(), document()->baseURL()->baseURI());
+    resourceURL = resourceURL->setSearch(hash);
+    setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
+}
+
+String* HTMLHyperlinkContainer::hash()
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (hrefAttr.hasValue()) {
+        ResourceURL* url = new ResourceURL(hrefAttr.getValue()->trim(),
+                                           document()->baseURL()->urlString());
+        if (!url->hostname()->isEmpty()) {
+            return url->hash();
+        }
+    }
+    return String::emptyString;
+}
+
+void HTMLHyperlinkContainer::setHash(String* hash)
+{
+    Nullable<String*> hrefAttr =
+        getAttribute(starFish()->staticStrings()->m_href);
+    if (!hrefAttr.hasValue()) {
+        return;
+    }
+    ResourceURL* resourceURL = new ResourceURL(
+        hrefAttr.getValue()->trim(), document()->baseURL()->baseURI());
+    resourceURL = resourceURL->setHash(hash);
+    setAttribute(starFish()->staticStrings()->m_href, resourceURL->href());
 }
 }
