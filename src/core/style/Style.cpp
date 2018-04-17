@@ -31,6 +31,8 @@
 
 #include "StarFish.h"
 #include "core/animation/Animation.h"
+#include "core/animation/CubicBezier.h"
+#include "core/animation/Steps.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLDocument.h"
@@ -2579,10 +2581,6 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("step-start");
         case TransitionTimingFunctionStepEndValue:
             return String::fromUTF8("step-end");
-        case TransitionTimingFunctionStepsValue:
-            return String::fromUTF8("steps");
-        case TransitionTimingFunctionCubicBezierValue:
-            return String::fromUTF8("cubic-bezier");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -2866,6 +2864,9 @@ String* CSSStyleValuePair::toString() const
         builder.appendString("\")");
         return builder.finalize();
     }
+    case CSSStyleValuePair::ValueKind::AnimationTimingFunctionValueKind:
+        STARFISH_ASSERT(animationTimingFunctionValue());
+        return animationTimingFunctionValue()->toString();
     }
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
@@ -3535,6 +3536,70 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
     return true;
 }
 
+static bool parseCubicBezierFunction(const CSSTokenValue& value,
+                                     CSSStyleValuePair* result)
+{
+    Nullable<CSSTokenValue> mayBezier =
+        CSSPropertyParser::parseFunctionBlock(value.data(), "cubic-bezier");
+    if (!mayBezier.hasValue()) {
+        return false;
+    }
+    std::vector<CSSTokenValue> tokens;
+    mayBezier.getValue().split(',', tokens);
+    if (tokens.size() != 4) {
+        return false;
+    }
+    float x1, y1, x2, y2;
+    if (!CSSPropertyParser::parseNumber(
+            tokens[0].trim().data(), CSSPropertyParser::AllowNegative, &x1)) {
+        return false;
+    }
+    if (!CSSPropertyParser::parseNumber(
+            tokens[1].trim().data(), CSSPropertyParser::AllowNegative, &y1)) {
+        return false;
+    }
+    if (!CSSPropertyParser::parseNumber(
+            tokens[2].trim().data(), CSSPropertyParser::AllowNegative, &x2)) {
+        return false;
+    }
+    if (!CSSPropertyParser::parseNumber(
+            tokens[3].trim().data(), CSSPropertyParser::AllowNegative, &y2)) {
+        return false;
+    }
+    result->setAnimationTimingFunctionValue(new CubicBezier(x1, y1, x2, y2));
+    return true;
+}
+
+static bool parseStepsFunction(const CSSTokenValue& value,
+                               CSSStyleValuePair* result)
+{
+    Nullable<CSSTokenValue> maySteps =
+        CSSPropertyParser::parseFunctionBlock(value.data(), "steps");
+    if (!maySteps.hasValue()) {
+        return false;
+    }
+    std::vector<CSSTokenValue> tokens;
+    maySteps.getValue().split(',', tokens);
+    size_t size = tokens.size();
+    if (size < 1 || size > 2) {
+        return false;
+    }
+    int32_t number;
+    bool isEnd = true;
+    if (!CSSPropertyParser::parseInt32(tokens[0].data(), 0, number)) {
+        return false;
+    }
+    if (size == 2) {
+        if (tokens[1] == "start") {
+            isEnd = false;
+        } else if (tokens[1] != "end") {
+            return false;
+        }
+    }
+    result->setAnimationTimingFunctionValue(new Steps(number, isEnd));
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueUnitTransitionTimingFunction(
     const CSSTokenValue& value)
 {
@@ -3561,7 +3626,8 @@ bool CSSStyleValuePair::updateValueUnitTransitionTimingFunction(
     } else if (STRING_VALUE_IS_STRING("step-end")) {
         m_value.m_transitionTimingFunction =
             TransitionTimingFunctionValue::TransitionTimingFunctionStepEndValue;
-    } else {
+    } else if (!parseCubicBezierFunction(value, this) &&
+               !parseStepsFunction(value, this)) {
         return false;
     }
     return true;
@@ -3584,24 +3650,39 @@ static bool parseTransitionShorthand(const CSSTokenVector& tokens,
     timingFunction->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     delay->setValueKind(CSSStyleValuePair::ValueKind::Initial);
 
-    bool isFirstTimeValue = true;
     CSSStyleValuePair temp;
+    bool foundProperty = false;
+    bool foundDuration = false;
+    bool foundTimingFunction = false;
+    bool foundDelay = false;
 
     for (size_t i = 0; i < len; i++) {
         const CSSTokenValue& tok = tokens[i];
-        if (temp.updateValueUnitTransitionProperty(tok)) {
+        if (!foundProperty && temp.updateValueUnitTransitionProperty(tok)) {
+            foundProperty = true;
             *property = temp;
-        } else if (isFirstTimeValue && temp.updateValueUnitTimeOrCalc(tok, 0)) {
-            *duration = temp;
-            isFirstTimeValue = false;
-        } else if (temp.updateValueUnitTransitionTimingFunction(tok)) {
-            *timingFunction = temp;
-        } else if (!isFirstTimeValue &&
-                   temp.updateValueUnitTimeOrCalc(tok, 0)) {
-            *delay = temp;
-        } else {
-            return false;
+            continue;
         }
+        if ((!foundDuration || !foundDelay) &&
+            temp.updateValueUnitTimeOrCalc(tok, 0)) {
+            if (!foundDuration) {
+                foundDuration = true;
+                *duration = temp;
+                continue;
+            }
+            if (!foundDelay) {
+                foundDelay = true;
+                *delay = temp;
+                continue;
+            }
+        }
+        if (!foundTimingFunction &&
+            temp.updateValueUnitTransitionTimingFunction(tok)) {
+            foundTimingFunction = true;
+            *timingFunction = temp;
+            continue;
+        }
+        return false;
     }
     return true;
 }
@@ -3691,7 +3772,7 @@ void CSSStyleDeclaration::setTransitionTransitionDelay(const char* value,
 }
 
 static String* createTransitionString(String* property, String* duration,
-                                      String* delay)
+                                      String* timingFn, String* delay)
 {
     StringBuilder builder;
 
@@ -3706,6 +3787,14 @@ static String* createTransitionString(String* property, String* duration,
             builder.appendString(String::spaceString);
         }
         builder.appendString(duration);
+    }
+
+    if (!timingFn->equals(String::emptyString) &&
+        !timingFn->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(timingFn);
     }
 
     if (!delay->equals(String::emptyString) &&
@@ -3723,26 +3812,27 @@ String* CSSStyleDeclaration::Transition()
 {
     String* property = TransitionProperty();
     String* duration = TransitionDuration();
+    String* timingFn = TransitionTimingFunction();
     String* delay = TransitionDelay();
-    return createTransitionString(property, duration, delay);
+    return createTransitionString(property, duration, timingFn, delay);
 }
 
 String* CSSStyleDeclaration::TransitionTransitionProperty()
 {
     String* property = TransitionProperty();
-    return createTransitionString(property, nullptr, nullptr);
+    return createTransitionString(property, nullptr, nullptr, nullptr);
 }
 
 String* CSSStyleDeclaration::TransitionTransitionDuration()
 {
     String* duration = TransitionDuration();
-    return createTransitionString(nullptr, duration, nullptr);
+    return createTransitionString(nullptr, duration, nullptr, nullptr);
 }
 
 String* CSSStyleDeclaration::TransitionTransitionDelay()
 {
     String* delay = TransitionDelay();
-    return createTransitionString(nullptr, nullptr, delay);
+    return createTransitionString(nullptr, nullptr, nullptr, delay);
 }
 
 void CSSStyleDeclaration::setBackground(const char* value, size_t length,
@@ -5700,7 +5790,8 @@ void StyleResolver::apply(Element* element,
             case CSSStyleValuePair::ValueKind::Initial:
             case CSSStyleValuePair::ValueKind::Unset:
                 style->setTransitionTimingFunction(
-                    TransitionTimingFunctionEaseValue);
+                    TransitionTimingFunctionValue::
+                        TransitionTimingFunctionEaseValue);
                 break;
             case CSSStyleValuePair::ValueKind::Inherit:
                 style->setTransitionTimingFunction(
@@ -5710,6 +5801,10 @@ void StyleResolver::apply(Element* element,
                 TransitionTimingFunctionValueKind:
                 style->setTransitionTimingFunction(
                     cssValues[k].transitionTimingFunctionValue());
+                break;
+            case CSSStyleValuePair::ValueKind::AnimationTimingFunctionValueKind:
+                style->setTransitionTimingFunction(
+                    cssValues[k].animationTimingFunctionValue());
                 break;
             default:
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -12707,35 +12802,7 @@ bool CSSStyleValuePair::updateValueTransitionTimingFunction(
         return false;
     }
 
-    // TODO parse steps, cubic-bezier function
-    const CSSTokenValue& value = tokens[0];
-    m_valueKind =
-        CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind;
-    if (STRING_VALUE_IS_STRING("ease")) {
-        m_value.m_transitionTimingFunction =
-            TransitionTimingFunctionValue::TransitionTimingFunctionEaseValue;
-    } else if (STRING_VALUE_IS_STRING("linear")) {
-        m_value.m_transitionTimingFunction =
-            TransitionTimingFunctionValue::TransitionTimingFunctionLinearValue;
-    } else if (STRING_VALUE_IS_STRING("ease-in")) {
-        m_value.m_transitionTimingFunction =
-            TransitionTimingFunctionValue::TransitionTimingFunctionEaseInValue;
-    } else if (STRING_VALUE_IS_STRING("ease-out")) {
-        m_value.m_transitionTimingFunction =
-            TransitionTimingFunctionValue::TransitionTimingFunctionEaseOutValue;
-    } else if (STRING_VALUE_IS_STRING("ease-in-out")) {
-        m_value.m_transitionTimingFunction = TransitionTimingFunctionValue::
-            TransitionTimingFunctionEaseInOutValue;
-    } else if (STRING_VALUE_IS_STRING("step-start")) {
-        m_value.m_transitionTimingFunction = TransitionTimingFunctionValue::
-            TransitionTimingFunctionStepStartValue;
-    } else if (STRING_VALUE_IS_STRING("step-end")) {
-        m_value.m_transitionTimingFunction =
-            TransitionTimingFunctionValue::TransitionTimingFunctionStepEndValue;
-    } else {
-        return false;
-    }
-    return true;
+    return updateValueUnitTransitionTimingFunction(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueBoxSizing(Document* document,
@@ -13337,14 +13404,20 @@ void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
         return;
     }
 
-    Nullable<String*> functionContent =
-        CSSPropertyParser::parseFunctionContent(value, "path");
-    if (functionContent.hasValue()) {
-        // TODO validate function content for D property
-        CSSStyleValuePair pair;
-        pair.setPathFunctionValue(functionContent.getValue());
-        addCSSValuePair(CSSStyleValuePair::KeyKind::D, pair);
+    Nullable<CSSTokenValue> mayFunctionBlock =
+        CSSPropertyParser::parseFunctionBlock(value, "path");
+    if (!mayFunctionBlock.hasValue()) {
+        return;
     }
+    Nullable<CSSTokenValue> mayQuoteBlock =
+        CSSPropertyParser::parseQuoteBlock(mayFunctionBlock.getValue().data());
+    if (!mayQuoteBlock.hasValue()) {
+        return;
+    }
+    // TODO validate function content for D property
+    CSSStyleValuePair pair;
+    pair.setPathFunctionValue(mayQuoteBlock.getValue().toGCString());
+    addCSSValuePair(CSSStyleValuePair::KeyKind::D, pair);
 }
 
 bool CSSStyleValuePair::updateValueOutlineColor(Document* document,

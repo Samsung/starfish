@@ -46,6 +46,24 @@ public:
         return GC_MALLOC_ATOMIC(size);
     }
 
+    bool isSteps() const override
+    {
+        return true;
+    }
+
+    String* toString() const override
+    {
+        StringBuilder builder;
+        builder.appendString("steps(");
+        builder.appendString(String::fromInt(m_numberOfSteps));
+        if (m_isEndDirection) {
+            builder.appendString(", end)");
+        } else {
+            builder.appendString(", start)");
+        }
+        return builder.finalize();
+    }
+
 private:
     bool m_isEndDirection;
     size_t m_numberOfSteps;

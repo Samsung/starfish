@@ -24,9 +24,9 @@
 
 namespace StarFish {
 
-class CubicBeizer : public AnimationTimingFunction {
+class CubicBezier : public AnimationTimingFunction {
 public:
-    CubicBeizer(float X1, float Y1, float X2, float Y2);
+    CubicBezier(float X1, float Y1, float X2, float Y2);
     float getValue(float x);
 
     static void* operator new(size_t size)
@@ -34,10 +34,38 @@ public:
         return GC_MALLOC_ATOMIC(size);
     }
 
+    bool isCubicBezier() const override
+    {
+        return true;
+    }
+
+    String* toString() const override
+    {
+        float x1 = m_coffX3 / 3.0;
+        float y1 = m_coffY3 / 3.0;
+        float x2 = (m_coffX2 + m_coffX3) / 3.0 + x1;
+        float y2 = (m_coffY2 + m_coffY3) / 3.0 + y1;
+
+        StringBuilder builder;
+        builder.appendString("cubic-bezier(");
+        builder.appendString(String::fromFloat(x1));
+        builder.appendString(", ");
+        builder.appendString(String::fromFloat(y1));
+        builder.appendString(", ");
+        builder.appendString(String::fromFloat(x2));
+        builder.appendString(", ");
+        builder.appendString(String::fromFloat(y2));
+        builder.appendString(")");
+        return builder.finalize();
+    }
+
 private:
-    float m_coff1;
-    float m_coff2;
-    float m_coff3;
+    float m_coffX1;
+    float m_coffX2;
+    float m_coffX3;
+    float m_coffY1;
+    float m_coffY2;
+    float m_coffY3;
 };
 }
 #endif

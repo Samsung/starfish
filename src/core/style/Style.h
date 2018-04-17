@@ -42,6 +42,7 @@
 namespace StarFish {
 
 class AncestorSelectorFilter;
+class AnimationTimingFunction;
 class CalcData;
 class ComputedStyle;
 class StyleRule;
@@ -488,8 +489,6 @@ enum TransitionTimingFunctionValue {
     TransitionTimingFunctionEaseInOutValue,
     TransitionTimingFunctionStepStartValue,
     TransitionTimingFunctionStepEndValue,
-    TransitionTimingFunctionStepsValue,
-    TransitionTimingFunctionCubicBezierValue
 };
 
 enum BoxSizingValue { ContentBoxBoxSizingValue, BorderBoxBoxSizingValue };
@@ -1000,6 +999,7 @@ public:
         // transition
         TransitionPropertyValueKind,
         TransitionTimingFunctionValueKind,
+        AnimationTimingFunctionValueKind,
 
         // content
         Attr,
@@ -1656,6 +1656,12 @@ public:
         return m_value.m_stringValue;
     }
 
+    AnimationTimingFunction* animationTimingFunctionValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == AnimationTimingFunctionValueKind);
+        return m_value.m_animationTimingFunction;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1731,6 +1737,7 @@ public:
         WidthHeightKeywordValue m_widthHeightKeywordValue;
         PointerEventsValue m_pointerEventsValue;
         BoxDecorationBreakValue m_boxDecorationBreakValue;
+        AnimationTimingFunction* m_animationTimingFunction;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2041,6 +2048,11 @@ public:
             : m_boxDecorationBreakValue(v)
         {
         }
+
+        ValueData(AnimationTimingFunction* v)
+            : m_animationTimingFunction(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2082,6 +2094,8 @@ public:
             return m_value.m_textOverflowData;
         case GradientValueKind:
             return m_value.m_gradientValue;
+        case AnimationTimingFunctionValueKind:
+            return m_value.m_animationTimingFunction;
         default:
             return nullptr;
         }
@@ -2266,6 +2280,12 @@ public:
     {
         m_valueKind = PathFunctionValueKind;
         m_value.m_stringValue = v;
+    }
+
+    void setAnimationTimingFunctionValue(AnimationTimingFunction* v)
+    {
+        m_valueKind = AnimationTimingFunctionValueKind;
+        m_value.m_animationTimingFunction = v;
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \

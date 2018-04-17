@@ -450,6 +450,55 @@ public:
         return true;
     }
 
+    bool consumeParenthesisBlock()
+    {
+        char* backup = m_curPos;
+        if (!consumeIfNext('(')) {
+            m_curPos = backup;
+            return false;
+        }
+        int len = 0;
+        char* start = m_curPos;
+        while (*m_curPos != ')' && m_curPos < m_endPos) {
+            m_curPos++;
+            len++;
+        }
+        if (*m_curPos != ')') {
+            m_curPos = backup;
+            return false;
+        }
+        m_parsedString = CSSTokenValue(start, len);
+        m_curPos++;
+        return true;
+    }
+
+    bool consumeQuoteBlock()
+    {
+        char* backup = m_curPos;
+        consumeIfNext('\\');
+        char mark = '\0';
+        if (*m_curPos == '"' || *m_curPos == '\'') {
+            mark = *m_curPos;
+            m_curPos++;
+        }
+        int len = 0;
+        char* start = m_curPos;
+        while (*m_curPos != mark && m_curPos < m_endPos) {
+            m_curPos++;
+            len++;
+        }
+        if (m_curPos == m_endPos) {
+            m_curPos = backup;
+            return false;
+        }
+        if (*(m_curPos - 1) == '\\') {
+            len--;
+        }
+        m_parsedString = CSSTokenValue(start, len);
+        m_curPos++;
+        return true;
+    }
+
     bool consumeFunctionContent()
     {
         consumeWhitespaces();
@@ -599,25 +648,35 @@ public:
         return false;
     }
 
-    static Nullable<String*> parseFunctionContent(const char* token,
-                                                  const char* functionName)
+    static Nullable<CSSTokenValue> parseFunctionBlock(const char* token,
+                                                      const char* functionName)
     {
         CSSPropertyParser parser((char*)token);
         parser.consumeWhitespaces();
-        if (parser.consumeString(0)) {
+        if (parser.consumeString(AllowNegative || AllowUnderline)) {
             const CSSTokenValue& name = parser.parsedString();
-            if (name == functionName && parser.consumeIfNext('(')) {
-                if (parser.consumeFunctionContent()) {
-                    String* mayResult =
-                        parser.parsedFunctionContentToGCString();
-                    parser.consumeWhitespaces();
-                    if (parser.isEnd()) {
-                        return mayResult;
-                    }
+            parser.consumeWhitespaces();
+            if (name == functionName && parser.consumeParenthesisBlock()) {
+                parser.consumeWhitespaces();
+                if (parser.isEnd()) {
+                    return parser.parsedString();
                 }
             }
         }
-        return Nullable<String*>();
+        return Nullable<CSSTokenValue>();
+    }
+
+    static Nullable<CSSTokenValue> parseQuoteBlock(const char* token)
+    {
+        CSSPropertyParser parser((char*)token);
+        parser.consumeWhitespaces();
+        if (parser.consumeQuoteBlock()) {
+            parser.consumeWhitespaces();
+            if (parser.isEnd()) {
+                return parser.parsedString();
+            }
+        }
+        return Nullable<CSSTokenValue>();
     }
 
     static bool parseNumber(const char* token, uint8_t option, float* val)

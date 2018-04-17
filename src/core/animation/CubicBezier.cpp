@@ -22,21 +22,25 @@
 #include <cmath>
 
 namespace StarFish {
-CubicBeizer::CubicBeizer(float X1, float Y1, float X2, float Y2)
+CubicBezier::CubicBezier(float X1, float Y1, float X2, float Y2)
 {
     STARFISH_ASSERT(0 <= X1 && X1 <= 1);
     STARFISH_ASSERT(0 <= X2 && X2 <= 1);
 
-    m_coff3 = 3.0 * Y1;
-    m_coff2 = 3.0 * (Y2 - Y1) - m_coff3;
-    m_coff1 = 1 - m_coff3 - m_coff2;
+    m_coffY3 = 3.0 * Y1;
+    m_coffY2 = 3.0 * (Y2 - Y1) - m_coffY3;
+    m_coffY1 = 1 - m_coffY3 - m_coffY2;
+
+    m_coffX3 = 3.0 * X1;
+    m_coffX2 = 3.0 * (X2 - X1) - m_coffX3;
+    m_coffX1 = 1 - m_coffX3 - m_coffX2;
 }
 
-float CubicBeizer::getValue(float x)
+float CubicBezier::getValue(float x)
 {
     float square = x * x;
     float cube = square * x;
 
-    return (m_coff1 * cube) + (m_coff2 * square) + (m_coff3 * x);
+    return (m_coffY1 * cube) + (m_coffY2 * square) + (m_coffY3 * x);
 }
 }

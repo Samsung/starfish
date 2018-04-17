@@ -20,9 +20,11 @@
 #ifndef __StarFishStyleTransitionData__
 #define __StarFishStyleTransitionData__
 
-#include "core/style/Style.h"
+#include "core/animation/AnimationTimingFunction.h"
 
 namespace StarFish {
+
+class AnimationTimingFunction;
 
 class StyleTransitionData : public gc {
 public:
@@ -67,12 +69,12 @@ public:
         m_delay = delay;
     }
 
-    TransitionTimingFunctionValue timingFunction()
+    AnimationTimingFunction* timingFunction()
     {
         return m_timingFunction;
     }
 
-    void setTimingFunction(TransitionTimingFunctionValue f)
+    void setTimingFunction(AnimationTimingFunction* f)
     {
         m_timingFunction = f;
     }
@@ -84,7 +86,7 @@ private:
                                   const StyleTransitionData& b);
 
     TransitionPropertyValue m_property;
-    TransitionTimingFunctionValue m_timingFunction;
+    AnimationTimingFunction* m_timingFunction;
     CSSTime m_duration;
     CSSTime m_delay;
 };
@@ -103,7 +105,7 @@ bool operator==(const StyleTransitionData& a, const StyleTransitionData& b)
         return false;
     }
 
-    if (a.m_timingFunction != b.m_timingFunction) {
+    if (*a.m_timingFunction != *b.m_timingFunction) {
         return false;
     }
 

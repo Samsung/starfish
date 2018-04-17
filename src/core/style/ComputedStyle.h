@@ -1949,11 +1949,11 @@ public:
         m_rareComputedStyleData.ensureTransition()->setDelay(duration);
     }
 
-    TransitionTimingFunctionValue transitionTimingFunction()
+    AnimationTimingFunction* transitionTimingFunction()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
-            return TransitionTimingFunctionValue::
-                TransitionTimingFunctionEaseValue;
+            return knownTransitionTimingFunction(
+                TransitionTimingFunctionEaseValue);
         }
 
         StyleTransitionData* transition = m_rareComputedStyleData.transition();
@@ -1961,12 +1961,18 @@ public:
             return transition->timingFunction();
         }
 
-        return TransitionTimingFunctionValue::TransitionTimingFunctionEaseValue;
+        return knownTransitionTimingFunction(TransitionTimingFunctionEaseValue);
     }
 
-    void setTransitionTimingFunction(TransitionTimingFunctionValue f)
+    void setTransitionTimingFunction(AnimationTimingFunction* v)
     {
-        m_rareComputedStyleData.ensureTransition()->setTimingFunction(f);
+        m_rareComputedStyleData.ensureTransition()->setTimingFunction(v);
+    }
+
+    void setTransitionTimingFunction(TransitionTimingFunctionValue v)
+    {
+        m_rareComputedStyleData.ensureTransition()->setTimingFunction(
+            knownTransitionTimingFunction(v));
     }
 
 #define SET_SIDE(UPOS, ...)                                      \
@@ -3240,6 +3246,9 @@ public:
     {
         ensureInheritedRareData()->m_wordBreak = v;
     }
+
+    static AnimationTimingFunction* knownTransitionTimingFunction(
+        TransitionTimingFunctionValue v);
 
     void* operator new(size_t size);
     void* operator new(size_t /* size */, void* p)
