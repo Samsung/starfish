@@ -20,26 +20,19 @@
 #ifndef __StarFishStyleTransitionData__
 #define __StarFishStyleTransitionData__
 
-#include "core/animation/AnimationTimingFunction.h"
-
 namespace StarFish {
 
 class AnimationTimingFunction;
 
-class StyleTransitionData : public gc {
+class StyleTransitionLayer : public gc {
 public:
-    StyleTransitionData()
-        : m_property(TransitionPropertyValue::TransitionPropertyAllValue)
-        , m_duration(0)
-        , m_delay(0)
+    StyleTransitionLayer();
+
+    ~StyleTransitionLayer()
     {
     }
 
-    ~StyleTransitionData()
-    {
-    }
-
-    TransitionPropertyValue property()
+    TransitionPropertyValue property() const
     {
         return m_property;
     }
@@ -49,7 +42,7 @@ public:
         m_property = property;
     }
 
-    CSSTime duration()
+    CSSTime duration() const
     {
         return m_duration;
     }
@@ -59,7 +52,7 @@ public:
         m_duration = duration;
     }
 
-    CSSTime delay()
+    CSSTime delay() const
     {
         return m_delay;
     }
@@ -69,7 +62,7 @@ public:
         m_delay = delay;
     }
 
-    AnimationTimingFunction* timingFunction()
+    AnimationTimingFunction* timingFunction() const
     {
         return m_timingFunction;
     }
@@ -79,43 +72,94 @@ public:
         m_timingFunction = f;
     }
 
-private:
-    friend inline bool operator==(const StyleTransitionData& a,
-                                  const StyleTransitionData& b);
-    friend inline bool operator!=(const StyleTransitionData& a,
-                                  const StyleTransitionData& b);
+    bool operator==(const StyleTransitionLayer& b) const;
+    bool operator!=(const StyleTransitionLayer& b) const;
 
+private:
     TransitionPropertyValue m_property;
     AnimationTimingFunction* m_timingFunction;
     CSSTime m_duration;
     CSSTime m_delay;
 };
 
-bool operator==(const StyleTransitionData& a, const StyleTransitionData& b)
-{
-    if (a.m_property != b.m_property) {
-        return false;
+class StyleTransitionData : public GCVector<StyleTransitionLayer> {
+public:
+    static AnimationTimingFunction* defaultTimingFunction();
+
+    TransitionPropertyValue property(size_t layer = 0) const
+    {
+        if (size() <= layer) {
+            return TransitionPropertyAllValue;
+        }
+        return at(layer).property();
     }
 
-    if (a.m_duration != b.m_duration) {
-        return false;
+    void setProperty(TransitionPropertyValue property, size_t layer = 0)
+    {
+        if (size() <= layer) {
+            resize(layer + 1);
+        }
+        at(layer).setProperty(property);
     }
 
-    if (a.m_delay != b.m_delay) {
-        return false;
+    CSSTime duration(size_t layer = 0) const
+    {
+        if (size() <= layer) {
+            return 0;
+        }
+        return at(layer).duration();
     }
 
-    if (*a.m_timingFunction != *b.m_timingFunction) {
-        return false;
+    void setDuration(CSSTime duration, size_t layer = 0)
+    {
+        if (size() <= layer) {
+            resize(layer + 1);
+        }
+        at(layer).setDuration(duration);
     }
 
-    return true;
-}
+    CSSTime delay(size_t layer = 0) const
+    {
+        if (size() <= layer) {
+            return 0;
+        }
+        return at(layer).delay();
+    }
 
-bool operator!=(const StyleTransitionData& a, const StyleTransitionData& b)
-{
-    return !operator==(a, b);
-}
+    void setDelay(CSSTime delay, size_t layer = 0)
+    {
+        if (size() <= layer) {
+            resize(layer + 1);
+        }
+        at(layer).setDelay(delay);
+    }
+
+    AnimationTimingFunction* timingFunction(size_t layer = 0) const;
+
+    void setTimingFunction(AnimationTimingFunction* f, size_t layer = 0)
+    {
+        if (size() <= layer) {
+            resize(layer + 1);
+        }
+        at(layer).setTimingFunction(f);
+    }
+
+    bool operator==(const StyleTransitionData& b) const
+    {
+        size_t len = size();
+        for (size_t i = 0; i < len; i++) {
+            if (at(i) != b.at(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool operator!=(const StyleTransitionData& b) const
+    {
+        return !operator==(b);
+    }
+};
 }
 
 #endif
