@@ -125,6 +125,8 @@ public:
 
     virtual bool isPlaceholderVisible();
 
+    virtual bool isLabelable() const override;
+
 protected:
     HTMLFormControl(Document* document, bool supportTabIndex = true);
     void fireSubmitEvent();

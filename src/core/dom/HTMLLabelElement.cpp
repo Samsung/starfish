@@ -20,6 +20,9 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
+#include "core/dom/Document.h"
+#include "core/dom/HTMLFormElement.h"
+#include "core/dom/Traverse.h"
 #include "core/dom/HTMLLabelElement.h"
 
 namespace StarFish {
@@ -27,5 +30,47 @@ namespace StarFish {
 QualifiedName HTMLLabelElement::name()
 {
     return starFish()->staticStrings()->m_labelTagName;
+}
+
+HTMLFormElement* HTMLLabelElement::form()
+{
+    HTMLElement* element = control();
+    if (!element) {
+        return nullptr;
+    }
+
+    return element->asHTMLFormControl()->form();
+}
+
+String* HTMLLabelElement::forAttr()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_forattr);
+}
+
+void HTMLLabelElement::setForAttr(String* str)
+{
+    setAttribute(starFish()->staticStrings()->m_forattr, str);
+}
+
+HTMLElement* HTMLLabelElement::control()
+{
+    String* id = forAttr();
+    if (id->equals(String::emptyString)) {
+        return (HTMLElement*)Traverse::findDescendant(this, [&](Node* child) {
+            if (child->isLabelable()) {
+                return true;
+            } else {
+                return false;
+            }
+        });
+    }
+
+    if (Element* control = document()->getElementById(id)) {
+        if (control->isLabelable()) {
+            return (HTMLElement*)control;
+        }
+    }
+
+    return nullptr;
 }
 }

@@ -37,6 +37,14 @@ public:
 
     // 4.4 Interface Node
     virtual QualifiedName name();
+
+    // Interface Option
+    HTMLFormElement* form();
+
+    String* forAttr();
+    void setForAttr(String* str);
+
+    HTMLElement* control();
 };
 }
 

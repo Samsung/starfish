@@ -589,10 +589,10 @@ test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLInputElement18.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLInputElement20.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLInputElement21.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLInputElement22.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLabelElement01.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLabelElement01.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLabelElement02.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLabelElement03.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLabelElement04.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLabelElement04.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLegendElement01.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLegendElement02.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLegendElement03.html
