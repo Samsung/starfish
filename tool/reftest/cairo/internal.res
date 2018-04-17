@@ -269,3 +269,9 @@ test/cairo/internal-test/css/text/text-overflow-001.html
 test/cairo/internal-test/dom/HTMLAnchorElement01.html
 test/cairo/internal-test/dom/HTMLAnchorElement02.html
 test/cairo/internal-test/dom/HTMLAnchorElement03.html
+test/cairo/internal-test/dom/HTMLAnchorElement04.html
+test/cairo/internal-test/dom/HTMLAnchorElement05.html
+test/cairo/internal-test/dom/HTMLAnchorElement06.html
+test/cairo/internal-test/dom/HTMLAnchorElement07.html
+test/cairo/internal-test/dom/HTMLAnchorElement08.html
+test/cairo/internal-test/dom/HTMLAnchorElement09.html
