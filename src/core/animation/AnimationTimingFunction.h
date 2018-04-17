@@ -22,12 +22,34 @@
 
 namespace StarFish {
 
+class CubicBezier;
+class Steps;
+
 class AnimationTimingFunction : public gc {
 public:
     virtual ~AnimationTimingFunction()
     {
     }
     virtual float getValue(float x) = 0;
+    virtual String* toString() const = 0;
+    virtual bool isCubicBezier() const
+    {
+        return false;
+    }
+    virtual bool isSteps() const
+    {
+        return false;
+    }
+    CubicBezier* asCubicBezier() const
+    {
+        return (CubicBezier*)this;
+    }
+    Steps* asSteps() const
+    {
+        return (Steps*)this;
+    }
+    bool operator==(const AnimationTimingFunction& b) const;
+    bool operator!=(const AnimationTimingFunction& b) const;
 };
 }
 #endif

@@ -127,6 +127,11 @@ public:
 
         return substring(first, (last - first + 1));
     }
+
+    String* toGCString()
+    {
+        return String::fromUTF8(data(), size());
+    }
 };
 }
 

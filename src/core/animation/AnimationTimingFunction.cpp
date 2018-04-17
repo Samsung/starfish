@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,29 +18,24 @@
  */
 
 #include "StarFishConfig.h"
+#include "core/animation/AnimationTimingFunction.h"
 #include "core/animation/CubicBezier.h"
-#include <cmath>
+#include "core/animation/Steps.h"
 
 namespace StarFish {
-CubicBezier::CubicBezier(float X1, float Y1, float X2, float Y2)
+bool AnimationTimingFunction::operator==(const AnimationTimingFunction& b) const
 {
-    STARFISH_ASSERT(0 <= X1 && X1 <= 1);
-    STARFISH_ASSERT(0 <= X2 && X2 <= 1);
-
-    m_coffY3 = 3.0 * Y1;
-    m_coffY2 = 3.0 * (Y2 - Y1) - m_coffY3;
-    m_coffY1 = 1 - m_coffY3 - m_coffY2;
-
-    m_coffX3 = 3.0 * X1;
-    m_coffX2 = 3.0 * (X2 - X1) - m_coffX3;
-    m_coffX1 = 1 - m_coffX3 - m_coffX2;
+    if (isCubicBezier() && b.isCubicBezier()) {
+        return *(asCubicBezier()) == *(b.asCubicBezier());
+    }
+    if (isSteps() && b.isSteps()) {
+        return *(asSteps()) == *(b.asSteps());
+    }
+    return false;
 }
 
-float CubicBezier::getValue(float x)
+bool AnimationTimingFunction::operator!=(const AnimationTimingFunction& b) const
 {
-    float square = x * x;
-    float cube = square * x;
-
-    return (m_coffY1 * cube) + (m_coffY2 * square) + (m_coffY3 * x);
+    return !operator==(b);
 }
 }

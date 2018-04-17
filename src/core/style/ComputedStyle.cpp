@@ -146,6 +146,28 @@ StyleTransformDataGroup* ComputedStyle::transforms(Frame* frame)
     return nullptr;
 }
 
+AnimationTimingFunction* ComputedStyle::knownTransitionTimingFunction(
+    TransitionTimingFunctionValue v)
+{
+    switch (v) {
+    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseValue:
+        return new CubicBezier(0.25, 0.1, 0.25, 1);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionLinearValue:
+        return new CubicBezier(0, 0, 1, 1);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseInValue:
+        return new CubicBezier(0.42, 0, 1, 1);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseOutValue:
+        return new CubicBezier(0.0, 0.0, 0.58, 1.0);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseInOutValue:
+        return new CubicBezier(0.42, 0.0, 0.58, 1.0);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionStepStartValue:
+        return new Steps(1, false);
+    case TransitionTimingFunctionValue::TransitionTimingFunctionStepEndValue:
+        return new Steps(1, true);
+    }
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
 class StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion
     : public ResourceClient {
 public:
@@ -920,29 +942,6 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
     }
 }
 
-static AnimationTimingFunction* getTimingFunction(ComputedStyle* style)
-{
-    TransitionTimingFunctionValue fn = style->transitionTimingFunction();
-    switch (fn) {
-    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseValue:
-        return new CubicBeizer(0.25, 0.1, 0.25, 1);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionLinearValue:
-        return new CubicBeizer(0, 0, 1, 1);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseInValue:
-        return new CubicBeizer(0.42, 0, 1, 1);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseOutValue:
-        return new CubicBeizer(0.0, 0.0, 0.58, 1.0);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseInOutValue:
-        return new CubicBeizer(0.42, 0.0, 0.58, 1.0);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionStepStartValue:
-        return new Steps(1, false);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionStepEndValue:
-        return new Steps(1, true);
-    default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
 bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
 {
     TransitionPropertyValue property = newStyle->transitionProperty();
@@ -990,7 +989,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                     TransitionPropertyValue::TransitionPropertyWidthValue),
                 AnimatedValue(from), AnimatedValue(to),
                 newStyle->transitionDuration().toTimeValue(), 0,
-                getTimingFunction(newStyle)));
+                newStyle->transitionTimingFunction()));
             // keep current computed style
             newStyle->setWidth(from);
         }
@@ -1008,7 +1007,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                     TransitionPropertyValue::TransitionPropertyHeightValue),
                 AnimatedValue(from), AnimatedValue(to),
                 newStyle->transitionDuration().toTimeValue(), 0,
-                getTimingFunction(newStyle)));
+                newStyle->transitionTimingFunction()));
             // keep current computed style
             newStyle->setHeight(from);
         }
@@ -1029,7 +1028,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                     TransitionPropertyValue::TransitionPropertyTransformValue),
                 AnimatedValue(matrixBefore),
                 newStyle->transitionDuration().toTimeValue(), 0,
-                getTimingFunction(newStyle));
+                newStyle->transitionTimingFunction());
             executor->registerAnimation(task);
 
             element->document()
@@ -1050,7 +1049,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                     TransitionPropertyValue::TransitionPropertyTransformValue),
                 AnimatedValue(), AnimatedValue(),
                 newStyle->transitionDuration().toTimeValue(), 0,
-                getTimingFunction(newStyle)));
+                newStyle->transitionTimingFunction()));
             */
         }
     }

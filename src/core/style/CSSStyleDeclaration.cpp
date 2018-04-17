@@ -1445,10 +1445,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::TransitionTimingFunction: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionTimingFunction);
-        p.setValueKind(
-            CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind);
-        p.setValue(
-            CSSStyleValuePair::ValueData(style->transitionTimingFunction()));
+        p.setAnimationTimingFunctionValue(style->transitionTimingFunction());
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::BoxShadow: {
