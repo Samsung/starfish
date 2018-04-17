@@ -1952,8 +1952,7 @@ public:
     AnimationTimingFunction* transitionTimingFunction()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
-            return knownTransitionTimingFunction(
-                TransitionTimingFunctionEaseValue);
+            return StyleTransitionData::defaultTimingFunction();
         }
 
         StyleTransitionData* transition = m_rareComputedStyleData.transition();
@@ -1961,7 +1960,7 @@ public:
             return transition->timingFunction();
         }
 
-        return knownTransitionTimingFunction(TransitionTimingFunctionEaseValue);
+        return StyleTransitionData::defaultTimingFunction();
     }
 
     void setTransitionTimingFunction(AnimationTimingFunction* v)
