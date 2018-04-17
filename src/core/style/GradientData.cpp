@@ -242,45 +242,49 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
     }
 }
 
-bool LinearGradientData::computeEndPoints(const int width, const int height,
-                                          float& x1, float& y1, float& x2,
-                                          float& y2)
+bool LinearGradientData::computeEndPoints(const Unit::Rect& rect, float& x1,
+                                          float& y1, float& x2, float& y2)
 {
+    int x = rect.x();
+    int y = rect.y();
+    int maxX = rect.maxX();
+    int maxY = rect.maxY();
+
     if (m_sc == 0) {
         float angle = fmodf(m_angleDeg, 360);
         if (angle < 0)
             angle += 360;
 
         if (!angle) {
-            x1 = 0;
-            y1 = height;
-            x2 = 0;
-            y2 = 0;
+            x1 = x;
+            y1 = maxY;
+            x2 = x;
+            y2 = y;
             return true;
         }
 
         if (angle == 90) {
-            x1 = 0;
-            y1 = 0;
+            x1 = x;
+            y1 = y;
 
-            x2 = width;
-            y2 = 0;
+            x2 = maxX;
+            y2 = y;
             return true;
         }
 
         if (angle == 180) {
-            x1 = 0;
-            y1 = 0;
-            x2 = 0;
-            y2 = height;
+            x1 = x;
+            y1 = y;
+            x2 = x;
+            y2 = maxY;
             return true;
         }
 
         if (angle == 270) {
-            x1 = width;
-            y1 = 0;
-            x2 = 0;
-            y2 = 0;
+            x1 = maxX;
+            y1 = y;
+            x2 = x;
+            y2 = y;
             return true;
         }
 
@@ -288,8 +292,8 @@ bool LinearGradientData::computeEndPoints(const int width, const int height,
 
         float perpendicularSlope = -1 / slope;
 
-        float halfHeight = height / 2;
-        float halfWidth = width / 2;
+        float halfHeight = rect.height() / 2;
+        float halfWidth = rect.width() / 2;
 
         float cx, cy;
 
@@ -312,11 +316,11 @@ bool LinearGradientData::computeEndPoints(const int width, const int height,
         float ex = c / (slope - perpendicularSlope);
         float ey = perpendicularSlope * ex + c;
 
-        x2 = halfWidth + ex;
-        y2 = halfHeight - ey;
+        x2 = x + halfWidth + ex;
+        y2 = y + halfHeight - ey;
 
-        x1 = halfWidth - ex;
-        y1 = halfHeight + ey;
+        x1 = x + halfWidth - ex;
+        y1 = y + halfHeight + ey;
         return true;
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

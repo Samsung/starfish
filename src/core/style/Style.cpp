@@ -9880,7 +9880,7 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                 CSSStyleValuePair color;
                 CSSStyleValuePair length;
                 parser.consumeString(0);
-                String* ps = parser.parsedFunctionContentToGCString();
+                String* ps = parser.parsedStringToGCString();
                 if (*parser.curPos() == '(') {
                     parser.consumeParenthesis();
                     ps = ps->concat(parser.parsedStringToGCString());

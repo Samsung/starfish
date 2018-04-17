@@ -250,8 +250,8 @@ public:
         return m_sc;
     }
 
-    bool computeEndPoints(const int width, const int height, float& x1,
-                          float& y1, float& x2, float& y2);
+    bool computeEndPoints(const Unit::Rect& rect, float& x1, float& y1,
+                          float& x2, float& y2);
 
     virtual CSSGradientValue* convertToCSSGradientValue() override;
     virtual void checkComputed(Length curFontSize, Length rootFontSize,
