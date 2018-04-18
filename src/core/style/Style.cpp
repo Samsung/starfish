@@ -7841,6 +7841,9 @@ void StyleResolver::apply(Element* element,
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::StringValueKind) {
                 style->setGridTemplateAreas(cssValues[k].stringValue());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::None) {
+                style->setGridTemplateAreas(String::emptyString);
             }
             break;
         case CSSStyleValuePair::KeyKind::GridArea:
@@ -11477,6 +11480,12 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
     if (!tokens.size()) {
         return false;
     }
+
+    if (tokens.size() == 1 && tokens[0].equals("none")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::None;
+        return true;
+    }
+
     size_t count = 0;
     std::unordered_multimap<std::string, struct Area> collector;
     std::unordered_set<std::string> areaSet;
