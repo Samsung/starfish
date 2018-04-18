@@ -1,0 +1,28 @@
+P /.git
+- .git
+- .gitignore
+- .gitmodules
+- .gitattributes
+- .gitlab-ci.yml
+- .gbs.conf
+- *.list
+- .clang-format
+
+- *debug*.manifest
+- *.tar.gz
+
+- build_init.sh
+
+- *.pyc
+- lextab.*
+- parsetab.*
+
+# Include tool/gyp only
++ tool
++ tool/gyp
+- tool/*
+
++ third_party/libtuv/test
+- test
+- out
+- out_tizen
