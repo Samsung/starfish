@@ -66,7 +66,7 @@ extern Evas* g_internalCanvas;
 #include <Ecore_X.h>
 #endif
 
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
 #include <tizen.h>
 #endif
 #ifdef STARFISH_ENABLE_TTS
@@ -240,7 +240,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #if defined(TIZEN_DEVICE_API)
     , m_widgetContext(nullptr)
 #endif
-#if defined(STARFISH_TIZEN_WEARABLE)
+#if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
     , m_updateFlag(false)
 #endif
     , m_enterCount(0)

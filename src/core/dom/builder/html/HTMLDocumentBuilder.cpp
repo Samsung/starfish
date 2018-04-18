@@ -298,7 +298,7 @@ void HTMLDocumentBuilder::build(ResourceURL* url, ResourceURL* referrerURL)
 {
     m_resource = m_document->resourceLoader().fetch(url);
     m_resource->addResourceClient(new HTMLResourceClient(m_resource, *this));
-#ifndef STARFISH_TIZEN_WEARABLE
+#ifndef STARFISH_TIZEN_WEARABLE_WIDGET
     if (url->urlString()->isEmpty() ||
         url->urlString()->equals("about:blank")) {
         m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync,

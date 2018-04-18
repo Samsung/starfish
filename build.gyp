@@ -185,6 +185,9 @@
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
                 './build.dep.gyp:capi-network-connection',
+                './build.dep.gyp:capi-media-player',
+                './build.dep.gyp:mp4parse',
+                './build.dep.gyp:webm',
                 '<@(deps_release_extra)',
             ],
             'defines': [

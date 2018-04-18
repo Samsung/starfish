@@ -37,8 +37,11 @@ ExclusiveArch: %arm
 %if "%{tizen_profile_name}" == "tv"
 %define tizen_product tv
 %endif
-%if "%{tizen_profile_name}" == "mobile"
+%if "%{tizen_profile_name}" == "wearable"
 %define tizen_product gear
+%endif
+%if "%{tizen_profile_name}" == "mobile"
+%define tizen_product unified
 %endif
 %if "%{tizen_profile_name}" == "headless"
 %define tizen_product speaker
