@@ -534,14 +534,25 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | type | Type of embedded resource.<br>&lt;URL&gt; must be a local path.<br>Allowed value: text/css |
 | [HTMLTableElement](https://html.spec.whatwg.org/#the-table-element) | interface | HTMLTableElement | The HTMLTableElement interface provides special properties and methods for manipulating the layout and presentation of tables in an HTML document. |
 |    | attribute |  rows  |  Returns a live HTMLCollection containing all the rows of the element, that is all &lt;tr&gt; that are a child of the element, or a child or one of its &lt;thead&gt;, &lt;tbody&gt; and &lt;tfoot&gt; children. |
+|    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
+|    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
 | [HTMLTableRowElement](https://html.spec.whatwg.org/#htmltablerowelement) | interface | HTMLTableRowElement | The HTMLTableRowElement interface provides special properties and methods for manipulating the layout and presentation of rows in an HTML table. |
 |    | attribute |  rowIndex  |  Returns a long value which gives the logical position of the row within the entire table. If the row is not part of a table, returns -1.  |
+|    | attribute |  bgColor  |  Returns the background color of the cells. |
+|    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
+|    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
 |  [HTMLTableCellElement](https://html.spec.whatwg.org/#htmltablecellelement)  |  attribute  |  colSpan  |  colspan content attribute  |
 |    | attribute |  rowSpan  |  rowspan content attribute  |
 |    | attribute |  bgColor  |  bgcolor content attributes  |
+|    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
+|    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
 | [HTMLTableColElement](https://html.spec.whatwg.org/#htmltablecolelement) | interface | HTMLTableColElement |  |
 |  | attribute | span | Number of columns spanned by the element. |
+|    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
+|    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
 | [HTMLTableSectionElement](https://html.spec.whatwg.org/#htmltablesectionelement) | interface | HTMLTableSectionElement |  |
+|    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
+|    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
 | [HTMLTrackElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-track-element) | interface | HTMLTrackElement | The track element allows authors to specify explicit external timed text tracks for media elements. It does not represent anything on its own. |
 |  | attribute | kind | Return value of keywords such as subtitles, captions, descriptions, chapters and metadata. |
 |  | attribute | src | Gives the URL of the text track data. |

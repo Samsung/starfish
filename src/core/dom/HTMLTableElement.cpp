@@ -59,7 +59,9 @@ void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
             m_hasCellSpacingAttribute = false;
         }
         setNeedsStyleRecalc();
-    } else if (name == starFish()->staticStrings()->m_width) {
+    } else if (name == starFish()->staticStrings()->m_width ||
+               name == starFish()->staticStrings()->m_bgcolor ||
+               name == starFish()->staticStrings()->m_align) {
         setNeedsStyleRecalc();
     }
 }
@@ -102,7 +104,8 @@ void HTMLTableElement::styleForPresentationAttribute(
             cssValues.push_back(pair);
         }
     }
-    String* bgColor = this->bgColor();
+    String* bgColor =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
     if (!bgColor->equals(String::emptyString)) {
         CSSStyleValuePair pair;
         CSSTokenValue token = w->toNullableUTF8String().m_buffer;
@@ -110,6 +113,15 @@ void HTMLTableElement::styleForPresentationAttribute(
             pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
             cssValues.push_back(pair);
         }
+    }
+
+    String* align = getAttributeOrEmpty(starFish()->staticStrings()->m_align);
+    if (isValidAlign(align)) {
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::TextAlignValueKind);
+        pair.setValue(alignValue(align));
+        cssValues.push_back(pair);
     }
 }
 
@@ -126,16 +138,6 @@ String* HTMLTableElement::width()
 void HTMLTableElement::setWidth(String* width)
 {
     setAttribute(starFish()->staticStrings()->m_width, width);
-}
-
-String* HTMLTableElement::bgColor()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_bgColor);
-}
-
-void HTMLTableElement::setBgColor(String* bgColor)
-{
-    setAttribute(starFish()->staticStrings()->m_bgColor, bgColor);
 }
 
 String* HTMLTableElement::cellspacing()
@@ -184,5 +186,37 @@ HTMLCollection* HTMLTableElement::rows()
     rareData->putActiveHtmlCollectionListWithQuery(activeLists,
                                                    this->localName(), m_rows);
     return m_rows;
+}
+
+bool HTMLTableElement::isValidAlign(String* align)
+{
+    if (align->isEmpty()) {
+        return false;
+    }
+
+    if (align->equalsIgnoreCase("left") || align->equalsIgnoreCase("right") ||
+        align->equalsIgnoreCase("middle") ||
+        align->equalsIgnoreCase("center") ||
+        align->equalsIgnoreCase("-starfish-center")) {
+        return true;
+    }
+    return false;
+}
+
+TextAlignValue HTMLTableElement::alignValue(String* align)
+{
+    STARFISH_ASSERT(!align->isEmpty());
+    if (align->equalsIgnoreCase("left")) {
+        return TextAlignValue::LeftTextAlignValue;
+    } else if (align->equalsIgnoreCase("right")) {
+        return TextAlignValue::RightTextAlignValue;
+    } else if (align->equalsIgnoreCase("middle") ||
+               align->equalsIgnoreCase("center")) {
+        return TextAlignValue::CenterTextAlignValue;
+    } else if (align->equalsIgnoreCase("-starfish-center")) {
+        return TextAlignValue::StarFishCenterTextAlignValue;
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 }
 }

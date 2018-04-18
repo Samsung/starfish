@@ -314,7 +314,7 @@ public:
     QualifiedName m_char;
     QualifiedName m_rows;
     QualifiedName m_rowspan;
-    QualifiedName m_bgColor;
+    QualifiedName m_bgcolor;
     QualifiedName m_span;
     QualifiedName m_scope;
     QualifiedName m_disabled;
@@ -361,6 +361,8 @@ public:
     QualifiedName m_download;
     QualifiedName m_ping;
     QualifiedName m_usemap;
+    QualifiedName m_choff;
+    QualifiedName m_valign;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

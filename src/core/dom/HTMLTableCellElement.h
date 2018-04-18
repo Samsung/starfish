@@ -20,25 +20,29 @@
 #ifndef __StarFishHTMLTableCellElement__
 #define __StarFishHTMLTableCellElement__
 
-#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLTablePartElement.h"
 
 namespace StarFish {
 
 class HTMLTableElement;
 
-class HTMLTableCellElement : public HTMLElement {
+class HTMLTableCellElement : public HTMLTablePartElement {
 public:
     static const int MAX_COLSPAN = 1000;
     static const int MAX_ROWSPAN = 65534;
 
     HTMLTableCellElement(Document* document)
-        : HTMLElement(document)
+        : HTMLTablePartElement(document)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLTableCellElement() const override;
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues);
@@ -55,10 +59,6 @@ public:
 
     uint32_t rowSpan();
     void setRowSpan(uint32_t rowSpan);
-
-    // Not in HTML5
-    String* bgColor();
-    void setBgColor(String* bgColor);
 
     // only for DOM conformance test
     String* ch();

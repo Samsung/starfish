@@ -148,7 +148,7 @@ StaticStrings::StaticStrings(StarFish* sf)
                            AtomicString::createAtomicString(sf, "rows"));
     m_rowspan = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "rowspan"));
-    m_bgColor = QualifiedName(AtomicString::emptyAtomicString(),
+    m_bgcolor = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "bgcolor"));
     m_span = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "span"));
@@ -257,6 +257,10 @@ StaticStrings::StaticStrings(StarFish* sf)
                            AtomicString::createAtomicString(sf, "ping"));
     m_usemap = QualifiedName(AtomicString::emptyAtomicString(),
                              AtomicString::createAtomicString(sf, "useMap"));
+    m_choff = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "choff"));
+    m_valign = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "valign"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

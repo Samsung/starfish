@@ -20,14 +20,14 @@
 #ifndef __StarFishHTMLTableColElement__
 #define __StarFishHTMLTableColElement__
 
-#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLTablePartElement.h"
 
 namespace StarFish {
 
-class HTMLTableColElement : public HTMLElement {
+class HTMLTableColElement : public HTMLTablePartElement {
 public:
     HTMLTableColElement(Document* document)
-        : HTMLElement(document)
+        : HTMLTablePartElement(document)
     {
     }
 

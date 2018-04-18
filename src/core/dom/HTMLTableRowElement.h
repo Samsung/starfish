@@ -20,14 +20,14 @@
 #ifndef __StarFishHTMLTableRowElement__
 #define __StarFishHTMLTableRowElement__
 
-#include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLTablePartElement.h"
 
 namespace StarFish {
 
-class HTMLTableRowElement : public HTMLElement {
+class HTMLTableRowElement : public HTMLTablePartElement {
 public:
     HTMLTableRowElement(Document* document)
-        : HTMLElement(document)
+        : HTMLTablePartElement(document)
     {
     }
 
@@ -37,6 +37,16 @@ public:
 
     /* 4.4 Interface Node */
     virtual QualifiedName name();
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues);
+
+    // Not in HTML5
+    String* bgColor();
+    void setBgColor(String* bgColor);
 
     // only for DOM conformance test
     String* ch();

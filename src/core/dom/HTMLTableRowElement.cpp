@@ -30,6 +30,35 @@ QualifiedName HTMLTableRowElement::name()
     return starFish()->staticStrings()->m_trTagName;
 }
 
+void HTMLTableRowElement::didAttributeChanged(QualifiedName name, String* old,
+                                              String* value,
+                                              bool attributeCreated,
+                                              bool attributeRemoved)
+{
+    HTMLTablePartElement::didAttributeChanged(
+        name, old, value, attributeCreated, attributeRemoved);
+    if (name == starFish()->staticStrings()->m_bgcolor) {
+        setNeedsStyleRecalc();
+    }
+}
+
+void HTMLTableRowElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    HTMLTablePartElement::styleForPresentationAttribute(cssValues);
+
+    String* bgColor =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
+    if (!bgColor->equals(String::emptyString)) {
+        CSSStyleValuePair pair;
+        CSSTokenValue token = bgColor->toNullableUTF8String().m_buffer;
+        if (pair.updateValueUnitColor(token)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
+            cssValues.push_back(pair);
+        }
+    }
+}
+
 String* HTMLTableRowElement::ch()
 {
     Nullable<String*> ret = getAttribute(starFish()->staticStrings()->m_char);

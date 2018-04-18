@@ -608,6 +608,11 @@ public:
         return false;
     }
 
+    virtual bool isHTMLTablePartElement() const
+    {
+        return false;
+    }
+
     HTMLListContainer* asHTMLListContainer() const
     {
         STARFISH_ASSERT(isHTMLListContainer());
