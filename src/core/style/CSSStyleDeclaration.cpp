@@ -1689,6 +1689,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateAreas);
             p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
             p.setStringValue(areas);
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
         }
         addValuePair(p);
     } break;
