@@ -1892,6 +1892,14 @@ public:
         return m_overflowY;
     }
 
+    StyleTransitionData* transition()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return nullptr;
+        }
+        return m_rareComputedStyleData.transition();
+    }
+
     TransitionPropertyValue transitionProperty()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {

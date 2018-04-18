@@ -145,7 +145,6 @@ bool FrameTreeBuilderContext::isInFrameTableFlow() const
 
 void FrameTreeBuilder::clearTree(Node* current)
 {
-    current->markNeedsFrameTreeBuild();
     if (!current->frame())
         return;
     current->setFrame(nullptr);
@@ -165,7 +164,7 @@ void FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(Frame* f)
 
     Node* node = f->node()->firstChild();
     while (node) {
-        FrameTreeBuilder::clearTree(node);
+        node->markNeedsFrameTreeBuild();
         node = node->nextSibling();
     }
 
@@ -910,6 +909,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     }
 
     if ((current->needsFrameTreeBuild() || force)) {
+        if (current->frame()) {
+            clearTree(current);
+        }
+
         needsCreatePseudoElement = true;
 
         if (current->needsFrameTreeBuild()) {

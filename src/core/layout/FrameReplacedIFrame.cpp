@@ -76,6 +76,7 @@ void FrameReplacedIFrame::layout(LayoutContext& ctx,
 
 void FrameReplacedIFrame::establishesStackingContextIfNeeds()
 {
+    FrameReplaced::establishesStackingContextIfNeeds();
     HTMLIFrameElement* v = node()->asHTMLIFrameElement();
     if (v->browsingContext()) {
         if (v->browsingContext()->window()) {
