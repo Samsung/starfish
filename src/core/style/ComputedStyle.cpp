@@ -1027,7 +1027,8 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 transitionPropertyValueToString(
                     TransitionPropertyValue::TransitionPropertyTransformValue),
                 AnimatedValue(matrixBefore),
-                newStyle->transitionDuration().toTimeValue(), 0,
+                newStyle->transitionDuration().toTimeValue(),
+                newStyle->transitionDelay().toTimeValue(),
                 newStyle->transitionTimingFunction());
             executor->registerAnimation(task);
 

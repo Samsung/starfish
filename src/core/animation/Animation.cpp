@@ -42,6 +42,7 @@ AnimationTask::AnimationTask(Element* target,
                              float delayInms,
                              AnimationTimingFunction* timingFunction)
 {
+    m_isStartEventFired = false;
     m_targetElement = target;
     m_durationMs = durationInms;
     m_delayMs = delayInms;
@@ -60,6 +61,7 @@ void AnimationTask::attachedToElement()
 
 void AnimationTask::fireStartEvent()
 {
+    m_isStartEventFired = true;
     TransitionEventInit init;
     init.setPropertyName(m_targetPropertyString);
     init.setBubbles(true);
@@ -385,19 +387,24 @@ void AnimationExecutor::step()
         AnimationTask* task = m_animationList[i];
 
         if (task->m_startTimeMs == 0) {
-            task->m_startTimeMs = currentTickCount;
-            task->fireStartEvent();
+            task->m_startTimeMs = currentTickCount + task->m_delayMs;
         }
 
-        float progress = task->computeProgress(currentTickCount);
-        if (progress >= 1 || task->targetElement()->frame() == nullptr ||
-            !task->targetElement()
-                 ->isInDocumentScopeAndDocumentParticipateInRendering()) {
-            task->fireEndEvent();
-            m_animationList.erase(i);
-            i--;
-        } else {
-            task->execute(progress);
+        if (task->m_startTimeMs <= currentTickCount) {
+            if (!task->m_isStartEventFired) {
+                task->fireStartEvent();
+            }
+
+            float progress = task->computeProgress(currentTickCount);
+            if (progress >= 1 || task->targetElement()->frame() == nullptr ||
+                !task->targetElement()
+                     ->isInDocumentScopeAndDocumentParticipateInRendering()) {
+                task->fireEndEvent();
+                m_animationList.erase(i);
+                i--;
+            } else {
+                task->execute(progress);
+            }
         }
     }
     stopIfNeeds();

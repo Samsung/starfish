@@ -468,6 +468,20 @@ void WebView::layoutIfNeeds()
     m_didLayoutCallbacks.clear();
 
     if (didLayout || !m_rootStackingContext) {
+#ifdef STARFISH_ENABLE_TEST
+        if (m_starFish->startUpFlag() &
+            StarFishStartUpFlag::enableComputedStyleDump) {
+            // dump style
+            m_topLevelBrowsingContext->document()->styleResolver().dumpDOMStyle(
+                m_topLevelBrowsingContext->document());
+        }
+        if (m_starFish->startUpFlag() &
+            StarFishStartUpFlag::enableFrameTreeDump) {
+            FrameTreeBuilder::dumpFrameTree(
+                m_topLevelBrowsingContext->document(), 0);
+        }
+#endif
+
         m_topLevelBrowsingContext->document()
             ->frame()
             ->establishesStackingContextIfNeeds();
@@ -493,20 +507,6 @@ void WebView::layoutIfNeeds()
             }
             m_needsComputeStackingContextProperties = false;
         }
-
-#ifdef STARFISH_ENABLE_TEST
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableComputedStyleDump) {
-            // dump style
-            m_topLevelBrowsingContext->document()->styleResolver().dumpDOMStyle(
-                m_topLevelBrowsingContext->document());
-        }
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableFrameTreeDump) {
-            FrameTreeBuilder::dumpFrameTree(
-                m_topLevelBrowsingContext->document(), 0);
-        }
-#endif
 
 #ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() &
@@ -737,14 +737,16 @@ bool WebView::rendering(bool force)
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
 
-            compositor->translate(starFish()->posX(), starFish()->posY());
+            float devicePixelRatio = starFish()->screenInfo().deviceScaleFactor;
+            compositor->translate(starFish()->posX() / devicePixelRatio,
+                                  starFish()->posY() / devicePixelRatio);
+            compositor->clip(Unit::Rect(
+                0, 0, starFish()->platformWindow()->width() / devicePixelRatio,
+                starFish()->platformWindow()->height() / devicePixelRatio));
+
             compositor->save();
             compositor->translate(-mainFrame->scrollLeft(),
                                   -mainFrame->scrollTop());
-            compositor->clip(Unit::Rect(
-                mainFrame->scrollLeft().toInt(), mainFrame->scrollTop().toInt(),
-                starFish()->platformWindow()->width(),
-                starFish()->platformWindow()->height()));
             Canvas* canvas = Compositor::createCanvasAdaptor(compositor);
             mainBrowsingContext()->paintWindowBackground(canvas);
 

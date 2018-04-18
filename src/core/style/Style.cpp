@@ -8767,7 +8767,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         ComputedStyle* oldStyle = element->style();
         element->setStyle(style);
 
-        if (oldStyle && !style->transitionDuration().isZero() &&
+        if (oldStyle && style->transition() &&
             (damage != ComputedStyleDamage::ComputedStyleDamageNone)) {
             if (needsToApplyTransition(style, damagedKeys)) {
                 if (!element->webView()->inRendering()) {

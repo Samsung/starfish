@@ -186,6 +186,7 @@ protected:
     CSSStyleValuePair::KeyKind m_property;
 
 private:
+    bool m_isStartEventFired;
     size_t m_startTimeMs;
     size_t m_durationMs;
     size_t m_delayMs;
