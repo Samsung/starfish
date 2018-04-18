@@ -51,6 +51,9 @@
         ],
         'defines_custom_im': [
             'STARFISH_TIZEN_WEARABLE',
+            # 'STARFISH_TIZEN_WEARABLE_WIDGET',
+            'STARFISH_TIZEN_TRANSPARENT_BACKGROUND',
+            'STARFISH_ENABLE_MULTIMEDIA',
         ],
         'defines_custom_da': [
         ],
@@ -361,12 +364,12 @@
                 'sources_extra': [
                     '<!@(find third_party/deviceapi/src -name *.cpp)',
                 ],
-            }], 
+            }],
             ['platform=="tizen" and custom=="im"', {
                 'sources_extra': [
                     '<!@(find third_party/deviceapi/src -name *.cpp)',
                 ],
-            }], 
+            }],
             ['touchUi=="0" and backend=="efl_cairo"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO_HEADLESS',

@@ -375,7 +375,7 @@ std::string WebView::EvaluateJavaScript(std::string script)
 {
     STARFISH_ASSERT(m_starfish);
     return TO_STARFISH(m_starfish)
-        ->evaluate(StarFish::String::createASCIIString(script.c_str()))
+        ->evaluate(StarFish::String::fromUTF8(script.c_str()))
         ->toUTF8NonGCString();
 }
 

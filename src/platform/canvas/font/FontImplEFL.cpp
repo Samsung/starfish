@@ -32,7 +32,7 @@
 #include "core/modules/canvas/font/Font.h"
 #include "core/style/UnitHelper.h"
 
-#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) && \
+#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE_WIDGET) && \
     defined(PORT_CANVAS_BACKEND_EFL)
 extern "C" Evas_Coord evas_object_text_max_ascent_get(const Evas_Text* obj);
 extern "C" Evas_Coord evas_object_text_max_descent_get(const Evas_Text* obj);

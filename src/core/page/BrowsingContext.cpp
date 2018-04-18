@@ -499,10 +499,15 @@ bool BrowsingContext::layoutIfNeeds(bool fromWebView)
 
 void BrowsingContext::clearingBeforePaint(Canvas* canvas)
 {
+#ifdef STARFISH_TIZEN_TRANSPARENT_BACKGROUND
+    canvas->clearColor(Unit::Color(0, 0, 0, 0));
+    return;
+#endif
+
 #ifdef STARFISH_TIZEN
     if (!document()->tizenWidgetTransparentBackground()) {
         if (document()->browsingContext()->isTopLevelBrowsingContext()) {
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
             canvas->clearColor(Unit::Color(0, 0, 0, 255));
 #else
             canvas->clearColor(Unit::Color(255, 255, 255, 255));

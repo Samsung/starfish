@@ -4342,7 +4342,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 {
     ComputedStyle* ret = new ComputedStyle(m_mediumFontSize);
     ret->m_display = DisplayValue::BlockDisplayValue;
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
     ret->m_inheritedStyles.m_color = Unit::Color(255, 255, 255, 255);
 #else
     ret->m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);

@@ -775,7 +775,7 @@ extern "C" STARFISH_EXPORT void registerFileMatchLocationCB(
     matchLocation_cb = cb;
 }
 
-#if defined(STARFISH_TIZEN_WEARABLE)
+#if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
 extern "C" STARFISH_EXPORT void starfishRemoveForUpdate(
     StarFishInstance* instance)
 {
@@ -783,7 +783,7 @@ extern "C" STARFISH_EXPORT void starfishRemoveForUpdate(
     starfishRemove(instance);
 }
 #endif
-#if defined(STARFISH_TIZEN_WEARABLE) && defined(TIZEN_DEVICE_API)
+#if defined(STARFISH_TIZEN_WEARABLE_WIDGET) && defined(TIZEN_DEVICE_API)
 typedef int (*sfwebWidgetAPISetContentInfoOfContext_cb)(const void* ctx,
                                                         const void* data);
 typedef int (*sfwebWidgetAPIGetContentInfoOfContext_cb)(const void* ctx,

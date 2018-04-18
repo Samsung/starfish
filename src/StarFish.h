@@ -288,7 +288,7 @@ public:
         return m_widgetContext;
     }
 #endif
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
     void enableUpdate()
     {
         m_updateFlag = true;
@@ -380,7 +380,7 @@ protected:
 #ifdef TIZEN_DEVICE_API
     const void* m_widgetContext;
 #endif
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
     bool m_updateFlag;
 #endif
     size_t m_enterCount;

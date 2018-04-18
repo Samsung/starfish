@@ -50,7 +50,7 @@
 #include <Ecore_IMF.h>
 #include <Ecore_IMF_Evas.h>
 
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
 #include <tizen.h>
 #endif
 
@@ -61,7 +61,7 @@
 #include <cairo-evas-gl.h>
 #endif
 
-#ifndef STARFISH_TIZEN_WEARABLE
+#ifndef STARFISH_TIZEN_WEARABLE_WIDGET
 extern "C" Ecore_Evas* ecore_evas_ecore_evas_get(const Evas* e);
 extern "C" Ecore_Window ecore_evas_window_get(const Ecore_Evas* e);
 #endif
@@ -286,7 +286,7 @@ public:
             evas_object_image_data_update_add(m_canvasAdpater, 0, 0, w, h);
         }
 #endif
-#if defined(STARFISH_TIZEN_WEARABLE)
+#if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         evas_object_raise(m_dummyBox);
 #else
         evas_object_raise(m_mainBox);
@@ -972,7 +972,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     evas_object_image_content_hint_set(wnd->m_canvasAdpater,
                                        EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
     evas_object_image_alpha_set(wnd->m_canvasAdpater, EINA_TRUE);
-    evas_object_render_op_set(wnd->m_canvasAdpater, EVAS_RENDER_COPY);
 #endif
 #if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
     defined(STARFISH_TIZEN_EVASGL_CAIRO)
@@ -1006,7 +1005,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         wnd->width(), wnd->height());
     wnd->m_cairo = cairo_create(wnd->m_surface);
 #endif
-#ifndef STARFISH_TIZEN_WEARABLE
+#ifndef STARFISH_TIZEN_WEARABLE_WIDGET
     Evas* e = evas_object_evas_get(wnd->m_mainBox);
     Ecore_Evas* ee = ecore_evas_ecore_evas_get(e);
     Ecore_Window ew = ecore_evas_window_get(ee);
@@ -1699,7 +1698,7 @@ PlatformWindow::~PlatformWindow()
         ecore_imf_context_del(eflWindow->m_imfContext);
     }
 
-#ifndef STARFISH_TIZEN_WEARABLE
+#ifndef STARFISH_TIZEN_WEARABLE_WIDGET
     evas_object_event_callback_del(eflWindow->m_mainBox,
                                    EVAS_CALLBACK_MOUSE_DOWN,
                                    eflWindow->m_mouseDownEventHandler);
@@ -1717,7 +1716,7 @@ PlatformWindow::~PlatformWindow()
                                    eflWindow->m_keyUpEventHandler);
 #endif
 
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
     evas_object_event_callback_del(eflWindow->m_dummyBox,
                                    EVAS_CALLBACK_MOUSE_DOWN,
                                    eflWindow->m_mouseDownEventHandler);
@@ -1731,7 +1730,7 @@ PlatformWindow::~PlatformWindow()
                                    eflWindow->m_clickEventHandler);
 
 #endif
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
     if (!starFish()->updateFlag()) {
         evas_object_del((Evas_Object*)eflWindow->m_window);
     }
