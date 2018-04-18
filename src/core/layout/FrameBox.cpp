@@ -3113,11 +3113,31 @@ void FrameBox::establishesStackingContextIfNeeds()
 {
     if (isEstablishesStackingContext()) {
         STARFISH_ASSERT(isRootElement() || stackingContext() == nullptr);
-        if (!isRootElement() || (isRootElement() &&
-                                 !node()
-                                      ->document()
-                                      ->browsingContext()
-                                      ->isTopLevelBrowsingContext())) {
+        if (isRootElement()) {
+            if (node()
+                    ->document()
+                    ->browsingContext()
+                    ->isTopLevelBrowsingContext()) {
+                ensureFrameBoxRareData()->m_stackingContext =
+                    new StackingContext(this, nullptr);
+            } else {
+                STARFISH_ASSERT(node()
+                                    ->document()
+                                    ->browsingContext()
+                                    ->sourceElement()
+                                    ->frame()
+                                    ->asFrameBox()
+                                    ->stackingContext());
+                ensureFrameBoxRareData()->m_stackingContext =
+                    new StackingContext(this, node()
+                                                  ->document()
+                                                  ->browsingContext()
+                                                  ->sourceElement()
+                                                  ->frame()
+                                                  ->asFrameBox()
+                                                  ->stackingContext());
+            }
+        } else {
             FrameBox* p;
             if (!isRootElement()) {
                 p = layoutParent()->asFrameBox();
@@ -3156,9 +3176,6 @@ void FrameBox::establishesStackingContextIfNeeds()
             }
             ensureFrameBoxRareData()->m_stackingContext =
                 new StackingContext(this, p->stackingContext());
-        } else {
-            ensureFrameBoxRareData()->m_stackingContext =
-                new StackingContext(this, nullptr);
         }
     }
 }

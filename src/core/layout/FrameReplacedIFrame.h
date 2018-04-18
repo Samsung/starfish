@@ -35,6 +35,7 @@ public:
     virtual void computeStyleFlags()
     {
         FrameReplaced::computeStyleFlags();
+        m_flags.m_isEstablishesStackingContext = true;
     }
 
     virtual bool isFrameReplacedIFrame()
@@ -82,6 +83,8 @@ public:
     virtual void compsitingStackingContext(Canvas* c)
     {
     }
+
+    virtual void computeVisibleRect(FrameBox::ComputeVisibleRectContext& ctx);
 
     virtual void establishesStackingContextIfNeeds();
 

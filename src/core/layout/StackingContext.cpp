@@ -1402,6 +1402,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     ComputedStyle* ownerStyle = m_owner->style();
     compositor->save();
 
+    if (m_owner->isFrameReplaced() &&
+        m_owner->asFrameReplaced()->isFrameReplacedIFrame()) {
+        compositor->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
+    }
+
     SkMatrix m = transformMatrix();
     if (!m.isIdentity()) {
         SkMatrix test;

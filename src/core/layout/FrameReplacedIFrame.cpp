@@ -74,6 +74,24 @@ void FrameReplacedIFrame::layout(LayoutContext& ctx,
     }
 }
 
+void FrameReplacedIFrame::computeVisibleRect(
+    FrameBox::ComputeVisibleRectContext& ctx)
+{
+    Frame::ComputeVisibleRectContextFragment f(ctx, this);
+    tryUniteVisibleRect(ctx);
+
+    HTMLIFrameElement* v = node()->asHTMLIFrameElement();
+    if (v->browsingContext()) {
+        if (v->browsingContext()->window()) {
+            v->browsingContext()
+                ->window()
+                ->document()
+                ->frame()
+                ->computeVisibleRect(ctx);
+        }
+    }
+}
+
 void FrameReplacedIFrame::establishesStackingContextIfNeeds()
 {
     FrameReplaced::establishesStackingContextIfNeeds();
