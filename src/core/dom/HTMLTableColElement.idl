@@ -5,9 +5,9 @@ interface HTMLTableColElement : HTMLElement {
   [CEReactions] attribute unsigned long span;
 
   // also has obsolete members
-  [Unimplemented, CEReactions] attribute DOMString align;
+  [CEReactions, Reflect] attribute DOMString align;
   [CEReactions] attribute DOMString ch;
-  [Unimplemented, CEReactions] attribute DOMString chOff;
-  [Unimplemented, CEReactions] attribute DOMString vAlign;
+  [CEReactions, Reflect] attribute DOMString chOff;
+  [CEReactions, Reflect] attribute DOMString vAlign;
   [Unimplemented, CEReactions] attribute DOMString width;
 };

@@ -25,10 +25,22 @@
 
 namespace StarFish {
 
+void HTMLTableCellElement::didAttributeChanged(QualifiedName name, String* old,
+                                               String* value,
+                                               bool attributeCreated,
+                                               bool attributeRemoved)
+{
+    HTMLTablePartElement::didAttributeChanged(
+        name, old, value, attributeCreated, attributeRemoved);
+    if (name == starFish()->staticStrings()->m_bgcolor) {
+        setNeedsStyleRecalc();
+    }
+}
+
 void HTMLTableCellElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLTablePartElement::styleForPresentationAttribute(cssValues);
 
     HTMLTableElement* table = tableElement();
     if (table && table->hasCellPaddingAttribute()) {
@@ -54,7 +66,8 @@ void HTMLTableCellElement::styleForPresentationAttribute(
             cssValues.push_back(pair);
         }
     }
-    String* bgColor = this->bgColor();
+    String* bgColor =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
     if (!bgColor->equals(String::emptyString)) {
         CSSStyleValuePair pair;
         CSSTokenValue token = bgColor->toNullableUTF8String().m_buffer;
@@ -125,16 +138,6 @@ void HTMLTableCellElement::setRowSpan(uint32_t rowSpan)
 {
     setAttribute(starFish()->staticStrings()->m_rowspan,
                  String::fromInt(rowSpan));
-}
-
-String* HTMLTableCellElement::bgColor()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_bgColor);
-}
-
-void HTMLTableCellElement::setBgColor(String* bgColor)
-{
-    setAttribute(starFish()->staticStrings()->m_bgColor, bgColor);
 }
 
 String* HTMLTableCellElement::ch()

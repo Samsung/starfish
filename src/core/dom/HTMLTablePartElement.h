@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,43 +17,37 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLTableRowElement__
-#define __StarFishHTMLTableRowElement__
+#ifndef __StarFishHTMLHTMLTablePartElement__
+#define __StarFishHTMLHTMLTablePartElement__
 
-#include "core/dom/HTMLTablePartElement.h"
+#include "core/dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLTableRowElement : public HTMLTablePartElement {
+class HTMLTablePartElement : public HTMLElement {
 public:
-    HTMLTableRowElement(Document* document)
-        : HTMLTablePartElement(document)
+    HTMLTablePartElement(Document* document)
+        : HTMLElement(document)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isHTMLTableRowElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual bool isHTMLTablePartElement() const override
+    {
+        return true;
+    }
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
+
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues);
+        CSSStyleValuePairVectorHolder& cssValues) override;
 
-    // Not in HTML5
-    String* bgColor();
-    void setBgColor(String* bgColor);
+    bool isValidAlign(String* align);
+    TextAlignValue alignValue(String* align);
 
-    // only for DOM conformance test
-    String* ch();
-    void setCh(String* ch);
-
-    int32_t rowIndex();
+    bool isValidValign(String* valign);
+    VerticalAlignValue valignValue(String* valign);
 };
 }
-
 #endif

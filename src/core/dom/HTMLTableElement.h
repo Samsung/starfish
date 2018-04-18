@@ -62,9 +62,6 @@ public:
     String* width();
     void setWidth(String* width);
 
-    String* bgColor();
-    void setBgColor(String* bgColor);
-
     String* cellspacing();
     void setCellspacing(String* cellspacing);
 
@@ -72,6 +69,9 @@ public:
     void setCellpadding(String* cellpadding);
 
     HTMLCollection* rows();
+
+    bool isValidAlign(String* align);
+    TextAlignValue alignValue(String* align);
 
 private:
     bool m_hasCellPaddingAttribute;
