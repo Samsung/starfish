@@ -58,8 +58,13 @@ public:
     bool toggle(String* token);
     bool toggle(String* token, bool forceValue);
     bool toggle(String* token, bool isForced, bool forceValue);
+    bool replace(String* token, String* newToken);
+    bool supports(String* token);
+
     String* toString();
-    void validateToken(String* token); // Throw Exceptions
+    void validateToken(String* token);              // Throw Exceptions
+    virtual bool validateTokenValue(String* token); // Throw Exceptions
+    String* value() const;
     void setValue(String* value);
 
 private:

@@ -7,9 +7,9 @@ interface DOMTokenList {
   [RaisesException, CEReactions] void add(DOMString... tokens);
   [RaisesException, CEReactions] void remove(DOMString... tokens);
   [RaisesException, CEReactions] boolean toggle(DOMString token, optional boolean force);
-  [Unimplemented, CEReactions] void replace(DOMString token, DOMString newToken);
-  [Unimplemented] boolean supports(DOMString token);
-  [Unimplemented] attribute DOMString value;
+  [RaisesException, CEReactions] boolean replace(DOMString token, DOMString newToken);
+  [RaisesException] boolean supports(DOMString token);
+  [CEReactions] attribute DOMString value;
   stringifier;
   iterable<DOMString>;
 };
