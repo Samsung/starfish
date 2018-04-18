@@ -281,3 +281,4 @@ test/cairo/internal-test/dom/HTMLAnchorElement09.html
 test/cairo/internal-test/css/background/background_lineargradient1.html
 test/cairo/internal-test/css/background/background_lineargradient2.html
 test/cairo/internal-test/css/background/background_lineargradient3.html
+test/cairo/internal-test/css/background/background_lineargradient4.html

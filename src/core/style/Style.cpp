@@ -4213,9 +4213,8 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
             continue;
         }
         bool hasSepChar = false;
-        if (seperatorCount > 0 &&
-            seperatorContains(seperator, seperatorCount, data[i])) {
-            hasSepChar = true;
+        if (seperatorCount > 0 && !inParenthesis) {
+            hasSepChar = seperatorContains(seperator, seperatorCount, data[i]);
         }
 
         if ((!inParenthesis && !inQuotes &&
@@ -4238,7 +4237,8 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
             if (hasSepChar && !numberOfnesting) {
                 tokens.push_back(CSSTokenValue(std::string(data + i, 1)));
             }
-        } else if ((inParenthesis && data[i] == ')') || i == length - 1) {
+        } else if (((inParenthesis && !numberOfnesting) && data[i] == ')') ||
+                   i == length - 1) {
             if (str.length() > 3 && (str[0] == 'u' || str[0] == 'U') &&
                 (str[1] == 'r' || str[1] == 'R') &&
                 (str[2] == 'l' || str[2] == 'L')) {
@@ -9827,6 +9827,7 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
     parser.consumeString(CSSPropertyParser::AllowNegative);
 
     const CSSTokenValue& type = parser.parsedString();
+    CSSGradientValue* gradient;
     if (type == "linear-gradient" && parser.consumeIfNext('(')) {
         // linear-gradient() = linear-gradient(
         //   [ <angle> | to <side-or-corner> ]?
@@ -9839,89 +9840,94 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
         CSSAngle angle;
         CSSStyleValuePair s;
         parser.consumeWhitespaces();
-        parser.consumeString(CSSPropertyParser::AllowNegative);
-        const CSSTokenValue& str = parser.parsedString();
-        if (str == "to") {
-            CSSAngle lr;
-            CSSAngle tb;
-            bool hasLR = false;
-            bool hasTB = false;
-            uint8_t sideOrConer = 0;
-            while (parser.consumeWhitespaces() && *(parser.curPos()) != ',') {
-                parser.consumeString(0);
-                const CSSTokenValue& ps = parser.parsedString();
-                if (!hasTB && ps == "top") {
-                    hasTB = true;
-                    sideOrConer |= SideOrConer::toTop;
-                } else if (!hasLR && ps == "right") {
-                    hasLR = true;
-                    sideOrConer |= SideOrConer::toRight;
-                } else if (!hasTB && ps == "bottom") {
-                    hasTB = true;
-                    sideOrConer |= SideOrConer::toBottom;
-                } else if (!hasLR && ps == "left") {
-                    hasLR = true;
-                    sideOrConer |= SideOrConer::toLeft;
-                } else {
-                    return false;
-                }
-            }
-            linearGradientValue->setSideOrConter(sideOrConer);
-            parser.consumeIfNext(',');
-        } else if (parser.parseAngle(str.c_str(),
-                                     CSSPropertyParser::AllowNegative, &s)) {
-            angle = s.angleValue();
-            linearGradientValue->setAngle(angle);
-            parser.consumeIfNext(',');
-        }
-
-        while (parser.consumeWhitespaces() && *(parser.curPos()) != ')') {
-            CSSColorStop* cs = new CSSColorStop();
-
-            while (parser.consumeWhitespaces() && *(parser.curPos()) != ',' &&
-                   *(parser.curPos()) != ')') {
-                CSSStyleValuePair color;
-                CSSStyleValuePair length;
-                parser.consumeString(0);
-                String* ps = parser.parsedStringToGCString();
-                if (*parser.curPos() == '(') {
-                    parser.consumeParenthesis();
-                    ps = ps->concat(parser.parsedStringToGCString());
-                }
-
-                CSSTokenValue value(ps->toUTF8NonGCString().data());
-                if (!color.updateValueUnitColor(value)) {
-                    return false;
-                }
-
-                cs->setColor(color);
-
-                uint8_t option = CSSPropertyParser::AllowNegative |
-                                 CSSPropertyParser::AllowPercent;
-                parser.consumeWhitespaces();
-                if (*(parser.curPos()) != ',' && *(parser.curPos()) != ')') {
-                    parser.consumeString(option);
-                    ps = parser.parsedStringToGCString();
-                    value = CSSTokenValue(ps->toUTF8NonGCString().data());
-                    if (!length.updateValueUnitLength(value, option)) {
+        if (*(parser.curPos()) == 't' || isDigit(*(parser.curPos()))) {
+            parser.consumeString(CSSPropertyParser::AllowNegative);
+            const CSSTokenValue& str = parser.parsedString();
+            if (str == "to") {
+                CSSAngle lr;
+                CSSAngle tb;
+                bool hasLR = false;
+                bool hasTB = false;
+                uint8_t sideOrConer = 0;
+                while (parser.consumeWhitespaces() &&
+                       *(parser.curPos()) != ',') {
+                    parser.consumeString(0);
+                    const CSSTokenValue& ps = parser.parsedString();
+                    if (!hasTB && ps == "top") {
+                        hasTB = true;
+                        sideOrConer |= SideOrConer::toTop;
+                    } else if (!hasLR && ps == "right") {
+                        hasLR = true;
+                        sideOrConer |= SideOrConer::toRight;
+                    } else if (!hasTB && ps == "bottom") {
+                        hasTB = true;
+                        sideOrConer |= SideOrConer::toBottom;
+                    } else if (!hasLR && ps == "left") {
+                        hasLR = true;
+                        sideOrConer |= SideOrConer::toLeft;
+                    } else {
                         return false;
                     }
-                    cs->setOffset(length);
                 }
-                linearGradientValue->cssColorStopList().push_back(cs);
+                linearGradientValue->setSideOrConter(sideOrConer);
+                parser.consumeIfNext(',');
+            } else if (parser.parseAngle(
+                           str.c_str(), CSSPropertyParser::AllowNegative, &s)) {
+                angle = s.angleValue();
+                linearGradientValue->setAngle(angle);
+                parser.consumeIfNext(',');
             }
-            parser.consumeIfNext(',');
         }
-        if (linearGradientValue->cssColorStopList().size() < 2) {
-            return false;
-        }
-        m_value.m_gradientValue = linearGradientValue;
+        gradient = linearGradientValue;
     } else if (type == "radial-gradient" && parser.consumeIfNext('(')) {
-        // TODO: Consider the radial gradient
         return false;
     } else {
         return false;
     }
+
+    // Parse color-stops
+    while (parser.consumeWhitespaces() && *(parser.curPos()) != ')') {
+        CSSColorStop* cs = new CSSColorStop();
+
+        while (parser.consumeWhitespaces() && *(parser.curPos()) != ',' &&
+               *(parser.curPos()) != ')') {
+            CSSStyleValuePair color;
+            CSSStyleValuePair length;
+            parser.consumeString(0);
+            String* ps = parser.parsedStringToGCString();
+            if (*parser.curPos() == '(') {
+                parser.consumeParenthesis();
+                ps = ps->concat(parser.parsedStringToGCString());
+            }
+
+            CSSTokenValue value(ps->toUTF8NonGCString().data());
+            if (!color.updateValueUnitColor(value)) {
+                return false;
+            }
+
+            cs->setColor(color);
+
+            uint8_t option = CSSPropertyParser::AllowNegative |
+                             CSSPropertyParser::AllowPercent;
+            parser.consumeWhitespaces();
+            if (*(parser.curPos()) != ',' && *(parser.curPos()) != ')') {
+                parser.consumeString(option);
+                ps = parser.parsedStringToGCString();
+                value = CSSTokenValue(ps->toUTF8NonGCString().data());
+                if (!length.updateValueUnitLength(value, option)) {
+                    return false;
+                }
+                cs->setOffset(length);
+            }
+            gradient->cssColorStopList().push_back(cs);
+        }
+        parser.consumeIfNext(',');
+    }
+    if (gradient->cssColorStopList().size() < 2) {
+        return false;
+    }
+
+    m_value.m_gradientValue = gradient;
     m_valueKind = CSSStyleValuePair::ValueKind::GradientValueKind;
     return true;
 }
