@@ -1,0 +1,2 @@
+- /third_party/lwe/Makefile
+- /third_party/lwe/inspector
