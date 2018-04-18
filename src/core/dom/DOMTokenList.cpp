@@ -292,6 +292,65 @@ bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
     return needAdd;
 }
 
+bool DOMTokenList::replace(String* token, String* newToken)
+{
+    validateToken(token);
+    validateToken(newToken);
+
+    Nullable<String*> old = m_element->getAttribute(m_localName);
+    if (!old.hasValue()) {
+        // Nothing to replace
+        return false;
+    }
+    String* src = old.getValue();
+    String* dst = String::createASCIIString("");
+    GCVector<StringView> tokens;
+    tokenize(src, tokens);
+    bool* matchFlags = new bool[tokens.size()];
+    int matchCount = checkMatchedTokens(matchFlags, tokens, token);
+    matchCount += checkMatchedTokens(matchFlags, tokens, newToken);
+    bool isReplaced = false;
+
+    if (matchCount > 0) {
+        bool isEmpty = true;
+        for (unsigned i = 0; i < tokens.size(); i++) {
+            if (matchFlags[i]) {
+                if (!isReplaced) {
+                    if (isEmpty) {
+                        dst = dst->concat(newToken);
+                        isEmpty = false;
+                    } else {
+                        dst =
+                            dst->concat(String::spaceString)->concat(newToken);
+                    }
+                    isReplaced = true;
+                }
+            } else {
+                if (isEmpty) {
+                    dst = dst->concat(&tokens[i]);
+                    isEmpty = false;
+                } else {
+                    dst = dst->concat(String::spaceString)->concat(&tokens[i]);
+                }
+            }
+        }
+    }
+
+    delete[] matchFlags;
+
+    if (isReplaced) {
+        m_element->setAttribute(m_localName, dst);
+        return true;
+    }
+
+    return false;
+}
+
+bool DOMTokenList::supports(String* token)
+{
+    return validateTokenValue(token);
+}
+
 String* DOMTokenList::toString()
 {
     return m_element->getAttributeOrEmpty(m_localName);
@@ -312,8 +371,22 @@ void DOMTokenList::validateToken(String* token)
     }
 }
 
+// Throw Exceptions
+bool DOMTokenList::validateTokenValue(String* token)
+{
+    throw new DOMException(m_element->document(),
+                           DOMException::Code::SCRIPT_TYPE_ERR,
+                           "DOMTokenList has no supported tokens.");
+    return false;
+}
+
+String* DOMTokenList::value() const
+{
+    return m_element->getAttributeOrEmpty(m_localName);
+}
+
 void DOMTokenList::setValue(String* value)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    m_element->setAttribute(m_localName, value);
 }
 }
