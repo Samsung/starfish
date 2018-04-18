@@ -1043,7 +1043,7 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                         if (!isFixed) {
                             width = contentWidth;
                         }
-                        LayoutUnit dividedWidth = ceil(width / (end - start));
+                        LayoutUnit dividedWidth = width / (end - start);
                         for (size_t i = area.m_columnStart;
                              i <= area.m_columnEnd - 1; i++) {
                             GridLine& line = m_gridLineColumns[i];
