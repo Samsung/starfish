@@ -229,11 +229,10 @@ public:
                          AnimatedValue toValue, float duration, float delay,
                          AnimationTimingFunction* timingFunction);
     void execute(float progress) override;
-    void attachedToElement() override;
     void detachedFromElement() override;
-    void computeToValue();
 
 private:
+    void opacityUpdated(bool before, bool after);
 };
 
 class TransformAnimationTask : public AnimationTask {

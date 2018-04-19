@@ -944,30 +944,27 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
 
 bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
 {
-    TransitionPropertyValue property = newStyle->transitionProperty();
-    bool isPropertyAll =
-        property == TransitionPropertyValue::TransitionPropertyAllValue;
+    StyleTransitionData* data = newStyle->transition();
+    for (size_t i = 0; i < data->size(); i++) {
+        if (!data->at(i).duration().toTimeValue()) {
+            continue;
+        }
+        TransitionPropertyValue property = data->at(i).property();
+        bool isPropertyAll =
+            property == TransitionPropertyValue::TransitionPropertyAllValue;
 
-    if ((isPropertyAll ||
-         property == TransitionPropertyValue::TransitionPropertyWidthValue) &&
-        damagedKeys[CSSStyleValuePair::Width]) {
-        return true;
-    }
-    if ((isPropertyAll ||
-         property == TransitionPropertyValue::TransitionPropertyHeightValue) &&
-        damagedKeys[CSSStyleValuePair::Height]) {
-        return true;
-    }
-    if ((isPropertyAll ||
-         property ==
-             TransitionPropertyValue::TransitionPropertyTransformValue) &&
-        damagedKeys[CSSStyleValuePair::Transform]) {
-        return true;
-    }
-    if ((isPropertyAll ||
-         property == TransitionPropertyValue::TransitionPropertyOpacityValue) &&
-        damagedKeys[CSSStyleValuePair::Opacity]) {
-        return true;
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyTransformValue) &&
+            damagedKeys[CSSStyleValuePair::Transform]) {
+            return true;
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyOpacityValue) &&
+            damagedKeys[CSSStyleValuePair::Opacity]) {
+            return true;
+        }
     }
 
     return false;
@@ -977,98 +974,59 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                      ComputedStyle* newStyle, const bool* damagedKeys)
 {
     AnimationExecutor* executor = element->document()->animationExecutor();
-    TransitionPropertyValue property = newStyle->transitionProperty();
-    bool isPropertyAll =
-        property == TransitionPropertyValue::TransitionPropertyAllValue;
-
-    if ((isPropertyAll ||
-         property == TransitionPropertyValue::TransitionPropertyWidthValue) &&
-        damagedKeys[CSSStyleValuePair::Width]) {
-        Length from = oldStyle->width();
-        Length to = newStyle->width();
-
-        if (from.isFixed() && to.isFixed()) {
-            executor->registerAnimation(new LengthAnimationTask(
-                element, CSSStyleValuePair::KeyKind::Width,
-                transitionPropertyValueToString(
-                    TransitionPropertyValue::TransitionPropertyWidthValue),
-                AnimatedValue(from), AnimatedValue(to),
-                newStyle->transitionDuration().toTimeValue(), 0,
-                newStyle->transitionTimingFunction()));
-            // keep current computed style
-            newStyle->setWidth(from);
+    StyleTransitionData* data = newStyle->transition();
+    for (size_t i = 0; i < data->size(); i++) {
+        if (!data->at(i).duration().toTimeValue()) {
+            continue;
         }
-    }
-    if ((isPropertyAll ||
-         property == TransitionPropertyValue::TransitionPropertyHeightValue) &&
-        damagedKeys[CSSStyleValuePair::Height]) {
-        Length from = oldStyle->height();
-        Length to = newStyle->height();
+        TransitionPropertyValue property = data->at(i).property();
+        bool isPropertyAll =
+            property == TransitionPropertyValue::TransitionPropertyAllValue;
 
-        if (from.isFixed() && to.isFixed()) {
-            executor->registerAnimation(new LengthAnimationTask(
-                element, CSSStyleValuePair::KeyKind::Height,
-                transitionPropertyValueToString(
-                    TransitionPropertyValue::TransitionPropertyHeightValue),
-                AnimatedValue(from), AnimatedValue(to),
-                newStyle->transitionDuration().toTimeValue(), 0,
-                newStyle->transitionTimingFunction()));
-            // keep current computed style
-            newStyle->setHeight(from);
+        auto duration = data->at(i).duration().toTimeValue();
+        auto delay = data->at(i).delay().toTimeValue();
+        auto timingFunction = data->at(i).timingFunction();
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyTransformValue) &&
+            damagedKeys[CSSStyleValuePair::Transform]) {
+            if (oldFrame && oldFrame->isTransformable()) {
+                STARFISH_ASSERT(oldFrame->isFrameBox());
+                FrameBox* box = oldFrame->asFrameBox();
+                SkMatrix matrixBefore = oldStyle->transformsToMatrix(
+                    box->width(), box->height(), box, true);
+
+                TransformAnimationTask* task = new TransformAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::Transform,
+                    transitionPropertyValueToString(
+                        TransitionPropertyValue::
+                            TransitionPropertyTransformValue),
+                    AnimatedValue(matrixBefore), duration, delay,
+                    timingFunction);
+                executor->registerAnimation(task);
+
+                element->document()
+                    ->browsingContext()
+                    ->webView()
+                    ->addDidLayoutCallback(
+                        [](void* data) {
+                            TransformAnimationTask* task =
+                                (TransformAnimationTask*)data;
+                            task->computeToValue();
+                        },
+                        task);
+            }
         }
-    }
-    if ((isPropertyAll ||
-         property ==
-             TransitionPropertyValue::TransitionPropertyTransformValue) &&
-        damagedKeys[CSSStyleValuePair::Transform]) {
-        if (oldFrame && oldFrame->isTransformable()) {
-            STARFISH_ASSERT(oldFrame->isFrameBox());
-            FrameBox* box = oldFrame->asFrameBox();
-            SkMatrix matrixBefore = oldStyle->transformsToMatrix(
-                box->width(), box->height(), box, true);
-
-            TransformAnimationTask* task = new TransformAnimationTask(
-                element, CSSStyleValuePair::KeyKind::Transform,
-                transitionPropertyValueToString(
-                    TransitionPropertyValue::TransitionPropertyTransformValue),
-                AnimatedValue(matrixBefore),
-                newStyle->transitionDuration().toTimeValue(),
-                newStyle->transitionDelay().toTimeValue(),
-                newStyle->transitionTimingFunction());
-            executor->registerAnimation(task);
-
-            element->document()
-                ->browsingContext()
-                ->webView()
-                ->addDidLayoutCallback(
-                    [](void* data) {
-                        TransformAnimationTask* task =
-                            (TransformAnimationTask*)data;
-                        task->computeToValue();
-                    },
-                    task);
-            /*
-            // for disable transform animation
-            executor->registerAnimation(new AnimationTask(
-                element, CSSStyleValuePair::KeyKind::Transform,
-                transitionPropertyValueToString(
-                    TransitionPropertyValue::TransitionPropertyTransformValue),
-                AnimatedValue(), AnimatedValue(),
-                newStyle->transitionDuration().toTimeValue(), 0,
-                newStyle->transitionTimingFunction()));
-            */
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyOpacityValue) &&
+            damagedKeys[CSSStyleValuePair::Opacity]) {
+            executor->registerAnimation(new OpacityAnimationTask(
+                element, AnimatedValue(oldStyle->opacity()),
+                AnimatedValue(newStyle->opacity()), duration, delay,
+                timingFunction));
+            newStyle->setOpacity(oldStyle->opacity());
         }
-    }
-    if ((isPropertyAll ||
-         property == TransitionPropertyValue::TransitionPropertyOpacityValue) &&
-        damagedKeys[CSSStyleValuePair::Opacity]) {
-        executor->registerAnimation(new OpacityAnimationTask(
-            element, AnimatedValue(oldStyle->opacity()),
-            AnimatedValue(newStyle->opacity()),
-            newStyle->transitionDuration().toTimeValue(),
-            newStyle->transitionDelay().toTimeValue(),
-            newStyle->transitionTimingFunction()));
-        newStyle->setOpacity(oldStyle->opacity());
     }
 }
 
