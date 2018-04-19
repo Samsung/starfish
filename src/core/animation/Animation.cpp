@@ -185,9 +185,21 @@ OpacityAnimationTask::OpacityAnimationTask(
 {
 }
 
-void OpacityAnimationTask::attachedToElement()
+void OpacityAnimationTask::opacityUpdated(bool before, bool after)
 {
-    AnimationTask::attachedToElement();
+    Element* current = targetElement();
+    Frame* frame = current->frame();
+
+    if (before != after) {
+        targetElement()->webView()->clearStackingContext(true);
+    }
+
+    if (frame->isFrameBox() && frame->asFrameBox()->stackingContext() &&
+        frame->asFrameBox()->needsGraphicsBuffer()) {
+        targetElement()->setNeedsComposite();
+    } else {
+        targetElement()->setNeedsPainting();
+    }
 }
 
 void OpacityAnimationTask::detachedFromElement()
@@ -202,10 +214,7 @@ void OpacityAnimationTask::detachedFromElement()
     style->setOpacity(m_toValue.getFloat());
     frame->computeStyleFlags();
     bool after = frame->isEstablishesStackingContext();
-    if (before != after) {
-        targetElement()->webView()->clearStackingContext(true);
-    }
-    targetElement()->setNeedsPainting();
+    opacityUpdated(before, after);
 }
 
 void OpacityAnimationTask::execute(float progress)
@@ -221,12 +230,7 @@ void OpacityAnimationTask::execute(float progress)
     style->setOpacity(newOpacity);
     frame->computeStyleFlags();
     bool after = frame->isEstablishesStackingContext();
-
-    if (before != after) {
-        targetElement()->webView()->clearStackingContext(true);
-    }
-
-    targetElement()->setNeedsPainting();
+    opacityUpdated(before, after);
 }
 
 TransformAnimationTask::TransformAnimationTask(
