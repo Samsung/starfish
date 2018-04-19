@@ -382,4 +382,39 @@ void LinearGradientData::checkComputed(Length curFontSize, Length rootFontSize,
         }
     }
 }
+
+bool GradientData::equals(GradientData* other) const
+{
+    if (m_type != other->m_type) {
+        return false;
+    }
+
+    if (m_colorStopList.size() != other->m_colorStopList.size()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < m_colorStopList.size(); ++i) {
+        if (!(m_colorStopList[i]->equals(other->m_colorStopList[i]))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool LinearGradientData::equals(GradientData* other) const
+{
+    if (!GradientData::equals(other)) {
+        return false;
+    }
+
+    LinearGradientData* r = other->asLinearGradientData();
+    if (m_angleDeg != r->m_angleDeg) {
+        return false;
+    }
+    if (m_sc != r->m_sc) {
+        return false;
+    }
+    return true;
+}
 }

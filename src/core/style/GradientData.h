@@ -77,11 +77,11 @@ public:
 class ColorStopOffsetValue {
 public:
     union ColorStopOffsetData {
-        float m_numberData;
+        float m_percentageData;
         Length m_lengthData;
 
         ColorStopOffsetData(float data)
-            : m_numberData(data)
+            : m_percentageData(data)
         {
         }
 
@@ -92,59 +92,83 @@ public:
     };
 
     ColorStopOffsetValue()
-        : m_type(ColorStopOffsetType::ValueType::None)
-        , m_data(0)
+        : m_valueType(ColorStopOffsetType::ValueType::None)
+        , m_valueData(0)
     {
     }
 
     ColorStopOffsetValue(ColorStopOffsetType::ValueType type)
-        : m_type(type)
-        , m_data(0)
+        : m_valueType(type)
+        , m_valueData(0)
     {
     }
 
     ColorStopOffsetValue(float data)
-        : m_type(ColorStopOffsetType::ValueType::Percentage)
-        , m_data(data)
+        : m_valueType(ColorStopOffsetType::ValueType::Percentage)
+        , m_valueData(data)
     {
     }
 
     ColorStopOffsetValue(Length data)
-        : m_type(ColorStopOffsetType::ValueType::Length)
-        , m_data(data)
+        : m_valueType(ColorStopOffsetType::ValueType::Length)
+        , m_valueData(data)
     {
     }
 
     void setType(ColorStopOffsetType::ValueType type)
     {
-        m_type = type;
+        m_valueType = type;
     }
 
     ColorStopOffsetType type() const
     {
-        return m_type;
+        return m_valueType;
     }
 
     void setValue(ColorStopOffsetData data)
     {
-        m_data = data;
+        m_valueData = data;
     }
 
     float percentageValue() const
     {
-        STARFISH_ASSERT(m_type.isPercentage());
-        return m_data.m_numberData;
+        STARFISH_ASSERT(m_valueType.isPercentage());
+        return m_valueData.m_percentageData;
     }
 
     Length lengthValue() const
     {
-        STARFISH_ASSERT(m_type.isLength());
-        return m_data.m_lengthData;
+        STARFISH_ASSERT(m_valueType.isLength());
+        return m_valueData.m_lengthData;
+    }
+
+    bool operator==(ColorStopOffsetValue& other) const
+    {
+        if (m_valueType != other.m_valueType) {
+            return false;
+        }
+
+        if (m_valueType.m_type == ColorStopOffsetType::ValueType::None) {
+            return true;
+        } else if (m_valueType.m_type ==
+                   ColorStopOffsetType::ValueType::Length) {
+            return m_valueData.m_lengthData == other.m_valueData.m_lengthData;
+        } else if (m_valueType.m_type ==
+                   ColorStopOffsetType::ValueType::Percentage) {
+            return m_valueData.m_percentageData ==
+                   other.m_valueData.m_percentageData;
+        }
+        return false;
+    }
+
+    bool operator!=(ColorStopOffsetValue& other) const
+    {
+        return !(operator==(other));
     }
 
 private:
-    ColorStopOffsetType m_type;
-    ColorStopOffsetData m_data;
+    ColorStopOffsetType m_valueType;
+    ColorStopOffsetData m_valueData;
 };
 
 class ColorStop : public gc {
@@ -185,6 +209,17 @@ public:
         m_specified = value;
     }
 
+    bool equals(ColorStop* other) const
+    {
+        if (m_color != other->m_color) {
+            return false;
+        }
+        if (m_offset != other->m_offset) {
+            return false;
+        }
+        return true;
+    }
+
 private:
     Unit::Color m_color;
     ColorStopOffsetValue m_offset;
@@ -220,6 +255,8 @@ public:
     void makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
                                  float& y1, float& x2, float& y2,
                                  FrameBox* owner);
+
+    virtual bool equals(GradientData* other) const;
 
 protected:
     CSSGradientType m_type;
@@ -257,6 +294,7 @@ public:
     virtual void checkComputed(Length curFontSize, Length rootFontSize,
                                Font* font, LayoutSize windowSize,
                                ComputedStyle* cs) override;
+    virtual bool equals(GradientData* other) const override;
 
 private:
     float m_angleDeg;
