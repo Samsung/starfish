@@ -9840,7 +9840,8 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
         CSSAngle angle;
         CSSStyleValuePair s;
         parser.consumeWhitespaces();
-        if (*(parser.curPos()) == 't' || isDigit(*(parser.curPos()))) {
+        if (*(parser.curPos()) == 't' || *(parser.curPos()) == '-' ||
+            isDigit(*(parser.curPos()))) {
             parser.consumeString(CSSPropertyParser::AllowNegative);
             const CSSTokenValue& str = parser.parsedString();
             if (str == "to") {
@@ -9893,7 +9894,7 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                *(parser.curPos()) != ')') {
             CSSStyleValuePair color;
             CSSStyleValuePair length;
-            parser.consumeString(0);
+            parser.consumeString(CSSPropertyParser::AllowSharp);
             String* ps = parser.parsedStringToGCString();
             if (*parser.curPos() == '(') {
                 parser.consumeParenthesis();
@@ -9907,8 +9908,8 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
 
             cs->setColor(color);
 
-            uint8_t option = CSSPropertyParser::AllowNegative |
-                             CSSPropertyParser::AllowPercent;
+            uint32_t option = CSSPropertyParser::AllowNegative |
+                              CSSPropertyParser::AllowPercent;
             parser.consumeWhitespaces();
             if (*(parser.curPos()) != ',' && *(parser.curPos()) != ')') {
                 parser.consumeString(option);

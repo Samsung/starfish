@@ -69,6 +69,7 @@ public:
         AllowDot = 1 << 5,
         AllowUnderline = 1 << 6,
         AllowPlus = 1 << 7,
+        AllowSharp = 1 << 8,
     };
 
     STARFISH_MAKE_STACK_ALLOCATED();
@@ -402,13 +403,14 @@ public:
     }
 
     // a-z | 0-9 | - | _ | %
-    bool consumeString(uint8_t option)
+    bool consumeString(uint32_t option)
     {
         bool allowNegative = option & AllowNegative;
         bool allowPercent = option & AllowPercent;
         bool allowUnderline = option & AllowUnderline;
         bool allowDot = option & AllowDot;
         bool allowPlus = option & AllowPlus;
+        bool allowSharp = option & AllowSharp;
 
         int len = 0;
         for (char *cur = m_curPos; cur < m_endPos; cur++, len++) {
@@ -424,13 +426,15 @@ public:
                 continue;
             } else if (allowDot && *cur == '.') {
                 continue;
+            } else if (allowSharp && *cur == '#') {
+                continue;
             } else {
                 break;
             }
         }
         m_parsedString = CSSTokenValue(m_curPos, len);
         m_curPos += len;
-        return true;
+        return (len > 0) ? true : false;
     }
 
     bool consumeIfNext(char c)
@@ -679,7 +683,7 @@ public:
         return Nullable<CSSTokenValue>();
     }
 
-    static bool parseNumber(const char* token, uint8_t option, float* val)
+    static bool parseNumber(const char* token, uint32_t option, float* val)
     {
         bool allowNegative = option & AllowNegative;
         CSSPropertyParser parser((char*)token);
@@ -694,7 +698,7 @@ public:
         return false;
     }
 
-    static bool parseInt32(const char* token, uint8_t option, int32_t& result)
+    static bool parseInt32(const char* token, uint32_t option, int32_t& result)
     {
         bool allowNegative = option & AllowNegative;
         CSSPropertyParser parser((char*)token);
@@ -709,7 +713,7 @@ public:
         return false;
     }
 
-    static bool parseInt32(const char* token, uint8_t option,
+    static bool parseInt32(const char* token, uint32_t option,
                            CSSStyleValuePair* pair)
     {
         int32_t result;
@@ -720,7 +724,7 @@ public:
         return true;
     }
 
-    static bool parseLength(const char* token, uint8_t option,
+    static bool parseLength(const char* token, uint32_t option,
                             CSSStyleValuePair* pair)
     {
         bool allowWithoutUnit = option & AllowWithoutUnit;
@@ -751,7 +755,7 @@ public:
         return false;
     }
 
-    static bool parseTime(const char* token, uint8_t option,
+    static bool parseTime(const char* token, uint32_t option,
                           CSSStyleValuePair* pair)
     {
         bool allowWithoutUnit = option & AllowWithoutUnit;
@@ -779,7 +783,7 @@ public:
         return false;
     }
 
-    static bool parseAngle(const char* token, uint8_t option,
+    static bool parseAngle(const char* token, uint32_t option,
                            CSSStyleValuePair* pair)
     {
         bool allowWithoutUnit = option & AllowWithoutUnit;
@@ -967,7 +971,7 @@ public:
                 double hue = 0;
                 CSSStyleValuePair p;
                 p.setValueKind(CSSStyleValuePair::ValueKind::Angle);
-                uint8_t option = 0;
+                uint32_t option = 0;
                 option |= CSSPropertyParser::AllowNegative;
                 option |= CSSPropertyParser::AllowWithoutUnit;
                 if (!parseAngle(v[0].data(), option, &p)) {
