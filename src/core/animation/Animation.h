@@ -223,6 +223,19 @@ public:
     void execute(float progress) override;
 };
 
+class OpacityAnimationTask : public AnimationTask {
+public:
+    OpacityAnimationTask(Element* target, AnimatedValue fromValue,
+                         AnimatedValue toValue, float duration, float delay,
+                         AnimationTimingFunction* timingFunction);
+    void execute(float progress) override;
+    void attachedToElement() override;
+    void detachedFromElement() override;
+    void computeToValue();
+
+private:
+};
+
 class TransformAnimationTask : public AnimationTask {
 public:
     TransformAnimationTask(Element* target,

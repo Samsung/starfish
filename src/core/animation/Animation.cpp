@@ -175,6 +175,60 @@ void LengthAnimationTask::execute(float progress)
     current->setNeedsLayout();
 }
 
+OpacityAnimationTask::OpacityAnimationTask(
+    Element* target, AnimatedValue fromValue, AnimatedValue toValue,
+    float duration, float delay, AnimationTimingFunction* timingFunction)
+    : AnimationTask(
+          target, CSSStyleValuePair::KeyKind::Opacity,
+          transitionPropertyValueToString(TransitionPropertyOpacityValue),
+          fromValue, toValue, duration, delay, timingFunction)
+{
+}
+
+void OpacityAnimationTask::attachedToElement()
+{
+    AnimationTask::attachedToElement();
+}
+
+void OpacityAnimationTask::detachedFromElement()
+{
+    AnimationTask::detachedFromElement();
+
+    Element* current = targetElement();
+    Frame* frame = current->frame();
+
+    bool before = frame->isEstablishesStackingContext();
+    ComputedStyle* style = current->style();
+    style->setOpacity(m_toValue.getFloat());
+    frame->computeStyleFlags();
+    bool after = frame->isEstablishesStackingContext();
+    if (before != after) {
+        targetElement()->webView()->clearStackingContext(true);
+    }
+    targetElement()->setNeedsPainting();
+}
+
+void OpacityAnimationTask::execute(float progress)
+{
+    float from = m_fromValue.getFloat();
+    float to = m_toValue.getFloat();
+
+    Element* current = targetElement();
+    Frame* frame = current->frame();
+    bool before = frame->isEstablishesStackingContext();
+    ComputedStyle* style = current->style();
+    float newOpacity = from * (1 - progress) + to * progress;
+    style->setOpacity(newOpacity);
+    frame->computeStyleFlags();
+    bool after = frame->isEstablishesStackingContext();
+
+    if (before != after) {
+        targetElement()->webView()->clearStackingContext(true);
+    }
+
+    targetElement()->setNeedsPainting();
+}
+
 TransformAnimationTask::TransformAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     String* targetPropertyString, AnimatedValue fromValue, float duration,
@@ -349,6 +403,7 @@ void AnimationExecutor::startIfNeeds()
             return false;
         },
         this);
+    window()->webView()->increaseActiveAnimatorCount();
 }
 
 void AnimationExecutor::stop()
@@ -361,6 +416,7 @@ void AnimationExecutor::stop()
         window()->starFish()->timer()->removeGenericAnimator(
             m_platformAnimator);
         m_platformAnimator = SIZE_MAX;
+        window()->webView()->decreaseActiveAnimatorCount();
     }
 }
 

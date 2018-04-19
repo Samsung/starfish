@@ -180,6 +180,21 @@ public:
     void assignGraphicsBuffer(CanvasSurface** surfaceHolder,
                               size_t visibleWidth, size_t visibleHeight);
 
+    uint32_t currentActiveAnimatorCount()
+    {
+        return m_currentActiveAnimatorCount;
+    }
+
+    void increaseActiveAnimatorCount()
+    {
+        m_currentActiveAnimatorCount++;
+    }
+
+    void decreaseActiveAnimatorCount()
+    {
+        m_currentActiveAnimatorCount--;
+    }
+
 private:
     WebView(StarFish* starFish);
 
@@ -221,6 +236,7 @@ private:
     GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
 
     uint64_t m_lastRenderingTime;
+    uint32_t m_currentActiveAnimatorCount;
     bool m_inRendering;
     bool m_needsRendering;
     bool m_needsComputeStackingContextProperties;

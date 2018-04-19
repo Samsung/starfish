@@ -964,6 +964,11 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
         damagedKeys[CSSStyleValuePair::Transform]) {
         return true;
     }
+    if ((isPropertyAll ||
+         property == TransitionPropertyValue::TransitionPropertyOpacityValue) &&
+        damagedKeys[CSSStyleValuePair::Opacity]) {
+        return true;
+    }
 
     return false;
 }
@@ -1053,6 +1058,17 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 newStyle->transitionTimingFunction()));
             */
         }
+    }
+    if ((isPropertyAll ||
+         property == TransitionPropertyValue::TransitionPropertyOpacityValue) &&
+        damagedKeys[CSSStyleValuePair::Opacity]) {
+        executor->registerAnimation(new OpacityAnimationTask(
+            element, AnimatedValue(oldStyle->opacity()),
+            AnimatedValue(newStyle->opacity()),
+            newStyle->transitionDuration().toTimeValue(),
+            newStyle->transitionDelay().toTimeValue(),
+            newStyle->transitionTimingFunction()));
+        newStyle->setOpacity(oldStyle->opacity());
     }
 }
 
