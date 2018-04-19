@@ -36,6 +36,7 @@ public:
         : HTMLElement(document)
         , m_generatedSheet(nullptr)
         , m_styleSheetTextResource(nullptr)
+        , m_relList(nullptr)
     {
     }
 
@@ -46,11 +47,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLLinkElement() const override;
 
-    /* 4.4 Interface Node */
-    virtual QualifiedName name();
-
-    /* Other methods (not in DOM API) */
-
     String* href();
     void setHref(String* href);
 
@@ -60,9 +56,15 @@ public:
     String* rel();
     void setRel(String* rel);
 
+    DOMTokenList* relList();
+
     String* type();
     void setType(String* type);
 
+    /* 4.4 Interface Node */
+    virtual QualifiedName name();
+
+    /* Other methods (not in DOM API) */
     StyleSheet* sheet();
 
     ResourceURL* url();
@@ -85,6 +87,9 @@ protected:
     void didStyleSheetLoadComplete();
     CSSStyleSheet* m_generatedSheet;
     TextResource* m_styleSheetTextResource;
+
+private:
+    DOMTokenList* m_relList;
 };
 }
 

@@ -29,6 +29,7 @@
 #include "core/dom/HTMLTrackElement.h"
 #include "core/dom/TextTrack.h"
 #include "core/dom/TextTrackList.h"
+#include "core/dom/DOMTokenList.h"
 #include "core/extra/MimeType.h"
 #include "core/extra/TimeRanges.h"
 #include "core/modules/mediasource/MediaSource.h"
@@ -72,6 +73,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     , m_currentPendingOperationHandle(SIZE_MAX)
     , m_resourceSelectionContext(nullptr)
     , m_currentPlayStart(std::numeric_limits<double>::quiet_NaN())
+    , m_controlsList(nullptr)
 {
     document->browsingContext()->registerMediaElement(this);
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -105,6 +107,7 @@ void* HTMLMediaElement::operator new(size_t size)
         GC_set_bit(
             desc, GC_WORD_OFFSET(HTMLMediaElement, m_resourceSelectionContext));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_pastPlayed));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMediaElement, m_controlsList));
         HTMLElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLMediaElement));
         typeInited = true;
@@ -115,6 +118,15 @@ void* HTMLMediaElement::operator new(size_t size)
 MediaPlayer* HTMLMediaElement::activeMediaPlayer()
 {
     return (m_mediaPlayer && m_mediaPlayer->alive()) ? m_mediaPlayer : nullptr;
+}
+
+DOMTokenList* HTMLMediaElement::controlsList()
+{
+    if (!m_controlsList) {
+        m_controlsList =
+            new DOMTokenList(this, starFish()->staticStrings()->m_controlsList);
+    }
+    return m_controlsList;
 }
 
 void HTMLMediaElement::onDOMContentLoaded()

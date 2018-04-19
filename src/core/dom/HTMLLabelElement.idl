@@ -1,4 +1,4 @@
-// https://html.spec.whatwg.org/#forms
+// https://html.spec.whatwg.org/#the-label-element
 
 [HTMLConstructor]
 interface HTMLLabelElement : HTMLElement {

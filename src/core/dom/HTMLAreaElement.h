@@ -28,6 +28,7 @@ class HTMLAreaElement : public HTMLHyperlinkContainer {
 public:
     HTMLAreaElement(Document* document)
         : HTMLHyperlinkContainer(document)
+        , m_relList(nullptr)
     {
     }
 
@@ -38,8 +39,13 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLAreaElement() const;
 
+    DOMTokenList* relList();
+
     /* 4.4 Interface Node */
     virtual QualifiedName name();
+
+private:
+    DOMTokenList* m_relList;
 };
 }
 #endif

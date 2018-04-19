@@ -45,6 +45,7 @@ void* HTMLLinkElement::operator new(size_t size)
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLLinkElement, m_generatedSheet));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(HTMLLinkElement, m_styleSheetTextResource));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLLinkElement, m_relList));
         HTMLElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLLinkElement));
         typeInited = true;
@@ -78,6 +79,14 @@ String* HTMLLinkElement::rel()
 void HTMLLinkElement::setRel(String* rel)
 {
     setAttribute(starFish()->staticStrings()->m_rel, rel);
+}
+
+DOMTokenList* HTMLLinkElement::relList()
+{
+    if (!m_relList) {
+        m_relList = new DOMTokenList(this, starFish()->staticStrings()->m_rel);
+    }
+    return m_relList;
 }
 
 String* HTMLLinkElement::media()

@@ -19,7 +19,10 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+
 #include "core/dom/HTMLAreaElement.h"
+
+#include "core/dom/DOMTokenList.h"
 
 namespace StarFish {
 
@@ -29,11 +32,20 @@ void* HTMLAreaElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLAreaElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLAreaElement, m_relList));
         HTMLElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLAreaElement));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+DOMTokenList* HTMLAreaElement::relList()
+{
+    if (!m_relList) {
+        m_relList = new DOMTokenList(this, starFish()->staticStrings()->m_rel);
+    }
+    return m_relList;
 }
 
 QualifiedName HTMLAreaElement::name()

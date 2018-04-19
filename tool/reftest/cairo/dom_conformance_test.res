@@ -294,7 +294,7 @@ test/cairo/reftest/dom-conformance-test/html/level2/html/hasFeature06.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAnchorElement04.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAnchorElement05.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAnchorElement06.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAnchorElement07.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAnchorElement07.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAnchorElement08.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAnchorElement09.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLAnchorElement10.html
@@ -600,14 +600,14 @@ test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLegendElement02.htm
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLIElement01.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLIElement02.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement01.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement02.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement02.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement03.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement04.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement04.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement05.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement06.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement07.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement07.html
 test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement08.html
-#test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement09.html
+test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLLinkElement09.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLMapElement01.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLMapElement02.html
 #test/cairo/reftest/dom-conformance-test/html/level2/html/HTMLMenuElement01.html

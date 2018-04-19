@@ -371,15 +371,6 @@ void DOMTokenList::validateToken(String* token)
     }
 }
 
-// Throw Exceptions
-bool DOMTokenList::validateTokenValue(String* token)
-{
-    throw new DOMException(m_element->document(),
-                           DOMException::Code::SCRIPT_TYPE_ERR,
-                           "DOMTokenList has no supported tokens.");
-    return false;
-}
-
 String* DOMTokenList::value() const
 {
     return m_element->getAttributeOrEmpty(m_localName);
@@ -388,5 +379,57 @@ String* DOMTokenList::value() const
 void DOMTokenList::setValue(String* value)
 {
     m_element->setAttribute(m_localName, value);
+}
+
+bool DOMTokenList::validateTokenValue(String* token)
+{
+    String* lowerToken = token->toASCIILower();
+
+    if (m_element->isHTMLAnchorElement() || m_element->isHTMLAreaElement()) {
+        return supportedTokensOfAnchorAndArea(lowerToken);
+    } else if (m_element->isHTMLLinkElement()) {
+        return supportedTokensOfLink(lowerToken);
+    } else if (m_element->isHTMLMediaElement()) {
+        return supportedTokensOfMedia(lowerToken);
+    } else {
+        throw new DOMException(m_element->document(),
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "DOMTokenList has no supported tokens.");
+    }
+    return false;
+}
+
+bool DOMTokenList::supportedTokensOfAnchorAndArea(String* token)
+{
+    if (token->equals("noreferrer") || token->equals("noopener")) {
+        return true;
+    }
+    return false;
+}
+
+bool DOMTokenList::supportedTokensOfLink(String* token)
+{
+    // TODO check for module preload
+
+    if (token->equals("preload") || token->equals("preconnect") ||
+        token->equals("dns-prefetch") || token->equals("stylesheet") ||
+        token->equals("import") || token->equals("icon") ||
+        token->equals("alternate") || token->equals("prefetch") ||
+        token->equals("prerender") || token->equals("next") ||
+        token->equals("manifest") || token->equals("apple-touch-icon") ||
+        token->equals("apple-touch-icon-precomposed") ||
+        token->equals("canonical")) {
+        return true;
+    }
+    return false;
+}
+
+bool DOMTokenList::supportedTokensOfMedia(String* token)
+{
+    if (token->equals("nodownload") || token->equals("nofullscreen") ||
+        token->equals("noremoteplayback")) {
+        return true;
+    }
+    return false;
 }
 }

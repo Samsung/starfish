@@ -323,6 +323,8 @@ public:
     void addEventToOperationQueue(EventTarget* t, Event* e);
     void processNextOperationQueue();
 
+    DOMTokenList* controlsList();
+
 #define ADD_DISPATCH_EVENT_DECL(Name) \
     void dispatch##Name##EventNow();  \
     void dispatch##Name##Event();
@@ -438,6 +440,9 @@ protected:
         }
         return false;
     }
+
+private:
+    DOMTokenList* m_controlsList;
 };
 }
 

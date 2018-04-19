@@ -28,10 +28,14 @@ class HTMLAnchorElement : public HTMLHyperlinkContainer {
 public:
     HTMLAnchorElement(Document* document)
         : HTMLHyperlinkContainer(document)
+        , m_relList(nullptr)
     {
         m_tabIndexWasSetExplicitly = true;
         m_tabIndex = 0;
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -41,15 +45,18 @@ public:
                                      String* val, bool attributeCreated,
                                      bool attributeRemoved) override;
 
-    /* 4.4 Interface Node */
+    DOMTokenList* relList();
 
+    /* 4.4 Interface Node */
     virtual QualifiedName name();
 
     /* Other methods (not in DOM API) */
-
     virtual bool handleDefaultEvent(Event* event) override;
 
     bool supportsFocus() const override;
+
+private:
+    DOMTokenList* m_relList;
 };
 }
 
