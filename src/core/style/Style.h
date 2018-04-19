@@ -2289,6 +2289,12 @@ public:
         m_value.m_transitionProperty = v;
     }
 
+    void setTransitionTimingFunctionValue(TransitionTimingFunctionValue v)
+    {
+        m_valueKind = TransitionTimingFunctionValueKind;
+        m_value.m_transitionTimingFunction = v;
+    }
+
     void setAnimationTimingFunctionValue(AnimationTimingFunction* v)
     {
         m_valueKind = AnimationTimingFunctionValueKind;

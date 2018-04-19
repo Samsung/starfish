@@ -194,6 +194,8 @@ String* transitionPropertyValueToString(TransitionPropertyValue val)
     switch (val) {
     case TransitionPropertyAllValue:
         return String::createASCIIString("all");
+    case TransitionPropertyBackground:
+        return String::createASCIIString("background");
     case TransitionPropertyBackgroundColorValue:
         return String::createASCIIString("background-color");
     case TransitionPropertyBackgroundPositionValue:
@@ -4085,6 +4087,117 @@ ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
     return style;
 }
 
+static void applyTransitionProperty(ComputedStyle* style,
+                                    ComputedStyle* parentStyle,
+                                    CSSStyleValuePair& item, size_t layer)
+{
+    switch (item.valueKind()) {
+    case CSSStyleValuePair::Initial:
+    case CSSStyleValuePair::Unset:
+        style->setTransitionProperty(TransitionPropertyAllValue, layer);
+        break;
+    case CSSStyleValuePair::Inherit:
+        STARFISH_ASSERT(layer == 0);
+        style->setTransitionProperty(parentStyle->transitionProperty());
+        break;
+    case CSSStyleValuePair::TransitionPropertyValueKind:
+        style->setTransitionProperty(item.transitionPropertyValue(), layer);
+        break;
+    default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+}
+
+static void applyTransitionDuration(ComputedStyle* style,
+                                    ComputedStyle* parentStyle,
+                                    CSSStyleValuePair& item, size_t layer)
+{
+    switch (item.valueKind()) {
+    case CSSStyleValuePair::Initial:
+    case CSSStyleValuePair::Unset:
+        style->setTransitionDuration(CSSTime(0), layer);
+        break;
+    case CSSStyleValuePair::Inherit:
+        STARFISH_ASSERT(layer == 0);
+        style->setTransitionDuration(parentStyle->transitionDuration());
+        break;
+    case CSSStyleValuePair::Time:
+        style->setTransitionDuration(item.timeValue(), layer);
+        break;
+    case CSSStyleValuePair::CalcValueKind: {
+        CalcData* calcData = item.calcValue();
+        CalcValueType type = calcData->type();
+        if (type.isTime()) {
+            style->setTransitionDuration(calcData->timeValue(), layer);
+        } else {
+            style->setTransitionDuration(CSSTime(0), layer);
+        }
+        break;
+    }
+    default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+}
+
+static void applyTransitionTimingFunction(ComputedStyle* style,
+                                          ComputedStyle* parentStyle,
+                                          CSSStyleValuePair& item, size_t layer)
+{
+    switch (item.valueKind()) {
+    case CSSStyleValuePair::Initial:
+    case CSSStyleValuePair::Unset:
+        style->setTransitionTimingFunction(TransitionTimingFunctionEaseValue,
+                                           layer);
+        break;
+    case CSSStyleValuePair::Inherit:
+        STARFISH_ASSERT(layer == 0);
+        style->setTransitionTimingFunction(
+            parentStyle->transitionTimingFunction());
+        break;
+    case CSSStyleValuePair::TransitionTimingFunctionValueKind:
+        style->setTransitionTimingFunction(item.transitionTimingFunctionValue(),
+                                           layer);
+        break;
+    case CSSStyleValuePair::AnimationTimingFunctionValueKind:
+        style->setTransitionTimingFunction(item.animationTimingFunctionValue(),
+                                           layer);
+        break;
+    default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+}
+
+static void applyTransitionDelay(ComputedStyle* style,
+                                 ComputedStyle* parentStyle,
+                                 CSSStyleValuePair& item, size_t layer)
+{
+    switch (item.valueKind()) {
+    case CSSStyleValuePair::Initial:
+    case CSSStyleValuePair::Unset:
+        style->setTransitionDelay(CSSTime(0), layer);
+        break;
+    case CSSStyleValuePair::Inherit:
+        STARFISH_ASSERT(layer == 0);
+        style->setTransitionDelay(parentStyle->transitionDelay());
+        break;
+    case CSSStyleValuePair::Time:
+        style->setTransitionDelay(item.timeValue(), layer);
+        break;
+    case CSSStyleValuePair::CalcValueKind: {
+        CalcData* calcData = item.calcValue();
+        CalcValueType type = calcData->type();
+        if (type.isTime()) {
+            style->setTransitionDelay(calcData->timeValue(), layer);
+        } else {
+            style->setTransitionDelay(CSSTime(0), layer);
+        }
+        break;
+    }
+    default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+}
+
 void StyleResolver::apply(Element* element,
                           GCAtomicVector<CSSStyleValuePair>& cssValues,
                           GCVector<MutablePropertyValue>& cssCustomValues,
@@ -5402,150 +5515,45 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionProperty:
-            switch (cssValues[k].valueKind()) {
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setTransitionProperty(
-                    TransitionPropertyValue::TransitionPropertyAllValue);
-                break;
-            case CSSStyleValuePair::ValueKind::Inherit:
-                style->setTransitionProperty(parentStyle->transitionProperty());
-                break;
-            case CSSStyleValuePair::ValueKind::ValueListKind: {
+            if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
+                applyTransitionProperty(style, parentStyle, cssValues[k], 0);
+            } else {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    switch (item.valueKind()) {
-                    case CSSStyleValuePair::Initial:
-                        break;
-                    case CSSStyleValuePair::TransitionPropertyValueKind:
-                        style->setTransitionProperty(
-                            item.transitionPropertyValue(), i);
-                        break;
-                    default:
-                        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                    }
+                    applyTransitionProperty(style, parentStyle, (*list)[i], i);
                 }
-                break;
-            }
-            default:
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionDuration:
-            switch (cssValues[k].valueKind()) {
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setTransitionDuration(CSSTime(0));
-                break;
-            case CSSStyleValuePair::ValueKind::Inherit:
-                style->setTransitionDuration(parentStyle->transitionDuration());
-                break;
-            case CSSStyleValuePair::ValueKind::ValueListKind: {
+            if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
+                applyTransitionDuration(style, parentStyle, cssValues[k], 0);
+            } else {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    switch (item.valueKind()) {
-                    case CSSStyleValuePair::Initial:
-                        break;
-                    case CSSStyleValuePair::Time:
-                        style->setTransitionDuration(item.timeValue(), i);
-                        break;
-                    case CSSStyleValuePair::CalcValueKind: {
-                        CalcData* calcData = item.calcValue();
-                        CalcValueType type = calcData->type();
-                        if (type.isTime()) {
-                            style->setTransitionDuration(calcData->timeValue(),
-                                                         i);
-                        } else {
-                            style->setTransitionDuration(CSSTime(0), i);
-                        }
-                        break;
-                    }
-                    default:
-                        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                    }
+                    applyTransitionDuration(style, parentStyle, (*list)[i], i);
                 }
-                break;
-            }
-            default:
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
-            switch (cssValues[k].valueKind()) {
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setTransitionTimingFunction(
-                    TransitionTimingFunctionValue::
-                        TransitionTimingFunctionEaseValue);
-                break;
-            case CSSStyleValuePair::ValueKind::Inherit:
-                style->setTransitionTimingFunction(
-                    parentStyle->transitionTimingFunction());
-                break;
-            case CSSStyleValuePair::ValueKind::ValueListKind: {
+            if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
+                applyTransitionTimingFunction(style, parentStyle, cssValues[k],
+                                              0);
+            } else {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    switch (item.valueKind()) {
-                    case CSSStyleValuePair::Initial:
-                        break;
-                    case CSSStyleValuePair::TransitionTimingFunctionValueKind:
-                        style->setTransitionTimingFunction(
-                            item.transitionTimingFunctionValue(), i);
-                        break;
-                    case CSSStyleValuePair::AnimationTimingFunctionValueKind:
-                        style->setTransitionTimingFunction(
-                            item.animationTimingFunctionValue(), i);
-                        break;
-                    default:
-                        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                    }
+                    applyTransitionTimingFunction(style, parentStyle,
+                                                  (*list)[i], i);
                 }
-                break;
-            }
-            default:
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionDelay:
-            switch (cssValues[k].valueKind()) {
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setTransitionDelay(CSSTime(0));
-                break;
-            case CSSStyleValuePair::ValueKind::Inherit:
-                style->setTransitionDelay(parentStyle->transitionDelay());
-                break;
-            case CSSStyleValuePair::ValueKind::ValueListKind: {
+            if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
+                applyTransitionDelay(style, parentStyle, cssValues[k], 0);
+            } else {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    switch (item.valueKind()) {
-                    case CSSStyleValuePair::Initial:
-                        break;
-                    case CSSStyleValuePair::Time:
-                        style->setTransitionDelay(item.timeValue(), i);
-                        break;
-                    case CSSStyleValuePair::CalcValueKind: {
-                        CalcData* calcData = item.calcValue();
-                        CalcValueType type = calcData->type();
-                        if (type.isTime()) {
-                            style->setTransitionDelay(calcData->timeValue(), i);
-                        } else {
-                            style->setTransitionDelay(CSSTime(0), i);
-                        }
-                        break;
-                    }
-                    default:
-                        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                    }
+                    applyTransitionDelay(style, parentStyle, (*list)[i], i);
                 }
-                break;
-            }
-            default:
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
         case CSSStyleValuePair::KeyKind::BorderImageSlice:
@@ -13911,6 +13919,9 @@ static bool parseCubicBezierFunction(const CSSTokenValue& value,
             tokens[3].trim().data(), CSSPropertyParser::AllowNegative, &y2)) {
         return false;
     }
+    if (x1 < 0 || x1 > 1 || x2 < 0 || x2 > 1) {
+        return false;
+    }
     result->setAnimationTimingFunctionValue(new CubicBezier(x1, y1, x2, y2));
     return true;
 }
@@ -13931,7 +13942,8 @@ static bool parseStepsFunction(const CSSTokenValue& value,
     }
     int32_t number;
     bool isEnd = true;
-    if (!CSSPropertyParser::parseInt32(tokens[0].data(), 0, number)) {
+    if (!CSSPropertyParser::parseInt32(tokens[0].data(), 0, number) ||
+        number <= 0) {
         return false;
     }
     if (size == 2) {
@@ -13948,29 +13960,22 @@ static bool parseStepsFunction(const CSSTokenValue& value,
 bool CSSStyleValuePair::updateValueUnitTransitionTimingFunction(
     const CSSTokenValue& value)
 {
-    m_valueKind =
-        CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind;
     if (STRING_VALUE_IS_STRING("ease")) {
-        m_value.m_transitionTimingFunction =
-            TransitionTimingFunctionValue::TransitionTimingFunctionEaseValue;
+        setTransitionTimingFunctionValue(TransitionTimingFunctionEaseValue);
     } else if (STRING_VALUE_IS_STRING("linear")) {
-        m_value.m_transitionTimingFunction =
-            TransitionTimingFunctionValue::TransitionTimingFunctionLinearValue;
+        setTransitionTimingFunctionValue(TransitionTimingFunctionLinearValue);
     } else if (STRING_VALUE_IS_STRING("ease-in")) {
-        m_value.m_transitionTimingFunction =
-            TransitionTimingFunctionValue::TransitionTimingFunctionEaseInValue;
+        setTransitionTimingFunctionValue(TransitionTimingFunctionEaseInValue);
     } else if (STRING_VALUE_IS_STRING("ease-out")) {
-        m_value.m_transitionTimingFunction =
-            TransitionTimingFunctionValue::TransitionTimingFunctionEaseOutValue;
+        setTransitionTimingFunctionValue(TransitionTimingFunctionEaseOutValue);
     } else if (STRING_VALUE_IS_STRING("ease-in-out")) {
-        m_value.m_transitionTimingFunction = TransitionTimingFunctionValue::
-            TransitionTimingFunctionEaseInOutValue;
+        setTransitionTimingFunctionValue(
+            TransitionTimingFunctionEaseInOutValue);
     } else if (STRING_VALUE_IS_STRING("step-start")) {
-        m_value.m_transitionTimingFunction = TransitionTimingFunctionValue::
-            TransitionTimingFunctionStepStartValue;
+        setTransitionTimingFunctionValue(
+            TransitionTimingFunctionStepStartValue);
     } else if (STRING_VALUE_IS_STRING("step-end")) {
-        m_value.m_transitionTimingFunction =
-            TransitionTimingFunctionValue::TransitionTimingFunctionStepEndValue;
+        setTransitionTimingFunctionValue(TransitionTimingFunctionStepEndValue);
     } else if (!parseCubicBezierFunction(value, this) &&
                !parseStepsFunction(value, this)) {
         return false;

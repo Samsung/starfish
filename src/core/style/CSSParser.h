@@ -726,7 +726,7 @@ public:
             }
             layers.push_back(layer);
         }
-        return layers.size();
+        return !(length && token[length - 1] == ',') && layers.size();
     }
 
     static bool parseNumber(const char* token, uint32_t option, float* val)

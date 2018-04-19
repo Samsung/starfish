@@ -305,3 +305,4 @@ test/cairo/reftest/vendor/webkit_original/fast/css3-text/css3-text-indent/text-i
 test/cairo/reftest/vendor/webkit_original/fast/block/float/floats-and-text-indent.html
 test/cairo/reftest/vendor/webkit_original/fast/block/float/floats-and-text-indent-rl.html
 #test/cairo/reftest/vendor/webkit_original/fast/block/float/022.html
+test/cairo/reftest/vendor/webkit_original/fast/box-decoration-break/box-decoration-break-rendering.html
