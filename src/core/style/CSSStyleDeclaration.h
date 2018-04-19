@@ -113,22 +113,17 @@ public:
     String* BackgroundRepeat();
     String* BackgroundPosition();
     String* Font();
-    String* FontFamily();
-    String* Src();
     String* TextDecoration();
     String* Transition();
-    String* TransitionTransitionProperty();
-    String* TransitionTransitionDuration();
-    String* TransitionTransitionDelay();
     String* Overflow();
     String* FlexFlow();
     String* Flex();
     String* Outline();
-    String* D();
     String* ListStyle();
     String* customProperty(String* key);
 #define DECLARE_ATTRIBUTE_GETTER(name, ...) String* name();
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(DECLARE_ATTRIBUTE_GETTER)
+    FOR_EACH_STYLE_ATTRIBUTE_STICKY(DECLARE_ATTRIBUTE_GETTER)
 #undef DECLARE_ATTRIBUTE_GETTER
 
     void addCSSValuePair(CSSStyleValuePair::KeyKind name,
@@ -158,18 +153,17 @@ public:
     void setSrc(const char* value, size_t len, bool isImportant);
     void setTextDecoration(const char* value, size_t len, bool isImportant);
     void setTransition(const char* value, size_t len, bool isImportant);
-    void setTransitionTransitionProperty(const char* value, size_t len,
-                                         bool isImportant);
-    void setTransitionTransitionDuration(const char* value, size_t len,
-                                         bool isImportant);
-    void setTransitionTransitionDelay(const char* value, size_t len,
-                                      bool isImportant);
     void setOverflow(const char* value, size_t len, bool isImportant);
     void setFlexFlow(const char* value, size_t len, bool isImportant);
     void setFlex(const char* value, size_t len, bool isImportant);
     void setOutline(const char* value, size_t len, bool isImportant);
     void setD(const char* value, size_t len, bool isImportant);
     void setListStyle(const char* value, size_t len, bool isImportant);
+    void setTransitionProperty(const char* value, size_t len, bool isImportant);
+    void setTransitionDuration(const char* value, size_t len, bool isImportant);
+    void setTransitionTimingFunction(const char* value, size_t len,
+                                     bool isImportant);
+    void setTransitionDelay(const char* value, size_t len, bool isImportant);
 
     void setCustomProperty(String* key, String* value, size_t len);
 

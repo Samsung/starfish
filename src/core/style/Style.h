@@ -431,6 +431,7 @@ enum ImageRenderingValue {
 
 enum TransitionPropertyValue {
     TransitionPropertyAllValue,
+    TransitionPropertyBackground,
     TransitionPropertyBackgroundColorValue,
     TransitionPropertyBackgroundPositionValue,
     TransitionPropertyBorderBottomColorValue,
@@ -679,11 +680,6 @@ class CSSStyleDeclaration;
     F(TableLayout, tableLayout, "table-layout")                                \
     F(UnicodeBidi, unicodeBidi, "unicode-bidi")                                \
     F(Content, content, "content")                                             \
-    F(TransitionProperty, transitionProperty, "transition-property")           \
-    F(TransitionDuration, transitionDuration, "transition-duration")           \
-    F(TransitionTimingFunction, transitionTimingFunction,                      \
-      "transition-timing-function")                                            \
-    F(TransitionDelay, transitionDelay, "transition-delay")                    \
     F(BoxShadow, boxShadow, "box-shadow")                                      \
     F(BoxSizing, boxSizing, "box-sizing")                                      \
     F(Fill, fill, "fill")                                                      \
@@ -757,10 +753,15 @@ class CSSStyleDeclaration;
 // define(FOR_EACH_STYLE_ATTRIBUTE)
 // This order is used by CSSParser::parseFontFaceRule
 
-#define FOR_EACH_STYLE_ATTRIBUTE_STICKY(F)   \
-    F(D, d, "d")                             \
-    F(FontFamily, fontFamily, "font-family") \
-    F(Src, src, "src")
+#define FOR_EACH_STYLE_ATTRIBUTE_STICKY(F)                           \
+    F(D, d, "d")                                                     \
+    F(FontFamily, fontFamily, "font-family")                         \
+    F(Src, src, "src")                                               \
+    F(TransitionDelay, transitionDelay, "transition-delay")          \
+    F(TransitionDuration, transitionDuration, "transition-duration") \
+    F(TransitionProperty, transitionProperty, "transition-property") \
+    F(TransitionTimingFunction, transitionTimingFunction,            \
+      "transition-timing-function")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(F)                        \
     F(Border, border, "border")                                      \
@@ -2282,6 +2283,12 @@ public:
         m_value.m_stringValue = v;
     }
 
+    void setTransitionPropertyValue(TransitionPropertyValue v)
+    {
+        m_valueKind = TransitionPropertyValueKind;
+        m_value.m_transitionProperty = v;
+    }
+
     void setAnimationTimingFunctionValue(AnimationTimingFunction* v)
     {
         m_valueKind = AnimationTimingFunctionValueKind;
@@ -2360,6 +2367,10 @@ public:
                                    CSSStyleValuePair& xPair,
                                    CSSStyleValuePair& yPair);
     bool updateValueShadow(const CSSTokenVector& tokens, bool boxShadow);
+    bool updateValueLayerTransitionProperty(const CSSTokenVector& tokens);
+    bool updateValueLayerTransitionDuration(const CSSTokenVector& tokens);
+    bool updateValueLayerTransitionTimingFunction(const CSSTokenVector& tokens);
+    bool updateValueLayerTransitionDelay(const CSSTokenVector& tokens);
 
 protected:
     KeyKind m_keyKind : 8;

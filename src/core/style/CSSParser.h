@@ -611,6 +611,35 @@ public:
         return true;
     }
 
+    bool consumeLayerBlock()
+    {
+        consumeWhitespaces();
+        char* start = m_curPos;
+        size_t openParenthesis = 0;
+        while (m_curPos < m_endPos) {
+            if (*m_curPos == '(') {
+                openParenthesis++;
+            } else if (*m_curPos == ')' && openParenthesis) {
+                openParenthesis--;
+            } else if (*m_curPos == ',') {
+                if (m_curPos <= start) {
+                    return false;
+                }
+                if (!openParenthesis) {
+                    m_parsedString = CSSTokenValue(start, m_curPos - start);
+                    m_curPos++;
+                    return true;
+                }
+            }
+            m_curPos++;
+        }
+        if (m_curPos > start) {
+            m_parsedString = CSSTokenValue(start, m_curPos - start);
+            return true;
+        }
+        return false;
+    }
+
     const CSSTokenValue& parsedString()
     {
         return m_parsedString;
@@ -681,6 +710,23 @@ public:
             }
         }
         return Nullable<CSSTokenValue>();
+    }
+
+    static bool parseLayers(const char* token, size_t length,
+                            CSSTokenVector& layers)
+    {
+        CSSPropertyParser parser((char*)token, length);
+        while (!parser.isEnd()) {
+            if (!parser.consumeLayerBlock()) {
+                return false;
+            }
+            CSSTokenValue layer(parser.parsedString().trim());
+            if (!layer.length()) {
+                return false;
+            }
+            layers.push_back(layer);
+        }
+        return layers.size();
     }
 
     static bool parseNumber(const char* token, uint32_t option, float* val)
