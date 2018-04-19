@@ -22,7 +22,7 @@
 
 namespace StarFish {
 
-class WillChangeData : public GCVector<AtomicString> {
+class WillChangeData : public GCAtomicVector<AtomicString> {
 public:
     WillChangeData()
         : m_contents(false)
