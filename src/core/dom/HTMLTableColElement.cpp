@@ -23,6 +23,40 @@
 #include "core/dom/HTMLTableCellElement.h"
 
 namespace StarFish {
+void HTMLTableColElement::didAttributeChanged(QualifiedName name, String* old,
+                                              String* value,
+                                              bool attributeCreated,
+                                              bool attributeRemoved)
+{
+    HTMLTablePartElement::didAttributeChanged(
+        name, old, value, attributeCreated, attributeRemoved);
+    if (name == starFish()->staticStrings()->m_width) {
+        setNeedsStyleRecalc();
+    }
+}
+
+void HTMLTableColElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    HTMLTablePartElement::styleForPresentationAttribute(cssValues);
+
+    String* w = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+    if (!w->equals(String::emptyString)) {
+        // Use px as the default unit
+        if (!w->contains("px") && !w->contains("%")) {
+            w = w->concat(String::createASCIIString("px"));
+        }
+
+        CSSStyleValuePair pair;
+        CSSTokenVector tokens;
+        CSSTokenValue token = w->toNullableUTF8String().m_buffer;
+        tokens.push_back(token);
+        if (pair.updateValueWidth(document(), tokens)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
+            cssValues.push_back(pair);
+        }
+    }
+}
 
 QualifiedName HTMLTableColElement::name()
 {

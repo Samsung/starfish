@@ -173,6 +173,12 @@ struct TableRowsCollectionData : public gc {
 
 bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection)
 {
+    if (!data) {
+        if (node->isHTMLTableRowElement()) {
+            return true;
+        }
+        return false;
+    }
     TableRowsCollectionData* tableData = (TableRowsCollectionData*)data;
     if (tableData->lastNode == nullptr) {
         for (Node* mv = node; mv; mv = mv->nextSibling()) {

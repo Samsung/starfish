@@ -2,9 +2,9 @@
 
 [HTMLConstructor]
 interface HTMLTableElement : HTMLElement {
-  [Unimplemented, CEReactions] attribute HTMLTableCaptionElement? caption;
-  [Unimplemented] HTMLTableCaptionElement createCaption();
-  [Unimplemented, CEReactions] void deleteCaption();
+  [CEReactions, RaisesException=Setter] attribute HTMLTableCaptionElement? caption;
+  [CEReactions] HTMLTableCaptionElement createCaption();
+  [CEReactions] void deleteCaption();
 
   [Unimplemented, CEReactions] attribute HTMLTableSectionElement? tHead;
   [Unimplemented] HTMLTableSectionElement createTHead();
@@ -28,7 +28,7 @@ interface HTMLTableElement : HTMLElement {
   [Unimplemented, CEReactions] attribute DOMString frame;
   [Unimplemented, CEReactions] attribute DOMString rules;
   [Unimplemented, CEReactions] attribute DOMString summary;
-  [CEReactions] attribute DOMString width;
+  [CEReactions, Reflect] attribute DOMString width;
 
   [CEReactions, TreatNullAs=EmptyString, Reflect] attribute DOMString bgColor;
   [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString cellPadding;

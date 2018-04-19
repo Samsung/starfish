@@ -21,6 +21,7 @@
 #include "StarFish.h"
 #include "core/dom/HTMLTableElement.h"
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/DOMException.h"
 
 namespace StarFish {
 
@@ -88,7 +89,7 @@ void HTMLTableElement::styleForPresentationAttribute(
             cssValues.push_back(pair);
         }
     }
-    String* w = width();
+    String* w = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
     if (!w->equals(String::emptyString)) {
         // Use px as the default unit
         if (!w->contains("px") && !w->contains("%")) {
@@ -130,14 +131,53 @@ QualifiedName HTMLTableElement::name()
     return starFish()->staticStrings()->m_tableTagName;
 }
 
-String* HTMLTableElement::width()
+HTMLTableCaptionElement* HTMLTableElement::caption()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+    Node* child = firstChild();
+    while (child) {
+        if (child->isHTMLTableCaptionElement()) {
+            return child->asHTMLTableCaptionElement();
+        }
+        child = child->nextSibling();
+    }
+    return nullptr;
 }
 
-void HTMLTableElement::setWidth(String* width)
+void HTMLTableElement::setCaption(HTMLTableCaptionElement* caption)
 {
-    setAttribute(starFish()->staticStrings()->m_width, width);
+    if (caption && !caption->isHTMLTableCaptionElement()) {
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
+                               "Failed to set the 'caption' property on "
+                               "'HTMLTableElement': The provided value is not "
+                               "of type 'HTMLTableCaptionElement'.");
+    }
+
+    deleteCaption();
+    if (!caption) {
+        insertBefore(caption, firstChild());
+    }
+}
+
+HTMLTableCaptionElement* HTMLTableElement::createCaption()
+{
+    HTMLTableCaptionElement* caption = this->caption();
+    if (!caption) {
+        caption = new HTMLTableCaptionElement(document());
+        insertBefore(caption, firstChild());
+    }
+    return caption;
+}
+
+void HTMLTableElement::deleteCaption()
+{
+    Node* child = firstChild();
+    while (child) {
+        if (child->isHTMLTableCaptionElement()) {
+            removeChild(child);
+            return;
+        }
+        child = child->nextSibling();
+    }
 }
 
 String* HTMLTableElement::cellspacing()

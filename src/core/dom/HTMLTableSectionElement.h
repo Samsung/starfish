@@ -26,14 +26,20 @@ namespace StarFish {
 
 class HTMLTableSectionElement : public HTMLTablePartElement {
 public:
-    HTMLTableSectionElement(Document* document)
-        : HTMLTablePartElement(document)
-    {
-    }
+    HTMLTableSectionElement(Document* document);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLTableSectionElement() const;
+
+    HTMLCollection* rows();
+
+    HTMLElement* insertRow(long index = -1);
+
+    void deleteRow(long index);
 
     /* 4.4 Interface Node */
     virtual QualifiedName name() = 0;
@@ -41,6 +47,9 @@ public:
     // only for DOM conformance test
     String* ch();
     void setCh(String* ch);
+
+private:
+    HTMLCollection* m_rows;
 };
 }
 

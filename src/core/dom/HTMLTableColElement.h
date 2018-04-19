@@ -35,6 +35,13 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLTableColElement() const override;
 
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved);
+
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues) override;
+
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 

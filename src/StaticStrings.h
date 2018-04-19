@@ -363,7 +363,7 @@ public:
     QualifiedName m_download;
     QualifiedName m_ping;
     QualifiedName m_usemap;
-    QualifiedName m_choff;
+    QualifiedName m_charoff;
     QualifiedName m_valign;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
