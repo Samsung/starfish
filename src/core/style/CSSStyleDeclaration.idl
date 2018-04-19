@@ -15,5 +15,5 @@ interface CSSStyleDeclaration {
 
   // NOTE add getter&setter for named access
   getter DOMString? (DOMString property);
-  setter void (DOMString property, DOMString? propertyValue);
+  [RaisesException] setter void (DOMString property, DOMString? propertyValue);
 };
