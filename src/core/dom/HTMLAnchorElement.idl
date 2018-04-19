@@ -6,8 +6,8 @@ interface HTMLAnchorElement : HTMLElement {
   [CEReactions] attribute DOMString target;
   [Unimplemented, CEReactions] attribute DOMString download;
   [Unimplemented, CEReactions] attribute DOMString ping;
-  [Unimplemented, CEReactions] attribute DOMString rel;
-  [Unimplemented, SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
+  [CEReactions, Reflect] attribute DOMString rel;
+  [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
   [Unimplemented, CEReactions] attribute DOMString hreflang;
   [Unimplemented, CEReactions] attribute DOMString type;
 

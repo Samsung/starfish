@@ -5,19 +5,24 @@
 interface HTMLLinkElement : HTMLElement {
   [CEReactions] attribute DOMString href;
   [Unimplemented, CEReactions] attribute DOMString? crossOrigin;
-  [CEReactions] attribute DOMString rel;
+  [CEReactions, Reflect] attribute DOMString rel;
   [Unimplemented, CEReactions] attribute RequestDestination as; // (default "")
-  [Unimplemented, SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
+  [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
   [CEReactions] attribute DOMString media;
   [Unimplemented, CEReactions] attribute DOMString nonce;
   [Unimplemented, CEReactions] attribute DOMString integrity;
-  [Unimplemented, CEReactions] attribute DOMString hreflang;
+  [CEReactions, Reflect] attribute DOMString hreflang;
   [CEReactions] attribute DOMString type;
   [Unimplemented, SameObject, PutForwards=value] readonly attribute DOMTokenList sizes;
   [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
   [Unimplemented, CEReactions] attribute DOMString scope;
   [Unimplemented, CEReactions] attribute WorkerType workerType;
   [Unimplemented, CEReactions] attribute boolean useCache;
+
+  // https://html.spec.whatwg.org/#HTMLLinkElement-partial
+  [CEReactions, Reflect] attribute DOMString charset;
+  [CEReactions, Reflect] attribute DOMString rev;
+  [CEReactions, Reflect] attribute DOMString target;
 };
 
 HTMLLinkElement implements LinkStyle;

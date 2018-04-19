@@ -25,6 +25,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/DOMTokenList.h"
 #include "core/dom/Event.h"
 #include "core/page/Location.h"
 #include "core/page/Window.h"
@@ -33,6 +34,20 @@
 #include "browser/history/HistoryManager.h"
 
 namespace StarFish {
+
+void* HTMLAnchorElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLAnchorElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLAnchorElement, m_relList));
+        HTMLElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLAnchorElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
 
 QualifiedName HTMLAnchorElement::name()
 {
@@ -51,6 +66,14 @@ void HTMLAnchorElement::didAttributeChanged(QualifiedName name, String* old,
         if (m_tabIndex == -1)
             m_tabIndex = 0;
     }
+}
+
+DOMTokenList* HTMLAnchorElement::relList()
+{
+    if (!m_relList) {
+        m_relList = new DOMTokenList(this, starFish()->staticStrings()->m_rel);
+    }
+    return m_relList;
 }
 
 bool HTMLAnchorElement::handleDefaultEvent(Event* event)

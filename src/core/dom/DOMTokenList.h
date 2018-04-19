@@ -62,12 +62,16 @@ public:
     bool supports(String* token);
 
     String* toString();
-    void validateToken(String* token);              // Throw Exceptions
-    virtual bool validateTokenValue(String* token); // Throw Exceptions
+    void validateToken(String* token); // Throw Exceptions
     String* value() const;
     void setValue(String* value);
 
 private:
+    bool validateTokenValue(String* token); // Throw Exceptions
+    bool supportedTokensOfAnchorAndArea(String* token);
+    bool supportedTokensOfLink(String* token);
+    bool supportedTokensOfMedia(String* token);
+
     Element* m_element;
     QualifiedName m_localName;
 };

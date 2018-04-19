@@ -293,7 +293,9 @@ public:
     QualifiedName m_width;
     QualifiedName m_height;
     QualifiedName m_rel;
+    QualifiedName m_rev;
     QualifiedName m_href;
+    QualifiedName m_hreflang;
     QualifiedName m_type;
     QualifiedName m_dir;
     QualifiedName m_color;
@@ -369,6 +371,7 @@ public:
     QualifiedName m_autoplay;
     QualifiedName m_preload;
     QualifiedName m_controls;
+    QualifiedName m_controlsList;
     QualifiedName m_kind;
     QualifiedName m_label;
     QualifiedName m_srclang;

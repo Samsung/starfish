@@ -93,8 +93,13 @@ StaticStrings::StaticStrings(StarFish* sf)
                              AtomicString::createAtomicString(sf, "height"));
     m_rel = QualifiedName(AtomicString::emptyAtomicString(),
                           AtomicString::createAtomicString(sf, "rel"));
+    m_rev = QualifiedName(AtomicString::emptyAtomicString(),
+                          AtomicString::createAtomicString(sf, "rev"));
     m_href = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "href"));
+    m_hreflang =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "hreflang"));
     m_type = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "type"));
     m_dir = QualifiedName(AtomicString::emptyAtomicString(),
@@ -274,6 +279,9 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_controls =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "controls"));
+    m_controlsList =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "controlsList"));
     m_kind = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "kind"));
     m_label = QualifiedName(AtomicString::emptyAtomicString(),

@@ -325,9 +325,13 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | style | Return a live CSS declaration block. |
 | [HTMLAnchorElement](https://html.spec.whatwg.org/multipage/semantics.html#the-a-element) | interface | HTMLAnchorElement | The HTMLAnchorElement interface represents hyperlink elements and provides special properties and methods (beyond those of the regular HTMLElement object interface that they inherit from) for manipulating the layout and presentation of such elements. |
 |  | attribute | target | Reflect the respective content attribute of the same name |
+|  | attribute | rel | Is a DOMString that reflects the rel HTML attribute, specifying the relationship of the target object to the linked object. |
+|  | attribute | relList | Returns a DOMTokenList that reflects the rel HTML attribute, as a list of tokens. |
 | [HTMLAreaElement](https://html.spec.whatwg.org/multipage/image-maps.html#the-area-element) | interface | HTMLAreaElement | The area element represents either a hyperlink with some text and a corresponding area on an image map, or a dead area on an image map. |
 |  | attribute | target | Reflect the target HTML attribute, indicating the browsing context in which to open the linked resource. |
 |  | attribute | noHref | Indicate if the area is inactive (true) or active (false). |
+|  | attribute | rel | Is a DOMString that reflects the rel HTML attribute, indicating relationships of the current document to the linked resource. |
+|  | attribute | relList | Returns a DOMTokenList that reflects the rel HTML attribute, indicating relationships of the current document to the linked resource, as a list of tokens. |
 | [HTMLHyperlinkElementUtils](https://html.spec.whatwg.org/multipage/links.html#api-for-a-and-area-elements) | interface | HTMLHyperlinkElementUtils | The HTMLHyperlinkElementUtils mixin defines utility methods and properties to work with HTMLAnchorElement and HTMLAreaElement. These utilities allow to deal with common features like URLs. |
 |  | attribute | href | Return the whole URL. |
 |  | attribute | origin | Return the origin. |
@@ -424,6 +428,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | contentDocument | Returns the iframe element's content document. |
 |  | attribute | contentWindow | Returns the WindowProxy object of the iframe element's nested browsing context, if its nested browsing context is non-null, or null otherwise. |
 |  | attribute | scrolling | Specifies whether or not to display scrollbars in an iframe |
+| [HTMLLabelElement](https://html.spec.whatwg.org/#the-label-element) | interface | HTMLLabelElement | Represents a caption in a user interface. |
+|  | attribute  | form | Is a HTMLFormElement object representing the form with which the labeled control is associated |
+|  | attribute  | htmlFor | Is a string containing the ID of the labeled control. This reflects the for attribute. |
+|  | attribute  | control | Is a HTMLElement representing the control with which the label is associated. |
 | [HTMLLegendElement](https://html.spec.whatwg.org/multipage/form-elements.html#the-legend-element) | interface | HTMLLegendElement | Represents a caption for the rest of the contents of the legend element's parent fieldset element, if any. |
 |  | attribute  | form | Returns the element's form owner, or null if there is not one. |
 | [HTMLLIElement](https://html.spec.whatwg.org/#htmllielement) | interface | HTMLLIElement | Represents a list item. |
@@ -432,8 +440,13 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLLinkElement](https://html.spec.whatwg.org/multipage/semantics.html#the-link-element) | interface | HTMLLinkElement | The HTMLLinkElement interface represents reference information for external resources and the relationship of those resources to a document and vice-versa |
 |  | attribute | href | Is a DOMString representing the URI for the target resource. |
 |  | attribute | rel | Is a DOMString representing the forward relationship of the linked resource from the document to the resource. |
+|  | attribute | relList | Is a DOMTokenList that reflects the rel HTML attribute, as a list of tokens. |
 |  | attribute | media | Is a DOMString representing a list of one or more media formats to which the resource applies. |
+|  | attribute | hreflang | Is a DOMString representing the language code for the linked resource. |
 |  | attribute | type | Is a DOMString representing the MIME type of the linked resource. |
+|  | attribute | charset | Is a DOMString representing the character encoding for the target resource. |
+|  | attribute | rev | Is a DOMString representing the reverse relationship of the linked resource from the resource to the document. |
+|  | attribute | target | Is a DOMString representing the name of the target frame to which the resource applies. |
 | [HTMLOListElement](https://html.spec.whatwg.org/#htmlolistelement)  | interface | HTMLOListElement |  |
 |  | attribute | reversed | Specifies that the list order should be descending. |
 |  | attribute | start | Specifies the start value of an ordered list. |
@@ -479,6 +492,8 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | loop | Is a Boolean that reflects the loop HTML attribute, which indicates whether the media element should start over when it reaches the end. |
 |  | method | Promise\<void\> play() | Begins playback of the media. |
 |  | method | void pause() | Pauses the media playback. |
+|  | attribute | constrols | Is a Boolean that reflects the controls HTML attribute, indicating whether user interface items for controlling the resource should be displayed. |
+|  | attribute | constrolsList | Returns a DOMTokenList that helps the user agent select what controls to show on the media element whenever the user agent shows its own set of controls. |
 |  | attribute | volume | Is a double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest). |
 |  | attribute | muted | Is a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise. |
 |  | attribute | textTracks | Returns the list of TextTrack objects contained in the element. |
@@ -525,6 +540,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLOptionsCollection](https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection) | interface | HTMLOptionsCollection | The HTMLOptionsCollection interface is used for collections of option elements. It is always rooted on a select element and has attributes and methods that manipulate that element's descendants. |
 |  | attribute | length | Returns the number of elements in the collection. |
 |  | attribute | selectedIndex | Returns the index of the first selected item, if any, or −1 if there is no selected item. Can be set, to change the selection. |
+|  | method | add | Inserts element before the node given as argument. |
+|  | method | remove | Removes the item with index index from the collection. |
 | [HTMLSourceElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSourceElement) | interface | HTMLSourceElement | The HTMLSourceElement interface provides special properties for manipulating <source> elements. |
 |  | attribute | src | DOMString reflecting the src HTML attribute, containing the URL for the media resource. (Note: Current version of HTMLSourceElement considers only media element related case, not picture case.) |
 |  | attribute | type | DOMString reflecting the type HTML attribute, containing the type of the media resource. |
