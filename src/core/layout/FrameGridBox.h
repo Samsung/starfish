@@ -235,6 +235,9 @@ private:
     GCVector<FrameBox*> m_orderedGridItems;
     GCVector<GridArea> m_orderedGridArea;
     GCUnorderedMultiMap<std::string, GridArea> m_namedAreaMap;
+
+    LayoutUnit m_rowGap;
+    LayoutUnit m_columnGap;
     // FIXME(#1286): This checker is poor.
     bool m_areaChecker[GRID_MAX_TRACK][GRID_MAX_TRACK];
 };
