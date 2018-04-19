@@ -58,8 +58,7 @@ bool ImageValue::operator==(const ImageValue& other) const
         return m_valueData.m_url->equals(other.m_valueData.m_url);
         break;
     case ImageValueType::ValueType::Gradient:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return false;
+        return m_valueData.m_gradient->equals(other.m_valueData.m_gradient);
         break;
     default:
         return false;
