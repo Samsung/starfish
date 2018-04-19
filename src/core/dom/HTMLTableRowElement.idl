@@ -12,7 +12,7 @@ interface HTMLTableRowElement : HTMLElement {
   // https://html.spec.whatwg.org/#HTMLTableRowElement-partial
   [CEReactions, Reflect] attribute DOMString align;
   [CEReactions] attribute DOMString ch;
-  [CEReactions, Reflect] attribute DOMString chOff;
+  [CEReactions, Reflect=charoff] attribute DOMString chOff;
   [CEReactions, Reflect] attribute DOMString vAlign;
 
   [CEReactions, TreatNullAs=EmptyString, Reflect] attribute DOMString bgColor;

@@ -7,7 +7,7 @@ interface HTMLTableColElement : HTMLElement {
   // also has obsolete members
   [CEReactions, Reflect] attribute DOMString align;
   [CEReactions] attribute DOMString ch;
-  [CEReactions, Reflect] attribute DOMString chOff;
+  [CEReactions, Reflect=charoff] attribute DOMString chOff;
   [CEReactions, Reflect] attribute DOMString vAlign;
-  [Unimplemented, CEReactions] attribute DOMString width;
+  [CEReactions, Reflect] attribute DOMString width;
 };

@@ -550,14 +550,19 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | media | Applicable media. |
 |  | attribute | type | Type of embedded resource.<br>&lt;URL&gt; must be a local path.<br>Allowed value: text/css |
 | [HTMLTableElement](https://html.spec.whatwg.org/#the-table-element) | interface | HTMLTableElement | The HTMLTableElement interface provides special properties and methods for manipulating the layout and presentation of tables in an HTML document. |
+|    | attribute |  caption  |  Represents the first <caption>.  |
 |    | attribute |  rows  |  Returns a live HTMLCollection containing all the rows of the element, that is all &lt;tr&gt; that are a child of the element, or a child or one of its &lt;thead&gt;, &lt;tbody&gt; and &lt;tfoot&gt; children. |
 |    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
 |    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
+|    | method |  createCaption  |  Returns an HTMLElement representing the first <caption> that is a child of the element. If none is found, a new one is created and inserted in the tree as the first child of the <table> element.  |
+|    | method |  deleteCaption  |  Removes the first <caption> that is a child of the element.  |
 | [HTMLTableRowElement](https://html.spec.whatwg.org/#htmltablerowelement) | interface | HTMLTableRowElement | The HTMLTableRowElement interface provides special properties and methods for manipulating the layout and presentation of rows in an HTML table. |
 |    | attribute |  rowIndex  |  Returns a long value which gives the logical position of the row within the entire table. If the row is not part of a table, returns -1.  |
 |    | attribute |  bgColor  |  Returns the background color of the cells. |
 |    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
 |    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
+| [HTMLTableCaptionElement](https://html.spec.whatwg.org/multipage/tables.html#htmltablecaptionelement) | interface |  HTMLTableCaptionElement | Represents the title of the table that is its parent, if it has a parent and that is a table element. | 
+|  | attribute |  align | Represents an enumerated attribute indicating alignment of the caption with respect to the table. |
 |  [HTMLTableCellElement](https://html.spec.whatwg.org/#htmltablecellelement)  |  attribute  |  colSpan  |  colspan content attribute  |
 |    | attribute |  rowSpan  |  rowspan content attribute  |
 |    | attribute |  bgColor  |  bgcolor content attributes  |
@@ -565,11 +570,15 @@ This section describes the complete list of supported HTML tags and attributes b
 |    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
 | [HTMLTableColElement](https://html.spec.whatwg.org/#htmltablecolelement) | interface | HTMLTableColElement |  |
 |  | attribute | span | Number of columns spanned by the element. |
-|    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
-|    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
+|  | attribute | align |  Returns an enumerated value reflecting the align attribute.  |
+|  | attribute | vAlign |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
+|  | attribute | width |  Returns default column width. |
 | [HTMLTableSectionElement](https://html.spec.whatwg.org/#htmltablesectionelement) | interface | HTMLTableSectionElement |  |
 |    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
+|    | attribute |  rows   |  Returns containing the rows in the section.  |
 |    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
+|    | method |  insertRow  |  Inserts a new row just before the given position in the section.  |
+|    | method |  deleteRow  |  Removes the cell at the given position in the section.  |
 | [HTMLTrackElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-track-element) | interface | HTMLTrackElement | The track element allows authors to specify explicit external timed text tracks for media elements. It does not represent anything on its own. |
 |  | attribute | kind | Return value of keywords such as subtitles, captions, descriptions, chapters and metadata. |
 |  | attribute | src | Gives the URL of the text track data. |

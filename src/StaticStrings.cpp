@@ -262,8 +262,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                            AtomicString::createAtomicString(sf, "ping"));
     m_usemap = QualifiedName(AtomicString::emptyAtomicString(),
                              AtomicString::createAtomicString(sf, "useMap"));
-    m_choff = QualifiedName(AtomicString::emptyAtomicString(),
-                            AtomicString::createAtomicString(sf, "choff"));
+    m_charoff = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "charoff"));
     m_valign = QualifiedName(AtomicString::emptyAtomicString(),
                              AtomicString::createAtomicString(sf, "valign"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA

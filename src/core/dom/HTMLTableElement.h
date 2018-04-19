@@ -21,6 +21,7 @@
 #define __StarFishHTMLTableElement__
 
 #include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLTableCaptionElement.h"
 
 namespace StarFish {
 
@@ -55,13 +56,16 @@ public:
         return m_hasCellPaddingAttribute;
     }
 
+    HTMLTableCaptionElement* caption();
+    void setCaption(HTMLTableCaptionElement* caption);
+
+    HTMLTableCaptionElement* createCaption();
+    void deleteCaption();
+
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 
     /* Not in HTML5 */
-    String* width();
-    void setWidth(String* width);
-
     String* cellspacing();
     void setCellspacing(String* cellspacing);
 
