@@ -9601,6 +9601,101 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
         }
         gradient = linearGradientValue;
     } else if (type == "radial-gradient" && parser.consumeIfNext('(')) {
+        // <radial-gradient> = radial-gradient(
+        //   [ [ <shape> || <size> ] [ at <position> ]? , |
+        //     at <position>,
+        //   ]?
+        //   <color-stop> [ , <color-stop> ]+
+        // )
+        CSSRadialGradientValue* radialGradientValue =
+            new CSSRadialGradientValue();
+        parser.consumeWhitespaces();
+        if (isDigit(*(parser.curPos())) || *(parser.curPos()) == 'a' ||
+            *(parser.curPos()) == 'c' || *(parser.curPos()) == 'f' ||
+            *(parser.curPos()) == 'e') {
+            CSSRadialGradientValue::Shape shape =
+                CSSRadialGradientValue::Shape::None;
+            CSSRadialGradientSize size;
+            CSSStyleValuePair firstRadius;
+            CSSStyleValuePair secondRadius;
+            CSSStyleValuePair positionX;
+            CSSStyleValuePair positionY;
+            CSSTokenVector tokens;
+            bool inPositionStr = false;
+            while (parser.consumeWhitespaces() && *(parser.curPos()) != ',') {
+                parser.consumeString(CSSPropertyParser::AllowNegative);
+                const CSSTokenValue& value = parser.parsedString();
+                CSSStyleValuePair temp;
+                if (!inPositionStr && value == "circle") {
+                    if (shape != CSSRadialGradientValue::Shape::None) {
+                        return false;
+                    }
+                    shape = CSSRadialGradientValue::Shape::Circle;
+                } else if (!inPositionStr && value == "ellipse") {
+                    if (shape != CSSRadialGradientValue::Shape::None) {
+                        return false;
+                    }
+                    shape = CSSRadialGradientValue::Shape::Elipse;
+                } else if (!inPositionStr &&
+                           (value[0] == 'c' || value[0] == 'f')) {
+                    if (size.hasValue()) {
+                        return false;
+                    }
+                    if (value == "closest-side") {
+                        size.setKeyword(
+                            CSSRadialGradientSize::Keyword::ClosetSide);
+                    } else if (value == "farthest-side") {
+                        size.setKeyword(
+                            CSSRadialGradientSize::Keyword::FarthestSide);
+                    } else if (value == "closest-corner") {
+                        size.setKeyword(
+                            CSSRadialGradientSize::Keyword::ClosetCorner);
+                    } else if (value == "farthest-corner") {
+                        size.setKeyword(
+                            CSSRadialGradientSize::Keyword::FarthestCorner);
+                    } else {
+                        return false;
+                    }
+                } else if (!inPositionStr &&
+                           temp.updateValueUnitLength(
+                               value, CSSPropertyParser::AllowPercent)) {
+                    if (size.hasKeyword() || size.hasSecondRadius()) {
+                        return false;
+                    }
+                    if (!size.hasFirstRadius()) {
+                        size.setFirstRadius(temp);
+                    } else {
+                        size.setSecondRadius(temp);
+                    }
+                } else if (inPositionStr || value == "at") {
+                    if (!inPositionStr) {
+                        inPositionStr = true;
+                    } else {
+                        tokens.push_back(value);
+                    }
+                } else {
+                    return false;
+                }
+            }
+
+            if (shape != CSSRadialGradientValue::Shape::None) {
+                radialGradientValue->setShape(shape);
+            }
+            if (size.hasValue()) {
+                radialGradientValue->setSize(size);
+            }
+            if (tokens.size() > 4) {
+                return false;
+            }
+            if (inPositionStr && parseBackgroundPositionShorhand(
+                                     tokens, &positionX, &positionY, false)) {
+                radialGradientValue->setPositionX(positionX);
+                radialGradientValue->setPositionY(positionY);
+            }
+        }
+        gradient = radialGradientValue;
+        // Return false at this time,
+        // it would be removed when RadialGradientData was Implemented
         return false;
     } else {
         return false;

@@ -23,6 +23,35 @@
 
 namespace StarFish {
 
+void CSSGradientValue::convertCSSColorStopsToColorStops(
+    GCVector<ColorStop*>& out)
+{
+    for (auto item : m_cssColorStopList) {
+        ColorStop* cs = new ColorStop();
+        auto color = item->color();
+        if (color.valueKind() ==
+            CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+            Unit::Color c =
+                NamedColor::namedColorToColor(color.namedColorValue());
+            cs->setColor(c);
+        } else {
+            Unit::Color c = color.colorValue();
+            cs->setColor(c);
+        }
+
+        auto offset = item->offset();
+        if (offset.valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
+            cs->setOffset(ColorStopOffsetValue(offset.percentageValue()));
+        } else if (offset.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+            cs->setOffset(ColorStopOffsetValue(offset.lengthValue()));
+        } else if (offset.valueKind() == CSSStyleValuePair::ValueKind::None) {
+            cs->setOffset(ColorStopOffsetValue());
+        }
+
+        out.push_back(cs);
+    }
+}
+
 String* CSSLinearGradientValue::toString()
 {
     StringBuilder result;
@@ -71,34 +100,20 @@ GradientData* CSSLinearGradientValue::convertToGradientData()
         gradient->setSideOrConter(m_sc);
     }
 
-    auto& colorStopList = gradient->colorStopList();
-
-    for (auto item : m_cssColorStopList) {
-        ColorStop* cs = new ColorStop();
-        auto color = item->color();
-        if (color.valueKind() ==
-            CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-            Unit::Color c =
-                NamedColor::namedColorToColor(color.namedColorValue());
-            cs->setColor(c);
-        } else {
-            Unit::Color c = color.colorValue();
-            cs->setColor(c);
-        }
-
-        auto offset = item->offset();
-        if (offset.valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
-            cs->setOffset(ColorStopOffsetValue(offset.percentageValue()));
-        } else if (offset.valueKind() == CSSStyleValuePair::ValueKind::Length) {
-            cs->setOffset(ColorStopOffsetValue(offset.lengthValue()));
-        } else if (offset.valueKind() == CSSStyleValuePair::ValueKind::None) {
-            cs->setOffset(ColorStopOffsetValue());
-        }
-
-        colorStopList.push_back(cs);
-    }
+    convertCSSColorStopsToColorStops(gradient->colorStopList());
 
     return gradient;
 }
 
+String* CSSRadialGradientValue::toString()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return String::emptyString;
+}
+
+GradientData* CSSRadialGradientValue::convertToGradientData()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
 } /* namespace StarFish */
