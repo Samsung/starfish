@@ -25,6 +25,7 @@
 #include "core/dom/NodeListImpl.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLOptionElement.h"
+#include "core/dom/HTMLLabelElement.h"
 
 namespace StarFish {
 
@@ -291,6 +292,17 @@ bool isMapAreasElement(Node* node, void* data, GCVector<Node*>* collection)
 {
     if (node->isHTMLAreaElement()) {
         return true;
+    }
+    return false;
+}
+
+bool isAssociatedLabelElement(Node* node, void* data,
+                              GCVector<Node*>* collection)
+{
+    if (node->isHTMLLabelElement()) {
+        if (node->asHTMLLabelElement()->control() == (HTMLElement*)data) {
+            return true;
+        }
     }
     return false;
 }

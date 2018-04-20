@@ -112,6 +112,8 @@ public:
     int32_t minLength();
     void setMinLength(int32_t minlength);
 
+    NodeList* labels();
+
     bool isAutofocusable();
 
     bool autofocus();
@@ -143,6 +145,7 @@ protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormControl, m_value));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLFormControl, m_labels));
         HTMLElement::fillGCDescriptor(desc);
     }
 
@@ -151,6 +154,7 @@ protected:
 private:
     Node* findAncestor(Node* ancestorToFind, Node* fromThisNode);
     bool m_supportTabIndex;
+    NodeList* m_labels;
 };
 
 class HTMLFormElement : public HTMLFormControl {

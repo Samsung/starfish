@@ -125,6 +125,7 @@ HTMLFormControl::HTMLFormControl(Document* document, bool supportTabIndex)
     : HTMLElement(document)
     , m_value(String::emptyString)
     , m_supportTabIndex(supportTabIndex)
+    , m_labels(nullptr)
 {
     if (m_supportTabIndex) {
         m_tabIndexWasSetExplicitly = true;
@@ -505,6 +506,21 @@ void HTMLFormControl::setMinLength(int32_t minlength)
         setAttribute(starFish()->staticStrings()->m_minlength,
                      String::fromInt(minlength));
     }
+}
+
+NodeList* HTMLFormControl::labels()
+{
+    if (!isLabelable()) {
+        return nullptr;
+    }
+
+    if (!m_labels) {
+        m_labels =
+            new NodeList(document(), NodeListImpl::AssociatedLabelElementFilter,
+                         this, false);
+    }
+
+    return m_labels;
 }
 
 void* HTMLFormElement::operator new(size_t size)

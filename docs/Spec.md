@@ -359,6 +359,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | name | Returns the name of the input element. |
 |  | attribute | type | Returns the type of the input element. |
 |  | attribute | value | Returns the value of the input element. |
+|  | attribute | labels | Is a NodeList that represents a list of label elements that are labels for this button. |
 | [HTMLBRElement](https://html.spec.whatwg.org/multipage/semantics.html#the-br-element) | interface | HTMLBRElement | The br element represents a line break. |
 |  [HTMLCollection](https://dom.spec.whatwg.org/#htmlcollection)  |  attribute  |  length  |  Returns the number of elements in the collection.  |
 |    |  method  |  Element? item(unsigned long index) (or collection[index])  |  Returns the element with index index number from the collection. The elements are sorted in tree order.  |
@@ -421,6 +422,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | min | minimum value |
 |  | attribute | max | maximum value |
 |  | attribute | step | Granularity to be matched by the form control's value |
+|  | attribute | labels | Is a NodeList that represents a list of label elements that are labels for this button. |
 | [HTMLIFrameElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element) | interface | HTMLIFrameElement |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the frame in CSS pixels. |
@@ -529,6 +531,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | multiple | Whether to allow multiple values |
 |  | attribute | required | Whether the control is required for form submission |
 |  | attribute | size | Size of the control |
+|  | attribute | labels | Is a NodeList that represents a list of label elements that are labels for this button. |
 | [HTMLOptionElement](https://html.spec.whatwg.org/#htmloptionelement) | interface | HTMLOptionElement | The option element represents an option in a select element or as part of a list of suggestions in a datalist element. |
 |  | attribute | disabled | Returns whether the option element is disabled. |
 |  | attribute | form | Returns the element's form owner, or null if there is not one. |
@@ -583,6 +586,24 @@ This section describes the complete list of supported HTML tags and attributes b
 |    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
 |    | method |  insertRow  |  Inserts a new row just before the given position in the section.  |
 |    | method |  deleteRow  |  Removes the cell at the given position in the section.  |
+| [HTMLTextAreaElement](https://html.spec.whatwg.org/#the-textarea-element) | interface | HTMLTextAreaElement | Provides special properties and methods for manipulating the layout and presentation of textarea elements. |
+|  | attribute | autofocus | Returns / Sets the element's autofocus attribute, indicating that the control should have input focus when the page loadsApplicable media. |
+|  | attribute | cols | Returns / Sets the element's cols attribute, indicating the visible width of the text area. |
+|  | attribute | dirName |  |
+|  | attribute | disabled | Returns / Sets the element's disabled attribute, indicating that the control is not available for interaction. |
+|  | attribute | form | Returns a reference to the parent form element. |
+|  | attribute | maxLength | Returns / Sets the element's maxlength attribute, indicating the maximum number of characters the user can enter. |
+|  | attribute | minLength | Returns / Sets the element's minlength attribute, indicating the minimum number of characters the user can enter.  |
+|  | attribute | name | Returns / Sets the element's name attribute, containing the name of the control. |
+|  | attribute | placeholder | Returns / Sets the element's placeholder attribute, containing a hint to the user about what to enter in the control. |
+|  | attribute | readOnly | Returns / Sets the element's readonly attribute, indicating that the user cannot modify the value of the control. |
+|  | attribute | required | Returns / Sets the element's required attribute, indicating that the user must specify a value before submitting the form. |
+|  | attribute | rows | Returns / Sets the element's rows attribute, indicating the number of visible text lines for the control. |
+|  | attribute | type | Returns the string textarea. |
+|  | attribute | defaultValue | Returns / Sets the control's default value, which behaves like the Node.textContent property. |
+|  | attribute | value | Returns / Sets the raw value contained in the control. |
+|  | attribute | textLength | Returns the codepoint length of the control's value. Same as calling value.length |
+|  | attribute | labels | Returns a list of label elements associated with this select element. |
 | [HTMLTrackElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-track-element) | interface | HTMLTrackElement | The track element allows authors to specify explicit external timed text tracks for media elements. It does not represent anything on its own. |
 |  | attribute | kind | Return value of keywords such as subtitles, captions, descriptions, chapters and metadata. |
 |  | attribute | src | Gives the URL of the text track data. |
