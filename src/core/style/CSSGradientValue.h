@@ -25,6 +25,7 @@ namespace StarFish {
 
 class CSSLinearGradientValue;
 class GradientData;
+class ColorStop;
 
 enum class CSSGradientType { LinearGradient, RadialGradient };
 
@@ -88,6 +89,7 @@ public:
     {
         return m_cssColorStopList;
     }
+    void convertCSSColorStopsToColorStops(GCVector<ColorStop*>& out);
 
 protected:
     CSSGradientType m_gradientType;
@@ -128,6 +130,156 @@ public:
 private:
     CSSAngle m_angle;
     uint8_t m_sc;
+};
+
+class CSSRadialGradientSize : public gc {
+public:
+    enum class Keyword {
+        None,
+        ClosetSide,
+        FarthestSide,
+        ClosetCorner,
+        FarthestCorner
+    };
+
+    CSSRadialGradientSize()
+        : m_firstRadius()
+        , m_secondRadius()
+        , m_keyword(Keyword::None)
+    {
+    }
+
+    CSSStyleValuePair firstRadius()
+    {
+        return m_firstRadius;
+    }
+
+    void setFirstRadius(CSSStyleValuePair& firstRadius)
+    {
+        m_firstRadius = firstRadius;
+    }
+
+    CSSStyleValuePair secondRadius()
+    {
+        return m_secondRadius;
+    }
+
+    void setSecondRadius(CSSStyleValuePair& secondRadius)
+    {
+        m_secondRadius = secondRadius;
+    }
+
+    bool hasValue()
+    {
+        return hasFirstRadius() || hasSecondRadius() || hasKeyword();
+    }
+
+    bool hasFirstRadius()
+    {
+        const auto& valueKind = m_firstRadius.valueKind();
+        return (valueKind == CSSStyleValuePair::ValueKind::Percentage) ||
+               (valueKind == CSSStyleValuePair::ValueKind::Length);
+    }
+
+    bool hasSecondRadius()
+    {
+        const auto& valueKind = m_secondRadius.valueKind();
+        return (valueKind == CSSStyleValuePair::ValueKind::Percentage) ||
+               (valueKind == CSSStyleValuePair::ValueKind::Length);
+    }
+
+    bool hasKeyword()
+    {
+        return m_keyword != Keyword::None;
+    }
+
+    Keyword keyword()
+    {
+        return m_keyword;
+    }
+
+    void setKeyword(Keyword keyword)
+    {
+        m_keyword = keyword;
+    }
+
+private:
+    CSSStyleValuePair m_firstRadius;
+    CSSStyleValuePair m_secondRadius;
+    Keyword m_keyword;
+};
+
+class CSSRadialGradientValue : public CSSGradientValue {
+public:
+    enum class Shape { None, Circle, Elipse };
+    CSSRadialGradientValue(Shape shape = Shape::Circle)
+        : CSSGradientValue(CSSGradientType::RadialGradient)
+        , m_shape(shape)
+        , m_size()
+        , m_positionX()
+        , m_positionY()
+    {
+    }
+
+    CSSRadialGradientValue(Shape shape, CSSRadialGradientSize& size,
+                           CSSStyleValuePair& positionX,
+                           CSSStyleValuePair& positionY)
+        : CSSGradientValue(CSSGradientType::RadialGradient)
+        , m_shape(shape)
+        , m_size(size)
+        , m_positionX(positionX)
+        , m_positionY(positionY)
+    {
+    }
+
+    Shape shape()
+    {
+        return m_shape;
+    }
+
+    void setShape(Shape shape)
+    {
+        m_shape = shape;
+    }
+
+    CSSRadialGradientSize size()
+    {
+        return m_size;
+    }
+
+    void setSize(CSSRadialGradientSize& size)
+    {
+        m_size = size;
+    }
+
+    CSSStyleValuePair positionX()
+    {
+        return m_positionX;
+    }
+
+    void setPositionX(CSSStyleValuePair& positionX)
+    {
+        m_positionX = positionX;
+    }
+
+    CSSStyleValuePair positionY()
+    {
+        return m_positionY;
+    }
+
+    void setPositionY(CSSStyleValuePair& positionY)
+    {
+        m_positionY = positionY;
+    }
+
+    virtual String* toString() override;
+    virtual GradientData* convertToGradientData() override;
+
+private:
+    Shape m_shape;
+    CSSRadialGradientSize m_size;
+    CSSStyleValuePair m_positionX;
+    CSSStyleValuePair m_positionY;
 };
 } // namespace StarFish
 
