@@ -196,6 +196,8 @@ public:
     void applyFrUnitsWithRows();
     void buildGridLineTemplate();
     void layoutGridItems();
+    void alignGridLinesForColumns(GridArea&, LayoutUnit&, LayoutUnit&, bool);
+    void alignGridLinesForRows(GridArea&);
     void arrangeGridLinesWithGridAreas(bool);
 
     bool fixGridAreaWithDefine(GridArea*, size_t);
