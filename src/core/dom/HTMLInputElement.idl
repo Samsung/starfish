@@ -52,7 +52,7 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented] boolean reportValidity();
     [Unimplemented] void setCustomValidity(DOMString error);
 
-    [Unimplemented] readonly attribute NodeList? labels;
+    readonly attribute NodeList? labels;
 
     [Unimplemented] void select();
     [Unimplemented] attribute unsigned long? selectionStart;

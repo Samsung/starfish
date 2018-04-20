@@ -37,6 +37,8 @@ bool isFormElements(Node* node, void* data, GCVector<Node*>* collection);
 bool isOptionElement(Node* node, void* data, GCVector<Node*>* collection);
 bool isSelectedOption(Node* node, void* data, GCVector<Node*>* collection);
 bool isMapAreasElement(Node* node, void* data, GCVector<Node*>* collection);
+bool isAssociatedLabelElement(Node* node, void* data,
+                              GCVector<Node*>* collection);
 
 class NodeListImpl : public gc {
 public:
@@ -53,6 +55,7 @@ public:
         OptionElementFilter,
         SelectedOptionsFilter,
         MapAreasElementFilter,
+        AssociatedLabelElementFilter,
     };
 
     NodeListImpl(Node* root, FilterFunctionType filterType, void* data,
@@ -96,6 +99,9 @@ public:
             break;
         case MapAreasElementFilter:
             m_filter = isMapAreasElement;
+            break;
+        case AssociatedLabelElementFilter:
+            m_filter = isAssociatedLabelElement;
             break;
         case None:
             STARFISH_ASSERT_NOT_REACHED();

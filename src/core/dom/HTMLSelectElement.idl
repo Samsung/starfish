@@ -33,5 +33,5 @@ interface HTMLSelectElement : HTMLElement {
     [Unimplemented] boolean reportValidity();
     [Unimplemented] void setCustomValidity(DOMString error);
 
-    [Unimplemented] readonly attribute NodeList labels;
+    readonly attribute NodeList labels;
 };
