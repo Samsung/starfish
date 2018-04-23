@@ -311,12 +311,14 @@ public:
     QualifiedName m_lang;
     QualifiedName m_cols;
     QualifiedName m_colspan;
+    QualifiedName m_coords;
     QualifiedName m_cellspacing;
     QualifiedName m_cellpadding;
     QualifiedName m_char;
     QualifiedName m_rows;
     QualifiedName m_rowspan;
     QualifiedName m_bgcolor;
+    QualifiedName m_shape;
     QualifiedName m_span;
     QualifiedName m_scope;
     QualifiedName m_disabled;

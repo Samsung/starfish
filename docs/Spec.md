@@ -327,6 +327,14 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | target | Reflect the respective content attribute of the same name |
 |  | attribute | rel | Is a DOMString that reflects the rel HTML attribute, specifying the relationship of the target object to the linked object. |
 |  | attribute | relList | Returns a DOMTokenList that reflects the rel HTML attribute, as a list of tokens. |
+|  | attribute | hreflang | Is a DOMString that reflects the hreflang HTML attribute, indicating the language of the linked resource. |
+|  | attribute | type | Is a DOMString that reflects the type HTML attribute, indicating the MIME type of the linked resource. |
+|  | attribute | text| Is a DOMString being a synonym for the Node.textContent property. |
+|  | attribute | coord | Is a DOMString representing a comma-separated list of coordinates. |
+|  | attribute | charset | Is a DOMString representing the character encoding of the linked resource. |
+|  | attribute | name | Is a DOMString representing the anchor name. |
+|  | attribute | rev | Is a DOMString representing that the rev HTML attribute, specifying the relationship of the link object to the target object. |
+|  | attribute | shape | Is a DOMString representing the shape of the active area. |
 | [HTMLAreaElement](https://html.spec.whatwg.org/multipage/image-maps.html#the-area-element) | interface | HTMLAreaElement | The area element represents either a hyperlink with some text and a corresponding area on an image map, or a dead area on an image map. |
 |  | attribute | target | Reflect the target HTML attribute, indicating the browsing context in which to open the linked resource. |
 |  | attribute | noHref | Indicate if the area is inactive (true) or active (false). |
