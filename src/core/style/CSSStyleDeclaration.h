@@ -253,6 +253,11 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
+    static bool parseBackgroundPositionShorthand(const CSSTokenVector& tokens,
+                                                 CSSStyleValuePair* retx,
+                                                 CSSStyleValuePair* rety,
+                                                 bool allowComma = true);
+
 protected:
     void rootPointerValueIfExists(const CSSStyleValuePair& v);
 

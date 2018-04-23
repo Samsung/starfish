@@ -2332,6 +2332,7 @@ public:
                                    bool allowComma);
     bool updateValueBackgroundAttachment(const CSSTokenVector& tokens,
                                          bool allowComma);
+    bool updateValueBorderRadius(const CSSTokenVector& tokens);
     bool updateValueBox(const CSSTokenVector& tokens, bool allowComma);
     bool updateValueUnitBackgroundRepeat(const CSSTokenValue& token);
     bool updateValueUnitBackgroundPositionX(const CSSTokenValue& token);
@@ -2355,6 +2356,10 @@ public:
     bool updateValueUnitFontWeight(const CSSTokenValue& token);
     bool updateValueUnitWordWrap(const CSSTokenValue& token);
     bool updateValueUnitLineHeight(const CSSTokenValue& token);
+    bool updateValueUnitListStyleImage(const CSSTokenValue& value);
+    bool updateValueUnitListStylePosition(const CSSTokenValue& value);
+    bool updateValueUnitListStyleType(Document* document,
+                                      const CSSTokenValue& value);
     bool updateValueUnitTransitionProperty(const CSSTokenValue& value);
     bool updateValueUnitTransitionTimingFunction(const CSSTokenValue& value);
     bool updateValueUnitOverflowX(const CSSTokenValue& value);
