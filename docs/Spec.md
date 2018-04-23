@@ -580,9 +580,19 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute |  align | Represents an enumerated attribute indicating alignment of the caption with respect to the table. |
 |  [HTMLTableCellElement](https://html.spec.whatwg.org/#htmltablecellelement)  |  attribute  |  colSpan  |  colspan content attribute  |
 |    | attribute |  rowSpan  |  rowspan content attribute  |
-|    | attribute |  bgColor  |  bgcolor content attributes  |
+|    | attribute |  headers  |  Describe a list of id of \<th\> elements that represents headers associated with the cell.  |
+|    | attribute |  cellIndex  | Returns the cell's position in the cells collection of the \<tr\> the cell is contained within.  |
+|    | attribute |  scope  |  Indicates the scope of a \<th\> cell.  |
+|    | attribute |  abbr  |  Speicify an alternative label for the header cell.  |
 |    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
+|    | attribute |  axis  |  Contains a name grouping cells in virtual. It reflects the obsolete axis attribute.  |
+|    | attribute |  height  |  Contains a length of pixel of the hinted height of the cell.  |
+|    | attribute |  width  |  Specify the number of pixels wide the cell should be drawn, if possible.  |
+|    | attribute |  ch  |  Contains one single chararcter.  |
+|    | attribute |  chOff  |  Contains a integer indicating how many characters must be left at the right (for left-to-right scripts; or at the left for right-to-left scripts) of the character defined by HTMLTableCellElement.ch.  |
+|    | attribute |  noWrap |  Reflects the nowrap attribute and indicating if cell content can be broken in several lines.  |
 |    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
+|    | attribute |  bgColor  |  bgcolor content attributes  |
 | [HTMLTableColElement](https://html.spec.whatwg.org/#htmltablecolelement) | interface | HTMLTableColElement |  |
 |  | attribute | span | Number of columns spanned by the element. |
 |  | attribute | align |  Returns an enumerated value reflecting the align attribute.  |
