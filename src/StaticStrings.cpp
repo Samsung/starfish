@@ -141,6 +141,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                            AtomicString::createAtomicString(sf, "cols"));
     m_colspan = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "colspan"));
+    m_coords = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "coords"));
     m_cellspacing =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "cellspacing"));
@@ -155,6 +157,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                               AtomicString::createAtomicString(sf, "rowspan"));
     m_bgcolor = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "bgcolor"));
+    m_shape = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "shape"));
     m_span = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "span"));
     m_scope = QualifiedName(AtomicString::emptyAtomicString(),

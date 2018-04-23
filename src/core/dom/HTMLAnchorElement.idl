@@ -8,12 +8,20 @@ interface HTMLAnchorElement : HTMLElement {
   [Unimplemented, CEReactions] attribute DOMString ping;
   [CEReactions, Reflect] attribute DOMString rel;
   [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
-  [Unimplemented, CEReactions] attribute DOMString hreflang;
-  [Unimplemented, CEReactions] attribute DOMString type;
+  [CEReactions, Reflect] attribute DOMString hreflang;
+  [CEReactions, Reflect] attribute DOMString type;
 
-  [Unimplemented, CEReactions] attribute DOMString text;
+  [CEReactions, Rename=textContent] attribute DOMString? text;
 
   [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
+
+  // obsolete members
+  // https://html.spec.whatwg.org/#HTMLAnchorElement-partial
+  [CEReactions, Reflect] attribute DOMString coords;
+  [CEReactions, Reflect] attribute DOMString charset;
+  [CEReactions, Reflect] attribute DOMString name;
+  [CEReactions, Reflect] attribute DOMString rev;
+  [CEReactions, Reflect] attribute DOMString shape;
 };
 
 HTMLAnchorElement implements HTMLHyperlinkElementUtils;
