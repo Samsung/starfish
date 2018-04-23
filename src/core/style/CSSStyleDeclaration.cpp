@@ -39,6 +39,1145 @@
 
 namespace StarFish {
 
+#define TOKEN_IS_STRING(str) \
+    (strlen(str) == strlen(token) && (memcmp(token, str, strlen(str))) == 0)
+
+#define VALUE_IS_STRING(str) \
+    (strlen(str) == strlen(value) && (memcmp(value, str, strlen(str))) == 0)
+
+#define VALUE_IS_INHERIT() VALUE_IS_STRING("inherit")
+
+#define VALUE_IS_INITIAL() VALUE_IS_STRING("initial")
+
+#define VALUE_IS_UNSET() VALUE_IS_STRING("unset")
+
+#define VALUE_IS_NONE() VALUE_IS_STRING("none")
+
+#define VALUE_IS_AUTO() VALUE_IS_STRING("auto")
+
+#define STRING_VALUE_IS_STRING(str) (value.equals(str))
+
+#define STRING_VALUE_IS_INHERIT() STRING_VALUE_IS_STRING("inherit")
+
+#define STRING_VALUE_IS_INITIAL() STRING_VALUE_IS_STRING("initial")
+
+#define STRING_VALUE_IS_UNSET() STRING_VALUE_IS_STRING("unset")
+
+#define STRING_VALUE_IS_NONE() STRING_VALUE_IS_STRING("none")
+
+#define STRING_VALUE_IS_AUTO() STRING_VALUE_IS_STRING("auto")
+
+#define GEN_ATTRIBUTE_GETTER_FOURSIDE(PRE, ...)                           \
+    {                                                                     \
+        String* top = PRE##Top##__VA_ARGS__();                            \
+        if (!top->equals(String::emptyString)) {                          \
+            String* right = PRE##Right##__VA_ARGS__();                    \
+            if (!right->equals(String::emptyString)) {                    \
+                String* bottom = PRE##Bottom##__VA_ARGS__();              \
+                if (!bottom->equals(String::emptyString)) {               \
+                    String* left = PRE##Left##__VA_ARGS__();              \
+                    if (!left->equals(String::emptyString)) {             \
+                        return combineBoxString(top, right, bottom, left, \
+                                                isCombined);              \
+                    }                                                     \
+                }                                                         \
+            }                                                             \
+        }                                                                 \
+        return String::emptyString;                                       \
+    }
+
+#define ADD_PAIRS(PRE, ...)                                                  \
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Top##__VA_ARGS__, top); \
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Right##__VA_ARGS__,     \
+                    right);                                                  \
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Bottom##__VA_ARGS__,    \
+                    bottom);                                                 \
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Left##__VA_ARGS__, left);
+
+#define RM_PAIRS(PRE, ...)                                                    \
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Top##__VA_ARGS__);    \
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Right##__VA_ARGS__);  \
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Bottom##__VA_ARGS__); \
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Left##__VA_ARGS__);
+
+#define GEN_ATTRIBUTE_SETTER_FOURSIDE(PRE, ...)                    \
+    {                                                              \
+        if (length == 0) {                                         \
+            RM_PAIRS(PRE, __VA_ARGS__);                            \
+            return;                                                \
+        }                                                          \
+        CSSTokenVector tokens;                                     \
+        tokenizeCSSValue(tokens, value, length);                   \
+                                                                   \
+        CSSStyleValuePair c, top, right, bottom, left;             \
+        if (c.updateValueCommon(tokens)) {                         \
+            c.setFlagImportant(isImportant);                       \
+            top = right = bottom = left = c;                       \
+            ADD_PAIRS(PRE, __VA_ARGS__);                           \
+            return;                                                \
+        }                                                          \
+        size_t len = tokens.size();                                \
+        if (len < 1 || len > 4) {                                  \
+            return;                                                \
+        }                                                          \
+                                                                   \
+        GCVector<CSSStyleValuePair> result;                        \
+        for (size_t i = 0; i < len; i++) {                         \
+            CSSStyleValuePair v;                                   \
+            v.setFlagImportant(isImportant);                       \
+            if (!v.updateValueUnit##PRE##__VA_ARGS__(tokens[i])) { \
+                return;                                            \
+            }                                                      \
+            result.push_back(v);                                   \
+        }                                                          \
+        top = result[0];                                           \
+        right = len < 2 ? top : result[1];                         \
+        bottom = len < 3 ? top : result[2];                        \
+        left = len < 4 ? right : result[3];                        \
+        top.setFlagImportant(isImportant);                         \
+        right.setFlagImportant(isImportant);                       \
+        bottom.setFlagImportant(isImportant);                      \
+        left.setFlagImportant(isImportant);                        \
+        ADD_PAIRS(PRE, __VA_ARGS__);                               \
+    }
+
+#define GEN_ATTRIBUTE_GETTER_BORDER(POS)                               \
+    {                                                                  \
+        String* width = Border##POS##Width();                          \
+        String* style = Border##POS##Style();                          \
+        String* color = Border##POS##Color();                          \
+        return BorderString(width, false, style, false, color, false); \
+    }
+
+#define GEN_ATTRIBUTE_SETTER_BORDER(POS)                                   \
+    {                                                                      \
+        if (len == 0) {                                                    \
+            removeBorder##POS##CSSValuePairs(this);                        \
+            return;                                                        \
+        }                                                                  \
+                                                                           \
+        CSSTokenVector tokens;                                             \
+        tokenizeCSSValue(tokens, value, len);                              \
+                                                                           \
+        CSSStyleValuePair v, width, style, color;                          \
+        if (v.updateValueCommon(tokens)) {                                 \
+            v.setFlagImportant(isImportant);                               \
+            addBorder##POS##CSSValuePairs(this, v, v, v);                  \
+        } else if (parseBorderShorthand(tokens, &width, &style, &color)) { \
+            width.setFlagImportant(isImportant);                           \
+            style.setFlagImportant(isImportant);                           \
+            color.setFlagImportant(isImportant);                           \
+            addBorder##POS##CSSValuePairs(this, width, style, color);      \
+        }                                                                  \
+    }
+
+static bool seperatorContains(const char* seperator, size_t seperatorCount,
+                              char ch)
+{
+    for (size_t i = 0; i < seperatorCount; i++) {
+        if (seperator[i] == ch) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void removeBackgroundCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize);
+    target->removeCSSValuePair(
+        CSSStyleValuePair::KeyKind::BackgroundAttachment);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundOrigin);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundClip);
+}
+
+static void addBackgroundCSSValuePairs(
+    CSSStyleDeclaration* target, CSSStyleValuePair color,
+    CSSStyleValuePair image, CSSStyleValuePair repeatX,
+    CSSStyleValuePair repeatY, CSSStyleValuePair positionX,
+    CSSStyleValuePair positionY, CSSStyleValuePair size,
+    CSSStyleValuePair attachment, CSSStyleValuePair origin,
+    CSSStyleValuePair clip)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor, color);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage, image);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX,
+                            repeatX);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY,
+                            repeatY);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX,
+                            positionX);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY,
+                            positionY);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, size);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundAttachment,
+                            attachment);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundOrigin,
+                            origin);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundClip, clip);
+}
+
+// Parse backgroundRepeat string in case it has single token
+static bool parseBackgroundRepeatShorhand(const CSSTokenValue& tok,
+                                          CSSStyleValuePair* retx,
+                                          CSSStyleValuePair* rety)
+{
+    if (retx->updateValueUnitBackgroundRepeat(tok)) {
+        *rety = *retx;
+    } else if (tok.equals("repeat-x")) {
+        *retx = CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
+            RepeatRepeatValue);
+        *rety = CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
+            NoRepeatRepeatValue);
+    } else if (tok.equals("repeat-y")) {
+        *retx = CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
+            NoRepeatRepeatValue);
+        *rety = CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
+            RepeatRepeatValue);
+    } else {
+        return false;
+    }
+    return true;
+}
+
+static bool parseBackgroundRepeatShorhand(const CSSTokenVector& tokens,
+                                          CSSStyleValuePair* retx,
+                                          CSSStyleValuePair* rety,
+                                          bool allowComma = true)
+{
+    // <repeat-style> = repeat-x | repeat-y | [repeat | no-repeat]{1,2}
+    // <repeat-style> [, <repeat-style>]*
+    size_t len = 0;
+    retx->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+    rety->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (value.equals(",")) {
+            if (!allowComma || i == 0 || i == tokens.size() - 1) {
+                return false;
+            }
+        } else if (i == tokens.size() - 1) {
+            len++;
+            i++;
+        } else {
+            len++;
+            continue;
+        }
+        if (len == 1) {
+            CSSStyleValuePair x, y;
+            if (parseBackgroundRepeatShorhand(tokens[i - 1], &x, &y)) {
+                retx->multiValue()->push_back(x);
+                rety->multiValue()->push_back(y);
+            } else {
+                return false;
+            }
+        } else if (len == 2) {
+            CSSStyleValuePair x, y;
+            if (x.updateValueUnitBackgroundRepeat(tokens[i - 2]) &&
+                y.updateValueUnitBackgroundRepeat(tokens[i - 1])) {
+                retx->multiValue()->push_back(x);
+                rety->multiValue()->push_back(y);
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        len = 0;
+    }
+    return true;
+}
+
+static bool parseBackgroundShorthand(
+    const CSSTokenVector& tokens, CSSStyleValuePair* _Color,
+    CSSStyleValuePair* _Image, CSSStyleValuePair* _RepeatX,
+    CSSStyleValuePair* _RepeatY, CSSStyleValuePair* _PositionX,
+    CSSStyleValuePair* _PositionY, CSSStyleValuePair* _Size,
+    CSSStyleValuePair* _Attachment, CSSStyleValuePair* _Origin,
+    CSSStyleValuePair* _Clip, bool allowColor)
+{
+    // - ACCEPT only 1-word_ : bg-color, bg-image, bg-attachment, bg-origin,
+    // bg-clip
+    // - ACCEPT 1 to 2 words : bg-repeat, position, bg-size
+
+    size_t len = tokens.size();
+    if (len < 1 || len > 11) {
+        return false;
+    }
+
+    _Color->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Image->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _RepeatX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _RepeatY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _PositionX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _PositionY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Size->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Attachment->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Origin->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Clip->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool hasColor = false, hasImage = false, hasRepeat = false,
+         hasPosition = false, hasSize = false, hasAttachment = false,
+         hasOrigin = false, hasClip = false;
+    bool hasPositionPrev = false, shouldSize = false;
+    CSSStyleValuePair temp, tempX, tempY;
+    CSSTokenValue* tok;
+    CSSTokenVector toks;
+
+#define SET_SINGLE_PROP(PROP) \
+    *_##PROP = temp;          \
+    has##PROP = true;
+#define SET_DOUBLE_PROP(PROP) \
+    *_##PROP##X = tempX;      \
+    *_##PROP##Y = tempY;      \
+    has##PROP = true;
+#define SINGLE_CONTINUE() continue;
+#define DOUBLE_CONTINUE() \
+    i++;                  \
+    continue;
+
+    for (size_t i = 0; i < len; i++) {
+        if (hasPositionPrev) {
+            hasPositionPrev = false;
+            if (tokens[i].equals("/")) {
+                shouldSize = true;
+                continue;
+            }
+        }
+        // 1. Verify 2 tokens (current and next token at once)
+        // e.g. background: top center; -> means background-position(x:top,
+        // y:center)
+        if (i + 1 < len) {
+            toks.clear();
+            toks.push_back(tokens[i]);
+            toks.push_back(tokens[i + 1]);
+            // 1-1. BackgroundSize
+            // 1-2. BackgroundPosition, BackgroundRepeat
+            if (shouldSize) {
+                STARFISH_ASSERT(!hasSize);
+                if (temp.updateValueBackgroundSize(toks, false)) {
+                    shouldSize = false;
+                    SET_SINGLE_PROP(Size)
+                    DOUBLE_CONTINUE()
+                }
+            } else if (!hasPosition &&
+                       CSSStyleDeclaration::parseBackgroundPositionShorthand(
+                           toks, &tempX, &tempY, false)) {
+                hasPositionPrev = true;
+                SET_DOUBLE_PROP(Position)
+                DOUBLE_CONTINUE()
+            } else if (!hasRepeat && parseBackgroundRepeatShorhand(
+                                         toks, &tempX, &tempY, false)) {
+                SET_DOUBLE_PROP(Repeat)
+                DOUBLE_CONTINUE()
+            }
+        }
+        // 2. Verify single token
+        tok = const_cast<CSSTokenValue*>(&tokens[i]);
+        toks.clear();
+        toks.push_back(*tok);
+        // 2-1. BackgroundSize
+        // 2-2. BackgroundImage, BackgroundPosition,
+        // BackgroundRepeat, BackgroundAttachment,
+        // BackgroundOrigin, BackgroundClip, BackgroundColor
+        if (shouldSize) {
+            STARFISH_ASSERT(!hasSize);
+            if (temp.updateValueBackgroundSize(toks, false)) {
+                shouldSize = false;
+                SET_SINGLE_PROP(Size)
+                SINGLE_CONTINUE()
+            }
+        } else if (!hasImage && temp.updateValueBackgroundImage(toks, false)) {
+            SET_SINGLE_PROP(Image)
+            SINGLE_CONTINUE()
+        } else if (!hasPosition &&
+                   CSSStyleDeclaration::parseBackgroundPositionShorthand(
+                       toks, &tempX, &tempY, false)) {
+            hasPositionPrev = true;
+            SET_DOUBLE_PROP(Position)
+            SINGLE_CONTINUE()
+        } else if (!hasRepeat &&
+                   parseBackgroundRepeatShorhand(toks, &tempX, &tempY, false)) {
+            SET_DOUBLE_PROP(Repeat)
+            SINGLE_CONTINUE()
+        } else if (!hasAttachment &&
+                   temp.updateValueBackgroundAttachment(toks, false)) {
+            SET_SINGLE_PROP(Attachment)
+            SINGLE_CONTINUE()
+        } else if (!hasOrigin && temp.updateValueBox(toks, false)) {
+            SET_SINGLE_PROP(Origin)
+            SINGLE_CONTINUE()
+        } else if (!hasClip && temp.updateValueBox(toks, false)) {
+            SET_SINGLE_PROP(Clip)
+            SINGLE_CONTINUE()
+        } else if (!hasColor && temp.updateValueUnitColor(*tok)) {
+            if (!allowColor) {
+                return false;
+            }
+            SET_SINGLE_PROP(Color)
+            SINGLE_CONTINUE()
+        }
+
+        return false;
+    }
+#undef SINGLE_CONTINUE
+#undef DOUBLE_CONTINUE
+#undef SET_SINGLE_PROP
+#undef SET_DOUBLE_PROP
+
+    return true;
+}
+
+static String* printBackground(String* image, String* position, String* size,
+                               String* repeat, String* attachment,
+                               String* origin, String* clip, String* color)
+{
+    if (image->equals(String::inheritString) ||
+        position->equals(String::inheritString) ||
+        size->equals(String::inheritString) ||
+        repeat->equals(String::inheritString) ||
+        attachment->equals(String::inheritString) ||
+        origin->equals(String::inheritString) ||
+        clip->equals(String::inheritString) ||
+        color->equals(String::inheritString)) {
+        return String::emptyString;
+    }
+
+    StringBuilder builder;
+
+    if (image->length() != 0 && !image->equals(String::initialString)) {
+        builder.appendString(image);
+    }
+    if (position->length() != 0 && !position->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(position);
+    }
+    if (size->length() != 0 && !size->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        if (position->length() == 0) {
+            builder.appendString("0% 0%");
+        }
+        builder.appendString(" / ");
+        builder.appendString(size);
+    }
+    if (repeat->length() != 0 && !repeat->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(repeat);
+    }
+    if (attachment->length() != 0 &&
+        !attachment->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(attachment);
+    }
+    if (origin->length() != 0 && !origin->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(origin);
+    }
+    if (clip->length() != 0 && !clip->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(clip);
+    }
+    if (color->length() != 0 && !color->equals(String::initialString)) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(color);
+    }
+
+    return builder.finalize();
+}
+
+static String* BorderString(String* width, bool isWidthCombined, String* style,
+                            bool isStyleCombined, String* color,
+                            bool isColorCombined)
+{
+    String* space = String::spaceString;
+    StringBuilder builder;
+
+    if (width->equals(style) && style->equals(color)) {
+        STARFISH_ASSERT(width->equals(String::emptyString) ||
+                        width->equals(String::initialString) ||
+                        width->equals(String::inheritString));
+        return width;
+    }
+
+    if (!width->equals(String::emptyString) &&
+        !width->equals(String::initialString) && !isWidthCombined) {
+        builder.appendString(width);
+    }
+
+    if (!style->equals(String::emptyString) &&
+        !style->equals(String::initialString) && !isStyleCombined) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(space);
+        }
+        builder.appendString(style);
+    }
+
+    if (!color->equals(String::emptyString) &&
+        !color->equals(String::initialString) && !isColorCombined) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(space);
+        }
+        builder.appendString(color);
+    }
+
+    return builder.finalize();
+}
+
+static void mergeBordeRadiusString(StringBuilder& sb, String* tl, String* tr,
+                                   String* br, String* bl)
+{
+    if (tl->equals(tr) && tr->equals(br) && br->equals(bl)) {
+        sb.appendString(tl);
+    } else if (tl->equals(br) && tr->equals(bl)) {
+        sb.appendString(tl);
+        sb.appendChar(' ');
+        sb.appendString(tr);
+    } else if (tr->equals(bl)) {
+        sb.appendString(tl);
+        sb.appendChar(' ');
+        sb.appendString(tr);
+        sb.appendChar(' ');
+        sb.appendString(br);
+    } else {
+        sb.appendString(tl);
+        sb.appendChar(' ');
+        sb.appendString(tr);
+        sb.appendChar(' ');
+        sb.appendString(br);
+        sb.appendChar(' ');
+        sb.appendString(bl);
+    }
+}
+
+static bool parseBorderShorthand(const CSSTokenVector& tokens,
+                                 CSSStyleValuePair* width,
+                                 CSSStyleValuePair* style,
+                                 CSSStyleValuePair* color)
+{
+    size_t len = tokens.size();
+    if (len < 1 || len > 3) {
+        return false;
+    }
+
+    width->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    style->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    color->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool hasWidth = false, hasStyle = false, hasColor = false;
+    CSSStyleValuePair temp;
+    for (size_t i = 0; i < len; i++) {
+        const CSSTokenValue& tok = tokens[i];
+        if (!hasWidth && temp.updateValueUnitBorderWidth(tok)) {
+            *width = temp;
+            hasWidth = true;
+        } else if (!hasStyle && temp.updateValueUnitBorderStyle(tok)) {
+            *style = temp;
+            hasStyle = true;
+        } else if (!hasColor && temp.updateValueUnitColor(tok)) {
+            *color = temp;
+            hasColor = true;
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
+#define ADD_REMOVE_BORDER_CSSVALUES(POS, ...)                                 \
+    static void removeBorder##POS##CSSValuePairs(CSSStyleDeclaration* target) \
+    {                                                                         \
+        target->removeCSSValuePair(                                           \
+            CSSStyleValuePair::KeyKind::Border##POS##Width);                  \
+        target->removeCSSValuePair(                                           \
+            CSSStyleValuePair::KeyKind::Border##POS##Style);                  \
+        target->removeCSSValuePair(                                           \
+            CSSStyleValuePair::KeyKind::Border##POS##Color);                  \
+    }
+
+GEN_FOURSIDE(ADD_REMOVE_BORDER_CSSVALUES)
+#undef ADD_REMOVE_BORDER_CSSVALUES
+
+#define ADD_ADD_BORDER_CSSVALUES(POS, ...)                          \
+    static void addBorder##POS##CSSValuePairs(                      \
+        CSSStyleDeclaration* target, CSSStyleValuePair width,       \
+        CSSStyleValuePair style, CSSStyleValuePair color)           \
+    {                                                               \
+        target->addCSSValuePair(                                    \
+            CSSStyleValuePair::KeyKind::Border##POS##Width, width); \
+        target->addCSSValuePair(                                    \
+            CSSStyleValuePair::KeyKind::Border##POS##Style, style); \
+        target->addCSSValuePair(                                    \
+            CSSStyleValuePair::KeyKind::Border##POS##Color, color); \
+    }
+
+GEN_FOURSIDE(ADD_ADD_BORDER_CSSVALUES)
+#undef ADD_ADD_BORDER_CSSVALUES
+
+static void removeBorderCSSValuePairs(CSSStyleDeclaration* target)
+{
+    removeBorderTopCSSValuePairs(target);
+    removeBorderRightCSSValuePairs(target);
+    removeBorderBottomCSSValuePairs(target);
+    removeBorderLeftCSSValuePairs(target);
+}
+
+static void addBorderCSSValuePairs(CSSStyleDeclaration* target,
+                                   CSSStyleValuePair width,
+                                   CSSStyleValuePair style,
+                                   CSSStyleValuePair color)
+{
+    addBorderTopCSSValuePairs(target, width, style, color);
+    addBorderRightCSSValuePairs(target, width, style, color);
+    addBorderBottomCSSValuePairs(target, width, style, color);
+    addBorderLeftCSSValuePairs(target, width, style, color);
+}
+
+static void removeBorderImageCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageSource);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageSlice);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageWidth);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageOutset);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageRepeat);
+}
+
+static void addBorderImageCSSValuePairs(CSSStyleDeclaration* target,
+                                        CSSStyleValuePair source,
+                                        CSSStyleValuePair slice,
+                                        CSSStyleValuePair width,
+                                        CSSStyleValuePair outset,
+                                        CSSStyleValuePair repeat)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageSource,
+                            source);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageSlice,
+                            slice);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageWidth,
+                            width);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageOutset,
+                            outset);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageRepeat,
+                            repeat);
+}
+
+static bool isRepeatTokenValue(const CSSTokenValue& token)
+{
+    if (token.equals("stretch") || token.equals("repeat") ||
+        token.equals("round") || token.equals("space")) {
+        return true;
+    }
+    return false;
+}
+
+static bool parseBorderImageShorthand(const CSSTokenVector& tokens,
+                                      CSSStyleValuePair* _source,
+                                      CSSStyleValuePair* _slice,
+                                      CSSStyleValuePair* _width,
+                                      CSSStyleValuePair* _outset,
+                                      CSSStyleValuePair* _repeat)
+{
+    size_t len = tokens.size();
+    if (len < 1 || len > 18) {
+        return false;
+    }
+
+    _source->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _slice->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _width->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _outset->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _repeat->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool hasSource = false, hasSlice = false, hasWidth = false,
+         hasOutset = false, hasRepeat = false;
+    bool hasSlicePrev = false, shouldWidth = false;
+    bool hasWidthPrev = false, shouldOutset = false;
+    CSSStyleValuePair temp;
+    CSSTokenVector toks;
+
+    size_t pos = 0;
+    while (pos < len) {
+        CSSTokenValue token = tokens[pos++];
+        std::transform(token.begin(), token.end(), token.begin(), ::tolower);
+        if (hasSlicePrev) {
+            hasSlicePrev = false;
+            if (token.equals("/")) {
+                shouldWidth = true;
+                continue;
+            }
+        }
+        if (hasWidthPrev) {
+            hasWidthPrev = false;
+            if (token.equals("/")) {
+                shouldOutset = true;
+                continue;
+            }
+        }
+
+        if (shouldWidth) {
+            shouldWidth = false;
+            if (token.equals("/")) {
+                shouldOutset = true;
+                continue;
+            }
+
+            toks.clear();
+            toks.push_back(token);
+            while (pos < len) {
+                token = tokens[pos++];
+                if (token.equals("/")) {
+                    shouldOutset = true;
+                    pos--;
+                    break;
+                } else if (isRepeatTokenValue(token)) {
+                    pos--;
+                    break;
+                }
+                toks.push_back(token);
+            }
+
+            if (temp.updateValueUnitBorderImageWidth(toks)) {
+                hasWidthPrev = true;
+                hasWidth = true;
+                *_width = temp;
+                continue;
+            }
+        } else if (shouldOutset) {
+            shouldOutset = false;
+            toks.clear();
+            toks.push_back(token);
+            while (pos < len) {
+                token = tokens[pos++];
+                if (isRepeatTokenValue(token)) {
+                    pos--;
+                    break;
+                }
+                toks.push_back(token);
+            }
+
+            if (temp.updateValueUnitBorderImageOutset(toks)) {
+                hasOutset = true;
+                *_outset = temp;
+                continue;
+            }
+        } else if (!hasSource && temp.updateValueUnitBorderImageSource(token)) {
+            hasSource = true;
+            *_source = temp;
+            continue;
+        } else if (!hasSlice || !hasRepeat) {
+            toks.clear();
+            toks.push_back(token);
+            bool isRepeat = isRepeatTokenValue(token) ? true : false;
+
+            while (pos < len) {
+                token = tokens[pos++];
+                if (token.equals("/")) {
+                    pos--;
+                    break;
+                } else if (isRepeatTokenValue(token)) {
+                    if (isRepeat) {
+                        toks.push_back(token);
+                    } else {
+                        pos--;
+                    }
+                    break;
+                }
+                toks.push_back(token);
+            }
+
+            if (isRepeat && temp.updateValueUnitBorderImageRepeat(toks)) {
+                hasRepeat = true;
+                *_repeat = temp;
+                continue;
+            } else if (temp.updateValueUnitBorderImageSlice(toks)) {
+                hasSlicePrev = true;
+                hasSlice = true;
+                *_slice = temp;
+                continue;
+            }
+        }
+        return false;
+    }
+    return true;
+}
+
+static void removeFlexCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexGrow);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexShrink);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexBasis);
+}
+
+static void addFlexCSSValuePairs(CSSStyleDeclaration* target,
+                                 CSSStyleValuePair flexGrow,
+                                 CSSStyleValuePair flexShrink,
+                                 CSSStyleValuePair flexBasis)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::FlexGrow, flexGrow);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::FlexShrink, flexShrink);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::FlexBasis, flexBasis);
+}
+
+static bool parseFlexShorthand(const CSSTokenVector& tokens,
+                               CSSStyleValuePair* flexGrow,
+                               CSSStyleValuePair* flexShrink,
+                               CSSStyleValuePair* flexBasis)
+{
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    flexGrow->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    flexShrink->setNumberValue(1);
+    flexBasis->setPercentageValue(0);
+
+    bool hasFlexGrow = false, hasFlexShrink = false, hasFlexBasis = false;
+    CSSStyleValuePair temp;
+    size_t pos = 0;
+
+    while (pos < len) {
+        const CSSTokenValue& token = tokens[pos++];
+        if (!hasFlexGrow && temp.updateValueUnitFlexGrow(token)) {
+            hasFlexGrow = true;
+            *flexGrow = temp;
+            continue;
+        } else if (hasFlexGrow && !hasFlexShrink &&
+                   temp.updateValueUnitFlexShrink(token)) {
+            hasFlexShrink = true;
+            *flexShrink = temp;
+            continue;
+        } else if (temp.updateValueUnitFlexBasis(token)) {
+            hasFlexBasis = true;
+            *flexBasis = temp;
+            break;
+        }
+        return false;
+    }
+
+    return hasFlexGrow || hasFlexShrink || hasFlexBasis;
+}
+
+static void removeFlexFlowCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexDirection);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexWrap);
+}
+
+static void addFlexFlowCSSValuePairs(CSSStyleDeclaration* target,
+                                     CSSStyleValuePair flexDirection,
+                                     CSSStyleValuePair flexWrap)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::FlexDirection,
+                            flexDirection);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::FlexWrap, flexWrap);
+}
+
+static bool parseFlexFlowShorthand(const CSSTokenVector& tokens,
+                                   CSSStyleValuePair* flexDirection,
+                                   CSSStyleValuePair* flexWrap)
+{
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    flexDirection->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    flexWrap->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool hasFlexDirection = false, hasFlexWrap = false;
+    CSSStyleValuePair temp;
+    size_t pos = 0;
+
+    while (pos < len) {
+        const CSSTokenValue& token = tokens[pos++];
+        if (!hasFlexDirection && temp.updateValueUnitFlexDirection(token)) {
+            hasFlexDirection = true;
+            *flexDirection = temp;
+            continue;
+        } else if (temp.updateValueUnitFlexWrap(token)) {
+            hasFlexWrap = true;
+            *flexWrap = temp;
+            break;
+        }
+        return false;
+    }
+
+    return hasFlexDirection || hasFlexWrap;
+}
+
+static bool parseFontShorthand(const CSSTokenVector& tokens,
+                               CSSStyleValuePair* _Style,
+                               // UNSUPPORTED CSSStyleValuePair* _Variant,
+                               CSSStyleValuePair* _Weight,
+                               // UNSUPPORTED CSSStyleValuePair* _Stretch,
+                               CSSStyleValuePair* _Size,
+                               CSSStyleValuePair* _LineHeight,
+                               CSSStyleValuePair* _Family)
+{
+    // [font-style|font-weight] font-size[/line-height] font-family
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    _Style->setValueKind(CSSStyleValuePair::ValueKind::FontStyleValueKind);
+    _Style->setValue(FontStyleValue::NormalFontStyleValue);
+    _Weight->setValueKind(CSSStyleValuePair::ValueKind::FontWeightValueKind);
+    _Weight->setValue(FontWeightValue::NormalFontWeightValue);
+    _LineHeight->setValueKind(CSSStyleValuePair::ValueKind::Normal);
+
+    bool hasStyle = false, hasWeight = false, hasSize = false,
+         hasLineHeight = false, hasFamily = false;
+    CSSStyleValuePair temp;
+    bool hasSizePrev = false, shouldLineHeight = false;
+    size_t pos = 0;
+    CSSTokenVector fontFamilyCandidate;
+
+    while (pos < len) {
+        const CSSTokenValue& orgToken = tokens[pos];
+        CSSTokenValue token = tokens[pos++];
+        std::transform(token.begin(), token.end(), token.begin(), ::tolower);
+
+        if (hasSizePrev) {
+            hasSizePrev = false;
+            if (token.equals("/")) {
+                shouldLineHeight = true;
+                continue;
+            }
+        }
+        if (shouldLineHeight) {
+            shouldLineHeight = false;
+            if (temp.updateValueUnitLineHeight(token)) {
+                hasLineHeight = true;
+                *_LineHeight = temp;
+                continue;
+            }
+        } else if (!hasSize && !hasStyle &&
+                   temp.updateValueUnitFontStyle(token)) {
+            hasStyle = true;
+            *_Style = temp;
+            continue;
+        } else if (!hasSize && !hasWeight &&
+                   temp.updateValueUnitFontWeight(token)) {
+            hasWeight = true;
+            *_Weight = temp;
+            continue;
+        } else if (!hasSize && temp.updateValueUnitFontSize(token)) {
+            hasSizePrev = true;
+            hasSize = true;
+            *_Size = temp;
+            continue;
+        } else if (hasSize) {
+            if (hasFamily && token == ",") {
+                continue;
+            }
+            if (token[0] == '\'' && token.length() > 2 &&
+                token.back() == '\'') {
+                fontFamilyCandidate.push_back(
+                    orgToken.substr(1, orgToken.length() - 2));
+            } else if (token[0] == '"' && token.length() > 2 &&
+                       token.back() == '"') {
+                fontFamilyCandidate.push_back(
+                    orgToken.substr(1, orgToken.length() - 2));
+            } else {
+                fontFamilyCandidate.push_back(orgToken);
+            }
+            hasFamily = true;
+            continue;
+        }
+        return false;
+    }
+    if (!hasSize || !hasFamily) {
+        return false;
+    }
+    if (fontFamilyCandidate.size() == 1) {
+        _Family->setKeywordValue(String::fromUTF8(
+            fontFamilyCandidate[0].data(), fontFamilyCandidate[0].length()));
+    } else {
+        ValueList* val = new ValueList(
+            ValueList::Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
+        for (size_t i = 0; i < fontFamilyCandidate.size(); i++) {
+            auto str = fontFamilyCandidate[i];
+            val->emplace_back(CSSStyleValuePair::ValueKind::KeywordValueKind,
+                              String::fromUTF8(str.data(), str.length()));
+        }
+        _Family->setValueList(val);
+    }
+    return true;
+}
+
+static bool parseListStyleShorhand(Document* document,
+                                   const CSSTokenVector& tokens,
+                                   CSSStyleValuePair* type,
+                                   CSSStyleValuePair* position,
+                                   CSSStyleValuePair* image)
+{
+    size_t size = tokens.size();
+    if (size == 1 && tokens[0].equals("none")) {
+        type->setValueKind(CSSStyleValuePair::None);
+        image->setValueKind(CSSStyleValuePair::None);
+        position->setValueKind(CSSStyleValuePair::ListStylePositionValueKind);
+        position->setValue(ListStylePositionValue::ListStylePositionOutside);
+        return true;
+    }
+    if (size != 3) {
+        return false;
+    }
+    bool foundType = false, foundPos = false, foundImg = false;
+    size_t noneCount = 0;
+    // NOTE Consider corner cases
+    //   none none inside       (O)
+    //   url(...) inside inside (O)
+    //   none url(...) inside   (O)
+    for (size_t i = 0; i < size; i++) {
+        const CSSTokenValue& token = tokens[i];
+        if (!foundPos && position->updateValueUnitListStylePosition(token)) {
+            foundPos = true;
+            continue;
+        }
+        if (!foundImg && image->updateValueUnitListStyleImage(token)) {
+            if (image->valueKind() != CSSStyleValuePair::None) {
+                foundImg = true;
+            } else {
+                noneCount++;
+            }
+            continue;
+        }
+        if (!foundType && type->updateValueUnitListStyleType(document, token)) {
+            foundType = true;
+            continue;
+        }
+        return false;
+    }
+    if (!foundImg && noneCount > 0) {
+        noneCount--;
+        image->setValueKind(CSSStyleValuePair::None);
+        foundImg = true;
+    }
+    if (!foundType && noneCount > 0) {
+        noneCount--;
+        type->setValueKind(CSSStyleValuePair::None);
+        foundType = true;
+    }
+    return foundPos && foundImg && foundType;
+}
+
+static void removeOverflowCSSValuePairs(CSSStyleDeclaration* target)
+{
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::OverflowX);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::OverflowY);
+}
+
+static void addOverflowCSSValuePairs(CSSStyleDeclaration* target,
+                                     CSSStyleValuePair overflowX,
+                                     CSSStyleValuePair overflowY)
+{
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::OverflowX, overflowX);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::OverflowY, overflowY);
+}
+
+static bool parseOverflowShorthand(const CSSTokenVector& tokens,
+                                   CSSStyleValuePair* overflowX,
+                                   CSSStyleValuePair* overflowY)
+{
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    overflowX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    overflowY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    CSSStyleValuePair temp;
+
+    const CSSTokenValue& tok = tokens[0];
+
+    if (temp.updateValueUnitOverflowX(tokens[0])) {
+        *overflowX = temp;
+        *overflowY = temp;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+static bool parseTransitionShorthand(const CSSTokenVector& tokens,
+                                     CSSStyleValuePair* property,
+                                     CSSStyleValuePair* duration,
+                                     CSSStyleValuePair* timingFunction,
+                                     CSSStyleValuePair* delay)
+{
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    property->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    duration->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    timingFunction->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    delay->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    CSSStyleValuePair temp;
+    bool foundProperty = false;
+    bool foundDuration = false;
+    bool foundTimingFunction = false;
+    bool foundDelay = false;
+
+    for (size_t i = 0; i < len; i++) {
+        const CSSTokenValue& tok = tokens[i];
+        if (!foundProperty && temp.updateValueUnitTransitionProperty(tok)) {
+            foundProperty = true;
+            *property = temp;
+            continue;
+        }
+        if ((!foundDuration || !foundDelay) &&
+            temp.updateValueUnitTimeOrCalc(tok, 0)) {
+            if (!foundDuration) {
+                foundDuration = true;
+                *duration = temp;
+                continue;
+            }
+            if (!foundDelay) {
+                foundDelay = true;
+                *delay = temp;
+                continue;
+            }
+        }
+        if (!foundTimingFunction &&
+            temp.updateValueUnitTransitionTimingFunction(tok)) {
+            foundTimingFunction = true;
+            *timingFunction = temp;
+            continue;
+        }
+        return false;
+    }
+    return true;
+}
+
 // helper function to convert Length to CSSStyleValuePair format
 CSSStyleValuePair CSSStyleDeclaration::lengthToCSSStyleValue(Length len)
 {
@@ -85,18 +1224,6 @@ CSSStyleValuePair CSSStyleDeclaration::lengthToCSSStyleValue(Length len)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     return p;
-}
-
-static CSSStyleValuePair stylePaintDataToCSSStyleValue(StylePaintData paintData)
-{
-    CSSStyleValuePair ret;
-    if (paintData.color().isTransparent()) {
-        ret.setValueKind(CSSStyleValuePair::ValueKind::None);
-    } else {
-        ret.setValueKind(CSSStyleValuePair::ValueKind::ColorValueKind);
-        ret.setColorValue(paintData.color());
-    }
-    return ret;
 }
 
 void CSSStyleDeclaration::rootPointerValueIfExists(const CSSStyleValuePair& v)
@@ -171,6 +1298,196 @@ void CSSStyleDeclaration::setCustomProperty(String* key, String* value,
     m_cssCustomValues.push_back(custom);
 }
 
+void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
+                                           const char* data, size_t length,
+                                           const char* seperator,
+                                           size_t seperatorCount,
+                                           bool isCaseSensitive,
+                                           bool preserveContentWS)
+{
+    CSSTokenValue str;
+    bool inParenthesis = false;
+    size_t numberOfnesting = 0;
+    bool inQuotes = false;
+    bool isWhiteSpaceState = false;
+    for (size_t i = 0; i < length; i++) {
+        if (data[i] == '(') {
+            inParenthesis = true;
+            numberOfnesting++;
+        } else if (data[i] == ')') {
+            if (numberOfnesting) {
+                numberOfnesting--;
+            }
+        } else if (data[i] == '"' || data[i] == '\'') {
+            inQuotes = !inQuotes;
+        }
+
+        if (!preserveContentWS && isWhiteSpaceState &&
+            String::isSpaceOrNewline(data[i])) {
+            continue;
+        }
+
+        isWhiteSpaceState = false;
+        str += data[i];
+        if (!preserveContentWS && (inParenthesis || inQuotes) &&
+            String::isSpaceOrNewline(data[i])) {
+            str[str.length() - 1] = ' ';
+            isWhiteSpaceState = true;
+            continue;
+        }
+        bool hasSepChar = false;
+        if (seperatorCount > 0 && !inParenthesis) {
+            hasSepChar = seperatorContains(seperator, seperatorCount, data[i]);
+        }
+
+        if ((!inParenthesis && !inQuotes &&
+             (String::isSpaceOrNewline(data[i]) || hasSepChar)) ||
+            (data[i] == '(' && hasSepChar) || (data[i] == ')' && hasSepChar)) {
+            str.pop_back();
+            bool onlyWhiteSpace = true;
+            for (size_t i = 0; i < str.length(); i++) {
+                if (!isCaseSensitive)
+                    str[i] = ::tolower(str[i]);
+                if (!String::isASCIISpace(str[i])) {
+                    onlyWhiteSpace = false;
+                }
+            }
+
+            if (!onlyWhiteSpace && !numberOfnesting) {
+                tokens.push_back(CSSTokenValue(std::move(str)));
+            }
+            isWhiteSpaceState = true;
+            if (hasSepChar && !numberOfnesting) {
+                tokens.push_back(CSSTokenValue(std::string(data + i, 1)));
+            }
+        } else if (((inParenthesis && !numberOfnesting) && data[i] == ')') ||
+                   i == length - 1) {
+            if (str.length() > 3 && (str[0] == 'u' || str[0] == 'U') &&
+                (str[1] == 'r' || str[1] == 'R') &&
+                (str[2] == 'l' || str[2] == 'L')) {
+                std::transform(str.begin(), str.begin() + 3, str.begin(),
+                               ::tolower);
+                tokens.push_back(std::move(str));
+            } else if (str.length() != 0) {
+                if (!isCaseSensitive && !inQuotes) {
+                    std::transform(str.begin(), str.end(), str.begin(),
+                                   ::tolower);
+                }
+                if (!numberOfnesting) {
+                    tokens.push_back(std::move(str));
+                }
+            }
+            inParenthesis = false;
+            isWhiteSpaceState = true;
+        }
+    }
+}
+
+void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
+                                          const CSSStyleValuePair& ret)
+{
+    for (unsigned i = 0; i < m_cssValues.size(); i++) {
+        if (m_cssValues[i].keyKind() == name) {
+            if (isInlineStyle() || ret.flagImportant() == true ||
+                (ret.flagImportant() == false &&
+                 m_cssValues[i].flagImportant() == false)) {
+                m_cssValues[i].setValueKind(ret.valueKind());
+                m_cssValues[i].setValue(ret.value());
+                m_cssValues[i].setFlagImportant(ret.flagImportant());
+                m_cssValues[i].setTemporaryKeyKind(ret.temporaryKeyKind());
+                rootPointerValueIfExists(ret);
+                notifyNeedsStyleRecalc();
+            }
+
+            return;
+        }
+    }
+    m_cssValues.push_back(CSSStyleValuePair(ret));
+    m_cssValues.back().setKeyKind(name);
+    rootPointerValueIfExists(ret);
+    notifyNeedsStyleRecalc();
+}
+
+void CSSStyleDeclaration::removeCSSValuePair(CSSStyleValuePair::KeyKind name)
+{
+    unsigned len = m_cssValues.size();
+    for (unsigned i = 0; i < len; i++) {
+        if (m_cssValues[i].keyKind() == name) {
+            m_cssValues.erase(m_cssValues.begin() + i);
+            notifyNeedsStyleRecalc();
+            return;
+        }
+    }
+}
+
+bool CSSStyleDeclaration::hasCSSValuePair(CSSStyleValuePair::KeyKind name)
+{
+    unsigned len = m_cssValues.size();
+    for (unsigned i = 0; i < len; i++) {
+        if (m_cssValues[i].keyKind() == name) {
+            return true;
+        }
+    }
+    return false;
+}
+
+CSSStyleValuePair CSSStyleDeclaration::getCSSValuePair(
+    CSSStyleValuePair::KeyKind name)
+{
+    unsigned len = m_cssValues.size();
+    for (unsigned i = 0; i < len; i++) {
+        if (m_cssValues[i].keyKind() == name) {
+            return m_cssValues[i];
+        }
+    }
+
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
+void CSSStyleDeclaration::notifyNeedsStyleRecalc()
+{
+    if (m_node->isElement()) {
+        m_node->asElement()->notifyInlineStyleChanged();
+    }
+}
+
+String* CSSStyleDeclaration::combineBoxString(String* t, String* r, String* b,
+                                              String* l, bool* isCombined)
+{
+    if (isCombined) {
+        *isCombined = true;
+    }
+    // [NOTICE]
+    // All initial --> return "initial"
+    // Not all, but more than 1 initial --> return ""
+    size_t initialCount = 0;
+    initialCount += t->equals(String::initialString) ? 1 : 0;
+    initialCount += r->equals(String::initialString) ? 1 : 0;
+    initialCount += b->equals(String::initialString) ? 1 : 0;
+    initialCount += l->equals(String::initialString) ? 1 : 0;
+    if (initialCount > 0 && initialCount < 4) {
+    }
+
+    String* space = String::spaceString;
+    if (!r->equals(l)) {
+        return t->concat(space)
+            ->concat(r)
+            ->concat(space)
+            ->concat(b)
+            ->concat(space)
+            ->concat(l);
+    } else if (!t->equals(b)) {
+        return t->concat(space)->concat(r)->concat(space)->concat(b);
+    } else if (!t->equals(r)) {
+        return t->concat(space)->concat(r);
+    } else {
+        if (isCombined) {
+            *isCombined = false;
+        }
+        return t;
+    }
+}
+
 #define DEFINE_ATTRIBUTE_GETTER(name, ...)                                    \
     String* CSSStyleDeclaration::name()                                       \
     {                                                                         \
@@ -229,1787 +1546,6 @@ FOR_EACH_STYLE_ATTRIBUTE_STICKY(DEFINE_ATTRIBUTE_GETTER)
 
 FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_SETTER)
 #undef DEFINE_ATTRIBUTE_SETTER
-
-#define DEFINE_ATTRIBUTE_GETTER_FOURSIDE(PRE, ...)                        \
-    String* CSSStyleDeclaration::PRE##__VA_ARGS__(bool* isCombined)       \
-    {                                                                     \
-        String* top = PRE##Top##__VA_ARGS__();                            \
-        if (!top->equals(String::emptyString)) {                          \
-            String* right = PRE##Right##__VA_ARGS__();                    \
-            if (!right->equals(String::emptyString)) {                    \
-                String* bottom = PRE##Bottom##__VA_ARGS__();              \
-                if (!bottom->equals(String::emptyString)) {               \
-                    String* left = PRE##Left##__VA_ARGS__();              \
-                    if (!left->equals(String::emptyString)) {             \
-                        return combineBoxString(top, right, bottom, left, \
-                                                isCombined);              \
-                    }                                                     \
-                }                                                         \
-            }                                                             \
-        }                                                                 \
-        return String::emptyString;                                       \
-    }
-DEFINE_ATTRIBUTE_GETTER_FOURSIDE(Margin);
-DEFINE_ATTRIBUTE_GETTER_FOURSIDE(Padding);
-DEFINE_ATTRIBUTE_GETTER_FOURSIDE(Border, Width);
-DEFINE_ATTRIBUTE_GETTER_FOURSIDE(Border, Style);
-DEFINE_ATTRIBUTE_GETTER_FOURSIDE(Border, Color);
-#undef DEFINE_ATTRIBUTE_GETTER_FOURSIDE
-
-String* CSSStyleDeclaration::combineBoxString(String* t, String* r, String* b,
-                                              String* l, bool* isCombined)
-{
-    if (isCombined) {
-        *isCombined = true;
-    }
-    // [NOTICE]
-    // All initial --> return "initial"
-    // Not all, but more than 1 initial --> return ""
-    size_t initialCount = 0;
-    initialCount += t->equals(String::initialString) ? 1 : 0;
-    initialCount += r->equals(String::initialString) ? 1 : 0;
-    initialCount += b->equals(String::initialString) ? 1 : 0;
-    initialCount += l->equals(String::initialString) ? 1 : 0;
-    if (initialCount > 0 && initialCount < 4) {
-    }
-
-    String* space = String::spaceString;
-    if (!r->equals(l)) {
-        return t->concat(space)
-            ->concat(r)
-            ->concat(space)
-            ->concat(b)
-            ->concat(space)
-            ->concat(l);
-    } else if (!t->equals(b)) {
-        return t->concat(space)->concat(r)->concat(space)->concat(b);
-    } else if (!t->equals(r)) {
-        return t->concat(space)->concat(r);
-    } else {
-        if (isCombined) {
-            *isCombined = false;
-        }
-        return t;
-    }
-}
-
-void ComputedStyleCSSStyleDeclaration::layoutIfNeeds()
-{
-    if (m_node->isDocument()) {
-        return;
-    }
-
-    m_node->window()->browsingContext()->webView()->layoutIfNeeds();
-}
-
-void ComputedStyleCSSStyleDeclaration::buildFrameTreeIfNeeds()
-{
-    if (m_node->isDocument()) {
-        return;
-    }
-
-    m_node->window()->browsingContext()->buildFrameTreeIfNeeds();
-}
-
-void ComputedStyleCSSStyleDeclaration::resolveStyleIfNeeds()
-{
-    if (m_node->isDocument()) {
-        return;
-    }
-
-    m_node->window()->browsingContext()->resolveStyleIfNeeds();
-}
-
-ComputedStyleCSSStyleDeclaration::Stage
-ComputedStyleCSSStyleDeclaration::requiredStage(
-    CSSStyleValuePair::KeyKind keyKind)
-{
-    ComputedStyleCSSStyleDeclaration::Stage result =
-        ComputedStyleCSSStyleDeclaration::Stage::resolveStyle;
-
-    if (keyKind >= CSSStyleValuePair::KeyKind::PaddingTop &&
-        keyKind <= CSSStyleValuePair::KeyKind::PaddingLeft) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
-    } else if (keyKind >= CSSStyleValuePair::KeyKind::MarginTop &&
-               keyKind <= CSSStyleValuePair::KeyKind::MarginLeft) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
-    } else if (keyKind >= CSSStyleValuePair::KeyKind::BorderTopWidth &&
-               keyKind <= CSSStyleValuePair::KeyKind::BorderLeftWidth) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
-    } else if (keyKind >= CSSStyleValuePair::KeyKind::Top &&
-               keyKind <= CSSStyleValuePair::KeyKind::Left) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
-    } else if (keyKind >= CSSStyleValuePair::KeyKind::Width &&
-               keyKind <= CSSStyleValuePair::KeyKind::Height) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
-    } else if (keyKind == CSSStyleValuePair::KeyKind::MinWidth ||
-               keyKind == CSSStyleValuePair::KeyKind::MinHeight) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::frameTreeBuild;
-    }
-    return result;
-}
-
-void ComputedStyleCSSStyleDeclaration::updateValue(
-    CSSStyleValuePair::KeyKind keyKind)
-{
-    if (m_node->isDocument() || m_node->style() == nullptr) {
-        return;
-    }
-
-    Frame* frame = m_node->frame();
-    ComputedStyle* style = m_node->style();
-
-    switch (keyKind) {
-#define IGNORE_SHORTHANDS_AND_ETC(Name, ...) \
-    case CSSStyleValuePair::KeyKind::Name:   \
-        break;
-        FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(IGNORE_SHORTHANDS_AND_ETC)
-        IGNORE_SHORTHANDS_AND_ETC(Empty)
-        IGNORE_SHORTHANDS_AND_ETC(KeyKindSize)
-        IGNORE_SHORTHANDS_AND_ETC(Src)
-        IGNORE_SHORTHANDS_AND_ETC(VarValue)
-#undef IGNORE_SHORTHANDS_ETC
-
-#define ADD_ABSOLUTE_LENGTH_PAIR(keyKind, getter)                     \
-    case CSSStyleValuePair::KeyKind::keyKind: {                       \
-        CSSStyleValuePair p;                                          \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);            \
-        if (frame && frame->isFrameBox()) {                           \
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);     \
-            p.setValue(CSSLength(frame->asFrameBox()->getter()));     \
-        } else if (frame && frame->isFrameInline()) {                 \
-            InlineNonReplacedBox* inb =                               \
-                blockContainer(frame)->firstInlineNonReplacedBox(     \
-                    frame->asFrameInline());                          \
-            if (inb != nullptr) {                                     \
-                p.setValue(CSSLength(inb->getter()));                 \
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length); \
-            } else {                                                  \
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);   \
-            }                                                         \
-        } else {                                                      \
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);       \
-        }                                                             \
-        addValuePair(p);                                              \
-    } break;
-
-        ADD_ABSOLUTE_LENGTH_PAIR(MarginTop, marginTop);
-        ADD_ABSOLUTE_LENGTH_PAIR(MarginRight, marginRight);
-        ADD_ABSOLUTE_LENGTH_PAIR(MarginBottom, marginBottom);
-        ADD_ABSOLUTE_LENGTH_PAIR(MarginLeft, marginLeft);
-        ADD_ABSOLUTE_LENGTH_PAIR(PaddingTop, paddingTop);
-        ADD_ABSOLUTE_LENGTH_PAIR(PaddingRight, paddingRight);
-        ADD_ABSOLUTE_LENGTH_PAIR(PaddingBottom, paddingBottom);
-        ADD_ABSOLUTE_LENGTH_PAIR(PaddingLeft, paddingLeft);
-        ADD_ABSOLUTE_LENGTH_PAIR(BorderTopWidth, borderTop);
-        ADD_ABSOLUTE_LENGTH_PAIR(BorderRightWidth, borderRight);
-        ADD_ABSOLUTE_LENGTH_PAIR(BorderBottomWidth, borderBottom);
-        ADD_ABSOLUTE_LENGTH_PAIR(BorderLeftWidth, borderLeft)
-#undef ADD_ABSOLUTE_LENGTH_PAIR
-
-    case CSSStyleValuePair::KeyKind::Top:
-    case CSSStyleValuePair::KeyKind::Right:
-    case CSSStyleValuePair::KeyKind::Bottom:
-    case CSSStyleValuePair::KeyKind::Left: {
-        CSSStyleValuePair t, b, l, r;
-        t.setKeyKind(CSSStyleValuePair::KeyKind::Top);
-        b.setKeyKind(CSSStyleValuePair::KeyKind::Bottom);
-        l.setKeyKind(CSSStyleValuePair::KeyKind::Left);
-        r.setKeyKind(CSSStyleValuePair::KeyKind::Right);
-        if (frame && frame->isFrameBox() && frame->isPositioned()) {
-            LayoutContext ctx(m_node->starFish(),
-                              m_node->document()->frame()->asFrameDocument());
-            FrameBox* cb = containingBlock(frame);
-            FrameBox* self = frame->asFrameBox();
-            LayoutUnit parentContentWidth = cb->contentWidth();
-            LayoutUnit parentContentHeight = cb->contentHeight();
-            if (frame->isAbsolutePositioned()) {
-                FrameBox* parent = frame->layoutParent()->asFrameBox();
-
-                LayoutLocation l1, l2;
-                if (cb->isAncestorOf(parent)) {
-                    l2 = parent->absolutePoint(cb);
-                } else {
-                    l1 = cb->absolutePoint(ctx.frameDocument());
-                    l2 = parent->absolutePoint(ctx.frameDocument());
-                }
-
-                if (keyKind == CSSStyleValuePair::KeyKind::Top ||
-                    keyKind == CSSStyleValuePair::KeyKind::Bottom) {
-                    LayoutUnit absY =
-                        self->y() + l2.y() - l1.y() - cb->borderTop();
-                    LayoutUnit top = absY - self->marginTop();
-                    parentContentHeight += cb->paddingHeight();
-                    t.setLengthValue(CSSLength(top));
-                    b.setLengthValue(CSSLength(parentContentHeight - top -
-                                               self->outerHeight()));
-                } else {
-                    LayoutUnit absX =
-                        self->x() + l2.x() - l1.x() - cb->borderLeft();
-                    LayoutUnit left = absX - self->marginLeft();
-                    parentContentWidth += cb->paddingWidth();
-                    l.setLengthValue(CSSLength(left));
-                    r.setLengthValue(CSSLength(parentContentWidth - left -
-                                               self->outerWidth()));
-                }
-            } else {
-                STARFISH_ASSERT(style->position() == RelativePositionValue);
-                LengthData offset = style->offset();
-
-                if (keyKind == CSSStyleValuePair::KeyKind::Top ||
-                    keyKind == CSSStyleValuePair::KeyKind::Bottom) {
-                    Length top = offset.top();
-                    Length bottom = offset.bottom();
-                    if (!top.isAuto() && !bottom.isAuto()) {
-                        t.setLengthValue(CSSLength(
-                            top.specifiedValue(parentContentHeight, self)));
-                        b.setLengthValue(CSSLength(
-                            bottom.specifiedValue(parentContentHeight, self)));
-                    } else if (!top.isAuto()) {
-                        t.setLengthValue(CSSLength(
-                            top.specifiedValue(parentContentHeight, self)));
-                        b.setLengthValue(-1 * t.cssLengthValue());
-                    } else if (!bottom.isAuto()) {
-                        b.setLengthValue(CSSLength(
-                            bottom.specifiedValue(parentContentHeight, self)));
-                        t.setLengthValue(-1 * b.cssLengthValue());
-                    } else {
-                        t.setLengthValue(CSSLength(0));
-                        b.setLengthValue(CSSLength(0));
-                    }
-                } else {
-                    Length left = offset.left();
-                    Length right = offset.right();
-                    if (!left.isAuto() && !right.isAuto()) {
-                        l.setLengthValue(CSSLength(
-                            left.specifiedValue(parentContentWidth, self)));
-                        r.setLengthValue(CSSLength(
-                            right.specifiedValue(parentContentWidth, self)));
-                    } else if (!left.isAuto()) {
-                        l.setLengthValue(CSSLength(
-                            left.specifiedValue(parentContentWidth, self)));
-                        r.setLengthValue(-1 * l.cssLengthValue());
-                    } else if (!right.isAuto()) {
-                        r.setLengthValue(CSSLength(
-                            right.specifiedValue(parentContentWidth, self)));
-                        l.setLengthValue(-1 * r.cssLengthValue());
-                    } else {
-                        l.setLengthValue(CSSLength(0));
-                        r.setLengthValue(CSSLength(0));
-                    }
-                }
-            }
-        }
-
-        if (keyKind == CSSStyleValuePair::KeyKind::Top) {
-            addValuePair(t);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::Bottom) {
-            addValuePair(b);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::Left) {
-            addValuePair(l);
-        } else if (keyKind == CSSStyleValuePair::KeyKind::Right) {
-            addValuePair(r);
-        }
-    } break;
-    case CSSStyleValuePair::KeyKind::Width: {
-        CSSStyleValuePair w;
-        w.setKeyKind(CSSStyleValuePair::KeyKind::Width);
-        if (frame && style->width().isDefinite(true)) {
-            LayoutContext ctx(m_node->starFish(),
-                              m_node->document()->frame()->asFrameDocument());
-            w.setLengthValue(CSSLength(style->width().specifiedValue(
-                ctx.parentContentWidth(frame), m_node)));
-        } else {
-            if (frame && frame->isFrameBox()) {
-                w.setLengthValue(
-                    CSSLength(frame->asFrameBox()->contentWidth()));
-            } else {
-                w.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        }
-        addValuePair(w);
-    } break;
-    case CSSStyleValuePair::KeyKind::Height: {
-        CSSStyleValuePair h;
-        h.setKeyKind(CSSStyleValuePair::KeyKind::Height);
-        if (frame && frame->isFrameBox()) {
-            LayoutContext ctx(m_node->starFish(),
-                              m_node->document()->frame()->asFrameDocument());
-            bool parentHasFixedHeight = ctx.parentHasFixedHeight(frame);
-            if (style->height().isDefinite(parentHasFixedHeight)) {
-                LayoutUnit parentContentHeight;
-                if (parentHasFixedHeight) {
-                    parentContentHeight = ctx.parentFixedHeight(frame);
-                }
-                h.setLengthValue(CSSLength(style->height().specifiedValue(
-                    parentContentHeight, m_node)));
-            } else {
-                h.setLengthValue(
-                    CSSLength(frame->asFrameBox()->contentHeight()));
-            }
-        } else {
-            h.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(h);
-    } break;
-    case CSSStyleValuePair::KeyKind::FontFamily: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::FontFamily);
-        if (style->fontFamily()[0].m_length == 1) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::KeywordValueKind);
-            p.setValue(style->fontFamily()[1].m_familyName);
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            ValueList* val =
-                new ValueList(ValueList::Separator::
-                                  CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
-            size_t len = style->fontFamily()[0].m_length;
-            for (size_t i = 0; i < len; i++) {
-                val->emplace_back(
-                    CSSStyleValuePair::ValueKind::KeywordValueKind,
-                    style->fontFamily()[i + 1].m_familyName);
-            }
-            p.setValueList(val);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::ZIndex: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::ZIndex);
-        if (style->isSpecifiedZIndex()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
-            p.setValue(style->zIndex());
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::All: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::All);
-        p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-        p.setValue(String::emptyString);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::WhiteSpace: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpace);
-        p.setValueKind(CSSStyleValuePair::WhiteSpaceValueKind);
-        p.setValue(CSSStyleValuePair::ValueData(style->whiteSpace()));
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::FlexBasis: {
-        CSSStyleValuePair p;
-        FlexBasisData flexBasis = style->flexBasis();
-        if (flexBasis.isContent()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::FlexBasisValueKind);
-            p.setValue(FlexBasisValue::ContentFlexBasisValue);
-        } else {
-            Length len = flexBasis.width();
-            p = lengthToCSSStyleValue(len);
-        }
-        p.setKeyKind(CSSStyleValuePair::KeyKind::FlexBasis);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::TextIndent: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->textIndent());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::TextIndent);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::LineHeight: {
-        CSSStyleValuePair lh;
-        lh.setKeyKind(CSSStyleValuePair::KeyKind::LineHeight);
-
-        if (style->hasNormalLineHeight() || !frame) {
-            lh.setValueKind(CSSStyleValuePair::ValueKind::Normal);
-        } else {
-            lh.setLengthValue(CSSLength(CSSLength::PX, frame->lineHeight()));
-        }
-        addValuePair(lh);
-    } break;
-    case CSSStyleValuePair::KeyKind::FontSize: {
-        CSSStyleValuePair fs;
-        fs.setKeyKind(CSSStyleValuePair::KeyKind::FontSize);
-
-        fs.setLengthValue(CSSLength(CSSLength::PX, style->fixedFontSize()));
-
-        addValuePair(fs);
-    } break;
-    case CSSStyleValuePair::KeyKind::LetterSpacing: {
-        CSSStyleValuePair fs;
-        fs.setKeyKind(CSSStyleValuePair::KeyKind::LetterSpacing);
-
-        fs.setLengthValue(
-            CSSLength(CSSLength::PX, style->letterSpacing().fixed()));
-
-        addValuePair(fs);
-    } break;
-    case CSSStyleValuePair::KeyKind::WordSpacing: {
-        CSSStyleValuePair fs;
-        fs.setKeyKind(CSSStyleValuePair::KeyKind::WordSpacing);
-
-        fs.setLengthValue(
-            CSSLength(CSSLength::PX, style->wordSpacing().fixed()));
-
-        addValuePair(fs);
-    } break;
-    case CSSStyleValuePair::KeyKind::MinWidth: {
-        CSSStyleValuePair minW;
-        minW.setKeyKind(CSSStyleValuePair::KeyKind::MinWidth);
-        Length minWidth = style->minWidth();
-
-        if (minWidth.isAuto()) {
-            if (frame && frame->isFlexItem()) {
-                minW.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            } else {
-                minW.setLengthValue(CSSLength(CSSLength::PX, 0));
-            }
-        } else if (minWidth.isDefinite(false)) {
-            CSSStyleValuePair p = lengthToCSSStyleValue(minWidth);
-            p.setKeyKind(CSSStyleValuePair::KeyKind::MinWidth);
-            minW = p;
-        } else if (minWidth.isPercent()) {
-            minW.setPercentageValue(minWidth.percent());
-        } else if (minWidth.isCalc()) {
-            minW.setCalcValue(minWidth.calcData());
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-        addValuePair(minW);
-    } break;
-    case CSSStyleValuePair::KeyKind::MinHeight: {
-        CSSStyleValuePair minH;
-        minH.setKeyKind(CSSStyleValuePair::KeyKind::MinHeight);
-        Length minHeight = style->minHeight();
-
-        if (minHeight.isAuto()) {
-            if (frame && frame->isFlexItem()) {
-                minH.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            } else {
-                minH.setLengthValue(CSSLength(CSSLength::PX, 0));
-            }
-        } else if (minHeight.isDefinite(false)) {
-            CSSStyleValuePair p = lengthToCSSStyleValue(minHeight);
-            p.setKeyKind(CSSStyleValuePair::KeyKind::MinHeight);
-            minH = p;
-        } else if (minHeight.isPercent()) {
-            minH.setPercentageValue(minHeight.percent());
-        } else if (minHeight.isCalc()) {
-            minH.setCalcValue(minHeight.calcData());
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-        addValuePair(minH);
-    } break;
-    case CSSStyleValuePair::KeyKind::MaxWidth: {
-        CSSStyleValuePair maxW;
-        maxW.setKeyKind(CSSStyleValuePair::KeyKind::MaxWidth);
-        Length maxWidth = style->maxWidth();
-
-        if (maxWidth.isAuto()) {
-            maxW.setValueKind(CSSStyleValuePair::ValueKind::None);
-        } else if (maxWidth.isDefinite(false)) {
-            CSSStyleValuePair p = lengthToCSSStyleValue(maxWidth);
-            p.setKeyKind(CSSStyleValuePair::KeyKind::MaxWidth);
-            maxW = p;
-        } else if (maxWidth.isPercent()) {
-            maxW.setPercentageValue(maxWidth.percent());
-        } else if (maxWidth.isCalc()) {
-            maxW.setCalcValue(maxWidth.calcData());
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-        addValuePair(maxW);
-    } break;
-    case CSSStyleValuePair::KeyKind::MaxHeight: {
-        CSSStyleValuePair maxH;
-        maxH.setKeyKind(CSSStyleValuePair::KeyKind::MaxHeight);
-        Length maxHeight = style->maxHeight();
-
-        if (maxHeight.isAuto()) {
-            maxH.setValueKind(CSSStyleValuePair::ValueKind::None);
-        } else if (maxHeight.isDefinite(false)) {
-            CSSStyleValuePair p = lengthToCSSStyleValue(maxHeight);
-            p.setKeyKind(CSSStyleValuePair::KeyKind::MaxHeight);
-            maxH = p;
-        } else if (maxHeight.isPercent()) {
-            maxH.setPercentageValue(maxHeight.percent());
-        } else if (maxHeight.isCalc()) {
-            maxH.setCalcValue(maxHeight.calcData());
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-        addValuePair(maxH);
-    } break;
-    case CSSStyleValuePair::KeyKind::BackgroundImage: {
-        CSSStyleValuePair bgImage;
-        bgImage.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundImage);
-        if (!style->backgroundLayerSize()) {
-            bgImage.setValueKind(CSSStyleValuePair::None);
-            addValuePair(bgImage);
-            return;
-        }
-        bgImage.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-
-        ValueList* bgImageValues;
-        bgImageValues = new ValueList(ValueList::Separator::CommaSeparator);
-
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-            auto imageValue = style->backgroundImage();
-            const auto& type = imageValue->type();
-            if (type.isNone()) {
-                item.setStringValue(String::emptyString);
-            } else if (type.isURL()) {
-                item.setUrlValue(imageValue->urlValue());
-            } else if (type.isGradient()) {
-                item.setGradientValue(
-                    imageValue->gradientValue()->convertToCSSGradientValue());
-            }
-            bgImageValues->push_back(item);
-        }
-        bgImage.setValueList(bgImageValues);
-        addValuePair(bgImage);
-    } break;
-    case CSSStyleValuePair::KeyKind::BackgroundSize: {
-        CSSStyleValuePair bgSize;
-
-        bgSize.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundSize);
-        if (!style->backgroundLayerSize()) {
-            bgSize.setValueKind(CSSStyleValuePair::Auto);
-            addValuePair(bgSize);
-            return;
-        }
-        bgSize.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-
-        ValueList* bgSizeValues;
-
-        bgSizeValues = new ValueList(ValueList::Separator::CommaSeparator);
-
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-            if (style->backgroundSizeIsLength(i)) {
-                item.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-                ValueList* vals =
-                    new ValueList(ValueList::Separator::SpaceSeparator);
-                LengthSize lengthSize = style->backgroundSizeLengthValue(i);
-
-                CSSStyleValuePair w = lengthToCSSStyleValue(lengthSize.width());
-                vals->emplace_back(w.valueKind(), w.value());
-
-                CSSStyleValuePair h =
-                    lengthToCSSStyleValue(lengthSize.height());
-                vals->emplace_back(h.valueKind(), h.value());
-
-                item.setValue(vals);
-            } else {
-                item.setBackgroundSizeValue(style->backgroundSizeTypeValue(i));
-                item.setValueKind(
-                    CSSStyleValuePair::ValueKind::BackgroundSizeValueKind);
-                item.setValue(style->backgroundSizeTypeValue(i));
-            }
-            bgSizeValues->push_back(item);
-        }
-
-        bgSize.setValueList(bgSizeValues);
-        addValuePair(bgSize);
-
-    } break;
-    case CSSStyleValuePair::KeyKind::BackgroundAttachment: {
-        CSSStyleValuePair bgAttachment;
-
-        bgAttachment.setKeyKind(
-            CSSStyleValuePair::KeyKind::BackgroundAttachment);
-        if (!style->backgroundLayerSize()) {
-            bgAttachment.setBackgroundAttachmentValue(
-                ScrollBackgroundAttachmentValue);
-            addValuePair(bgAttachment);
-            return;
-        }
-        bgAttachment.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* bgAttachmentValues;
-
-        bgAttachmentValues =
-            new ValueList(ValueList::Separator::CommaSeparator);
-
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-
-            item.setBackgroundAttachmentValue(style->backgroundAttachment(i));
-            bgAttachmentValues->push_back(item);
-        }
-        bgAttachment.setValueList(bgAttachmentValues);
-        addValuePair(bgAttachment);
-
-    } break;
-    case CSSStyleValuePair::KeyKind::BackgroundClip: {
-        CSSStyleValuePair bgClip;
-
-        bgClip.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundClip);
-        if (!style->backgroundLayerSize()) {
-            bgClip.setValueKind(CSSStyleValuePair::BoxValueKind);
-            bgClip.setValue(BorderBoxBoxValue);
-            addValuePair(bgClip);
-            return;
-        }
-        bgClip.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-
-        ValueList* bgClipValues;
-
-        bgClipValues = new ValueList(ValueList::Separator::CommaSeparator);
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-
-            item.setBoxValue(style->backgroundClip(i));
-            bgClipValues->push_back(item);
-        }
-        bgClip.setValueList(bgClipValues);
-        addValuePair(bgClip);
-
-    } break;
-    case CSSStyleValuePair::KeyKind::BackgroundOrigin: {
-        CSSStyleValuePair bgOrigin;
-
-        bgOrigin.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundOrigin);
-        if (!style->backgroundLayerSize()) {
-            bgOrigin.setValueKind(CSSStyleValuePair::BoxValueKind);
-            bgOrigin.setValue(PaddingBoxBoxValue);
-            addValuePair(bgOrigin);
-            return;
-        }
-        bgOrigin.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-
-        ValueList* bgOriginValues;
-
-        bgOriginValues = new ValueList(ValueList::Separator::CommaSeparator);
-
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-            item.setBoxValue(style->backgroundOrigin(i));
-            bgOriginValues->push_back(item);
-        }
-        bgOrigin.setValueList(bgOriginValues);
-        addValuePair(bgOrigin);
-
-    } break;
-    case CSSStyleValuePair::KeyKind::BackgroundRepeatX: {
-        CSSStyleValuePair bgRepeatX;
-
-        bgRepeatX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
-        if (!style->backgroundLayerSize()) {
-            bgRepeatX.setBackgroundRepeatValue(style->backgroundRepeatX());
-            addValuePair(bgRepeatX);
-            return;
-        }
-        bgRepeatX.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-
-        ValueList* bgRepeatXValues;
-
-        bgRepeatXValues = new ValueList(ValueList::Separator::CommaSeparator);
-
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-
-            item.setBackgroundRepeatValue(style->backgroundRepeatX(i));
-            bgRepeatXValues->push_back(item);
-        }
-
-        bgRepeatX.setValueList(bgRepeatXValues);
-        addValuePair(bgRepeatX);
-
-    } break;
-    case CSSStyleValuePair::KeyKind::BackgroundRepeatY: {
-        CSSStyleValuePair bgRepeatY;
-
-        bgRepeatY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
-        if (!style->backgroundLayerSize()) {
-            bgRepeatY.setBackgroundRepeatValue(style->backgroundRepeatY());
-            addValuePair(bgRepeatY);
-            return;
-        }
-        bgRepeatY.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-
-        ValueList* bgRepeatYValues;
-
-        bgRepeatYValues = new ValueList(ValueList::Separator::CommaSeparator);
-
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-            item.setBackgroundRepeatValue(style->backgroundRepeatY(i));
-            bgRepeatYValues->push_back(item);
-        }
-
-        bgRepeatY.setValueList(bgRepeatYValues);
-        addValuePair(bgRepeatY);
-
-    } break;
-    case CSSStyleValuePair::KeyKind::BackgroundPositionX: {
-        CSSStyleValuePair bgPositionX;
-
-        bgPositionX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionX);
-        if (!style->backgroundLayerSize()) {
-            bgPositionX.setPercentageValue(0);
-            addValuePair(bgPositionX);
-            return;
-        }
-        bgPositionX.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-
-        ValueList* bgPositionXValues;
-
-        bgPositionXValues = new ValueList(ValueList::Separator::CommaSeparator);
-
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-
-            item = lengthToCSSStyleValue(style->backgroundPositionX(i));
-            bgPositionXValues->push_back(item);
-        }
-
-        bgPositionX.setValueList(bgPositionXValues);
-        addValuePair(bgPositionX);
-
-    } break;
-    case CSSStyleValuePair::KeyKind::BackgroundPositionY: {
-        CSSStyleValuePair bgPositionY;
-
-        bgPositionY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionY);
-        if (!style->backgroundLayerSize()) {
-            bgPositionY.setPercentageValue(0);
-            addValuePair(bgPositionY);
-            return;
-        }
-        bgPositionY.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-
-        ValueList* bgPositionYValues;
-
-        bgPositionYValues = new ValueList(ValueList::Separator::CommaSeparator);
-
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-
-            item = lengthToCSSStyleValue(style->backgroundPositionY(i));
-            bgPositionYValues->push_back(item);
-        }
-
-        bgPositionY.setValueList(bgPositionYValues);
-        addValuePair(bgPositionY);
-
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderImageSource: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSource);
-        BorderData border = style->border();
-        if (border.image().url()->length() == 0) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
-            p.setValue(border.image().url());
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderImageSlice: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSlice);
-        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList(ValueList::Separator::SpaceSeparator);
-        BorderData border = style->border();
-        BorderImageLengthBox box = border.image().slices();
-
-        if (box.top().isLength()) {
-            CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
-            vals->emplace_back(t.valueKind(), t.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.top().number());
-        }
-        if (box.right().isLength()) {
-            CSSStyleValuePair r = lengthToCSSStyleValue(box.right().length());
-            vals->emplace_back(r.valueKind(), r.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.right().number());
-        }
-        if (box.bottom().isLength()) {
-            CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom().length());
-            vals->emplace_back(b.valueKind(), b.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.bottom().number());
-        }
-        if (box.left().isLength()) {
-            CSSStyleValuePair l = lengthToCSSStyleValue(box.left().length());
-            vals->emplace_back(l.valueKind(), l.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.left().number());
-        }
-        if (border.image().sliceFill()) {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::KeywordValueKind,
-                               String::fromUTF8("fill"));
-        }
-
-        p.setValue(vals);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderImageRepeat: {
-        BorderImageData bImage = style->border().image();
-
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageRepeat);
-
-        if (bImage.repeatX() == bImage.repeatY()) {
-            p.setBorderImageRepeatValue(bImage.repeatX());
-        } else {
-            ValueList* vals =
-                new ValueList(ValueList::Separator::SpaceSeparator);
-            vals->emplace_back(
-                CSSStyleValuePair::ValueKind::BorderImageRepeatValueKind,
-                bImage.repeatX());
-            vals->emplace_back(
-                CSSStyleValuePair::ValueKind::BorderImageRepeatValueKind,
-                bImage.repeatY());
-            p.setValueList(vals);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderImageWidth: {
-        // FIXME: Need to refactor BorderImageLength.h, and update the lines
-        // below
-
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageWidth);
-        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList(ValueList::Separator::SpaceSeparator);
-        BorderData border = style->border();
-        BorderImageLengthBox box = border.image().widths();
-
-        if (box.top().isLength()) {
-            CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
-            vals->emplace_back(t.valueKind(), t.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.top().number());
-        }
-        if (box.right().isLength()) {
-            CSSStyleValuePair r = lengthToCSSStyleValue(box.right().length());
-            vals->emplace_back(r.valueKind(), r.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.right().number());
-        }
-        if (box.bottom().isLength()) {
-            CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom().length());
-            vals->emplace_back(b.valueKind(), b.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.bottom().number());
-        }
-        if (box.left().isLength()) {
-            CSSStyleValuePair l = lengthToCSSStyleValue(box.left().length());
-            vals->emplace_back(l.valueKind(), l.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.bottom().number());
-        }
-
-        p.setValue(vals);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderImageOutset: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageOutset);
-        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList(ValueList::Separator::SpaceSeparator);
-        BorderData border = style->border();
-        BorderImageLengthBox box = border.image().outsets();
-
-        if (box.top().isLength()) {
-            CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
-            vals->emplace_back(t.valueKind(), t.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.top().number());
-        }
-        if (box.right().isLength()) {
-            CSSStyleValuePair r = lengthToCSSStyleValue(box.right().length());
-            vals->emplace_back(r.valueKind(), r.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.right().number());
-        }
-        if (box.bottom().isLength()) {
-            CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom().length());
-            vals->emplace_back(b.valueKind(), b.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.bottom().number());
-        }
-        if (box.left().isLength()) {
-            CSSStyleValuePair l = lengthToCSSStyleValue(box.left().length());
-            vals->emplace_back(l.valueKind(), l.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.bottom().number());
-        }
-
-        p.setValue(vals);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::TransformOrigin: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::TransformOrigin);
-
-        if (!style->hasTransformOrigin()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            ValueList* vals = new ValueList();
-
-            CSSStyleValuePair x = lengthToCSSStyleValue(
-                style->transformOrigin()->originValue()->getXAxis());
-            vals->emplace_back(x.valueKind(), x.value());
-
-            CSSStyleValuePair y = lengthToCSSStyleValue(
-                style->transformOrigin()->originValue()->getYAxis());
-            vals->emplace_back(y.valueKind(), y.value());
-
-            p.setValue(vals);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::Transform: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::Transform);
-        if (!style->hasTransforms()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::TransformFunctions);
-            FrameDocument* doc = frame->asFrameDocument();
-            FrameBox* box = frame->findNearestAssociateBox();
-            SkMatrix m = style->transformsToMatrix(
-                box->width(), box->height(), box, style->hasTransforms(frame));
-
-            CSSTransformFunctions* transforms = new CSSTransformFunctions();
-
-            ValueList* values =
-                new ValueList(ValueList::Separator::CommaSeparator);
-
-            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                                 m.getScaleX());
-            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                                 m.getSkewY());
-            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                                 m.getSkewX());
-            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                                 m.getScaleY());
-            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                                 m.getTranslateX());
-            values->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                                 m.getTranslateY());
-
-            transforms->emplace_back(CSSTransformFunction::Matrix, values);
-            p.setValue(transforms);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderTopStyle: {
-        CSSStyleValuePair tStyle;
-        tStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderTopStyle);
-        tStyle.setBorderStyleValue(style->border().top().style());
-        addValuePair(tStyle);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderBottomStyle: {
-        CSSStyleValuePair bStyle;
-        bStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderBottomStyle);
-        bStyle.setBorderStyleValue(style->border().bottom().style());
-        addValuePair(bStyle);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderLeftStyle: {
-        CSSStyleValuePair lStyle;
-        lStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderLeftStyle);
-        lStyle.setBorderStyleValue(style->border().left().style());
-        addValuePair(lStyle);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderRightStyle: {
-        CSSStyleValuePair rStyle;
-        rStyle.setKeyKind(CSSStyleValuePair::KeyKind::BorderRightStyle);
-        rStyle.setBorderStyleValue(style->border().right().style());
-        addValuePair(rStyle);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderTopColor: {
-        CSSStyleValuePair tColor;
-        tColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderTopColor);
-        tColor.setColorValue(style->border().top().color());
-        addValuePair(tColor);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderBottomColor: {
-        CSSStyleValuePair bColor;
-        bColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderBottomColor);
-        bColor.setColorValue(style->border().bottom().color());
-        addValuePair(bColor);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderLeftColor: {
-        CSSStyleValuePair lColor;
-        lColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderLeftColor);
-        lColor.setColorValue(style->border().left().color());
-        addValuePair(lColor);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderRightColor: {
-        CSSStyleValuePair rColor;
-        rColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderRightColor);
-        rColor.setColorValue(style->border().right().color());
-        addValuePair(rColor);
-    } break;
-    case CSSStyleValuePair::KeyKind::ObjectPosition: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::ObjectPosition);
-
-        if (!style->hasObjectSizing()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            ValueList* vals =
-                new ValueList(ValueList::Separator::SpaceSeparator);
-            CSSStyleValuePair x =
-                lengthToCSSStyleValue(style->objectPositionX());
-            vals->emplace_back(x.valueKind(), x.value());
-            CSSStyleValuePair y =
-                lengthToCSSStyleValue(style->objectPositionY());
-            vals->emplace_back(y.valueKind(), y.value());
-            p.setValue(vals);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::Clip: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::Clip);
-        if (style->clip()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::RectValueKind);
-            p.setValue(style->clip());
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::ListStyleImage: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleImage);
-        const ListStyleData& listStyle = style->listStyleData();
-        if (listStyle.image()->length() == 0) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        } else {
-            p.setUrlValue(listStyle.image());
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::TextShadow: {
-        CSSStyleValuePair shadows;
-        shadows.setKeyKind(CSSStyleValuePair::KeyKind::TextShadow);
-        if (!style->textShadow()) {
-            shadows.setValueKind(CSSStyleValuePair::ValueKind::None);
-        } else {
-            shadows.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            shadows.setValueList(
-                new ValueList(ValueList::Separator::CommaSeparator));
-
-            for (auto& sd : *style->textShadow()) {
-                CSSStyleValuePair s;
-                s.setValueList(
-                    new ValueList(ValueList::Separator::SpaceSeparator));
-                {
-                    CSSStyleValuePair color;
-                    if (sd.hasColor()) {
-                        color.setColorValue(sd.color());
-                    } else {
-                        color.setColorValue(style->color());
-                    }
-                    s.multiValue()->emplace_back(color.valueKind(),
-                                                 color.value());
-                }
-
-                CSSStyleValuePair lengths;
-                lengths.setValueList(
-                    new ValueList(ValueList::Separator::SpaceSeparator));
-
-                CSSStyleValuePair l1 = lengthToCSSStyleValue(sd.offsetX());
-                lengths.multiValue()->emplace_back(l1.valueKind(), l1.value());
-
-                CSSStyleValuePair l2 = lengthToCSSStyleValue(sd.offsetY());
-                lengths.multiValue()->emplace_back(l2.valueKind(), l2.value());
-
-                CSSStyleValuePair l3 = lengthToCSSStyleValue(sd.radius());
-                lengths.multiValue()->emplace_back(l3.valueKind(), l3.value());
-
-                s.multiValue()->emplace_back(lengths.valueKind(),
-                                             lengths.value());
-
-                shadows.multiValue()->emplace_back(s.valueKind(), s.value());
-            }
-        }
-        addValuePair(shadows);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderCollapse: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderCollapse);
-        p.setValueKind(CSSStyleValuePair::ValueKind::BorderCollapseValueKind);
-        p.setValue(CSSStyleValuePair::ValueData(style->borderCollapse()));
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::BorderSpacing: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderSpacing);
-        auto h = style->horizontalBorderSpacing();
-        auto v = style->verticalBorderSpacing();
-        if (h == v) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(lengthToCSSStyleValue(h).value());
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            ValueList* list =
-                new ValueList(ValueList::Separator::SpaceSeparator);
-            list->emplace_back(CSSStyleValuePair::ValueKind::Length,
-                               lengthToCSSStyleValue(h).value());
-            list->emplace_back(CSSStyleValuePair::ValueKind::Length,
-                               lengthToCSSStyleValue(v).value());
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::TableLayout: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::TableLayout);
-        p.setValueKind(CSSStyleValuePair::ValueKind::TableLayoutValueKind);
-        p.setValue(CSSStyleValuePair::ValueData(style->tableLayout()));
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::Content: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::Content);
-        p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        ContentDataGroup* contentData = style->content();
-        if (contentData) {
-            ValueList* values = new ValueList();
-            for (size_t i = 0; i < contentData->size(); i++) {
-                ContentData& c = contentData->at(i);
-                if (c.type() == ContentData::Text) {
-                    CSSStyleValuePair t;
-                    t.setStringValue(c.text()->text());
-                    values->pushBack(t);
-                } else if (c.type() == ContentData::Image) {
-                    CSSStyleValuePair t;
-                    t.setUrlValue(c.image()->image());
-                    values->pushBack(t);
-                } else if (c.type() == ContentData::Counter) {
-                    CSSStyleValuePair t;
-                    CounterContentData* data = c.counter();
-                    CSSCounterFunction* f = new CSSCounterFunction(data->id());
-                    f->setSeparator(data->separator());
-                    f->setStyle(AtomicString::createAtomicString(
-                        m_node->starFish(), data->counterStyle()->name()));
-                    t.setCounterFunctionValue(f);
-                    values->pushBack(t);
-                } else if (c.type() == ContentData::Quote) {
-                    CSSStyleValuePair t;
-                    t.setQuoteValue(c.quote());
-                    values->pushBack(t);
-                }
-            }
-            p.setValueList(values);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::TransitionProperty: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionProperty);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
-        size_t layerSize = style->transitionLayerSize();
-        if (!layerSize) {
-            p.multiValue()->emplace_back(
-                CSSStyleValuePair::TransitionPropertyValueKind,
-                TransitionPropertyAllValue);
-        } else {
-            for (size_t i = 0; i < layerSize; i++) {
-                p.multiValue()->emplace_back(
-                    CSSStyleValuePair::TransitionPropertyValueKind,
-                    style->transitionProperty(i));
-            }
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::TransitionDuration: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionDuration);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
-        size_t layerSize = style->transitionLayerSize();
-        if (!layerSize) {
-            p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
-        } else {
-            ValueList* list = new ValueList(ValueList::CommaSeparator);
-            for (size_t i = 0; i < layerSize; i++) {
-                p.multiValue()->emplace_back(CSSStyleValuePair::Time,
-                                             style->transitionDuration(i));
-            }
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::TransitionDelay: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionDelay);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
-        size_t layerSize = style->transitionLayerSize();
-        if (!layerSize) {
-            p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
-        } else {
-            ValueList* list = new ValueList(ValueList::CommaSeparator);
-            for (size_t i = 0; i < layerSize; i++) {
-                p.multiValue()->emplace_back(CSSStyleValuePair::Time,
-                                             style->transitionDelay(i));
-            }
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::TransitionTimingFunction: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionTimingFunction);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
-        size_t layerSize = style->transitionLayerSize();
-        if (!layerSize) {
-            p.multiValue()->emplace_back(
-                CSSStyleValuePair::AnimationTimingFunctionValueKind,
-                StyleTransitionData::defaultTimingFunction());
-        } else {
-            ValueList* list = new ValueList(ValueList::CommaSeparator);
-            for (size_t i = 0; i < layerSize; i++) {
-                p.multiValue()->emplace_back(
-                    CSSStyleValuePair::AnimationTimingFunctionValueKind,
-                    style->transitionTimingFunction(i));
-            }
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::BoxShadow: {
-        CSSStyleValuePair shadows;
-        shadows.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);
-        if (!style->boxShadow()) {
-            shadows.setValueKind(CSSStyleValuePair::ValueKind::None);
-        } else {
-            shadows.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            shadows.setValueList(
-                new ValueList(ValueList::Separator::CommaSeparator));
-
-            for (auto& sd : *style->boxShadow()) {
-                CSSStyleValuePair s;
-                s.setValueList(
-                    new ValueList(ValueList::Separator::SpaceSeparator));
-                {
-                    CSSStyleValuePair color;
-                    if (sd.hasColor()) {
-                        color.setColorValue(sd.color());
-                    } else {
-                        color.setColorValue(style->color());
-                    }
-                    s.multiValue()->emplace_back(color.valueKind(),
-                                                 color.value());
-                }
-
-                CSSStyleValuePair lengths;
-                lengths.setValueList(
-                    new ValueList(ValueList::Separator::SpaceSeparator));
-
-                CSSStyleValuePair l1 = lengthToCSSStyleValue(sd.offsetX());
-                lengths.multiValue()->emplace_back(l1.valueKind(), l1.value());
-
-                CSSStyleValuePair l2 = lengthToCSSStyleValue(sd.offsetY());
-                lengths.multiValue()->emplace_back(l2.valueKind(), l2.value());
-
-                CSSStyleValuePair l3 = lengthToCSSStyleValue(sd.radius());
-                lengths.multiValue()->emplace_back(l3.valueKind(), l3.value());
-
-                CSSStyleValuePair l4 =
-                    lengthToCSSStyleValue(sd.spreadDistance());
-                lengths.multiValue()->emplace_back(l4.valueKind(), l4.value());
-
-                s.multiValue()->emplace_back(lengths.valueKind(),
-                                             lengths.value());
-
-                if (sd.inset()) {
-                    CSSStyleValuePair inset;
-                    inset.setValueKind(
-                        CSSStyleValuePair::ValueKind::StringValueKind);
-                    inset.setStringValue(String::createASCIIString("inset"));
-                    s.multiValue()->emplace_back(inset.valueKind(),
-                                                 inset.value());
-                }
-
-                shadows.multiValue()->emplace_back(s.valueKind(), s.value());
-            }
-        }
-        addValuePair(shadows);
-    } break;
-    case CSSStyleValuePair::KeyKind::Fill: {
-        CSSStyleValuePair p = stylePaintDataToCSSStyleValue(style->fill());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::Fill);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::FillOpacity: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::FillOpacity);
-        p.setValueKind(CSSStyleValuePair::ValueKind::Number);
-        p.setNumberValue(style->fillOpacity());
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::FillRule: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::FillRule);
-        p.setValueKind(CSSStyleValuePair::ValueKind::FillRuleValueKind);
-        p.setValue(CSSStyleValuePair::ValueData(style->fillRule()));
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::Stroke: {
-        CSSStyleValuePair p = stylePaintDataToCSSStyleValue(style->stroke());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::Stroke);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::StrokeWidth: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->strokeWidth());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeWidth);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::X: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->x());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::X);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::Y: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->y());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::Y);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::CX: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->cx());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::CX);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::CY: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->cy());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::CY);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::R: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->r());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::R);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::RX: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->rx());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::RX);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::RY: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->ry());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::RY);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::OutlineColor: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineColor);
-        p.setValueKind(CSSStyleValuePair::ValueKind::ColorValueKind);
-        p.setColorValue(style->color());
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::OutlineWidth: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->outlineWidth());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineWidth);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::OutlineOffset: {
-        CSSStyleValuePair p = lengthToCSSStyleValue(style->outlineOffset());
-        p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineOffset);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::OutlineStyle: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::OutlineStyle);
-        p.setValueKind(CSSStyleValuePair::ValueKind::BorderStyleValueKind);
-        p.setBorderStyleValue(style->outlineStyle());
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::Cursor: {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::Cursor);
-        // when cursor value type is implemented, add cursor value type instead
-        // of string `auto`
-        p.setKeywordValue(String::createASCIIString("auto"));
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::MaskImage: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::MaskImage);
-        String* url = style->maskImage();
-        if (url->length()) {
-            p.setUrlValue(url);
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::MaskSize: {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::MaskSize);
-        p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridTemplateColumns: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateColumns);
-        if (style->gridTemplateColumns()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::GridTemplateUnits);
-            p.setGridTemplateUnits(style->gridTemplateColumns());
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridTemplateRows: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateRows);
-        if (style->gridTemplateRows()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::GridTemplateUnits);
-            p.setGridTemplateUnits(style->gridTemplateRows());
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridGap: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::GridGap);
-        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
-        Length row = style->gridRowGap();
-        Length column = style->gridColumnGap();
-        CSSStyleValuePair ret1;
-        if (row.isFixed()) {
-            ret1.setLengthValue(CSSLength(row.numberData()));
-            values->push_back(ret1);
-        }
-
-        CSSStyleValuePair ret2;
-        if (column.isFixed()) {
-            ret2.setLengthValue(CSSLength(column.numberData()));
-            values->push_back(ret2);
-        }
-        p.setValueList(values);
-
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridRowGap: {
-        CSSStyleValuePair p;
-        Length row = style->gridRowGap();
-        if (row.isFixed()) {
-            p.setLengthValue(CSSLength(row.fixed()));
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridColumnGap: {
-        CSSStyleValuePair p;
-        Length column = style->gridColumnGap();
-        if (column.isFixed()) {
-            p.setLengthValue(CSSLength(column.fixed()));
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridTemplateAreas: {
-        CSSStyleValuePair p;
-        String* areas = style->gridTemplateAreas();
-        if (areas) {
-            p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateAreas);
-            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-            p.setStringValue(areas);
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridArea: {
-        CSSStyleValuePair p;
-        String* area = style->gridArea();
-        if (area) {
-            p.setKeyKind(CSSStyleValuePair::KeyKind::GridArea);
-            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-            p.setStringValue(area);
-        } else {
-            p.setKeyKind(CSSStyleValuePair::KeyKind::GridArea);
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::TextOverflow: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::TextOverflow);
-        p.setValueKind(CSSStyleValuePair::ValueKind::TextOverflowValueKind);
-        p.setValue(new TextOverflowData(style->textOverflow()));
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::CounterReset: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::CounterReset);
-        CounterBaseList* list = style->counterReset();
-        if (list) {
-            ValueList* v = new ValueList(ValueList::SpaceSeparator);
-            size_t size = list->size();
-            for (size_t i = 0; i < size; i++) {
-                v->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
-                                (*list)[i].first);
-                v->emplace_back(CSSStyleValuePair::Int32, (*list)[i].second);
-            }
-            p.setValueList(v);
-        } else {
-            p.setValueKind(CSSStyleValuePair::None);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::CounterIncrement: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::CounterIncrement);
-        CounterBaseList* list = style->counterIncrement();
-        if (list) {
-            ValueList* v = new ValueList(ValueList::SpaceSeparator);
-            size_t size = list->size();
-            for (size_t i = 0; i < size; i++) {
-                v->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
-                                (*list)[i].first);
-                v->emplace_back(CSSStyleValuePair::Int32, (*list)[i].second);
-            }
-            p.setValueList(v);
-        } else {
-            p.setValueKind(CSSStyleValuePair::None);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridRowStart: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::GridRowStart);
-        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
-        p.setInt32Value(style->gridRowStart());
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridRowEnd: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::GridRowEnd);
-        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
-        p.setInt32Value(style->gridRowEnd());
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridColumnStart: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
-        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
-        p.setInt32Value(style->gridColumnStart());
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridColumnEnd: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
-        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
-        p.setInt32Value(style->gridColumnStart());
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::WillChange: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::WillChange);
-        WillChangeData* data = style->willChange();
-        if (!data) {
-            p.setValueKind(CSSStyleValuePair::Auto);
-        } else {
-            ValueList* list = new ValueList(ValueList::CommaSeparator);
-            if (data->contents()) {
-                list->emplace_back(CSSStyleValuePair::KeywordValueKind,
-                                   String::fromUTF8("contents"));
-            }
-            if (data->scrollPosition()) {
-                list->emplace_back(CSSStyleValuePair::KeywordValueKind,
-                                   String::fromUTF8("scroll-position"));
-            }
-            size_t size = data->size();
-            for (size_t i = 0; i < size; i++) {
-                list->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
-                                   data->at(i));
-            }
-            p.setValueList(list);
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::TextDecorationLine: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::TextDecorationLine);
-        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        if (style->textDecorationLine()) {
-            p.setValue(style->textDecorationLine());
-        } else {
-            p.setValue(new ValueList(ValueList::Separator::SpaceSeparator));
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::D: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::D);
-        String* dvalue = style->d();
-        if (dvalue->length()) {
-            p.setPathFunctionValue(dvalue);
-        } else {
-            p.setValueKind(CSSStyleValuePair::None);
-        }
-        addValuePair(p);
-    } break;
-#define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
-    case CSSStyleValuePair::KeyKind::Border##Name1Name2##Radius: {            \
-        CSSStyleValuePair p;                                                  \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::Border##Name1Name2##Radius); \
-        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);          \
-        ValueList* valueList = new ValueList(ValueList::SpaceSeparator);      \
-        if (style->hasBorderRadius()) {                                       \
-            if (style->borderRadius().m_##name1Name2##Vertical ==             \
-                style->borderRadius().m_##name1Name2##Horizontal) {           \
-                CSSStyleValuePair pair;                                       \
-                if (style->borderRadius()                                     \
-                        .m_##name1Name2##Vertical.isPercent()) {              \
-                    pair.setValueKind(                                        \
-                        CSSStyleValuePair::ValueKind::Percentage);            \
-                    pair.setPercentageValue(                                  \
-                        style->borderRadius()                                 \
-                            .m_##name1Name2##Vertical.percent());             \
-                } else {                                                      \
-                    pair.setValueKind(CSSStyleValuePair::ValueKind::Length);  \
-                    pair.setLengthValue(                                      \
-                        CSSLength(style->borderRadius()                       \
-                                      .m_##name1Name2##Vertical.fixed()));    \
-                }                                                             \
-                valueList->pushBack(pair);                                    \
-            } else {                                                          \
-                CSSStyleValuePair pair;                                       \
-                if (style->borderRadius()                                     \
-                        .m_##name1Name2##Horizontal.isPercent()) {            \
-                    pair.setValueKind(                                        \
-                        CSSStyleValuePair::ValueKind::Percentage);            \
-                    pair.setPercentageValue(                                  \
-                        style->borderRadius()                                 \
-                            .m_##name1Name2##Horizontal.percent());           \
-                } else {                                                      \
-                    pair.setValueKind(CSSStyleValuePair::ValueKind::Length);  \
-                    pair.setLengthValue(                                      \
-                        CSSLength(style->borderRadius()                       \
-                                      .m_##name1Name2##Horizontal.fixed()));  \
-                }                                                             \
-                valueList->pushBack(pair);                                    \
-                if (style->borderRadius()                                     \
-                        .m_##name1Name2##Vertical.isPercent()) {              \
-                    pair.setValueKind(                                        \
-                        CSSStyleValuePair::ValueKind::Percentage);            \
-                    pair.setPercentageValue(                                  \
-                        style->borderRadius()                                 \
-                            .m_##name1Name2##Vertical.percent());             \
-                } else {                                                      \
-                    pair.setValueKind(CSSStyleValuePair::ValueKind::Length);  \
-                    pair.setLengthValue(                                      \
-                        CSSLength(style->borderRadius()                       \
-                                      .m_##name1Name2##Vertical.fixed()));    \
-                }                                                             \
-                valueList->pushBack(pair);                                    \
-            }                                                                 \
-        } else {                                                              \
-            CSSStyleValuePair pair;                                           \
-            pair.setValueKind(CSSStyleValuePair::ValueKind::Length);          \
-            pair.setLengthValue(CSSLength(0.f));                              \
-            valueList->pushBack(pair);                                        \
-        }                                                                     \
-        p.setValueList(valueList);                                            \
-        addValuePair(p);                                                      \
-    } break;
-
-        ADD_VALUE_PAIR_BORDER_RADIUS(TopLeft, topLeft)
-        ADD_VALUE_PAIR_BORDER_RADIUS(BottomLeft, bottomLeft)
-        ADD_VALUE_PAIR_BORDER_RADIUS(TopRight, topRight)
-        ADD_VALUE_PAIR_BORDER_RADIUS(BottomRight, bottomRight)
-#undef ADD_VALUE_PAIR_BORDER_RADIUS
-
-#define ADD_VALUE_PAIR(KEY, VALUE, GETTER)                   \
-    case CSSStyleValuePair::KeyKind::KEY: {                  \
-        CSSStyleValuePair p;                                 \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::KEY);       \
-        p.setValueKind(CSSStyleValuePair::ValueKind::VALUE); \
-        p.setValue(style->GETTER());                         \
-        addValuePair(p);                                     \
-    } break;
-        ADD_VALUE_PAIR(Display, DisplayValueKind, display)
-        ADD_VALUE_PAIR(Position, PositionValueKind, position)
-        ADD_VALUE_PAIR(Float, FloatValueKind, floating)
-        ADD_VALUE_PAIR(CaptionSide, CaptionSideValueKind, captionSide)
-        ADD_VALUE_PAIR(Clear, ClearValueKind, clear)
-        ADD_VALUE_PAIR(EmptyCells, EmptyCellsValueKind, emptyCells)
-        ADD_VALUE_PAIR(VerticalAlign, VerticalAlignValueKind, verticalAlign)
-        ADD_VALUE_PAIR(TextAlign, SideValueKind, textAlign)
-        ADD_VALUE_PAIR(TextDecorationStyle, TextDecorationStyleValueKind,
-                       textDecorationStyle)
-        ADD_VALUE_PAIR(TextUnderlinePosition, TextUnderlinePositionValueKind,
-                       textUnderlinePosition)
-        ADD_VALUE_PAIR(Resize, ResizeValueKind, resize)
-        ADD_VALUE_PAIR(TextTransform, TextTransformValueKind, textTransform)
-        ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
-        ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
-        ADD_VALUE_PAIR(FontStyle, FontStyleValueKind, fontStyle)
-        ADD_VALUE_PAIR(FontWeight, FontWeightValueKind, fontWeight)
-        ADD_VALUE_PAIR(FontKerning, FontKerningValueKind, fontKerning)
-        ADD_VALUE_PAIR(WordWrap, WordWrapValueKind, wordWrap)
-        ADD_VALUE_PAIR(OverflowWrap, WordWrapValueKind, wordWrap)
-        ADD_VALUE_PAIR(OverflowX, OverflowValueKind, overflowX)
-        ADD_VALUE_PAIR(OverflowY, OverflowValueKind, overflowY)
-        ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiValueKind, unicodeBidi)
-        ADD_VALUE_PAIR(Opacity, Number, opacity)
-        ADD_VALUE_PAIR(BoxDecorationBreak, BoxDecorationBreakValueKind,
-                       boxDecorationBreak)
-        ADD_VALUE_PAIR(BoxSizing, BoxSizingValueKind, boxSizing)
-        ADD_VALUE_PAIR(FlexDirection, FlexDirectionValueKind, flexDirection)
-        ADD_VALUE_PAIR(FlexWrap, FlexWrapValueKind, flexWrap)
-        ADD_VALUE_PAIR(Order, Int32, order)
-        ADD_VALUE_PAIR(JustifyContent, JustifyContentValueKind, justifyContent)
-        ADD_VALUE_PAIR(AlignItems, AlignItemValueKind, alignItems)
-        ADD_VALUE_PAIR(AlignSelf, AlignItemValueKind, alignSelf)
-        ADD_VALUE_PAIR(AlignContent, AlignContentValueKind, alignContent)
-        ADD_VALUE_PAIR(FlexGrow, Number, flexGrow)
-        ADD_VALUE_PAIR(FlexShrink, Number, flexShrink)
-        ADD_VALUE_PAIR(ObjectFit, ObjectFitValueKind, objectFit)
-        ADD_VALUE_PAIR(ListStylePosition, ListStylePositionValueKind,
-                       listStylePosition)
-        ADD_VALUE_PAIR(ListStyleType, KeywordValueKind, listStyleType)
-        ADD_VALUE_PAIR(UserSelect, UserSelectValueKind, userSelect)
-        ADD_VALUE_PAIR(Hyphens, HyphensValueKind, hyphens)
-        ADD_VALUE_PAIR(LineBreak, LineBreakValueKind, lineBreak)
-        ADD_VALUE_PAIR(WordBreak, WordBreakValueKind, wordBreak)
-        ADD_VALUE_PAIR(ImageRendering, ImageRenderingValueKind, imageRendering)
-        ADD_VALUE_PAIR(PointerEvents, PointerEventsValueKind, pointerEvents)
-#undef ADD_VALUE_PAIR
-
-#define ADD_COLOR_PAIR(KEY, GETTER)                                     \
-    case CSSStyleValuePair::KeyKind::KEY: {                             \
-        CSSStyleValuePair p;                                            \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::KEY);                  \
-        p.setValueKind(CSSStyleValuePair::ValueKind::KeywordValueKind); \
-        p.setValue(style->GETTER().toString());                         \
-        addValuePair(p);                                                \
-    } break;
-        ADD_COLOR_PAIR(Color, color)
-        ADD_COLOR_PAIR(BackgroundColor, backgroundColor)
-        ADD_COLOR_PAIR(TextDecorationColor, textDecorationColor)
-        ADD_COLOR_PAIR(CaretColor, caretColor)
-#undef ADD_COLOR_PAIR
-
-    } /* switch */
-}
 
 uint32_t CSSStyleDeclaration::length() const
 {
@@ -2177,6 +1713,1361 @@ bool CSSStyleDeclaration::defaultNamedSetter(String* name,
         },
         &sender);
     return true;
+}
+
+String* CSSStyleDeclaration::cssTextAffectedByAllProperty(
+    const size_t& pos) const
+{
+    String* value;
+    CSSStyleValuePair pair = m_cssValues[pos];
+    switch (pair.valueKind()) {
+    case CSSStyleValuePair::ValueKind::Initial:
+        value = String::createASCIIString("initial");
+        break;
+    case CSSStyleValuePair::ValueKind::Inherit:
+        value = String::createASCIIString("inherit");
+        break;
+    case CSSStyleValuePair::ValueKind::Unset:
+        value = String::createASCIIString("unset");
+        break;
+    default:
+        value = String::emptyString;
+        break;
+    }
+    bool isImportant = pair.flagImportant();
+    StringBuilder txt;
+#define APPEND_CSS_VALUES(Name, name, cssname)                                 \
+    {                                                                          \
+        CSSStyleKind kind = lookupCSSStyle(cssname, strlen(cssname));          \
+        if (kind != CSSStyleKind::All && kind != CSSStyleKind::Direction &&    \
+            kind != CSSStyleKind::UnicodeBidi) {                               \
+            txt.appendString(cssname);                                         \
+            txt.appendString(": ");                                            \
+            auto iter =                                                        \
+                std::find_if(m_cssValues.begin() + pos, m_cssValues.end(),     \
+                             [kind](CSSStyleValuePair p) {                     \
+                                 return (static_cast<int>(p.keyKind()) - 1) == \
+                                        (static_cast<int>(kind) - 2);          \
+                             });                                               \
+            if (iter != m_cssValues.end()) {                                   \
+                txt.appendString(iter->toString());                            \
+            } else {                                                           \
+                txt.appendString(value);                                       \
+            }                                                                  \
+            if (isImportant || iter->flagImportant()) {                        \
+                txt.appendString(" !important");                               \
+            }                                                                  \
+            txt.appendString("; ");                                            \
+        }                                                                      \
+    }
+    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(APPEND_CSS_VALUES)
+#undef APPEND_CSS_VALUES
+
+    return txt.finalize();
+}
+
+String* CSSStyleDeclaration::generateCSSText() const
+{
+    size_t pos =
+        std::find_if(m_cssValues.begin(), m_cssValues.end(),
+                     [](CSSStyleValuePair p) {
+                         return p.keyKind() == CSSStyleValuePair::KeyKind::All;
+                     }) -
+        m_cssValues.begin();
+
+    bool hasAllProperty = false;
+    bool hasImportantAllProperty = false;
+    if (pos < m_cssValues.size()) {
+        hasAllProperty = true;
+        hasImportantAllProperty = m_cssValues[pos].flagImportant();
+    }
+
+    if (hasAllProperty && (pos + 1) < m_cssValues.size() &&
+        !hasImportantAllProperty) {
+        return cssTextAffectedByAllProperty(pos);
+    }
+
+    StringBuilder txt;
+    auto itValue = m_cssValues.begin();
+    if (hasAllProperty) {
+        itValue += pos;
+    }
+    for (; itValue != m_cssValues.end(); itValue++) {
+        if (hasImportantAllProperty) {
+            if (itValue->flagImportant()) {
+                txt.appendString(itValue->keyName());
+                txt.appendString(": ");
+                txt.appendString(itValue->toString());
+                if (itValue->flagImportant()) {
+                    txt.appendString(" !important");
+                }
+                txt.appendString("; ");
+            }
+        } else {
+            txt.appendString(itValue->keyName());
+            txt.appendString(": ");
+            txt.appendString(itValue->toString());
+            if (itValue->flagImportant()) {
+                txt.appendString(" !important");
+            }
+            txt.appendString("; ");
+        }
+    }
+    return txt.finalize();
+}
+
+String* CSSStyleDeclaration::Background()
+{
+    StringBuilder builder;
+    String* images = BackgroundImage();
+    String* positions = BackgroundPosition();
+    String* sizes = BackgroundSize();
+    String* repeats = BackgroundRepeat();
+    String* attachments = BackgroundAttachment();
+    String* origins = BackgroundOrigin();
+    String* clips = BackgroundClip();
+    String* color = BackgroundColor();
+    GCVector<StringView> vImages, vPositions, vSizes, vRepeats, vAttachments,
+        vOrigins, vClips;
+    StringUtils::tokenize(images, ",", 1, vImages);
+    StringUtils::tokenize(positions, ",", 1, vPositions);
+    StringUtils::tokenize(sizes, ",", 1, vSizes);
+    StringUtils::tokenize(repeats, ",", 1, vRepeats);
+    StringUtils::tokenize(attachments, ",", 1, vAttachments);
+    StringUtils::tokenize(origins, ",", 1, vOrigins);
+    StringUtils::tokenize(clips, ",", 1, vClips);
+
+    size_t max = vImages.size();
+    if (max < vPositions.size()) {
+        max = vPositions.size();
+    }
+    if (max < vSizes.size()) {
+        max = vSizes.size();
+    }
+    if (max < vRepeats.size()) {
+        max = vRepeats.size();
+    }
+    if (max < vAttachments.size()) {
+        max = vAttachments.size();
+    }
+    if (max < vOrigins.size()) {
+        max = vOrigins.size();
+    }
+    if (max < vClips.size()) {
+        max = vClips.size();
+    }
+
+    for (unsigned int i = 0; i < max; i++) {
+        String* image =
+            (i < vImages.size()) ? vImages[i].trim() : String::emptyString;
+        String* position = (i < vPositions.size()) ? vPositions[i].trim()
+                                                   : String::emptyString;
+        String* size =
+            (i < vSizes.size()) ? vSizes[i].trim() : String::emptyString;
+        String* repeat =
+            (i < vRepeats.size()) ? vRepeats[i].trim() : String::emptyString;
+        String* attachment = (i < vAttachments.size()) ? vAttachments[i].trim()
+                                                       : String::emptyString;
+        String* origin =
+            (i < vOrigins.size()) ? vOrigins[i].trim() : String::emptyString;
+        String* clip =
+            (i < vClips.size()) ? vClips[i].trim() : String::emptyString;
+        builder.appendString(
+            printBackground(image, position, size, repeat, attachment, origin,
+                            clip, i == max - 1 ? color : String::emptyString));
+        if (i != max - 1) {
+            builder.appendString(", ");
+        }
+    }
+    return builder.finalize();
+}
+
+void CSSStyleDeclaration::setBackground(const char* value, size_t length,
+                                        bool isImportant)
+{
+    if (length == 0) {
+        removeBackgroundCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, ",/", 2);
+    if (tokens.size() == 0) {
+        return;
+    }
+
+    // TODO: should check comma-separated input
+    CSSStyleValuePair v, color, image, repeatX, repeatY, positionX, positionY,
+        size, attachment, origin, clip;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addBackgroundCSSValuePairs(this, v, v, v, v, v, v, v, v, v, v);
+    } else {
+#define APPEND_NEW_LAYER(PROP, NEWPROP)                                     \
+    if (PROP.valueKind() != CSSStyleValuePair::ValueKind::ValueListKind) {  \
+        CSSStyleValuePair tmp = PROP;                                       \
+        PROP.setValueList(                                                  \
+            new ValueList(ValueList::Separator::CommaSeparator));           \
+        PROP.multiValue()->push_back(tmp);                                  \
+    }                                                                       \
+    if (NEWPROP.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) \
+        PROP.multiValue()->push_back((*NEWPROP.multiValue())[0]);           \
+    else {                                                                  \
+        PROP.multiValue()->push_back(NEWPROP);                              \
+    }
+
+        CSSTokenVector layer;
+        unsigned int cntLayer = 0;
+        for (unsigned int t = 0; t < tokens.size(); t++) {
+            const CSSTokenValue& val = tokens[t];
+            if (val.equals(",")) {
+                if (t == 0 || t == tokens.size() - 1)
+                    return;
+            } else if (t == tokens.size() - 1) {
+                layer.push_back(tokens[t]);
+            } else {
+                layer.push_back(tokens[t]);
+                continue;
+            }
+
+            if (layer.size() == 0) {
+                return;
+            }
+            CSSStyleValuePair layerImage, layerRepeatX, layerRepeatY,
+                layerPositionX, layerPositionY, layerSize, layerAttachment,
+                layerOrigin, layerClip;
+            // NOTE: Color is allowed only for the last background layer (t ==
+            // tokens->size() - 1)
+            if (!parseBackgroundShorthand(
+                    layer, &color, &layerImage, &layerRepeatX, &layerRepeatY,
+                    &layerPositionX, &layerPositionY, &layerSize,
+                    &layerAttachment, &layerOrigin, &layerClip,
+                    t == tokens.size() - 1)) {
+                return;
+            }
+            if (cntLayer == 0) {
+                image = layerImage;
+                repeatX = layerRepeatX;
+                repeatY = layerRepeatY;
+                positionX = layerPositionX;
+                positionY = layerPositionY;
+                size = layerSize;
+                attachment = layerAttachment;
+                origin = layerOrigin;
+                clip = layerClip;
+            } else {
+                APPEND_NEW_LAYER(image, layerImage);
+                APPEND_NEW_LAYER(repeatX, layerRepeatX);
+                APPEND_NEW_LAYER(repeatY, layerRepeatY);
+                APPEND_NEW_LAYER(positionX, layerPositionX);
+                APPEND_NEW_LAYER(positionY, layerPositionY);
+                APPEND_NEW_LAYER(size, layerSize);
+                APPEND_NEW_LAYER(attachment, layerAttachment);
+                APPEND_NEW_LAYER(origin, layerOrigin);
+                APPEND_NEW_LAYER(clip, layerClip);
+            }
+            cntLayer++;
+            layer.clear();
+        }
+        color.setFlagImportant(isImportant);
+        image.setFlagImportant(isImportant);
+        repeatX.setFlagImportant(isImportant);
+        repeatY.setFlagImportant(isImportant);
+        positionX.setFlagImportant(isImportant);
+        positionY.setFlagImportant(isImportant);
+        size.setFlagImportant(isImportant);
+        attachment.setFlagImportant(isImportant);
+        origin.setFlagImportant(isImportant);
+        clip.setFlagImportant(isImportant);
+        addBackgroundCSSValuePairs(this, color, image, repeatX, repeatY,
+                                   positionX, positionY, size, attachment,
+                                   origin, clip);
+    }
+#undef APPEND_NEW_LAYER
+}
+
+bool CSSStyleDeclaration::parseBackgroundPositionShorthand(
+    const CSSTokenVector& tokens, CSSStyleValuePair* retx,
+    CSSStyleValuePair* rety, bool allowComma)
+{
+    // [ [ <percentage> | <length> | left | center | right ] [ <percentage> |
+    // <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [
+    // top | center | bottom ] ] | inherit
+    size_t len = 0;
+    retx->setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+    rety->setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+    retx->setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
+    rety->setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
+
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (value.equals(",")) {
+            if (!allowComma || i == 0 || i == tokens.size() - 1) {
+                return false;
+            }
+        } else if (i == tokens.size() - 1) {
+            len++;
+            i++;
+        } else {
+            len++;
+            continue;
+        }
+
+        CSSStyleValuePair ret;
+        CSSStyleValuePair x, y;
+        if (len == 1) {
+            const CSSTokenValue& tok = tokens[i - 1];
+            if (x.updateValueUnitBackgroundPositionX(tok)) {
+                y = CSSStyleValuePair(
+                    CSSStyleValuePair::ValueKind::SideValueKind,
+                    SideValue::CenterSideValue);
+            } else if (y.updateValueUnitBackgroundPositionY(tok)) {
+                x = CSSStyleValuePair(
+                    CSSStyleValuePair::ValueKind::SideValueKind,
+                    SideValue::CenterSideValue);
+            } else {
+                return false;
+            }
+        } else if (len == 2) {
+            // !!! NOTICE !!!
+            // background-position: right bottom <- (O) [enum-x enum-y]
+            // background-position: bottom right <- (O) [enum-y enum-x] !!!
+            // background-position: 20px 20px    <- (O) [length length]
+            // background-position: right 20px   <- (O) [enum-x length]
+            // background-position: 20px bottom  <- (O) [length enum-y]
+            // background-position: bottom 20px  <- (X) [enum-y length] !!!
+            // background-position: 20px right   <- (X) [length enum-x] !!!
+            bool checker = true;
+            const CSSTokenValue& tok1 = tokens[i - 2];
+            const CSSTokenValue& tok2 = tokens[i - 1];
+            CSSStyleValuePair::ValueKind sideKind =
+                CSSStyleValuePair::ValueKind::SideValueKind;
+            checker &= x.updateValueUnitBackgroundPositionX(tok1);
+            checker &= y.updateValueUnitBackgroundPositionY(tok2);
+
+            if (!checker && x.valueKind() == sideKind &&
+                y.valueKind() == sideKind) {
+                checker = true;
+                checker &= x.updateValueUnitBackgroundPositionX(tok2);
+                checker &= y.updateValueUnitBackgroundPositionY(tok1);
+            }
+            if (!checker) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        retx->multiValue()->push_back(x);
+        rety->multiValue()->push_back(y);
+        len = 0;
+    }
+
+    return true;
+}
+
+String* CSSStyleDeclaration::BackgroundPosition()
+{
+    String* positionX = BackgroundPositionX();
+    String* positionY = BackgroundPositionY();
+
+    if (positionX->equals(String::emptyString) ||
+        positionY->equals(String::emptyString)) {
+        return String::emptyString;
+    }
+
+    GCVector<StringView> vPositionX, vPositionY;
+    StringUtils::tokenize(positionX, ",", 1, vPositionX);
+    StringUtils::tokenize(positionY, ",", 1, vPositionY);
+
+    StringBuilder builder;
+    for (size_t i = 0; i < vPositionX.size(); i++) {
+        String* pX = vPositionX[i].trim();
+        String* pY = vPositionY[i].trim();
+        if (pX->equals(String::initialString)) {
+            if (pY->equals(String::initialString)) {
+                builder.appendString(String::initialString);
+            } else {
+                builder.appendString(String::emptyString);
+            }
+        } else if (pX->equals(String::inheritString)) {
+            if (pY->equals(String::inheritString)) {
+                builder.appendString(String::inheritString);
+            } else {
+                builder.appendString(String::emptyString);
+            }
+        } else {
+            builder.appendString(pX);
+            builder.appendString(String::spaceString);
+            builder.appendString(pY);
+        }
+        if (i != vPositionX.size() - 1) {
+            builder.appendChar(',');
+            builder.appendString(String::spaceString);
+        }
+    }
+    return builder.finalize();
+}
+
+void CSSStyleDeclaration::setBackgroundPosition(const char* value,
+                                                size_t length, bool isImportant)
+{
+    if (value == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, ",", 1);
+
+    CSSStyleValuePair c, x, y;
+    if (c.updateValueCommon(tokens)) {
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, c);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, c);
+    } else if (parseBackgroundPositionShorthand(tokens, &x, &y)) {
+        x.setFlagImportant(isImportant);
+        y.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, x);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, y);
+    }
+}
+
+String* CSSStyleDeclaration::BackgroundRepeat()
+{
+    String* repeatX = BackgroundRepeatX();
+    String* repeatY = BackgroundRepeatY();
+    GCVector<StringView> vRepeatX, vRepeatY;
+    StringUtils::tokenize(repeatX, ",", 1, vRepeatX);
+    StringUtils::tokenize(repeatY, ",", 1, vRepeatY);
+
+    StringBuilder builder;
+    size_t size = std::min(vRepeatX.size(), vRepeatY.size());
+    for (size_t i = 0; i < size; i++) {
+        String* rX = vRepeatX[i].trim();
+        String* rY = vRepeatY[i].trim();
+        if (rX->equals(rY)) {
+            builder.appendString(rX);
+        } else if (rX->equals("repeat") && rY->equals("no-repeat")) {
+            builder.appendString("repeat-x");
+        } else if (rX->equals("no-repeat") && rY->equals("repeat")) {
+            builder.appendString("repeat-y");
+        } else {
+            return builder.finalize();
+        }
+        if (i != size - 1) {
+            builder.appendChar(',');
+            builder.appendString(String::spaceString);
+        }
+    }
+    return builder.finalize();
+}
+
+void CSSStyleDeclaration::setBackgroundRepeat(const char* value, size_t length,
+                                              bool isImportant)
+{
+    if (value == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, ",", 1);
+
+    CSSStyleValuePair c, x, y;
+    if (c.updateValueCommon(tokens)) {
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, c);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, c);
+    } else if (parseBackgroundRepeatShorhand(tokens, &x, &y)) {
+        x.setFlagImportant(isImportant);
+        y.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, x);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, y);
+    }
+}
+
+String* CSSStyleDeclaration::Border()
+{
+    bool isWidthCombined;
+    String* width = BorderWidth(&isWidthCombined);
+    bool isStyleCombined;
+    String* style = BorderStyle(&isStyleCombined);
+    bool isColorCombined;
+    String* color = BorderColor(&isColorCombined);
+    return BorderString(width, isWidthCombined, style, isStyleCombined, color,
+                        isColorCombined);
+}
+
+void CSSStyleDeclaration::setBorder(const char* value, size_t len,
+                                    bool isImportant)
+{
+    if (len == 0) {
+        removeBorderCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len);
+
+    CSSStyleValuePair v, width, style, color;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addBorderCSSValuePairs(this, v, v, v);
+    } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
+        width.setFlagImportant(isImportant);
+        style.setFlagImportant(isImportant);
+        color.setFlagImportant(isImportant);
+        addBorderCSSValuePairs(this, width, style, color);
+    }
+}
+
+String* CSSStyleDeclaration::BorderColor(bool* isCombined)
+{
+    GEN_ATTRIBUTE_GETTER_FOURSIDE(Border, Color)
+}
+
+void CSSStyleDeclaration::setBorderColor(const char* value, size_t length,
+                                         bool isImportant)
+{
+    GEN_ATTRIBUTE_SETTER_FOURSIDE(Border, Color)
+}
+
+String* CSSStyleDeclaration::BorderStyle(bool* isCombined)
+{
+    GEN_ATTRIBUTE_GETTER_FOURSIDE(Border, Style)
+}
+
+void CSSStyleDeclaration::setBorderStyle(const char* value, size_t length,
+                                         bool isImportant)
+{
+    GEN_ATTRIBUTE_SETTER_FOURSIDE(Border, Style)
+}
+
+String* CSSStyleDeclaration::BorderWidth(bool* isCombined)
+{
+    GEN_ATTRIBUTE_GETTER_FOURSIDE(Border, Width)
+}
+
+void CSSStyleDeclaration::setBorderWidth(const char* value, size_t length,
+                                         bool isImportant)
+{
+    GEN_ATTRIBUTE_SETTER_FOURSIDE(Border, Width)
+}
+
+String* CSSStyleDeclaration::BorderTop()
+{
+    GEN_ATTRIBUTE_GETTER_BORDER(Top)
+}
+
+void CSSStyleDeclaration::setBorderTop(const char* value, size_t len,
+                                       bool isImportant)
+{
+    GEN_ATTRIBUTE_SETTER_BORDER(Top)
+}
+
+String* CSSStyleDeclaration::BorderRight()
+{
+    GEN_ATTRIBUTE_GETTER_BORDER(Right)
+}
+
+void CSSStyleDeclaration::setBorderRight(const char* value, size_t len,
+                                         bool isImportant)
+{
+    GEN_ATTRIBUTE_SETTER_BORDER(Right)
+}
+
+String* CSSStyleDeclaration::BorderBottom()
+{
+    GEN_ATTRIBUTE_GETTER_BORDER(Bottom)
+}
+
+void CSSStyleDeclaration::setBorderBottom(const char* value, size_t len,
+                                          bool isImportant)
+{
+    GEN_ATTRIBUTE_SETTER_BORDER(Bottom)
+}
+
+String* CSSStyleDeclaration::BorderLeft()
+{
+    GEN_ATTRIBUTE_GETTER_BORDER(Left)
+}
+
+void CSSStyleDeclaration::setBorderLeft(const char* value, size_t len,
+                                        bool isImportant)
+{
+    GEN_ATTRIBUTE_SETTER_BORDER(Left)
+}
+
+String* CSSStyleDeclaration::BorderRadius()
+{
+    String* tl = BorderTopLeftRadius();
+    String* tr = BorderTopRightRadius();
+    String* br = BorderBottomRightRadius();
+    String* bl = BorderBottomLeftRadius();
+
+    size_t stl = tl->indexOf(' ');
+    size_t str = tr->indexOf(' ');
+    size_t sbr = br->indexOf(' ');
+    size_t sbl = bl->indexOf(' ');
+
+    bool needsSlash = (stl != SIZE_MAX) || (str != SIZE_MAX) ||
+                      (sbr != SIZE_MAX) || (sbl != SIZE_MAX);
+    StringBuilder sb;
+
+    if (needsSlash) {
+        String* tl2;
+        if (stl != SIZE_MAX) {
+            tl2 = tl->substring(0, stl);
+        } else {
+            tl2 = tl;
+        }
+
+        String* tr2;
+        if (str != SIZE_MAX) {
+            tr2 = tr->substring(0, str);
+        } else {
+            tr2 = tr;
+        }
+
+        String* br2;
+        if (sbr != SIZE_MAX) {
+            br2 = br->substring(0, sbr);
+        } else {
+            br2 = br;
+        }
+
+        String* bl2;
+        if (sbl != SIZE_MAX) {
+            bl2 = bl->substring(0, sbl);
+        } else {
+            bl2 = bl;
+        }
+        mergeBordeRadiusString(sb, tl2, tr2, br2, bl2);
+        sb.appendString(" / ");
+
+        if (stl != SIZE_MAX) {
+            tl2 = tl->substring(stl + 1, tl->length() - (stl + 1));
+        } else {
+            tl2 = tl;
+        }
+
+        if (str != SIZE_MAX) {
+            tr2 = tr->substring(str + 1, tr->length() - (str + 1));
+        } else {
+            tr2 = tr;
+        }
+
+        if (sbr != SIZE_MAX) {
+            br2 = br->substring(sbr + 1, br->length() - (sbr + 1));
+        } else {
+            br2 = br;
+        }
+
+        if (sbl != SIZE_MAX) {
+            bl2 = bl->substring(sbl + 1, bl->length() - (sbl + 1));
+        } else {
+            bl2 = bl;
+        }
+        mergeBordeRadiusString(sb, tl2, tr2, br2, bl2);
+    } else {
+        mergeBordeRadiusString(sb, tl, tr, br, bl);
+    }
+
+    return sb.finalize();
+}
+
+void CSSStyleDeclaration::setBorderRadius(const char* value, size_t len,
+                                          bool isImportant)
+{
+    removeCSSValuePair(CSSStyleValuePair::BorderTopLeftRadius);
+    removeCSSValuePair(CSSStyleValuePair::BorderTopRightRadius);
+    removeCSSValuePair(CSSStyleValuePair::BorderBottomRightRadius);
+    removeCSSValuePair(CSSStyleValuePair::BorderBottomLeftRadius);
+    if (len == 0) {
+        return;
+    }
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, "/", 1);
+
+    // {1~4} / {1~4}
+    if (tokens.size() < 1 || tokens.size() > 9) {
+        return;
+    }
+
+    bool seenSlash = false;
+    size_t beforeSlash = 0;
+    size_t afterSlash = 0;
+
+    for (size_t i = 0; i < tokens.size(); i++) {
+        const auto& t = tokens[i];
+        if (t.equals("/")) {
+            if (seenSlash) {
+                return;
+            }
+            if (i == 0) {
+                return;
+            }
+            seenSlash = true;
+        } else {
+            if (seenSlash) {
+                afterSlash++;
+            } else {
+                beforeSlash++;
+            }
+            if (beforeSlash > 4 || afterSlash > 4) {
+                return;
+            }
+        }
+    }
+
+    if (seenSlash && afterSlash == 0) {
+        return;
+    }
+
+    CSSTokenVector topLeftV;
+    CSSTokenVector topRightV;
+    CSSTokenVector bottomRightV;
+    CSSTokenVector bottomLeftV;
+
+    if (beforeSlash == 1) {
+        topLeftV.push_back(tokens[0]);
+        topRightV.push_back(tokens[0]);
+        bottomRightV.push_back(tokens[0]);
+        bottomLeftV.push_back(tokens[0]);
+    } else if (beforeSlash == 2) {
+        topLeftV.push_back(tokens[0]);
+        topRightV.push_back(tokens[1]);
+        bottomRightV.push_back(tokens[0]);
+        bottomLeftV.push_back(tokens[1]);
+    } else if (beforeSlash == 3) {
+        topLeftV.push_back(tokens[0]);
+        topRightV.push_back(tokens[1]);
+        bottomRightV.push_back(tokens[2]);
+        bottomLeftV.push_back(tokens[1]);
+    } else {
+        STARFISH_ASSERT(beforeSlash == 4);
+        topLeftV.push_back(tokens[0]);
+        topRightV.push_back(tokens[1]);
+        bottomRightV.push_back(tokens[2]);
+        bottomLeftV.push_back(tokens[3]);
+    }
+
+    size_t base = 1 + beforeSlash;
+    if (afterSlash == 1) {
+        topLeftV.push_back(tokens[base]);
+        topRightV.push_back(tokens[base]);
+        bottomRightV.push_back(tokens[base]);
+        bottomLeftV.push_back(tokens[base]);
+    } else if (afterSlash == 2) {
+        topLeftV.push_back(tokens[base]);
+        topRightV.push_back(tokens[base + 1]);
+        bottomRightV.push_back(tokens[base]);
+        bottomLeftV.push_back(tokens[base + 1]);
+    } else if (afterSlash == 3) {
+        topLeftV.push_back(tokens[base]);
+        topRightV.push_back(tokens[base + 1]);
+        bottomRightV.push_back(tokens[base + 2]);
+        bottomLeftV.push_back(tokens[base + 1]);
+    } else if (afterSlash == 4) {
+        topLeftV.push_back(tokens[base + 0]);
+        topRightV.push_back(tokens[base + 1]);
+        bottomRightV.push_back(tokens[base + 2]);
+        bottomLeftV.push_back(tokens[base + 3]);
+    }
+
+    CSSStyleValuePair topLeft;
+    CSSStyleValuePair topRight;
+    CSSStyleValuePair bottomRight;
+    CSSStyleValuePair bottomLeft;
+
+    if (!topLeft.updateValueBorderRadius(topLeftV) ||
+        !topRight.updateValueBorderRadius(topRightV) ||
+        !bottomRight.updateValueBorderRadius(bottomRightV) ||
+        !bottomLeft.updateValueBorderRadius(bottomLeftV)) {
+        return;
+    }
+
+    topLeft.setFlagImportant(isImportant);
+    topRight.setFlagImportant(isImportant);
+    bottomRight.setFlagImportant(isImportant);
+    bottomLeft.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::BorderTopLeftRadius, topLeft);
+    addCSSValuePair(CSSStyleValuePair::BorderTopRightRadius, topRight);
+    addCSSValuePair(CSSStyleValuePair::BorderBottomRightRadius, bottomRight);
+    addCSSValuePair(CSSStyleValuePair::BorderBottomLeftRadius, bottomLeft);
+}
+
+String* CSSStyleDeclaration::BorderImage()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return String::emptyString;
+}
+
+void CSSStyleDeclaration::setBorderImage(const char* value, size_t length,
+                                         bool isImportant)
+{
+    if (length == 0) {
+        removeBorderImageCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, "/", 1);
+
+    CSSStyleValuePair v, source, slice, width, outset, repeat;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addBorderImageCSSValuePairs(this, v, v, v, v, v);
+    } else if (parseBorderImageShorthand(tokens, &source, &slice, &width,
+                                         &outset, &repeat)) {
+        source.setFlagImportant(isImportant);
+        slice.setFlagImportant(isImportant);
+        width.setFlagImportant(isImportant);
+        outset.setFlagImportant(isImportant);
+        repeat.setFlagImportant(isImportant);
+        addBorderImageCSSValuePairs(this, source, slice, width, outset, repeat);
+    }
+}
+
+void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
+{
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::D);
+        return;
+    }
+
+    if (VALUE_IS_INHERIT()) {
+        CSSStyleValuePair pair;
+        pair.setFlagImportant(isImportant);
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::D);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::D, pair);
+        return;
+    }
+
+    Nullable<CSSTokenValue> mayFunctionBlock =
+        CSSPropertyParser::parseFunctionBlock(value, "path");
+    if (!mayFunctionBlock.hasValue()) {
+        return;
+    }
+    Nullable<CSSTokenValue> mayQuoteBlock =
+        CSSPropertyParser::parseQuoteBlock(mayFunctionBlock.getValue().data());
+    if (!mayQuoteBlock.hasValue()) {
+        return;
+    }
+    // TODO validate function content for D property
+    CSSStyleValuePair pair;
+    pair.setPathFunctionValue(mayQuoteBlock.getValue().toGCString());
+    addCSSValuePair(CSSStyleValuePair::KeyKind::D, pair);
+}
+
+String* CSSStyleDeclaration::Flex()
+{
+    String* flexGrow = FlexGrow();
+    String* flexShrink = FlexShrink();
+    String* flexBasis = FlexBasis();
+
+    String* space = String::spaceString;
+    StringBuilder builder;
+    builder.appendString(flexGrow);
+    builder.appendString(space);
+    builder.appendString(flexShrink);
+    builder.appendString(space);
+    builder.appendString(flexBasis);
+
+    return builder.finalize();
+}
+
+void CSSStyleDeclaration::setFlex(const char* str, size_t length,
+                                  bool isImportant)
+{
+    if (length == 0) {
+        removeFlexCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, str, length);
+    const CSSTokenValue& value = tokens[0];
+
+    // TODO comma separation
+    CSSStyleValuePair v, flexGrow, flexShrink, flexBasis;
+    float f;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addFlexCSSValuePairs(this, v, v, v);
+    } else if (STRING_VALUE_IS_AUTO()) {
+        flexGrow.setFlagImportant(isImportant);
+        flexShrink.setFlagImportant(isImportant);
+        flexBasis.setFlagImportant(isImportant);
+        flexGrow.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        flexGrow.setValue(1.0f);
+        flexShrink.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        flexShrink.setValue(1.0f);
+        flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
+    } else if (STRING_VALUE_IS_NONE()) {
+        flexGrow.setFlagImportant(isImportant);
+        flexShrink.setFlagImportant(isImportant);
+        flexBasis.setFlagImportant(isImportant);
+        flexGrow.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        flexGrow.setValue(0.0f);
+        flexShrink.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        flexShrink.setValue(0.0f);
+        flexBasis.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
+    } else if (parseFlexShorthand(tokens, &flexGrow, &flexShrink, &flexBasis)) {
+        flexGrow.setFlagImportant(isImportant);
+        flexShrink.setFlagImportant(isImportant);
+        flexBasis.setFlagImportant(isImportant);
+        addFlexCSSValuePairs(this, flexGrow, flexShrink, flexBasis);
+    }
+}
+
+void CSSStyleDeclaration::setFlexFlow(const char* value, size_t length,
+                                      bool isImportant)
+{
+    if (length == 0) {
+        removeFlexFlowCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    // TODO comma separation
+    CSSStyleValuePair v, flexDirection, flexWrap;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addFlexFlowCSSValuePairs(this, v, v);
+    } else if (parseFlexFlowShorthand(tokens, &flexDirection, &flexWrap)) {
+        flexDirection.setFlagImportant(isImportant);
+        flexWrap.setFlagImportant(isImportant);
+        addFlexFlowCSSValuePairs(this, flexDirection, flexWrap);
+    }
+}
+
+String* CSSStyleDeclaration::FlexFlow()
+{
+    String* flexDirection = FlexDirection();
+    String* flexWrap = FlexWrap();
+
+    String* space = String::spaceString;
+    StringBuilder builder;
+    builder.appendString(flexDirection);
+    builder.appendString(space);
+    builder.appendString(flexWrap);
+
+    return builder.finalize();
+}
+
+String* CSSStyleDeclaration::Font()
+{
+    String* style = FontStyle();
+    String* weight = FontWeight();
+    String* size = FontSize();
+    String* lineHeight = LineHeight();
+
+    if (style->length() == 0 || weight->length() == 0 || size->length() == 0 ||
+        lineHeight->length() == 0) {
+        return String::emptyString;
+    }
+    int maxCount = 4;
+    int initialCount = 0;
+    int inheritCount = 0;
+    initialCount += (style->equals(String::initialString) ? 1 : 0);
+    initialCount += (weight->equals(String::initialString) ? 1 : 0);
+    initialCount += (size->equals(String::initialString) ? 1 : 0);
+    initialCount += (lineHeight->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (style->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (weight->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (size->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (lineHeight->equals(String::inheritString) ? 1 : 0);
+
+    if (initialCount == maxCount) {
+        return String::initialString;
+    }
+    if (inheritCount == maxCount) {
+        return String::inheritString;
+    }
+    if (initialCount > 0 || inheritCount > 0) {
+        return String::emptyString;
+    }
+
+    StringBuilder builder;
+    // 1. style
+    if (!style->equals("normal")) {
+        builder.appendString(style);
+    }
+    // 2. weight
+    if (!weight->equals("normal")) {
+        if (builder.contentLength() > 0) {
+            builder.appendString(String::spaceString);
+        }
+        builder.appendString(weight);
+    }
+    // 3. size
+    if (builder.contentLength() > 0) {
+        builder.appendString(String::spaceString);
+    }
+    builder.appendString(size);
+    // 4. lineHeight
+    if (!lineHeight->equals("normal")) {
+        builder.appendString("/");
+        builder.appendString(lineHeight);
+    }
+    return builder.finalize();
+}
+
+void CSSStyleDeclaration::setFont(const char* value, size_t length,
+                                  bool isImportant)
+{
+    if (length == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontSize);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, "/,", 2);
+    if (tokens.size() == 0) {
+        return;
+    }
+
+    CSSStyleValuePair v, style /*, variant*/, weight /*, stretch*/, size,
+        lineHeight, fontFamily;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontSize, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight, v);
+        return;
+    }
+
+    tokens.clear();
+    tokenizeCSSValue(tokens, value, length, "/,", 2, true);
+    if (parseFontShorthand(tokens, &style, &weight, &size, &lineHeight,
+                           &fontFamily)) {
+        fontFamily.setFlagImportant(isImportant);
+        style.setFlagImportant(isImportant);
+        weight.setFlagImportant(isImportant);
+        size.setFlagImportant(isImportant);
+        lineHeight.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, fontFamily);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle, style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight, weight);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontSize, size);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight, lineHeight);
+    }
+}
+
+void CSSStyleDeclaration::setFontFamily(const char* value, size_t len,
+                                        bool isImportant)
+{
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily);
+        return;
+    }
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, ",", 1, true);
+    CSSStyleValuePair ret;
+    if (ret.updateValueCommon(tokens) || ret.updateValueFontFamily(tokens)) {
+        ret.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, ret);
+    }
+}
+
+String* CSSStyleDeclaration::ListStyle()
+{
+    String* t = ListStyleType();
+    String* p = ListStylePosition();
+    String* i = ListStyleImage();
+
+    if (!t->length() || !p->length() || !i->length()) {
+        return String::emptyString;
+    }
+
+    bool isTGlobal = (t == String::initialString) ||
+                     (t == String::inheritString) || (t == String::unsetString);
+    bool isPGlobal = (p == String::initialString) ||
+                     (p == String::inheritString) || (p == String::unsetString);
+    bool isIGlobal = (i == String::initialString) ||
+                     (i == String::inheritString) || (i == String::unsetString);
+
+    if (isTGlobal && isPGlobal && isIGlobal) {
+        if (t == p && p == i) {
+            // e.g. initial initial initial -> intial
+            // e.g. inherit inherit inherit -> inherit
+            // e.g. unset unset unset -> unset
+            return t;
+        }
+        return String::emptyString;
+    }
+
+    // Sequence: position image type
+    StringBuilder builder;
+    builder.appendString(p);
+    builder.appendString(String::spaceString);
+    builder.appendString(i);
+    builder.appendString(String::spaceString);
+    builder.appendString(t);
+    return builder.finalize();
+}
+
+void CSSStyleDeclaration::setListStyle(const char* value, size_t len,
+                                       bool isImportant)
+{
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleImage);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, ",", 1);
+    CSSStyleValuePair c, t, p, i;
+    if (c.updateValueCommon(tokens)) {
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType, c);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition, c);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleImage, c);
+    } else if (parseListStyleShorhand(m_node->document(), tokens, &t, &p, &i)) {
+        t.setFlagImportant(isImportant);
+        p.setFlagImportant(isImportant);
+        i.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType, t);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition, p);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleImage, i);
+    }
+}
+
+String* CSSStyleDeclaration::Margin(bool* isCombined)
+{
+    GEN_ATTRIBUTE_GETTER_FOURSIDE(Margin)
+}
+
+void CSSStyleDeclaration::setMargin(const char* value, size_t length,
+                                    bool isImportant)
+{
+    GEN_ATTRIBUTE_SETTER_FOURSIDE(Margin)
+}
+
+String* CSSStyleDeclaration::Outline()
+{
+    String* width = OutlineWidth();
+    String* style = OutlineStyle();
+    String* color = OutlineColor();
+    return BorderString(width, false, style, false, color, false);
+}
+
+void CSSStyleDeclaration::setOutline(const char* value, size_t length,
+                                     bool isImportant)
+{
+    if (length == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    CSSStyleValuePair v, width, style, color;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor, v);
+    } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
+        width.setFlagImportant(isImportant);
+        style.setFlagImportant(isImportant);
+        color.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth, width);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle, style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor, color);
+    }
+}
+
+String* CSSStyleDeclaration::Overflow()
+{
+    // TODO: Should find the specific rule for composing overflow
+    String* overflowX = OverflowX();
+    String* overflowY = OverflowY();
+
+    if (overflowX->equals(overflowY)) {
+        return overflowX;
+    } else {
+        return String::createASCIIString("auto");
+    }
+}
+
+void CSSStyleDeclaration::setOverflow(const char* value, size_t length,
+                                      bool isImportant)
+{
+    if (length == 0) {
+        removeOverflowCSSValuePairs(this);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    // TODO comma separation
+    CSSStyleValuePair v, overflowX, overflowY;
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addOverflowCSSValuePairs(this, v, v);
+    } else if (parseOverflowShorthand(tokens, &overflowX, &overflowY)) {
+        overflowX.setFlagImportant(isImportant);
+        overflowY.setFlagImportant(isImportant);
+        addOverflowCSSValuePairs(this, overflowX, overflowY);
+    }
+}
+
+String* CSSStyleDeclaration::Padding(bool* isCombined)
+{
+    GEN_ATTRIBUTE_GETTER_FOURSIDE(Padding)
+}
+
+void CSSStyleDeclaration::setPadding(const char* value, size_t length,
+                                     bool isImportant)
+{
+    GEN_ATTRIBUTE_SETTER_FOURSIDE(Padding)
+}
+
+void CSSStyleDeclaration::setSrc(const char* value, size_t len,
+                                 bool isImportant)
+{
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::Src);
+        return;
+    }
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, ",", 1, true);
+    CSSStyleValuePair ret;
+    if (ret.updateValueSrc(tokens)) {
+        ret.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Src, ret);
+    }
+}
+
+String* CSSStyleDeclaration::TextDecoration()
+{
+    if (isComputedStyle()) {
+        updateValue(CSSStyleValuePair::TextDecorationLine);
+        updateValue(CSSStyleValuePair::TextDecorationStyle);
+        updateValue(CSSStyleValuePair::TextDecorationColor);
+    }
+
+    StringBuilder b;
+    for (unsigned i = 0; i < m_cssValues.size(); i++) {
+        CSSStyleValuePair& p = m_cssValues[i];
+        switch (p.keyKind()) {
+        case CSSStyleValuePair::KeyKind::TextDecorationLine:
+            b.appendString(p.toString());
+            b.appendString(String::spaceString);
+            break;
+        case CSSStyleValuePair::KeyKind::TextDecorationStyle:
+        case CSSStyleValuePair::KeyKind::TextDecorationColor:
+            b.appendString(p.toString());
+            b.appendString(String::spaceString);
+            break;
+        default:
+            break;
+        }
+    }
+
+    return b.finalize()->trim();
+}
+
+void CSSStyleDeclaration::setTextDecoration(const char* value, size_t len,
+                                            bool isImportant)
+{
+    if (len == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, "", 0);
+
+    CSSStyleValuePair ret;
+    if (ret.updateValueCommon(tokens)) {
+        ret.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine, ret);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle, ret);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor, ret);
+        return;
+    }
+
+    bool doneStyle = false;
+    bool doneColor = false;
+    bool doneLine = false;
+    CSSTokenVector singleTokenList;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        singleTokenList.clear();
+        singleTokenList.push_back(tokens[i]);
+
+        CSSStyleValuePair p;
+        p.setFlagImportant(isImportant);
+        if (!doneStyle &&
+            p.updateValueTextDecorationStyle(nullptr, singleTokenList)) {
+            addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle, p);
+            doneStyle = true;
+        } else if (!doneColor &&
+                   p.updateValueTextDecorationColor(nullptr, singleTokenList)) {
+            addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor, p);
+            doneColor = true;
+        } else if (!doneLine &&
+                   p.updateValueTextDecorationLine(nullptr, singleTokenList)) {
+            // text-decoration-line can accept consecutive multi-values
+            std::set<TextDecorationLineValue> set;
+            const CSSStyleValuePair& lineVal = p.multiValue()->at(0);
+            set.insert(lineVal.textDecorationLineValue());
+            for (size_t j = i + 1; j < tokens.size(); j++) {
+                singleTokenList.clear();
+                singleTokenList.push_back(tokens[j]);
+                bool ok = false;
+                CSSStyleValuePair tmpVal;
+                if (tmpVal.updateValueTextDecorationLine(nullptr,
+                                                         singleTokenList)) {
+                    const CSSStyleValuePair& nextVal =
+                        tmpVal.multiValue()->at(0);
+                    if (set.find(nextVal.textDecorationLineValue()) ==
+                        set.end()) {
+                        i = j;
+                        set.insert(nextVal.textDecorationLineValue());
+                        p.multiValue()->push_back(nextVal);
+                        ok = true;
+                    }
+                }
+
+                if (!ok) {
+                    break;
+                }
+            }
+            addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine, p);
+            doneLine = true;
+        } else {
+            // Error: each style, color, and line can appear only once OR
+            // an unknown token received
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine);
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle);
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor);
+            return;
+        }
+    }
 }
 
 void CSSStyleDeclaration::setTransitionProperty(const char* value,
@@ -2355,59 +3246,6 @@ String* CSSStyleDeclaration::Transition()
     return builder.finalize();
 }
 
-static bool parseTransitionShorthand(const CSSTokenVector& tokens,
-                                     CSSStyleValuePair* property,
-                                     CSSStyleValuePair* duration,
-                                     CSSStyleValuePair* timingFunction,
-                                     CSSStyleValuePair* delay)
-{
-    size_t len = tokens.size();
-    if (len < 1) {
-        return false;
-    }
-
-    property->setValueKind(CSSStyleValuePair::ValueKind::Initial);
-    duration->setValueKind(CSSStyleValuePair::ValueKind::Initial);
-    timingFunction->setValueKind(CSSStyleValuePair::ValueKind::Initial);
-    delay->setValueKind(CSSStyleValuePair::ValueKind::Initial);
-
-    CSSStyleValuePair temp;
-    bool foundProperty = false;
-    bool foundDuration = false;
-    bool foundTimingFunction = false;
-    bool foundDelay = false;
-
-    for (size_t i = 0; i < len; i++) {
-        const CSSTokenValue& tok = tokens[i];
-        if (!foundProperty && temp.updateValueUnitTransitionProperty(tok)) {
-            foundProperty = true;
-            *property = temp;
-            continue;
-        }
-        if ((!foundDuration || !foundDelay) &&
-            temp.updateValueUnitTimeOrCalc(tok, 0)) {
-            if (!foundDuration) {
-                foundDuration = true;
-                *duration = temp;
-                continue;
-            }
-            if (!foundDelay) {
-                foundDelay = true;
-                *delay = temp;
-                continue;
-            }
-        }
-        if (!foundTimingFunction &&
-            temp.updateValueUnitTransitionTimingFunction(tok)) {
-            foundTimingFunction = true;
-            *timingFunction = temp;
-            continue;
-        }
-        return false;
-    }
-    return true;
-}
-
 void CSSStyleDeclaration::setTransition(const char* value, size_t length,
                                         bool isImportant)
 {
@@ -2510,12 +3348,10 @@ void InlineCSSStyleDeclaration::setCssText(String* text)
     m_node->asElement()->setStyleAttr(text);
 }
 
-void ComputedStyleCSSStyleDeclaration::setCssText(String* text)
-{
-    STARFISH_ASSERT(m_node->isElement());
-    throw new DOMException(
-        m_node->asElement()->document(),
-        DOMException::NO_MODIFICATION_ALLOWED_ERR,
-        "These styles are computed, and therefore read-only.");
-}
+#undef ADD_PAIRS
+#undef RM_PAIRS
+#undef GEN_ATTRIBUTE_GETTER_FOURSIDE
+#undef GEN_ATTRIBUTE_SETTER_FOURSIDE
+#undef GEN_ATTRIBUTE_GETTER_BORDER
+#undef GEN_ATTRIBUTE_SETTER_BORDER
 }
