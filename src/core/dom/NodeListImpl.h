@@ -32,6 +32,7 @@ bool isSameTagName(Node* node, void* data, GCVector<Node*>* collection);
 bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection);
+bool isTableCellElement(Node* node, void* data, GCVector<Node*>* collection);
 bool isFormElements(Node* node, void* data, GCVector<Node*>* collection);
 bool isOptionElement(Node* node, void* data, GCVector<Node*>* collection);
 bool isSelectedOption(Node* node, void* data, GCVector<Node*>* collection);
@@ -47,6 +48,7 @@ public:
         ClassNamesFilter,
         NamedAccessFilter,
         TableRowsFilter,
+        TableCellsFilter,
         FormElementsFiliter,
         OptionElementFilter,
         SelectedOptionsFilter,
@@ -79,6 +81,9 @@ public:
             break;
         case TableRowsFilter:
             m_filter = isSameTableElement;
+            break;
+        case TableCellsFilter:
+            m_filter = isTableCellElement;
             break;
         case FormElementsFiliter:
             m_filter = isFormElements;

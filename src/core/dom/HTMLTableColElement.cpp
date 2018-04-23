@@ -43,6 +43,8 @@ void HTMLTableColElement::styleForPresentationAttribute(
     String* w = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
     if (!w->equals(String::emptyString)) {
         // Use px as the default unit
+        // There is another type (relative_length), but it is not implemented in
+        // any of major browsers.
         if (!w->contains("px") && !w->contains("%")) {
             w = w->concat(String::createASCIIString("px"));
         }

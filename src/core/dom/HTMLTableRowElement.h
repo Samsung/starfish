@@ -28,8 +28,12 @@ class HTMLTableRowElement : public HTMLTablePartElement {
 public:
     HTMLTableRowElement(Document* document)
         : HTMLTablePartElement(document)
+        , m_cells(nullptr)
     {
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -53,6 +57,17 @@ public:
     void setCh(String* ch);
 
     int32_t rowIndex();
+
+    int32_t sectionRowIndex();
+
+    HTMLCollection* cells();
+
+    HTMLTableCellElement* insertCell(int32_t index = -1);
+
+    void deleteCell(long index);
+
+private:
+    HTMLCollection* m_cells;
 };
 }
 
