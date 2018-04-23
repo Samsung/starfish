@@ -965,6 +965,11 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
             damagedKeys[CSSStyleValuePair::Opacity]) {
             return true;
         }
+        if (damagedKeys[CSSStyleValuePair::BackgroundColor] &&
+            (isPropertyAll || property == TransitionPropertyBackgroundValue ||
+             property == TransitionPropertyBackgroundColorValue)) {
+            return true;
+        }
     }
 
     return false;
@@ -1026,6 +1031,17 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 AnimatedValue(newStyle->opacity()), duration, delay,
                 timingFunction));
             newStyle->setOpacity(oldStyle->opacity());
+        }
+        if (damagedKeys[CSSStyleValuePair::BackgroundColor] &&
+            (isPropertyAll || property == TransitionPropertyBackgroundValue ||
+             property == TransitionPropertyBackgroundColorValue)) {
+            executor->registerAnimation(new ColorAnimationTask(
+                element, CSSStyleValuePair::BackgroundColor,
+                String::createASCIIString("background-color"),
+                AnimatedValue(oldStyle->backgroundColor()),
+                AnimatedValue(newStyle->backgroundColor()), duration, delay,
+                timingFunction));
+            newStyle->setBackgroundColor(oldStyle->backgroundColor());
         }
     }
 }

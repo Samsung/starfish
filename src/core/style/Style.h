@@ -431,9 +431,10 @@ enum ImageRenderingValue {
 
 enum TransitionPropertyValue {
     TransitionPropertyAllValue,
-    TransitionPropertyBackground,
+    TransitionPropertyBackgroundValue,
     TransitionPropertyBackgroundColorValue,
     TransitionPropertyBackgroundPositionValue,
+    TransitionPropertyBackgroundSizeValue,
     TransitionPropertyBorderBottomColorValue,
     TransitionPropertyBorderBottomWidthValue,
     TransitionPropertyBorderLeftColorValue,
