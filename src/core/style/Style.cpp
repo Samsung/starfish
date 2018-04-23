@@ -193,12 +193,14 @@ String* transitionPropertyValueToString(TransitionPropertyValue val)
     switch (val) {
     case TransitionPropertyAllValue:
         return String::createASCIIString("all");
-    case TransitionPropertyBackground:
+    case TransitionPropertyBackgroundValue:
         return String::createASCIIString("background");
     case TransitionPropertyBackgroundColorValue:
         return String::createASCIIString("background-color");
     case TransitionPropertyBackgroundPositionValue:
         return String::createASCIIString("background-position");
+    case TransitionPropertyBackgroundSizeValue:
+        return String::createASCIIString("background-size");
     case TransitionPropertyBorderBottomColorValue:
         return String::createASCIIString("border-bottom-color");
     case TransitionPropertyBorderBottomWidthValue:
@@ -1906,13 +1908,16 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
             TransitionPropertyValue::TransitionPropertyAllValue;
     } else if (STRING_VALUE_IS_STRING("background")) {
         m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBackground;
+            TransitionPropertyValue::TransitionPropertyBackgroundValue;
     } else if (STRING_VALUE_IS_STRING("background-color")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBackgroundColorValue;
     } else if (STRING_VALUE_IS_STRING("background-position")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBackgroundPositionValue;
+    } else if (STRING_VALUE_IS_STRING("background-size")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBackgroundSizeValue;
     } else if (STRING_VALUE_IS_STRING("border-bottom-color")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBorderBottomColorValue;
