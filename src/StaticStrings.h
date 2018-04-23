@@ -371,6 +371,10 @@ public:
     QualifiedName m_alink;
     QualifiedName m_vlink;
     QualifiedName m_background;
+    QualifiedName m_headers;
+    QualifiedName m_abbr;
+    QualifiedName m_nowrap;
+    QualifiedName m_axis;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

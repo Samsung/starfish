@@ -60,6 +60,11 @@ public:
     uint32_t rowSpan();
     void setRowSpan(uint32_t rowSpan);
 
+    int32_t cellIndex();
+
+    String* scope();
+    void setScope(String* scope);
+
     // only for DOM conformance test
     String* ch();
     void setCh(String* ch);

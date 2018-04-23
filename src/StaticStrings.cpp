@@ -279,6 +279,14 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_background =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "background"));
+    m_headers = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "headers"));
+    m_abbr = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "abbr"));
+    m_nowrap = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "nowrap"));
+    m_axis = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "axis"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

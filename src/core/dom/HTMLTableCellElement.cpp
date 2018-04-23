@@ -20,7 +20,10 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLTableCellElement.h"
+
+#include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLTableElement.h"
+#include "core/dom/HTMLTableRowElement.h"
 #include "core/style/CSSParser.h"
 
 namespace StarFish {
@@ -32,7 +35,10 @@ void HTMLTableCellElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLTablePartElement::didAttributeChanged(
         name, old, value, attributeCreated, attributeRemoved);
-    if (name == starFish()->staticStrings()->m_bgcolor) {
+    if (name == starFish()->staticStrings()->m_nowrap ||
+        name == starFish()->staticStrings()->m_height ||
+        name == starFish()->staticStrings()->m_width ||
+        name == starFish()->staticStrings()->m_bgcolor) {
         setNeedsStyleRecalc();
     }
 }
@@ -66,9 +72,52 @@ void HTMLTableCellElement::styleForPresentationAttribute(
             cssValues.push_back(pair);
         }
     }
+
+    String* nowrap = getAttributeOrEmpty(starFish()->staticStrings()->m_nowrap);
+    if (!nowrap->isEmpty()) {
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpace);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::WhiteSpaceValueKind);
+        pair.setValue(WhiteSpaceValue::NoWrapWhiteSpaceValue);
+    }
+
+    String* h = getAttributeOrEmpty(starFish()->staticStrings()->m_height);
+    if (!h->isEmpty()) {
+        // Use px as the default unit
+        if (!h->contains("px") && !h->contains("%")) {
+            h = h->concat(String::createASCIIString("px"));
+        }
+
+        CSSStyleValuePair pair;
+        CSSTokenVector tokens;
+        CSSTokenValue token = h->toNullableUTF8String().m_buffer;
+        tokens.push_back(token);
+        if (pair.updateValueHeight(document(), tokens)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Height);
+            cssValues.push_back(pair);
+        }
+    }
+
+    String* w = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+    if (!w->equals(String::emptyString)) {
+        // Use px as the default unit
+        if (!w->contains("px") && !w->contains("%")) {
+            w = w->concat(String::createASCIIString("px"));
+        }
+
+        CSSStyleValuePair pair;
+        CSSTokenVector tokens;
+        CSSTokenValue token = w->toNullableUTF8String().m_buffer;
+        tokens.push_back(token);
+        if (pair.updateValueWidth(document(), tokens)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
+            cssValues.push_back(pair);
+        }
+    }
+
     String* bgColor =
         getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
-    if (!bgColor->equals(String::emptyString)) {
+    if (!bgColor->isEmpty()) {
         CSSStyleValuePair pair;
         CSSTokenValue token = bgColor->toNullableUTF8String().m_buffer;
         if (pair.updateValueUnitColor(token)) {
@@ -138,6 +187,39 @@ void HTMLTableCellElement::setRowSpan(uint32_t rowSpan)
 {
     setAttribute(starFish()->staticStrings()->m_rowspan,
                  String::fromInt(rowSpan));
+}
+
+int32_t HTMLTableCellElement::cellIndex()
+{
+    Node* parent = parentNode();
+    if (parent->isHTMLTableRowElement()) {
+        HTMLTableRowElement* row = parent->asHTMLTableRowElement();
+        HTMLCollection* cells = row->cells();
+        size_t length = cells->length();
+        for (size_t i = 0; i < length; i++) {
+            if (cells->item(i) == this) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+String* HTMLTableCellElement::scope()
+{
+    String* scope = getAttributeOrEmpty(starFish()->staticStrings()->m_scope);
+    if (scope->isEmpty() || scope->equalsIgnoreCase("col") ||
+        scope->equalsIgnoreCase("colgroup") || scope->equalsIgnoreCase("row") ||
+        scope->equalsIgnoreCase("rowgroup")) {
+        return scope;
+    }
+
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
+void HTMLTableCellElement::setScope(String* scope)
+{
+    setAttribute(starFish()->staticStrings()->m_scope, scope);
 }
 
 String* HTMLTableCellElement::ch()
