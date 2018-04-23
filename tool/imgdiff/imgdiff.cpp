@@ -169,6 +169,7 @@ public:
         fprintf(stderr, "\n");
         va_end(args);
         // ::abort();
+        puts("[imgdiff-fail]");
         exit(-1);
     }
 
@@ -230,7 +231,7 @@ int main(int argc, char *argv[])
     i2->open(argv[2]);
 
     if ((i1->width() != i2->width()) || (i1->height() != i2->height())) {
-        puts("diff: 100.0% failed (image size diffrent)");
+        puts("diff: 100.0% failed[imgdiff-fail] (image size diffrent)");
         return 0;
     }
 
@@ -291,7 +292,7 @@ int main(int argc, char *argv[])
         if (maxCnt < 4) {
             printf("diff: %01.2f%% passed (not exactly same)(debug %d)\n", 100.f*(diffCount/((float)(width*height))), maxCnt);
         } else {
-            printf("diff: %01.2f%% failed\n", 100.f*(diffCount/((float)(width*height))));
+            printf("diff: %01.2f%% failed[imgdiff-fail]\n", 100.f*(diffCount/((float)(width*height))));
         }
 
 

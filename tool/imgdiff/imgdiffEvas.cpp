@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     EvasImage img2 = EvasImage(e, file2);
 
     if (!((img1.width == img2.width) && (img1.height == img2.height))) {
-        printf("Fail\n");
+        printf("Fail[imgdiff-fail]\n");
         return 0;
     }
     evas_object_resize(win, img1.width, img1.height);
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
         if (maxCnt < 4) {
             printf("diff: %01.2f%% passed (not exactly same)(debug %d)\n", 100.f*(diffCount/((float)(width*height))), maxCnt);
         } else {
-            printf("diff: %01.2f%% failed\n", 100.f*(diffCount/((float)(width*height))));
+            printf("diff: %01.2f%% failed[imgdiff-fail]\n", 100.f*(diffCount/((float)(width*height))));
         }
 
     } else {

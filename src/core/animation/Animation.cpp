@@ -357,7 +357,6 @@ void AnimationExecutor::registerAnimation(AnimationTask* newTask)
 void AnimationExecutor::cancelPreviousAnimation(
     Element* target, CSSStyleValuePair::KeyKind cssType)
 {
-    // TODO : Need optimization
     // fire end event
     m_animationList.erase(
         std::remove_if(m_animationList.begin(), m_animationList.end(),

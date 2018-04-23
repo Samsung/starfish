@@ -285,3 +285,4 @@ test/cairo/internal-test/css/background/background_lineargradient3.html
 test/cairo/internal-test/css/background/background_lineargradient4.html
 test/cairo/internal-test/css/background/background_lineargradient5.html
 test/cairo/internal-test/css/transition/parse-transition.html
+test/cairo/internal-test/css/legacy/body_legacy_attrs.html

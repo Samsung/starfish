@@ -1035,13 +1035,19 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
         if (damagedKeys[CSSStyleValuePair::BackgroundColor] &&
             (isPropertyAll || property == TransitionPropertyBackgroundValue ||
              property == TransitionPropertyBackgroundColorValue)) {
-            executor->registerAnimation(new ColorAnimationTask(
-                element, CSSStyleValuePair::BackgroundColor,
-                String::createASCIIString("background-color"),
-                AnimatedValue(oldStyle->backgroundColor()),
-                AnimatedValue(newStyle->backgroundColor()), duration, delay,
-                timingFunction));
-            newStyle->setBackgroundColor(oldStyle->backgroundColor());
+            if (oldStyle->backgroundColor() != newStyle->backgroundColor()) {
+                // We need double-check because function compareStyle doesn't
+                // provide correct information about each keys yet.
+                executor->registerAnimation(new ColorAnimationTask(
+                    element, CSSStyleValuePair::BackgroundColor,
+                    transitionPropertyValueToString(
+                        TransitionPropertyValue::
+                            TransitionPropertyBackgroundColorValue),
+                    AnimatedValue(oldStyle->backgroundColor()),
+                    AnimatedValue(newStyle->backgroundColor()), duration, delay,
+                    timingFunction));
+                newStyle->setBackgroundColor(oldStyle->backgroundColor());
+            }
         }
     }
 }
