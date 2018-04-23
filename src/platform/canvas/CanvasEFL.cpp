@@ -159,6 +159,7 @@ public:
         m_buffer = NULL;
         m_directDraw = true;
         m_forceMapMode = false;
+        m_eventLayer = NULL;
         struct dummy {
             void* a;
             void* b;
@@ -169,6 +170,7 @@ public:
         };
         dummy* d = (dummy*)data;
         m_canvas = (Evas*)d->a;
+        m_eventLayer = (Evas_Object*)d->b;
         m_width = d->w;
         m_height = d->h;
         m_objList = d->objList;
@@ -183,6 +185,7 @@ public:
         m_imageCount = 0;
         m_objList = NULL;
         m_forceMapMode = m_directDraw = false;
+        m_eventLayer = NULL;
         m_image = (Evas_Object*)data->unwrap();
         void* buffer = evas_object_image_data_get(m_image, EINA_TRUE);
         m_buffer = buffer;
@@ -225,7 +228,10 @@ public:
         evas_object_color_set(eo, c.r(), c.g(), c.b(), c.a());
         evas_object_move(eo, 0, 0);
         evas_object_resize(eo, m_width, m_height);
-        evas_object_render_op_set(eo, EVAS_RENDER_COPY);
+        if (m_eventLayer) {
+            elm_box_pack_end(m_eventLayer, eo);
+            evas_object_raise(eo);
+        }
         applyClippers(eo);
         evas_object_show(eo);
         restore();
@@ -726,6 +732,10 @@ public:
         evas_object_color_set(eo, c.r(), c.g(), c.b(), c.a());
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
+        if (m_eventLayer) {
+            elm_box_pack_end(m_eventLayer, eo);
+            evas_object_raise(eo);
+        }
         if (!isHole) {
             applyClippers(eo);
         }
@@ -1555,8 +1565,10 @@ public:
         }
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
-        evas_object_raise(eo);
-
+        if (m_eventLayer) {
+            elm_box_pack_end(m_eventLayer, eo);
+            evas_object_raise(eo);
+        }
 #ifdef STARFISH_ENABLE_TEST
         if (evas_object_evas_get(eo) != m_canvas) {
             eo = evas_object_image_add(m_canvas);
@@ -1738,7 +1750,6 @@ public:
         evas_map_free(map);
 
         evas_object_show(eo);
-
         restore();
     }
 
@@ -1943,6 +1954,7 @@ protected:
                    std::hash<NativeImageData*>,
                    std::equal_to<NativeImageData*>>* m_prevDrawnImageMap;
     CanvasShadowDataList m_textShadowDataList;
+    Evas_Object* m_eventLayer;
 };
 
 Canvas* createCanvasDirectEFL(StarFish* starfish, void* data)

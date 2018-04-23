@@ -89,6 +89,14 @@ namespace StarFish {
     F(PLAYER_ERROR_NOT_SUPPORTED_SUBTITLE)
 #endif
 
+#define RETURN_WHEN_PLAYER_ERROR(...) \
+    if (ret != PLAYER_ERROR_NONE) {   \
+        PLAYER_LOGE(__VA_ARGS__);     \
+        printNativePlayerError(ret);  \
+        handlePlayerError();          \
+        return;                       \
+    }
+
 void MediaPlayerTizen::printNativePlayerError(int errorCode)
 {
     switch (errorCode) {
@@ -1304,14 +1312,6 @@ bool MediaPlayerTizen::isMSEBufferEOS()
     }
     return isEOS;
 }
-
-#define RETURN_WHEN_PLAYER_ERROR(...) \
-    if (ret != PLAYER_ERROR_NONE) {   \
-        PLAYER_LOGE(__VA_ARGS__);     \
-        printNativePlayerError(ret);  \
-        handlePlayerError();          \
-        return;                       \
-    }
 
 void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
 {

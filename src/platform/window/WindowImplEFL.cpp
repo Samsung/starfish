@@ -289,7 +289,6 @@ public:
 #if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         evas_object_raise(m_dummyBox);
 #else
-        evas_object_raise(m_mainBox);
         if (!isIMEEnabledNow() && g_focusedWin == this) {
             evas_object_focus_set(m_nonIMEKeyEventBox, EINA_TRUE);
         }
@@ -946,6 +945,10 @@ static const char* getImfMethod()
 
 const uint32_t CLICK_REFRESH_DELAY = 400;
 
+void elm_box_layout_cb(Evas_Object* o, Evas_Object_Box_Data* priv,
+                       void* user_data)
+{
+}
 PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                        int height)
 {
@@ -954,18 +957,19 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
-    wnd->m_mainBox = elm_label_add(wnd->m_window);
+    wnd->m_mainBox = elm_box_add(wnd->m_window);
     evas_object_resize(wnd->m_mainBox, width, height);
     evas_object_move(wnd->m_mainBox, wnd->starFish()->posX(),
                      wnd->starFish()->posY());
-    evas_object_show(wnd->m_mainBox);
-
     wnd->m_nonIMEKeyEventBox = elm_label_add(wnd->m_window);
     evas_object_show(wnd->m_nonIMEKeyEventBox);
+    elm_box_layout_set(wnd->m_mainBox, elm_box_layout_cb, NULL, NULL);
+    evas_object_show(wnd->m_mainBox);
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     wnd->m_canvasAdpater =
         evas_object_image_add(evas_object_evas_get(wnd->m_mainBox));
+    elm_box_pack_end(wnd->m_mainBox, wnd->m_canvasAdpater);
     evas_object_resize(wnd->m_canvasAdpater, width, height);
     evas_object_move(wnd->m_canvasAdpater, wnd->starFish()->posX(),
                      wnd->starFish()->posY());
@@ -2022,7 +2026,7 @@ Compositor* WindowImplEFL::prepareCompositor()
 #endif
     int width, height;
     evas_object_geometry_get(m_mainBox, NULL, NULL, &width, &height);
-    Evas* evas = evas_object_evas_get(m_mainBox);
+    Evas* evas = evas_object_evas_get(m_window);
     struct dummy {
         void* a;
         void* b;
@@ -2032,9 +2036,13 @@ Compositor* WindowImplEFL::prepareCompositor()
         std::vector<Evas_Object*>* surfaceList;
         bool f;
     };
+    elm_box_unpack_all(m_mainBox);
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+    elm_box_pack_end(m_mainBox, m_canvasAdpater);
+#endif
     dummy* d = new dummy;
     d->a = evas;
-    d->b = nullptr;
+    d->b = m_mainBox;
     d->w = width + starFish()->posX();
     d->h = height + starFish()->posY();
     d->objList = &m_objectList;
