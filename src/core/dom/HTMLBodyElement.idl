@@ -9,6 +9,12 @@ interface HTMLBodyElement : HTMLElement {
   attribute EventHandler onload;
   [Unimplemented] attribute EventHandler onresize;
   [Unimplemented] attribute EventHandler onscroll;
+  [CEReactions, Reflect=aLink] attribute DOMString alink;
+  [CEReactions, Reflect=bgcolor] attribute DOMString bgColor;
+  [CEReactions, Reflect] attribute DOMString background;
+  [CEReactions, Reflect] attribute DOMString link;
+  [CEReactions, Reflect] attribute DOMString text;
+  [CEReactions, Reflect=vLink] attribute DOMString vlink;
 };
 
 HTMLBodyElement implements WindowEventHandlers;

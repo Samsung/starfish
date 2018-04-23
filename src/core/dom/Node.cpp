@@ -1735,7 +1735,7 @@ void Node::setNeedsStyleRecalc(StyleChangeReason reason)
         return;
     }
 
-    if (reason <= StyleChangeReason::ClassChange) {
+    if (reason <= StyleChangeReason::AttributeChange) {
         if (!m_needsStyleRecalc) {
             m_needsStyleRecalc = true;
         }

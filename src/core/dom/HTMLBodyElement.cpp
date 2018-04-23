@@ -62,6 +62,77 @@ void HTMLBodyElement::didAttributeChanged(QualifiedName name, String* old,
         window()->setAttributeEventListener(ss->m_load, value, this);
     } else if (name == ss->m_onunload) {
         window()->setAttributeEventListener(ss->m_unload, value, this);
+    } else if (name == ss->m_alink) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+    } else if (name == ss->m_background) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+    } else if (name == ss->m_bgcolor) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+    } else if (name == ss->m_link) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+    } else if (name == ss->m_text) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+    } else if (name == ss->m_vlink) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+    }
+}
+
+void HTMLBodyElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues);
+
+    // TODO add alink, link, vlink when :visited, :link implemented
+
+    // attr background
+    {
+        CSSStyleValuePair containerPair;
+        CSSStyleValuePair pair;
+        String* value =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_background);
+        if (value->length()) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundImage);
+            pair.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
+            pair.setUrlValue(value);
+
+            ValueList* values =
+                new ValueList(ValueList::Separator::CommaSeparator);
+            values->push_back(pair);
+            containerPair.setKeyKind(
+                CSSStyleValuePair::KeyKind::BackgroundImage);
+            containerPair.setValueList(values);
+            cssValues.push_back(containerPair);
+        }
+    }
+
+    // attr bgcolor
+    {
+        CSSStyleValuePair pair;
+        String* value =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
+        if (value->length()) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
+            CSSTokenVector v;
+            v.push_back(value->toUTF8NonGCString());
+            if (pair.updateValueColor(document(), v)) {
+                cssValues.push_back(pair);
+            }
+        }
+    }
+
+    // attr text
+    {
+        CSSStyleValuePair pair;
+        String* value =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_text);
+        if (value->length()) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Color);
+            CSSTokenVector v;
+            v.push_back(value->toUTF8NonGCString());
+            if (pair.updateValueColor(document(), v)) {
+                cssValues.push_back(pair);
+            }
+        }
     }
 }
 }

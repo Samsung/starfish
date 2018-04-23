@@ -5889,7 +5889,8 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     element->styleForPresentationAttribute(cssValues);
     // FIXME : clean up to remove this vector called by empty.
     GCVector<MutablePropertyValue> empty;
-    apply(element, cssValues.mutableData(), empty, nullptr, ret, parent, false);
+    apply(element, cssValues.mutableData(), empty,
+          element->document()->documentURI(), ret, parent, false);
 
     // Apply non-important author-rules
     {

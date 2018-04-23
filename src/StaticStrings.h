@@ -367,6 +367,10 @@ public:
     QualifiedName m_usemap;
     QualifiedName m_charoff;
     QualifiedName m_valign;
+    QualifiedName m_link;
+    QualifiedName m_alink;
+    QualifiedName m_vlink;
+    QualifiedName m_background;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

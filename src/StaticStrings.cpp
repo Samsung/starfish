@@ -270,6 +270,15 @@ StaticStrings::StaticStrings(StarFish* sf)
                               AtomicString::createAtomicString(sf, "charoff"));
     m_valign = QualifiedName(AtomicString::emptyAtomicString(),
                              AtomicString::createAtomicString(sf, "valign"));
+    m_link = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "link"));
+    m_vlink = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "vlink"));
+    m_alink = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "alink"));
+    m_background =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "background"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

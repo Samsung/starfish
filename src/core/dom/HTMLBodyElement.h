@@ -79,6 +79,9 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
+
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues) override;
 };
 }
 
