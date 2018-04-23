@@ -239,6 +239,14 @@ bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection)
     return false;
 };
 
+bool isTableCellElement(Node* node, void* data, GCVector<Node*>* collection)
+{
+    if (node->isHTMLTableCellElement()) {
+        return true;
+    }
+    return false;
+}
+
 bool isFormElements(Node* node, void* data, GCVector<Node*>* collection)
 {
     // https://html.spec.whatwg.org/#dom-form-elements

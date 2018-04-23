@@ -558,6 +558,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |    | method |  deleteCaption  |  Removes the first <caption> that is a child of the element.  |
 | [HTMLTableRowElement](https://html.spec.whatwg.org/#htmltablerowelement) | interface | HTMLTableRowElement | The HTMLTableRowElement interface provides special properties and methods for manipulating the layout and presentation of rows in an HTML table. |
 |    | attribute |  rowIndex  |  Returns a long value which gives the logical position of the row within the entire table. If the row is not part of a table, returns -1.  |
+|    | attribute |  sectionRowIndex  |  Returns a long value which gives the logical position of the row within the table section it belongs to.  |
+|    | attribute |  cells  |  Returns the cells in the row.  |
+|    | attribute |  insertCell  |  Inserts a new cell just before the given position in the row.  |
+|    | attribute |  deleteCell  |  Removes the cell at the given position in the row.  |
 |    | attribute |  bgColor  |  Returns the background color of the cells. |
 |    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
 |    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |

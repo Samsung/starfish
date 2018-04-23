@@ -20,10 +20,27 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLTableRowElement.h"
+
+#include "core/dom/DOMException.h"
+#include "core/dom/HTMLCollection.h"
+#include "core/dom/HTMLTDElement.h"
 #include "core/dom/HTMLTableElement.h"
-#include "HTMLCollection.h"
+#include "core/dom/HTMLTableSectionElement.h"
 
 namespace StarFish {
+void* HTMLTableRowElement::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLTableRowElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLTableRowElement, m_cells));
+        HTMLTablePartElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLTableRowElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
 
 QualifiedName HTMLTableRowElement::name()
 {
@@ -106,5 +123,81 @@ int32_t HTMLTableRowElement::rowIndex()
         }
     }
     return -1;
+}
+
+inline HTMLCollection* findTableSectionRows(const HTMLTableRowElement& row)
+{
+    auto* parent = row.parentNode();
+    if (parent->isHTMLTableSectionElement()) {
+        return parent->asHTMLTableSectionElement()->rows();
+    } else if (parent->isHTMLTableElement()) {
+        return parent->asHTMLTableElement()->rows();
+    }
+    return nullptr;
+}
+
+int32_t HTMLTableRowElement::sectionRowIndex()
+{
+    HTMLCollection* rows = findTableSectionRows(*this);
+    if (!rows) {
+        return -1;
+    }
+
+    size_t length = rows->length();
+    for (size_t i = 0; i < length; i++) {
+        if (rows->item(i) == this) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+HTMLCollection* HTMLTableRowElement::cells()
+{
+    if (m_cells) {
+        return m_cells;
+    }
+
+    RareNodeMembers* rareData = ensureRareMembers();
+    ActiveHTMLCollectionList* activeLists =
+        rareData->ensureActiveHtmlCollectionListForTagName();
+    m_cells =
+        new HTMLCollection(this, NodeListImpl::TableCellsFilter, nullptr, true);
+    rareData->putActiveHtmlCollectionListWithQuery(activeLists,
+                                                   this->localName(), m_cells);
+    return m_cells;
+}
+
+HTMLTableCellElement* HTMLTableRowElement::insertCell(int32_t index)
+{
+    HTMLCollection* cells = this->cells();
+    if (index < -1 ||
+        (index != -1 && static_cast<size_t>(index) > cells->length())) {
+        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
+    }
+
+    HTMLTDElement* cell = new HTMLTDElement(document());
+    if (index == -1 || static_cast<size_t>(index) == cells->length()) {
+        appendChild(cell);
+    } else {
+        insertBefore(cell, cells->item(index));
+    }
+    return cell;
+}
+
+void HTMLTableRowElement::deleteCell(long index)
+{
+    HTMLCollection* cells = this->cells();
+    if (index == -1) {
+        if (cells->length() == 0) {
+            return;
+        } else {
+            index = cells->length() - 1;
+        }
+    } else if (index < -1 || static_cast<size_t>(index) >= cells->length()) {
+        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
+    }
+
+    removeChild(cells->item(index));
 }
 }
