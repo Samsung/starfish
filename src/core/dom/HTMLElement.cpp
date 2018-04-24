@@ -201,7 +201,7 @@ void HTMLElement::styleForPresentationAttribute(
     }
 }
 
-int HTMLElement::tabIndex() const
+int HTMLElement::tabIndex()
 {
     if (supportsFocus()) {
         return Element::tabIndex();

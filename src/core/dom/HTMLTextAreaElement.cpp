@@ -121,7 +121,7 @@ QualifiedName HTMLTextAreaElement::name()
     return starFish()->staticStrings()->m_textareaTagName;
 }
 
-bool HTMLTextAreaElement::supportsFocus() const
+bool HTMLTextAreaElement::supportsFocus()
 {
     return isMutable();
 }

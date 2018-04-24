@@ -81,7 +81,7 @@ public:
     virtual bool handleDefaultEvent(Event* event) override;
     virtual LayoutUnit caretThickness() const;
 
-    bool isMutable() const
+    bool isMutable()
     {
         return !disabled() && !readonly();
     }

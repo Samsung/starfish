@@ -39,7 +39,7 @@ public:
     void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
     void reset() override;
-    bool supportsFocus() const override;
+    bool supportsFocus() override;
     bool isHTMLTextAreaElement() const override;
     bool isPlaceholderVisible() override;
 

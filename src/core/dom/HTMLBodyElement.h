@@ -40,7 +40,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isFocusable() const
+    virtual bool isFocusable() override
     {
         return true;
     }
