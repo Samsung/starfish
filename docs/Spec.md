@@ -355,6 +355,17 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constructor | Audio(optional DOMString src="") | |
 | [HTMLBodyElement](https://html.spec.whatwg.org/multipage/semantics.html#the-body-element) | interface | HTMLBodyElement | The body element represents the main content of the document. |
 |  | attribute | onload | Fired at the Window when the document has finished loading; fired at an element containing a resource (e.g. img, embed) when its resource has finished loading |
+|  | attribute | onblur | Is an EventHandler for Window representing the code to be called when the blur event is raised. |
+|  | attribute | onerror | Is an OnErrorEventHandler for Window representing the code to be called when the error event is raised. |
+|  | attribute | onfocus | Is an EventHandler for Window representing the code to be called when the focus event is raised. |
+|  | attribute | onload | Fired at the Window when the document has finished loading; fired at an element containing a resource (e.g. img, embed) when its resource has finished loading |
+|  | attribute | onresize | Is an EventHandler for Window representing the code to be called when the resize event is raised. |
+|  | attribute | alink | Is a DOMString that represents the color of active hyperlinks. |
+|  | attribute | bgColor | Is a DOMString that represents the background color for the document. |
+|  | attribute | background | Is a DOMString that represents the description of the location of the background image resource. |
+|  | attribute | link | Is a DOMString that represents the color of unvisited links. |
+|  | attribute | text | Is a DOMString that represents the foreground color of text. |
+|  | attribute | vlink | Is a DOMString that represents the color of visited links. |
 | [HTMLBaseElement](https://html.spec.whatwg.org/multipage/semantics.html#the-base-element) | interface | HTMLBaseElement | The base element specifies the base URL to use for all relative URLs contained within a document. |
 |  | attribute | href | The base URL to be used throughout the document for relative URL addresses. |
 |  | attribute | target | A name or keyword indicating the default location to display the result when hyperlinks or forms cause navigation |

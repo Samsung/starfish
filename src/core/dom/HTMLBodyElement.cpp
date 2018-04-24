@@ -32,7 +32,12 @@ QualifiedName HTMLBodyElement::name()
     return starFish()->staticStrings()->m_bodyTagName;
 }
 
+DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, blur);
+DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, error);
+DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, focus);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, load);
+DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, resize);
+// DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, load);
 
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, message);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, messageerror);
@@ -58,8 +63,20 @@ void HTMLBodyElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
     StaticStrings* ss = starFish()->staticStrings();
-    if (name == ss->m_onload) {
+    if (name == ss->m_onblur) {
+        window()->setAttributeEventListener(ss->m_blur, value, this);
+    } else if (name == ss->m_onerror) {
+        window()->setAttributeEventListener(ss->m_error, value, this);
+    } else if (name == ss->m_onfocus) {
+        window()->setAttributeEventListener(ss->m_focus, value, this);
+    } else if (name == ss->m_onload) {
         window()->setAttributeEventListener(ss->m_load, value, this);
+    } else if (name == ss->m_onresize) {
+        window()->setAttributeEventListener(ss->m_resize, value, this);
+    } else if (name == ss->m_onmessage) {
+        window()->setAttributeEventListener(ss->m_message, value, this);
+    } else if (name == ss->m_onmessageerror) {
+        window()->setAttributeEventListener(ss->m_messageerror, value, this);
     } else if (name == ss->m_onunload) {
         window()->setAttributeEventListener(ss->m_unload, value, this);
     } else if (name == ss->m_alink) {

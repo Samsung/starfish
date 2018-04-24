@@ -92,7 +92,6 @@ public:
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
     DECLARE_EVENT_LISTENER(abort);
     // DECLARE_EVENT_LISTENER(auxclick);
-    DECLARE_EVENT_LISTENER(blur);
     // DECLARE_EVENT_LISTENER(cancel);
     DECLARE_EVENT_LISTENER(change);
     DECLARE_EVENT_LISTENER(click);
@@ -108,8 +107,6 @@ public:
     // DECLARE_EVENT_LISTENER(dragover);
     // DECLARE_EVENT_LISTENER(dragstart);
     // DECLARE_EVENT_LISTENER(drop);
-    DECLARE_EVENT_LISTENER(error);
-    DECLARE_EVENT_LISTENER(focus);
     DECLARE_EVENT_LISTENER(input);
     // DECLARE_EVENT_LISTENER(invalid);
     DECLARE_EVENT_LISTENER(keydown);
@@ -131,8 +128,7 @@ public:
     // DECLARE_EVENT_LISTENER(select);
     // DECLARE_EVENT_LISTENER(show);
     DECLARE_EVENT_LISTENER(submit);
-    // DECLARE_EVENT_LISTENER(toggle);
-    DECLARE_EVENT_LISTENER(resize);
+// DECLARE_EVENT_LISTENER(toggle);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     DECLARE_EVENT_LISTENER(suspend);
     DECLARE_EVENT_LISTENER(emptied);
@@ -164,11 +160,11 @@ public:
 
 #define VIRTUAL virtual
 #define OVERRIDE
-    // DECLARE_EVENT_LISTENER(blur);
-    // DECLARE_EVENT_LISTENER(error);
-    // DECLARE_EVENT_LISTENER(focus);
+    DECLARE_EVENT_LISTENER(blur);
+    DECLARE_EVENT_LISTENER(error);
+    DECLARE_EVENT_LISTENER(focus);
     DECLARE_EVENT_LISTENER(load);
-// DECLARE_EVENT_LISTENER(resize);
+    DECLARE_EVENT_LISTENER(resize);
 // DECLARE_EVENT_LISTENER(scroll);
 #undef VIRTUAL
 #undef OVERRIDE
