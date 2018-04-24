@@ -882,12 +882,18 @@ static GridArea* getBiggestAreaWithColumn(GCVector<GridArea>& list,
                                 b->m_columnEnd - b->m_columnStart;
                      });
 
-    if (areas.size()) {
-        for (size_t i = 0; i < areas.size(); i++) {
-            if (end - start < areas[i]->m_columnEnd - areas[i]->m_columnStart) {
-                target = areas[i];
-                break;
-            }
+    for (size_t i = 0; i < areas.size(); i++) {
+        if (end - start < areas[i]->m_columnEnd - areas[i]->m_columnStart) {
+            target = areas[i];
+            break;
+        }
+    }
+
+    for (size_t i = 0; i < areas.size(); i++) {
+        if (end - start < areas[i]->m_columnEnd - areas[i]->m_columnStart &&
+            end == areas[i]->m_columnEnd) {
+            target = areas[i];
+            break;
         }
     }
 
@@ -940,23 +946,6 @@ void GridFormattingContext::alignGridLinesForColumns(GridArea& area,
                                                      LayoutUnit& contentWidth,
                                                      bool isFixed)
 {
-    GridArea* target = nullptr;
-    size_t maxValue = 0;
-    for (size_t i = 0; i < m_orderedGridArea.size(); i++) {
-        GridArea preArea = m_orderedGridArea[i];
-        if (preArea.m_rowStart < area.m_rowStart) {
-            if (preArea.m_columnEnd == area.m_columnEnd &&
-                preArea.m_columnEnd - preArea.m_columnStart >
-                    area.m_columnEnd - area.m_columnStart) {
-                size_t diff = preArea.m_columnEnd - preArea.m_columnStart;
-                if (maxValue < diff) {
-                    maxValue = diff;
-                    target = &m_orderedGridArea[i];
-                }
-            }
-        }
-    }
-
     size_t start = area.m_columnStart;
     size_t end = area.m_columnEnd;
 
@@ -965,185 +954,77 @@ void GridFormattingContext::alignGridLinesForColumns(GridArea& area,
         sumWidth += m_gridLineColumns[i].offset();
     }
 
-    if (target) {
+    GridArea* biggest = getBiggestAreaWithColumn(m_orderedGridArea,
+                                                 area.m_rowStart, start, end);
+
+    if (!sumWidth) {
         if (!isFixed) {
             width = contentWidth;
         }
 
-        if (sumWidth < contentWidth) {
-            std::vector<GridLine*> fixed;
-            std::vector<GridLine*> noneFixed;
-            for (size_t i = start; i <= end - 1; i++) {
-                if (m_gridLineColumns[i].isFixed() &&
-                    !m_gridLineColumns[i].isFr()) {
-                    fixed.push_back(&m_gridLineColumns[i]);
-                } else {
-                    noneFixed.push_back(&m_gridLineColumns[i]);
-                }
-            }
-
-            if (noneFixed.size()) {
-                LayoutUnit sumOfFixedSize(0);
-                for (size_t i = 0; i < fixed.size(); i++) {
-                    sumOfFixedSize += fixed[i]->offset();
-                }
-
-                LayoutUnit dividedWidth =
-                    (contentWidth - sumOfFixedSize) / noneFixed.size();
-                for (size_t i = 0; i < noneFixed.size(); i++) {
-                    GridLine* line = noneFixed[i];
-                    line->setOffset(dividedWidth, true);
-                }
-            }
-        } else {
-            if (isFixed) {
-                LayoutUnit diff = (sumWidth - contentWidth) / (end - start);
-                for (size_t i = start; i <= end - 1; i++) {
-                    GridLine& line = m_gridLineColumns[i];
-                    line.setOffset(line.offset() - diff, true);
-                }
-                diff = (sumWidth - contentWidth) /
-                       (target->m_columnEnd - target->m_columnStart);
-                for (size_t i = target->m_columnStart;
-                     i <= target->m_columnEnd - 1; i++) {
-                    GridLine& line = m_gridLineColumns[i];
-                    line.setOffset(line.offset() + diff, true);
-                }
-            }
+        LayoutUnit dividedWidth = width / (end - start);
+        for (size_t i = start; i <= end - 1; i++) {
+            GridLine& line = m_gridLineColumns[i];
+            line.setOffset(dividedWidth, true);
         }
-    } else {
-        if (!sumWidth) {
-            if (!isFixed) {
-                width = contentWidth;
+    } else if (sumWidth > contentWidth) {
+        if (biggest) {
+            std::vector<GridArea*> innerAreas;
+            for (size_t i = 0; i < m_orderedGridArea.size(); i++) {
+                GridArea preArea = m_orderedGridArea[i];
+                if (preArea.m_index == biggest->m_index) {
+                    continue;
+                }
+
+                if (preArea.m_index > area.m_index) {
+                    break;
+                }
+
+                if (preArea.m_rowStart <= area.m_rowStart &&
+                    area.m_index != preArea.m_index) {
+                    if (biggest->m_columnStart <= preArea.m_columnStart &&
+                        biggest->m_columnEnd >= preArea.m_columnEnd) {
+                        innerAreas.push_back(&m_orderedGridArea[i]);
+                    }
+                }
             }
-            LayoutUnit dividedWidth = width / (end - start);
-            for (size_t i = area.m_columnStart; i <= area.m_columnEnd - 1;
+
+            SetForGrid<size_t> set;
+            for (size_t i = 0; i < innerAreas.size(); i++) {
+                GridArea* inner = innerAreas[i];
+
+                for (size_t lineNumber = inner->m_columnStart + 1;
+                     lineNumber <= inner->m_columnEnd; lineNumber++) {
+                    set.insert(lineNumber);
+                }
+            }
+
+            std::vector<GridLine*> lines;
+
+            for (size_t i = biggest->m_columnStart; i < biggest->m_columnEnd;
                  i++) {
-                GridLine& line = m_gridLineColumns[i];
-                line.setOffset(dividedWidth, true);
+                if (i >= area.m_columnStart && i < area.m_columnEnd) {
+                    continue;
+                }
+
+                if (!set.find(i + 1) && !m_gridLineColumns[i].isFixed()) {
+                    lines.push_back(&m_gridLineColumns[i]);
+                }
             }
-        } else if (sumWidth < contentWidth) {
-            GridArea* biggest = getBiggestAreaWithColumn(
-                m_orderedGridArea, area.m_rowStart, start, end);
 
-            if (biggest) {
-                std::vector<GridLine*> distributedLines;
-                for (size_t i = biggest->m_columnEnd - 1;
-                     i >= biggest->m_columnStart; --i) {
-                    if (i > area.m_columnStart - 1 &&
-                        i <= area.m_columnEnd - 1) {
-                        continue;
-                    }
-
-                    if (biggest->m_columnEnd - 1 == i ||
-                        !m_gridLineColumns[i].isContaining()) {
-                        distributedLines.push_back(&m_gridLineColumns[i]);
-                    } else {
-                        break;
-                    }
+            if (lines.size()) {
+                LayoutUnit diff = (sumWidth - contentWidth) / lines.size();
+                for (size_t i = 0; i < lines.size(); i++) {
+                    GridLine* line = lines[i];
+                    line->setOffset(line->offset() + diff, true);
                 }
 
-                LayoutUnit diff = contentWidth - sumWidth;
-                if (distributedLines.size()) {
-                    LayoutUnit sumOfDistributedLines(0);
-                    for (size_t i = 0; i < distributedLines.size(); i++) {
-                        sumOfDistributedLines += distributedLines[i]->offset();
-                    }
-
-                    LayoutUnit remaining(0);
-                    for (size_t i = 0; i < distributedLines.size(); i++) {
-                        LayoutUnit offset =
-                            diff * (distributedLines[i]->offset() /
-                                    sumOfDistributedLines);
-                        if (distributedLines[i]->offset() - offset > 0) {
-                            distributedLines[i]->setOffset(
-                                distributedLines[i]->offset() - offset, true);
-                        } else {
-                            remaining += offset - distributedLines[i]->offset();
-                            distributedLines[i]->setOffset(0, true);
-                        }
-                    }
-
-                    if (remaining > 0) {
-                        GridArea* next = getBiggestAreaWithColumn(
-                            m_orderedGridArea, biggest->m_rowStart,
-                            biggest->m_columnStart, biggest->m_columnEnd);
-                        if (next) {
-                            size_t count = 0;
-                            for (size_t i = next->m_columnStart;
-                                 i <= next->m_columnEnd - 1; i++) {
-                                if (i > biggest->m_columnStart - 1 &&
-                                    i <= biggest->m_columnEnd - 1) {
-                                    continue;
-                                }
-                                count++;
-                            }
-                            LayoutUnit offset = remaining / count;
-                            for (size_t i = next->m_columnStart;
-                                 i <= next->m_columnEnd - 1; i++) {
-                                if (i > biggest->m_columnStart - 1 &&
-                                    i <= biggest->m_columnEnd - 1) {
-                                    continue;
-                                }
-                                m_gridLineColumns[i].setOffset(
-                                    m_gridLineColumns[i].offset() - offset,
-                                    true);
-                            }
-                        }
-                    }
-                }
-
-                LayoutUnit dividedWidth = contentWidth / (end - start);
+                diff = contentWidth / (end - start);
                 for (size_t i = start; i <= end - 1; i++) {
                     GridLine& line = m_gridLineColumns[i];
-                    line.setOffset(dividedWidth, true);
+                    line.setOffset(diff, true);
                 }
             } else {
-                size_t count = 0;
-                for (size_t i = start; i <= end - 1; i++) {
-                    if (!m_gridLineColumns[i].offset()) {
-                        count++;
-                    }
-                }
-                if (count) {
-                    LayoutUnit dividedWidth = (contentWidth - sumWidth) / count;
-                    for (size_t i = start; i <= end - 1; i++) {
-                        if (!m_gridLineColumns[i].offset()) {
-                            GridLine& line = m_gridLineColumns[i];
-                            line.setOffset(dividedWidth, true);
-                        }
-                    }
-                } else {
-                    std::vector<GridLine*> noneFixed;
-                    LayoutUnit sumOfFixed(0);
-                    for (size_t i = start; i <= end - 1; i++) {
-                        if (m_gridLineColumns[i].isFixed() &&
-                            !m_gridLineColumns[i].isFr()) {
-                            sumOfFixed += m_gridLineColumns[i].offset();
-                        } else {
-                            noneFixed.push_back(&m_gridLineColumns[i]);
-                        }
-                    }
-
-                    if (noneFixed.size()) {
-                        LayoutUnit dividedWidth =
-                            (contentWidth - (sumWidth - sumOfFixed)) /
-                            noneFixed.size();
-                        for (size_t i = 0; i < noneFixed.size(); i++) {
-                            GridLine* line = noneFixed[i];
-                            line->setOffset(line->offset() + dividedWidth,
-                                            true);
-                        }
-                    }
-                }
-            }
-        } else if (sumWidth > contentWidth) {
-            GridArea* biggest = getBiggestAreaWithColumn(
-                m_orderedGridArea, area.m_rowStart, start, end);
-            GridArea* same = getSameAreaWithColumn(m_orderedGridArea,
-                                                   area.m_rowStart, start, end);
-
-            if (biggest && !same) {
                 std::vector<GridLine*> noneFixed;
                 LayoutUnit sumOfFixed(0);
                 for (size_t i = start; i <= end - 1; i++) {
@@ -1154,33 +1035,180 @@ void GridFormattingContext::alignGridLinesForColumns(GridArea& area,
                         noneFixed.push_back(&m_gridLineColumns[i]);
                     }
                 }
+                if (noneFixed.size()) {
+                    LayoutUnit diff = contentWidth / noneFixed.size();
 
-                LayoutUnit diff = 0;
-                if (biggest->m_columnEnd - end) {
-                    diff = (sumWidth - contentWidth) /
-                           (biggest->m_columnEnd - end);
+                    for (size_t i = 0; i < noneFixed.size(); i++) {
+                        GridLine* line = noneFixed[i];
+                        line->setOffset(diff, true);
+                    }
+
+                    noneFixed.clear();
+                    sumOfFixed = 0;
+
+                    size_t startForTarget = biggest->m_columnStart;
+                    size_t endForTarget = biggest->m_columnEnd;
+
+                    for (size_t i = startForTarget; i <= endForTarget - 1;
+                         i++) {
+                        if (m_gridLineColumns[i].isFixed() &&
+                            !m_gridLineColumns[i].isFr()) {
+                            sumOfFixed += m_gridLineColumns[i].offset();
+                        } else {
+                            noneFixed.push_back(&m_gridLineColumns[i]);
+                        }
+                    }
+
+                    if (noneFixed.size()) {
+                        diff = (sumWidth - contentWidth) / noneFixed.size();
+
+                        for (size_t i = 0; i < noneFixed.size(); i++) {
+                            GridLine* line = noneFixed[i];
+                            line->setOffset(line->offset() + diff, true);
+                        }
+                    }
                 }
+            }
+        }
+    } else if (sumWidth < contentWidth) {
+        if (biggest) {
+            std::vector<GridArea*> innerAreas;
+            for (size_t i = 0; i < m_orderedGridArea.size(); i++) {
+                GridArea preArea = m_orderedGridArea[i];
+                if (preArea.m_index == biggest->m_index) {
+                    continue;
+                }
+
+                if (preArea.m_index > area.m_index) {
+                    break;
+                }
+
+                if (preArea.m_rowStart <= area.m_rowStart &&
+                    area.m_index != preArea.m_index) {
+                    if (biggest->m_columnStart <= preArea.m_columnStart &&
+                        biggest->m_columnEnd >= preArea.m_columnEnd) {
+                        innerAreas.push_back(&m_orderedGridArea[i]);
+                    }
+                }
+            }
+
+            SetForGrid<size_t> set;
+
+            for (size_t i = 0; i < innerAreas.size(); i++) {
+                GridArea* inner = innerAreas[i];
+
+                for (size_t lineNumber = inner->m_columnStart + 1;
+                     lineNumber <= inner->m_columnEnd; lineNumber++) {
+                    set.insert(lineNumber);
+                }
+            }
+
+            std::vector<GridLine*> lines;
+
+            // Filter fixed lines.
+            for (size_t i = biggest->m_columnStart; i < biggest->m_columnEnd;
+                 i++) {
+                if (i >= area.m_columnStart && i < area.m_columnEnd) {
+                    continue;
+                }
+
+                if (!set.find(i + 1) && !m_gridLineColumns[i].isFixed()) {
+                    lines.push_back(&m_gridLineColumns[i]);
+                }
+            }
+
+            if (lines.size()) {
+                LayoutUnit diff = contentWidth - sumWidth;
+
+                LayoutUnit sumOfLines(0);
+                for (size_t i = 0; i < lines.size(); i++) {
+                    sumOfLines += lines[i]->offset();
+                }
+
+                LayoutUnit remaining(0);
+                for (size_t i = 0; i < lines.size(); i++) {
+                    LayoutUnit offset =
+                        diff * (lines[i]->offset() / sumOfLines);
+
+                    if (lines[i]->offset() - offset > 0) {
+                        lines[i]->setOffset(lines[i]->offset() - offset, true);
+                    } else {
+                        remaining += offset - lines[i]->offset();
+                        lines[i]->setOffset(0, true);
+                    }
+                }
+
+                // FIXME: If remaining is not '0', we have to distribute width.
+
                 LayoutUnit dividedWidth = contentWidth / (end - start);
+
                 for (size_t i = start; i <= end - 1; i++) {
                     GridLine& line = m_gridLineColumns[i];
                     line.setOffset(dividedWidth, true);
                 }
-                // FIXME : If this line is fixed line, we dont
-                // distribute column's width.
-                for (size_t i = end; i <= biggest->m_columnEnd - 1; i++) {
-                    GridLine& line = m_gridLineColumns[i];
-                    line.setOffset(line.offset() + diff, true);
+            } else {
+                std::vector<GridLine*> noneFixed;
+                LayoutUnit sumOfFixed(0);
+
+                for (size_t i = start; i <= end - 1; i++) {
+                    if (m_gridLineColumns[i].isFixed() &&
+                        !m_gridLineColumns[i].isFr()) {
+                        sumOfFixed += m_gridLineColumns[i].offset();
+                    } else {
+                        noneFixed.push_back(&m_gridLineColumns[i]);
+                    }
+                }
+
+                if (noneFixed.size()) {
+                    LayoutUnit dividedWidth =
+                        (contentWidth - (sumWidth - sumOfFixed)) /
+                        noneFixed.size();
+                    for (size_t i = 0; i < noneFixed.size(); i++) {
+                        GridLine* line = noneFixed[i];
+                        line->setOffset(line->offset() + dividedWidth, true);
+                    }
+                }
+            }
+        } else {
+            size_t count = 0;
+            for (size_t i = start; i <= end - 1; i++) {
+                if (!m_gridLineColumns[i].offset()) {
+                    count++;
+                }
+            }
+
+            if (count) {
+                LayoutUnit dividedWidth = (contentWidth - sumWidth) / count;
+                for (size_t i = start; i <= end - 1; i++) {
+                    if (!m_gridLineColumns[i].offset()) {
+                        GridLine& line = m_gridLineColumns[i];
+                        line.setOffset(dividedWidth, true);
+                    }
+                }
+            } else {
+                std::vector<GridLine*> noneFixed;
+                LayoutUnit sumOfFixed(0);
+
+                for (size_t i = start; i <= end - 1; i++) {
+                    if (m_gridLineColumns[i].isFixed() &&
+                        !m_gridLineColumns[i].isFr()) {
+                        sumOfFixed += m_gridLineColumns[i].offset();
+                    } else {
+                        noneFixed.push_back(&m_gridLineColumns[i]);
+                    }
+                }
+
+                if (noneFixed.size()) {
+                    LayoutUnit dividedWidth =
+                        (contentWidth - (sumWidth - sumOfFixed)) /
+                        noneFixed.size();
+                    for (size_t i = 0; i < noneFixed.size(); i++) {
+                        GridLine* line = noneFixed[i];
+                        line->setOffset(line->offset() + dividedWidth, true);
+                    }
                 }
             }
         }
-    }
-
-    // Make a mark for the end of lines.
-    GridArea* biggest =
-        getBiggestAreaWithColumn(m_orderedGridArea, area.m_rowStart,
-                                 area.m_columnStart, area.m_columnEnd);
-    if (biggest && !(m_gridLineColumns[area.m_columnEnd - 1].isContaining())) {
-        m_gridLineColumns[area.m_columnEnd - 1].setContaining(true);
     }
 }
 

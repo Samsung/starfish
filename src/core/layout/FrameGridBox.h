@@ -284,6 +284,16 @@ public:
         dataSet.push_back(data);
     }
 
+    bool find(dataType data)
+    {
+        for (size_t i = 0; i < dataSet.size(); i++) {
+            if (data == dataSet[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     size_t size()
     {
         return dataSet.size();
