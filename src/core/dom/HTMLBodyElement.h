@@ -47,7 +47,12 @@ public:
 
 #define VIRTUAL virtual
 #define OVERRIDE override
+    DECLARE_EVENT_LISTENER(blur);
+    DECLARE_EVENT_LISTENER(error);
+    DECLARE_EVENT_LISTENER(focus);
     DECLARE_EVENT_LISTENER(load);
+    DECLARE_EVENT_LISTENER(resize);
+// DECLARE_EVENT_LISTENER(scroll);
 #undef VIRTUAL
 #undef OVERRIDE
 
