@@ -21,155 +21,15 @@ namespace StarFish {
 
 class Font;
 class LinearGradientData;
+class RadialGradientData;
 class CSSGradientValue;
 class FrameBox;
+class CSSColorStop;
 
-enum class CSSGradientType;
-
-class ColorStopOffsetType {
-public:
-    enum class ValueType { None, Invalid, Length, Percentage };
-
-    STARFISH_MAKE_STACK_ALLOCATED();
-
-    ColorStopOffsetType()
-        : m_type(ValueType::None)
-    {
-    }
-
-    ColorStopOffsetType(ValueType type)
-        : m_type(type)
-    {
-    }
-
-    bool isNone() const
-    {
-        return m_type == ValueType::None;
-    }
-
-    bool isInvalid() const
-    {
-        return m_type == ValueType::Invalid;
-    }
-
-    bool isLength() const
-    {
-        return m_type == ValueType::Length;
-    }
-
-    bool isPercentage() const
-    {
-        return m_type == ValueType::Percentage;
-    }
-
-    bool operator==(ColorStopOffsetType& other) const
-    {
-        return m_type == other.m_type;
-    }
-
-    bool operator!=(ColorStopOffsetType& other) const
-    {
-        return !(operator==(other));
-    }
-    ValueType m_type;
-};
-
-class ColorStopOffsetValue {
-public:
-    union ColorStopOffsetData {
-        float m_percentageData;
-        Length m_lengthData;
-
-        ColorStopOffsetData(float data)
-            : m_percentageData(data)
-        {
-        }
-
-        ColorStopOffsetData(Length data)
-            : m_lengthData(data)
-        {
-        }
-    };
-
-    ColorStopOffsetValue()
-        : m_valueType(ColorStopOffsetType::ValueType::None)
-        , m_valueData(0)
-    {
-    }
-
-    ColorStopOffsetValue(ColorStopOffsetType::ValueType type)
-        : m_valueType(type)
-        , m_valueData(0)
-    {
-    }
-
-    ColorStopOffsetValue(float data)
-        : m_valueType(ColorStopOffsetType::ValueType::Percentage)
-        , m_valueData(data)
-    {
-    }
-
-    ColorStopOffsetValue(Length data)
-        : m_valueType(ColorStopOffsetType::ValueType::Length)
-        , m_valueData(data)
-    {
-    }
-
-    void setType(ColorStopOffsetType::ValueType type)
-    {
-        m_valueType = type;
-    }
-
-    ColorStopOffsetType type() const
-    {
-        return m_valueType;
-    }
-
-    void setValue(ColorStopOffsetData data)
-    {
-        m_valueData = data;
-    }
-
-    float percentageValue() const
-    {
-        STARFISH_ASSERT(m_valueType.isPercentage());
-        return m_valueData.m_percentageData;
-    }
-
-    Length lengthValue() const
-    {
-        STARFISH_ASSERT(m_valueType.isLength());
-        return m_valueData.m_lengthData;
-    }
-
-    bool operator==(ColorStopOffsetValue& other) const
-    {
-        if (m_valueType != other.m_valueType) {
-            return false;
-        }
-
-        if (m_valueType.m_type == ColorStopOffsetType::ValueType::None) {
-            return true;
-        } else if (m_valueType.m_type ==
-                   ColorStopOffsetType::ValueType::Length) {
-            return m_valueData.m_lengthData == other.m_valueData.m_lengthData;
-        } else if (m_valueType.m_type ==
-                   ColorStopOffsetType::ValueType::Percentage) {
-            return m_valueData.m_percentageData ==
-                   other.m_valueData.m_percentageData;
-        }
-        return false;
-    }
-
-    bool operator!=(ColorStopOffsetValue& other) const
-    {
-        return !(operator==(other));
-    }
-
-private:
-    ColorStopOffsetType m_valueType;
-    ColorStopOffsetData m_valueData;
-};
+enum class GradientType;
+enum class SideValue;
+enum class RadialGradientShape;
+enum class RadialGradientSizeKeyword;
 
 class ColorStop : public gc {
 public:
@@ -189,12 +49,12 @@ public:
         m_color = color;
     }
 
-    ColorStopOffsetValue offset()
+    Length offset()
     {
         return m_offset;
     }
 
-    void setOffset(ColorStopOffsetValue offset)
+    void setOffset(Length offset)
     {
         m_offset = offset;
     }
@@ -211,35 +71,53 @@ public:
 
     bool equals(ColorStop* other) const
     {
-        if (m_color != other->m_color) {
-            return false;
-        }
-        if (m_offset != other->m_offset) {
+        if ((m_color != other->m_color) || (m_offset != other->m_offset)) {
             return false;
         }
         return true;
     }
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(ColorStop)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ColorStop, m_offset));
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ColorStop));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new(size_t size, ColorStop* colorStop)
+    {
+        return colorStop;
+    }
+
+    void* operator new[](size_t size) = delete;
+
 private:
     Unit::Color m_color;
-    ColorStopOffsetValue m_offset;
+    Length m_offset;
     bool m_specified;
 };
 
 class GradientData : public gc {
 public:
-    GradientData(CSSGradientType gradientType)
+    GradientData(GradientType gradientType)
         : m_type(gradientType)
         , m_colorStopList()
     {
     }
 
-    CSSGradientType type()
+    GradientType type()
     {
         return m_type;
     }
 
     LinearGradientData* asLinearGradientData();
+    RadialGradientData* asRadialGradientData();
 
     GCVector<ColorStop*>& colorStopList()
     {
@@ -250,7 +128,7 @@ public:
 
     virtual void checkComputed(Length curFontSize, Length rootFontSize,
                                Font* font, LayoutSize windowSize,
-                               ComputedStyle* cs) = 0;
+                               ComputedStyle* cs);
 
     void makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
                                  float& y1, float& x2, float& y2,
@@ -259,7 +137,13 @@ public:
     virtual bool equals(GradientData* other) const;
 
 protected:
-    CSSGradientType m_type;
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(GradientData, m_colorStopList));
+    }
+
+    void convertColorStopsToCSSColorStops(GCVector<CSSColorStop*>& out);
+    GradientType m_type;
     GCVector<ColorStop*> m_colorStopList;
 };
 
@@ -296,8 +180,154 @@ public:
                                ComputedStyle* cs) override;
     virtual bool equals(GradientData* other) const override;
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(LinearGradientData)] = { 0 };
+            GradientData::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(LinearGradientData));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new(size_t size, LinearGradientData* linearGradientData)
+    {
+        return linearGradientData;
+    }
+
+    void* operator new[](size_t size) = delete;
+
 private:
     float m_angleDeg;
     uint8_t m_sc;
+};
+
+class RadialGradientData : public GradientData {
+public:
+    RadialGradientData();
+
+    RadialGradientShape shape()
+    {
+        return m_shape;
+    }
+
+    void setShape(RadialGradientShape shape)
+    {
+        m_shape = shape;
+    }
+
+    SideValue horizontalSide()
+    {
+        return m_horizentalSide;
+    }
+
+    void setHorizontalSide(SideValue side);
+
+    Length horizentalSideOffset()
+    {
+        return m_horizentalSideOffset;
+    }
+
+    void setHorizontalSideOffset(Length offset)
+    {
+        m_horizentalSideOffset = offset;
+    }
+
+    SideValue verticalSide()
+    {
+        return m_verticalSide;
+    }
+
+    void setVerticalSide(SideValue side);
+
+    Length verticalSideOffset()
+    {
+        return m_verticalSideOffset;
+    }
+
+    void setVerticalSideOffset(Length offset)
+    {
+        m_verticalSideOffset = offset;
+    }
+
+    Length firstRadius()
+    {
+        return m_firstRadius;
+    }
+
+    void setFirstRadius(Length radius)
+    {
+        m_firstRadius = radius;
+    }
+
+    Length secondRadius()
+    {
+        return m_secondRadius;
+    }
+
+    void setSecondRadius(Length radius)
+    {
+        m_secondRadius = radius;
+    }
+
+    RadialGradientSizeKeyword keyword()
+    {
+        return m_keyword;
+    }
+
+    void setKeyword(RadialGradientSizeKeyword keyword)
+    {
+        m_keyword = keyword;
+    }
+
+    virtual CSSGradientValue* convertToCSSGradientValue() override;
+    virtual void checkComputed(Length curFontSize, Length rootFontSize,
+                               Font* font, LayoutSize windowSize,
+                               ComputedStyle* cs) override;
+    virtual bool equals(GradientData* other) const override;
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(RadialGradientData)] = { 0 };
+            GC_set_bit(desc, GC_WORD_OFFSET(RadialGradientData,
+                                            m_horizentalSideOffset));
+            GC_set_bit(
+                desc, GC_WORD_OFFSET(RadialGradientData, m_verticalSideOffset));
+            GC_set_bit(desc, GC_WORD_OFFSET(RadialGradientData, m_firstRadius));
+            GC_set_bit(desc,
+                       GC_WORD_OFFSET(RadialGradientData, m_secondRadius));
+            GradientData::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(RadialGradientData));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new(size_t size, RadialGradientData* radialGradientData)
+    {
+        return radialGradientData;
+    }
+
+    void* operator new[](size_t size) = delete;
+
+private:
+    RadialGradientShape m_shape;
+
+    // Position of gradient center
+    SideValue m_horizentalSide;
+    Length m_horizentalSideOffset;
+    SideValue m_verticalSide;
+    Length m_verticalSideOffset;
+
+    // size of the gradient's ending shape
+    Length m_firstRadius;
+    Length m_secondRadius;
+    RadialGradientSizeKeyword m_keyword;
 };
 } // namespace StarFish

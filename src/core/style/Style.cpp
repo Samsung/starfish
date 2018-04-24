@@ -1076,6 +1076,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("top");
         case SideValue::BottomSideValue:
             return String::fromUTF8("bottom");
+        case SideValue::NoneSideValue:
+            return String::emptyString;
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -7711,8 +7713,7 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
         if (isDigit(*(parser.curPos())) || *(parser.curPos()) == 'a' ||
             *(parser.curPos()) == 'c' || *(parser.curPos()) == 'f' ||
             *(parser.curPos()) == 'e') {
-            CSSRadialGradientValue::Shape shape =
-                CSSRadialGradientValue::Shape::None;
+            RadialGradientShape shape = RadialGradientShape::None;
             CSSRadialGradientSize size;
             CSSStyleValuePair firstRadius;
             CSSStyleValuePair secondRadius;
@@ -7725,32 +7726,31 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                 const CSSTokenValue& value = parser.parsedString();
                 CSSStyleValuePair temp;
                 if (!inPositionStr && value == "circle") {
-                    if (shape != CSSRadialGradientValue::Shape::None) {
+                    if (shape != RadialGradientShape::None) {
                         return false;
                     }
-                    shape = CSSRadialGradientValue::Shape::Circle;
+                    shape = RadialGradientShape::Circle;
                 } else if (!inPositionStr && value == "ellipse") {
-                    if (shape != CSSRadialGradientValue::Shape::None) {
+                    if (shape != RadialGradientShape::None) {
                         return false;
                     }
-                    shape = CSSRadialGradientValue::Shape::Elipse;
+                    shape = RadialGradientShape::Elipse;
                 } else if (!inPositionStr &&
                            (value[0] == 'c' || value[0] == 'f')) {
                     if (size.hasValue()) {
                         return false;
                     }
                     if (value == "closest-side") {
-                        size.setKeyword(
-                            CSSRadialGradientSize::Keyword::ClosetSide);
+                        size.setKeyword(RadialGradientSizeKeyword::ClosetSide);
                     } else if (value == "farthest-side") {
                         size.setKeyword(
-                            CSSRadialGradientSize::Keyword::FarthestSide);
+                            RadialGradientSizeKeyword::FarthestSide);
                     } else if (value == "closest-corner") {
                         size.setKeyword(
-                            CSSRadialGradientSize::Keyword::ClosetCorner);
+                            RadialGradientSizeKeyword::ClosetCorner);
                     } else if (value == "farthest-corner") {
                         size.setKeyword(
-                            CSSRadialGradientSize::Keyword::FarthestCorner);
+                            RadialGradientSizeKeyword::FarthestCorner);
                     } else {
                         return false;
                     }
@@ -7776,7 +7776,12 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                 }
             }
 
-            if (shape != CSSRadialGradientValue::Shape::None) {
+            if (shape == RadialGradientShape::Circle &&
+                size.hasSecondRadius()) {
+                return false;
+            }
+
+            if (shape != RadialGradientShape::None) {
                 radialGradientValue->setShape(shape);
             }
             if (size.hasValue()) {
@@ -7793,9 +7798,6 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             }
         }
         gradient = radialGradientValue;
-        // Return false at this time,
-        // it would be removed when RadialGradientData was Implemented
-        return false;
     } else {
         return false;
     }

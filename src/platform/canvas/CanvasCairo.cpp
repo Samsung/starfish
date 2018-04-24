@@ -756,7 +756,7 @@ public:
         size_t size = colorStops.size();
         for (size_t i = 0; i < size; ++i) {
             const auto& color = colorStops[i]->color();
-            const auto& offset = colorStops[i]->offset().percentageValue();
+            const auto& offset = colorStops[i]->offset().percent();
             cairo_pattern_add_color_stop_rgba(pt, offset, color.R(), color.G(),
                                               color.B(), color.A());
         }

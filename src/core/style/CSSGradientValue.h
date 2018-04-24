@@ -27,7 +27,7 @@ class CSSLinearGradientValue;
 class GradientData;
 class ColorStop;
 
-enum class CSSGradientType { LinearGradient, RadialGradient };
+enum class GradientType { LinearGradient, RadialGradient };
 
 enum SideOrConer {
     toLeft = 1 << 0,
@@ -71,13 +71,13 @@ private:
 
 class CSSGradientValue : public gc {
 public:
-    CSSGradientValue(CSSGradientType gradientType)
+    CSSGradientValue(GradientType gradientType)
         : m_gradientType(gradientType)
         , m_cssColorStopList()
     {
     }
 
-    CSSGradientType type()
+    GradientType type()
     {
         return m_gradientType;
     }
@@ -89,17 +89,19 @@ public:
     {
         return m_cssColorStopList;
     }
-    void convertCSSColorStopsToColorStops(GCVector<ColorStop*>& out);
 
 protected:
-    CSSGradientType m_gradientType;
+    void convertCSSColorStopsToColorStops(GCVector<ColorStop*>& out);
+    String* colorStopListToString();
+
+    GradientType m_gradientType;
     GCVector<CSSColorStop*> m_cssColorStopList;
 };
 
 class CSSLinearGradientValue : public CSSGradientValue {
 public:
     CSSLinearGradientValue(CSSAngle angle = CSSAngle(180))
-        : CSSGradientValue(CSSGradientType::LinearGradient)
+        : CSSGradientValue(GradientType::LinearGradient)
         , m_angle(angle)
         , m_sc(0)
     {
@@ -132,20 +134,20 @@ private:
     uint8_t m_sc;
 };
 
+enum class RadialGradientSizeKeyword {
+    None,
+    ClosetSide,
+    FarthestSide,
+    ClosetCorner,
+    FarthestCorner
+};
+
 class CSSRadialGradientSize : public gc {
 public:
-    enum class Keyword {
-        None,
-        ClosetSide,
-        FarthestSide,
-        ClosetCorner,
-        FarthestCorner
-    };
-
     CSSRadialGradientSize()
         : m_firstRadius()
         , m_secondRadius()
-        , m_keyword(Keyword::None)
+        , m_keyword(RadialGradientSizeKeyword::None)
     {
     }
 
@@ -154,7 +156,7 @@ public:
         return m_firstRadius;
     }
 
-    void setFirstRadius(CSSStyleValuePair& firstRadius)
+    void setFirstRadius(CSSStyleValuePair firstRadius)
     {
         m_firstRadius = firstRadius;
     }
@@ -164,7 +166,7 @@ public:
         return m_secondRadius;
     }
 
-    void setSecondRadius(CSSStyleValuePair& secondRadius)
+    void setSecondRadius(CSSStyleValuePair secondRadius)
     {
         m_secondRadius = secondRadius;
     }
@@ -190,15 +192,15 @@ public:
 
     bool hasKeyword()
     {
-        return m_keyword != Keyword::None;
+        return m_keyword != RadialGradientSizeKeyword::None;
     }
 
-    Keyword keyword()
+    RadialGradientSizeKeyword keyword()
     {
         return m_keyword;
     }
 
-    void setKeyword(Keyword keyword)
+    void setKeyword(RadialGradientSizeKeyword keyword)
     {
         m_keyword = keyword;
     }
@@ -206,14 +208,15 @@ public:
 private:
     CSSStyleValuePair m_firstRadius;
     CSSStyleValuePair m_secondRadius;
-    Keyword m_keyword;
+    RadialGradientSizeKeyword m_keyword;
 };
 
+enum class RadialGradientShape { None, Circle, Elipse };
 class CSSRadialGradientValue : public CSSGradientValue {
 public:
-    enum class Shape { None, Circle, Elipse };
-    CSSRadialGradientValue(Shape shape = Shape::Circle)
-        : CSSGradientValue(CSSGradientType::RadialGradient)
+    CSSRadialGradientValue(
+        RadialGradientShape shape = RadialGradientShape::Circle)
+        : CSSGradientValue(GradientType::RadialGradient)
         , m_shape(shape)
         , m_size()
         , m_positionX()
@@ -221,10 +224,11 @@ public:
     {
     }
 
-    CSSRadialGradientValue(Shape shape, CSSRadialGradientSize& size,
+    CSSRadialGradientValue(RadialGradientShape shape,
+                           CSSRadialGradientSize& size,
                            CSSStyleValuePair& positionX,
                            CSSStyleValuePair& positionY)
-        : CSSGradientValue(CSSGradientType::RadialGradient)
+        : CSSGradientValue(GradientType::RadialGradient)
         , m_shape(shape)
         , m_size(size)
         , m_positionX(positionX)
@@ -232,12 +236,12 @@ public:
     {
     }
 
-    Shape shape()
+    RadialGradientShape shape()
     {
         return m_shape;
     }
 
-    void setShape(Shape shape)
+    void setShape(RadialGradientShape shape)
     {
         m_shape = shape;
     }
@@ -276,8 +280,8 @@ public:
     virtual GradientData* convertToGradientData() override;
 
 private:
-    Shape m_shape;
-    CSSRadialGradientSize m_size;
+    RadialGradientShape m_shape;
+    CSSRadialGradientSize m_size; // size of the gradient's ending shape
     CSSStyleValuePair m_positionX;
     CSSStyleValuePair m_positionY;
 };

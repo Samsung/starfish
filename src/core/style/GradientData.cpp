@@ -44,6 +44,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "core/style/Style.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSGradientValue.h"
 #include "core/layout/FrameBox.h"
@@ -62,8 +63,8 @@ static bool requiresStopsNormalization(GCVector<ColorStop*>& colorStops)
     //     return true;
 
     // Degenerate stops
-    if (colorStops.front()->offset().percentageValue() < 0 ||
-        colorStops.back()->offset().percentageValue() > 1)
+    if (colorStops.front()->offset().percent() < 0 ||
+        colorStops.back()->offset().percent() > 1)
         return true;
 
     return false;
@@ -71,8 +72,8 @@ static bool requiresStopsNormalization(GCVector<ColorStop*>& colorStops)
 
 static bool normalizeAndAddStops(GCVector<ColorStop*>& colorStops)
 {
-    const float firstOffset = colorStops.front()->offset().percentageValue();
-    const float lastOffset = colorStops.back()->offset().percentageValue();
+    const float firstOffset = colorStops.front()->offset().percent();
+    const float lastOffset = colorStops.back()->offset().percent();
     const float span = lastOffset - firstOffset;
 
     if (fabs(span) < std::numeric_limits<float>::epsilon()) {
@@ -93,8 +94,9 @@ static bool normalizeAndAddStops(GCVector<ColorStop*>& colorStops)
 
     for (size_t i = 0; i < colorStops.size(); ++i) {
         const float normalizedOffset =
-            (colorStops[i]->offset().percentageValue() - firstOffset) / span;
-        colorStops[i]->setOffset(normalizedOffset);
+            (colorStops[i]->offset().percent() - firstOffset) / span;
+        colorStops[i]->setOffset(
+            Length(Length::Type::Percent, normalizedOffset));
     }
 
     return true;
@@ -102,12 +104,30 @@ static bool normalizeAndAddStops(GCVector<ColorStop*>& colorStops)
 
 LinearGradientData* GradientData::asLinearGradientData()
 {
-    STARFISH_ASSERT(m_type == CSSGradientType::LinearGradient);
+    STARFISH_ASSERT(m_type == GradientType::LinearGradient);
     return (LinearGradientData*)this;
 }
 
+RadialGradientData* GradientData::asRadialGradientData()
+{
+    STARFISH_ASSERT(m_type == GradientType::RadialGradient);
+    return (RadialGradientData*)this;
+}
+
+void GradientData::checkComputed(Length curFontSize, Length rootFontSize,
+                                 Font* font, LayoutSize windowSize,
+                                 ComputedStyle* cs)
+{
+    for (auto item : m_colorStopList) {
+        auto v = item->offset();
+        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                windowSize.width(), windowSize.height(), cs);
+        item->setOffset(v);
+    }
+}
+
 LinearGradientData::LinearGradientData(float angleDeg)
-    : GradientData(CSSGradientType::LinearGradient)
+    : GradientData(GradientType::LinearGradient)
     , m_angleDeg(angleDeg)
     , m_sc(0)
 {
@@ -118,7 +138,7 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
                                            FrameBox* owner)
 {
     float gradientLength = 0.0f;
-    if (m_type == CSSGradientType::LinearGradient) {
+    if (m_type == GradientType::LinearGradient) {
         gradientLength = hypotf(x2 - x1, y2 - y1);
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -136,26 +156,25 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
 
         const auto& offset = item->offset();
 
-        if (offset.type().isPercentage()) {
-            cs->setOffset(offset.percentageValue());
-            cs->setSpecified(true);
-        } else if (offset.type().isLength()) {
-            float length =
-                offset.lengthValue().specifiedValue(gradientLength, owner);
-            length = (gradientLength > 0) ? length / gradientLength : 0;
-            cs->setOffset(length);
-            cs->setSpecified(true);
-        } else {
+        if (offset.isAuto()) {
             // If the first color-stop does not have a position, set its
             // position to 0%. If the last color-stop does not have a position,
             // set its position to 100%.
             if (i == 0) {
-                cs->setOffset(0.0f);
+                cs->setOffset(Length(Length::Type::Percent, 0.0f));
                 cs->setSpecified(true);
             } else if (i == size - 1) {
-                cs->setOffset(1.0f);
+                cs->setOffset(Length(Length::Type::Percent, 1.0f));
                 cs->setSpecified(true);
             }
+        } else if (offset.isPercent()) {
+            cs->setOffset(offset);
+            cs->setSpecified(true);
+        } else {
+            float length = offset.specifiedValue(gradientLength, owner);
+            length = (gradientLength > 0) ? length / gradientLength : 0;
+            cs->setOffset(Length(Length::Type::Percent, length));
+            cs->setSpecified(true);
         }
 
         // If a color-stop has a position that is less than the specified
@@ -170,10 +189,11 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
                     break;
                 }
             }
-            if (cs->offset().percentageValue() <
-                out[prevSpecifiedIndex]->offset().percentageValue()) {
+            if (cs->offset().percent() <
+                out[prevSpecifiedIndex]->offset().percent()) {
                 cs->setOffset(
-                    out[prevSpecifiedIndex]->offset().percentageValue());
+                    Length(Length::Type::Percent,
+                           out[prevSpecifiedIndex]->offset().percent()));
             }
         }
         out.push_back(cs);
@@ -199,20 +219,20 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
                 size_t unspecifiedRunEnd = i;
 
                 if (unspecifiedRunStart < unspecifiedRunEnd) {
-                    float lastSpecifiedOffset = out[unspecifiedRunStart - 1]
-                                                    ->offset()
-                                                    .percentageValue();
+                    float lastSpecifiedOffset =
+                        out[unspecifiedRunStart - 1]->offset().percent();
                     float next_specified_offset =
-                        out[unspecifiedRunEnd]->offset().percentageValue();
+                        out[unspecifiedRunEnd]->offset().percent();
                     float delta =
                         (next_specified_offset - lastSpecifiedOffset) /
                         (unspecifiedRunEnd - unspecifiedRunStart + 1);
 
                     for (size_t j = unspecifiedRunStart; j < unspecifiedRunEnd;
                          ++j)
-                        out[j]->setOffset(lastSpecifiedOffset +
-                                          (j - unspecifiedRunStart + 1) *
-                                              delta);
+                        out[j]->setOffset(
+                            Length(Length::Type::Percent,
+                                   lastSpecifiedOffset +
+                                       (j - unspecifiedRunStart + 1) * delta));
                 }
                 inUnspecifiedRun = false;
             }
@@ -225,9 +245,9 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
         return;
     }
 
-    if (m_type == CSSGradientType::LinearGradient) {
-        float firstOffset = out.front()->offset().percentageValue();
-        float lastOffset = out.back()->offset().percentageValue();
+    if (m_type == GradientType::LinearGradient) {
+        float firstOffset = out.front()->offset().percent();
+        float lastOffset = out.back()->offset().percent();
         if (normalizeAndAddStops(out)) {
             float dx = x2 - x1;
             float dy = y2 - y1;
@@ -328,6 +348,29 @@ bool LinearGradientData::computeEndPoints(const Unit::Rect& rect, float& x1,
     }
 }
 
+void GradientData::convertColorStopsToCSSColorStops(
+    GCVector<CSSColorStop*>& out)
+{
+    for (auto item : m_colorStopList) {
+        CSSColorStop* cs = new CSSColorStop();
+
+        CSSStyleValuePair color;
+        color.setColorValue(item->color());
+        cs->setColor(color);
+
+        if (item->offset().isAuto()) {
+            CSSStyleValuePair offset;
+            cs->setOffset(offset);
+        } else {
+            CSSStyleValuePair offset =
+                (CSSStyleDeclaration::lengthToCSSStyleValue(item->offset()));
+            cs->setOffset(offset);
+        }
+
+        out.push_back(cs);
+    }
+}
+
 CSSGradientValue* LinearGradientData::convertToCSSGradientValue()
 {
     CSSLinearGradientValue* gradient = new CSSLinearGradientValue();
@@ -338,31 +381,7 @@ CSSGradientValue* LinearGradientData::convertToCSSGradientValue()
         gradient->setSideOrConter(m_sc);
     }
 
-    auto& cssColorStopList = gradient->cssColorStopList();
-
-    for (auto item : m_colorStopList) {
-        CSSColorStop* cs = new CSSColorStop();
-
-        CSSStyleValuePair color;
-        color.setColorValue(item->color());
-        cs->setColor(color);
-
-        if (item->offset().type().isPercentage()) {
-            CSSStyleValuePair offset;
-            offset.setPercentageValue(item->offset().percentageValue());
-            cs->setOffset(offset);
-        } else if (item->offset().type().isLength()) {
-            CSSStyleValuePair offset =
-                (CSSStyleDeclaration::lengthToCSSStyleValue(
-                    item->offset().lengthValue()));
-            cs->setOffset(offset);
-        } else if (item->offset().type().isNone()) {
-            CSSStyleValuePair offset;
-            cs->setOffset(offset);
-        }
-
-        cssColorStopList.push_back(cs);
-    }
+    convertColorStopsToCSSColorStops(gradient->cssColorStopList());
 
     return gradient;
 }
@@ -371,16 +390,110 @@ void LinearGradientData::checkComputed(Length curFontSize, Length rootFontSize,
                                        Font* font, LayoutSize windowSize,
                                        ComputedStyle* cs)
 {
-    for (auto item : m_colorStopList) {
-        auto offset = item->offset();
-        if (offset.type().isLength()) {
-            auto v = offset.lengthValue();
-            v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                    windowSize.width(), windowSize.height(),
-                                    cs);
-            item->setOffset(v);
+    GradientData::checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                cs);
+}
+
+RadialGradientData::RadialGradientData()
+    : GradientData(GradientType::RadialGradient)
+{
+}
+
+void RadialGradientData::setHorizontalSide(SideValue side)
+{
+    STARFISH_ASSERT(side == SideValue::CenterSideValue ||
+                    side == SideValue::LeftSideValue ||
+                    side == SideValue::RightSideValue)
+    m_horizentalSide = side;
+}
+
+void RadialGradientData::setVerticalSide(SideValue side)
+{
+    STARFISH_ASSERT(side == SideValue::CenterSideValue ||
+                    side == SideValue::TopSideValue ||
+                    side == SideValue::BottomSideValue)
+    m_verticalSide = side;
+}
+
+CSSGradientValue* RadialGradientData::convertToCSSGradientValue()
+{
+    CSSRadialGradientValue* gradient = new CSSRadialGradientValue();
+
+    // Position of gradient center
+    // Note : Current background-position implementations can not be processed
+    //        if they are 3 to 4 in length.
+    CSSStyleValuePair xlist;
+    xlist.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+    xlist.setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
+    if (m_horizentalSide != SideValue::NoneSideValue) {
+        CSSStyleValuePair x;
+        x.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+        x.setValue(m_horizentalSide);
+        xlist.multiValue()->push_back(x);
+    } else if (!m_horizentalSideOffset.isAuto()) {
+        CSSStyleValuePair x =
+            CSSStyleDeclaration::lengthToCSSStyleValue(m_horizentalSideOffset);
+        xlist.multiValue()->push_back(x);
+    }
+    gradient->setPositionX(xlist);
+
+    CSSStyleValuePair ylist;
+    ylist.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+    ylist.setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
+    if (m_verticalSide != SideValue::NoneSideValue) {
+        CSSStyleValuePair y;
+        y.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+        y.setValue(m_verticalSide);
+        ylist.multiValue()->push_back(y);
+    } else if (!m_verticalSideOffset.isAuto()) {
+        CSSStyleValuePair y =
+            CSSStyleDeclaration::lengthToCSSStyleValue(m_verticalSideOffset);
+        ylist.multiValue()->push_back(y);
+    }
+    gradient->setPositionY(ylist);
+
+    // Shape
+    gradient->setShape(m_shape);
+
+    CSSRadialGradientSize size;
+    // Size of the gradient's ending shape
+    if (m_keyword != RadialGradientSizeKeyword::None) {
+        size.setKeyword(m_keyword);
+    } else {
+        if (!m_firstRadius.isAuto()) {
+            size.setFirstRadius(
+                CSSStyleDeclaration::lengthToCSSStyleValue(m_firstRadius));
+            if (!m_secondRadius.isAuto()) {
+                size.setSecondRadius(
+                    CSSStyleDeclaration::lengthToCSSStyleValue(m_secondRadius));
+            }
         }
     }
+    gradient->setSize(size);
+
+    convertColorStopsToCSSColorStops(gradient->cssColorStopList());
+    return gradient;
+}
+
+void RadialGradientData::checkComputed(Length curFontSize, Length rootFontSize,
+                                       Font* font, LayoutSize windowSize,
+                                       ComputedStyle* cs)
+{
+    GradientData::checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                cs);
+
+    m_horizentalSideOffset.changeToFixedIfNeeded(curFontSize, rootFontSize,
+                                                 font, windowSize.width(),
+                                                 windowSize.height(), cs);
+    m_verticalSideOffset.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                               windowSize.width(),
+                                               windowSize.height(), cs);
+    m_firstRadius.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                        windowSize.width(), windowSize.height(),
+                                        cs);
+    m_secondRadius.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                         windowSize.width(),
+                                         windowSize.height(), cs);
 }
 
 bool GradientData::equals(GradientData* other) const
@@ -409,10 +522,24 @@ bool LinearGradientData::equals(GradientData* other) const
     }
 
     LinearGradientData* r = other->asLinearGradientData();
-    if (m_angleDeg != r->m_angleDeg) {
+    if ((m_angleDeg != r->m_angleDeg) || (m_sc != r->m_sc)) {
         return false;
     }
-    if (m_sc != r->m_sc) {
+    return true;
+}
+
+bool RadialGradientData::equals(GradientData* other) const
+{
+    if (!GradientData::equals(other)) {
+        return false;
+    }
+    RadialGradientData* r = other->asRadialGradientData();
+    if ((m_shape != r->m_shape) || (m_horizentalSide != r->m_horizentalSide) ||
+        (m_horizentalSideOffset != r->m_horizentalSideOffset) ||
+        (m_verticalSide != r->m_verticalSide) ||
+        (m_verticalSideOffset != r->m_verticalSideOffset) ||
+        (m_firstRadius != r->m_firstRadius) ||
+        (m_secondRadius != r->m_secondRadius) || (m_keyword != r->m_keyword)) {
         return false;
     }
     return true;
