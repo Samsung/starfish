@@ -1602,7 +1602,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
 
             ImageValue* imageValue = style->backgroundImage(idx);
             if (imageValue->gradientValue()->type() ==
-                CSSGradientType::LinearGradient) {
+                GradientType::LinearGradient) {
                 Unit::Rect rect = paintingRect.snapSizeToPixel();
                 auto gradient =
                     imageValue->gradientValue()->asLinearGradientData();
@@ -1617,7 +1617,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                 canvas->drawLinearGradient(rect, x1, y1, x2, y2, colorStop);
 
             } else if (imageValue->gradientValue()->type() ==
-                       CSSGradientType::RadialGradient) {
+                       GradientType::RadialGradient) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
             canvas->restore();

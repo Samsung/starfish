@@ -214,7 +214,8 @@ enum TextAlignValue {
 };
 
 // transform-origin, background-position
-enum SideValue {
+enum class SideValue {
+    NoneSideValue,
     TopSideValue,
     RightSideValue,
     BottomSideValue,

@@ -40,16 +40,29 @@ void CSSGradientValue::convertCSSColorStopsToColorStops(
         }
 
         auto offset = item->offset();
-        if (offset.valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
-            cs->setOffset(ColorStopOffsetValue(offset.percentageValue()));
-        } else if (offset.valueKind() == CSSStyleValuePair::ValueKind::Length) {
-            cs->setOffset(ColorStopOffsetValue(offset.lengthValue()));
-        } else if (offset.valueKind() == CSSStyleValuePair::ValueKind::None) {
-            cs->setOffset(ColorStopOffsetValue());
+        if (offset.valueKind() != CSSStyleValuePair::ValueKind::None) {
+            cs->setOffset(offset.toLengthValue());
         }
 
         out.push_back(cs);
     }
+}
+
+String* CSSGradientValue::colorStopListToString()
+{
+    StringBuilder result;
+    for (size_t i = 0; i < m_cssColorStopList.size(); ++i) {
+        auto* cs = m_cssColorStopList[i];
+        if (i > 0) {
+            result.appendString(", ");
+        }
+        result.appendString(cs->color().toString());
+        if (cs->offset().valueKind() != CSSStyleValuePair::ValueKind::None) {
+            result.appendChar(' ');
+            result.appendString(cs->offset().toString());
+        }
+    }
+    return result.finalize();
 }
 
 String* CSSLinearGradientValue::toString()
@@ -60,7 +73,8 @@ String* CSSLinearGradientValue::toString()
     CSSLinearGradientValue* linear = (CSSLinearGradientValue*)this;
     if (linear->angle().toDegreeValue() != 180) {
         result.appendString(linear->angle().toString());
-    } else {
+        result.appendString(", ");
+    } else if (m_sc) {
         result.appendString("to ");
         if (m_sc & toLeft) {
             result.appendString("left ");
@@ -73,18 +87,10 @@ String* CSSLinearGradientValue::toString()
         } else if (m_sc & toBottom) {
             result.appendString("bottom");
         }
-    }
-
-    for (auto cs : m_cssColorStopList) {
         result.appendString(", ");
-        result.appendString(cs->color().toString());
-
-        if (cs->offset().valueKind() != CSSStyleValuePair::ValueKind::None) {
-            result.appendChar(' ');
-            result.appendString(cs->offset().toString());
-        }
     }
 
+    result.appendString(colorStopListToString());
     result.appendChar(')');
 
     return result.finalize();
@@ -107,13 +113,90 @@ GradientData* CSSLinearGradientValue::convertToGradientData()
 
 String* CSSRadialGradientValue::toString()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return String::emptyString;
+    StringBuilder result;
+
+    result.appendString("radial-gradient(");
+
+    if (m_shape == RadialGradientShape::Circle) {
+        result.appendString("circle ");
+    } else if (m_shape == RadialGradientShape::Elipse) {
+        result.appendString("elipse ");
+    }
+
+    if (m_size.hasKeyword()) {
+        if (m_size.keyword() == RadialGradientSizeKeyword::ClosetSide) {
+            result.appendString("closest-side ");
+        } else if (m_size.keyword() ==
+                   RadialGradientSizeKeyword::FarthestSide) {
+            result.appendString("farthest-side ");
+        } else if (m_size.keyword() ==
+                   RadialGradientSizeKeyword::ClosetCorner) {
+            result.appendString("closest-corner ");
+        } else if (m_size.keyword() ==
+                   RadialGradientSizeKeyword::FarthestCorner) {
+            result.appendString("farthest-corner ");
+        }
+    } else if (m_size.hasFirstRadius()) {
+        result.appendString(m_size.firstRadius().toString());
+        result.appendChar(' ');
+        if (m_size.hasSecondRadius()) {
+            result.appendString(m_size.secondRadius().toString());
+            result.appendChar(' ');
+        }
+    }
+    if (m_positionX.valueKind() ==
+        CSSStyleValuePair::ValueKind::ValueListKind) {
+        result.appendString("at ");
+        result.appendString(m_positionX.toString());
+        result.appendChar(' ');
+        result.appendString(m_positionY.toString());
+        result.appendString(", ");
+    }
+
+    result.appendString(colorStopListToString());
+    result.appendChar(')');
+
+    return result.finalize();
 }
 
 GradientData* CSSRadialGradientValue::convertToGradientData()
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    RadialGradientData* gradient = new RadialGradientData();
+
+    // Position of gradient center
+    if (m_positionX.valueKind() ==
+        CSSStyleValuePair::ValueKind::ValueListKind) {
+        auto& x = m_positionX.multiValue()->front();
+        if (x.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+            gradient->setHorizontalSide(x.sideValue());
+        } else if (x.valueKind() == CSSStyleValuePair::ValueKind::None) {
+            gradient->setHorizontalSideOffset(x.toLengthValue());
+        }
+    }
+    if (m_positionY.valueKind() ==
+        CSSStyleValuePair::ValueKind::ValueListKind) {
+        auto& y = m_positionY.multiValue()->front();
+        if (y.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+            gradient->setVerticalSide(y.sideValue());
+        } else if (y.valueKind() == CSSStyleValuePair::ValueKind::None) {
+            gradient->setVerticalSideOffset(y.toLengthValue());
+        }
+    }
+
+    // Shape
+    gradient->setShape(m_shape);
+
+    // Size of the gradient's ending shape
+    gradient->setKeyword(m_size.keyword());
+    if (m_size.hasFirstRadius()) {
+        gradient->setFirstRadius(m_size.firstRadius().toLengthValue());
+    }
+    if (m_size.hasSecondRadius()) {
+        gradient->setSecondRadius(m_size.secondRadius().toLengthValue());
+    }
+
+    convertCSSColorStopsToColorStops(gradient->colorStopList());
+    return gradient;
 }
 } /* namespace StarFish */
