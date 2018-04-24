@@ -613,6 +613,16 @@ public:
         return false;
     }
 
+    virtual bool isHTMLTableColGroupElement() const
+    {
+        return false;
+    }
+
+    virtual bool isHTMLTBodyElement() const
+    {
+        return false;
+    }
+
     HTMLListContainer* asHTMLListContainer() const
     {
         STARFISH_ASSERT(isHTMLListContainer());

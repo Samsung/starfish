@@ -31,6 +31,11 @@ public:
     {
     }
 
+    virtual bool isHTMLTableColGroupElement() const override
+    {
+        return true;
+    }
+
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 };

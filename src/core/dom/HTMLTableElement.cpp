@@ -20,17 +20,26 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/HTMLTableElement.h"
-#include "core/dom/HTMLCollection.h"
+
 #include "core/dom/DOMException.h"
+#include "core/dom/HTMLCollection.h"
+#include "core/dom/HTMLTBodyElement.h"
+#include "core/dom/HTMLTFootElement.h"
+#include "core/dom/HTMLTHeadElement.h"
+#include "core/dom/HTMLTableColGroupElement.h"
+#include "core/dom/HTMLTableRowElement.h"
+#include "core/dom/HTMLTableSectionElement.h"
+#include "core/style/CSSParser.h"
 
 namespace StarFish {
-
 void* HTMLTableElement::operator new(size_t size)
 {
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLTableElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLTableElement, m_rows));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLTableElement, m_tBodies));
         HTMLElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLTableElement));
         typeInited = true;
@@ -72,6 +81,43 @@ void HTMLTableElement::styleForPresentationAttribute(
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
 
+    String* w = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+    if (!w->isEmpty()) {
+        // Use px as the default unit
+        if (!w->contains("px") && !w->contains("%")) {
+            w = w->concat(String::createASCIIString("px"));
+        }
+
+        CSSStyleValuePair pair;
+        CSSTokenVector tokens;
+        CSSTokenValue token = w->toNullableUTF8String().m_buffer;
+        tokens.push_back(token);
+        if (pair.updateValueWidth(document(), tokens)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
+            cssValues.push_back(pair);
+        }
+    }
+
+    String* bgColor =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
+    if (!bgColor->isEmpty()) {
+        CSSStyleValuePair pair;
+        CSSTokenValue token = bgColor->toNullableUTF8String().m_buffer;
+        if (pair.updateValueUnitColor(token)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
+            cssValues.push_back(pair);
+        }
+    }
+
+    String* align = getAttributeOrEmpty(starFish()->staticStrings()->m_align);
+    if (isValidAlign(align)) {
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::TextAlignValueKind);
+        pair.setValue(alignValue(align));
+        cssValues.push_back(pair);
+    }
+
     if (m_hasCellSpacingAttribute) {
         String* value = cellspacing();
         if (value && !value->equals(String::emptyString)) {
@@ -88,41 +134,6 @@ void HTMLTableElement::styleForPresentationAttribute(
             pair.setKeyKind(CSSStyleValuePair::KeyKind::BorderSpacing);
             cssValues.push_back(pair);
         }
-    }
-    String* w = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
-    if (!w->equals(String::emptyString)) {
-        // Use px as the default unit
-        if (!w->contains("px") && !w->contains("%")) {
-            w = w->concat(String::createASCIIString("px"));
-        }
-
-        CSSStyleValuePair pair;
-        CSSTokenVector tokens;
-        CSSTokenValue token = w->toNullableUTF8String().m_buffer;
-        tokens.push_back(token);
-        if (pair.updateValueWidth(document(), tokens)) {
-            pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
-            cssValues.push_back(pair);
-        }
-    }
-    String* bgColor =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
-    if (!bgColor->equals(String::emptyString)) {
-        CSSStyleValuePair pair;
-        CSSTokenValue token = w->toNullableUTF8String().m_buffer;
-        if (pair.updateValueUnitColor(token)) {
-            pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
-            cssValues.push_back(pair);
-        }
-    }
-
-    String* align = getAttributeOrEmpty(starFish()->staticStrings()->m_align);
-    if (isValidAlign(align)) {
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::TextAlignValueKind);
-        pair.setValue(alignValue(align));
-        cssValues.push_back(pair);
     }
 }
 
@@ -180,24 +191,176 @@ void HTMLTableElement::deleteCaption()
     }
 }
 
-String* HTMLTableElement::cellspacing()
+HTMLTableSectionElement* HTMLTableElement::tHead()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_cellspacing);
+    Node* child = firstChild();
+    while (child) {
+        if (child->isHTMLTHeadElement()) {
+            return child->asHTMLTHeadElement();
+        }
+        child = child->nextSibling();
+    }
+    return nullptr;
 }
 
-void HTMLTableElement::setCellspacing(String* cellspacing)
+void HTMLTableElement::setTHead(HTMLTableSectionElement* tHead)
 {
-    setAttribute(starFish()->staticStrings()->m_cellspacing, cellspacing);
+    if (tHead && !tHead->isHTMLTHeadElement()) {
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
+                               "Failed to set the 'tHead' property on "
+                               "'HTMLTableElement': The provided value is not "
+                               "of type 'HTMLTHeadElement'.");
+    }
+
+    deleteTHead();
+    if (!tHead) {
+        Node* child = firstChild();
+        while (child) {
+            if (!child->isHTMLTableCaptionElement() &&
+                !child->isHTMLTableColGroupElement()) {
+                break;
+            }
+            child = child->nextSibling();
+        }
+        insertBefore(tHead, child);
+    }
 }
 
-String* HTMLTableElement::cellpadding()
+HTMLTableSectionElement* HTMLTableElement::createTHead()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_cellpadding);
+    HTMLTableSectionElement* tHead = this->tHead();
+    if (!tHead) {
+        tHead = new HTMLTHeadElement(document());
+        Node* child = firstChild();
+        while (child) {
+            if (!child->isHTMLTableCaptionElement() &&
+                !child->isHTMLTableColGroupElement()) {
+                break;
+            }
+            child = child->nextSibling();
+        }
+        insertBefore(tHead, child);
+    }
+    return tHead;
 }
 
-void HTMLTableElement::setCellpadding(String* cellpadding)
+void HTMLTableElement::deleteTHead()
 {
-    setAttribute(starFish()->staticStrings()->m_cellpadding, cellpadding);
+    Node* child = firstChild();
+    while (child) {
+        if (child->isHTMLTHeadElement()) {
+            removeChild(child);
+            return;
+        }
+        child = child->nextSibling();
+    }
+}
+
+HTMLTableSectionElement* HTMLTableElement::tFoot()
+{
+    Node* child = firstChild();
+    while (child) {
+        if (child->isHTMLTFootElement()) {
+            return child->asHTMLTFootElement();
+        }
+        child = child->nextSibling();
+    }
+    return nullptr;
+}
+
+void HTMLTableElement::setTFoot(HTMLTableSectionElement* tFoot)
+{
+    if (tFoot && !tFoot->isHTMLTFootElement()) {
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
+                               "Failed to set the 'tFoot' property on "
+                               "'HTMLTableElement': The provided value is not "
+                               "of type 'HTMLTFootElement'.");
+    }
+
+    deleteTHead();
+    if (!tFoot) {
+        Node* child = firstChild();
+        while (child) {
+            if (!child->isHTMLTableCaptionElement() &&
+                !child->isHTMLTableColGroupElement() &&
+                !child->isHTMLTHeadElement()) {
+                break;
+            }
+            child = child->nextSibling();
+        }
+        insertBefore(tFoot, child);
+    }
+}
+
+HTMLTableSectionElement* HTMLTableElement::createTFoot()
+{
+    HTMLTableSectionElement* tFoot = this->tFoot();
+    if (!tFoot) {
+        tFoot = new HTMLTFootElement(document());
+        Node* child = firstChild();
+        while (child) {
+            if (!child->isHTMLTableCaptionElement() &&
+                !child->isHTMLTableColGroupElement() &&
+                !child->isHTMLTHeadElement()) {
+                break;
+            }
+            child = child->nextSibling();
+        }
+        insertBefore(tFoot, child);
+    }
+    return tFoot;
+}
+
+void HTMLTableElement::deleteTFoot()
+{
+    Node* child = firstChild();
+    while (child) {
+        if (child->isHTMLTFootElement()) {
+            removeChild(child);
+            return;
+        }
+        child = child->nextSibling();
+    }
+}
+
+HTMLCollection* HTMLTableElement::tBodies()
+{
+    if (m_tBodies) {
+        return m_tBodies;
+    }
+
+    RareNodeMembers* rareData = ensureRareMembers();
+    ActiveHTMLCollectionList* activeLists =
+        rareData->ensureActiveHtmlCollectionListForTagName();
+
+    m_tBodies =
+        new HTMLCollection(this, NodeListImpl::TBodiesFilter, nullptr, true);
+
+    rareData->putActiveHtmlCollectionListWithQuery(
+        activeLists, starFish()->staticStrings()->m_tbodies.localName(),
+        m_tBodies);
+    return m_tBodies;
+}
+
+HTMLTableSectionElement* HTMLTableElement::createTBody()
+{
+    HTMLTableSectionElement* tBody = new HTMLTBodyElement(document());
+
+    Node* child = lastChild();
+    Node* lastTBody = nullptr;
+    while (child) {
+        if (child->isHTMLTBodyElement()) {
+            lastTBody = child;
+            break;
+        }
+        child = child->previousSibling();
+    }
+    if (lastTBody) {
+        insertBefore(tBody, lastTBody->nextSibling());
+    } else {
+        appendChild(tBody);
+    }
+    return tBody;
 }
 
 struct TableRowsCollectionData : public gc {
@@ -221,11 +384,81 @@ HTMLCollection* HTMLTableElement::rows()
     data->tag.resize(4);
 
     m_rows =
-        new HTMLCollection(this, NodeListImpl::TableRowsFilter, data, false);
+        new HTMLCollection(this, NodeListImpl::TableRowsFilter, data, true);
 
-    rareData->putActiveHtmlCollectionListWithQuery(activeLists,
-                                                   this->localName(), m_rows);
+    rareData->putActiveHtmlCollectionListWithQuery(
+        activeLists, starFish()->staticStrings()->m_rows.localName(), m_rows);
     return m_rows;
+}
+
+HTMLTableRowElement* HTMLTableElement::insertRow(int32_t index)
+{
+    HTMLCollection* rows = this->rows();
+    size_t rowsLength = rows->length();
+    if (index < -1 ||
+        (index != -1 && static_cast<size_t>(index) > rowsLength)) {
+        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
+    }
+
+    HTMLTableRowElement* row = new HTMLTableRowElement(document());
+    HTMLCollection* tBodies = this->tBodies();
+    size_t tBodiesLength = tBodies->length();
+    if (rowsLength == 0 && tBodiesLength == 0) {
+        HTMLTBodyElement* tBody = new HTMLTBodyElement(document());
+        tBody->appendChild(row);
+        appendChild(tBody);
+    } else if (rowsLength == 0) {
+        Element* lastTBody = tBodies->item(tBodiesLength - 1);
+        lastTBody->appendChild(row);
+    } else if (index == -1 || static_cast<size_t>(index) == rowsLength) {
+        Element* lastRow = rows->item(rowsLength - 1);
+        STARFISH_ASSERT(lastRow && lastRow->parentNode());
+        lastRow->parentNode()->appendChild(row);
+    } else {
+        Element* indexedRow = rows->item(index);
+        STARFISH_ASSERT(indexedRow && indexedRow->parentNode());
+        indexedRow->parentNode()->insertBefore(row, indexedRow);
+    }
+    return row;
+}
+
+void HTMLTableElement::deleteRow(int32_t index)
+{
+    HTMLCollection* rows = this->rows();
+    size_t rowsLength = rows->length();
+    if (index == -1) {
+        if (rows->length() == 0) {
+            return;
+        } else {
+            index = rowsLength - 1;
+        }
+    } else if (index < -1 || static_cast<size_t>(index) >= rowsLength) {
+        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
+    }
+
+    Element* row = rows->item(index);
+    STARFISH_ASSERT(row && row->parentNode());
+    row->parentNode()->removeChild(row);
+}
+
+String* HTMLTableElement::cellspacing()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_cellspacing);
+}
+
+void HTMLTableElement::setCellspacing(String* cellspacing)
+{
+    setAttribute(starFish()->staticStrings()->m_cellspacing, cellspacing);
+}
+
+String* HTMLTableElement::cellpadding()
+{
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_cellpadding);
+}
+
+void HTMLTableElement::setCellpadding(String* cellpadding)
+{
+    setAttribute(starFish()->staticStrings()->m_cellpadding, cellpadding);
 }
 
 bool HTMLTableElement::isValidAlign(String* align)

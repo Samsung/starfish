@@ -287,6 +287,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                              AtomicString::createAtomicString(sf, "nowrap"));
     m_axis = QualifiedName(AtomicString::emptyAtomicString(),
                            AtomicString::createAtomicString(sf, "axis"));
+    m_tbodies = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "bodies"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

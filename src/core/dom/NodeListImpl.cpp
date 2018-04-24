@@ -240,7 +240,15 @@ bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection)
     return false;
 };
 
-bool isTableCellElement(Node* node, void* data, GCVector<Node*>* collection)
+bool isTBodiesElement(Node* node, void* data, GCVector<Node*>* collection)
+{
+    if (node->isHTMLTBodyElement()) {
+        return true;
+    }
+    return false;
+}
+
+bool isTableCellsElement(Node* node, void* data, GCVector<Node*>* collection)
 {
     if (node->isHTMLTableCellElement()) {
         return true;

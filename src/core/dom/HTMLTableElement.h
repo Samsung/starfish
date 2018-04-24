@@ -56,14 +56,30 @@ public:
         return m_hasCellPaddingAttribute;
     }
 
+    /* 4.4 Interface Node */
+    virtual QualifiedName name();
+
     HTMLTableCaptionElement* caption();
     void setCaption(HTMLTableCaptionElement* caption);
-
     HTMLTableCaptionElement* createCaption();
     void deleteCaption();
 
-    /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    HTMLTableSectionElement* tHead();
+    void setTHead(HTMLTableSectionElement* tHead);
+    HTMLTableSectionElement* createTHead();
+    void deleteTHead();
+
+    HTMLTableSectionElement* tFoot();
+    void setTFoot(HTMLTableSectionElement* tFoot);
+    HTMLTableSectionElement* createTFoot();
+    void deleteTFoot();
+
+    HTMLCollection* tBodies();
+    HTMLTableSectionElement* createTBody();
+
+    HTMLCollection* rows();
+    HTMLTableRowElement* insertRow(int32_t index = -1);
+    void deleteRow(int32_t index);
 
     /* Not in HTML5 */
     String* cellspacing();
@@ -72,8 +88,6 @@ public:
     String* cellpadding();
     void setCellpadding(String* cellpadding);
 
-    HTMLCollection* rows();
-
     bool isValidAlign(String* align);
     TextAlignValue alignValue(String* align);
 
@@ -81,6 +95,7 @@ private:
     bool m_hasCellPaddingAttribute;
     bool m_hasCellSpacingAttribute;
     HTMLCollection* m_rows;
+    HTMLCollection* m_tBodies;
 };
 }
 

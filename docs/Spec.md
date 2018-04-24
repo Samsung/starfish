@@ -572,12 +572,23 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | media | Applicable media. |
 |  | attribute | type | Type of embedded resource.<br>&lt;URL&gt; must be a local path.<br>Allowed value: text/css |
 | [HTMLTableElement](https://html.spec.whatwg.org/#the-table-element) | interface | HTMLTableElement | The HTMLTableElement interface provides special properties and methods for manipulating the layout and presentation of tables in an HTML document. |
-|    | attribute |  caption  |  Represents the first <caption>.  |
+|    | attribute |  caption  |  Represents the first &lt;caption&gt;.  |
+|    | attribute |  tHead  |  Represents the first &lt;thead&gt; that is a child of the element, or null if none is found.  |
+|    | attribute |  tFoot  |  Represents the first &lt;tfoot&gt; that is a child of the element, or null if none is found.  |
+|    | attribute |  tBodies  |  Contains all the &lt;tbody&gt; of the element.  |
 |    | attribute |  rows  |  Returns a live HTMLCollection containing all the rows of the element, that is all &lt;tr&gt; that are a child of the element, or a child or one of its &lt;thead&gt;, &lt;tbody&gt; and &lt;tfoot&gt; children. |
 |    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
+|    | attribute |  width  |  Contains the length in pixels or in percentage of the desired width fo the entire table.  | 
 |    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
-|    | method |  createCaption  |  Returns an HTMLElement representing the first <caption> that is a child of the element. If none is found, a new one is created and inserted in the tree as the first child of the <table> element.  |
-|    | method |  deleteCaption  |  Removes the first <caption> that is a child of the element.  |
+|    | attribute |  bgColor  | Contains the background color of the cells.  |
+|    | method |  createCaption  |  Returns an HTMLElement representing the first &lt;caption&gt; that is a child of the element. If none is found, a new one is created and inserted in the tree as the first child of the &lt;table&gt; element.  |
+|    | method |  deleteCaption  |  Removes the first &lt;caption&gt; that is a child of the element.  |
+|    | method |  createTHead  |  Returns an HTMLElement representing the first &lt;thead&gt; that is a child of the element.  |
+|    | method |  deleteTHead  |  Removes the first &lt;thead&gt; that is a child of the element.  |
+|    | method |  createTFoot  |  Returns an HTMLElement representing the first &lt;tfoot&gt; that is a child of the element.  |
+|    | method |  deleteTFoot  |  Removes the first &lt;tfoot&gt; that is a child of the element.  |
+|    | method |  insertRow  |  Returns an HTMLTableRowElement representing a new row of the table.  |
+|    | method |  deleteRow  |  Removes the row corresponding to the index given in parameter.  |
 | [HTMLTableRowElement](https://html.spec.whatwg.org/#htmltablerowelement) | interface | HTMLTableRowElement | The HTMLTableRowElement interface provides special properties and methods for manipulating the layout and presentation of rows in an HTML table. |
 |    | attribute |  rowIndex  |  Returns a long value which gives the logical position of the row within the entire table. If the row is not part of a table, returns -1.  |
 |    | attribute |  sectionRowIndex  |  Returns a long value which gives the logical position of the row within the table section it belongs to.  |
