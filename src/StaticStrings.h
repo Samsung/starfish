@@ -375,6 +375,7 @@ public:
     QualifiedName m_abbr;
     QualifiedName m_nowrap;
     QualifiedName m_axis;
+    QualifiedName m_tbodies;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;
