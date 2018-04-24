@@ -313,10 +313,10 @@ public:
         return m_state & NodeStateFocused;
     }
 
-    virtual bool supportsFocus() const;
+    virtual bool supportsFocus();
     virtual bool isFocusable();
 
-    virtual int tabIndex() const;
+    virtual int tabIndex();
     void setTabIndex(int32_t t)
     {
         m_tabIndexWasSetExplicitly = true;

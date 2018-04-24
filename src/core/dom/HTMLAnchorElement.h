@@ -53,7 +53,7 @@ public:
     /* Other methods (not in DOM API) */
     virtual bool handleDefaultEvent(Event* event) override;
 
-    bool supportsFocus() const override;
+    bool supportsFocus() override;
 
 private:
     DOMTokenList* m_relList;

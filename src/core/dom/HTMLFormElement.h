@@ -89,13 +89,13 @@ public:
     virtual String* value();
     virtual void setValue(String* value);
 
-    virtual bool disabled() const;
+    virtual bool disabled() override;
     virtual void setDisabled(bool disabled);
 
     virtual HTMLFormElement* form();
 
     // Other method
-    virtual bool supportsFocus();
+    virtual bool supportsFocus() override;
 
     virtual bool isHTMLFormControl() const override
     {

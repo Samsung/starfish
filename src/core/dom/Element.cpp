@@ -1366,7 +1366,7 @@ String* Element::getLaunguage()
     return value;
 }
 
-bool Element::supportsFocus() const
+bool Element::supportsFocus()
 {
     if (!tabIndexSetExplicitly()) {
         return false;
@@ -1383,7 +1383,7 @@ bool Element::isFocusable()
     return true;
 }
 
-int Element::tabIndex() const
+int Element::tabIndex()
 {
     return m_tabIndex;
 }

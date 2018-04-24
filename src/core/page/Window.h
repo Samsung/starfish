@@ -245,7 +245,7 @@ public:
         return m_starFish;
     }
 
-    ScriptBindingInstance* scriptBindingInstance() const
+    ScriptBindingInstance* scriptBindingInstance() override
     {
         return m_scriptBindingInstance;
     }

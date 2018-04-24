@@ -207,7 +207,7 @@ public:
         return *m_styleResolver;
     }
 
-    ScriptBindingInstance* scriptBindingInstance() const;
+    ScriptBindingInstance* scriptBindingInstance() override;
 
     HTMLHtmlElement* rootElement();
     HTMLHeadElement* head();

@@ -193,7 +193,7 @@ BrowsingContext* Document::browsingContext() const
     return window()->browsingContext();
 }
 
-ScriptBindingInstance* Document::scriptBindingInstance() const
+ScriptBindingInstance* Document::scriptBindingInstance()
 {
     return window()->scriptBindingInstance();
 }

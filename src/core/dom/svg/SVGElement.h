@@ -124,7 +124,7 @@ public:
         return false;
     }
 
-    int tabIndex() const override;
+    int tabIndex() override;
 
     NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
     {

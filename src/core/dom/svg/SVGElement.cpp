@@ -252,7 +252,7 @@ void SVGElement::styleForPresentationAttribute(
     }
 }
 
-int SVGElement::tabIndex() const
+int SVGElement::tabIndex()
 {
     if (supportsFocus()) {
         return Element::tabIndex();

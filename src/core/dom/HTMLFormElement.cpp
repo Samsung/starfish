@@ -238,7 +238,7 @@ void HTMLFormControl::setMultiple(bool multiple)
     }
 }
 
-bool HTMLFormControl::disabled() const
+bool HTMLFormControl::disabled()
 {
     Nullable<String*> val =
         getAttribute(starFish()->staticStrings()->m_disabled);

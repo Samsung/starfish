@@ -47,7 +47,7 @@ public:
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues);
 
-    int tabIndex() const override;
+    int tabIndex() override;
 
     LayoutRect offsetRect();
     long offsetWidth()
