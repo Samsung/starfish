@@ -170,6 +170,7 @@ protected:
         int m_int;
         SkMatrix m_matrix;
         ValueData()
+            : m_int(0)
         {
         }
     } m_data;

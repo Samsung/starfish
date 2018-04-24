@@ -229,6 +229,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     : m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
+    , m_screenScaleRatio(1)
     , m_shouldFitWindow(true)
     , m_console(new Console(this))
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
@@ -248,6 +249,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_localStorageFilePath(String::fromUTF8(localStorageFilePath))
     , m_customUserAgentString(customUserAgentString)
     , m_builtinPolyfillPathString(builtinPolyfillPathString)
+    , m_activeThreadListMutex(nullptr)
 #ifdef STARFISH_ENABLE_HTTPCACHE
     , m_httpCache(nullptr)
 #endif
@@ -337,7 +339,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     }
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
-    Evas_Object* wndObj;
+    Evas_Object* wndObj = nullptr;
     if (!m_nativeHandle) {
         wndObj = elm_win_add(NULL, STARFISH_NAME, ELM_WIN_BASIC);
         elm_win_title_set(wndObj, STARFISH_NAME);

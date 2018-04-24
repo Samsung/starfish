@@ -25,6 +25,7 @@
 namespace StarFish {
 
 CSSAngle::CSSAngle(String* str, float f)
+    : m_kind(DEG)
 {
     if (str->length() == 0 || str->equals("deg")) {
         m_kind = DEG;
@@ -39,6 +40,7 @@ CSSAngle::CSSAngle(String* str, float f)
 }
 
 CSSAngle::CSSAngle(const CSSTokenValue& str, float f)
+    : m_kind(DEG)
 {
     if (str.length() == 0 || str == "deg") {
         m_kind = DEG;
@@ -65,6 +67,7 @@ float CSSAngle::toDegreeValue() const
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return m_value;
 }
 
 String* CSSAngle::toString() const
@@ -83,5 +86,6 @@ String* CSSAngle::toString() const
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return String::emptyString;
 }
 } // namespace StarFish

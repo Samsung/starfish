@@ -152,6 +152,8 @@ Settings::Settings(std::string default_ua, std::string ua)
     , m_UserAgent(ua)
 #if defined(STARFISH_ENABLE_HTTPCACHE)
     , m_cacheMode(StarFish::HTTPCache::LOAD_DEFAULT)
+#else
+    , m_cacheMode(0)
 #endif
 {
 }
@@ -234,6 +236,7 @@ WebView* WebView::Create(void* starFish)
 
 WebView::WebView(void* starFish)
     : m_starfish(starFish)
+    , m_webViewClient(nullptr)
 {
 }
 

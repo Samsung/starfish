@@ -727,6 +727,7 @@ void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
         if (type() == PseudoClass) {
             m_type = PseudoElement;
         }
+        break;
     case PseudoBackdrop:
     case PseudoCue:
     case PseudoGrammarError:
@@ -2062,6 +2063,7 @@ StyleResolver::StyleResolver(Document* document)
     : DocumentHoldable(document)
     , m_mediumFontSize(starFish()->defaultFontSizeMultiplier() *
                        DEFAULT_FONT_SIZE)
+    , m_styleSheetWithAllRules(nullptr)
     , m_usesFirstLineRule(false)
     , m_mediaQueryEvaluator(nullptr)
     , m_ruleSet(new RuleSet())
@@ -7284,7 +7286,7 @@ bool CSSStyleValuePair::updateValueObjectPosition(const CSSTokenVector& tokens,
                                                   CSSStyleValuePair& xPair,
                                                   CSSStyleValuePair& yPair)
 {
-    if (tokens.size() < 0 || tokens.size() > 4) {
+    if (tokens.size() > 4) {
         return false;
     }
 

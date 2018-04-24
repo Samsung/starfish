@@ -180,11 +180,7 @@ public:
         }
         case HTMLToken::Character:
         case HTMLToken::Comment:
-            if (token.isAll7BitData()) {
-                m_data = token.data().toString();
-            } else {
-                m_data = token.data().toString();
-            }
+            m_data = token.data().toString();
             break;
         }
     }

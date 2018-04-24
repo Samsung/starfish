@@ -58,6 +58,7 @@ public:
     {
         m_string = src.m_string;
         m_urlString = src.m_urlString;
+        m_baseURL = src.m_baseURL;
 
         m_protocolEnd = src.m_protocolEnd;
         m_usernameStart = src.m_usernameStart;

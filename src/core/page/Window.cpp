@@ -80,7 +80,9 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
     , m_scrolling(new Scrolling(this))
     , m_width(initialWidth)
     , m_height(initialHeight)
+    , m_cssTarget(nullptr)
     , m_frames(nullptr)
+
 {
     /*
         GC_REGISTER_FINALIZER_NO_ORDER(

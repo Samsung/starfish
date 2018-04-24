@@ -103,6 +103,7 @@ protected:
         m_letterSpacing = 0;
         m_fontKerning = FontKerningValue::FontKerningAutoValue;
         m_fontFaceList = nullptr;
+        m_fontSelector = nullptr;
     }
 
 public:
@@ -213,7 +214,6 @@ protected:
 
     FontFaceList* m_fontFaceList;
     FontSelector* m_fontSelector;
-    size_t m_seenUnresolvedWebFontIndex;
     char m_weight;
     char m_style;
     FontKerningValue m_fontKerning;

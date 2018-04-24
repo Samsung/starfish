@@ -85,6 +85,7 @@ public:
         GradientData* m_gradient;
 
         ImageValueData()
+            : m_url(nullptr)
         {
         }
 
