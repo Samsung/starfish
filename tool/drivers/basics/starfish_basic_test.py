@@ -100,6 +100,8 @@ def default_tc_handler(tc_file, output, show_progress=True):
     else:
         if show_progress:
             print utils.Strings.FAIL_SIGN + tc_file
+            print "starfish output  =>"
+            print output
         return False
 
 

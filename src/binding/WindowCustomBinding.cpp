@@ -427,6 +427,8 @@ static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
     GC_gcollect_and_unmap();
     GENERATE_WINDOW();
     customExit(0, window);
+    fflush(stdout);
+    fflush(stderr);
 
     return scriptUndefined();
 }

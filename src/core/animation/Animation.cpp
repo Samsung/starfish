@@ -147,29 +147,137 @@ void ColorAnimationTask::execute(float progress)
     current->setNeedsPainting();
 }
 
-// This function change computed style of target node.
-// * After this function, NeedsLayout flag will be set.
+void LengthAnimationTask::computeToValue()
+{
+    if (m_property == CSSStyleValuePair::KeyKind::Width) {
+        LayoutUnit currentWidth =
+            targetElement()->frame()->asFrameBox()->width();
+        if (targetElement()->style()->boxSizing() ==
+            BoxSizingValue::ContentBoxBoxSizingValue) {
+            currentWidth =
+                targetElement()->frame()->asFrameBox()->contentWidth();
+        }
+
+        m_toFixedValue = currentWidth;
+        targetElement()->style()->setWidth(
+            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+    } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
+        LayoutUnit currentHeight =
+            targetElement()->frame()->asFrameBox()->height();
+        if (targetElement()->style()->boxSizing() ==
+            BoxSizingValue::ContentBoxBoxSizingValue) {
+            currentHeight =
+                targetElement()->frame()->asFrameBox()->contentHeight();
+        }
+
+        m_toFixedValue = currentHeight;
+        targetElement()->style()->setHeight(
+            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+    } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
+        FrameBox* cb = containingBlock(targetElement()->frame());
+        m_toFixedValue =
+            targetElement()->frame()->style()->minWidth().specifiedValue(
+                cb->contentWidth(), targetElement()->frame());
+        targetElement()->style()->setMinWidth(
+            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+    } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
+        FrameBox* cb = containingBlock(targetElement()->frame());
+        m_toFixedValue =
+            targetElement()->frame()->style()->minHeight().specifiedValue(
+                cb->contentHeight(), targetElement()->frame());
+        targetElement()->style()->setMinHeight(
+            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+    } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
+        FrameBox* cb = containingBlock(targetElement()->frame());
+        m_toFixedValue =
+            targetElement()->frame()->style()->maxWidth().specifiedValue(
+                cb->contentWidth(), targetElement()->frame());
+        targetElement()->style()->setMaxWidth(
+            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+    } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
+        FrameBox* cb = containingBlock(targetElement()->frame());
+        m_toFixedValue =
+            targetElement()->frame()->style()->maxHeight().specifiedValue(
+                cb->contentHeight(), targetElement()->frame());
+        targetElement()->style()->setMaxHeight(
+            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    targetElement()->setNeedsLayout();
+}
+
+void LengthAnimationTask::attachedToElement()
+{
+    AnimationTask::attachedToElement();
+
+    if (m_toValue.getLength().isDefinite(false)) {
+        m_toFixedValue =
+            m_toValue.getLength().specifiedValue(0, targetElement()->frame());
+
+        if (m_property == CSSStyleValuePair::KeyKind::Width) {
+            targetElement()->style()->setWidth(
+                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+        } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
+            targetElement()->style()->setHeight(
+                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+        } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
+            targetElement()->style()->setMinWidth(
+                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+        } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
+            targetElement()->style()->setMinHeight(
+                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+        } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
+            targetElement()->style()->setMaxWidth(
+                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+        } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
+            targetElement()->style()->setMaxHeight(
+                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else {
+        targetElement()
+            ->document()
+            ->browsingContext()
+            ->webView()
+            ->addDidLayoutCallback(
+                [](void* data) -> bool {
+                    LengthAnimationTask* task = (LengthAnimationTask*)data;
+                    task->computeToValue();
+                    return true;
+                },
+                this);
+    }
+}
+
 void LengthAnimationTask::execute(float progress)
 {
-    Length from = m_fromValue.getLength();
-    Length to = m_toValue.getLength();
+    LayoutUnit from = m_fromValue.getLayoutUnit();
+    LayoutUnit to = m_toFixedValue;
 
     Element* current = targetElement();
     ComputedStyle* style = current->style();
     float newLength;
-    if (from.fixed() < to.fixed()) {
-        newLength = from.fixed() + (to.fixed() - from.fixed()) * progress;
+    if (from < to) {
+        newLength = from + (to - from) * progress;
     } else {
-        newLength = from.fixed() - (from.fixed() - to.fixed()) * progress;
+        newLength = from - (from - to) * progress;
     }
-
-    // TODO : More types should be supported
     if (m_property == CSSStyleValuePair::KeyKind::Width) {
         style->setWidth(Length(Length::Fixed, newLength));
     } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
         style->setHeight(Length(Length::Fixed, newLength));
+    } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
+        style->setMinWidth(Length(Length::Fixed, newLength));
+    } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
+        style->setMinHeight(Length(Length::Fixed, newLength));
+    } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
+        style->setMaxWidth(Length(Length::Fixed, newLength));
+    } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
+        style->setMaxHeight(Length(Length::Fixed, newLength));
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     current->setNeedsLayout();
@@ -277,6 +385,17 @@ void TransformAnimationTask::attachedToElement()
 {
     AnimationTask::attachedToElement();
     targetElement()->markRunningTransformAnimation();
+    targetElement()
+        ->document()
+        ->browsingContext()
+        ->webView()
+        ->addDidLayoutCallback(
+            [](void* data) {
+                TransformAnimationTask* task = (TransformAnimationTask*)data;
+                task->computeToValue();
+                return false;
+            },
+            this);
 }
 
 void TransformAnimationTask::detachedFromElement()
