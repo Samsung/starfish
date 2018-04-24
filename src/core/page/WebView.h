@@ -174,7 +174,7 @@ public:
 
     void onIdle();
 
-    typedef void (*DidLayoutCallback)(void*);
+    typedef bool (*DidLayoutCallback)(void*); // return true cause relayout
     void addDidLayoutCallback(DidLayoutCallback cb, void* data);
 
     void assignGraphicsBuffer(CanvasSurface** surfaceHolder,

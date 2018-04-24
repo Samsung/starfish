@@ -444,29 +444,46 @@ void WebView::clearBlobURLStore()
 void WebView::layoutIfNeeds()
 {
     INSTALL_PROFILE_TIMER(starFish(), "WebView::rendering::layoutIfNeeds");
-    bool didLayout = m_topLevelBrowsingContext->layoutIfNeeds();
+    bool didLayout = false;
 
-    for (size_t i = 0; i < m_browsingContextsNeedsLayout.size(); i++) {
-        didLayout =
-            didLayout | m_browsingContextsNeedsLayout[i]->layoutIfNeeds();
-    }
-    m_browsingContextsNeedsLayout.clear();
-
-    if (inRendering()) {
-        for (size_t i = 0; i < m_browsingContextsHasPendingAnimation.size();
-             i++) {
-            m_browsingContextsHasPendingAnimation[i]
-                ->document()
-                ->animationExecutor()
-                ->runPendingAnimation();
+    while (true) {
+        didLayout = didLayout | m_topLevelBrowsingContext->layoutIfNeeds();
+        for (size_t i = 0; i < m_browsingContextsNeedsLayout.size(); i++) {
+            didLayout =
+                didLayout | m_browsingContextsNeedsLayout[i]->layoutIfNeeds();
         }
-        m_browsingContextsHasPendingAnimation.clear();
-    }
+        m_browsingContextsNeedsLayout.clear();
 
-    for (size_t i = 0; i < m_didLayoutCallbacks.size(); i++) {
-        m_didLayoutCallbacks[i].first(m_didLayoutCallbacks[i].second);
+        if (inRendering()) {
+            for (size_t i = 0; i < m_browsingContextsHasPendingAnimation.size();
+                 i++) {
+                m_browsingContextsHasPendingAnimation[i]
+                    ->document()
+                    ->animationExecutor()
+                    ->runPendingAnimation();
+            }
+            m_browsingContextsHasPendingAnimation.clear();
+        }
+
+        bool needsReLayout = false;
+        for (size_t i = 0; i < m_didLayoutCallbacks.size(); i++) {
+            if (m_didLayoutCallbacks[i].first(m_didLayoutCallbacks[i].second)) {
+                for (size_t j = 0; j <= i; j++) {
+                    m_didLayoutCallbacks.erase(m_didLayoutCallbacks.begin());
+                }
+                needsReLayout = true;
+                break;
+            }
+        }
+
+        if (needsReLayout) {
+            continue;
+        }
+
+        m_didLayoutCallbacks.clear();
+
+        break;
     }
-    m_didLayoutCallbacks.clear();
 
     if (didLayout || !m_rootStackingContext) {
 #ifdef STARFISH_ENABLE_TEST

@@ -403,7 +403,7 @@ void RadialGradientData::setHorizontalSide(SideValue side)
 {
     STARFISH_ASSERT(side == SideValue::CenterSideValue ||
                     side == SideValue::LeftSideValue ||
-                    side == SideValue::RightSideValue)
+                    side == SideValue::RightSideValue);
     m_horizentalSide = side;
 }
 
@@ -411,7 +411,7 @@ void RadialGradientData::setVerticalSide(SideValue side)
 {
     STARFISH_ASSERT(side == SideValue::CenterSideValue ||
                     side == SideValue::TopSideValue ||
-                    side == SideValue::BottomSideValue)
+                    side == SideValue::BottomSideValue);
     m_verticalSide = side;
 }
 

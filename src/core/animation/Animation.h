@@ -29,7 +29,15 @@ class Node;
 class PlatformWindow;
 
 class AnimatedValue : public gc {
-    enum ValueType { UNDEFINED, COLOR, LENGTH, FLOAT, INT, MATRIX };
+    enum ValueType {
+        UNDEFINED,
+        COLOR,
+        LAYOUT_UNIT,
+        LENGTH,
+        FLOAT,
+        INT,
+        MATRIX
+    };
 
 public:
     AnimatedValue()
@@ -47,6 +55,12 @@ public:
     {
         m_data.m_length = lengthValue;
         m_type = LENGTH;
+    }
+
+    AnimatedValue(LayoutUnit v)
+    {
+        m_data.m_layoutUnit = v;
+        m_type = LAYOUT_UNIT;
     }
 
     AnimatedValue(float floatValue)
@@ -92,6 +106,11 @@ public:
         return m_type == MATRIX;
     }
 
+    bool isLayoutUnit()
+    {
+        return m_type == LAYOUT_UNIT;
+    }
+
     Unit::Color getColor()
     {
         STARFISH_ASSERT(m_type == COLOR);
@@ -102,6 +121,12 @@ public:
     {
         STARFISH_ASSERT(m_type == LENGTH);
         return m_data.m_length;
+    }
+
+    LayoutUnit getLayoutUnit()
+    {
+        STARFISH_ASSERT(m_type == LAYOUT_UNIT);
+        return m_data.m_layoutUnit;
     }
 
     float getFloat()
@@ -140,6 +165,7 @@ protected:
     union ValueData {
         Unit::Color m_color;
         Length m_length;
+        LayoutUnit m_layoutUnit;
         float m_float;
         int m_int;
         SkMatrix m_matrix;
@@ -221,6 +247,11 @@ public:
     {
     }
     void execute(float progress) override;
+    void attachedToElement() override;
+    void computeToValue();
+
+protected:
+    LayoutUnit m_toFixedValue;
 };
 
 class OpacityAnimationTask : public AnimationTask {

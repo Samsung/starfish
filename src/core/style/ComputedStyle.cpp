@@ -955,6 +955,42 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
 
         if ((isPropertyAll ||
              property ==
+                 TransitionPropertyValue::TransitionPropertyWidthValue) &&
+            damagedKeys[CSSStyleValuePair::Width]) {
+            return true;
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyHeightValue) &&
+            damagedKeys[CSSStyleValuePair::Height]) {
+            return true;
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyMinWidthValue) &&
+            damagedKeys[CSSStyleValuePair::MinWidth]) {
+            return true;
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyMinHeightValue) &&
+            damagedKeys[CSSStyleValuePair::MinHeight]) {
+            return true;
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyMaxWidthValue) &&
+            damagedKeys[CSSStyleValuePair::MaxWidth]) {
+            return true;
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyMaxHeightValue) &&
+            damagedKeys[CSSStyleValuePair::MaxHeight]) {
+            return true;
+        }
+        if ((isPropertyAll ||
+             property ==
                  TransitionPropertyValue::TransitionPropertyTransformValue) &&
             damagedKeys[CSSStyleValuePair::Transform]) {
             return true;
@@ -991,6 +1027,139 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
         auto duration = data->at(i).duration().toTimeValue();
         auto delay = data->at(i).delay().toTimeValue();
         auto timingFunction = data->at(i).timingFunction();
+
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyWidthValue) &&
+            damagedKeys[CSSStyleValuePair::Width]) {
+            if (oldFrame && oldStyle->width().isDefinite(true) &&
+                oldStyle->hasBlockLikeDisplay() &&
+                newStyle->width().isDefinite(true) &&
+                newStyle->hasBlockLikeDisplay()) {
+                LayoutUnit currentWidth = oldFrame->asFrameBox()->width();
+                if (oldStyle->boxSizing() ==
+                    BoxSizingValue::ContentBoxBoxSizingValue) {
+                    currentWidth = oldFrame->asFrameBox()->contentWidth();
+                }
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::Width,
+                    transitionPropertyValueToString(
+                        TransitionPropertyValue::TransitionPropertyWidthValue),
+                    AnimatedValue(currentWidth),
+                    AnimatedValue(newStyle->width()), duration, delay,
+                    timingFunction));
+            }
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyHeightValue) &&
+            damagedKeys[CSSStyleValuePair::Height]) {
+            if (oldFrame && oldStyle->height().isDefinite(true) &&
+                oldStyle->hasBlockLikeDisplay() &&
+                newStyle->height().isDefinite(true) &&
+                newStyle->hasBlockLikeDisplay()) {
+                LayoutUnit currentHeight = oldFrame->asFrameBox()->height();
+                if (oldStyle->boxSizing() ==
+                    BoxSizingValue::ContentBoxBoxSizingValue) {
+                    currentHeight = oldFrame->asFrameBox()->contentHeight();
+                }
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::Height,
+                    transitionPropertyValueToString(
+                        TransitionPropertyValue::TransitionPropertyHeightValue),
+                    AnimatedValue(currentHeight),
+                    AnimatedValue(newStyle->height()), duration, delay,
+                    timingFunction));
+            }
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyMinWidthValue) &&
+            damagedKeys[CSSStyleValuePair::MinWidth]) {
+            if (oldFrame && oldStyle->minWidth().isDefinite(true) &&
+                oldStyle->hasBlockLikeDisplay() &&
+                newStyle->minWidth().isDefinite(true) &&
+                newStyle->hasBlockLikeDisplay()) {
+                FrameBox* cb = containingBlock(oldFrame);
+                LayoutUnit currentValue = oldStyle->minWidth().specifiedValue(
+                    cb->contentWidth(), oldFrame);
+
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::MinWidth,
+                    transitionPropertyValueToString(
+                        TransitionPropertyValue::
+                            TransitionPropertyMinWidthValue),
+                    AnimatedValue(currentValue),
+                    AnimatedValue(newStyle->minWidth()), duration, delay,
+                    timingFunction));
+            }
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyMaxWidthValue) &&
+            damagedKeys[CSSStyleValuePair::MaxWidth]) {
+            if (oldFrame && oldStyle->maxWidth().isDefinite(true) &&
+                oldStyle->hasBlockLikeDisplay() &&
+                newStyle->maxWidth().isDefinite(true) &&
+                newStyle->hasBlockLikeDisplay()) {
+                FrameBox* cb = containingBlock(oldFrame);
+                LayoutUnit currentValue = oldStyle->maxWidth().specifiedValue(
+                    cb->contentWidth(), oldFrame);
+
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::MaxWidth,
+                    transitionPropertyValueToString(
+                        TransitionPropertyValue::
+                            TransitionPropertyMaxWidthValue),
+                    AnimatedValue(currentValue),
+                    AnimatedValue(newStyle->maxWidth()), duration, delay,
+                    timingFunction));
+            }
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyMinHeightValue) &&
+            damagedKeys[CSSStyleValuePair::MinHeight]) {
+            if (oldFrame && oldStyle->minHeight().isDefinite(true) &&
+                oldStyle->hasBlockLikeDisplay() &&
+                newStyle->minHeight().isDefinite(true) &&
+                newStyle->hasBlockLikeDisplay()) {
+                FrameBox* cb = containingBlock(oldFrame);
+                LayoutUnit currentValue = oldStyle->minHeight().specifiedValue(
+                    cb->contentHeight(), oldFrame);
+
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::MinHeight,
+                    transitionPropertyValueToString(
+                        TransitionPropertyValue::
+                            TransitionPropertyMinHeightValue),
+                    AnimatedValue(currentValue),
+                    AnimatedValue(newStyle->minHeight()), duration, delay,
+                    timingFunction));
+            }
+        }
+        if ((isPropertyAll ||
+             property ==
+                 TransitionPropertyValue::TransitionPropertyMaxHeightValue) &&
+            damagedKeys[CSSStyleValuePair::MaxHeight]) {
+            if (oldFrame && oldStyle->maxHeight().isDefinite(true) &&
+                oldStyle->hasBlockLikeDisplay() &&
+                newStyle->maxHeight().isDefinite(true) &&
+                newStyle->hasBlockLikeDisplay()) {
+                FrameBox* cb = containingBlock(oldFrame);
+                LayoutUnit currentValue = oldStyle->maxHeight().specifiedValue(
+                    cb->contentHeight(), oldFrame);
+
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::MaxHeight,
+                    transitionPropertyValueToString(
+                        TransitionPropertyValue::
+                            TransitionPropertyMaxHeightValue),
+                    AnimatedValue(currentValue),
+                    AnimatedValue(newStyle->maxHeight()), duration, delay,
+                    timingFunction));
+            }
+        }
         if ((isPropertyAll ||
              property ==
                  TransitionPropertyValue::TransitionPropertyTransformValue) &&
@@ -1009,17 +1178,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                     AnimatedValue(matrixBefore), duration, delay,
                     timingFunction);
                 executor->registerAnimation(task);
-
-                element->document()
-                    ->browsingContext()
-                    ->webView()
-                    ->addDidLayoutCallback(
-                        [](void* data) {
-                            TransformAnimationTask* task =
-                                (TransformAnimationTask*)data;
-                            task->computeToValue();
-                        },
-                        task);
             }
         }
         if ((isPropertyAll ||
