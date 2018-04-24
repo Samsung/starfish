@@ -88,6 +88,10 @@ BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView,
     , m_parentBrowsingContext(source ? source->document()->browsingContext()
                                      : nullptr)
     , m_sourceElement(source)
+    , m_pendingStyleSheetCount(0)
+    , m_pendingRenderingCount(0)
+    , m_isRunning(false)
+    , m_isActive(false)
     , m_touchDownPoint(0, 0)
     , m_lastMouseMovePoint(std::numeric_limits<float>::quiet_NaN(),
                            std::numeric_limits<float>::quiet_NaN())

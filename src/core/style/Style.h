@@ -2833,6 +2833,7 @@ public:
         , m_argument(String::emptyString)
     {
         m_pseudotype = PseudoNone;
+        m_nth = { 0, 0 };
     }
 
     PseudoType pseudoType() const

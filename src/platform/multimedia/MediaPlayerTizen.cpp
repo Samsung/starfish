@@ -1010,6 +1010,10 @@ void MediaPlayerTizen::prepareMediaSource()
 #ifdef STARFISH_RUN_MSE_THREAD
     else {
         m_playerDeadFlag = (bool*)malloc(sizeof(bool));
+        if (m_playerDeadFlag == NULL) {
+            RETURN_WHEN_PLAYER_ERROR("ERROR: prepareMediaSource\n");
+        }
+
         *m_playerDeadFlag = false;
         Thread* t = new Thread(m_container->starFish());
         t->run(m_container->starFish()->messageLoop(), threadFillingBuffer,

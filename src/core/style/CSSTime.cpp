@@ -24,6 +24,7 @@
 
 namespace StarFish {
 CSSTime::CSSTime(String* str, float f)
+    : m_kind(S)
 {
     if (str->length() == 0 || str->equals("s")) {
         m_kind = S;
@@ -34,6 +35,7 @@ CSSTime::CSSTime(String* str, float f)
 }
 
 CSSTime::CSSTime(const CSSTokenValue& str, float f)
+    : m_kind(S)
 {
     if (str.length() == 0 || str == "s") {
         m_kind = S;
@@ -52,6 +54,7 @@ double CSSTime::toTimeValue() const
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return m_value;
 }
 
 String* CSSTime::toString() const
@@ -66,5 +69,6 @@ String* CSSTime::toString() const
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return String::emptyString;
 }
 }

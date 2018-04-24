@@ -50,6 +50,7 @@ namespace StarFish {
 ResourceLoader::ResourceLoader(Document* document)
     : DocumentHoldable(document)
     , m_isDocumentInOpenState(false)
+    , m_documentOpenTime(0)
     , m_pendingResourceCountWhileDocumentOpening(0)
     , m_resourceCacheSize(0)
     , m_downloadedResourceContentSize(0)

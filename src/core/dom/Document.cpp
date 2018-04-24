@@ -111,6 +111,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_styleSheetList(nullptr)
     , m_brokenImage(nullptr)
     , m_animationExecutor(new AnimationExecutor(window))
+    , m_scriptBindingInstance(nullptr)
     , m_domVersion(0)
     , m_implementation(nullptr)
     , m_pendingDocumentParsingIdlerHandle(SIZE_MAX)
@@ -1599,24 +1600,29 @@ Event* Document::createEvent(String* type)
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 e = new Event(this);
             }
+            break;
         case 'e':
             if (type->equals("errorevent")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 e = new Event(this);
             }
+            break;
         case 'f':
             if (type->equals("focusevent")) {
                 e = new FocusEvent(this);
             }
+            break;
         case 'h':
             if (type->equals("htmlevents")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 e = new Event(this);
             }
+            break;
         case 'm':
             if (type->equals("mouseevent")) {
                 e = new MouseEvent(this);
             }
+            break;
         case 't':
             if (type->equals("touchevent")) {
                 e = new TouchEvent(this);
@@ -1624,11 +1630,13 @@ Event* Document::createEvent(String* type)
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 e = new Event(this);
             }
+            break;
         case 'w':
             if (type->equals("wheelevent")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 e = new Event(this);
             }
+            break;
         default:
             break;
         }

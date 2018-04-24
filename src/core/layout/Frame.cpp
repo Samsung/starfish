@@ -105,6 +105,7 @@ FrameBox* containingBlock(Frame* currentFrame)
 
 FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
     : m_box(box)
+    , m_canLayoutParentCollapseWithMarginTop(false)
 {
     STARFISH_ASSERT(box->isFloating());
     m_isLeft = box->style()->floating() == LeftFloatValue;

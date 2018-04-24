@@ -760,6 +760,14 @@ bool CSSPropertyParser::stringIsIdent(String* v)
 
 CSSParser::CSSParser(Document* document)
     : DocumentHoldable(document)
+    , m_preserveWS(false)
+    , m_preserveComments(false)
+    , m_scanner(nullptr)
+    , m_error(nullptr)
+    , m_state()
+    , m_parserType(MediaQuerySetParser)
+    , m_querySet(nullptr)
+    , m_blockLevel(0)
 {
     m_error = String::emptyString;
     m_failedParsing = false;
@@ -1038,7 +1046,7 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
                !token->hasSourceOfNumberValueDot()) { // an+b
         result.first = token->numericValue();
         size_t pos = token->value()->indexOf('n');
-        if (pos < 0) {
+        if (pos == SIZE_MAX) {
             return false;
         }
         nString = token->value()->toString()->substring(

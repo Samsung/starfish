@@ -55,6 +55,13 @@ public:
 
     NativeImageDataMISC(const char* buf, size_t len)
     {
+        m_image = nullptr;
+        m_imageSurface = nullptr;
+        m_width = 0;
+        m_height = 0;
+        m_stride = 0;
+        m_hasTransparentPixel = false;
+
         if (buf && len != 0) {
             decodeImage(nullptr, nullptr, buf, len);
             initInternalSurface();
@@ -315,6 +322,7 @@ private:
         if ((m_image = (unsigned char*)malloc(rowbytes * m_height)) ==
             nullptr) {
             png_destroy_read_struct(&png, &info, nullptr);
+            free(rowPointers);
             return;
         }
 
@@ -537,6 +545,10 @@ private:
         m_height = gifFile->SHeight;
 
         screenBuffer = (GifRowType*)malloc(m_height * sizeof(GifRowType));
+        if (screenBuffer == NULL) {
+            STARFISH_LOG_ERROR("Gif Open Error: malloc failed\n");
+            return;
+        }
 
         size = m_width * sizeof(GifPixelType);
         m_stride = m_width * 4;

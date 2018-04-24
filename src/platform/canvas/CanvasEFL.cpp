@@ -173,6 +173,7 @@ public:
         m_height = d->h;
         m_objList = d->objList;
         m_forceMapMode = d->f;
+        m_prevDrawnImageMap = nullptr;
         initState();
     }
 
@@ -185,6 +186,7 @@ public:
         m_image = (Evas_Object*)data->unwrap();
         void* buffer = evas_object_image_data_get(m_image, EINA_TRUE);
         m_buffer = buffer;
+        m_prevDrawnImageMap = nullptr;
         initFromBuffer(buffer, data->imageWidth(), data->imageHeight(),
                        data->bufferStride());
     }

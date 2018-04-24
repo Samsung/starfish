@@ -40,6 +40,7 @@ Timer::Timer(StarFish* sf)
 {
     m_timeoutCounter = 0;
     m_requestAnimationFrameCounter = 1;
+    m_AnimationCounter = 0;
 }
 
 struct AnimationTickData {

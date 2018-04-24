@@ -93,6 +93,7 @@ class CSSVariableSyntaxTreeBuilder : public gc {
         VariableContainer(size_t start, size_t end)
             : m_start(start)
             , m_end(end)
+            , m_root(nullptr)
         {
         }
         size_t m_start;
@@ -102,8 +103,10 @@ class CSSVariableSyntaxTreeBuilder : public gc {
 
 public:
     CSSVariableSyntaxTreeBuilder()
-        : m_valid(true)
+        : m_data(nullptr)
+        , m_valid(true)
     {
+        m_variableContainers.clear();
     }
 
     void build(const CSSTokenValue&);

@@ -49,9 +49,6 @@ StorageImpl::StorageImpl(StorageType storageType,
 unsigned long StorageImpl::length()
 {
     return m_map->size();
-    if (m_storageManager) {
-        return m_storageManager->length(m_securityOriginData);
-    }
 }
 
 Nullable<String*> StorageImpl::key(unsigned long index)

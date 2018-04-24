@@ -766,8 +766,13 @@ int main(int argc, char* argv[])
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();
 #endif
-    webView->LoadURL(std::string(argv[1]));
 
+    try {
+        webView->LoadURL(std::string(argv[1]));
+    } catch (...) {
+        fprintf(stderr, "Exception: WebView");
+        return -1;
+    }
 #if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_SHELL)
     pthread_t t;
     pthread_attr_t attr;

@@ -187,6 +187,7 @@ StyleRuleMedia::StyleRuleMedia(MediaQuerySet* media,
 
 StyleRuleMedia::StyleRuleMedia(StyleRuleMedia& o)
     : StyleRuleCondition(o)
+    , m_mediaQuerySet(nullptr)
 {
     if (o.mediaQuerySet()) {
         m_mediaQuerySet = MediaQuerySet::create(o.mediaQuerySet()->document());

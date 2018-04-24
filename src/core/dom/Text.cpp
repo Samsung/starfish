@@ -39,7 +39,7 @@ Text* Text::splitText(unsigned long offset)
     // INDEX_SIZE_ERR
     // Raised if the specified offset is negative or greater than
     // the number of 16-bit units in data.
-    if (offset < 0 || offset > data()->length()) {
+    if (offset > data()->length()) {
         throw new DOMException(document(), DOMException::Code::INDEX_SIZE_ERR);
     }
     String* oldValue = data();

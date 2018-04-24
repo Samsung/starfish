@@ -371,6 +371,7 @@ struct Nullable {
 public:
     Nullable()
         : m_hasValue(false)
+        , m_value()
     {
     }
 
@@ -382,6 +383,7 @@ public:
 
     Nullable(std::nullptr_t value)
         : m_hasValue(false)
+        , m_value()
     {
     }
 

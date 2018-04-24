@@ -38,6 +38,7 @@ struct ThreadData {
         , m_messageLoop(m)
         , m_fn(w)
         , m_data(d)
+        , m_tid(0)
         , m_joinHandle(SIZE_MAX)
     {
     }

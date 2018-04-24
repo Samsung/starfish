@@ -232,6 +232,7 @@ StackingContextRareData::StackingContextRareData()
     , m_isVisibleRectComputedForNonGraphicsLayer(false)
     , m_visibleRect(0, 0, 0, 0)
     , m_buffer(nullptr)
+    , m_matrix()
 {
 }
 

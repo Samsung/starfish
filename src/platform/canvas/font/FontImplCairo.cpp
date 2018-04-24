@@ -54,13 +54,13 @@ PlatformFontCache* PlatformFontCache::create(StarFish* sf)
 
 FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
 {
-    uint8_t* newBuf = (uint8_t*)malloc(dataLen);
+    uint8_t* newBuf = new uint8_t[dataLen];
     memcpy(newBuf, data, dataLen);
     FT_Face face;
     FT_Error error =
         FT_New_Memory_Face(g_freeTypeInstance, newBuf, dataLen, 0, &face);
     if (error) {
-        delete newBuf;
+        delete[] newBuf;
         return nullptr;
     }
     FT_Set_Pixel_Sizes(face, 0, 16);
@@ -179,6 +179,7 @@ FontImplCairo::loadGlyph(char32_t ch)
 
     FcPattern* resultPattern = FcFontMatch(NULL, pattern, &fontConfigResult);
     if (!resultPattern) {
+        FcCharSetDestroy(fontConfigCharSet);
         return result;
     }
     FcChar8* filePath = NULL;

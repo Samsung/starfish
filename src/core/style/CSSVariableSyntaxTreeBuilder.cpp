@@ -113,7 +113,8 @@ void CSSVariableSyntaxTreeBuilder::build(const CSSTokenValue& src)
     }
 
     size_t cursor = 0;
-    size_t parenthesisCount = 0, start = 0, end = 0;
+    int parenthesisCount = 0;
+    size_t start = 0, end = 0;
     while (cursor < src.size()) {
         if (cursor + 4 < src.size() && src[cursor] == 'v' &&
             src[cursor + 1] == 'a' && src[cursor + 2] == 'r' &&

@@ -184,27 +184,32 @@ public:
                 if (kindStr->equalsIgnoreCase(String::fromUTF8("chapters"))) {
                     return Kind::Chapters;
                 }
+                break;
             case 'b':
             case 'B':
                 if (kindStr->equalsIgnoreCase(String::fromUTF8("subtitles"))) {
                     return Kind::Subtitles;
                 }
+                break;
             case 'p':
             case 'P':
                 if (kindStr->equalsIgnoreCase(String::fromUTF8("captions"))) {
                     return Kind::Captions;
                 }
+                break;
             case 's':
             case 'S':
                 if (kindStr->equalsIgnoreCase(
                         String::fromUTF8("descriptions"))) {
                     return Kind::Descriptions;
                 }
+                break;
             case 't':
             case 'T':
                 if (kindStr->equalsIgnoreCase(String::fromUTF8("metadata"))) {
                     return Kind::Metadata;
                 }
+                break;
             default:
                 return Kind::InvalidKind;
             }

@@ -139,8 +139,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
         } break;
         case KeyValue::DeleteKey: {
             if (value->length()) {
-                if (m_currentCaretPosition >= 0 &&
-                    m_currentCaretPosition < value->length() &&
+                if (m_currentCaretPosition < value->length() &&
                     (int32_t)value->length() > minLength()) {
                     StringBuilder sb;
                     sb.appendSubString(value, 0, m_currentCaretPosition);

@@ -50,10 +50,12 @@ class CustomEvent : public Event {
 public:
     CustomEvent(Document* document)
         : Event(document)
+        , m_detail(scriptNull())
     {
     }
     CustomEvent(Document* document, String* eventType)
         : Event(document, eventType)
+        , m_detail(scriptNull())
     {
     }
     CustomEvent(Document* document, String* eventType,
