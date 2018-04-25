@@ -121,8 +121,8 @@ StaticStrings::StaticStrings(StarFish* sf)
                               AtomicString::createAtomicString(sf, "charset"));
     m_content = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "content"));
-    m_forattr = QualifiedName(AtomicString::emptyAtomicString(),
-                              AtomicString::createAtomicString(sf, "for"));
+    m_for = QualifiedName(AtomicString::emptyAtomicString(),
+                          AtomicString::createAtomicString(sf, "for"));
     m_httpEquiv =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "http-equiv"));

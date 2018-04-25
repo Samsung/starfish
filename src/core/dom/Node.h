@@ -43,6 +43,8 @@ class RareNodeMembers;
 class RareElementMembers;
 
 typedef GCVector<std::pair<String*, HTMLCollection*>> ActiveHTMLCollectionList;
+typedef GCVector<std::pair<std::pair<String*, String*>, HTMLCollection*>>
+    ActiveStringPairHTMLCollectionList;
 typedef GCVector<std::pair<String*, NodeList*>> ActiveNodeListVector;
 
 class RareNodeMembers : public gc {
@@ -52,6 +54,7 @@ public:
         , m_childNodeList(nullptr)
         , m_domTokenList(nullptr)
         , m_activeHtmlCollectionListsForTagName(nullptr)
+        , m_activeHtmlCollectionListsForTagNameNS(nullptr)
         , m_activeHtmlCollectionListsForClassName(nullptr)
         , m_activeNodeListVectorForName(nullptr)
     {
@@ -69,6 +72,8 @@ public:
     }
 
     ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForTagName();
+    ActiveStringPairHTMLCollectionList*
+    ensureActiveHtmlCollectionListForTagNameNS();
     ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForClassName();
     ActiveNodeListVector* ensureActiveNodeListVectorForName();
 
@@ -77,9 +82,15 @@ public:
 
     HTMLCollection* hasQueryInActiveHtmlCollectionList(
         ActiveHTMLCollectionList* list, String* query);
+    HTMLCollection* hasQueryInActiveHtmlCollectionList(
+        ActiveStringPairHTMLCollectionList* list,
+        std::pair<String*, String*> query);
     void putActiveHtmlCollectionListWithQuery(ActiveHTMLCollectionList* list,
                                               String* query,
                                               HTMLCollection* coll);
+    void putActiveHtmlCollectionListWithQuery(
+        ActiveStringPairHTMLCollectionList* list,
+        std::pair<String*, String*> query, HTMLCollection* coll);
     void invalidateActiveActiveNodeListCacheIfNeeded();
 
     HTMLCollection* m_children;
@@ -87,6 +98,7 @@ public:
     DOMTokenList* m_domTokenList;
 
     ActiveHTMLCollectionList* m_activeHtmlCollectionListsForTagName;
+    ActiveStringPairHTMLCollectionList* m_activeHtmlCollectionListsForTagNameNS;
     ActiveHTMLCollectionList* m_activeHtmlCollectionListsForClassName;
     ActiveNodeListVector* m_activeNodeListVectorForName;
 };
@@ -274,6 +286,7 @@ public:
     /* 4.5. Interface Document */
     HTMLCollection* getElementsByTagName(String* name);
     HTMLCollection* getElementsByTagName(QualifiedName qualifiedName);
+    HTMLCollection* getElementsByTagNameNS(Nullable<String*> ns, String* name);
     HTMLCollection* getElementsByClassName(String* classNames);
 
     void parseSelector(GCVector<CSSSelectorList*>& selectorListContainer,

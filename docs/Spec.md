@@ -156,6 +156,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | readyState | Returns loading state of the document |
 |  | attribute | onreadystatechange | Event handler related with document's readyState |
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | If localName is "\*" returns an HTMLCollection of all descendant elements.Otherwise, returns an HTMLCollection of all descendant elements whose local name is localName. |
+|  | method | HTMLCollection getElementsByTagNameNS(DOMString namespace, DOMString localName) | Returns a HTMLCollection of all descendant elements whose namespace is namespace and local name is localName. |
 |  | method | NodeList getElementsByName(DOMString name) | returns an NodeList of all descendant elements whose name is name. |
 |  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns an HTMLCollection of the elements in the object on which the method was invoked (a document or an element) that have all the classes given by classes. |
 |  | method | Element createElement(DOMString localName) | Returns an element in the HTML namespace with localName as local name. |
@@ -298,6 +299,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | method | sequence&lt;DOMString&gt; getAttributeNames() | Returns sequence of Attributes's QualifiedName. |
 |  | method | boolean matches(DOMString selectors) | Returns true if matching selectors against element’s root yields element, and false otherwise. |
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | Returns the list of elements with local name localName for the context object. |
+|  | method | HTMLCollection getElementsByTagNameNS(DOMString namespace, DOMString localName) | Returns a HTMLCollection of all descendant elements whose namespace is namespace and local name is localName. |
 |  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns the list of elements with class names classNames for the context object. |
 || method | insertAdjacentElement |t inserts the node into the tree in the position given by the position argument |
 || method | insertAdjacentText | inserts the node into the tree in the position given by the position argument |

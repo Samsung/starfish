@@ -42,19 +42,9 @@ HTMLFormElement* HTMLLabelElement::form()
     return element->asHTMLFormControl()->form();
 }
 
-String* HTMLLabelElement::forAttr()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_forattr);
-}
-
-void HTMLLabelElement::setForAttr(String* str)
-{
-    setAttribute(starFish()->staticStrings()->m_forattr, str);
-}
-
 HTMLElement* HTMLLabelElement::control()
 {
-    String* id = forAttr();
+    String* id = getAttributeOrEmpty(starFish()->staticStrings()->m_for);
     if (id->equals(String::emptyString)) {
         return (HTMLElement*)Traverse::findDescendant(this, [&](Node* child) {
             if (child->isLabelable()) {

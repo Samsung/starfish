@@ -3,7 +3,7 @@
 [HTMLConstructor]
 interface HTMLLabelElement : HTMLElement {
     readonly attribute HTMLFormElement? form;
-    [CEReactions, Rename=forAttr] attribute DOMString htmlFor;
+    [CEReactions, Reflect=for] attribute DOMString htmlFor;
     readonly attribute HTMLElement? control;
 };
 

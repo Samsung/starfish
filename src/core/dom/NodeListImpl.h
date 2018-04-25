@@ -29,6 +29,7 @@ typedef bool (*NodeListFilterFunction)(Node*, void*, GCVector<Node*>*);
 bool isChildNode(Node* node, void* data, GCVector<Node*>* collection);
 bool isChildElement(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameTagName(Node* node, void* data, GCVector<Node*>* collection);
+bool isSameTagNameNS(Node* node, void* data, GCVector<Node*>* collection);
 bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection);
@@ -48,6 +49,7 @@ public:
         ChildNodeFilter,
         ChildElementFilter,
         TagNameFilter,
+        TagNameNSFilter,
         ClassNamesFilter,
         NamedAccessFilter,
         TableRowsFilter,
@@ -61,8 +63,9 @@ public:
     };
 
     NodeListImpl(Node* root, FilterFunctionType filterType, void* data,
-                 bool canCache = false)
+                 bool canCache = false, bool includeRoot = false)
         : m_canCache(canCache)
+        , m_includeRoot(includeRoot)
         , m_isCacheValid(false)
         , m_root(root)
         , m_filter(nullptr)
@@ -77,6 +80,9 @@ public:
             break;
         case TagNameFilter:
             m_filter = isSameTagName;
+            break;
+        case TagNameNSFilter:
+            m_filter = isSameTagNameNS;
             break;
         case ClassNamesFilter:
             m_filter = hasClassNames;
@@ -113,8 +119,9 @@ public:
         }
     }
 
-    NodeListImpl(Node* root, bool canCache = true)
+    NodeListImpl(Node* root, bool canCache = true, bool includeRoot = false)
         : m_canCache(canCache)
+        , m_includeRoot(includeRoot)
         , m_isCacheValid(true)
         , m_root(root)
         , m_filter(nullptr)
@@ -123,8 +130,9 @@ public:
     }
 
     NodeListImpl(Node* root, NodeListFilterFunction filter, void* data,
-                 bool canCache)
+                 bool canCache, bool includeRoot = false)
         : m_canCache(canCache)
+        , m_includeRoot(includeRoot)
         , m_isCacheValid(true)
         , m_root(root)
         , m_filter(filter)
@@ -143,6 +151,8 @@ public:
 
     void setItems(GCVector<Element*>& elements);
     void getherDescendant(GCVector<Node*>* collection, Node* root) const;
+    void getherDescendantIncludingRoot(GCVector<Node*>* collection,
+                                       Node* root) const;
     Node* root()
     {
         return m_root;
@@ -151,6 +161,7 @@ public:
 private:
     void fillCacheIfNeed() const;
     bool m_canCache;
+    bool m_includeRoot;
     mutable bool m_isCacheValid;
 
     Node* m_root;
