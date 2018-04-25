@@ -72,6 +72,11 @@ public:
         m_fixed = fixed;
     }
 
+    void setFr(LayoutUnit fr)
+    {
+        m_fr = fr;
+    }
+
     void setComputed(bool computed)
     {
         m_computed = computed;
