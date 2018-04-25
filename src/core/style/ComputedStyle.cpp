@@ -953,6 +953,35 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
         bool isPropertyAll =
             property == TransitionPropertyValue::TransitionPropertyAllValue;
 
+        if (damagedKeys[CSSStyleValuePair::BackgroundColor] &&
+            (isPropertyAll || property == TransitionPropertyBackgroundValue ||
+             property == TransitionPropertyBackgroundColorValue)) {
+            return true;
+        }
+        if (damagedKeys[CSSStyleValuePair::BorderBottomColor] &&
+            (isPropertyAll || property == TransitionPropertyBorderColorValue ||
+             property == TransitionPropertyBorderBottomValue ||
+             property == TransitionPropertyBorderBottomColorValue)) {
+            return true;
+        }
+        if (damagedKeys[CSSStyleValuePair::BorderLeftColor] &&
+            (isPropertyAll || property == TransitionPropertyBorderColorValue ||
+             property == TransitionPropertyBorderLeftValue ||
+             property == TransitionPropertyBorderLeftColorValue)) {
+            return true;
+        }
+        if (damagedKeys[CSSStyleValuePair::BorderRightColor] &&
+            (isPropertyAll || property == TransitionPropertyBorderColorValue ||
+             property == TransitionPropertyBorderRightValue ||
+             property == TransitionPropertyBorderRightColorValue)) {
+            return true;
+        }
+        if (damagedKeys[CSSStyleValuePair::BorderTopColor] &&
+            (isPropertyAll || property == TransitionPropertyBorderColorValue ||
+             property == TransitionPropertyBorderTopValue ||
+             property == TransitionPropertyBorderTopColorValue)) {
+            return true;
+        }
         if ((isPropertyAll ||
              property ==
                  TransitionPropertyValue::TransitionPropertyWidthValue) &&
@@ -1001,11 +1030,6 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
             damagedKeys[CSSStyleValuePair::Opacity]) {
             return true;
         }
-        if (damagedKeys[CSSStyleValuePair::BackgroundColor] &&
-            (isPropertyAll || property == TransitionPropertyBackgroundValue ||
-             property == TransitionPropertyBackgroundColorValue)) {
-            return true;
-        }
     }
 
     return false;
@@ -1028,6 +1052,66 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
         auto delay = data->at(i).delay().toTimeValue();
         auto timingFunction = data->at(i).timingFunction();
 
+        if (damagedKeys[CSSStyleValuePair::BorderBottomColor] &&
+            (isPropertyAll || property == TransitionPropertyBorderColorValue ||
+             property == TransitionPropertyBorderBottomValue ||
+             property == TransitionPropertyBorderBottomColorValue)) {
+            Unit::Color oldColor = oldStyle->border().bottom().color();
+            executor->registerAnimation(new ColorAnimationTask(
+                element, CSSStyleValuePair::BorderBottomColor,
+                transitionPropertyValueToString(
+                    TransitionPropertyValue::
+                        TransitionPropertyBorderBottomColorValue),
+                AnimatedValue(oldColor),
+                AnimatedValue(newStyle->border().bottom().color()), duration,
+                delay, timingFunction));
+            newStyle->setBorderBottomColor(oldColor);
+        }
+        if (damagedKeys[CSSStyleValuePair::BorderLeftColor] &&
+            (isPropertyAll || property == TransitionPropertyBorderColorValue ||
+             property == TransitionPropertyBorderLeftValue ||
+             property == TransitionPropertyBorderLeftColorValue)) {
+            Unit::Color oldColor = oldStyle->border().left().color();
+            executor->registerAnimation(new ColorAnimationTask(
+                element, CSSStyleValuePair::BorderLeftColor,
+                transitionPropertyValueToString(
+                    TransitionPropertyValue::
+                        TransitionPropertyBorderLeftColorValue),
+                AnimatedValue(oldColor),
+                AnimatedValue(newStyle->border().left().color()), duration,
+                delay, timingFunction));
+            newStyle->setBorderLeftColor(oldColor);
+        }
+        if (damagedKeys[CSSStyleValuePair::BorderRightColor] &&
+            (isPropertyAll || property == TransitionPropertyBorderColorValue ||
+             property == TransitionPropertyBorderRightValue ||
+             property == TransitionPropertyBorderRightColorValue)) {
+            Unit::Color oldColor = oldStyle->border().right().color();
+            executor->registerAnimation(new ColorAnimationTask(
+                element, CSSStyleValuePair::BorderRightColor,
+                transitionPropertyValueToString(
+                    TransitionPropertyValue::
+                        TransitionPropertyBorderRightColorValue),
+                AnimatedValue(oldColor),
+                AnimatedValue(newStyle->border().right().color()), duration,
+                delay, timingFunction));
+            newStyle->setBorderRightColor(oldColor);
+        }
+        if (damagedKeys[CSSStyleValuePair::BorderTopColor] &&
+            (isPropertyAll || property == TransitionPropertyBorderColorValue ||
+             property == TransitionPropertyBorderTopValue ||
+             property == TransitionPropertyBorderTopColorValue)) {
+            Unit::Color oldColor = oldStyle->border().top().color();
+            executor->registerAnimation(new ColorAnimationTask(
+                element, CSSStyleValuePair::BorderTopColor,
+                transitionPropertyValueToString(
+                    TransitionPropertyValue::
+                        TransitionPropertyBorderTopColorValue),
+                AnimatedValue(oldColor),
+                AnimatedValue(newStyle->border().top().color()), duration,
+                delay, timingFunction));
+            newStyle->setBorderTopColor(oldColor);
+        }
         if ((isPropertyAll ||
              property ==
                  TransitionPropertyValue::TransitionPropertyWidthValue) &&

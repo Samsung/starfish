@@ -205,6 +205,8 @@ String* transitionPropertyValueToString(TransitionPropertyValue val)
         return String::createASCIIString("border-bottom-color");
     case TransitionPropertyBorderBottomWidthValue:
         return String::createASCIIString("border-bottom-width");
+    case TransitionPropertyBorderColorValue:
+        return String::createASCIIString("border-color");
     case TransitionPropertyBorderLeftColorValue:
         return String::createASCIIString("border-left-color");
     case TransitionPropertyBorderLeftWidthValue:
@@ -1921,18 +1923,30 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
     } else if (STRING_VALUE_IS_STRING("background-size")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBackgroundSizeValue;
+    } else if (STRING_VALUE_IS_STRING("border-bottom")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderBottomValue;
     } else if (STRING_VALUE_IS_STRING("border-bottom-color")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBorderBottomColorValue;
     } else if (STRING_VALUE_IS_STRING("border-bottom-width")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBorderBottomWidthValue;
+    } else if (STRING_VALUE_IS_STRING("border-color")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderColorValue;
+    } else if (STRING_VALUE_IS_STRING("border-left")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderLeftValue;
     } else if (STRING_VALUE_IS_STRING("border-left-color")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBorderLeftColorValue;
     } else if (STRING_VALUE_IS_STRING("border-left-width")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBorderLeftWidthValue;
+    } else if (STRING_VALUE_IS_STRING("border-right")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderRightValue;
     } else if (STRING_VALUE_IS_STRING("border-right-color")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBorderRightColorValue;
@@ -1942,6 +1956,9 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
     } else if (STRING_VALUE_IS_STRING("border-spacing")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBorderSpacingValue;
+    } else if (STRING_VALUE_IS_STRING("border-top")) {
+        m_value.m_transitionProperty =
+            TransitionPropertyValue::TransitionPropertyBorderTopValue;
     } else if (STRING_VALUE_IS_STRING("border-top-color")) {
         m_value.m_transitionProperty =
             TransitionPropertyValue::TransitionPropertyBorderTopColorValue;

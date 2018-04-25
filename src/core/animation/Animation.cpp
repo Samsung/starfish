@@ -141,6 +141,14 @@ void ColorAnimationTask::execute(float progress)
     // TODO : More types should be supported
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
         style->setBackgroundColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottomColor) {
+        style->setBorderBottomColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeftColor) {
+        style->setBorderLeftColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderRightColor) {
+        style->setBorderRightColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderTopColor) {
+        style->setBorderTopColor(Unit::Color(r, g, b, a));
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
