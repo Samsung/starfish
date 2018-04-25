@@ -1601,24 +1601,35 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             }
 
             ImageValue* imageValue = style->backgroundImage(idx);
+            float x1, y1, r1, x2, y2, r2, a;
             if (imageValue->gradientValue()->type() ==
                 GradientType::LinearGradient) {
                 Unit::Rect rect = paintingRect.snapSizeToPixel();
                 auto gradient =
                     imageValue->gradientValue()->asLinearGradientData();
 
-                float x1, y1, x2, y2;
                 gradient->computeEndPoints(rect, x1, y1, x2, y2);
 
                 GCVector<ColorStop*> colorStop;
-                gradient->makeSpecifiedColorStops(colorStop, x1, y1, x2, y2,
-                                                  box);
+                gradient->makeSpecifiedColorStops(colorStop, x1, y1, r1, x2, y2,
+                                                  r2, box);
 
                 canvas->drawLinearGradient(rect, x1, y1, x2, y2, colorStop);
 
             } else if (imageValue->gradientValue()->type() ==
                        GradientType::RadialGradient) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                Unit::Rect rect = paintingRect.snapSizeToPixel();
+                auto gradient =
+                    imageValue->gradientValue()->asRadialGradientData();
+                gradient->computeEndPoints(rect, box, x1, y1, r1, x2, y2, r2,
+                                           a);
+
+                GCVector<ColorStop*> colorStop;
+                gradient->makeSpecifiedColorStops(colorStop, x1, y1, r1, x2, y2,
+                                                  r2, box);
+                canvas->drawRadialGradient(rect, x1, y1, r1, x2, y2, r2, a,
+                                           colorStop);
             }
             canvas->restore();
         }

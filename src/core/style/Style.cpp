@@ -7795,8 +7795,9 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                 }
             }
 
-            if (shape == RadialGradientShape::Circle &&
-                size.hasSecondRadius()) {
+            if ((shape == RadialGradientShape::Circle &&
+                 size.hasSecondRadius()) ||
+                (tokens.size() > 4)) {
                 return false;
             }
 
@@ -7806,14 +7807,14 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             if (size.hasValue()) {
                 radialGradientValue->setSize(size);
             }
-            if (tokens.size() > 4) {
-                return false;
-            }
-            if (inPositionStr &&
-                CSSStyleDeclaration::parseBackgroundPositionShorthand(
-                    tokens, &positionX, &positionY, false)) {
-                radialGradientValue->setPositionX(positionX);
-                radialGradientValue->setPositionY(positionY);
+            if (inPositionStr) {
+                if (CSSStyleDeclaration::parseBackgroundPositionShorthand(
+                        tokens, &positionX, &positionY, false)) {
+                    radialGradientValue->setPositionX(positionX);
+                    radialGradientValue->setPositionY(positionY);
+                } else {
+                    return false;
+                }
             }
         }
         gradient = radialGradientValue;

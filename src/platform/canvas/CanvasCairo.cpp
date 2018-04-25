@@ -768,6 +768,40 @@ public:
         cairo_restore(m_canvas);
     }
 
+    virtual void drawRadialGradient(const Unit::Rect& dst, const float& sx,
+                                    const float& sy, const float& sr,
+                                    const float& ex, const float& ey,
+                                    const float& er, const float& a,
+                                    GCVector<ColorStop*>& colorStops)
+    {
+        STARFISH_ASSERT(m_canvas);
+        if (!lastState().m_visible) {
+            return;
+        }
+        cairo_save(m_canvas);
+        cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());
+        cairo_clip(m_canvas);
+        cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());
+
+        // TODO : support ellipse shape
+
+        cairo_pattern_t* pt;
+        pt = cairo_pattern_create_radial(sx, sy, sr, ex, ey, er);
+
+        size_t size = colorStops.size();
+        for (size_t i = 0; i < size; ++i) {
+            const auto& color = colorStops[i]->color();
+            const auto& offset = colorStops[i]->offset().percent();
+            cairo_pattern_add_color_stop_rgba(pt, offset, color.R(), color.G(),
+                                              color.B(), color.A());
+        }
+        cairo_arc(m_canvas, ex, ey, er, 0, 2 * M_PI);
+        cairo_set_source(m_canvas, pt);
+        cairo_fill(m_canvas);
+        cairo_pattern_destroy(pt);
+        cairo_restore(m_canvas);
+    }
+
     virtual void postMatrix(const SkMatrix& matrix)
     {
         cairo_matrix_t result_matrix;

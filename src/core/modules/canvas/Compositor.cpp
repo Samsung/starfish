@@ -186,6 +186,15 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
+    virtual void drawRadialGradient(const Unit::Rect& dst, const float& sx,
+                                    const float& sy, const float& sr,
+                                    const float& ex, const float& ey,
+                                    const float& er, const float& a,
+                                    GCVector<ColorStop*>& colorStops)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual void applyMatrixTo(LayoutLocation& lp)
     {
         m_compositor->applyMatrixTo(lp);

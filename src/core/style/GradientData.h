@@ -131,8 +131,8 @@ public:
                                ComputedStyle* cs);
 
     void makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
-                                 float& y1, float& x2, float& y2,
-                                 FrameBox* owner);
+                                 float& y1, float& r1, float& x2, float& y2,
+                                 float& r2, FrameBox* owner);
 
     virtual bool equals(GradientData* other) const;
 
@@ -273,15 +273,19 @@ public:
         m_secondRadius = radius;
     }
 
-    RadialGradientSizeKeyword keyword()
+    RadialGradientSizeKeyword gradientSizeKeyword()
     {
-        return m_keyword;
+        return m_gradientSizeKeyword;
     }
 
     void setKeyword(RadialGradientSizeKeyword keyword)
     {
-        m_keyword = keyword;
+        m_gradientSizeKeyword = keyword;
     }
+
+    bool computeEndPoints(const Unit::Rect& rect, FrameBox* owner, float& x1,
+                          float& y1, float& r1, float& x2, float& y2, float& r2,
+                          float& aspectRatio);
 
     virtual CSSGradientValue* convertToCSSGradientValue() override;
     virtual void checkComputed(Length curFontSize, Length rootFontSize,
@@ -317,6 +321,15 @@ public:
     void* operator new[](size_t size) = delete;
 
 private:
+    void computeEndPointsFromSideValue(const Unit::Rect& rect, FrameBox* owner,
+                                       float& x, float& y);
+    void radiusToSide(const float& x, const float& y, const Unit::Rect& rect,
+                      bool (*compare)(float, float), float& outDx,
+                      float& outDy);
+
+    void radiusToCorner(const float& x, const float& y, const Unit::Rect& rect,
+                        bool (*compare)(float, float), float& r1, float& r2);
+
     RadialGradientShape m_shape;
 
     // Position of gradient center
@@ -328,6 +341,6 @@ private:
     // size of the gradient's ending shape
     Length m_firstRadius;
     Length m_secondRadius;
-    RadialGradientSizeKeyword m_keyword;
+    RadialGradientSizeKeyword m_gradientSizeKeyword;
 };
 } // namespace StarFish
