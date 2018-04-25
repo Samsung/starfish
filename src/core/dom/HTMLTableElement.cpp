@@ -32,6 +32,72 @@
 #include "core/style/CSSParser.h"
 
 namespace StarFish {
+#define PUSH_PAIR_BORDER_WIDTH(POS, ...)                                     \
+    {                                                                        \
+        if (!border->contains("px")) {                                       \
+            border = border->concat(String::createASCIIString("px"));        \
+        }                                                                    \
+        CSSStyleValuePair pair;                                              \
+        CSSTokenVector tokens;                                               \
+        CSSTokenValue token = border->toNullableUTF8String().m_buffer;       \
+        tokens.push_back(token);                                             \
+        if (pair.updateValueBorder##POS##Width(document(), tokens)) {        \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Width); \
+            cssValues.push_back(pair);                                       \
+        }                                                                    \
+    }
+
+#define PUSH_PAIR_BORDER_COLOR(POS, ...)                                     \
+    {                                                                        \
+        CSSStyleValuePair pair;                                              \
+        CSSTokenVector tokens;                                               \
+        CSSTokenValue token = bordercolor->toNullableUTF8String().m_buffer;  \
+        tokens.push_back(token);                                             \
+        if (pair.updateValueBorder##POS##Color(document(), tokens)) {        \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Color); \
+            cssValues.push_back(pair);                                       \
+        }                                                                    \
+    }
+
+#define PUSH_PAIR_BORDER_FRAME(POS, pos)                                     \
+    {                                                                        \
+        CSSStyleValuePair pair;                                              \
+        CSSTokenVector tokens;                                               \
+        if (border_##pos) {                                                  \
+            CSSTokenValue token("solid");                                    \
+            tokens.push_back(token);                                         \
+        } else {                                                             \
+            CSSTokenValue token("hidden");                                   \
+            tokens.push_back(token);                                         \
+        }                                                                    \
+        if (pair.updateValueBorder##POS##Style(document(), tokens)) {        \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Style); \
+            cssValues.push_back(pair);                                       \
+        }                                                                    \
+    }                                                                        \
+    {                                                                        \
+        CSSStyleValuePair pair;                                              \
+        CSSTokenVector tokens;                                               \
+        CSSTokenValue token("thin");                                         \
+        tokens.push_back(token);                                             \
+        if (pair.updateValueBorder##POS##Width(document(), tokens)) {        \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Width); \
+            cssValues.push_back(pair);                                       \
+        }                                                                    \
+    }
+
+#define PUSH_PAIR_BORDER_STYLE(POS, ...)                                     \
+    {                                                                        \
+        CSSStyleValuePair pair;                                              \
+        CSSTokenVector tokens;                                               \
+        CSSTokenValue token(borderStyle);                                    \
+        tokens.push_back(token);                                             \
+        if (pair.updateValueBorder##POS##Style(document(), tokens)) {        \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Style); \
+            cssValues.push_back(pair);                                       \
+        }                                                                    \
+    }
+
 void* HTMLTableElement::operator new(size_t size)
 {
     static bool typeInited = false;
@@ -47,13 +113,73 @@ void* HTMLTableElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+HTMLTableElement::Rules getRulesFromRulesAttributeValue(String* rules)
+{
+    if (!rules || rules->isEmpty()) {
+        return HTMLTableElement::UnsetRules;
+    }
+    if (rules->equalsIgnoreCase("none")) {
+        return HTMLTableElement::NoneRules;
+    } else if (rules->equalsIgnoreCase("groups")) {
+        return HTMLTableElement::GroupsRules;
+    } else if (rules->equalsIgnoreCase("rows")) {
+        return HTMLTableElement::RowsRules;
+    } else if (rules->equalsIgnoreCase("cols")) {
+        return HTMLTableElement::ColsRules;
+    } else if (rules->equalsIgnoreCase("all")) {
+        return HTMLTableElement::AllRules;
+    }
+    return HTMLTableElement::UnsetRules;
+}
+
+HTMLTableElement::CellBorders getCellBordersFromRule(
+    HTMLTableElement::Rules rules, bool hasBorder, bool hasBorderColor)
+{
+    switch (rules) {
+    case HTMLTableElement::UnsetRules:
+        if (!hasBorder) {
+            return HTMLTableElement::NoBorders;
+        }
+        if (hasBorderColor) {
+            return HTMLTableElement::SolidBorders;
+        }
+        return HTMLTableElement::InsetBorders;
+    case HTMLTableElement::NoneRules:
+    case HTMLTableElement::GroupsRules:
+        return HTMLTableElement::NoBorders;
+    case HTMLTableElement::RowsRules:
+        return HTMLTableElement::SolidBordersRowsOnly;
+    case HTMLTableElement::ColsRules:
+        return HTMLTableElement::SolidBordersColsOnly;
+    case HTMLTableElement::AllRules:
+        return HTMLTableElement::SolidBorders;
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    return HTMLTableElement::NoBorders;
+}
+
 void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* value, bool attributeCreated,
                                            bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_cellpadding) {
+    if (name == starFish()->staticStrings()->m_align ||
+        name == starFish()->staticStrings()->m_frame ||
+        name == starFish()->staticStrings()->m_width ||
+        name == starFish()->staticStrings()->m_bgcolor) {
+        setNeedsStyleRecalc();
+    } else if (name == starFish()->staticStrings()->m_border) {
+        m_hasBorder = value && !value->isEmpty();
+        setNeedsStyleRecalc();
+    } else if (name == starFish()->staticStrings()->m_bordercolor) {
+        m_hasBorderColor = value && !value->isEmpty();
+        setNeedsStyleRecalc();
+    } else if (name == starFish()->staticStrings()->m_rules) {
+        m_rules = getRulesFromRulesAttributeValue(value);
+        setNeedsStyleRecalc();
+    } else if (name == starFish()->staticStrings()->m_cellpadding) {
         if (attributeCreated) {
             m_hasCellPaddingAttribute = true;
         }
@@ -69,17 +195,97 @@ void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
             m_hasCellSpacingAttribute = false;
         }
         setNeedsStyleRecalc();
-    } else if (name == starFish()->staticStrings()->m_width ||
-               name == starFish()->staticStrings()->m_bgcolor ||
-               name == starFish()->staticStrings()->m_align) {
-        setNeedsStyleRecalc();
     }
+}
+
+bool getBordersFromFrameAttributeValue(String* frame, bool& border_top,
+                                       bool& border_right, bool& border_bottom,
+                                       bool& border_left)
+{
+    border_top = border_right = border_bottom = border_left = false;
+    if (frame->equalsIgnoreCase("void")) {
+    } else if (frame->equalsIgnoreCase("above")) {
+        border_top = true;
+    } else if (frame->equalsIgnoreCase("below")) {
+        border_bottom = true;
+    } else if (frame->equalsIgnoreCase("hsides")) {
+        border_top = border_bottom = true;
+    } else if (frame->equalsIgnoreCase("vsides")) {
+        border_right = border_left = true;
+    } else if (frame->equalsIgnoreCase("lhs")) {
+        border_left = true;
+    } else if (frame->equalsIgnoreCase("rhs")) {
+        border_right = true;
+    } else if (frame->equalsIgnoreCase("box") ||
+               frame->equalsIgnoreCase("border")) {
+        border_top = border_right = border_bottom = border_left = true;
+    } else {
+        return false;
+    }
+    return true;
 }
 
 void HTMLTableElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues)
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
+
+    String* align = getAttributeOrEmpty(starFish()->staticStrings()->m_align);
+    if (isValidAlign(align)) {
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::TextAlignValueKind);
+        pair.setValue(alignValue(align));
+        cssValues.push_back(pair);
+    }
+
+    if (m_hasBorder) {
+        String* border =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_border);
+        GEN_FOURSIDE(PUSH_PAIR_BORDER_WIDTH);
+    }
+
+    if (m_hasBorderColor) {
+        String* bordercolor =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_bordercolor);
+        GEN_FOURSIDE(PUSH_PAIR_BORDER_COLOR);
+    }
+
+    String* frame = getAttributeOrEmpty(starFish()->staticStrings()->m_frame);
+    bool hasFrame = !frame->isEmpty();
+    if (hasFrame) {
+        bool border_top, border_right, border_bottom, border_left;
+        hasFrame = getBordersFromFrameAttributeValue(
+            frame, border_top, border_right, border_bottom, border_left);
+        if (hasFrame) {
+            GEN_FOURSIDE(PUSH_PAIR_BORDER_FRAME);
+        }
+    }
+
+    if (m_rules != UnsetRules) {
+        CSSStyleValuePair pair;
+        CSSTokenVector tokens;
+        CSSTokenValue token("collapse");
+        tokens.push_back(token);
+        if (pair.updateValueBorderCollapse(document(), tokens)) {
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::BorderCollapse);
+            cssValues.push_back(pair);
+        }
+    }
+
+    if (!hasFrame) {
+        const char* borderStyle = nullptr;
+        if (m_hasBorderColor) {
+            borderStyle = "solid";
+        } else if (m_hasBorder) {
+            borderStyle = "outset";
+        } else if (m_rules != UnsetRules) {
+            borderStyle = "hidden";
+        }
+        if (borderStyle) {
+            GEN_FOURSIDE(PUSH_PAIR_BORDER_STYLE);
+        }
+    }
 
     String* w = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
     if (!w->isEmpty()) {
@@ -109,20 +315,12 @@ void HTMLTableElement::styleForPresentationAttribute(
         }
     }
 
-    String* align = getAttributeOrEmpty(starFish()->staticStrings()->m_align);
-    if (isValidAlign(align)) {
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::TextAlignValueKind);
-        pair.setValue(alignValue(align));
-        cssValues.push_back(pair);
-    }
-
     if (m_hasCellSpacingAttribute) {
-        String* value = cellspacing();
+        String* value =
+            getAttributeOrEmpty(starFish()->staticStrings()->m_cellspacing);
         if (value && !value->equals(String::emptyString)) {
-            // Use px as the default unit
-            if (!value->contains("px") && !value->contains("%")) {
+            // Use px only
+            if (!value->contains("px")) {
                 value = value->concat(String::createASCIIString("px"));
             }
         }
@@ -441,26 +639,6 @@ void HTMLTableElement::deleteRow(int32_t index)
     row->parentNode()->removeChild(row);
 }
 
-String* HTMLTableElement::cellspacing()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_cellspacing);
-}
-
-void HTMLTableElement::setCellspacing(String* cellspacing)
-{
-    setAttribute(starFish()->staticStrings()->m_cellspacing, cellspacing);
-}
-
-String* HTMLTableElement::cellpadding()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_cellpadding);
-}
-
-void HTMLTableElement::setCellpadding(String* cellpadding)
-{
-    setAttribute(starFish()->staticStrings()->m_cellpadding, cellpadding);
-}
-
 bool HTMLTableElement::isValidAlign(String* align)
 {
     if (align->isEmpty()) {
@@ -491,5 +669,28 @@ TextAlignValue HTMLTableElement::alignValue(String* align)
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+}
+
+bool HTMLTableElement::groupRules()
+{
+    return m_rules == GroupsRules;
+}
+
+HTMLTableElement::CellBorders HTMLTableElement::cellBorders()
+{
+    return getCellBordersFromRule(m_rules, m_hasBorder, m_hasBorderColor);
+}
+
+String* HTMLTableElement::cellpadding()
+{
+    String* value =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_cellpadding);
+    if (value && !value->isEmpty()) {
+        // Use px only
+        if (!value->contains("px")) {
+            value = value->concat(String::createASCIIString("px"));
+        }
+    }
+    return value;
 }
 }

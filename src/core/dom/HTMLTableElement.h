@@ -29,11 +29,32 @@ class HTMLCollection;
 
 class HTMLTableElement : public HTMLElement {
 public:
+    enum Rules {
+        UnsetRules,
+        NoneRules,
+        GroupsRules,
+        RowsRules,
+        ColsRules,
+        AllRules
+    };
+
+    enum CellBorders {
+        NoBorders,
+        InsetBorders,
+        SolidBordersRowsOnly,
+        SolidBordersColsOnly,
+        SolidBorders,
+    };
+
     HTMLTableElement(Document* document)
         : HTMLElement(document)
+        , m_tBodies(nullptr)
+        , m_rows(nullptr)
+        , m_hasBorder(false)
+        , m_hasBorderColor(false)
+        , m_rules(UnsetRules)
         , m_hasCellPaddingAttribute(false)
         , m_hasCellSpacingAttribute(false)
-        , m_rows(nullptr)
     {
     }
 
@@ -82,20 +103,22 @@ public:
     void deleteRow(int32_t index);
 
     /* Not in HTML5 */
-    String* cellspacing();
-    void setCellspacing(String* cellspacing);
-
-    String* cellpadding();
-    void setCellpadding(String* cellpadding);
-
     bool isValidAlign(String* align);
     TextAlignValue alignValue(String* align);
 
+    bool groupRules();
+    CellBorders cellBorders();
+
+    String* cellpadding();
+
 private:
+    HTMLCollection* m_tBodies;
+    HTMLCollection* m_rows;
+    bool m_hasBorder;
+    bool m_hasBorderColor;
+    Rules m_rules;
     bool m_hasCellPaddingAttribute;
     bool m_hasCellSpacingAttribute;
-    HTMLCollection* m_rows;
-    HTMLCollection* m_tBodies;
 };
 }
 

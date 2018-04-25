@@ -122,4 +122,68 @@ VerticalAlignValue HTMLTablePartElement::valignValue(String* valign)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
+
+HTMLTableElement* HTMLTablePartElement::findParentTable()
+{
+    Node* parent = parentNode();
+    while (parent && !parent->isHTMLTableElement()) {
+        parent = parent->parentNode();
+    }
+    if (parent == nullptr) {
+        return nullptr;
+    }
+    return parent->asHTMLTableElement();
+}
+
+#define ADDITIONAL_BORDER_RULES(POS, ...)                                    \
+    void HTMLTablePartElement::additionalBorderRules##POS(                   \
+        CSSStyleValuePairVectorHolder& cssValues, const char* width,         \
+        const char* style)                                                   \
+    {                                                                        \
+        {                                                                    \
+            CSSStyleValuePair pair;                                          \
+            CSSTokenVector tokens;                                           \
+            CSSTokenValue token(width);                                      \
+            tokens.push_back(token);                                         \
+            pair.updateValueBorder##POS##Width(document(), tokens);          \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Width); \
+            cssValues.push_back(pair);                                       \
+        }                                                                    \
+        {                                                                    \
+            CSSStyleValuePair pair;                                          \
+            CSSTokenVector tokens;                                           \
+            CSSTokenValue token(style);                                      \
+            tokens.push_back(token);                                         \
+            pair.updateValueBorder##POS##Style(document(), tokens);          \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Style); \
+            cssValues.push_back(pair);                                       \
+        }                                                                    \
+        {                                                                    \
+            CSSStyleValuePair pair;                                          \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Color); \
+            pair.setValueKind(CSSStyleValuePair::ValueKind::Inherit);        \
+            cssValues.push_back(pair);                                       \
+        }                                                                    \
+    }
+GEN_FOURSIDE(ADDITIONAL_BORDER_RULES)
+#undef ADDITIONAL_BORDER_RULES
+
+void HTMLTablePartElement::additionalPadding(
+    CSSStyleValuePairVectorHolder& cssValues, String* padding)
+{
+#define ADDITIONAL_PADDING(POS, ...)                                    \
+    {                                                                   \
+        CSSStyleValuePair pair;                                         \
+        CSSTokenVector tokens;                                          \
+        CSSTokenValue token = padding->toNullableUTF8String().m_buffer; \
+        tokens.push_back(token);                                        \
+        if (pair.updateValueLength(tokens, 0)) {                        \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Padding##POS);  \
+            cssValues.push_back(pair);                                  \
+        }                                                               \
+    }
+
+    GEN_FOURSIDE(ADDITIONAL_PADDING);
+#undef ADDITIONAL_PADDING
+}
 }

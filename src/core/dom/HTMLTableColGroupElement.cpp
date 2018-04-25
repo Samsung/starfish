@@ -22,6 +22,19 @@
 #include "core/dom/HTMLTableColGroupElement.h"
 
 namespace StarFish {
+
+void HTMLTableColGroupElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues);
+
+    HTMLTableElement* tableElement = findParentTable();
+    if (tableElement && tableElement->groupRules()) {
+        additionalBorderRulesRight(cssValues, "thin", "solid");
+        additionalBorderRulesLeft(cssValues, "thin", "solid");
+    }
+}
+
 QualifiedName HTMLTableColGroupElement::name()
 {
     return starFish()->staticStrings()->m_colgroupTagName;

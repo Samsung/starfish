@@ -47,6 +47,18 @@ void* HTMLTableSectionElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void HTMLTableSectionElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues);
+
+    HTMLTableElement* tableElement = findParentTable();
+    if (tableElement && tableElement->groupRules()) {
+        additionalBorderRulesTop(cssValues, "thin", "solid");
+        additionalBorderRulesBottom(cssValues, "thin", "solid");
+    }
+}
+
 HTMLCollection* HTMLTableSectionElement::rows()
 {
     if (m_rows) {

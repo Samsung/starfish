@@ -3813,8 +3813,11 @@ void StyleResolver::apply(Element* element,
 #undef ADD_RESOLVE_STYLE_POS
 #define ADD_RESOLVE_STYLE_BORDER_STYLE(POS, pos)                           \
     case CSSStyleValuePair::KeyKind::Border##POS##Style:                   \
-        if (cssValues[k].valueKind() ==                                    \
-            CSSStyleValuePair::ValueKind::Inherit) {                       \
+        if (element->isHTMLTableElement() &&                               \
+            style->pseudoType() != PseudoElementNone) {                    \
+            break;                                                         \
+        } else if (cssValues[k].valueKind() ==                             \
+                   CSSStyleValuePair::ValueKind::Inherit) {                \
             BorderData pBorder = parentStyle->border();                    \
             style->setBorder##POS##Style(pBorder.pos().style());           \
         } else if ((cssValues[k].valueKind() ==                            \

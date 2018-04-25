@@ -31,6 +31,9 @@ public:
     {
     }
 
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues) override;
+
     virtual bool isHTMLTableColGroupElement() const override
     {
         return true;
