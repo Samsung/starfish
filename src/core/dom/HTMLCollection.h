@@ -32,7 +32,7 @@ class Element;
 class HTMLCollection : public ScriptWrappable {
 public:
     HTMLCollection(Node* root, NodeListImpl::FilterFunctionType filterType,
-                   void* data, bool canCache = false);
+                   void* data, bool canCache = false, bool includeRoot = false);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;

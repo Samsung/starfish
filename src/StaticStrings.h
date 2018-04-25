@@ -303,7 +303,7 @@ public:
     QualifiedName m_size;
     QualifiedName m_charset;
     QualifiedName m_content;
-    QualifiedName m_forattr;
+    QualifiedName m_for;
     QualifiedName m_httpEquiv;
     QualifiedName m_contentLanguage;
     QualifiedName m_contentEditable;

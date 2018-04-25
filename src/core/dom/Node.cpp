@@ -59,6 +59,16 @@ RareNodeMembers::ensureActiveHtmlCollectionListForTagName()
     return m_activeHtmlCollectionListsForTagName;
 }
 
+ActiveStringPairHTMLCollectionList*
+RareNodeMembers::ensureActiveHtmlCollectionListForTagNameNS()
+{
+    if (m_activeHtmlCollectionListsForTagNameNS == nullptr) {
+        m_activeHtmlCollectionListsForTagNameNS =
+            new (GC) ActiveStringPairHTMLCollectionList;
+    }
+    return m_activeHtmlCollectionListsForTagNameNS;
+}
+
 ActiveHTMLCollectionList*
 RareNodeMembers::ensureActiveHtmlCollectionListForClassName()
 {
@@ -82,6 +92,17 @@ HTMLCollection* RareNodeMembers::hasQueryInActiveHtmlCollectionList(
 {
     for (size_t i = 0; i < list->size(); i++) {
         if ((*list)[i].first->equals(query)) {
+            return (*list)[i].second;
+        }
+    }
+    return nullptr;
+}
+
+HTMLCollection* RareNodeMembers::hasQueryInActiveHtmlCollectionList(
+    ActiveStringPairHTMLCollectionList* list, std::pair<String*, String*> query)
+{
+    for (size_t i = 0; i < list->size(); i++) {
+        if ((*list)[i].first == query) {
             return (*list)[i].second;
         }
     }
@@ -117,6 +138,17 @@ void RareNodeMembers::putActiveHtmlCollectionListWithQuery(
     list->push_back(std::make_pair(query, coll));
 }
 
+void RareNodeMembers::putActiveHtmlCollectionListWithQuery(
+    ActiveStringPairHTMLCollectionList* list, std::pair<String*, String*> query,
+    HTMLCollection* coll)
+{
+    STARFISH_ASSERT(!hasQueryInActiveHtmlCollectionList(list, query));
+    STARFISH_ASSERT(query.first);
+    STARFISH_ASSERT(query.second);
+    STARFISH_ASSERT(coll);
+    list->push_back(std::make_pair(query, coll));
+}
+
 void RareNodeMembers::invalidateActiveActiveNodeListCacheIfNeeded()
 {
     if (m_children) {
@@ -127,6 +159,15 @@ void RareNodeMembers::invalidateActiveActiveNodeListCacheIfNeeded()
         for (size_t i = 0; i < m_activeHtmlCollectionListsForTagName->size();
              i++) {
             (*m_activeHtmlCollectionListsForTagName)[i]
+                .second->getNodeListImpl()
+                .invalidateCache();
+        }
+    }
+
+    if (m_activeHtmlCollectionListsForTagNameNS) {
+        for (size_t i = 0; i < m_activeHtmlCollectionListsForTagNameNS->size();
+             i++) {
+            (*m_activeHtmlCollectionListsForTagNameNS)[i]
                 .second->getNodeListImpl()
                 .invalidateCache();
         }
@@ -1567,6 +1608,35 @@ HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
                               new QualifiedName(qualifiedName), true);
     rareData->putActiveHtmlCollectionListWithQuery(
         activeLists, qualifiedName.localName(), list);
+    return list;
+}
+
+HTMLCollection* Node::getElementsByTagNameNS(Nullable<String*> ns, String* name)
+{
+    QualifiedName qName(document()->createAttributeNameNS(ns, name));
+    RareNodeMembers* rareData = ensureRareMembers();
+    ActiveStringPairHTMLCollectionList* activeLists =
+        rareData->ensureActiveHtmlCollectionListForTagNameNS();
+    HTMLCollection* list = rareData->hasQueryInActiveHtmlCollectionList(
+        activeLists, std::make_pair(qName.namespaceURI().getValue().string(),
+                                    qName.localName()));
+    if (list) {
+        return list;
+    }
+
+    if (isElement()) {
+        list = new HTMLCollection(this, NodeListImpl::TagNameNSFilter,
+                                  new QualifiedName(qName), true, false);
+    } else {
+        STARFISH_ASSERT(isDocument());
+        list = new HTMLCollection(this, NodeListImpl::TagNameNSFilter,
+                                  new QualifiedName(qName), true, true);
+    }
+
+    rareData->putActiveHtmlCollectionListWithQuery(
+        activeLists, std::make_pair(qName.namespaceURI().getValue().string(),
+                                    qName.localName()),
+        list);
     return list;
 }
 

@@ -45,7 +45,7 @@ interface Element : Node {
   [RaisesException] boolean matches(DOMString selectors);
 
   HTMLCollection getElementsByTagName(DOMString qualifiedName);
-  [Unimplemented] HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+  HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   HTMLCollection getElementsByClassName(DOMString classNames);
 
   [CEReactions, RaisesException] Node? insertAdjacentElement(DOMString where, Element element); // historical

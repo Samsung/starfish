@@ -41,9 +41,6 @@ public:
     // Interface Option
     HTMLFormElement* form();
 
-    String* forAttr();
-    void setForAttr(String* str);
-
     HTMLElement* control();
 };
 }

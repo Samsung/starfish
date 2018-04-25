@@ -56,6 +56,33 @@ bool isSameTagName(Node* node, void* data, GCVector<Node*>* collection)
     return false;
 };
 
+bool isSameTagNameNS(Node* node, void* data, GCVector<Node*>* collection)
+{
+    QualifiedName* tagNameNS = (QualifiedName*)data;
+    if (node->isElement()) {
+        if (tagNameNS->namespaceURI().getValue().string()->equals("*")) {
+            if (tagNameNS->localName()->equals("*")) {
+                return true;
+            }
+
+            if (tagNameNS->equalsLocalName(node->asElement()->name())) {
+                return true;
+            }
+        } else {
+            if (tagNameNS->localName()->equals("*")) {
+                if (tagNameNS->equalsNamespace(node->asElement()->name())) {
+                    return true;
+                }
+            }
+
+            if (node->asElement()->name() == *tagNameNS) {
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
 bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection)
 {
     String* classNames = (String*)data;
@@ -330,6 +357,17 @@ void NodeListImpl::getherDescendant(GCVector<Node*>* collection,
     }
 }
 
+void NodeListImpl::getherDescendantIncludingRoot(GCVector<Node*>* collection,
+                                                 Node* root) const
+{
+    STARFISH_ASSERT(m_filter && root);
+    if (m_filter(root, m_data, collection)) {
+        collection->push_back(root);
+    }
+
+    getherDescendant(collection, root);
+}
+
 size_t NodeListImpl::length() const
 {
     if (m_canCache) {
@@ -337,7 +375,11 @@ size_t NodeListImpl::length() const
         return m_cachedNodeList.size();
     }
     GCVector<Node*> collection;
-    getherDescendant(&collection, m_root);
+    if (m_includeRoot) {
+        getherDescendantIncludingRoot(&collection, m_root);
+    } else {
+        getherDescendant(&collection, m_root);
+    }
     return collection.size();
 }
 
@@ -350,7 +392,11 @@ Node* NodeListImpl::item(uint32_t index) const
         }
     } else {
         GCVector<Node*> collection;
-        getherDescendant(&collection, m_root);
+        if (m_includeRoot) {
+            getherDescendantIncludingRoot(&collection, m_root);
+        } else {
+            getherDescendant(&collection, m_root);
+        }
         if (index < collection.size()) {
             return collection[index];
         }
@@ -362,7 +408,11 @@ void NodeListImpl::fillCacheIfNeed() const
 {
     STARFISH_ASSERT(m_canCache);
     if (!m_isCacheValid) {
-        getherDescendant(&m_cachedNodeList, m_root);
+        if (m_includeRoot) {
+            getherDescendantIncludingRoot(&m_cachedNodeList, m_root);
+        } else {
+            getherDescendant(&m_cachedNodeList, m_root);
+        }
         m_isCacheValid = true;
     }
 }
