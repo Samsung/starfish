@@ -161,7 +161,6 @@ String* CSSRadialGradientValue::toString()
 
 GradientData* CSSRadialGradientValue::convertToGradientData()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     RadialGradientData* gradient = new RadialGradientData();
 
     // Position of gradient center
@@ -170,7 +169,7 @@ GradientData* CSSRadialGradientValue::convertToGradientData()
         auto& x = m_positionX.multiValue()->front();
         if (x.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
             gradient->setHorizontalSide(x.sideValue());
-        } else if (x.valueKind() == CSSStyleValuePair::ValueKind::None) {
+        } else if (x.valueKind() != CSSStyleValuePair::ValueKind::None) {
             gradient->setHorizontalSideOffset(x.toLengthValue());
         }
     }
@@ -179,7 +178,7 @@ GradientData* CSSRadialGradientValue::convertToGradientData()
         auto& y = m_positionY.multiValue()->front();
         if (y.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
             gradient->setVerticalSide(y.sideValue());
-        } else if (y.valueKind() == CSSStyleValuePair::ValueKind::None) {
+        } else if (y.valueKind() != CSSStyleValuePair::ValueKind::None) {
             gradient->setVerticalSideOffset(y.toLengthValue());
         }
     }

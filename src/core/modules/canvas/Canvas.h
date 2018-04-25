@@ -188,6 +188,11 @@ public:
                                     const float& sy, const float& ex,
                                     const float& ey,
                                     GCVector<ColorStop*>& colorStops) = 0;
+    virtual void drawRadialGradient(const Unit::Rect& dst, const float& sx,
+                                    const float& sy, const float& sr,
+                                    const float& ex, const float& ey,
+                                    const float& er, const float& a,
+                                    GCVector<ColorStop*>& colorStops) = 0;
 
     virtual void applyMatrixTo(LayoutLocation& lp) = 0;
     virtual void applyMatrixTo(LayoutRect& lp) = 0;

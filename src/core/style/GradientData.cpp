@@ -45,6 +45,7 @@
 
 #include "StarFishConfig.h"
 #include "core/style/Style.h"
+#include "core/style/CalcData.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSGradientValue.h"
 #include "core/layout/FrameBox.h"
@@ -102,6 +103,63 @@ static bool normalizeAndAddStops(GCVector<ColorStop*>& colorStops)
     return true;
 }
 
+static float positionFromSideValue(const Unit::Rect& rect, FrameBox* owner,
+                                   const SideValue side, Length offset,
+                                   bool isHorizontal)
+{
+    float origin = 0;
+    int sign = 1;
+    float edgeDistance = isHorizontal ? rect.width() : rect.height();
+    float x = rect.x();
+    float y = rect.y();
+    // In this case the center of the gradient is given relative to an edge in
+    // the form of: [ top | bottom | right | left ] [ <percentage> | <length> ].
+    if (offset.isAuto() && side != SideValue::NoneSideValue) {
+        switch (side) {
+        case SideValue::TopSideValue:
+            STARFISH_ASSERT(!isHorizontal);
+            return y;
+        case SideValue::LeftSideValue:
+            STARFISH_ASSERT(isHorizontal);
+            return x;
+        case SideValue::BottomSideValue:
+            STARFISH_ASSERT(!isHorizontal);
+            return y + rect.height();
+        case SideValue::RightSideValue:
+            STARFISH_ASSERT(isHorizontal);
+            return x + rect.width();
+        case SideValue::CenterSideValue: {
+            if (isHorizontal) {
+                return x + sign * .5f * edgeDistance;
+            } else {
+                return y + sign * .5f * edgeDistance;
+            }
+        }
+        default:
+            STARFISH_ASSERT_NOT_REACHED();
+            break;
+        }
+    } else if (!offset.isAuto() && side != SideValue::NoneSideValue) {
+        if (side == SideValue::RightSideValue ||
+            side == SideValue::CenterSideValue) {
+            // For right/bottom, the offset is relative to the far edge.
+            origin = x + edgeDistance;
+            sign = -1;
+        }
+    }
+
+    if (offset.isPercent()) {
+        return origin + sign * offset.percent() * edgeDistance;
+    } else if (offset.isCalc() && owner->node()) {
+        return origin +
+               sign *
+                   offset.calcData()->specifiedValue(edgeDistance,
+                                                     owner->node());
+    }
+
+    return origin + sign * offset.specifiedValue(edgeDistance, owner);
+}
+
 LinearGradientData* GradientData::asLinearGradientData()
 {
     STARFISH_ASSERT(m_type == GradientType::LinearGradient);
@@ -134,14 +192,15 @@ LinearGradientData::LinearGradientData(float angleDeg)
 }
 
 void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
-                                           float& y1, float& x2, float& y2,
+                                           float& y1, float& r1, float& x2,
+                                           float& y2, float& r2,
                                            FrameBox* owner)
 {
     float gradientLength = 0.0f;
     if (m_type == GradientType::LinearGradient) {
         gradientLength = hypotf(x2 - x1, y2 - y1);
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        gradientLength = r1;
     }
 
     size_t size = m_colorStopList.size();
@@ -256,9 +315,33 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
             x1 = x1 + dx * firstOffset;
             y1 = y1 + dy * firstOffset;
         }
-
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        float firstOffset = out.front()->offset().percent();
+        float lastOffset = out.back()->offset().percent();
+        if (normalizeAndAddStops(out)) {
+            // Radial offsets are relative to the [0 , endRadius] segment.
+            float adjustedr1 = r2 * firstOffset;
+            float adjustedr2 = r2 * lastOffset;
+            // Unlike linear gradients (where we can adjust the points
+            // arbitrarily), we cannot let our radii turn negative here.
+            if (adjustedr2 < 0) {
+                // For the non-repeat case, this can never happen:
+                // clampNegativeOffsets() ensures we don't have to deal with
+                // negative offsets at this point.
+
+                // When in repeat mode, we deal with it by repositioning both
+                // radii in the positive domain - shifting them by a multiple of
+                // the radius span (which is the period of our repeating
+                // gradient -> hence no visible side effects).
+                const float radiusSpan = adjustedr2 - adjustedr1;
+                const float shiftToPositive =
+                    radiusSpan * ceilf(-adjustedr1 / radiusSpan);
+                adjustedr1 += shiftToPositive;
+                adjustedr2 += shiftToPositive;
+            }
+            r1 = adjustedr1;
+            r2 = adjustedr2;
+        }
     }
 }
 
@@ -457,8 +540,8 @@ CSSGradientValue* RadialGradientData::convertToCSSGradientValue()
 
     CSSRadialGradientSize size;
     // Size of the gradient's ending shape
-    if (m_keyword != RadialGradientSizeKeyword::None) {
-        size.setKeyword(m_keyword);
+    if (m_gradientSizeKeyword != RadialGradientSizeKeyword::None) {
+        size.setKeyword(m_gradientSizeKeyword);
     } else {
         if (!m_firstRadius.isAuto()) {
             size.setFirstRadius(
@@ -494,6 +577,160 @@ void RadialGradientData::checkComputed(Length curFontSize, Length rootFontSize,
     m_secondRadius.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
                                          windowSize.width(),
                                          windowSize.height(), cs);
+}
+
+static float resolveRadius(FrameBox* owner, const Length& radius,
+                           const float& widthOrHeight)
+{
+    float ret;
+    if (radius.isPercent()) {
+        ret = widthOrHeight * radius.percent();
+    } else {
+        ret = radius.specifiedValue(0, owner);
+    }
+    return clampTo<float>(std::max(ret, 0.0f));
+    ;
+}
+
+void RadialGradientData::radiusToSide(const float& x, const float& y,
+                                      const Unit::Rect& rect,
+                                      bool (*compare)(float, float), float& r1,
+                                      float& r2)
+{
+    float dx1 = clampTo<float>(fabs(x));
+    float dy1 = clampTo<float>(fabs(y));
+    float dx2 = clampTo<float>(fabs(x - rect.width()));
+    float dy2 = clampTo<float>(fabs(y - rect.height()));
+
+    float dx = compare(dx1, dx2) ? dx1 : dx2;
+    float dy = compare(dy1, dy2) ? dy1 : dy2;
+
+    if (m_shape == RadialGradientShape::Circle) {
+        compare(dx, dy) ? r1 = dx, r2 = dx : r1 = dy, r2 = dy;
+    } else {
+        r1 = dx, r2 = dy;
+    }
+}
+
+// Compute the radius of an ellipse with center at 0,0 which passes through p,
+// and has width/height given by aspectRatio.
+inline static void ellipseRadius(const float& x, const float& y,
+                                 const float& aspectRatio, float& dx, float& dy)
+{
+    if (aspectRatio == 0 || std::isinf(aspectRatio)) {
+        dx = dy = 0;
+    }
+    // x^2/a^2 + y^2/b^2 = 1
+    // a/b = aspectRatio, b = a/aspectRatio
+    // a = sqrt(x^2 + y^2/(1/r^2))
+    float a = sqrtf(x * x + y * y * aspectRatio * aspectRatio);
+    dx = clampTo<float>(a);
+    dy = clampTo<float>(a / aspectRatio);
+}
+
+// Compute the radius to the closest/farthest corner (depending on the compare
+// functor).
+void RadialGradientData::radiusToCorner(const float& x, const float& y,
+                                        const Unit::Rect& rect,
+                                        bool (*compare)(float, float),
+                                        float& r1, float& r2)
+{
+    struct point {
+        float x;
+        float y;
+    } coners[4];
+    coners[0] = { rect.x(), rect.y() };
+    coners[1] = { rect.x() + rect.width(), rect.y() };
+    coners[2] = { rect.x() + rect.width(), rect.y() + rect.height() };
+    coners[3] = { rect.x(), rect.y() + rect.height() };
+
+    unsigned cornerIndex = 0;
+    float distance =
+        hypotf(x - coners[cornerIndex].x, y - coners[cornerIndex].y);
+    for (unsigned i = 1; i < 4; ++i) {
+        float newDistance =
+            hypotf(x - coners[cornerIndex].x, y - coners[cornerIndex].y);
+        if (compare(newDistance, distance)) {
+            cornerIndex = i;
+            distance = newDistance;
+        }
+    }
+
+    if (m_shape == RadialGradientShape::Circle) {
+        r1 = r2 = distance;
+    } else {
+        float tdx = 0, tdy = 0;
+        radiusToCorner(x, y, rect, compare, tdx, tdy);
+        ellipseRadius(coners[cornerIndex].x - x, coners[cornerIndex].y - y,
+                      tdx / tdy, r1, r2);
+    }
+}
+
+bool RadialGradientData::computeEndPoints(const Unit::Rect& rect,
+                                          FrameBox* owner, float& x1, float& y1,
+                                          float& r1, float& x2, float& y2,
+                                          float& r2, float& aspectRatio)
+{
+    int x = rect.x();
+    int y = rect.y();
+    r1 = 0;
+    if (m_verticalSide == SideValue::NoneSideValue &&
+        m_horizentalSide == SideValue::NoneSideValue) {
+        x1 = x + rect.width() / 2;
+        y1 = x + rect.height() / 2;
+    } else {
+        computeEndPointsFromSideValue(rect, owner, x1, y1);
+    }
+    x2 = x1;
+    y2 = y1;
+
+    float r2Horizontal = 0;
+    float r2Vertical = 0;
+    if (!m_firstRadius.isAuto()) {
+        r2Horizontal = resolveRadius(owner, m_firstRadius, rect.width());
+        if (m_secondRadius.isAuto()) {
+            r2Vertical = r2Horizontal;
+        } else {
+            r2Vertical = resolveRadius(owner, m_secondRadius, rect.height());
+        }
+    } else {
+        switch (m_gradientSizeKeyword) {
+        case RadialGradientSizeKeyword::ClosetSide:
+            radiusToSide(x2, y2, rect, [](float a, float b) { return a < b; },
+                         r2Horizontal, r2Vertical);
+            break;
+        case RadialGradientSizeKeyword::FarthestSide:
+            radiusToSide(x2, y2, rect, [](float a, float b) { return a > b; },
+                         r2Horizontal, r2Vertical);
+            break;
+        case RadialGradientSizeKeyword::ClosetCorner:
+            radiusToCorner(x2, y2, rect, [](float a, float b) { return a < b; },
+                           r2Horizontal, r2Vertical);
+            break;
+        case RadialGradientSizeKeyword::FarthestCorner:
+        default:
+            radiusToCorner(x2, y2, rect, [](float a, float b) { return a > b; },
+                           r2Horizontal, r2Vertical);
+            break;
+        }
+    }
+    bool isDegenerate = !r2Horizontal || !r2Vertical;
+    isDegenerate ? r2 = 0, aspectRatio = 1 : r2 = r2Horizontal,
+                   aspectRatio = r2Horizontal / r2Vertical;
+    return true;
+}
+
+void RadialGradientData::computeEndPointsFromSideValue(const Unit::Rect& rect,
+                                                       FrameBox* owner,
+                                                       float& x, float& y)
+{
+    // STARFISH_ASSERT(m_horizentalSide != SideValue::NoneSideValue);
+    // STARFISH_ASSERT(m_verticalSide != SideValue::NoneSideValue);
+
+    x = positionFromSideValue(rect, owner, m_horizentalSide,
+                              m_horizentalSideOffset, true);
+    y = positionFromSideValue(rect, owner, m_verticalSide, m_verticalSideOffset,
+                              false);
 }
 
 bool GradientData::equals(GradientData* other) const
@@ -539,7 +776,8 @@ bool RadialGradientData::equals(GradientData* other) const
         (m_verticalSide != r->m_verticalSide) ||
         (m_verticalSideOffset != r->m_verticalSideOffset) ||
         (m_firstRadius != r->m_firstRadius) ||
-        (m_secondRadius != r->m_secondRadius) || (m_keyword != r->m_keyword)) {
+        (m_secondRadius != r->m_secondRadius) ||
+        (m_gradientSizeKeyword != r->m_gradientSizeKeyword)) {
         return false;
     }
     return true;
