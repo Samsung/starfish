@@ -1612,25 +1612,84 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->border() != oldStyle->border()) {
-        // TODO seprate this
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderTopWidth] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderTopColor] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderTopStyle] = true;
-
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderRightWidth] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderRightColor] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderRightStyle] = true;
-
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomWidth] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomColor] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomStyle] = true;
-
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftWidth] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftColor] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftStyle] = true;
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    {
+        BorderData oldBorder = oldStyle->border();
+        BorderData newBorder = newStyle->border();
+        BorderValue& oldBorderTop = oldBorder.top();
+        BorderValue& oldBorderRight = oldBorder.right();
+        BorderValue& oldBorderBottom = oldBorder.bottom();
+        BorderValue& oldBorderLeft = oldBorder.left();
+        BorderValue& newBorderTop = newBorder.top();
+        BorderValue& newBorderRight = newBorder.right();
+        BorderValue& newBorderBottom = newBorder.bottom();
+        BorderValue& newBorderLeft = newBorder.left();
+        bool borderDamage = false;
+        if (oldBorderTop.hasBorderColor() != newBorderTop.hasBorderColor() ||
+            oldBorderTop.color() != newBorderTop.color()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderTopColor] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
+        if (oldBorderTop.width() != newBorderTop.width()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderTopWidth] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
+        if (oldBorderTop.style() != newBorderTop.style()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderTopStyle] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
+        if (oldBorderRight.hasBorderColor() !=
+                newBorderRight.hasBorderColor() ||
+            oldBorderRight.color() != newBorderRight.color()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderRightColor] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
+        if (oldBorderRight.width() != newBorderRight.width()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderRightWidth] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
+        if (oldBorderRight.style() != newBorderRight.style()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderRightStyle] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
+        if (oldBorderBottom.hasBorderColor() !=
+                newBorderBottom.hasBorderColor() ||
+            oldBorderBottom.color() != newBorderBottom.color()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomColor] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
+        if (oldBorderBottom.width() != newBorderBottom.width()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomWidth] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
+        if (oldBorderBottom.style() != newBorderBottom.style()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomStyle] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
+        if (oldBorderLeft.hasBorderColor() != newBorderLeft.hasBorderColor() ||
+            oldBorderLeft.color() != newBorderLeft.color()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftColor] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
+        if (oldBorderLeft.width() != newBorderLeft.width()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftWidth] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
+        if (oldBorderLeft.style() != newBorderLeft.style()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftStyle] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
     }
 
     if (newStyle->border().image().url() != oldStyle->border().image().url()) {
