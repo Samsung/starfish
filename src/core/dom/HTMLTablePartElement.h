@@ -21,9 +21,9 @@
 #define __StarFishHTMLHTMLTablePartElement__
 
 #include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLTableElement.h"
 
 namespace StarFish {
-
 class HTMLTablePartElement : public HTMLElement {
 public:
     HTMLTablePartElement(Document* document)
@@ -48,6 +48,19 @@ public:
 
     bool isValidValign(String* valign);
     VerticalAlignValue valignValue(String* valign);
+
+    HTMLTableElement* findParentTable();
+
+    void additionalBorderRulesTop(CSSStyleValuePairVectorHolder& cssValues,
+                                  const char* width, const char* style);
+    void additionalBorderRulesRight(CSSStyleValuePairVectorHolder& cssValues,
+                                    const char* width, const char* style);
+    void additionalBorderRulesBottom(CSSStyleValuePairVectorHolder& cssValues,
+                                     const char* width, const char* style);
+    void additionalBorderRulesLeft(CSSStyleValuePairVectorHolder& cssValues,
+                                   const char* width, const char* style);
+    void additionalPadding(CSSStyleValuePairVectorHolder& cssValues,
+                           String* padding);
 };
 }
 #endif

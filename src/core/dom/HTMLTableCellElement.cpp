@@ -125,6 +125,40 @@ void HTMLTableCellElement::styleForPresentationAttribute(
             cssValues.push_back(pair);
         }
     }
+
+    if (HTMLTableElement* tableElement = findParentTable()) {
+        HTMLTableElement::CellBorders borders = tableElement->cellBorders();
+        switch (borders) {
+        case HTMLTableElement::NoBorders:
+            break;
+        case HTMLTableElement::InsetBorders:
+            additionalBorderRulesTop(cssValues, "1px", "inset");
+            additionalBorderRulesRight(cssValues, "1px", "inset");
+            additionalBorderRulesBottom(cssValues, "1px", "inset");
+            additionalBorderRulesLeft(cssValues, "1px", "inset");
+            break;
+        case HTMLTableElement::SolidBordersRowsOnly:
+            additionalBorderRulesTop(cssValues, "thin", "solid");
+            additionalBorderRulesBottom(cssValues, "thin", "solid");
+            break;
+        case HTMLTableElement::SolidBordersColsOnly:
+            additionalBorderRulesRight(cssValues, "thin", "solid");
+            additionalBorderRulesLeft(cssValues, "thin", "solid");
+            break;
+        case HTMLTableElement::SolidBorders:
+            additionalBorderRulesTop(cssValues, "1px", "solid");
+            additionalBorderRulesRight(cssValues, "1px", "solid");
+            additionalBorderRulesBottom(cssValues, "1px", "solid");
+            additionalBorderRulesLeft(cssValues, "1px", "solid");
+            break;
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        String* padding = tableElement->cellpadding();
+        if (!padding->isEmpty()) {
+            additionalPadding(cssValues, padding);
+        }
+    }
 }
 
 HTMLTableElement* HTMLTableCellElement::tableElement()

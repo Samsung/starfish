@@ -35,6 +35,9 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLTableSectionElement() const;
 
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues) override;
+
     HTMLCollection* rows();
 
     HTMLElement* insertRow(long index = -1);

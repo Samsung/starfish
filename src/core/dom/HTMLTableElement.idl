@@ -24,13 +24,13 @@ interface HTMLTableElement : HTMLElement {
   // also has obsolete members
   // https://html.spec.whatwg.org/#HTMLTableElement-partial
   [CEReactions, Reflect] attribute DOMString align;
-  [Unimplemented, CEReactions, Reflect] attribute DOMString border;
-  [Unimplemented, CEReactions] attribute DOMString frame;
-  [Unimplemented, CEReactions] attribute DOMString rules;
-  [Unimplemented, CEReactions] attribute DOMString summary;
+  [CEReactions, Reflect] attribute DOMString border;
+  [CEReactions, Reflect] attribute DOMString frame;
+  [CEReactions, Reflect] attribute DOMString rules;
+  [CEReactions, Reflect] attribute DOMString summary;
   [CEReactions, Reflect] attribute DOMString width;
 
   [CEReactions, TreatNullAs=EmptyString, Reflect] attribute DOMString bgColor;
-  [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString cellPadding;
-  [Unimplemented, CEReactions, TreatNullAs=EmptyString] attribute DOMString cellSpacing;
+  [CEReactions, TreatNullAs=EmptyString, Reflect] attribute DOMString cellPadding;
+  [CEReactions, TreatNullAs=EmptyString, Reflect] attribute DOMString cellSpacing;
 };

@@ -376,6 +376,11 @@ public:
     QualifiedName m_nowrap;
     QualifiedName m_axis;
     QualifiedName m_tbodies;
+    QualifiedName m_border;
+    QualifiedName m_bordercolor;
+    QualifiedName m_frame;
+    QualifiedName m_rules;
+    QualifiedName m_summary;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

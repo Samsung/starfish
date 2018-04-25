@@ -580,9 +580,14 @@ This section describes the complete list of supported HTML tags and attributes b
 |    | attribute |  tBodies  |  Contains all the &lt;tbody&gt; of the element.  |
 |    | attribute |  rows  |  Returns a live HTMLCollection containing all the rows of the element, that is all &lt;tr&gt; that are a child of the element, or a child or one of its &lt;thead&gt;, &lt;tbody&gt; and &lt;tfoot&gt; children. |
 |    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
+|    | attribute |  border  |  Contains the width in pixels of the border of the table.  |
+|    | attribute |  frame  |  Contains the type of the external borders of the table.  |
+|    | attribute |  rules  |  Contains the type of the internal borders of the table.  |
+|    | attribute |  summary  |  Contains a description of the purpose or the structure of the table.  |
 |    | attribute |  width  |  Contains the length in pixels or in percentage of the desired width fo the entire table.  | 
-|    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
 |    | attribute |  bgColor  | Contains the background color of the cells.  |
+|    | attribute |  cellPadding  |  Contains the width in pixels of the horizontal and vertical sapce between cell content and cell borders.  |
+|    | attribute |  cellSpacing  |  Contains the width in pixels of the horizontal and vertical separation between cells.  |
 |    | method |  createCaption  |  Returns an HTMLElement representing the first &lt;caption&gt; that is a child of the element. If none is found, a new one is created and inserted in the tree as the first child of the &lt;table&gt; element.  |
 |    | method |  deleteCaption  |  Removes the first &lt;caption&gt; that is a child of the element.  |
 |    | method |  createTHead  |  Returns an HTMLElement representing the first &lt;thead&gt; that is a child of the element.  |
