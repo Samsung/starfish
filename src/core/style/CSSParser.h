@@ -1615,6 +1615,18 @@ public:
         MinusSign,
     };
 
+    enum LogicOp {
+        And,
+        Or,
+        Not,
+    };
+
+    enum TruthOp {
+        False = 0,
+        True = 1,
+        Paren = 3,
+    };
+
     enum AllowedRulesType {
         // As per css-syntax, css-cascade and css-namespaces, @charset rules
         // must come first, followed by @import then @namespace.
@@ -1667,6 +1679,7 @@ protected:
                               bool isURL = false);
     RefPtr<CSSToken> currentToken();
     void ungetToken();
+    bool consumeToken(String* token);
     void preserveState();
     void restoreState();
     void forgetState();
@@ -1767,6 +1780,20 @@ protected:
     GCVector<CSSToken*> m_tokenMemoryPool;
     char m_tokenInnerPool[CSSTOKEN_POOL_INITIAL_SIZE * sizeof(CSSToken)];
     unsigned m_blockLevel;
+
+private:
+    // for supports rule
+    bool parseSupportsCondition();
+    bool parseSupportsNegation();
+    bool parseSupportsConnectives(String* conjoiner);
+    bool parseGroupRuleBody();
+    bool parseSupportsConditionInParen();
+    bool parseSupportsConditionInParenSub();
+    bool parseSupportsDeclarationCondition();
+    bool parseGeneralEnclosed();
+    void doLogicOperation();
+    GCVector<TruthOp> m_supportOperandStack;
+    GCVector<LogicOp> m_supportOperatorStack;
 };
 
 struct MediaQueryExpValue {

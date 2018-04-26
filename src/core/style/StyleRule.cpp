@@ -340,4 +340,11 @@ StyleRuleNamespace::StyleRuleNamespace(String* namespaceURI, String* prefix)
     , m_prefix(prefix)
 {
 }
+
+StyleRuleSupports::StyleRuleSupports(String* conditionText, bool isSupported,
+                                     GCVector<StyleRuleBase*>& rules)
+    : StyleRuleCondition(CSSRule::Type::SUPPORTS_RULE, conditionText, rules)
+    , m_isSupported(isSupported)
+{
+}
 }
