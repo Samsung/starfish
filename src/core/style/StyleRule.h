@@ -346,17 +346,16 @@ class StyleRuleSupports : public StyleRuleCondition {
     friend class StyleResolver;
 
 public:
-    StyleRuleSupports(String* conditionText, bool conditionIsSupported,
+    StyleRuleSupports(String* conditionText, bool isSupported,
                       GCVector<StyleRuleBase*>& rules);
     StyleRuleSupports(StyleRuleSupports& o);
-    bool conditionIsSupported() const
+    bool isSupported()
     {
-        return m_conditionIsSupported;
+        return m_isSupported;
     }
 
 private:
-    String* m_conditionText;
-    bool m_conditionIsSupported;
+    bool m_isSupported;
 };
 
 class StyleRuleCounterStyle : public StyleRuleBase {
