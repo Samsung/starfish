@@ -1661,7 +1661,7 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                     struct Sender {
                         bool priority;
                         bool allowSrcProperty;
-                        CSSStyleKind kind;
+                        CSSStyleValuePair::KeyKind kind;
                         String* key;
                         CSSTokenString* value;
                         CSSStyleDeclaration* declaration;
@@ -1683,21 +1683,22 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                             ((Sender*)data)->kind = lookupCSSStyle(name, len);
 
                             if (((Sender*)data)->kind ==
-                                CSSStyleKind::CustomProperty) {
+                                CSSStyleValuePair::KeyKind::CustomProperty) {
                                 ((Sender*)data)->key =
                                     String::createASCIIString(name);
                             }
 #ifndef NDEBUG
                             // ignore vendor prefix & CSS Custom Variables
                             if (((Sender*)data)->kind ==
-                                    CSSStyleKind::Unknown &&
+                                    CSSStyleValuePair::KeyKind::Unknown &&
                                 len && name[0] != '-') {
                                 STARFISH_LOG_ERROR(
                                     "CSSParser: Unsupported property: %s\n",
                                     name);
                             }
 #endif
-                            if (((Sender*)data)->kind == CSSStyleKind::Src &&
+                            if (((Sender*)data)->kind ==
+                                    CSSStyleValuePair::KeyKind::Src &&
                                 !((Sender*)data)->allowSrcProperty) {
                                 return 0;
                             }
@@ -1710,11 +1711,11 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                                             ((Sender*)data)->priority;
                                         CSSStyleDeclaration* declaration =
                                             ((Sender*)data)->declaration;
-                                        CSSStyleKind kind =
+                                        CSSStyleValuePair::KeyKind kind =
                                             ((Sender*)data)->kind;
 
-                                        if (kind ==
-                                            CSSStyleKind::CustomProperty) {
+                                        if (kind == CSSStyleValuePair::KeyKind::
+                                                        CustomProperty) {
                                             // https://www.w3.org/TR/css-variables-1/
                                             String* key = ((Sender*)data)->key;
                                             declaration->setCustomProperty(
@@ -1722,10 +1723,10 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                                                          value),
                                                 len);
                                         }
-#define SET_ATTR(name, nameLower, nameCSSCase)        \
-    else if (kind == CSSStyleKind::name)              \
-    {                                                 \
-        declaration->set##name(value, len, priority); \
+#define SET_ATTR(name, nameLower, nameCSSCase)         \
+    else if (kind == CSSStyleValuePair::KeyKind::name) \
+    {                                                  \
+        declaration->set##name(value, len, priority);  \
     }
                                         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
                                         return 0;

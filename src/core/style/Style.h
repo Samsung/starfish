@@ -430,65 +430,6 @@ enum ImageRenderingValue {
     ImageRenderingPixelatedValue,
 };
 
-enum TransitionPropertyValue {
-    TransitionPropertyAllValue,
-    TransitionPropertyBackgroundValue,
-    TransitionPropertyBackgroundColorValue,
-    TransitionPropertyBackgroundPositionValue,
-    TransitionPropertyBackgroundSizeValue,
-    TransitionPropertyBorderBottomValue,
-    TransitionPropertyBorderBottomColorValue,
-    TransitionPropertyBorderBottomWidthValue,
-    TransitionPropertyBorderColorValue,
-    TransitionPropertyBorderLeftValue,
-    TransitionPropertyBorderLeftColorValue,
-    TransitionPropertyBorderLeftWidthValue,
-    TransitionPropertyBorderRightValue,
-    TransitionPropertyBorderRightColorValue,
-    TransitionPropertyBorderRightWidthValue,
-    TransitionPropertyBorderSpacingValue,
-    TransitionPropertyBorderTopValue,
-    TransitionPropertyBorderTopColorValue,
-    TransitionPropertyBorderTopWidthValue,
-    TransitionPropertyBottomValue,
-    TransitionPropertyClipValue,
-    TransitionPropertyColorValue,
-    TransitionPropertyFontSizeValue,
-    TransitionPropertyFontWeightValue,
-    TransitionPropertyHeightValue,
-    TransitionPropertyLeftValue,
-    TransitionPropertyLetterSpacingValue,
-    TransitionPropertyLineHeightValue,
-    TransitionPropertyMarginBottomValue,
-    TransitionPropertyMarginLeftValue,
-    TransitionPropertyMarginRightValue,
-    TransitionPropertyMarginTopValue,
-    TransitionPropertyMaxHeightValue,
-    TransitionPropertyMaxWidthValue,
-    TransitionPropertyMinHeightValue,
-    TransitionPropertyMinWidthValue,
-    TransitionPropertyOpacityValue,
-    TransitionPropertyOutlineColorValue,
-    TransitionPropertyOutlineWidthValue,
-    TransitionPropertyPaddingBottomValue,
-    TransitionPropertyPaddingLeftValue,
-    TransitionPropertyPaddingRightValue,
-    TransitionPropertyPaddingTopValue,
-    TransitionPropertyRightValue,
-    TransitionPropertyTextIndentValue,
-    TransitionPropertyTextShadowValue,
-    TransitionPropertyTransformValue,
-    TransitionPropertyTransformOriginValue,
-    TransitionPropertyTopValue,
-    TransitionPropertyVerticalAlignValue,
-    TransitionPropertyVisibilityValue,
-    TransitionPropertyWidthValue,
-    TransitionPropertyWordSpacingValue,
-    TransitionPropertyZIndexValue,
-};
-
-String* transitionPropertyValueToString(TransitionPropertyValue val);
-
 enum TransitionTimingFunctionValue {
     TransitionTimingFunctionEaseValue,
     TransitionTimingFunctionLinearValue,
@@ -910,11 +851,12 @@ class CSSStyleValuePair : public gc {
 
 public:
     enum KeyKind {
-        Empty,
+        Unknown,
 #define ADD_CSS_KEYKIND(Name, name, cssname) Name,
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
             VarValue,
+        CustomProperty,
         KeyKindSize,
     };
     // font related properties must be followed end of this enum(KeyKind)
@@ -941,6 +883,7 @@ public:
         NamedColorValueKind,
         UrlValueKind,
         PathFunctionValueKind,
+        CSSPropertyNameValueKind,
 
         CalcValueKind,
 
@@ -1005,7 +948,6 @@ public:
         TransformFunctions,
 
         // transition
-        TransitionPropertyValueKind,
         TransitionTimingFunctionValueKind,
         AnimationTimingFunctionValueKind,
 
@@ -1056,8 +998,8 @@ public:
     };
 
     CSSStyleValuePair()
-        : m_keyKind(KeyKind::Empty)
-        , m_temporaryKeyKind(KeyKind::Empty)
+        : m_keyKind(KeyKind::Unknown)
+        , m_temporaryKeyKind(KeyKind::Unknown)
         , m_valueKind(ValueKind::None)
         , m_flagImportant(false)
         , m_value(0.0f)
@@ -1472,10 +1414,10 @@ public:
         return m_value.m_tableLayout;
     }
 
-    TransitionPropertyValue transitionPropertyValue() const
+    KeyKind cssPropertyNameValue() const
     {
-        STARFISH_ASSERT(m_valueKind == TransitionPropertyValueKind);
-        return m_value.m_transitionProperty;
+        STARFISH_ASSERT(m_valueKind == CSSPropertyNameValueKind);
+        return m_value.m_cssPropertyNameValue;
     }
 
     TransitionTimingFunctionValue transitionTimingFunctionValue() const
@@ -1717,7 +1659,7 @@ public:
         CaptionSideValue m_captionSide;
         TableLayoutValue m_tableLayout;
         EmptyCellsValue m_emptyCells;
-        TransitionPropertyValue m_transitionProperty;
+        KeyKind m_cssPropertyNameValue;
         TransitionTimingFunctionValue m_transitionTimingFunction;
         BoxSizingValue m_boxSizing;
         CSSTime m_time;
@@ -1931,8 +1873,8 @@ public:
             : m_tableLayout(v)
         {
         }
-        ValueData(TransitionPropertyValue v)
-            : m_transitionProperty(v)
+        ValueData(KeyKind v)
+            : m_cssPropertyNameValue(v)
         {
         }
         ValueData(CSSTime v)
@@ -2064,8 +2006,8 @@ public:
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
-        : m_keyKind(KeyKind::Empty)
-        , m_temporaryKeyKind(KeyKind::Empty)
+        : m_keyKind(KeyKind::Unknown)
+        , m_temporaryKeyKind(KeyKind::Unknown)
         , m_valueKind(kind)
         , m_flagImportant(false)
         , m_value(value)
@@ -2290,10 +2232,10 @@ public:
         m_value.m_stringValue = v;
     }
 
-    void setTransitionPropertyValue(TransitionPropertyValue v)
+    void setCSSPropertyNameValue(KeyKind v)
     {
-        m_valueKind = TransitionPropertyValueKind;
-        m_value.m_transitionProperty = v;
+        m_valueKind = CSSPropertyNameValueKind;
+        m_value.m_cssPropertyNameValue = v;
     }
 
     void setTransitionTimingFunctionValue(TransitionTimingFunctionValue v)

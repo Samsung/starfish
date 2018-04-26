@@ -32,12 +32,12 @@ public:
     {
     }
 
-    TransitionPropertyValue property() const
+    CSSStyleValuePair::KeyKind property() const
     {
         return m_property;
     }
 
-    void setProperty(TransitionPropertyValue property)
+    void setProperty(CSSStyleValuePair::KeyKind property)
     {
         m_property = property;
     }
@@ -76,7 +76,7 @@ public:
     bool operator!=(const StyleTransitionLayer& b) const;
 
 private:
-    TransitionPropertyValue m_property;
+    CSSStyleValuePair::KeyKind m_property;
     AnimationTimingFunction* m_timingFunction;
     CSSTime m_duration;
     CSSTime m_delay;
@@ -86,15 +86,15 @@ class StyleTransitionData : public GCVector<StyleTransitionLayer> {
 public:
     static AnimationTimingFunction* defaultTimingFunction();
 
-    TransitionPropertyValue property(size_t layer = 0) const
+    CSSStyleValuePair::KeyKind property(size_t layer = 0) const
     {
         if (size() <= layer) {
-            return TransitionPropertyAllValue;
+            return CSSStyleValuePair::KeyKind::All;
         }
         return at(layer).property();
     }
 
-    void setProperty(TransitionPropertyValue property, size_t layer = 0)
+    void setProperty(CSSStyleValuePair::KeyKind property, size_t layer = 0)
     {
         if (size() <= layer) {
             resize(layer + 1);

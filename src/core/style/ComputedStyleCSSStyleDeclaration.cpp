@@ -128,9 +128,10 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::Name:   \
         break;
         FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(IGNORE_SHORTHANDS_AND_ETC)
-        IGNORE_SHORTHANDS_AND_ETC(Empty)
+        IGNORE_SHORTHANDS_AND_ETC(CustomProperty)
         IGNORE_SHORTHANDS_AND_ETC(KeyKindSize)
         IGNORE_SHORTHANDS_AND_ETC(Src)
+        IGNORE_SHORTHANDS_AND_ETC(Unknown)
         IGNORE_SHORTHANDS_AND_ETC(VarValue)
 #undef IGNORE_SHORTHANDS_ETC
 
@@ -1191,12 +1192,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         size_t layerSize = style->transitionLayerSize();
         if (!layerSize) {
             p.multiValue()->emplace_back(
-                CSSStyleValuePair::TransitionPropertyValueKind,
-                TransitionPropertyAllValue);
+                CSSStyleValuePair::CSSPropertyNameValueKind,
+                CSSStyleValuePair::All);
         } else {
             for (size_t i = 0; i < layerSize; i++) {
                 p.multiValue()->emplace_back(
-                    CSSStyleValuePair::TransitionPropertyValueKind,
+                    CSSStyleValuePair::CSSPropertyNameValueKind,
                     style->transitionProperty(i));
             }
         }

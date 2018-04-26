@@ -29,6 +29,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/CSSProperty.h"
 #include "core/page/Window.h"
 #include "core/modules/message_loop/Timer.h"
 #include "platform/window/PlatformWindow.h"
@@ -37,9 +38,8 @@ namespace StarFish {
 
 AnimationTask::AnimationTask(Element* target,
                              CSSStyleValuePair::KeyKind targetProperty,
-                             String* targetPropertyString, AnimatedValue from,
-                             AnimatedValue to, float durationInms,
-                             float delayInms,
+                             AnimatedValue from, AnimatedValue to,
+                             float durationInms, float delayInms,
                              AnimationTimingFunction* timingFunction)
 {
     m_isStartEventFired = false;
@@ -51,7 +51,7 @@ AnimationTask::AnimationTask(Element* target,
     m_toValue = to;
     m_property = targetProperty;
     m_timingFunction = timingFunction;
-    m_targetPropertyString = targetPropertyString;
+    m_targetPropertyString = CSSPropertyHelper::toGCString(targetProperty);
 }
 
 void AnimationTask::attachedToElement()
@@ -294,10 +294,8 @@ void LengthAnimationTask::execute(float progress)
 OpacityAnimationTask::OpacityAnimationTask(
     Element* target, AnimatedValue fromValue, AnimatedValue toValue,
     float duration, float delay, AnimationTimingFunction* timingFunction)
-    : AnimationTask(
-          target, CSSStyleValuePair::KeyKind::Opacity,
-          transitionPropertyValueToString(TransitionPropertyOpacityValue),
-          fromValue, toValue, duration, delay, timingFunction)
+    : AnimationTask(target, CSSStyleValuePair::KeyKind::Opacity, fromValue,
+                    toValue, duration, delay, timingFunction)
 {
 }
 
@@ -350,13 +348,10 @@ void OpacityAnimationTask::execute(float progress)
 }
 
 TransformAnimationTask::TransformAnimationTask(
-    Element* target, CSSStyleValuePair::KeyKind targetProperty,
-    String* targetPropertyString, AnimatedValue fromValue, float duration,
-    float delay, AnimationTimingFunction* timingFunction)
-    : AnimationTask(
-          target, CSSStyleValuePair::KeyKind::Transform,
-          transitionPropertyValueToString(TransitionPropertyTransformValue),
-          fromValue, AnimatedValue(), duration, delay, timingFunction)
+    Element* target, AnimatedValue fromValue, float duration, float delay,
+    AnimationTimingFunction* timingFunction)
+    : AnimationTask(target, CSSStyleValuePair::KeyKind::Transform, fromValue,
+                    AnimatedValue(), duration, delay, timingFunction)
 {
     target->style()->rareComputedStyleData()->ensureTransforms();
 }
