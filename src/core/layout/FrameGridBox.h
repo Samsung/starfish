@@ -209,6 +209,7 @@ public:
     bool fixGridAreaWithUndefine(GridArea**, GridArea*, size_t);
     void parsingGridTemplateAreasAndStoreInformation();
     void buildGridAreaAndOrdering();
+    size_t convertToRealLine(String*);
     LayoutUnit preferredWidth();
 
     GCVector<GridLine>& gridLineColumns()
