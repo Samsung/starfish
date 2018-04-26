@@ -110,6 +110,11 @@ bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
     return false;
 }
 
+String* CSSPropertyHelper::toGCString(CSSStyleValuePair::KeyKind property)
+{
+    return String::createASCIIString(toString(property));
+}
+
 const char* CSSPropertyHelper::toString(CSSStyleValuePair::KeyKind property)
 {
     switch (property) {
@@ -474,12 +479,19 @@ const char* CSSPropertyHelper::toString(CSSStyleValuePair::KeyKind property)
     case CSSStyleValuePair::ZIndex:
         return "z-index";
     // Non CSS property
-    case CSSStyleValuePair::Empty:
+    case CSSStyleValuePair::CustomProperty:
     case CSSStyleValuePair::KeyKindSize:
+    case CSSStyleValuePair::Unknown:
     case CSSStyleValuePair::VarValue:
         break;
     }
     return "";
+}
+
+String* CSSPropertyHelper::toCamelCaseGCString(
+    CSSStyleValuePair::KeyKind property)
+{
+    return String::createASCIIString(toCamelCaseString(property));
 }
 
 const char* CSSPropertyHelper::toCamelCaseString(
@@ -847,8 +859,9 @@ const char* CSSPropertyHelper::toCamelCaseString(
     case CSSStyleValuePair::ZIndex:
         return "zIndex";
     // Non CSS property
-    case CSSStyleValuePair::Empty:
+    case CSSStyleValuePair::CustomProperty:
     case CSSStyleValuePair::KeyKindSize:
+    case CSSStyleValuePair::Unknown:
     case CSSStyleValuePair::VarValue:
         break;
     }

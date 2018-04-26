@@ -182,9 +182,8 @@ class AnimationTask : public gc {
 
 public:
     AnimationTask(Element* target, CSSStyleValuePair::KeyKind targetProperty,
-                  String* targetPropertyString, AnimatedValue from,
-                  AnimatedValue to, float durationInms, float delayInms,
-                  AnimationTimingFunction* timingFunction);
+                  AnimatedValue from, AnimatedValue to, float durationInms,
+                  float delayInms, AnimationTimingFunction* timingFunction);
     float computeProgress(uint64_t tickCount);
     bool canExecute();
     void fireStartEvent();
@@ -226,11 +225,11 @@ class ColorAnimationTask : public AnimationTask {
 public:
     ColorAnimationTask(Element* target,
                        CSSStyleValuePair::KeyKind targetProperty,
-                       String* targetPropertyString, AnimatedValue fromValue,
-                       AnimatedValue toValue, float duration, float delay,
+                       AnimatedValue fromValue, AnimatedValue toValue,
+                       float duration, float delay,
                        AnimationTimingFunction* timingFunction)
-        : AnimationTask(target, targetProperty, targetPropertyString, fromValue,
-                        toValue, duration, delay, timingFunction)
+        : AnimationTask(target, targetProperty, fromValue, toValue, duration,
+                        delay, timingFunction)
     {
     }
     void execute(float progress) override;
@@ -240,11 +239,11 @@ class LengthAnimationTask : public AnimationTask {
 public:
     LengthAnimationTask(Element* target,
                         CSSStyleValuePair::KeyKind targetProperty,
-                        String* targetPropertyString, AnimatedValue fromValue,
-                        AnimatedValue toValue, float duration, float delay,
+                        AnimatedValue fromValue, AnimatedValue toValue,
+                        float duration, float delay,
                         AnimationTimingFunction* timingFunction)
-        : AnimationTask(target, targetProperty, targetPropertyString, fromValue,
-                        toValue, duration, delay, timingFunction)
+        : AnimationTask(target, targetProperty, fromValue, toValue, duration,
+                        delay, timingFunction)
     {
     }
     void execute(float progress) override;
@@ -269,10 +268,8 @@ private:
 
 class TransformAnimationTask : public AnimationTask {
 public:
-    TransformAnimationTask(Element* target,
-                           CSSStyleValuePair::KeyKind targetProperty,
-                           String* targetPropertyString,
-                           AnimatedValue fromValue, float duration, float delay,
+    TransformAnimationTask(Element* target, AnimatedValue fromValue,
+                           float duration, float delay,
                            AnimationTimingFunction* timingFunction);
     void execute(float progress) override;
     void attachedToElement() override;

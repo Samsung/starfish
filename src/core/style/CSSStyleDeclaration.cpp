@@ -1563,12 +1563,13 @@ String* CSSStyleDeclaration::item(uint32_t index)
 String* CSSStyleDeclaration::getPropertyValue(String* name)
 {
     auto str = name->toNullableUTF8String();
-    CSSStyleKind kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
+    CSSStyleValuePair::KeyKind kind =
+        lookupCSSStyle(str.m_buffer, str.m_bufferSize);
     String* val = String::emptyString;
     switch (kind) {
-#define MATCH_KEY(Name, ...) \
-    case CSSStyleKind::Name: \
-        val = Name();        \
+#define MATCH_KEY(Name, ...)               \
+    case CSSStyleValuePair::KeyKind::Name: \
+        val = Name();                      \
         break;
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(MATCH_KEY)
 #undef MATCH_KEY
@@ -1584,13 +1585,14 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
 {
     bool isImportant = false;
     auto str = name->toNullableUTF8String();
-    CSSStyleKind kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
+    CSSStyleValuePair::KeyKind kind =
+        lookupCSSStyle(str.m_buffer, str.m_bufferSize);
 
     if (prior->length() > 0) {
         if (prior->equalsIgnoreCase("important")) {
             isImportant = true;
         } else {
-            if (kind == CSSStyleKind::CustomProperty) {
+            if (kind == CSSStyleValuePair::KeyKind::CustomProperty) {
                 setCustomProperty(name, value, str.m_bufferSize);
             }
             return;
@@ -1599,7 +1601,7 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
 
     struct Sender {
         CSSStyleDeclaration* self;
-        CSSStyleKind kind;
+        CSSStyleValuePair::KeyKind kind;
         bool isImportant;
     } sender;
     sender.self = this;
@@ -1607,17 +1609,17 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
     sender.isImportant = isImportant;
     value->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
-            CSSStyleKind kind = ((Sender*)data)->kind;
+            CSSStyleValuePair::KeyKind kind = ((Sender*)data)->kind;
             CSSStyleDeclaration* self = ((Sender*)data)->self;
             bool isImportant = ((Sender*)data)->isImportant;
-            if (kind == CSSStyleKind::Unknown) {
+            if (kind == CSSStyleValuePair::KeyKind::Unknown) {
             } else {
                 if (false) {
                 }
-#define SET_ATTR(name, nameLower, nameCSSCase)  \
-    else if (kind == CSSStyleKind::name)        \
-    {                                           \
-        self->set##name(buf, len, isImportant); \
+#define SET_ATTR(name, nameLower, nameCSSCase)         \
+    else if (kind == CSSStyleValuePair::KeyKind::name) \
+    {                                                  \
+        self->set##name(buf, len, isImportant);        \
     }
                 FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
 #undef SET_ATTR
@@ -1639,20 +1641,21 @@ void CSSStyleDeclaration::setCssText(String* text)
 Nullable<String*> CSSStyleDeclaration::defaultNamedGetter(String* name)
 {
     auto str = name->toNullableUTF8String();
-    CSSStyleKind kind = lookupCSSStyleCamelCase(str.m_buffer, str.m_bufferSize);
+    CSSStyleValuePair::KeyKind kind =
+        lookupCSSStyleCamelCase(str.m_buffer, str.m_bufferSize);
 
-    if (kind == CSSStyleKind::Unknown) {
+    if (kind == CSSStyleValuePair::KeyKind::Unknown) {
         kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
     }
-    if (kind == CSSStyleKind::Unknown) {
+    if (kind == CSSStyleValuePair::KeyKind::Unknown) {
         return Nullable<String*>();
     }
     if (false) {
     }
-#define GET_ATTR(name, ...)               \
-    else if (kind == CSSStyleKind::name)  \
-    {                                     \
-        return Nullable<String*>(name()); \
+#define GET_ATTR(name, ...)                            \
+    else if (kind == CSSStyleValuePair::KeyKind::name) \
+    {                                                  \
+        return Nullable<String*>(name());              \
     }
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(GET_ATTR)
 #undef GET_ATTR
@@ -1671,12 +1674,13 @@ bool CSSStyleDeclaration::defaultNamedSetter(String* name,
                                              Nullable<String*> value)
 {
     auto str = name->toNullableUTF8String();
-    CSSStyleKind kind = lookupCSSStyleCamelCase(str.m_buffer, str.m_bufferSize);
+    CSSStyleValuePair::KeyKind kind =
+        lookupCSSStyleCamelCase(str.m_buffer, str.m_bufferSize);
 
-    if (kind == CSSStyleKind::Unknown) {
+    if (kind == CSSStyleValuePair::KeyKind::Unknown) {
         kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
     }
-    if (kind == CSSStyleKind::Unknown) {
+    if (kind == CSSStyleValuePair::KeyKind::Unknown) {
         return false;
     }
     if (UNLIKELY(isComputedStyle())) {
@@ -1691,21 +1695,21 @@ bool CSSStyleDeclaration::defaultNamedSetter(String* name,
 
     struct Sender {
         CSSStyleDeclaration* self;
-        CSSStyleKind kind;
+        CSSStyleValuePair::KeyKind kind;
     } sender;
     sender.self = this;
     sender.kind = kind;
 
     valueTo->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
-            CSSStyleKind kind = ((Sender*)data)->kind;
+            CSSStyleValuePair::KeyKind kind = ((Sender*)data)->kind;
             CSSStyleDeclaration* self = ((Sender*)data)->self;
             if (false) {
             }
-#define SET_ATTR(name, ...)               \
-    else if (kind == CSSStyleKind::name)  \
-    {                                     \
-        self->set##name(buf, len, false); \
+#define SET_ATTR(name, ...)                            \
+    else if (kind == CSSStyleValuePair::KeyKind::name) \
+    {                                                  \
+        self->set##name(buf, len, false);              \
     }
             FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
 #undef SET_ATTR
@@ -1738,9 +1742,11 @@ String* CSSStyleDeclaration::cssTextAffectedByAllProperty(
     StringBuilder txt;
 #define APPEND_CSS_VALUES(Name, name, cssname)                                 \
     {                                                                          \
-        CSSStyleKind kind = lookupCSSStyle(cssname, strlen(cssname));          \
-        if (kind != CSSStyleKind::All && kind != CSSStyleKind::Direction &&    \
-            kind != CSSStyleKind::UnicodeBidi) {                               \
+        CSSStyleValuePair::KeyKind kind =                                      \
+            lookupCSSStyle(cssname, strlen(cssname));                          \
+        if (kind != CSSStyleValuePair::KeyKind::All &&                         \
+            kind != CSSStyleValuePair::KeyKind::Direction &&                   \
+            kind != CSSStyleValuePair::KeyKind::UnicodeBidi) {                 \
             txt.appendString(cssname);                                         \
             txt.appendString(": ");                                            \
             auto iter =                                                        \

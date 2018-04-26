@@ -21,16 +21,13 @@
 #define __StarFishCSSProperty__
 
 namespace StarFish {
-
-// TODO
-// Declare CSSProperty Enum here and clean up duplicated enum declarations
-// (`CSSStyleValuePair::KeyKind`, `enum class CSSStyleKind`)
-
 class CSSPropertyHelper {
 public:
     static bool isAnimatable(CSSStyleValuePair::KeyKind property);
     static const char* toString(CSSStyleValuePair::KeyKind property);
+    static String* toGCString(CSSStyleValuePair::KeyKind property);
     static const char* toCamelCaseString(CSSStyleValuePair::KeyKind property);
+    static String* toCamelCaseGCString(CSSStyleValuePair::KeyKind property);
 };
 }
 

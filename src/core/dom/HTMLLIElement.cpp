@@ -102,7 +102,7 @@ void HTMLLIElement::styleForPresentationAttribute(
                 }
             }
 
-            if (pair.keyKind() != CSSStyleValuePair::KeyKind::Empty) {
+            if (pair.keyKind() != CSSStyleValuePair::KeyKind::Unknown) {
                 cssValues.push_back(pair);
             }
         }

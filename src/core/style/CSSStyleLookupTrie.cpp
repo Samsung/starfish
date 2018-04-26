@@ -22,29 +22,29 @@
 
 namespace StarFish {
 
-CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
+CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
 {
     switch (length) {
     case 1:
         if (memcmp(data, "x", 1) == 0) {
-            return CSSStyleKind::X;
+            return CSSStyleValuePair::KeyKind::X;
         } else if (memcmp(data, "y", 1) == 0) {
-            return CSSStyleKind::Y;
+            return CSSStyleValuePair::KeyKind::Y;
         } else if (memcmp(data, "d", 1) == 0) {
-            return CSSStyleKind::D;
+            return CSSStyleValuePair::KeyKind::D;
         } else if (memcmp(data, "r", 1) == 0) {
-            return CSSStyleKind::R;
+            return CSSStyleValuePair::KeyKind::R;
         }
         break;
     case 2:
         if (memcmp(data, "cx", 2) == 0) {
-            return CSSStyleKind::CX;
+            return CSSStyleValuePair::KeyKind::CX;
         } else if (memcmp(data, "cy", 2) == 0) {
-            return CSSStyleKind::CY;
+            return CSSStyleValuePair::KeyKind::CY;
         } else if (memcmp(data, "rx", 2) == 0) {
-            return CSSStyleKind::RX;
+            return CSSStyleValuePair::KeyKind::RX;
         } else if (memcmp(data, "ry", 2) == 0) {
-            return CSSStyleKind::RY;
+            return CSSStyleValuePair::KeyKind::RY;
         }
         break;
     case 3:
@@ -52,13 +52,13 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Top
         // Src
         if (memcmp(data, "all", 3) == 0) {
-            return CSSStyleKind::All;
+            return CSSStyleValuePair::KeyKind::All;
         }
         if (memcmp(data, "top", 3) == 0) {
-            return CSSStyleKind::Top;
+            return CSSStyleValuePair::KeyKind::Top;
         }
         if (memcmp(data, "src", 3) == 0) {
-            return CSSStyleKind::Src;
+            return CSSStyleValuePair::KeyKind::Src;
         }
         break;
     case 4:
@@ -70,23 +70,23 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font", 4) == 0) {
-                return CSSStyleKind::Font;
+                return CSSStyleValuePair::KeyKind::Font;
             }
             if (memcmp(data, "flex", 4) == 0) {
-                return CSSStyleKind::Flex;
+                return CSSStyleValuePair::KeyKind::Flex;
             }
             if (memcmp(data, "fill", 4) == 0) {
-                return CSSStyleKind::Fill;
+                return CSSStyleValuePair::KeyKind::Fill;
             }
             break;
         case 'l':
             if (memcmp(data, "left", 4) == 0) {
-                return CSSStyleKind::Left;
+                return CSSStyleValuePair::KeyKind::Left;
             }
             break;
         case 'c':
             if (memcmp(data, "clip", 4) == 0) {
-                return CSSStyleKind::Clip;
+                return CSSStyleValuePair::KeyKind::Clip;
             }
             break;
         }
@@ -101,30 +101,30 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "color", 5) == 0) {
-                return CSSStyleKind::Color;
+                return CSSStyleValuePair::KeyKind::Color;
             }
             if (memcmp(data, "clear", 5) == 0) {
-                return CSSStyleKind::Clear;
+                return CSSStyleValuePair::KeyKind::Clear;
             }
             break;
         case 'f':
             if (memcmp(data, "float", 5) == 0) {
-                return CSSStyleKind::Float;
+                return CSSStyleValuePair::KeyKind::Float;
             }
             break;
         case 'w':
             if (memcmp(data, "width", 5) == 0) {
-                return CSSStyleKind::Width;
+                return CSSStyleValuePair::KeyKind::Width;
             }
             break;
         case 'r':
             if (memcmp(data, "right", 5) == 0) {
-                return CSSStyleKind::Right;
+                return CSSStyleValuePair::KeyKind::Right;
             }
             break;
         case 'o':
             if (memcmp(data, "order", 5) == 0) {
-                return CSSStyleKind::Order;
+                return CSSStyleValuePair::KeyKind::Order;
             }
             break;
         }
@@ -142,37 +142,37 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             switch (data[1]) {
             case 'o':
                 if (memcmp(data, "bottom", 6) == 0) {
-                    return CSSStyleKind::Bottom;
+                    return CSSStyleValuePair::KeyKind::Bottom;
                 }
                 if (memcmp(data, "border", 6) == 0) {
-                    return CSSStyleKind::Border;
+                    return CSSStyleValuePair::KeyKind::Border;
                 }
                 break;
             }
             break;
         case 'c':
             if (memcmp(data, "cursor", 6) == 0) {
-                return CSSStyleKind::Cursor;
+                return CSSStyleValuePair::KeyKind::Cursor;
             }
             break;
         case 'h':
             if (memcmp(data, "height", 6) == 0) {
-                return CSSStyleKind::Height;
+                return CSSStyleValuePair::KeyKind::Height;
             }
             break;
         case 'm':
             if (memcmp(data, "margin", 6) == 0) {
-                return CSSStyleKind::Margin;
+                return CSSStyleValuePair::KeyKind::Margin;
             }
             break;
         case 'r':
             if (memcmp(data, "resize", 6) == 0) {
-                return CSSStyleKind::Resize;
+                return CSSStyleValuePair::KeyKind::Resize;
             }
             break;
         case 's':
             if (memcmp(data, "stroke", 6) == 0) {
-                return CSSStyleKind::Stroke;
+                return CSSStyleValuePair::KeyKind::Stroke;
             }
             break;
         }
@@ -188,35 +188,35 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "content", 7) == 0) {
-                return CSSStyleKind::Content;
+                return CSSStyleValuePair::KeyKind::Content;
             }
             break;
         case 'd':
             if (memcmp(data, "display", 7) == 0) {
-                return CSSStyleKind::Display;
+                return CSSStyleValuePair::KeyKind::Display;
             }
             break;
         case 'h':
             if (memcmp(data, "hyphens", 7) == 0) {
-                return CSSStyleKind::Hyphens;
+                return CSSStyleValuePair::KeyKind::Hyphens;
             }
             break;
         case 'p':
             if (memcmp(data, "padding", 7) == 0) {
-                return CSSStyleKind::Padding;
+                return CSSStyleValuePair::KeyKind::Padding;
             }
             break;
         case 'z':
             if (memcmp(data, "z-index", 7) == 0) {
-                return CSSStyleKind::ZIndex;
+                return CSSStyleValuePair::KeyKind::ZIndex;
             }
             break;
         case 'o':
             if (memcmp(data, "opacity", 7) == 0) {
-                return CSSStyleKind::Opacity;
+                return CSSStyleValuePair::KeyKind::Opacity;
             }
             if (memcmp(data, "outline", 7) == 0) {
-                return CSSStyleKind::Outline;
+                return CSSStyleValuePair::KeyKind::Outline;
             }
             break;
         }
@@ -228,17 +228,17 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "position", 8) == 0) {
-                return CSSStyleKind::Position;
+                return CSSStyleValuePair::KeyKind::Position;
             }
             break;
         case 'o':
             if (memcmp(data, "overflow", 8) == 0) {
-                return CSSStyleKind::Overflow;
+                return CSSStyleValuePair::KeyKind::Overflow;
             }
             break;
         case 'g':
             if (memcmp(data, "grid-gap", 8) == 0) {
-                return CSSStyleKind::GridGap;
+                return CSSStyleValuePair::KeyKind::GridGap;
             }
             break;
         }
@@ -259,50 +259,50 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font-size", 9) == 0) {
-                return CSSStyleKind::FontSize;
+                return CSSStyleValuePair::KeyKind::FontSize;
             }
             if (memcmp(data, "flex-wrap", 9) == 0) {
-                return CSSStyleKind::FlexWrap;
+                return CSSStyleValuePair::KeyKind::FlexWrap;
             }
             if (memcmp(data, "flex-flow", 9) == 0) {
-                return CSSStyleKind::FlexFlow;
+                return CSSStyleValuePair::KeyKind::FlexFlow;
             }
             if (memcmp(data, "flex-grow", 9) == 0) {
-                return CSSStyleKind::FlexGrow;
+                return CSSStyleValuePair::KeyKind::FlexGrow;
             }
             if (memcmp(data, "fill-rule", 9) == 0) {
-                return CSSStyleKind::FillRule;
+                return CSSStyleValuePair::KeyKind::FillRule;
             }
             break;
         case 't':
             if (memcmp(data, "transform", 9) == 0) {
-                return CSSStyleKind::Transform;
+                return CSSStyleValuePair::KeyKind::Transform;
             }
             break;
         case 'd':
             if (memcmp(data, "direction", 9) == 0) {
-                return CSSStyleKind::Direction;
+                return CSSStyleValuePair::KeyKind::Direction;
             }
             break;
         case 'm':
             if (memcmp(data, "max-width", 9) == 0) {
-                return CSSStyleKind::MaxWidth;
+                return CSSStyleValuePair::KeyKind::MaxWidth;
             }
             if (memcmp(data, "min-width", 9) == 0) {
-                return CSSStyleKind::MinWidth;
+                return CSSStyleValuePair::KeyKind::MinWidth;
             }
             if (memcmp(data, "mask-size", 9) == 0) {
-                return CSSStyleKind::MaskSize;
+                return CSSStyleValuePair::KeyKind::MaskSize;
             }
             break;
         case 'w':
             if (memcmp(data, "word-wrap", 9) == 0) {
-                return CSSStyleKind::WordWrap;
+                return CSSStyleValuePair::KeyKind::WordWrap;
             }
             break;
         case 'g':
             if (memcmp(data, "grid-area", 9) == 0) {
-                return CSSStyleKind::GridArea;
+                return CSSStyleValuePair::KeyKind::GridArea;
             }
             break;
         }
@@ -331,80 +331,80 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background", 10) == 0) {
-                return CSSStyleKind::Background;
+                return CSSStyleValuePair::KeyKind::Background;
             }
             if (memcmp(data, "border-top", 10) == 0) {
-                return CSSStyleKind::BorderTop;
+                return CSSStyleValuePair::KeyKind::BorderTop;
             }
             if (memcmp(data, "box-shadow", 10) == 0) {
-                return CSSStyleKind::BoxShadow;
+                return CSSStyleValuePair::KeyKind::BoxShadow;
             }
             if (memcmp(data, "box-sizing", 10) == 0) {
-                return CSSStyleKind::BoxSizing;
+                return CSSStyleValuePair::KeyKind::BoxSizing;
             }
             break;
         case 'f':
             if (memcmp(data, "font-style", 10) == 0) {
-                return CSSStyleKind::FontStyle;
+                return CSSStyleValuePair::KeyKind::FontStyle;
             }
             if (memcmp(data, "flex-basis", 10) == 0) {
-                return CSSStyleKind::FlexBasis;
+                return CSSStyleValuePair::KeyKind::FlexBasis;
             }
             break;
         case 'l':
             if (memcmp(data, "list-style", 10) == 0) {
-                return CSSStyleKind::ListStyle;
+                return CSSStyleValuePair::KeyKind::ListStyle;
             }
             if (memcmp(data, "line-break", 10) == 0) {
-                return CSSStyleKind::LineBreak;
+                return CSSStyleValuePair::KeyKind::LineBreak;
             }
             break;
         case 't':
             if (memcmp(data, "text-align", 10) == 0) {
-                return CSSStyleKind::TextAlign;
+                return CSSStyleValuePair::KeyKind::TextAlign;
             }
             if (memcmp(data, "transition", 10) == 0) {
-                return CSSStyleKind::Transition;
+                return CSSStyleValuePair::KeyKind::Transition;
             }
             break;
         case 'm':
             if (memcmp(data, "margin-top", 10) == 0) {
-                return CSSStyleKind::MarginTop;
+                return CSSStyleValuePair::KeyKind::MarginTop;
             }
             if (memcmp(data, "mask-image", 10) == 0) {
-                return CSSStyleKind::MaskImage;
+                return CSSStyleValuePair::KeyKind::MaskImage;
             }
             if (memcmp(data, "max-height", 10) == 0) {
-                return CSSStyleKind::MaxHeight;
+                return CSSStyleValuePair::KeyKind::MaxHeight;
             }
             if (memcmp(data, "min-height", 10) == 0) {
-                return CSSStyleKind::MinHeight;
+                return CSSStyleValuePair::KeyKind::MinHeight;
             }
             break;
         case 'o':
             if (memcmp(data, "object-fit", 10) == 0) {
-                return CSSStyleKind::ObjectFit;
+                return CSSStyleValuePair::KeyKind::ObjectFit;
             }
             if (memcmp(data, "overflow-x", 10) == 0) {
-                return CSSStyleKind::OverflowX;
+                return CSSStyleValuePair::KeyKind::OverflowX;
             }
             if (memcmp(data, "overflow-y", 10) == 0) {
-                return CSSStyleKind::OverflowY;
+                return CSSStyleValuePair::KeyKind::OverflowY;
             }
             break;
         case 'v':
             if (memcmp(data, "visibility", 10) == 0) {
-                return CSSStyleKind::Visibility;
+                return CSSStyleValuePair::KeyKind::Visibility;
             }
             break;
         case 'a':
             if (memcmp(data, "align-self", 10) == 0) {
-                return CSSStyleKind::AlignSelf;
+                return CSSStyleValuePair::KeyKind::AlignSelf;
             }
             break;
         case 'w':
             if (memcmp(data, "word-break", 10) == 0) {
-                return CSSStyleKind::WordBreak;
+                return CSSStyleValuePair::KeyKind::WordBreak;
             }
             break;
         }
@@ -428,69 +428,69 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'a':
             if (memcmp(data, "align-items", 11) == 0) {
-                return CSSStyleKind::AlignItems;
+                return CSSStyleValuePair::KeyKind::AlignItems;
             }
             break;
         case 'b':
             if (memcmp(data, "border-left", 11) == 0) {
-                return CSSStyleKind::BorderLeft;
+                return CSSStyleValuePair::KeyKind::BorderLeft;
             }
             break;
         case 'c':
             if (memcmp(data, "caret-color", 11) == 0) {
-                return CSSStyleKind::CaretColor;
+                return CSSStyleValuePair::KeyKind::CaretColor;
             }
             break;
         case 'e':
             if (memcmp(data, "empty-cells", 11) == 0) {
-                return CSSStyleKind::EmptyCells;
+                return CSSStyleValuePair::KeyKind::EmptyCells;
             }
             break;
         case 'f':
             if (memcmp(data, "font-weight", 11) == 0) {
-                return CSSStyleKind::FontWeight;
+                return CSSStyleValuePair::KeyKind::FontWeight;
             }
             if (memcmp(data, "font-family", 11) == 0) {
-                return CSSStyleKind::FontFamily;
+                return CSSStyleValuePair::KeyKind::FontFamily;
             }
             if (memcmp(data, "flex-shrink", 11) == 0) {
-                return CSSStyleKind::FlexShrink;
+                return CSSStyleValuePair::KeyKind::FlexShrink;
             }
             break;
         case 'l':
             if (memcmp(data, "line-height", 11) == 0) {
-                return CSSStyleKind::LineHeight;
+                return CSSStyleValuePair::KeyKind::LineHeight;
             }
             break;
         case 'm':
             if (memcmp(data, "margin-left", 11) == 0) {
-                return CSSStyleKind::MarginLeft;
+                return CSSStyleValuePair::KeyKind::MarginLeft;
             }
             break;
         case 'p':
             if (memcmp(data, "padding-top", 11) == 0) {
-                return CSSStyleKind::PaddingTop;
+                return CSSStyleValuePair::KeyKind::PaddingTop;
             }
             break;
         case 't':
             if (memcmp(data, "text-indent", 11) == 0) {
-                return CSSStyleKind::TextIndent;
+                return CSSStyleValuePair::KeyKind::TextIndent;
             }
             if (memcmp(data, "text-shadow", 11) == 0) {
-                return CSSStyleKind::TextShadow;
+                return CSSStyleValuePair::KeyKind::TextShadow;
             }
             break;
         case 'u':
             if (memcmp(data, "user-select", 11) == 0) {
-                return CSSStyleKind::UserSelect;
+                return CSSStyleValuePair::KeyKind::UserSelect;
             }
             break;
         case 'w':
             if (memcmp(data, "will-change", 11) == 0) {
-                return CSSStyleKind::WillChange;
+                return CSSStyleValuePair::KeyKind::WillChange;
             }
             if (memcmp(data, "white-space", 11) == 0) {
-                return CSSStyleKind::WhiteSpace;
+                return CSSStyleValuePair::KeyKind::WhiteSpace;
             }
             break;
         }
@@ -514,70 +514,70 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-image", 12) == 0) {
-                return CSSStyleKind::BorderImage;
+                return CSSStyleValuePair::KeyKind::BorderImage;
             }
             if (memcmp(data, "border-style", 12) == 0) {
-                return CSSStyleKind::BorderStyle;
+                return CSSStyleValuePair::KeyKind::BorderStyle;
             }
             if (memcmp(data, "border-width", 12) == 0) {
-                return CSSStyleKind::BorderWidth;
+                return CSSStyleValuePair::KeyKind::BorderWidth;
             }
             if (memcmp(data, "border-color", 12) == 0) {
-                return CSSStyleKind::BorderColor;
+                return CSSStyleValuePair::KeyKind::BorderColor;
             }
             if (memcmp(data, "border-right", 12) == 0) {
-                return CSSStyleKind::BorderRight;
+                return CSSStyleValuePair::KeyKind::BorderRight;
             }
             break;
         case 'c':
             if (memcmp(data, "caption-side", 12) == 0) {
-                return CSSStyleKind::CaptionSide;
+                return CSSStyleValuePair::KeyKind::CaptionSide;
             }
             break;
         case 'p':
             if (memcmp(data, "padding-left", 12) == 0) {
-                return CSSStyleKind::PaddingLeft;
+                return CSSStyleValuePair::KeyKind::PaddingLeft;
             }
             break;
         case 'm':
             if (memcmp(data, "margin-right", 12) == 0) {
-                return CSSStyleKind::MarginRight;
+                return CSSStyleValuePair::KeyKind::MarginRight;
             }
             break;
         case 't':
             if (memcmp(data, "table-layout", 12) == 0) {
-                return CSSStyleKind::TableLayout;
+                return CSSStyleValuePair::KeyKind::TableLayout;
             }
             break;
         case 'u':
             if (memcmp(data, "unicode-bidi", 12) == 0) {
-                return CSSStyleKind::UnicodeBidi;
+                return CSSStyleValuePair::KeyKind::UnicodeBidi;
             }
             break;
         case 'f':
             if (memcmp(data, "fill-opacity", 12) == 0) {
-                return CSSStyleKind::FillOpacity;
+                return CSSStyleValuePair::KeyKind::FillOpacity;
             }
             if (memcmp(data, "font-kerning", 12) == 0) {
-                return CSSStyleKind::FontKerning;
+                return CSSStyleValuePair::KeyKind::FontKerning;
             }
             break;
         case 's':
             if (memcmp(data, "stroke-width", 12) == 0) {
-                return CSSStyleKind::StrokeWidth;
+                return CSSStyleValuePair::KeyKind::StrokeWidth;
             }
             break;
         case 'w':
             if (memcmp(data, "word-spacing", 12) == 0) {
-                return CSSStyleKind::WordSpacing;
+                return CSSStyleValuePair::KeyKind::WordSpacing;
             }
             break;
         case 'g':
             if (memcmp(data, "grid-row-end", 12) == 0) {
-                return CSSStyleKind::GridRowEnd;
+                return CSSStyleValuePair::KeyKind::GridRowEnd;
             }
             if (memcmp(data, "grid-row-gap", 12) == 0) {
-                return CSSStyleKind::GridRowGap;
+                return CSSStyleValuePair::KeyKind::GridRowGap;
             }
             break;
         }
@@ -597,49 +597,49 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "padding-right", 13) == 0) {
-                return CSSStyleKind::PaddingRight;
+                return CSSStyleValuePair::KeyKind::PaddingRight;
             }
             break;
         case 'm':
             if (memcmp(data, "margin-bottom", 13) == 0) {
-                return CSSStyleKind::MarginBottom;
+                return CSSStyleValuePair::KeyKind::MarginBottom;
             }
             break;
         case 'b':
             if (memcmp(data, "border-bottom", 13) == 0) {
-                return CSSStyleKind::BorderBottom;
+                return CSSStyleValuePair::KeyKind::BorderBottom;
             }
             if (memcmp(data, "border-radius", 13) == 0) {
-                return CSSStyleKind::BorderRadius;
+                return CSSStyleValuePair::KeyKind::BorderRadius;
             }
             break;
         case 'a':
             if (memcmp(data, "align-content", 13) == 0) {
-                return CSSStyleKind::AlignContent;
+                return CSSStyleValuePair::KeyKind::AlignContent;
             }
             break;
         case 'c':
             if (memcmp(data, "counter-reset", 13) == 0) {
-                return CSSStyleKind::CounterReset;
+                return CSSStyleValuePair::KeyKind::CounterReset;
             }
             break;
         case 't':
             if (memcmp(data, "text-overflow", 13) == 0) {
-                return CSSStyleKind::TextOverflow;
+                return CSSStyleValuePair::KeyKind::TextOverflow;
             }
             break;
         case 'o':
             if (memcmp(data, "outline-width", 13) == 0) {
-                return CSSStyleKind::OutlineWidth;
+                return CSSStyleValuePair::KeyKind::OutlineWidth;
             }
             if (memcmp(data, "outline-style", 13) == 0) {
-                return CSSStyleKind::OutlineStyle;
+                return CSSStyleValuePair::KeyKind::OutlineStyle;
             }
             if (memcmp(data, "outline-color", 13) == 0) {
-                return CSSStyleKind::OutlineColor;
+                return CSSStyleValuePair::KeyKind::OutlineColor;
             }
             if (memcmp(data, "overflow-wrap", 13) == 0) {
-                return CSSStyleKind::OverflowWrap;
+                return CSSStyleValuePair::KeyKind::OverflowWrap;
             }
             break;
         }
@@ -656,45 +656,45 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-spacing", 14) == 0) {
-                return CSSStyleKind::BorderSpacing;
+                return CSSStyleValuePair::KeyKind::BorderSpacing;
             }
             break;
         case 'f':
             if (memcmp(data, "flex-direction", 14) == 0) {
-                return CSSStyleKind::FlexDirection;
+                return CSSStyleValuePair::KeyKind::FlexDirection;
             }
             break;
         case 'v':
             if (memcmp(data, "vertical-align", 14) == 0) {
-                return CSSStyleKind::VerticalAlign;
+                return CSSStyleValuePair::KeyKind::VerticalAlign;
             }
             break;
         case 'p':
             if (memcmp(data, "padding-bottom", 14) == 0) {
-                return CSSStyleKind::PaddingBottom;
+                return CSSStyleValuePair::KeyKind::PaddingBottom;
             }
             if (memcmp(data, "pointer-events", 14) == 0) {
-                return CSSStyleKind::PointerEvents;
+                return CSSStyleValuePair::KeyKind::PointerEvents;
             }
             break;
         case 'o':
             if (memcmp(data, "outline-offset", 14) == 0) {
-                return CSSStyleKind::OutlineOffset;
+                return CSSStyleValuePair::KeyKind::OutlineOffset;
             }
             break;
         case 't':
             if (memcmp(data, "text-transform", 14) == 0) {
-                return CSSStyleKind::TextTransform;
+                return CSSStyleValuePair::KeyKind::TextTransform;
             }
             break;
         case 'l':
             if (memcmp(data, "letter-spacing", 14) == 0) {
-                return CSSStyleKind::LetterSpacing;
+                return CSSStyleValuePair::KeyKind::LetterSpacing;
             }
             break;
         case 'g':
             if (memcmp(data, "grid-row-start", 14) == 0) {
-                return CSSStyleKind::GridRowStart;
+                return CSSStyleValuePair::KeyKind::GridRowStart;
             }
             break;
         }
@@ -712,46 +712,46 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'j':
             if (memcmp(data, "justify-content", 15) == 0) {
-                return CSSStyleKind::JustifyContent;
+                return CSSStyleValuePair::KeyKind::JustifyContent;
             }
             break;
         case 't':
             if (memcmp(data, "text-decoration", 15) == 0) {
-                return CSSStyleKind::TextDecoration;
+                return CSSStyleValuePair::KeyKind::TextDecoration;
             }
             break;
         case 'b':
             if (memcmp(data, "background-size", 15) == 0) {
-                return CSSStyleKind::BackgroundSize;
+                return CSSStyleValuePair::KeyKind::BackgroundSize;
             }
             if (memcmp(data, "background-clip", 15) == 0) {
-                return CSSStyleKind::BackgroundClip;
+                return CSSStyleValuePair::KeyKind::BackgroundClip;
             }
             if (memcmp(data, "border-collapse", 15) == 0) {
-                return CSSStyleKind::BorderCollapse;
+                return CSSStyleValuePair::KeyKind::BorderCollapse;
             }
             break;
         case 'l':
             if (memcmp(data, "list-style-type", 15) == 0) {
-                return CSSStyleKind::ListStyleType;
+                return CSSStyleValuePair::KeyKind::ListStyleType;
             }
             break;
         case 'o':
             if (memcmp(data, "object-position", 15) == 0) {
-                return CSSStyleKind::ObjectPosition;
+                return CSSStyleValuePair::KeyKind::ObjectPosition;
             }
             break;
         case 'i':
             if (memcmp(data, "image-rendering", 15) == 0) {
-                return CSSStyleKind::ImageRendering;
+                return CSSStyleValuePair::KeyKind::ImageRendering;
             }
             break;
         case 'g':
             if (memcmp(data, "grid-column-end", 15) == 0) {
-                return CSSStyleKind::GridColumnEnd;
+                return CSSStyleValuePair::KeyKind::GridColumnEnd;
             }
             if (memcmp(data, "grid-column-gap", 15) == 0) {
-                return CSSStyleKind::GridColumnGap;
+                return CSSStyleValuePair::KeyKind::GridColumnGap;
             }
             break;
         }
@@ -768,33 +768,33 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 't':
             if (memcmp(data, "transform-origin", 16) == 0) {
-                return CSSStyleKind::TransformOrigin;
+                return CSSStyleValuePair::KeyKind::TransformOrigin;
             }
             if (memcmp(data, "transition-delay", 16) == 0) {
-                return CSSStyleKind::TransitionDelay;
+                return CSSStyleValuePair::KeyKind::TransitionDelay;
             }
             break;
 
         case 'b':
             if (memcmp(data, "background-color", 16) == 0) {
-                return CSSStyleKind::BackgroundColor;
+                return CSSStyleValuePair::KeyKind::BackgroundColor;
             }
             if (memcmp(data, "background-image", 16) == 0) {
-                return CSSStyleKind::BackgroundImage;
+                return CSSStyleValuePair::KeyKind::BackgroundImage;
             }
             if (memcmp(data, "border-top-color", 16) == 0) {
-                return CSSStyleKind::BorderTopColor;
+                return CSSStyleValuePair::KeyKind::BorderTopColor;
             }
             if (memcmp(data, "border-top-style", 16) == 0) {
-                return CSSStyleKind::BorderTopStyle;
+                return CSSStyleValuePair::KeyKind::BorderTopStyle;
             }
             if (memcmp(data, "border-top-width", 16) == 0) {
-                return CSSStyleKind::BorderTopWidth;
+                return CSSStyleValuePair::KeyKind::BorderTopWidth;
             }
             break;
         case 'l':
             if (memcmp(data, "list-style-image", 16) == 0) {
-                return CSSStyleKind::ListStyleImage;
+                return CSSStyleValuePair::KeyKind::ListStyleImage;
             }
             break;
         }
@@ -810,29 +810,29 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left-color", 17) == 0) {
-                return CSSStyleKind::BorderLeftColor;
+                return CSSStyleValuePair::KeyKind::BorderLeftColor;
             }
             if (memcmp(data, "border-left-style", 17) == 0) {
-                return CSSStyleKind::BorderLeftStyle;
+                return CSSStyleValuePair::KeyKind::BorderLeftStyle;
             }
             if (memcmp(data, "border-left-width", 17) == 0) {
-                return CSSStyleKind::BorderLeftWidth;
+                return CSSStyleValuePair::KeyKind::BorderLeftWidth;
             }
             if (memcmp(data, "background-repeat", 17) == 0) {
-                return CSSStyleKind::BackgroundRepeat;
+                return CSSStyleValuePair::KeyKind::BackgroundRepeat;
             }
             if (memcmp(data, "background-origin", 17) == 0) {
-                return CSSStyleKind::BackgroundOrigin;
+                return CSSStyleValuePair::KeyKind::BackgroundOrigin;
             }
             break;
         case 'c':
             if (memcmp(data, "counter-increment", 17) == 0) {
-                return CSSStyleKind::CounterIncrement;
+                return CSSStyleValuePair::KeyKind::CounterIncrement;
             }
             break;
         case 'g':
             if (memcmp(data, "grid-column-start", 17) == 0) {
-                return CSSStyleKind::GridColumnStart;
+                return CSSStyleValuePair::KeyKind::GridColumnStart;
             }
             break;
         }
@@ -847,24 +847,24 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-image-slice", 18) == 0) {
-                return CSSStyleKind::BorderImageSlice;
+                return CSSStyleValuePair::KeyKind::BorderImageSlice;
             }
             if (memcmp(data, "border-image-width", 18) == 0) {
-                return CSSStyleKind::BorderImageWidth;
+                return CSSStyleValuePair::KeyKind::BorderImageWidth;
             }
             if (memcmp(data, "border-right-style", 18) == 0) {
-                return CSSStyleKind::BorderRightStyle;
+                return CSSStyleValuePair::KeyKind::BorderRightStyle;
             }
             if (memcmp(data, "border-right-width", 18) == 0) {
-                return CSSStyleKind::BorderRightWidth;
+                return CSSStyleValuePair::KeyKind::BorderRightWidth;
             }
             if (memcmp(data, "border-right-color", 18) == 0) {
-                return CSSStyleKind::BorderRightColor;
+                return CSSStyleValuePair::KeyKind::BorderRightColor;
             }
             break;
         case 'g':
             if (memcmp(data, "grid-template-rows", 18) == 0) {
-                return CSSStyleKind::GridTemplateRows;
+                return CSSStyleValuePair::KeyKind::GridTemplateRows;
             }
             break;
         }
@@ -884,49 +884,49 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background-repeat-x", 19) == 0) {
-                return CSSStyleKind::BackgroundRepeatX;
+                return CSSStyleValuePair::KeyKind::BackgroundRepeatX;
             }
             if (memcmp(data, "background-repeat-y", 19) == 0) {
-                return CSSStyleKind::BackgroundRepeatY;
+                return CSSStyleValuePair::KeyKind::BackgroundRepeatY;
             }
             if (memcmp(data, "background-position", 19) == 0) {
-                return CSSStyleKind::BackgroundPosition;
+                return CSSStyleValuePair::KeyKind::BackgroundPosition;
             }
             if (memcmp(data, "border-image-outset", 19) == 0) {
-                return CSSStyleKind::BorderImageOutset;
+                return CSSStyleValuePair::KeyKind::BorderImageOutset;
             }
             if (memcmp(data, "border-image-repeat", 19) == 0) {
-                return CSSStyleKind::BorderImageRepeat;
+                return CSSStyleValuePair::KeyKind::BorderImageRepeat;
             }
             if (memcmp(data, "border-image-source", 19) == 0) {
-                return CSSStyleKind::BorderImageSource;
+                return CSSStyleValuePair::KeyKind::BorderImageSource;
             }
             if (memcmp(data, "border-bottom-style", 19) == 0) {
-                return CSSStyleKind::BorderBottomStyle;
+                return CSSStyleValuePair::KeyKind::BorderBottomStyle;
             }
             if (memcmp(data, "border-bottom-width", 19) == 0) {
-                return CSSStyleKind::BorderBottomWidth;
+                return CSSStyleValuePair::KeyKind::BorderBottomWidth;
             }
             if (memcmp(data, "border-bottom-color", 19) == 0) {
-                return CSSStyleKind::BorderBottomColor;
+                return CSSStyleValuePair::KeyKind::BorderBottomColor;
             }
             break;
         case 'l':
             if (memcmp(data, "list-style-position", 19) == 0) {
-                return CSSStyleKind::ListStylePosition;
+                return CSSStyleValuePair::KeyKind::ListStylePosition;
             }
             break;
         case 't':
             if (memcmp(data, "transition-property", 19) == 0) {
-                return CSSStyleKind::TransitionProperty;
+                return CSSStyleValuePair::KeyKind::TransitionProperty;
             }
             if (memcmp(data, "transition-duration", 19) == 0) {
-                return CSSStyleKind::TransitionDuration;
+                return CSSStyleValuePair::KeyKind::TransitionDuration;
             }
             break;
         case 'g':
             if (memcmp(data, "grid-template-areas", 19) == 0) {
-                return CSSStyleKind::GridTemplateAreas;
+                return CSSStyleValuePair::KeyKind::GridTemplateAreas;
             }
             break;
         }
@@ -938,12 +938,12 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "box-decoration-break", 20) == 0) {
-                return CSSStyleKind::BoxDecorationBreak;
+                return CSSStyleValuePair::KeyKind::BoxDecorationBreak;
             }
             break;
         case 't':
             if (memcmp(data, "text-decoration-line", 20) == 0) {
-                return CSSStyleKind::TextDecorationLine;
+                return CSSStyleValuePair::KeyKind::TextDecorationLine;
             }
             break;
         }
@@ -958,26 +958,26 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background-position-x", 21) == 0) {
-                return CSSStyleKind::BackgroundPositionX;
+                return CSSStyleValuePair::KeyKind::BackgroundPositionX;
             }
             if (memcmp(data, "background-position-y", 21) == 0) {
-                return CSSStyleKind::BackgroundPositionY;
+                return CSSStyleValuePair::KeyKind::BackgroundPositionY;
             }
             if (memcmp(data, "background-attachment", 21) == 0) {
-                return CSSStyleKind::BackgroundAttachment;
+                return CSSStyleValuePair::KeyKind::BackgroundAttachment;
             }
             break;
         case 'g':
             if (memcmp(data, "grid-template-columns", 21) == 0) {
-                return CSSStyleKind::GridTemplateColumns;
+                return CSSStyleValuePair::KeyKind::GridTemplateColumns;
             }
             break;
         case 't':
             if (memcmp(data, "text-decoration-color", 21) == 0) {
-                return CSSStyleKind::TextDecorationColor;
+                return CSSStyleValuePair::KeyKind::TextDecorationColor;
             }
             if (memcmp(data, "text-decoration-style", 21) == 0) {
-                return CSSStyleKind::TextDecorationStyle;
+                return CSSStyleValuePair::KeyKind::TextDecorationStyle;
             }
             break;
         }
@@ -987,7 +987,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-top-left-radius", 22) == 0) {
-                return CSSStyleKind::BorderTopLeftRadius;
+                return CSSStyleValuePair::KeyKind::BorderTopLeftRadius;
             }
             break;
         }
@@ -998,12 +998,12 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-top-right-radius", 23) == 0) {
-                return CSSStyleKind::BorderTopRightRadius;
+                return CSSStyleValuePair::KeyKind::BorderTopRightRadius;
             }
             break;
         case 't':
             if (memcmp(data, "text-underline-position", 23) == 0) {
-                return CSSStyleKind::TextUnderlinePosition;
+                return CSSStyleValuePair::KeyKind::TextUnderlinePosition;
             }
             break;
         }
@@ -1013,7 +1013,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-bottom-left-radius", 25) == 0) {
-                return CSSStyleKind::BorderBottomLeftRadius;
+                return CSSStyleValuePair::KeyKind::BorderBottomLeftRadius;
             }
             break;
         }
@@ -1024,12 +1024,12 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-bottom-right-radius", 26) == 0) {
-                return CSSStyleKind::BorderBottomRightRadius;
+                return CSSStyleValuePair::KeyKind::BorderBottomRightRadius;
             }
             break;
         case 't':
             if (memcmp(data, "transition-timing-function", 26) == 0) {
-                return CSSStyleKind::TransitionTimingFunction;
+                return CSSStyleValuePair::KeyKind::TransitionTimingFunction;
             }
             break;
         }
@@ -1038,46 +1038,47 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
 
     // https://www.w3.org/TR/css-variables-1/#defining-variables
     if (length >= 2 && data[0] == '-' && data[1] == '-')
-        return CSSStyleKind::CustomProperty;
+        return CSSStyleValuePair::KeyKind::CustomProperty;
 
-    return CSSStyleKind::Unknown;
+    return CSSStyleValuePair::KeyKind::Unknown;
 }
 
-CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
+CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
+                                                   unsigned length)
 {
     switch (length) {
     case 3:
         if (memcmp(data, "all", 3) == 0) {
-            return CSSStyleKind::All;
+            return CSSStyleValuePair::KeyKind::All;
         }
         if (memcmp(data, "top", 3) == 0) {
-            return CSSStyleKind::Top;
+            return CSSStyleValuePair::KeyKind::Top;
         }
         if (memcmp(data, "src", 3) == 0) {
-            return CSSStyleKind::Src;
+            return CSSStyleValuePair::KeyKind::Src;
         }
         break;
     case 4:
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font", 4) == 0) {
-                return CSSStyleKind::Font;
+                return CSSStyleValuePair::KeyKind::Font;
             }
             if (memcmp(data, "flex", 4) == 0) {
-                return CSSStyleKind::Flex;
+                return CSSStyleValuePair::KeyKind::Flex;
             }
             if (memcmp(data, "fill", 4) == 0) {
-                return CSSStyleKind::Fill;
+                return CSSStyleValuePair::KeyKind::Fill;
             }
             break;
         case 'l':
             if (memcmp(data, "left", 4) == 0) {
-                return CSSStyleKind::Left;
+                return CSSStyleValuePair::KeyKind::Left;
             }
             break;
         case 'c':
             if (memcmp(data, "clip", 4) == 0) {
-                return CSSStyleKind::Clip;
+                return CSSStyleValuePair::KeyKind::Clip;
             }
             break;
         }
@@ -1086,30 +1087,30 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "color", 5) == 0) {
-                return CSSStyleKind::Color;
+                return CSSStyleValuePair::KeyKind::Color;
             }
             if (memcmp(data, "clear", 5) == 0) {
-                return CSSStyleKind::Clear;
+                return CSSStyleValuePair::KeyKind::Clear;
             }
             break;
         case 'f':
             if (memcmp(data, "float", 5) == 0) {
-                return CSSStyleKind::Float;
+                return CSSStyleValuePair::KeyKind::Float;
             }
             break;
         case 'w':
             if (memcmp(data, "width", 5) == 0) {
-                return CSSStyleKind::Width;
+                return CSSStyleValuePair::KeyKind::Width;
             }
             break;
         case 'r':
             if (memcmp(data, "right", 5) == 0) {
-                return CSSStyleKind::Right;
+                return CSSStyleValuePair::KeyKind::Right;
             }
             break;
         case 'o':
             if (memcmp(data, "order", 5) == 0) {
-                return CSSStyleKind::Order;
+                return CSSStyleValuePair::KeyKind::Order;
             }
             break;
         }
@@ -1120,37 +1121,37 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             switch (data[1]) {
             case 'o':
                 if (memcmp(data, "bottom", 6) == 0) {
-                    return CSSStyleKind::Bottom;
+                    return CSSStyleValuePair::KeyKind::Bottom;
                 }
                 if (memcmp(data, "border", 6) == 0) {
-                    return CSSStyleKind::Border;
+                    return CSSStyleValuePair::KeyKind::Border;
                 }
                 break;
             }
             break;
         case 'h':
             if (memcmp(data, "height", 6) == 0) {
-                return CSSStyleKind::Height;
+                return CSSStyleValuePair::KeyKind::Height;
             }
             break;
         case 'm':
             if (memcmp(data, "margin", 6) == 0) {
-                return CSSStyleKind::Margin;
+                return CSSStyleValuePair::KeyKind::Margin;
             }
             break;
         case 'z':
             if (memcmp(data, "zIndex", 6) == 0) {
-                return CSSStyleKind::ZIndex;
+                return CSSStyleValuePair::KeyKind::ZIndex;
             }
             break;
         case 'r':
             if (memcmp(data, "resize", 6) == 0) {
-                return CSSStyleKind::Resize;
+                return CSSStyleValuePair::KeyKind::Resize;
             }
             break;
         case 's':
             if (memcmp(data, "stroke", 6) == 0) {
-                return CSSStyleKind::Stroke;
+                return CSSStyleValuePair::KeyKind::Stroke;
             }
             break;
         }
@@ -1159,35 +1160,35 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "content", 7) == 0) {
-                return CSSStyleKind::Content;
+                return CSSStyleValuePair::KeyKind::Content;
             }
             break;
         case 'd':
             if (memcmp(data, "display", 7) == 0) {
-                return CSSStyleKind::Display;
+                return CSSStyleValuePair::KeyKind::Display;
             }
             break;
         case 'h':
             if (memcmp(data, "hyphens", 7) == 0) {
-                return CSSStyleKind::Hyphens;
+                return CSSStyleValuePair::KeyKind::Hyphens;
             }
             break;
         case 'p':
             if (memcmp(data, "padding", 7) == 0) {
-                return CSSStyleKind::Padding;
+                return CSSStyleValuePair::KeyKind::Padding;
             }
             break;
         case 'o':
             if (memcmp(data, "opacity", 7) == 0) {
-                return CSSStyleKind::Opacity;
+                return CSSStyleValuePair::KeyKind::Opacity;
             }
             if (memcmp(data, "outline", 7) == 0) {
-                return CSSStyleKind::Outline;
+                return CSSStyleValuePair::KeyKind::Outline;
             }
             break;
         case 'g':
             if (memcmp(data, "gridGap", 7) == 0) {
-                return CSSStyleKind::GridGap;
+                return CSSStyleValuePair::KeyKind::GridGap;
             }
             break;
         }
@@ -1196,55 +1197,55 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "cssFloat", 8) == 0) {
-                return CSSStyleKind::Float;
+                return CSSStyleValuePair::KeyKind::Float;
             }
             break;
         case 'f':
             if (memcmp(data, "fontSize", 8) == 0) {
-                return CSSStyleKind::FontSize;
+                return CSSStyleValuePair::KeyKind::FontSize;
             }
             if (memcmp(data, "flexWrap", 8) == 0) {
-                return CSSStyleKind::FlexWrap;
+                return CSSStyleValuePair::KeyKind::FlexWrap;
             }
             if (memcmp(data, "flexFlow", 8) == 0) {
-                return CSSStyleKind::FlexFlow;
+                return CSSStyleValuePair::KeyKind::FlexFlow;
             }
             if (memcmp(data, "flexGrow", 8) == 0) {
-                return CSSStyleKind::FlexGrow;
+                return CSSStyleValuePair::KeyKind::FlexGrow;
             }
             if (memcmp(data, "fillRule", 8) == 0) {
-                return CSSStyleKind::FillRule;
+                return CSSStyleValuePair::KeyKind::FillRule;
             }
             break;
         case 'm':
             if (memcmp(data, "maxWidth", 8) == 0) {
-                return CSSStyleKind::MaxWidth;
+                return CSSStyleValuePair::KeyKind::MaxWidth;
             }
             if (memcmp(data, "minWidth", 8) == 0) {
-                return CSSStyleKind::MinWidth;
+                return CSSStyleValuePair::KeyKind::MinWidth;
             }
             if (memcmp(data, "masksize", 8) == 0) {
-                return CSSStyleKind::MaskSize;
+                return CSSStyleValuePair::KeyKind::MaskSize;
             }
             break;
         case 'p':
             if (memcmp(data, "position", 8) == 0) {
-                return CSSStyleKind::Position;
+                return CSSStyleValuePair::KeyKind::Position;
             }
             break;
         case 'o':
             if (memcmp(data, "overflow", 8) == 0) {
-                return CSSStyleKind::Overflow;
+                return CSSStyleValuePair::KeyKind::Overflow;
             }
             break;
         case 'w':
             if (memcmp(data, "wordWrap", 8) == 0) {
-                return CSSStyleKind::WordWrap;
+                return CSSStyleValuePair::KeyKind::WordWrap;
             }
             break;
         case 'g':
             if (memcmp(data, "gridArea", 8) == 0) {
-                return CSSStyleKind::GridArea;
+                return CSSStyleValuePair::KeyKind::GridArea;
             }
             break;
         }
@@ -1253,77 +1254,77 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'a':
             if (memcmp(data, "alignSelf", 9) == 0) {
-                return CSSStyleKind::AlignSelf;
+                return CSSStyleValuePair::KeyKind::AlignSelf;
             }
             break;
         case 'b':
             if (memcmp(data, "borderTop", 9) == 0) {
-                return CSSStyleKind::BorderTop;
+                return CSSStyleValuePair::KeyKind::BorderTop;
             }
             if (memcmp(data, "boxSizing", 9) == 0) {
-                return CSSStyleKind::BoxSizing;
+                return CSSStyleValuePair::KeyKind::BoxSizing;
             }
             if (memcmp(data, "boxShadow", 9) == 0) {
-                return CSSStyleKind::BoxShadow;
+                return CSSStyleValuePair::KeyKind::BoxShadow;
             }
             break;
         case 't':
             if (memcmp(data, "transform", 9) == 0) {
-                return CSSStyleKind::Transform;
+                return CSSStyleValuePair::KeyKind::Transform;
             }
             if (memcmp(data, "textAlign", 9) == 0) {
-                return CSSStyleKind::TextAlign;
+                return CSSStyleValuePair::KeyKind::TextAlign;
             }
             break;
         case 'd':
             if (memcmp(data, "direction", 9) == 0) {
-                return CSSStyleKind::Direction;
+                return CSSStyleValuePair::KeyKind::Direction;
             }
             break;
         case 'f':
             if (memcmp(data, "fontStyle", 9) == 0) {
-                return CSSStyleKind::FontStyle;
+                return CSSStyleValuePair::KeyKind::FontStyle;
             }
             if (memcmp(data, "flexBasis", 9) == 0) {
-                return CSSStyleKind::FlexBasis;
+                return CSSStyleValuePair::KeyKind::FlexBasis;
             }
             break;
         case 'l':
             if (memcmp(data, "listStyle", 9) == 0) {
-                return CSSStyleKind::ListStyle;
+                return CSSStyleValuePair::KeyKind::ListStyle;
             }
             if (memcmp(data, "lineBreak", 9) == 0) {
-                return CSSStyleKind::LineBreak;
+                return CSSStyleValuePair::KeyKind::LineBreak;
             }
             break;
         case 'm':
             if (memcmp(data, "marginTop", 9) == 0) {
-                return CSSStyleKind::MarginTop;
+                return CSSStyleValuePair::KeyKind::MarginTop;
             }
             if (memcmp(data, "maskImage", 9) == 0) {
-                return CSSStyleKind::MaskImage;
+                return CSSStyleValuePair::KeyKind::MaskImage;
             }
             if (memcmp(data, "maxHeight", 9) == 0) {
-                return CSSStyleKind::MaxHeight;
+                return CSSStyleValuePair::KeyKind::MaxHeight;
             }
             if (memcmp(data, "minHeight", 9) == 0) {
-                return CSSStyleKind::MinHeight;
+                return CSSStyleValuePair::KeyKind::MinHeight;
             }
             break;
         case 'o':
             if (memcmp(data, "objectFit", 9) == 0) {
-                return CSSStyleKind::ObjectFit;
+                return CSSStyleValuePair::KeyKind::ObjectFit;
             }
             if (memcmp(data, "overflowX", 9) == 0) {
-                return CSSStyleKind::OverflowX;
+                return CSSStyleValuePair::KeyKind::OverflowX;
             }
             if (memcmp(data, "overflowY", 9) == 0) {
-                return CSSStyleKind::OverflowY;
+                return CSSStyleValuePair::KeyKind::OverflowY;
             }
             break;
         case 'w':
             if (memcmp(data, "wordBreak", 9) == 0) {
-                return CSSStyleKind::WordBreak;
+                return CSSStyleValuePair::KeyKind::WordBreak;
             }
             break;
         }
@@ -1332,88 +1333,88 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'a':
             if (memcmp(data, "alignItems", 10) == 0) {
-                return CSSStyleKind::AlignItems;
+                return CSSStyleValuePair::KeyKind::AlignItems;
             }
             break;
         case 'b':
             if (memcmp(data, "background", 10) == 0) {
-                return CSSStyleKind::Background;
+                return CSSStyleValuePair::KeyKind::Background;
             }
             if (memcmp(data, "borderLeft", 10) == 0) {
-                return CSSStyleKind::BorderLeft;
+                return CSSStyleValuePair::KeyKind::BorderLeft;
             }
             break;
         case 'c':
             if (memcmp(data, "caretColor", 10) == 0) {
-                return CSSStyleKind::CaretColor;
+                return CSSStyleValuePair::KeyKind::CaretColor;
             }
             break;
         case 'e':
             if (memcmp(data, "emptyCells", 10) == 0) {
-                return CSSStyleKind::EmptyCells;
+                return CSSStyleValuePair::KeyKind::EmptyCells;
             }
             break;
         case 'f':
             if (memcmp(data, "fontWeight", 10) == 0) {
-                return CSSStyleKind::FontWeight;
+                return CSSStyleValuePair::KeyKind::FontWeight;
             }
             if (memcmp(data, "fontFamily", 10) == 0) {
-                return CSSStyleKind::FontFamily;
+                return CSSStyleValuePair::KeyKind::FontFamily;
             }
             if (memcmp(data, "flexShrink", 10) == 0) {
-                return CSSStyleKind::FlexShrink;
+                return CSSStyleValuePair::KeyKind::FlexShrink;
             }
             break;
         case 'g':
             if (memcmp(data, "gridRowEnd", 10) == 0) {
-                return CSSStyleKind::GridRowEnd;
+                return CSSStyleValuePair::KeyKind::GridRowEnd;
             }
             if (memcmp(data, "gridRowGap", 10) == 0) {
-                return CSSStyleKind::GridRowGap;
+                return CSSStyleValuePair::KeyKind::GridRowGap;
             }
             break;
         case 'l':
             if (memcmp(data, "lineHeight", 10) == 0) {
-                return CSSStyleKind::LineHeight;
+                return CSSStyleValuePair::KeyKind::LineHeight;
             }
             break;
         case 'm':
             if (memcmp(data, "marginLeft", 10) == 0) {
-                return CSSStyleKind::MarginLeft;
+                return CSSStyleValuePair::KeyKind::MarginLeft;
             }
             break;
         case 'p':
             if (memcmp(data, "paddingTop", 10) == 0) {
-                return CSSStyleKind::PaddingTop;
+                return CSSStyleValuePair::KeyKind::PaddingTop;
             }
             break;
         case 't':
             if (memcmp(data, "transition", 10) == 0) {
-                return CSSStyleKind::Transition;
+                return CSSStyleValuePair::KeyKind::Transition;
             }
             if (memcmp(data, "textIndent", 10) == 0) {
-                return CSSStyleKind::TextIndent;
+                return CSSStyleValuePair::KeyKind::TextIndent;
             }
             if (memcmp(data, "textShadow", 10) == 0) {
-                return CSSStyleKind::TextShadow;
+                return CSSStyleValuePair::KeyKind::TextShadow;
             }
             break;
         case 'u':
             if (memcmp(data, "userSelect", 10) == 0) {
-                return CSSStyleKind::UserSelect;
+                return CSSStyleValuePair::KeyKind::UserSelect;
             }
             break;
         case 'v':
             if (memcmp(data, "visibility", 10) == 0) {
-                return CSSStyleKind::Visibility;
+                return CSSStyleValuePair::KeyKind::Visibility;
             }
             break;
         case 'w':
             if (memcmp(data, "willChange", 10) == 0) {
-                return CSSStyleKind::WillChange;
+                return CSSStyleValuePair::KeyKind::WillChange;
             }
             if (memcmp(data, "whiteSpace", 10) == 0) {
-                return CSSStyleKind::WhiteSpace;
+                return CSSStyleValuePair::KeyKind::WhiteSpace;
             }
             break;
         }
@@ -1422,62 +1423,62 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "borderImage", 11) == 0) {
-                return CSSStyleKind::BorderImage;
+                return CSSStyleValuePair::KeyKind::BorderImage;
             }
             if (memcmp(data, "borderStyle", 11) == 0) {
-                return CSSStyleKind::BorderStyle;
+                return CSSStyleValuePair::KeyKind::BorderStyle;
             }
             if (memcmp(data, "borderWidth", 11) == 0) {
-                return CSSStyleKind::BorderWidth;
+                return CSSStyleValuePair::KeyKind::BorderWidth;
             }
             if (memcmp(data, "borderColor", 11) == 0) {
-                return CSSStyleKind::BorderColor;
+                return CSSStyleValuePair::KeyKind::BorderColor;
             }
             if (memcmp(data, "borderRight", 11) == 0) {
-                return CSSStyleKind::BorderRight;
+                return CSSStyleValuePair::KeyKind::BorderRight;
             }
             break;
         case 'c':
             if (memcmp(data, "captionSide", 11) == 0) {
-                return CSSStyleKind::CaptionSide;
+                return CSSStyleValuePair::KeyKind::CaptionSide;
             }
             break;
         case 'p':
             if (memcmp(data, "paddingLeft", 11) == 0) {
-                return CSSStyleKind::PaddingLeft;
+                return CSSStyleValuePair::KeyKind::PaddingLeft;
             }
             break;
         case 'm':
             if (memcmp(data, "marginRight", 11) == 0) {
-                return CSSStyleKind::MarginRight;
+                return CSSStyleValuePair::KeyKind::MarginRight;
             }
             break;
         case 't':
             if (memcmp(data, "tableLayout", 11) == 0) {
-                return CSSStyleKind::TableLayout;
+                return CSSStyleValuePair::KeyKind::TableLayout;
             }
             break;
         case 'u':
             if (memcmp(data, "unicodeBidi", 11) == 0) {
-                return CSSStyleKind::UnicodeBidi;
+                return CSSStyleValuePair::KeyKind::UnicodeBidi;
             }
             break;
         case 'f':
             if (memcmp(data, "fillOpacity", 11) == 0) {
-                return CSSStyleKind::FillOpacity;
+                return CSSStyleValuePair::KeyKind::FillOpacity;
             }
             if (memcmp(data, "fontKerning", 11) == 0) {
-                return CSSStyleKind::FontKerning;
+                return CSSStyleValuePair::KeyKind::FontKerning;
             }
             break;
         case 's':
             if (memcmp(data, "strokeWidth", 11) == 0) {
-                return CSSStyleKind::StrokeWidth;
+                return CSSStyleValuePair::KeyKind::StrokeWidth;
             }
             break;
         case 'w':
             if (memcmp(data, "wordSpacing", 11) == 0) {
-                return CSSStyleKind::WordSpacing;
+                return CSSStyleValuePair::KeyKind::WordSpacing;
             }
             break;
         }
@@ -1486,54 +1487,54 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'a':
             if (memcmp(data, "alignContent", 12) == 0) {
-                return CSSStyleKind::AlignContent;
+                return CSSStyleValuePair::KeyKind::AlignContent;
             }
             break;
         case 'p':
             if (memcmp(data, "paddingRight", 12) == 0) {
-                return CSSStyleKind::PaddingRight;
+                return CSSStyleValuePair::KeyKind::PaddingRight;
             }
             break;
         case 'm':
             if (memcmp(data, "marginBottom", 12) == 0) {
-                return CSSStyleKind::MarginBottom;
+                return CSSStyleValuePair::KeyKind::MarginBottom;
             }
             break;
         case 'b':
             if (memcmp(data, "borderBottom", 12) == 0) {
-                return CSSStyleKind::BorderBottom;
+                return CSSStyleValuePair::KeyKind::BorderBottom;
             }
             if (memcmp(data, "borderRadius", 12) == 0) {
-                return CSSStyleKind::BorderRadius;
+                return CSSStyleValuePair::KeyKind::BorderRadius;
             }
             break;
         case 'c':
             if (memcmp(data, "counterReset", 12) == 0) {
-                return CSSStyleKind::CounterReset;
+                return CSSStyleValuePair::KeyKind::CounterReset;
             }
             break;
         case 'o':
             if (memcmp(data, "outlineColor", 12) == 0) {
-                return CSSStyleKind::OutlineColor;
+                return CSSStyleValuePair::KeyKind::OutlineColor;
             }
             if (memcmp(data, "outlineWidth", 12) == 0) {
-                return CSSStyleKind::OutlineWidth;
+                return CSSStyleValuePair::KeyKind::OutlineWidth;
             }
             if (memcmp(data, "outlineStyle", 12) == 0) {
-                return CSSStyleKind::OutlineStyle;
+                return CSSStyleValuePair::KeyKind::OutlineStyle;
             }
             if (memcmp(data, "overflowWrap", 12) == 0) {
-                return CSSStyleKind::OverflowWrap;
+                return CSSStyleValuePair::KeyKind::OverflowWrap;
             }
             break;
         case 't':
             if (memcmp(data, "textOverflow", 12) == 0) {
-                return CSSStyleKind::TextOverflow;
+                return CSSStyleValuePair::KeyKind::TextOverflow;
             }
             break;
         case 'g':
             if (memcmp(data, "gridRowStart", 12) == 0) {
-                return CSSStyleKind::GridRowStart;
+                return CSSStyleValuePair::KeyKind::GridRowStart;
             }
             break;
         }
@@ -1542,51 +1543,51 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "borderSpacing", 13) == 0) {
-                return CSSStyleKind::BorderSpacing;
+                return CSSStyleValuePair::KeyKind::BorderSpacing;
             }
             break;
         case 'f':
             if (memcmp(data, "flexDirection", 13) == 0) {
-                return CSSStyleKind::FlexDirection;
+                return CSSStyleValuePair::KeyKind::FlexDirection;
             }
             break;
         case 'v':
             if (memcmp(data, "verticalAlign", 13) == 0) {
-                return CSSStyleKind::VerticalAlign;
+                return CSSStyleValuePair::KeyKind::VerticalAlign;
             }
             break;
         case 'p':
             if (memcmp(data, "paddingBottom", 13) == 0) {
-                return CSSStyleKind::PaddingBottom;
+                return CSSStyleValuePair::KeyKind::PaddingBottom;
             }
             if (memcmp(data, "pointerEvents", 13) == 0) {
-                return CSSStyleKind::PointerEvents;
+                return CSSStyleValuePair::KeyKind::PointerEvents;
             }
             break;
         case 'o':
             if (memcmp(data, "outlineOffset", 13) == 0) {
-                return CSSStyleKind::OutlineOffset;
+                return CSSStyleValuePair::KeyKind::OutlineOffset;
             }
             break;
         case 't':
             if (memcmp(data, "textTransform", 13) == 0) {
-                return CSSStyleKind::TextTransform;
+                return CSSStyleValuePair::KeyKind::TextTransform;
             }
             break;
         case 'l':
             if (memcmp(data, "listStyleType", 13) == 0) {
-                return CSSStyleKind::ListStyleType;
+                return CSSStyleValuePair::KeyKind::ListStyleType;
             }
             if (memcmp(data, "letterSpacing", 13) == 0) {
-                return CSSStyleKind::LetterSpacing;
+                return CSSStyleValuePair::KeyKind::LetterSpacing;
             }
             break;
         case 'g':
             if (memcmp(data, "gridColumnEnd", 13) == 0) {
-                return CSSStyleKind::GridColumnEnd;
+                return CSSStyleValuePair::KeyKind::GridColumnEnd;
             }
             if (memcmp(data, "gridColumnGap", 13) == 0) {
-                return CSSStyleKind::GridColumnGap;
+                return CSSStyleValuePair::KeyKind::GridColumnGap;
             }
             break;
         }
@@ -1595,47 +1596,47 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'j':
             if (memcmp(data, "justifyContent", 14) == 0) {
-                return CSSStyleKind::JustifyContent;
+                return CSSStyleValuePair::KeyKind::JustifyContent;
             }
             break;
         case 'l':
             if (memcmp(data, "listStyleImage", 14) == 0) {
-                return CSSStyleKind::ListStyleImage;
+                return CSSStyleValuePair::KeyKind::ListStyleImage;
             }
             break;
         case 't':
             if (memcmp(data, "textDecoration", 14) == 0) {
-                return CSSStyleKind::TextDecoration;
+                return CSSStyleValuePair::KeyKind::TextDecoration;
             }
             break;
         case 'b':
             if (memcmp(data, "backgroundSize", 14) == 0) {
-                return CSSStyleKind::BackgroundSize;
+                return CSSStyleValuePair::KeyKind::BackgroundSize;
             }
             if (memcmp(data, "backgroundClip", 14) == 0) {
-                return CSSStyleKind::BackgroundClip;
+                return CSSStyleValuePair::KeyKind::BackgroundClip;
             }
             if (memcmp(data, "borderTopColor", 14) == 0) {
-                return CSSStyleKind::BorderTopColor;
+                return CSSStyleValuePair::KeyKind::BorderTopColor;
             }
             if (memcmp(data, "borderTopStyle", 14) == 0) {
-                return CSSStyleKind::BorderTopStyle;
+                return CSSStyleValuePair::KeyKind::BorderTopStyle;
             }
             if (memcmp(data, "borderTopWidth", 14) == 0) {
-                return CSSStyleKind::BorderTopWidth;
+                return CSSStyleValuePair::KeyKind::BorderTopWidth;
             }
             if (memcmp(data, "borderCollapse", 14) == 0) {
-                return CSSStyleKind::BorderCollapse;
+                return CSSStyleValuePair::KeyKind::BorderCollapse;
             }
             break;
         case 'o':
             if (memcmp(data, "objectPosition", 14) == 0) {
-                return CSSStyleKind::ObjectPosition;
+                return CSSStyleValuePair::KeyKind::ObjectPosition;
             }
             break;
         case 'i':
             if (memcmp(data, "imageRendering", 14) == 0) {
-                return CSSStyleKind::ImageRendering;
+                return CSSStyleValuePair::KeyKind::ImageRendering;
             }
             break;
         }
@@ -1644,32 +1645,32 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 't':
             if (memcmp(data, "transformOrigin", 15) == 0) {
-                return CSSStyleKind::TransformOrigin;
+                return CSSStyleValuePair::KeyKind::TransformOrigin;
             }
             if (memcmp(data, "transitionDelay", 15) == 0) {
-                return CSSStyleKind::TransitionDelay;
+                return CSSStyleValuePair::KeyKind::TransitionDelay;
             }
             break;
         case 'b':
             if (memcmp(data, "backgroundColor", 15) == 0) {
-                return CSSStyleKind::BackgroundColor;
+                return CSSStyleValuePair::KeyKind::BackgroundColor;
             }
             if (memcmp(data, "backgroundImage", 15) == 0) {
-                return CSSStyleKind::BackgroundImage;
+                return CSSStyleValuePair::KeyKind::BackgroundImage;
             }
             if (memcmp(data, "borderLeftColor", 15) == 0) {
-                return CSSStyleKind::BorderLeftColor;
+                return CSSStyleValuePair::KeyKind::BorderLeftColor;
             }
             if (memcmp(data, "borderLeftStyle", 15) == 0) {
-                return CSSStyleKind::BorderLeftStyle;
+                return CSSStyleValuePair::KeyKind::BorderLeftStyle;
             }
             if (memcmp(data, "borderLeftWidth", 15) == 0) {
-                return CSSStyleKind::BorderLeftWidth;
+                return CSSStyleValuePair::KeyKind::BorderLeftWidth;
             }
             break;
         case 'g':
             if (memcmp(data, "gridColumnStart", 15) == 0) {
-                return CSSStyleKind::GridColumnStart;
+                return CSSStyleValuePair::KeyKind::GridColumnStart;
             }
             break;
         }
@@ -1678,35 +1679,35 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "backgroundRepeat", 16) == 0) {
-                return CSSStyleKind::BackgroundRepeat;
+                return CSSStyleValuePair::KeyKind::BackgroundRepeat;
             }
             if (memcmp(data, "backgroundOrigin", 16) == 0) {
-                return CSSStyleKind::BackgroundOrigin;
+                return CSSStyleValuePair::KeyKind::BackgroundOrigin;
             }
             if (memcmp(data, "borderImageSlice", 16) == 0) {
-                return CSSStyleKind::BorderImageSlice;
+                return CSSStyleValuePair::KeyKind::BorderImageSlice;
             }
             if (memcmp(data, "borderImageWidth", 16) == 0) {
-                return CSSStyleKind::BorderImageWidth;
+                return CSSStyleValuePair::KeyKind::BorderImageWidth;
             }
             if (memcmp(data, "borderRightStyle", 16) == 0) {
-                return CSSStyleKind::BorderRightStyle;
+                return CSSStyleValuePair::KeyKind::BorderRightStyle;
             }
             if (memcmp(data, "borderRightWidth", 16) == 0) {
-                return CSSStyleKind::BorderRightWidth;
+                return CSSStyleValuePair::KeyKind::BorderRightWidth;
             }
             if (memcmp(data, "borderRightColor", 16) == 0) {
-                return CSSStyleKind::BorderRightColor;
+                return CSSStyleValuePair::KeyKind::BorderRightColor;
             }
             break;
         case 'c':
             if (memcmp(data, "counterIncrement", 16) == 0) {
-                return CSSStyleKind::CounterIncrement;
+                return CSSStyleValuePair::KeyKind::CounterIncrement;
             }
             break;
         case 'g':
             if (memcmp(data, "gridTemplateRows", 16) == 0) {
-                return CSSStyleKind::GridTemplateRows;
+                return CSSStyleValuePair::KeyKind::GridTemplateRows;
             }
             break;
         }
@@ -1715,38 +1716,38 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "backgroundRepeatX", 17) == 0) {
-                return CSSStyleKind::BackgroundRepeatX;
+                return CSSStyleValuePair::KeyKind::BackgroundRepeatX;
             }
             if (memcmp(data, "backgroundRepeatY", 17) == 0) {
-                return CSSStyleKind::BackgroundRepeatY;
+                return CSSStyleValuePair::KeyKind::BackgroundRepeatY;
             }
             if (memcmp(data, "borderImageOutset", 17) == 0) {
-                return CSSStyleKind::BorderImageOutset;
+                return CSSStyleValuePair::KeyKind::BorderImageOutset;
             }
             if (memcmp(data, "borderImageRepeat", 17) == 0) {
-                return CSSStyleKind::BorderImageRepeat;
+                return CSSStyleValuePair::KeyKind::BorderImageRepeat;
             }
             if (memcmp(data, "borderImageSource", 17) == 0) {
-                return CSSStyleKind::BorderImageSource;
+                return CSSStyleValuePair::KeyKind::BorderImageSource;
             }
             if (memcmp(data, "borderBottomStyle", 17) == 0) {
-                return CSSStyleKind::BorderBottomStyle;
+                return CSSStyleValuePair::KeyKind::BorderBottomStyle;
             }
             if (memcmp(data, "borderBottomWidth", 17) == 0) {
-                return CSSStyleKind::BorderBottomWidth;
+                return CSSStyleValuePair::KeyKind::BorderBottomWidth;
             }
             if (memcmp(data, "borderBottomColor", 17) == 0) {
-                return CSSStyleKind::BorderBottomColor;
+                return CSSStyleValuePair::KeyKind::BorderBottomColor;
             }
             break;
         case 'l':
             if (memcmp(data, "listStylePosition", 17) == 0) {
-                return CSSStyleKind::ListStylePosition;
+                return CSSStyleValuePair::KeyKind::ListStylePosition;
             }
             break;
         case 'g':
             if (memcmp(data, "gridTemplateAreas", 17) == 0) {
-                return CSSStyleKind::GridTemplateAreas;
+                return CSSStyleValuePair::KeyKind::GridTemplateAreas;
             }
             break;
         }
@@ -1755,21 +1756,21 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "backgroundPosition", 18) == 0) {
-                return CSSStyleKind::BackgroundPosition;
+                return CSSStyleValuePair::KeyKind::BackgroundPosition;
             }
             if (memcmp(data, "boxDecorationBreak", 18) == 0) {
-                return CSSStyleKind::BoxDecorationBreak;
+                return CSSStyleValuePair::KeyKind::BoxDecorationBreak;
             }
             break;
         case 't':
             if (memcmp(data, "transitionProperty", 18) == 0) {
-                return CSSStyleKind::TransitionProperty;
+                return CSSStyleValuePair::KeyKind::TransitionProperty;
             }
             if (memcmp(data, "transitionDuration", 18) == 0) {
-                return CSSStyleKind::TransitionDuration;
+                return CSSStyleValuePair::KeyKind::TransitionDuration;
             }
             if (memcmp(data, "textDecorationLine", 18) == 0) {
-                return CSSStyleKind::TextDecorationLine;
+                return CSSStyleValuePair::KeyKind::TextDecorationLine;
             }
             break;
         }
@@ -1778,26 +1779,26 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "backgroundPositionX", 19) == 0) {
-                return CSSStyleKind::BackgroundPositionX;
+                return CSSStyleValuePair::KeyKind::BackgroundPositionX;
             }
             if (memcmp(data, "backgroundPositionY", 19) == 0) {
-                return CSSStyleKind::BackgroundPositionY;
+                return CSSStyleValuePair::KeyKind::BackgroundPositionY;
             }
             if (memcmp(data, "borderTopLeftRadius", 19) == 0) {
-                return CSSStyleKind::BorderTopLeftRadius;
+                return CSSStyleValuePair::KeyKind::BorderTopLeftRadius;
             }
             break;
         case 't':
             if (memcmp(data, "textDecorationColor", 19) == 0) {
-                return CSSStyleKind::TextDecorationColor;
+                return CSSStyleValuePair::KeyKind::TextDecorationColor;
             }
             if (memcmp(data, "textDecorationStyle", 19) == 0) {
-                return CSSStyleKind::TextDecorationStyle;
+                return CSSStyleValuePair::KeyKind::TextDecorationStyle;
             }
             break;
         case 'g':
             if (memcmp(data, "gridTemplateColumns", 19) == 0) {
-                return CSSStyleKind::GridTemplateColumns;
+                return CSSStyleValuePair::KeyKind::GridTemplateColumns;
             }
         }
         break;
@@ -1805,10 +1806,10 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "borderTopRightRadius", 20) == 0) {
-                return CSSStyleKind::BorderTopRightRadius;
+                return CSSStyleValuePair::KeyKind::BorderTopRightRadius;
             }
             if (memcmp(data, "backgroundAttachment", 20) == 0) {
-                return CSSStyleKind::BackgroundAttachment;
+                return CSSStyleValuePair::KeyKind::BackgroundAttachment;
             }
             break;
         }
@@ -1817,7 +1818,7 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 't':
             if (memcmp(data, "textUnderlinePosition", 21) == 0) {
-                return CSSStyleKind::TextUnderlinePosition;
+                return CSSStyleValuePair::KeyKind::TextUnderlinePosition;
             }
             break;
         }
@@ -1826,7 +1827,7 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "borderBottomLeftRadius", 22) == 0) {
-                return CSSStyleKind::BorderBottomLeftRadius;
+                return CSSStyleValuePair::KeyKind::BorderBottomLeftRadius;
             }
             break;
         }
@@ -1835,7 +1836,7 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "borderBottomRightRadius", 23) == 0) {
-                return CSSStyleKind::BorderBottomRightRadius;
+                return CSSStyleValuePair::KeyKind::BorderBottomRightRadius;
             }
             break;
         }
@@ -1844,14 +1845,14 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         switch (data[0]) {
         case 't':
             if (memcmp(data, "transitionTimingFunction", 24) == 0) {
-                return CSSStyleKind::TransitionTimingFunction;
+                return CSSStyleValuePair::KeyKind::TransitionTimingFunction;
             }
             break;
         }
         break;
     }
 
-    return CSSStyleKind::Unknown;
+    return CSSStyleValuePair::KeyKind::Unknown;
 }
 
 UnitType lookupUnitType(const char* data, unsigned length)

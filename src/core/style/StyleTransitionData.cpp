@@ -25,7 +25,7 @@
 
 namespace StarFish {
 StyleTransitionLayer::StyleTransitionLayer()
-    : m_property(TransitionPropertyValue::TransitionPropertyAllValue)
+    : m_property(CSSStyleValuePair::KeyKind::All)
     , m_timingFunction(StyleTransitionData::defaultTimingFunction())
     , m_duration(0)
     , m_delay(0)

@@ -1914,10 +1914,10 @@ public:
         return 0;
     }
 
-    TransitionPropertyValue transitionProperty(size_t layer = 0)
+    CSSStyleValuePair::KeyKind transitionProperty(size_t layer = 0)
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
-            return TransitionPropertyValue::TransitionPropertyAllValue;
+            return CSSStyleValuePair::KeyKind::All;
         }
 
         StyleTransitionData* transition = m_rareComputedStyleData.transition();
@@ -1925,10 +1925,10 @@ public:
             return transition->property(layer);
         }
 
-        return TransitionPropertyValue::TransitionPropertyAllValue;
+        return CSSStyleValuePair::KeyKind::All;
     }
 
-    void setTransitionProperty(TransitionPropertyValue property,
+    void setTransitionProperty(CSSStyleValuePair::KeyKind property,
                                size_t layer = 0)
     {
         m_rareComputedStyleData.ensureTransition()->setProperty(property,

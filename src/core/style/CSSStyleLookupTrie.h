@@ -24,21 +24,12 @@
 
 namespace StarFish {
 
-#define DEFINE_CSS_STYLE_KIND(name, nameLower, lowerCaseName) name,
-
-enum class CSSStyleKind : int {
-    Unknown,
-    CustomProperty,
-    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_CSS_STYLE_KIND)
-};
-
-#undef DEFINE_CSS_STYLE_KIND
-
 // z-index, font-size...
-CSSStyleKind lookupCSSStyle(const char* data, unsigned length);
+CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length);
 
 // zIndex, fontSize...
-CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length);
+CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
+                                                   unsigned length);
 
 UnitType lookupUnitType(const char* data, unsigned length);
 

@@ -54,6 +54,7 @@
 #include "core/style/CSSCounterFunction.h"
 #include "core/style/CSSGradientValue.h"
 #include "core/style/CSSParser.h"
+#include "core/style/CSSProperty.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleLookupTrie.h"
 #include "core/style/CSSStyleSheet.h"
@@ -184,114 +185,6 @@ static Nullable<Length> convertValueToLength(CSSStyleValuePair::ValueKind kind,
             return Nullable<Length>();
         }
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-String* transitionPropertyValueToString(TransitionPropertyValue val)
-{
-    switch (val) {
-    case TransitionPropertyAllValue:
-        return String::createASCIIString("all");
-    case TransitionPropertyBackgroundValue:
-        return String::createASCIIString("background");
-    case TransitionPropertyBackgroundColorValue:
-        return String::createASCIIString("background-color");
-    case TransitionPropertyBackgroundPositionValue:
-        return String::createASCIIString("background-position");
-    case TransitionPropertyBackgroundSizeValue:
-        return String::createASCIIString("background-size");
-    case TransitionPropertyBorderBottomColorValue:
-        return String::createASCIIString("border-bottom-color");
-    case TransitionPropertyBorderBottomWidthValue:
-        return String::createASCIIString("border-bottom-width");
-    case TransitionPropertyBorderColorValue:
-        return String::createASCIIString("border-color");
-    case TransitionPropertyBorderLeftColorValue:
-        return String::createASCIIString("border-left-color");
-    case TransitionPropertyBorderLeftWidthValue:
-        return String::createASCIIString("border-left-width");
-    case TransitionPropertyBorderRightColorValue:
-        return String::createASCIIString("border-right-color");
-    case TransitionPropertyBorderRightWidthValue:
-        return String::createASCIIString("border-right-width");
-    case TransitionPropertyBorderSpacingValue:
-        return String::createASCIIString("border-spacing");
-    case TransitionPropertyBorderTopColorValue:
-        return String::createASCIIString("border-top-color");
-    case TransitionPropertyBorderTopWidthValue:
-        return String::createASCIIString("border-top-width");
-    case TransitionPropertyBottomValue:
-        return String::createASCIIString("bottom");
-    case TransitionPropertyClipValue:
-        return String::createASCIIString("clip");
-    case TransitionPropertyColorValue:
-        return String::createASCIIString("color");
-    case TransitionPropertyFontSizeValue:
-        return String::createASCIIString("font-size");
-    case TransitionPropertyFontWeightValue:
-        return String::createASCIIString("font-weight");
-    case TransitionPropertyHeightValue:
-        return String::createASCIIString("height");
-    case TransitionPropertyLeftValue:
-        return String::createASCIIString("left");
-    case TransitionPropertyLetterSpacingValue:
-        return String::createASCIIString("letter-spacing");
-    case TransitionPropertyLineHeightValue:
-        return String::createASCIIString("line-height");
-    case TransitionPropertyMarginBottomValue:
-        return String::createASCIIString("margin-bottom");
-    case TransitionPropertyMarginLeftValue:
-        return String::createASCIIString("margin-left");
-    case TransitionPropertyMarginRightValue:
-        return String::createASCIIString("margin-right");
-    case TransitionPropertyMarginTopValue:
-        return String::createASCIIString("margin-top");
-    case TransitionPropertyMaxHeightValue:
-        return String::createASCIIString("max-height");
-    case TransitionPropertyMaxWidthValue:
-        return String::createASCIIString("max-width");
-    case TransitionPropertyMinHeightValue:
-        return String::createASCIIString("min-height");
-    case TransitionPropertyMinWidthValue:
-        return String::createASCIIString("min-width");
-    case TransitionPropertyOpacityValue:
-        return String::createASCIIString("opacity");
-    case TransitionPropertyOutlineColorValue:
-        return String::createASCIIString("outline-color");
-    case TransitionPropertyOutlineWidthValue:
-        return String::createASCIIString("outline-width");
-    case TransitionPropertyPaddingBottomValue:
-        return String::createASCIIString("padding-bottom");
-    case TransitionPropertyPaddingLeftValue:
-        return String::createASCIIString("padding-left");
-    case TransitionPropertyPaddingRightValue:
-        return String::createASCIIString("padding-right");
-    case TransitionPropertyPaddingTopValue:
-        return String::createASCIIString("padding-top");
-    case TransitionPropertyRightValue:
-        return String::createASCIIString("right");
-    case TransitionPropertyTextIndentValue:
-        return String::createASCIIString("text-indent");
-    case TransitionPropertyTextShadowValue:
-        return String::createASCIIString("text-shadow");
-    case TransitionPropertyTransformValue:
-        return String::createASCIIString("transform");
-    case TransitionPropertyTransformOriginValue:
-        return String::createASCIIString("transform-origin");
-    case TransitionPropertyTopValue:
-        return String::createASCIIString("top");
-    case TransitionPropertyVerticalAlignValue:
-        return String::createASCIIString("vertical-align");
-    case TransitionPropertyVisibilityValue:
-        return String::createASCIIString("visibility");
-    case TransitionPropertyWidthValue:
-        return String::createASCIIString("width");
-    case TransitionPropertyWordSpacingValue:
-        return String::createASCIIString("word-spacing");
-    case TransitionPropertyZIndexValue:
-        return String::createASCIIString("z-index");
-    default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
@@ -1460,8 +1353,8 @@ String* CSSStyleValuePair::toString() const
     case CSSStyleValuePair::ValueKind::ValuePairKind: {
         return pairValue()->toString();
     }
-    case CSSStyleValuePair::ValueKind::TransitionPropertyValueKind:
-        return transitionPropertyValueToString(transitionPropertyValue());
+    case CSSStyleValuePair::ValueKind::CSSPropertyNameValueKind:
+        return CSSPropertyHelper::toCamelCaseGCString(cssPropertyNameValue());
     case CSSStyleValuePair::ValueKind::Time:
         return timeValue().toString();
     case CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind:
@@ -1907,173 +1800,13 @@ bool StyleResolver::anyAttributeMatches(Element* element,
 bool CSSStyleValuePair::updateValueUnitTransitionProperty(
     const CSSTokenValue& value)
 {
-    m_valueKind = CSSStyleValuePair::ValueKind::TransitionPropertyValueKind;
-    if (STRING_VALUE_IS_STRING("all")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyAllValue;
-    } else if (STRING_VALUE_IS_STRING("background")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBackgroundValue;
-    } else if (STRING_VALUE_IS_STRING("background-color")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBackgroundColorValue;
-    } else if (STRING_VALUE_IS_STRING("background-position")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBackgroundPositionValue;
-    } else if (STRING_VALUE_IS_STRING("background-size")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBackgroundSizeValue;
-    } else if (STRING_VALUE_IS_STRING("border-bottom")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderBottomValue;
-    } else if (STRING_VALUE_IS_STRING("border-bottom-color")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderBottomColorValue;
-    } else if (STRING_VALUE_IS_STRING("border-bottom-width")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderBottomWidthValue;
-    } else if (STRING_VALUE_IS_STRING("border-color")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderColorValue;
-    } else if (STRING_VALUE_IS_STRING("border-left")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderLeftValue;
-    } else if (STRING_VALUE_IS_STRING("border-left-color")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderLeftColorValue;
-    } else if (STRING_VALUE_IS_STRING("border-left-width")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderLeftWidthValue;
-    } else if (STRING_VALUE_IS_STRING("border-right")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderRightValue;
-    } else if (STRING_VALUE_IS_STRING("border-right-color")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderRightColorValue;
-    } else if (STRING_VALUE_IS_STRING("border-right-width")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderRightWidthValue;
-    } else if (STRING_VALUE_IS_STRING("border-spacing")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderSpacingValue;
-    } else if (STRING_VALUE_IS_STRING("border-top")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderTopValue;
-    } else if (STRING_VALUE_IS_STRING("border-top-color")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderTopColorValue;
-    } else if (STRING_VALUE_IS_STRING("border-top-width")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBorderTopWidthValue;
-    } else if (STRING_VALUE_IS_STRING("bottom")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyBottomValue;
-    } else if (STRING_VALUE_IS_STRING("clip")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyClipValue;
-    } else if (STRING_VALUE_IS_STRING("color")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyColorValue;
-    } else if (STRING_VALUE_IS_STRING("font-size")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyFontSizeValue;
-    } else if (STRING_VALUE_IS_STRING("font-weight")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("height")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyHeightValue;
-    } else if (STRING_VALUE_IS_STRING("left")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyLeftValue;
-    } else if (STRING_VALUE_IS_STRING("letter-spacing")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyLetterSpacingValue;
-    } else if (STRING_VALUE_IS_STRING("line-height")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyLineHeightValue;
-    } else if (STRING_VALUE_IS_STRING("margin-bottom")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyMarginBottomValue;
-    } else if (STRING_VALUE_IS_STRING("margin-left")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyMarginLeftValue;
-    } else if (STRING_VALUE_IS_STRING("margin-right")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyMarginRightValue;
-    } else if (STRING_VALUE_IS_STRING("margin-top")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyMarginTopValue;
-    } else if (STRING_VALUE_IS_STRING("max-height")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyMaxHeightValue;
-    } else if (STRING_VALUE_IS_STRING("max-width")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyMaxWidthValue;
-    } else if (STRING_VALUE_IS_STRING("min-height")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyMinHeightValue;
-    } else if (STRING_VALUE_IS_STRING("min-width")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyMinWidthValue;
-    } else if (STRING_VALUE_IS_STRING("opacity")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyOpacityValue;
-    } else if (STRING_VALUE_IS_STRING("outline-color")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyOutlineColorValue;
-    } else if (STRING_VALUE_IS_STRING("outline-width")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyOutlineWidthValue;
-    } else if (STRING_VALUE_IS_STRING("padding-bottom")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyPaddingBottomValue;
-    } else if (STRING_VALUE_IS_STRING("padding-left")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyPaddingLeftValue;
-    } else if (STRING_VALUE_IS_STRING("padding-right")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyPaddingRightValue;
-    } else if (STRING_VALUE_IS_STRING("padding-top")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyPaddingTopValue;
-    } else if (STRING_VALUE_IS_STRING("right")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyRightValue;
-    } else if (STRING_VALUE_IS_STRING("text-indent")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyTextIndentValue;
-    } else if (STRING_VALUE_IS_STRING("text-shadow")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyTextShadowValue;
-    } else if (STRING_VALUE_IS_STRING("transform")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyTransformValue;
-    } else if (STRING_VALUE_IS_STRING("transform-origin")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyTransformOriginValue;
-    } else if (STRING_VALUE_IS_STRING("top")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyTopValue;
-    } else if (STRING_VALUE_IS_STRING("vertical-align")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyVerticalAlignValue;
-    } else if (STRING_VALUE_IS_STRING("visibility")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyVisibilityValue;
-    } else if (STRING_VALUE_IS_STRING("width")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyWidthValue;
-    } else if (STRING_VALUE_IS_STRING("word-spacing")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyWordSpacingValue;
-    } else if (STRING_VALUE_IS_STRING("z-index")) {
-        m_value.m_transitionProperty =
-            TransitionPropertyValue::TransitionPropertyZIndexValue;
-    } else {
-        return false;
+    CSSStyleValuePair::KeyKind kind =
+        lookupCSSStyleCamelCase(value.data(), value.length());
+    if (CSSPropertyHelper::isAnimatable(kind)) {
+        setCSSPropertyNameValue(kind);
+        return true;
     }
-    return true;
+    return false;
 }
 
 StyleResolver::StyleResolver(Document* document)
@@ -2144,16 +1877,17 @@ void StyleResolver::applyAllProperty(
     ComputedStyle*& style, ComputedStyle* parentStyle, bool isImportant)
 {
     GCAtomicVector<CSSStyleValuePair> cssValues;
-    CSSStyleKind kind;
-#define ADD_CSS_VALUE_PAIR(Name, name, cssname)                         \
-    kind = lookupCSSStyle(cssname, strlen(cssname));                    \
-    if (kind != CSSStyleKind::All && kind != CSSStyleKind::Direction && \
-        kind != CSSStyleKind::UnicodeBidi) {                            \
-        CSSStyleValuePair p;                                            \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::Name);                 \
-        p.setValueKind(valueKind);                                      \
-        p.setFlagImportant(isImportant);                                \
-        cssValues.push_back(p);                                         \
+    CSSStyleValuePair::KeyKind kind;
+#define ADD_CSS_VALUE_PAIR(Name, name, cssname)            \
+    kind = lookupCSSStyle(cssname, strlen(cssname));       \
+    if (kind != CSSStyleValuePair::KeyKind::All &&         \
+        kind != CSSStyleValuePair::KeyKind::Direction &&   \
+        kind != CSSStyleValuePair::KeyKind::UnicodeBidi) { \
+        CSSStyleValuePair p;                               \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Name);    \
+        p.setValueKind(valueKind);                         \
+        p.setFlagImportant(isImportant);                   \
+        cssValues.push_back(p);                            \
     }
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_VALUE_PAIR)
 #undef ADD_CSS_VALUE_PAIR
@@ -2182,14 +1916,14 @@ static void applyTransitionProperty(ComputedStyle* style,
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
-        style->setTransitionProperty(TransitionPropertyAllValue, layer);
+        style->setTransitionProperty(CSSStyleValuePair::KeyKind::All, layer);
         break;
     case CSSStyleValuePair::Inherit:
         STARFISH_ASSERT(layer == 0);
         style->setTransitionProperty(parentStyle->transitionProperty());
         break;
-    case CSSStyleValuePair::TransitionPropertyValueKind:
-        style->setTransitionProperty(item.transitionPropertyValue(), layer);
+    case CSSStyleValuePair::CSSPropertyNameValueKind:
+        style->setTransitionProperty(item.cssPropertyNameValue(), layer);
         break;
     default:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -2341,7 +2075,7 @@ void StyleResolver::apply(Element* element,
             switch (cssValues[k].temporaryKeyKind()) {
                 FOR_EACH_STYLE_ATTRIBUTE_BASIC(SET_CASES)
                 FOR_EACH_STYLE_ATTRIBUTE_STICKY(SET_CASES)
-            case CSSStyleValuePair::KeyKind::Empty:
+            case CSSStyleValuePair::KeyKind::Unknown:
                 break;
             default:
                 break;
@@ -5707,7 +5441,7 @@ void StyleResolver::apply(Element* element,
                 break;
             }
             break;
-        case CSSStyleValuePair::KeyKind::Empty:
+        case CSSStyleValuePair::KeyKind::Unknown:
             break;
         default:
             break;
