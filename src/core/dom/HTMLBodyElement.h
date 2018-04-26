@@ -38,12 +38,7 @@ public:
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 
-    /* Other methods (not in DOM API) */
-
-    virtual bool isFocusable() override
-    {
-        return true;
-    }
+/* Other methods (not in DOM API) */
 
 #define VIRTUAL virtual
 #define OVERRIDE override
