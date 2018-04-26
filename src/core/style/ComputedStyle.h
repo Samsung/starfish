@@ -418,10 +418,10 @@ public:
     GETTER_VALUE(String*, stringValue, gridTemplateAreas, GridTemplateAreas);
     GETTER_VALUE(String*, stringValue, gridArea, GridArea);
 
-    GETTER_VALUE(int32_t, int32Value, gridRowStart, GridRowStart);
-    GETTER_VALUE(int32_t, int32Value, gridRowEnd, GridRowEnd);
-    GETTER_VALUE(int32_t, int32Value, gridColumnStart, GridColumnStart);
-    GETTER_VALUE(int32_t, int32Value, gridColumnEnd, GridColumnEnd);
+    GETTER_VALUE(String*, stringValue, gridRowStart, GridRowStart);
+    GETTER_VALUE(String*, stringValue, gridRowEnd, GridRowEnd);
+    GETTER_VALUE(String*, stringValue, gridColumnStart, GridColumnStart);
+    GETTER_VALUE(String*, stringValue, gridColumnEnd, GridColumnEnd);
 
     LengthData* ensureOffset()
     {
@@ -2644,22 +2644,22 @@ public:
         *m_rareComputedStyleData.ensureTextOverflow() = v;
     }
 
-    void setGridRowStart(int32_t v)
+    void setGridRowStart(String* v)
     {
         *m_rareComputedStyleData.ensureGridRowStart() = v;
     }
 
-    void setGridRowEnd(int32_t v)
+    void setGridRowEnd(String* v)
     {
         *m_rareComputedStyleData.ensureGridRowEnd() = v;
     }
 
-    void setGridColumnStart(int32_t v)
+    void setGridColumnStart(String* v)
     {
         *m_rareComputedStyleData.ensureGridColumnStart() = v;
     }
 
-    void setGridColumnEnd(int32_t v)
+    void setGridColumnEnd(String* v)
     {
         *m_rareComputedStyleData.ensureGridColumnEnd() = v;
     }
@@ -2694,44 +2694,60 @@ public:
         return Length();
     }
 
-    int32_t gridRowStart()
+    String* gridRowStart()
     {
-        Nullable<int32_t> v = m_rareComputedStyleData.gridRowStart();
-        if (v.hasValue()) {
-            return v.getValue();
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return String::emptyString;
         }
 
-        return 0;
+        Nullable<String*> area = m_rareComputedStyleData.gridRowStart();
+        if (area.hasValue()) {
+            return area.getValue();
+        }
+
+        return String::emptyString;
     }
 
-    int32_t gridRowEnd()
+    String* gridRowEnd()
     {
-        Nullable<int32_t> v = m_rareComputedStyleData.gridRowEnd();
-        if (v.hasValue()) {
-            return v.getValue();
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return String::emptyString;
         }
 
-        return 0;
+        Nullable<String*> area = m_rareComputedStyleData.gridRowEnd();
+        if (area.hasValue()) {
+            return area.getValue();
+        }
+
+        return String::emptyString;
     }
 
-    int32_t gridColumnStart()
+    String* gridColumnStart()
     {
-        Nullable<int32_t> v = m_rareComputedStyleData.gridColumnStart();
-        if (v.hasValue()) {
-            return v.getValue();
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return String::emptyString;
         }
 
-        return 0;
+        Nullable<String*> area = m_rareComputedStyleData.gridColumnStart();
+        if (area.hasValue()) {
+            return area.getValue();
+        }
+
+        return String::emptyString;
     }
 
-    int32_t gridColumnEnd()
+    String* gridColumnEnd()
     {
-        Nullable<int32_t> v = m_rareComputedStyleData.gridColumnEnd();
-        if (v.hasValue()) {
-            return v.getValue();
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return String::emptyString;
         }
 
-        return 0;
+        Nullable<String*> area = m_rareComputedStyleData.gridColumnEnd();
+        if (area.hasValue()) {
+            return area.getValue();
+        }
+
+        return String::emptyString;
     }
 
     void clearContent()

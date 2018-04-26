@@ -1558,29 +1558,29 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::GridRowStart: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridRowStart);
-        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
-        p.setInt32Value(style->gridRowStart());
+        p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        p.setStringValue(style->gridRowStart());
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::GridRowEnd: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridRowEnd);
-        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
-        p.setInt32Value(style->gridRowEnd());
+        p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        p.setStringValue(style->gridRowEnd());
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::GridColumnStart: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
-        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
-        p.setInt32Value(style->gridColumnStart());
+        p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        p.setStringValue(style->gridColumnStart());
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::GridColumnEnd: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
-        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
-        p.setInt32Value(style->gridColumnStart());
+        p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        p.setStringValue(style->gridColumnStart());
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::WillChange: {

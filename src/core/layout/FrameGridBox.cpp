@@ -512,6 +512,57 @@ bool GridFormattingContext::fixGridAreaWithUndefine(GridArea** preArea,
     return true;
 }
 
+size_t GridFormattingContext::convertToRealLine(String* str)
+{
+    // TODO : Implement that other factors should be converted.
+    auto raw = str->toUTF8NonGCString();
+    CSSTokenVector tokens;
+    CSSStyleDeclaration::tokenizeCSSValue(tokens, raw.data(), raw.length());
+
+    if (tokens[0].equals("auto")) {
+        return 0;
+    }
+
+    if (tokens.size() >= 2 && tokens[0].equals("span")) {
+        auto ss = tokens[1].trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+        parser.consumeWhitespaces();
+
+        bool hasPoint = false;
+        if (parser.consumeNumber(&hasPoint)) {
+            return 0;
+        } else if (parser.consumeString(CSSPropertyParser::AllowWithoutUnit)) {
+            return 0;
+        }
+    } else {
+        auto ss = tokens[0].trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+        parser.consumeWhitespaces();
+
+        bool hasPoint = false;
+        if (parser.consumeNumber(&hasPoint)) {
+            if (tokens.size() >= 2) {
+                for (size_t i = 1; i < tokens.size(); i++) {
+                    auto str = tokens[i].trim();
+                    CSSPropertyParser sub((char*)str.data(), str.length());
+                    sub.consumeWhitespaces();
+                    if (!sub.consumeString(
+                            CSSPropertyParser::AllowWithoutUnit)) {
+                        return 0;
+                    }
+                }
+                return 0;
+            } else {
+                return parser.parsedNumber();
+            }
+        } else if (parser.consumeString(CSSPropertyParser::AllowWithoutUnit)) {
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
 void GridFormattingContext::buildGridAreaAndOrdering()
 {
     for (size_t i = 0; i < GRID_MAX_TRACK; i++) {
@@ -526,10 +577,10 @@ void GridFormattingContext::buildGridAreaAndOrdering()
     for (auto gridItem : m_orderedGridItems) {
         ComputedStyle* style = gridItem->style();
 
-        size_t rowStart = style->gridRowStart();
-        size_t rowEnd = style->gridRowEnd();
-        size_t columnStart = style->gridColumnStart();
-        size_t columnEnd = style->gridColumnEnd();
+        size_t rowStart = convertToRealLine(style->gridRowStart());
+        size_t rowEnd = convertToRealLine(style->gridRowEnd());
+        size_t columnStart = convertToRealLine(style->gridColumnStart());
+        size_t columnEnd = convertToRealLine(style->gridColumnEnd());
 
         adaptStartAndEndValueForRow(*this, gridItem, m_gridLineRows.size(),
                                     rowStart, rowEnd);

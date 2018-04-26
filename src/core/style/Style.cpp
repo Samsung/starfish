@@ -5580,8 +5580,8 @@ void StyleResolver::apply(Element* element,
             break;
         case CSSStyleValuePair::KeyKind::GridColumnStart:
             switch (cssValues[k].valueKind()) {
-            case CSSStyleValuePair::ValueKind::Int32:
-                style->setGridColumnStart(cssValues[k].int32Value());
+            case CSSStyleValuePair::ValueKind::StringValueKind:
+                style->setGridColumnStart(cssValues[k].stringValue());
                 break;
             default:
                 break;
@@ -5589,8 +5589,8 @@ void StyleResolver::apply(Element* element,
             break;
         case CSSStyleValuePair::KeyKind::GridColumnEnd:
             switch (cssValues[k].valueKind()) {
-            case CSSStyleValuePair::ValueKind::Int32:
-                style->setGridColumnEnd(cssValues[k].int32Value());
+            case CSSStyleValuePair::ValueKind::StringValueKind:
+                style->setGridColumnEnd(cssValues[k].stringValue());
                 break;
             default:
                 break;
@@ -5598,8 +5598,8 @@ void StyleResolver::apply(Element* element,
             break;
         case CSSStyleValuePair::KeyKind::GridRowStart:
             switch (cssValues[k].valueKind()) {
-            case CSSStyleValuePair::ValueKind::Int32:
-                style->setGridRowStart(cssValues[k].int32Value());
+            case CSSStyleValuePair::ValueKind::StringValueKind:
+                style->setGridRowStart(cssValues[k].stringValue());
                 break;
             default:
                 break;
@@ -5607,8 +5607,8 @@ void StyleResolver::apply(Element* element,
             break;
         case CSSStyleValuePair::KeyKind::GridRowEnd:
             switch (cssValues[k].valueKind()) {
-            case CSSStyleValuePair::ValueKind::Int32:
-                style->setGridRowEnd(cssValues[k].int32Value());
+            case CSSStyleValuePair::ValueKind::StringValueKind:
+                style->setGridRowEnd(cssValues[k].stringValue());
                 break;
             default:
                 break;
@@ -9180,6 +9180,67 @@ bool CSSStyleValuePair::updateValueGridTemplateRows(
     return true;
 }
 
+static bool isValidForGridStartEnd(const CSSTokenVector& tokens)
+{
+    // Grammar = auto | <custom-ident> | [ <integer> && <custom-ident>?] |
+    //           [ span && [ <integer> || <custom-ident>] ]
+    if (!tokens.size()) {
+        return false;
+    }
+
+    if (tokens[0].equals("auto")) {
+        return true;
+    }
+
+    if (tokens.size() >= 2 && tokens[0].equals("span")) {
+        auto ss = tokens[1].trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+        parser.consumeWhitespaces();
+
+        bool hasPoint = false;
+        if (parser.consumeNumber(&hasPoint)) {
+            if (hasPoint) {
+                return false;
+            }
+            return true;
+        } else if (parser.consumeString(CSSPropertyParser::AllowWithoutUnit)) {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        auto ss = tokens[0].trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+        parser.consumeWhitespaces();
+
+        bool hasPoint = false;
+        if (parser.consumeNumber(&hasPoint)) {
+            if (hasPoint) {
+                return false;
+            }
+
+            if (tokens.size() >= 2) {
+                for (size_t i = 1; i < tokens.size(); i++) {
+                    auto str = tokens[i].trim();
+                    CSSPropertyParser sub((char*)str.data(), str.length());
+                    sub.consumeWhitespaces();
+                    if (!sub.consumeString(
+                            CSSPropertyParser::AllowWithoutUnit)) {
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                return true;
+            }
+        } else if (parser.consumeString(CSSPropertyParser::AllowWithoutUnit)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool CSSStyleValuePair::updateValueGridRowStart(Document* document,
                                                 const CSSTokenVector& tokens)
 {
@@ -9187,23 +9248,22 @@ bool CSSStyleValuePair::updateValueGridRowStart(Document* document,
         return false;
     }
 
-    auto ss = tokens[0].trim();
-    CSSPropertyParser parser((char*)ss.data(), ss.length());
+    bool result = isValidForGridStartEnd(tokens);
 
-    bool hasPoint = false;
-    parser.consumeWhitespaces();
-    if (!parser.consumeNumber(&hasPoint)) {
-        return false;
+    if (result) {
+        std::string str;
+        for (size_t i = 0; i < tokens.size(); i++) {
+            auto token = tokens[i];
+            str += token;
+            if (i != tokens.size() - 1) {
+                str += " ";
+            }
+        }
+        setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        setStringValue(String::createASCIIString(str.c_str()));
     }
 
-    float number = parser.parsedNumber();
-
-    if (number >= 1.0f) {
-        setInt32Value(number);
-        return true;
-    }
-
-    return false;
+    return result;
 }
 
 bool CSSStyleValuePair::updateValueGridRowEnd(Document* document,
@@ -9213,23 +9273,22 @@ bool CSSStyleValuePair::updateValueGridRowEnd(Document* document,
         return false;
     }
 
-    auto ss = tokens[0].trim();
-    CSSPropertyParser parser((char*)ss.data(), ss.length());
+    bool result = isValidForGridStartEnd(tokens);
 
-    bool hasPoint = false;
-    parser.consumeWhitespaces();
-    if (!parser.consumeNumber(&hasPoint)) {
-        return false;
+    if (result) {
+        std::string str;
+        for (size_t i = 0; i < tokens.size(); i++) {
+            auto token = tokens[i];
+            str += token;
+            if (i != tokens.size() - 1) {
+                str += " ";
+            }
+        }
+        setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        setStringValue(String::createASCIIString(str.c_str()));
     }
 
-    float number = parser.parsedNumber();
-
-    if (number >= 1.0f) {
-        setInt32Value(number);
-        return true;
-    }
-
-    return false;
+    return result;
 }
 
 bool CSSStyleValuePair::updateValueGridColumnStart(Document* document,
@@ -9239,23 +9298,22 @@ bool CSSStyleValuePair::updateValueGridColumnStart(Document* document,
         return false;
     }
 
-    auto ss = tokens[0].trim();
-    CSSPropertyParser parser((char*)ss.data(), ss.length());
+    bool result = isValidForGridStartEnd(tokens);
 
-    bool hasPoint = false;
-    parser.consumeWhitespaces();
-    if (!parser.consumeNumber(&hasPoint)) {
-        return false;
+    if (result) {
+        std::string str;
+        for (size_t i = 0; i < tokens.size(); i++) {
+            auto token = tokens[i];
+            str += token;
+            if (i != tokens.size() - 1) {
+                str += " ";
+            }
+        }
+        setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        setStringValue(String::createASCIIString(str.c_str()));
     }
 
-    float number = parser.parsedNumber();
-
-    if (number >= 1.0f) {
-        setInt32Value(number);
-        return true;
-    }
-
-    return false;
+    return result;
 }
 
 bool CSSStyleValuePair::updateValueGridColumnEnd(Document* document,
@@ -9265,23 +9323,22 @@ bool CSSStyleValuePair::updateValueGridColumnEnd(Document* document,
         return false;
     }
 
-    auto ss = tokens[0].trim();
-    CSSPropertyParser parser((char*)ss.data(), ss.length());
+    bool result = isValidForGridStartEnd(tokens);
 
-    bool hasPoint = false;
-    parser.consumeWhitespaces();
-    if (!parser.consumeNumber(&hasPoint)) {
-        return false;
+    if (result) {
+        std::string str;
+        for (size_t i = 0; i < tokens.size(); i++) {
+            auto token = tokens[i];
+            str += token;
+            if (i != tokens.size() - 1) {
+                str += " ";
+            }
+        }
+        setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        setStringValue(String::createASCIIString(str.c_str()));
     }
 
-    float number = parser.parsedNumber();
-
-    if (number >= 1.0f) {
-        setInt32Value(number);
-        return true;
-    }
-
-    return false;
+    return result;
 }
 
 bool CSSStyleValuePair::updateValueGridGap(Document* document,
