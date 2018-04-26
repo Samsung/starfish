@@ -1,12 +1,6 @@
 #!/bin/bash
 #set -x
 
-if [ ! -f /proc/cpuinfo ]; then
-    echo "Is this Linux? Cannot find or read /proc/cpuinfo"
-    exit 1
-fi
-NUMPROC=$(grep 'processor' /proc/cpuinfo | wc -l)
-
 INCREMENTAL=false
 if [[ $1 == incremental ]]; then
     INCREMENTAL=true
@@ -113,7 +107,7 @@ function build_gc_for_linux() {
         if [[ $INCREMENTAL == false ]]; then
             ../../../../configure $GCCONFFLAGS CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS $CFLAGS" > /dev/null
         fi
-        make -j$NUMPROC > /dev/null
+        make -j > /dev/null
 
         echo Building bdwgc for $host $arch $mode $libtype done
         cd -
@@ -177,7 +171,7 @@ function build_gc_for_tizen() {
             NM=$TIZEN_TOOLCHAIN/bin/${COMPILER_PREFIX}${TOOLCHAIN_GCC_WRAPPER}-nm \
             RANLIB=$TIZEN_TOOLCHAIN/bin/${COMPILER_PREFIX}${TOOLCHAIN_GCC_WRAPPER}-ranlib \
             LD=$TIZEN_TOOLCHAIN/bin/$COMPILER_PREFIX-ld > /dev/null
-        make -j$NUMPROC > /dev/null
+        make -j > /dev/null
 
         echo Building bdwgc for tizen $version $host $arch $mode $libtype done
         cd -

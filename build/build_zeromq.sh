@@ -1,13 +1,6 @@
 #!/bin/bash
 #set -x
 
-if [ ! -f /proc/cpuinfo ]; then
-    echo "Is this Linux? Cannot find or read /proc/cpuinfo"
-    exit 1
-fi
-NUMPROC=$(grep 'processor' /proc/cpuinfo | wc -l)
-
-
 COMPILER_VERSION_MAJOR=4.6
 COMPILER_VERSION_MINOR=4.6.4
 
@@ -82,7 +75,7 @@ function build_zeromq_for_linux() {
         LDFLAGS="$LDFLAGS_COMMON ${!LDFLAGS_HOST} ${!LDFLAGS_ARCH} ${!LDFLAGS_MODE} ${!LDFLAGS_LIBTYPE}"
 
         ../../../../configure $GCCONFFLAGS CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS $CFLAGS" CXXFLAGS="$CFLAGS" > /dev/null
-        make -j$NUMPROC > /dev/null
+        make -j > /dev/null
 
         echo Building zeromq for $host $arch $mode $libtype done
         cd -
@@ -148,7 +141,7 @@ function build_zeromq_for_tizen() {
             NM=$TIZEN_TOOLCHAIN/bin/${COMPILER_PREFIX}${TOOLCHAIN_GCC_WRAPPER}-nm \
             RANLIB=$TIZEN_TOOLCHAIN/bin/${COMPILER_PREFIX}${TOOLCHAIN_GCC_WRAPPER}-ranlib \
             LD=$TIZEN_TOOLCHAIN/bin/$COMPILER_PREFIX-ld > /dev/null
-        make -j$NUMPROC > /dev/null
+        make -j > /dev/null
 
         echo Building zeromq for tizen $version $host $arch $mode $libtype done
         cd -
