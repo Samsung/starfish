@@ -29,6 +29,7 @@
 #include "core/dom/ProcessingInstruction.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMTokenList.h"
+#include "core/dom/Traverse.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLElement.h"
@@ -376,6 +377,31 @@ bool Node::isEqualNode(Node* other)
     }
 
     return true;
+}
+
+bool Node::isSameNode(Node* other)
+{
+    return other == this;
+}
+
+void Node::normalize()
+{
+    Node* node = this;
+    while (Node* firstChild = node->firstChild()) {
+        node = firstChild;
+    }
+
+    while (node) {
+        if (node == this) {
+            break;
+        }
+
+        if (node->nodeType() == TEXT_NODE && !node->isCDATASection()) {
+            node = node->asText()->mergeWithTextSiblings();
+        } else {
+            node = Traverse::nextPostOrder(node, nullptr);
+        }
+    }
 }
 
 bool Node::isDescendantOf(const Node* other)

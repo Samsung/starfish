@@ -239,6 +239,9 @@ public:
     void setTextContent(Nullable<String*> val);
 
     bool isEqualNode(Node* other);
+    bool isSameNode(Node* other);
+
+    void normalize();
 
     bool isDescendantOf(const Node* other);
 

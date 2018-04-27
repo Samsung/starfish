@@ -177,6 +177,22 @@ public:
         }
         return nullptr;
     }
+
+    static Node* nextPostOrder(Node* current, const Node* stayWithin)
+    {
+        if (current == stayWithin) {
+            return nullptr;
+        }
+        if (!current->nextSibling()) {
+            return current->parentNode();
+        }
+
+        Node* next = current->nextSibling();
+        while (Node* firstChild = next->firstChild()) {
+            next = firstChild;
+        }
+        return next;
+    }
 };
 }
 
