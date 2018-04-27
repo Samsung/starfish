@@ -63,24 +63,20 @@ QualifiedName HTMLStyleElement::name()
     return starFish()->staticStrings()->m_styleTagName;
 }
 
-String* HTMLStyleElement::type()
+bool HTMLStyleElement::disabled()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    if (!m_generatedSheet) {
+        return false;
+    }
+    return m_generatedSheet->disabled();
 }
 
-void HTMLStyleElement::setType(String* type)
+void HTMLStyleElement::setDisabled(bool disabled)
 {
-    setAttribute(starFish()->staticStrings()->m_type, type);
-}
-
-String* HTMLStyleElement::media()
-{
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_media);
-}
-
-void HTMLStyleElement::setMedia(String* media)
-{
-    setAttribute(starFish()->staticStrings()->m_media, media);
+    if (!m_generatedSheet) {
+        return;
+    }
+    m_generatedSheet->setDisabled(disabled);
 }
 
 StyleSheet* HTMLStyleElement::sheet()
@@ -155,7 +151,7 @@ void HTMLStyleElement::generateStyleSheet()
     document()->styleResolver().addSheet(sheet);
 
     CSSParser parser(document());
-    parser.makeToken(media());
+    parser.makeToken(getAttributeOrEmpty(starFish()->staticStrings()->m_media));
     MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
     sheet->setMediaQuerySet(mediaQuerySet);
     const MediaQueryEvaluator& evaluator =

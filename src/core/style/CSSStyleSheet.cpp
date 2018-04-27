@@ -73,6 +73,7 @@ CSSStyleSheet::CSSStyleSheet(Node* origin, String* str)
     , m_ruleList(nullptr)
     , m_mediaQuerySet(nullptr)
     , m_mediaWrapper(nullptr)
+    , m_disabled(false)
 {
 }
 
@@ -211,6 +212,9 @@ void CSSStyleSheet::collectRulesFromImportedSheet(
     MediaQueryResultList* viewportDependentResult,
     MediaQueryResultList* deviceDependentResult)
 {
+    if (disabled()) {
+        return;
+    }
     for (unsigned i = 0; i < rules.size(); i++) {
         if (rules[i]->isLoading()) {
             continue;
@@ -242,6 +246,9 @@ void CSSStyleSheet::collectStyleRules(
     MediaQueryResultList* viewportDependentResult,
     MediaQueryResultList* deviceDependentResult)
 {
+    if (disabled()) {
+        return;
+    }
     auto iter = rules.begin();
     while (iter != rules.end()) {
         auto rule = (*iter);
@@ -489,4 +496,21 @@ CSSRule* CSSStyleSheet::item(unsigned index)
     return m_childRuleWrappers[index];
 }
 
+bool CSSStyleSheet::disabled()
+{
+    return m_disabled;
+}
+
+void CSSStyleSheet::setDisabled(bool disabled)
+{
+    if (m_disabled == disabled) {
+        return;
+    }
+    m_disabled = disabled;
+
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setNeedsStyleSheetsRecalc();
+}
 } /* namespace StarFish */
