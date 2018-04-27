@@ -193,6 +193,8 @@ struct GridLayoutScope {
 #define GRID_MAX_TRACK 50
 class GridFormattingContext {
 public:
+    enum ConvertType { ROWSTART, COLUMNSTART, ROWEND, COLUMNEND };
+
     GridFormattingContext(LayoutContext& ctx, FrameGridBox* container,
                           LayoutUnit availableWidth);
 
@@ -209,7 +211,10 @@ public:
     bool fixGridAreaWithUndefine(GridArea**, GridArea*, size_t);
     void parsingGridTemplateAreasAndStoreInformation();
     void buildGridAreaAndOrdering();
-    size_t convertToRealLine(String*);
+    size_t convertToRealLine(String*, size_t, ConvertType);
+    void convertToStartEndForRow(ComputedStyle*, size_t&, size_t&);
+    void convertToStartEndForColumn(ComputedStyle*, size_t&, size_t&);
+
     LayoutUnit preferredWidth();
 
     GCVector<GridLine>& gridLineColumns()
