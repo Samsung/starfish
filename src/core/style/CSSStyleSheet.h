@@ -185,6 +185,9 @@ public:
     unsigned insertRule(String* ruleString, unsigned index);
     void deleteRule(unsigned index);
 
+    bool disabled();
+    void setDisabled(bool disabled);
+
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet
     // before access style rules.
@@ -199,6 +202,8 @@ protected:
     GCVector<StyleRuleImport*> m_importRules;
     GCVector<std::pair<StyleRule*, ResourceURL*>> m_styleRules;
     GCVector<CSSRule*> m_childRuleWrappers;
+
+    bool m_disabled : 1;
 };
 
 } /* namespace StarFish */

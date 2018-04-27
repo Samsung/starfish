@@ -571,6 +571,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | type | DOMString reflecting the type HTML attribute, containing the type of the media resource. |
 | [HTMLSpanElement](https://html.spec.whatwg.org/multipage/semantics.html#the-span-element) | interface | HTMLSpanElement | The span element is a generic inline container for phrasing content. |
 | [HTMLStyleElement](https://html.spec.whatwg.org/multipage/semantics.html#the-style-element) | interface | HTMLStyleElement | The style element allows authors to embed style information in their documents. |
+|  | attribute | disabled | Represent whether or not the stylesheet is disabled (true) or not (false). |
 |  | attribute | media | Applicable media. |
 |  | attribute | type | Type of embedded resource.<br>&lt;URL&gt; must be a local path.<br>Allowed value: text/css |
 | [HTMLTableElement](https://html.spec.whatwg.org/#the-table-element) | interface | HTMLTableElement | The HTMLTableElement interface provides special properties and methods for manipulating the layout and presentation of tables in an HTML document. |

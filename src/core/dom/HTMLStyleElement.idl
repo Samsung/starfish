@@ -2,9 +2,11 @@
 
 [HTMLConstructor]
 interface HTMLStyleElement : HTMLElement {
-  [CEReactions] attribute DOMString media;
-  [Unimplemented, CEReactions] attribute DOMString nonce;
-  [CEReactions] attribute DOMString type;
+  [Measure] attribute boolean disabled;
+  [CEReactions, Reflect] attribute DOMString media;
+  [CEReactions, Reflect] attribute DOMString type;
+
+  [Unimplemented] readonly attribute StyleSheet? sheet;
 };
 
 HTMLStyleElement implements LinkStyle;

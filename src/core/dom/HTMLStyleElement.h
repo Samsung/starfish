@@ -43,16 +43,11 @@ public:
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 
-    /* Other methods (not in DOM API) */
-
-    String* type();
-    void setType(String* type);
-
-    String* media();
-    void setMedia(String* media);
-
+    bool disabled();
+    void setDisabled(bool disabled);
     StyleSheet* sheet();
 
+    /* Other methods (not in DOM API) */
     virtual void didCharacterDataModified(String* before, String* after);
     virtual void didNodeInsertedToDocumentTree();
     virtual void didNodeRemovedFromDocumentTree();
