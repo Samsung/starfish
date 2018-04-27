@@ -38,6 +38,39 @@
 
 namespace StarFish {
 
+#define _DAMAGED_KEYS(PropName, ...) (damagedKeys[PropName])
+
+// args: property [, dependency_1 [, dependency_2]]
+#define NEED_TRANSITION(...)       \
+    (_DAMAGED_KEYS(__VA_ARGS__) && \
+     (isPropertyAll || _checkCSSProperty(property, __VA_ARGS__)))
+
+#define RETURN_NEED_TRANSITION(...)     \
+    if (NEED_TRANSITION(__VA_ARGS__)) { \
+        return true;                    \
+    }
+
+static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
+                                     CSSStyleValuePair::KeyKind a)
+{
+    return kind == a;
+}
+
+static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
+                                     CSSStyleValuePair::KeyKind a,
+                                     CSSStyleValuePair::KeyKind b)
+{
+    return kind == a || kind == b;
+}
+
+static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
+                                     CSSStyleValuePair::KeyKind a,
+                                     CSSStyleValuePair::KeyKind b,
+                                     CSSStyleValuePair::KeyKind c)
+{
+    return kind == a || kind == b || kind == c;
+}
+
 void* RareComputedStyleData::operator new(size_t size)
 {
     static bool typeInited = false;
@@ -953,67 +986,31 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
         CSSStyleValuePair::KeyKind property = data->at(i).property();
         bool isPropertyAll = property == CSSStyleValuePair::All;
 
-        if (damagedKeys[CSSStyleValuePair::BackgroundColor] &&
-            (isPropertyAll || property == CSSStyleValuePair::Background ||
-             property == CSSStyleValuePair::BackgroundColor)) {
-            return true;
-        }
-        if (damagedKeys[CSSStyleValuePair::BorderBottomColor] &&
-            (isPropertyAll || property == CSSStyleValuePair::BorderColor ||
-             property == CSSStyleValuePair::BorderBottom ||
-             property == CSSStyleValuePair::BorderBottomColor)) {
-            return true;
-        }
-        if (damagedKeys[CSSStyleValuePair::BorderLeftColor] &&
-            (isPropertyAll || property == CSSStyleValuePair::BorderColor ||
-             property == CSSStyleValuePair::BorderLeft ||
-             property == CSSStyleValuePair::BorderLeftColor)) {
-            return true;
-        }
-        if (damagedKeys[CSSStyleValuePair::BorderRightColor] &&
-            (isPropertyAll || property == CSSStyleValuePair::BorderColor ||
-             property == CSSStyleValuePair::BorderRight ||
-             property == CSSStyleValuePair::BorderRightColor)) {
-            return true;
-        }
-        if (damagedKeys[CSSStyleValuePair::BorderTopColor] &&
-            (isPropertyAll || property == CSSStyleValuePair::BorderColor ||
-             property == CSSStyleValuePair::BorderTop ||
-             property == CSSStyleValuePair::BorderTopColor)) {
-            return true;
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::Width) &&
-            damagedKeys[CSSStyleValuePair::Width]) {
-            return true;
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::Height) &&
-            damagedKeys[CSSStyleValuePair::Height]) {
-            return true;
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::MinWidth) &&
-            damagedKeys[CSSStyleValuePair::MinWidth]) {
-            return true;
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::MinHeight) &&
-            damagedKeys[CSSStyleValuePair::MinHeight]) {
-            return true;
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::MaxWidth) &&
-            damagedKeys[CSSStyleValuePair::MaxWidth]) {
-            return true;
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::MaxHeight) &&
-            damagedKeys[CSSStyleValuePair::MaxHeight]) {
-            return true;
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::Transform) &&
-            damagedKeys[CSSStyleValuePair::Transform]) {
-            return true;
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::Opacity) &&
-            damagedKeys[CSSStyleValuePair::Opacity]) {
-            return true;
-        }
+        // e.g. BackgroundColor = BackgroundColor | Background | All
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::BackgroundColor,
+                               CSSStyleValuePair::Background);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::BorderBottomColor,
+                               CSSStyleValuePair::BorderColor,
+                               CSSStyleValuePair::BorderBottom);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::BorderLeftColor,
+                               CSSStyleValuePair::BorderColor,
+                               CSSStyleValuePair::BorderLeft);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::BorderTopColor,
+                               CSSStyleValuePair::BorderColor,
+                               CSSStyleValuePair::BorderTop);
+        // TODO CaretColor (Inheritance issue)
+        // TODO Color (Inheritance issue)
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::Height);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::MaxHeight);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::MaxWidth);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::MinHeight);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::MinWidth);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::Opacity);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::OutlineColor);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::TextDecorationColor,
+                               CSSStyleValuePair::TextDecoration);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::Transform);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::Width);
     }
 
     return false;
@@ -1035,10 +1032,23 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
         auto delay = data->at(i).delay().toTimeValue();
         auto timingFunction = data->at(i).timingFunction();
 
-        if (damagedKeys[CSSStyleValuePair::BorderBottomColor] &&
-            (isPropertyAll || property == CSSStyleValuePair::BorderColor ||
-             property == CSSStyleValuePair::BorderBottom ||
-             property == CSSStyleValuePair::BorderBottomColor)) {
+        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundColor,
+                            CSSStyleValuePair::Background)) {
+            if (oldStyle->backgroundColor() != newStyle->backgroundColor()) {
+                // We need double-check because function compareStyle doesn't
+                // provide correct information about each keys yet.
+                Unit::Color oldColor = oldStyle->backgroundColor();
+                executor->registerAnimation(new ColorAnimationTask(
+                    element, CSSStyleValuePair::BackgroundColor,
+                    AnimatedValue(oldColor),
+                    AnimatedValue(newStyle->backgroundColor()), duration, delay,
+                    timingFunction));
+                newStyle->setBackgroundColor(oldColor);
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderBottomColor,
+                            CSSStyleValuePair::BorderColor,
+                            CSSStyleValuePair::BorderBottom)) {
             Unit::Color oldColor = oldStyle->border().bottom().color();
             executor->registerAnimation(new ColorAnimationTask(
                 element, CSSStyleValuePair::BorderBottomColor,
@@ -1047,10 +1057,9 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 delay, timingFunction));
             newStyle->setBorderBottomColor(oldColor);
         }
-        if (damagedKeys[CSSStyleValuePair::BorderLeftColor] &&
-            (isPropertyAll || property == CSSStyleValuePair::BorderColor ||
-             property == CSSStyleValuePair::BorderLeft ||
-             property == CSSStyleValuePair::BorderLeftColor)) {
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderLeftColor,
+                            CSSStyleValuePair::BorderColor,
+                            CSSStyleValuePair::BorderLeft)) {
             Unit::Color oldColor = oldStyle->border().left().color();
             executor->registerAnimation(new ColorAnimationTask(
                 element, CSSStyleValuePair::BorderLeftColor,
@@ -1059,10 +1068,9 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 delay, timingFunction));
             newStyle->setBorderLeftColor(oldColor);
         }
-        if (damagedKeys[CSSStyleValuePair::BorderRightColor] &&
-            (isPropertyAll || property == CSSStyleValuePair::BorderColor ||
-             property == CSSStyleValuePair::BorderRight ||
-             property == CSSStyleValuePair::BorderRightColor)) {
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderRightColor,
+                            CSSStyleValuePair::BorderColor,
+                            CSSStyleValuePair::BorderRight)) {
             Unit::Color oldColor = oldStyle->border().right().color();
             executor->registerAnimation(new ColorAnimationTask(
                 element, CSSStyleValuePair::BorderRightColor,
@@ -1071,10 +1079,9 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 delay, timingFunction));
             newStyle->setBorderRightColor(oldColor);
         }
-        if (damagedKeys[CSSStyleValuePair::BorderTopColor] &&
-            (isPropertyAll || property == CSSStyleValuePair::BorderColor ||
-             property == CSSStyleValuePair::BorderTop ||
-             property == CSSStyleValuePair::BorderTopColor)) {
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderTopColor,
+                            CSSStyleValuePair::BorderColor,
+                            CSSStyleValuePair::BorderTop)) {
             Unit::Color oldColor = oldStyle->border().top().color();
             executor->registerAnimation(new ColorAnimationTask(
                 element, CSSStyleValuePair::BorderTopColor,
@@ -1083,26 +1090,9 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 delay, timingFunction));
             newStyle->setBorderTopColor(oldColor);
         }
-        if ((isPropertyAll || property == CSSStyleValuePair::Width) &&
-            damagedKeys[CSSStyleValuePair::Width]) {
-            if (oldFrame && oldStyle->width().isDefinite(true) &&
-                oldStyle->hasBlockLikeDisplay() &&
-                newStyle->width().isDefinite(true) &&
-                newStyle->hasBlockLikeDisplay()) {
-                LayoutUnit currentWidth = oldFrame->asFrameBox()->width();
-                if (oldStyle->boxSizing() ==
-                    BoxSizingValue::ContentBoxBoxSizingValue) {
-                    currentWidth = oldFrame->asFrameBox()->contentWidth();
-                }
-                executor->registerAnimation(
-                    new LengthAnimationTask(element, CSSStyleValuePair::Width,
-                                            AnimatedValue(currentWidth),
-                                            AnimatedValue(newStyle->width()),
-                                            duration, delay, timingFunction));
-            }
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::Height) &&
-            damagedKeys[CSSStyleValuePair::Height]) {
+        // TODO CaretColor (Inheritance issue)
+        // TODO Color (Inheritance issue)
+        if (NEED_TRANSITION(CSSStyleValuePair::Height)) {
             if (oldFrame && oldStyle->height().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&
                 newStyle->height().isDefinite(true) &&
@@ -1119,59 +1109,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                                             duration, delay, timingFunction));
             }
         }
-        if ((isPropertyAll || property == CSSStyleValuePair::MinWidth) &&
-            damagedKeys[CSSStyleValuePair::MinWidth]) {
-            if (oldFrame && oldStyle->minWidth().isDefinite(true) &&
-                oldStyle->hasBlockLikeDisplay() &&
-                newStyle->minWidth().isDefinite(true) &&
-                newStyle->hasBlockLikeDisplay()) {
-                FrameBox* cb = containingBlock(oldFrame);
-                LayoutUnit currentValue = oldStyle->minWidth().specifiedValue(
-                    cb->contentWidth(), oldFrame);
-
-                executor->registerAnimation(new LengthAnimationTask(
-                    element, CSSStyleValuePair::MinWidth,
-                    AnimatedValue(currentValue),
-                    AnimatedValue(newStyle->minWidth()), duration, delay,
-                    timingFunction));
-            }
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::MaxWidth) &&
-            damagedKeys[CSSStyleValuePair::MaxWidth]) {
-            if (oldFrame && oldStyle->maxWidth().isDefinite(true) &&
-                oldStyle->hasBlockLikeDisplay() &&
-                newStyle->maxWidth().isDefinite(true) &&
-                newStyle->hasBlockLikeDisplay()) {
-                FrameBox* cb = containingBlock(oldFrame);
-                LayoutUnit currentValue = oldStyle->maxWidth().specifiedValue(
-                    cb->contentWidth(), oldFrame);
-
-                executor->registerAnimation(new LengthAnimationTask(
-                    element, CSSStyleValuePair::MaxWidth,
-                    AnimatedValue(currentValue),
-                    AnimatedValue(newStyle->maxWidth()), duration, delay,
-                    timingFunction));
-            }
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::MinHeight) &&
-            damagedKeys[CSSStyleValuePair::MinHeight]) {
-            if (oldFrame && oldStyle->minHeight().isDefinite(true) &&
-                oldStyle->hasBlockLikeDisplay() &&
-                newStyle->minHeight().isDefinite(true) &&
-                newStyle->hasBlockLikeDisplay()) {
-                FrameBox* cb = containingBlock(oldFrame);
-                LayoutUnit currentValue = oldStyle->minHeight().specifiedValue(
-                    cb->contentHeight(), oldFrame);
-
-                executor->registerAnimation(new LengthAnimationTask(
-                    element, CSSStyleValuePair::MinHeight,
-                    AnimatedValue(currentValue),
-                    AnimatedValue(newStyle->minHeight()), duration, delay,
-                    timingFunction));
-            }
-        }
-        if ((isPropertyAll || property == CSSStyleValuePair::MaxHeight) &&
-            damagedKeys[CSSStyleValuePair::MaxHeight]) {
+        if (NEED_TRANSITION(CSSStyleValuePair::MaxHeight)) {
             if (oldFrame && oldStyle->maxHeight().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&
                 newStyle->maxHeight().isDefinite(true) &&
@@ -1187,8 +1125,81 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                     timingFunction));
             }
         }
-        if ((isPropertyAll || property == CSSStyleValuePair::Transform) &&
-            damagedKeys[CSSStyleValuePair::Transform]) {
+        if (NEED_TRANSITION(CSSStyleValuePair::MaxWidth)) {
+            if (oldFrame && oldStyle->maxWidth().isDefinite(true) &&
+                oldStyle->hasBlockLikeDisplay() &&
+                newStyle->maxWidth().isDefinite(true) &&
+                newStyle->hasBlockLikeDisplay()) {
+                FrameBox* cb = containingBlock(oldFrame);
+                LayoutUnit currentValue = oldStyle->maxWidth().specifiedValue(
+                    cb->contentWidth(), oldFrame);
+
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::MaxWidth,
+                    AnimatedValue(currentValue),
+                    AnimatedValue(newStyle->maxWidth()), duration, delay,
+                    timingFunction));
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::MinHeight)) {
+            if (oldFrame && oldStyle->minHeight().isDefinite(true) &&
+                oldStyle->hasBlockLikeDisplay() &&
+                newStyle->minHeight().isDefinite(true) &&
+                newStyle->hasBlockLikeDisplay()) {
+                FrameBox* cb = containingBlock(oldFrame);
+                LayoutUnit currentValue = oldStyle->minHeight().specifiedValue(
+                    cb->contentHeight(), oldFrame);
+
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::MinHeight,
+                    AnimatedValue(currentValue),
+                    AnimatedValue(newStyle->minHeight()), duration, delay,
+                    timingFunction));
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::MinWidth)) {
+            if (oldFrame && oldStyle->minWidth().isDefinite(true) &&
+                oldStyle->hasBlockLikeDisplay() &&
+                newStyle->minWidth().isDefinite(true) &&
+                newStyle->hasBlockLikeDisplay()) {
+                FrameBox* cb = containingBlock(oldFrame);
+                LayoutUnit currentValue = oldStyle->minWidth().specifiedValue(
+                    cb->contentWidth(), oldFrame);
+
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::MinWidth,
+                    AnimatedValue(currentValue),
+                    AnimatedValue(newStyle->minWidth()), duration, delay,
+                    timingFunction));
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::Opacity)) {
+            executor->registerAnimation(new OpacityAnimationTask(
+                element, AnimatedValue(oldStyle->opacity()),
+                AnimatedValue(newStyle->opacity()), duration, delay,
+                timingFunction));
+            newStyle->setOpacity(oldStyle->opacity());
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::OutlineColor)) {
+            Unit::Color oldColor = oldStyle->outlineColor();
+            executor->registerAnimation(
+                new ColorAnimationTask(element, CSSStyleValuePair::OutlineColor,
+                                       AnimatedValue(oldColor),
+                                       AnimatedValue(newStyle->outlineColor()),
+                                       duration, delay, timingFunction));
+            newStyle->setOutlineColor(oldColor);
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::TextDecorationColor,
+                            CSSStyleValuePair::TextDecoration)) {
+            Unit::Color oldColor = oldStyle->textDecorationColor();
+            executor->registerAnimation(new ColorAnimationTask(
+                element, CSSStyleValuePair::TextDecorationColor,
+                AnimatedValue(oldColor),
+                AnimatedValue(newStyle->textDecorationColor()), duration, delay,
+                timingFunction));
+            newStyle->setTextDecorationColor(oldColor);
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::Transform)) {
             if (oldFrame && oldFrame->isTransformable()) {
                 STARFISH_ASSERT(oldFrame->isFrameBox());
                 FrameBox* box = oldFrame->asFrameBox();
@@ -1201,26 +1212,21 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 executor->registerAnimation(task);
             }
         }
-        if ((isPropertyAll || property == CSSStyleValuePair::Opacity) &&
-            damagedKeys[CSSStyleValuePair::Opacity]) {
-            executor->registerAnimation(new OpacityAnimationTask(
-                element, AnimatedValue(oldStyle->opacity()),
-                AnimatedValue(newStyle->opacity()), duration, delay,
-                timingFunction));
-            newStyle->setOpacity(oldStyle->opacity());
-        }
-        if (damagedKeys[CSSStyleValuePair::BackgroundColor] &&
-            (isPropertyAll || property == CSSStyleValuePair::Background ||
-             property == CSSStyleValuePair::BackgroundColor)) {
-            if (oldStyle->backgroundColor() != newStyle->backgroundColor()) {
-                // We need double-check because function compareStyle doesn't
-                // provide correct information about each keys yet.
-                executor->registerAnimation(new ColorAnimationTask(
-                    element, CSSStyleValuePair::BackgroundColor,
-                    AnimatedValue(oldStyle->backgroundColor()),
-                    AnimatedValue(newStyle->backgroundColor()), duration, delay,
-                    timingFunction));
-                newStyle->setBackgroundColor(oldStyle->backgroundColor());
+        if (NEED_TRANSITION(CSSStyleValuePair::Width)) {
+            if (oldFrame && oldStyle->width().isDefinite(true) &&
+                oldStyle->hasBlockLikeDisplay() &&
+                newStyle->width().isDefinite(true) &&
+                newStyle->hasBlockLikeDisplay()) {
+                LayoutUnit currentWidth = oldFrame->asFrameBox()->width();
+                if (oldStyle->boxSizing() ==
+                    BoxSizingValue::ContentBoxBoxSizingValue) {
+                    currentWidth = oldFrame->asFrameBox()->contentWidth();
+                }
+                executor->registerAnimation(
+                    new LengthAnimationTask(element, CSSStyleValuePair::Width,
+                                            AnimatedValue(currentWidth),
+                                            AnimatedValue(newStyle->width()),
+                                            duration, delay, timingFunction));
             }
         }
     }
@@ -2311,4 +2317,7 @@ bool ComputedStyle::isFourSideBorderStyleValueSolid()
 
     return false;
 }
+#undef _DAMAGED_KEYS
+#undef NEED_TRANSITION
+#undef RETURN_NEED_TRANSITION
 }
