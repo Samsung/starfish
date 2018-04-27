@@ -53,6 +53,7 @@ public:
     String* wholeText();
 
     /* Other methods (not in DOM API) */
+    Node* mergeWithTextSiblings();
 
     virtual Node* clone() override
     {

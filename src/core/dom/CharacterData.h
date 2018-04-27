@@ -71,6 +71,7 @@ public:
     void replaceData(unsigned long offset, unsigned long count, String* data);
 
     /* Other methods (not in DOM API) */
+
     static std::string replaceAll(const std::string& str,
                                   const std::string& pattern,
                                   const std::string& replace)

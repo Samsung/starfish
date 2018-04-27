@@ -20,6 +20,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Text.h"
+#include "core/dom/Traverse.h"
 #include "core/dom/DOMException.h"
 
 namespace StarFish {
@@ -99,5 +100,32 @@ String* Text::wholeText()
                   [&](Node* n) { str = str->concat(n->asText()->data()); });
 
     return str;
+}
+
+Node* Text::mergeWithTextSiblings()
+{
+    if (!length()) {
+        Node* next = Traverse::nextPostOrder(this, nullptr);
+        remove();
+        return next;
+    }
+
+    while (Node* next = nextSibling()) {
+        if (next->nodeType() != TEXT_NODE || next->isCDATASection()) {
+            break;
+        }
+
+        Text* nextText = next->asText();
+        if (!nextText->length()) {
+            nextText->remove();
+            continue;
+        }
+
+        appendData(nextText->data());
+        nextText->setData(String::emptyString);
+        nextText->remove();
+    }
+
+    return Traverse::nextPostOrder(this, nullptr);
 }
 }
