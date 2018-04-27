@@ -1354,7 +1354,7 @@ String* CSSStyleValuePair::toString() const
         return pairValue()->toString();
     }
     case CSSStyleValuePair::ValueKind::CSSPropertyNameValueKind:
-        return CSSPropertyHelper::toCamelCaseGCString(cssPropertyNameValue());
+        return CSSPropertyHelper::toGCString(cssPropertyNameValue());
     case CSSStyleValuePair::ValueKind::Time:
         return timeValue().toString();
     case CSSStyleValuePair::ValueKind::TransitionTimingFunctionValueKind:
@@ -1801,7 +1801,7 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
     const CSSTokenValue& value)
 {
     CSSStyleValuePair::KeyKind kind =
-        lookupCSSStyleCamelCase(value.data(), value.length());
+        lookupCSSStyle(value.data(), value.length());
     if (CSSPropertyHelper::isAnimatable(kind)) {
         setCSSPropertyNameValue(kind);
         return true;

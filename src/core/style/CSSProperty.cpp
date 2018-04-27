@@ -25,23 +25,30 @@ namespace StarFish {
 bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
 {
     switch (property) {
+    case CSSStyleValuePair::All:
+    case CSSStyleValuePair::Background:
     case CSSStyleValuePair::BackgroundColor:
     case CSSStyleValuePair::BackgroundImage:
     case CSSStyleValuePair::BackgroundPositionX:
     case CSSStyleValuePair::BackgroundPositionY:
     case CSSStyleValuePair::BackgroundSize:
+    case CSSStyleValuePair::BorderBottom:
     case CSSStyleValuePair::BorderBottomColor:
     case CSSStyleValuePair::BorderBottomLeftRadius:
     case CSSStyleValuePair::BorderBottomRightRadius:
     case CSSStyleValuePair::BorderBottomWidth:
+    case CSSStyleValuePair::BorderColor:
     case CSSStyleValuePair::BorderImageOutset:
     case CSSStyleValuePair::BorderImageSlice:
     case CSSStyleValuePair::BorderImageSource:
     case CSSStyleValuePair::BorderImageWidth:
+    case CSSStyleValuePair::BorderLeft:
     case CSSStyleValuePair::BorderLeftColor:
     case CSSStyleValuePair::BorderLeftWidth:
+    case CSSStyleValuePair::BorderRight:
     case CSSStyleValuePair::BorderRightColor:
     case CSSStyleValuePair::BorderRightWidth:
+    case CSSStyleValuePair::BorderTop:
     case CSSStyleValuePair::BorderTopColor:
     case CSSStyleValuePair::BorderTopLeftRadius:
     case CSSStyleValuePair::BorderTopRightRadius:
