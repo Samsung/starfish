@@ -11338,22 +11338,26 @@ static bool parseStepsFunction(const CSSTokenValue& value,
     if (!maySteps.hasValue()) {
         return false;
     }
-    std::vector<CSSTokenValue> tokens;
-    maySteps.getValue().split(',', tokens);
-    size_t size = tokens.size();
+    const CSSTokenValue& stepsContent = maySteps.getValue();
+    CSSTokenVector args;
+    if (!CSSPropertyParser::parseLayers(stepsContent.data(),
+                                        stepsContent.length(), args)) {
+        return false;
+    }
+    size_t size = args.size();
     if (size < 1 || size > 2) {
         return false;
     }
     int32_t number;
     bool isEnd = true;
-    if (!CSSPropertyParser::parseInt32(tokens[0].data(), 0, number) ||
+    if (!CSSPropertyParser::parseInt32(args[0].data(), 0, number) ||
         number <= 0) {
         return false;
     }
     if (size == 2) {
-        if (tokens[1] == "start") {
+        if (args[1] == "start") {
             isEnd = false;
-        } else if (tokens[1] != "end") {
+        } else if (args[1] != "end") {
             return false;
         }
     }
