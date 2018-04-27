@@ -186,10 +186,9 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual void drawRadialGradient(const Unit::Rect& dst, const float& sx,
-                                    const float& sy, const float& sr,
-                                    const float& ex, const float& ey,
-                                    const float& er, const float& a,
+    virtual void drawRadialGradient(const Unit::Rect& dst, float sx, float sy,
+                                    float sr, float ex, float ey, float er,
+                                    float firstRadius, float secondRadius,
                                     GCVector<ColorStop*>& colorStops)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

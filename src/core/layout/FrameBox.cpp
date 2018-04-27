@@ -1601,7 +1601,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             }
 
             ImageValue* imageValue = style->backgroundImage(idx);
-            float x1, y1, r1, x2, y2, r2, a;
+            float x1, y1, r1, x2, y2, r2, firstRadius, secondRadius;
             if (imageValue->gradientValue()->type() ==
                 GradientType::LinearGradient) {
                 Unit::Rect rect = paintingRect.snapSizeToPixel();
@@ -1623,12 +1623,13 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                 auto gradient =
                     imageValue->gradientValue()->asRadialGradientData();
                 gradient->computeEndPoints(rect, box, x1, y1, r1, x2, y2, r2,
-                                           a);
+                                           firstRadius, secondRadius);
 
                 GCVector<ColorStop*> colorStop;
                 gradient->makeSpecifiedColorStops(colorStop, x1, y1, r1, x2, y2,
                                                   r2, box);
-                canvas->drawRadialGradient(rect, x1, y1, r1, x2, y2, r2, a,
+                canvas->drawRadialGradient(rect, x1, y1, r1, x2, y2, r2,
+                                           firstRadius, secondRadius,
                                            colorStop);
             }
             canvas->restore();

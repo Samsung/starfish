@@ -285,7 +285,7 @@ public:
 
     bool computeEndPoints(const Unit::Rect& rect, FrameBox* owner, float& x1,
                           float& y1, float& r1, float& x2, float& y2, float& r2,
-                          float& aspectRatio);
+                          float& firstRadius, float& secondRadius);
 
     virtual CSSGradientValue* convertToCSSGradientValue() override;
     virtual void checkComputed(Length curFontSize, Length rootFontSize,
