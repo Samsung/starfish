@@ -512,7 +512,8 @@ bool GridFormattingContext::fixGridAreaWithUndefine(GridArea** preArea,
     return true;
 }
 
-size_t GridFormattingContext::convertToRealLine(String* str)
+size_t GridFormattingContext::convertToRealLine(String* str, size_t pos,
+                                                ConvertType type)
 {
     // TODO : Implement that other factors should be converted.
     auto raw = str->toUTF8NonGCString();
@@ -530,7 +531,17 @@ size_t GridFormattingContext::convertToRealLine(String* str)
 
         bool hasPoint = false;
         if (parser.consumeNumber(&hasPoint)) {
-            return 0;
+            size_t n = parser.parsedNumber();
+            if (type < ROWEND) {
+                n = pos - n;
+                if (n <= 0) {
+                    n = 1;
+                }
+            } else {
+                n = pos + n;
+            }
+
+            return n;
         } else if (parser.consumeString(CSSPropertyParser::AllowWithoutUnit)) {
             return 0;
         }
@@ -556,11 +567,141 @@ size_t GridFormattingContext::convertToRealLine(String* str)
                 return parser.parsedNumber();
             }
         } else if (parser.consumeString(CSSPropertyParser::AllowWithoutUnit)) {
-            return 0;
+            auto name = parser.parsedString();
+            GridArea* area =
+                getNamedGridArea(String::createASCIIString(name.c_str()));
+            if (area) {
+                if (type == COLUMNSTART) {
+                    return area->m_columnStart;
+                } else if (type == COLUMNEND) {
+                    return area->m_columnEnd;
+                } else if (type == ROWSTART) {
+                    return area->m_rowStart;
+                } else if (type == ROWEND) {
+                    return area->m_rowEnd;
+                }
+            } else {
+                return 0;
+            }
         }
     }
 
     return 0;
+}
+
+void GridFormattingContext::convertToStartEndForRow(ComputedStyle* style,
+                                                    size_t& start, size_t& end)
+{
+    String* rowStart = style->gridRowStart();
+    String* rowEnd = style->gridRowEnd();
+
+    bool spanStart = false;
+    bool spanEnd = false;
+    {
+        auto raw = rowStart->toUTF8NonGCString();
+        CSSTokenVector tokens;
+        CSSStyleDeclaration::tokenizeCSSValue(tokens, raw.data(), raw.length());
+
+        for (size_t i = 0; i < tokens.size(); i++) {
+            if (tokens[i].equals("span")) {
+                spanStart = true;
+                break;
+            }
+        }
+    }
+
+    {
+        auto raw = rowEnd->toUTF8NonGCString();
+        CSSTokenVector tokens;
+        CSSStyleDeclaration::tokenizeCSSValue(tokens, raw.data(), raw.length());
+
+        for (size_t i = 0; i < tokens.size(); i++) {
+            if (tokens[i].equals("span")) {
+                spanEnd = true;
+                break;
+            }
+        }
+    }
+
+    if (spanStart && spanEnd) {
+        start = end = 0;
+        return;
+    }
+
+    if (!spanStart && spanEnd) {
+        size_t s = convertToRealLine(rowStart, 0, ROWSTART);
+        size_t e = convertToRealLine(rowEnd, s, ROWEND);
+        start = s;
+        end = e;
+    } else if (spanStart && !spanEnd) {
+        size_t e = convertToRealLine(rowEnd, 0, ROWEND);
+        size_t s = convertToRealLine(rowStart, e, ROWSTART);
+        start = s;
+        end = e;
+    } else {
+        size_t s = convertToRealLine(rowStart, 0, ROWSTART);
+        size_t e = convertToRealLine(rowEnd, 0, ROWEND);
+        start = s;
+        end = e;
+    }
+}
+
+void GridFormattingContext::convertToStartEndForColumn(ComputedStyle* style,
+                                                       size_t& start,
+                                                       size_t& end)
+{
+    String* columnStart = style->gridColumnStart();
+    String* columnEnd = style->gridColumnEnd();
+
+    bool spanStart = false;
+    bool spanEnd = false;
+    {
+        auto raw = columnStart->toUTF8NonGCString();
+        CSSTokenVector tokens;
+        CSSStyleDeclaration::tokenizeCSSValue(tokens, raw.data(), raw.length());
+
+        for (size_t i = 0; i < tokens.size(); i++) {
+            if (tokens[i].equals("span")) {
+                spanStart = true;
+                break;
+            }
+        }
+    }
+
+    {
+        auto raw = columnEnd->toUTF8NonGCString();
+        CSSTokenVector tokens;
+        CSSStyleDeclaration::tokenizeCSSValue(tokens, raw.data(), raw.length());
+
+        for (size_t i = 0; i < tokens.size(); i++) {
+            if (tokens[i].equals("span")) {
+                spanEnd = true;
+                break;
+            }
+        }
+    }
+
+    if (spanStart && spanEnd) {
+        start = end = 0;
+        return;
+    }
+
+    if (!spanStart && spanEnd) {
+        size_t s = convertToRealLine(columnStart, 0, COLUMNSTART);
+        size_t e = convertToRealLine(columnEnd, s, COLUMNEND);
+        start = s;
+        end = e;
+    } else if (spanStart && !spanEnd) {
+        size_t e = convertToRealLine(columnEnd, 0, COLUMNEND);
+        size_t s = convertToRealLine(columnStart, e, COLUMNSTART);
+        start = s;
+        end = e;
+    } else {
+        size_t s = convertToRealLine(columnStart, 0, COLUMNSTART);
+        size_t e = convertToRealLine(columnEnd, 0, COLUMNEND);
+        start = s;
+        end = e;
+    }
 }
 
 void GridFormattingContext::buildGridAreaAndOrdering()
@@ -577,10 +718,10 @@ void GridFormattingContext::buildGridAreaAndOrdering()
     for (auto gridItem : m_orderedGridItems) {
         ComputedStyle* style = gridItem->style();
 
-        size_t rowStart = convertToRealLine(style->gridRowStart());
-        size_t rowEnd = convertToRealLine(style->gridRowEnd());
-        size_t columnStart = convertToRealLine(style->gridColumnStart());
-        size_t columnEnd = convertToRealLine(style->gridColumnEnd());
+        size_t rowStart, rowEnd;
+        size_t columnStart, columnEnd;
+        convertToStartEndForRow(style, rowStart, rowEnd);
+        convertToStartEndForColumn(style, columnStart, columnEnd);
 
         adaptStartAndEndValueForRow(*this, gridItem, m_gridLineRows.size(),
                                     rowStart, rowEnd);
