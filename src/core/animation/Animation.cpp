@@ -138,7 +138,6 @@ void ColorAnimationTask::execute(float progress)
     unsigned char b = from.b() * (1 - progress) + to.b() * progress;
     unsigned char a = from.a();
 
-    // TODO : More types should be supported
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
         style->setBackgroundColor(Unit::Color(r, g, b, a));
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottomColor) {
@@ -149,6 +148,13 @@ void ColorAnimationTask::execute(float progress)
         style->setBorderRightColor(Unit::Color(r, g, b, a));
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderTopColor) {
         style->setBorderTopColor(Unit::Color(r, g, b, a));
+    }
+    // TODO CaretColor (Inheritance issue)
+    // TODO Color (Inheritance issue)
+    else if (m_property == CSSStyleValuePair::KeyKind::OutlineColor) {
+        style->setOutlineColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::TextDecorationColor) {
+        style->setTextDecorationColor(Unit::Color(r, g, b, a));
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }

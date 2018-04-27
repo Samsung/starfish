@@ -97,6 +97,7 @@ bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
     case CSSStyleValuePair::RY:
     case CSSStyleValuePair::Stroke:
     case CSSStyleValuePair::StrokeWidth:
+    case CSSStyleValuePair::TextDecoration:
     case CSSStyleValuePair::TextDecorationColor:
     case CSSStyleValuePair::TextIndent:
     case CSSStyleValuePair::TextShadow:
