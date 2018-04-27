@@ -589,7 +589,6 @@ static float resolveRadius(FrameBox* owner, const Length& radius,
         ret = radius.specifiedValue(0, owner);
     }
     return clampTo<float>(std::max(ret, 0.0f));
-    ;
 }
 
 void RadialGradientData::radiusToSide(const float& x, const float& y,
@@ -669,7 +668,8 @@ void RadialGradientData::radiusToCorner(const float& x, const float& y,
 bool RadialGradientData::computeEndPoints(const Unit::Rect& rect,
                                           FrameBox* owner, float& x1, float& y1,
                                           float& r1, float& x2, float& y2,
-                                          float& r2, float& aspectRatio)
+                                          float& r2, float& firstRadius,
+                                          float& secondRadius)
 {
     int x = rect.x();
     int y = rect.y();
@@ -684,39 +684,38 @@ bool RadialGradientData::computeEndPoints(const Unit::Rect& rect,
     x2 = x1;
     y2 = y1;
 
-    float r2Horizontal = 0;
-    float r2Vertical = 0;
+    firstRadius = 0;
+    secondRadius = 0;
     if (!m_firstRadius.isAuto()) {
-        r2Horizontal = resolveRadius(owner, m_firstRadius, rect.width());
+        firstRadius = resolveRadius(owner, m_firstRadius, rect.width());
         if (m_secondRadius.isAuto()) {
-            r2Vertical = r2Horizontal;
+            secondRadius = firstRadius;
         } else {
-            r2Vertical = resolveRadius(owner, m_secondRadius, rect.height());
+            secondRadius = resolveRadius(owner, m_secondRadius, rect.height());
         }
     } else {
         switch (m_gradientSizeKeyword) {
         case RadialGradientSizeKeyword::ClosetSide:
             radiusToSide(x2, y2, rect, [](float a, float b) { return a < b; },
-                         r2Horizontal, r2Vertical);
+                         firstRadius, secondRadius);
             break;
         case RadialGradientSizeKeyword::FarthestSide:
             radiusToSide(x2, y2, rect, [](float a, float b) { return a > b; },
-                         r2Horizontal, r2Vertical);
+                         firstRadius, secondRadius);
             break;
         case RadialGradientSizeKeyword::ClosetCorner:
             radiusToCorner(x2, y2, rect, [](float a, float b) { return a < b; },
-                           r2Horizontal, r2Vertical);
+                           firstRadius, secondRadius);
             break;
         case RadialGradientSizeKeyword::FarthestCorner:
         default:
             radiusToCorner(x2, y2, rect, [](float a, float b) { return a > b; },
-                           r2Horizontal, r2Vertical);
+                           firstRadius, secondRadius);
             break;
         }
     }
-    bool isDegenerate = !r2Horizontal || !r2Vertical;
-    isDegenerate ? r2 = 0, aspectRatio = 1 : r2 = r2Horizontal,
-                   aspectRatio = r2Horizontal / r2Vertical;
+
+    (!firstRadius || !secondRadius) ? r2 = 0 : r2 = firstRadius;
     return true;
 }
 
