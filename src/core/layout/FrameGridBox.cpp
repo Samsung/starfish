@@ -240,24 +240,13 @@ static void adaptStartAndEndValueForRow(GridFormattingContext& ctx,
                                         FrameBox* gridItem, size_t numberOfRows,
                                         size_t& start, size_t& end)
 {
-    // check named grid areas.
-    auto style = gridItem->style();
-    if (style) {
-        String* name = style->gridArea();
-        if (name) {
-            GridArea* area = ctx.getNamedGridArea(name);
-            if (area) {
-                start = area->m_rowStart;
-                end = area->m_rowEnd;
-            }
-        }
-    }
-
     if (start > 0 && end > 0) {
         if (start > end) {
             size_t temp = start;
             start = end;
             end = temp;
+        } else if (start == end) {
+            end = start + 1;
         }
     } else if (start > 0 && !end) {
         end = start + 1;
@@ -296,24 +285,13 @@ static void adaptStartAndEndValueForColumn(GridFormattingContext& ctx,
                                            size_t numberOfColumns,
                                            size_t& start, size_t& end)
 {
-    // check named grid areas.
-    auto style = gridItem->style();
-    if (style) {
-        String* name = style->gridArea();
-        if (name) {
-            GridArea* area = ctx.getNamedGridArea(name);
-            if (area) {
-                start = area->m_columnStart;
-                end = area->m_columnEnd;
-            }
-        }
-    }
-
     if (start > 0 && end > 0) {
         if (start > end) {
             size_t temp = start;
             start = end;
             end = temp;
+        } else if (start == end) {
+            end = start + 1;
         }
     } else if (start > 0 && !end) {
         end = start + 1;

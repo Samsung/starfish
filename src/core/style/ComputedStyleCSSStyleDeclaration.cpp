@@ -1502,15 +1502,51 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     } break;
     case CSSStyleValuePair::KeyKind::GridArea: {
         CSSStyleValuePair p;
-        String* area = style->gridArea();
-        if (area) {
-            p.setKeyKind(CSSStyleValuePair::KeyKind::GridArea);
-            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-            p.setStringValue(area);
+        p.setKeyKind(CSSStyleValuePair::KeyKind::GridArea);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        p.setValueList(new ValueList(ValueList::Separator::SlashSeparator));
+
+        // row start / column start / row end / column end
+        CSSStyleValuePair rs;
+        rs.setKeyKind(CSSStyleValuePair::KeyKind::GridRowStart);
+        rs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        if (style->gridRowStart() != String::emptyString) {
+            rs.setStringValue(style->gridRowStart());
         } else {
-            p.setKeyKind(CSSStyleValuePair::KeyKind::GridArea);
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            rs.setStringValue(String::createASCIIString("auto"));
         }
+        p.multiValue()->emplace_back(rs.valueKind(), rs.value());
+
+        CSSStyleValuePair cs;
+        cs.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
+        cs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        if (style->gridColumnStart() != String::emptyString) {
+            cs.setStringValue(style->gridColumnStart());
+        } else {
+            cs.setStringValue(String::createASCIIString("auto"));
+        }
+        p.multiValue()->emplace_back(cs.valueKind(), cs.value());
+
+        CSSStyleValuePair re;
+        re.setKeyKind(CSSStyleValuePair::KeyKind::GridRowEnd);
+        re.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        if (style->gridRowEnd() != String::emptyString) {
+            re.setStringValue(style->gridRowEnd());
+        } else {
+            re.setStringValue(String::createASCIIString("auto"));
+        }
+        p.multiValue()->emplace_back(re.valueKind(), re.value());
+
+        CSSStyleValuePair ce;
+        ce.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnEnd);
+        ce.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+        if (style->gridColumnEnd() != String::emptyString) {
+            ce.setStringValue(style->gridColumnEnd());
+        } else {
+            ce.setStringValue(String::createASCIIString("auto"));
+        }
+        p.multiValue()->emplace_back(ce.valueKind(), ce.value());
+
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::TextOverflow: {
