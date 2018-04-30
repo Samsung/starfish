@@ -236,6 +236,7 @@ private:
     GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
 
     uint64_t m_lastRenderingTime;
+    uint64_t m_navigateStartingTime;
     uint32_t m_currentActiveAnimatorCount;
     bool m_inRendering;
     bool m_needsRendering;

@@ -125,8 +125,6 @@ void* ComputedStyle::operator new(size_t size)
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle,
                                               m_inheritedStyles.m_lineHeight));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_width));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_height));
         GC_set_bit(
             obj_bitmap,
             GC_WORD_OFFSET(ComputedStyle, m_rareComputedStyleData.m_styles));
@@ -694,13 +692,21 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         setStrokeWidth(v);
     }
 
-    m_width.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                  windowSize.width(), windowSize.height(),
-                                  this);
-    m_height.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                   windowSize.width(), windowSize.height(),
-                                   this);
     if (hasRareComputeStyleData()) {
+        Nullable<Length> width = m_rareComputedStyleData.width();
+        if (width.hasValue()) {
+            m_rareComputedStyleData.ensureWidth()->changeToFixedIfNeeded(
+                curFontSize, rootFontSize, font, windowSize.width(),
+                windowSize.height(), this);
+        }
+
+        Nullable<Length> height = m_rareComputedStyleData.height();
+        if (height.hasValue()) {
+            m_rareComputedStyleData.ensureHeight()->changeToFixedIfNeeded(
+                curFontSize, rootFontSize, font, windowSize.width(),
+                windowSize.height(), this);
+        }
+
         Nullable<Length> minWidth = m_rareComputedStyleData.minWidth();
         if (minWidth.hasValue()) {
             m_rareComputedStyleData.ensureMinWidth()->changeToFixedIfNeeded(
@@ -998,8 +1004,8 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
         RETURN_NEED_TRANSITION(CSSStyleValuePair::BorderTopColor,
                                CSSStyleValuePair::BorderColor,
                                CSSStyleValuePair::BorderTop);
-        // TODO CaretColor (Inheritance issue)
-        // TODO Color (Inheritance issue)
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::Color);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::CaretColor);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::Height);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MaxHeight);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MaxWidth);
@@ -1090,8 +1096,22 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 delay, timingFunction));
             newStyle->setBorderTopColor(oldColor);
         }
-        // TODO CaretColor (Inheritance issue)
-        // TODO Color (Inheritance issue)
+        if (NEED_TRANSITION(CSSStyleValuePair::Color)) {
+            Unit::Color oldColor = oldStyle->color();
+            executor->registerAnimation(new ColorAnimationTask(
+                element, CSSStyleValuePair::Color, AnimatedValue(oldColor),
+                AnimatedValue(newStyle->color()), duration, delay,
+                timingFunction));
+            newStyle->setColor(oldColor);
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::CaretColor)) {
+            Unit::Color oldColor = oldStyle->caretColor();
+            executor->registerAnimation(new ColorAnimationTask(
+                element, CSSStyleValuePair::CaretColor, AnimatedValue(oldColor),
+                AnimatedValue(newStyle->caretColor()), duration, delay,
+                timingFunction));
+            newStyle->setColor(oldColor);
+        }
         if (NEED_TRANSITION(CSSStyleValuePair::Height)) {
             if (oldFrame && oldStyle->height().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&
@@ -1484,7 +1504,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_width != oldStyle->m_width) {
+    if (newStyle->width() != oldStyle->width()) {
         damagedKeys[CSSStyleValuePair::KeyKind::Width] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
@@ -1502,7 +1522,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_height != oldStyle->m_height) {
+    if (newStyle->height() != oldStyle->height()) {
         damagedKeys[CSSStyleValuePair::KeyKind::Height] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);

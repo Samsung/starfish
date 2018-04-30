@@ -114,7 +114,7 @@
 #include <cwchar>
 #include <numeric>
 
-#define ESCARGOT // for use additional functions in GCttil
+#define ESCARGOT // for use additional functions in GCutil
 #include <GCUtil.h>
 #undef ESCARGOT
 

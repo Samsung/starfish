@@ -122,6 +122,49 @@ float AnimationTask::computeProgress(uint64_t tickCount)
     return result;
 }
 
+static void checkNeedsUpdateInheritStyleValues(
+    CSSStyleValuePair::KeyKind keyKind, Element* parentElement,
+    Unit::Color nextColor)
+{
+    ComputedStyle* parentStyle = parentElement->style();
+    Unit::Color parentClr;
+    if (keyKind == CSSStyleValuePair::KeyKind::Color) {
+        parentClr = parentStyle->color();
+    } else if (keyKind == CSSStyleValuePair::KeyKind::CaretColor) {
+        parentClr = parentStyle->caretColor();
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    Node* n = parentElement->firstChild();
+    while (n) {
+        bool isMatch = false;
+        ComputedStyle* childStyle = n->style();
+        if (childStyle->color() == parentClr &&
+            keyKind == CSSStyleValuePair::KeyKind::Color) {
+            isMatch = true;
+        } else if (childStyle->caretColor() == parentClr &&
+                   keyKind == CSSStyleValuePair::KeyKind::CaretColor) {
+            isMatch = true;
+        }
+
+        if (isMatch) {
+            if (n->isElement()) {
+                n->setNeedsStyleRecalc(
+                    Node::StyleChangeReason::JustNeedsRecalcSelf);
+            } else {
+                if (keyKind == CSSStyleValuePair::KeyKind::Color) {
+                    childStyle->setColor(nextColor);
+                } else if (keyKind == CSSStyleValuePair::KeyKind::CaretColor) {
+                    childStyle->setCaretColor(nextColor);
+                }
+            }
+        }
+
+        n = n->nextSibling();
+    }
+}
+
 // This function change computed style of target node.
 // * After this function, NeedsPainting flag will be set.
 void ColorAnimationTask::execute(float progress)
@@ -148,10 +191,16 @@ void ColorAnimationTask::execute(float progress)
         style->setBorderRightColor(Unit::Color(r, g, b, a));
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderTopColor) {
         style->setBorderTopColor(Unit::Color(r, g, b, a));
-    }
-    // TODO CaretColor (Inheritance issue)
-    // TODO Color (Inheritance issue)
-    else if (m_property == CSSStyleValuePair::KeyKind::OutlineColor) {
+    } else if (m_property == CSSStyleValuePair::KeyKind::Color) {
+        checkNeedsUpdateInheritStyleValues(CSSStyleValuePair::KeyKind::Color,
+                                           current, Unit::Color(r, g, b, a));
+        style->setColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::CaretColor) {
+        checkNeedsUpdateInheritStyleValues(
+            CSSStyleValuePair::KeyKind::CaretColor, current,
+            Unit::Color(r, g, b, a));
+        style->setCaretColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::OutlineColor) {
         style->setOutlineColor(Unit::Color(r, g, b, a));
     } else if (m_property == CSSStyleValuePair::KeyKind::TextDecorationColor) {
         style->setTextDecorationColor(Unit::Color(r, g, b, a));
@@ -571,9 +620,9 @@ void TransformAnimationTask::detachedFromElement()
 
     Element* current = targetElement();
     ComputedStyle* style = current->style();
-    FrameBox* box = current->frame()->asFrameBox();
 
-    if (style && style->hasTransforms()) {
+    if (style && style->hasTransforms() && current->frame()) {
+        FrameBox* box = current->frame()->asFrameBox();
         auto transforms = style->rareComputedStyleData()->transforms();
         if (transforms->at(transforms->size() - 1).type() ==
             StyleTransformData::InternalMatrix) {
@@ -799,8 +848,7 @@ void AnimationExecutor::runPendingAnimation()
             false,
         };
 
-        if (currentElementStyle &&
-            !info->newStyle->transitionDuration().isZero()) {
+        if (currentElementStyle && currentElementStyle->transition()) {
             compareStyle(info->oldStyle, currentElementStyle, damagedKeys);
             if (!info->oldFrame) {
                 info->oldFrame = info->element->frame();

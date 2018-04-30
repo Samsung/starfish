@@ -18,6 +18,14 @@
  */
 
 // #define STARFISH_ENABLE_PROFILE_TIMER
+// #define STARFISH_ENABLE_PROFILE_LOADING
+
+#ifdef STARFISH_ENABLE_PROFILE_LOADING_TIMER
+#ifndef STARFISH_ENABLE_TEST
+#error \
+    "`STARFISH_ENABLE_PROFILE_LOADING_TIMER` flag needs `STARFISH_ENABLE_TEST`"
+#endif
+#endif
 
 #include "StarFishConfig.h"
 
@@ -79,6 +87,7 @@ WebView::WebView(StarFish* starFish)
     , m_sessionStorageNamespace(nullptr)
     , m_historyManager(nullptr)
     , m_seed((unsigned int)time(NULL))
+    , m_navigateStartingTime(0)
     , m_currentActiveAnimatorCount(0)
     , m_inRendering(false)
     , m_needsRendering(false)
@@ -117,6 +126,7 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
     clearBlobURLStore();
     initRenderingFlags();
     clearStack<102400>();
+    m_navigateStartingTime = timestamp();
     if (m_topLevelBrowsingContext) {
         m_topLevelBrowsingContext->dispose();
     }
@@ -838,8 +848,21 @@ bool WebView::rendering(bool force)
             }
             g_surfaceForScreehShot = nullptr;
         }
+
+#ifdef STARFISH_ENABLE_PROFILE_LOADING
+        if (g_fireOnloadEvent) {
+            auto currentTime = timestamp();
+            auto diff = currentTime - m_navigateStartingTime;
+            STARFISH_LOG_INFO(
+                "`STARFISH_ENABLE_PROFILE_LOADING` => %fms elapsed since "
+                "starting loading\n",
+                (float)diff);
+            exit(0);
+        }
+#endif
     }
 #endif
+
     return didPaintingOrCompositing;
 }
 
