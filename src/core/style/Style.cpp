@@ -5494,10 +5494,14 @@ void StyleResolver::apply(Element* element,
             break;
         case CSSStyleValuePair::KeyKind::GridArea:
             if (cssValues[k].valueKind() ==
-                CSSStyleValuePair::ValueKind::StringValueKind) {
-                style->setGridArea(cssValues[k].stringValue());
-            } else {
-                style->setGridArea(nullptr);
+                CSSStyleValuePair::ValueKind::ValueListKind) {
+                auto list = cssValues[k].multiValue();
+                if (list) {
+                    style->setGridRowStart(list->at(0).stringValue());
+                    style->setGridColumnStart(list->at(1).stringValue());
+                    style->setGridRowEnd(list->at(2).stringValue());
+                    style->setGridColumnEnd(list->at(3).stringValue());
+                }
             }
             break;
         case CSSStyleValuePair::KeyKind::WillChange:
@@ -9188,6 +9192,178 @@ bool CSSStyleValuePair::updateValueGridColumnEnd(Document* document,
     return result;
 }
 
+bool CSSStyleValuePair::updateValueGridArea(Document* document,
+                                            const CSSTokenVector& tokens)
+{
+    if (!tokens.size()) {
+        return false;
+    }
+
+    std::string str;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        auto ss = tokens[i];
+        ss.trim();
+        str += (ss + " ");
+    }
+
+    std::istringstream is(str);
+    std::string part;
+
+    std::vector<CSSTokenValue> parts;
+    while (getline(is, part, '/')) {
+        CSSTokenValue s(part.c_str());
+        s = s.trim();
+        parts.push_back(s);
+    }
+
+    bool result = true;
+    setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+    setValueList(new ValueList(ValueList::Separator::SlashSeparator));
+    CSSStyleValuePair rs;
+    CSSStyleValuePair cs;
+    CSSStyleValuePair re;
+    CSSStyleValuePair ce;
+    // First : row start, Second : column start
+    // Third : row end, Fourth : column end
+    if (parts.size() == 1) {
+        if (parts[0].equals("auto")) {
+            rs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            rs.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(rs.valueKind(), rs.value());
+            cs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            cs.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(cs.valueKind(), cs.value());
+            re.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            re.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(re.valueKind(), re.value());
+            ce.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            ce.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(ce.valueKind(), ce.value());
+        } else {
+            CSSTokenVector list;
+            list.push_back(parts[0]);
+            result = isValidForGridStartEnd(list);
+            float x;
+            if (CSSPropertyParser::parseNumber(parts[0].c_str(), 0, &x)) {
+                if (result) {
+                    rs.setValueKind(
+                        CSSStyleValuePair::ValueKind::StringValueKind);
+                    rs.setStringValue(
+                        String::createASCIIString(parts[0].c_str()));
+                    multiValue()->emplace_back(rs.valueKind(), rs.value());
+                    cs.setValueKind(
+                        CSSStyleValuePair::ValueKind::StringValueKind);
+                    cs.setStringValue(String::createASCIIString("auto"));
+                    multiValue()->emplace_back(cs.valueKind(), cs.value());
+                    re.setValueKind(
+                        CSSStyleValuePair::ValueKind::StringValueKind);
+                    re.setStringValue(String::createASCIIString("auto"));
+                    multiValue()->emplace_back(re.valueKind(), re.value());
+                    ce.setValueKind(
+                        CSSStyleValuePair::ValueKind::StringValueKind);
+                    ce.setStringValue(String::createASCIIString("auto"));
+                    multiValue()->emplace_back(ce.valueKind(), ce.value());
+                }
+            } else {
+                if (result) {
+                    rs.setValueKind(
+                        CSSStyleValuePair::ValueKind::StringValueKind);
+                    rs.setStringValue(
+                        String::createASCIIString(parts[0].c_str()));
+                    multiValue()->emplace_back(rs.valueKind(), rs.value());
+                    cs.setValueKind(
+                        CSSStyleValuePair::ValueKind::StringValueKind);
+                    cs.setStringValue(
+                        String::createASCIIString(parts[0].c_str()));
+                    multiValue()->emplace_back(cs.valueKind(), cs.value());
+                    re.setValueKind(
+                        CSSStyleValuePair::ValueKind::StringValueKind);
+                    re.setStringValue(
+                        String::createASCIIString(parts[0].c_str()));
+                    multiValue()->emplace_back(re.valueKind(), re.value());
+                    ce.setValueKind(
+                        CSSStyleValuePair::ValueKind::StringValueKind);
+                    ce.setStringValue(
+                        String::createASCIIString(parts[0].c_str()));
+                    multiValue()->emplace_back(ce.valueKind(), ce.value());
+                }
+            }
+        }
+    } else if (parts.size() == 2) {
+        CSSTokenVector list1, list2;
+        list1.push_back(parts[0]);
+        list2.push_back(parts[1]);
+        result = isValidForGridStartEnd(list1);
+        result = isValidForGridStartEnd(list2) & result;
+        if (result) {
+            rs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            rs.setStringValue(String::createASCIIString(parts[0].c_str()));
+            multiValue()->emplace_back(rs.valueKind(), rs.value());
+            cs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            cs.setStringValue(String::createASCIIString(parts[1].c_str()));
+            multiValue()->emplace_back(cs.valueKind(), cs.value());
+            re.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            re.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(re.valueKind(), re.value());
+            ce.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            ce.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(ce.valueKind(), ce.value());
+        }
+    } else if (parts.size() == 3) {
+        CSSTokenVector list1, list2, list3;
+        list1.push_back(parts[0]);
+        list2.push_back(parts[1]);
+        list3.push_back(parts[2]);
+        result = isValidForGridStartEnd(list1);
+        result = isValidForGridStartEnd(list2) & result;
+        result = isValidForGridStartEnd(list3) & result;
+
+        if (result) {
+            rs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            rs.setStringValue(String::createASCIIString(parts[0].c_str()));
+            multiValue()->emplace_back(rs.valueKind(), rs.value());
+            cs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            cs.setStringValue(String::createASCIIString(parts[1].c_str()));
+            multiValue()->emplace_back(cs.valueKind(), cs.value());
+            re.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            re.setStringValue(String::createASCIIString(parts[2].c_str()));
+            multiValue()->emplace_back(re.valueKind(), re.value());
+            ce.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            ce.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(ce.valueKind(), ce.value());
+        }
+    } else if (parts.size() == 4) {
+        CSSTokenVector list1, list2, list3, list4;
+        list1.push_back(parts[0]);
+        list2.push_back(parts[1]);
+        list3.push_back(parts[2]);
+        list4.push_back(parts[3]);
+        result = isValidForGridStartEnd(list1);
+        result = isValidForGridStartEnd(list2) & result;
+        result = isValidForGridStartEnd(list3) & result;
+        result = isValidForGridStartEnd(list4) & result;
+
+        if (result) {
+            rs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            rs.setStringValue(String::createASCIIString(parts[0].c_str()));
+            multiValue()->emplace_back(rs.valueKind(), rs.value());
+            cs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            cs.setStringValue(String::createASCIIString(parts[1].c_str()));
+            multiValue()->emplace_back(cs.valueKind(), cs.value());
+            re.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            re.setStringValue(String::createASCIIString(parts[2].c_str()));
+            multiValue()->emplace_back(re.valueKind(), re.value());
+            ce.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            ce.setStringValue(String::createASCIIString(parts[3].c_str()));
+            multiValue()->emplace_back(ce.valueKind(), ce.value());
+        }
+    } else {
+        result = false;
+    }
+
+    return result;
+}
+
 bool CSSStyleValuePair::updateValueGridGap(Document* document,
                                            const CSSTokenVector& tokens)
 {
@@ -9289,27 +9465,6 @@ bool CSSStyleValuePair::updateValueGridColumnGap(Document* document,
 
     CSSLength length = CSSLength(str, number);
     setLengthValue(length);
-
-    return true;
-}
-
-bool CSSStyleValuePair::updateValueGridArea(Document* document,
-                                            const CSSTokenVector& tokens)
-{
-    if (tokens.size() != 1) {
-        return false;
-    }
-
-    const char* token = tokens[0].data();
-    int32_t val = 0;
-    if (TOKEN_IS_STRING("auto")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
-    } else {
-        // This part stores the name of area.
-        String* str = String::createASCIIString(token);
-        setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-        setStringValue(str);
-    }
 
     return true;
 }

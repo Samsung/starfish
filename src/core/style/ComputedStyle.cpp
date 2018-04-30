@@ -2180,12 +2180,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->gridArea() != oldStyle->gridArea()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::GridArea] = true;
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
-    }
-
     if (newStyle->boxDecorationBreak() != oldStyle->boxDecorationBreak()) {
         damagedKeys[CSSStyleValuePair::KeyKind::BoxDecorationBreak] = true;
         damage = (ComputedStyleDamage)(
