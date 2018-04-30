@@ -53,6 +53,7 @@
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/WebOrigin.h"
+#include "core/dom/Range.h"
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
 #include "platform/loader/ImageResource.h"
@@ -1424,6 +1425,11 @@ QualifiedName Document::createAttributeNameNS(Nullable<String*> ns,
             : AtomicString::emptyAtomicString();
     return QualifiedName(nsURI, AtomicString::createAtomicString(
                                     window()->starFish(), localName));
+}
+
+Range* Document::createRange()
+{
+    return Range::create(this);
 }
 
 DOMImplementation* Document::implementation()

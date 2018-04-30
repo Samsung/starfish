@@ -193,6 +193,67 @@ public:
         }
         return next;
     }
+
+    static Node* childAt(Node* parent, unsigned index)
+    {
+        Node* child = parent->firstChild();
+        while (child && index) {
+            child = child->nextSibling();
+            index--;
+        }
+        return child;
+    }
+
+    static Node* commonAncestor(Node* nodeA, Node* nodeB)
+    {
+        STARFISH_ASSERT(nodeA && nodeB);
+
+        if (nodeA == nodeB) {
+            return nodeA;
+        }
+
+        if (root(nodeA) != root(nodeB)) {
+            return nullptr;
+        }
+
+        int depthA = 0;
+        int depthB = 0;
+        for (Node* node = nodeA; node; node = node->parentNode()) {
+            depthA++;
+        }
+        for (Node* node = nodeB; node; node = node->parentNode()) {
+            depthB++;
+        }
+
+        Node* ancestorA = nodeA;
+        Node* ancestorB = nodeB;
+        if (depthA > depthB) {
+            while (depthA-- > depthB) {
+                ancestorA = ancestorA->parentNode();
+            }
+        } else {
+            while (depthA < depthB--) {
+                ancestorB = ancestorB->parentNode();
+            }
+        }
+
+        while (ancestorA != ancestorB) {
+            ancestorA = ancestorA->parentNode();
+            ancestorB = ancestorB->parentNode();
+        }
+
+        STARFISH_ASSERT(ancestorA && ancestorB);
+        return ancestorA;
+    }
+
+    static Node* root(Node* current)
+    {
+        Node* node = current;
+        while (node->parentNode()) {
+            node = node->parentNode();
+        }
+        return node;
+    }
 };
 }
 

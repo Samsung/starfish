@@ -418,6 +418,21 @@ bool Node::isDescendantOf(const Node* other)
     return false;
 }
 
+unsigned Node::index()
+{
+    STARFISH_ASSERT(parentNode());
+    Node* parent = parentNode();
+    Node* child = parent->firstChild();
+    unsigned index = 0;
+
+    while (child != this) {
+        index++;
+        child = child->nextSibling();
+    }
+
+    return index;
+}
+
 OverflowValue Node::appliedOverflowX()
 {
     if (isDocument()) {
@@ -672,6 +687,29 @@ void Node::setState(NodeState state, bool enable)
 
         didStateChanged(oldState, newState);
     }
+}
+
+unsigned Node::nodeLength() const
+{
+    switch (nodeType()) {
+    case DOCUMENT_TYPE_NODE:
+        return 0;
+    case TEXT_NODE:
+    case CDATA_SECTION_NODE:
+    case PROCESSING_INSTRUCTION_NODE:
+    case COMMENT_NODE:
+        return this->asCharacterData()->length();
+    default:
+        unsigned childCount = 0;
+        Node* child = firstChild();
+        while (child) {
+            childCount++;
+            child = child->nextSibling();
+        }
+        return childCount;
+    }
+    STARFISH_ASSERT_NOT_REACHED();
+    return 0;
 }
 
 unsigned short isPreceding(const Node* node, const Node* isPrec,
