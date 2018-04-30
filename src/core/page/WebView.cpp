@@ -531,7 +531,7 @@ void WebView::layoutIfNeeds()
         if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableStackingContextDump) {
             size_t totalSurfaceBufferSize = 0;
-            if (mainBrowsingContext()->document()->frame()->firstChild()) {
+            if (m_rootStackingContext) {
                 STARFISH_ASSERT(mainBrowsingContext()
                                     ->document()
                                     ->frame()
