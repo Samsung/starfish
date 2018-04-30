@@ -395,9 +395,18 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     } else {
         auto it2 = headers.findHeader(HTTPHeaderMap::kReferer);
         if (it2 == headers.headerMap().end() && m_orgProxy->referrer()) {
-            auto urlUTF8Data =
-                m_orgProxy->referrer()->urlString()->toUTF8NonGCString();
-            headers.setHeader(HTTPHeaderMap::kReferer, urlUTF8Data);
+            ResourceURL* rUrl = m_orgProxy->referrer();
+            String* rString;
+            if (rUrl->isReferrerURL()) {
+                rString =
+                    rUrl->asReferrerURL()->referrerString(m_orgProxy->url());
+            } else {
+                rString = rUrl->urlString();
+            }
+            if (!rString->isEmpty()) {
+                auto urlUTF8Data = rString->toUTF8NonGCString();
+                headers.setHeader(HTTPHeaderMap::kReferer, urlUTF8Data);
+            }
         }
     }
 }

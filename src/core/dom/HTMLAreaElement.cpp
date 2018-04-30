@@ -22,6 +22,7 @@
 
 #include "core/dom/HTMLAreaElement.h"
 
+#include "core/dom/Document.h"
 #include "core/dom/DOMTokenList.h"
 
 namespace StarFish {
@@ -46,6 +47,20 @@ DOMTokenList* HTMLAreaElement::relList()
         m_relList = new DOMTokenList(this, starFish()->staticStrings()->m_rel);
     }
     return m_relList;
+}
+
+String* HTMLAreaElement::referrerPolicy()
+{
+    return getAttributeOrEmpty(
+        document()->starFish()->staticStrings()->m_referrerpolicy);
+}
+
+void HTMLAreaElement::setReferrerPolicy(String* policy)
+{
+    if (ReferrerURL::isValidPolicy(policy)) {
+        setAttribute(document()->starFish()->staticStrings()->m_referrerpolicy,
+                     policy);
+    }
 }
 
 QualifiedName HTMLAreaElement::name()

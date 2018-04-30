@@ -41,6 +41,9 @@ public:
 
     DOMTokenList* relList();
 
+    String* referrerPolicy();
+    void setReferrerPolicy(String* policy);
+
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 

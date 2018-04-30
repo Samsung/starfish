@@ -76,6 +76,20 @@ DOMTokenList* HTMLAnchorElement::relList()
     return m_relList;
 }
 
+String* HTMLAnchorElement::referrerPolicy()
+{
+    return getAttributeOrEmpty(
+        document()->starFish()->staticStrings()->m_referrerpolicy);
+}
+
+void HTMLAnchorElement::setReferrerPolicy(String* policy)
+{
+    if (ReferrerURL::isValidPolicy(policy)) {
+        setAttribute(document()->starFish()->staticStrings()->m_referrerpolicy,
+                     policy);
+    }
+}
+
 bool HTMLAnchorElement::handleDefaultEvent(Event* event)
 {
     if (HTMLElement::handleDefaultEvent(event)) {
@@ -86,6 +100,8 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
         auto href = starFish()->staticStrings()->m_href;
         Nullable<String*> hrefAttr = getAttribute(href);
         if (hrefAttr.hasValue()) {
+            ResourceURL* rUrl =
+                new ReferrerURL(document()->documentURI(), referrerPolicy());
             String* hrefStr = hrefAttr.getValue()->trim();
             if (hrefStr->length()) {
                 if (hrefStr->startsWith("#")) {
@@ -108,11 +124,11 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
                         }
                     }
                 } else {
-                    window()->location()->setHref(hrefStr);
+                    window()->location()->setLocation(hrefStr, rUrl);
                 }
             } else {
-                window()->location()->setHref(
-                    document()->documentURI()->urlString());
+                window()->location()->setLocation(
+                    document()->documentURI()->urlString(), rUrl);
             }
             return true;
         }

@@ -13,7 +13,7 @@ interface HTMLAnchorElement : HTMLElement {
 
   [CEReactions, Rename=textContent] attribute DOMString? text;
 
-  [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
+  [CEReactions] attribute DOMString referrerPolicy;
 
   // obsolete members
   // https://html.spec.whatwg.org/#HTMLAnchorElement-partial

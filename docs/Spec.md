@@ -342,6 +342,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | noHref | Indicate if the area is inactive (true) or active (false). |
 |  | attribute | rel | Is a DOMString that reflects the rel HTML attribute, indicating relationships of the current document to the linked resource. |
 |  | attribute | relList | Returns a DOMTokenList that reflects the rel HTML attribute, indicating relationships of the current document to the linked resource, as a list of tokens. |
+|  | attribute | referrerPolicy | Reflects the referrerpolicy HTML attribute indicating which referrer to use when fetching the linked resource. |
 | [HTMLHyperlinkElementUtils](https://html.spec.whatwg.org/multipage/links.html#api-for-a-and-area-elements) | interface | HTMLHyperlinkElementUtils | The HTMLHyperlinkElementUtils mixin defines utility methods and properties to work with HTMLAnchorElement and HTMLAreaElement. These utilities allow to deal with common features like URLs. |
 |  | attribute | href | Return the whole URL. |
 |  | attribute | origin | Return the origin. |
@@ -425,6 +426,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the image including base URI. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the image in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the image in CSS pixels. |
+|  | attribute | referrerPolicy | Reflects the referrerpolicy HTML attribute indicating which referrer to use when fetching the linked resource. |
 | [HTMLInputElement](https://html.spec.whatwg.org/multipage/input.html#the-input-element) | interface | HTMLInputElement | The input element represents a typed data field, usually with a form control to allow the user to edit the data. |
 |  | attribute | formAction | Specifies the URL of the file that will process the input control when the form is submitted. |
 |  | attribute | formEnctype | Specifies how the form-data should be encoded when submitting it to the server. |
@@ -450,6 +452,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the frame in CSS pixels. |
 |  | attribute | contentDocument | Returns the iframe element's content document. |
 |  | attribute | contentWindow | Returns the WindowProxy object of the iframe element's nested browsing context, if its nested browsing context is non-null, or null otherwise. |
+|  | attribute | referrerPolicy | Reflects the referrerpolicy HTML attribute indicating which referrer to use when fetching the linked resource. |
 |  | attribute | scrolling | Specifies whether or not to display scrollbars in an iframe |
 | [HTMLLabelElement](https://html.spec.whatwg.org/#the-label-element) | interface | HTMLLabelElement | Represents a caption in a user interface. |
 |  | attribute  | form | Is a HTMLFormElement object representing the form with which the labeled control is associated |
@@ -467,6 +470,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | media | Is a DOMString representing a list of one or more media formats to which the resource applies. |
 |  | attribute | hreflang | Is a DOMString representing the language code for the linked resource. |
 |  | attribute | type | Is a DOMString representing the MIME type of the linked resource. |
+|  | attribute | referrerPolicy | Is a DOMString the referrerpolicy HTML attribute indicating which referrer to use when fetching the linked resource. |
 |  | attribute | charset | Is a DOMString representing the character encoding for the target resource. |
 |  | attribute | rev | Is a DOMString representing the reverse relationship of the linked resource from the resource to the document. |
 |  | attribute | target | Is a DOMString representing the name of the target frame to which the resource applies. |

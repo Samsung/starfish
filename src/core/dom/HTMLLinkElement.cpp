@@ -109,6 +109,20 @@ void HTMLLinkElement::setType(String* type)
     setAttribute(starFish()->staticStrings()->m_type, type);
 }
 
+String* HTMLLinkElement::referrerPolicy()
+{
+    return getAttributeOrEmpty(
+        document()->starFish()->staticStrings()->m_referrerpolicy);
+}
+
+void HTMLLinkElement::setReferrerPolicy(String* policy)
+{
+    if (ReferrerURL::isValidPolicy(policy)) {
+        setAttribute(document()->starFish()->staticStrings()->m_referrerpolicy,
+                     policy);
+    }
+}
+
 StyleSheet* HTMLLinkElement::sheet()
 {
     return m_generatedSheet;
@@ -216,6 +230,8 @@ void HTMLLinkElement::loadStyleSheet()
         getAttributeOrEmpty(starFish()->staticStrings()->m_href);
     ResourceURL* url =
         new ResourceURL(urlString, document()->baseURL()->baseURI());
+    ResourceURL* rUrl =
+        new ReferrerURL(document()->documentURI(), referrerPolicy());
 
     if (m_styleSheetTextResource) {
         m_styleSheetTextResource->cancel();
@@ -227,8 +243,7 @@ void HTMLLinkElement::loadStyleSheet()
         new ElementResourceClient(this, m_styleSheetTextResource));
     willStyleSheetLoad();
     m_styleSheetTextResource->request(
-        Resource::ResourceRequestSyncLevel::NeverSync,
-        document()->documentURI(), true);
+        Resource::ResourceRequestSyncLevel::NeverSync, rUrl, true);
 }
 
 void HTMLLinkElement::unloadStyleSheetIfExists()

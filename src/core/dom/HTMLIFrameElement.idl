@@ -13,7 +13,7 @@ interface HTMLIFrameElement : HTMLElement {
     readonly attribute Document? contentDocument;
     readonly attribute Window? contentWindow;
 //    [Unimplemented, RaisesException] Document? getSVGDocument();
-//    [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
+    [CEReactions] attribute DOMString referrerPolicy;
     // https://w3c.github.io/webappsec-csp/embedded/#dom-htmliframeelement-csp
     [Unimplemented, RuntimeEnabled=EmbedderCSPEnforcement, CEReactions, Reflect] attribute DOMString csp;
 

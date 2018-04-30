@@ -63,6 +63,9 @@ public:
     Document* contentDocument() const;
     Window* contentWindow() const;
 
+    String* referrerPolicy();
+    void setReferrerPolicy(String* policy);
+
     /* Other methods (not in DOM API) */
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
