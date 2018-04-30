@@ -245,6 +245,8 @@ public:
 
     bool isDescendantOf(const Node* other);
 
+    unsigned index();
+
     Node* cloneNode(bool deep = false);
 
     unsigned short compareDocumentPosition(const Node* other);
@@ -371,6 +373,8 @@ public:
     {
         return m_state;
     }
+
+    unsigned nodeLength() const;
 
     // MUST uses same bit with StyleResolver::StyleDamageFrom
     enum StyleChangeReason {

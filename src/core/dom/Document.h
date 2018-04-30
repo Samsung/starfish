@@ -45,6 +45,7 @@ class Location;
 class ResourceRequest;
 class StyleSheetList;
 class Text;
+class Range;
 class ResourceURL;
 class WebOrigin;
 class Window;
@@ -171,6 +172,8 @@ public:
     Attr* createAttributeNS(Nullable<String*> ns, String* name);
     QualifiedName createAttributeName(String* name);
     QualifiedName createAttributeNameNS(Nullable<String*> ns, String* name);
+
+    Range* createRange();
 
     DOMImplementation* implementation();
 
@@ -439,6 +442,23 @@ public:
         }
     }
 
+    void appendRange(Range* range)
+    {
+        m_ranges.push_back(range);
+    }
+
+    void removeRange(Range* range)
+    {
+        size_t idx;
+        for (idx = 0; idx < m_ranges.size(); idx++) {
+            if (m_ranges[idx] == range) {
+                break;
+            }
+        }
+        STARFISH_ASSERT(idx < m_ranges.size());
+        m_ranges.erase(m_ranges.begin() + idx);
+    }
+
     bool onLoadFired() const
     {
         return m_onLoadFired;
@@ -562,6 +582,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_implementation));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_currentScripts));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_focusRingCache));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_ranges));
     }
 
     // only used in html document builder
@@ -617,6 +638,7 @@ protected:
     GCVector<Element*> m_currentScripts;
     GCAtomicVector<Element*>
         m_focusRingCache; // using atomic vector is not accident
+    GCVector<Range*> m_ranges;
     // each element has strong reference by DOM tree already
     size_t m_pendingDocumentParsingIdlerHandle;
     String* m_contentLanguage;
