@@ -2167,12 +2167,12 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::Width:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_width = parentStyle->m_width;
+                style->setWidth(parentStyle->width());
             } else if ((cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) ||
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_width = Length();
+                style->setWidth(Length());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::
                            WidthHeightKeywordValueKind) {
@@ -2181,9 +2181,9 @@ void StyleResolver::apply(Element* element,
                 Nullable<Length> length = convertValueToLength(
                     cssValues[k].valueKind(), cssValues[k].value());
                 if (length.hasValue()) {
-                    style->m_width = length.getValue();
+                    style->setWidth(length.getValue());
                 } else {
-                    style->m_width = Length();
+                    style->setWidth(Length());
                 }
             }
             break;
@@ -2231,19 +2231,19 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::Height:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_height = parentStyle->m_height;
+                style->setHeight(parentStyle->height());
             } else if ((cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) ||
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_height = Length();
+                style->setHeight(Length());
             } else {
                 Nullable<Length> length = convertValueToLength(
                     cssValues[k].valueKind(), cssValues[k].value());
                 if (length.hasValue()) {
-                    style->m_height = length.getValue();
+                    style->setHeight(length.getValue());
                 } else {
-                    style->m_height = Length();
+                    style->setHeight(Length());
                 }
             }
             break;

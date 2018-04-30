@@ -80,6 +80,8 @@ class RareComputedStyleData : public gc {
         Border,
         BoxDecorationBreak,
         BoxShadow,
+        Width,
+        Height,
         Padding,
         Margin,
         Offset,
@@ -447,6 +449,8 @@ public:
         return (*it).m_value.m_lengthData;
     }
 
+    GETTER_VALUE(Length, length, width, Width);
+    GETTER_VALUE(Length, length, height, Height);
     GETTER_VALUE(Length, length, minWidth, MinWidth);
     GETTER_VALUE(Length, length, maxWidth, MaxWidth);
     GETTER_VALUE(Length, length, minHeight, MinHeight);
@@ -793,7 +797,16 @@ public:
 
     Length width()
     {
-        return m_width;
+        if (!hasRareComputeStyleData()) {
+            return Length();
+        }
+
+        Nullable<Length> ret = m_rareComputedStyleData.width();
+        if (ret.hasValue()) {
+            return ret.getValue();
+        }
+
+        return Length();
     }
 
     Length maxWidth()
@@ -826,7 +839,7 @@ public:
 
     void setWidth(const Length& l)
     {
-        m_width = l;
+        *m_rareComputedStyleData.ensureWidth() = l;
     }
 
     void setMaxWidth(const Length& l)
@@ -841,7 +854,16 @@ public:
 
     Length height()
     {
-        return m_height;
+        if (!hasRareComputeStyleData()) {
+            return Length();
+        }
+
+        Nullable<Length> ret = m_rareComputedStyleData.height();
+        if (ret.hasValue()) {
+            return ret.getValue();
+        }
+
+        return Length();
     }
 
     Length maxHeight()
@@ -874,7 +896,7 @@ public:
 
     void setHeight(const Length& l)
     {
-        m_height = l;
+        *m_rareComputedStyleData.ensureHeight() = l;
     }
 
     void setMaxHeight(const Length& l)
@@ -3397,9 +3419,6 @@ protected:
     StyleResolver::StyleDamageSource m_styleDamageSource : 5;
     int m_styleDamageSourceNodeStateMap : 4;
     bool m_zIndexSpecifiedByUser : 1;
-
-    Length m_width;
-    Length m_height;
 
     Font* m_font;
 
