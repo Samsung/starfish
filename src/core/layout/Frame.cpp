@@ -974,14 +974,9 @@ Frame::Frame(Node* node, ComputedStyle* s)
     }
 
     m_flags.m_isAnonymous = isAnonymous;
-
-    bool isRootElement = node && node->isHTMLHtmlElement();
-
     m_flags.m_isLeftMBPCleared = false;
     m_flags.m_isRightMBPCleared = false;
 
-    m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
-    m_flags.m_isEstablishesStackingContext = isRootElement;
     m_flags.m_needsGraphicsBuffer = false;
     m_flags.m_isNormalFlow = true;
     m_flags.m_isFrameText = false;
@@ -1130,6 +1125,11 @@ bool Frame::isFloating()
 
 void Frame::computeStyleFlags()
 {
+    Node* node = this->node();
+    bool isRootElement = node && node->isHTMLHtmlElement();
+    m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
+    m_flags.m_isEstablishesStackingContext = isRootElement;
+
     computeShouldApplyOverflow();
 
     ComputedStyle* style = Frame::style();
@@ -1162,7 +1162,7 @@ void Frame::computeStyleFlags()
         (style->originalDisplay() == DisplayValue::InlineFlexDisplayValue);
     // https://www.w3.org/TR/html5/rendering.html#the-fieldset-and-legend-elements
     m_flags.m_isEstablishesBlockFormattingContext |=
-        (!isAnonymous() && node()->isHTMLFieldSetElement());
+        (!isAnonymous() && node->isHTMLFieldSetElement());
 
     // https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#model
     // The table wrapper box establishes a block formatting context
@@ -1184,7 +1184,7 @@ void Frame::computeStyleFlags()
     m_flags.m_isEstablishesStackingContext |= (style->hasTransforms(this));
 
     // TODO add condition
-    m_flags.m_needsGraphicsBuffer |= (style->has3DTransforms(this));
+    m_flags.m_needsGraphicsBuffer = (style->has3DTransforms(this));
 
 #ifdef PORT_CANVAS_BACKEND_EFL
     // force use graphics buffer with complex-transform

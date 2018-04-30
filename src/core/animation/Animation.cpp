@@ -353,11 +353,166 @@ void OpacityAnimationTask::execute(float progress)
     opacityUpdated(before, after);
 }
 
+inline double rad2deg(double rad)
+{
+    return rad * (180.0 / M_PI);
+}
+
+inline double deg2rad(float degree)
+{
+    return degree * M_PI / 180;
+}
+
+/// https://drafts.csswg.org/css-transforms/#decomposing-a-2d-matrix
+static MatrixDecomposed2D decomposing2DMatrix(const SkMatrix& matrix)
+{
+    // 0(row0x) 1(row1x) 2
+    // 3(row0y) 4(row1y) 5
+    // 6 7 8
+    float row0x = matrix.get(0); // m11
+    float row0y = matrix.get(3); // m12
+    float row1x = matrix.get(1); // m21
+    float row1y = matrix.get(4); // m22
+
+    float translateX = matrix.getTranslateX();
+    float translateY = matrix.getTranslateY();
+    float scaleX = sqrt(row0x * row0x + row0y * row0y);
+    float scaleY = sqrt(row1x * row1x + row1y * row1y);
+
+    // If determinant is negative, one axis was flipped.
+    float determinant = row0x * row1y - row0y * row1x;
+    if (determinant < 0) {
+        if (row0x < row1y) {
+            // Flip axis with minimum unit vector dot product.
+            scaleX = -scaleX;
+        } else {
+            scaleY = -scaleY;
+        }
+    }
+
+    // Renormalize matrix to remove scale.
+    if (scaleX != 0.0) {
+        row0x *= 1. / scaleX;
+        row0y *= 1. / scaleX;
+    }
+
+    if (scaleY != 0.0) {
+        row1x *= 1. / scaleY;
+        row1y *= 1. / scaleY;
+    }
+
+    // Compute rotation and renormalize matrix.
+    float angle = atan2(row0y, row0x);
+    if (angle != 0.0) {
+        // Rotate(-angle) = [cos(angle), sin(angle), -sin(angle), cos(angle)]
+        //                = [row0x, -row0y, row0y, row0x]
+        // Thanks to the normalization above.
+        float sn = -row0y;
+        float cs = row0x;
+        float m11 = row0x;
+        float m12 = row0y;
+        float m21 = row1x;
+        float m22 = row1y;
+        row0x = cs * m11 + sn * m21;
+        row0y = cs * m12 + sn * m22;
+        row1x = -sn * m11 + cs * m21;
+        row1y = -sn * m12 + cs * m22;
+    }
+
+    MatrixDecomposed2D ret;
+    ret.matrixM11 = row0x;
+    ret.matrixM12 = row0y;
+    ret.matrixM21 = row1x;
+    ret.matrixM22 = row1y;
+    // Convert into degrees because our rotation functions expect it.
+    ret.angle = rad2deg(angle);
+    ret.scaleX = scaleX;
+    ret.scaleY = scaleY;
+    ret.translateX = translateX;
+    ret.translateY = translateY;
+
+    return ret;
+}
+
+static void matrixInterpolationPreprocessing(MatrixDecomposed2D& a,
+                                             MatrixDecomposed2D& b)
+{
+    // If x-axis of one is flipped, and y-axis of the other,
+    // convert to an unflipped rotation.
+    if ((a.scaleX < 0 && b.scaleY < 0) || (a.scaleY < 0 && b.scaleX < 0)) {
+        a.scaleX = -a.scaleX;
+        a.scaleY = -a.scaleY;
+        a.angle += a.angle < 0 ? 180 : -180;
+    }
+    // Don’t rotate the long way around.
+    // XXX: we don't need this step I think
+    /*
+    if (!a.angle) {
+        a.angle = 360;
+    }
+    if (!b.angle) {
+        b.angle = 360;
+    }*/
+
+    if (std::abs(a.angle - b.angle) > 180) {
+        if (a.angle > b.angle) {
+            a.angle -= 360;
+        } else {
+            a.angle -= 360;
+        }
+    }
+}
+
+// https://drafts.csswg.org/css-transforms/#recomposing-to-a-2d-matrix
+static SkMatrix recomposing2DMatrix(const MatrixDecomposed2D& decomposed)
+{
+    SkMatrix matrix = SkMatrix::I();
+
+    // 0(M11) 1(M21) 2
+    // 3(M12) 4(M22) 5
+    // 6 7 8
+    matrix.set(0, decomposed.matrixM11);
+    matrix.set(3, decomposed.matrixM12);
+    matrix.set(1, decomposed.matrixM21);
+    matrix.set(4, decomposed.matrixM22);
+
+    // Translate matrix.
+    matrix.set(2, decomposed.translateX * decomposed.matrixM11 +
+                      decomposed.translateY * decomposed.matrixM21);
+    matrix.set(5, decomposed.translateX * decomposed.matrixM12 +
+                      decomposed.translateY * decomposed.matrixM22);
+
+    // Rotate matrix.
+    float angle = deg2rad(decomposed.angle);
+    float cosAngle = cos(angle);
+    float sinAngle = sin(angle);
+
+    SkMatrix rotateMatrix = SkMatrix::I();
+
+    rotateMatrix.set(0, cosAngle);
+    rotateMatrix.set(3, sinAngle);
+    rotateMatrix.set(1, -sinAngle);
+    rotateMatrix.set(4, cosAngle);
+
+    // Multiplication of matrix and rotate_matrix
+    SkMatrix newMatrix = SkMatrix::I();
+    newMatrix.setConcat(matrix, rotateMatrix);
+
+    // Scale matrix.
+    newMatrix.set(0, newMatrix[0] * decomposed.scaleX);
+    newMatrix.set(3, newMatrix[3] * decomposed.scaleX);
+    newMatrix.set(1, newMatrix[1] * decomposed.scaleY);
+    newMatrix.set(4, newMatrix[4] * decomposed.scaleY);
+
+    return newMatrix;
+}
+
 TransformAnimationTask::TransformAnimationTask(
     Element* target, AnimatedValue fromValue, float duration, float delay,
     AnimationTimingFunction* timingFunction)
     : AnimationTask(target, CSSStyleValuePair::KeyKind::Transform, fromValue,
                     AnimatedValue(), duration, delay, timingFunction)
+    , m_decomposedFrom(decomposing2DMatrix(fromValue.getMatrix()))
 {
     target->style()->rareComputedStyleData()->ensureTransforms();
 }
@@ -368,6 +523,9 @@ void TransformAnimationTask::computeToValue()
     SkMatrix matrix = box->style()->transformsToMatrix(
         box->width(), box->height(), box, true);
     m_toValue = AnimatedValue(matrix);
+    m_decomposedTo = decomposing2DMatrix(m_toValue.getMatrix());
+
+    matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
 
     Element* current = targetElement();
     ComputedStyle* style = current->style();
@@ -425,6 +583,7 @@ void TransformAnimationTask::detachedFromElement()
                 current->webView()->clearStackingContext(true);
                 style->clearTransform();
                 box->computeStyleFlags();
+                current->setNeedsPainting();
             } else {
                 current->webView()->setNeedsComputeStackingContextProperties();
                 STARFISH_RELEASE_ASSERT(
@@ -458,13 +617,29 @@ void TransformAnimationTask::execute(float progress)
                             StyleTransformData::InternalMatrix);
 
     StyleTransformData& data = transforms->at(transforms->size() - 1);
-    SkMatrix now;
-    for (size_t i = 0; i < 9; i++) {
-        double d = from.get(i) * (1 - progress) + to.get(i) * progress;
-        now.set(i, d);
-    }
 
-    data.setInternalMatrix(now);
+    MatrixDecomposed2D now;
+
+    now.angle = m_decomposedFrom.angle * (1 - progress) +
+                m_decomposedTo.angle * progress;
+    now.matrixM11 = m_decomposedFrom.matrixM11 * (1 - progress) +
+                    m_decomposedTo.matrixM11 * progress;
+    now.matrixM12 = m_decomposedFrom.matrixM12 * (1 - progress) +
+                    m_decomposedTo.matrixM12 * progress;
+    now.matrixM21 = m_decomposedFrom.matrixM21 * (1 - progress) +
+                    m_decomposedTo.matrixM21 * progress;
+    now.matrixM22 = m_decomposedFrom.matrixM22 * (1 - progress) +
+                    m_decomposedTo.matrixM22 * progress;
+    now.scaleX = m_decomposedFrom.scaleX * (1 - progress) +
+                 m_decomposedTo.scaleX * progress;
+    now.scaleY = m_decomposedFrom.scaleY * (1 - progress) +
+                 m_decomposedTo.scaleY * progress;
+    now.translateX = m_decomposedFrom.translateX * (1 - progress) +
+                     m_decomposedTo.translateX * progress;
+    now.translateY = m_decomposedFrom.translateY * (1 - progress) +
+                     m_decomposedTo.translateY * progress;
+
+    data.setInternalMatrix(recomposing2DMatrix(now));
     current->webView()->setNeedsComputeStackingContextProperties();
 }
 

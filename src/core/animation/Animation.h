@@ -266,6 +266,32 @@ private:
     void opacityUpdated(bool before, bool after);
 };
 
+struct MatrixDecomposed2D {
+    float translateX;
+    float translateY;
+    float scaleX;
+    float scaleY;
+    float angle;
+    float matrixM11;
+    float matrixM12;
+    float matrixM21;
+    float matrixM22;
+
+    MatrixDecomposed2D()
+        : translateX(0)
+        , translateY(0)
+        , scaleX(0)
+        , scaleY(0)
+        , angle(0)
+        , matrixM11(0)
+        , matrixM12(0)
+        , matrixM21(0)
+        , matrixM22(0)
+
+    {
+    }
+};
+
 class TransformAnimationTask : public AnimationTask {
 public:
     TransformAnimationTask(Element* target, AnimatedValue fromValue,
@@ -277,6 +303,8 @@ public:
     void computeToValue();
 
 private:
+    MatrixDecomposed2D m_decomposedFrom;
+    MatrixDecomposed2D m_decomposedTo;
 };
 
 class AnimationExecutor : public gc {

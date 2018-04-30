@@ -2170,7 +2170,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
 inline double deg2rad(float degree)
 {
-    return degree * 3.14159265358979323846 / 180;
+    return degree * M_PI / 180;
 }
 
 SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
