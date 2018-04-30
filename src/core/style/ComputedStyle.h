@@ -581,6 +581,7 @@ public:
     CLEARER(CounterIncrement);
     CLEARER(WillChange);
     CLEARER(TextDecorationLine);
+    CLEARER(Clip);
 
 #undef FIND_VALUE
 #undef CLEARER
@@ -684,6 +685,7 @@ class ComputedStyle : public gc {
         m_seenPseudoElementAfter = false;
         m_gotInheritedColor = false;
         m_usedInAnimator = false;
+        m_someNonInheritMemberExplicitlyInherited = false;
 
         initNonInheritedStyles();
     }
@@ -706,6 +708,7 @@ public:
         m_seenPseudoElementBefore = false;
         m_seenPseudoElementAfter = false;
         m_gotInheritedColor = false;
+        m_someNonInheritMemberExplicitlyInherited = false;
 
         initNonInheritedStyles();
     }
@@ -723,6 +726,16 @@ public:
     void markUsedInAnimator()
     {
         m_usedInAnimator = true;
+    }
+
+    bool someNonInheritMemberExplicitlyInherited()
+    {
+        return m_someNonInheritMemberExplicitlyInherited;
+    }
+
+    void markSomeNonInheritMemberExplicitlyInherited()
+    {
+        m_someNonInheritMemberExplicitlyInherited = true;
     }
 
     DisplayValue originalDisplay()
@@ -772,7 +785,11 @@ public:
 
     void setClip(RectData* r)
     {
-        *m_rareComputedStyleData.ensureClip() = *r;
+        if (r) {
+            *m_rareComputedStyleData.ensureClip() = *r;
+        } else {
+            m_rareComputedStyleData.clearClip();
+        }
     }
 
     void setGridTemplateColumns(GCVector<GridLength>* gridTemplate)
@@ -3397,6 +3414,7 @@ protected:
     bool m_seenPseudoElementFirstLineInherited : 1;
     bool m_gotInheritedColor : 1;
     bool m_usedInAnimator : 1;
+    bool m_someNonInheritMemberExplicitlyInherited : 1;
     FloatValue m_float : 2;
     ClearValue m_clear : 2;
     DisplayValue m_display : 5;

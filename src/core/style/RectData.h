@@ -86,6 +86,11 @@ public:
                m_bottom == src.m_bottom && m_left == src.m_left;
     }
 
+    bool operator!=(const RectData& src)
+    {
+        return !operator==(src);
+    }
+
 private:
     Length m_top;
     Length m_right;

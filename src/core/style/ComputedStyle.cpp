@@ -2107,7 +2107,14 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
-    if (newStyle->clip() != oldStyle->clip()) {
+    auto oldClip = newStyle->clip();
+    auto newClip = newStyle->clip();
+    if (oldClip == nullptr && newClip == nullptr) {
+    } else if (oldClip == nullptr || newClip == nullptr) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Clip] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    } else if (*newStyle->clip() != *oldStyle->clip()) {
         damagedKeys[CSSStyleValuePair::KeyKind::Clip] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
