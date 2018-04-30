@@ -75,6 +75,9 @@ public:
     unsigned long height();
     void setHeight(unsigned long height);
 
+    String* referrerPolicy();
+    void setReferrerPolicy(String* policy);
+
     String* nameAttr();
     void setNameAttr(String* name);
 

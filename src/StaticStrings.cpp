@@ -300,6 +300,9 @@ StaticStrings::StaticStrings(StarFish* sf)
                             AtomicString::createAtomicString(sf, "rules"));
     m_summary = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "summary"));
+    m_referrerpolicy =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "referrerpolicy"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

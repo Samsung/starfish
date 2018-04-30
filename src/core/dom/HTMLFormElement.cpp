@@ -729,7 +729,8 @@ void HTMLFormElement::submitData(ResourceURL* url,
         HTMLFormElement* formElement = (HTMLFormElement*)data1;
         DocumentURL* urlToOpen = (DocumentURL*)data2;
         // force open
-        formElement->document()->window()->location()->assign(urlToOpen);
+        formElement->document()->window()->location()->assign(
+            urlToOpen, formElement->document()->documentURI());
         formElement->clearPlannedNavigationTask();
     };
 

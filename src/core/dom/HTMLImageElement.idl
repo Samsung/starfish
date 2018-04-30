@@ -19,7 +19,7 @@ interface HTMLImageElement : HTMLElement {
   [Unimplemented] readonly attribute unsigned long naturalHeight;
   [Unimplemented] readonly attribute boolean complete;
   [Unimplemented] readonly attribute DOMString currentSrc;
-  [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
+  [CEReactions] attribute DOMString referrerPolicy;
 
   // https://www.w3.org/TR/REC-DOM-Level-1/level-one-html.html#ID-17701901
   // Initial definition

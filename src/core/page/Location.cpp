@@ -92,7 +92,7 @@ String* Location::hash()
 
 void Location::setHref(String* newURL)
 {
-    setLocation(newURL);
+    setLocation(newURL, document()->documentURI());
 }
 
 void Location::setHost(String* newHost)
@@ -146,35 +146,49 @@ void Location::setHash(String* search)
     }
 }
 
-void Location::setLocation(String* url)
+void Location::setLocation(String* url, ResourceURL* referrerURL)
 {
-    assign(url);
+    assign(url, referrerURL);
 }
 
 void Location::assign(String* url)
 {
     ResourceURL* r = new ResourceURL(url, document()->baseURL()->urlString());
     if (r->protocolKind() != ResourceURL::UNKNOWN) {
-        assign(r);
+        assign(r, document()->documentURI());
     }
 }
 
-static void navigateImpl(BrowsingContext* ctx, ResourceURL* url)
+void Location::assign(String* url, ResourceURL* referrerURL)
+{
+    ResourceURL* r = new ResourceURL(url, document()->baseURL()->urlString());
+    if (r->protocolKind() != ResourceURL::UNKNOWN) {
+        assign(r, referrerURL);
+    }
+}
+
+static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
+                         ResourceURL* referrerURL)
 {
     if (ctx->isTopLevelBrowsingContext()) {
-        ctx->starFish()->messageLoop()->invokeNavigate(
-            ctx->webView(), url, ctx->document()->documentURI());
+        ctx->starFish()->messageLoop()->invokeNavigate(ctx->webView(), url,
+                                                       referrerURL);
     } else {
         ctx->sourceElement()->navigate(url, HistoryManager::Action::Add,
-                                       ctx->document()->documentURI());
+                                       referrerURL);
     }
 }
 
 void Location::assign(ResourceURL* url, bool force)
 {
+    assign(url, document()->documentURI(), force);
+}
+
+void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
+{
     if (!url->isJavascriptURL()) {
         if (force || !this->url()->urlString()->equals(url->urlString())) {
-            navigateImpl(document()->browsingContext(), url);
+            navigateImpl(document()->browsingContext(), url, referrerURL);
         }
     }
 }

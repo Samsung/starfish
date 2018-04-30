@@ -26,6 +26,7 @@ class Document;
 class WebOrigin;
 class FormSubmitData;
 class DocumentURL;
+class ReferrerURL;
 
 class ResourceURL : public gc {
     friend WebOrigin;
@@ -198,6 +199,17 @@ public:
         return (DocumentURL*)this;
     }
 
+    virtual bool isReferrerURL()
+    {
+        return false;
+    }
+
+    ReferrerURL* asReferrerURL()
+    {
+        STARFISH_ASSERT(isReferrerURL());
+        return (ReferrerURL*)this;
+    }
+
 protected:
     void resolvePositions();
     void parseURLString(String* baseURL, String* url);
@@ -244,6 +256,39 @@ public:
 
 private:
     FormSubmitData* m_formSubmitData;
+};
+
+class ReferrerURL : public ResourceURL {
+public:
+    enum ReferrerPolicy {
+        NoReferrer,
+        NoReferrerWhenDowngrade,
+        Origin,
+        OriginWhenCrossOrigin,
+        SameOrigin,
+        StrictOrigin,
+        StrictOriginWhenCrossOrigin,
+        UnsafeUrl
+    };
+
+    ReferrerURL(String* url);
+    ReferrerURL(String* url, String* policy);
+    ReferrerURL(ResourceURL* url);
+    ReferrerURL(ResourceURL* url, String* policy);
+
+    virtual bool isReferrerURL() override
+    {
+        return true;
+    }
+
+    String* referrerString(ResourceURL* url);
+    ReferrerPolicy policy();
+    static bool isValidPolicy(String* policy);
+
+private:
+    ReferrerPolicy m_policy;
+
+    ReferrerPolicy policyFromString(String* policy);
 };
 }
 

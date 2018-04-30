@@ -194,6 +194,20 @@ Window* HTMLIFrameElement::contentWindow() const
     return nullptr;
 }
 
+String* HTMLIFrameElement::referrerPolicy()
+{
+    return getAttributeOrEmpty(
+        document()->starFish()->staticStrings()->m_referrerpolicy);
+}
+
+void HTMLIFrameElement::setReferrerPolicy(String* policy)
+{
+    if (ReferrerURL::isValidPolicy(policy)) {
+        setAttribute(document()->starFish()->staticStrings()->m_referrerpolicy,
+                     policy);
+    }
+}
+
 void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
                                  ResourceURL* referrerURL)
 {
@@ -203,9 +217,14 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
         if (!m_historyManager) {
             m_historyManager = HistoryManager::create(this);
         }
+
+        ResourceURL* rUrl = referrerURL;
+        if (!rUrl->isReferrerURL()) {
+            rUrl = new ReferrerURL(rUrl, referrerPolicy());
+        }
         m_browsingContext = BrowsingContext::create(this);
         m_browsingContext->setName(nameAttr());
-        m_browsingContext->open(url, type, referrerURL);
+        m_browsingContext->open(url, type, rUrl);
     }
 }
 

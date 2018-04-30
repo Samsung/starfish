@@ -228,9 +228,24 @@ void HTMLImageElement::loadImage(String* src)
         new ImageDownloadClient(this, m_imageResource));
     m_imageResource->addResourceClient(
         new ElementResourceClient(this, m_imageResource));
+    ResourceURL* rUrl =
+        new ReferrerURL(document()->documentURI(), referrerPolicy());
     m_imageResource->request(
-        Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
-        document()->documentURI(), true);
+        Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded, rUrl, true);
+}
+
+String* HTMLImageElement::referrerPolicy()
+{
+    return getAttributeOrEmpty(
+        document()->starFish()->staticStrings()->m_referrerpolicy);
+}
+
+void HTMLImageElement::setReferrerPolicy(String* policy)
+{
+    if (ReferrerURL::isValidPolicy(policy)) {
+        setAttribute(document()->starFish()->staticStrings()->m_referrerpolicy,
+                     policy);
+    }
 }
 
 String* HTMLImageElement::nameAttr()

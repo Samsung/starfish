@@ -14,7 +14,7 @@ interface HTMLLinkElement : HTMLElement {
   [CEReactions, Reflect] attribute DOMString hreflang;
   [CEReactions] attribute DOMString type;
   [Unimplemented, SameObject, PutForwards=value] readonly attribute DOMTokenList sizes;
-  [Unimplemented, CEReactions] attribute DOMString referrerPolicy;
+  [CEReactions] attribute DOMString referrerPolicy;
   [Unimplemented, CEReactions] attribute DOMString scope;
   [Unimplemented, CEReactions] attribute WorkerType workerType;
   [Unimplemented, CEReactions] attribute boolean useCache;

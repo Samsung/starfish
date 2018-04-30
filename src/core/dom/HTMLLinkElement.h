@@ -61,6 +61,9 @@ public:
     String* type();
     void setType(String* type);
 
+    String* referrerPolicy();
+    void setReferrerPolicy(String* policy);
+
     /* 4.4 Interface Node */
     virtual QualifiedName name();
 
