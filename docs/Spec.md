@@ -232,8 +232,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constant | INVALID_NODE_TYPE_ERR = 24 | The supplied node is incorrect or has an incorrect ancestor for this operation. |
 |  | constant | DATA_CLONE_ERR = 25 | The object can not be cloned. |
 | [DOMParser](https://w3c.github.io/DOM-Parsing/#the-domparser-interface) | interface | DOMParser | DOMParser can parse XML or HTML source stored in a string into a DOM Document.  |
-| | constructor | DOMParser() | Create a new DOMParser |
+|  | constructor | DOMParser() | Create a new DOMParser |
 |  | enum | SupportedType | "text/html", "text/xml", "application/xml", "application/xhtml+xml", "image/svg+xml" |
+|  | method | Document parseFromString(DOMString str, SupportedType type) | Parse str using a parser that matches type's supported MIME types. |
 | [DOMPoint](https://drafts.fxtf.org/geometry/#DOMPoint) | interface | DOMPoint |  |
 |  | constructor | DOMPoint(optional unrestricted double x = 0, optional unrestricted double y = 0, optional unrestricted double z = 0, optional unrestricted double w = 1) | Creates a new DOMPoint object. |
 |  | attribute | x | Return the x coordinate value of the object it was invoked on. |
@@ -271,13 +272,16 @@ This section describes the complete list of supported HTML tags and attributes b
 |    |  attribute  |  bottom  |  Return max(y coordinate, y coordinate + height dimension) of the object  |
 |    |  attribute  |  left  |  Return min(x coordinate, x coordinate + width dimension) of the object  |
 | [DOMSettableTokenList](https://dev.w3.org/html5/spec-LC/common-dom-interfaces.html#domsettabletokenlist-0) | interface | DOMSettableTokenList | The DOMSettableTokenList interface is the same as the DOMTokenList interface, except that it allows the underlying string to be directly changed. |
-|  | attribute  | value | The value attribute must return the underlying string on getting, and must replace the underlying string with the new value on setting. |
-|  [DOMTokenList](https://dom.spec.whatwg.org/#interface-domtokenlist)  |  attribute  |  length  |  Returns the number of tokens.  |
-|    |  method  |  DOMString? item(unsigned long index) (or tokenlist[index])  |  Returns the token with the index index number.  |
-|    |  method  |  boolean contains(DOMString token)  |  Returns true if token is present, and false otherwise.  |
-|    |  method  |  void add(DOMString... tokens)  |  Adds all arguments passed, except those already present.  |
-|    |  method  |  void remove(DOMString... tokens)  |  Removes arguments passed, if they are present.  |
-|    |  method  |  boolean toggle(DOMString token, optional boolean force = false)  |  If force is not specified, "toggles" token, removing it if it is present and adding it if it is not. If force is true, adds token (same as add()). If force is false, removes token (same as remove()).   |
+|  | attribute | value | The value attribute must return the underlying string on getting, and must replace the underlying string with the new value on setting. |
+|  [DOMTokenList](https://dom.spec.whatwg.org/#interface-domtokenlist)  |  attribute  |  length  |  Returns the number of tokens. |
+|    | method | DOMString? item(unsigned long index) (or tokenlist[index])  |  Returns the token with the index index number. |
+|    | method | boolean contains(DOMString token)  |  Returns true if token is present, and false otherwise. |
+|    | method | void add(DOMString... tokens)  |  Adds all arguments passed, except those already present. |
+|    | method | void remove(DOMString... tokens)  |  Removes arguments passed, if they are present. |
+|    | method | boolean toggle(DOMString token, optional boolean force = false)  |  If force is not specified, "toggles" token, removing it if it is present and adding it if it is not. If force is true, adds token (same as add()). If force is false, removes token (same as remove()). |
+|    | method | boolean replace(DOMString token, DOMString newToken)  |  Replaces an existing token with a new token. |
+|    | method | boolean supports(DOMString token)  |  Returns true if a given token is in the associated attribute's supported tokens. |
+|    | attibute | value | Represents The value of the list as a DOMString. |
 |  [DOMImplementation](https://dom.spec.whatwg.org/#domimplementation)  |  method  |  DocumentType createDocumentType(DOMString qualifiedName, DOMString publicId, DOMString systemId)  |  Returns a doctype, with the given qualifiedName, publicId, and systemId. If qualifiedName does not match the Name production, an InvalidCharacterError is thrown, and if it does not match the QName production, a NamespaceError is thrown. |
 |    |  method  |    XMLDocument createDocument(DOMString? namespace, [TreatNullAs=EmptyString] DOMString qualifiedName, optional DocumentType? doctype = null)  |  Returns an XMLDocument, with a document element whose local name is qualifiedName and whose namespace is namespace (unless qualifiedName is the empty string), and with doctype, if it is given, as its doctype. |
 |    |  method  |  Document createHTMLDocument(optional DOMString title);  |  Returns a document, with a basic tree already constructed including a title element, unless the title argument is omitted. |
@@ -366,18 +370,14 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLAudioElement](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) | interface | HTMLAudioElement | The audio element represents a sound or audio stream. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
 |  | constructor | Audio(optional DOMString src="") | |
 | [HTMLBodyElement](https://html.spec.whatwg.org/multipage/semantics.html#the-body-element) | interface | HTMLBodyElement | The body element represents the main content of the document. |
-|  | attribute | onload | Fired at the Window when the document has finished loading; fired at an element containing a resource (e.g. img, embed) when its resource has finished loading |
 |  | attribute | onblur | Is an EventHandler for Window representing the code to be called when the blur event is raised. |
 |  | attribute | onerror | Is an OnErrorEventHandler for Window representing the code to be called when the error event is raised. |
 |  | attribute | onfocus | Is an EventHandler for Window representing the code to be called when the focus event is raised. |
 |  | attribute | onload | Fired at the Window when the document has finished loading; fired at an element containing a resource (e.g. img, embed) when its resource has finished loading |
 |  | attribute | onresize | Is an EventHandler for Window representing the code to be called when the resize event is raised. |
-|  | attribute | alink | Is a DOMString that represents the color of active hyperlinks. |
 |  | attribute | bgColor | Is a DOMString that represents the background color for the document. |
 |  | attribute | background | Is a DOMString that represents the description of the location of the background image resource. |
-|  | attribute | link | Is a DOMString that represents the color of unvisited links. |
 |  | attribute | text | Is a DOMString that represents the foreground color of text. |
-|  | attribute | vlink | Is a DOMString that represents the color of visited links. |
 | [HTMLBaseElement](https://html.spec.whatwg.org/multipage/semantics.html#the-base-element) | interface | HTMLBaseElement | The base element specifies the base URL to use for all relative URLs contained within a document. |
 |  | attribute | href | The base URL to be used throughout the document for relative URL addresses. |
 |  | attribute | target | A name or keyword indicating the default location to display the result when hyperlinks or forms cause navigation |
@@ -420,11 +420,12 @@ This section describes the complete list of supported HTML tags and attributes b
 | [HTMLFormElement](https://html.spec.whatwg.org/#forms) | interface | HTMLFormElement | The HTMLFormElement interface provides methods to create and modify form elements. |
 |  | attribute | action | Returns action attribute that specifies where to send the form-data when a form is submitted. |
 |  | attribute | enctype | Returns enctype attribute that specifies how the form-data should be encoded when submitting it to the server. |
+|  | attribute | encoding | Reflect the enctype content attribute. |
 |  | attribute | method | Returns method attribute that specifies the HTTP method to use when sending form-data |
 |  | attribute | name | Returns the name of the form. |
+|  | attribute | target | Reflecting the value of the form's target HTML attribute, indicating where to display the results received from submitting the form. |
 |  | attribute | elements | A HTMLFormControlsCollection holding all form controls belonging to this form element. |
 |  | attribute | length | A long reflecting  the number of controls in the form. |
-|  | method | submit | Submits the form. |
 | [HTMLHeadElement](https://html.spec.whatwg.org/multipage/semantics.html#the-head-element) | interface | HTMLHeadElement | The head element represents a collection of metadata for the Document. |
 | [HTMLHRElement](https://html.spec.whatwg.org/multipage/grouping-content.html#the-hr-element) | interface | HTMLHRElement | The hr element represents a thematic break between paragraph-level elements. |
 | [HTMLHeadingElement](https://html.spec.whatwg.org/#htmlheadingelement) | interface | HTMLHeadingElement | The h1, h2, h3, h4, h5 and h6 elements represent headings for their sections. |
@@ -436,27 +437,33 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the image in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the image in CSS pixels. |
 |  | attribute | referrerPolicy | Reflects the referrerpolicy HTML attribute indicating which referrer to use when fetching the linked resource. |
+|  | attribute | name | Represents the name of the element. |
 | [HTMLInputElement](https://html.spec.whatwg.org/multipage/input.html#the-input-element) | interface | HTMLInputElement | The input element represents a typed data field, usually with a form control to allow the user to edit the data. |
+|  | attribute | autofocus | Returns / Sets the element's autofocus attribute, which specifies that a form control should have input focus when the page loads. |
+|  | attribute | defaultChecked | Returns / Sets the default state of a radio button or checkbox as originally specified in HTML that created this object. |
+|  | attribute | checked | Returns / Sets the current state of the element when type is checkbox or radio. |
+|  | attribute | disabled | Returns / Sets the element's disabled attribute, indicating that the control is not available for interaction. |
+|  | attribute | form | Returns the element's form owner, or null if there is not one. |
 |  | attribute | formAction | Specifies the URL of the file that will process the input control when the form is submitted. |
 |  | attribute | formEnctype | Specifies how the form-data should be encoded when submitting it to the server. |
 |  | attribute | formMethod | Defines the HTTP method for sending data to the action URL. |
-|  | attribute | name | Returns the name of the input element. |
-|  | attribute | type | Returns the type of the input element. |
-|  | attribute | value | Returns the value of the input element. |
-|  | attribute | defaultChecked | Returns / Sets the default state of a radio button or checkbox as originally specified in HTML that created this object. |
-|  | attribute | checked | Returns  the checkedness of the input element. |
-|  | attribute | disabled | Returns whether the input element is disabled. |
-|  | attribte  | form | Returns the element's form owner, or null if there is not one. |
-|  | attribute | size | Returns the number of characters that, in a visual rendering. |
-|  | attribute | placeholder | Returns a short hint that describes the expected value of an input field. |
+|  | attribute | formTarget | Returns / Sets the element's formtarget attribute, containing a name or keyword indicating where to display the response that is received after submitting the form. |
+|  | attribute | max | Returns / Sets the element's max attribute, containing the maximum (numeric or date-time) value for this item, which must not be less than its minimum (min attribute) value. |
+|  | attribute | maxLength | Returns / Sets the element's maxlength attribute, containing the maximum length of characters (in Unicode code points) that the value can have. |
+|  | attribute | min | Returns / Sets the element's min attribute, containing the minimum (numeric or date-time) value for this item, which must not be greater than its maximum (max attribute) value. |
+|  | attribute | minLength | Returns / Sets the element's minlength attribute, containing the minimum length of characters (in Unicode code points) that the value can have. |
 |  | attribute | multiple | Returns / Sets the element's multiple attribute, indicating whether more than one value is possible (e.g., multiple files). |
+|  | attribute | name | Returns the name of the input element. |
+|  | attribute | placeholder | Returns / Sets the element's placeholder attribute, containing a hint to the user of what can be entered in the control. |
 |  | attribute | required | Returns / Sets the element's required attribute, indicating that the user must fill in a value before submitting a form. |
-|  | attribute | min | minimum value |
-|  | attribute | max | maximum value |
+|  | attribute | size | Returns / Sets the element's size attribute, containing size of the control. |
 |  | attribute | step | Granularity to be matched by the form control's value |
+|  | attribute | type | Returns the type of the input element. |
+|  | attribute | defaultValue | Returns / Sets the default value as originally specified in the HTML that created this object. |
 |  | attribute | labels | Is a NodeList that represents a list of label elements that are labels for this button. |
 | [HTMLIFrameElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element) | interface | HTMLIFrameElement |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the frame including base URI. |
+|  | attribute | name | Reflects the name HTML attribute, containing a name by which to refer to the frame. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the frame in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the frame in CSS pixels. |
 |  | attribute | contentDocument | Returns the iframe element's content document. |
@@ -487,6 +494,7 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | reversed | Specifies that the list order should be descending. |
 |  | attribute | start | Specifies the start value of an ordered list. |
 |  | attribute | type | Specifies the kind of marker to use in the list. |
+|  | attribute | compact | This variable just relect attribute 'compact' |
 | [HTMLUListElement](https://html.spec.whatwg.org/#htmlulistelement)  | interface | HTMLUListElement |  |
 |  | attribute | type | This variable just relect attribute 'type' |
 |  | attribute | compact | This variable just relect attribute 'compact' |
@@ -494,9 +502,9 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | compact | This variable just relect attribute 'compact' |
 | [HTMLMapElement](https://html.spec.whatwg.org/multipage/image-maps.html#the-map-element) | interface | HTMLMapElement | The map element, in conjunction with an img element and any area element descendants, defines an image map. |
 |  | attribute | name | Represents the map element for referencing it other context. |
+|  | attribute | areas | Represents the area elements associated to this map. |
 | [HTMLMediaElement](https://html.spec.whatwg.org/multipage/embedded-content.html#htmlmediaelement) | interface | HTMLMediaElement | The HTMLMediaElement interface adds to HTMLElement the properties and methods needed to support basic media-related capabilities that are common to audio and video. The HTMLVideoElement and HTMLAudioElement elements both inherit this interface. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
 |  | enum | CanPlayTypeResult | "", "maybe", "probably" |
-|  | typedef | (MediaStream or MediaSource or Blob) MediaProvider |  |
 |  | attribute | src | Is a DOMString that reflects the src HTML attribute, which contains the URL of a media resource to use. |
 |  | attribute | currentSrc | Returns a DOMString with the absolute URL of the chosen media resource. |
 |  | constant | NETWORK_EMPTY = 0 |  |
@@ -518,8 +526,6 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | currentTime | Is a double indicating the current playback time in seconds. Setting this value seeks the media to the new time. |
 |  | attribute | duration | Returns a double indicating the length of the media in seconds, or 0 if no media data is available. |
 |  | attribute | paused | Returns a Boolean that indicates whether the media element is paused. |
-|  | attribute | defaultPlaybackRate | Is a double indicating the default playback rate for the media. |
-|  | attribute | playbackRate | Is a double that indicates the rate at which the media is being played back.  |
 |  | attribute | played | Returns a TimeRanges object that contains the ranges of the media source that the browser has played, if any. |
 |  | attribute | seekable | Returns a TimeRanges object that contains the time ranges that the user is able to seek to, if any. |
 |  | attribute | ended | Returns a Boolean that indicates whether the media element has finished playing. |
