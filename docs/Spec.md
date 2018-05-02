@@ -481,7 +481,6 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | compact | This variable just relect attribute 'compact' |
 | [HTMLMapElement](https://html.spec.whatwg.org/multipage/image-maps.html#the-map-element) | interface | HTMLMapElement | The map element, in conjunction with an img element and any area element descendants, defines an image map. |
 |  | attribute | name | Represents the map element for referencing it other context. |
-|  | attribute | areas | Represents the area elements associated to this map. |
 | [HTMLMediaElement](https://html.spec.whatwg.org/multipage/embedded-content.html#htmlmediaelement) | interface | HTMLMediaElement | The HTMLMediaElement interface adds to HTMLElement the properties and methods needed to support basic media-related capabilities that are common to audio and video. The HTMLVideoElement and HTMLAudioElement elements both inherit this interface. (Note: Currently, elements related to multimedia are checked on Tizen 2.4 TV Product.)|
 |  | enum | CanPlayTypeResult | "", "maybe", "probably" |
 |  | typedef | (MediaStream or MediaSource or Blob) MediaProvider |  |
