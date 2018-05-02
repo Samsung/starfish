@@ -17,7 +17,9 @@
  *  USA
  */
 
+#ifndef ESCARGOT
 #define ESCARGOT // for GCutil
+#endif
 #include "StarFishConfig.h"
 #include "NativeImageData.h"
 #include "core/modules/threading/Thread.h"

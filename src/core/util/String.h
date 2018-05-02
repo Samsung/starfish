@@ -324,7 +324,6 @@ public:
     virtual ~String()
     {
     }
-
     static const unsigned defaultLengthLimit = 1 << 16;
 
     static String* const emptyString;
@@ -564,7 +563,6 @@ protected:
     {
         m_hashValue = 0;
     }
-
     size_t hashValueSlowCase() const;
 
     template <typename T>
