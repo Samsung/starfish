@@ -3,76 +3,76 @@
 ## HTML
 This section describes the complete list of supported HTML tags and attributes by the lightweight web engine. Please note that only the tags and attributes mentioned explicitly in this section are supported. In addition, the lightweight web engine supports only HTML5 documents, and it assumes all input documents are HTML5 documents even if `!DOCTYPE` is not explicitly specified.
 
-| HTML Tag | Attribute | Allowed Value | Usage | Note |
-|----------|-----------|---------------|-------|------|
-| [Global Attribute](https://www.w3.org/TR/html5/dom.html#global-attributes) | class | &lt;string&gt; | &lt;element class="classname"&gt; |  |
-|  | dir | ltr &#124; rtl | &lt;element dir="ltr"&gt; |  |
-|  | id | &lt;string&gt; | &lt;element id="id"&gt; |  |
-|  | style | &lt;css_styles&gt; | &lt;element style="css_styles"&gt; | &lt;css_styles&gt; must conform to the CSS section of this specification document. |
-|  | lang | Refer to [ISO639](https://en.wikipedia.org/wiki/ISO_639) | &lt;element lang="fr"&gt;Ceci est un paragraphe.&lt;/element&gt; |  |
-|  [html](https://www.w3.org/TR/html5/semantics.html#the-root-element)  |  |  | &lt;html&gt;&lt;/html&gt; |  |
-|  [head](https://www.w3.org/TR/html5/document-metadata.html#the-head-element)  |  |  | &lt;head&gt;SAMSUNG&lt;/head&gt; |  |
-|  [link](https://www.w3.org/TR/html5/document-metadata.html#the-link-element)  | rel | stylesheet | &lt;link rel="stylesheet"&gt; |  |
-|  | href | &lt;URL&gt; | &lt;link rel="stylesheet" href="mystyle.css"&gt; |  |
-|  | media | media query | &lt;link rel="stylesheet" href="mystyle.css" media="screen"&gt; |  |
-|  | type | text/css | &lt;link rel="stylesheet" href="mystyle.css" type="text/css"&gt; |  |
-|  [meta](https://www.w3.org/TR/html5/document-metadata.html#the-meta-element)  | charset | UTF-8 | &lt;meta charset="UTF-8"&gt; | Only UTF-8 is supported  |
-|  | name | tizen-transparent-background | &lt;meta name="tizen-transparent-background" content="yes"&gt; | name and content are used to set the background transparent only. To do so, both name and content must be set in the same meta tag |
-|  | name | tizen-widget-transparent-background | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; | name and content are used to set the widget background transparent only. To do so, both name and content must be set in the same meta tag |
-|  | content | yes &#124; no | &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; |  |
-|  [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element)  | media | media query | &lt;style type="text/css" media="screen"&gt;&lt;/style&gt; | |
-|  | type | text/css | &lt;style type="text/css"&gt;&lt;/style&gt; | Only "text/css" type is supported. |
-|  [body](https://www.w3.org/TR/html5/sections.html#the-body-element)  |  |  | &lt;body&gt;SAMSUNG&lt;/body&gt; |  |
-|  [base](https://www.w3.org/TR/html5/document-metadata.html#the-base-element)  |  |  | &lt;base href="http://www.samsung.com/" &gt; |  |
-|  [h1, h2, h3, h4, h5, and h6](https://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements)  | align | left &#124; center &#124; right | &lt;h1 align="center"&gt;&lt;/h1&gt; | The align attribute's value of &lt;h1&gt; to &lt;h6&gt; can be only "left", "center" and "right". The attribute is not supported in HTML5. Use CSS instead. |
-|  [p](https://www.w3.org/TR/html5/grouping-content.html#the-p-element)  |  |  | &lt;p&gt; |  |
-|  [div](https://www.w3.org/TR/html5/grouping-content.html#the-div-element)  |  |  | &lt;div&gt;SAMSUNG&lt;/div&gt; |  |
-|  [span](https://www.w3.org/TR/html5/text-level-semantics.html#the-span-element)  |  |  | &lt;span&gt;SAMSUNG&lt;/span&gt; |  |
-|  [br](https://www.w3.org/TR/html5/text-level-semantics.html#the-br-element)  |  |  | &lt;br&gt; |  |
-|  [image](https://www.w3.org/TR/html5/embedded-content-0.html#the-img-element)  | src | &lt;URL&gt; | &lt;img src="URL"&gt; |  Supported images are of type .png, .jpg, and .bmp |
-|  | height | pixels | &lt;img height="pixels"&gt; |  |
-|  | width | pixels | &lt;img width="pixels"&gt; |  |
-|  [script](https://www.w3.org/TR/html5/scripting-1.html#the-script-element)  | src | &lt;URL&gt; | &lt;script src="URL"&gt;&lt;/script&gt; |  |
-|  | type | text/javascript | &lt;script type="text/javascript"&gt;&lt;/script&gt; |  |
-|  | charset | UTF-8 | &lt;script charset="UTF-8"&gt;&lt;/script&gt; | Only UTF-8 is supported |
-|  [table](https://www.w3.org/TR/html5/tabular-data.html#the-table-element)  | width | pixels &#124; &lt;percentage&gt; | &lt;table width="400"&gt;&lt;/table&gt; |  |
-|  | bgcolor | &lt;color&gt; | &lt;table bgcolor="blue"&gt;&lt;/table&gt; |  |
-|  | cellspacing | pixels | &lt;table cellspacing="2"&gt;&lt;/table&gt; |  |
-|  [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element) |  |  | &lt;caption&gt;SAMSUNG&lt;/caption&gt; |  |
-|  [colgroup](https://www.w3.org/TR/html5/tabular-data.html#the-colgroup-element)  |  |  | &lt;colgroup&gt;&lt;/colgroup&gt; |  |
-|  [tbody](https://www.w3.org/TR/html5/tabular-data.html#the-tbody-element)  |  |  | &lt;tbody&gt;&lt;/tbody&gt; |  |
-|  [thead](https://www.w3.org/TR/html5/tabular-data.html#the-thead-element)  |  |  | &lt;thead&gt;&lt;/thead&gt; |  |
-|  [tfoot](https://www.w3.org/TR/html5/tabular-data.html#the-tfoot-element)  |  |  | &lt;tfoot&gt;&lt;/tfoot&gt; |  |
-|  [tr](https://www.w3.org/TR/html5/tabular-data.html#the-tr-element)  |  |  | &lt;tr&gt;&lt;/tr&gt; |  |
-|  [td](https://www.w3.org/TR/html5/tabular-data.html#the-td-element), [th](https://www.w3.org/TR/html5/tabular-data.html#the-th-element) | width | pixels &#124; &lt;percentage&gt; | &lt;td width="30%"&gt;SAMSUNG&lt;/td&gt; |  |
-|  | colspan | number | &lt;td colspan="2"&gt; |  |
-|  | rowspan | number | &lt;td rowspan="2"&gt; |  |
-|  | bgcolor | &lt;color&gt; | &lt;td bgcolor="blue"&gt;SAMSUNG&lt;/td&gt; |  |
-|  [video](https://www.w3.org/TR/html5/embedded-content-0.html#the-video-element)  | src | &lt;URL&gt; | &lt;video src="movie.ogg" &gt; | [local&#124;network][absolute&#124;relative] URL |
-|  | autoplay | autoplay | &lt;video width="320" height="240" autoplay&gt; |  |
-|  | loop | loop | &lt;video loop&gt; |  |
-|  | muted | muted | &lt;video muted&gt; |  |
-|  | width | pixels | &lt;video width="320" height="240"&gt; |  |
-|  | height | pixels | &lt;video width="320" height="240"&gt; |  |
-|  [a](https://www.w3.org/TR/html5/text-level-semantics.html#the-a-element) | href | &lt;URL&gt; | &lt;a href="./content.html"&gt;content&lt;/a&gt; |  |
-|  [pre](https://www.w3.org/TR/html5/grouping-content.html#the-pre-element) |  |  | &lt;pre&gt;SAMSUNG&lt;/pre&gt; |  |
-|  [ul](https://www.w3.org/TR/html5/grouping-content.html#the-ul-element)  |  |  | &lt;ul&gt;&lt;/ul&gt; | List items are not displayed as bullets. |
-|  [li](https://www.w3.org/TR/html5/grouping-content.html#the-li-element)  |  |  | &lt;li&gt;Coffee&lt;/li&gt; |  |
-|  [dd](https://www.w3.org/TR/html5/grouping-content.html#the-dd-element)  |  |  | &lt;dd&gt;Coffee&lt;/dd&gt; |  |
-|  [dl](https://www.w3.org/TR/html5/grouping-content.html#the-dl-element)  |  |  | &lt;dl&gt;Coffee&lt;/dl&gt; |  |
-|  [dt](https://www.w3.org/TR/html5/grouping-content.html#the-dt-element)  |  |  | &lt;dt&gt;Coffee&lt;/dt&gt; |  |
-|  [audio](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) |  |  | &lt;audio&gt;&lt;/audio&gt; |  |
-|  [source](https://www.w3.org/TR/html5/embedded-content-0.html#the-source-element) | src | &lt;URL&gt; | &lt;source src="horse.mp4"&gt; |  |
-|  | type | MIME-type | &lt;source type="video/mp4"&gt; | Only video/mp4 and audio/mp4 are supported. |
-|  [object](https://www.w3.org/TR/html5/embedded-content-0.html#the-object-element) |  |  | &lt;object&gt;&lt;/object&gt; |  |
-|  [strong](https://www.w3.org/TR/html5/text-level-semantics.html#the-strong-element) |  |  | &lt;h1&gt;Chapter 1: &lt;strong&gt;The Praxis&lt;/strong&gt;&lt;/h1&gt; |  |
-|  [b](https://www.w3.org/TR/html5/text-level-semantics.html#the-b-element) |  |  | &lt;h1&gt;Chapter 1: &lt;b&gt;The Praxis&lt;/b&gt;&lt;/h1&gt; |  |
-|  [i](https://www.w3.org/TR/html5/text-level-semantics.html#the-i-element) |  |  | &lt;h1&gt;Chapter 1: &lt;i&gt;The Praxis&lt;/i&gt;&lt;/h1&gt; |  |
-|  [font](https://www.w3.org/TR/html401/present/graphics.html#edef-FONT) | color |  | &lt;font color="red"&gt;SAMSUNG&lt;/font&gt; | Obsolete features. |
-|  | size | Possible values:<br>- An integer between 1 and 7. This sets the font to some fixed size, whose rendering depends on the user agent. Not all user agents may render all seven sizes.<br>-A relative increase in font size. The value "+1" means one size larger. The value "-3" means three sizes smaller. All sizes belong to the scale of 1 to 7. | &lt;font size="+3"&gt;SAMSUNG&lt;/font&gt; | Obsolete features. |
-|  [fieldset](https://www.w3.org/TR/html5/forms.html#the-fieldset-element) |  |  | &lt;fieldset&gt;&lt;legend&gt;Card&lt;/legend&gt;&lt;/fieldset&gt; |  |
-|  [legend](https://www.w3.org/TR/html5/forms.html#the-legend-elementT) |  |  | &lt;legend&gt;Display&lt;/legend&gt; |  |
-|  [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype)  |  | html | &lt;!DOCTYPE html&gt; | The DOCTYPE declaration must be the first tag in your HTML document. The lightweight web engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported.|
+| HTML Tag | Attribute | Allowed Value | Note |
+|----------|-----------|---------------|------|
+| [Global Attribute](https://www.w3.org/TR/html5/dom.html#global-attributes) | class | &lt;string&gt; |  |
+|  | dir | ltr | rtl is an experimental feature. |
+|  | id | &lt;string&gt; |  |
+|  | style | &lt;css_styles&gt; | &lt;css_styles&gt; must conform to the CSS section of this specification document. |
+|  | lang | Refer to [ISO639](https://en.wikipedia.org/wiki/ISO_639) |  |
+|  [html](https://www.w3.org/TR/html5/semantics.html#the-root-element)  |  |  |  |
+|  [head](https://www.w3.org/TR/html5/document-metadata.html#the-head-element)  |  |  |  |
+|  [link](https://www.w3.org/TR/html5/document-metadata.html#the-link-element)  | rel | stylesheet |  |
+|  | href | &lt;URL&gt; |  |
+|  | media | media query |  |
+|  | type | text/css |  |
+|  [meta](https://www.w3.org/TR/html5/document-metadata.html#the-meta-element)  | charset | UTF-8 | Only UTF-8 is supported  |
+|  | name | tizen-transparent-background | name and content are used to set the background transparent only. To do so, both name and content must be set in the same meta tag, e.g., &lt;meta name="tizen-transparent-background" content="yes"&gt; |
+|  | name | tizen-widget-transparent-background | name and content are used to set the widget background transparent only. To do so, both name and content must be set in the same meta tag, e.g., &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; |
+|  | content | yes &#124; no | e.g., &lt;meta name="tizen-widget-transparent-background" content="yes"&gt; |
+|  [style](https://www.w3.org/TR/html5/document-metadata.html#the-style-element)  | media | media query |  |
+|  | type | text/css | Only "text/css" type is supported. |
+|  [body](https://www.w3.org/TR/html5/sections.html#the-body-element)  |  |  |  |
+|  [base](https://www.w3.org/TR/html5/document-metadata.html#the-base-element)  |  |  |  |
+|  [h1, h2, h3, h4, h5, and h6](https://www.w3.org/TR/html5/sections.html#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements)  | align | left &#124; center &#124; right | The align attribute's value of &lt;h1&gt; to &lt;h6&gt; can be only "left", "center" and "right". The attribute is not supported in HTML5. Use CSS instead. |
+|  [p](https://www.w3.org/TR/html5/grouping-content.html#the-p-element)  |  |  |  |
+|  [div](https://www.w3.org/TR/html5/grouping-content.html#the-div-element)  |  |  |  |
+|  [span](https://www.w3.org/TR/html5/text-level-semantics.html#the-span-element)  |  |  |  |
+|  [br](https://www.w3.org/TR/html5/text-level-semantics.html#the-br-element)  |  |  |  |
+|  [image](https://www.w3.org/TR/html5/embedded-content-0.html#the-img-element)  | src | &lt;URL&gt; | Supported images are of type .png, .jpg, and .bmp |
+|  | height | pixels |  |
+|  | width | pixels |  |
+|  [script](https://www.w3.org/TR/html5/scripting-1.html#the-script-element)  | src | &lt;URL&gt; |  |
+|  | type | text/javascript |  |
+|  | charset | UTF-8 | Only UTF-8 is supported |
+|  [table](https://www.w3.org/TR/html5/tabular-data.html#the-table-element)  | width | pixels &#124; &lt;percentage&gt; |  |
+|  | bgcolor | &lt;color&gt; |  |
+|  | cellspacing | pixels |  |
+|  [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element) |  |  |  |
+|  [colgroup](https://www.w3.org/TR/html5/tabular-data.html#the-colgroup-element)  |  |  |  |
+|  [tbody](https://www.w3.org/TR/html5/tabular-data.html#the-tbody-element)  |  |  |  |
+|  [thead](https://www.w3.org/TR/html5/tabular-data.html#the-thead-element)  |  |  |  |
+|  [tfoot](https://www.w3.org/TR/html5/tabular-data.html#the-tfoot-element)  |  |  |  |
+|  [tr](https://www.w3.org/TR/html5/tabular-data.html#the-tr-element)  |  |  |  |
+|  [td](https://www.w3.org/TR/html5/tabular-data.html#the-td-element), [th](https://www.w3.org/TR/html5/tabular-data.html#the-th-element) | width | pixels &#124; &lt;percentage&gt; |  |
+|  | colspan | number |  |
+|  | rowspan | number |  |
+|  | bgcolor | &lt;color&gt; |  |
+|  [video](https://www.w3.org/TR/html5/embedded-content-0.html#the-video-element)  | src | &lt;URL&gt; | [local&#124;network][absolute&#124;relative] URL |
+|  | autoplay | autoplay |  |
+|  | loop | loop |  |
+|  | muted | muted |  |
+|  | width | pixels |  |
+|  | height | pixels |  |
+|  [a](https://www.w3.org/TR/html5/text-level-semantics.html#the-a-element) | href | &lt;URL&gt; |  |
+|  [pre](https://www.w3.org/TR/html5/grouping-content.html#the-pre-element) |  |  |  |
+|  [ul](https://www.w3.org/TR/html5/grouping-content.html#the-ul-element)  |  |  |  |
+|  [li](https://www.w3.org/TR/html5/grouping-content.html#the-li-element)  |  |  |  |
+|  [dd](https://www.w3.org/TR/html5/grouping-content.html#the-dd-element)  |  |  |  |
+|  [dl](https://www.w3.org/TR/html5/grouping-content.html#the-dl-element)  |  |  |  |
+|  [dt](https://www.w3.org/TR/html5/grouping-content.html#the-dt-element)  |  |  |  |
+|  [audio](https://www.w3.org/TR/html5/embedded-content-0.html#the-audio-element) |  |  |  |
+|  [source](https://www.w3.org/TR/html5/embedded-content-0.html#the-source-element) | src | &lt;URL&gt; |  |
+|  | type | MIME-type | Only video/mp4 and audio/mp4 are supported. |
+|  [object](https://www.w3.org/TR/html5/embedded-content-0.html#the-object-element) |  |  |  |
+|  [strong](https://www.w3.org/TR/html5/text-level-semantics.html#the-strong-element) |  |  |  |
+|  [b](https://www.w3.org/TR/html5/text-level-semantics.html#the-b-element) |  |  |  |
+|  [i](https://www.w3.org/TR/html5/text-level-semantics.html#the-i-element) |  |  |  |
+|  [font](https://www.w3.org/TR/html401/present/graphics.html#edef-FONT) | color |  | Obsolete features. |
+|  | size | Possible values:<br>- An integer between 1 and 7. This sets the font to some fixed size, whose rendering depends on the user agent. Not all user agents may render all seven sizes.<br>-A relative increase in font size. The value "+1" means one size larger. The value "-3" means three sizes smaller. All sizes belong to the scale of 1 to 7. | Obsolete features. |
+|  [fieldset](https://www.w3.org/TR/html5/forms.html#the-fieldset-element) |  |  |  |
+|  [legend](https://www.w3.org/TR/html5/forms.html#the-legend-elementT) |  |  |  |
+|  [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype)  |  | html | The DOCTYPE declaration must be the first tag in your HTML document. The lightweight web engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported.|
 
 ## DOM
 
@@ -1121,7 +1121,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | outline-style | &lt;border-style&gt; | Sets the style of the outline | |
 | | outline-width | &lt;border-width&gt; | Sets the width of the outline | |
 | | outline-offset | &lt;length&gt; | Sets the offset of the outline | |
-| | resize | none | Specifies whether or not an element is resizable by the user, and if so, along which axis/axes. | |
+| | resize | none | Specifies whether or not an element is resizable by the user, and if so, along which axis/axes. | Development status: experimental |
 | [Display](https://www.w3.org/TR/CSS2/visuren.html#display-prop) | display | inline &#124; block &#124; inline-block &#124; table &#124; inline-table &#124; table-row-group &#124; table-header-group &#124; table-footer-group &#124; table-row &#124; table-column-group &#124; table-column &#124; table-cell &#124; table-caption &#124; flex &#124; inline-flex &#124; none | The display property specifies the type of box used for an HTML element (Also check Visibility) |  |
 | [Position](https://www.w3.org/TR/CSS2/visuren.html#positioning-scheme) | position | static &#124; absolute &#124; relative &#124; fixed | The position property specifies the type of positioning method used for an element. | Each element in the document tree generates zero or more boxes according to the box model. The layout of these boxes is governed by box dimensions, type, positioning scheme, relationships between in the document tree and external information. \*CSS direction property only accepts "ltr" as a value. To support right-to-left text, the dir attribute in an HTML element should be used, e.g., &lt;html dir="rtl"&gt; (Also check Layers, Direction, Visual Formatting Model, and Visual Effects) |
 | | top | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the top edge of an element to a unit above/below the top edge of its nearest positioned ancestor. | |
@@ -1143,8 +1143,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | | align-self | flex-start &#124; flex-end &#124; center &#124; baseline &#124; stretch | Does the same as align-itmes, but it overwrites align-items when specified on flex-item. | |
 | | align-content | flex-start &#124; flex-end &#124; center &#124; space-between &#124; space-around &#124; stretch | Aligns a flex container’s lines within the flex container when there is extra space in the cross-axis, similar to how justify-content aligns individual items within the main-axis. | |
 | [Layered presentation](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#layers) | z-index | auto &#124; &lt;integer&gt; | Specifies the stack order of an element. | |
-| [Text direction](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#direction) | direction | ltr &#124; rtl | Specifies the text direction/writing direction. | |
-| | unicode-bidi | normal &#124; embed | This property together with the direction property relates to the handling of bidirectional text in a document. | |
+| [Text direction](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#direction) | direction | ltr | Specifies the text direction/writing direction. | Development status: experimental |
+| | unicode-bidi | normal &#124; embed | This property together with the direction property relates to the handling of bidirectional text in a document. | Development status: experimental |
 | [Width, height](https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#q10.0) | width | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the width of an element. | |
 | | min-width | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the minimum width of an element. | |
 | | max-width | &lt;length&gt; &#124; &lt;percentage&gt; &#124; none | Sets the maximum width of an element. | |
@@ -1186,7 +1186,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | white-space | normal &#124; pre &#124; nowrap &#124; pre-wrap &#124; pre-line | Describes how whitespace inside the element is handled. | |
 | | word-spacing | normal &#124; length &#124; initial &#124; inherit | Specifies the spacing behavior between tags and words. | |
 | | line-break | auto &#124; normal &#124; loose &#124; strict | Specifies how (or if) to break lines when working with punctuation and symbols. This only affects text in Chinese, Japanese, or Korean (CJK). | At present, loose and strict behaves the same as normal. |
-| | hyphens | none &#124; manual &#124; auto | This property controls whether hyphenation is allowed to create more soft wrap opportunities within a line of text. | At present, only none is supported. auto behaves the same as none. |
+| | hyphens | none &#124; auto | This property controls whether hyphenation is allowed to create more soft wrap opportunities within a line of text. | At present, only none is supported. auto behaves the same as none. |
 | [Text](https://www.w3.org/TR/css-text-3/) | overflow-wrap &#124; word-wrap | normal &#124; break-word | Specifies whether the UA may break at otherwise disallowed points within a line to prevent overflow, when an otherwise-unbreakable string is too long to fit within the line box, or when sequences of preserved white space would hang. | It only has an effect when white-space allows wrapping. |
 | [Table](https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#q17.0) | table-layout | fixed &#124; auto | Defines the algorithm to be used to lay out table cells, rows, and columns. | |
 | | caption-side | 	top &#124; bottom | Positions the content of a table's &lt;caption&gt; on the specified side. | |
@@ -1194,7 +1194,7 @@ This section describes the complete list of supported HTML tags and attributes b
 | | empty-cells | show &#124; hide | Hide border and background on empty cells in a table. | |
 | [Transform](https://www.w3.org/TR/css-transforms-1/) | transform | none &#124; matrix &#124; translate &#124; translateX &#124; translateY &#124; scale &#124; scaleX &#124; scaleY &#124; rotate &#124; skew &#124; skewX &#124; skewY | Applies a 2D transformation to an element. | The transform property applies a 2D transformation to an element. This property allows you to rotate, scale, move and skew. A transformable element is an element whose layout is governed by the CSS box model which is either a block-level or atomic inline-level element. |
 | | transform-origin | &lt;percentage&gt; &#124; &lt;length&gt; &#124; top &#124; right &#124; bottom &#124; left &#124; center | Changes the position of transformed elements | |
-| [User Interface](https://www.w3.org/TR/css-ui-4/) | user-select | none &#124; auto &#124; text &#124; contain &#124; all | The user-select property enables authors to specify which elements in the document can be selected by the user and how. | At present, none, and auto are supported. |
+| [User Interface](https://www.w3.org/TR/css-ui-4/) | user-select | none &#124; auto  | The user-select property enables authors to specify which elements in the document can be selected by the user and how. |  |
 | | caret-color | auto &#124; transparent &#124; currentColor &#124; &lt;color&gt; | The caret-color CSS property sets the color of the insertion caret. | |
 | [Functional Notations](https://www.w3.org/TR/css3-values/#functional-notations) | calc | refer to spec | Allows mathematical expressions with addition (+), subtraction (-), multiplication (*), and division (/) to be used as component values.  | At present, length, time, and anlge are supported. |
 | [Media Queries - Media Types](https://www.w3.org/TR/css3-mediaqueries/) | all &#124; screen | all &#124; screen | Describes media types supported by lightweight web engine. | ‘all’ means suitable for all supported devices. |
@@ -1213,17 +1213,17 @@ This section describes the complete list of supported HTML tags and attributes b
 | | grid | &lt;integer&gt; | This is used to query whether the output device is grid or bitmap. If the output device is grid-based (e.g., a "tty" terminal, or a phone display with only one fixed font), the value will be 1. Otherwise, the value will be 0. | The lightweight web engine supports only bitmap device. |
 | [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-4/) | hover | none &#124; hover | The 'hover' media feature is used to query the user’s ability to hover over elements on the page with the primary pointing device. | |
 | | any-hover | none &#124; hover | The 'any-hover' media feature is identical to the 'hover' media feature, but this corresponds to the union of capabilities of all the pointing devices available to the user. | |
-| | pointer | none &#124; coarse &#124; fine | The 'pointer' media feature is used to query the presence and accuracy of a pointing device such as a mouse. | |
-| | any-pointer | none &#124; coarse &#124; fine | The 'any-pointer' media feature is identical to the 'pointer' media feature, but this corresponds to the union of capabilities of all the pointing devices available to the user. | |
-| | update | none &#124; slow &#124; fast | The 'update' media feature is used to query the ability of the output device to modify the apearance of content once it has been rendered. | |
-| | overflow-block | none &#124; scroll &#124; optional-paged &#124; paged | The 'overflow-block' media feature describes the behavior of the device when content overflows the initial containing block in the block axis. | |
+| | pointer | none &#124; fine | The 'pointer' media feature is used to query the presence and accuracy of a pointing device such as a mouse. | |
+| | any-pointer | none &#124; fine | The 'any-pointer' media feature is identical to the 'pointer' media feature, but this corresponds to the union of capabilities of all the pointing devices available to the user. | |
+| | update | none &#124; fast | The 'update' media feature is used to query the ability of the output device to modify the apearance of content once it has been rendered. | |
+| | overflow-block | none &#124; scroll | The 'overflow-block' media feature describes the behavior of the device when content overflows the initial containing block in the block axis. | |
 | | overflow-inline | none &#124; scroll | The 'overflow-inline' media feature describes the behavior of the device when content overflows the initial containing block in the inline axis. | |
-| [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-5/) | scripting | none &#124; initial-only &#124; enabled | The 'scripting' media feature is used to query whether scripting languages, such as JavaScript, are supported on the current document. | |
-| [Media Queries - Media Features](https://w3c.github.io/manifest/#the-display-mode-media-feature) | display-mode | fullscreen &#124; standalone &#124; minimal-ui &#124; browser | The 'display-mode' media feature represents the display mode of the web application. | The fullscreen display mode is not supported yet. |
+| [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-5/) | scripting | none &#124; enabled | The 'scripting' media feature is used to query whether scripting languages, such as JavaScript, are supported on the current document. | |
+| [Media Queries - Media Features](https://w3c.github.io/manifest/#the-display-mode-media-feature) | display-mode | browser | The 'display-mode' media feature represents the display mode of the web application. |  |
 | [List](https://www.w3.org/TR/CSS2/generate.html#lists) | list-style | &lt;list-style-type&gt; &#124; &lt;list-style-position&gt; &#124; &lt;list-style-image&gt; | Shorthand | |
 | | list-style-type | &lt;counter-style&gt; &#124; &lt;string&gt; &#124; none | Specifies the appearance of a list item element | |
 | | list-style-position | inside  &#124; outside | Specifies the position of the marker box in the principal block box. | |
-| | list-style-image | &lt;url&gt; &#124; none | Specifies an image to be used as the list item marker. | Development status: Parsed. Loaded. but not appeared on screen. |
+| | list-style-image | &lt;url&gt; &#124; none | Specifies an image to be used as the list item marker. | Development status: experimental |
 | | counter-increment | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Increases or decreases the value of a CSS counter by a given value. |
 | | counter-reset | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Resets a CSS counter to a given value. |
 | [Box-shadow](https://www.w3.org/TR/css-backgrounds-3/#the-box-shadow) | box-shadow | none &#124; &lt;shadow&gt;# | Attaches one or more drop-shadows to the box. The property accepts either the none value, which indicates no shadows, or a comma-separated list of shadows, ordered front to back. | &lt;shadow&gt; = inset? && &lt;length&gt;{2,4} && &lt;color&gt;? |
