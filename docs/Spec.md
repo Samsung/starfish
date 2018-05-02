@@ -1,7 +1,35 @@
-# Specification
+# Lightweight Web Engine Specification
+
+This document describes the complete list of features supported by the
+lightweight Web engine (LWE).
+
+## Table of Contents
+
+[HTML](#html)<br>
+[DOM](#dom)<br>
+[Events](#events)<br>
+[CSS](#css)<br>
+[Selectors](#selectors)<br>
+[Additional Supported APIs](#additional-supported-apis)<br>
+&nbsp; &nbsp; &nbsp; &nbsp;[XMLHttpRequest](#xmlhttprequest)<br>
+&nbsp; &nbsp; &nbsp; &nbsp;[EventSource](#eventsource)<br>
+&nbsp; &nbsp; &nbsp; &nbsp;[Blob](#blob)<br>
+&nbsp; &nbsp; &nbsp; &nbsp;[Geolocation](#geolocation)<br>
+&nbsp; &nbsp; &nbsp; &nbsp;[Web Device API](#web-device-api)<br>
+
+## Encoding Scheme
+All files (i.e., .html, .css, and .js) are to be encoded in UTF-8. This is
+needed for supporting multilanguages. Widgets may not be displayed correctly
+especially when widgets contain non-ASCII characters when encodings other than
+UTF-8 are used.
 
 ## HTML
-This section describes the complete list of supported HTML tags and attributes by the lightweight web engine. Please note that only the tags and attributes mentioned explicitly in this section are supported. In addition, the lightweight web engine supports only HTML5 documents, and it assumes all input documents are HTML5 documents even if `!DOCTYPE` is not explicitly specified.
+This section describes the complete list of supported HTML tags and attributes
+by LWE. Please note that only the tags and attributes mentioned explicitly in
+this section are supported. In addition, LWE supports only HTML5 documents, and
+it assumes all input documents are HTML5 documents even if `!DOCTYPE` is not
+explicitly specified.
+
 
 | HTML Tag | Attribute | Allowed Value | Note |
 |----------|-----------|---------------|------|
@@ -75,6 +103,10 @@ This section describes the complete list of supported HTML tags and attributes b
 |  [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype)  |  | html | The DOCTYPE declaration must be the first tag in your HTML document. The lightweight web engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported.|
 
 ## DOM
+
+This section describes the complete list of supported DOM interfaces by LWE.
+Please note that only the attributes and methods mentioned explicitly in this
+section are supported.
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
@@ -950,7 +982,12 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | contentEditable | contentEditable property is used to indicate whether or not the element is editable. |
 |  | attribute | isContentEditable | returns a Boolean that is true if the contents of the element are editable; otherwise it returns false.|
 
-## Event
+## Events
+
+This section describes the complete list of supported events by LWE. Please note
+that only the attributes and methods mentioned explicitly in this section are
+supported.
+
 | Interface | Type | Name | Description |
 |-----------|------|------|-------------|
 | [Event](https://dom.spec.whatwg.org/#interface-event) | interface | Event | |
@@ -1081,6 +1118,11 @@ This section describes the complete list of supported HTML tags and attributes b
 | | attribute | onunload | Fired at the Window object when the page is going away. |
 
 ## CSS
+
+This section describes the complete list of supported CSS properties by LWE.
+Please note that only the properties and values mentioned explicitly in this
+section are supported.
+
 
 | Type | Property | Allowed Value | Description | Note |
 |------|----------|---------------|-------------|------|
@@ -1236,6 +1278,8 @@ This section describes the complete list of supported HTML tags and attributes b
 | [Will Change](https://drafts.csswg.org/css-will-change/#will-change) | will-change | scroll-position &#124; contents &#124; &lt;custom-ident&gt; | Provide a way for authors to hint browsers about the kind of changes to be expected on an element, so that the browser can set up appropriate optimizations ahead of time before the element is actually changed. | |
 
 ## Selectors
+
+This section describes the complete list of supported selectors by LWE.
 
 | Selectors | Type | Pattern | Usage | Description |
 |-----------|------|---------|-------|-------------|
