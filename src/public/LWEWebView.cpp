@@ -486,8 +486,6 @@ void* WebView::unwrap()
 
 #ifdef PORT_WINDOW_BACKEND_ANDROID
 
-using namespace StarFish;
-
 static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
                             const char signature[])
 {
@@ -748,7 +746,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
     JNIEnv* env, jobject thiz, jint w, jint h, jfloat devicePixelRatio,
     jstring jua)
 {
-    ScreenInfo info;
+    StarFish::ScreenInfo info;
     info.rect.setWidth(w);
     info.rect.setHeight(h);
     info.availableRect.setWidth(w);
@@ -761,12 +759,12 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
     float defaultFontSizeMultiplier = 1;
 
     const char* cstr = env->GetStringUTFChars(jua, NULL);
-    String* ua = String::fromUTF8(cstr);
+    StarFish::String* ua = StarFish::String::fromUTF8(cstr);
 
     StarFish::StarFish* starfish = new (NoGC) StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)0, locale, timezoneID, nullptr, w, h, 0,
-        0, defaultFontSizeMultiplier, String::fromUTF8("Roboto"), info, "", "",
-        cacheDir, ua);
+        0, defaultFontSizeMultiplier, StarFish::String::fromUTF8("Roboto"),
+        info, "", "", cacheDir, ua);
     env->ReleaseStringUTFChars(jua, cstr);
 
     LWE::WebView* webView = LWE::WebView::Create(starfish);
@@ -1092,15 +1090,17 @@ Java_com_samsung_android_mobileservice_lwe_WebView_dispatchMouseDown(
     JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
 {
     LWE::WebView* webView = (LWE::WebView*)data;
-    PlatformWindow* sf =
-        (PlatformWindow*)((StarFish::StarFish*)webView->getInternalPtr())
+    StarFish::PlatformWindow* sf =
+        (StarFish::PlatformWindow*)((StarFish::StarFish*)
+                                        webView->getInternalPtr())
             ->platformWindow();
-    StarFishEnterer enter(sf->starFish());
-    MouseData mdata(MouseData::MouseButtonValue::LeftButton,
-                    MouseData::MouseButtonsValue::LeftButtonDown,
-                    x / sf->starFish()->screenInfo().deviceScaleFactor,
-                    y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
-    sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
+    StarFish::StarFishEnterer enter(sf->starFish());
+    StarFish::MouseData mdata(
+        StarFish::MouseData::MouseButtonValue::LeftButton,
+        StarFish::MouseData::MouseButtonsValue::LeftButtonDown,
+        x / sf->starFish()->screenInfo().deviceScaleFactor,
+        y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
+    sf->dispatchMouseEvent(StarFish::MouseEventKind::MouseEventDown, mdata);
     // sf->m_isMouseLbuttonDown = true;
 
     LOGE("Mouse down=%f %f", x, y);
@@ -1111,20 +1111,22 @@ Java_com_samsung_android_mobileservice_lwe_WebView_dispatchMouseMove(
     JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
 {
     LWE::WebView* webView = (LWE::WebView*)data;
-    PlatformWindow* sf =
-        (PlatformWindow*)((StarFish::StarFish*)webView->getInternalPtr())
+    StarFish::PlatformWindow* sf =
+        (StarFish::PlatformWindow*)((StarFish::StarFish*)
+                                        webView->getInternalPtr())
             ->platformWindow();
 
-    StarFishEnterer enter(sf->starFish());
+    StarFish::StarFishEnterer enter(sf->starFish());
     // unsigned char buttons = sf->m_isMouseLbuttonDown
     //                       ?
     //                       MouseData::MouseButtonsValue::LeftButtonDown
     //                       : 0;
-    unsigned char buttons = MouseData::MouseButtonsValue::LeftButtonDown;
-    MouseData mdata(0, buttons,
-                    x / sf->starFish()->screenInfo().deviceScaleFactor,
-                    y / sf->starFish()->screenInfo().deviceScaleFactor, 0);
-    sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
+    unsigned char buttons =
+        StarFish::MouseData::MouseButtonsValue::LeftButtonDown;
+    StarFish::MouseData mdata(
+        0, buttons, x / sf->starFish()->screenInfo().deviceScaleFactor,
+        y / sf->starFish()->screenInfo().deviceScaleFactor, 0);
+    sf->dispatchMouseEvent(StarFish::MouseEventKind::MouseEventMove, mdata);
 
     LOGE("Mouse move=%f %f", x, y);
 }
@@ -1134,16 +1136,18 @@ Java_com_samsung_android_mobileservice_lwe_WebView_dispatchMouseUp(
     JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
 {
     LWE::WebView* webView = (LWE::WebView*)data;
-    PlatformWindow* sf =
-        (PlatformWindow*)((StarFish::StarFish*)webView->getInternalPtr())
+    StarFish::PlatformWindow* sf =
+        (StarFish::PlatformWindow*)((StarFish::StarFish*)
+                                        webView->getInternalPtr())
             ->platformWindow();
 
-    StarFishEnterer enter(sf->starFish());
-    MouseData mdata(MouseData::MouseButtonValue::NoButton,
-                    MouseData::MouseButtonsValue::NoButtonDown,
-                    x / sf->starFish()->screenInfo().deviceScaleFactor,
-                    y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
-    sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
+    StarFish::StarFishEnterer enter(sf->starFish());
+    StarFish::MouseData mdata(
+        StarFish::MouseData::MouseButtonValue::NoButton,
+        StarFish::MouseData::MouseButtonsValue::NoButtonDown,
+        x / sf->starFish()->screenInfo().deviceScaleFactor,
+        y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
+    sf->dispatchMouseEvent(StarFish::MouseEventKind::MouseEventUp, mdata);
     // sf->m_isMouseLbuttonDown = false;
 
     LOGE("Mouse up=%f %f", x, y);

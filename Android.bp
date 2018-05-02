@@ -1,0 +1,238 @@
+// Test Android.bp for LigthWeigth Web Engine
+
+
+cc_prebuilt_library_static {
+    name: "liblwe_prebuilt_static_cairo",
+    compile_multilib: "32",
+    multilib: {
+        lib32: {
+            srcs: [
+                "third_party/prebuilt_armv-7a_8.1.0/lib/libcairo.a",
+            ],
+        },
+    },
+}
+
+
+cc_prebuilt_library_static {
+    name: "liblwe_prebuilt_static_ft2",
+    compile_multilib: "32",
+    multilib: {
+        lib32: {
+            srcs: [
+                "third_party/prebuilt_armv-7a_8.1.0/lib/libft2.a",
+            ],
+        },
+    },
+}
+
+cc_prebuilt_library_static {
+    name: "liblwe_prebuilt_static_harfbuzz",
+    compile_multilib: "32",
+    multilib: {
+        lib32: {
+            srcs: [
+                "third_party/prebuilt_armv-7a_8.1.0/lib/libharfbuzz.a",
+            ],
+        },
+    },
+}
+
+cc_prebuilt_library_static {
+    name: "liblwe_prebuilt_staticharfbuzz_icu",
+    compile_multilib: "32",
+    multilib: {
+        lib32: {
+            srcs: [
+                "third_party/prebuilt_armv-7a_8.1.0/lib/libharfbuzz-icu.a",
+            ],
+        },
+    },
+}
+
+cc_prebuilt_library_static {
+    name: "liblwe_prebuilt_static_tj",
+    compile_multilib: "32",
+    multilib: {
+        lib32: {
+            srcs: [
+                "third_party/prebuilt_armv-7a_8.1.0/lib/libjpeg-turbo.a",
+            ],
+        },
+    },
+}
+
+cc_prebuilt_library_static {
+    name: "liblwe_prebuilt_static_pixman",
+    compile_multilib: "32",
+    multilib: {
+        lib32: {
+            srcs: [
+                "third_party/prebuilt_armv-7a_8.1.0/lib/libpixman.a",
+            ],
+        },
+    },
+}
+
+cc_prebuilt_library_shared {
+    name: "liblwe_prebuilt_shared_fc",
+    compile_multilib: "32",
+    multilib: {
+        lib32: {
+            srcs: [
+                "third_party/prebuilt_armv-7a_8.1.0/lib/libfontconfig.so",
+            ],
+        },
+    },
+}
+
+cc_prebuilt_library_shared {
+    name: "liblwe_prebuilt_shared_jnigraphics",
+    compile_multilib: "32",
+    multilib: {
+        lib32: {
+            srcs: [
+                "third_party/prebuilt_armv-7a_8.1.0/lib/libjnigraphics.so",
+            ],
+        },
+    },
+}
+
+cc_library_shared {
+    compile_multilib : "32",
+    //clang : true,
+    //cpp_std : "experimental",
+    rtti : false,
+    //no_default_compiler_flags : true,
+    gnu_extensions : false,
+    stl : "libc++_static",
+    name: "liblightweightwebengine",
+    arch: {
+        arm: {
+            instruction_set: "arm",
+        },
+    },
+    local_include_dirs: [
+        "third_party/GCutil/bdwgc/include",
+        "third_party/GCutil",
+        "third_party/escargot/src",
+        "third_party/escargot/include",
+        "third_party/escargot/third_party/checked_arithmetic",
+        "third_party/escargot/third_party/double_conversion",
+        "third_party/escargot/third_party/rapidjson/include",
+        "third_party/escargot/third_party/yarr",
+        "third_party/skia_matrix",
+        "third_party/clipper/cpp",
+        "third_party/rapidxml",
+        "third_party/webm",
+        "third_party/MP4Parse/source/include",
+        "third_party/cppzmq",
+        ".",
+        "inc",
+        "src",
+// external header
+        "third_party/prebuilt_armv-7a_8.1.0/include",
+        "third_party/prebuilt_armv-7a_8.1.0/include/bdwgc",
+        "third_party/prebuilt_armv-7a_8.1.0/include/cairo",
+        "third_party/prebuilt_armv-7a_8.1.0/include/harfbuzz",
+    ],
+
+    srcs: [
+        "third_party/GCutil/bdwgc/*.c",
+        "third_party/GCutil/*.cpp",
+        "third_party/escargot/third_party/double_conversion/*.cc",
+        "third_party/escargot/third_party/yarr/*.cpp",
+        "third_party/escargot/src/**/*.cpp",
+        "src/**/*.cpp",
+        "third_party/skia_matrix/SkMath.cpp",
+        "third_party/skia_matrix/SkPoint.cpp",
+        "third_party/skia_matrix/SkRect.cpp",
+        "third_party/skia_matrix/SkMatrix.cpp",
+        "third_party/skia_matrix/SkDebug.cpp",
+    ],
+
+    exclude_srcs: [
+        "src/shell/shell.cpp",
+    ],
+
+    shared_libs: [
+        "libz",
+        "libcurl",
+        "libcutils",
+        "libicuuc",
+        "libicui18n",
+        "libutils",
+        "liblog",
+        "libpng",
+        "libjpeg",
+        "libcrypto",
+        "libssl",
+        "liblwe_prebuilt_shared_fc",
+        "liblwe_prebuilt_shared_jnigraphics",
+//      "libjnigraphics",  //TODO
+    ],
+    static_libs:[
+        "libgif",
+        "liblwe_prebuilt_static_cairo",
+        "liblwe_prebuilt_static_ft2",
+        "liblwe_prebuilt_static_harfbuzz",
+        "liblwe_prebuilt_staticharfbuzz_icu",
+        "liblwe_prebuilt_static_tj",
+        "liblwe_prebuilt_static_pixman",
+    ],
+
+//  export_include_dirs: ["src"],
+    cflags: [
+        "-Wno-format-nonliteral",
+        "-Wno-invalid-offsetof",
+        "-fvisibility=hidden",
+        "-fno-omit-frame-pointer",
+        "-fstack-protector",
+        "-Wno-unused-parameter",
+        "-Wno-unused-result",
+        "-Wno-unused-variable",
+        "-Wno-unused-function",
+        "-Wno-deprecated-declarations",
+        "-Wno-type-limits",
+        "-fdata-sections",
+        "-ffunction-sections",
+        "-DESCARGOT",
+        "-fpermissive",
+        "-DHAVE_CONFIG_H",
+        "-DANDROID",
+        "-DPLATFORM_ANDROID",
+        "-DIGNORE_DYNAMIC_LOADING",
+        "-DGC_DONT_REGISTER_MAIN_STATIC_DATA",
+    ],
+    cppflags: [
+        //"-g3",
+        //"-O0",
+        "-Wno-format-nonliteral",
+        "-Wno-invalid-offsetof",
+        "-fvisibility=hidden",
+        "-fno-omit-frame-pointer",
+        "-fstack-protector",
+        "-Wno-unused-parameter",
+        "-Wno-unused-result",
+        "-Wno-unused-variable",
+        "-Wno-unused-function",
+        "-Wno-deprecated-declarations",
+        "-Wno-type-limits",
+        "-fdata-sections",
+        "-ffunction-sections",
+        "-DSTARFISH_ANDROID",
+        "-DESCARGOT_ENABLE_TYPEDARRAY",
+        "-DESCARGOT_ENABLE_PROMISE",
+        "-DANDROID=1",
+        "-DESCARGOT_32=1",
+        "-DSTARFISH_IGNORE_SSL_VERIFYPEER",
+        "-DSTARFISH_ENABLE_HTTPCACHE",
+        "-fexceptions",
+        "-fpermissive",
+        "-fno-fast-math",
+        "-fno-unsafe-math-optimizations",
+        "-fdenormal-fp-math=ieee",
+        "-Wno-expansion-to-defined",
+        "-Wno-dynamic-class-memaccess",
+    ],
+}

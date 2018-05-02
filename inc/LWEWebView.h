@@ -57,6 +57,7 @@ private:
 class STARFISH_EXPORT WebViewClient
 {
 public:
+	virtual ~WebViewClient(){}
 	virtual void OnReceivedError(WebView* view, ResourceError error){}
 	virtual void OnPageFinished(WebView* view, std::string url){}
 	virtual void OnPageStarted(WebView* view, std::string url){}
