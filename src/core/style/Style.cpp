@@ -7587,7 +7587,8 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             CSSTokenVector tokens;
             bool inPositionStr = false;
             while (parser.consumeWhitespaces() && *(parser.curPos()) != ',') {
-                parser.consumeString(CSSPropertyParser::AllowNegative);
+                parser.consumeString(CSSPropertyParser::AllowNegative |
+                                     CSSPropertyParser::AllowPercent);
                 const CSSTokenValue& value = parser.parsedString();
                 CSSStyleValuePair temp;
                 if (!inPositionStr && value == "circle") {
