@@ -107,7 +107,7 @@ static float positionFromSideValue(const Unit::Rect& rect, FrameBox* owner,
                                    const SideValue side, Length offset,
                                    bool isHorizontal)
 {
-    float origin = 0;
+    float origin = isHorizontal ? rect.x() : rect.y();
     int sign = 1;
     float edgeDistance = isHorizontal ? rect.width() : rect.height();
     float x = rect.x();
@@ -200,7 +200,7 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
     if (m_type == GradientType::LinearGradient) {
         gradientLength = hypotf(x2 - x1, y2 - y1);
     } else {
-        gradientLength = r1;
+        gradientLength = r2;
     }
 
     size_t size = m_colorStopList.size();
@@ -591,11 +591,13 @@ static float resolveRadius(FrameBox* owner, const Length& radius,
     return clampTo<float>(std::max(ret, 0.0f));
 }
 
-void RadialGradientData::radiusToSide(const float& x, const float& y,
+void RadialGradientData::radiusToSide(const float x2, const float y2,
                                       const Unit::Rect& rect,
                                       bool (*compare)(float, float), float& r1,
                                       float& r2)
 {
+    float x = x2 - rect.x();
+    float y = y2 - rect.y();
     float dx1 = clampTo<float>(fabs(x));
     float dy1 = clampTo<float>(fabs(y));
     float dx2 = clampTo<float>(fabs(x - rect.width()));
@@ -629,7 +631,7 @@ inline static void ellipseRadius(const float& x, const float& y,
 
 // Compute the radius to the closest/farthest corner (depending on the compare
 // functor).
-void RadialGradientData::radiusToCorner(const float& x, const float& y,
+void RadialGradientData::radiusToCorner(const float x2, const float y2,
                                         const Unit::Rect& rect,
                                         bool (*compare)(float, float),
                                         float& r1, float& r2)
@@ -645,10 +647,10 @@ void RadialGradientData::radiusToCorner(const float& x, const float& y,
 
     unsigned cornerIndex = 0;
     float distance =
-        hypotf(x - coners[cornerIndex].x, y - coners[cornerIndex].y);
+        hypotf(x2 - coners[cornerIndex].x, y2 - coners[cornerIndex].y);
     for (unsigned i = 1; i < 4; ++i) {
         float newDistance =
-            hypotf(x - coners[cornerIndex].x, y - coners[cornerIndex].y);
+            hypotf(x2 - coners[cornerIndex].x, y2 - coners[cornerIndex].y);
         if (compare(newDistance, distance)) {
             cornerIndex = i;
             distance = newDistance;
@@ -659,8 +661,8 @@ void RadialGradientData::radiusToCorner(const float& x, const float& y,
         r1 = r2 = distance;
     } else {
         float tdx = 0, tdy = 0;
-        radiusToCorner(x, y, rect, compare, tdx, tdy);
-        ellipseRadius(coners[cornerIndex].x - x, coners[cornerIndex].y - y,
+        radiusToSide(x2, y2, rect, compare, tdx, tdy);
+        ellipseRadius(coners[cornerIndex].x - x2, coners[cornerIndex].y - y2,
                       tdx / tdy, r1, r2);
     }
 }
@@ -675,9 +677,11 @@ bool RadialGradientData::computeEndPoints(const Unit::Rect& rect,
     int y = rect.y();
     r1 = 0;
     if (m_verticalSide == SideValue::NoneSideValue &&
-        m_horizentalSide == SideValue::NoneSideValue) {
+        m_verticalSideOffset.isAuto() &&
+        m_horizentalSide == SideValue::NoneSideValue &&
+        m_horizentalSideOffset.isAuto()) {
         x1 = x + rect.width() / 2;
-        y1 = x + rect.height() / 2;
+        y1 = y + rect.height() / 2;
     } else {
         computeEndPointsFromSideValue(rect, owner, x1, y1);
     }

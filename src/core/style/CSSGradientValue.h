@@ -215,7 +215,7 @@ enum class RadialGradientShape { None, Circle, Elipse };
 class CSSRadialGradientValue : public CSSGradientValue {
 public:
     CSSRadialGradientValue(
-        RadialGradientShape shape = RadialGradientShape::Circle)
+        RadialGradientShape shape = RadialGradientShape::None)
         : CSSGradientValue(GradientType::RadialGradient)
         , m_shape(shape)
         , m_size()

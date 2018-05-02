@@ -323,11 +323,11 @@ public:
 private:
     void computeEndPointsFromSideValue(const Unit::Rect& rect, FrameBox* owner,
                                        float& x, float& y);
-    void radiusToSide(const float& x, const float& y, const Unit::Rect& rect,
+    void radiusToSide(const float x2, const float y2, const Unit::Rect& rect,
                       bool (*compare)(float, float), float& outDx,
                       float& outDy);
 
-    void radiusToCorner(const float& x, const float& y, const Unit::Rect& rect,
+    void radiusToCorner(const float x2, const float y2, const Unit::Rect& rect,
                         bool (*compare)(float, float), float& r1, float& r2);
 
     RadialGradientShape m_shape;
