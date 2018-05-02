@@ -1311,10 +1311,10 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
     bool inQuotes = false;
     bool isWhiteSpaceState = false;
     for (size_t i = 0; i < length; i++) {
-        if (data[i] == '(') {
+        if (data[i] == '(' && !inQuotes) {
             inParenthesis = true;
             numberOfnesting++;
-        } else if (data[i] == ')') {
+        } else if (data[i] == ')' && !inQuotes) {
             if (numberOfnesting) {
                 numberOfnesting--;
             }
