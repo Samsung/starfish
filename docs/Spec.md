@@ -78,11 +78,6 @@ This section describes the complete list of supported HTML tags and attributes b
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
-|[Common Definitions](https://heycam.github.io/webidl/#common) | typedef | (unsigned long long) DOMTimeStamp | The DOMTimeStamp type is used for representing a number of milliseconds, either as an absolute time (relative to some epoch) or as a relative amount of time. |
-|  | typedef | (Int8Array or Int16Array or Int32Array or Uint8Array or Uint16Array or Uint32Array or Uint8ClampedArray or Float32Array or Float64Array or DataView) ArrayBufferView |  |
-|  | typedef | (ArrayBufferView or ArrayBuffer) BufferSource |  |
-|  | callback | Function = any (any... arguments) | |
-|  | callback | VoidFunction = void () | |
 | [Attr](https://dom.spec.whatwg.org/#interface-attr) | interface | Attr | Attr nodes are simply known as attributes. They are sometimes referred to as content attributes to avoid confusion with IDL attributes. |
 |  | attribute | localName | Return the local name. |
 |  | attribute | name | Return the qualified name. |
@@ -93,6 +88,10 @@ This section describes the complete list of supported HTML tags and attributes b
 | [CharacterData](https://dom.spec.whatwg.org/#interface-characterdata) | interface | CharacterData | CharacterData is an abstract interface and does not exist as node. It is used by Text, ProcessingInstruction, and Comment nodes. |
 |  | attribute | data | Getter must return context object’s data. Its setter must replace data with node context object, offset 0, count context object’s length, and data new value. |
 |  | attribute | length | Return context object’s length. |
+|  | method | void appendData(DOMString data) | Append data |
+|  | method | void insertData(unsigned long offset, DOMString data) | Insert data |
+|  | method | void deleteData(unsigned long offset, unsigned long count) | Replace data to empty string |
+|  | method | void replaceData(unsigned long offset, unsigned long count, DOMString data) | Replace data |
 | [ChildNode](https://dom.spec.whatwg.org/#childnode) | interface | ChildNode | The childNodes interface contains methods that are particular to Node objects that can have a parent. |
 |  | method | void remove() | Removes this childNodes from the children list of its parent. |
 | [Comment](https://dom.spec.whatwg.org/#interface-comment) | interface | Comment | The Comment interface represents textual notations within markup; although it is generally not visually shown, such comments are available to be read in the source view |
@@ -104,8 +103,16 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | constant | MEDIA_RULE = 4 |  |
 |  | constant | FONT_FACE_RULE = 5 |  |
 |  | constant | PAGE_RULE = 6 |  |
+|  | constant | KEYFRAMES_RULE = 7 |  |
+|  | constant | KEYFRAME_RULE = 8 |  |
 |  | constant | MARGIN_RULE = 9 |  |
 |  | constant | NAMESPACE_RULE = 10 |  |
+|  | constant | COUNTER_STYLE_RULE = 11 |  |
+|  | constant | SUPPORTS_RULE = 12 |  |
+|  | constant | DOCUMENT_RULE = 13 |  |
+|  | constant | FONT_FEATURE_VALUES_RULE = 14 |  |
+|  | constant | VIEWPORT_RULE = 15 |  |
+|  | constant | REGION_STYLE_RULE = 16 |  |
 |  | attribute | type | One of the Type constants indicating the type of CSS rule. |
 |  | attribute | cssText | Returns a serialization of the CSS rule. |
 |  | attribute | parentRule | Returns the parent CSS rule. |
@@ -123,18 +130,20 @@ This section describes the complete list of supported HTML tags and attributes b
 |  | attribute | style | Returns a CSSStyleDeclaration object for the style rule. |
 | [CSSImportRule](https://drafts.csswg.org/cssom/#the-cssimportrule-interface) | interface | CSSImportRule | Represents an @import at-rule. |
 |  | attribute | href | Returns the URL specified by the @import at-rule. |
+|  | attribute | media | Returns the value of the media attribute of the associated CSS style sheet. |
 |  | attribute | styleSheet | Returns a CSS style sheet downloaded by @import at-rule. |
 | [CSSGroupingRule](https://drafts.csswg.org/cssom/#the-cssgroupingrule-interface) | interface | CSSGroupingRule | Represents an at-rule that contains other rules nested inside itself. |
 |  | attribute | cssRules | Returns a CSSRuleList object for the child CSS rules. |
 |  | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Returns the result of invoking insert a CSS rule rule into the child CSS rules at index. |
 |  | method | void deleteRule(unsigned long index) | Removes a CSS rule from the child CSS rules at index. |
 | [CSSConditionRule](https://drafts.csswg.org/css-conditional-3/#cssconditionrule) | interface | CSSConditionRule | Represents all the “conditional” at-rules, which consist of a condition and a statement block. |
-|  | attribute | conditionText | Returns the result of serializing the associated condition. |
+|  | attribute | conditionText | Experimental. Partial support (only getter works). Returns the result of serializing the associated condition. |
 | [CSSMediaRule](https://drafts.csswg.org/css-conditional-3/#cssmediarule) | interface | CSSMediaRule | Represents a @media at-rule. |
-|  | attribute | conditionText | Returns the value of media.mediaText on the rule. (CSSMediaRule-specific definition for attribute on CSSConditionRule) Note: Currently, lightweight web engine supports only getter.|
+|  | attribute | media | Returns a MediaList object for the list of media queries specified with the @media at-rule.|
 | [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | Represents a CSS style sheet. |
 | | attribute | ownerRule | If this style sheet is imported into the document using an @import rule, the ownerRule property will return that CSSImportRule, otherwise it returns null. |
 | | attribute | cssRules | Returns a live CSSRuleList, listing the CSSRule objects in the style sheet. |
+| | attribute | rules | Non-standard. Synonym for cssRules. |
 | | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Inserts a new rule at the specified position in the style sheet, given the textual representation of the rule. |
 | | method | void deleteRule(unsigned long index) | Deletes a rule at the specified position from the style sheet. |
 | [CSSRuleList](https://drafts.csswg.org/cssom/#the-cssrulelist-interface) | interface | CSSRuleList | Represents an ordered collection of CSS style rules. |
