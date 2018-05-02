@@ -1224,45 +1224,48 @@ This section describes the complete list of supported HTML tags and attributes b
 
 | Selectors | Type | Pattern | Usage | Description |
 |-----------|------|---------|-------|-------------|
-| [Selectors](https://www.w3.org/TR/selectors/) | Universal Selector | * | * | Selects all elements |
-| | Type Selector | element | p | Selects all \<p\> elements. The 'OR' condition is allowed (e.g., element, element) |
-| | Class Selector | element.class | div.intro | Selects all \<div\> elements with class="intro". A subset matching of "class" values is not allowed (for example, div.class1.class2) |
-| | ID Selector | element#id | div#firstname | Selects an \<div\> element with id="firstname" |
-| | Attribute Selectors | [attr] | [target] | Selects all elements with a target attribute |
-| | | [attr=val] | [lang=en] | Selects all elements with lang="en" |
+| [Logical combinators](https://www.w3.org/TR/selectors/#logical-combination) | The negation pseudo-class | :not() | :not(p) | Selects elements that do not match a list of selectors |
+| [Elemental selectors](https://www.w3.org/TR/selectors/#elemental-selectors) | Type (tag name) selector | element | p | Selects all \<p\> elements. The 'OR' condition is allowed (e.g., element, element) |
+| | Universal selector | * | * | Selects all elements |
+| [Attribute selectors](https://www.w3.org/TR/selectors/#attribute-selectors) | Attribute presence and value selectors | [att] | [target] | Selects all elements with a target attribute |
+| | | [att=val] | [lang=en] | Selects all elements with lang="en" |
 | | | [att~=val] | [title~=flower] | Selects all elements with a title attribute containing the word "flower" |
 | | | [att&#124;=val] | [lang&#124;=en] | Selects all elements with a lang attribute value starting with "en" |
-| | | [att^=val] | a[href^="https"] | Selects every \<a\> element whose href attribute value begins with "https" |
+| | Substring matching attribute selectors | [att^=val] | a[href^="https"] | Selects every \<a\> element whose href attribute value begins with "https" |
 | | | [att$=val] | a[href$=".pdf"] | Selects every \<a\> element whose href attribute value ends with ".pdf" |
 | | | [att*=val] | a[href*="w3schools"] | Selects every \<a\> element whose href attribute value contains the substring "w3schools" |
-| | Pseudo-classes | :hover | a:hover | Selects links on mouse over |
-| | | :active | a:active | Selects the active link |
-| | | :disabled | input:disabled | Selects every disabled \<input\> element |
-| | | :enabled | input:enabled | Selects every enabled \<input\> element |
-| | | :placeholder-shown | :placeholder-shown | Selects any \<input\> or \<textarea\> element that is currently displaying placeholder text. |
-| | | :focus | input:focus | Selects the input element which has focus |
-| | | :target | #news:target | Selects the current active #news element (clicked on a URL containing that anchor name) |
-| | | :dir() | :dir(rtl) | Selects any element with right-to-left text |
-| | | :lang() | p:lang(it) | Selects every \<p\> element with a lang attribute equal to "it" (Italian) |
-| | | :root | :root | Selects the document's root element |
-| | | :nth-child() | p:nth-child(2) | Selects every \<p\> element that is the second child of its parent |
-| | | :nth-last-child() | p:nth-last-child(2) | Selects every \<p\> element that is the second child of its parent, counting from the last child |
-| | | :nth-of-type() | p:nth-of-type(2) | Selects every \<p\> element that is the second \<p\> element of its parent |
-| | | :nth-last-of-type() | p:nth-last-of-type(2) | 	Selects every \<p\> element that is the second \<p\> element of its parent, counting from the last child |
-| | | :first-child | p:first-child | Selects every \<p\> element that is the first child of its parent |
-| | | :last-child | p:last-child | Selects every \<p\> element that is the last child of its parent |
-| | | :first-of-type | p:first-of-type | Selects every \<p\> element that is the first \<p\> element of its parent |
-| | | :last-of-type | p:last-of-type | Selects every \<p\> element that is the last \<p\> element of its parent |
-| | | :only-child | p:only-child | Selects every \<p\> element that is the only child of its parent |
-| | | :only-of-type | p:only-of-type | Selects every \<p\> element that is the only \<p\> element of its parent |
-| | Pseudo-elements | ::first-line | p::first-line | Selects the first line of every \<p\> element|
-| | | ::first-letter | p::first-letter | Selects the first letter of every \<p\> element |
-| | | ::before | p::before | Insert something before the content of each \<p\> element |
-| | | ::after | p::after | Insert something after the content of each \<p\> element |
-| | Descendant Combinator | selector1 selector2 | div p | Selects all \<p\> elements inside \<div\> elements |
-| | Child Combinator | selector1 > selector2 | div > p | Selects all \<p\> elements that are immediate children of a \<div\> element |
-| | Next-sibling Combinator | selector1 + selector2 | div + p | Selects all \<p\> elements that are placed immediately after \<div\> elements |
-| | Subsequent-sibling Combinator | selector1 ~ selector2 | div ~ p | Selects all \<p\> elements that are siblings of \<div\> elements |
+| | Class selector | element.class | div.intro | Selects all \<div\> elements with class="intro". A subset matching of "class" values is not allowed (for example, div.class1.class2) |
+| | ID selector | element#id | div#firstname | Selects an \<div\> element with id="firstname" |
+| [Linguistic pseudo-classes](https://www.w3.org/TR/selectors/#linguistic-pseudos) | The directionality pseudo-class | :dir() | :dir(ltr) | Selects any element with left-to-right text <br> NOTE: 'rtl' value is not supported yet |
+| | The language pseudo-class | :lang() | p:lang(it) | Selects every \<p\> element with a lang attribute equal to "it" (Italian) |
+| [Location pseudo-classes](https://www.w3.org/TR/selectors/#location) | The target pseudo-class | :target | #news:target | Selects the current active #news element (clicked on a URL containing that anchor name) |
+| [User action pseudo-classes](https://www.w3.org/TR/selectors/#useraction-pseudos) | The pointer hover pseudo-class | :hover | a:hover | Selects links on mouse over |
+| | The activation pseudo-class | :active | a:active | Selects the active link |
+| | The input focus pseudo-class | :focus | input:focus | Selects the input element which has focus |
+| [The input pseudo-classes](https://www.w3.org/TR/selectors/#input-pseudos) |  The ':enabled' pseudo-classes | :enabled | input:enabled | Selects every enabled \<input\> element |
+| | The ':disabled' pseudo-classes | :disabled | input:disabled | Selects every disabled \<input\> element |
+| | The placeholder-shown pseudo-class | :placeholder-shown | :placeholder-shown | Selects any \<input\> or \<textarea\> element that is currently displaying placeholder text. |
+| | The selected-option pseudo-class | :checked | input:checked | Selects any radio(\<input type="radio"\>), checkbox (\<input type="checkbox"\>), or option(\<option\> in a \<select\>) element that is checked or toggled to an on state |
+| [Tree-structural pseudo-classes](https://www.w3.org/TR/selectors/#structural-pseudos) | ':root' pseudo-class | :root | :root | Selects the document's root element |
+| | ':empty' pseudo-class | :empty | p:empty | Selects any element that has no children |
+| | 'nth-child()' pseudo-class  | :nth-child() | p:nth-child(2) | Selects every \<p\> element that is the second child of its parent |
+| | ':nth-last-child()' pseudo-class | :nth-last-child() | p:nth-last-child(2) | Selects every \<p\> element that is the second child of its parent, counting from the last child |
+| | ':first-child' pseudo-class | :first-child | p:first-child | Selects every \<p\> element that is the first child of its parent |
+| | ':last-child' pseudo-class | :last-child | p:last-child | Selects every \<p\> element that is the last child of its parent |
+| | ':only-child' pseudo-class | :only-child | p:only-child | Selects every \<p\> element that is the only child of its parent |
+| | ':nth-of-type()' pseudo-class | :nth-of-type() | p:nth-of-type(2) | Selects every \<p\> element that is the second \<p\> element of its parent |
+| | ':nth-last-of-type()' pseudo-class | :nth-last-of-type() | p:nth-last-of-type(2) | 	Selects every \<p\> element that is the second \<p\> element of its parent, counting from the last child |
+| | ':first-of-type' pseudo-class | :first-of-type | p:first-of-type | Selects every \<p\> element that is the first \<p\> element of its parent |
+| | ':last-of-type' pseudo-class | :last-of-type | p:last-of-type | Selects every \<p\> element that is the last \<p\> element of its parent |
+| | ':only-of-type' pseudo-class | :only-of-type | p:only-of-type | Selects every \<p\> element that is the only \<p\> element of its parent |
+| [Combinators](https://www.w3.org/TR/selectors/#combinators) | Descendant combinator ( ) | selector1 selector2 | div p | Selects all \<p\> elements inside \<div\> elements |
+| | Child combinator (>) | selector1 > selector2 | div > p | Selects all \<p\> elements that are immediate children of a \<div\> element |
+| | Next-sibling combinator (+) | selector1 + selector2 | div + p | Selects all \<p\> elements that are placed immediately after \<div\> elements |
+| | Subsequent-sibling combinator (~) | selector1 ~ selector2 | div ~ p | Selects all \<p\> elements that are siblings of \<div\> elements |
+| [Typographic Pseudo-elements](https://www.w3.org/TR/css-pseudo-4/#typographic-pseudos) | The ::first-line pseudo-element | ::first-line | p::first-line | Selects the first line of every \<p\> element|
+| | The ::first-letter pseudo-element | ::first-letter | p::first-letter | Selects the first letter of every \<p\> element |
+| [Tree-Abiding Pseudo-elements](https://www.w3.org/TR/css-pseudo-4/#treelike) | Generated Content Pseudo-elements: '::before' | ::before | p::before | Insert something before the content of each \<p\> element |
+| | Generated Content Pseudo-elements: '::after' | ::after | p::after | Insert something after the content of each \<p\> element |
 
 ## Additional Supported APIs
 
