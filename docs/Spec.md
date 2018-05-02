@@ -229,15 +229,14 @@ section are supported.
 | | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
 | Document (non-standard) | method | (HTMLCollection or Node or null) document._nodeName_ | Returns elements of type a, applet, area, embed, form, frameset, img, or object with name="_nodeName_". Returns an element if there is only one such element. |
 | [VisibilityChange Event](https://www.w3.org/TR/page-visibility/#sec-visibilitychange-event) | Event Handler | visibilitychange | Fire when the content of a tab has become visible or has been hidden. |
-| [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | DocumentFragment is a "lightweight" or "minimal" Document object. It is very common to want to be able to extract a portion of a document's tree or to create a new fragment of a document. Also it implements [ParentNode](https://dom.spec.whatwg.org/#interface-parentnode) and [NonElementParentNode](https://www.w3.org/TR/dom/#interface-nonelementparentnode)|
 | [DocumentType](https://dom.spec.whatwg.org/#documenttype) | interface | DocumentType | Document type |
 |  | attribute | name | Return the context object’s name. |
 |  | attribute | publicId | Return the context object’s public ID. |
 |  | attribute | systemId | Return the context object’s system ID. |
 | [DOMStringList](https://html.spec.whatwg.org/#domstringlist) | interface | DOMStringList | |
 |  | attribute | length | Returns the number of strings in strings. |
-|  | attribute | item | Returns the string with index index from strings. |
-|  | attribute | contain | Returns true if strings contains string, and false otherwise. |
+|  | method | DOMString? item(unsigned long index) | Returns the string with index index from strings. |
+|  | method | contain | Returns true if strings contains string, and false otherwise. |
 | [DOMException](https://heycam.github.io/webidl/#idl-exceptions) | interface | DOMException |  |
 |  | attribute | code | Exception code |
 |  | attribute | name | optional exception name |
@@ -288,14 +287,16 @@ section are supported.
 |  | attribute | p3 | Return a DOMPoint that represents p3 of the quadrilateral |
 |  | attribute | p4 | Return a DOMPoint that represents p4 of the quadrilateral |
 |  | method | DOMRect getBounds() | Return bounds |
-|  [DOMRect](https://drafts.fxtf.org/geometry/#domrect)  |  attribute  |  x  |  Return x coordinate value of the object   |
+|  [DOMRect](https://drafts.fxtf.org/geometry/#domrect) | interface | DOMRect | Represents a rectangle. |
+|    |  attribute  |  x  |  Return x coordinate value of the object   |
 |    |  attribute  |  y  |  Return y coordinate value of the object   |
 |    |  attribute  |  width  |  Return width dimension value of the object  |
 |    |  attribute  |  height  |  Return height dimension value of the object  |
 | [DOMRectList](https://dxr.mozilla.org/mozilla-central/source/dom/webidl/DOMRectList.webidl) | interface | DOMRectList | The DOMRectList objects are collections of DOMRects. DOMRectList must be supported for legacy reasons. New interfaces must not use DOMRectList and may use Sequences instead. |
 |  | attribute | length | Returns the total number of DOMRect objects associated with the object. |
 |  | method | DOMRect? item(unsigned long index) | Returns the DOMRect with the index number. |
-|  [DOMRectReadOnly](https://drafts.fxtf.org/geometry/#domrectreadonly)  |  attribute  |  x  |  Return x coordinate value of the object   |
+|  [DOMRectReadOnly](https://drafts.fxtf.org/geometry/#domrectreadonly)  | interface | DOMRectReadOnly | Specifies the standard properties used by DOMRect to define a rectangle. |
+|    |  attribute  |  x  |  Return x coordinate value of the object   |
 |    |  attribute  |  y  |  Return y coordinate value of the object   |
 |    |  attribute  |  width  |  Return width dimension value of the object  |
 |    |  attribute  |  height  |  Return height dimension value of the object  |
@@ -367,7 +368,6 @@ section are supported.
 | | method | void addEventListener(DOMString type, EventListener? callback, optional boolean capture=false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: The lightweight web engine only supports boolean type for third argument) |
 | | method | void removeEventListener(DOMString type, EventListener? callback, optional boolean captures=false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: The lightweight web engine only supports boolean type for third argument) |
 | | method | boolean dispatchEvent(Event event) | Dispatches an Event at the specified EventTarget, invoking the affected EventListeners in the appropriate order. |
-| [EventListener](https://dom.spec.whatwg.org/#callbackdef-eventlistener) | callback | EventListener = void () | An event listener can be used to observe a specific event. |
 | [ElementCSSInlineStyle](https://drafts.csswg.org/cssom/#elementcssinlinestyle) | interface | ElementCSSInlineStyle | The ElementCSSInlineStyle interface provides access to inline style properties of an element. |
 |  | attribute | style | Return a live CSS declaration block. |
 | [HTMLAnchorElement](https://html.spec.whatwg.org/multipage/semantics.html#the-a-element) | interface | HTMLAnchorElement | The HTMLAnchorElement interface represents hyperlink elements and provides special properties and methods (beyond those of the regular HTMLElement object interface that they inherit from) for manipulating the layout and presentation of such elements. |
@@ -571,11 +571,9 @@ section are supported.
 |  | attribute | muted | Is a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise. |
 |  | attribute | textTracks | Returns the list of TextTrack objects contained in the element. |
 |  | method | TextTrack addTextTrack(TextTrackKind kind, optional DOMString label = "", optional DOMString language = "") |  |
-| [HTMLMetaElement](https://html.spec.whatwg.org/multipage/semantics.html#meta) | interface | HTMLMetaElement | The meta element represents various kinds of metadata that cannot be expressed using the title, base, link, style, and script elements. |
 | [HTMLModElement](https://html.spec.whatwg.org/#htmlmodelement) | interface | HTMLModElement | The mod element represents edits to the document. |
 |  | attribute | cite | Containing a URI of a resource explaining the change. |
 |  | attribute | datetime | Containing a date-and-time string representing a timestamp for the change. |
-| [HTMLObjectElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-object-element) | interface | HTMLObjectElement | The object element can represent an external resource, which, depending on the type of the resource, will either be treated as an image, as a nested browsing context, or as an external resource to be processed by a plugin. |
 | [HTMLParagraphElement](https://html.spec.whatwg.org/multipage/semantics.html#the-p-element)  | interface | HTMLParagraphElement |  |
 | [HTMLParamElement](https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-param-element) | interface | HTMLParamElement | The param element defines parameters for plugins invoked by object elements. It does not represent anything on its own. |
 |  | attribute | name | Represents the name of the parameter. |
@@ -602,13 +600,22 @@ section are supported.
 |  | attribute | multiple | Whether to allow multiple values |
 |  | attribute | required | Whether the control is required for form submission |
 |  | attribute | size | Size of the control |
+|  | attribute | length | The number of \<option\> elements in this select element. |
+|  | method | getter Element? item(unsigned long index) | Gets an item from the options collection for this \<select\> element. |
+|  | method | HTMLOptionElement? namedItem(DOMString name) | Gets the item in the options collection with the specified name. |
+|  | method | void add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null) | Adds an element to the collection of option elements for this select element. |
+|  | method | void remove() | Removes the element from the options collection for this select element. |
+|  | method | void remove(long index) | Removes the element at the specified index from the options collection for this select element. |
+|  | method | setter void (unsigned long index, HTMLOptionElement? option) | Access an item by specifying the index in array-style brackets or parentheses, without calling this method explicitly. |
 |  | attribute | labels | Is a NodeList that represents a list of label elements that are labels for this button. |
 | [HTMLOptionElement](https://html.spec.whatwg.org/#htmloptionelement) | interface | HTMLOptionElement | The option element represents an option in a select element or as part of a list of suggestions in a datalist element. |
+|  | attribute | defaultSelected | Contains the initial value of the selected HTML attribute, indicating whether the option is selected by default or not. |
 |  | attribute | disabled | Returns whether the option element is disabled. |
 |  | attribute | form | Returns the element's form owner, or null if there is not one. |
 |  | attribute | selected | Returns true if the element's selectedness is true, or false otherwise. |
 |  | attribute | value | Returns the value of the option element. |
 |  | attribute | text | Same as textContent, except that spaces are collapsed and script elements are skipped. |
+|  | attribute | index | The position of the option within the list of options it belongs to, in tree-order. |
 | [HTMLOptGroupElement](https://html.spec.whatwg.org/#htmloptgroupelement) | interface | HTMLOptGroupElement | The optgroup element represents a group of option elements with a common label. |
 |  | attribute | disabled | Whether the form control is disabled. |
 | [HTMLOptionsCollection](https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection) | interface | HTMLOptionsCollection | The HTMLOptionsCollection interface is used for collections of option elements. It is always rooted on a select element and has attributes and methods that manipulate that element's descendants. |
@@ -655,7 +662,6 @@ section are supported.
 |    | attribute |  deleteCell  |  Removes the cell at the given position in the row.  |
 |    | attribute |  bgColor  |  Returns the background color of the cells. |
 |    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
-|    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
 | [HTMLTableCaptionElement](https://html.spec.whatwg.org/multipage/tables.html#htmltablecaptionelement) | interface |  HTMLTableCaptionElement | Represents the title of the table that is its parent, if it has a parent and that is a table element. | 
 |  | attribute |  align | Represents an enumerated attribute indicating alignment of the caption with respect to the table. |
 |  [HTMLTableCellElement](https://html.spec.whatwg.org/#htmltablecellelement)  |  attribute  |  colSpan  |  colspan content attribute  |
@@ -668,8 +674,6 @@ section are supported.
 |    | attribute |  axis  |  Contains a name grouping cells in virtual. It reflects the obsolete axis attribute.  |
 |    | attribute |  height  |  Contains a length of pixel of the hinted height of the cell.  |
 |    | attribute |  width  |  Specify the number of pixels wide the cell should be drawn, if possible.  |
-|    | attribute |  ch  |  Contains one single chararcter.  |
-|    | attribute |  chOff  |  Contains a integer indicating how many characters must be left at the right (for left-to-right scripts; or at the left for right-to-left scripts) of the character defined by HTMLTableCellElement.ch.  |
 |    | attribute |  noWrap |  Reflects the nowrap attribute and indicating if cell content can be broken in several lines.  |
 |    | attribute |  vAlign  |  Returns an enumerated value indicating how the content of the cell must be vertically aligned.  |
 |    | attribute |  bgColor  |  bgcolor content attributes  |
@@ -808,6 +812,7 @@ section are supported.
 |  | method | Element? querySelector(DOMString selectors) | Returns the first Element with the current element as root that matches the specified group of selectors. |
 |  | method | NodeList querySelectorAll(DOMString selectors) | Returns a NodeList representing a list of elements with the current element as root that matches the specified group of selectors. |
 | [Text](https://dom.spec.whatwg.org/#text) | interface | Text | Text node whose data is data and node document is current global object’s associated Document. |
+|  | method | Text splitText(unsigned long offset) | Breaks the node into two nodes at a specified offset. |
 |  | attribute | wholeText | Returns the combined data of all direct Text node siblings. |
 | [TextTrack](https://html.spec.whatwg.org/#texttrack)  | interface | TextTrack |  |
 |  | enum | TextTrackMode | "disabled",  "hidden",  "showing" |
@@ -854,7 +859,8 @@ section are supported.
 |  | method | void forward() | Goes to the next page in session history, the same action as when the user clicks the browser's Forward button; this is equivalent to history.go(1). |
 |  | method | void pushState(any data, DOMString title, optional DOMString? url = null) | Pushes the given data onto the session history stack with the specified title and, if provided, URL. |
 |  | method | void replaceState(any data, DOMString title, optional DOMString? url = null) | Updates the most recent entry on the history stack to have the specified data, title, and, if provided, URL |
-|  [Location](https://html.spec.whatwg.org/multipage/browsers.html#location)  |  attribute  |  href  |  Return Location object's url  |
+|  [Location](https://html.spec.whatwg.org/multipage/browsers.html#location) | interface | Location | Represents the location (URL) of the object it is linked to. |
+|    |  attribute  |  href  |  Return Location object's url  |
 |    |  attribute  |  protocol  |  Return  Location object's url's scheme, followed by ":".  |
 |    |  attribute  |  href  |  Return this Location object's url, serialized.  |
 |    |  attribute  |  origin  | Return the serialization of this Location object's url's origin.  |
@@ -867,21 +873,19 @@ section are supported.
 |    |  method  |  assign(DOMString url)  |  Loads the resource at the URL provided in parameter.  |
 |    |  method  |  replace(DOMString url)  |  Replaces the current resource with the URL provided in parameter.  |
 |    |  method  |  reload()  |  Reloads the resource from the current URL.  |
-| [MediaSource](https://w3c.github.io/media-source/#mediasource) | enum | ReadyState | "closed", "open", "ended" |
+| [MediaSource](https://w3c.github.io/media-source/#mediasource) | interface | MediaSource |The MediaSource object represents a source of media data for an HTMLMediaElement. |
+|  | enum | ReadyState | "closed", "open", "ended" |
 |  | enum | EndOfStreamError  | "network", "decode" |
-|  | interface | MediaSource | The MediaSource object represents a source of media data for an HTMLMediaElement. |
 |  | attribute | sourceBuffers | Contains the list of SourceBuffer objects associated with this MediaSource. |
 |  | attribute | activeSourceBuffers | Contains the subset of sourceBuffers that are providing the selected video track, the enabled audio track(s), and the "showing" or "hidden" text track(s). |
 |  | attribute | readyState | Indicates the current state of the MediaSource object. |
 |  | attribute | duration | Allows the web application to set the presentation duration. |
-|  | method | SourceBuffer addSourceBuffer(DOMString type) | Adds a new SourceBuffer to sourceBuffers. |
-|  | method | void removeSourceBuffer(SourceBuffer sourceBuffer) | Removes a SourceBuffer from sourceBuffers. |
 |  | method | void endOfStream(optional EndOfStreamError error) | Signals the end of the stream. |
-|  | method | static boolean isTypeSupported(DOMString type) | Check to see whether the MediaSource is capable of creating SourceBuffer objects for the specified MIME type. |
-|  [SourceBuffer](https://w3c.github.io/media-source/#sourcebuffer)  |  attribute  |  mode  |  Controls how a sequence of media segments are handled  |
+|  [SourceBuffer](https://w3c.github.io/media-source/#sourcebuffer)  | interface | SourceBuffer | Represents a chunk of media to be passed into an HTMLMediaElement and played, via a MediaSource object. |
+|    |  enum  |  AppendMode  |  "segments", "sequence"  |
+|    |  attribute  |  mode  |  Controls how a sequence of media segments are handled  |
 |    |  attribute  |  updating  |  Return whether the asynchronous continuation of an appendBuffer() or remove() operation is still being processed  |
 |    |  attribute  |  buffered  |  Return what TimeRanges are buffered in the SourceBuffer  |
-|    |  attribute  |  timestampOffset  |  Controls the offset applied to timestamps inside subsequent media segments that are appended to this SourceBuffer  |
 |    |  attribute  |  textTracks  |  Return The list of TextTrack objects created by this object  |
 |    |  attribute  |  appendWindowStart  |  The presentation timestamp for the start of the append window  |
 |    |  attribute  |  appendWindowEnd  |  The presentation timestamp for the end of the append window  |
@@ -891,9 +895,9 @@ section are supported.
 |    |  attribute  |  onerror  |  The event handler for the error event  |
 |    |  attribute  |  onabort  |  The event handler for the abort event  |
 |    |  method  |  void appendBuffer(BufferSource data)  |  Appends the segment data in an BufferSource to the source buffer |
-|    |  method  |  void abort()  |  Aborts the current segment and resets the segment parser  |
 |    |  method  |  void remove(double start, unrestricted double end)  |  Removes media for a specific time range  |
-|  [SourceBufferList](https://w3c.github.io/media-source/#sourcebufferlist)  |  attribute  |  length |  Return number of SourceBuffer objects in the list.  |
+| [SourceBufferList](https://w3c.github.io/media-source/#sourcebufferlist) | interface | SourceBufferList | Represents a simple container list for multiple SourceBuffer objects. |
+|    | length |  Return number of SourceBuffer objects in the list.  |
 |    |  method  |  SourceBuffer[unsigned long index]  |  Return SourceBuffer object with index  |
 | [StyleSheet](https://drafts.csswg.org/cssom/#the-stylesheet-interface) | interface | StyleSheet | The StyleSheet interface represents an abstract, base style sheet. |
 | | attribute | type | Specifies the style sheet language for this style sheet. |
@@ -901,6 +905,7 @@ section are supported.
 | | attribute | parentStyleSheet | Returns the parent CSS style sheet. |
 | | attribute | ownerNode | The node that associates this style sheet with the document. |
 | | attribute | media | Returns the MediaList object that is associated with the CSS style sheet. |
+| | attribute | ownerNode | Returns a Node associating this style sheet with the current document. |
 | [StyleSheetList](https://drafts.csswg.org/cssom/#the-stylesheetlist-interface) | interface | StyleSheetList | The StyleSheetList interface represents an ordered collection of CSS style sheets. |
 | | method | getter StyleSheet? item(unsigned long index) | Return the indexth CSS style sheet in the collection. |
 | | attribute | length | Return the number of CSS style sheets represented by the collection. |
@@ -924,11 +929,11 @@ section are supported.
 | | attribute | length | Returns the number of Touch objects in the list |
 | [Window](https://html.spec.whatwg.org/#the-window-object) | interface | Window | The Window has an associated Document, which is a Document object. |
 |  | attribute | window | Returns window. |
-|  | attribute | self | Returns window. |
 |  | attribute | top | Returns window for the top-level browsing context. |
 |  | attribute | parent | Returns parent window. |
 |  | attribute | frameElement | Returns the Element for the browsing context container. Returns null if there isn’t one, and in cross-origin situations. |
 |  | attribute | document | Returns the document associated with window. |
+|  | attribute | name | Gets/sets the name of the window. |
 |  | attribute | location | Return this Window object's Location object. |
 |  | attribute | history | Return the object implementing the History interface for this Window object's associated Document. |
 |  | attribute | navigator | Return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
@@ -936,11 +941,6 @@ section are supported.
 |  | attribute | length | Return the number of document-tree child browsing contexts of this Window object. |
 |  | method | postMessage(message, targetOrigin, transfer) | Posts a message to the given window. |
 | [Window](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface) | enum | ScrollBehvior | "auto", "instant", "smooth" |
-|  [ScrollOptions](https://www.w3.org/TR/cssom-view-1/#dictdef-scrolloptions) | dictionary | ScrollOptions |  |
-|    | attribute | behavior | Initializes the behavior attribute of the ScrollOptions object |
-|  [ScrollToOptions](https://www.w3.org/TR/cssom-view-1/#dictdef-scrolltooptions) | dictionary | ScrollToOptions |  |
-|    | attribute | left | Initializes the left attribute of the ScrollToOptions object |
-|    | attribute | top | Initializes the top attribute of the ScrollToOptions object |
 |  | attribute | innerWidth | Return the viewport width including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
 |  | attribute | innerHeight | Return the viewport height including the size of a rendered scroll bar (if any), or zero if there is no viewport. |
 |  | attribute | scrollX | property of the Window interface returns the number of pixels that the document is currently scrolled horizontally |
@@ -956,7 +956,14 @@ section are supported.
 | | callback | FrameRequestCallback = void (DOMHighResTimeStamp time) | |
 | [Window](https://drafts.csswg.org/cssom/#extensions-to-the-window-interface) | method | CSSStyleDeclaration getComputedStyle(Element elt, optional CSSOMString? pseudoElt) | Gives the values of all the CSS properties of an element after applying the active stylesheets and resolving any basic computation those values may contain. |
 | [Window](https://drafts.csswg.org/cssom-view/#extensions-to-the-window-interface) | method | MediaQueryList matchMedia(CSSOMString query) | Returns a new MediaQueryList object representing the parsed results of the specified media query string. |
+| | attribute | screen | Returns a reference to the screen object associated with the window. |
+| | attribute | devicePixelRatio | Returns the ratio between physical pixels and device independent pixels in the current display. |
 | [Named Access on the Window Object](https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object) | misc | window[id] | Named access on the Window object returns the indicated element, where id is a non-empty ID of an HTML element in the current document. |
+|  [ScrollOptions](https://www.w3.org/TR/cssom-view-1/#dictdef-scrolloptions) | dictionary | ScrollOptions |  |
+|    | attribute | behavior | Initializes the behavior attribute of the ScrollOptions object |
+|  [ScrollToOptions](https://www.w3.org/TR/cssom-view-1/#dictdef-scrolltooptions) | dictionary | ScrollToOptions |  |
+|    | attribute | left | Initializes the left attribute of the ScrollToOptions object |
+|    | attribute | top | Initializes the top attribute of the ScrollToOptions object |
 | [URL](https://url.spec.whatwg.org/#url) | interface | URL | The URLinterface represent an object providing static methods used for creating object URLs. |
 | | constructor | URL(DOMString url, optional DOMString base) | Create a new URL |
 |  | attribute | href | A DOMString containing the whole URL. |
@@ -970,10 +977,10 @@ section are supported.
 |  | attribute | pathname | A DOMString containing an initial '/' followed by the path of the URL. |
 |  | attribute | search | A DOMString containing a '?' followed by the parameters of the URL. |
 |  | attribute | hash | A DOMString containing a '#' followed by the fragment identifier of the URL. |
-| [WindowTimers](https://www.w3.org/TR/html5/webappapis.html#timers) | method | long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments) | Calls a function or evaluates an expression after a specified number of milliseconds. |
 |  | method | static DOMString createObjectURL(Blob blob) | Returns a DOMString containing a unique blob URL, that is a URL with blob: as its scheme, followed by an opaque string uniquely identifying the object in the browser. |
 |  | method | static DOMString createObjectURL(MediaSource mediaSource) | Returns a DOMString containing a unique blob URL, that is a URL with media source: as its scheme, followed by an opaque string uniquely identifying the object in the browser. |
 |  | method | static void revokeObjectURL(DOMString url) | Revokes an object URL previously created using URL.createObjectURL() |
+| [WindowTimers](https://www.w3.org/TR/html5/webappapis.html#timers) | method | long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments) | Calls a function or evaluates an expression after a specified number of milliseconds. |
 |  | method | void clearTimeout(optional long handle = 0) | Clears a timer set with setTimeout(). |
 |  | method | long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments) | Calls a function or evaluates an expression at specified intervals (in milliseconds). |
 |  | method | void clearInterval(optional long handle = 0) | Clears a timer set with setInterval(). |
