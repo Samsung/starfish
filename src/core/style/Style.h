@@ -683,8 +683,10 @@ class CSSStyleDeclaration;
     F(GridColumnStart, gridColumnStart, "grid-column-start")                   \
     F(GridColumnEnd, gridColumnEnd, "grid-column-end")                         \
     F(GridGap, gridGap, "grid-gap")                                            \
+    F(GridRow, gridRow, "grid-row")                                            \
     F(GridRowGap, gridRowGap, "grid-row-gap")                                  \
     F(GridColumnGap, gridColumnGap, "grid-column-gap")                         \
+    F(GridColumn, gridColumn, "grid-column")                                   \
     F(GridTemplateAreas, gridTemplateAreas, "grid-template-areas")             \
     F(GridArea, gridArea, "grid-area")                                         \
     F(CaretColor, caretColor, "caret-color")                                   \

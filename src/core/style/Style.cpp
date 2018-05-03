@@ -5504,6 +5504,26 @@ void StyleResolver::apply(Element* element,
                 }
             }
             break;
+        case CSSStyleValuePair::KeyKind::GridRow:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::ValueListKind) {
+                auto list = cssValues[k].multiValue();
+                if (list) {
+                    style->setGridRowStart(list->at(0).stringValue());
+                    style->setGridRowEnd(list->at(1).stringValue());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::GridColumn:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::ValueListKind) {
+                auto list = cssValues[k].multiValue();
+                if (list) {
+                    style->setGridColumnStart(list->at(0).stringValue());
+                    style->setGridColumnEnd(list->at(1).stringValue());
+                }
+            }
+            break;
         case CSSStyleValuePair::KeyKind::WillChange:
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Inherit:
@@ -9467,6 +9487,144 @@ bool CSSStyleValuePair::updateValueGridColumnGap(Document* document,
     setLengthValue(length);
 
     return true;
+}
+
+bool CSSStyleValuePair::updateValueGridRow(Document* document,
+                                           const CSSTokenVector& tokens)
+{
+    if (!tokens.size()) {
+        return false;
+    }
+
+    std::string str;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        auto ss = tokens[i];
+        str += (ss + " ");
+    }
+
+    std::istringstream is(str);
+    std::string part;
+
+    std::vector<CSSTokenValue> parts;
+    while (getline(is, part, '/')) {
+        CSSTokenValue s(part.c_str());
+        s = s.trim();
+        parts.push_back(s);
+    }
+
+    bool result = true;
+    setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+    setValueList(new ValueList(ValueList::Separator::SlashSeparator));
+    CSSStyleValuePair rs;
+    CSSStyleValuePair re;
+
+    if (parts.size() == 1) {
+        if (parts[0].equals("auto")) {
+            rs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            rs.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(rs.valueKind(), rs.value());
+            re.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            re.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(re.valueKind(), re.value());
+        } else {
+            CSSTokenVector list;
+            list.push_back(parts[0]);
+            result = isValidForGridStartEnd(list);
+            if (result) {
+                rs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+                rs.setStringValue(String::createASCIIString(parts[0].c_str()));
+                multiValue()->emplace_back(rs.valueKind(), rs.value());
+                re.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+                re.setStringValue(String::createASCIIString(parts[0].c_str()));
+                multiValue()->emplace_back(re.valueKind(), re.value());
+            }
+        }
+    } else if (parts.size() == 2) {
+        CSSTokenVector list1, list2;
+        list1.push_back(parts[0]);
+        list2.push_back(parts[1]);
+        result = isValidForGridStartEnd(list1);
+        result = isValidForGridStartEnd(list2) & result;
+        if (result) {
+            rs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            rs.setStringValue(String::createASCIIString(parts[0].c_str()));
+            multiValue()->emplace_back(rs.valueKind(), rs.value());
+            re.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            re.setStringValue(String::createASCIIString(parts[1].c_str()));
+            multiValue()->emplace_back(re.valueKind(), re.value());
+        }
+    }
+
+    return result;
+}
+
+bool CSSStyleValuePair::updateValueGridColumn(Document* document,
+                                              const CSSTokenVector& tokens)
+{
+    if (!tokens.size()) {
+        return false;
+    }
+
+    std::string str;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        auto ss = tokens[i];
+        str += (ss + " ");
+    }
+
+    std::istringstream is(str);
+    std::string part;
+
+    std::vector<CSSTokenValue> parts;
+    while (getline(is, part, '/')) {
+        CSSTokenValue s(part.c_str());
+        s = s.trim();
+        parts.push_back(s);
+    }
+
+    bool result = true;
+    setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+    setValueList(new ValueList(ValueList::Separator::SlashSeparator));
+    CSSStyleValuePair cs;
+    CSSStyleValuePair ce;
+
+    if (parts.size() == 1) {
+        if (parts[0].equals("auto")) {
+            cs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            cs.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(cs.valueKind(), cs.value());
+            ce.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            ce.setStringValue(String::createASCIIString("auto"));
+            multiValue()->emplace_back(ce.valueKind(), ce.value());
+        } else {
+            CSSTokenVector list;
+            list.push_back(parts[0]);
+            result = isValidForGridStartEnd(list);
+            if (result) {
+                cs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+                cs.setStringValue(String::createASCIIString(parts[0].c_str()));
+                multiValue()->emplace_back(cs.valueKind(), cs.value());
+                ce.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+                ce.setStringValue(String::createASCIIString(parts[0].c_str()));
+                multiValue()->emplace_back(ce.valueKind(), ce.value());
+            }
+        }
+    } else if (parts.size() == 2) {
+        CSSTokenVector list1, list2;
+        list1.push_back(parts[0]);
+        list2.push_back(parts[1]);
+        result = isValidForGridStartEnd(list1);
+        result = isValidForGridStartEnd(list2) & result;
+        if (result) {
+            cs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            cs.setStringValue(String::createASCIIString(parts[0].c_str()));
+            multiValue()->emplace_back(cs.valueKind(), cs.value());
+            ce.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
+            ce.setStringValue(String::createASCIIString(parts[1].c_str()));
+            multiValue()->emplace_back(ce.valueKind(), ce.value());
+        }
+    }
+
+    return result;
 }
 
 bool CSSStyleValuePair::updateValueGridTemplateAreas(
