@@ -295,6 +295,10 @@ test/cairo/internal-test/css/background/background_lineargradient2.html
 test/cairo/internal-test/css/background/background_lineargradient3.html
 test/cairo/internal-test/css/background/background_lineargradient4.html
 test/cairo/internal-test/css/background/background_lineargradient5.html
+test/cairo/internal-test/css/background/background_lineargradient6.html
+test/cairo/internal-test/css/background/background_lineargradient7.html
+test/cairo/internal-test/css/background/background_lineargradient8.html
+test/cairo/internal-test/css/background/background_lineargradient9.html
 test/cairo/internal-test/css/transition/parse-transition.html
 test/cairo/internal-test/css/legacy/body_legacy_attrs.html
 test/cairo/internal-test/css/style/style-content-with-quotes.html
